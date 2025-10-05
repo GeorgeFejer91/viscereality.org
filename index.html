@@ -1,210 +1,1245 @@
-<!DOCTYPE HTML>
-<!--
-	Hyperspace by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
--->
-<html>
-	<head>
-		<title>Altered States of Viscereality</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-		<link rel="stylesheet" href="assets/css/main.css" />
-		<link rel="stylesheet" href="assets/css/dark-theme.css" />
-		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-	</head>
-	<body class="is-preload">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Name - Portfolio</title>
+    <style>
+        /* ---- ROOT VARIABLES ---- */
+        :root {
+            --main-bg-color: #0a0a0a;
+            --main-text-color: #e0e0e0;
+            --accent-color: #ff6b6b;
+            --accent-secondary: #4ecdc4;
+            --separator-color: #2a2a2a;
+            --highlight-color: #ffd93d;
+            --menu-hover-color: rgba(255, 107, 107, 0.15);
+            --menu-active-color: rgba(255, 107, 107, 0.25);
+            --frame-border: #444444;
+            --sprocket-color: #1a1a1a;
+            --sprocket-border: #333333;
+            --frame-height: 75px;
+            --mobile-menu-height: 90px;
+            --card-bg: rgba(20, 20, 20, 0.8);
+        }
 
-		<!-- Sidebar -->
-			<section id="sidebar">
-				<div class="inner">
-					<nav>
-						<ul>
-							<li><a href="#intro">Welcome</a></li>
-							<li><a href="#one">Who we are</a></li>
-							<li><a href="#two">What we do</a></li>
-							<li><a href="#three">Get in touch</a></li>
-						</ul>
-					</nav>
-				</div>
-			</section>
+        /* ---- COLOR SHIFTING ANIMATION ---- */
+        @keyframes colorShift {
+            0% {
+                --accent-color: #ff6b6b;
+                --accent-secondary: #4ecdc4;
+            }
+            16.66% {
+                --accent-color: #a855f7;
+                --accent-secondary: #ec4899;
+            }
+            33.33% {
+                --accent-color: #3b82f6;
+                --accent-secondary: #8b5cf6;
+            }
+            50% {
+                --accent-color: #10b981;
+                --accent-secondary: #06b6d4;
+            }
+            66.66% {
+                --accent-color: #f59e0b;
+                --accent-secondary: #ef4444;
+            }
+            83.33% {
+                --accent-color: #ec4899;
+                --accent-secondary: #f97316;
+            }
+            100% {
+                --accent-color: #ff6b6b;
+                --accent-secondary: #4ecdc4;
+            }
+        }
 
-		<!-- Wrapper -->
-			<div id="wrapper">
+        /* Apply animated colors to specific elements */
+        .logo h1,
+        .section-title,
+        .nav-menu .active a,
+        .mobile-nav .active a,
+        .card h3,
+        .timeline-item h3,
+        .contact-link,
+        .hero h1 {
+            animation: textColorShift 60s ease-in-out infinite;
+        }
 
-				<!-- Intro -->
-					<section id="intro" class="wrapper style1 fullscreen fade-up">
-						<div class="inner">
-							<h1>Altered States of Viscereality</h1>
-							<p>Just another fine responsive site template designed by <a href="http://html5up.net">HTML5 UP</a><br />
-							and released for free under the <a href="http://html5up.net/license">Creative Commons</a>.</p>
-							<ul class="actions">
-								<li><a href="#one" class="button scrolly">Learn more</a></li>
-							</ul>
-						</div>
-					</section>
+        @keyframes textColorShift {
+            0% { color: #ff6b6b; }
+            16.66% { color: #a855f7; }
+            33.33% { color: #3b82f6; }
+            50% { color: #10b981; }
+            66.66% { color: #f59e0b; }
+            83.33% { color: #ec4899; }
+            100% { color: #ff6b6b; }
+        }
 
-				<!-- One -->
-					<section id="one" class="wrapper style2 spotlights">
-						<section>
-							<a href="#" class="image"><img src="images/pic01.jpg" alt="" data-position="center center" /></a>
-							<div class="content">
-								<div class="inner">
-									<h2>Sed ipsum dolor</h2>
-									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
-									<ul class="actions">
-										<li><a href="generic.html" class="button">Learn more</a></li>
-									</ul>
-								</div>
-							</div>
-						</section>
-						<section>
-							<a href="#" class="image"><img src="images/pic02.jpg" alt="" data-position="top center" /></a>
-							<div class="content">
-								<div class="inner">
-									<h2>Feugiat consequat</h2>
-									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
-									<ul class="actions">
-										<li><a href="generic.html" class="button">Learn more</a></li>
-									</ul>
-								</div>
-							</div>
-						</section>
-						<section>
-							<a href="#" class="image"><img src="images/pic03.jpg" alt="" data-position="25% 25%" /></a>
-							<div class="content">
-								<div class="inner">
-									<h2>Ultricies aliquam</h2>
-									<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus.</p>
-									<ul class="actions">
-										<li><a href="generic.html" class="button">Learn more</a></li>
-									</ul>
-								</div>
-							</div>
-						</section>
-					</section>
+        .logo h2,
+        .hero h2,
+        .timeline-item .date {
+            animation: secondaryColorShift 60s ease-in-out infinite;
+        }
 
-				<!-- Two -->
-					<section id="two" class="wrapper style3 fade-up">
-						<div class="inner">
-							<h2>What we do</h2>
-							<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus, lacus eget hendrerit bibendum, urna est aliquam sem, sit amet imperdiet est velit quis lorem.</p>
-							<div class="features">
-								<section>
-									<span class="icon solid major fa-code"></span>
-									<h3>Lorem ipsum amet</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-								<section>
-									<span class="icon solid major fa-lock"></span>
-									<h3>Aliquam sed nullam</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-								<section>
-									<span class="icon solid major fa-cog"></span>
-									<h3>Sed erat ullam corper</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-								<section>
-									<span class="icon solid major fa-desktop"></span>
-									<h3>Veroeros quis lorem</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-								<section>
-									<span class="icon solid major fa-link"></span>
-									<h3>Urna quis bibendum</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-								<section>
-									<span class="icon major fa-gem"></span>
-									<h3>Aliquam urna dapibus</h3>
-									<p>Phasellus convallis elit id ullam corper amet et pulvinar. Duis aliquam turpis mauris, sed ultricies erat dapibus.</p>
-								</section>
-							</div>
-							<ul class="actions">
-								<li><a href="generic.html" class="button">Learn more</a></li>
-							</ul>
-						</div>
-					</section>
+        @keyframes secondaryColorShift {
+            0% { color: #4ecdc4; }
+            16.66% { color: #ec4899; }
+            33.33% { color: #8b5cf6; }
+            50% { color: #06b6d4; }
+            66.66% { color: #ef4444; }
+            83.33% { color: #f97316; }
+            100% { color: #4ecdc4; }
+        }
 
-				<!-- Three -->
-					<section id="three" class="wrapper style1 fade-up">
-						<div class="inner">
-							<h2>Get in touch</h2>
-							<p>Phasellus convallis elit id ullamcorper pulvinar. Duis aliquam turpis mauris, eu ultricies erat malesuada quis. Aliquam dapibus, lacus eget hendrerit bibendum, urna est aliquam sem, sit amet imperdiet est velit quis lorem.</p>
-							<div class="split style1">
-								<section>
-									<form method="post" action="#">
-										<div class="fields">
-											<div class="field half">
-												<label for="name">Name</label>
-												<input type="text" name="name" id="name" />
-											</div>
-											<div class="field half">
-												<label for="email">Email</label>
-												<input type="text" name="email" id="email" />
-											</div>
-											<div class="field">
-												<label for="message">Message</label>
-												<textarea name="message" id="message" rows="5"></textarea>
-											</div>
-										</div>
-										<ul class="actions">
-											<li><a href="" class="button submit">Send Message</a></li>
-										</ul>
-									</form>
-								</section>
-								<section>
-									<ul class="contact">
-										<li>
-											<h3>Address</h3>
-											<span>12345 Somewhere Road #654<br />
-											Nashville, TN 00000-0000<br />
-											USA</span>
-										</li>
-										<li>
-											<h3>Email</h3>
-											<a href="#">user@untitled.tld</a>
-										</li>
-										<li>
-											<h3>Phone</h3>
-											<span>(000) 000-0000</span>
-										</li>
-										<li>
-											<h3>Social</h3>
-											<ul class="icons">
-												<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-												<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-												<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
-												<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-												<li><a href="#" class="icon brands fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
-											</ul>
-										</li>
-									</ul>
-								</section>
-							</div>
-						</div>
-					</section>
+        /* Animated borders and shadows */
+        .sidebar {
+            animation: borderColorShift 60s ease-in-out infinite;
+        }
 
-			</div>
+        @keyframes borderColorShift {
+            0% { border-right-color: #ff6b6b; box-shadow: 3px 0 15px rgba(255, 107, 107, 0.2); }
+            16.66% { border-right-color: #a855f7; box-shadow: 3px 0 15px rgba(168, 85, 247, 0.2); }
+            33.33% { border-right-color: #3b82f6; box-shadow: 3px 0 15px rgba(59, 130, 246, 0.2); }
+            50% { border-right-color: #10b981; box-shadow: 3px 0 15px rgba(16, 185, 129, 0.2); }
+            66.66% { border-right-color: #f59e0b; box-shadow: 3px 0 15px rgba(245, 158, 11, 0.2); }
+            83.33% { border-right-color: #ec4899; box-shadow: 3px 0 15px rgba(236, 72, 153, 0.2); }
+            100% { border-right-color: #ff6b6b; box-shadow: 3px 0 15px rgba(255, 107, 107, 0.2); }
+        }
 
-		<!-- Footer -->
-			<footer id="footer" class="wrapper style1-alt">
-				<div class="inner">
-					<ul class="menu">
-						<li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
-					</ul>
-				</div>
-			</footer>
+        .logo,
+        .mobile-menu {
+            animation: borderTopColorShift 60s ease-in-out infinite;
+        }
 
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
+        @keyframes borderTopColorShift {
+            0% { border-color: #ff6b6b; }
+            16.66% { border-color: #a855f7; }
+            33.33% { border-color: #3b82f6; }
+            50% { border-color: #10b981; }
+            66.66% { border-color: #f59e0b; }
+            83.33% { border-color: #ec4899; }
+            100% { border-color: #ff6b6b; }
+        }
 
-	</body>
+        .section-title::after {
+            animation: gradientShift 60s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background: linear-gradient(90deg, #ff6b6b, transparent); }
+            16.66% { background: linear-gradient(90deg, #a855f7, transparent); }
+            33.33% { background: linear-gradient(90deg, #3b82f6, transparent); }
+            50% { background: linear-gradient(90deg, #10b981, transparent); }
+            66.66% { background: linear-gradient(90deg, #f59e0b, transparent); }
+            83.33% { background: linear-gradient(90deg, #ec4899, transparent); }
+            100% { background: linear-gradient(90deg, #ff6b6b, transparent); }
+        }
+
+        .contact-link {
+            animation: buttonColorShift 60s ease-in-out infinite;
+        }
+
+        @keyframes buttonColorShift {
+            0% { border-color: #ff6b6b; }
+            16.66% { border-color: #a855f7; }
+            33.33% { border-color: #3b82f6; }
+            50% { border-color: #10b981; }
+            66.66% { border-color: #f59e0b; }
+            83.33% { border-color: #ec4899; }
+            100% { border-color: #ff6b6b; }
+        }
+
+        .card::before {
+            animation: cardGradientShift 60s ease-in-out infinite;
+        }
+
+        @keyframes cardGradientShift {
+            0% { background: linear-gradient(90deg, #ff6b6b, #4ecdc4); }
+            16.66% { background: linear-gradient(90deg, #a855f7, #ec4899); }
+            33.33% { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+            50% { background: linear-gradient(90deg, #10b981, #06b6d4); }
+            66.66% { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+            83.33% { background: linear-gradient(90deg, #ec4899, #f97316); }
+            100% { background: linear-gradient(90deg, #ff6b6b, #4ecdc4); }
+        }
+
+        .timeline::before {
+            animation: timelineGradientShift 60s ease-in-out infinite;
+        }
+
+        @keyframes timelineGradientShift {
+            0% { background: linear-gradient(180deg, #ff6b6b, #4ecdc4); }
+            16.66% { background: linear-gradient(180deg, #a855f7, #ec4899); }
+            33.33% { background: linear-gradient(180deg, #3b82f6, #8b5cf6); }
+            50% { background: linear-gradient(180deg, #10b981, #06b6d4); }
+            66.66% { background: linear-gradient(180deg, #f59e0b, #ef4444); }
+            83.33% { background: linear-gradient(180deg, #ec4899, #f97316); }
+            100% { background: linear-gradient(180deg, #ff6b6b, #4ecdc4); }
+        }
+
+        .timeline-item::before {
+            animation: textColorShift 60s ease-in-out infinite;
+        }
+
+        .nav-menu li:hover a,
+        .card:hover h3 {
+            animation: textColorShift 60s ease-in-out infinite;
+        }
+
+        .skill-tag:hover {
+            animation: skillHoverShift 60s ease-in-out infinite;
+        }
+
+        @keyframes skillHoverShift {
+            0% { 
+                border-color: #4ecdc4;
+                background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+            }
+            16.66% { 
+                border-color: #ec4899;
+                background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+            }
+            33.33% { 
+                border-color: #8b5cf6;
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            }
+            50% { 
+                border-color: #06b6d4;
+                background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+            }
+            66.66% { 
+                border-color: #ef4444;
+                background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+            }
+            83.33% { 
+                border-color: #f97316;
+                background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+            }
+            100% { 
+                border-color: #4ecdc4;
+                background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(30, 30, 30, 0.9));
+                box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+            }
+        }
+
+        /* ---- RESET ---- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ---- BASIC STYLING ---- */
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            line-height: 1.7;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,.03) 2px, rgba(255,255,255,.03) 4px);
+            overflow-x: hidden;
+            /* Firefox scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: #000 var(--separator-color);
+        }
+
+        html {
+            overflow-x: hidden;
+            /* Firefox scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: #000 var(--separator-color);
+        }
+
+        /* WebKit scrollbar styling (Chrome, Safari, newer Edge) for main page */
+        body::-webkit-scrollbar,
+        html::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        body::-webkit-scrollbar-track,
+        html::-webkit-scrollbar-track {
+            background: var(--separator-color);
+        }
+        
+        body::-webkit-scrollbar-thumb,
+        html::-webkit-scrollbar-thumb {
+            background-color: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
+        /* ---- SIDEBAR STYLES ---- */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(20, 15, 15, 0.98) 100%);
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+            border-right: 2px solid var(--accent-color);
+            z-index: 100;
+            padding: 0;
+            box-shadow: 3px 0 15px rgba(255, 107, 107, 0.2);
+            /* Firefox scrollbar styling */
+            scrollbar-width: thin;
+            scrollbar-color: #000 var(--separator-color);
+        }
+
+        /* WebKit scrollbar styling (Chrome, Safari, newer Edge) for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--separator-color);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: #000;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+
+        .logo {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 10, 10, 0.9) 100%);
+            border-bottom: 3px solid var(--accent-color);
+            position: relative;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            min-width: 120px;
+            min-height: 120px;
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            border: 3px solid;
+            object-fit: cover;
+            display: block;
+            aspect-ratio: 1/1;
+            animation: photoColorShift 60s ease-in-out infinite;
+        }
+
+        .hero-profile-photo {
+            width: 100px;
+            height: 100px;
+            min-width: 100px;
+            min-height: 100px;
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 50%;
+            border: 3px solid;
+            object-fit: cover;
+            display: inline-block;
+            aspect-ratio: 1/1;
+            vertical-align: middle;
+            margin-left: 2rem;
+            animation: photoColorShift 60s ease-in-out infinite;
+        }
+
+        @keyframes photoColorShift {
+            0% { border-color: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+            16.66% { border-color: #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+            33.33% { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+            50% { border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+            66.66% { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+            83.33% { border-color: #ec4899; box-shadow: 0 0 20px rgba(236, 72, 153, 0.5); }
+            100% { border-color: #ff6b6b; box-shadow: 0 0 20px rgba(255, 107, 107, 0.5); }
+        }
+
+        .hero-name-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo h1 {
+            font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            margin-bottom: 0.3rem;
+            animation: textColorShift 60s ease-in-out infinite;
+        }
+
+        .logo h2 {
+            font-size: clamp(0.9rem, 1.2vw, 1.2rem);
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: var(--accent-secondary);
+        }
+
+        /* Film strip navigation */
+        .film-strip {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #0a0a0a;
+        }
+
+        .nav-menu {
+            list-style: none;
+            position: relative;
+            z-index: 10;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            position: relative;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid var(--frame-border);
+            padding: 0;
+            height: var(--frame-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(90deg, rgba(15, 15, 15, 0.5) 0%, rgba(10, 10, 10, 0.8) 50%, rgba(15, 15, 15, 0.5) 100%);
+        }
+
+        .nav-menu li a {
+            color: var(--main-text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: clamp(0.85rem, 1vw, 0.95rem);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-menu li:hover {
+            background: var(--menu-hover-color);
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .nav-menu li:hover a {
+            color: var(--accent-color);
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+        }
+
+        .nav-menu .active {
+            background: var(--menu-active-color);
+            border-left: 4px solid var(--accent-color);
+            box-shadow: inset 0 0 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-menu .active a {
+            color: var(--accent-color);
+        }
+
+        .nav-menu li:first-child {
+            border-top: 3px solid var(--frame-border);
+        }
+
+        /* Sprocket holes */
+        .nav-menu li .sprocket-left-1,
+        .nav-menu li .sprocket-left-2,
+        .nav-menu li .sprocket-left-3,
+        .nav-menu li .sprocket-right-1,
+        .nav-menu li .sprocket-right-2,
+        .nav-menu li .sprocket-right-3 {
+            position: absolute;
+            width: 10px;
+            height: 8px;
+            background-color: var(--sprocket-color);
+            border: 1px solid var(--sprocket-border);
+            z-index: 2;
+            box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.9);
+            border-radius: 2px;
+        }
+
+        .nav-menu li .sprocket-left-1 { left: 8px; top: 12px; }
+        .nav-menu li .sprocket-left-2 { left: 8px; top: 50%; transform: translateY(-50%); }
+        .nav-menu li .sprocket-left-3 { left: 8px; bottom: 12px; }
+        .nav-menu li .sprocket-right-1 { right: 8px; top: 12px; }
+        .nav-menu li .sprocket-right-2 { right: 8px; top: 50%; transform: translateY(-50%); }
+        .nav-menu li .sprocket-right-3 { right: 8px; bottom: 12px; }
+
+        /* ---- CONTENT STYLES ---- */
+        .content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 0;
+            overflow-x: hidden;
+            max-width: calc(100vw - 260px);
+        }
+
+        .section {
+            min-height: 100vh;
+            padding: 4rem 3rem;
+            scroll-margin-top: 2rem;
+            position: relative;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 3rem;
+            letter-spacing: 3px;
+            color: var(--accent-color);
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-color), transparent);
+        }
+
+        /* ---- HERO SECTION ---- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 4rem;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(30, 15, 15, 0.85) 100%);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, transparent 0px, rgba(255, 107, 107, 0.03) 1px, transparent 2px, transparent 4px),
+                repeating-linear-gradient(90deg, transparent 0px, rgba(78, 205, 196, 0.03) 1px, transparent 2px, transparent 4px);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 6vw, 5rem);
+            font-weight: 900;
+            letter-spacing: 5px;
+            margin: 0;
+            text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            animation: textColorShift 60s ease-in-out infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.95; }
+        }
+
+        .hero h2 {
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 400;
+            margin-bottom: 2rem;
+            color: var(--accent-secondary);
+            letter-spacing: 2px;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            line-height: 1.8;
+            max-width: 700px;
+            color: var(--main-text-color);
+        }
+
+        /* ---- CARDS ---- */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--frame-border);
+            border-radius: 8px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--accent-secondary));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .card p {
+            color: var(--main-text-color);
+            line-height: 1.6;
+        }
+
+        /* ---- SKILLS SECTION ---- */
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, var(--card-bg), rgba(30, 30, 30, 0.9));
+            border: 2px solid var(--frame-border);
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .skill-tag:hover {
+            border-color: var(--accent-secondary);
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(30, 30, 30, 0.9));
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* ---- TIMELINE ---- */
+        .timeline {
+            position: relative;
+            margin-top: 3rem;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--accent-color), var(--accent-secondary));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid var(--frame-border);
+            border-radius: 8px;
+            margin-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '▶';
+            position: absolute;
+            left: -3.2rem;
+            top: 1.5rem;
+            width: 20px;
+            height: 20px;
+            color: var(--accent-color);
+            font-size: 1.2rem;
+        }
+
+        .timeline-item h3 {
+            color: var(--accent-color);
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item .date {
+            color: var(--accent-secondary);
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        /* ---- CONTACT ---- */
+        .contact-links {
+            display: flex;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .contact-link {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--card-bg), rgba(30, 30, 30, 0.9));
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            background: var(--accent-color);
+            color: var(--main-bg-color);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* ---- FOOTER ---- */
+        .footer {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(10, 5, 5, 0.95) 100%);
+            padding: 2rem;
+            text-align: center;
+            border-top: 3px solid var(--accent-color);
+        }
+
+        /* ---- MOBILE MENU ---- */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .content {
+                margin-left: 0;
+                padding-bottom: var(--mobile-menu-height);
+                max-width: 100vw;
+            }
+            
+            .section {
+                padding: 3rem 1.5rem;
+                overflow-x: hidden;
+            }
+            
+            .hero {
+                padding: 0 2rem;
+                align-items: center;
+                text-align: center;
+                overflow-x: hidden;
+            }
+
+            .hero-name-container {
+                flex-direction: column;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .hero-profile-photo {
+                margin-left: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .mobile-menu {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                max-width: 100vw;
+                height: var(--mobile-menu-height);
+                background: linear-gradient(180deg, rgba(10, 10, 10, 0.98) 0%, rgba(20, 15, 15, 0.98) 100%);
+                z-index: 1000;
+                border-top: 3px solid var(--accent-color);
+                box-shadow: 0 -5px 20px rgba(255, 107, 107, 0.3);
+                overflow-x: hidden;
+            }
+            
+            .mobile-film-strip {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+                white-space: nowrap;
+                background-color: #0a0a0a;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            
+            .mobile-film-strip::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .mobile-nav {
+                display: inline-flex;
+                list-style: none;
+                padding: 0.5rem;
+                margin: 0;
+                height: 100%;
+            }
+            
+            .mobile-nav li {
+                position: relative;
+                display: inline-block;
+                height: calc(var(--mobile-menu-height) - 1rem);
+                min-width: 120px;
+                margin: 0 0.3rem;
+                border-left: 3px solid var(--frame-border);
+                border-right: 3px solid var(--frame-border);
+                background: linear-gradient(90deg, rgba(15, 15, 15, 0.8) 0%, rgba(10, 10, 10, 0.9) 50%, rgba(15, 15, 15, 0.8) 100%);
+                transition: all 0.3s ease;
+            }
+            
+            .mobile-nav li.active {
+                background: var(--menu-active-color);
+                border-color: var(--accent-color);
+                box-shadow: 0 0 15px rgba(255, 107, 107, 0.4);
+            }
+            
+            .mobile-nav li a {
+                color: var(--main-text-color);
+                text-decoration: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                height: 100%;
+                width: 100%;
+                padding: 0 1rem;
+                font-size: 0.85rem;
+                letter-spacing: 1px;
+                font-weight: 600;
+            }
+            
+            .mobile-nav li.active a {
+                color: var(--accent-color);
+            }
+            
+            /* Mobile sprocket holes */
+            .mobile-nav li .sprocket-top-1,
+            .mobile-nav li .sprocket-top-2,
+            .mobile-nav li .sprocket-bottom-1,
+            .mobile-nav li .sprocket-bottom-2 {
+                position: absolute;
+                width: 8px;
+                height: 6px;
+                background-color: var(--sprocket-color);
+                border: 1px solid var(--sprocket-border);
+                z-index: 2;
+                border-radius: 2px;
+            }
+            
+            .mobile-nav li .sprocket-top-1 { top: 6px; left: 25%; transform: translateX(-50%); }
+            .mobile-nav li .sprocket-top-2 { top: 6px; left: 75%; transform: translateX(-50%); }
+            .mobile-nav li .sprocket-bottom-1 { bottom: 6px; left: 25%; transform: translateX(-50%); }
+            .mobile-nav li .sprocket-bottom-2 { bottom: 6px; left: 75%; transform: translateX(-50%); }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mobile-nav li {
+                min-width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- DESKTOP SIDEBAR -->
+        <div class="sidebar">
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/GeorgeFejer91/georgefejer.com/main/Images/crop_selfie.png" alt="George Fejer" class="profile-photo">
+                <h1>GEORGE FEJER</h1>
+                <h2>Neuropsychologist, PhD Candidate</h2>
+            </div>
+            <div class="film-strip">
+                <ul class="nav-menu">
+                    <li class="active">
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#home">Home</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#about">About</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#projects">Projects</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#publications">Publications</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#expertise">Expertise</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-left-1"></span>
+                        <span class="sprocket-left-2"></span>
+                        <span class="sprocket-left-3"></span>
+                        <a href="#contact">Contact</a>
+                        <span class="sprocket-right-1"></span>
+                        <span class="sprocket-right-2"></span>
+                        <span class="sprocket-right-3"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MOBILE MENU -->
+        <div class="mobile-menu">
+            <div class="mobile-film-strip">
+                <ul class="mobile-nav">
+                    <li class="active">
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#home">Home</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#about">About</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#projects">Projects</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#publications">Publications</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#expertise">Expertise</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                    <li>
+                        <span class="sprocket-top-1"></span>
+                        <span class="sprocket-top-2"></span>
+                        <a href="#contact">Contact</a>
+                        <span class="sprocket-bottom-1"></span>
+                        <span class="sprocket-bottom-2"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="content">
+            <!-- HERO -->
+            <section id="home" class="hero">
+                <div class="hero-content">
+                    <div class="hero-name-container">
+                        <h1>GEORGE FEJER</h1>
+                        <img src="https://raw.githubusercontent.com/GeorgeFejer91/georgefejer.com/main/Images/crop_selfie.png" alt="George Fejer" class="hero-profile-photo">
+                    </div>
+                    <h2>Neuropsychologist & Consciousness Researcher</h2>
+                    <p>Exploring the neurophenomenology of embodied states of consciousness through Virtual Reality, psychedelics research, and advanced neuroimaging. Coordinator of the ALIUS Research Group and PhD candidate at the University of Konstanz.</p>
+                </div>
+            </section>
+
+            <!-- ABOUT -->
+            <section id="about" class="section">
+                <h2 class="section-title">About Me</h2>
+                <p style="max-width: 800px; font-size: 1.1rem; line-height: 1.8;">
+                    I'm a neuropsychologist and PhD candidate at the University of Konstanz, where I investigate the 
+                    neurophenomenology of embodied states of consciousness under the supervision of Prof. Bigna Lenggenhager. 
+                    My research combines cutting-edge Virtual Reality technologies with electrophysiology and neuroimaging 
+                    to understand altered states of consciousness, multisensory integration, and the effects of psychedelic substances. 
+                    As Coordinator of the ALIUS Research Group, I facilitate international collaboration in consciousness research, 
+                    organize journal clubs, and edit annual research bulletins. My work bridges rigorous experimental neuroscience 
+                    with phenomenological approaches to consciousness, exploring questions at the frontiers of human experience.
+                </p>
+            </section>
+
+            <!-- PROJECTS -->
+            <section id="projects" class="section">
+                <h2 class="section-title">Research Projects</h2>
+                <div class="cards-grid">
+                    <div class="card">
+                        <h3>Neurophenomenology of Embodiment</h3>
+                        <p>PhD research investigating embodied states of consciousness using Virtual Reality and electrophysiology. Exploring how immersive VR experiences affect self-perception, body ownership, and conscious experience through multimodal neuroimaging.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Psilocybin Microdosing Studies</h3>
+                        <p>Preregistered field and lab-based studies examining the effects of psilocybin microdosing on aesthetic experiences, emotion processing, creativity, and multisensory perception. Published in Psychopharmacology and Journal of Psychopharmacology.</p>
+                    </div>
+                    <div class="card">
+                        <h3>ALIUS Research Coordination</h3>
+                        <p>Leading international collaboration network for consciousness research. Overseeing research bulletins, organizing journal clubs, and facilitating interdisciplinary dialogue on altered states of consciousness and psychedelic science.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Multisensory Integration & VR</h3>
+                        <p>Investigating audiovisual speech perception and temporal binding windows in altered states. Using Unity-based VR paradigms combined with EEG to explore how consciousness modulates sensory integration processes.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PUBLICATIONS -->
+            <section id="publications" class="section">
+                <h2 class="section-title">Selected Publications</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <h3>No obligatory trade-off between space and time for working memory</h3>
+                        <p class="date">Communications Psychology, 2023</p>
+                        <p>de Vries, E., Fejer, G., & van Ede, F. Investigated the relationship between spatial and temporal organization in working memory, challenging traditional resource allocation models.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Effects of conscious connected breathing on cortical brain activity</h3>
+                        <p class="date">Current Psychology, 2023</p>
+                        <p>Bahi, C., Irrmischer, M., Franken, K. et al. Examined how breathwork practices influence brain activity patterns, mood states, and consciousness in healthy adults using EEG.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Psilocybin microdosing and emotion-related processing</h3>
+                        <p class="date">Journal of Psychopharmacology, 2021</p>
+                        <p>Marschall, J., Fejer, G., Lempe, P. et al. Preregistered field and lab-based study finding no significant effects of psilocybin microdosing on emotion-related symptoms and processing.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Effects of psilocybin microdosing on awe and aesthetic experiences</h3>
+                        <p class="date">Psychopharmacology, 2021</p>
+                        <p>van Elk, M., Fejer, G., Lempe, P. et al. Combined field study and controlled lab experiment investigating how microdosing affects subjective experiences of awe and aesthetic appreciation.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Microdosing psychedelics and creativity: Three double-blind placebo controlled trials</h3>
+                        <p class="date">Preprint, 2021</p>
+                        <p>Prochazkova, L., van Elk, M., Marschall, J., Rifkin, B. D., Fejer, G. et al. Comprehensive analysis of microdosing effects on creative performance across multiple methodological approaches.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- EXPERTISE -->
+            <section id="expertise" class="section">
+                <h2 class="section-title">Expertise & Experience</h2>
+                <div class="skills-list">
+                    <span class="skill-tag">Neuropsychology</span>
+                    <span class="skill-tag">Virtual Reality (Unity)</span>
+                    <span class="skill-tag">EEG / fNIRS</span>
+                    <span class="skill-tag">Eye-Tracking</span>
+                    <span class="skill-tag">Psychophysiology</span>
+                    <span class="skill-tag">Python / Jupyter</span>
+                    <span class="skill-tag">R / JASP / SPSS</span>
+                    <span class="skill-tag">3D Animation (Blender)</span>
+                    <span class="skill-tag">Hyperscanning / LSL</span>
+                    <span class="skill-tag">OpenSesame / E-Prime</span>
+                    <span class="skill-tag">Psychedelics Research</span>
+                    <span class="skill-tag">Multisensory Integration</span>
+                </div>
+                
+                <div class="timeline" style="margin-top: 3rem;">
+                    <div class="timeline-item">
+                        <h3>PhD Candidate in Cognitive Psychology</h3>
+                        <p class="date">2022 - Present | University of Konstanz</p>
+                        <p>Researching the neurophenomenology of embodied states of consciousness using VR and electrophysiology. Supervisor: Prof. Bigna Lenggenhager.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Coordinator of ALIUS Research Group</h3>
+                        <p class="date">2020 - Present | International Research Network</p>
+                        <p>Overseeing collaborations, writing and editing annual research bulletins, and organizing journal clubs on consciousness and psychedelics research.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Research & Teaching Fellow</h3>
+                        <p class="date">2021 - Present | University of Konstanz</p>
+                        <p>Conducting research with Virtual Reality and electrophysiology while teaching undergraduate courses in cognitive psychology.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>Research Assistant</h3>
+                        <p class="date">2020 - 2021 | University of Amsterdam</p>
+                        <p>Worked at the Religion Cognition & Behavior Lab under Prof. Michiel van Elk, focusing on the intersection of cognition, religion, and altered states.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3>MSc in Cognitive Neuropsychology</h3>
+                        <p class="date">2016 - 2020 | VU / University of Amsterdam</p>
+                        <p>Master's thesis on the effects of psilocybin microdosing. GPA: 8.2/10. Supervisors: Prof. Michiel van Elk and Dr. Erik van der Burg.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTACT -->
+            <section id="contact" class="section">
+                <h2 class="section-title">Contact & Collaboration</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 1rem; max-width: 600px;">
+                    <strong>Berlin, Germany</strong>
+                </p>
+                <p style="font-size: 1.1rem; margin-bottom: 2rem; max-width: 600px;">
+                    Interested in collaboration, research inquiries, or speaking engagements? I'm always open to discussing 
+                    innovative approaches in consciousness research, VR applications, and psychedelics science.
+                </p>
+                <div class="contact-links">
+                    <a href="mailto:george.fejer@uni-konstanz.de" class="contact-link">Email</a>
+                    <a href="https://scholar.google.com/citations?user=GPARoloAAAAJ&hl=en" class="contact-link">Google Scholar</a>
+                    <a href="https://orcid.org/0000-0002-4904-5504" class="contact-link">ORCID</a>
+                    <a href="https://www.linkedin.com/in/george-fejer1/" class="contact-link">LinkedIn</a>
+                    <a href="https://twitter.com/GeorgeFejer" class="contact-link">Fascist Twitter / X</a>
+                    <a href="https://www.aliusresearch.org/" class="contact-link">ALIUS</a>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+            <footer class="footer">
+                <p>&copy; 2025 George Fejer, PhD Candidate | Neuropsychology & Consciousness Research 🧠</p>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // Active menu highlighting
+        const sections = document.querySelectorAll('.section, .hero');
+        const desktopNavLinks = document.querySelectorAll('.nav-menu li');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav li');
+        
+        function updateActiveMenuItem() {
+            let current = 'home';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (window.pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            desktopNavLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.querySelector('a').getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+            
+            mobileNavLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.querySelector('a').getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                    
+                    if (window.innerWidth <= 768) {
+                        const filmStrip = document.querySelector('.mobile-film-strip');
+                        const itemLeft = link.offsetLeft;
+                        const itemWidth = link.offsetWidth;
+                        const containerWidth = filmStrip.offsetWidth;
+                        const scrollLeft = itemLeft - (containerWidth / 2) + (itemWidth / 2);
+                        
+                        filmStrip.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                    }
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', updateActiveMenuItem);
+        window.addEventListener('load', updateActiveMenuItem);
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    let scrollPos = targetElement.offsetTop;
+                    if (window.innerWidth <= 768) scrollPos -= 20;
+                    
+                    window.scrollTo({ top: scrollPos, behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
 </html>
