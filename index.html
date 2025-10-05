@@ -102,7 +102,7 @@
       width: 100%;
     }
 
-    /* Hero Section */
+    /* Hero Section - contains video + all text */
     #hero {
       position: relative;
     }
@@ -211,6 +211,11 @@
     }
 
     /* Text Sections */
+    .text-sections {
+      margin: 30px auto;
+      position: relative;
+    }
+
     .text-section {
       margin-bottom: 25px;
       padding: 20px;
@@ -292,7 +297,7 @@
       }
     }
 
-    /* Section Titles */
+    /* Other sections styling */
     h2 {
       font-size: 2.5em;
       margin-bottom: 30px;
@@ -307,6 +312,52 @@
       50% {
         text-shadow: 0 0 20px rgba(0, 99, 156, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
       }
+    }
+
+    .content-box {
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    /* Team Section */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+
+    .team-member {
+      padding: 25px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      border-left: 3px solid rgba(255, 255, 255, 0.5);
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .team-member:hover {
+      transform: translateY(-5px);
+    }
+
+    .team-member h3 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .team-member .role {
+      font-size: 0.95em;
+      margin-bottom: 15px;
+      opacity: 0.9;
+    }
+
+    .team-member p {
+      line-height: 1.6;
+      font-size: 0.95em;
     }
 
     /* Background Effects */
@@ -375,6 +426,10 @@
       section {
         padding: 60px 20px;
       }
+
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -385,15 +440,15 @@
   <!-- Floating Side Menu -->
   <div class="side-menu">
     <nav>
-      <a href="#hero" class="active" data-section="Home"></a>
-      <a href="#concept" data-section="Concept"></a>
-      <a href="#approach" data-section="Approach"></a>
-      <a href="#experience" data-section="Experience"></a>
-      <a href="#impact" data-section="Impact"></a>
+      <a href="#hero" class="active" data-section="Overview"></a>
+      <a href="#research" data-section="Research"></a>
+      <a href="#technology" data-section="Technology"></a>
+      <a href="#team" data-section="Team"></a>
+      <a href="#contact" data-section="Contact"></a>
     </nav>
   </div>
 
-  <!-- Hero Section -->
+  <!-- Hero Section - Video + All Text Content -->
   <section id="hero">
     <div class="section-content">
       <div class="video-breath-wrapper">
@@ -404,65 +459,110 @@
           <iframe src="https://www.youtube.com/embed/TBcWh4R4wck?autoplay=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&mute=1" frameborder="0" allow="autoplay; encrypted-media"></iframe>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Concept Section -->
-  <section id="concept">
-    <div class="section-content">
-      <h2>The Concept</h2>
-      <div class="text-section inhale-section">
-        <span class="inhale-term">The Viscereality Project</span> innovatively combines <span class="inhale-term">breathwork</span> and <span class="inhale-term">virtual reality</span> to induce altered states of consciousness. At its core is a bio-responsive VR application that dynamically adapts to users' breathing patterns.
+      <div class="text-sections">
+        <div class="text-section inhale-section">
+          <span class="inhale-term">The Viscereality Project</span> innovatively combines <span class="inhale-term">breathwork</span> and <span class="inhale-term">virtual reality</span> to induce altered states of consciousness. At its core is a bio-responsive VR application that dynamically adapts to users' breathing patterns.
+        </div>
+        
+        <div class="text-section exhale-section">
+          This approach aims to couple <span class="exhale-term">interoception</span> (internal bodily awareness) with <span class="exhale-term">exteroception</span> (perception of the external world) by synchronizing immersive virtual environments with breathing techniques such as circular breathing and hyperventilation.
+        </div>
+        
+        <div class="text-section inhale-section">
+          By blurring the boundaries between internal physiological states and external virtual contexts, the project seeks to facilitate a <span class="inhale-term">dissolution of the sense of self</span> - a key characteristic of altered states.
+        </div>
+        
+        <div class="text-section exhale-section">
+          This novel method explores how the interplay of bodily sensations and responsive digital environments can influence consciousness, potentially offering new insights into subjective experiences and opening avenues for <span class="exhale-term">therapeutic applications</span> in mental health.
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Approach Section -->
-  <section id="approach">
+  <!-- Research Section -->
+  <section id="research">
     <div class="section-content">
-      <h2>Our Approach</h2>
-      <div class="text-section exhale-section">
-        This approach aims to couple <span class="exhale-term">interoception</span> (internal bodily awareness) with <span class="exhale-term">exteroception</span> (perception of the external world) by synchronizing immersive virtual environments with breathing techniques such as circular breathing and hyperventilation.
+      <h2>Research Background</h2>
+      <div class="content-box">
+        <p>Our interdisciplinary research combines neuroscience, psychology, and virtual reality technology to explore the frontiers of human consciousness and therapeutic potential.</p>
       </div>
     </div>
   </section>
 
-  <!-- Experience Section -->
-  <section id="experience">
+  <!-- Technology Section -->
+  <section id="technology">
     <div class="section-content">
-      <h2>The Experience</h2>
-      <div class="text-section inhale-section">
-        By blurring the boundaries between internal physiological states and external virtual contexts, the project seeks to facilitate a <span class="inhale-term">dissolution of the sense of self</span> - a key characteristic of altered states.
+      <h2>Technology</h2>
+      <div class="content-box">
+        <p>Utilizing cutting-edge bio-sensors and responsive VR environments, we create immersive experiences that synchronize with physiological states in real-time.</p>
       </div>
     </div>
   </section>
 
-  <!-- Impact Section -->
-  <section id="impact">
+  <!-- Team Section -->
+  <section id="team">
     <div class="section-content">
-      <h2>Future Impact</h2>
-      <div class="text-section exhale-section">
-        This novel method explores how the interplay of bodily sensations and responsive digital environments can influence consciousness, potentially offering new insights into subjective experiences and opening avenues for <span class="exhale-term">therapeutic applications</span> in mental health.
+      <h2>Meet the Team</h2>
+      <div class="team-grid">
+        <div class="team-member inhale-section">
+          <h3>George Fejer</h3>
+          <p class="role"><span class="inhale-term">Corresponding Author</span></p>
+          <p>George Fejer is a PhD candidate in Cognitive Psychology at the University of Konstanz, an affiliate of the Centre for the Advanced Study of Collective Behaviour, and a research affiliate at the Max Planck Institute for Human Cognitive and Brain Sciences. He is the lead author of the project's scientific concept and grant application, awarded by the BIAL Foundation for the implementation of this project.</p>
+        </div>
+
+        <div class="team-member exhale-section">
+          <h3>Till Holzapfel</h3>
+          <p class="role"><span class="exhale-term">VR Developer</span></p>
+          <p>Till Holzapfel obtained a Master's in Cognitive Science from the University of Osnabrück, and worked as a lab manager for Intangible Realities Lab of Dr. David Glowacki. His work is dedicated to designing immersive VR for facilitating transformative experiences that deepen our scientific understanding of consciousness.</p>
+        </div>
+
+        <div class="team-member inhale-section">
+          <h3>Johannes Blum</h3>
+          <p class="role"><span class="inhale-term">VR Developer / Consultant</span></p>
+          <p>Johannes Blum is the Head of Research and Development at the Pädagogische Hochschule Schaffhausen, with a background in psychology and digital mental health. He previously worked on the development of Flowborne VR, a meditative breathwork experience enhanced by biofeedback, designed to promote deep relaxation through diaphragmatic breathing.</p>
+        </div>
+
+        <div class="team-member exhale-section">
+          <h3>Anestis Lalidis Mateo</h3>
+          <p class="role"><span class="exhale-term">Computer Scientist / VR Developer</span></p>
+          <p>Anestis Lalidis Mateo is a Master's student and Research Assistant in Computer Science at the University of Applied Sciences and Arts Bielefeld at the Institute for Building Intelligence, specializing in Human-Computer Interaction and Audiovisual Computing. His research focuses on VR/XR, biofeedback, and altered states of consciousness, with projects including VR-based experiments on hallucinatory experiences and the development of interactive interfaces for their representation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact">
+    <div class="section-content">
+      <h2>Get Involved</h2>
+      <div class="content-box">
+        <p>Interested in participating or learning more? Reach out to explore how altered states can transform therapeutic practice and self-understanding.</p>
       </div>
     </div>
   </section>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Reveal text sections on scroll
       const sections = document.querySelectorAll('.text-section');
       
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      }, { threshold: 0.3 });
-
-      sections.forEach(section => {
-        observer.observe(section);
-      });
+      // Sequential text reveal on page load
+      function showSectionsSequentially() {
+        setTimeout(() => {
+          sections[0].classList.add('visible');
+          setTimeout(() => {
+            sections[1].classList.add('visible');
+            setTimeout(() => {
+              sections[2].classList.add('visible');
+              setTimeout(() => {
+                sections[3].classList.add('visible');
+              }, 3000);
+            }, 3000);
+          }, 3000);
+        }, 500);
+      }
+      
+      showSectionsSequentially();
 
       // Update active navigation dot
       const navLinks = document.querySelectorAll('.side-menu a');
