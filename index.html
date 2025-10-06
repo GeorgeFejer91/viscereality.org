@@ -336,6 +336,53 @@
       text-align: center;
     }
 
+    /* Scientific Ingredients Section */
+    .ingredients-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .ingredient-card {
+      padding: 25px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      border-left: 3px solid rgba(255, 255, 255, 0.5);
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+      text-align: center;
+    }
+
+    .ingredient-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .ingredient-image {
+      margin-bottom: 20px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .ingredient-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .ingredient-card h4 {
+      font-size: 1.1em;
+      margin-bottom: 10px;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    .ingredient-card p {
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+
     /* Team Section */
     .team-grid {
       display: grid;
@@ -362,6 +409,34 @@
       margin: 0 auto 20px;
       width: 120px;
       height: 120px;
+      position: relative;
+    }
+
+    .team-photo::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      padding: 4px;
+      background: linear-gradient(45deg, rgba(0, 99, 156, 0.8), rgba(162, 111, 25, 0.8), rgba(0, 99, 156, 0.8));
+      background-size: 200% 200%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: rotateGradient 4s linear infinite;
+      z-index: -1;
+    }
+
+    @keyframes rotateGradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .photo-placeholder {
@@ -369,11 +444,9 @@
       height: 100%;
       border-radius: 50%;
       background: linear-gradient(135deg, rgba(0, 99, 156, 0.3), rgba(162, 111, 25, 0.3));
-      border: 3px solid rgba(255, 255, 255, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      animation: photoGlow 6s infinite;
     }
 
     .team-image {
@@ -381,16 +454,14 @@
       height: 100%;
       border-radius: 50%;
       object-fit: cover;
-      border: 3px solid rgba(255, 255, 255, 0.4);
-      animation: photoGlow 6s infinite;
     }
 
     @keyframes photoGlow {
       0%, 100% {
-        box-shadow: 0 0 15px rgba(0, 99, 156, 0.3);
+        box-shadow: 0 0 20px rgba(0, 99, 156, 0.4);
       }
       50% {
-        box-shadow: 0 0 25px rgba(162, 111, 25, 0.4);
+        box-shadow: 0 0 30px rgba(162, 111, 25, 0.5);
       }
     }
 
@@ -410,6 +481,17 @@
       line-height: 1.6;
       font-size: 0.95em;
       text-align: left;
+    }
+
+    .profile-link {
+      color: rgba(0, 99, 156, 1);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .profile-link:hover {
+      text-shadow: 0 0 10px rgba(0, 99, 156, 0.8);
+      color: rgba(0, 99, 156, 1);
     }
 
     /* Publications Section */
@@ -550,6 +632,41 @@
     .funding-card h3 {
       font-size: 1.6em;
       margin-bottom: 15px;
+    }
+
+    .logos-grid {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      align-items: center;
+      justify-items: center;
+    }
+
+    .logo-item {
+      width: 100%;
+      max-width: 250px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0, 99, 156, 0.3);
+    }
+
+    .logo-item img {
+      width: 100%;
+      height: auto;
+      max-height: 100px;
+      object-fit: contain;
+      filter: brightness(1.2);
     }
 
     .partner-list {
@@ -740,9 +857,6 @@
   <section id="explainers">
     <div class="section-content">
       <h2>Project Explainers</h2>
-      <div class="explainer-intro content-box">
-        <p>Watch these videos to understand the Viscereality Project. The first video provides a comprehensive 5-minute overview of the entire project.</p>
-      </div>
       <div class="video-grid">
         <div class="explainer-video inhale-section">
           <div class="video-wrapper">
@@ -760,12 +874,32 @@
     </div>
   </section>
 
-  <!-- Research Section -->
+  <!-- Scientific Ingredients Section -->
   <section id="research">
     <div class="section-content">
-      <h2>Research Background</h2>
-      <div class="content-box">
-        <p>Our interdisciplinary research combines neuroscience, psychology, and virtual reality technology to explore the frontiers of human consciousness and therapeutic potential.</p>
+      <h2>Scientific Ingredients</h2>
+      <div class="ingredients-grid">
+        <div class="ingredient-card inhale-section">
+          <div class="ingredient-image">
+            <img src="Scientific_Ingredients/11d-asc_2.png" alt="Altered States of Consciousness">
+          </div>
+          <h4>Breathwork induces altered states of consciousness similar to psychedelics [1, 2, 3].</h4>
+        </div>
+
+        <div class="ingredient-card exhale-section">
+          <div class="ingredient-image">
+            <img src="Scientific_Ingredients/lung-mechanics-respiratory-coupling.gif" alt="Bioresponsive VR">
+          </div>
+          <h4>Bioresponsive VR</h4>
+          <p>Respiratory coupling of lung-mechanics to the <span class="inhale-term">contraction</span> and <span class="exhale-term">expansion</span> of virtual space.</p>
+        </div>
+
+        <div class="ingredient-card inhale-section">
+          <div class="ingredient-image">
+            <img src="Scientific_Ingredients/breathink.gif" alt="Breathing affects perception">
+          </div>
+          <h4>Breathing affects the perception of quantities [4]</h4>
+        </div>
       </div>
     </div>
   </section>
@@ -799,7 +933,7 @@
           </div>
           <h3>Taru Hirvonen</h3>
           <p class="role"><span class="inhale-term">VR Developer / Researcher</span></p>
-          <p>Taru Hirvonen is a VR developer and researcher contributing to the technical development and scientific investigation of the Viscereality Project.</p>
+          <p>Taru Hirvonen (<a href="https://taru-u.github.io/apps/symmetry/" target="_blank" class="profile-link">taru-u.github.io/apps/symmetry/</a>) provided invaluable guidance on integrating spatio-temporal oscillation dynamics into particles, enabling them to move in response to lung dynamics while maintaining spatial relationships and interactions with one another.</p>
         </div>
 
         <div class="team-member exhale-section">
@@ -878,16 +1012,21 @@
   <!-- Funding & Partners Section -->
   <section id="funding">
     <div class="section-content">
-      <h2>Funding & Partners</h2>
+      <h2>Affiliations</h2>
       <div class="funding-info">
         <div class="funding-card inhale-section">
           <h3>Supported By</h3>
           <p>This project is supported by leading research institutions and funding organizations committed to advancing the understanding of consciousness and virtual reality applications.</p>
-          <div class="partner-list">
-            <div class="partner-item">BIAL Foundation</div>
-            <div class="partner-item">University of Konstanz</div>
-            <div class="partner-item">Max Planck Institute for Human Cognitive and Brain Sciences</div>
-            <div class="partner-item">Centre for the Advanced Study of Collective Behaviour</div>
+          <div class="logos-grid">
+            <div class="logo-item">
+              <img src="Affiiations_logo/bial.png" alt="BIAL Foundation">
+            </div>
+            <div class="logo-item">
+              <img src="Affiiations_logo/unikonstanz.png" alt="University of Konstanz">
+            </div>
+            <div class="logo-item">
+              <img src="Affiiations_logo/mpi.png" alt="Max Planck Institute">
+            </div>
           </div>
         </div>
       </div>
