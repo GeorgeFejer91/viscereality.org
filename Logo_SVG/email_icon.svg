@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <!-- Envelope body -->
+  <rect x="10" y="25" width="80" height="50" fill="#404040" stroke="white" stroke-width="2" rx="3"/>
+  
+  <!-- Envelope flap -->
+  <path d="M 10 25 L 50 55 L 90 25" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+</svg>
