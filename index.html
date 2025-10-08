@@ -492,6 +492,42 @@
       min-width: 250px;
     }
 
+    .qri-highlight {
+      animation: rgbSpectrum 15s linear infinite;
+      font-weight: bold;
+    }
+
+    @keyframes rgbSpectrum {
+      0% {
+        color: rgb(255, 0, 0);
+        text-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+      }
+      16.66% {
+        color: rgb(255, 255, 0);
+        text-shadow: 0 0 15px rgba(255, 255, 0, 0.6);
+      }
+      33.33% {
+        color: rgb(0, 255, 0);
+        text-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+      }
+      50% {
+        color: rgb(0, 255, 255);
+        text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+      }
+      66.66% {
+        color: rgb(0, 0, 255);
+        text-shadow: 0 0 15px rgba(0, 0, 255, 0.6);
+      }
+      83.33% {
+        color: rgb(255, 0, 255);
+        text-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
+      }
+      100% {
+        color: rgb(255, 0, 0);
+        text-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+      }
+    }
+
     .collaboration-body {
       margin-bottom: 30px;
     }
@@ -536,6 +572,26 @@
     .gallery-item .caption {
       font-size: 0.9em;
       color: rgba(255, 255, 255, 0.8);
+    }
+
+    .gallery-link {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: rgba(0, 99, 156, 0.2);
+      border: 1px solid rgba(0, 99, 156, 0.5);
+      border-radius: 5px;
+      color: rgba(0, 99, 156, 1);
+      text-decoration: none;
+      font-size: 0.85em;
+      transition: all 0.3s ease;
+    }
+
+    .gallery-link:hover {
+      background: rgba(0, 99, 156, 0.3);
+      border-color: rgba(0, 99, 156, 0.8);
+      box-shadow: 0 0 15px rgba(0, 99, 156, 0.5);
+      transform: translateY(-2px);
     }
 
     /* Team Section */
@@ -729,6 +785,26 @@
     .profile-link:hover {
       text-shadow: 0 0 10px rgba(0, 99, 156, 0.8);
       color: rgba(0, 99, 156, 1);
+    }
+
+    .demo-link {
+      display: inline-block;
+      padding: 6px 14px;
+      margin: 0 4px;
+      background: rgba(0, 99, 156, 0.15);
+      border: 2px solid rgba(0, 99, 156, 0.6);
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      animation: rgbSpectrum 15s linear infinite;
+    }
+
+    .demo-link:hover {
+      background: rgba(0, 99, 156, 0.25);
+      border-color: rgba(0, 99, 156, 1);
+      box-shadow: 0 0 15px rgba(0, 99, 156, 0.6);
+      transform: translateY(-2px);
     }
 
     /* Publications Section */
@@ -1125,9 +1201,9 @@
       <a href="#hero" class="active">Overview</a>
       <a href="#explainers">Explainers</a>
       <a href="#research">Research</a>
-      <a href="#collaborations">Collaborations</a>
       <a href="#team">Team</a>
       <a href="#publications">Publications</a>
+      <a href="#collaborations">Collaborations</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
       <a href="#contact">Contact</a>
@@ -1226,47 +1302,6 @@
               <span class="citation-icon">📄</span> [4]
             </a>
           </h4>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="collaborations">
-    <div class="section-content">
-      <h2>Collaborations</h2>
-      <div class="collaboration-grid">
-        <div class="collaboration-card inhale-section">
-          <div class="collaboration-header">
-            <div class="collaboration-logo">
-              <img src="Images/QRI_HEART/QRI_heart_logo.png" alt="QRI HEART Logo">
-            </div>
-            <h3>Qualia Research Institute – HEART Workshop</h3>
-          </div>
-
-          <div class="collaboration-body">
-            <p>
-              The <strong>QRI HEART Workshop</strong>, held in Tepoztlán in 2024, provided valuable developer feedback
-              and inspiration, offering a creative space that helped shape the aesthetic and technical direction of
-              the Viscereality Project. The collaboration focused on bridging <span class="inhale-term">computational neuroscience</span> and
-              <span class="exhale-term">experiential design</span>.
-            </p>
-            <p>
-              <strong>Andrés Gómez Emilsson</strong> contributed the <em>coupling kernel paradigm</em> that underpins the oscillatory
-              dynamics at the core of the system — a central theoretical and computational model guiding the bioresponsive
-              synchronization of virtual and physiological rhythms.
-            </p>
-          </div>
-
-          <div class="collaboration-gallery">
-            <div class="gallery-item">
-              <img src="Images/QRI_HEART/AndresGomez.png" alt="Andrés Gómez Emilsson">
-              <p class="caption">Andrés Gómez Emilsson</p>
-            </div>
-            <div class="gallery-item">
-              <img src="Images/QRI_HEART/SymmetricVision.png" alt="Symmetric Vision">
-              <p class="caption">Symmetric Vision (Visual Identity)</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1385,6 +1420,62 @@
             </a>
             <a href="https://doi.org/10.18420/muc2025-mci-ws11-174" target="_blank" class="inhale-term">DOI: 10.18420/muc2025-mci-ws11-174</a>
           </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="collaborations">
+    <div class="section-content">
+      <h2>Collaborations</h2>
+      <div class="collaboration-grid">
+        <div class="collaboration-card inhale-section">
+          <div class="collaboration-header">
+            <div class="collaboration-logo">
+              <img src="QRI_HEART/QRI_heart_logo.png" alt="QRI HEART Logo">
+            </div>
+            <h3>Qualia Research Institute – <span class="qri-highlight">HEART Workshop</span></h3>
+          </div>
+
+          <div class="collaboration-body">
+            <p>
+              The <span class="qri-highlight">QRI HEART Workshop</span>, held in Tepoztlán in 2024, provided valuable developer feedback
+              and inspiration, offering a creative space that helped shape the aesthetic and technical direction of
+              the Viscereality Project. The collaboration focused on bridging <span class="inhale-term">computational neuroscience</span> and
+              <span class="exhale-term">experiential design</span>.
+            </p>
+            <p>
+              <strong>Andrés Gómez Emilsson</strong> contributed the <em>coupling kernel paradigm</em> that underpins the oscillatory
+              dynamics at the core of the system, a central theoretical and computational model guiding the bioresponsive
+              synchronization of virtual and physiological rhythms. His work on 
+              <a href="https://qri.org/blog/cessation-simulations" target="_blank" class="profile-link">cessation simulations</a> 
+              and coupled oscillator dynamics informed key aspects of the system's design.
+            </p>
+            <p>
+              <strong><a href="https://www.symmetric-vision.xyz/" target="_blank" class="profile-link">Symmetric Vision</a></strong> provided invaluable advice contributing to the particle textures. 
+              With years of experience creating textures, his feedback greatly improved the aesthetics of our setup, 
+              helping refine the visual quality and immersive character of the particle-based environments.
+            </p>
+            <p>
+              The Viscereality VR paradigm represents a <strong>novel innovation</strong>: the <strong>first ever 3D implementation</strong> of QRI's coupling kernel framework, 
+              extending their <a href="https://qri.org/demo/coupled_kernels" target="_blank" class="demo-link">2D coupling kernel simulation grid</a> 
+              into immersive three-dimensional space. This approach allows users to experience oscillatory synchronization dynamics 
+              not just visually, but as a fully embodied spatial phenomenon coupled with their own physiological breathing rhythms.
+            </p>
+          </div>
+
+          <div class="collaboration-gallery">
+            <div class="gallery-item">
+              <img src="QRI_HEART/AndresGomez.png" alt="Andrés Gómez Emilsson">
+              <p class="caption">Andrés Gómez Emilsson</p>
+              <a href="https://qri.org/people/andr%C3%A9s-g%C3%B3mez-emilsson" target="_blank" class="gallery-link">qri.org</a>
+            </div>
+            <div class="gallery-item">
+              <img src="QRI_HEART/SymmetricVision.png" alt="Symmetric Vision">
+              <p class="caption">Symmetric Vision (Visual Identity)</p>
+              <a href="https://www.symmetric-vision.xyz/" target="_blank" class="gallery-link">symmetric-vision.xyz</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
