@@ -417,6 +417,40 @@
       line-height: 1.6;
     }
 
+    /* Citation Badge */
+    .citation-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      margin-left: 10px;
+      background: linear-gradient(135deg, rgba(0, 99, 156, 0.8), rgba(162, 111, 25, 0.8));
+      border-radius: 20px;
+      font-size: 0.75em;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px rgba(0, 99, 156, 0.5);
+      animation: badgePulse 3s infinite;
+      vertical-align: middle;
+    }
+
+    .citation-badge:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 99, 156, 0.8), 0 0 30px rgba(162, 111, 25, 0.6);
+    }
+
+    .citation-icon {
+      margin-right: 4px;
+    }
+
+    @keyframes badgePulse {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(0, 99, 156, 0.5);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(0, 99, 156, 0.8), 0 0 25px rgba(162, 111, 25, 0.6);
+      }
+    }
+
     /* Team Section */
     .team-grid {
       display: grid;
@@ -576,8 +610,13 @@
       filter: brightness(0) invert(1);
     }
 
+    .social-link.mesmerprism:hover {
+      border-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+    }
+
     .social-link.mesmerprism:hover img {
-      filter: brightness(1) invert(1);
+      filter: brightness(1.2) invert(1);
     }
 
     .social-link.email:hover {
@@ -592,6 +631,11 @@
     .social-link.github:hover {
       border-color: rgba(138, 43, 226, 0.8);
       box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+    }
+
+    .social-link.website:hover {
+      border-color: rgba(100, 200, 255, 0.8);
+      box-shadow: 0 0 15px rgba(100, 200, 255, 0.5);
     }
 
     .profile-link {
@@ -897,7 +941,6 @@
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      /* Top banner scales on mobile */
       .top-banner {
         padding: 10px;
       }
@@ -906,12 +949,10 @@
         max-width: 100%;
       }
 
-      /* Hide logo on mobile */
       .menu-logo {
         display: none;
       }
 
-      /* Move side menu to bottom on mobile - no animation */
       .side-menu {
         position: fixed;
         left: 50%;
@@ -963,7 +1004,6 @@
         transform: scale(1.2);
       }
 
-      /* Add padding to bottom for fixed menu */
       body {
         padding-top: 0;
         padding-bottom: 80px;
@@ -981,19 +1021,7 @@
         padding: 60px 15px;
       }
 
-      .team-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .advisory-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .video-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .ingredients-grid {
+      .team-grid, .advisory-grid, .video-grid, .ingredients-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1026,7 +1054,6 @@
       }
     }
 
-    /* Extra small devices */
     @media (max-width: 480px) {
       h2 {
         font-size: 1.5em;
@@ -1065,12 +1092,10 @@
   <div class="breath-indicator"></div>
   <div class="ambient-glow"></div>
 
-  <!-- Top Banner Image -->
   <div class="top-banner">
     <img src="Images/main.png" alt="Viscereality Project">
   </div>
 
-  <!-- Floating Side Menu -->
   <div class="side-menu">
     <div class="menu-logo">
       <img src="Images/logo.png" alt="Viscereality Logo">
@@ -1087,7 +1112,6 @@
     </nav>
   </div>
 
-  <!-- Hero Section - Video + All Text Content -->
   <section id="hero">
     <div class="section-content">
       <div class="video-breath-wrapper">
@@ -1122,7 +1146,6 @@
     </div>
   </section>
 
-  <!-- Explainer Videos Section -->
   <section id="explainers">
     <div class="section-content">
       <h2>Project Explainers</h2>
@@ -1143,7 +1166,6 @@
     </div>
   </section>
 
-  <!-- Scientific Ingredients Section -->
   <section id="research">
     <div class="section-content">
       <h2>Scientific Ingredients</h2>
@@ -1152,7 +1174,17 @@
           <div class="ingredient-image">
             <img src="Scientific_Ingredients/11d-asc_2.png" alt="Altered States of Consciousness">
           </div>
-          <h4>Breathwork induces altered states of consciousness similar to psychedelics [1, 2, 3].</h4>
+          <h4>Breathwork induces altered states of consciousness similar to psychedelics
+            <a href="https://link.springer.com/article/10.1007/s12144-023-05119-6" target="_blank" class="citation-badge">
+              <span class="citation-icon">📄</span> [1]
+            </a>
+            <a href="https://academic.oup.com/cercor/article/34/8/bhae347/7742322" target="_blank" class="citation-badge">
+              <span class="citation-icon">📄</span> [2]
+            </a>
+            <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11994804/" target="_blank" class="citation-badge">
+              <span class="citation-icon">📄</span> [3]
+            </a>
+          </h4>
         </div>
 
         <div class="ingredient-card exhale-section">
@@ -1167,13 +1199,16 @@
           <div class="ingredient-image">
             <img src="Scientific_Ingredients/breathink.gif" alt="Breathing affects perception">
           </div>
-          <h4>Breathing affects the perception of quantities [4]</h4>
+          <h4>Breathing affects the perception of quantities 
+            <a href="https://link.springer.com/article/10.1007/s00221-021-06147-z" target="_blank" class="citation-badge">
+              <span class="citation-icon">📄</span> [4]
+            </a>
+          </h4>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Team Section -->
   <section id="team">
     <div class="section-content">
       <h2>Meet the Team</h2>
@@ -1273,7 +1308,6 @@
     </div>
   </section>
 
-  <!-- Publications Section -->
   <section id="publications">
     <div class="section-content">
       <h2>Publications</h2>
@@ -1283,6 +1317,9 @@
           <p class="publication-authors">Fejer, George; Holzapfel, Till; Gómez-Emilsson, Andrés; Hirvonen, Taru; Jermaks, Raimonds; Blum, Johannes; Lobser, David; Lalidis Mateo, Anestis; Glowacki, David; Gaebler, Michael; Lenggenhager, Bigna (2025)</p>
           <p class="publication-venue">Mensch und Computer 2025 - Workshopband. Gesellschaft für Informatik e.V.. MCI-WS11: 18th Workshop "Be-greifbare Interaktion". Chemnitz. 31. August - 03. September 2025</p>
           <p class="publication-link">
+            <a href="https://dl.gi.de/items/592b296f-d598-4cdf-a34a-ea50981b63c0" target="_blank" class="citation-badge" style="margin-left: 0;">
+              <span class="citation-icon">📄</span> [5]
+            </a>
             <a href="https://doi.org/10.18420/muc2025-mci-ws11-174" target="_blank" class="inhale-term">DOI: 10.18420/muc2025-mci-ws11-174</a>
           </p>
         </div>
@@ -1290,7 +1327,6 @@
     </div>
   </section>
 
-  <!-- Scientific Advisory Section -->
   <section id="advisory">
     <div class="section-content">
       <h2>Scientific Advisory</h2>
@@ -1326,6 +1362,7 @@
           <p class="role"><span class="exhale-term">Cognitive and Brain Scientist</span></p>
           <p>Michael Gaebler is a cognitive neuroscientist at the Max Planck Institute for Human Cognitive and Brain Sciences in Leipzig (Department of Neurology) and leads the Mind-Body-Emotion Group, which is based both in Leipzig and at the Max Planck Dahlem Campus of Cognition in Berlin. His research explores the relationship between mental processes—such as thoughts and emotions—and brain-body interactions, with a particular focus on brain-heart dynamics in both health and pathology. The group employs psychophysiological and neuroimaging techniques, conducting studies in classical laboratory settings as well as in real-world and naturalistic environments, including immersive virtual reality.</p>
           <div class="social-links">
+            <a href="https://www.cbs.mpg.de/en/person/51292/15468" target="_blank" class="social-link website" title="Personal Website" style="font-size: 20px; font-weight: bold; color: rgba(255, 255, 255, 0.8);">🌐</a>
             <a href="https://scholar.google.com/citations?user=cml7waMAAAAJ&hl=de&oi=ao" target="_blank" class="social-link scholar" title="Google Scholar">
               <img src="Logo_SVG/googlescholar.svg" alt="Scholar">
             </a>
@@ -1384,7 +1421,6 @@
     </div>
   </section>
 
-  <!-- Funding & Partners Section -->
   <section id="funding">
     <div class="section-content">
       <h2>Affiliations</h2>
@@ -1393,22 +1429,21 @@
           <h3>Supported By</h3>
           <p>This project is supported by leading research institutions and funding organizations committed to advancing the understanding of consciousness and virtual reality applications.</p>
           <div class="logos-grid">
-            <div class="logo-item">
+            <a href="https://www.bial.com/en" target="_blank" class="logo-item">
               <img src="Affiiations_logo/bial.png" alt="BIAL Foundation">
-            </div>
-            <div class="logo-item">
+            </a>
+            <a href="https://www.psychologie.uni-konstanz.de/tt8ftuxr56xq3ybzwr/ag-kognitive-psychologie/personen/sura-genc/standard-titel/" target="_blank" class="logo-item">
               <img src="Affiiations_logo/unikonstanz.png" alt="University of Konstanz">
-            </div>
-            <div class="logo-item">
+            </a>
+            <a href="https://www.cbs.mpg.de/en" target="_blank" class="logo-item">
               <img src="Affiiations_logo/mpi.png" alt="Max Planck Institute">
-            </div>
+            </a>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Contact Section -->
   <section id="contact">
     <div class="section-content">
       <h2>Contact</h2>
@@ -1426,7 +1461,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       const textSections = document.querySelectorAll('.text-section');
       
-      // Sequential text reveal on page load for hero section
       function showSectionsSequentially() {
         setTimeout(() => {
           textSections[0].classList.add('visible');
@@ -1444,7 +1478,6 @@
       
       showSectionsSequentially();
 
-      // Reveal other sections on scroll
       const observerSections = document.querySelectorAll('.team-member, .publication-item, .advisory-member, .contact-card, .explainer-video, .funding-card');
       
       const observer = new IntersectionObserver((entries) => {
@@ -1463,7 +1496,6 @@
         observer.observe(section);
       });
 
-      // Smooth scroll for navigation links
       const navLinks = document.querySelectorAll('.side-menu a');
       
       navLinks.forEach(link => {
@@ -1481,7 +1513,6 @@
         });
       });
 
-      // Update active navigation link
       const pageSections = document.querySelectorAll('section');
 
       window.addEventListener('scroll', () => {
