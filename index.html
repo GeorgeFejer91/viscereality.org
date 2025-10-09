@@ -1174,8 +1174,7 @@
       .side-menu {
         position: fixed;
         left: 50%;
-        transform: translateX(-50%);
-        right: auto;
+               right: auto;
         bottom: 15px;
         top: auto;
         padding: 12px 20px;
@@ -1184,6 +1183,13 @@
         max-width: 90%;
         z-index: 1001;
         background: rgba(0, 0, 0, 0.9);
+
+         /* 👇 Add these lines */
+         transform: translate(-50%, 0) !important;
+          animation: none !important;
+
+
+
       }
 
       .side-menu nav {
