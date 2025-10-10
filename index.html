@@ -1157,14 +1157,30 @@
       }
     }
 
-    /* Mobile Responsive - FAILSAFE OVERRIDES */
+    /* Mobile Responsive - COMPLETE STATIC VERSION */
     @media (max-width: 768px) {
-      /* CRITICAL: Disable ALL animations with multiple failsafes */
-      .side-menu, .side-menu *, .side-menu a, .side-menu a.active, .side-menu nav {
+      /* NUCLEAR OPTION: Disable ALL animations and transitions */
+      .side-menu, 
+      .side-menu *, 
+      .side-menu a, 
+      .side-menu a.active, 
+      .side-menu a::before,
+      .side-menu nav {
         animation: none !important;
         animation-name: none !important;
         animation-duration: 0s !important;
         animation-iteration-count: 0 !important;
+        transition: none !important;
+        will-change: auto !important;
+      }
+      
+      /* Only child elements get transform: none (except active dot scale) */
+      .side-menu nav {
+        transform: none !important;
+      }
+      
+      .side-menu a::before {
+        transform: none !important;
       }
 
       .top-banner {
@@ -1180,58 +1196,82 @@
       }
 
       .side-menu {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%) !important; /* Force static transform */
-        right: auto;
-        bottom: 15px;
-        top: auto;
-        padding: 12px 20px;
-        border-radius: 30px;
-        max-width: 90%;
-        z-index: 1001;
-        background: rgba(0, 0, 0, 0.9);
-        will-change: auto !important; /* Prevent GPU layer optimization */
+        /* LOCK POSITION - Centered at bottom */
+        position: fixed !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important; /* Only horizontal centering, nothing else */
+        right: auto !important;
+        bottom: 15px !important;
+        top: auto !important;
+        
+        /* LOCK SIZE - No scaling allowed */
+        padding: 12px 20px !important;
+        border-radius: 30px !important;
+        max-width: 90% !important;
+        width: auto !important;
+        height: auto !important;
+        
+        /* LOCK APPEARANCE - No visual changes */
+        background: rgba(0, 0, 0, 0.9) !important;
+        box-shadow: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        
+        /* PREVENT ANY MOVEMENT OR SCALING */
+        animation: none !important;
+        animation-name: none !important;
+        animation-duration: 0s !important;
+        scale: 1 !important;
+        will-change: auto !important;
+        backface-visibility: hidden !important;
+        perspective: none !important;
+        
+        z-index: 1001 !important;
       }
 
-      /* Override the keyframe animation itself on mobile */
+      /* Completely nullify breathePulse animation on mobile */
       @keyframes breathePulse {
-        0%, 50%, 100% {
+        0%, 25%, 50%, 75%, 100% {
           transform: none !important;
           box-shadow: none !important;
+          opacity: 1 !important;
+          scale: 1 !important;
         }
       }
 
       .side-menu nav {
-        flex-direction: row;
-        justify-content: center;
-        gap: 15px;
+        flex-direction: row !important;
+        justify-content: center !important;
+        gap: 15px !important;
+        transform: none !important;
       }
 
       .side-menu a {
-        font-size: 0;
-        padding: 0;
-        min-width: 12px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.4);
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
+        font-size: 0 !important;
+        padding: 0 !important;
+        min-width: 12px !important;
+        width: 12px !important;
+        height: 12px !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        border: 2px solid rgba(255, 255, 255, 0.6) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: none !important;
+        transform: none !important;
+        box-shadow: none !important;
       }
 
       .side-menu a::before {
-        display: none;
+        display: none !important;
       }
 
       .side-menu a.active {
-        background: rgba(0, 99, 156, 0.9);
-        border-color: rgba(0, 99, 156, 1);
-        box-shadow: 0 0 15px rgba(0, 99, 156, 0.8);
-        transform: scale(1.4);
+        background: rgba(0, 99, 156, 0.9) !important;
+        border-color: rgba(0, 99, 156, 1) !important;
+        box-shadow: 0 0 15px rgba(0, 99, 156, 0.8) !important;
+        transform: scale(1.4) !important;
+        transition: none !important;
       }
 
       body {
@@ -1428,7 +1468,7 @@
             <img src="People/TillHolzapfel.png" alt="Till Holzapfel" class="team-image">
           </div>
           <h3>Till Holzapfel</h3>
-          <p class="role"><span class="exhale-term">VR Developer</span></p>
+          <p class="role"><span class="exhale-term">Lead VR Developer</span></p>
           <p>Till Holzapfel obtained a Master's in Cognitive Science from the University of Osnabrück, and worked as a lab manager for Intangible Realities Lab. His work is dedicated to designing immersive VR for facilitating transformative experiences.</p>
           <div class="social-links">
             <a href="https://orcid.org/0009-0002-7477-0844" target="_blank" class="social-link orcid" title="ORCID">
@@ -1454,7 +1494,7 @@
             <img src="People/TaruHirvonen.png" alt="Taru Hirvonen" class="team-image">
           </div>
           <h3>Taru Hirvonen</h3>
-          <p class="role"><span class="inhale-term">VR Developer / Researcher</span></p>
+          <p class="role"><span class="inhale-term">VR Developer / Computer Scientist</span></p>
           <p>Taru Hirvonen provided invaluable guidance on integrating spatio-temporal oscillation dynamics into particles, enabling them to move in response to lung dynamics.</p>
           <div class="social-links">
             <a href="https://taru-u.github.io/apps/symmetry/" target="_blank" class="social-link github" title="GitHub Portfolio">
@@ -1474,7 +1514,7 @@
             <img src="People/AnestisLalidisMateo.png" alt="Anestis Lalidis Mateo" class="team-image">
           </div>
           <h3>Anestis Lalidis Mateo</h3>
-          <p class="role"><span class="exhale-term">Computer Scientist / VR Developer</span></p>
+          <p class="role"><span class="exhale-term">VR Developer / Computer Scientist</span></p>
           <p>Anestis Lalidis Mateo is a Master's student and Research Assistant in Computer Science, specializing in Human-Computer Interaction and Audiovisual Computing with focus on VR/XR and biofeedback.</p>
           <div class="social-links">
             <a href="https://orcid.org/0009-0002-9545-9043" target="_blank" class="social-link orcid" title="ORCID">
@@ -1732,6 +1772,22 @@
   </section>
 
   <script>
+    // CRITICAL: Force static menu ONLY on actual mobile devices
+    (function() {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobileDevice) {
+        const menu = document.querySelector('.side-menu');
+        if (menu) {
+          // Force remove animations but keep centering transform
+          menu.style.animation = 'none';
+          menu.style.transform = 'translateX(-50%)';
+          menu.style.willChange = 'auto';
+          menu.style.transition = 'none';
+        }
+      }
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
       const textSections = document.querySelectorAll('.text-section');
       
