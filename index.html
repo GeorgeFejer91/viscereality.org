@@ -42,76 +42,20 @@
       display: block;
     }
 
-    /* Floating Side Menu - DESKTOP ONLY */
-    .side-menu-desktop {
+    /* Floating Side Menu - MOBILE FIRST (NO ANIMATION BY DEFAULT) */
+    .side-menu {
       position: fixed;
       left: 30px;
       top: 50%;
       transform: translateY(-50%);
       z-index: 1000;
-      animation: breathePulse 4s infinite ease-in-out;
+      /* NO animation declared here by default */
       background: rgba(0, 0, 0, 0.8);
       padding: 15px 12px;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
       max-height: 90vh;
-      display: block;
-    }
-
-    /* Mobile Menu - MOBILE ONLY */
-    .side-menu-mobile {
-      display: none;
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      z-index: 9999;
-      background: rgba(0, 0, 0, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 10px 15px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-    }
-
-    .side-menu-mobile nav {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .side-menu-mobile a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      color: rgba(255, 255, 255, 0.7);
-      padding: 8px 4px;
-      min-width: 60px;
-      max-width: 70px;
-      text-align: center;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      font-size: 9px;
-      line-height: 1.2;
-      transition: background 0.2s ease;
-      white-space: normal;
-      word-wrap: break-word;
-    }
-
-    .side-menu-mobile a.active {
-      background: rgba(0, 99, 156, 0.3);
-      border: 1px solid rgba(0, 99, 156, 0.6);
-      color: rgba(255, 255, 255, 1);
-    }
-
-    .side-menu-mobile a:hover {
-      background: rgba(255, 255, 255, 0.1);
     }
 
     .menu-logo {
@@ -128,24 +72,31 @@
       filter: brightness(1.1);
     }
 
-    @keyframes breathePulse {
-      0%, 100% {
-        transform: translateY(-50%) scale(1);
-        box-shadow: 0 0 20px rgba(0, 99, 156, 0.3);
+    /* DESKTOP ONLY - Enable animation when screen is large enough */
+    @media (min-width: 769px) {
+      .side-menu {
+        animation: breathePulse 4s infinite ease-in-out;
       }
-      50% {
-        transform: translateY(-50%) scale(1.02);
-        box-shadow: 0 0 30px rgba(162, 111, 25, 0.4);
+      
+      @keyframes breathePulse {
+        0%, 100% {
+          transform: translateY(-50%) scale(1);
+          box-shadow: 0 0 20px rgba(0, 99, 156, 0.3);
+        }
+        50% {
+          transform: translateY(-50%) scale(1.02);
+          box-shadow: 0 0 30px rgba(162, 111, 25, 0.4);
+        }
       }
     }
 
-    .side-menu-desktop nav {
+    .side-menu nav {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
-    .side-menu-desktop a {
+    .side-menu a {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -1206,15 +1157,14 @@
       }
     }
 
-    /* Mobile Responsive */
+    /* Mobile Responsive - FAILSAFE OVERRIDES */
     @media (max-width: 768px) {
-      /* Hide desktop menu, show mobile menu */
-      .side-menu-desktop {
-        display: none;
-      }
-
-      .side-menu-mobile {
-        display: block;
+      /* CRITICAL: Disable ALL animations with multiple failsafes */
+      .side-menu, .side-menu *, .side-menu a, .side-menu a.active, .side-menu nav {
+        animation: none !important;
+        animation-name: none !important;
+        animation-duration: 0s !important;
+        animation-iteration-count: 0 !important;
       }
 
       .top-banner {
@@ -1232,16 +1182,24 @@
       .side-menu {
         position: fixed;
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(-50%) !important; /* Force static transform */
         right: auto;
         bottom: 15px;
         top: auto;
         padding: 12px 20px;
-        animation: none;
         border-radius: 30px;
         max-width: 90%;
         z-index: 1001;
         background: rgba(0, 0, 0, 0.9);
+        will-change: auto !important; /* Prevent GPU layer optimization */
+      }
+
+      /* Override the keyframe animation itself on mobile */
+      @keyframes breathePulse {
+        0%, 50%, 100% {
+          transform: none !important;
+          box-shadow: none !important;
+        }
       }
 
       .side-menu nav {
@@ -1323,7 +1281,7 @@
     <img src="Images/main.png" alt="Viscereality Project">
   </div>
 
-  <div class="side-menu-desktop">
+  <div class="side-menu">
     <div class="menu-logo">
       <img src="Images/logo.png" alt="Viscereality Logo">
     </div>
@@ -1335,21 +1293,6 @@
       <a href="#publications">Publications</a>
       <a href="#collaborations">Collaborations</a>
       <a href="#cardiac-coherence">Cardiac<br>Coherence</a>
-      <a href="#advisory">Advisory</a>
-      <a href="#funding">Affiliations</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </div>
-
-  <div class="side-menu-mobile">
-    <nav>
-      <a href="#hero" class="active">Overview</a>
-      <a href="#explainers">Explainers</a>
-      <a href="#research">Research</a>
-      <a href="#team">Team</a>
-      <a href="#publications">Publications</a>
-      <a href="#collaborations">Collaborations</a>
-      <a href="#cardiac-coherence">Cardiac Coherence</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
       <a href="#contact">Contact</a>
@@ -1827,7 +1770,7 @@
         observer.observe(section);
       });
 
-      const navLinks = document.querySelectorAll('.side-menu-desktop a, .side-menu-mobile a');
+      const navLinks = document.querySelectorAll('.side-menu a');
       
       navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
