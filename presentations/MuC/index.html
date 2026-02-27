@@ -131,6 +131,28 @@
     font-size: 0.9rem;
     text-align: center;
   }
+
+  #fullscreen-btn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 160;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(8, 8, 8, 0.72);
+    color: var(--text);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  #fullscreen-btn:hover {
+    border-color: rgba(255,255,255,0.45);
+    background: rgba(18, 18, 18, 0.82);
+  }
 </style>
 </head>
 <body>
@@ -158,6 +180,8 @@
     <tr><td class="key">?</td><td>Toggle this help</td></tr>
   </table>
 </div>
+
+<button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
 
 <script>
 (function () {
@@ -189,11 +213,14 @@
   const progressTrack = document.getElementById("progress-track");
   const loadingEl = document.getElementById("loading");
   const helpEl = document.getElementById("help");
+  const fullscreenBtn = document.getElementById("fullscreen-btn");
 
   let activeVid = vidA;
   let standbyVid = vidB;
   let hudTimer;
   let cursorTimer;
+  let autoFullscreenAttempted = false;
+  let suppressNextAdvanceClick = false;
 
   // -----------------------------------------------------------------------
   // LOAD MANIFEST
@@ -410,6 +437,33 @@
   }
   document.addEventListener("mousemove", showCursor);
 
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      return;
+    }
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+
+  // Browsers block true auto-fullscreen on load. This enters fullscreen
+  // on the first non-button pointer interaction instead.
+  document.addEventListener("pointerdown", (e) => {
+    if (autoFullscreenAttempted) return;
+    if (fullscreenBtn.contains(e.target)) return;
+    autoFullscreenAttempted = true;
+    suppressNextAdvanceClick = true;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, true);
+
+  fullscreenBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    autoFullscreenAttempted = true;
+    toggleFullscreen();
+  });
+
   // -----------------------------------------------------------------------
   // KEYBOARD
   // -----------------------------------------------------------------------
@@ -439,9 +493,7 @@
         }
         break;
       case "f":
-        document.fullscreenElement
-          ? document.exitFullscreen()
-          : document.documentElement.requestFullscreen();
+        toggleFullscreen();
         break;
       case "?":
         helpEl.classList.toggle("show");
@@ -456,6 +508,10 @@
   document.addEventListener("click", (e) => {
     if (helpEl.classList.contains("show")) {
       helpEl.classList.remove("show");
+      return;
+    }
+    if (suppressNextAdvanceClick) {
+      suppressNextAdvanceClick = false;
       return;
     }
     goNext();
