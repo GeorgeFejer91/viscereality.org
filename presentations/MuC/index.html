@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation Player</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --hud-bg: rgba(12, 12, 12, 0.75);
+    --accent: #6ba3f7;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --bar-h: 3px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    cursor: none;
+  }
+  body.show-cursor { cursor: default; }
+
+  /* --- Video layers ---------------------------------------------------- */
+  /* Two stacked video elements for gapless playback (double-buffer) */
+  .video-layer {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: var(--bg);
+  }
+  #vid-a { z-index: 1; }
+  #vid-b { z-index: 2; opacity: 0; pointer-events: none; }
+  #vid-b.active { opacity: 1; }
+
+  /* --- HUD -------------------------------------------------------------- */
+  #hud {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hud-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.35s;
+    pointer-events: none;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  #hud.show { opacity: 1; }
+  #hud .label { color: var(--text); }
+  #hud .dim { color: var(--text-dim); margin-left: 10px; font-size: 0.85rem; }
+
+  /* --- Progress bar ---------------------------------------------------- */
+  #progress-track {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--bar-h);
+    background: rgba(255,255,255,0.08);
+    z-index: 100;
+  }
+  #progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  .tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: rgba(255,255,255,0.25);
+  }
+
+  /* --- Loading state --------------------------------------------------- */
+  #loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    background: var(--bg);
+    font-size: 1.1rem;
+    color: var(--text-dim);
+  }
+  #loading.hidden { display: none; }
+
+  /* --- Help overlay ---------------------------------------------------- */
+  #help {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #help.show { opacity: 1; pointer-events: auto; }
+  #help table {
+    border-collapse: collapse;
+    font-size: 1rem;
+  }
+  #help td {
+    padding: 6px 18px;
+  }
+  #help .key {
+    font-family: "SF Mono", "Fira Code", monospace;
+    background: rgba(255,255,255,0.1);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<video id="vid-a" class="video-layer" muted playsinline></video>
+<video id="vid-b" class="video-layer" muted playsinline></video>
+
+<div id="hud">
+  <span class="label" id="hud-label"></span>
+  <span class="dim" id="hud-pos"></span>
+</div>
+
+<div id="progress-track">
+  <div id="progress-fill"></div>
+</div>
+
+<div id="loading">Loading presentation...</div>
+
+<div id="help">
+  <table>
+    <tr><td class="key">&rarr;</td><td>Next slide</td></tr>
+    <tr><td class="key">&larr;</td><td>Previous slide</td></tr>
+    <tr><td class="key">Space</td><td>Pause / Resume</td></tr>
+    <tr><td class="key">F</td><td>Fullscreen</td></tr>
+    <tr><td class="key">?</td><td>Toggle this help</td></tr>
+  </table>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // -----------------------------------------------------------------------
+  // CONFIG
+  // -----------------------------------------------------------------------
+  const MANIFEST_URL = "manifest.json";
+  // Base path for chunk files (relative to this HTML file)
+  const BASE_PATH = "";
+
+  // -----------------------------------------------------------------------
+  // STATE
+  // -----------------------------------------------------------------------
+  let manifest = null;
+  let slideChunks = [];      // only "slide" type entries, ordered
+  let allChunks = [];        // full ordered list (slides + transitions)
+  let currentSlideIdx = 0;   // index into slideChunks[]
+  let isTransitioning = false;
+  let paused = false;
+
+  const vidA = document.getElementById("vid-a");
+  const vidB = document.getElementById("vid-b");
+  const hudEl = document.getElementById("hud");
+  const hudLabel = document.getElementById("hud-label");
+  const hudPos = document.getElementById("hud-pos");
+  const progressFill = document.getElementById("progress-fill");
+  const progressTrack = document.getElementById("progress-track");
+  const loadingEl = document.getElementById("loading");
+  const helpEl = document.getElementById("help");
+
+  let activeVid = vidA;
+  let standbyVid = vidB;
+  let hudTimer;
+  let cursorTimer;
+
+  // -----------------------------------------------------------------------
+  // LOAD MANIFEST
+  // -----------------------------------------------------------------------
+  fetch(MANIFEST_URL)
+    .then(r => r.json())
+    .then(data => {
+      manifest = data;
+      allChunks = data.chunks;
+      slideChunks = allChunks.filter(c => c.type === "slide");
+
+      if (slideChunks.length === 0) {
+        loadingEl.textContent = "No slide chunks found in manifest.";
+        return;
+      }
+
+      document.title = data.title || "Presentation";
+      renderTicks();
+      preloadAndStart();
+    })
+    .catch(err => {
+      loadingEl.textContent = "Failed to load manifest.json";
+      console.error(err);
+    });
+
+  // -----------------------------------------------------------------------
+  // PLAYBACK
+  // -----------------------------------------------------------------------
+  function preloadAndStart() {
+    playSlide(0)
+      .then(() => {
+        loadingEl.classList.add("hidden");
+      })
+      .catch((err) => {
+        loadingEl.textContent = "Failed to load first slide chunk.";
+        console.error(err);
+      });
+  }
+
+  function playSlide(idx) {
+    if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
+    const src = BASE_PATH + slideChunks[idx].file;
+    return loadInto(activeVid, src, true).then(() => {
+      currentSlideIdx = idx;
+      if (paused) {
+        activeVid.pause();
+      } else {
+        activeVid.play().catch(() => {});
+      }
+      showHud(idx);
+      updateProgress();
+      preloadNext(idx);
+      return true;
+    });
+  }
+
+  function preloadNext(slideIdx) {
+    // Find the transition that leads to the NEXT slide
+    const nextSlideIdx = slideIdx + 1;
+    if (nextSlideIdx >= slideChunks.length) return;
+
+    // The transition chunk that leads to nextSlide
+    const transChunk = allChunks.find(
+      c => c.type === "transition" && c.slide_to === slideChunks[nextSlideIdx].slide_number
+    );
+
+    if (transChunk) {
+      loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch((err) => {
+        console.error("Transition preload failed", err);
+      });
+    }
+  }
+
+  function goNext() {
+    if (isTransitioning) return;
+    const nextIdx = currentSlideIdx + 1;
+    if (nextIdx >= slideChunks.length) return;
+
+    // Find transition chunk
+    const nextSlide = slideChunks[nextIdx];
+    const transChunk = allChunks.find(
+      c => c.type === "transition" && c.slide_to === nextSlide.slide_number
+    );
+
+    if (!transChunk) {
+      playSlide(nextIdx).catch(console.error);
+      return;
+    }
+
+    // Seamless handoff: keep transition visible until next slide is decoded.
+    isTransitioning = true;
+    let slideReady = false;
+    let transitionDone = false;
+
+    const finalizeTransition = () => {
+      if (!slideReady || !transitionDone) return;
+      standbyVid.classList.remove("active");
+      standbyVid.pause();
+      currentSlideIdx = nextIdx;
+      showHud(nextIdx);
+      updateProgress();
+      preloadNext(nextIdx);
+      isTransitioning = false;
+    };
+
+    const nextSlideSrc = BASE_PATH + nextSlide.file;
+    loadInto(activeVid, nextSlideSrc, true)
+      .then(() => {
+        slideReady = true;
+        if (!paused) {
+          activeVid.play().catch(() => {});
+        }
+        finalizeTransition();
+      })
+      .catch((err) => {
+        console.error("Slide preload failed", err);
+        standbyVid.classList.remove("active");
+        isTransitioning = false;
+      });
+
+    const onEnd = () => {
+      standbyVid.removeEventListener("ended", onEnd);
+      transitionDone = true;
+      finalizeTransition();
+    };
+
+    standbyVid.addEventListener("ended", onEnd);
+    standbyVid.currentTime = 0;
+    standbyVid.loop = false;
+    standbyVid.classList.add("active");
+    standbyVid.play().catch((err) => {
+      console.error("Transition play failed", err);
+      standbyVid.removeEventListener("ended", onEnd);
+      standbyVid.classList.remove("active");
+      isTransitioning = false;
+    });
+  }
+
+  function goPrev() {
+    if (isTransitioning) return;
+    if (currentSlideIdx <= 0) return;
+
+    // For backwards, we skip transitions and just cut directly
+    // (reverse transitions would look odd)
+    playSlide(currentSlideIdx - 1).catch(console.error);
+  }
+
+  function loadInto(video, src, loop) {
+    return new Promise((resolve, reject) => {
+      const onReady = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error(`Failed loading video source: ${src}`));
+      };
+      const cleanup = () => {
+        video.removeEventListener("canplaythrough", onReady);
+        video.removeEventListener("error", onError);
+      };
+
+      video.loop = loop;
+      video.muted = true;
+      video.addEventListener("canplaythrough", onReady, { once: true });
+      video.addEventListener("error", onError, { once: true });
+      if (video.src !== src) {
+        video.src = src;
+      }
+      video.load();
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // HUD
+  // -----------------------------------------------------------------------
+  function showHud(idx) {
+    const chunk = slideChunks[idx];
+    hudLabel.textContent = chunk.label || `Slide ${chunk.slide_number}`;
+    hudPos.textContent = `${idx + 1} / ${slideChunks.length}`;
+    hudEl.classList.add("show");
+    clearTimeout(hudTimer);
+    hudTimer = setTimeout(() => hudEl.classList.remove("show"), 2500);
+  }
+
+  function updateProgress() {
+    if (slideChunks.length <= 1) {
+      progressFill.style.width = "100%";
+      return;
+    }
+    const pct = ((currentSlideIdx) / (slideChunks.length - 1)) * 100;
+    progressFill.style.width = Math.min(pct, 100) + "%";
+  }
+
+  function renderTicks() {
+    const total = slideChunks.length;
+    if (total <= 1) return;
+    slideChunks.forEach((_, i) => {
+      if (i === 0) return;
+      const tick = document.createElement("div");
+      tick.className = "tick";
+      tick.style.left = ((i / (total - 1)) * 100) + "%";
+      progressTrack.appendChild(tick);
+    });
+  }
+
+  // -----------------------------------------------------------------------
+  // CURSOR AUTO-HIDE
+  // -----------------------------------------------------------------------
+  function showCursor() {
+    document.body.classList.add("show-cursor");
+    clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(() => document.body.classList.remove("show-cursor"), 2000);
+  }
+  document.addEventListener("mousemove", showCursor);
+
+  // -----------------------------------------------------------------------
+  // KEYBOARD
+  // -----------------------------------------------------------------------
+  document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        goNext();
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        goPrev();
+        break;
+      case " ":
+        e.preventDefault();
+        if (paused) {
+          if (isTransitioning && standbyVid.classList.contains("active")) {
+            standbyVid.play().catch(() => {});
+          } else {
+            activeVid.play().catch(() => {});
+          }
+          paused = false;
+        } else {
+          activeVid.pause();
+          standbyVid.pause();
+          paused = true;
+        }
+        break;
+      case "f":
+        document.fullscreenElement
+          ? document.exitFullscreen()
+          : document.documentElement.requestFullscreen();
+        break;
+      case "?":
+        helpEl.classList.toggle("show");
+        break;
+      case "Escape":
+        helpEl.classList.remove("show");
+        break;
+    }
+  });
+
+  // Click to advance
+  document.addEventListener("click", (e) => {
+    if (helpEl.classList.contains("show")) {
+      helpEl.classList.remove("show");
+      return;
+    }
+    goNext();
+  });
+
+})();
+</script>
+</body>
+</html>

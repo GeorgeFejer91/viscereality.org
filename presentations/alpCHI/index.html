@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viscereality - alpCHI 2026</title>
+  <style>
+    :root {
+      --bg: #070a0f;
+      --panel: #111723;
+      --text: #e7edf8;
+      --dim: #9cabbe;
+      --line: #25344a;
+      --accent: #7bc0ff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 460px at 80% -5%, #24194a 0%, transparent 60%),
+        radial-gradient(800px 420px at 0% 105%, #0f3f63 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(740px, 100%);
+      background: linear-gradient(180deg, #131c29 0%, #101722 100%);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 26px 24px;
+      box-shadow: 0 20px 44px rgba(0, 0, 0, 0.45);
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 2.2vw, 2rem);
+      margin-bottom: 8px;
+    }
+
+    .kicker {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+      font-weight: 650;
+    }
+
+    p {
+      color: var(--dim);
+      line-height: 1.55;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    a.btn {
+      text-decoration: none;
+      color: #d8ebff;
+      border: 1px solid #37567a;
+      background: #172438;
+      padding: 10px 13px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+    }
+
+    a.btn:hover { background: #1a2d47; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="kicker">alpCHI 2026</div>
+    <h1>Viscereality Presentation</h1>
+    <p>
+      This page is reserved for the upcoming alpCHI 2026 presentation player.
+      Once chunks and manifest are uploaded, this page can be switched to the same
+      interactive player used for MuC.
+    </p>
+    <div class="actions">
+      <a class="btn" href="../">Back to Presentation Menu</a>
+      <a class="btn" href="/presentations/MuC/">Open MuC 2025 Player</a>
+    </div>
+  </main>
+</body>
+</html>
