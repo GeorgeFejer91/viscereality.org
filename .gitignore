@@ -1,0 +1,5 @@
+﻿__pycache__/
+*.pyc
+ppt-chunker.zip
+ppt-chunker/ppt-chunker/output_muc/
+ppt-chunker/ppt-chunker/output_muc_fit/

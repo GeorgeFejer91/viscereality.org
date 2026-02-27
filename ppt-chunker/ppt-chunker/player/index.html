@@ -223,36 +223,31 @@
   // PLAYBACK
   // -----------------------------------------------------------------------
   function preloadAndStart() {
-    const firstSrc = BASE_PATH + slideChunks[0].file;
-    activeVid.src = firstSrc;
-    activeVid.loop = true;
-    activeVid.muted = true;
-
-    activeVid.addEventListener("canplaythrough", function onReady() {
-      activeVid.removeEventListener("canplaythrough", onReady);
-      loadingEl.classList.add("hidden");
-      activeVid.play();
-      showHud(0);
-      updateProgress();
-
-      // Preload the transition or next slide into standby
-      preloadNext(0);
-    });
+    playSlide(0)
+      .then(() => {
+        loadingEl.classList.add("hidden");
+      })
+      .catch((err) => {
+        loadingEl.textContent = "Failed to load first slide chunk.";
+        console.error(err);
+      });
   }
 
   function playSlide(idx) {
-    if (idx < 0 || idx >= slideChunks.length) return;
-    currentSlideIdx = idx;
-
+    if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
     const src = BASE_PATH + slideChunks[idx].file;
-    activeVid.src = src;
-    activeVid.loop = true;
-    activeVid.play();
-    showHud(idx);
-    updateProgress();
-
-    // Preload what comes next
-    preloadNext(idx);
+    return loadInto(activeVid, src, true).then(() => {
+      currentSlideIdx = idx;
+      if (paused) {
+        activeVid.pause();
+      } else {
+        activeVid.play().catch(() => {});
+      }
+      showHud(idx);
+      updateProgress();
+      preloadNext(idx);
+      return true;
+    });
   }
 
   function preloadNext(slideIdx) {
@@ -266,9 +261,9 @@
     );
 
     if (transChunk) {
-      standbyVid.src = BASE_PATH + transChunk.file;
-      standbyVid.loop = false;
-      standbyVid.load();
+      loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch((err) => {
+        console.error("Transition preload failed", err);
+      });
     }
   }
 
@@ -283,29 +278,58 @@
       c => c.type === "transition" && c.slide_to === nextSlide.slide_number
     );
 
-    if (transChunk && standbyVid.src.includes(transChunk.file.split("/").pop())) {
-      // Play transition on standby layer, then swap to next slide
-      isTransitioning = true;
-      standbyVid.currentTime = 0;
-      standbyVid.loop = false;
-      standbyVid.classList.add("active");
-      standbyVid.play();
+    if (!transChunk) {
+      playSlide(nextIdx).catch(console.error);
+      return;
+    }
 
-      standbyVid.addEventListener("ended", function onEnd() {
-        standbyVid.removeEventListener("ended", onEnd);
+    // Seamless handoff: keep transition visible until next slide is decoded.
+    isTransitioning = true;
+    let slideReady = false;
+    let transitionDone = false;
+
+    const finalizeTransition = () => {
+      if (!slideReady || !transitionDone) return;
+      standbyVid.classList.remove("active");
+      standbyVid.pause();
+      currentSlideIdx = nextIdx;
+      showHud(nextIdx);
+      updateProgress();
+      preloadNext(nextIdx);
+      isTransitioning = false;
+    };
+
+    const nextSlideSrc = BASE_PATH + nextSlide.file;
+    loadInto(activeVid, nextSlideSrc, true)
+      .then(() => {
+        slideReady = true;
+        if (!paused) {
+          activeVid.play().catch(() => {});
+        }
+        finalizeTransition();
+      })
+      .catch((err) => {
+        console.error("Slide preload failed", err);
         standbyVid.classList.remove("active");
-        standbyVid.pause();
-
-        // Swap roles
-        [activeVid, standbyVid] = [standbyVid, activeVid];
-
-        playSlide(nextIdx);
         isTransitioning = false;
       });
-    } else {
-      // No transition, direct cut
-      playSlide(nextIdx);
-    }
+
+    const onEnd = () => {
+      standbyVid.removeEventListener("ended", onEnd);
+      transitionDone = true;
+      finalizeTransition();
+    };
+
+    standbyVid.addEventListener("ended", onEnd);
+    standbyVid.currentTime = 0;
+    standbyVid.loop = false;
+    standbyVid.classList.add("active");
+    standbyVid.play().catch((err) => {
+      console.error("Transition play failed", err);
+      standbyVid.removeEventListener("ended", onEnd);
+      standbyVid.classList.remove("active");
+      isTransitioning = false;
+    });
   }
 
   function goPrev() {
@@ -314,7 +338,33 @@
 
     // For backwards, we skip transitions and just cut directly
     // (reverse transitions would look odd)
-    playSlide(currentSlideIdx - 1);
+    playSlide(currentSlideIdx - 1).catch(console.error);
+  }
+
+  function loadInto(video, src, loop) {
+    return new Promise((resolve, reject) => {
+      const onReady = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        cleanup();
+        reject(new Error(`Failed loading video source: ${src}`));
+      };
+      const cleanup = () => {
+        video.removeEventListener("canplaythrough", onReady);
+        video.removeEventListener("error", onError);
+      };
+
+      video.loop = loop;
+      video.muted = true;
+      video.addEventListener("canplaythrough", onReady, { once: true });
+      video.addEventListener("error", onError, { once: true });
+      if (video.src !== src) {
+        video.src = src;
+      }
+      video.load();
+    });
   }
 
   // -----------------------------------------------------------------------
@@ -376,10 +426,15 @@
       case " ":
         e.preventDefault();
         if (paused) {
-          activeVid.play();
+          if (isTransitioning && standbyVid.classList.contains("active")) {
+            standbyVid.play().catch(() => {});
+          } else {
+            activeVid.play().catch(() => {});
+          }
           paused = false;
         } else {
           activeVid.pause();
+          standbyVid.pause();
           paused = true;
         }
         break;
