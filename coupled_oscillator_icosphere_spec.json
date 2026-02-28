@@ -1,0 +1,547 @@
+{
+  "metadata": {
+    "name": "Coupled Oscillator Icosphere Graphic Specification",
+    "purpose": "Describe exactly how the index.html Kuramoto-style icosphere orb is built and animated so it can be recreated from this JSON alone.",
+    "source_file": "index.html",
+    "feature_anchor": {
+      "html_card_id": "orb-card",
+      "visualization_id": "orbViz",
+      "container_id": "orbContainer"
+    },
+    "line_references": {
+      "css_block_start": 507,
+      "css_block_end": 565,
+      "mobile_css_override": 1404,
+      "html_markup_start": 1548,
+      "html_markup_end": 1551,
+      "script_start": 1899,
+      "script_end": 2154
+    },
+    "render_stack": [
+      "HTML",
+      "CSS 3D transforms",
+      "Vanilla JavaScript",
+      "requestAnimationFrame",
+      "IntersectionObserver"
+    ]
+  },
+  "dom_contract": {
+    "required_markup": {
+      "card_wrapper": {
+        "tag": "div",
+        "id": "orb-card",
+        "classes": [
+          "ingredient-card",
+          "exhale-section"
+        ],
+        "role": "Card container observed for viewport entry."
+      },
+      "visual_wrapper": {
+        "tag": "div",
+        "id": "orbViz",
+        "classes": [
+          "orb-visualization"
+        ],
+        "children": [
+          "orbContainer",
+          "orb-controls"
+        ],
+        "role": "Interactive visualization surface. Click toggles pause/play."
+      },
+      "particle_host": {
+        "tag": "div",
+        "id": "orbContainer",
+        "classes": [
+          "orb-container"
+        ],
+        "role": "Parent of all runtime-generated .orb-particle elements."
+      },
+      "control_hint": {
+        "tag": "div",
+        "classes": [
+          "orb-controls"
+        ],
+        "text": "Tap to pause/play",
+        "role": "Passive UI hint, pointer-events disabled."
+      }
+    },
+    "runtime_children": {
+      "generated_particle_tag": "div",
+      "generated_particle_class": "orb-particle",
+      "generated_count_formula": "10 * 4^SUBDIVISIONS + 2",
+      "generated_count_by_device": {
+        "desktop_subdivisions_3": 642,
+        "mobile_subdivisions_2": 162
+      }
+    }
+  },
+  "css_contract": {
+    "orb_visualization": {
+      "selector": ".orb-visualization",
+      "properties": {
+        "position": "relative",
+        "width": "100%",
+        "height": "300px",
+        "margin-bottom": "15px",
+        "border-radius": "8px",
+        "overflow": "hidden",
+        "background": "#000",
+        "cursor": "pointer",
+        "touch-action": "none"
+      },
+      "mobile_override": {
+        "selector": ".orb-visualization",
+        "height": "250px"
+      }
+    },
+    "orb_container": {
+      "selector": ".orb-container",
+      "properties": {
+        "width": "100%",
+        "height": "100%",
+        "position": "relative",
+        "transform-style": "preserve-3d",
+        "animation": "rotateOrb 40s infinite linear",
+        "will-change": "transform"
+      },
+      "keyframes_rotateOrb": {
+        "from": "transform: rotateY(0deg) rotateX(10deg)",
+        "to": "transform: rotateY(360deg) rotateX(10deg)"
+      }
+    },
+    "particles": {
+      "selector": ".orb-particle",
+      "properties": {
+        "position": "absolute",
+        "border-radius": "50%",
+        "transform-style": "preserve-3d",
+        "will-change": "transform",
+        "background": "radial-gradient(circle at center, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, currentColor 60%, currentColor 90%, rgba(255,255,255,0) 100%)"
+      },
+      "runtime_inline_styles": {
+        "width": "12px",
+        "height": "12px",
+        "left": "50%",
+        "top": "50%"
+      }
+    },
+    "paused_state": {
+      "selector": ".orb-paused .orb-container",
+      "effect": "animation-play-state: paused"
+    },
+    "control_hint": {
+      "selector": ".orb-controls",
+      "properties": {
+        "position": "absolute",
+        "bottom": "10px",
+        "right": "10px",
+        "background": "rgba(0,0,0,0.7)",
+        "padding": "5px 10px",
+        "border-radius": "5px",
+        "font-size": "0.8em",
+        "opacity": "0.6",
+        "transition": "opacity 0.3s",
+        "pointer-events": "none"
+      },
+      "hover_rule": {
+        "selector": ".orb-visualization:hover .orb-controls",
+        "opacity": "1"
+      }
+    }
+  },
+  "javascript_module": {
+    "scope_pattern": "IIFE (function(){ ... })()",
+    "dependencies": [
+      "window.performance.now",
+      "window.requestAnimationFrame",
+      "window.IntersectionObserver",
+      "document.getElementById",
+      "Math"
+    ],
+    "constants": {
+      "RADIUS_MIN": 80,
+      "RADIUS_MAX": 140,
+      "BREATH_CYCLE_MS": 12000,
+      "PARTICLE_SIZE_PX": 12,
+      "SUBDIVISIONS_DESKTOP": 3,
+      "SUBDIVISIONS_MOBILE": 2,
+      "SMOOTHING": 0.15,
+      "PHASE_DT_SCALE": 5,
+      "DT_CAP_SECONDS": 0.1
+    },
+    "mobile_detection": {
+      "strategy": "RegExp on navigator.userAgent",
+      "regex": "Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini",
+      "behavior": "Use fewer icosphere subdivisions on mobile for performance."
+    },
+    "state_vars": {
+      "isPaused": "boolean, toggled by click on orbViz",
+      "currentRadius": "smoothed radius value",
+      "lastTime": "timestamp used to compute frame delta time",
+      "animate.running": "ad-hoc flag to avoid starting multiple RAF loops"
+    }
+  },
+  "geometry_generation": {
+    "method": "Procedural icosphere using midpoint subdivision with per-pass edge midpoint caching.",
+    "base_vertices": [
+      [
+        -1,
+        "t",
+        0
+      ],
+      [
+        1,
+        "t",
+        0
+      ],
+      [
+        -1,
+        "-t",
+        0
+      ],
+      [
+        1,
+        "-t",
+        0
+      ],
+      [
+        0,
+        -1,
+        "t"
+      ],
+      [
+        0,
+        1,
+        "t"
+      ],
+      [
+        0,
+        -1,
+        "-t"
+      ],
+      [
+        0,
+        1,
+        "-t"
+      ],
+      [
+        "t",
+        0,
+        -1
+      ],
+      [
+        "t",
+        0,
+        1
+      ],
+      [
+        "-t",
+        0,
+        -1
+      ],
+      [
+        "-t",
+        0,
+        1
+      ]
+    ],
+    "golden_ratio_symbol": "t = (1 + sqrt(5)) / 2",
+    "base_faces_20": [
+      [
+        0,
+        11,
+        5
+      ],
+      [
+        0,
+        5,
+        1
+      ],
+      [
+        0,
+        1,
+        7
+      ],
+      [
+        0,
+        7,
+        10
+      ],
+      [
+        0,
+        10,
+        11
+      ],
+      [
+        1,
+        5,
+        9
+      ],
+      [
+        5,
+        11,
+        4
+      ],
+      [
+        11,
+        10,
+        2
+      ],
+      [
+        10,
+        7,
+        6
+      ],
+      [
+        7,
+        1,
+        8
+      ],
+      [
+        3,
+        9,
+        4
+      ],
+      [
+        3,
+        4,
+        2
+      ],
+      [
+        3,
+        2,
+        6
+      ],
+      [
+        3,
+        6,
+        8
+      ],
+      [
+        3,
+        8,
+        9
+      ],
+      [
+        4,
+        9,
+        5
+      ],
+      [
+        2,
+        4,
+        11
+      ],
+      [
+        6,
+        2,
+        10
+      ],
+      [
+        8,
+        6,
+        7
+      ],
+      [
+        9,
+        8,
+        1
+      ]
+    ],
+    "normalization_rule": "Every vertex and every midpoint is normalized to unit sphere.",
+    "subdivision_rule": {
+      "per_face_input": [
+        "a",
+        "b",
+        "c"
+      ],
+      "midpoints": [
+        "ab = mid(a,b)",
+        "bc = mid(b,c)",
+        "ca = mid(c,a)"
+      ],
+      "output_faces": [
+        [
+          "a",
+          "ab",
+          "ca"
+        ],
+        [
+          "b",
+          "bc",
+          "ab"
+        ],
+        [
+          "c",
+          "ca",
+          "bc"
+        ],
+        [
+          "ab",
+          "bc",
+          "ca"
+        ]
+      ],
+      "edge_midpoint_cache_key": "minIndex-maxIndex string, e.g. 4-11",
+      "reason": "Prevents duplicate midpoint vertices and keeps mesh manifold."
+    }
+  },
+  "oscillator_model": {
+    "one_oscillator_per_vertex": true,
+    "oscillator_object_schema": {
+      "element": "DOM node (.orb-particle)",
+      "pos": "[x,y,z] normalized vertex",
+      "phase": "random in [0, 2pi)",
+      "naturalFreq": "base + random + spatial modulation",
+      "rotX_deg": "computed from vertex y via -asin(y)",
+      "rotY_deg": "computed from vertex x,z via atan2(x,z)",
+      "neighbors1": "nearest 6 vertices by squared Euclidean distance",
+      "neighbors2": "next nearest 12 vertices (indices 6..17 after sort)"
+    },
+    "natural_frequency_formula": "naturalFreq = 0.15 + ((rand - 0.5) * 0.12) + (0.15 * sin(x*5) * cos(y*5))"
+  },
+  "neighbor_topology": {
+    "distance_metric": "squared Euclidean distance in 3D",
+    "self_distance": "Infinity so self is never selected",
+    "tier_1_neighbors_count": 6,
+    "tier_2_neighbors_count": 12,
+    "total_neighbors_per_oscillator": 18,
+    "sorting": "ascending by distance each oscillator"
+  },
+  "coupling_and_dynamics": {
+    "kuramoto_like_update": true,
+    "breath_dependent_coupling_curves": {
+      "input": "radiusNorm in [0,1]",
+      "center_transform": "centered = (radiusNorm - 0.5) * 2",
+      "K1_formula": "K1 = 0.1 + 1.2 * centered^2",
+      "K2_formula": "K2 = 0.02 + 0.4 * centered^2",
+      "note": "Both are U-shaped: stronger at inhale/exhale extremes, weaker mid-cycle."
+    },
+    "phase_velocity_formula": "omega_i = naturalFreq_i + (sum_tier1 + sum_tier2)/18 + wave1 + wave2 + noise",
+    "tier_coupling_terms": {
+      "tier1_term": "sum_tier1 = sum_over_neighbors1( K1 * sin(phase_j - phase_i) )",
+      "tier2_term": "sum_tier2 = sum_over_neighbors2( K2 * sin(phase_j - phase_i) )"
+    },
+    "external_forcing": {
+      "wavePhase1": "timeMs * 0.006",
+      "wavePhase2": "timeMs * 0.01",
+      "wave1": "0.02 * sin(x*8 + y*8 + wavePhase1)",
+      "wave2": "0.015 * cos(x*6 - z*6 + wavePhase2)",
+      "noise": "(Math.random() - 0.5) * 0.025"
+    },
+    "integration": {
+      "updates_buffer_type": "Float32Array(length = oscillator_count)",
+      "step_equation": "phase_i = (phase_i + omega_i * dt) mod (2*pi)",
+      "dt_seconds": "min((currentTime - lastTime)/1000, 0.1)",
+      "effective_dt_used": "dt * 5"
+    }
+  },
+  "breath_radius_envelope": {
+    "cycle_duration_ms": 12000,
+    "segment_model": [
+      {
+        "segment": 1,
+        "time_range": "0 to 3000ms",
+        "behavior": "inhale ramp from 0 to 1",
+        "formula": "easeInOutCubic(cycleTime / quarter)"
+      },
+      {
+        "segment": 2,
+        "time_range": "3000 to 6000ms",
+        "behavior": "hold at max",
+        "formula": "1.0"
+      },
+      {
+        "segment": 3,
+        "time_range": "6000 to 9000ms",
+        "behavior": "exhale ramp from 1 to 0",
+        "formula": "1.0 - easeInOutCubic((cycleTime - 2*quarter) / quarter)"
+      },
+      {
+        "segment": 4,
+        "time_range": "9000 to 12000ms",
+        "behavior": "hold at min",
+        "formula": "0.0"
+      }
+    ],
+    "easing_function": "easeInOutCubic(t) = t < 0.5 ? 4*t^3 : 1 - ((-2*t + 2)^3)/2",
+    "radius_target_formula": "targetRadius = RADIUS_MIN + (RADIUS_MAX - RADIUS_MIN) * targetProgress",
+    "radius_smoothing_formula": "currentRadius += (targetRadius - currentRadius) * SMOOTHING",
+    "radius_norm_formula": "radiusNorm = (currentRadius - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN)"
+  },
+  "color_mapping": {
+    "lookup_table_size": 1000,
+    "precompute_loop": "for i in 0..999",
+    "cache_formulas": {
+      "hue": "(i * 0.36) % 360",
+      "saturation_percent": "75 + 25 * sin(i * 0.1)",
+      "lightness_percent": "60 + 20 * cos(i * 0.08)",
+      "color_format": "hsl(hue, sat%, light%)"
+    },
+    "phase_to_color_index": "floor((phase / (2*pi)) * 1000) % 1000",
+    "particle_color_binding": "particle.style.color = colorCache[idx]"
+  },
+  "render_pipeline": {
+    "particle_position_formula": {
+      "x_px": "currentRadius * pos[0]",
+      "y_px": "currentRadius * pos[1]",
+      "z_px": "currentRadius * pos[2]"
+    },
+    "particle_transform_template": "translate(-50%, -50%) translate3d(xpx, ypx, zpx) rotateY(rotYdeg) rotateX(rotXdeg)",
+    "orientation_purpose": "rotate particle gradient disk to align with radial direction for volume impression."
+  },
+  "interaction_and_lifecycle": {
+    "pause_toggle": {
+      "event": "click on #orbViz",
+      "effect": [
+        "isPaused = !isPaused",
+        "toggle class 'orb-paused' on #orbViz"
+      ],
+      "note": "JS animation loop keeps scheduling RAF even when paused; updates are skipped."
+    },
+    "lazy_start": {
+      "observer_target": "#orb-card",
+      "observer_type": "IntersectionObserver",
+      "start_condition": "entry.isIntersecting && !animate.running",
+      "start_action": [
+        "animate.running = true",
+        "animate()"
+      ],
+      "stop_behavior": "No automatic stop on exit from viewport."
+    }
+  },
+  "rebuild_checklist": [
+    "Create the exact HTML ids/classes: orb-card, orbViz, orbContainer, orb-controls.",
+    "Apply the CSS contract including rotateOrb keyframes and .orb-paused rule.",
+    "Implement an IIFE that initializes constants and mobile subdivision logic.",
+    "Generate unit icosphere vertices by midpoint subdivision with edge midpoint cache.",
+    "Instantiate one DOM particle per vertex and store oscillator state objects.",
+    "Compute two neighbor tiers per oscillator using nearest sorted squared distances.",
+    "At each frame: update target radius from 12s breath envelope, smooth radius, compute radiusNorm.",
+    "Compute K1/K2 from radiusNorm and update all oscillator phases with coupling, waves, and noise.",
+    "Map phase to precomputed HSL cache and update particle 3D transforms.",
+    "Use requestAnimationFrame loop with dt cap and dt*5 scaling.",
+    "Wire click to pause/play and IntersectionObserver to start when in view."
+  ],
+  "acceptance_tests": {
+    "geometry": [
+      "Desktop creates approximately 642 particles.",
+      "Mobile creates approximately 162 particles.",
+      "Particles form a sphere, not a cube or random cloud."
+    ],
+    "animation": [
+      "Whole orb rotates continuously around Y with slight X tilt.",
+      "Sphere radius breathes between about 80px and 140px with hold phases.",
+      "Color field continuously shifts with oscillator phase."
+    ],
+    "interaction": [
+      "Clicking orb toggles paused state and freezes container rotation.",
+      "Animation begins only after orb card enters viewport."
+    ]
+  },
+  "known_characteristics": {
+    "determinism": "Not fully deterministic because per-frame noise uses Math.random().",
+    "performance_tradeoff": "DOM+CSS-3D approach is lightweight to integrate but heavier than WebGL at very high particle counts.",
+    "visual_style": "Particle disks with radial gradient and additive-looking color variation create an organic point-cloud sphere."
+  }
+}

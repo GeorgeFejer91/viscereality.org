@@ -1430,6 +1430,7 @@
       <a href="#cardiac-coherence">Cardiac<br>Coherence</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
+      <a href="/presentations/" target="_blank" rel="noopener noreferrer">Presentations</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -1446,6 +1447,7 @@
       <a href="#cardiac-coherence">Cardiac<br>Coherence</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
+      <a href="/presentations/" target="_blank" rel="noopener noreferrer">Presentations</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -2210,8 +2212,12 @@
       
       navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-          e.preventDefault();
           const targetId = this.getAttribute('href');
+          if (!targetId || !targetId.startsWith('#')) {
+            return;
+          }
+
+          e.preventDefault();
           const targetSection = document.querySelector(targetId);
           
           if (targetSection) {
