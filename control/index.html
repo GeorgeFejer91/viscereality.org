@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controller Redirect</title>
+</head>
+<body>
+  <script>
+    (function () {
+      "use strict";
+      const target = "/presentations/controller/" + window.location.search + window.location.hash;
+      window.location.replace(target);
+    })();
+  </script>
+  Redirecting to presenter controller...
+</body>
+</html>

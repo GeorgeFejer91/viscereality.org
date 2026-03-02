@@ -1,0 +1,11 @@
+name = "viscereality-presentation-sync"
+main = "src/worker.js"
+compatibility_date = "2025-12-01"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "RoomSession"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RoomSession"]

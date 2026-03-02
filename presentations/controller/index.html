@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presentation Controller</title>
+  <style>
+    :root {
+      --bg: #0a1018;
+      --panel: #121b29;
+      --panel-2: #0f1723;
+      --line: #2a3a53;
+      --text: #e8eef8;
+      --dim: #9bb0c9;
+      --accent: #67b1ff;
+      --ok: #7ee0a1;
+      --warn: #ffd36e;
+      --err: #ff8b8b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 500px at 92% -10%, #1f2d52 0%, transparent 60%),
+        radial-gradient(900px 500px at -8% 112%, #173448 0%, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    .shell {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+      gap: 14px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, #172235 0%, #101826 100%);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .stack { display: grid; gap: 10px; }
+
+    h1 {
+      font-size: 1.2rem;
+      letter-spacing: 0.01em;
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--dim);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .row {
+      display: grid;
+      gap: 6px;
+    }
+
+    .row-inline {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    label {
+      color: var(--dim);
+      font-size: 0.84rem;
+      letter-spacing: 0.02em;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid #324865;
+      border-radius: 8px;
+      background: #0f1622;
+      color: var(--text);
+      padding: 10px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(103, 177, 255, 0.2);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 1px solid #31537a;
+      background: #183152;
+      color: #d9e9ff;
+      border-radius: 8px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    button:hover { background: #1d3a61; }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      background: #131e2e;
+      border-color: #2a3a53;
+    }
+
+    .status {
+      border: 1px solid #30445f;
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: #0f1622;
+      font-size: 0.88rem;
+    }
+    .status.ok { border-color: rgba(126, 224, 161, 0.4); color: var(--ok); }
+    .status.warn { border-color: rgba(255, 211, 110, 0.4); color: var(--warn); }
+    .status.err { border-color: rgba(255, 139, 139, 0.45); color: var(--err); }
+
+    .viewer-link {
+      font-family: "Consolas", "SFMono-Regular", monospace;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      padding: 8px;
+      background: #0d1520;
+      border: 1px solid #2a3a53;
+      border-radius: 8px;
+      color: #c8d8ee;
+      word-break: break-all;
+    }
+
+    .big-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .big-controls button {
+      font-size: 1rem;
+      padding: 12px;
+    }
+
+    .meta {
+      border: 1px solid #2a3a53;
+      background: #0f1723;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 0.92rem;
+    }
+
+    .meta .line { margin-bottom: 4px; }
+    .meta .line:last-child { margin-bottom: 0; }
+
+    .slide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 8px;
+      max-height: calc(100vh - 210px);
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .slide-btn {
+      text-align: left;
+      background: #121d2d;
+      border: 1px solid #2c4160;
+      border-radius: 8px;
+      padding: 8px;
+      color: #d6e4f7;
+      font-size: 0.84rem;
+      line-height: 1.3;
+      cursor: pointer;
+    }
+
+    .slide-btn:hover { background: #16273f; }
+    .slide-btn.active {
+      border-color: #68b2ff;
+      box-shadow: 0 0 0 2px rgba(103, 177, 255, 0.23);
+      background: #1a3050;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+      .slide-grid {
+        max-height: 56vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="panel stack">
+      <h1>Presenter Controller</h1>
+      <p class="muted">
+        Hidden control page. This drives the public viewer page for one deck/room.
+      </p>
+
+      <div id="conn-status" class="status warn">Not connected</div>
+
+      <div class="row">
+        <label for="deck">Deck</label>
+        <select id="deck"></select>
+      </div>
+
+      <div class="row-inline">
+        <div class="row">
+          <label for="room">Room Code</label>
+          <input id="room" type="text" placeholder="e.g. chi-main" autocomplete="off">
+        </div>
+        <div class="row">
+          <label for="secret">Controller Secret</label>
+          <input id="secret" type="password" placeholder="Required" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="connect-btn" type="button">Connect</button>
+        <button id="disconnect-btn" type="button" disabled>Disconnect</button>
+      </div>
+
+      <div class="row">
+        <label>Viewer Link</label>
+        <div id="viewer-link" class="viewer-link">Provide deck + room to generate link.</div>
+      </div>
+      <div class="btn-row">
+        <button id="copy-link-btn" type="button">Copy Viewer Link</button>
+      </div>
+
+      <p class="muted">
+        Keyboard: <strong>Left</strong>/<strong>Right</strong> for prev/next, digits
+        <strong>1-9</strong> jump to slides 1-9.
+      </p>
+    </aside>
+
+    <main class="panel">
+      <div class="big-controls">
+        <button id="prev-btn" type="button" disabled>Prev</button>
+        <button id="next-btn" type="button" disabled>Next</button>
+      </div>
+
+      <div class="meta">
+        <div class="line" id="meta-deck">Deck: -</div>
+        <div class="line" id="meta-pos">Slide: -</div>
+        <div class="line" id="meta-label">Label: -</div>
+      </div>
+
+      <div id="slides" class="slide-grid"></div>
+    </main>
+  </div>
+
+  <script src="../shared/decks.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      const decks = window.PRESENTATION_DECKS || {};
+      const syncCfg = window.PRESENTATION_SYNC || {};
+
+      const deckSel = document.getElementById("deck");
+      const roomInput = document.getElementById("room");
+      const secretInput = document.getElementById("secret");
+      const connectBtn = document.getElementById("connect-btn");
+      const disconnectBtn = document.getElementById("disconnect-btn");
+      const copyLinkBtn = document.getElementById("copy-link-btn");
+      const viewerLinkEl = document.getElementById("viewer-link");
+      const prevBtn = document.getElementById("prev-btn");
+      const nextBtn = document.getElementById("next-btn");
+      const slidesEl = document.getElementById("slides");
+      const statusEl = document.getElementById("conn-status");
+      const metaDeck = document.getElementById("meta-deck");
+      const metaPos = document.getElementById("meta-pos");
+      const metaLabel = document.getElementById("meta-label");
+
+      const params = new URLSearchParams(window.location.search);
+      const initialDeck = params.get("deck") || "MuC";
+      const initialRoom = params.get("room") || "";
+
+      let slideChunks = [];
+      let currentSlideIdx = 0;
+      let currentSeq = -1;
+      let ws = null;
+      let authenticated = false;
+      let manualDisconnect = false;
+      let reconnectAttempts = 0;
+      let reconnectTimer = null;
+
+      function setStatus(msg, tone) {
+        statusEl.textContent = msg;
+        statusEl.className = "status " + (tone || "warn");
+      }
+
+      function roomCode() {
+        return (roomInput.value || "").trim();
+      }
+
+      function selectedDeckId() {
+        return deckSel.value;
+      }
+
+      function selectedDeck() {
+        return decks[selectedDeckId()] || null;
+      }
+
+      function buildViewerUrl() {
+        const deck = selectedDeck();
+        const room = roomCode();
+        if (!deck || !room) return "";
+        const url = new URL(deck.viewerPath, window.location.origin);
+        url.searchParams.set("room", room);
+        return url.toString();
+      }
+
+      function refreshViewerLink() {
+        const link = buildViewerUrl();
+        viewerLinkEl.textContent = link || "Provide deck + room to generate link.";
+      }
+
+      function markActiveSlide() {
+        const nodes = slidesEl.querySelectorAll(".slide-btn");
+        nodes.forEach((node) => {
+          const idx = Number(node.dataset.idx);
+          node.classList.toggle("active", idx === currentSlideIdx);
+        });
+
+        const current = slideChunks[currentSlideIdx];
+        metaDeck.textContent = "Deck: " + (selectedDeck() ? selectedDeck().title : "-");
+        metaPos.textContent = "Slide: " + (slideChunks.length ? (currentSlideIdx + 1) + " / " + slideChunks.length : "-");
+        metaLabel.textContent = "Label: " + (current ? (current.label || ("Slide " + (current.slide_number || (currentSlideIdx + 1)))) : "-");
+      }
+
+      function setControlState(enabled) {
+        prevBtn.disabled = !enabled;
+        nextBtn.disabled = !enabled;
+        disconnectBtn.disabled = !enabled && !ws;
+        const buttons = slidesEl.querySelectorAll(".slide-btn");
+        buttons.forEach((btn) => { btn.disabled = !enabled; });
+      }
+
+      function renderSlideButtons() {
+        slidesEl.innerHTML = "";
+        slideChunks.forEach((chunk, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "slide-btn";
+          btn.dataset.idx = String(idx);
+          btn.textContent = (idx + 1) + ". " + (chunk.label || ("Slide " + (chunk.slide_number || (idx + 1))));
+          btn.addEventListener("click", function () {
+            sendSetSlide(idx, "jump");
+          });
+          slidesEl.appendChild(btn);
+        });
+        markActiveSlide();
+        setControlState(authenticated);
+      }
+
+      function loadDeckManifest(deckId) {
+        const deck = decks[deckId];
+        if (!deck) {
+          slideChunks = [];
+          renderSlideButtons();
+          setStatus("Unknown deck: " + deckId, "err");
+          return Promise.resolve(false);
+        }
+
+        return fetch(deck.manifestPath)
+          .then(function (r) {
+            if (!r.ok) throw new Error("manifest request failed (" + r.status + ")");
+            return r.json();
+          })
+          .then(function (manifest) {
+            slideChunks = (manifest.chunks || []).filter(function (c) { return c.type === "slide"; });
+            if (slideChunks.length === 0) {
+              throw new Error("no slide chunks in manifest");
+            }
+            currentSlideIdx = 0;
+            currentSeq = -1;
+            renderSlideButtons();
+            return true;
+          })
+          .catch(function (err) {
+            slideChunks = [];
+            renderSlideButtons();
+            setStatus("Manifest load failed: " + err.message, "err");
+            return false;
+          });
+      }
+
+      function buildWsUrl() {
+        const base = syncCfg.relayWsBase || "";
+        if (!base) return "";
+        if (base.includes("replace-with-your-relay-domain")) return "";
+        const room = roomCode();
+        const deck = selectedDeckId();
+        if (!room || !deck) return "";
+
+        const url = new URL(base, window.location.origin);
+        url.searchParams.set("room", room);
+        url.searchParams.set("deck", deck);
+        url.searchParams.set("role", "controller");
+        return url.toString();
+      }
+
+      function clearReconnectTimer() {
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+      }
+
+      function scheduleReconnect() {
+        if (manualDisconnect) return;
+        const room = roomCode();
+        const secret = secretInput.value;
+        if (!room || !secret) return;
+
+        const base = Number(syncCfg.reconnectBaseMs || 1000);
+        const max = Number(syncCfg.reconnectMaxMs || 12000);
+        const delay = Math.min(max, base * Math.pow(2, reconnectAttempts));
+        reconnectAttempts += 1;
+
+        setStatus("Reconnecting in " + (delay / 1000).toFixed(1) + "s...", "warn");
+        clearReconnectTimer();
+        reconnectTimer = setTimeout(function () {
+          connectSocket();
+        }, delay);
+      }
+
+      function closeSocket() {
+        if (ws) {
+          try { ws.close(1000, "controller disconnect"); } catch (_) {}
+          ws = null;
+        }
+        authenticated = false;
+        setControlState(false);
+      }
+
+      function applyRemoteState(state) {
+        if (!state) return;
+        if (typeof state.seq === "number" && state.seq <= currentSeq) return;
+        if (typeof state.seq === "number") currentSeq = state.seq;
+
+        let idx = Number(state.slideIndex);
+        if (!Number.isFinite(idx)) return;
+        idx = Math.max(0, Math.min(slideChunks.length - 1, idx));
+        currentSlideIdx = idx;
+        markActiveSlide();
+      }
+
+      function sendJson(payload) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+        ws.send(JSON.stringify(payload));
+        return true;
+      }
+
+      function sendSetSlide(targetIdx, action) {
+        if (!authenticated) return;
+        if (!slideChunks.length) return;
+        const clamped = Math.max(0, Math.min(slideChunks.length - 1, targetIdx));
+        sendJson({
+          type: "set_slide",
+          targetSlideIndex: clamped,
+          action: action || "jump",
+        });
+      }
+
+      function connectSocket() {
+        clearReconnectTimer();
+
+        const wsUrl = buildWsUrl();
+        const secret = secretInput.value;
+        if (!wsUrl) {
+          setStatus("Set relay URL in presentations/shared/decks.js and provide room.", "err");
+          return;
+        }
+        if (!secret) {
+          setStatus("Controller secret is required.", "err");
+          return;
+        }
+        if (!slideChunks.length) {
+          setStatus("Deck manifest not loaded. Cannot control this deck.", "err");
+          return;
+        }
+
+        manualDisconnect = true;
+        closeSocket();
+        manualDisconnect = false;
+
+        setStatus("Connecting...", "warn");
+        ws = new WebSocket(wsUrl);
+
+        ws.addEventListener("open", function () {
+          reconnectAttempts = 0;
+          setStatus("Connected. Authenticating...", "warn");
+          sendJson({ type: "auth_controller", secret: secret });
+        });
+
+        ws.addEventListener("message", function (event) {
+          let msg;
+          try {
+            msg = JSON.parse(event.data);
+          } catch (_) {
+            return;
+          }
+
+          if (msg.type === "ping") {
+            sendJson({ type: "pong", ts: msg.ts || Date.now() });
+            return;
+          }
+
+          if (msg.type === "hello" && msg.state) {
+            applyRemoteState(msg.state);
+            return;
+          }
+
+          if (msg.type === "auth_ok") {
+            authenticated = true;
+            setControlState(true);
+            setStatus("Connected and authenticated.", "ok");
+            return;
+          }
+
+          if (msg.type === "state_update" && msg.state) {
+            applyRemoteState(msg.state);
+            return;
+          }
+
+          if (msg.type === "error") {
+            const code = msg.code || "UNKNOWN";
+            const message = msg.message || "Unknown error";
+            if (code === "AUTH_FAILED") {
+              authenticated = false;
+              setControlState(false);
+              setStatus("Auth failed: " + message, "err");
+              manualDisconnect = true;
+              closeSocket();
+            } else {
+              setStatus(code + ": " + message, "err");
+            }
+          }
+        });
+
+        ws.addEventListener("close", function () {
+          ws = null;
+          const wasAuthenticated = authenticated;
+          authenticated = false;
+          setControlState(false);
+          if (manualDisconnect) {
+            setStatus("Disconnected.", "warn");
+            return;
+          }
+          setStatus(wasAuthenticated ? "Connection lost." : "Connection closed.", "warn");
+          scheduleReconnect();
+        });
+
+        ws.addEventListener("error", function () {
+          setStatus("Socket error.", "err");
+          try { ws.close(); } catch (_) {}
+        });
+      }
+
+      function disconnect() {
+        manualDisconnect = true;
+        clearReconnectTimer();
+        closeSocket();
+        setStatus("Disconnected.", "warn");
+      }
+
+      function handleKeyboard(e) {
+        if (!authenticated) return;
+        if (!slideChunks.length) return;
+
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          sendSetSlide(currentSlideIdx + 1, "next");
+          return;
+        }
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          sendSetSlide(currentSlideIdx - 1, "prev");
+          return;
+        }
+
+        const num = Number(e.key);
+        if (Number.isInteger(num) && num >= 1 && num <= 9) {
+          const idx = num - 1;
+          if (idx < slideChunks.length) {
+            e.preventDefault();
+            sendSetSlide(idx, "jump");
+          }
+        }
+      }
+
+      function populateDecks() {
+        const ids = Object.keys(decks);
+        ids.forEach(function (id) {
+          const opt = document.createElement("option");
+          opt.value = id;
+          opt.textContent = decks[id].title + " (" + id + ")";
+          deckSel.appendChild(opt);
+        });
+        if (!ids.length) {
+          setStatus("No decks configured in shared/decks.js", "err");
+          connectBtn.disabled = true;
+          return;
+        }
+        deckSel.value = decks[initialDeck] ? initialDeck : ids[0];
+      }
+
+      function handleDeckOrRoomChanged() {
+        refreshViewerLink();
+      }
+
+      connectBtn.addEventListener("click", function () {
+        connectSocket();
+      });
+
+      disconnectBtn.addEventListener("click", function () {
+        disconnect();
+      });
+
+      copyLinkBtn.addEventListener("click", function () {
+        const text = buildViewerUrl();
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(
+          function () { setStatus("Viewer link copied.", "ok"); },
+          function () { setStatus("Copy failed. Copy manually.", "warn"); }
+        );
+      });
+
+      prevBtn.addEventListener("click", function () {
+        sendSetSlide(currentSlideIdx - 1, "prev");
+      });
+
+      nextBtn.addEventListener("click", function () {
+        sendSetSlide(currentSlideIdx + 1, "next");
+      });
+
+      deckSel.addEventListener("change", function () {
+        disconnect();
+        loadDeckManifest(selectedDeckId()).then(function () {
+          handleDeckOrRoomChanged();
+        });
+      });
+
+      roomInput.addEventListener("input", handleDeckOrRoomChanged);
+
+      document.addEventListener("keydown", handleKeyboard);
+
+      function boot() {
+        populateDecks();
+        roomInput.value = initialRoom;
+        refreshViewerLink();
+        setControlState(false);
+
+        loadDeckManifest(selectedDeckId()).then(function (ok) {
+          if (ok) {
+            setStatus("Ready. Enter room + secret, then connect.", "warn");
+          }
+        });
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>

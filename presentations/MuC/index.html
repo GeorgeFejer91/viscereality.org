@@ -153,6 +153,35 @@
     border-color: rgba(255,255,255,0.45);
     background: rgba(18, 18, 18, 0.82);
   }
+
+  #sync-status {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 170;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(10, 10, 10, 0.72);
+    color: #d6d6d6;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #sync-status.ok {
+    border-color: rgba(126, 224, 161, 0.45);
+    color: #9af0bc;
+  }
+  #sync-status.warn {
+    border-color: rgba(255, 211, 110, 0.45);
+    color: #ffdf8f;
+  }
+  #sync-status.err {
+    border-color: rgba(255, 139, 139, 0.45);
+    color: #ffb7b7;
+  }
+  #sync-status.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -170,6 +199,7 @@
 </div>
 
 <div id="loading">Loading presentation...</div>
+<div id="sync-status" class="hidden">Sync disabled</div>
 
 <div id="help">
   <table>
@@ -183,6 +213,7 @@
 
 <button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
 
+<script src="../shared/decks.js"></script>
 <script>
 (function () {
   "use strict";
@@ -190,9 +221,17 @@
   // -----------------------------------------------------------------------
   // CONFIG
   // -----------------------------------------------------------------------
+  const DECK_ID = "MuC";
   const MANIFEST_URL = "manifest.json";
   // Base path for chunk files (relative to this HTML file)
   const BASE_PATH = "";
+  const urlParams = new URLSearchParams(window.location.search);
+  const syncRoom = (urlParams.get("room") || "").trim();
+  const syncMode = syncRoom.length > 0;
+  const syncCfg = window.PRESENTATION_SYNC || {};
+  const relayWsBase = syncCfg.relayWsBase || "";
+  const reconnectBaseMs = Number(syncCfg.reconnectBaseMs || 1000);
+  const reconnectMaxMs = Number(syncCfg.reconnectMaxMs || 12000);
 
   // -----------------------------------------------------------------------
   // STATE
@@ -214,6 +253,7 @@
   const loadingEl = document.getElementById("loading");
   const helpEl = document.getElementById("help");
   const fullscreenBtn = document.getElementById("fullscreen-btn");
+  const syncStatusEl = document.getElementById("sync-status");
 
   let activeVid = vidA;
   let standbyVid = vidB;
@@ -221,6 +261,19 @@
   let cursorTimer;
   let autoFullscreenAttempted = false;
   let suppressNextAdvanceClick = false;
+  let pendingRemoteState = null;
+
+  let syncSocket = null;
+  let syncReconnectTimer = null;
+  let syncReconnectAttempts = 0;
+  let syncLastSeq = -1;
+
+  if (syncMode) {
+    syncStatusEl.classList.remove("hidden");
+    setSyncStatus("Sync mode: connecting...", "warn");
+  } else {
+    syncStatusEl.classList.add("hidden");
+  }
 
   // -----------------------------------------------------------------------
   // LOAD MANIFEST
@@ -240,10 +293,16 @@
       document.title = data.title || "Presentation";
       renderTicks();
       preloadAndStart();
+      if (syncMode) {
+        connectSyncSocket();
+      }
     })
     .catch(err => {
       loadingEl.textContent = "Failed to load manifest.json";
       console.error(err);
+      if (syncMode) {
+        setSyncStatus("Sync unavailable: manifest load failed.", "err");
+      }
     });
 
   // -----------------------------------------------------------------------
@@ -306,7 +365,11 @@
     );
 
     if (!transChunk) {
-      playSlide(nextIdx).catch(console.error);
+      playSlide(nextIdx)
+        .then(() => {
+          flushPendingRemoteState();
+        })
+        .catch(console.error);
       return;
     }
 
@@ -324,6 +387,7 @@
       updateProgress();
       preloadNext(nextIdx);
       isTransitioning = false;
+      flushPendingRemoteState();
     };
 
     const nextSlideSrc = BASE_PATH + nextSlide.file;
@@ -339,6 +403,7 @@
         console.error("Slide preload failed", err);
         standbyVid.classList.remove("active");
         isTransitioning = false;
+        flushPendingRemoteState();
       });
 
     const onEnd = () => {
@@ -356,6 +421,7 @@
       standbyVid.removeEventListener("ended", onEnd);
       standbyVid.classList.remove("active");
       isTransitioning = false;
+      flushPendingRemoteState();
     });
   }
 
@@ -365,7 +431,11 @@
 
     // For backwards, we skip transitions and just cut directly
     // (reverse transitions would look odd)
-    playSlide(currentSlideIdx - 1).catch(console.error);
+    playSlide(currentSlideIdx - 1)
+      .then(() => {
+        flushPendingRemoteState();
+      })
+      .catch(console.error);
   }
 
   function loadInto(video, src, loop) {
@@ -427,6 +497,165 @@
     });
   }
 
+  function setSyncStatus(message, tone) {
+    if (!syncMode) return;
+    syncStatusEl.classList.remove("ok", "warn", "err");
+    syncStatusEl.classList.add(tone || "warn");
+    syncStatusEl.textContent = message;
+  }
+
+  function buildSyncUrl() {
+    if (!relayWsBase) return null;
+    if (relayWsBase.includes("replace-with-your-relay-domain")) return null;
+    const wsUrl = new URL(relayWsBase, window.location.origin);
+    wsUrl.searchParams.set("room", syncRoom);
+    wsUrl.searchParams.set("deck", DECK_ID);
+    wsUrl.searchParams.set("role", "viewer");
+    return wsUrl.toString();
+  }
+
+  function scheduleSyncReconnect() {
+    if (!syncMode) return;
+    clearTimeout(syncReconnectTimer);
+    const delay = Math.min(reconnectMaxMs, reconnectBaseMs * Math.pow(2, syncReconnectAttempts));
+    syncReconnectAttempts += 1;
+    setSyncStatus(`Sync reconnecting in ${(delay / 1000).toFixed(1)}s...`, "warn");
+    syncReconnectTimer = setTimeout(() => {
+      connectSyncSocket();
+    }, delay);
+  }
+
+  function sendSync(payload) {
+    if (!syncSocket || syncSocket.readyState !== WebSocket.OPEN) return false;
+    syncSocket.send(JSON.stringify(payload));
+    return true;
+  }
+
+  function connectSyncSocket() {
+    if (!syncMode) return;
+    clearTimeout(syncReconnectTimer);
+
+    const wsUrl = buildSyncUrl();
+    if (!wsUrl) {
+      setSyncStatus("Sync disabled: relay URL not configured.", "err");
+      return;
+    }
+
+    setSyncStatus(syncReconnectAttempts > 0 ? "Sync reconnecting..." : "Sync connecting...", "warn");
+    try {
+      syncSocket = new WebSocket(wsUrl);
+    } catch (err) {
+      console.error("WebSocket init failed", err);
+      setSyncStatus("Sync error: failed to create socket.", "err");
+      scheduleSyncReconnect();
+      return;
+    }
+
+    syncSocket.addEventListener("open", () => {
+      syncReconnectAttempts = 0;
+      setSyncStatus("Sync connected (viewer read-only).", "ok");
+      sendSync({ type: "hello", role: "viewer" });
+    });
+
+    syncSocket.addEventListener("message", (event) => {
+      let msg;
+      try {
+        msg = JSON.parse(event.data);
+      } catch (_) {
+        return;
+      }
+
+      if (!msg || typeof msg !== "object") return;
+
+      if (msg.type === "ping") {
+        sendSync({ type: "pong", ts: msg.ts || Date.now() });
+        return;
+      }
+
+      if ((msg.type === "hello" || msg.type === "state_update") && msg.state) {
+        applyRemoteState(msg.state, msg.action || "jump");
+        return;
+      }
+
+      if (msg.type === "error") {
+        const code = msg.code || "SYNC_ERROR";
+        const message = msg.message || "Unknown sync error.";
+        setSyncStatus(`${code}: ${message}`, "err");
+      }
+    });
+
+    syncSocket.addEventListener("close", () => {
+      syncSocket = null;
+      setSyncStatus("Sync disconnected.", "warn");
+      scheduleSyncReconnect();
+    });
+
+    syncSocket.addEventListener("error", () => {
+      setSyncStatus("Sync socket error.", "err");
+      try { syncSocket.close(); } catch (_) {}
+    });
+  }
+
+  function queueRemoteState(state, actionHint) {
+    const seq = (typeof state.seq === "number") ? state.seq : -1;
+    if (!pendingRemoteState || seq >= pendingRemoteState.seq) {
+      pendingRemoteState = { state, actionHint, seq };
+    }
+  }
+
+  function flushPendingRemoteState() {
+    if (isTransitioning || !pendingRemoteState) return;
+    const queued = pendingRemoteState;
+    pendingRemoteState = null;
+    applyRemoteState(queued.state, queued.actionHint);
+  }
+
+  function applyRemoteState(state, actionHint) {
+    if (!state) return;
+
+    const seq = (typeof state.seq === "number") ? state.seq : null;
+    if (seq !== null && seq <= syncLastSeq) {
+      return;
+    }
+
+    let targetIdx = Number(state.slideIndex);
+    if (!Number.isFinite(targetIdx)) return;
+    targetIdx = Math.max(0, Math.min(slideChunks.length - 1, Math.trunc(targetIdx)));
+
+    if (isTransitioning) {
+      queueRemoteState(state, actionHint);
+      return;
+    }
+
+    if (seq !== null) {
+      syncLastSeq = seq;
+    }
+
+    if (targetIdx === currentSlideIdx) {
+      showHud(targetIdx);
+      updateProgress();
+      return;
+    }
+
+    if (targetIdx === currentSlideIdx + 1 && actionHint === "next") {
+      goNext();
+      return;
+    }
+
+    if (targetIdx === currentSlideIdx - 1 && actionHint === "prev") {
+      goPrev();
+      return;
+    }
+
+    playSlide(targetIdx)
+      .then(() => {
+        flushPendingRemoteState();
+      })
+      .catch((err) => {
+        console.error("Remote jump failed", err);
+      });
+  }
+
   // -----------------------------------------------------------------------
   // CURSOR AUTO-HIDE
   // -----------------------------------------------------------------------
@@ -471,14 +700,23 @@
     switch (e.key) {
       case "ArrowRight":
         e.preventDefault();
+        if (syncMode) {
+          return;
+        }
         goNext();
         break;
       case "ArrowLeft":
         e.preventDefault();
+        if (syncMode) {
+          return;
+        }
         goPrev();
         break;
       case " ":
         e.preventDefault();
+        if (syncMode) {
+          return;
+        }
         if (paused) {
           if (isTransitioning && standbyVid.classList.contains("active")) {
             standbyVid.play().catch(() => {});
@@ -512,6 +750,9 @@
     }
     if (suppressNextAdvanceClick) {
       suppressNextAdvanceClick = false;
+      return;
+    }
+    if (syncMode) {
       return;
     }
     goNext();
