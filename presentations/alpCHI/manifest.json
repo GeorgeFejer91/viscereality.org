@@ -1,6 +1,6 @@
 {
-  "title": "Viscereality_alpCHI_v1",
-  "total_slides": 18,
+  "title": "Viscereality_alpCHI_v2",
+  "total_slides": 25,
   "chunks": [
     {
       "type": "transition",
@@ -230,7 +230,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_16.mp4",
-      "duration": 1.0,
+      "duration": 30.0,
       "slide_number": 16,
       "label": "Slide 16",
       "loop": true
@@ -245,7 +245,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_17.mp4",
-      "duration": 3.54,
+      "duration": 30.0,
       "slide_number": 17,
       "label": "Slide 17",
       "loop": true
@@ -260,22 +260,127 @@
     {
       "type": "slide",
       "file": "chunks/slide_18.mp4",
-      "duration": 1.0,
+      "duration": 30.0,
       "slide_number": 18,
-      "label": "What else does the future hold?",
+      "label": "Slide 18",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_19.mp4",
+      "duration": 2.0,
+      "slide_from": 18,
+      "slide_to": 19
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_19.mp4",
+      "duration": 30.0,
+      "slide_number": 19,
+      "label": "Slide 19",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_20.mp4",
+      "duration": 2.0,
+      "slide_from": 19,
+      "slide_to": 20
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_20.mp4",
+      "duration": 8.12,
+      "slide_number": 20,
+      "label": "Slide 20",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_21.mp4",
+      "duration": 2.0,
+      "slide_from": 20,
+      "slide_to": 21
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_21.mp4",
+      "duration": 8.12,
+      "slide_number": 21,
+      "label": "Slide 21",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_22.mp4",
+      "duration": 2.0,
+      "slide_from": 21,
+      "slide_to": 22
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_22.mp4",
+      "duration": 8.12,
+      "slide_number": 22,
+      "label": "Slide 22",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_23.mp4",
+      "duration": 2.0,
+      "slide_from": 22,
+      "slide_to": 23
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_23.mp4",
+      "duration": 1.0,
+      "slide_number": 23,
+      "label": "Slide 23",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_24.mp4",
+      "duration": 2.0,
+      "slide_from": 23,
+      "slide_to": 24
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_24.mp4",
+      "duration": 1.0,
+      "slide_number": 24,
+      "label": "Slide 24",
+      "loop": true
+    },
+    {
+      "type": "transition",
+      "file": "chunks/trans_25.mp4",
+      "duration": 2.0,
+      "slide_from": 24,
+      "slide_to": 25
+    },
+    {
+      "type": "slide",
+      "file": "chunks/slide_25.mp4",
+      "duration": 1.0,
+      "slide_number": 25,
+      "label": "Slide 25",
       "loop": true
     }
   ],
-  "presentation_id": "viscereality_alpchi_v1",
-  "source_ppt": "C:\\Users\\cogpsy-vrlab\\Desktop\\alpCHI\\Viscereality_alpCHI_v1.pptx",
-  "generated_at_utc": "2026-03-03T00:26:45.985953+00:00",
+  "presentation_id": "viscereality_alpchi_v2",
+  "source_ppt": "C:\\Users\\cogpsy-vrlab\\Desktop\\alpCHI\\Viscereality_alpCHI_v2.pptx",
+  "generated_at_utc": "2026-03-03T02:05:49.484909+00:00",
   "encoding": {
     "fps": 30,
     "height": 1080,
     "mute": true,
     "timing_mode": "ppt"
   },
-  "master_file": "viscereality_alpchi_v1_master_fitted.mp4",
+  "master_file": "viscereality_alpchi_v2_master_fitted.mp4",
   "segments": [
     {
       "id": "trans_01",
@@ -582,8 +687,8 @@
       "type": "slide",
       "slide_index": 16,
       "start_sec": 444.21,
-      "end_sec": 445.21,
-      "duration_sec": 1.0,
+      "end_sec": 474.21,
+      "duration_sec": 30.0,
       "file": "chunks/slide_16.mp4",
       "loop_default": true
     },
@@ -591,8 +696,8 @@
       "id": "trans_17",
       "type": "transition",
       "slide_index": 17,
-      "start_sec": 445.21,
-      "end_sec": 447.21,
+      "start_sec": 474.21,
+      "end_sec": 476.21,
       "duration_sec": 2.0,
       "file": "chunks/trans_17.mp4",
       "loop_default": false
@@ -601,9 +706,9 @@
       "id": "slide_17",
       "type": "slide",
       "slide_index": 17,
-      "start_sec": 447.21,
-      "end_sec": 450.75,
-      "duration_sec": 3.54,
+      "start_sec": 476.21,
+      "end_sec": 506.21,
+      "duration_sec": 30.0,
       "file": "chunks/slide_17.mp4",
       "loop_default": true
     },
@@ -611,8 +716,8 @@
       "id": "trans_18",
       "type": "transition",
       "slide_index": 18,
-      "start_sec": 450.75,
-      "end_sec": 452.75,
+      "start_sec": 506.21,
+      "end_sec": 508.21,
       "duration_sec": 2.0,
       "file": "chunks/trans_18.mp4",
       "loop_default": false
@@ -621,10 +726,150 @@
       "id": "slide_18",
       "type": "slide",
       "slide_index": 18,
-      "start_sec": 452.75,
-      "end_sec": 453.75,
-      "duration_sec": 1.0,
+      "start_sec": 508.21,
+      "end_sec": 538.21,
+      "duration_sec": 30.0,
       "file": "chunks/slide_18.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_19",
+      "type": "transition",
+      "slide_index": 19,
+      "start_sec": 538.21,
+      "end_sec": 540.21,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_19.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_19",
+      "type": "slide",
+      "slide_index": 19,
+      "start_sec": 540.21,
+      "end_sec": 570.21,
+      "duration_sec": 30.0,
+      "file": "chunks/slide_19.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_20",
+      "type": "transition",
+      "slide_index": 20,
+      "start_sec": 570.21,
+      "end_sec": 572.21,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_20.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_20",
+      "type": "slide",
+      "slide_index": 20,
+      "start_sec": 572.21,
+      "end_sec": 580.33,
+      "duration_sec": 8.12,
+      "file": "chunks/slide_20.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_21",
+      "type": "transition",
+      "slide_index": 21,
+      "start_sec": 580.33,
+      "end_sec": 582.33,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_21.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_21",
+      "type": "slide",
+      "slide_index": 21,
+      "start_sec": 582.33,
+      "end_sec": 590.45,
+      "duration_sec": 8.12,
+      "file": "chunks/slide_21.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_22",
+      "type": "transition",
+      "slide_index": 22,
+      "start_sec": 590.45,
+      "end_sec": 592.45,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_22.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_22",
+      "type": "slide",
+      "slide_index": 22,
+      "start_sec": 592.45,
+      "end_sec": 600.57,
+      "duration_sec": 8.12,
+      "file": "chunks/slide_22.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_23",
+      "type": "transition",
+      "slide_index": 23,
+      "start_sec": 600.57,
+      "end_sec": 602.57,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_23.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_23",
+      "type": "slide",
+      "slide_index": 23,
+      "start_sec": 602.57,
+      "end_sec": 603.57,
+      "duration_sec": 1.0,
+      "file": "chunks/slide_23.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_24",
+      "type": "transition",
+      "slide_index": 24,
+      "start_sec": 603.57,
+      "end_sec": 605.57,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_24.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_24",
+      "type": "slide",
+      "slide_index": 24,
+      "start_sec": 605.57,
+      "end_sec": 606.57,
+      "duration_sec": 1.0,
+      "file": "chunks/slide_24.mp4",
+      "loop_default": true
+    },
+    {
+      "id": "trans_25",
+      "type": "transition",
+      "slide_index": 25,
+      "start_sec": 606.57,
+      "end_sec": 608.57,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_25.mp4",
+      "loop_default": false
+    },
+    {
+      "id": "slide_25",
+      "type": "slide",
+      "slide_index": 25,
+      "start_sec": 608.57,
+      "end_sec": 609.57,
+      "duration_sec": 1.0,
+      "file": "chunks/slide_25.mp4",
       "loop_default": true
     }
   ],
@@ -732,9 +977,51 @@
     },
     {
       "index": 18,
-      "label": "What else does the future hold?",
+      "label": "Slide 18",
       "slide_segment_id": "slide_18",
       "transition_segment_id": "trans_18"
+    },
+    {
+      "index": 19,
+      "label": "Slide 19",
+      "slide_segment_id": "slide_19",
+      "transition_segment_id": "trans_19"
+    },
+    {
+      "index": 20,
+      "label": "Slide 20",
+      "slide_segment_id": "slide_20",
+      "transition_segment_id": "trans_20"
+    },
+    {
+      "index": 21,
+      "label": "Slide 21",
+      "slide_segment_id": "slide_21",
+      "transition_segment_id": "trans_21"
+    },
+    {
+      "index": 22,
+      "label": "Slide 22",
+      "slide_segment_id": "slide_22",
+      "transition_segment_id": "trans_22"
+    },
+    {
+      "index": 23,
+      "label": "Slide 23",
+      "slide_segment_id": "slide_23",
+      "transition_segment_id": "trans_23"
+    },
+    {
+      "index": 24,
+      "label": "Slide 24",
+      "slide_segment_id": "slide_24",
+      "transition_segment_id": "trans_24"
+    },
+    {
+      "index": 25,
+      "label": "Slide 25",
+      "slide_segment_id": "slide_25",
+      "transition_segment_id": "trans_25"
     }
   ],
   "player_defaults": {
