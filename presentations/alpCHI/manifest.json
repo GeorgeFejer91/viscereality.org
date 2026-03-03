@@ -12,7 +12,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_01.mp4",
-      "duration": 3.54,
+      "duration": 30.0,
       "slide_number": 1,
       "label": "Slide 1",
       "loop": true
@@ -27,7 +27,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_02.mp4",
-      "duration": 12.0,
+      "duration": 30.0,
       "slide_number": 2,
       "label": "Slide 2",
       "loop": true
@@ -42,15 +42,22 @@
     {
       "type": "slide",
       "file": "chunks/slide_03.mp4",
-      "duration": 12.0,
+      "duration": 30.0,
       "slide_number": 3,
       "label": "Slide 3",
       "loop": true
     },
     {
+      "type": "transition",
+      "file": "chunks/trans_04.mp4",
+      "duration": 2.0,
+      "slide_from": 3,
+      "slide_to": 4
+    },
+    {
       "type": "slide",
       "file": "chunks/slide_04.mp4",
-      "duration": 6.0,
+      "duration": 30.0,
       "slide_number": 4,
       "label": "Slide 4",
       "loop": true
@@ -65,7 +72,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_05.mp4",
-      "duration": 6.0,
+      "duration": 30.0,
       "slide_number": 5,
       "label": "Slide 5",
       "loop": true
@@ -80,7 +87,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_06.mp4",
-      "duration": 5.4,
+      "duration": 30.0,
       "slide_number": 6,
       "label": "Slide 6",
       "loop": true
@@ -95,7 +102,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_07.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 7,
       "label": "Slide 7",
       "loop": true
@@ -110,7 +117,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_08.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 8,
       "label": "Slide 8",
       "loop": true
@@ -125,7 +132,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_09.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 9,
       "label": "Slide 9",
       "loop": true
@@ -140,7 +147,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_10.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 10,
       "label": "Slide 10",
       "loop": true
@@ -155,7 +162,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_11.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 11,
       "label": "Slide 11",
       "loop": true
@@ -170,7 +177,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_12.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 12,
       "label": "Slide 12",
       "loop": true
@@ -185,7 +192,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_13.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 13,
       "label": "Slide 13",
       "loop": true
@@ -200,7 +207,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_14.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 14,
       "label": "Slide 14",
       "loop": true
@@ -215,7 +222,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_15.mp4",
-      "duration": 41.03,
+      "duration": 30.0,
       "slide_number": 15,
       "label": "Slide 15",
       "loop": true
@@ -290,7 +297,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_20.mp4",
-      "duration": 8.12,
+      "duration": 30.0,
       "slide_number": 20,
       "label": "Slide 20",
       "loop": true
@@ -305,7 +312,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_21.mp4",
-      "duration": 8.12,
+      "duration": 30.0,
       "slide_number": 21,
       "label": "Slide 21",
       "loop": true
@@ -320,7 +327,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_22.mp4",
-      "duration": 8.12,
+      "duration": 30.0,
       "slide_number": 22,
       "label": "Slide 22",
       "loop": true
@@ -335,7 +342,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_23.mp4",
-      "duration": 1.0,
+      "duration": 30.0,
       "slide_number": 23,
       "label": "Slide 23",
       "loop": true
@@ -350,7 +357,7 @@
     {
       "type": "slide",
       "file": "chunks/slide_24.mp4",
-      "duration": 1.0,
+      "duration": 30.0,
       "slide_number": 24,
       "label": "Slide 24",
       "loop": true
@@ -365,20 +372,20 @@
     {
       "type": "slide",
       "file": "chunks/slide_25.mp4",
-      "duration": 1.0,
+      "duration": 30.0,
       "slide_number": 25,
       "label": "Slide 25",
       "loop": true
     }
   ],
   "presentation_id": "viscereality_alpchi_v2",
-  "source_ppt": "C:\\Users\\cogpsy-vrlab\\Desktop\\alpCHI\\Viscereality_alpCHI_v2.pptx",
-  "generated_at_utc": "2026-03-03T02:05:49.484909+00:00",
+  "source_ppt": null,
+  "generated_at_utc": "2026-03-03T03:40:57.588922+00:00",
   "encoding": {
-    "fps": 30,
-    "height": 1080,
+    "fps": null,
+    "height": null,
     "mute": true,
-    "timing_mode": "ppt"
+    "timing_mode": "config"
   },
   "master_file": "viscereality_alpchi_v2_master_fitted.mp4",
   "segments": [
@@ -397,8 +404,8 @@
       "type": "slide",
       "slide_index": 1,
       "start_sec": 2.0,
-      "end_sec": 5.54,
-      "duration_sec": 3.54,
+      "end_sec": 32.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_01.mp4",
       "loop_default": true
     },
@@ -406,8 +413,8 @@
       "id": "trans_02",
       "type": "transition",
       "slide_index": 2,
-      "start_sec": 5.54,
-      "end_sec": 7.54,
+      "start_sec": 32.0,
+      "end_sec": 34.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_02.mp4",
       "loop_default": false
@@ -416,9 +423,9 @@
       "id": "slide_02",
       "type": "slide",
       "slide_index": 2,
-      "start_sec": 7.54,
-      "end_sec": 19.54,
-      "duration_sec": 12.0,
+      "start_sec": 34.0,
+      "end_sec": 64.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_02.mp4",
       "loop_default": true
     },
@@ -426,8 +433,8 @@
       "id": "trans_03",
       "type": "transition",
       "slide_index": 3,
-      "start_sec": 19.54,
-      "end_sec": 21.54,
+      "start_sec": 64.0,
+      "end_sec": 66.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_03.mp4",
       "loop_default": false
@@ -436,19 +443,29 @@
       "id": "slide_03",
       "type": "slide",
       "slide_index": 3,
-      "start_sec": 21.54,
-      "end_sec": 33.54,
-      "duration_sec": 12.0,
+      "start_sec": 66.0,
+      "end_sec": 96.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_03.mp4",
       "loop_default": true
+    },
+    {
+      "id": "trans_04",
+      "type": "transition",
+      "slide_index": 4,
+      "start_sec": 96.0,
+      "end_sec": 98.0,
+      "duration_sec": 2.0,
+      "file": "chunks/trans_04.mp4",
+      "loop_default": false
     },
     {
       "id": "slide_04",
       "type": "slide",
       "slide_index": 4,
-      "start_sec": 33.54,
-      "end_sec": 39.54,
-      "duration_sec": 6.0,
+      "start_sec": 98.0,
+      "end_sec": 128.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_04.mp4",
       "loop_default": true
     },
@@ -456,8 +473,8 @@
       "id": "trans_05",
       "type": "transition",
       "slide_index": 5,
-      "start_sec": 39.54,
-      "end_sec": 41.54,
+      "start_sec": 128.0,
+      "end_sec": 130.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_05.mp4",
       "loop_default": false
@@ -466,9 +483,9 @@
       "id": "slide_05",
       "type": "slide",
       "slide_index": 5,
-      "start_sec": 41.54,
-      "end_sec": 47.54,
-      "duration_sec": 6.0,
+      "start_sec": 130.0,
+      "end_sec": 160.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_05.mp4",
       "loop_default": true
     },
@@ -476,8 +493,8 @@
       "id": "trans_06",
       "type": "transition",
       "slide_index": 6,
-      "start_sec": 47.54,
-      "end_sec": 49.54,
+      "start_sec": 160.0,
+      "end_sec": 162.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_06.mp4",
       "loop_default": false
@@ -486,9 +503,9 @@
       "id": "slide_06",
       "type": "slide",
       "slide_index": 6,
-      "start_sec": 49.54,
-      "end_sec": 54.94,
-      "duration_sec": 5.4,
+      "start_sec": 162.0,
+      "end_sec": 192.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_06.mp4",
       "loop_default": true
     },
@@ -496,8 +513,8 @@
       "id": "trans_07",
       "type": "transition",
       "slide_index": 7,
-      "start_sec": 54.94,
-      "end_sec": 56.94,
+      "start_sec": 192.0,
+      "end_sec": 194.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_07.mp4",
       "loop_default": false
@@ -506,9 +523,9 @@
       "id": "slide_07",
       "type": "slide",
       "slide_index": 7,
-      "start_sec": 56.94,
-      "end_sec": 97.97,
-      "duration_sec": 41.03,
+      "start_sec": 194.0,
+      "end_sec": 224.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_07.mp4",
       "loop_default": true
     },
@@ -516,8 +533,8 @@
       "id": "trans_08",
       "type": "transition",
       "slide_index": 8,
-      "start_sec": 97.97,
-      "end_sec": 99.97,
+      "start_sec": 224.0,
+      "end_sec": 226.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_08.mp4",
       "loop_default": false
@@ -526,9 +543,9 @@
       "id": "slide_08",
       "type": "slide",
       "slide_index": 8,
-      "start_sec": 99.97,
-      "end_sec": 141.0,
-      "duration_sec": 41.03,
+      "start_sec": 226.0,
+      "end_sec": 256.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_08.mp4",
       "loop_default": true
     },
@@ -536,8 +553,8 @@
       "id": "trans_09",
       "type": "transition",
       "slide_index": 9,
-      "start_sec": 141.0,
-      "end_sec": 143.0,
+      "start_sec": 256.0,
+      "end_sec": 258.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_09.mp4",
       "loop_default": false
@@ -546,9 +563,9 @@
       "id": "slide_09",
       "type": "slide",
       "slide_index": 9,
-      "start_sec": 143.0,
-      "end_sec": 184.03,
-      "duration_sec": 41.03,
+      "start_sec": 258.0,
+      "end_sec": 288.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_09.mp4",
       "loop_default": true
     },
@@ -556,8 +573,8 @@
       "id": "trans_10",
       "type": "transition",
       "slide_index": 10,
-      "start_sec": 184.03,
-      "end_sec": 186.03,
+      "start_sec": 288.0,
+      "end_sec": 290.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_10.mp4",
       "loop_default": false
@@ -566,9 +583,9 @@
       "id": "slide_10",
       "type": "slide",
       "slide_index": 10,
-      "start_sec": 186.03,
-      "end_sec": 227.06,
-      "duration_sec": 41.03,
+      "start_sec": 290.0,
+      "end_sec": 320.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_10.mp4",
       "loop_default": true
     },
@@ -576,8 +593,8 @@
       "id": "trans_11",
       "type": "transition",
       "slide_index": 11,
-      "start_sec": 227.06,
-      "end_sec": 229.06,
+      "start_sec": 320.0,
+      "end_sec": 322.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_11.mp4",
       "loop_default": false
@@ -586,9 +603,9 @@
       "id": "slide_11",
       "type": "slide",
       "slide_index": 11,
-      "start_sec": 229.06,
-      "end_sec": 270.09,
-      "duration_sec": 41.03,
+      "start_sec": 322.0,
+      "end_sec": 352.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_11.mp4",
       "loop_default": true
     },
@@ -596,8 +613,8 @@
       "id": "trans_12",
       "type": "transition",
       "slide_index": 12,
-      "start_sec": 270.09,
-      "end_sec": 272.09,
+      "start_sec": 352.0,
+      "end_sec": 354.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_12.mp4",
       "loop_default": false
@@ -606,9 +623,9 @@
       "id": "slide_12",
       "type": "slide",
       "slide_index": 12,
-      "start_sec": 272.09,
-      "end_sec": 313.12,
-      "duration_sec": 41.03,
+      "start_sec": 354.0,
+      "end_sec": 384.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_12.mp4",
       "loop_default": true
     },
@@ -616,8 +633,8 @@
       "id": "trans_13",
       "type": "transition",
       "slide_index": 13,
-      "start_sec": 313.12,
-      "end_sec": 315.12,
+      "start_sec": 384.0,
+      "end_sec": 386.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_13.mp4",
       "loop_default": false
@@ -626,9 +643,9 @@
       "id": "slide_13",
       "type": "slide",
       "slide_index": 13,
-      "start_sec": 315.12,
-      "end_sec": 356.15,
-      "duration_sec": 41.03,
+      "start_sec": 386.0,
+      "end_sec": 416.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_13.mp4",
       "loop_default": true
     },
@@ -636,8 +653,8 @@
       "id": "trans_14",
       "type": "transition",
       "slide_index": 14,
-      "start_sec": 356.15,
-      "end_sec": 358.15,
+      "start_sec": 416.0,
+      "end_sec": 418.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_14.mp4",
       "loop_default": false
@@ -646,9 +663,9 @@
       "id": "slide_14",
       "type": "slide",
       "slide_index": 14,
-      "start_sec": 358.15,
-      "end_sec": 399.18,
-      "duration_sec": 41.03,
+      "start_sec": 418.0,
+      "end_sec": 448.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_14.mp4",
       "loop_default": true
     },
@@ -656,8 +673,8 @@
       "id": "trans_15",
       "type": "transition",
       "slide_index": 15,
-      "start_sec": 399.18,
-      "end_sec": 401.18,
+      "start_sec": 448.0,
+      "end_sec": 450.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_15.mp4",
       "loop_default": false
@@ -666,9 +683,9 @@
       "id": "slide_15",
       "type": "slide",
       "slide_index": 15,
-      "start_sec": 401.18,
-      "end_sec": 442.21,
-      "duration_sec": 41.03,
+      "start_sec": 450.0,
+      "end_sec": 480.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_15.mp4",
       "loop_default": true
     },
@@ -676,8 +693,8 @@
       "id": "trans_16",
       "type": "transition",
       "slide_index": 16,
-      "start_sec": 442.21,
-      "end_sec": 444.21,
+      "start_sec": 480.0,
+      "end_sec": 482.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_16.mp4",
       "loop_default": false
@@ -686,8 +703,8 @@
       "id": "slide_16",
       "type": "slide",
       "slide_index": 16,
-      "start_sec": 444.21,
-      "end_sec": 474.21,
+      "start_sec": 482.0,
+      "end_sec": 512.0,
       "duration_sec": 30.0,
       "file": "chunks/slide_16.mp4",
       "loop_default": true
@@ -696,8 +713,8 @@
       "id": "trans_17",
       "type": "transition",
       "slide_index": 17,
-      "start_sec": 474.21,
-      "end_sec": 476.21,
+      "start_sec": 512.0,
+      "end_sec": 514.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_17.mp4",
       "loop_default": false
@@ -706,8 +723,8 @@
       "id": "slide_17",
       "type": "slide",
       "slide_index": 17,
-      "start_sec": 476.21,
-      "end_sec": 506.21,
+      "start_sec": 514.0,
+      "end_sec": 544.0,
       "duration_sec": 30.0,
       "file": "chunks/slide_17.mp4",
       "loop_default": true
@@ -716,8 +733,8 @@
       "id": "trans_18",
       "type": "transition",
       "slide_index": 18,
-      "start_sec": 506.21,
-      "end_sec": 508.21,
+      "start_sec": 544.0,
+      "end_sec": 546.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_18.mp4",
       "loop_default": false
@@ -726,8 +743,8 @@
       "id": "slide_18",
       "type": "slide",
       "slide_index": 18,
-      "start_sec": 508.21,
-      "end_sec": 538.21,
+      "start_sec": 546.0,
+      "end_sec": 576.0,
       "duration_sec": 30.0,
       "file": "chunks/slide_18.mp4",
       "loop_default": true
@@ -736,8 +753,8 @@
       "id": "trans_19",
       "type": "transition",
       "slide_index": 19,
-      "start_sec": 538.21,
-      "end_sec": 540.21,
+      "start_sec": 576.0,
+      "end_sec": 578.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_19.mp4",
       "loop_default": false
@@ -746,8 +763,8 @@
       "id": "slide_19",
       "type": "slide",
       "slide_index": 19,
-      "start_sec": 540.21,
-      "end_sec": 570.21,
+      "start_sec": 578.0,
+      "end_sec": 608.0,
       "duration_sec": 30.0,
       "file": "chunks/slide_19.mp4",
       "loop_default": true
@@ -756,8 +773,8 @@
       "id": "trans_20",
       "type": "transition",
       "slide_index": 20,
-      "start_sec": 570.21,
-      "end_sec": 572.21,
+      "start_sec": 608.0,
+      "end_sec": 610.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_20.mp4",
       "loop_default": false
@@ -766,9 +783,9 @@
       "id": "slide_20",
       "type": "slide",
       "slide_index": 20,
-      "start_sec": 572.21,
-      "end_sec": 580.33,
-      "duration_sec": 8.12,
+      "start_sec": 610.0,
+      "end_sec": 640.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_20.mp4",
       "loop_default": true
     },
@@ -776,8 +793,8 @@
       "id": "trans_21",
       "type": "transition",
       "slide_index": 21,
-      "start_sec": 580.33,
-      "end_sec": 582.33,
+      "start_sec": 640.0,
+      "end_sec": 642.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_21.mp4",
       "loop_default": false
@@ -786,9 +803,9 @@
       "id": "slide_21",
       "type": "slide",
       "slide_index": 21,
-      "start_sec": 582.33,
-      "end_sec": 590.45,
-      "duration_sec": 8.12,
+      "start_sec": 642.0,
+      "end_sec": 672.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_21.mp4",
       "loop_default": true
     },
@@ -796,8 +813,8 @@
       "id": "trans_22",
       "type": "transition",
       "slide_index": 22,
-      "start_sec": 590.45,
-      "end_sec": 592.45,
+      "start_sec": 672.0,
+      "end_sec": 674.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_22.mp4",
       "loop_default": false
@@ -806,9 +823,9 @@
       "id": "slide_22",
       "type": "slide",
       "slide_index": 22,
-      "start_sec": 592.45,
-      "end_sec": 600.57,
-      "duration_sec": 8.12,
+      "start_sec": 674.0,
+      "end_sec": 704.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_22.mp4",
       "loop_default": true
     },
@@ -816,8 +833,8 @@
       "id": "trans_23",
       "type": "transition",
       "slide_index": 23,
-      "start_sec": 600.57,
-      "end_sec": 602.57,
+      "start_sec": 704.0,
+      "end_sec": 706.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_23.mp4",
       "loop_default": false
@@ -826,9 +843,9 @@
       "id": "slide_23",
       "type": "slide",
       "slide_index": 23,
-      "start_sec": 602.57,
-      "end_sec": 603.57,
-      "duration_sec": 1.0,
+      "start_sec": 706.0,
+      "end_sec": 736.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_23.mp4",
       "loop_default": true
     },
@@ -836,8 +853,8 @@
       "id": "trans_24",
       "type": "transition",
       "slide_index": 24,
-      "start_sec": 603.57,
-      "end_sec": 605.57,
+      "start_sec": 736.0,
+      "end_sec": 738.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_24.mp4",
       "loop_default": false
@@ -846,9 +863,9 @@
       "id": "slide_24",
       "type": "slide",
       "slide_index": 24,
-      "start_sec": 605.57,
-      "end_sec": 606.57,
-      "duration_sec": 1.0,
+      "start_sec": 738.0,
+      "end_sec": 768.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_24.mp4",
       "loop_default": true
     },
@@ -856,8 +873,8 @@
       "id": "trans_25",
       "type": "transition",
       "slide_index": 25,
-      "start_sec": 606.57,
-      "end_sec": 608.57,
+      "start_sec": 768.0,
+      "end_sec": 770.0,
       "duration_sec": 2.0,
       "file": "chunks/trans_25.mp4",
       "loop_default": false
@@ -866,9 +883,9 @@
       "id": "slide_25",
       "type": "slide",
       "slide_index": 25,
-      "start_sec": 608.57,
-      "end_sec": 609.57,
-      "duration_sec": 1.0,
+      "start_sec": 770.0,
+      "end_sec": 800.0,
+      "duration_sec": 30.0,
       "file": "chunks/slide_25.mp4",
       "loop_default": true
     }
@@ -895,7 +912,8 @@
     {
       "index": 4,
       "label": "Slide 4",
-      "slide_segment_id": "slide_04"
+      "slide_segment_id": "slide_04",
+      "transition_segment_id": "trans_04"
     },
     {
       "index": 5,
@@ -1028,13 +1046,5 @@
     "start_slide": 1,
     "prev_behavior": "jump",
     "next_behavior": "transition_then_loop"
-  },
-  "metadata": {
-    "timing_strategy": "visible_media_max",
-    "static_slide_sec": 1.0,
-    "min_slide_sec": 1.0,
-    "video_autoplay_enforced": true,
-    "ppt_mutation_applied": false,
-    "ppt_mutation_warning": "PowerPoint timing/autoplay update failed: (-2147352567, 'Exception occurred.', (0, 'Microsoft PowerPoint', 'SlideShowTransition.AdvanceOnClick : Invalid request.  Presentation cannot be modified.', '', 0, -2147188160), None)"
   }
 }
