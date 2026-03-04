@@ -125,15 +125,18 @@ def cut_chunk_precise(
     crf: int = 18,
 ) -> None:
     output_mp4.parent.mkdir(parents=True, exist_ok=True)
+    # Use accurate seek (after input) so chunk boundaries match timeline precisely.
     cmd = [
         str(ffmpeg_bin),
         "-y",
-        "-ss",
-        f"{start_s:.3f}",
         "-i",
         str(input_mp4),
+        "-ss",
+        f"{start_s:.3f}",
         "-t",
         f"{duration_s:.3f}",
+        "-avoid_negative_ts",
+        "make_zero",
         "-c:v",
         "libx264",
         "-preset",
