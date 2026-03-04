@@ -314,9 +314,15 @@
     isTransitioning = true;
     let slideReady = false;
     let transitionDone = false;
+    let transitionTimeoutId = null;
+    let slideLoadStarted = false;
 
     const finalizeTransition = () => {
       if (!slideReady || !transitionDone) return;
+      if (transitionTimeoutId !== null) {
+        clearTimeout(transitionTimeoutId);
+        transitionTimeoutId = null;
+      }
       standbyVid.classList.remove("active");
       standbyVid.pause();
       currentSlideIdx = nextIdx;
@@ -327,19 +333,27 @@
     };
 
     const nextSlideSrc = BASE_PATH + nextSlide.file;
-    loadInto(activeVid, nextSlideSrc, true)
-      .then(() => {
-        slideReady = true;
-        if (!paused) {
-          activeVid.play().catch(() => {});
-        }
-        finalizeTransition();
-      })
-      .catch((err) => {
-        console.error("Slide preload failed", err);
-        standbyVid.classList.remove("active");
-        isTransitioning = false;
-      });
+    const beginSlideLoad = () => {
+      if (slideLoadStarted) return;
+      slideLoadStarted = true;
+      loadInto(activeVid, nextSlideSrc, true)
+        .then(() => {
+          slideReady = true;
+          if (!paused) {
+            activeVid.play().catch(() => {});
+          }
+          finalizeTransition();
+        })
+        .catch((err) => {
+          console.error("Slide preload failed", err);
+          if (transitionTimeoutId !== null) {
+            clearTimeout(transitionTimeoutId);
+            transitionTimeoutId = null;
+          }
+          standbyVid.classList.remove("active");
+          isTransitioning = false;
+        });
+    };
 
     const onEnd = () => {
       standbyVid.removeEventListener("ended", onEnd);
@@ -351,12 +365,27 @@
     standbyVid.currentTime = 0;
     standbyVid.loop = false;
     standbyVid.classList.add("active");
+    activeVid.pause();
+    transitionTimeoutId = setTimeout(() => {
+      standbyVid.removeEventListener("ended", onEnd);
+      transitionDone = true;
+      finalizeTransition();
+    }, Math.max(250, Math.round((Number(transChunk.duration) || 0) * 1000 + 250)));
     standbyVid.play().catch((err) => {
       console.error("Transition play failed", err);
+      if (transitionTimeoutId !== null) {
+        clearTimeout(transitionTimeoutId);
+        transitionTimeoutId = null;
+      }
       standbyVid.removeEventListener("ended", onEnd);
       standbyVid.classList.remove("active");
       isTransitioning = false;
+      playSlide(nextIdx).catch(console.error);
+      return;
     });
+    // Only preload/replace slide source once transition layer is active.
+    // This prevents brief frame leaks from the next slide before transition starts.
+    beginSlideLoad();
   }
 
   function goPrev() {
