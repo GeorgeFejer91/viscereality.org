@@ -14,6 +14,7 @@ P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 A_NS = "http://schemas.openxmlformats.org/drawingml/2006/main"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+TINY_TRANSITION_SEC = 0.011
 
 
 def parse_pptx_timing_xml(pptx_path: Path) -> list[SlideTimingSource]:
@@ -43,10 +44,11 @@ def parse_pptx_timing_xml(pptx_path: Path) -> list[SlideTimingSource]:
             transition_type = "none"
             transition_duration_s = 0.0
             advance_after_s = None
+            media_timing_s = _extract_media_timing_s(root, ns)
 
             if transition is not None:
                 spd = transition.get("spd")
-                dur_ms = transition.get("dur")
+                dur_ms = transition.get("dur") or _attr_by_local_name(transition, "dur")
                 adv_tm = transition.get("advTm")
                 for child in transition:
                     tag = _local_name(child.tag)
@@ -68,6 +70,7 @@ def parse_pptx_timing_xml(pptx_path: Path) -> list[SlideTimingSource]:
                     transition_type=transition_type,
                     transition_duration_s=round(transition_duration_s, 3),
                     advance_after_s=round(advance_after_s, 3) if advance_after_s is not None else None,
+                    media_timing_s=media_timing_s,
                 )
             )
 
@@ -215,6 +218,7 @@ def resolve_segments(
                 [
                     (getattr(com, "advance_after_s", None), "com"),
                     (xml.advance_after_s, "xml"),
+                    (xml.media_timing_s, "xml_media"),
                     (default_slide, "default"),
                 ]
             )
@@ -244,6 +248,12 @@ def resolve_segments(
 
         slide_sec = round(max(0.1, float(slide_sec)), 3)
         transition_sec = round(max(0.0, float(transition_sec)), 3)
+        # 0.01s is the smallest UI-entered duration and should behave as "no transition".
+        if 0.0 < transition_sec <= TINY_TRANSITION_SEC:
+            transition_type = "none"
+            transition_sec = 0.0
+            if source != "override":
+                source = f"{source}+tiny_transition_as_none"
         if transition_type == "none":
             transition_sec = 0.0
         elif transition_sec > 0 and transition_type == "none":
@@ -379,3 +389,40 @@ def _local_name(tag: str) -> str:
     if "}" in tag:
         return tag.rsplit("}", 1)[1]
     return tag
+
+
+def _attr_by_local_name(node: Any, attr_name: str) -> str | None:
+    for key, val in node.attrib.items():
+        if _local_name(key) == attr_name:
+            return val
+    return None
+
+
+def _extract_media_timing_s(root: Any, ns: dict[str, str]) -> float | None:
+    # Media playback durations are usually stored in timing command behaviors (ms).
+    max_ms = 0
+    for cmd in root.findall(".//p:timing//p:cmd", ns):
+        cmd_value = (cmd.get("cmd") or "").strip().lower()
+        if not cmd_value.startswith("playfrom("):
+            continue
+        behavior_tn = cmd.find(".//p:cBhvr/p:cTn", ns)
+        if behavior_tn is None:
+            continue
+        dur_ms = _parse_duration_ms(behavior_tn.get("dur"))
+        if dur_ms is not None and dur_ms > max_ms:
+            max_ms = dur_ms
+
+    if max_ms > 0:
+        return round(max_ms / 1000.0, 3)
+    return None
+
+
+def _parse_duration_ms(raw: str | None) -> int | None:
+    if raw is None:
+        return None
+    text = raw.strip().lower()
+    if not text or text == "indefinite":
+        return None
+    if text.isdigit():
+        return int(text)
+    return None

@@ -11,6 +11,7 @@ class SlideTimingSource:
     transition_type: str
     transition_duration_s: float
     advance_after_s: float | None
+    media_timing_s: float | None = None
 
 
 @dataclass

@@ -80,6 +80,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="If post-normalization drift exceeds tolerance, time-warp master video to expected duration.",
     )
     p_run.add_argument(
+        "--no-auto-reconcile",
+        action="store_false",
+        dest="auto_reconcile",
+        help=(
+            "Disable automatic non-retime timing reconciliation when export duration drifts "
+            "(enabled by default)."
+        ),
+    )
+    p_run.set_defaults(auto_reconcile=True)
+    p_run.add_argument(
         "--max-fit-ratio",
         type=float,
         default=1.1,

@@ -71,16 +71,22 @@ This runs:
 2. Timing resolution (override > COM > XML > defaults)
 3. PowerPoint COM export to raw MP4
 4. Web normalization encode
-5. Optional duration-fit warp (`--fit-duration`) when drift exceeds tolerance
-6. Chunking + validation
-7. Manifest generation
-8. Player scaffold copy (`index.html`)
+5. Automatic non-retime timing reconciliation (default on)
+6. Optional duration-fit warp (`--fit-duration`) when drift still exceeds tolerance
+7. Chunking + validation
+8. Manifest generation
+9. Player scaffold copy (`index.html`)
 
 ## Timing Modes
 
 - `ppt`: prefer authored timings (COM/XML), fallback to defaults
 - `hybrid`: like `ppt`, intended for mixed/manual override usage
 - `uniform`: force defaults per slide/transition
+
+When `uniform` is used without `--rewrite-timings`, PowerPoint may still honor intrinsic slide/media timings.
+The pipeline now auto-reconciles to intrinsic timing when needed (disable with `--no-auto-reconcile`).
+Tiny transition durations (`<= 0.01s`) are treated as authored "no transition".
+If PowerPoint export still renders visible duration for those tiny transitions, auto-reconcile can switch to an export-compatible timing profile (recorded in `duration_diagnostics.json`).
 
 ## Config Compatibility
 
@@ -99,6 +105,7 @@ This runs:
 ```text
 output/
   timing_config.json
+  duration_diagnostics.json
   <presentation_id>_master.mp4
   manifest.json
   index.html             # if --generate-player
@@ -145,5 +152,6 @@ For large decks, host chunks on external storage (e.g., R2) and change `BASE_PAT
 
 - `ffmpeg not found`: pass `--ffmpeg-bin` / `--ffprobe-bin` explicitly.
 - Duration mismatch errors: tune timings in config or increase `--duration-tolerance`.
+- Check `duration_diagnostics.json` to see requested vs effective timing model and drift.
 - Oversized chunk error: increase `--max-chunk-mb` or reduce quality settings.
 - COM export failure: close open modal dialogs in PowerPoint, retry command.

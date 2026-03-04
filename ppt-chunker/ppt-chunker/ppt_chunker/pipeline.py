@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -128,12 +129,28 @@ def run_command(args: argparse.Namespace) -> None:
         default_transition_sec=float(args.default_transition_sec),
         overrides=overrides,
     )
+    requested_timing_mode = str(args.timing_mode)
+    effective_timing_mode = requested_timing_mode
+    intrinsic_rows = _collect_intrinsic_slide_timings(xml_sources, com_sources)
+    intrinsic_conflicts = [
+        row
+        for row in intrinsic_rows
+        if row["effective_intrinsic_slide_s"] is not None
+        and abs(float(row["effective_intrinsic_slide_s"]) - float(args.default_slide_sec)) > 0.01
+    ]
+    if requested_timing_mode == "uniform" and not bool(args.rewrite_timings) and intrinsic_conflicts:
+        preview = ", ".join(str(row["slide_number"]) for row in intrinsic_conflicts[:6])
+        suffix = "..." if len(intrinsic_conflicts) > 6 else ""
+        print(
+            "WARNING: Uniform timings requested without rewrite, but intrinsic slide timings exist "
+            f"(slides {preview}{suffix}). Export may drift."
+        )
 
     config_payload = build_timing_config_payload(
         segments=segments,
         default_slide_sec=float(args.default_slide_sec),
         default_transition_sec=float(args.default_transition_sec),
-        timing_mode=args.timing_mode,
+        timing_mode=effective_timing_mode,
     )
     config_payload["presentation_id"] = presentation_id
     config_payload["title"] = args.title or pptx_path.stem
@@ -141,6 +158,9 @@ def run_command(args: argparse.Namespace) -> None:
     config_payload["analysis"] = {
         "com_probe_used": bool(com_sources),
         "slide_count": len(segments),
+        "timing_mode_requested": requested_timing_mode,
+        "timing_mode_effective": effective_timing_mode,
+        "intrinsic_timing_conflicts": [row["slide_number"] for row in intrinsic_conflicts],
     }
     write_json(output_dir / "timing_config.json", config_payload)
 
@@ -171,8 +191,85 @@ def run_command(args: argparse.Namespace) -> None:
 
     expected_duration = _expected_duration(segments)
     normalized_duration = ffprobe_duration(ffprobe_bin, master_mp4)
-    normalized_drift = abs(normalized_duration - expected_duration)
-    if bool(args.fit_duration) and normalized_drift > float(args.duration_tolerance):
+    normalized_drift_signed = normalized_duration - expected_duration
+    normalized_drift = abs(normalized_drift_signed)
+    tolerance = float(args.duration_tolerance)
+
+    reconciliation_info: dict[str, Any] | None = None
+    if normalized_drift > tolerance and not bool(args.rewrite_timings) and bool(args.auto_reconcile):
+        reconciliation = _attempt_non_retime_reconciliation(
+            requested_timing_mode=requested_timing_mode,
+            current_segments=segments,
+            xml_sources=xml_sources,
+            com_sources=com_sources,
+            overrides=overrides,
+            default_slide_sec=float(args.default_slide_sec),
+            default_transition_sec=float(args.default_transition_sec),
+            video_duration_s=normalized_duration,
+            duration_tolerance=tolerance,
+        )
+        if reconciliation is not None:
+            segments = reconciliation["segments"]
+            effective_timing_mode = str(reconciliation["effective_timing_mode"])
+            reconciliation_info = {
+                "strategy": reconciliation["strategy"],
+                "reason": reconciliation["reason"],
+                "requested_timing_mode": requested_timing_mode,
+                "effective_timing_mode": effective_timing_mode,
+                "expected_before_s": round(expected_duration, 3),
+                "expected_after_s": round(_expected_duration(segments), 3),
+            }
+            expected_duration = _expected_duration(segments)
+            normalized_drift_signed = normalized_duration - expected_duration
+            normalized_drift = abs(normalized_drift_signed)
+            print(
+                "Adjusted timing model without retiming video: "
+                f"{requested_timing_mode} -> {effective_timing_mode} "
+                f"(drift now {normalized_drift:.3f}s)."
+            )
+
+            config_payload = build_timing_config_payload(
+                segments=segments,
+                default_slide_sec=float(args.default_slide_sec),
+                default_transition_sec=float(args.default_transition_sec),
+                timing_mode=effective_timing_mode,
+            )
+            config_payload["presentation_id"] = presentation_id
+            config_payload["title"] = args.title or pptx_path.stem
+            config_payload["export"] = {
+                "fps": int(args.fps),
+                "height": int(args.height),
+                "mute": bool(args.mute_output),
+            }
+            config_payload["analysis"] = {
+                "com_probe_used": bool(com_sources),
+                "slide_count": len(segments),
+                "timing_mode_requested": requested_timing_mode,
+                "timing_mode_effective": effective_timing_mode,
+                "intrinsic_timing_conflicts": [row["slide_number"] for row in intrinsic_conflicts],
+                "reconciliation": reconciliation_info,
+            }
+            write_json(output_dir / "timing_config.json", config_payload)
+
+    duration_diagnostics = {
+        "requested_timing_mode": requested_timing_mode,
+        "effective_timing_mode": effective_timing_mode,
+        "rewrite_timings": bool(args.rewrite_timings),
+        "auto_reconcile": bool(args.auto_reconcile),
+        "default_slide_sec": round(float(args.default_slide_sec), 3),
+        "default_transition_sec": round(float(args.default_transition_sec), 3),
+        "expected_duration_s": round(expected_duration, 3),
+        "video_duration_s": round(normalized_duration, 3),
+        "drift_s": round(normalized_drift_signed, 3),
+        "abs_drift_s": round(normalized_drift, 3),
+        "duration_tolerance_s": round(tolerance, 3),
+        "intrinsic_timing_conflicts": intrinsic_conflicts,
+    }
+    if reconciliation_info is not None:
+        duration_diagnostics["reconciliation"] = reconciliation_info
+    write_json(output_dir / "duration_diagnostics.json", duration_diagnostics)
+
+    if bool(args.fit_duration) and normalized_drift > tolerance:
         max_fit_ratio = float(args.max_fit_ratio)
         if expected_duration <= 0:
             raise PipelineError("Expected duration is non-positive; cannot fit duration.")
@@ -199,6 +296,14 @@ def run_command(args: argparse.Namespace) -> None:
         )
         print(f"Applied duration fit speed factor: {speed_factor:.6f}")
         chunk_source_mp4 = fitted_mp4
+        duration_diagnostics["fit_duration"] = {
+            "applied": True,
+            "target_duration_s": round(expected_duration, 3),
+            "source_duration_s": round(normalized_duration, 3),
+            "speed_factor": round(speed_factor, 6),
+            "output_file": fitted_mp4.name,
+        }
+        write_json(output_dir / "duration_diagnostics.json", duration_diagnostics)
 
     _chunk_from_segments(
         mp4_path=chunk_source_mp4,
@@ -216,7 +321,7 @@ def run_command(args: argparse.Namespace) -> None:
             "fps": int(args.fps),
             "height": int(args.height),
             "mute": bool(args.mute_output),
-            "timing_mode": args.timing_mode,
+            "timing_mode": effective_timing_mode,
         },
         master_file=chunk_source_mp4.name,
     )
@@ -389,6 +494,219 @@ def _validate_manifest_files(output_dir: Path, manifest: dict[str, Any]) -> None
             missing.append(str(file_rel))
     if missing:
         raise PipelineError(f"Manifest references missing/empty chunk files: {missing}")
+
+
+def _collect_intrinsic_slide_timings(
+    xml_sources: list[Any], com_sources: dict[int, Any]
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for xml in xml_sources:
+        com = com_sources.get(xml.slide_number)
+        com_advance = getattr(com, "advance_after_s", None) if com is not None else None
+        xml_advance = getattr(xml, "advance_after_s", None)
+        xml_media = getattr(xml, "media_timing_s", None)
+        effective = com_advance if com_advance is not None else xml_advance
+        if effective is None:
+            effective = xml_media
+        rows.append(
+            {
+                "slide_number": int(xml.slide_number),
+                "com_advance_s": com_advance,
+                "xml_advance_s": xml_advance,
+                "xml_media_timing_s": xml_media,
+                "effective_intrinsic_slide_s": effective,
+            }
+        )
+    return rows
+
+
+def _attempt_non_retime_reconciliation(
+    *,
+    requested_timing_mode: str,
+    current_segments: list[ResolvedSegment],
+    xml_sources: list[Any],
+    com_sources: dict[int, Any],
+    overrides: dict[str, Any] | None,
+    default_slide_sec: float,
+    default_transition_sec: float,
+    video_duration_s: float,
+    duration_tolerance: float,
+) -> dict[str, Any] | None:
+    candidates: list[dict[str, Any]] = []
+    tiny_compat_current = _apply_tiny_transition_export_compat(
+        segments=current_segments,
+        xml_sources=xml_sources,
+        default_transition_sec=default_transition_sec,
+    )
+    if tiny_compat_current is not None:
+        candidates.append(
+            {
+                "strategy": "tiny_transition_export_compat",
+                "reason": "ppt_export_rendered_tiny_transition_with_visible_duration",
+                "effective_timing_mode": f"{requested_timing_mode}_tiny_transition_export_compat",
+                "segments": tiny_compat_current,
+            }
+        )
+
+    if requested_timing_mode == "uniform":
+        hybrid_segments = resolve_segments(
+            xml_sources=xml_sources,
+            com_sources=com_sources,
+            timing_mode="hybrid",
+            default_slide_sec=default_slide_sec,
+            default_transition_sec=default_transition_sec,
+            overrides=overrides,
+        )
+        candidates.append(
+            {
+                "strategy": "mode_switch",
+                "reason": "uniform_without_rewrite_conflicts_with_intrinsic_timings",
+                "effective_timing_mode": "hybrid",
+                "segments": hybrid_segments,
+            }
+        )
+        tiny_compat_hybrid = _apply_tiny_transition_export_compat(
+            segments=hybrid_segments,
+            xml_sources=xml_sources,
+            default_transition_sec=default_transition_sec,
+        )
+        if tiny_compat_hybrid is not None:
+            candidates.append(
+                {
+                    "strategy": "mode_switch+tiny_transition_export_compat",
+                    "reason": (
+                        "uniform_without_rewrite_conflicts_with_intrinsic_timings_and_"
+                        "ppt_export_rendered_tiny_transition_with_visible_duration"
+                    ),
+                    "effective_timing_mode": "hybrid_tiny_transition_export_compat",
+                    "segments": tiny_compat_hybrid,
+                }
+            )
+        blended_segments: list[ResolvedSegment] = []
+        for seg in hybrid_segments:
+            if seg.transition_type == "none":
+                blended_segments.append(seg)
+                continue
+            blended_segments.append(
+                replace(
+                    seg,
+                    transition_duration_s=round(float(default_transition_sec), 3),
+                    duration_source=f"{seg.duration_source}+uniform_transitions",
+                )
+            )
+        candidates.append(
+            {
+                "strategy": "mode_blend",
+                "reason": "uniform_without_rewrite_uses_intrinsic_slide_timing_and_uniform_transitions",
+                "effective_timing_mode": "hybrid_slides_uniform_transitions",
+                "segments": blended_segments,
+            }
+        )
+        tiny_compat_blended = _apply_tiny_transition_export_compat(
+            segments=blended_segments,
+            xml_sources=xml_sources,
+            default_transition_sec=default_transition_sec,
+        )
+        if tiny_compat_blended is not None:
+            candidates.append(
+                {
+                    "strategy": "mode_blend+tiny_transition_export_compat",
+                    "reason": (
+                        "uniform_without_rewrite_uses_intrinsic_slide_timing_and_uniform_transitions_"
+                        "plus_ppt_export_tiny_transition_compat"
+                    ),
+                    "effective_timing_mode": "hybrid_slides_uniform_transitions_tiny_transition_export_compat",
+                    "segments": tiny_compat_blended,
+                }
+            )
+
+    tail_adjust_candidate = _attempt_tail_slide_adjustment(
+        segments=current_segments,
+        video_duration_s=video_duration_s,
+        max_adjust_s=max(0.0, min(1.0, duration_tolerance)),
+    )
+    if tail_adjust_candidate is not None:
+        candidates.append(tail_adjust_candidate)
+
+    for candidate in candidates:
+        expected = _expected_duration(candidate["segments"])
+        drift = abs(video_duration_s - expected)
+        if drift <= duration_tolerance:
+            candidate["drift_after_s"] = round(drift, 3)
+            return candidate
+    return None
+
+
+def _apply_tiny_transition_export_compat(
+    *,
+    segments: list[ResolvedSegment],
+    xml_sources: list[Any],
+    default_transition_sec: float,
+) -> list[ResolvedSegment] | None:
+    xml_by_slide = {int(row.slide_number): row for row in xml_sources}
+    changed = False
+    adjusted: list[ResolvedSegment] = []
+
+    for seg in segments:
+        xml_row = xml_by_slide.get(int(seg.slide_number))
+        if xml_row is None:
+            adjusted.append(seg)
+            continue
+        xml_transition_type = str(getattr(xml_row, "transition_type", "none") or "none")
+        xml_transition_dur = float(getattr(xml_row, "transition_duration_s", 0.0) or 0.0)
+        is_tiny_authored = xml_transition_type != "none" and 0.0 < xml_transition_dur <= 0.011
+        if not is_tiny_authored:
+            adjusted.append(seg)
+            continue
+        if seg.transition_type != "none" or seg.transition_duration_s > 0.0:
+            adjusted.append(seg)
+            continue
+
+        changed = True
+        adjusted.append(
+            replace(
+                seg,
+                transition_type=xml_transition_type,
+                transition_duration_s=round(max(2.0, float(default_transition_sec)), 3),
+                duration_source=f"{seg.duration_source}+tiny_transition_export_compat",
+            )
+        )
+
+    if not changed:
+        return None
+    return adjusted
+
+
+def _attempt_tail_slide_adjustment(
+    *,
+    segments: list[ResolvedSegment],
+    video_duration_s: float,
+    max_adjust_s: float,
+) -> dict[str, Any] | None:
+    if not segments or max_adjust_s <= 0:
+        return None
+    expected_duration = _expected_duration(segments)
+    delta = round(video_duration_s - expected_duration, 3)
+    if delta == 0 or abs(delta) > max_adjust_s:
+        return None
+
+    last = segments[-1]
+    adjusted_last_duration = round(last.slide_duration_s + delta, 3)
+    if adjusted_last_duration < 0.1:
+        return None
+
+    adjusted = list(segments)
+    adjusted[-1] = replace(
+        last,
+        slide_duration_s=adjusted_last_duration,
+        duration_source=f"{last.duration_source}+tail_adjust",
+    )
+    return {
+        "strategy": "tail_adjust",
+        "reason": "small_terminal_drift_absorbed_by_last_slide",
+        "effective_timing_mode": "adjusted",
+        "segments": adjusted,
+    }
 
 
 def _expected_duration(segments: list[ResolvedSegment]) -> float:
