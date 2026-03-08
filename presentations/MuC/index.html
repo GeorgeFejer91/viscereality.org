@@ -200,12 +200,6 @@
     max-width: 220px;
     display: none;
   }
-  #deck-info img {
-    width: 100%;
-    height: auto;
-    border-radius: 7px;
-    margin-bottom: 8px;
-  }
   #deck-info a { color: #a9d4ff; text-decoration: none; }
 </style>
 </head>
@@ -226,7 +220,6 @@
 <div id="loading">Loading presentation...</div>
 <div id="sync-status" class="hidden">Sync disabled</div>
 <div id="deck-info">
-  <img id="deck-preview" alt="Deck preview">
   <div id="deck-title"></div>
   <div><a id="deck-link" target="_blank" rel="noopener noreferrer"></a></div>
 </div>
@@ -285,7 +278,6 @@
   const fullscreenBtn = document.getElementById("fullscreen-btn");
   const syncStatusEl = document.getElementById("sync-status");
   const deckInfo = document.getElementById("deck-info");
-  const deckPreview = document.getElementById("deck-preview");
   const deckTitle = document.getElementById("deck-title");
   const deckLink = document.getElementById("deck-link");
 
@@ -343,17 +335,10 @@
   function renderDeckInfo() {
     const deckCfg = (window.PRESENTATION_DECKS && window.PRESENTATION_DECKS.MuC) || {};
     const meta = manifest && manifest.deck_meta ? manifest.deck_meta : {};
-    const preview = meta.preview_image || deckCfg.previewImage;
     const confUrl = meta.conference_url || deckCfg.conferenceUrl;
     const confLabel = meta.conference_label || deckCfg.conferenceLabel || "Conference";
-    if (!preview && !confUrl) return;
+    if (!confUrl) return;
     deckInfo.style.display = "block";
-    if (preview) {
-      deckPreview.src = preview;
-      deckPreview.style.display = "block";
-    } else {
-      deckPreview.style.display = "none";
-    }
     deckTitle.textContent = manifest.title || deckCfg.title || "Presentation";
     if (confUrl) {
       deckLink.href = confUrl;
