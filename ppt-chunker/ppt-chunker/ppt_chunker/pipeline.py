@@ -1049,6 +1049,7 @@ def _apply_no_rewrite_export_compat(
 ) -> tuple[list[TimingDecision], dict[int, int], list[Hiccup]]:
     hiccups: list[Hiccup] = []
     source_gap_frames_by_slide: dict[int, int] = {}
+    promoted_transition_frames_by_slide: dict[int, int] = {}
     source_frames = int(round(float(ffprobe_video_stream_info(ffprobe_bin, master_mp4)["nb_frames"])))
     expected_frames = _expected_frames(decisions, fps)
     delta = source_frames - expected_frames
@@ -1099,7 +1100,10 @@ def _apply_no_rewrite_export_compat(
         take = min(compat_frames, remaining)
         if take <= 0:
             continue
-        source_gap_frames_by_slide[decision.slide_number] = take
+        decision.transition_type = tiny_map[decision.slide_number]
+        decision.transition_duration_s = round(take / float(fps), 3)
+        decision.transition_reason = "no_rewrite_export_compat"
+        promoted_transition_frames_by_slide[decision.slide_number] = take
         remaining -= take
         if abs(remaining) <= 1:
             break
@@ -1119,14 +1123,14 @@ def _apply_no_rewrite_export_compat(
 
     hiccups.append(
         Hiccup(
-            "tiny_transition_export_gap_skip_applied",
+            "tiny_transition_export_gap_promoted",
             "warning",
             (
-                "Applied no-rewrite export compatibility by skipping source-only tiny-transition "
-                f"frames while preserving authored transition semantics (delta_frames={delta})."
+                "Applied no-rewrite export compatibility by promoting source-only tiny-transition "
+                f"frames into emitted transition assets (delta_frames={delta})."
             ),
             details={
-                "source_gap_frames_by_slide": source_gap_frames_by_slide,
+                "promoted_transition_frames_by_slide": promoted_transition_frames_by_slide,
                 "compat_frames_per_tiny_transition": compat_frames,
             },
         )

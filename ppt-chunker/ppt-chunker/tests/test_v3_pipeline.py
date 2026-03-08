@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-import tempfile
 import unittest
+from unittest.mock import patch
 
 from ppt_chunker.manifest import build_manifest
-from ppt_chunker.models import Hiccup, MediaCandidate, ResolvedSegment, SlideFeature
+from ppt_chunker.models import MediaCandidate, ResolvedSegment, SlideFeature
 from ppt_chunker.pipeline import (
+    _apply_no_rewrite_export_compat,
     _has_error_hiccups,
     _resolve_timing_decisions,
     _slide_asset_stem,
@@ -129,6 +130,48 @@ class PipelineDecisionTests(unittest.TestCase):
         )
         self.assertEqual(decisions[0].transition_play_mode, "immediate")
         self.assertEqual(decisions[0].transition_duration_s, 0.0)
+
+    def test_no_rewrite_compat_promotes_tiny_transition_into_real_asset(self) -> None:
+        feature = SlideFeature(
+            slide_number=4,
+            label="Slide 4",
+            transition_type="morph",
+            transition_duration_s=0.01,
+            visible_media_count=0,
+            max_visible_media_duration_s=None,
+            unresolved_visible_media_count=0,
+            off_canvas_media_count=0,
+            unsupported_media_count=0,
+            media_candidates=[],
+            static_classification="static",
+        )
+        decisions, _ = _resolve_timing_decisions(
+            features=[feature],
+            overrides={"slides": {}, "defaults": {}},
+            default_static_sec=4.0,
+            default_transition_sec=0.5,
+        )
+        self.assertEqual(decisions[0].transition_type, "none")
+        self.assertEqual(decisions[0].transition_duration_s, 0.0)
+
+        with patch(
+            "ppt_chunker.pipeline.ffprobe_video_stream_info",
+            return_value={"nb_frames": "180"},
+        ):
+            promoted, gap_map, hiccups = _apply_no_rewrite_export_compat(
+                decisions=decisions,
+                features=[feature],
+                master_mp4=Path("dummy.mp4"),
+                ffprobe_bin=Path("ffprobe"),
+                fps=30,
+                default_transition_sec=0.5,
+            )
+
+        self.assertEqual(promoted[0].transition_type, "morph")
+        self.assertEqual(promoted[0].transition_duration_s, 2.0)
+        self.assertEqual(promoted[0].transition_reason, "no_rewrite_export_compat")
+        self.assertEqual(gap_map, {})
+        self.assertEqual(hiccups[0].code, "tiny_transition_export_gap_promoted")
 
 
 class ManifestTests(unittest.TestCase):
