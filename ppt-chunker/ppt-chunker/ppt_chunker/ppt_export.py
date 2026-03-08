@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import stat
 import tempfile
 import time
 from pathlib import Path
@@ -37,13 +38,17 @@ def export_ppt_to_video(
     with tempfile.TemporaryDirectory(prefix="ppt_chunker_") as td:
         temp_ppt = Path(td) / pptx_path.name
         shutil.copy2(pptx_path, temp_ppt)
+        try:
+            temp_ppt.chmod(temp_ppt.stat().st_mode | stat.S_IWRITE)
+        except Exception:
+            pass
 
         app = None
         pres = None
         try:
             app = _com_call(lambda: win32com.client.DispatchEx("PowerPoint.Application"), pywintypes, retries)
             pres = _com_call(
-                lambda: app.Presentations.Open(str(temp_ppt), False, False, False), pywintypes, retries
+                lambda: app.Presentations.Open(str(temp_ppt), False, True, False), pywintypes, retries
             )
 
             if rewrite_timings and segments:
@@ -79,6 +84,70 @@ def export_ppt_to_video(
                 pass
 
 
+def export_slides_to_png(
+    pptx_path: Path,
+    output_dir: Path,
+    retries: int = 10,
+) -> list[Path]:
+    try:
+        import pywintypes  # type: ignore
+        import win32com.client  # type: ignore
+    except Exception as exc:
+        raise PipelineError(
+            "pywin32 is required for PowerPoint COM export. Install with: py -3 -m pip install pywin32"
+        ) from exc
+
+    if not pptx_path.exists():
+        raise PipelineError(f"PPTX file not found: {pptx_path}")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="ppt_chunker_png_") as td:
+        temp_ppt = Path(td) / pptx_path.name
+        temp_png_dir = Path(td) / "png_export"
+        temp_png_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(pptx_path, temp_ppt)
+        try:
+            temp_ppt.chmod(temp_ppt.stat().st_mode | stat.S_IWRITE)
+        except Exception:
+            pass
+
+        app = None
+        pres = None
+        try:
+            app = _com_call(lambda: win32com.client.DispatchEx("PowerPoint.Application"), pywintypes, retries)
+            pres = _com_call(
+                lambda: app.Presentations.Open(str(temp_ppt), False, True, False), pywintypes, retries
+            )
+            # ppSaveAsPNG = 18
+            _com_call(lambda: pres.SaveAs(str(temp_png_dir), 18), pywintypes, retries)
+        except Exception as exc:
+            raise PipelineError(f"PowerPoint PNG export failed: {exc}") from exc
+        finally:
+            try:
+                if pres is not None:
+                    pres.Close()
+            except Exception:
+                pass
+            try:
+                if app is not None:
+                    app.Quit()
+            except Exception:
+                pass
+
+        exported = sorted(temp_png_dir.glob("Slide*.PNG"))
+        if not exported:
+            exported = sorted(temp_png_dir.glob("Slide*.png"))
+        if not exported:
+            raise PipelineError("PowerPoint PNG export produced no slide images.")
+
+        out_paths: list[Path] = []
+        for src in exported:
+            dst = output_dir / src.name.lower()
+            shutil.copy2(src, dst)
+            out_paths.append(dst)
+        return out_paths
+
+
 def _apply_timings_to_presentation(
     pres: Any, segments: list[ResolvedSegment], pywintypes: Any, retries: int
 ) -> None:
@@ -93,6 +162,8 @@ def _apply_timings_to_presentation(
         _com_call(lambda t=transition: setattr(t, "AdvanceOnClick", False), pywintypes, retries)
         _com_call(lambda t=transition: setattr(t, "AdvanceOnTime", True), pywintypes, retries)
         _com_call(lambda t=transition: setattr(t, "AdvanceTime", float(seg.slide_duration_s)), pywintypes, retries)
+        if str(seg.transition_type).lower() == "none":
+            _com_call(lambda t=transition: setattr(t, "EntryEffect", 0), pywintypes, retries)
         _com_call(
             lambda t=transition: setattr(t, "Duration", float(max(0.0, seg.transition_duration_s))),
             pywintypes,

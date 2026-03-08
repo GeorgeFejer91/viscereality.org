@@ -25,21 +25,28 @@
   }
   body.show-cursor { cursor: default; }
 
-  /* --- Video layers ---------------------------------------------------- */
-  /* Two stacked video elements for gapless playback (double-buffer) */
-  .video-layer {
+  .video-layer,
+  #img-layer {
     position: fixed;
     inset: 0;
     width: 100vw;
     height: 100vh;
     object-fit: contain;
     background: var(--bg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.08s linear;
   }
-  #vid-a { z-index: 1; }
-  #vid-b { z-index: 2; opacity: 0; pointer-events: none; }
-  #vid-b.active { opacity: 1; }
 
-  /* --- HUD -------------------------------------------------------------- */
+  .visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #vid-a { z-index: 1; }
+  #img-layer { z-index: 1; }
+  #vid-b { z-index: 2; }
+
   #hud {
     position: fixed;
     bottom: 24px;
@@ -63,7 +70,31 @@
   #hud .label { color: var(--text); }
   #hud .dim { color: var(--text-dim); margin-left: 10px; font-size: 0.85rem; }
 
-  /* --- Progress bar ---------------------------------------------------- */
+  #deck-info {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 170;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(10, 10, 10, 0.74);
+    color: #d6d6d6;
+    font-size: 0.78rem;
+    max-width: 220px;
+    display: none;
+  }
+  #deck-info img {
+    width: 100%;
+    height: auto;
+    border-radius: 7px;
+    margin-bottom: 8px;
+  }
+  #deck-info a {
+    color: #a9d4ff;
+    text-decoration: none;
+  }
+
   #progress-track {
     position: fixed;
     bottom: 0;
@@ -87,7 +118,6 @@
     background: rgba(255,255,255,0.25);
   }
 
-  /* --- Loading state --------------------------------------------------- */
   #loading {
     position: fixed;
     inset: 0;
@@ -101,7 +131,6 @@
   }
   #loading.hidden { display: none; }
 
-  /* --- Help overlay ---------------------------------------------------- */
   #help {
     position: fixed;
     inset: 0;
@@ -116,13 +145,8 @@
     transition: opacity 0.25s;
   }
   #help.show { opacity: 1; pointer-events: auto; }
-  #help table {
-    border-collapse: collapse;
-    font-size: 1rem;
-  }
-  #help td {
-    padding: 6px 18px;
-  }
+  #help table { border-collapse: collapse; font-size: 1rem; }
+  #help td { padding: 6px 18px; }
   #help .key {
     font-family: "SF Mono", "Fira Code", monospace;
     background: rgba(255,255,255,0.1);
@@ -148,21 +172,23 @@
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
   }
-
-  #fullscreen-btn:hover {
-    border-color: rgba(255,255,255,0.45);
-    background: rgba(18, 18, 18, 0.82);
-  }
 </style>
 </head>
 <body>
 
-<video id="vid-a" class="video-layer" muted playsinline autoplay></video>
-<video id="vid-b" class="video-layer" muted playsinline autoplay></video>
+<video id="vid-a" class="video-layer" muted playsinline preload="auto"></video>
+<video id="vid-b" class="video-layer" muted playsinline preload="auto"></video>
+<img id="img-layer" alt="Slide image">
 
 <div id="hud">
   <span class="label" id="hud-label"></span>
   <span class="dim" id="hud-pos"></span>
+</div>
+
+<div id="deck-info">
+  <img id="deck-preview" alt="Deck preview" />
+  <div id="deck-title"></div>
+  <div><a id="deck-link" target="_blank" rel="noopener noreferrer"></a></div>
 </div>
 
 <div id="progress-track">
@@ -182,30 +208,24 @@
 </div>
 
 <button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
-
+<script src="../shared/decks.js"></script>
 <script>
 (function () {
   "use strict";
 
-  // -----------------------------------------------------------------------
-  // CONFIG
-  // -----------------------------------------------------------------------
   const MANIFEST_URL = "manifest.json";
-  // Base path for chunk files (relative to this HTML file)
   const BASE_PATH = "";
 
-  // -----------------------------------------------------------------------
-  // STATE
-  // -----------------------------------------------------------------------
   let manifest = null;
-  let slideChunks = [];      // only "slide" type entries, ordered
-  let allChunks = [];        // full ordered list (slides + transitions)
-  let currentSlideIdx = 0;   // index into slideChunks[]
+  let allChunks = [];
+  let slideChunks = [];
+  let currentSlideIdx = 0;
   let isTransitioning = false;
   let paused = false;
 
   const vidA = document.getElementById("vid-a");
   const vidB = document.getElementById("vid-b");
+  const imgLayer = document.getElementById("img-layer");
   const hudEl = document.getElementById("hud");
   const hudLabel = document.getElementById("hud-label");
   const hudPos = document.getElementById("hud-pos");
@@ -214,6 +234,10 @@
   const loadingEl = document.getElementById("loading");
   const helpEl = document.getElementById("help");
   const fullscreenBtn = document.getElementById("fullscreen-btn");
+  const deckInfo = document.getElementById("deck-info");
+  const deckPreview = document.getElementById("deck-preview");
+  const deckTitle = document.getElementById("deck-title");
+  const deckLink = document.getElementById("deck-link");
 
   let activeVid = vidA;
   let standbyVid = vidB;
@@ -221,55 +245,119 @@
   let cursorTimer;
   let autoFullscreenAttempted = false;
   let suppressNextAdvanceClick = false;
+  let handoffTimeoutId = null;
 
-  // -----------------------------------------------------------------------
-  // LOAD MANIFEST
-  // -----------------------------------------------------------------------
   fetch(MANIFEST_URL)
     .then(r => r.json())
     .then(data => {
       manifest = data;
-      allChunks = data.chunks;
-      slideChunks = allChunks.filter(c => c.type === "slide");
-
-      if (slideChunks.length === 0) {
+      allChunks = Array.isArray(data.chunks) ? data.chunks : [];
+      slideChunks = allChunks.filter(c => c.type === "slide").map(c => ({
+        ...c,
+        asset_kind: c.asset_kind || "video",
+      }));
+      if (!slideChunks.length) {
         loadingEl.textContent = "No slide chunks found in manifest.";
         return;
       }
-
       document.title = data.title || "Presentation";
+      renderDeckInfo();
       renderTicks();
-      preloadAndStart();
+      playSlide(0).then(() => loadingEl.classList.add("hidden")).catch(err => {
+        loadingEl.textContent = "Failed to load first slide.";
+        console.error(err);
+      });
     })
     .catch(err => {
       loadingEl.textContent = "Failed to load manifest.json";
       console.error(err);
     });
 
-  // -----------------------------------------------------------------------
-  // PLAYBACK
-  // -----------------------------------------------------------------------
-  function preloadAndStart() {
-    playSlide(0)
-      .then(() => {
-        loadingEl.classList.add("hidden");
-      })
-      .catch((err) => {
-        loadingEl.textContent = "Failed to load first slide chunk.";
-        console.error(err);
-      });
+  function renderDeckInfo() {
+    const meta = manifest && manifest.deck_meta ? manifest.deck_meta : {};
+    const decks = window.PRESENTATION_DECKS || {};
+    const deckKey = Object.keys(decks).find(k => (decks[k].id || "").toLowerCase() === (manifest.presentation_id || "").toLowerCase());
+    const deckCfg = deckKey ? decks[deckKey] : {};
+    const preview = meta.preview_image || deckCfg.previewImage;
+    const confUrl = meta.conference_url || deckCfg.conferenceUrl;
+    const confLabel = meta.conference_label || deckCfg.conferenceLabel || "Conference";
+    if (!preview && !confUrl) return;
+    deckInfo.style.display = "block";
+    if (preview) {
+      deckPreview.src = preview;
+      deckPreview.style.display = "block";
+    } else {
+      deckPreview.style.display = "none";
+    }
+    deckTitle.textContent = manifest.title || deckCfg.title || "Presentation";
+    if (confUrl) {
+      deckLink.href = confUrl;
+      deckLink.textContent = confLabel;
+    } else {
+      deckLink.style.display = "none";
+    }
+  }
+
+  function showVideoLayer(video) {
+    imgLayer.classList.remove("visible");
+    vidA.classList.remove("visible");
+    vidB.classList.remove("visible");
+    video.classList.add("visible");
+  }
+
+  function showImageLayer() {
+    vidA.classList.remove("visible");
+    vidB.classList.remove("visible");
+    imgLayer.classList.add("visible");
+  }
+
+  function loadInto(video, src, loop) {
+    return new Promise((resolve, reject) => {
+      const onReady = () => { cleanup(); resolve(); };
+      const onError = () => { cleanup(); reject(new Error("Failed loading " + src)); };
+      const cleanup = () => {
+        video.removeEventListener("canplaythrough", onReady);
+        video.removeEventListener("error", onError);
+      };
+      video.loop = loop;
+      video.muted = true;
+      video.addEventListener("canplaythrough", onReady, { once: true });
+      video.addEventListener("error", onError, { once: true });
+      if (video.src !== src) video.src = src;
+      video.load();
+    });
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(src);
+      img.onerror = () => reject(new Error("Failed loading image " + src));
+      img.src = src;
+    });
   }
 
   function playSlide(idx) {
     if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
-    const src = BASE_PATH + slideChunks[idx].file;
-    return loadInto(activeVid, src, true).then(() => {
-      currentSlideIdx = idx;
-      if (paused) {
+    const slide = slideChunks[idx];
+    const src = BASE_PATH + slide.file;
+    if (slide.asset_kind === "image") {
+      return loadImage(src).then(() => {
+        imgLayer.src = src;
+        showImageLayer();
         activeVid.pause();
-      } else {
-        activeVid.play().catch(() => {});
-      }
+        standbyVid.pause();
+        currentSlideIdx = idx;
+        showHud(idx);
+        updateProgress();
+        preloadNext(idx);
+        return true;
+      });
+    }
+    return loadInto(activeVid, src, true).then(() => {
+      showVideoLayer(activeVid);
+      currentSlideIdx = idx;
+      if (paused) activeVid.pause(); else activeVid.play().catch(() => {});
       showHud(idx);
       updateProgress();
       preloadNext(idx);
@@ -278,19 +366,13 @@
   }
 
   function preloadNext(slideIdx) {
-    // Find the transition that leads to the NEXT slide
     const nextSlideIdx = slideIdx + 1;
     if (nextSlideIdx >= slideChunks.length) return;
-
-    // The transition chunk that leads to nextSlide
     const transChunk = allChunks.find(
       c => c.type === "transition" && c.slide_to === slideChunks[nextSlideIdx].slide_number
     );
-
     if (transChunk) {
-      loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch((err) => {
-        console.error("Transition preload failed", err);
-      });
+      loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch(() => {});
     }
   }
 
@@ -298,32 +380,24 @@
     if (isTransitioning) return;
     const nextIdx = currentSlideIdx + 1;
     if (nextIdx >= slideChunks.length) return;
-
-    // Find transition chunk
     const nextSlide = slideChunks[nextIdx];
     const transChunk = allChunks.find(
       c => c.type === "transition" && c.slide_to === nextSlide.slide_number
     );
-
     if (!transChunk) {
       playSlide(nextIdx).catch(console.error);
       return;
     }
 
-    // Seamless handoff: keep transition visible until next slide is decoded.
     isTransitioning = true;
     let slideReady = false;
     let transitionDone = false;
-    let transitionTimeoutId = null;
-    let slideLoadStarted = false;
+    const nextSrc = BASE_PATH + nextSlide.file;
 
-    const finalizeTransition = () => {
+    const finalize = () => {
       if (!slideReady || !transitionDone) return;
-      if (transitionTimeoutId !== null) {
-        clearTimeout(transitionTimeoutId);
-        transitionTimeoutId = null;
-      }
-      standbyVid.classList.remove("active");
+      if (handoffTimeoutId) clearTimeout(handoffTimeoutId);
+      standbyVid.classList.remove("visible");
       standbyVid.pause();
       currentSlideIdx = nextIdx;
       showHud(nextIdx);
@@ -332,100 +406,56 @@
       isTransitioning = false;
     };
 
-    const nextSlideSrc = BASE_PATH + nextSlide.file;
-    const beginSlideLoad = () => {
-      if (slideLoadStarted) return;
-      slideLoadStarted = true;
-      loadInto(activeVid, nextSlideSrc, true)
-        .then(() => {
-          slideReady = true;
-          if (!paused) {
-            activeVid.play().catch(() => {});
-          }
-          finalizeTransition();
-        })
-        .catch((err) => {
-          console.error("Slide preload failed", err);
-          if (transitionTimeoutId !== null) {
-            clearTimeout(transitionTimeoutId);
-            transitionTimeoutId = null;
-          }
-          standbyVid.classList.remove("active");
-          isTransitioning = false;
-        });
-    };
-
-    const onEnd = () => {
-      standbyVid.removeEventListener("ended", onEnd);
+    const onTransitionEnd = () => {
+      standbyVid.removeEventListener("ended", onTransitionEnd);
       transitionDone = true;
-      finalizeTransition();
+      finalize();
     };
-
-    standbyVid.addEventListener("ended", onEnd);
+    standbyVid.addEventListener("ended", onTransitionEnd);
     standbyVid.currentTime = 0;
     standbyVid.loop = false;
-    standbyVid.classList.add("active");
+    showVideoLayer(standbyVid);
     activeVid.pause();
-    transitionTimeoutId = setTimeout(() => {
-      standbyVid.removeEventListener("ended", onEnd);
-      transitionDone = true;
-      finalizeTransition();
-    }, Math.max(250, Math.round((Number(transChunk.duration) || 0) * 1000 + 250)));
-    standbyVid.play().catch((err) => {
-      console.error("Transition play failed", err);
-      if (transitionTimeoutId !== null) {
-        clearTimeout(transitionTimeoutId);
-        transitionTimeoutId = null;
-      }
-      standbyVid.removeEventListener("ended", onEnd);
-      standbyVid.classList.remove("active");
+    standbyVid.play().catch(err => {
+      console.error(err);
+      standbyVid.removeEventListener("ended", onTransitionEnd);
       isTransitioning = false;
       playSlide(nextIdx).catch(console.error);
-      return;
     });
-    // Only preload/replace slide source once transition layer is active.
-    // This prevents brief frame leaks from the next slide before transition starts.
-    beginSlideLoad();
+
+    handoffTimeoutId = setTimeout(() => {
+      transitionDone = true;
+      finalize();
+    }, Math.max(250, Math.round(((Number(transChunk.duration) || 0) * 1000) + 250)));
+
+    if (nextSlide.asset_kind === "image") {
+      loadImage(nextSrc).then(() => {
+        imgLayer.src = nextSrc;
+        showImageLayer();
+        slideReady = true;
+        finalize();
+      }).catch(err => {
+        console.error(err);
+        isTransitioning = false;
+      });
+    } else {
+      loadInto(activeVid, nextSrc, true).then(() => {
+        showVideoLayer(activeVid);
+        if (!paused) activeVid.play().catch(() => {});
+        slideReady = true;
+        finalize();
+      }).catch(err => {
+        console.error(err);
+        isTransitioning = false;
+      });
+    }
   }
 
   function goPrev() {
-    if (isTransitioning) return;
-    if (currentSlideIdx <= 0) return;
-
-    // For backwards, we skip transitions and just cut directly
-    // (reverse transitions would look odd)
+    if (isTransitioning || currentSlideIdx <= 0) return;
     playSlide(currentSlideIdx - 1).catch(console.error);
   }
 
-  function loadInto(video, src, loop) {
-    return new Promise((resolve, reject) => {
-      const onReady = () => {
-        cleanup();
-        resolve();
-      };
-      const onError = () => {
-        cleanup();
-        reject(new Error(`Failed loading video source: ${src}`));
-      };
-      const cleanup = () => {
-        video.removeEventListener("canplaythrough", onReady);
-        video.removeEventListener("error", onError);
-      };
-
-      video.loop = loop;
-      video.muted = true;
-      video.addEventListener("canplaythrough", onReady, { once: true });
-      video.addEventListener("error", onError, { once: true });
-      if (video.src !== src) {
-        video.src = src;
-      }
-      video.load();
-    });
-  }
-
-  // -----------------------------------------------------------------------
-  // HUD
-  // -----------------------------------------------------------------------
   function showHud(idx) {
     const chunk = slideChunks[idx];
     hudLabel.textContent = chunk.label || `Slide ${chunk.slide_number}`;
@@ -456,9 +486,6 @@
     });
   }
 
-  // -----------------------------------------------------------------------
-  // CURSOR AUTO-HIDE
-  // -----------------------------------------------------------------------
   function showCursor() {
     document.body.classList.add("show-cursor");
     clearTimeout(cursorTimer);
@@ -474,8 +501,6 @@
     document.documentElement.requestFullscreen().catch(() => {});
   }
 
-  // Browsers block true auto-fullscreen on load. This enters fullscreen
-  // on the first non-button pointer interaction instead.
   document.addEventListener("pointerdown", (e) => {
     if (autoFullscreenAttempted) return;
     if (fullscreenBtn.contains(e.target)) return;
@@ -493,48 +518,32 @@
     toggleFullscreen();
   });
 
-  // -----------------------------------------------------------------------
-  // KEYBOARD
-  // -----------------------------------------------------------------------
   document.addEventListener("keydown", (e) => {
     switch (e.key) {
-      case "ArrowRight":
-        e.preventDefault();
-        goNext();
-        break;
-      case "ArrowLeft":
-        e.preventDefault();
-        goPrev();
-        break;
+      case "ArrowRight": e.preventDefault(); goNext(); break;
+      case "ArrowLeft": e.preventDefault(); goPrev(); break;
       case " ":
         e.preventDefault();
         if (paused) {
-          if (isTransitioning && standbyVid.classList.contains("active")) {
-            standbyVid.play().catch(() => {});
+          if (imgLayer.classList.contains("visible")) {
+            paused = false;
           } else {
             activeVid.play().catch(() => {});
+            paused = false;
           }
-          paused = false;
         } else {
           activeVid.pause();
           standbyVid.pause();
           paused = true;
         }
         break;
-      case "f":
-        toggleFullscreen();
-        break;
-      case "?":
-        helpEl.classList.toggle("show");
-        break;
-      case "Escape":
-        helpEl.classList.remove("show");
-        break;
+      case "f": toggleFullscreen(); break;
+      case "?": helpEl.classList.toggle("show"); break;
+      case "Escape": helpEl.classList.remove("show"); break;
     }
   });
 
-  // Click to advance
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", () => {
     if (helpEl.classList.contains("show")) {
       helpEl.classList.remove("show");
       return;

@@ -55,8 +55,6 @@
     }
 
     .card {
-      display: block;
-      text-decoration: none;
       color: inherit;
       background: linear-gradient(180deg, #121924 0%, #0f141d 100%);
       border: 1px solid var(--line);
@@ -119,6 +117,28 @@
       font-size: 0.94rem;
     }
 
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      color: #dce8f8;
+      border: 1px solid #39628a;
+      background: rgba(34, 56, 79, 0.45);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 0.86rem;
+    }
+
+    .btn:hover {
+      background: rgba(56, 91, 127, 0.6);
+    }
+
     .foot {
       margin-top: 30px;
       color: var(--dim);
@@ -139,23 +159,31 @@
     </p>
 
     <section class="grid">
-      <a class="card" href="./MuC/" aria-label="Open Mensch und Computer 2025 presentation">
+      <article class="card">
         <img class="thumb" src="./MuC/preview.jpg" alt="MuC 2025 presentation preview frame">
         <div class="body">
           <div class="kicker">Mensch und Computer 2025</div>
           <div class="title">Viscereality - MuC 2025</div>
-          <div class="meta">Start Presentation</div>
+          <div class="meta">Interactive player with manual next/prev transition flow.</div>
+          <div class="actions">
+            <a class="btn" href="./MuC/" aria-label="Open MuC presentation player">Open Player</a>
+            <a class="btn" href="https://muc2025.mensch-und-computer.de/en/" target="_blank" rel="noopener noreferrer" aria-label="Open MuC conference page">Conference</a>
+          </div>
         </div>
-      </a>
+      </article>
 
-      <a class="card" href="./alpCHI/" aria-label="Open alpCHI 2026 presentation page">
-        <div class="thumb placeholder">Preview Coming Soon</div>
+      <article class="card">
+        <img class="thumb" src="./alpCHI/preview.jpg" alt="alpCHI presentation preview frame">
         <div class="body">
           <div class="kicker">alpCHI 2026</div>
           <div class="title">Viscereality - alpCHI 2026</div>
-          <div class="meta">Landing page prepared. Player assets can be dropped in when the deck is finalized.</div>
+          <div class="meta">Interactive player with strict authored transition/timing behavior.</div>
+          <div class="actions">
+            <a class="btn" href="./alpCHI/" aria-label="Open alpCHI presentation player">Open Player</a>
+            <a class="btn" href="https://alpchi.org/" target="_blank" rel="noopener noreferrer" aria-label="Open alpCHI conference page">Conference</a>
+          </div>
         </div>
-      </a>
+      </article>
     </section>
 
     <p class="foot">

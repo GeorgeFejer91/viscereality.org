@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-Hybrid PPT Chunker v2
----------------------
-Backwards-compatible CLI with `analyze` and `chunk`, plus end-to-end `run`.
+Generalized PPT Chunker v3
+--------------------------
+Primary staged workflow:
+  inspect -> build -> validate -> publish
+
+Legacy wrappers are kept for compatibility:
+  analyze, chunk, run, upload
 """
 
 from __future__ import annotations
@@ -11,97 +15,103 @@ import argparse
 import sys
 
 from ppt_chunker.exceptions import PipelineError
-from ppt_chunker.pipeline import analyze_command, chunk_command, run_command
+from ppt_chunker.pipeline import (
+    analyze_command,
+    build_command,
+    chunk_command,
+    inspect_command,
+    publish_command,
+    run_command,
+    validate_command,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Hybrid PPT Chunker v2: analyze/chunk/run pipeline for GitHub Pages playback."
+        description="Feature-driven PPT pipeline for GitHub Pages playback."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_analyze = sub.add_parser("analyze", help="Extract and resolve timings from PPTX")
-    p_analyze.add_argument("pptx", help="Path to .pptx file")
-    p_analyze.add_argument("-o", "--output-dir", default="output", help="Output directory")
+    # v3 commands
+    p_inspect = sub.add_parser("inspect", help="Extract slide/media features from PPTX")
+    p_inspect.add_argument("pptx", help="Path to .pptx")
+    p_inspect.add_argument("-o", "--output-dir", default="output")
+    p_inspect.add_argument("--profile", default="balanced1080")
+    p_inspect.add_argument("--ffprobe-bin")
+
+    p_build = sub.add_parser("build", help="Build artifacts from PPTX")
+    p_build.add_argument("pptx", help="Path to .pptx")
+    p_build.add_argument("-o", "--output-dir", default="output")
+    p_build.add_argument("--profile", default="balanced1080")
+    p_build.add_argument("--presentation-id")
+    p_build.add_argument("--title")
+    p_build.add_argument("--overrides-file")
+    p_build.add_argument("--ffmpeg-bin")
+    p_build.add_argument("--ffprobe-bin")
+    p_build.add_argument("--max-chunk-mb", type=float, default=95.0)
+    p_build.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
+    p_build.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
+    p_build.add_argument("--no-rewrite-timings", action="store_true")
+    p_build.add_argument("--reuse-master", action="store_true")
+
+    p_validate = sub.add_parser("validate", help="Validate output artifacts")
+    p_validate.add_argument("output_dir", help="Build output directory")
+    p_validate.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
+    p_validate.add_argument("--ffmpeg-bin")
+    p_validate.add_argument("--ffprobe-bin")
+
+    p_publish = sub.add_parser("publish", help="Publish validated artifacts to presentations/<deck>")
+    p_publish.add_argument("output_dir", help="Build output directory")
+    p_publish.add_argument("--deck", required=True, help="Deck name (e.g., alpCHI)")
+    p_publish.add_argument("--git-push", action="store_true")
+    p_publish.add_argument("--git-remote", default="origin")
+    p_publish.add_argument("--git-branch", default="main")
+
+    # legacy wrappers
+    p_analyze = sub.add_parser("analyze", help="Legacy wrapper -> inspect + timing_config")
+    p_analyze.add_argument("pptx", help="Path to .pptx")
+    p_analyze.add_argument("-o", "--output-dir", default="output")
     p_analyze.add_argument(
         "--timing-mode",
         choices=["ppt", "uniform", "hybrid"],
         default="ppt",
-        help="Timing mode for resolved output config",
     )
-    p_analyze.add_argument("--default-slide-sec", type=float, default=5.0)
-    p_analyze.add_argument("--default-transition-sec", type=float, default=2.0)
-    p_analyze.add_argument("--overrides-file", help="Optional JSON config to merge as overrides")
-    p_analyze.add_argument(
-        "--com-probe",
-        action="store_true",
-        help="Use PowerPoint COM probe for higher fidelity timing extraction",
-    )
+    p_analyze.add_argument("--default-slide-sec", type=float, default=4.0)
+    p_analyze.add_argument("--default-transition-sec", type=float, default=0.5)
+    p_analyze.add_argument("--overrides-file")
+    p_analyze.add_argument("--com-probe", action="store_true")
+    p_analyze.add_argument("--ffprobe-bin")
+    p_analyze.add_argument("--profile", default="balanced1080")
 
-    p_chunk = sub.add_parser("chunk", help="Chunk MP4 based on timing config")
-    p_chunk.add_argument("mp4", help="Path to exported .mp4 file")
+    p_chunk = sub.add_parser("chunk", help="Legacy wrapper for chunking an existing MP4")
+    p_chunk.add_argument("mp4", help="Path to master MP4")
     p_chunk.add_argument("-c", "--config", default="output/timing_config.json")
     p_chunk.add_argument("-o", "--output-dir", default="output")
-    p_chunk.add_argument("--ffmpeg-bin", help="Optional explicit ffmpeg binary path")
-    p_chunk.add_argument("--ffprobe-bin", help="Optional explicit ffprobe binary path")
-    p_chunk.add_argument("--duration-tolerance", type=float, default=1.0)
+    p_chunk.add_argument("--ffmpeg-bin")
+    p_chunk.add_argument("--ffprobe-bin")
     p_chunk.add_argument("--max-chunk-mb", type=float, default=95.0)
-    chunk_audio_group = p_chunk.add_mutually_exclusive_group()
-    chunk_audio_group.add_argument(
-        "--mute-output", action="store_true", default=True, help="Mute chunk audio (default)"
-    )
-    chunk_audio_group.add_argument("--keep-audio", action="store_false", dest="mute_output")
-    p_chunk.add_argument("--generate-player", action="store_true")
+    p_chunk.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
 
-    p_run = sub.add_parser("run", help="Run full pipeline: analyze + export + normalize + chunk")
-    p_run.add_argument("pptx", help="Path to .pptx file")
+    p_run = sub.add_parser("run", help="Legacy wrapper -> build + validate")
+    p_run.add_argument("pptx", help="Path to .pptx")
     p_run.add_argument("-o", "--output-dir", default="output")
-    p_run.add_argument("--presentation-id", help="Override ID used in output names/manifests")
-    p_run.add_argument("--title", help="Presentation title for manifest/player")
-    p_run.add_argument(
-        "--timing-mode",
-        choices=["ppt", "uniform", "hybrid"],
-        default="ppt",
-        help="Timing resolution mode",
-    )
-    p_run.add_argument("--default-slide-sec", type=float, default=5.0)
-    p_run.add_argument("--default-transition-sec", type=float, default=2.0)
-    p_run.add_argument("--overrides-file", help="Optional JSON timing override file")
-    p_run.add_argument("--rewrite-timings", action="store_true")
-    p_run.add_argument("--fps", type=int, default=30)
-    p_run.add_argument("--height", type=int, default=1080)
-    p_run.add_argument("--quality", type=int, default=85)
-    p_run.add_argument("--ffmpeg-bin", help="Optional explicit ffmpeg binary path")
-    p_run.add_argument("--ffprobe-bin", help="Optional explicit ffprobe binary path")
-    p_run.add_argument("--duration-tolerance", type=float, default=1.0)
-    p_run.add_argument(
-        "--fit-duration",
-        action="store_true",
-        help="If post-normalization drift exceeds tolerance, time-warp master video to expected duration.",
-    )
-    p_run.add_argument(
-        "--no-auto-reconcile",
-        action="store_false",
-        dest="auto_reconcile",
-        help=(
-            "Disable automatic non-retime timing reconciliation when export duration drifts "
-            "(enabled by default)."
-        ),
-    )
-    p_run.set_defaults(auto_reconcile=True)
-    p_run.add_argument(
-        "--max-fit-ratio",
-        type=float,
-        default=1.1,
-        help="Maximum allowed duration fit ratio (actual/expected) before failing (default: 1.1).",
-    )
+    p_run.add_argument("--profile", default="balanced1080")
+    p_run.add_argument("--presentation-id")
+    p_run.add_argument("--title")
+    p_run.add_argument("--overrides-file")
+    p_run.add_argument("--ffmpeg-bin")
+    p_run.add_argument("--ffprobe-bin")
     p_run.add_argument("--max-chunk-mb", type=float, default=95.0)
-    run_audio_group = p_run.add_mutually_exclusive_group()
-    run_audio_group.add_argument(
-        "--mute-output", action="store_true", default=True, help="Mute output audio (default)"
-    )
-    run_audio_group.add_argument("--keep-audio", action="store_false", dest="mute_output")
-    p_run.add_argument("--generate-player", action="store_true")
+    p_run.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
+    p_run.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
+    p_run.add_argument("--reuse-master", action="store_true")
+
+    p_upload = sub.add_parser("upload", help="Legacy wrapper -> publish")
+    p_upload.add_argument("output_dir")
+    p_upload.add_argument("--deck", required=True)
+    p_upload.add_argument("--git-push", action="store_true")
+    p_upload.add_argument("--git-remote", default="origin")
+    p_upload.add_argument("--git-branch", default="main")
 
     return parser
 
@@ -110,12 +120,22 @@ def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
     try:
-        if args.command == "analyze":
+        if args.command == "inspect":
+            inspect_command(args)
+        elif args.command == "build":
+            build_command(args)
+        elif args.command == "validate":
+            validate_command(args)
+        elif args.command == "publish":
+            publish_command(args)
+        elif args.command == "analyze":
             analyze_command(args)
         elif args.command == "chunk":
             chunk_command(args)
         elif args.command == "run":
             run_command(args)
+        elif args.command == "upload":
+            publish_command(args)
         else:
             parser.error(f"Unknown command: {args.command}")
         return 0

@@ -34,10 +34,13 @@
     height: 100vh;
     object-fit: contain;
     background: var(--bg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.08s linear;
   }
+  .video-layer.visible { opacity: 1; visibility: visible; }
   #vid-a { z-index: 1; }
-  #vid-b { z-index: 2; opacity: 0; pointer-events: none; }
-  #vid-b.active { opacity: 1; }
+  #vid-b { z-index: 2; pointer-events: none; }
 
   /* --- HUD -------------------------------------------------------------- */
   #hud {
@@ -182,11 +185,33 @@
     color: #ffb7b7;
   }
   #sync-status.hidden { display: none; }
+
+  #deck-info {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 170;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(10, 10, 10, 0.74);
+    color: #d6d6d6;
+    font-size: 0.78rem;
+    max-width: 220px;
+    display: none;
+  }
+  #deck-info img {
+    width: 100%;
+    height: auto;
+    border-radius: 7px;
+    margin-bottom: 8px;
+  }
+  #deck-info a { color: #a9d4ff; text-decoration: none; }
 </style>
 </head>
 <body>
 
-<video id="vid-a" class="video-layer" muted playsinline></video>
+<video id="vid-a" class="video-layer visible" muted playsinline></video>
 <video id="vid-b" class="video-layer" muted playsinline></video>
 
 <div id="hud">
@@ -200,6 +225,11 @@
 
 <div id="loading">Loading presentation...</div>
 <div id="sync-status" class="hidden">Sync disabled</div>
+<div id="deck-info">
+  <img id="deck-preview" alt="Deck preview">
+  <div id="deck-title"></div>
+  <div><a id="deck-link" target="_blank" rel="noopener noreferrer"></a></div>
+</div>
 
 <div id="help">
   <table>
@@ -254,6 +284,10 @@
   const helpEl = document.getElementById("help");
   const fullscreenBtn = document.getElementById("fullscreen-btn");
   const syncStatusEl = document.getElementById("sync-status");
+  const deckInfo = document.getElementById("deck-info");
+  const deckPreview = document.getElementById("deck-preview");
+  const deckTitle = document.getElementById("deck-title");
+  const deckLink = document.getElementById("deck-link");
 
   let activeVid = vidA;
   let standbyVid = vidB;
@@ -291,6 +325,7 @@
       }
 
       document.title = data.title || "Presentation";
+      renderDeckInfo();
       renderTicks();
       preloadAndStart();
       if (syncMode) {
@@ -304,6 +339,29 @@
         setSyncStatus("Sync unavailable: manifest load failed.", "err");
       }
     });
+
+  function renderDeckInfo() {
+    const deckCfg = (window.PRESENTATION_DECKS && window.PRESENTATION_DECKS.MuC) || {};
+    const meta = manifest && manifest.deck_meta ? manifest.deck_meta : {};
+    const preview = meta.preview_image || deckCfg.previewImage;
+    const confUrl = meta.conference_url || deckCfg.conferenceUrl;
+    const confLabel = meta.conference_label || deckCfg.conferenceLabel || "Conference";
+    if (!preview && !confUrl) return;
+    deckInfo.style.display = "block";
+    if (preview) {
+      deckPreview.src = preview;
+      deckPreview.style.display = "block";
+    } else {
+      deckPreview.style.display = "none";
+    }
+    deckTitle.textContent = manifest.title || deckCfg.title || "Presentation";
+    if (confUrl) {
+      deckLink.href = confUrl;
+      deckLink.textContent = confLabel;
+    } else {
+      deckLink.style.display = "none";
+    }
+  }
 
   // -----------------------------------------------------------------------
   // PLAYBACK
@@ -323,6 +381,9 @@
     if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
     const src = BASE_PATH + slideChunks[idx].file;
     return loadInto(activeVid, src, true).then(() => {
+      vidA.classList.remove("visible");
+      vidB.classList.remove("visible");
+      activeVid.classList.add("visible");
       currentSlideIdx = idx;
       if (paused) {
         activeVid.pause();
@@ -380,8 +441,9 @@
 
     const finalizeTransition = () => {
       if (!slideReady || !transitionDone) return;
-      standbyVid.classList.remove("active");
+      standbyVid.classList.remove("visible");
       standbyVid.pause();
+      activeVid.classList.add("visible");
       currentSlideIdx = nextIdx;
       showHud(nextIdx);
       updateProgress();
@@ -401,7 +463,8 @@
       })
       .catch((err) => {
         console.error("Slide preload failed", err);
-        standbyVid.classList.remove("active");
+        standbyVid.classList.remove("visible");
+        activeVid.classList.add("visible");
         isTransitioning = false;
         flushPendingRemoteState();
       });
@@ -415,11 +478,13 @@
     standbyVid.addEventListener("ended", onEnd);
     standbyVid.currentTime = 0;
     standbyVid.loop = false;
-    standbyVid.classList.add("active");
+    activeVid.classList.remove("visible");
+    standbyVid.classList.add("visible");
     standbyVid.play().catch((err) => {
       console.error("Transition play failed", err);
       standbyVid.removeEventListener("ended", onEnd);
-      standbyVid.classList.remove("active");
+      standbyVid.classList.remove("visible");
+      activeVid.classList.add("visible");
       isTransitioning = false;
       flushPendingRemoteState();
     });
@@ -718,7 +783,7 @@
           return;
         }
         if (paused) {
-          if (isTransitioning && standbyVid.classList.contains("active")) {
+          if (isTransitioning && standbyVid.classList.contains("visible")) {
             standbyVid.play().catch(() => {});
           } else {
             activeVid.play().catch(() => {});

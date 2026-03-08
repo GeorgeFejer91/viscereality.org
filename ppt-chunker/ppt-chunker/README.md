@@ -1,157 +1,100 @@
-﻿# Hybrid PPT Chunker v2
+# PPT Chunker v3 (Strict, Feature-Driven)
 
-Windows-first PowerPoint pipeline for GitHub Pages slide-style playback.
+Windows-first PowerPoint pipeline for building GitHub Pages deck players with strict validation.
 
-## What You Get
+## Staged Workflow
 
-- Backward-compatible commands:
-  - `analyze <pptx>`
-  - `chunk <mp4> --config timing_config.json`
-- New end-to-end command:
-  - `run <pptx>`
-- Slide player behavior:
-  - slide chunks loop
-  - `Next` plays transition once then loops next slide
-  - `Previous` jumps directly to previous slide
-- Double-buffer player template (`player/index.html`)
-- Strict validation + fail-fast ffmpeg errors
-- Chunk size guardrail (`--max-chunk-mb`)
+1. Inspect
+
+```bash
+py -3 chunk_presentation.py inspect "presentation.pptx" -o output --profile balanced1080
+```
+
+Outputs `feature_report.json`.
+
+2. Build
+
+```bash
+py -3 chunk_presentation.py build "presentation.pptx" -o output --strict
+```
+
+Outputs:
+
+- `manifest.json`
+- `timing_decisions.json`
+- `feature_report.json`
+- `hiccup_report.json`
+- `chunks/*.mp4` (hashed names)
+- `assets/*.png` for static slides
+
+3. Validate
+
+```bash
+py -3 chunk_presentation.py validate output --strict
+```
+
+Outputs:
+
+- `validation_report.json`
+- `hiccup_report.json` (updated)
+- `validation.ok` on pass
+
+4. Publish
+
+```bash
+py -3 chunk_presentation.py publish output --deck alpCHI
+```
+
+Copies validated artifacts to `presentations/<deck>/`.
+
+Optional git push:
+
+```bash
+py -3 chunk_presentation.py publish output --deck alpCHI --git-push
+```
+
+## Defaults
+
+- Profile: `balanced1080`
+- Static slide duration: `4.0s`
+- Tiny transition rule: `<=0.01s` -> treated as `none`
+- Strict mode: enabled by default for `build` and `validate`
+- Source PPT: never mutated (temp working copy only)
+
+## Manifest Contract
+
+Legacy `chunks` stays available.
+
+Extended fields include:
+
+- `segments[]` with `start_sec/end_sec`
+- per-slide `asset_kind` (`video` or `image`)
+- optional `deck_meta`
+
+## Player Behavior
+
+- Slide chunks loop indefinitely.
+- `Next`: transition chunk plays once, then next slide loops.
+- `Prev`: jump directly to previous slide.
+- Static slides can be image assets and wait for user navigation.
+
+## Legacy Compatibility
+
+Legacy commands still exist and route to v3 internals:
+
+- `analyze`
+- `chunk`
+- `run`
+- `upload`
 
 ## Requirements
 
 - Python 3.10+
-- `pywin32` (required for `run` COM export and optional COM probe)
-- ffmpeg/ffprobe binaries (PATH or winget install locations)
+- PowerPoint + `pywin32`
+- ffmpeg / ffprobe
 
-Install:
+Install pywin32:
 
 ```bash
 py -3 -m pip install pywin32
 ```
-
-## Commands
-
-### 1) Analyze PPT timings
-
-```bash
-py -3 chunk_presentation.py analyze "presentation.pptx" --com-probe -o output
-```
-
-Outputs: `output/timing_config.json`
-
-- Uses XML timing extraction by default.
-- `--com-probe` adds PowerPoint COM timing probe.
-- Writes legacy `segments` and v2 `defaults/slides` blocks.
-
-### 2) Chunk an existing MP4 (legacy-compatible flow)
-
-```bash
-py -3 chunk_presentation.py chunk "presentation.mp4" \
-  --config output/timing_config.json \
-  --output-dir output \
-  --max-chunk-mb 95 \
-  --generate-player
-```
-
-### 3) Run full end-to-end pipeline
-
-```bash
-py -3 chunk_presentation.py run "presentation.pptx" \
-  --output-dir output \
-  --timing-mode ppt \
-  --fit-duration \
-  --fps 30 \
-  --height 1080 \
-  --max-chunk-mb 95 \
-  --generate-player
-```
-
-This runs:
-1. XML analysis (+ COM probe for `ppt`/`hybrid`)
-2. Timing resolution (override > COM > XML > defaults)
-3. PowerPoint COM export to raw MP4
-4. Web normalization encode
-5. Automatic non-retime timing reconciliation (default on)
-6. Optional duration-fit warp (`--fit-duration`) when drift still exceeds tolerance
-7. Chunking + validation
-8. Manifest generation
-9. Player scaffold copy (`index.html`)
-
-## Timing Modes
-
-- `ppt`: prefer authored timings (COM/XML), fallback to defaults
-- `hybrid`: like `ppt`, intended for mixed/manual override usage
-- `uniform`: force defaults per slide/transition
-
-When `uniform` is used without `--rewrite-timings`, PowerPoint may still honor intrinsic slide/media timings.
-The pipeline now auto-reconciles to intrinsic timing when needed (disable with `--no-auto-reconcile`).
-Tiny transition durations (`<= 0.01s`) are treated as authored "no transition".
-If PowerPoint export still renders visible duration for those tiny transitions, auto-reconcile can switch to an export-compatible timing profile (recorded in `duration_diagnostics.json`).
-
-## Config Compatibility
-
-`timing_config.json` supports both:
-
-- Legacy:
-  - `default_slide_duration_s`
-  - `segments[]` with `slide_duration_s`, `transition_duration_s`, `label`
-- V2 additions:
-  - `defaults.slide_sec`, `defaults.transition_sec`
-  - `slides.<n>.slide_sec`, `slides.<n>.transition_sec`, `slides.<n>.label`
-  - optional `export` object
-
-## Output Structure
-
-```text
-output/
-  timing_config.json
-  duration_diagnostics.json
-  <presentation_id>_master.mp4
-  manifest.json
-  index.html             # if --generate-player
-  chunks/
-    slide_01.mp4
-    trans_02.mp4
-    slide_02.mp4
-    ...
-  build/
-    <presentation_id>_raw.mp4
-```
-
-## Manifest
-
-`manifest.json` keeps old `chunks` for player compatibility and adds v2 fields:
-
-- `presentation_id`
-- `source_ppt`
-- `generated_at_utc`
-- `encoding`
-- `segments` with timeline bounds (`start_sec`, `end_sec`)
-- `slides` map
-- `player_defaults`
-
-## GitHub Pages Integration
-
-1. Copy `output/` artifacts into your repo path:
-   - `presentations/<deck>/manifest.json`
-   - `presentations/<deck>/chunks/*`
-   - `presentations/<deck>/index.html`
-2. Enable Pages on your branch.
-3. Open:
-   - `https://<user>.github.io/<repo>/presentations/<deck>/`
-
-For large decks, host chunks on external storage (e.g., R2) and change `BASE_PATH` in `index.html`.
-
-## Critical Notes
-
-- PowerPoint COM can intermittently reject calls (`RPC_E_CALL_REJECTED`); retries/backoff are built in.
-- Hidden pages are URL-obscured, not authenticated.
-- `run` preserves source PPT by using a temporary working copy.
-
-## Troubleshooting
-
-- `ffmpeg not found`: pass `--ffmpeg-bin` / `--ffprobe-bin` explicitly.
-- Duration mismatch errors: tune timings in config or increase `--duration-tolerance`.
-- Check `duration_diagnostics.json` to see requested vs effective timing model and drift.
-- Oversized chunk error: increase `--max-chunk-mb` or reduce quality settings.
-- COM export failure: close open modal dialogs in PowerPoint, retry command.
