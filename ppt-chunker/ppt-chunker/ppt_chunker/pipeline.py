@@ -668,7 +668,13 @@ def _segment_mixed_assets(
                         slide_number=seg.slide_number,
                     )
                 )
-            raw_transition = chunks_dir / f"trans_{seg.slide_number:02d}.mp4"
+            transition_duration_nominal = transition_frames / fps
+            transition_duration_token = _filename_seconds_token(transition_duration_nominal)
+            transition_mode_token = _transition_mode_token(seg.transition_play_mode)
+            raw_transition = (
+                chunks_dir
+                / f"transition_to{seg.slide_number:02d}_dur{transition_duration_token}_nav{transition_mode_token}.mp4"
+            )
             cut_chunk_frame_exact(
                 ffmpeg_bin=ffmpeg_bin,
                 input_mp4=master_mp4,
@@ -681,7 +687,7 @@ def _segment_mixed_assets(
             enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
             hashed_transition = rename_with_hash(raw_transition)
             decode_check(ffprobe_bin, hashed_transition)
-            transition_duration = transition_frames / fps
+            transition_duration = transition_duration_nominal
             t_start = timeline_frame_cursor / fps
             t_end = (timeline_frame_cursor + transition_frames) / fps
             source_t_start = source_frame_cursor / fps
@@ -695,6 +701,7 @@ def _segment_mixed_assets(
                     "slide_from": seg.slide_number - 1 if seg.slide_number > 1 else 0,
                     "slide_to": seg.slide_number,
                     "asset_kind": "video",
+                    "transition_play_mode": seg.transition_play_mode,
                 }
             )
             extended.append(
@@ -710,6 +717,7 @@ def _segment_mixed_assets(
                     "file": transition_rel,
                     "loop_default": False,
                     "asset_kind": "video",
+                    "transition_play_mode": seg.transition_play_mode,
                 }
             )
             source_frame_cursor += transition_frames
@@ -719,8 +727,9 @@ def _segment_mixed_assets(
         slide_end = (timeline_frame_cursor + slide_frames) / fps
         source_slide_start = source_frame_cursor / fps
         source_slide_end = (source_frame_cursor + slide_frames) / fps
+        slide_duration_token = _filename_seconds_token(slide_frames / fps)
         if seg.asset_kind == "image":
-            raw_png = assets_dir / f"slide_{seg.slide_number:02d}.png"
+            raw_png = assets_dir / f"slide_{seg.slide_number:02d}_dur{slide_duration_token}.png"
             try:
                 extract_frame_png(ffmpeg_bin, master_mp4, raw_png, source_slide_start + (1.0 / fps))
                 hashed_png = rename_with_hash(raw_png)
@@ -771,7 +780,7 @@ def _segment_mixed_assets(
                         slide_number=seg.slide_number,
                     )
                 )
-            raw_slide = chunks_dir / f"slide_{seg.slide_number:02d}.mp4"
+            raw_slide = chunks_dir / f"slide_{seg.slide_number:02d}_dur{slide_duration_token}.mp4"
             cut_chunk_frame_exact(
                 ffmpeg_bin=ffmpeg_bin,
                 input_mp4=master_mp4,
@@ -867,6 +876,7 @@ def _resolve_timing_decisions(
         override = slide_overrides.get(str(feature.slide_number), {})
         slide_reason = "static_default"
         transition_reason = "authored"
+        transition_play_mode = "manual"
 
         intrinsic_slide = (
             intrinsic_slide_map.get(feature.slide_number)
@@ -900,6 +910,11 @@ def _resolve_timing_decisions(
         if override.get("transition_sec") is not None:
             transition_duration = float(override["transition_sec"])
             transition_reason = "override"
+        override_play_mode = str(
+            override.get("transition_play_mode", override.get("transition_play", "manual"))
+        ).strip().lower()
+        if override_play_mode in ("auto", "immediate", "autoplay"):
+            transition_play_mode = "auto"
 
         if transition_type == "none":
             transition_duration = 0.0
@@ -951,6 +966,7 @@ def _resolve_timing_decisions(
                 static_image_file=f"assets/slide_{feature.slide_number:02d}.png"
                 if asset_kind == "image"
                 else None,
+                transition_play_mode=transition_play_mode,
             )
         )
     return decisions, hiccups
@@ -1165,6 +1181,20 @@ def _git_add_commit_push(
     subprocess.run(["git", "commit", "-m", message], cwd=repo_root, check=True)
     subprocess.run(["git", "push", remote, branch], cwd=repo_root, check=True)
     print("Publish commit pushed.")
+
+
+def _filename_seconds_token(seconds: float) -> str:
+    value = max(0.0, float(seconds))
+    token = f"{value:.3f}".replace(".", "p")
+    token = token.rstrip("0").rstrip("p")
+    return token or "0"
+
+
+def _transition_mode_token(mode: str | None) -> str:
+    normalized = str(mode or "manual").strip().lower()
+    if normalized in ("auto", "immediate", "autoplay"):
+        return "auto"
+    return "manual"
 
 
 def sanitize_id(value: str) -> str:

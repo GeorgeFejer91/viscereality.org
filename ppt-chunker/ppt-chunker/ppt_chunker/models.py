@@ -24,6 +24,7 @@ class ResolvedSegment:
     duration_source: str
     asset_kind: str = "video"
     static_image_file: str | None = None
+    transition_play_mode: str = "manual"
 
     def to_legacy_json(self) -> dict[str, Any]:
         return {
@@ -32,6 +33,7 @@ class ResolvedSegment:
             "slide_duration_s": round(self.slide_duration_s, 3),
             "transition_duration_s": round(self.transition_duration_s, 3),
             "transition_type": self.transition_type,
+            "transition_play_mode": self.transition_play_mode,
             "asset_kind": self.asset_kind,
         }
 
@@ -90,6 +92,7 @@ class TimingDecision:
     transition_reason: str
     asset_kind: str = "video"
     static_image_file: str | None = None
+    transition_play_mode: str = "manual"
 
     def to_segment(self) -> ResolvedSegment:
         return ResolvedSegment(
@@ -101,6 +104,7 @@ class TimingDecision:
             duration_source=f"{self.slide_reason}/{self.transition_reason}",
             asset_kind=self.asset_kind,
             static_image_file=self.static_image_file,
+            transition_play_mode=self.transition_play_mode,
         )
 
     def to_dict(self) -> dict[str, Any]:

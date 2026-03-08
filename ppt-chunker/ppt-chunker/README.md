@@ -77,6 +77,21 @@ Extended fields include:
 - `Next`: transition chunk plays once, then next slide loops.
 - `Prev`: jump directly to previous slide.
 - Static slides can be image assets and wait for user navigation.
+- Filename rules can override playback metadata at runtime.
+
+## Filename Rules (Runtime-Parsed)
+
+Chunk filenames can carry play hints that the player parses:
+
+- Type token: `slide` or `transition`
+- Duration token: `dur<seconds>` (use `p` for decimals, e.g. `dur2p5`)
+- Transition navigation token: `navauto` or `navmanual`
+
+Examples:
+
+- `slide_04_dur4.mp4`
+- `transition_to05_dur0_navmanual.mp4` (transition effectively skipped)
+- `transition_to06_dur1p2_navauto.mp4` (auto-advance after current slide)
 
 ## Legacy Compatibility
 

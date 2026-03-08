@@ -246,12 +246,14 @@
   let autoFullscreenAttempted = false;
   let suppressNextAdvanceClick = false;
   let handoffTimeoutId = null;
+  let autoAdvanceTimer = null;
+  let autoAdvanceVideoHandler = null;
 
   fetch(MANIFEST_URL)
     .then(r => r.json())
     .then(data => {
       manifest = data;
-      allChunks = Array.isArray(data.chunks) ? data.chunks : [];
+      allChunks = normalizeChunks(Array.isArray(data.chunks) ? data.chunks : []);
       slideChunks = allChunks.filter(c => c.type === "slide").map(c => ({
         ...c,
         asset_kind: c.asset_kind || "video",
@@ -272,6 +274,50 @@
       loadingEl.textContent = "Failed to load manifest.json";
       console.error(err);
     });
+
+  function parseChunkNameRules(filePath) {
+    const out = {};
+    const fileName = String(filePath || "").split("/").pop() || "";
+    const stem = fileName.toLowerCase().replace(/\.[^.]+$/, "");
+    if (!stem) return out;
+    if (stem.startsWith("transition") || stem.startsWith("trans_")) {
+      out.type = "transition";
+    } else if (stem.startsWith("slide")) {
+      out.type = "slide";
+    }
+    const durMatch = stem.match(/(?:^|[_-])dur(\d+(?:p\d+)?)/);
+    if (durMatch) {
+      const parsed = Number(durMatch[1].replace("p", "."));
+      if (Number.isFinite(parsed) && parsed >= 0) out.duration = parsed;
+    }
+    const navMatch = stem.match(/(?:^|[_-])nav(auto|manual|hold|immediate)/);
+    if (navMatch) {
+      out.transition_play_mode = navMatch[1] === "auto" || navMatch[1] === "immediate"
+        ? "auto"
+        : "manual";
+    }
+    return out;
+  }
+
+  function normalizeChunk(chunk) {
+    const normalized = {
+      ...chunk,
+      asset_kind: chunk.asset_kind || "video",
+    };
+    const rules = parseChunkNameRules(normalized.file);
+    if (rules.type) normalized.type = rules.type;
+    if (Number.isFinite(rules.duration)) normalized.duration = rules.duration;
+    if (rules.transition_play_mode) {
+      normalized.transition_play_mode = rules.transition_play_mode;
+    } else if (!normalized.transition_play_mode) {
+      normalized.transition_play_mode = "manual";
+    }
+    return normalized;
+  }
+
+  function normalizeChunks(chunks) {
+    return chunks.map(normalizeChunk);
+  }
 
   function renderDeckInfo() {
     const meta = manifest && manifest.deck_meta ? manifest.deck_meta : {};
@@ -337,10 +383,62 @@
     });
   }
 
+  function findTransitionForNext(slideIdx) {
+    const nextSlideIdx = slideIdx + 1;
+    if (nextSlideIdx >= slideChunks.length) return null;
+    const nextSlide = slideChunks[nextSlideIdx];
+    return allChunks.find(
+      c => c.type === "transition" && c.slide_to === nextSlide.slide_number
+    ) || null;
+  }
+
+  function clearAutoAdvance() {
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = null;
+    }
+    if (autoAdvanceVideoHandler) {
+      activeVid.removeEventListener("ended", autoAdvanceVideoHandler);
+      autoAdvanceVideoHandler = null;
+    }
+  }
+
+  function armAutoAdvanceForCurrentSlide() {
+    clearAutoAdvance();
+    if (paused || isTransitioning) return;
+    const slide = slideChunks[currentSlideIdx];
+    if (!slide) return;
+    const transChunk = findTransitionForNext(currentSlideIdx);
+    if (!transChunk || transChunk.transition_play_mode !== "auto") return;
+
+    const trigger = () => {
+      if (paused || isTransitioning) return;
+      if (currentSlideIdx >= slideChunks.length - 1) return;
+      goNext();
+    };
+
+    if (slide.asset_kind === "image") {
+      const durationSec = Number(slide.duration) || 0;
+      if (durationSec <= 0) return;
+      autoAdvanceTimer = setTimeout(trigger, Math.max(100, Math.round(durationSec * 1000)));
+      return;
+    }
+
+    autoAdvanceVideoHandler = () => {
+      autoAdvanceVideoHandler = null;
+      trigger();
+    };
+    activeVid.addEventListener("ended", autoAdvanceVideoHandler, { once: true });
+  }
+
   function playSlide(idx) {
     if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
+    clearAutoAdvance();
     const slide = slideChunks[idx];
     const src = BASE_PATH + slide.file;
+    const transChunk = findTransitionForNext(idx);
+    const autoAdvance = !!(transChunk && transChunk.transition_play_mode === "auto");
+
     if (slide.asset_kind === "image") {
       return loadImage(src).then(() => {
         imgLayer.src = src;
@@ -351,27 +449,30 @@
         showHud(idx);
         updateProgress();
         preloadNext(idx);
+        armAutoAdvanceForCurrentSlide();
         return true;
       });
     }
-    return loadInto(activeVid, src, true).then(() => {
+
+    return loadInto(activeVid, src, !autoAdvance).then(() => {
       showVideoLayer(activeVid);
       currentSlideIdx = idx;
-      if (paused) activeVid.pause(); else activeVid.play().catch(() => {});
+      if (paused) {
+        activeVid.pause();
+      } else {
+        activeVid.play().catch(() => {});
+      }
       showHud(idx);
       updateProgress();
       preloadNext(idx);
+      armAutoAdvanceForCurrentSlide();
       return true;
     });
   }
 
   function preloadNext(slideIdx) {
-    const nextSlideIdx = slideIdx + 1;
-    if (nextSlideIdx >= slideChunks.length) return;
-    const transChunk = allChunks.find(
-      c => c.type === "transition" && c.slide_to === slideChunks[nextSlideIdx].slide_number
-    );
-    if (transChunk) {
+    const transChunk = findTransitionForNext(slideIdx);
+    if (transChunk && (Number(transChunk.duration) || 0) > 0) {
       loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch(() => {});
     }
   }
@@ -381,18 +482,22 @@
     const nextIdx = currentSlideIdx + 1;
     if (nextIdx >= slideChunks.length) return;
     const nextSlide = slideChunks[nextIdx];
-    const transChunk = allChunks.find(
-      c => c.type === "transition" && c.slide_to === nextSlide.slide_number
-    );
-    if (!transChunk) {
+    const transChunk = findTransitionForNext(currentSlideIdx);
+    const transDuration = transChunk ? (Number(transChunk.duration) || 0) : 0;
+    if (!transChunk || transDuration <= 0) {
       playSlide(nextIdx).catch(console.error);
       return;
     }
 
+    clearAutoAdvance();
     isTransitioning = true;
     let slideReady = false;
     let transitionDone = false;
     const nextSrc = BASE_PATH + nextSlide.file;
+    const nextSlideTransition = findTransitionForNext(nextIdx);
+    const nextSlideAuto = !!(
+      nextSlideTransition && nextSlideTransition.transition_play_mode === "auto"
+    );
 
     const finalize = () => {
       if (!slideReady || !transitionDone) return;
@@ -403,6 +508,7 @@
       showHud(nextIdx);
       updateProgress();
       preloadNext(nextIdx);
+      armAutoAdvanceForCurrentSlide();
       isTransitioning = false;
     };
 
@@ -426,7 +532,7 @@
     handoffTimeoutId = setTimeout(() => {
       transitionDone = true;
       finalize();
-    }, Math.max(250, Math.round(((Number(transChunk.duration) || 0) * 1000) + 250)));
+    }, Math.max(250, Math.round((transDuration * 1000) + 250)));
 
     if (nextSlide.asset_kind === "image") {
       loadImage(nextSrc).then(() => {
@@ -439,7 +545,7 @@
         isTransitioning = false;
       });
     } else {
-      loadInto(activeVid, nextSrc, true).then(() => {
+      loadInto(activeVid, nextSrc, !nextSlideAuto).then(() => {
         showVideoLayer(activeVid);
         if (!paused) activeVid.play().catch(() => {});
         slideReady = true;
@@ -531,10 +637,12 @@
             activeVid.play().catch(() => {});
             paused = false;
           }
+          armAutoAdvanceForCurrentSlide();
         } else {
           activeVid.pause();
           standbyVid.pause();
           paused = true;
+          clearAutoAdvance();
         }
         break;
       case "f": toggleFullscreen(); break;

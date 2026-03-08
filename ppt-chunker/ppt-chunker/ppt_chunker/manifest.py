@@ -32,6 +32,7 @@ def build_manifest(
             slide_item["static_image_file"] = seg.static_image_file
         if seg.transition_type != "none" and seg.transition_duration_s > 0:
             slide_item["transition_segment_id"] = f"trans_{seg.slide_number:02d}"
+            slide_item["transition_play_mode"] = seg.transition_play_mode
         slides_block.append(slide_item)
 
     return {
@@ -54,5 +55,10 @@ def build_manifest(
             "next_behavior": "transition_then_loop",
         },
         "deck_meta": deck_meta or {},
+        "filename_rules": {
+            "type_tokens": ["slide", "transition"],
+            "duration_token_format": "dur<seconds-with-p-decimal>",
+            "transition_nav_token_format": "navauto|navmanual",
+        },
     }
 
