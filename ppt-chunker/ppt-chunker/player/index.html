@@ -70,25 +70,6 @@
   #hud .label { color: var(--text); }
   #hud .dim { color: var(--text-dim); margin-left: 10px; font-size: 0.85rem; }
 
-  #deck-info {
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 170;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-    background: rgba(10, 10, 10, 0.74);
-    color: #d6d6d6;
-    font-size: 0.78rem;
-    max-width: 220px;
-    display: none;
-  }
-  #deck-info a {
-    color: #a9d4ff;
-    text-decoration: none;
-  }
-
   #progress-track {
     position: fixed;
     bottom: 0;
@@ -179,11 +160,6 @@
   <span class="dim" id="hud-pos"></span>
 </div>
 
-<div id="deck-info">
-  <div id="deck-title"></div>
-  <div><a id="deck-link" target="_blank" rel="noopener noreferrer"></a></div>
-</div>
-
 <div id="progress-track">
   <div id="progress-fill"></div>
 </div>
@@ -227,10 +203,6 @@
   const loadingEl = document.getElementById("loading");
   const helpEl = document.getElementById("help");
   const fullscreenBtn = document.getElementById("fullscreen-btn");
-  const deckInfo = document.getElementById("deck-info");
-  const deckTitle = document.getElementById("deck-title");
-  const deckLink = document.getElementById("deck-link");
-
   let activeVid = vidA;
   let standbyVid = vidB;
   let hudTimer;
@@ -255,7 +227,6 @@
         return;
       }
       document.title = data.title || "Presentation";
-      renderDeckInfo();
       renderTicks();
       playSlide(0).then(() => loadingEl.classList.add("hidden")).catch(err => {
         loadingEl.textContent = "Failed to load first slide.";
@@ -272,23 +243,26 @@
     const fileName = String(filePath || "").split("/").pop() || "";
     const stem = fileName.toLowerCase().replace(/\.[^.]+$/, "");
     if (!stem) return out;
-    if (stem.startsWith("transition") || stem.startsWith("trans_")) {
+    const normalizedStem = stem.replace(/^\d+_/, "");
+    if (normalizedStem.startsWith("transition") || normalizedStem.startsWith("trans_")) {
       out.type = "transition";
-    } else if (stem.startsWith("slide")) {
+    } else if (normalizedStem.startsWith("slide")) {
       out.type = "slide";
     }
-    const durMatch = stem.match(/(?:^|[_-])dur(\d+(?:p\d+)?)/);
+    const durMatch = normalizedStem.match(/(?:^|[_-])dur(\d+(?:p\d+)?)/);
     if (durMatch) {
       const parsed = Number(durMatch[1].replace("p", "."));
       if (Number.isFinite(parsed) && parsed >= 0) out.duration = parsed;
     }
-    const navMatch = stem.match(/(?:^|[_-])nav(auto|manual|hold|immediate)/);
+    const navMatch = normalizedStem.match(/(?:^|[_-])nav(auto|manual|hold|immediate)/);
     if (navMatch) {
-      out.transition_play_mode = navMatch[1] === "auto" || navMatch[1] === "immediate"
-        ? "auto"
-        : "manual";
+      out.transition_play_mode = navMatch[1] === "hold" ? "manual" : navMatch[1];
     }
     return out;
+  }
+
+  function isAutoTransitionMode(mode) {
+    return mode === "auto" || mode === "immediate";
   }
 
   function normalizeChunk(chunk) {
@@ -309,24 +283,6 @@
 
   function normalizeChunks(chunks) {
     return chunks.map(normalizeChunk);
-  }
-
-  function renderDeckInfo() {
-    const meta = manifest && manifest.deck_meta ? manifest.deck_meta : {};
-    const decks = window.PRESENTATION_DECKS || {};
-    const deckKey = Object.keys(decks).find(k => (decks[k].id || "").toLowerCase() === (manifest.presentation_id || "").toLowerCase());
-    const deckCfg = deckKey ? decks[deckKey] : {};
-    const confUrl = meta.conference_url || deckCfg.conferenceUrl;
-    const confLabel = meta.conference_label || deckCfg.conferenceLabel || "Conference";
-    if (!confUrl) return;
-    deckInfo.style.display = "block";
-    deckTitle.textContent = manifest.title || deckCfg.title || "Presentation";
-    if (confUrl) {
-      deckLink.href = confUrl;
-      deckLink.textContent = confLabel;
-    } else {
-      deckLink.style.display = "none";
-    }
   }
 
   function showVideoLayer(video) {
@@ -394,7 +350,7 @@
     const slide = slideChunks[currentSlideIdx];
     if (!slide) return;
     const transChunk = findTransitionForNext(currentSlideIdx);
-    if (!transChunk || transChunk.transition_play_mode !== "auto") return;
+    if (!transChunk || !isAutoTransitionMode(transChunk.transition_play_mode)) return;
 
     const trigger = () => {
       if (paused || isTransitioning) return;
@@ -422,7 +378,7 @@
     const slide = slideChunks[idx];
     const src = BASE_PATH + slide.file;
     const transChunk = findTransitionForNext(idx);
-    const autoAdvance = !!(transChunk && transChunk.transition_play_mode === "auto");
+    const autoAdvance = !!(transChunk && isAutoTransitionMode(transChunk.transition_play_mode));
 
     if (slide.asset_kind === "image") {
       return loadImage(src).then(() => {
@@ -481,7 +437,7 @@
     const nextSrc = BASE_PATH + nextSlide.file;
     const nextSlideTransition = findTransitionForNext(nextIdx);
     const nextSlideAuto = !!(
-      nextSlideTransition && nextSlideTransition.transition_play_mode === "auto"
+      nextSlideTransition && isAutoTransitionMode(nextSlideTransition.transition_play_mode)
     );
 
     const finalize = () => {

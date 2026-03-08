@@ -21,6 +21,7 @@ def build_manifest(
     timeline_skip_sec: float = 0.0,
 ) -> dict[str, Any]:
     slides_block: list[dict[str, Any]] = []
+    segment_by_slide = {seg.slide_number: seg for seg in segments}
     for seg in segments:
         slide_item: dict[str, Any] = {
             "index": seg.slide_number,
@@ -30,9 +31,13 @@ def build_manifest(
         }
         if seg.static_image_file:
             slide_item["static_image_file"] = seg.static_image_file
-        if seg.transition_type != "none" and seg.transition_duration_s > 0:
-            slide_item["transition_segment_id"] = f"trans_{seg.slide_number:02d}"
-            slide_item["transition_play_mode"] = seg.transition_play_mode
+        next_seg = segment_by_slide.get(seg.slide_number + 1)
+        if next_seg and (
+            (next_seg.transition_type != "none" and next_seg.transition_duration_s > 0)
+            or str(next_seg.transition_play_mode).strip().lower() == "immediate"
+        ):
+            slide_item["transition_segment_id"] = f"trans_{next_seg.slide_number:02d}"
+            slide_item["transition_play_mode"] = next_seg.transition_play_mode
         slides_block.append(slide_item)
 
     return {
@@ -56,9 +61,10 @@ def build_manifest(
         },
         "deck_meta": deck_meta or {},
         "filename_rules": {
+            "sequence_prefix_format": "NN_<Type>_...",
             "type_tokens": ["slide", "transition"],
             "duration_token_format": "dur<seconds-with-p-decimal>",
-            "transition_nav_token_format": "navauto|navmanual",
+            "transition_nav_token_format": "navauto|navmanual|navimmediate",
         },
     }
 

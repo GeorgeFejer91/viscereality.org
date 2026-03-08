@@ -83,15 +83,17 @@ Extended fields include:
 
 Chunk filenames can carry play hints that the player parses:
 
+- Sequence prefix: `NN_` so files sort in playback order
 - Type token: `slide` or `transition`
 - Duration token: `dur<seconds>` (use `p` for decimals, e.g. `dur2p5`)
-- Transition navigation token: `navauto` or `navmanual`
+- Transition navigation token: `navauto`, `navmanual`, or `navimmediate`
 
 Examples:
 
-- `slide_04_dur4.mp4`
-- `transition_to05_dur0_navmanual.mp4` (transition effectively skipped)
-- `transition_to06_dur1p2_navauto.mp4` (auto-advance after current slide)
+- `01_Slide_01_dur4.mp4`
+- `02_Transition_01_to_02_dur0_navmanual.mp4` (transition effectively skipped)
+- `04_Transition_02_to_03_dur0p033_navimmediate.mp4` (single-frame immediate handoff)
+- `04_Transition_02_to_03_dur1p2_navauto.mp4` (auto-advance after current slide)
 
 ## Legacy Compatibility
 

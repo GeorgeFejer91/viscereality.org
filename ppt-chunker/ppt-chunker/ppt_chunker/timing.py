@@ -174,6 +174,9 @@ def load_overrides(path: Path | None) -> dict[str, Any]:
                 "transition_sec": row.get("transition_duration_s"),
                 "label": row.get("label"),
                 "transition_type": row.get("transition_type"),
+                "transition_play_mode": row.get(
+                    "transition_play_mode", row.get("transition_play")
+                ),
             }
 
     if isinstance(cfg.get("slides"), dict):
@@ -184,6 +187,9 @@ def load_overrides(path: Path | None) -> dict[str, Any]:
                     "transition_sec": row.get("transition_sec", row.get("transition_duration_s")),
                     "label": row.get("label"),
                     "transition_type": row.get("transition_type"),
+                    "transition_play_mode": row.get(
+                        "transition_play_mode", row.get("transition_play")
+                    ),
                 }
 
     return {"defaults": defaults, "slides": slides, "export": export}
@@ -208,6 +214,7 @@ def resolve_segments(
         com = com_sources.get(xml.slide_number)
         transition_type = xml.transition_type or "none"
         source = "default"
+        transition_play_mode = "manual"
 
         if timing_mode == "uniform":
             slide_sec = default_slide
@@ -244,6 +251,13 @@ def resolve_segments(
             source = "override"
         if ov.get("transition_type"):
             transition_type = str(ov["transition_type"])
+        override_play_mode = str(
+            ov.get("transition_play_mode", ov.get("transition_play", "manual"))
+        ).strip().lower()
+        if override_play_mode in ("auto", "autoplay"):
+            transition_play_mode = "auto"
+        elif override_play_mode == "immediate":
+            transition_play_mode = "immediate"
         label = str(ov.get("label") or xml.label or f"Slide {xml.slide_number}")
 
         slide_sec = round(max(0.1, float(slide_sec)), 3)
@@ -267,6 +281,7 @@ def resolve_segments(
                 transition_duration_s=transition_sec,
                 slide_duration_s=slide_sec,
                 duration_source=source,
+                transition_play_mode=transition_play_mode,
             )
         )
     return out
@@ -288,6 +303,7 @@ def build_timing_config_payload(
             "slide_sec": legacy["slide_duration_s"],
             "transition_sec": legacy["transition_duration_s"],
             "transition_type": seg.transition_type,
+            "transition_play_mode": seg.transition_play_mode,
         }
 
     return {
@@ -322,6 +338,9 @@ def segments_from_config(config: dict[str, Any]) -> list[ResolvedSegment]:
                 transition_duration_s=round(float(row.get("transition_duration_s", 0.0)), 3),
                 slide_duration_s=round(float(row["slide_duration_s"]), 3),
                 duration_source="config",
+                transition_play_mode=str(
+                    row.get("transition_play_mode", row.get("transition_play", "manual"))
+                ),
             )
         )
     return out

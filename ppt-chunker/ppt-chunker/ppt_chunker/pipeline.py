@@ -627,11 +627,15 @@ def _segment_mixed_assets(
         )
 
     source_frame_cursor = 0
-    timeline_frame_cursor = 0
+    playback_frame_cursor = 0
     skipped_source_frames = 0
-    legacy: list[dict[str, Any]] = []
-    extended: list[dict[str, Any]] = []
+    previous_slide_last_source_frame: int | None = None
+    slide_entries_legacy: dict[int, dict[str, Any]] = {}
+    slide_entries_extended: dict[int, dict[str, Any]] = {}
+    transition_entries_legacy: dict[int, dict[str, Any]] = {}
+    transition_entries_extended: dict[int, dict[str, Any]] = {}
     gap_map = source_gap_frames_by_slide or {}
+    sequence_width = _sequence_index_width(len(segments))
 
     for seg in segments:
         gap_frames = int(gap_map.get(seg.slide_number, 0) or 0)
@@ -657,8 +661,19 @@ def _segment_mixed_assets(
             else 0
         )
         slide_frames = max(1, int(round(seg.slide_duration_s * fps)))
+        synthesize_immediate_transition = (
+            seg.slide_number > 1
+            and transition_frames <= 0
+            and _is_immediate_transition_mode(seg.transition_play_mode)
+        )
+        emit_transition = seg.slide_number > 1 and (
+            transition_frames > 0 or synthesize_immediate_transition
+        )
+        playback_transition_frames = transition_frames if transition_frames > 0 else (
+            1 if synthesize_immediate_transition else 0
+        )
 
-        if transition_frames > 0:
+        if transition_frames > 0 or synthesize_immediate_transition:
             if source_frame_cursor + transition_frames > source_frames + 1:
                 hiccups.append(
                     Hiccup(
@@ -668,44 +683,55 @@ def _segment_mixed_assets(
                         slide_number=seg.slide_number,
                     )
                 )
-            transition_duration_nominal = transition_frames / fps
-            transition_duration_token = _filename_seconds_token(transition_duration_nominal)
-            transition_mode_token = _transition_mode_token(seg.transition_play_mode)
-            raw_transition = (
-                chunks_dir
-                / f"transition_to{seg.slide_number:02d}_dur{transition_duration_token}_nav{transition_mode_token}.mp4"
-            )
-            cut_chunk_frame_exact(
-                ffmpeg_bin=ffmpeg_bin,
-                input_mp4=master_mp4,
-                output_mp4=raw_transition,
-                start_frame=source_frame_cursor,
-                frame_count=transition_frames,
-                fps=fps,
-                mute_output=mute_output,
-            )
-            enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
-            hashed_transition = rename_with_hash(raw_transition)
-            decode_check(ffprobe_bin, hashed_transition)
-            transition_duration = transition_duration_nominal
-            t_start = timeline_frame_cursor / fps
-            t_end = (timeline_frame_cursor + transition_frames) / fps
-            source_t_start = source_frame_cursor / fps
-            source_t_end = (source_frame_cursor + transition_frames) / fps
-            transition_rel = f"chunks/{hashed_transition.name}"
-            legacy.append(
-                {
+            if emit_transition:
+                transition_duration_nominal = playback_transition_frames / fps
+                transition_duration_token = _filename_seconds_token(transition_duration_nominal)
+                transition_mode_token = _transition_mode_token(seg.transition_play_mode)
+                raw_transition = chunks_dir / _transition_asset_stem(
+                    slide_to=seg.slide_number,
+                    duration_token=transition_duration_token,
+                    transition_mode_token=transition_mode_token,
+                    width=sequence_width,
+                )
+                cut_chunk_frame_exact(
+                    ffmpeg_bin=ffmpeg_bin,
+                    input_mp4=master_mp4,
+                    output_mp4=raw_transition,
+                    start_frame=(
+                        source_frame_cursor
+                        if transition_frames > 0
+                        else max(0, int(previous_slide_last_source_frame or 0))
+                    ),
+                    frame_count=playback_transition_frames,
+                    fps=fps,
+                    mute_output=mute_output,
+                )
+                enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
+                hashed_transition = rename_with_hash(raw_transition)
+                decode_check(ffprobe_bin, hashed_transition)
+                transition_duration = transition_duration_nominal
+                t_start = playback_frame_cursor / fps
+                t_end = (playback_frame_cursor + playback_transition_frames) / fps
+                source_transition_start_frame = (
+                    source_frame_cursor
+                    if transition_frames > 0
+                    else max(0, int(previous_slide_last_source_frame or 0))
+                )
+                source_t_start = source_transition_start_frame / fps
+                source_t_end = (
+                    (source_transition_start_frame + playback_transition_frames) / fps
+                )
+                transition_rel = f"chunks/{hashed_transition.name}"
+                transition_entries_legacy[seg.slide_number] = {
                     "type": "transition",
                     "file": transition_rel,
                     "duration": round(transition_duration, 3),
-                    "slide_from": seg.slide_number - 1 if seg.slide_number > 1 else 0,
+                    "slide_from": seg.slide_number - 1,
                     "slide_to": seg.slide_number,
                     "asset_kind": "video",
                     "transition_play_mode": seg.transition_play_mode,
                 }
-            )
-            extended.append(
-                {
+                transition_entries_extended[seg.slide_number] = {
                     "id": f"trans_{seg.slide_number:02d}",
                     "type": "transition",
                     "slide_index": seg.slide_number,
@@ -719,47 +745,48 @@ def _segment_mixed_assets(
                     "asset_kind": "video",
                     "transition_play_mode": seg.transition_play_mode,
                 }
-            )
             source_frame_cursor += transition_frames
-            timeline_frame_cursor += transition_frames
+            if emit_transition:
+                playback_frame_cursor += playback_transition_frames
 
-        slide_start = timeline_frame_cursor / fps
-        slide_end = (timeline_frame_cursor + slide_frames) / fps
+        slide_start = playback_frame_cursor / fps
+        slide_end = (playback_frame_cursor + slide_frames) / fps
         source_slide_start = source_frame_cursor / fps
         source_slide_end = (source_frame_cursor + slide_frames) / fps
         slide_duration_token = _filename_seconds_token(slide_frames / fps)
         if seg.asset_kind == "image":
-            raw_png = assets_dir / f"slide_{seg.slide_number:02d}_dur{slide_duration_token}.png"
+            raw_png = assets_dir / _slide_asset_stem(
+                slide_number=seg.slide_number,
+                duration_token=slide_duration_token,
+                width=sequence_width,
+                extension=".png",
+            )
             try:
                 extract_frame_png(ffmpeg_bin, master_mp4, raw_png, source_slide_start + (1.0 / fps))
                 hashed_png = rename_with_hash(raw_png)
                 png_rel = f"assets/{hashed_png.name}"
-                legacy.append(
-                    {
-                        "type": "slide",
-                        "file": png_rel,
-                        "duration": round(slide_frames / fps, 3),
-                        "slide_number": seg.slide_number,
-                        "label": seg.label,
-                        "loop": True,
-                        "asset_kind": "image",
-                    }
-                )
-                extended.append(
-                    {
-                        "id": f"slide_{seg.slide_number:02d}",
-                        "type": "slide",
-                        "slide_index": seg.slide_number,
-                        "start_sec": round(slide_start, 3),
-                        "end_sec": round(slide_end, 3),
-                        "source_start_sec": round(source_slide_start, 3),
-                        "source_end_sec": round(source_slide_end, 3),
-                        "duration_sec": round(slide_frames / fps, 3),
-                        "file": png_rel,
-                        "loop_default": True,
-                        "asset_kind": "image",
-                    }
-                )
+                slide_entries_legacy[seg.slide_number] = {
+                    "type": "slide",
+                    "file": png_rel,
+                    "duration": round(slide_frames / fps, 3),
+                    "slide_number": seg.slide_number,
+                    "label": seg.label,
+                    "loop": True,
+                    "asset_kind": "image",
+                }
+                slide_entries_extended[seg.slide_number] = {
+                    "id": f"slide_{seg.slide_number:02d}",
+                    "type": "slide",
+                    "slide_index": seg.slide_number,
+                    "start_sec": round(slide_start, 3),
+                    "end_sec": round(slide_end, 3),
+                    "source_start_sec": round(source_slide_start, 3),
+                    "source_end_sec": round(source_slide_end, 3),
+                    "duration_sec": round(slide_frames / fps, 3),
+                    "file": png_rel,
+                    "loop_default": True,
+                    "asset_kind": "image",
+                }
                 seg.static_image_file = png_rel
             except Exception as exc:
                 hiccups.append(
@@ -780,7 +807,12 @@ def _segment_mixed_assets(
                         slide_number=seg.slide_number,
                     )
                 )
-            raw_slide = chunks_dir / f"slide_{seg.slide_number:02d}_dur{slide_duration_token}.mp4"
+            raw_slide = chunks_dir / _slide_asset_stem(
+                slide_number=seg.slide_number,
+                duration_token=slide_duration_token,
+                width=sequence_width,
+                extension=".mp4",
+            )
             cut_chunk_frame_exact(
                 ffmpeg_bin=ffmpeg_bin,
                 input_mp4=master_mp4,
@@ -794,34 +826,48 @@ def _segment_mixed_assets(
             hashed_slide = rename_with_hash(raw_slide)
             decode_check(ffprobe_bin, hashed_slide)
             slide_rel = f"chunks/{hashed_slide.name}"
-            legacy.append(
-                {
-                    "type": "slide",
-                    "file": slide_rel,
-                    "duration": round(slide_frames / fps, 3),
-                    "slide_number": seg.slide_number,
-                    "label": seg.label,
-                    "loop": True,
-                    "asset_kind": "video",
-                }
-            )
-            extended.append(
-                {
-                    "id": f"slide_{seg.slide_number:02d}",
-                    "type": "slide",
-                    "slide_index": seg.slide_number,
-                    "start_sec": round(slide_start, 3),
-                    "end_sec": round(slide_end, 3),
-                    "source_start_sec": round(source_slide_start, 3),
-                    "source_end_sec": round(source_slide_end, 3),
-                    "duration_sec": round(slide_frames / fps, 3),
-                    "file": slide_rel,
-                    "loop_default": True,
-                    "asset_kind": "video",
-                }
-            )
+            slide_entries_legacy[seg.slide_number] = {
+                "type": "slide",
+                "file": slide_rel,
+                "duration": round(slide_frames / fps, 3),
+                "slide_number": seg.slide_number,
+                "label": seg.label,
+                "loop": True,
+                "asset_kind": "video",
+            }
+            slide_entries_extended[seg.slide_number] = {
+                "id": f"slide_{seg.slide_number:02d}",
+                "type": "slide",
+                "slide_index": seg.slide_number,
+                "start_sec": round(slide_start, 3),
+                "end_sec": round(slide_end, 3),
+                "source_start_sec": round(source_slide_start, 3),
+                "source_end_sec": round(source_slide_end, 3),
+                "duration_sec": round(slide_frames / fps, 3),
+                "file": slide_rel,
+                "loop_default": True,
+                "asset_kind": "video",
+            }
         source_frame_cursor += slide_frames
-        timeline_frame_cursor += slide_frames
+        playback_frame_cursor += slide_frames
+        previous_slide_last_source_frame = source_frame_cursor - 1
+
+    legacy: list[dict[str, Any]] = []
+    extended: list[dict[str, Any]] = []
+    for seg in segments:
+        slide_entry = slide_entries_legacy.get(seg.slide_number)
+        if slide_entry:
+            legacy.append(slide_entry)
+        slide_segment = slide_entries_extended.get(seg.slide_number)
+        if slide_segment:
+            extended.append(slide_segment)
+        next_slide_number = seg.slide_number + 1
+        transition_entry = transition_entries_legacy.get(next_slide_number)
+        if transition_entry:
+            legacy.append(transition_entry)
+        transition_segment = transition_entries_extended.get(next_slide_number)
+        if transition_segment:
+            extended.append(transition_segment)
 
     if abs(source_frames - source_frame_cursor) > 1:
         hiccups.append(
@@ -836,17 +882,17 @@ def _segment_mixed_assets(
         )
     expected_timeline_frames = 0
     for seg in segments:
-        if seg.transition_type != "none" and seg.transition_duration_s > 0:
-            expected_timeline_frames += int(round(seg.transition_duration_s * fps))
+        if _should_emit_transition_asset(seg):
+            expected_timeline_frames += _emitted_transition_frames(seg, fps)
         expected_timeline_frames += max(1, int(round(seg.slide_duration_s * fps)))
-    if abs(expected_timeline_frames - timeline_frame_cursor) > 1:
+    if abs(expected_timeline_frames - playback_frame_cursor) > 1:
         hiccups.append(
             Hiccup(
                 "timeline_drift_frames_timeline",
                 "error",
                 (
                     "Timeline frame cursor mismatch after segmentation: "
-                    f"expected={expected_timeline_frames} got={timeline_frame_cursor}"
+                    f"expected={expected_timeline_frames} got={playback_frame_cursor}"
                 ),
             )
         )
@@ -854,7 +900,7 @@ def _segment_mixed_assets(
         "timeline_skip_frames": skipped_source_frames,
         "timeline_skip_sec": round(skipped_source_frames / float(fps), 3),
         "source_frames": source_frames,
-        "timeline_frames": timeline_frame_cursor,
+        "timeline_frames": playback_frame_cursor,
     }
     return legacy, extended, hiccups, meta
 
@@ -913,8 +959,10 @@ def _resolve_timing_decisions(
         override_play_mode = str(
             override.get("transition_play_mode", override.get("transition_play", "manual"))
         ).strip().lower()
-        if override_play_mode in ("auto", "immediate", "autoplay"):
+        if override_play_mode in ("auto", "autoplay"):
             transition_play_mode = "auto"
+        elif override_play_mode == "immediate":
+            transition_play_mode = "immediate"
 
         if transition_type == "none":
             transition_duration = 0.0
@@ -1192,9 +1240,62 @@ def _filename_seconds_token(seconds: float) -> str:
 
 def _transition_mode_token(mode: str | None) -> str:
     normalized = str(mode or "manual").strip().lower()
-    if normalized in ("auto", "immediate", "autoplay"):
+    if normalized == "immediate":
+        return "immediate"
+    if normalized in ("auto", "autoplay"):
         return "auto"
     return "manual"
+
+
+def _is_immediate_transition_mode(mode: str | None) -> bool:
+    return str(mode or "").strip().lower() == "immediate"
+
+
+def _should_emit_transition_asset(seg: ResolvedSegment) -> bool:
+    return seg.slide_number > 1 and (
+        (seg.transition_type != "none" and seg.transition_duration_s > 0)
+        or _is_immediate_transition_mode(seg.transition_play_mode)
+    )
+
+
+def _emitted_transition_frames(seg: ResolvedSegment, fps: int) -> int:
+    if not _should_emit_transition_asset(seg):
+        return 0
+    transition_frames = int(round(float(seg.transition_duration_s) * fps))
+    if transition_frames > 0:
+        return transition_frames
+    return 1
+
+
+def _sequence_index_width(slide_count: int) -> int:
+    highest_sequence = max(1, (max(1, int(slide_count)) * 2) - 1)
+    return max(2, len(str(highest_sequence)))
+
+
+def _slide_sequence_index(slide_number: int) -> int:
+    return max(1, ((max(1, int(slide_number)) - 1) * 2) + 1)
+
+
+def _transition_sequence_index(slide_to: int) -> int:
+    return max(2, (max(2, int(slide_to)) - 1) * 2)
+
+
+def _slide_asset_stem(
+    *, slide_number: int, duration_token: str, width: int, extension: str
+) -> str:
+    sequence = _slide_sequence_index(slide_number)
+    return f"{sequence:0{width}d}_Slide_{slide_number:02d}_dur{duration_token}{extension}"
+
+
+def _transition_asset_stem(
+    *, slide_to: int, duration_token: str, transition_mode_token: str, width: int
+) -> str:
+    sequence = _transition_sequence_index(slide_to)
+    slide_from = max(1, int(slide_to) - 1)
+    return (
+        f"{sequence:0{width}d}_Transition_{slide_from:02d}_to_{int(slide_to):02d}"
+        f"_dur{duration_token}_nav{transition_mode_token}.mp4"
+    )
 
 
 def sanitize_id(value: str) -> str:
