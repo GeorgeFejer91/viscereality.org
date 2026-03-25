@@ -1,0 +1,39 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks=true,
+    urlcolor=blue!50!black,
+    linkcolor=black
+}
+
+\setlist[itemize]{leftmargin=1.4em, itemsep=0.35em, topsep=0.4em}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\newcommand{\flyertitle}[1]{%
+    {\LARGE\bfseries #1\par}
+}
+
+\newcommand{\flyersubtitle}[1]{%
+    \vspace{0.35em}
+    {\large #1\par}
+}
+
+\newcommand{\infobox}[1]{%
+    \vspace{0.8em}
+    \noindent
+    \colorbox{black!6}{%
+        \parbox{\dimexpr\linewidth-2\fboxsep\relax}{\textbf{Hinweis:} #1}%
+    }
+    \vspace{0.8em}
+}
