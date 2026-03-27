@@ -4,1421 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>The Viscereality Project</title>
-  <style>
-    :root {
-      --mobile-vh: 1vh;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      scroll-padding-top: 20px;
-    }
-
-    body {
-      background: #000;
-      color: #fff;
-      font-family: 'Arial', sans-serif;
-      line-height: 1.7;
-      overflow-x: hidden;
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    }
-
-    html {
-      height: -webkit-fill-available;
-    }
-
-    /* Top Banner */
-    .top-banner {
-      width: 100%;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .top-banner img {
-      width: 100%;
-      max-width: 480px;
-      height: auto;
-      display: block;
-    }
-
-    /* Floating Side Menu - DESKTOP ONLY */
-    .side-menu.desktop-menu {
-      display: block;
-      position: fixed;
-      left: 30px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1000;
-      animation: breathePulse 4s infinite ease-in-out;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 15px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      max-height: 90vh;
-    }
-
-    /* Mobile Menu - HIDDEN ON DESKTOP */
-    .mobile-menu {
-      display: none;
-    }
-
-    .menu-logo {
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      text-align: center;
-    }
-
-    .menu-logo img {
-      width: 100%;
-      max-width: 100px;
-      height: auto;
-      filter: brightness(1.1);
-    }
-
-    @keyframes breathePulse {
-      0%, 100% {
-        transform: translateY(-50%) scale(1);
-        box-shadow: 0 0 20px rgba(0, 99, 156, 0.3);
-      }
-      50% {
-        transform: translateY(-50%) scale(1.02);
-        box-shadow: 0 0 30px rgba(162, 111, 25, 0.4);
-      }
-    }
-
-    .side-menu nav {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .side-menu a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.3s ease;
-      padding: 6px 8px;
-      border-radius: 5px;
-      font-size: 12px;
-      position: relative;
-      line-height: 1.2;
-      text-align: center;
-      justify-content: flex-start;
-    }
-
-    .side-menu a::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.4);
-      border: 2px solid rgba(255, 255, 255, 0.6);
-      transition: all 0.3s ease;
-      flex-shrink: 0;
-    }
-
-    .side-menu a:hover {
-      color: rgba(255, 255, 255, 1);
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .side-menu a:hover::before {
-      background: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-    }
-
-    .side-menu a.active {
-      color: rgba(0, 99, 156, 1);
-      background: rgba(0, 99, 156, 0.15);
-    }
-
-    .side-menu a.active::before {
-      background: rgba(0, 99, 156, 0.9);
-      border-color: rgba(0, 99, 156, 1);
-      box-shadow: 0 0 15px rgba(0, 99, 156, 0.8);
-    }
-
-    /* Mobile Menu Styles - Completely Independent */
-    .mobile-menu {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 10px 15px;
-      padding-bottom: calc(10px + env(safe-area-inset-bottom));
-      z-index: 9999;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
-      -webkit-overflow-scrolling: auto;
-      overscroll-behavior: contain;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-      will-change: auto;
-    }
-
-    @supports (padding: max(0px)) {
-      .mobile-menu {
-        padding-bottom: max(10px, env(safe-area-inset-bottom));
-      }
-    }
-
-    .mobile-menu nav {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .mobile-menu a {
-      font-size: 9px;
-      padding: 8px 4px;
-      min-width: 60px;
-      max-width: 70px;
-      min-height: 44px;
-      text-align: center;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      line-height: 1.2;
-      transition: background 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      -webkit-tap-highlight-color: rgba(0, 99, 156, 0.3);
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .mobile-menu a.active {
-      background: rgba(0, 99, 156, 0.3);
-      border: 1px solid rgba(0, 99, 156, 0.6);
-      color: rgba(0, 99, 156, 1);
-    }
-
-    .mobile-menu a:hover,
-    .mobile-menu a:active {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    /* Sections */
-    section {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 20px;
-      position: relative;
-    }
-
-    .section-content {
-      max-width: 900px;
-      width: 100%;
-    }
-
-    /* Hero Section */
-    #hero {
-      position: relative;
-    }
-
-    .video-breath-wrapper {
-      position: relative;
-      margin: 0 auto 40px;
-      width: 70%;
-    }
-
-    .video-container {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 3px;
-      z-index: 2;
-    }
-
-    .video-container iframe, .video-container video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .breath-wave {
-      position: absolute;
-      border-radius: 3px;
-      background: transparent;
-      z-index: 1;
-    }
-
-    .inhale-wave {
-      top: -15px;
-      left: -15px;
-      right: -15px;
-      bottom: -15px;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 10px rgba(0, 99, 156, 0.7);
-      animation: inhaleWave 6s infinite;
-    }
-
-    .exhale-wave {
-      top: -30px;
-      left: -30px;
-      right: -30px;
-      bottom: -30px;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 10px rgba(162, 111, 25, 0.7);
-      animation: exhaleWave 6s infinite;
-      animation-delay: 3s;
-    }
-
-    @keyframes inhaleWave {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 0.3;
-        box-shadow: 0 0 5px rgba(0, 99, 156, 0.5);
-      }
-      50% {
-        transform: scale(1.05);
-        opacity: 0.8;
-        box-shadow: 0 0 15px rgba(0, 99, 156, 0.8), 0 0 20px rgba(255, 255, 255, 0.5);
-      }
-    }
-
-    @keyframes exhaleWave {
-      0%, 100% {
-        transform: scale(1.05);
-        opacity: 0.8;
-        box-shadow: 0 0 15px rgba(162, 111, 25, 0.8), 0 0 20px rgba(255, 255, 255, 0.5);
-      }
-      50% {
-        transform: scale(1);
-        opacity: 0.3;
-        box-shadow: 0 0 5px rgba(162, 111, 25, 0.5);
-      }
-    }
-
-    .breath-light {
-      position: absolute;
-      top: -40px;
-      left: -40px;
-      right: -40px;
-      bottom: -40px;
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-      filter: blur(15px);
-      z-index: 0;
-      opacity: 0.7;
-      animation: breatheLightPulse 6s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
-    }
-
-    @keyframes breatheLightPulse {
-      0%, 100% {
-        opacity: 0.3;
-        transform: scale(0.95);
-        background: radial-gradient(circle at center, rgba(0, 99, 156, 0.1) 0%, transparent 70%);
-      }
-      50% {
-        opacity: 0.7;
-        transform: scale(1.05);
-        background: radial-gradient(circle at center, rgba(162, 111, 25, 0.1) 0%, transparent 70%);
-      }
-    }
-
-    /* Text Sections */
-    .text-sections {
-      margin: 30px auto;
-      position: relative;
-      max-width: 720px;
-    }
-
-    .text-section {
-      margin-bottom: 20px;
-      padding: 16px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 5px;
-      border-left: 2px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 1s ease, transform 1s ease;
-      font-size: 0.9em;
-    }
-
-    .text-section.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .inhale-section {
-      box-shadow: 0 4px 15px -5px rgba(255, 255, 255, 0.1), 0 0 10px rgba(0, 99, 156, 0.2);
-      animation: inhaleSectionGlow 6s infinite;
-    }
-
-    .exhale-section {
-      box-shadow: 0 4px 15px -5px rgba(255, 255, 255, 0.1), 0 0 10px rgba(162, 111, 25, 0.2);
-      animation: exhaleSectionGlow 6s infinite;
-      animation-delay: 3s;
-    }
-
-    @keyframes inhaleSectionGlow {
-      0%, 100% {
-        border-left-color: rgba(255, 255, 255, 0.3);
-      }
-      50% {
-        border-left-color: rgba(0, 99, 156, 1);
-        box-shadow: 0 4px 20px -5px rgba(0, 99, 156, 0.7), 0 0 15px rgba(255, 255, 255, 0.3);
-      }
-    }
-
-    @keyframes exhaleSectionGlow {
-      0%, 100% {
-        border-left-color: rgba(255, 255, 255, 0.3);
-      }
-      50% {
-        border-left-color: rgba(162, 111, 25, 1);
-        box-shadow: 0 4px 20px -5px rgba(162, 111, 25, 0.7), 0 0 15px rgba(255, 255, 255, 0.3);
-      }
-    }
-
-    .inhale-term {
-      color: #fff;
-      font-weight: bold;
-      animation: inhaleTermPulse 6s infinite;
-    }
-
-    .exhale-term {
-      color: #fff;
-      font-weight: bold;
-      animation: exhaleTermPulse 6s infinite;
-      animation-delay: 3s;
-    }
-
-    @keyframes inhaleTermPulse {
-      0%, 100% {
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      }
-      50% {
-        text-shadow: 0 0 10px rgba(0, 99, 156, 0.8), 0 0 15px rgba(255, 255, 255, 0.5);
-        color: rgba(0, 99, 156, 1);
-      }
-    }
-
-    @keyframes exhaleTermPulse {
-      0%, 100% {
-        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-      }
-      50% {
-        text-shadow: 0 0 10px rgba(162, 111, 25, 0.8), 0 0 15px rgba(255, 255, 255, 0.5);
-        color: rgba(162, 111, 25, 1);
-      }
-    }
-
-    /* Other sections styling */
-    h2 {
-      font-size: 2.5em;
-      margin-bottom: 30px;
-      text-align: center;
-      animation: titleGlow 6s infinite;
-    }
-
-    @keyframes titleGlow {
-      0%, 100% {
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-      }
-      50% {
-        text-shadow: 0 0 20px rgba(0, 99, 156, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
-      }
-    }
-
-    .content-box {
-      padding: 30px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      text-align: center;
-    }
-
-    /* Scientific Ingredients Section */
-    .ingredients-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      margin-top: 30px;
-    }
-
-    .ingredient-card {
-      padding: 25px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-      transition: transform 0.3s ease;
-      text-align: center;
-    }
-
-    .ingredient-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .ingredient-image {
-      margin-bottom: 20px;
-      border-radius: 8px;
-      overflow: hidden;
-      background: rgba(0, 0, 0, 0.5);
-    }
-
-    .ingredient-image img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .ingredient-card h4 {
-      font-size: 1.1em;
-      margin-bottom: 10px;
-      color: #fff;
-      line-height: 1.4;
-    }
-
-    .ingredient-card p {
-      font-size: 0.95em;
-      line-height: 1.6;
-    }
-
-    /* ORB VISUALIZATION STYLES */
-    .orb-visualization {
-      position: relative;
-      width: 100%;
-      height: 300px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #000;
-      cursor: pointer;
-      touch-action: none;
-    }
-
-    .orb-container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: rotateOrb 40s infinite linear;
-      will-change: transform;
-    }
-
-    @keyframes rotateOrb {
-      from { transform: rotateY(0deg) rotateX(10deg); }
-      to { transform: rotateY(360deg) rotateX(10deg); }
-    }
-
-    .orb-particle {
-      position: absolute;
-      border-radius: 50%;
-      transform-style: preserve-3d;
-      will-change: transform;
-      background: radial-gradient(circle at center, 
-        rgba(255, 255, 255, 0) 0%,
-        rgba(255, 255, 255, 0) 40%,
-        currentColor 60%,
-        currentColor 90%,
-        rgba(255, 255, 255, 0) 100%);
-    }
-
-    .orb-paused .orb-container {
-      animation-play-state: paused;
-    }
-
-    .orb-controls {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 0.8em;
-      opacity: 0.6;
-      transition: opacity 0.3s;
-      pointer-events: none;
-    }
-
-    .orb-visualization:hover .orb-controls {
-      opacity: 1;
-    }
-
-    /* Citation Badge */
-    .citation-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      margin-left: 10px;
-      background: linear-gradient(135deg, rgba(0, 99, 156, 0.8), rgba(162, 111, 25, 0.8));
-      border-radius: 20px;
-      font-size: 0.75em;
-      text-decoration: none;
-      color: white;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 10px rgba(0, 99, 156, 0.5);
-      animation: badgePulse 3s infinite;
-      vertical-align: middle;
-    }
-
-    .citation-badge:hover {
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 0 20px rgba(0, 99, 156, 0.8), 0 0 30px rgba(162, 111, 25, 0.6);
-    }
-
-    .citation-icon {
-      margin-right: 4px;
-    }
-
-    @keyframes badgePulse {
-      0%, 100% {
-        box-shadow: 0 0 10px rgba(0, 99, 156, 0.5);
-      }
-      50% {
-        box-shadow: 0 0 20px rgba(0, 99, 156, 0.8), 0 0 25px rgba(162, 111, 25, 0.6);
-      }
-    }
-
-    /* Collaborations Section */
-    .collaboration-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 30px;
-      margin-top: 30px;
-    }
-
-    .collaboration-card {
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .collaboration-intro {
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .collaboration-intro p {
-      margin-bottom: 15px;
-      line-height: 1.7;
-      font-size: 0.95em;
-    }
-
-    .contributors-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
-      margin-top: 20px;
-    }
-
-    .contributor-item {
-      text-align: center;
-    }
-
-    .contributor-item h4 {
-      font-size: 1.3em;
-      margin-bottom: 15px;
-      color: #fff;
-    }
-
-    .contributor-item p {
-      text-align: left;
-      line-height: 1.7;
-      font-size: 0.95em;
-      margin-bottom: 15px;
-    }
-
-    .collaboration-header {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin-bottom: 25px;
-      flex-wrap: wrap;
-    }
-
-    .collaboration-logo {
-      flex-shrink: 0;
-    }
-
-    .collaboration-logo img {
-      width: 120px;
-      height: auto;
-      filter: brightness(1.1);
-    }
-
-    .collaboration-header h3 {
-      font-size: 1.6em;
-      color: #fff;
-      flex: 1;
-      min-width: 250px;
-    }
-
-    .qri-highlight {
-      animation: rgbSpectrum 15s linear infinite;
-      font-weight: bold;
-    }
-
-    @keyframes rgbSpectrum {
-      0% {
-        color: rgb(240, 180, 200);
-        text-shadow: 0 0 15px rgba(240, 180, 200, 0.6);
-      }
-      14.28% {
-        color: rgb(180, 160, 220);
-        text-shadow: 0 0 15px rgba(180, 160, 220, 0.6);
-      }
-      28.56% {
-        color: rgb(160, 200, 230);
-        text-shadow: 0 0 15px rgba(160, 200, 230, 0.6);
-      }
-      42.84% {
-        color: rgb(140, 220, 210);
-        text-shadow: 0 0 15px rgba(140, 220, 210, 0.6);
-      }
-      57.12% {
-        color: rgb(180, 230, 180);
-        text-shadow: 0 0 15px rgba(180, 230, 180, 0.6);
-      }
-      71.4% {
-        color: rgb(255, 240, 150);
-        text-shadow: 0 0 15px rgba(255, 240, 150, 0.6);
-      }
-      85.68% {
-        color: rgb(255, 190, 160);
-        text-shadow: 0 0 15px rgba(255, 190, 160, 0.6);
-      }
-      100% {
-        color: rgb(240, 180, 200);
-        text-shadow: 0 0 15px rgba(240, 180, 200, 0.6);
-      }
-    }
-
-    .gallery-photo {
-      margin: 0 auto 20px;
-      width: 120px;
-      height: 120px;
-      position: relative;
-    }
-
-    .gallery-photo::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      padding: 4px;
-      background: linear-gradient(45deg, rgba(0, 99, 156, 0.8), rgba(162, 111, 25, 0.8), rgba(0, 99, 156, 0.8));
-      background-size: 200% 200%;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: rotateGradient 4s linear infinite;
-      z-index: -1;
-    }
-
-    .gallery-photo img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .gallery-link {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 8px 16px;
-      background: rgba(0, 99, 156, 0.2);
-      border: 1px solid rgba(0, 99, 156, 0.5);
-      border-radius: 5px;
-      color: rgba(0, 99, 156, 1);
-      text-decoration: none;
-      font-size: 0.85em;
-      transition: all 0.3s ease;
-    }
-
-    .gallery-link:hover {
-      background: rgba(0, 99, 156, 0.3);
-      border-color: rgba(0, 99, 156, 0.8);
-      box-shadow: 0 0 15px rgba(0, 99, 156, 0.5);
-      transform: translateY(-2px);
-    }
-
-    .heart-icon {
-      width: 120px;
-      height: auto;
-      margin: 0 auto 20px;
-      display: block;
-      animation: heartPulse 4s ease-in-out infinite;
-    }
-
-    @keyframes heartPulse {
-      0%, 100% {
-        filter: grayscale(100%) brightness(0.8);
-        opacity: 0.6;
-        transform: scale(1);
-      }
-      50% {
-        filter: grayscale(0%) brightness(1);
-        opacity: 1;
-        transform: scale(1.05);
-      }
-    }
-
-    /* Team Section */
-    .team-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
-      margin-top: 30px;
-    }
-
-    .team-member {
-      padding: 25px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-      transition: transform 0.3s ease;
-      text-align: center;
-    }
-
-    .team-member:hover {
-      transform: translateY(-5px);
-    }
-
-    .team-photo {
-      margin: 0 auto 20px;
-      width: 120px;
-      height: 120px;
-      position: relative;
-    }
-
-    .team-photo::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      padding: 4px;
-      background: linear-gradient(45deg, rgba(0, 99, 156, 0.8), rgba(162, 111, 25, 0.8), rgba(0, 99, 156, 0.8));
-      background-size: 200% 200%;
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      animation: rotateGradient 4s linear infinite;
-      z-index: -1;
-    }
-
-    @keyframes rotateGradient {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-
-    .photo-placeholder {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(0, 99, 156, 0.3), rgba(162, 111, 25, 0.3));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .team-image {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .team-member h3 {
-      font-size: 1.4em;
-      margin-bottom: 10px;
-      color: #fff;
-      text-align: center;
-    }
-
-    .team-member .role {
-      font-size: 0.95em;
-      margin-bottom: 15px;
-      opacity: 0.9;
-      text-align: center;
-    }
-
-    .team-member p {
-      line-height: 1.6;
-      font-size: 0.95em;
-      text-align: left;
-    }
-
-    .social-links {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      margin: 15px 0;
-      flex-wrap: wrap;
-    }
-
-    .social-link {
-      width: 40px;
-      height: 40px;
-      padding: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .social-link img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: filter 0.3s ease;
-    }
-
-    .social-link:hover img {
-      filter: brightness(1.2);
-    }
-
-    .social-link.linkedin:hover {
-      border-color: rgba(0, 119, 181, 0.8);
-      box-shadow: 0 0 15px rgba(0, 119, 181, 0.5);
-    }
-
-    .social-link.orcid:hover {
-      border-color: rgba(166, 206, 57, 0.8);
-      box-shadow: 0 0 15px rgba(166, 206, 57, 0.5);
-    }
-
-    .social-link.scholar:hover {
-      border-color: rgba(66, 133, 244, 0.8);
-      box-shadow: 0 0 15px rgba(66, 133, 244, 0.5);
-    }
-
-    .social-link.linktree:hover {
-      border-color: rgba(67, 189, 125, 0.8);
-      box-shadow: 0 0 15px rgba(67, 189, 125, 0.5);
-    }
-
-    .social-link.email:hover {
-      border-color: rgba(180, 80, 80, 0.8);
-      box-shadow: 0 0 15px rgba(180, 80, 80, 0.5);
-    }
-
-    .social-link.github img {
-      filter: brightness(1) invert(1);
-    }
-
-    .social-link.github:hover {
-      border-color: rgba(138, 43, 226, 0.8);
-      box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
-    }
-
-    .social-link.github:hover img {
-      filter: brightness(1.2) invert(1);
-    }
-
-    .social-link.mesmerprism img {
-      filter: brightness(0) invert(1);
-    }
-
-    .social-link.mesmerprism:hover {
-      border-color: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-    }
-
-    .social-link.mesmerprism:hover img {
-      filter: brightness(1.2) invert(1);
-    }
-
-    .social-link.website:hover {
-      border-color: rgba(100, 200, 255, 0.8);
-      box-shadow: 0 0 15px rgba(100, 200, 255, 0.5);
-    }
-
-    .social-link.website svg {
-      color: rgba(255, 255, 255, 0.8);
-      transition: color 0.3s ease;
-    }
-
-    .social-link.website:hover svg {
-      color: rgba(100, 200, 255, 1);
-    }
-
-    .profile-link {
-      color: rgba(0, 99, 156, 1);
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-
-    .profile-link:hover {
-      text-shadow: 0 0 10px rgba(0, 99, 156, 0.8);
-      color: rgba(0, 99, 156, 1);
-    }
-
-    .demo-link {
-      display: inline-block;
-      padding: 6px 14px;
-      margin: 0 4px;
-      background: rgba(0, 99, 156, 0.15);
-      border: 2px solid rgba(0, 99, 156, 0.6);
-      border-radius: 6px;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      font-weight: 600;
-      animation: rgbSpectrum 15s linear infinite;
-    }
-
-    .demo-link:hover {
-      background: rgba(0, 99, 156, 0.25);
-      border-color: rgba(0, 99, 156, 1);
-      box-shadow: 0 0 15px rgba(0, 99, 156, 0.6);
-      transform: translateY(-2px);
-    }
-
-    /* Publications Section */
-    .publications-list {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-top: 30px;
-    }
-
-    .publication-item {
-      padding: 25px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .publication-item h4 {
-      font-size: 1.2em;
-      margin-bottom: 15px;
-      color: #fff;
-      line-height: 1.4;
-    }
-
-    .publication-authors {
-      font-size: 0.95em;
-      margin-bottom: 8px;
-      opacity: 0.9;
-    }
-
-    .publication-venue {
-      font-size: 0.9em;
-      margin-bottom: 12px;
-      opacity: 0.85;
-    }
-
-    .publication-link a {
-      color: rgba(0, 99, 156, 1);
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-
-    .publication-link a:hover {
-      text-shadow: 0 0 15px rgba(0, 99, 156, 0.8);
-    }
-
-    /* Explainer Videos Section */
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 30px;
-      margin-top: 30px;
-    }
-
-    .explainer-video {
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-    }
-
-    .video-wrapper {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 5px;
-      margin-bottom: 15px;
-    }
-
-    .video-wrapper iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .video-caption {
-      text-align: center;
-      font-size: 0.95em;
-      color: rgba(255, 255, 255, 0.9);
-      margin-top: 10px;
-    }
-
-    /* Advisory Section */
-    .advisory-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 25px;
-      margin-top: 30px;
-    }
-
-    .advisory-member {
-      padding: 25px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-      transition: transform 0.3s ease;
-      text-align: center;
-    }
-
-    .advisory-member:hover {
-      transform: translateY(-5px);
-    }
-
-    .advisory-member h3 {
-      font-size: 1.4em;
-      margin-bottom: 10px;
-      color: #fff;
-    }
-
-    .advisory-member p {
-      text-align: left;
-    }
-
-    /* Funding Section */
-    .funding-info {
-      max-width: 800px;
-      margin: 30px auto;
-    }
-
-    .funding-card {
-      padding: 30px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-align: center;
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .funding-card h3 {
-      font-size: 1.6em;
-      margin-bottom: 15px;
-    }
-
-    .logos-grid {
-      margin-top: 40px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 40px;
-      align-items: center;
-      justify-items: center;
-    }
-
-    .logo-item {
-      width: 100%;
-      max-width: 250px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.03);
-      border-radius: 10px;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .logo-item:hover {
-      background: rgba(255, 255, 255, 0.08);
-      transform: translateY(-5px);
-      box-shadow: 0 5px 20px rgba(0, 99, 156, 0.3);
-    }
-
-    .logo-item img {
-      width: 100%;
-      height: auto;
-      max-height: 100px;
-      object-fit: contain;
-      filter: brightness(1.2);
-    }
-
-    .partner-list {
-      margin-top: 25px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .partner-item {
-      padding: 12px 20px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 5px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s ease;
-    }
-
-    .partner-item:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(0, 99, 156, 0.5);
-      box-shadow: 0 0 10px rgba(0, 99, 156, 0.3);
-    }
-
-    /* Contact Section */
-    .contact-info {
-      max-width: 600px;
-      margin: 30px auto;
-    }
-
-    .contact-card {
-      padding: 40px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 8px;
-      border-left: 3px solid rgba(255, 255, 255, 0.5);
-      text-align: center;
-      text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .contact-email {
-      font-size: 1.3em;
-      margin: 0;
-    }
-
-    .email-link {
-      color: rgba(0, 99, 156, 1);
-      text-decoration: none;
-      transition: all 0.3s ease;
-      padding: 10px 20px;
-      display: inline-block;
-      border-radius: 5px;
-    }
-
-    .email-link:hover {
-      background: rgba(0, 99, 156, 0.15);
-      box-shadow: 0 0 20px rgba(0, 99, 156, 0.5);
-      text-shadow: 0 0 10px rgba(0, 99, 156, 0.8);
-    }
-
-    .contact-card h3 {
-      font-size: 1.6em;
-      margin-bottom: 15px;
-    }
-
-    .contact-details {
-      margin-top: 20px;
-      line-height: 1.8;
-    }
-
-    /* Background Effects */
-    .breath-indicator {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      z-index: 100;
-      animation: breathIndicator 6s infinite ease-in-out;
-    }
-
-    @keyframes breathIndicator {
-      0%, 100% {
-        opacity: 0.4;
-        height: 2px;
-        background: rgba(0, 99, 156, 0.7);
-      }
-      50% {
-        opacity: 1;
-        height: 4px;
-        background: rgba(162, 111, 25, 0.7);
-      }
-    }
-
-    .ambient-glow {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
-      z-index: -1;
-      animation: ambientBreath 6s infinite ease-in-out;
-      pointer-events: none;
-    }
-
-    @keyframes ambientBreath {
-      0%, 100% {
-        opacity: 0.3;
-        transform: scale(0.9);
-        background: radial-gradient(circle at center, rgba(0, 99, 156, 0.03) 0%, transparent 70%);
-      }
-      50% {
-        opacity: 0.6;
-        transform: scale(1.1);
-        background: radial-gradient(circle at center, rgba(162, 111, 25, 0.03) 0%, transparent 70%);
-      }
-    }
-
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
-      /* Hide desktop menu, show mobile menu */
-      .side-menu.desktop-menu {
-        display: none !important;
-      }
-
-      .mobile-menu {
-        display: block !important;
-      }
-
-      .top-banner {
-        padding: 10px;
-      }
-
-      .top-banner img {
-        max-width: 100%;
-      }
-
-      .menu-logo {
-        display: none;
-      }
-
-      .side-menu {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%);
-        right: auto;
-        bottom: 15px;
-        top: auto;
-        padding: 12px 20px;
-        animation: none;
-        border-radius: 30px;
-        max-width: 90%;
-        z-index: 1001;
-        background: rgba(0, 0, 0, 0.9);
-      }
-
-      .side-menu nav {
-        flex-direction: row;
-        justify-content: center;
-        gap: 15px;
-      }
-
-      .side-menu a {
-        font-size: 0;
-        padding: 0;
-        min-width: 12px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.4);
-        border: 2px solid rgba(255, 255, 255, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      .side-menu a::before {
-        display: none;
-      }
-
-      .side-menu a.active {
-        background: rgba(0, 99, 156, 0.9);
-        border-color: rgba(0, 99, 156, 1);
-        box-shadow: 0 0 15px rgba(0, 99, 156, 0.8);
-        transform: scale(1.4);
-      }
-
-      body {
-        padding-bottom: 80px;
-      }
-
-      .video-breath-wrapper {
-        width: 95%;
-      }
-
-      h2 {
-        font-size: 1.8em;
-      }
-
-      section {
-        padding: 60px 15px;
-      }
-
-      .team-grid, .advisory-grid, .video-grid, .ingredients-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .contributors-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .collaboration-logo img {
-        width: 100px;
-      }
-
-      .collaboration-header {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .collaboration-logo img {
-        width: 100px;
-      }
-
-      .orb-visualization {
-        height: 250px;
-      }
-    }
-  </style>
+  <link rel="preload" href="assets/css/site.css?v=20260327" as="style">
+  <link rel="stylesheet" href="assets/css/site.css?v=20260327">
 </head>
 <body>
   <div class="breath-indicator"></div>
   <div class="ambient-glow"></div>
 
   <div class="top-banner">
-    <img src="Images/main.png" alt="Viscereality Project">
+    <img src="Images/main.png" alt="Viscereality Project" width="797" height="619" loading="eager" decoding="async" fetchpriority="high">
   </div>
 
   <!-- DESKTOP MENU -->
   <div class="side-menu desktop-menu">
     <div class="menu-logo">
-      <img src="Images/logo.png" alt="Viscereality Logo">
+      <img src="Images/logo.png" alt="Viscereality Logo" width="246" height="386" loading="eager" decoding="async" fetchpriority="high">
     </div>
     <nav>
       <a href="#hero" class="active">Overview</a>
@@ -1430,6 +30,7 @@
       <a href="#cardiac-coherence">Cardiac<br>Coherence</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
+      <a href="#hire-us">Hire Us</a>
       <a href="/presentations/" target="_blank" rel="noopener noreferrer">Presentations</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -1447,6 +48,7 @@
       <a href="#cardiac-coherence">Cardiac<br>Coherence</a>
       <a href="#advisory">Advisory</a>
       <a href="#funding">Affiliations</a>
+      <a href="#hire-us">Hire Us</a>
       <a href="/presentations/" target="_blank" rel="noopener noreferrer">Presentations</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -1459,8 +61,19 @@
         <div class="breath-wave exhale-wave"></div>
         <div class="breath-light"></div>
         <div class="video-container">
-          <video autoplay loop muted playsinline preload="auto" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
-            <source src="Video/viscereality_dynamic.mp4" type="video/mp4">
+          <video
+            class="deferred-video hero-video"
+            autoplay
+            loop
+            muted
+            playsinline
+            preload="none"
+            poster="assets/media/viscereality-hero-poster.jpg"
+            data-defer-video
+            data-play-when-visible
+            aria-label="Viscereality dynamic background video"
+          >
+            <source data-desktop-src="assets/media/viscereality-hero-desktop.mp4" data-mobile-src="assets/media/viscereality-hero-mobile.mp4" type="video/mp4">
             Your browser does not support the video tag.
           </video>
         </div>
@@ -1492,15 +105,33 @@
       <div class="video-grid">
         <div class="explainer-video inhale-section">
           <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/Qm-lmC-xYCI?vq=hd1080&hd=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <button class="youtube-lite" type="button" data-youtube-id="Qm-lmC-xYCI" data-youtube-title="5-Minute Project Overview" aria-label="Load 5-Minute Project Overview video">
+              <img src="https://i.ytimg.com/vi/Qm-lmC-xYCI/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+              <span class="youtube-lite__play" aria-hidden="true"></span>
+              <span class="youtube-lite__label">Play video</span>
+            </button>
           </div>
           <p class="video-caption">5-Minute Project Overview</p>
         </div>
         <div class="explainer-video exhale-section">
           <div class="video-wrapper">
-            <iframe src="https://www.youtube.com/embed/zi28hQTSoS8?vq=hd1080&hd=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <button class="youtube-lite" type="button" data-youtube-id="zi28hQTSoS8" data-youtube-title="Extended Explainer" aria-label="Load Extended Explainer video">
+              <img src="https://i.ytimg.com/vi/zi28hQTSoS8/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+              <span class="youtube-lite__play" aria-hidden="true"></span>
+              <span class="youtube-lite__label">Play video</span>
+            </button>
           </div>
           <p class="video-caption">Extended Explainer</p>
+        </div>
+        <div class="explainer-video inhale-section">
+          <div class="video-wrapper">
+            <button class="youtube-lite" type="button" data-youtube-id="cRfKxcZXzrM" data-youtube-title="Viscereality: A Bio-Responsive Breathing Space for Respiration &amp; Heart Coherence in Virtual Reality" aria-label="Load Viscereality: A Bio-Responsive Breathing Space for Respiration and Heart Coherence in Virtual Reality video">
+              <img src="https://i.ytimg.com/vi/cRfKxcZXzrM/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+              <span class="youtube-lite__play" aria-hidden="true"></span>
+              <span class="youtube-lite__label">Play video</span>
+            </button>
+          </div>
+          <p class="video-caption">Viscereality: A Bio-Responsive Breathing Space for Respiration &amp; Heart Coherence in Virtual Reality</p>
         </div>
       </div>
     </div>
@@ -1512,7 +143,7 @@
       <div class="ingredients-grid">
         <div class="ingredient-card inhale-section">
           <div class="ingredient-image">
-            <img src="Scientific_Ingredients/11d-asc_2.png" alt="Altered States of Consciousness">
+            <img src="Scientific_Ingredients/11d-asc_2.png" alt="Altered States of Consciousness" width="606" height="430" loading="lazy" decoding="async">
           </div>
           <h4>Breathwork induces altered states of consciousness similar to psychedelics
             <a href="https://link.springer.com/article/10.1007/s12144-023-05119-6" target="_blank" class="citation-badge">
@@ -1529,7 +160,9 @@
 
         <div class="ingredient-card exhale-section">
           <div class="ingredient-image">
-            <img src="Scientific_Ingredients/lung-mechanics-respiratory-coupling.gif" alt="Bioresponsive VR">
+            <video class="ingredient-loop deferred-video" autoplay loop muted playsinline preload="none" poster="assets/media/lung-mechanics-poster.jpg" data-defer-video data-play-when-visible aria-label="Bioresponsive VR animation">
+              <source data-src="assets/media/lung-mechanics-loop.mp4" type="video/mp4">
+            </video>
           </div>
           <h4>Bioresponsive VR</h4>
           <p>Respiratory coupling of lung-mechanics to the <span class="inhale-term">contraction</span> and <span class="exhale-term">expansion</span> of virtual space.</p>
@@ -1537,7 +170,9 @@
 
         <div class="ingredient-card inhale-section">
           <div class="ingredient-image">
-            <img src="Scientific_Ingredients/breathink.gif" alt="Breathing affects perception">
+            <video class="ingredient-loop deferred-video" autoplay loop muted playsinline preload="none" poster="assets/media/breathink-poster.jpg" data-defer-video data-play-when-visible aria-label="Breathing affects perception animation">
+              <source data-src="assets/media/breathink-loop.mp4" type="video/mp4">
+            </video>
           </div>
           <h4>Breathing affects the perception of quantities 
             <a href="https://link.springer.com/article/10.1007/s00221-021-06147-z" target="_blank" class="citation-badge">
@@ -1568,92 +203,92 @@
       <div class="team-grid">
         <div class="team-member inhale-section">
           <div class="team-photo">
-            <img src="People/GeorgeFejer.png" alt="George Fejer" class="team-image">
+            <img decoding="async" loading="lazy" src="People/GeorgeFejer.png" alt="George Fejer" class="team-image">
           </div>
           <h3>George Fejer</h3>
           <p class="role"><span class="inhale-term">Corresponding Author</span></p>
           <p>George Fejer is a PhD candidate in Cognitive Psychology at the University of Konstanz, an affiliate of the Centre for the Advanced Study of Collective Behaviour, and a research affiliate at the Max Planck Institute for Human Cognitive and Brain Sciences.</p>
           <div class="social-links">
             <a href="https://scholar.google.com/citations?user=GPARoloAAAAJ&hl=de&oi=sra" target="_blank" class="social-link scholar" title="Google Scholar">
-              <img src="Logo_SVG/googlescholar.svg" alt="Scholar">
+              <img decoding="async" loading="lazy" src="Logo_SVG/googlescholar.svg" alt="Scholar">
             </a>
             <a href="#" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/george-fejer1/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:george.fejer@aliusresearch.org" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
           </div>
         </div>
 
         <div class="team-member exhale-section">
           <div class="team-photo">
-            <img src="People/TillHolzapfel.png" alt="Till Holzapfel" class="team-image">
+            <img decoding="async" loading="lazy" src="People/TillHolzapfel.png" alt="Till Holzapfel" class="team-image">
           </div>
           <h3>Till Holzapfel</h3>
           <p class="role"><span class="exhale-term">VR Developer</span></p>
           <p>Till Holzapfel obtained a Master's in Cognitive Science from the University of Osnabrück, and worked as a lab manager for Intangible Realities Lab. His work is dedicated to designing immersive VR for facilitating transformative experiences.</p>
           <div class="social-links">
             <a href="https://orcid.org/0009-0002-7477-0844" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/till-holzapfel-intangiblerealitieslab/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="https://github.com/Zivilkannibale" target="_blank" class="social-link github" title="GitHub">
-              <img src="Logo_SVG/github.svg" alt="GitHub">
+              <img decoding="async" loading="lazy" src="Logo_SVG/github.svg" alt="GitHub">
             </a>
             <a href="mailto:tillholzapfel@gmail.com" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
             <a href="https://linktr.ee/mesmerprism" target="_blank" class="social-link mesmerprism" title="Linktree">
-              <img src="Logo_SVG/mesmerprism.svg" alt="Linktree">
+              <img decoding="async" loading="lazy" src="Logo_SVG/mesmerprism.svg" alt="Linktree">
             </a>
           </div>
         </div>
 
         <div class="team-member inhale-section">
           <div class="team-photo">
-            <img src="People/TaruHirvonen.png" alt="Taru Hirvonen" class="team-image">
+            <img decoding="async" loading="lazy" src="People/TaruHirvonen.png" alt="Taru Hirvonen" class="team-image">
           </div>
           <h3>Taru Hirvonen</h3>
           <p class="role"><span class="inhale-term">VR Developer / Researcher</span></p>
           <p>Taru Hirvonen provided invaluable guidance on integrating spatio-temporal oscillation dynamics into particles, enabling them to move in response to lung dynamics.</p>
           <div class="social-links">
             <a href="https://taru-u.github.io/apps/symmetry/" target="_blank" class="social-link github" title="GitHub Portfolio">
-              <img src="Logo_SVG/github.svg" alt="GitHub">
+              <img decoding="async" loading="lazy" src="Logo_SVG/github.svg" alt="GitHub">
             </a>
             <a href="#" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:2taruhi@gmail.com" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
           </div>
         </div>
 
         <div class="team-member exhale-section">
           <div class="team-photo">
-            <img src="People/AnestisLalidisMateo.png" alt="Anestis Lalidis Mateo" class="team-image">
+            <img decoding="async" loading="lazy" src="People/AnestisLalidisMateo.png" alt="Anestis Lalidis Mateo" class="team-image">
           </div>
           <h3>Anestis Lalidis Mateo</h3>
           <p class="role"><span class="exhale-term">Computer Scientist / VR Developer</span></p>
           <p>Anestis Lalidis Mateo is a Master's student and Research Assistant in Computer Science, specializing in Human-Computer Interaction and Audiovisual Computing with focus on VR/XR and biofeedback.</p>
           <div class="social-links">
             <a href="https://orcid.org/0009-0002-9545-9043" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="#" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:alalidis@hsbi.de" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
             <a href="https://www.hsbi.de/personenverzeichnis/anestis-pere-lalidis-mateo" target="_blank" class="social-link" title="Portfolio">
-              <img src="Logo_SVG/bielefeld.svg" alt="University">
+              <img decoding="async" loading="lazy" src="Logo_SVG/bielefeld.svg" alt="University">
             </a>
           </div>
         </div>
@@ -1698,7 +333,7 @@
         <div class="collaboration-card inhale-section">
           <div class="collaboration-header">
             <div class="collaboration-logo">
-              <img src="QRI_HEART/QRI_heart_logo.png" alt="QRI HEART Logo">
+              <img decoding="async" loading="lazy" src="QRI_HEART/QRI_heart_logo.png" alt="QRI HEART Logo">
             </div>
             <h3>Qualia Research Institute – <span class="qri-highlight">HEART Workshop</span></h3>
           </div>
@@ -1720,7 +355,7 @@
           <div class="contributors-grid">
             <div class="contributor-item">
               <div class="gallery-photo">
-                <img src="QRI_HEART/AndresGomez.png" alt="Andrés Gómez Emilsson">
+                <img decoding="async" loading="lazy" src="QRI_HEART/AndresGomez.png" alt="Andrés Gómez Emilsson">
               </div>
               <h4>Andrés Gómez Emilsson</h4>
               <p>
@@ -1735,7 +370,7 @@
 
             <div class="contributor-item">
               <div class="gallery-photo">
-                <img src="QRI_HEART/SymmetricVision.png" alt="Symmetric Vision">
+                <img decoding="async" loading="lazy" src="QRI_HEART/SymmetricVision.png" alt="Symmetric Vision">
               </div>
               <h4>Symmetric Vision</h4>
               <p>
@@ -1757,17 +392,32 @@
       <div class="collaboration-grid">
         <div class="collaboration-card exhale-section">
           <div style="text-align: center; margin-bottom: 30px;">
-            <img src="Images/heart_icon.png" alt="Heart Rate Variability" class="heart-icon">
+            <img src="Images/heart_icon.png" alt="Heart Rate Variability" class="heart-icon" width="1024" height="1536" loading="lazy" decoding="async">
           </div>
-          <p style="line-height: 1.7; font-size: 0.95em; margin-bottom: 30px;">
+          <p class="cardiac-copy">
             In collaboration with the University of Sussex, we are adding cardiac coherence monitoring to complement the breath-responsive system. Based on HeartMath's resonance frequency research, the interface adapts in real-time to help users find their optimal breathing rate, where heart rhythm naturally synchronizes with respiration. Visual changes responding to coherence levels, providing intuitive feedback improve HRV metrics.
           </p>
-          <div style="max-width: 50%; margin: 0 auto;">
-            <video autoplay loop muted playsinline preload="auto" style="width: 100%; height: auto; border-radius: 8px;">
-              <source src="cardiac_coherence/SupplementaryMaterial/S7 slow breath mismatch_clean.mp4" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
+          <div class="cardiac-video-wrapper">
+            <div class="video-wrapper">
+              <button class="youtube-lite" type="button" data-youtube-id="cRfKxcZXzrM" data-youtube-title="Viscereality: A Bio-Responsive Breathing Space for Respiration &amp; Heart Coherence in Virtual Reality" aria-label="Load Viscereality: A Bio-Responsive Breathing Space for Respiration and Heart Coherence in Virtual Reality video">
+                <img src="https://i.ytimg.com/vi/cRfKxcZXzrM/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async">
+                <span class="youtube-lite__play" aria-hidden="true"></span>
+                <span class="youtube-lite__label">Play video</span>
+              </button>
+            </div>
           </div>
+          <p class="video-caption">Viscereality: A Bio-Responsive Breathing Space for Respiration &amp; Heart Coherence in Virtual Reality</p>
+        </div>
+        <div class="publication-item inhale-section cardiac-paper-entry">
+          <h4>Breathing Space: Spatial Mapping of Breath and Cardiac Biofeedback for Affective State Representation and Coherence Training in Viscereality</h4>
+          <p class="publication-authors">Fejer, George; Holzapfel, Till; Hirvonen, Taru; Lalidis Mateo, Anestis; Blum, Johannes; Gaebler, Michael; Lenggenhager, Bigna (2026)</p>
+          <p class="publication-venue">Proceedings of the 1st International Conference on Human-Computer Interaction in the Alps, 79-86</p>
+          <p class="publication-link">
+            <a href="https://dl.acm.org/doi/epdf/10.1145/3780045.3780061" target="_blank" class="citation-badge" style="margin-left: 0;">
+              <span class="citation-icon">&#128196;</span> [6]
+            </a>
+            <a href="https://doi.org/10.1145/3780045.3780061" target="_blank" class="inhale-term">DOI: 10.1145/3780045.3780061</a>
+          </p>
         </div>
       </div>
     </div>
@@ -1779,30 +429,30 @@
       <div class="advisory-grid">
         <div class="advisory-member inhale-section">
           <div class="team-photo">
-            <img src="People/BignaLenggenhager.png" alt="Bigna Lenggenhager" class="team-image">
+            <img decoding="async" loading="lazy" src="People/BignaLenggenhager.png" alt="Bigna Lenggenhager" class="team-image">
           </div>
           <h3>Bigna Lenggenhager</h3>
           <p class="role"><span class="inhale-term">Cognitive Neuropsychologist | Co-Principal Investigator</span></p>
           <p>Bigna Lenggenhager has several years of experience, having worked as a professor at the Universities of Zurich and Konstanz, with her research focusing on body-swap illusions and the plasticity of the bodily self.</p>
           <div class="social-links">
             <a href="https://scholar.google.com/citations?user=pgLjsPEAAAAJ&hl=de&oi=ao" target="_blank" class="social-link scholar" title="Google Scholar">
-              <img src="Logo_SVG/googlescholar.svg" alt="Scholar">
+              <img decoding="async" loading="lazy" src="Logo_SVG/googlescholar.svg" alt="Scholar">
             </a>
             <a href="https://orcid.org/0000-0003-0418-9931" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/bigna-lenggenhager-59a82b79/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:bigna.lenggenhager@gmail.com" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
           </div>
         </div>
 
         <div class="advisory-member exhale-section">
           <div class="team-photo">
-            <img src="People/MichaelGaebler.png" alt="Michael Gaebler" class="team-image">
+            <img decoding="async" loading="lazy" src="People/MichaelGaebler.png" alt="Michael Gaebler" class="team-image">
           </div>
           <h3>Michael Gaebler</h3>
           <p class="role"><span class="exhale-term">Cognitive and Brain Scientist</span></p>
@@ -1815,56 +465,56 @@
               </svg>
             </a>
             <a href="https://scholar.google.com/citations?user=cml7waMAAAAJ&hl=de&oi=ao" target="_blank" class="social-link scholar" title="Google Scholar">
-              <img src="Logo_SVG/googlescholar.svg" alt="Scholar">
+              <img decoding="async" loading="lazy" src="Logo_SVG/googlescholar.svg" alt="Scholar">
             </a>
             <a href="https://orcid.org/0000-0002-4442-5778" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/mgaebler/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:gaebler@mplb-berlin.mpg.de" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
           </div>
         </div>
 
         <div class="advisory-member inhale-section">
           <div class="team-photo">
-            <img src="People/OliverDeussen.png" alt="Oliver Deussen" class="team-image">
+            <img decoding="async" loading="lazy" src="People/OliverDeussen.png" alt="Oliver Deussen" class="team-image">
           </div>
           <h3>Oliver Deussen</h3>
           <p class="role"><span class="inhale-term">Professor for Visual Computing | Principal Investigator</span></p>
           <p>Oliver Deussen is a professor of Visual Computing at the University of Konstanz and a speaker of the Excellence Cluster. His research focuses on modeling and rendering complex systems.</p>
           <div class="social-links">
             <a href="https://orcid.org/0000-0001-5803-2185" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/oliver-deussen-9501a139/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
           </div>
         </div>
 
         <div class="advisory-member exhale-section">
           <div class="team-photo">
-            <img src="People/JohannesBlum.png" alt="Johannes Blum" class="team-image">
+            <img decoding="async" loading="lazy" src="People/JohannesBlum.png" alt="Johannes Blum" class="team-image">
           </div>
           <h3>Johannes Blum</h3>
           <p class="role"><span class="exhale-term">VR Developer / Consultant</span></p>
           <p>Johannes Blum is the Head of Research and Development at the Pädagogische Hochschule Schaffhausen. He previously worked on the development of Flowborne VR, a meditative breathwork experience.</p>
           <div class="social-links">
             <a href="https://scholar.google.com/citations?user=C6xOMkwAAAAJ&hl=de&oi=sra" target="_blank" class="social-link scholar" title="Google Scholar">
-              <img src="Logo_SVG/googlescholar.svg" alt="Scholar">
+              <img decoding="async" loading="lazy" src="Logo_SVG/googlescholar.svg" alt="Scholar">
             </a>
             <a href="https://orcid.org/0000-0003-1368-1573" target="_blank" class="social-link orcid" title="ORCID">
-              <img src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
+              <img decoding="async" loading="lazy" src="Logo_SVG/ORCID_logo.svg" alt="ORCID">
             </a>
             <a href="https://www.linkedin.com/in/johannes-r-blum/" target="_blank" class="social-link linkedin" title="LinkedIn">
-              <img src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
+              <img decoding="async" loading="lazy" src="Logo_SVG/LinkedIn.svg" alt="LinkedIn">
             </a>
             <a href="mailto:johannes.blum@phsh.ch" class="social-link email" title="Email">
-              <img src="Logo_SVG/email_icon.svg" alt="Email">
+              <img decoding="async" loading="lazy" src="Logo_SVG/email_icon.svg" alt="Email">
             </a>
           </div>
         </div>
@@ -1881,15 +531,46 @@
           <p>This project is supported by leading research institutions and funding organizations committed to advancing the understanding of consciousness and virtual reality applications.</p>
           <div class="logos-grid">
             <a href="https://www.bial.com/en" target="_blank" class="logo-item">
-              <img src="Affiiations_logo/bial.png" alt="BIAL Foundation">
+              <img decoding="async" loading="lazy" src="Affiiations_logo/bial.png" alt="BIAL Foundation">
             </a>
             <a href="https://www.psychologie.uni-konstanz.de/tt8ftuxr56xq3ybzwr/ag-kognitive-psychologie/personen/sura-genc/standard-titel/" target="_blank" class="logo-item">
-              <img src="Affiiations_logo/unikonstanz.png" alt="University of Konstanz">
+              <img decoding="async" loading="lazy" src="Affiiations_logo/unikonstanz.png" alt="University of Konstanz">
             </a>
             <a href="https://www.cbs.mpg.de/en" target="_blank" class="logo-item">
-              <img src="Affiiations_logo/mpi.png" alt="Max Planck Institute">
+              <img decoding="async" loading="lazy" src="Affiiations_logo/mpi.png" alt="Max Planck Institute">
             </a>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hire-us">
+    <div class="section-content">
+      <h2>Hire Us</h2>
+      <div class="hire-grid">
+        <div class="hire-card inhale-section">
+          <h3>Adapt Viscereality To Your Research</h3>
+          <p>
+            We can adapt the Viscereality system in many different forms to match the needs of a study, while preserving the
+            visual language and physiological grounding that define the project.
+          </p>
+          <p>
+            For non-profit use, we can provide access to Viscereality under a user agreement. In return, we hope collaborators
+            will bring us in for the technical maintenance and research support needed to keep experiments stable and usable.
+          </p>
+        </div>
+        <div class="hire-card exhale-section">
+          <h3>How We Can Help</h3>
+          <ul class="hire-service-list">
+            <li>Set up and deploy your experiment.</li>
+            <li>Support data logging workflows and troubleshooting.</li>
+            <li>Assist with software and hardware solutions.</li>
+            <li>Customize the system to fit specific research goals.</li>
+            <li>Adapt particle-based representations for many kinds of study designs.</li>
+            <li>Work with first-person or third-person objects and interaction targets.</li>
+            <li>Build bodily mappings for cardiac or respiratory signals.</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -1908,359 +589,6 @@
     </div>
   </section>
 
-  <script>
-    // ORB VISUALIZATION SCRIPT
-    (function() {
-      const RADIUS_MIN = 80;
-      const RADIUS_MAX = 140;
-      const BREATH_CYCLE = 12000;
-      const PARTICLE_SIZE = 12;
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const SUBDIVISIONS = isMobile ? 2 : 3; // Fewer particles on mobile
-      
-      const container = document.getElementById('orbContainer');
-      const vizElement = document.getElementById('orbViz');
-      let isPaused = false;
-      
-      // Generate icosphere
-      function generateIcosphere(subdivisions) {
-        const vertices = [];
-        const t = (1 + Math.sqrt(5)) / 2;
-        
-        const v = [
-          [-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0],
-          [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t],
-          [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]
-        ].map(p => {
-          const len = Math.sqrt(p[0]*p[0] + p[1]*p[1] + p[2]*p[2]);
-          return [p[0]/len, p[1]/len, p[2]/len];
-        });
-        
-        vertices.push(...v);
-        
-        let faces = [
-          [0,11,5], [0,5,1], [0,1,7], [0,7,10], [0,10,11],
-          [1,5,9], [5,11,4], [11,10,2], [10,7,6], [7,1,8],
-          [3,9,4], [3,4,2], [3,2,6], [3,6,8], [3,8,9],
-          [4,9,5], [2,4,11], [6,2,10], [8,6,7], [9,8,1]
-        ];
-        
-        for (let s = 0; s < subdivisions; s++) {
-          const newFaces = [];
-          const midCache = new Map();
-          
-          const getMid = (i1, i2) => {
-            const key = i1 < i2 ? `${i1}-${i2}` : `${i2}-${i1}`;
-            if (midCache.has(key)) return midCache.get(key);
-            
-            const v1 = vertices[i1];
-            const v2 = vertices[i2];
-            const mid = [
-              (v1[0] + v2[0]) / 2,
-              (v1[1] + v2[1]) / 2,
-              (v1[2] + v2[2]) / 2
-            ];
-            const len = Math.sqrt(mid[0]*mid[0] + mid[1]*mid[1] + mid[2]*mid[2]);
-            const normalized = [mid[0]/len, mid[1]/len, mid[2]/len];
-            
-            const idx = vertices.length;
-            vertices.push(normalized);
-            midCache.set(key, idx);
-            return idx;
-          };
-          
-          faces.forEach(([a, b, c]) => {
-            const ab = getMid(a, b);
-            const bc = getMid(b, c);
-            const ca = getMid(c, a);
-            newFaces.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
-          });
-          
-          faces = newFaces;
-        }
-        
-        return vertices;
-      }
-      
-      const vertices = generateIcosphere(SUBDIVISIONS);
-      
-      const oscillators = vertices.map((pos, i) => {
-        const particle = document.createElement('div');
-        particle.className = 'orb-particle';
-        particle.style.width = PARTICLE_SIZE + 'px';
-        particle.style.height = PARTICLE_SIZE + 'px';
-        particle.style.left = '50%';
-        particle.style.top = '50%';
-        container.appendChild(particle);
-        
-        const rotationY = Math.atan2(pos[0], pos[2]) * (180 / Math.PI);
-        const rotationX = -Math.asin(pos[1]) * (180 / Math.PI);
-        
-        const spatialFreq = 0.15 * Math.sin(pos[0] * 5) * Math.cos(pos[1] * 5);
-        const randomFreq = (Math.random() - 0.5) * 0.12;
-        
-        return {
-          element: particle,
-          pos: pos,
-          phase: Math.random() * 2 * Math.PI,
-          naturalFreq: 0.15 + randomFreq + spatialFreq,
-          rotX: rotationX,
-          rotY: rotationY,
-          neighbors1: [],
-          neighbors2: []
-        };
-      });
-      
-      oscillators.forEach((osc, i) => {
-        const distances = oscillators
-          .map((other, j) => {
-            if (i === j) return { index: j, dist: Infinity };
-            const dx = osc.pos[0] - other.pos[0];
-            const dy = osc.pos[1] - other.pos[1];
-            const dz = osc.pos[2] - other.pos[2];
-            return { index: j, dist: dx*dx + dy*dy + dz*dz };
-          })
-          .sort((a, b) => a.dist - b.dist);
-        
-        osc.neighbors1 = distances.slice(0, 6).map(d => d.index);
-        osc.neighbors2 = distances.slice(6, 18).map(d => d.index);
-      });
-      
-      function couplingCurve1(t) {
-        const centered = (t - 0.5) * 2;
-        return 0.1 + 1.2 * (centered * centered);
-      }
-      
-      function couplingCurve2(t) {
-        const centered = (t - 0.5) * 2;
-        return 0.02 + 0.4 * (centered * centered);
-      }
-      
-      function updatePhases(dt, radiusNorm, time) {
-        const K1 = couplingCurve1(radiusNorm);
-        const K2 = couplingCurve2(radiusNorm);
-        
-        const wavePhase1 = time * 0.006;
-        const wavePhase2 = time * 0.01;
-        
-        const updates = new Float32Array(oscillators.length);
-        
-        for (let i = 0; i < oscillators.length; i++) {
-          const osc = oscillators[i];
-          let coupling = 0;
-          
-          for (let j = 0; j < osc.neighbors1.length; j++) {
-            const nIdx = osc.neighbors1[j];
-            coupling += K1 * Math.sin(oscillators[nIdx].phase - osc.phase);
-          }
-          
-          for (let j = 0; j < osc.neighbors2.length; j++) {
-            const nIdx = osc.neighbors2[j];
-            coupling += K2 * Math.sin(oscillators[nIdx].phase - osc.phase);
-          }
-          
-          const wave1 = 0.02 * Math.sin(osc.pos[0] * 8 + osc.pos[1] * 8 + wavePhase1);
-          const wave2 = 0.015 * Math.cos(osc.pos[0] * 6 - osc.pos[2] * 6 + wavePhase2);
-          const noise = (Math.random() - 0.5) * 0.025;
-          
-          updates[i] = osc.naturalFreq + coupling / 18 + wave1 + wave2 + noise;
-        }
-        
-        for (let i = 0; i < oscillators.length; i++) {
-          oscillators[i].phase += updates[i] * dt;
-          oscillators[i].phase %= (2 * Math.PI);
-        }
-      }
-      
-      const colorCache = new Array(1000);
-      for (let i = 0; i < 1000; i++) {
-        const hue = (i * 0.36) % 360;
-        const sat = 75 + 25 * Math.sin(i * 0.1);
-        const light = 60 + 20 * Math.cos(i * 0.08);
-        colorCache[i] = `hsl(${hue}, ${sat}%, ${light}%)`;
-      }
-      
-      function phaseToColor(phase) {
-        const idx = Math.floor((phase / (2 * Math.PI)) * 1000) % 1000;
-        return colorCache[idx];
-      }
-      
-      function easeInOutCubic(t) {
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      }
-      
-      function updateVisuals(radius) {
-        for (let i = 0; i < oscillators.length; i++) {
-          const osc = oscillators[i];
-          
-          const x = radius * osc.pos[0];
-          const y = radius * osc.pos[1];
-          const z = radius * osc.pos[2];
-          
-          const el = osc.element;
-          el.style.color = phaseToColor(osc.phase);
-          el.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, ${z}px) rotateY(${osc.rotY}deg) rotateX(${osc.rotX}deg)`;
-        }
-      }
-      
-      let currentRadius = RADIUS_MIN;
-      const SMOOTHING = 0.15;
-      
-      function getBreathState(time) {
-        const cycleTime = time % BREATH_CYCLE;
-        const quarter = BREATH_CYCLE / 4;
-        
-        let targetProgress;
-        if (cycleTime < quarter) {
-          targetProgress = easeInOutCubic(cycleTime / quarter);
-        } else if (cycleTime < quarter * 2) {
-          targetProgress = 1.0;
-        } else if (cycleTime < quarter * 3) {
-          targetProgress = 1.0 - easeInOutCubic((cycleTime - quarter * 2) / quarter);
-        } else {
-          targetProgress = 0.0;
-        }
-        
-        return targetProgress;
-      }
-      
-      let lastTime = performance.now();
-      
-      function animate() {
-        if (isPaused) {
-          requestAnimationFrame(animate);
-          return;
-        }
-        
-        const currentTime = performance.now();
-        const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
-        lastTime = currentTime;
-        
-        const targetProgress = getBreathState(currentTime);
-        const targetRadius = RADIUS_MIN + (RADIUS_MAX - RADIUS_MIN) * targetProgress;
-        
-        currentRadius += (targetRadius - currentRadius) * SMOOTHING;
-        const radiusNorm = (currentRadius - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN);
-        
-        updatePhases(dt * 5, radiusNorm, currentTime);
-        updateVisuals(currentRadius);
-        
-        requestAnimationFrame(animate);
-      }
-      
-      // Pause/play on click/tap
-      vizElement.addEventListener('click', function(e) {
-        isPaused = !isPaused;
-        vizElement.classList.toggle('orb-paused', isPaused);
-      });
-      
-      // Start animation when card is in view
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting && !animate.running) {
-            animate.running = true;
-            animate();
-          }
-        });
-      });
-      
-      observer.observe(document.getElementById('orb-card'));
-    })();
-
-    // ORIGINAL WEBSITE SCRIPTS
-    document.addEventListener('DOMContentLoaded', function() {
-      function setMobileVH() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style
-        .setProperty('--mobile-vh', `${vh}px`);
-      }
-      
-      setMobileVH();
-      
-      window.addEventListener('resize', setMobileVH);
-      window.addEventListener('orientationchange', function() {
-        setTimeout(setMobileVH, 100);
-      });
-
-      const textSections = document.querySelectorAll('.text-section');
-      
-      function showSectionsSequentially() {
-        setTimeout(() => {
-          textSections[0].classList.add('visible');
-          setTimeout(() => {
-            textSections[1].classList.add('visible');
-            setTimeout(() => {
-              textSections[2].classList.add('visible');
-              setTimeout(() => {
-                textSections[3].classList.add('visible');
-              }, 3000);
-            }, 3000);
-          }, 3000);
-        }, 500);
-      }
-      
-      showSectionsSequentially();
-
-      const observerSections = document.querySelectorAll('.team-member, .publication-item, .advisory-member, .contact-card, .explainer-video, .funding-card, .collaboration-card, .ingredient-card');
-      
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-          }
-        });
-      }, { threshold: 0.2 });
-
-      observerSections.forEach(section => {
-        section.style.opacity = '0';
-        section.style.transform = 'translateY(20px)';
-        section.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-        observer.observe(section);
-      });
-
-      const navLinks = document.querySelectorAll('.side-menu a, .mobile-menu a');
-      
-      navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          const targetId = this.getAttribute('href');
-          if (!targetId || !targetId.startsWith('#')) {
-            return;
-          }
-
-          e.preventDefault();
-          const targetSection = document.querySelector(targetId);
-          
-          if (targetSection) {
-            targetSection.scrollIntoView({
-              behavior: 'smooth',
-              block: 'start'
-            });
-          }
-        });
-      });
-
-      const pageSections = document.querySelectorAll('section');
-
-      window.addEventListener('scroll', () => {
-        let current = '';
-        
-        pageSections.forEach(section => {
-          const sectionTop = section.offsetTop;
-          const sectionHeight = section.clientHeight;
-          if (pageYOffset >= sectionTop - sectionHeight / 3) {
-            current = section.getAttribute('id');
-          }
-        });
-
-        navLinks.forEach(link => {
-          link.classList.remove('active');
-          if (link.getAttribute('href').slice(1) === current) {
-            link.classList.add('active');
-          }
-        });
-      });
-    });
-  </script>
+  <script src="assets/js/site.js?v=20260327" defer></script>
 </body>
 </html>
