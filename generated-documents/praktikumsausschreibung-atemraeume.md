@@ -8,15 +8,15 @@
 
 ## Projektbeschreibung
 
-Viele VR-Ansaetze zur Atemtherapie setzen auf vereinfachte Spielmechaniken und externe Belohnungssysteme, etwa Punkte oder Fortschrittsbalken, deren Motivationswirkung oft schnell nachlaesst.
+**Ausgangspunkt.** Viele VR-Ansaetze zur Atemtherapie setzen auf vereinfachte Spielmechaniken und externe Belohnungssysteme, etwa Punkte oder Fortschrittsbalken, deren Motivationswirkung oft schnell nachlaesst.
 
-Unser VR-System ([www.viscereality.org](https://www.viscereality.org)) verfolgt einen anderen Ansatz. Es uebersetzt die Atmung in Echtzeit in raeumliche Veraenderungen und macht die Atemtiefe im virtuellen Raum sichtbar, ergaenzt durch audiovisuelles Feedback. Eine kurze, anschauliche Erklaerung des Ansatzes bietet dieses Video: [YouTube](https://www.youtube.com/watch?v=Qm-lmC-xYCI).
+**Ansatz.** Unser VR-System ([www.viscereality.org](https://www.viscereality.org)) verfolgt einen anderen Weg: Es uebersetzt die Atmung in Echtzeit in raeumliche Veraenderungen und macht die Atemtiefe im virtuellen Raum unmittelbar sichtbar, ergaenzt durch audiovisuelles Feedback. Einen kurzen Eindruck vermittelt das Projektvideo auf [YouTube](https://www.youtube.com/watch?v=Qm-lmC-xYCI).
 
-Ziel des Projekts ist eine erste klinische Validierung im Rahmen einer Beobachtungsstudie. Wir moechten pruefen, ob Schlaganfallpatient:innen das VR-Paradigma subjektiv als hilfreich fuer Atemuebungen erleben.
+**Studienziel.** Im Rahmen einer ersten klinischen Beobachtungsstudie moechten wir pruefen, ob Schlaganfallpatient:innen das VR-Paradigma subjektiv als hilfreich fuer Atemuebungen erleben.
 
-Das Projekt ist eine Kooperation zwischen der Universitaet Konstanz und den Kliniken Schmieder. Gesucht wird eine studentische Person, die als Schnittstelle zwischen Forschung und Klinik agiert, die VR-Anwendung sowie Frageboegen mit Patient:innen durchfuehrt und Rueckmeldungen an das Forschungsteam weitergibt. So sollen praxisrelevante Erkenntnisse gewonnen werden, um VR-Systeme zu entwickeln, die im klinischen Alltag nutzbar und hilfreich sind.
+**Rolle im Praktikum.** Das Projekt ist eine Kooperation zwischen der Universitaet Konstanz und den Kliniken Schmieder. Gesucht wird eine studentische Person, die als Schnittstelle zwischen Forschung und Klinik die VR-Anwendung mit Patient:innen durchfuehrt, Frageboegen begleitet und Rueckmeldungen strukturiert an das Forschungsteam weitergibt.
 
-Neben den projektbezogenen Aufgaben erhalten Praktikant:innen einen Einblick in die Arbeitsablaeufe, Aufgabenbereiche und Rahmenbedingungen des klinischen Alltags an den Kliniken Schmieder, einschliesslich des Umgangs mit neurologischen Patient:innen im Rehabilitationskontext.
+**Klinischer Einblick.** Darueber hinaus bietet das Praktikum Einblicke in Arbeitsablaeufe, Aufgabenbereiche und Rahmenbedingungen des klinischen Alltags an den Kliniken Schmieder sowie in den Umgang mit neurologischen Patient:innen im Rehabilitationskontext.
 
 ## Aufgaben der/des Praktikant:in
 

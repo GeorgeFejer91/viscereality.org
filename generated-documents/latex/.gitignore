@@ -1,4 +1,5 @@
 build/
+tmp/
 output/*.aux
 output/*.fdb_latexmk
 output/*.fls
