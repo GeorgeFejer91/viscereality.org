@@ -1314,8 +1314,8 @@
     .logos-grid {
       margin-top: 40px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 40px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 32px;
       align-items: center;
       justify-items: center;
     }
@@ -1338,12 +1338,39 @@
       box-shadow: 0 5px 20px rgba(0, 99, 156, 0.3);
     }
 
+    .logo-item--light {
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .logo-item--light:hover {
+      background: #fff;
+    }
+
     .logo-item img {
       width: 100%;
       height: auto;
       max-height: 100px;
       object-fit: contain;
       filter: brightness(1.2);
+    }
+
+    .logo-item--light img {
+      filter: none;
+    }
+
+    .support-note {
+      max-width: 650px;
+      margin: 28px auto 0;
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.95em;
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    .support-note a {
+      color: #fff;
+      text-decoration-color: rgba(255, 255, 255, 0.45);
+      text-underline-offset: 3px;
     }
 
     .partner-list {
