@@ -8,6 +8,7 @@ from ppt_chunker.manifest import build_manifest
 from ppt_chunker.models import MediaCandidate, ResolvedSegment, SlideFeature
 from ppt_chunker.pipeline import (
     _apply_no_rewrite_export_compat,
+    _expected_source_frames,
     _has_error_hiccups,
     _resolve_timing_decisions,
     _slide_asset_stem,
@@ -131,6 +132,37 @@ class PipelineDecisionTests(unittest.TestCase):
         self.assertEqual(decisions[0].transition_play_mode, "immediate")
         self.assertEqual(decisions[0].transition_duration_s, 0.0)
 
+    def test_default_synthetic_transition_does_not_count_against_source_master(self) -> None:
+        feature = SlideFeature(
+            slide_number=2,
+            label="Slide 2",
+            transition_type="none",
+            transition_duration_s=0.0,
+            visible_media_count=1,
+            max_visible_media_duration_s=6.0,
+            unresolved_visible_media_count=0,
+            off_canvas_media_count=0,
+            unsupported_media_count=0,
+            media_candidates=[],
+            static_classification="media",
+        )
+        decisions, hiccups = _resolve_timing_decisions(
+            features=[feature],
+            overrides={
+                "slides": {},
+                "defaults": {
+                    "transition_type": "synthetic_fade",
+                    "transition_sec": 2.0,
+                },
+            },
+            default_static_sec=4.0,
+            default_transition_sec=2.0,
+        )
+        self.assertFalse(_has_error_hiccups(hiccups))
+        self.assertEqual(decisions[0].transition_type, "synthetic_fade")
+        self.assertEqual(decisions[0].transition_duration_s, 2.0)
+        self.assertEqual(_expected_source_frames(decisions, fps=30), 180)
+
     def test_no_rewrite_compat_promotes_tiny_transition_into_real_asset(self) -> None:
         feature = SlideFeature(
             slide_number=4,
@@ -172,6 +204,61 @@ class PipelineDecisionTests(unittest.TestCase):
         self.assertEqual(promoted[0].transition_reason, "no_rewrite_export_compat")
         self.assertEqual(gap_map, {})
         self.assertEqual(hiccups[0].code, "tiny_transition_export_gap_promoted")
+
+    def test_no_rewrite_compat_distributes_padding_for_synthetic_transitions(self) -> None:
+        decisions, _ = _resolve_timing_decisions(
+            features=[
+                SlideFeature(
+                    slide_number=1,
+                    label="Slide 1",
+                    transition_type="none",
+                    transition_duration_s=0.0,
+                    visible_media_count=0,
+                    max_visible_media_duration_s=None,
+                    unresolved_visible_media_count=0,
+                    off_canvas_media_count=0,
+                    unsupported_media_count=0,
+                    media_candidates=[],
+                    static_classification="static",
+                ),
+                SlideFeature(
+                    slide_number=2,
+                    label="Slide 2",
+                    transition_type="none",
+                    transition_duration_s=0.0,
+                    visible_media_count=0,
+                    max_visible_media_duration_s=None,
+                    unresolved_visible_media_count=0,
+                    off_canvas_media_count=0,
+                    unsupported_media_count=0,
+                    media_candidates=[],
+                    static_classification="static",
+                ),
+            ],
+            overrides={
+                "slides": {},
+                "defaults": {
+                    "transition_type": "synthetic_fade",
+                    "transition_sec": 2.0,
+                },
+            },
+            default_static_sec=4.0,
+            default_transition_sec=2.0,
+        )
+        with patch(
+            "ppt_chunker.pipeline.ffprobe_video_stream_info",
+            return_value={"nb_frames": "255"},
+        ):
+            _, gap_map, hiccups = _apply_no_rewrite_export_compat(
+                decisions=decisions,
+                features=[],
+                master_mp4=Path("dummy.mp4"),
+                ffprobe_bin=Path("ffprobe"),
+                fps=30,
+                default_transition_sec=2.0,
+            )
+        self.assertEqual(gap_map, {2: 15})
+        self.assertEqual(hiccups[0].code, "synthetic_transition_source_gap_distributed")
 
 
 class ManifestTests(unittest.TestCase):

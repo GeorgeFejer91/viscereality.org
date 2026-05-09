@@ -442,9 +442,22 @@
 
     const finalize = () => {
       if (!slideReady || !transitionDone) return;
-      if (handoffTimeoutId) clearTimeout(handoffTimeoutId);
-      standbyVid.classList.remove("visible");
+      if (handoffTimeoutId) {
+        clearTimeout(handoffTimeoutId);
+        handoffTimeoutId = null;
+      }
       standbyVid.pause();
+      if (nextSlide.asset_kind === "image") {
+        showImageLayer();
+      } else {
+        showVideoLayer(activeVid);
+        activeVid.currentTime = 0;
+        if (paused) {
+          activeVid.pause();
+        } else {
+          activeVid.play().catch(() => {});
+        }
+      }
       currentSlideIdx = nextIdx;
       showHud(nextIdx);
       updateProgress();
@@ -478,7 +491,6 @@
     if (nextSlide.asset_kind === "image") {
       loadImage(nextSrc).then(() => {
         imgLayer.src = nextSrc;
-        showImageLayer();
         slideReady = true;
         finalize();
       }).catch(err => {
@@ -487,8 +499,8 @@
       });
     } else {
       loadInto(activeVid, nextSrc, !nextSlideAuto).then(() => {
-        showVideoLayer(activeVid);
-        if (!paused) activeVid.play().catch(() => {});
+        activeVid.pause();
+        activeVid.currentTime = 0;
         slideReady = true;
         finalize();
       }).catch(err => {

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +22,7 @@ from .media import (
     image_mismatch_score,
     normalize_video,
     rename_with_hash,
+    synthesize_frame_fade_transition,
 )
 from .models import Hiccup, ResolvedSegment, SlideFeature, TimingDecision
 from .ppt_export import export_ppt_to_video
@@ -329,7 +332,12 @@ def validate_command(args: argparse.Namespace) -> None:
             if master_path.exists():
                 master_duration = ffprobe_duration(ffprobe_bin, master_path)
                 timeline_skip = float(manifest.get("timeline_skip_sec", 0.0) or 0.0)
-                expected_master = total_duration + max(0.0, timeline_skip)
+                synthetic_duration = sum(
+                    float(c.get("duration", 0.0) or 0.0)
+                    for c in chunks
+                    if str(c.get("transition_source", "")).lower() == "synthetic"
+                )
+                expected_master = total_duration - synthetic_duration + max(0.0, timeline_skip)
                 if abs(master_duration - expected_master) > 0.4:
                     hiccups.append(
                         Hiccup(
@@ -483,6 +491,105 @@ def publish_command(args: argparse.Namespace) -> None:
             remote=str(getattr(args, "git_remote", "origin")),
             branch=str(getattr(args, "git_branch", "main")),
             message=f"Publish {deck} presentation artifacts",
+        )
+
+
+def fast_publish_command(args: argparse.Namespace) -> None:
+    pptx_path = Path(args.pptx).expanduser().resolve()
+    output_dir = Path(args.output_dir).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    profile_name = getattr(args, "profile", "balanced1080")
+    profile = _profile_settings(profile_name)
+    ffmpeg_bin, ffprobe_bin = discover_ffmpeg_tools(
+        getattr(args, "ffmpeg_bin", None), getattr(args, "ffprobe_bin", None)
+    )
+    presentation_id = sanitize_id(getattr(args, "presentation_id", None) or getattr(args, "deck", None) or pptx_path.stem)
+    title = getattr(args, "title", None) or pptx_path.stem
+    default_static_sec = float(getattr(args, "default_static_sec", profile["default_static_sec"]))
+    transition_sec = float(getattr(args, "transition_sec", 2.0))
+    max_chunk_mb = float(getattr(args, "max_chunk_mb", profile["max_chunk_mb"]))
+    strict = bool(getattr(args, "strict", True))
+    mute_output = bool(getattr(args, "mute_output", True))
+
+    prep_dir = output_dir / "prepared"
+    prep_dir.mkdir(parents=True, exist_ok=True)
+    features = extract_slide_features(pptx_path, str(ffprobe_bin))
+    unresolved = [f.slide_number for f in features if f.unresolved_visible_media_count > 0]
+    if unresolved:
+        raise PipelineError(f"Cannot fast-publish with unresolved media durations on slides: {unresolved}")
+
+    prepared_pptx = prep_dir / f"{presentation_id}_timed_no_transitions.pptx"
+    duration_plan = _prepare_timed_no_transition_pptx(
+        source_pptx=pptx_path,
+        output_pptx=prepared_pptx,
+        features=features,
+        default_static_sec=default_static_sec,
+    )
+    write_json(
+        prep_dir / "duration_plan.json",
+        {
+            "version": 1,
+            "source_ppt": str(pptx_path),
+            "prepared_pptx": str(prepared_pptx),
+            "default_static_sec": default_static_sec,
+            "transition_sec": transition_sec,
+            "slides": duration_plan,
+        },
+    )
+
+    overrides_path = prep_dir / "synthetic_transition_overrides.json"
+    write_json(
+        overrides_path,
+        {
+            "defaults": {
+                "transition_sec": transition_sec,
+                "transition_type": "synthetic_fade",
+            },
+            "deck_meta": {
+                "transition_strategy": "synthetic_fade",
+                "source_timing_strategy": "pptx_advTm_from_longest_visible_media",
+            },
+        },
+    )
+
+    os.environ.setdefault("PPT_CHUNKER_KEEP_POWERPOINT_OPEN", "1")
+    build_command(
+        argparse.Namespace(
+            pptx=str(prepared_pptx),
+            output_dir=str(output_dir),
+            profile=profile_name,
+            presentation_id=presentation_id,
+            title=title,
+            overrides_file=str(overrides_path),
+            ffmpeg_bin=str(ffmpeg_bin),
+            ffprobe_bin=str(ffprobe_bin),
+            max_chunk_mb=max_chunk_mb,
+            strict=strict,
+            mute_output=mute_output,
+            no_rewrite_timings=True,
+            reuse_master=bool(getattr(args, "reuse_master", False)),
+        )
+    )
+    validate_command(
+        argparse.Namespace(
+            output_dir=str(output_dir),
+            strict=strict,
+            ffmpeg_bin=str(ffmpeg_bin),
+            ffprobe_bin=str(ffprobe_bin),
+        )
+    )
+
+    deck = str(getattr(args, "deck", "") or "").strip()
+    if deck:
+        publish_command(
+            argparse.Namespace(
+                output_dir=str(output_dir),
+                deck=deck,
+                git_push=False,
+                git_remote=getattr(args, "git_remote", "origin"),
+                git_branch=getattr(args, "git_branch", "main"),
+            )
         )
 
 
@@ -655,9 +762,17 @@ def _segment_mixed_assets(
             source_frame_cursor += gap_frames
             skipped_source_frames += gap_frames
 
+        synthetic_transition = (
+            seg.slide_number > 1
+            and _is_synthetic_transition_type(seg.transition_type)
+            and seg.transition_duration_s > 0
+        )
         transition_frames = (
             int(round(seg.transition_duration_s * fps))
-            if seg.transition_type != "none" and seg.transition_duration_s > 0
+            if seg.slide_number > 1
+            and seg.transition_type != "none"
+            and seg.transition_duration_s > 0
+            and not synthetic_transition
             else 0
         )
         slide_frames = max(1, int(round(seg.slide_duration_s * fps)))
@@ -668,12 +783,16 @@ def _segment_mixed_assets(
         )
         emit_transition = seg.slide_number > 1 and (
             transition_frames > 0 or synthesize_immediate_transition
+            or synthetic_transition
         )
-        playback_transition_frames = transition_frames if transition_frames > 0 else (
-            1 if synthesize_immediate_transition else 0
-        )
+        if synthetic_transition:
+            playback_transition_frames = max(1, int(round(seg.transition_duration_s * fps)))
+        else:
+            playback_transition_frames = transition_frames if transition_frames > 0 else (
+                1 if synthesize_immediate_transition else 0
+            )
 
-        if transition_frames > 0 or synthesize_immediate_transition:
+        if transition_frames > 0 or synthesize_immediate_transition or synthetic_transition:
             if source_frame_cursor + transition_frames > source_frames + 1:
                 hiccups.append(
                     Hiccup(
@@ -693,33 +812,52 @@ def _segment_mixed_assets(
                     transition_mode_token=transition_mode_token,
                     width=sequence_width,
                 )
-                cut_chunk_frame_exact(
-                    ffmpeg_bin=ffmpeg_bin,
-                    input_mp4=master_mp4,
-                    output_mp4=raw_transition,
-                    start_frame=(
-                        source_frame_cursor
-                        if transition_frames > 0
-                        else max(0, int(previous_slide_last_source_frame or 0))
-                    ),
-                    frame_count=playback_transition_frames,
-                    fps=fps,
-                    mute_output=mute_output,
+                source_transition_start_frame = (
+                    source_frame_cursor
+                    if transition_frames > 0
+                    else max(0, int(previous_slide_last_source_frame or 0))
                 )
+                if synthetic_transition:
+                    if previous_slide_last_source_frame is None:
+                        hiccups.append(
+                            Hiccup(
+                                "synthetic_transition_missing_previous_frame",
+                                "error",
+                                f"Synthetic transition for slide {seg.slide_number} has no previous slide frame.",
+                                slide_number=seg.slide_number,
+                            )
+                        )
+                    synthesize_frame_fade_transition(
+                        ffmpeg_bin=ffmpeg_bin,
+                        input_mp4=master_mp4,
+                        output_mp4=raw_transition,
+                        previous_frame=max(0, int(previous_slide_last_source_frame or 0)),
+                        next_frame=min(max(0, source_frame_cursor), max(0, source_frames - 1)),
+                        frame_count=playback_transition_frames,
+                        fps=fps,
+                        mute_output=mute_output,
+                    )
+                else:
+                    cut_chunk_frame_exact(
+                        ffmpeg_bin=ffmpeg_bin,
+                        input_mp4=master_mp4,
+                        output_mp4=raw_transition,
+                        start_frame=source_transition_start_frame,
+                        frame_count=playback_transition_frames,
+                        fps=fps,
+                        mute_output=mute_output,
+                    )
                 enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
                 hashed_transition = rename_with_hash(raw_transition)
                 decode_check(ffprobe_bin, hashed_transition)
                 transition_duration = transition_duration_nominal
                 t_start = playback_frame_cursor / fps
                 t_end = (playback_frame_cursor + playback_transition_frames) / fps
-                source_transition_start_frame = (
-                    source_frame_cursor
-                    if transition_frames > 0
-                    else max(0, int(previous_slide_last_source_frame or 0))
-                )
                 source_t_start = source_transition_start_frame / fps
                 source_t_end = (
                     (source_transition_start_frame + playback_transition_frames) / fps
+                    if not synthetic_transition
+                    else source_t_start
                 )
                 transition_rel = f"chunks/{hashed_transition.name}"
                 transition_entries_legacy[seg.slide_number] = {
@@ -731,6 +869,8 @@ def _segment_mixed_assets(
                     "asset_kind": "video",
                     "transition_play_mode": seg.transition_play_mode,
                 }
+                if synthetic_transition:
+                    transition_entries_legacy[seg.slide_number]["transition_source"] = "synthetic"
                 transition_entries_extended[seg.slide_number] = {
                     "id": f"trans_{seg.slide_number:02d}",
                     "type": "transition",
@@ -745,6 +885,8 @@ def _segment_mixed_assets(
                     "asset_kind": "video",
                     "transition_play_mode": seg.transition_play_mode,
                 }
+                if synthetic_transition:
+                    transition_entries_extended[seg.slide_number]["transition_source"] = "synthetic"
             source_frame_cursor += transition_frames
             if emit_transition:
                 playback_frame_cursor += playback_transition_frames
@@ -920,9 +1062,13 @@ def _resolve_timing_decisions(
 
     for feature in features:
         override = slide_overrides.get(str(feature.slide_number), {})
+        default_transition_type = overrides.get("defaults", {}).get("transition_type")
+        default_transition_play_mode = overrides.get("defaults", {}).get("transition_play_mode")
         slide_reason = "static_default"
         transition_reason = "authored"
         transition_play_mode = "manual"
+        if default_transition_play_mode:
+            transition_play_mode = str(default_transition_play_mode).strip().lower()
 
         intrinsic_slide = (
             intrinsic_slide_map.get(feature.slide_number)
@@ -951,8 +1097,11 @@ def _resolve_timing_decisions(
             slide_duration = float(default_static_sec)
             slide_reason = "static_default"
 
-        transition_type = str(feature.transition_type or "none")
+        transition_type = str(default_transition_type or feature.transition_type or "none")
         transition_duration = float(feature.transition_duration_s or 0.0)
+        if default_transition_type and _is_synthetic_transition_type(default_transition_type):
+            transition_duration = float(default_transition_sec)
+            transition_reason = "default_transition"
         if override.get("transition_sec") is not None:
             transition_duration = float(override["transition_sec"])
             transition_reason = "override"
@@ -1051,7 +1200,7 @@ def _apply_no_rewrite_export_compat(
     source_gap_frames_by_slide: dict[int, int] = {}
     promoted_transition_frames_by_slide: dict[int, int] = {}
     source_frames = int(round(float(ffprobe_video_stream_info(ffprobe_bin, master_mp4)["nb_frames"])))
-    expected_frames = _expected_frames(decisions, fps)
+    expected_frames = _expected_source_frames(decisions, fps)
     delta = source_frames - expected_frames
     if abs(delta) <= 1:
         return decisions, source_gap_frames_by_slide, hiccups
@@ -1064,6 +1213,34 @@ def _apply_no_rewrite_export_compat(
                     "No-rewrite export produced fewer frames than timing decisions "
                     f"(source={source_frames} expected={expected_frames} delta={delta})."
                 ),
+            )
+        )
+        return decisions, source_gap_frames_by_slide, hiccups
+
+    synthetic_gap_targets = [
+        row.slide_number
+        for row in decisions
+        if row.slide_number > 1 and _is_synthetic_transition_type(row.transition_type)
+    ]
+    if synthetic_gap_targets:
+        assigned = 0
+        target_count = len(synthetic_gap_targets)
+        for idx, slide_number in enumerate(synthetic_gap_targets, start=1):
+            next_assigned = int(round(delta * (idx / float(target_count))))
+            gap = max(0, next_assigned - assigned)
+            assigned = next_assigned
+            if gap > 0:
+                source_gap_frames_by_slide[slide_number] = gap
+        hiccups.append(
+            Hiccup(
+                "synthetic_transition_source_gap_distributed",
+                "warning",
+                (
+                    "No-rewrite export produced extra source frames while transitions are "
+                    "synthetic; distributed them as pre-slide source gaps "
+                    f"(delta_frames={delta})."
+                ),
+                details={"source_gap_frames_by_slide": source_gap_frames_by_slide},
             )
         )
         return decisions, source_gap_frames_by_slide, hiccups
@@ -1142,8 +1319,26 @@ def _expected_frames(decisions: list[TimingDecision], fps: int) -> int:
     total = 0
     for row in decisions:
         total += int(round(float(row.slide_duration_s) * fps))
-        total += int(round(float(row.transition_duration_s) * fps))
+        if row.slide_number > 1:
+            total += int(round(float(row.transition_duration_s) * fps))
     return total
+
+
+def _expected_source_frames(decisions: list[TimingDecision], fps: int) -> int:
+    total = 0
+    for row in decisions:
+        total += int(round(float(row.slide_duration_s) * fps))
+        if (
+            row.slide_number > 1
+            and row.transition_type != "none"
+            and not _is_synthetic_transition_type(row.transition_type)
+        ):
+            total += int(round(float(row.transition_duration_s) * fps))
+    return total
+
+
+def _is_synthetic_transition_type(transition_type: str | None) -> bool:
+    return str(transition_type or "").strip().lower() in {"synthetic_fade", "synthetic-crossfade", "synthetic_crossfade"}
 
 
 def _merge_com_into_features(
@@ -1209,6 +1404,92 @@ def _copy_player_template(output_dir: Path) -> None:
     if not src.exists():
         raise PipelineError(f"Player template not found: {src}")
     shutil.copy2(src, dst)
+
+
+def _prepare_timed_no_transition_pptx(
+    *,
+    source_pptx: Path,
+    output_pptx: Path,
+    features: list[SlideFeature],
+    default_static_sec: float,
+) -> list[dict[str, Any]]:
+    output_pptx.parent.mkdir(parents=True, exist_ok=True)
+    slide_duration_ms: dict[int, int] = {}
+    plan: list[dict[str, Any]] = []
+    for feature in features:
+        if feature.visible_media_count > 0 and feature.max_visible_media_duration_s is not None:
+            duration_s = float(feature.max_visible_media_duration_s)
+            reason = "longest_visible_media"
+        else:
+            duration_s = float(default_static_sec)
+            reason = "static_default"
+        duration_ms = max(100, int(round(duration_s * 1000.0)))
+        slide_duration_ms[feature.slide_number] = duration_ms
+        plan.append(
+            {
+                "slide_number": feature.slide_number,
+                "duration_s": round(duration_ms / 1000.0, 3),
+                "reason": reason,
+                "visible_media_count": feature.visible_media_count,
+                "max_visible_media_duration_s": feature.max_visible_media_duration_s,
+            }
+        )
+
+    with zipfile.ZipFile(source_pptx, "r") as zin, zipfile.ZipFile(
+        output_pptx, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6
+    ) as zout:
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            slide_number = _slide_number_from_pptx_path(item.filename)
+            if slide_number is not None and slide_number in slide_duration_ms:
+                data = _patch_slide_transition_to_timed_none(data, slide_duration_ms[slide_number])
+            zi = zipfile.ZipInfo(item.filename, date_time=item.date_time)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = item.external_attr
+            zi.comment = item.comment
+            zout.writestr(zi, data)
+    return plan
+
+
+def _slide_number_from_pptx_path(path: str) -> int | None:
+    match = re.fullmatch(r"ppt/slides/slide(\d+)\.xml", path)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def _patch_slide_transition_to_timed_none(data: bytes, duration_ms: int) -> bytes:
+    text = data.decode("utf-8")
+    replacement = (
+        '<p:transition xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" '
+        f'advClick="0" advTm="{int(duration_ms)}" p14:dur="0"/>'
+    )
+    start = text.find("<p:transition")
+    if start == -1:
+        insert_at = text.find("<p:timing")
+        if insert_at == -1:
+            insert_at = text.find("</p:sld>")
+        if insert_at == -1:
+            raise PipelineError("Could not find slide transition insertion point.")
+        text = text[:insert_at] + replacement + text[insert_at:]
+        return text.encode("utf-8")
+    alt_start = text.rfind("<mc:AlternateContent", 0, start)
+    alt_end = text.find("</mc:AlternateContent>", start)
+    if alt_start != -1 and alt_end != -1:
+        alt_close = alt_end + len("</mc:AlternateContent>")
+        if "<p:transition" in text[alt_start:alt_close]:
+            text = text[:alt_start] + replacement + text[alt_close:]
+            return text.encode("utf-8")
+    close = text.find("</p:transition>", start)
+    if close != -1:
+        end = close + len("</p:transition>")
+    else:
+        end = text.find("/>", start)
+        if end == -1:
+            raise PipelineError("Could not find slide transition close.")
+        end += 2
+    text = text[:start] + replacement + text[end:]
+    return text.encode("utf-8")
 
 
 def _git_add_commit_push(

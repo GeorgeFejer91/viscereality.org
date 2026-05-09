@@ -4,6 +4,7 @@ import shutil
 import stat
 import tempfile
 import time
+import os
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +49,7 @@ def export_ppt_to_video(
         try:
             app = _com_call(lambda: win32com.client.DispatchEx("PowerPoint.Application"), pywintypes, retries)
             pres = _com_call(
-                lambda: app.Presentations.Open(str(temp_ppt), False, True, False), pywintypes, retries
+                lambda: app.Presentations.Open(str(temp_ppt), False, False, False), pywintypes, retries
             )
 
             if rewrite_timings and segments:
@@ -128,11 +129,12 @@ def export_slides_to_png(
                     pres.Close()
             except Exception:
                 pass
-            try:
-                if app is not None:
-                    app.Quit()
-            except Exception:
-                pass
+            if os.environ.get("PPT_CHUNKER_KEEP_POWERPOINT_OPEN") != "1":
+                try:
+                    if app is not None:
+                        app.Quit()
+                except Exception:
+                    pass
 
         exported = sorted(temp_png_dir.glob("Slide*.PNG"))
         if not exported:

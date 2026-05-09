@@ -47,6 +47,27 @@ py -3 chunk_presentation.py publish output --deck alpCHI
 
 Copies validated artifacts to `presentations/<deck>/`.
 
+## Fast Website Publish
+
+For decks with GIFs or embedded videos, use the one-command path:
+
+```bash
+py -3 chunk_presentation.py fast-publish "presentation.pptx" -o output_<deck> --deck <deck> --presentation-id <deck> --title "Deck Title" --transition-sec 2 --default-static-sec 4 --strict
+```
+
+This path is optimized for website publishing:
+
+- scans visible GIF/video durations per slide
+- writes a temporary PPTX copy with each slide advance set to the longest visible media duration
+- removes PowerPoint transitions from the master export
+- exports one high-resolution MP4 through PowerPoint
+- cuts exact slide-loop chunks from that master
+- creates standardized synthetic transition chunks, defaulting to 2s fades
+- validates durations, decoding, static-slide images, and the generated player
+- publishes to `presentations/<deck>/`
+
+The source PPTX is not mutated. PowerPoint timing rewrites through COM are avoided, and `PPT_CHUNKER_KEEP_POWERPOINT_OPEN=1` is set by default inside this command so an active PowerPoint session is not closed.
+
 Optional git push:
 
 ```bash

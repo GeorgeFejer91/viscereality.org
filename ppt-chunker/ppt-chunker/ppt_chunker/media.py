@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 import numpy as np
@@ -242,6 +243,73 @@ def cut_chunk_frame_exact(
         cmd.extend(["-c:a", "aac", "-b:a", "128k"])
     cmd.append(str(output_mp4))
     run_subprocess(cmd, f"cut frame-exact chunk {output_mp4.name}")
+
+
+def synthesize_frame_fade_transition(
+    ffmpeg_bin: Path,
+    input_mp4: Path,
+    output_mp4: Path,
+    previous_frame: int,
+    next_frame: int,
+    frame_count: int,
+    fps: int,
+    mute_output: bool = True,
+    crf: int = 18,
+) -> None:
+    if frame_count <= 0:
+        raise PipelineError(f"Frame count must be > 0 for {output_mp4.name}")
+    output_mp4.parent.mkdir(parents=True, exist_ok=True)
+    duration_s = frame_count / float(fps)
+    with tempfile.TemporaryDirectory(prefix="ppt_chunker_fade_") as td:
+        prev_png = Path(td) / "previous.png"
+        next_png = Path(td) / "next.png"
+        extract_frame_png(ffmpeg_bin, input_mp4, prev_png, max(0.0, previous_frame / float(fps)))
+        extract_frame_png(ffmpeg_bin, input_mp4, next_png, max(0.0, next_frame / float(fps)))
+        cmd = [
+            str(ffmpeg_bin),
+            "-y",
+            "-loop",
+            "1",
+            "-framerate",
+            str(fps),
+            "-t",
+            f"{duration_s:.6f}",
+            "-i",
+            str(prev_png),
+            "-loop",
+            "1",
+            "-framerate",
+            str(fps),
+            "-t",
+            f"{duration_s:.6f}",
+            "-i",
+            str(next_png),
+            "-filter_complex",
+            (
+                f"[0:v][1:v]xfade=transition=fade:duration={duration_s:.6f}:offset=0,"
+                f"format=yuv420p,fps={fps}"
+            ),
+            "-frames:v",
+            str(frame_count),
+            "-c:v",
+            "libx264",
+            "-preset",
+            "fast",
+            "-crf",
+            str(crf),
+            "-g",
+            "15",
+            "-pix_fmt",
+            "yuv420p",
+            "-movflags",
+            "+faststart",
+        ]
+        if mute_output:
+            cmd.extend(["-an"])
+        else:
+            cmd.extend(["-an"])
+        cmd.append(str(output_mp4))
+        run_subprocess(cmd, f"synthesize fade transition {output_mp4.name}")
 
 
 def enforce_chunk_size(

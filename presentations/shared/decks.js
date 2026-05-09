@@ -30,5 +30,14 @@
       conferenceUrl: "https://alpchi.org/",
       conferenceLabel: "alpCHI",
     }),
+    BBD26: Object.freeze({
+      id: "BBD26",
+      title: "Berlin Breathwork Days 2026",
+      viewerPath: "/presentations/BBD26/",
+      manifestPath: "/presentations/BBD26/manifest.json",
+      previewImage: "/presentations/BBD26/preview.jpg",
+      conferenceUrl: "https://www.berlinbreathwork.org/en/bbd26-programm",
+      conferenceLabel: "Berlin Breathwork Days",
+    }),
   });
 })();

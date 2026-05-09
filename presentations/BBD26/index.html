@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentation Player</title>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --hud-bg: rgba(12, 12, 12, 0.75);
+    --accent: #6ba3f7;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --bar-h: 3px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    cursor: none;
+  }
+  body.show-cursor { cursor: default; }
+
+  .video-layer,
+  #img-layer {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: var(--bg);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.08s linear;
+  }
+
+  .visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #vid-a { z-index: 1; }
+  #img-layer { z-index: 1; }
+  #vid-b { z-index: 2; }
+
+  #hud {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--hud-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.35s;
+    pointer-events: none;
+    white-space: nowrap;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  #hud.show { opacity: 1; }
+  #hud .label { color: var(--text); }
+  #hud .dim { color: var(--text-dim); margin-left: 10px; font-size: 0.85rem; }
+
+  #progress-track {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--bar-h);
+    background: rgba(255,255,255,0.08);
+    z-index: 100;
+  }
+  #progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  .tick {
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: rgba(255,255,255,0.25);
+  }
+
+  #loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    background: var(--bg);
+    font-size: 1.1rem;
+    color: var(--text-dim);
+  }
+  #loading.hidden { display: none; }
+
+  #help {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #help.show { opacity: 1; pointer-events: auto; }
+  #help table { border-collapse: collapse; font-size: 1rem; }
+  #help td { padding: 6px 18px; }
+  #help .key {
+    font-family: "SF Mono", "Fira Code", monospace;
+    background: rgba(255,255,255,0.1);
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  #fullscreen-btn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 160;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(8, 8, 8, 0.72);
+    color: var(--text);
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+</style>
+</head>
+<body>
+
+<video id="vid-a" class="video-layer" muted playsinline preload="auto"></video>
+<video id="vid-b" class="video-layer" muted playsinline preload="auto"></video>
+<img id="img-layer" alt="Slide image">
+
+<div id="hud">
+  <span class="label" id="hud-label"></span>
+  <span class="dim" id="hud-pos"></span>
+</div>
+
+<div id="progress-track">
+  <div id="progress-fill"></div>
+</div>
+
+<div id="loading">Loading presentation...</div>
+
+<div id="help">
+  <table>
+    <tr><td class="key">&rarr;</td><td>Next slide</td></tr>
+    <tr><td class="key">&larr;</td><td>Previous slide</td></tr>
+    <tr><td class="key">Space</td><td>Pause / Resume</td></tr>
+    <tr><td class="key">F</td><td>Fullscreen</td></tr>
+    <tr><td class="key">?</td><td>Toggle this help</td></tr>
+  </table>
+</div>
+
+<button id="fullscreen-btn" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
+<script src="../shared/decks.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const MANIFEST_URL = "manifest.json";
+  const BASE_PATH = "";
+
+  let manifest = null;
+  let allChunks = [];
+  let slideChunks = [];
+  let currentSlideIdx = 0;
+  let isTransitioning = false;
+  let paused = false;
+
+  const vidA = document.getElementById("vid-a");
+  const vidB = document.getElementById("vid-b");
+  const imgLayer = document.getElementById("img-layer");
+  const hudEl = document.getElementById("hud");
+  const hudLabel = document.getElementById("hud-label");
+  const hudPos = document.getElementById("hud-pos");
+  const progressFill = document.getElementById("progress-fill");
+  const progressTrack = document.getElementById("progress-track");
+  const loadingEl = document.getElementById("loading");
+  const helpEl = document.getElementById("help");
+  const fullscreenBtn = document.getElementById("fullscreen-btn");
+  let activeVid = vidA;
+  let standbyVid = vidB;
+  let hudTimer;
+  let cursorTimer;
+  let autoFullscreenAttempted = false;
+  let suppressNextAdvanceClick = false;
+  let handoffTimeoutId = null;
+  let autoAdvanceTimer = null;
+  let autoAdvanceVideoHandler = null;
+
+  fetch(MANIFEST_URL)
+    .then(r => r.json())
+    .then(data => {
+      manifest = data;
+      allChunks = normalizeChunks(Array.isArray(data.chunks) ? data.chunks : []);
+      slideChunks = allChunks.filter(c => c.type === "slide").map(c => ({
+        ...c,
+        asset_kind: c.asset_kind || "video",
+      }));
+      if (!slideChunks.length) {
+        loadingEl.textContent = "No slide chunks found in manifest.";
+        return;
+      }
+      document.title = data.title || "Presentation";
+      renderTicks();
+      playSlide(0).then(() => loadingEl.classList.add("hidden")).catch(err => {
+        loadingEl.textContent = "Failed to load first slide.";
+        console.error(err);
+      });
+    })
+    .catch(err => {
+      loadingEl.textContent = "Failed to load manifest.json";
+      console.error(err);
+    });
+
+  function parseChunkNameRules(filePath) {
+    const out = {};
+    const fileName = String(filePath || "").split("/").pop() || "";
+    const stem = fileName.toLowerCase().replace(/\.[^.]+$/, "");
+    if (!stem) return out;
+    const normalizedStem = stem.replace(/^\d+_/, "");
+    if (normalizedStem.startsWith("transition") || normalizedStem.startsWith("trans_")) {
+      out.type = "transition";
+    } else if (normalizedStem.startsWith("slide")) {
+      out.type = "slide";
+    }
+    const durMatch = normalizedStem.match(/(?:^|[_-])dur(\d+(?:p\d+)?)/);
+    if (durMatch) {
+      const parsed = Number(durMatch[1].replace("p", "."));
+      if (Number.isFinite(parsed) && parsed >= 0) out.duration = parsed;
+    }
+    const navMatch = normalizedStem.match(/(?:^|[_-])nav(auto|manual|hold|immediate)/);
+    if (navMatch) {
+      out.transition_play_mode = navMatch[1] === "hold" ? "manual" : navMatch[1];
+    }
+    return out;
+  }
+
+  function isAutoTransitionMode(mode) {
+    return mode === "auto" || mode === "immediate";
+  }
+
+  function normalizeChunk(chunk) {
+    const normalized = {
+      ...chunk,
+      asset_kind: chunk.asset_kind || "video",
+    };
+    const rules = parseChunkNameRules(normalized.file);
+    if (rules.type) normalized.type = rules.type;
+    if (Number.isFinite(rules.duration)) normalized.duration = rules.duration;
+    if (rules.transition_play_mode) {
+      normalized.transition_play_mode = rules.transition_play_mode;
+    } else if (!normalized.transition_play_mode) {
+      normalized.transition_play_mode = "manual";
+    }
+    return normalized;
+  }
+
+  function normalizeChunks(chunks) {
+    return chunks.map(normalizeChunk);
+  }
+
+  function showVideoLayer(video) {
+    imgLayer.classList.remove("visible");
+    vidA.classList.remove("visible");
+    vidB.classList.remove("visible");
+    video.classList.add("visible");
+  }
+
+  function showImageLayer() {
+    vidA.classList.remove("visible");
+    vidB.classList.remove("visible");
+    imgLayer.classList.add("visible");
+  }
+
+  function loadInto(video, src, loop) {
+    return new Promise((resolve, reject) => {
+      const onReady = () => { cleanup(); resolve(); };
+      const onError = () => { cleanup(); reject(new Error("Failed loading " + src)); };
+      const cleanup = () => {
+        video.removeEventListener("canplaythrough", onReady);
+        video.removeEventListener("error", onError);
+      };
+      video.loop = loop;
+      video.muted = true;
+      video.addEventListener("canplaythrough", onReady, { once: true });
+      video.addEventListener("error", onError, { once: true });
+      if (video.src !== src) video.src = src;
+      video.load();
+    });
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(src);
+      img.onerror = () => reject(new Error("Failed loading image " + src));
+      img.src = src;
+    });
+  }
+
+  function findTransitionForNext(slideIdx) {
+    const nextSlideIdx = slideIdx + 1;
+    if (nextSlideIdx >= slideChunks.length) return null;
+    const nextSlide = slideChunks[nextSlideIdx];
+    return allChunks.find(
+      c => c.type === "transition" && c.slide_to === nextSlide.slide_number
+    ) || null;
+  }
+
+  function clearAutoAdvance() {
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      autoAdvanceTimer = null;
+    }
+    if (autoAdvanceVideoHandler) {
+      activeVid.removeEventListener("ended", autoAdvanceVideoHandler);
+      autoAdvanceVideoHandler = null;
+    }
+  }
+
+  function armAutoAdvanceForCurrentSlide() {
+    clearAutoAdvance();
+    if (paused || isTransitioning) return;
+    const slide = slideChunks[currentSlideIdx];
+    if (!slide) return;
+    const transChunk = findTransitionForNext(currentSlideIdx);
+    if (!transChunk || !isAutoTransitionMode(transChunk.transition_play_mode)) return;
+
+    const trigger = () => {
+      if (paused || isTransitioning) return;
+      if (currentSlideIdx >= slideChunks.length - 1) return;
+      goNext();
+    };
+
+    if (slide.asset_kind === "image") {
+      const durationSec = Number(slide.duration) || 0;
+      if (durationSec <= 0) return;
+      autoAdvanceTimer = setTimeout(trigger, Math.max(100, Math.round(durationSec * 1000)));
+      return;
+    }
+
+    autoAdvanceVideoHandler = () => {
+      autoAdvanceVideoHandler = null;
+      trigger();
+    };
+    activeVid.addEventListener("ended", autoAdvanceVideoHandler, { once: true });
+  }
+
+  function playSlide(idx) {
+    if (idx < 0 || idx >= slideChunks.length) return Promise.resolve(false);
+    clearAutoAdvance();
+    const slide = slideChunks[idx];
+    const src = BASE_PATH + slide.file;
+    const transChunk = findTransitionForNext(idx);
+    const autoAdvance = !!(transChunk && isAutoTransitionMode(transChunk.transition_play_mode));
+
+    if (slide.asset_kind === "image") {
+      return loadImage(src).then(() => {
+        imgLayer.src = src;
+        showImageLayer();
+        activeVid.pause();
+        standbyVid.pause();
+        currentSlideIdx = idx;
+        showHud(idx);
+        updateProgress();
+        preloadNext(idx);
+        armAutoAdvanceForCurrentSlide();
+        return true;
+      });
+    }
+
+    return loadInto(activeVid, src, !autoAdvance).then(() => {
+      showVideoLayer(activeVid);
+      currentSlideIdx = idx;
+      if (paused) {
+        activeVid.pause();
+      } else {
+        activeVid.play().catch(() => {});
+      }
+      showHud(idx);
+      updateProgress();
+      preloadNext(idx);
+      armAutoAdvanceForCurrentSlide();
+      return true;
+    });
+  }
+
+  function preloadNext(slideIdx) {
+    const transChunk = findTransitionForNext(slideIdx);
+    if (transChunk && (Number(transChunk.duration) || 0) > 0) {
+      loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch(() => {});
+    }
+  }
+
+  function goNext() {
+    if (isTransitioning) return;
+    const nextIdx = currentSlideIdx + 1;
+    if (nextIdx >= slideChunks.length) return;
+    const nextSlide = slideChunks[nextIdx];
+    const transChunk = findTransitionForNext(currentSlideIdx);
+    const transDuration = transChunk ? (Number(transChunk.duration) || 0) : 0;
+    if (!transChunk || transDuration <= 0) {
+      playSlide(nextIdx).catch(console.error);
+      return;
+    }
+
+    clearAutoAdvance();
+    isTransitioning = true;
+    let slideReady = false;
+    let transitionDone = false;
+    const nextSrc = BASE_PATH + nextSlide.file;
+    const nextSlideTransition = findTransitionForNext(nextIdx);
+    const nextSlideAuto = !!(
+      nextSlideTransition && isAutoTransitionMode(nextSlideTransition.transition_play_mode)
+    );
+
+    const finalize = () => {
+      if (!slideReady || !transitionDone) return;
+      if (handoffTimeoutId) {
+        clearTimeout(handoffTimeoutId);
+        handoffTimeoutId = null;
+      }
+      standbyVid.pause();
+      if (nextSlide.asset_kind === "image") {
+        showImageLayer();
+      } else {
+        showVideoLayer(activeVid);
+        activeVid.currentTime = 0;
+        if (paused) {
+          activeVid.pause();
+        } else {
+          activeVid.play().catch(() => {});
+        }
+      }
+      currentSlideIdx = nextIdx;
+      showHud(nextIdx);
+      updateProgress();
+      preloadNext(nextIdx);
+      armAutoAdvanceForCurrentSlide();
+      isTransitioning = false;
+    };
+
+    const onTransitionEnd = () => {
+      standbyVid.removeEventListener("ended", onTransitionEnd);
+      transitionDone = true;
+      finalize();
+    };
+    standbyVid.addEventListener("ended", onTransitionEnd);
+    standbyVid.currentTime = 0;
+    standbyVid.loop = false;
+    showVideoLayer(standbyVid);
+    activeVid.pause();
+    standbyVid.play().catch(err => {
+      console.error(err);
+      standbyVid.removeEventListener("ended", onTransitionEnd);
+      isTransitioning = false;
+      playSlide(nextIdx).catch(console.error);
+    });
+
+    handoffTimeoutId = setTimeout(() => {
+      transitionDone = true;
+      finalize();
+    }, Math.max(250, Math.round((transDuration * 1000) + 250)));
+
+    if (nextSlide.asset_kind === "image") {
+      loadImage(nextSrc).then(() => {
+        imgLayer.src = nextSrc;
+        slideReady = true;
+        finalize();
+      }).catch(err => {
+        console.error(err);
+        isTransitioning = false;
+      });
+    } else {
+      loadInto(activeVid, nextSrc, !nextSlideAuto).then(() => {
+        activeVid.pause();
+        activeVid.currentTime = 0;
+        slideReady = true;
+        finalize();
+      }).catch(err => {
+        console.error(err);
+        isTransitioning = false;
+      });
+    }
+  }
+
+  function goPrev() {
+    if (isTransitioning || currentSlideIdx <= 0) return;
+    playSlide(currentSlideIdx - 1).catch(console.error);
+  }
+
+  function showHud(idx) {
+    const chunk = slideChunks[idx];
+    hudLabel.textContent = chunk.label || `Slide ${chunk.slide_number}`;
+    hudPos.textContent = `${idx + 1} / ${slideChunks.length}`;
+    hudEl.classList.add("show");
+    clearTimeout(hudTimer);
+    hudTimer = setTimeout(() => hudEl.classList.remove("show"), 2500);
+  }
+
+  function updateProgress() {
+    if (slideChunks.length <= 1) {
+      progressFill.style.width = "100%";
+      return;
+    }
+    const pct = ((currentSlideIdx) / (slideChunks.length - 1)) * 100;
+    progressFill.style.width = Math.min(pct, 100) + "%";
+  }
+
+  function renderTicks() {
+    const total = slideChunks.length;
+    if (total <= 1) return;
+    slideChunks.forEach((_, i) => {
+      if (i === 0) return;
+      const tick = document.createElement("div");
+      tick.className = "tick";
+      tick.style.left = ((i / (total - 1)) * 100) + "%";
+      progressTrack.appendChild(tick);
+    });
+  }
+
+  function showCursor() {
+    document.body.classList.add("show-cursor");
+    clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(() => document.body.classList.remove("show-cursor"), 2000);
+  }
+  document.addEventListener("mousemove", showCursor);
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+      return;
+    }
+    document.documentElement.requestFullscreen().catch(() => {});
+  }
+
+  document.addEventListener("pointerdown", (e) => {
+    if (autoFullscreenAttempted) return;
+    if (fullscreenBtn.contains(e.target)) return;
+    autoFullscreenAttempted = true;
+    suppressNextAdvanceClick = true;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, true);
+
+  fullscreenBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    autoFullscreenAttempted = true;
+    toggleFullscreen();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    switch (e.key) {
+      case "ArrowRight": e.preventDefault(); goNext(); break;
+      case "ArrowLeft": e.preventDefault(); goPrev(); break;
+      case " ":
+        e.preventDefault();
+        if (paused) {
+          if (imgLayer.classList.contains("visible")) {
+            paused = false;
+          } else {
+            activeVid.play().catch(() => {});
+            paused = false;
+          }
+          armAutoAdvanceForCurrentSlide();
+        } else {
+          activeVid.pause();
+          standbyVid.pause();
+          paused = true;
+          clearAutoAdvance();
+        }
+        break;
+      case "f": toggleFullscreen(); break;
+      case "?": helpEl.classList.toggle("show"); break;
+      case "Escape": helpEl.classList.remove("show"); break;
+    }
+  });
+
+  document.addEventListener("click", () => {
+    if (helpEl.classList.contains("show")) {
+      helpEl.classList.remove("show");
+      return;
+    }
+    if (suppressNextAdvanceClick) {
+      suppressNextAdvanceClick = false;
+      return;
+    }
+    goNext();
+  });
+
+})();
+</script>
+</body>
+</html>

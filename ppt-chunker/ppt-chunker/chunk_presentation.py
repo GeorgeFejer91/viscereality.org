@@ -19,6 +19,7 @@ from ppt_chunker.pipeline import (
     analyze_command,
     build_command,
     chunk_command,
+    fast_publish_command,
     inspect_command,
     publish_command,
     run_command,
@@ -66,6 +67,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_publish.add_argument("--git-push", action="store_true")
     p_publish.add_argument("--git-remote", default="origin")
     p_publish.add_argument("--git-branch", default="main")
+
+    p_fast = sub.add_parser(
+        "fast-publish",
+        help="Prepare timed no-transition PPTX, export master MP4, synthesize 2s transitions, validate, publish",
+    )
+    p_fast.add_argument("pptx", help="Path to .pptx")
+    p_fast.add_argument("-o", "--output-dir", default="output_fast_publish")
+    p_fast.add_argument("--deck", required=True, help="Deck name under presentations/<deck>")
+    p_fast.add_argument("--presentation-id")
+    p_fast.add_argument("--title")
+    p_fast.add_argument("--profile", default="balanced1080")
+    p_fast.add_argument("--transition-sec", type=float, default=2.0)
+    p_fast.add_argument("--default-static-sec", type=float, default=4.0)
+    p_fast.add_argument("--ffmpeg-bin")
+    p_fast.add_argument("--ffprobe-bin")
+    p_fast.add_argument("--max-chunk-mb", type=float, default=95.0)
+    p_fast.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
+    p_fast.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
+    p_fast.add_argument("--reuse-master", action="store_true")
+    p_fast.add_argument("--git-remote", default="origin")
+    p_fast.add_argument("--git-branch", default="main")
 
     # legacy wrappers
     p_analyze = sub.add_parser("analyze", help="Legacy wrapper -> inspect + timing_config")
@@ -128,6 +150,8 @@ def main() -> int:
             validate_command(args)
         elif args.command == "publish":
             publish_command(args)
+        elif args.command == "fast-publish":
+            fast_publish_command(args)
         elif args.command == "analyze":
             analyze_command(args)
         elif args.command == "chunk":
