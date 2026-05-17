@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import re
 import shutil
@@ -11,6 +12,7 @@ from typing import Any
 
 from .dependencies import discover_ffmpeg_tools
 from .exceptions import PipelineError
+from .gif_timing import normalize_gif_duration_to_export_grid
 from .manifest import build_manifest
 from .media import (
     cut_chunk_frame_exact,
@@ -421,7 +423,15 @@ def validate_command(args: argparse.Namespace) -> None:
                 source_start_sec = float(
                     seg.get("source_start_sec", seg.get("start_sec", 0.0)) or 0.0
                 )
-                start_sec = source_start_sec + (1.0 / 30.0)
+                duration_sec = float(seg.get("duration_sec", 0.0) or 0.0)
+                frame_sec = 1.0 / 30.0
+                # Authored PowerPoint transitions can still be visually settling during
+                # the first frame or two of a static segment. Sampling near the midpoint
+                # validates the slide itself instead of transition residue.
+                sample_offset_sec = max(frame_sec, duration_sec / 2.0)
+                if duration_sec > frame_sec:
+                    sample_offset_sec = min(sample_offset_sec, duration_sec - frame_sec)
+                start_sec = source_start_sec + sample_offset_sec
                 sample_png = output_dir / "build" / f"{seg.get('id', 'slide')}_sample.png"
                 try:
                     extract_frame_png(ffmpeg_bin, master_path, sample_png, start_sec)
@@ -535,10 +545,37 @@ def fast_publish_command(args: argparse.Namespace) -> None:
     transition_renderer = _normalize_transition_renderer(
         getattr(args, "transition_renderer", "ppt")
     )
+    normalize_gif_grid = bool(getattr(args, "normalize_gif_grid", True))
+    gif_duration_policy = str(getattr(args, "gif_duration_policy", "export-grid"))
 
     prep_dir = output_dir / "prepared"
     prep_dir.mkdir(parents=True, exist_ok=True)
-    features = extract_slide_features(pptx_path, str(ffprobe_bin), duration_scope=media_scope)
+    timing_source_pptx = pptx_path
+    gif_normalization_rows: list[dict[str, Any]] = []
+    if normalize_gif_grid:
+        timing_source_pptx = prep_dir / f"{presentation_id}_gif_grid_normalized.pptx"
+        gif_normalization_rows = _prepare_gif_grid_normalized_pptx(
+            source_pptx=pptx_path,
+            output_pptx=timing_source_pptx,
+            fps=int(profile["fps"]),
+            policy=gif_duration_policy,
+        )
+        write_json(
+            prep_dir / "gif_normalization_report.json",
+            {
+                "version": 1,
+                "source_ppt": str(pptx_path),
+                "normalized_pptx": str(timing_source_pptx),
+                "fps": int(profile["fps"]),
+                "policy": gif_duration_policy,
+                "gif_count": len(gif_normalization_rows),
+                "gifs": gif_normalization_rows,
+            },
+        )
+
+    features = extract_slide_features(
+        timing_source_pptx, str(ffprobe_bin), duration_scope=media_scope
+    )
     if media_scope == "central":
         unresolved = [
             f.slide_number for f in features if f.unresolved_central_visible_media_count > 0
@@ -555,7 +592,7 @@ def fast_publish_command(args: argparse.Namespace) -> None:
     )
     prepared_pptx = prep_dir / f"{presentation_id}_{prepared_suffix}.pptx"
     duration_plan = _prepare_timed_no_transition_pptx(
-        source_pptx=pptx_path,
+        source_pptx=timing_source_pptx,
         output_pptx=prepared_pptx,
         features=features,
         default_static_sec=default_static_sec,
@@ -574,6 +611,8 @@ def fast_publish_command(args: argparse.Namespace) -> None:
             "transition_sec": transition_sec,
             "media_scope": media_scope,
             "transition_renderer": transition_renderer,
+            "normalize_gif_grid": normalize_gif_grid,
+            "gif_duration_policy": gif_duration_policy,
             "slides": duration_plan,
         },
     )
@@ -600,6 +639,11 @@ def fast_publish_command(args: argparse.Namespace) -> None:
                 else "pptx_advTm_from_longest_visible_media"
             ),
             "timing_precision": "pptx_ms_input_frame_exact_chunk_output",
+            "gif_timing_strategy": (
+                f"delay_metadata_extended_{gif_duration_policy.replace('-', '_')}"
+                if normalize_gif_grid
+                else "source_gif_timing_preserved"
+            ),
         },
     }
     if transition_renderer == "synthetic":
@@ -973,7 +1017,19 @@ def _segment_mixed_assets(
                 extension=".png",
             )
             try:
-                extract_frame_png(ffmpeg_bin, master_mp4, raw_png, source_slide_start + (1.0 / fps))
+                frame_sec = 1.0 / float(fps)
+                sample_offset_sec = max(frame_sec, (slide_frames / float(fps)) / 2.0)
+                if slide_frames > 1:
+                    sample_offset_sec = min(
+                        sample_offset_sec,
+                        (slide_frames / float(fps)) - frame_sec,
+                    )
+                extract_frame_png(
+                    ffmpeg_bin,
+                    master_mp4,
+                    raw_png,
+                    source_slide_start + sample_offset_sec,
+                )
                 hashed_png = rename_with_hash(raw_png)
                 png_rel = f"assets/{hashed_png.name}"
                 slide_entries_legacy[seg.slide_number] = {
@@ -1359,19 +1415,17 @@ def _apply_no_rewrite_export_compat(
             extra_frames = max(0, next_assigned - assigned)
             assigned = next_assigned
             nominal_frames = int(round(float(decision.transition_duration_s) * fps))
-            source_transition_frames_by_slide[decision.slide_number] = (
-                nominal_frames + extra_frames
-            )
-            if extra_frames > 0:
-                decision.transition_reason = "authored_transition_source_fit"
+            rendered_frames = nominal_frames + extra_frames
+            source_transition_frames_by_slide[decision.slide_number] = rendered_frames
+            decision.transition_duration_s = round(rendered_frames / float(fps), 3)
+            decision.transition_reason = "authored_transition_rendered"
         hiccups.append(
             Hiccup(
-                "authored_transition_source_fit_distributed",
+                "authored_transition_rendered_duration_measured",
                 "warning",
                 (
                     "No-rewrite export produced extra frames during authored transitions; "
-                    "transition chunks will be cut from the full rendered source span and "
-                    "time-fitted back to the requested frame count "
+                    "transition chunks will preserve the measured rendered duration "
                     f"(delta_frames={delta})."
                 ),
                 details={
@@ -1603,6 +1657,8 @@ def _prepare_timed_no_transition_pptx(
         if scoped_media_count > 0 and scoped_media_duration is not None:
             requested_duration_s = float(scoped_media_duration)
             reason = "longest_central_media" if media_scope == "central" else "longest_visible_media"
+            duration_frames = max(1, int(math.ceil(requested_duration_s * float(fps) - 1e-9)))
+            duration_snap_policy = "ceil_to_frame_grid"
         else:
             requested_duration_s = float(default_static_sec)
             reason = (
@@ -1610,7 +1666,8 @@ def _prepare_timed_no_transition_pptx(
                 if media_scope == "central" and feature.visible_media_count > 0
                 else "static_default"
             )
-        duration_frames = max(1, int(round(requested_duration_s * float(fps))))
+            duration_frames = max(1, int(round(requested_duration_s * float(fps))))
+            duration_snap_policy = "round_to_frame_grid"
         duration_ms = max(100, int(round((duration_frames * 1000.0) / float(fps))))
         transition_frames = max(0, int(round(float(transition_sec) * float(fps))))
         transition_ms = int(round((transition_frames * 1000.0) / float(fps)))
@@ -1622,6 +1679,8 @@ def _prepare_timed_no_transition_pptx(
                 "duration_s": round(duration_ms / 1000.0, 3),
                 "requested_duration_s": round(float(requested_duration_s), 3),
                 "duration_frames": duration_frames,
+                "duration_snap_policy": duration_snap_policy,
+                "frame_grid_slack_s": round((duration_frames / float(fps)) - requested_duration_s, 3),
                 "reason": reason,
                 "asset_kind": "video" if scoped_media_count > 0 else "image",
                 "media_scope": media_scope,
@@ -1654,6 +1713,45 @@ def _prepare_timed_no_transition_pptx(
             zi.comment = item.comment
             zout.writestr(zi, data)
     return plan
+
+
+def _prepare_gif_grid_normalized_pptx(
+    *,
+    source_pptx: Path,
+    output_pptx: Path,
+    fps: int,
+    policy: str = "export-grid",
+) -> list[dict[str, Any]]:
+    """
+    Copy a PPTX while retiming embedded GIFs onto an export-safe common grid.
+
+    The GIF binary payload is preserved except for Graphic Control Extension delay
+    words, so the image data remains untouched while loop totals become durations
+    PowerPoint can represent exactly at the requested export fps.
+    """
+    output_pptx.parent.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, Any]] = []
+    with zipfile.ZipFile(source_pptx, "r") as zin, zipfile.ZipFile(
+        output_pptx, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6
+    ) as zout:
+        for item in zin.infolist():
+            data = zin.read(item.filename)
+            if item.filename.lower().startswith("ppt/media/") and item.filename.lower().endswith(".gif"):
+                data, normalized = normalize_gif_duration_to_export_grid(
+                    data,
+                    fps=fps,
+                    policy=policy,
+                )
+                if normalized is not None:
+                    payload = normalized.to_dict()
+                    payload["file"] = item.filename
+                    rows.append(payload)
+            zi = zipfile.ZipInfo(item.filename, date_time=item.date_time)
+            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = item.external_attr
+            zi.comment = item.comment
+            zout.writestr(zi, data)
+    return rows
 
 
 def _slide_number_from_pptx_path(path: str) -> int | None:

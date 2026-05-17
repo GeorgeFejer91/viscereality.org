@@ -92,6 +92,24 @@ def build_parser() -> argparse.ArgumentParser:
         default="ppt",
         help="Use authored PowerPoint transitions in the export, or synthesize fades after export.",
     )
+    p_fast.add_argument(
+        "--normalize-gif-grid",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "Retiming pass for embedded GIFs: preserve pixels, extend frame delays onto the "
+            "smallest grid shared by GIF timing and the export fps."
+        ),
+    )
+    p_fast.add_argument(
+        "--gif-duration-policy",
+        choices=["export-grid", "ceil-second", "nearest-second"],
+        default="export-grid",
+        help=(
+            "How normalized GIF loop totals are snapped: the finest shared export grid, "
+            "a whole-second ceiling for maximum robustness, or the nearest whole second."
+        ),
+    )
     p_fast.add_argument("--ffmpeg-bin")
     p_fast.add_argument("--ffprobe-bin")
     p_fast.add_argument("--max-chunk-mb", type=float, default=95.0)
