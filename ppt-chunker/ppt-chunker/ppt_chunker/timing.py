@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import time
 import zipfile
+import os
 from pathlib import Path
 from typing import Any
 import xml.etree.ElementTree as ET
@@ -136,7 +137,7 @@ def probe_timing_com(
         except Exception:
             pass
         try:
-            if app is not None:
+            if app is not None and os.environ.get("PPT_CHUNKER_KEEP_POWERPOINT_OPEN") != "1":
                 app.Quit()
         except Exception:
             pass

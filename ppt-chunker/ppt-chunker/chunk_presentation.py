@@ -70,7 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_fast = sub.add_parser(
         "fast-publish",
-        help="Prepare timed no-transition PPTX, export master MP4, synthesize 2s transitions, validate, publish",
+        help="Prepare timed PPTX, export master MP4, chunk exact slide loops/transitions, validate, publish",
     )
     p_fast.add_argument("pptx", help="Path to .pptx")
     p_fast.add_argument("-o", "--output-dir", default="output_fast_publish")
@@ -79,7 +79,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_fast.add_argument("--title")
     p_fast.add_argument("--profile", default="balanced1080")
     p_fast.add_argument("--transition-sec", type=float, default=2.0)
-    p_fast.add_argument("--default-static-sec", type=float, default=4.0)
+    p_fast.add_argument("--default-static-sec", type=float, default=1.0)
+    p_fast.add_argument(
+        "--media-scope",
+        choices=["central", "center", "visible"],
+        default="central",
+        help="Use central/on-stage media for slide loop timing by default; visible keeps legacy behavior.",
+    )
+    p_fast.add_argument(
+        "--transition-renderer",
+        choices=["ppt", "synthetic"],
+        default="ppt",
+        help="Use authored PowerPoint transitions in the export, or synthesize fades after export.",
+    )
     p_fast.add_argument("--ffmpeg-bin")
     p_fast.add_argument("--ffprobe-bin")
     p_fast.add_argument("--max-chunk-mb", type=float, default=95.0)

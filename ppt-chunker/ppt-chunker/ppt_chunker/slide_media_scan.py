@@ -32,11 +32,16 @@ VIDEO_EXTENSIONS = {
 GIF_EXTENSION = ".gif"
 
 
-def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> list[SlideFeature]:
+def extract_slide_features(
+    pptx_path: Path,
+    ffprobe_bin: str | None = None,
+    duration_scope: str = "visible",
+) -> list[SlideFeature]:
     pptx_path = Path(pptx_path).expanduser().resolve()
     if not zipfile.is_zipfile(pptx_path):
         raise PipelineError(f"Invalid PPTX zip: {pptx_path}")
 
+    duration_scope = _normalize_duration_scope(duration_scope)
     ffprobe_path = discover_ffmpeg_tools(None, ffprobe_bin)[1]
     timing_rows = {row.slide_number: row for row in parse_pptx_timing_xml(pptx_path)}
 
@@ -46,6 +51,7 @@ def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> l
     with zipfile.ZipFile(str(pptx_path)) as zf:
         slide_paths = _ordered_slide_paths(zf)
         slide_w, slide_h = _slide_size_emu(zf)
+        duration_cache: dict[str, tuple[float | None, str | None]] = {}
         for index, slide_path in enumerate(slide_paths, start=1):
             root = ET.parse(zf.open(slide_path)).getroot()
             rel_map = _slide_relationships(zf, slide_path)
@@ -55,6 +61,9 @@ def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> l
                 shape_id = _shape_id(shape, ns)
                 geom = _shape_geometry(shape, ns)
                 off_canvas, visible = _visibility_flags(geom, slide_w, slide_h)
+                central, centrality_score, center_x_ratio, center_y_ratio = _centrality_flags(
+                    geom, slide_w, slide_h
+                )
                 rel_ids = _shape_rel_ids(shape)
                 for rel_id in rel_ids:
                     target = rel_map.get(rel_id)
@@ -67,11 +76,20 @@ def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> l
                     supported = ext in VIDEO_EXTENSIONS or ext == GIF_EXTENSION
                     duration_s = None
                     probe_error = None
-                    if supported:
-                        try:
-                            duration_s = _probe_duration_s(zf, target, ext, ffprobe_path)
-                        except Exception as exc:
-                            probe_error = str(exc)
+                    should_probe = supported and _should_probe_duration(
+                        visible=visible,
+                        central=bool(visible and central),
+                        duration_scope=duration_scope,
+                    )
+                    if should_probe:
+                        if target in duration_cache:
+                            duration_s, probe_error = duration_cache[target]
+                        else:
+                            try:
+                                duration_s = _probe_duration_s(zf, target, ext, ffprobe_path)
+                            except Exception as exc:
+                                probe_error = str(exc)
+                            duration_cache[target] = (duration_s, probe_error)
                     candidates.append(
                         MediaCandidate(
                             shape_id=shape_id,
@@ -83,19 +101,55 @@ def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> l
                             supported=supported,
                             duration_s=duration_s,
                             duration_probe_error=probe_error,
+                            x=geom[0] if geom is not None else None,
+                            y=geom[1] if geom is not None else None,
+                            cx=geom[2] if geom is not None else None,
+                            cy=geom[3] if geom is not None else None,
+                            center_x_ratio=center_x_ratio,
+                            center_y_ratio=center_y_ratio,
+                            central=bool(visible and central),
+                            centrality_score=round(float(centrality_score), 3),
                         )
                     )
 
             visible_candidates = [c for c in candidates if c.visible]
+            central_visible_candidates = [c for c in visible_candidates if c.central]
             visible_media_count = len(visible_candidates)
             resolved_durations = [
                 float(c.duration_s) for c in visible_candidates if c.duration_s is not None and c.duration_s > 0
             ]
+            resolved_central_durations = [
+                float(c.duration_s)
+                for c in central_visible_candidates
+                if c.duration_s is not None and c.duration_s > 0
+            ]
             unresolved_visible = [
-                c for c in visible_candidates if c.supported and (c.duration_s is None or c.duration_s <= 0)
+                c
+                for c in visible_candidates
+                if c.supported
+                and _should_probe_duration(
+                    visible=c.visible,
+                    central=c.central,
+                    duration_scope=duration_scope,
+                )
+                and (c.duration_s is None or c.duration_s <= 0)
+            ]
+            unresolved_central_visible = [
+                c
+                for c in central_visible_candidates
+                if c.supported and (c.duration_s is None or c.duration_s <= 0)
             ]
             unsupported_visible = [c for c in visible_candidates if not c.supported]
-            max_visible = round(max(resolved_durations), 3) if resolved_durations else None
+            max_visible = (
+                round(max(resolved_durations), 3)
+                if resolved_durations and duration_scope != "central"
+                else None
+            )
+            max_central = (
+                round(max(resolved_central_durations), 3)
+                if resolved_central_durations
+                else None
+            )
             static_classification = "static" if visible_media_count == 0 else "media"
 
             timing = timing_rows.get(index)
@@ -118,6 +172,9 @@ def extract_slide_features(pptx_path: Path, ffprobe_bin: str | None = None) -> l
                     unsupported_media_count=len(unsupported_visible),
                     media_candidates=candidates,
                     static_classification=static_classification,
+                    central_visible_media_count=len(central_visible_candidates),
+                    max_central_visible_media_duration_s=max_central,
+                    unresolved_central_visible_media_count=len(unresolved_central_visible),
                 )
             )
     return out
@@ -233,6 +290,68 @@ def _visibility_flags(
     bottom = y + cy
     intersects = right > 0 and bottom > 0 and x < slide_w and y < slide_h
     return (not intersects, intersects)
+
+
+def _normalize_duration_scope(raw: str | None) -> str:
+    value = str(raw or "visible").strip().lower()
+    if value in {"center", "centre", "central", "main"}:
+        return "central"
+    if value in {"visible", "all"}:
+        return value
+    raise PipelineError("duration_scope must be 'central', 'visible', or 'all'.")
+
+
+def _should_probe_duration(*, visible: bool, central: bool, duration_scope: str) -> bool:
+    if duration_scope == "all":
+        return True
+    if duration_scope == "central":
+        return bool(central)
+    return bool(visible)
+
+
+def _centrality_flags(
+    geom: tuple[int, int, int, int] | None, slide_w: int, slide_h: int
+) -> tuple[bool, float, float | None, float | None]:
+    if geom is None or slide_w <= 0 or slide_h <= 0:
+        return (False, 0.0, None, None)
+    x, y, cx, cy = geom
+    if cx <= 0 or cy <= 0:
+        return (False, 0.0, None, None)
+
+    center_x = x + (cx / 2.0)
+    center_y = y + (cy / 2.0)
+    center_x_ratio = center_x / float(slide_w)
+    center_y_ratio = center_y / float(slide_h)
+
+    central_left = slide_w * 0.15
+    central_top = slide_h * 0.12
+    central_right = slide_w * 0.85
+    central_bottom = slide_h * 0.88
+
+    right = x + cx
+    bottom = y + cy
+    overlap_w = max(0.0, min(float(right), central_right) - max(float(x), central_left))
+    overlap_h = max(0.0, min(float(bottom), central_bottom) - max(float(y), central_top))
+    overlap_ratio = (overlap_w * overlap_h) / float(cx * cy)
+    center_inside = (
+        central_left <= center_x <= central_right
+        and central_top <= center_y <= central_bottom
+    )
+    central = center_inside or overlap_ratio >= 0.35
+
+    distance_x = abs(center_x_ratio - 0.5) / 0.5
+    distance_y = abs(center_y_ratio - 0.5) / 0.5
+    distance_score = max(0.0, 1.0 - ((distance_x + distance_y) / 2.0))
+    score = (overlap_ratio * 0.65) + (distance_score * 0.35)
+    if center_inside:
+        score += 0.25
+
+    return (
+        central,
+        max(0.0, min(score, 1.5)),
+        round(float(center_x_ratio), 4),
+        round(float(center_y_ratio), 4),
+    )
 
 
 def _shape_rel_ids(shape: Any) -> list[str]:

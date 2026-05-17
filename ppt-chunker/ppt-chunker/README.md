@@ -52,19 +52,20 @@ Copies validated artifacts to `presentations/<deck>/`.
 For decks with GIFs or embedded videos, use the one-command path:
 
 ```bash
-py -3 chunk_presentation.py fast-publish "presentation.pptx" -o output_<deck> --deck <deck> --presentation-id <deck> --title "Deck Title" --transition-sec 2 --default-static-sec 4 --strict
+py -3 chunk_presentation.py fast-publish "presentation.pptx" -o output_<deck> --deck <deck> --presentation-id <deck> --title "Deck Title" --transition-sec 2 --default-static-sec 1 --strict
 ```
 
 This path is optimized for website publishing:
 
-- scans visible GIF/video durations per slide
-- writes a temporary PPTX copy with each slide advance set to the longest visible media duration
-- removes PowerPoint transitions from the master export
+- scans GIF/video durations per slide and, by default, uses only central/on-stage media for loop timing
+- writes a temporary PPTX copy with each slide advance set to the longest central media duration, rounded onto the export frame grid
+- standardizes authored PowerPoint transitions to the requested duration, defaulting to 2s Morph when the source deck uses Morph
 - exports one high-resolution MP4 through PowerPoint
-- cuts exact slide-loop chunks from that master
-- creates standardized synthetic transition chunks, defaulting to 2s fades
+- cuts exact slide-loop and transition chunks from that master by frame count
 - validates durations, decoding, static-slide images, and the generated player
 - publishes to `presentations/<deck>/`
+
+Use `--media-scope visible` to restore the legacy longest-visible-media rule, or `--transition-renderer synthetic` to remove PowerPoint transitions from the export and generate standardized fades after export.
 
 The source PPTX is not mutated. PowerPoint timing rewrites through COM are avoided, and `PPT_CHUNKER_KEEP_POWERPOINT_OPEN=1` is set by default inside this command so an active PowerPoint session is not closed.
 
@@ -77,7 +78,7 @@ py -3 chunk_presentation.py publish output --deck alpCHI --git-push
 ## Defaults
 
 - Profile: `balanced1080`
-- Static slide duration: `4.0s`
+- Static slide duration: `4.0s` in the staged build path, `1.0s` in fast-publish
 - Tiny transition rule: `<=0.01s` -> treated as `none`
 - Strict mode: enabled by default for `build` and `validate`
 - Source PPT: never mutated (temp working copy only)

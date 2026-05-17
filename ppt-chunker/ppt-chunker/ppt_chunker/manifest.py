@@ -19,6 +19,7 @@ def build_manifest(
     master_file: str | None = None,
     deck_meta: dict[str, Any] | None = None,
     timeline_skip_sec: float = 0.0,
+    timeline_source_fit_sec: float = 0.0,
 ) -> dict[str, Any]:
     slides_block: list[dict[str, Any]] = []
     segment_by_slide = {seg.slide_number: seg for seg in segments}
@@ -52,6 +53,7 @@ def build_manifest(
         "encoding": encoding,
         "master_file": master_file,
         "timeline_skip_sec": round(max(0.0, float(timeline_skip_sec)), 3),
+        "timeline_source_fit_sec": round(max(0.0, float(timeline_source_fit_sec)), 3),
         "segments": chunk_entries_extended,
         "slides": slides_block,
         "player_defaults": {

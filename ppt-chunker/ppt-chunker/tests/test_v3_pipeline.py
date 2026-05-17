@@ -10,6 +10,7 @@ from ppt_chunker.pipeline import (
     _apply_no_rewrite_export_compat,
     _expected_source_frames,
     _has_error_hiccups,
+    _patch_slide_transition_timing,
     _resolve_timing_decisions,
     _slide_asset_stem,
     _transition_mode_token,
@@ -190,7 +191,7 @@ class PipelineDecisionTests(unittest.TestCase):
             "ppt_chunker.pipeline.ffprobe_video_stream_info",
             return_value={"nb_frames": "180"},
         ):
-            promoted, gap_map, hiccups = _apply_no_rewrite_export_compat(
+            promoted, gap_map, transition_frame_map, hiccups = _apply_no_rewrite_export_compat(
                 decisions=decisions,
                 features=[feature],
                 master_mp4=Path("dummy.mp4"),
@@ -203,6 +204,7 @@ class PipelineDecisionTests(unittest.TestCase):
         self.assertEqual(promoted[0].transition_duration_s, 2.0)
         self.assertEqual(promoted[0].transition_reason, "no_rewrite_export_compat")
         self.assertEqual(gap_map, {})
+        self.assertEqual(transition_frame_map, {})
         self.assertEqual(hiccups[0].code, "tiny_transition_export_gap_promoted")
 
     def test_no_rewrite_compat_distributes_padding_for_synthetic_transitions(self) -> None:
@@ -249,7 +251,7 @@ class PipelineDecisionTests(unittest.TestCase):
             "ppt_chunker.pipeline.ffprobe_video_stream_info",
             return_value={"nb_frames": "255"},
         ):
-            _, gap_map, hiccups = _apply_no_rewrite_export_compat(
+            _, gap_map, transition_frame_map, hiccups = _apply_no_rewrite_export_compat(
                 decisions=decisions,
                 features=[],
                 master_mp4=Path("dummy.mp4"),
@@ -258,7 +260,134 @@ class PipelineDecisionTests(unittest.TestCase):
                 default_transition_sec=2.0,
             )
         self.assertEqual(gap_map, {2: 15})
+        self.assertEqual(transition_frame_map, {})
         self.assertEqual(hiccups[0].code, "synthetic_transition_source_gap_distributed")
+
+    def test_no_rewrite_compat_time_fits_authored_transition_surplus(self) -> None:
+        decisions, _ = _resolve_timing_decisions(
+            features=[
+                SlideFeature(
+                    slide_number=1,
+                    label="Slide 1",
+                    transition_type="none",
+                    transition_duration_s=0.0,
+                    visible_media_count=0,
+                    max_visible_media_duration_s=None,
+                    unresolved_visible_media_count=0,
+                    off_canvas_media_count=0,
+                    unsupported_media_count=0,
+                    media_candidates=[],
+                    static_classification="static",
+                ),
+                SlideFeature(
+                    slide_number=2,
+                    label="Slide 2",
+                    transition_type="morph",
+                    transition_duration_s=2.0,
+                    visible_media_count=0,
+                    max_visible_media_duration_s=None,
+                    unresolved_visible_media_count=0,
+                    off_canvas_media_count=0,
+                    unsupported_media_count=0,
+                    media_candidates=[],
+                    static_classification="static",
+                ),
+            ],
+            overrides={"slides": {}, "defaults": {}},
+            default_static_sec=1.0,
+            default_transition_sec=2.0,
+        )
+        with patch(
+            "ppt_chunker.pipeline.ffprobe_video_stream_info",
+            return_value={"nb_frames": "150"},
+        ):
+            _, gap_map, transition_frame_map, hiccups = _apply_no_rewrite_export_compat(
+                decisions=decisions,
+                features=[],
+                master_mp4=Path("dummy.mp4"),
+                ffprobe_bin=Path("ffprobe"),
+                fps=30,
+                default_transition_sec=2.0,
+            )
+        self.assertEqual(gap_map, {})
+        self.assertEqual(transition_frame_map, {2: 90})
+        self.assertEqual(hiccups[0].code, "authored_transition_source_fit_distributed")
+
+    def test_central_media_scope_ignores_side_media_for_duration_and_asset(self) -> None:
+        feature = SlideFeature(
+            slide_number=3,
+            label="Slide 3",
+            transition_type="morph",
+            transition_duration_s=2.0,
+            visible_media_count=2,
+            max_visible_media_duration_s=20.0,
+            unresolved_visible_media_count=0,
+            off_canvas_media_count=0,
+            unsupported_media_count=0,
+            media_candidates=[],
+            static_classification="media",
+            central_visible_media_count=1,
+            max_central_visible_media_duration_s=5.0,
+            unresolved_central_visible_media_count=0,
+        )
+        decisions, hiccups = _resolve_timing_decisions(
+            features=[feature],
+            overrides={"slides": {}, "defaults": {"media_scope": "central"}},
+            default_static_sec=1.0,
+            default_transition_sec=2.0,
+        )
+        self.assertFalse(_has_error_hiccups(hiccups))
+        self.assertEqual(decisions[0].slide_reason, "central_media_max")
+        self.assertAlmostEqual(decisions[0].slide_duration_s, 5.0, places=3)
+        self.assertEqual(decisions[0].asset_kind, "video")
+
+    def test_central_media_scope_treats_side_only_media_as_static_image(self) -> None:
+        feature = SlideFeature(
+            slide_number=4,
+            label="Slide 4",
+            transition_type="morph",
+            transition_duration_s=2.0,
+            visible_media_count=1,
+            max_visible_media_duration_s=20.0,
+            unresolved_visible_media_count=0,
+            off_canvas_media_count=0,
+            unsupported_media_count=0,
+            media_candidates=[],
+            static_classification="media",
+            central_visible_media_count=0,
+            max_central_visible_media_duration_s=None,
+            unresolved_central_visible_media_count=0,
+        )
+        decisions, hiccups = _resolve_timing_decisions(
+            features=[feature],
+            overrides={"slides": {}, "defaults": {"media_scope": "central"}},
+            default_static_sec=1.0,
+            default_transition_sec=2.0,
+        )
+        self.assertFalse(_has_error_hiccups(hiccups))
+        self.assertEqual(decisions[0].slide_reason, "no_central_media_static_default")
+        self.assertAlmostEqual(decisions[0].slide_duration_s, 1.0, places=3)
+        self.assertEqual(decisions[0].asset_kind, "image")
+
+    def test_authored_transition_patch_preserves_morph_and_sets_exact_ms(self) -> None:
+        raw = (
+            b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+            b'<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">'
+            b'<p:cSld/><p:transition spd="slow" '
+            b'xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" '
+            b'p14:dur="750"><p159:morph '
+            b'xmlns:p159="http://schemas.microsoft.com/office/powerpoint/2015/09/main" '
+            b'option="byObject"/></p:transition><p:timing/></p:sld>'
+        )
+        patched = _patch_slide_transition_timing(
+            raw,
+            slide_duration_ms=5033,
+            transition_duration_ms=2000,
+            transition_strategy="authored",
+        ).decode("utf-8")
+        self.assertIn('advTm="5033"', patched)
+        self.assertIn('p14:dur="2000"', patched)
+        self.assertIn("<p159:morph", patched)
 
 
 class ManifestTests(unittest.TestCase):

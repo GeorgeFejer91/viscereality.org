@@ -207,11 +207,18 @@ def cut_chunk_frame_exact(
     fps: int,
     mute_output: bool = True,
     crf: int = 18,
+    output_frame_count: int | None = None,
 ) -> None:
     if frame_count <= 0:
         raise PipelineError(f"Frame count must be > 0 for {output_mp4.name}")
     output_mp4.parent.mkdir(parents=True, exist_ok=True)
     end_frame = start_frame + frame_count
+    if output_frame_count is not None and output_frame_count <= 0:
+        raise PipelineError(f"Output frame count must be > 0 for {output_mp4.name}")
+    if output_frame_count is not None and output_frame_count != frame_count:
+        setpts = f"{(float(output_frame_count) / float(frame_count)):.10f}*(PTS-STARTPTS)"
+    else:
+        setpts = "PTS-STARTPTS"
     cmd = [
         str(ffmpeg_bin),
         "-y",
@@ -220,7 +227,7 @@ def cut_chunk_frame_exact(
         "-vf",
         (
             f"trim=start_frame={start_frame}:end_frame={end_frame},"
-            "setpts=PTS-STARTPTS"
+            f"setpts={setpts}"
         ),
         "-r",
         str(fps),

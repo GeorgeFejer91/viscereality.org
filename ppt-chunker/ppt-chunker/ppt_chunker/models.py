@@ -55,6 +55,14 @@ class MediaCandidate:
     supported: bool
     duration_s: float | None = None
     duration_probe_error: str | None = None
+    x: int | None = None
+    y: int | None = None
+    cx: int | None = None
+    cy: int | None = None
+    center_x_ratio: float | None = None
+    center_y_ratio: float | None = None
+    central: bool = False
+    centrality_score: float = 0.0
 
 
 @dataclass
@@ -70,6 +78,9 @@ class SlideFeature:
     unsupported_media_count: int
     media_candidates: list[MediaCandidate]
     static_classification: str
+    central_visible_media_count: int = 0
+    max_central_visible_media_duration_s: float | None = None
+    unresolved_central_visible_media_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -77,6 +88,10 @@ class SlideFeature:
         if self.max_visible_media_duration_s is not None:
             payload["max_visible_media_duration_s"] = round(
                 float(self.max_visible_media_duration_s), 3
+            )
+        if self.max_central_visible_media_duration_s is not None:
+            payload["max_central_visible_media_duration_s"] = round(
+                float(self.max_central_visible_media_duration_s), 3
             )
         return payload
 

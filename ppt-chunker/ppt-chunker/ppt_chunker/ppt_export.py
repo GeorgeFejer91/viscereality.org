@@ -79,7 +79,7 @@ def export_ppt_to_video(
             except Exception:
                 pass
             try:
-                if app is not None:
+                if app is not None and os.environ.get("PPT_CHUNKER_KEEP_POWERPOINT_OPEN") != "1":
                     app.Quit()
             except Exception:
                 pass
