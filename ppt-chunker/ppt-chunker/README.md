@@ -63,10 +63,11 @@ This path is optimized for website publishing:
 - measures authored PowerPoint transition spans in the rendered master, then by default retimes all rendered transition frames to the requested duration without frame dropping
 - exports one high-resolution MP4 through PowerPoint
 - cuts exact slide-loop and transition chunks from that master by frame count
+- cross-checks every emitted MP4 chunk with ffprobe against its intended manifest duration; if drift exceeds the tight tolerance, an ffmpeg `setpts` correction pass retimes the chunk while preserving decoded frames, then probes again
 - validates durations, decoding, static-slide images, and the generated player
 - publishes to `presentations/<deck>/`
 
-Use `--media-scope visible` to restore the legacy longest-visible-media rule, `--gif-duration-policy nearest-second` when you prefer simple whole-second loops with the smallest retiming change, `--gif-duration-policy ceil-second` when you want whole-second loops that never shorten the source, `--transition-fit-policy measured` when you want transition chunks to keep PowerPoint's measured duration instead of retiming to `--transition-sec`, `--no-normalize-gif-grid` to preserve source GIF timings exactly, or `--transition-renderer synthetic` to remove PowerPoint transitions from the export and generate standardized fades after export.
+Use `--media-scope visible` to restore the legacy longest-visible-media rule, `--gif-duration-policy nearest-second` when you prefer simple whole-second loops with the smallest retiming change, `--gif-duration-policy ceil-second` when you want whole-second loops that never shorten the source, `--transition-fit-policy measured` when you want transition chunks to keep PowerPoint's measured duration instead of retiming to `--transition-sec`, `--duration-tolerance-sec` to tune the ffprobe correction threshold, `--no-normalize-gif-grid` to preserve source GIF timings exactly, or `--transition-renderer synthetic` to remove PowerPoint transitions from the export and generate standardized fades after export.
 
 The source PPTX is not mutated. PowerPoint timing rewrites through COM are avoided, and `PPT_CHUNKER_KEEP_POWERPOINT_OPEN=1` is set by default inside this command so an active PowerPoint session is not closed.
 

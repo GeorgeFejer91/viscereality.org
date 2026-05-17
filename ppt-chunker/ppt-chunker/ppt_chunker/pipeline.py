@@ -25,6 +25,7 @@ from .media import (
     image_mismatch_score,
     normalize_video,
     rename_with_hash,
+    reconcile_video_duration,
     synthesize_frame_fade_transition,
 )
 from .models import Hiccup, ResolvedSegment, SlideFeature, TimingDecision
@@ -48,7 +49,7 @@ PROFILE_PRESETS: dict[str, dict[str, Any]] = {
         "quality": 85,
         "default_static_sec": 4.0,
         "default_transition_sec": 0.5,
-        "duration_tolerance_sec": 0.25,
+        "duration_tolerance_sec": 0.02,
         "max_chunk_mb": 95.0,
     }
 }
@@ -115,6 +116,12 @@ def build_command(args: argparse.Namespace) -> None:
     )
     max_chunk_mb = float(getattr(args, "max_chunk_mb", profile["max_chunk_mb"]))
     mute_output = bool(getattr(args, "mute_output", True))
+    duration_tolerance_arg = getattr(args, "duration_tolerance_sec", None)
+    duration_tolerance_sec = float(
+        duration_tolerance_arg
+        if duration_tolerance_arg is not None
+        else profile.get("duration_tolerance_sec", _duration_check_tolerance(int(profile["fps"])))
+    )
     transition_fit_policy = _normalize_transition_fit_policy(
         getattr(args, "transition_fit_policy", "target-preserve-frames")
     )
@@ -242,6 +249,7 @@ def build_command(args: argparse.Namespace) -> None:
         ffmpeg_bin=ffmpeg_bin,
         ffprobe_bin=ffprobe_bin,
         fps=int(profile["fps"]),
+        duration_tolerance_sec=duration_tolerance_sec,
         max_chunk_mb=max_chunk_mb,
         mute_output=mute_output,
     )
@@ -262,6 +270,8 @@ def build_command(args: argparse.Namespace) -> None:
             "quality": int(profile["quality"]),
             "mute": mute_output,
             "profile": profile_name,
+            "duration_tolerance_sec": duration_tolerance_sec,
+            "duration_reconciliation": "ffprobe_then_ffmpeg_setpts_preserve_frames",
         },
         master_file=master_mp4.name,
         deck_meta=overrides.get("deck_meta", {}),
@@ -299,6 +309,12 @@ def validate_command(args: argparse.Namespace) -> None:
     manifest = read_json(output_dir / "manifest.json")
     hiccups: list[Hiccup] = []
     static_scores: list[dict[str, Any]] = []
+    encoding = manifest.get("encoding", {}) if isinstance(manifest.get("encoding"), dict) else {}
+    fps = int(encoding.get("fps", 30) or 30)
+    duration_tolerance_sec = float(
+        encoding.get("duration_tolerance_sec", _duration_check_tolerance(fps))
+        or _duration_check_tolerance(fps)
+    )
 
     chunks = manifest.get("chunks", [])
     if not isinstance(chunks, list) or not chunks:
@@ -326,14 +342,15 @@ def validate_command(args: argparse.Namespace) -> None:
                 try:
                     decode_check(ffprobe_bin, fpath)
                     actual_dur = ffprobe_duration(ffprobe_bin, fpath)
-                    if abs(actual_dur - expected_dur) > 0.25:
+                    if abs(actual_dur - expected_dur) > duration_tolerance_sec:
                         hiccups.append(
                             Hiccup(
                                 "chunk_duration_mismatch",
                                 "error",
                                 (
                                     f"Chunk duration mismatch for {file_rel}: "
-                                    f"expected={expected_dur:.3f}s actual={actual_dur:.3f}s"
+                                    f"expected={expected_dur:.3f}s actual={actual_dur:.3f}s "
+                                    f"tolerance={duration_tolerance_sec:.3f}s"
                                 ),
                             )
                         )
@@ -469,6 +486,7 @@ def validate_command(args: argparse.Namespace) -> None:
         "version": 3,
         "created_at_utc": utc_now_iso(),
         "strict": strict,
+        "duration_tolerance_sec": duration_tolerance_sec,
         "status": "fail" if _has_error_hiccups(hiccups) else "pass",
         "error_count": len([h for h in hiccups if h.severity == "error"]),
         "warning_count": len([h for h in hiccups if h.severity != "error"]),
@@ -685,6 +703,7 @@ def fast_publish_command(args: argparse.Namespace) -> None:
             reuse_master=bool(getattr(args, "reuse_master", False)),
             skip_com_probe=True,
             transition_fit_policy=transition_fit_policy,
+            duration_tolerance_sec=getattr(args, "duration_tolerance_sec", None),
         )
     )
     validate_command(
@@ -754,6 +773,7 @@ def chunk_command(args: argparse.Namespace) -> None:
     config = read_json(Path(args.config).expanduser().resolve())
     segments = segments_from_config(config)
 
+    duration_tolerance_sec = _duration_check_tolerance(30)
     chunk_entries_legacy, chunk_entries_extended, hiccups, segment_meta = _segment_mixed_assets(
         output_dir=output_dir,
         master_mp4=mp4_path,
@@ -765,6 +785,7 @@ def chunk_command(args: argparse.Namespace) -> None:
         ffmpeg_bin=ffmpeg_bin,
         ffprobe_bin=ffprobe_bin,
         fps=30,
+        duration_tolerance_sec=duration_tolerance_sec,
         max_chunk_mb=float(getattr(args, "max_chunk_mb", 95.0)),
         mute_output=bool(getattr(args, "mute_output", True)),
     )
@@ -779,7 +800,12 @@ def chunk_command(args: argparse.Namespace) -> None:
         segments=segments,
         chunk_entries_legacy=chunk_entries_legacy,
         chunk_entries_extended=chunk_entries_extended,
-        encoding={"timing_mode": "config"},
+        encoding={
+            "timing_mode": "config",
+            "fps": 30,
+            "duration_tolerance_sec": duration_tolerance_sec,
+            "duration_reconciliation": "ffprobe_then_ffmpeg_setpts_preserve_frames",
+        },
         master_file=mp4_path.name,
         timeline_skip_sec=float(segment_meta.get("timeline_skip_sec", 0.0)),
         timeline_source_fit_sec=float(segment_meta.get("timeline_source_fit_sec", 0.0)),
@@ -803,6 +829,7 @@ def run_command(args: argparse.Namespace) -> None:
         max_chunk_mb=float(
             getattr(args, "max_chunk_mb", PROFILE_PRESETS["balanced1080"]["max_chunk_mb"])
         ),
+        duration_tolerance_sec=getattr(args, "duration_tolerance_sec", None),
         mute_output=bool(getattr(args, "mute_output", True)),
         no_rewrite_timings=False,
         reuse_master=bool(getattr(args, "reuse_master", False)),
@@ -829,6 +856,7 @@ def _segment_mixed_assets(
     ffmpeg_bin: Path,
     ffprobe_bin: Path,
     fps: int,
+    duration_tolerance_sec: float,
     max_chunk_mb: float,
     mute_output: bool,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[Hiccup], dict[str, Any]]:
@@ -865,6 +893,8 @@ def _segment_mixed_assets(
     gap_map = source_gap_frames_by_slide or {}
     transition_source_frame_map = source_transition_frames_by_slide or {}
     transition_fit_policy = _normalize_transition_fit_policy(transition_fit_policy)
+    duration_tolerance_sec = max(0.0, float(duration_tolerance_sec))
+    duration_corrections: list[dict[str, Any]] = []
     sequence_width = _sequence_index_width(len(segments))
 
     for seg in segments:
@@ -976,6 +1006,7 @@ def _segment_mixed_assets(
                             start_frame=source_transition_start_frame,
                             frame_count=source_transition_frames,
                             target_duration_s=transition_duration_nominal,
+                            source_fps=source_fps,
                             mute_output=mute_output,
                         )
                     else:
@@ -989,9 +1020,16 @@ def _segment_mixed_assets(
                             mute_output=mute_output,
                             output_frame_count=playback_transition_frames,
                         )
-                enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
+                duration_audit = _finalize_video_chunk_duration(
+                    ffmpeg_bin=ffmpeg_bin,
+                    ffprobe_bin=ffprobe_bin,
+                    path=raw_transition,
+                    target_duration_s=transition_duration_nominal,
+                    duration_tolerance_sec=duration_tolerance_sec,
+                    max_chunk_mb=max_chunk_mb,
+                    mute_output=mute_output,
+                )
                 hashed_transition = rename_with_hash(raw_transition)
-                decode_check(ffprobe_bin, hashed_transition)
                 transition_duration = transition_duration_nominal
                 t_start = playback_frame_cursor / fps
                 t_end = (playback_frame_cursor + playback_transition_frames) / fps
@@ -1013,6 +1051,11 @@ def _segment_mixed_assets(
                 }
                 if synthetic_transition:
                     transition_entries_legacy[seg.slide_number]["transition_source"] = "synthetic"
+                _attach_duration_audit_fields(
+                    transition_entries_legacy[seg.slide_number],
+                    duration_audit,
+                    extended=False,
+                )
                 if (
                     transition_fit_policy == "target-preserve-frames"
                     and not synthetic_transition
@@ -1038,6 +1081,11 @@ def _segment_mixed_assets(
                 }
                 if synthetic_transition:
                     transition_entries_extended[seg.slide_number]["transition_source"] = "synthetic"
+                _attach_duration_audit_fields(
+                    transition_entries_extended[seg.slide_number],
+                    duration_audit,
+                    extended=True,
+                )
                 if (
                     transition_fit_policy == "target-preserve-frames"
                     and not synthetic_transition
@@ -1047,6 +1095,10 @@ def _segment_mixed_assets(
                         source_transition_frames / float(fps), 3
                     )
                     transition_entries_extended[seg.slide_number]["retimed_preserve_frames"] = True
+                if bool(duration_audit.get("duration_corrected")):
+                    duration_corrections.append(
+                        _duration_correction_detail(transition_rel, duration_audit)
+                    )
             source_frame_cursor += source_transition_frames
             if emit_transition:
                 playback_frame_cursor += playback_transition_frames
@@ -1136,9 +1188,16 @@ def _segment_mixed_assets(
                 fps=fps,
                 mute_output=mute_output,
             )
-            enforce_chunk_size(ffmpeg_bin, raw_slide, max_chunk_mb, mute_output=mute_output)
+            duration_audit = _finalize_video_chunk_duration(
+                ffmpeg_bin=ffmpeg_bin,
+                ffprobe_bin=ffprobe_bin,
+                path=raw_slide,
+                target_duration_s=slide_frames / float(fps),
+                duration_tolerance_sec=duration_tolerance_sec,
+                max_chunk_mb=max_chunk_mb,
+                mute_output=mute_output,
+            )
             hashed_slide = rename_with_hash(raw_slide)
-            decode_check(ffprobe_bin, hashed_slide)
             slide_rel = f"chunks/{hashed_slide.name}"
             slide_entries_legacy[seg.slide_number] = {
                 "type": "slide",
@@ -1149,6 +1208,11 @@ def _segment_mixed_assets(
                 "loop": True,
                 "asset_kind": "video",
             }
+            _attach_duration_audit_fields(
+                slide_entries_legacy[seg.slide_number],
+                duration_audit,
+                extended=False,
+            )
             slide_entries_extended[seg.slide_number] = {
                 "id": f"slide_{seg.slide_number:02d}",
                 "type": "slide",
@@ -1162,6 +1226,13 @@ def _segment_mixed_assets(
                 "loop_default": True,
                 "asset_kind": "video",
             }
+            _attach_duration_audit_fields(
+                slide_entries_extended[seg.slide_number],
+                duration_audit,
+                extended=True,
+            )
+            if bool(duration_audit.get("duration_corrected")):
+                duration_corrections.append(_duration_correction_detail(slide_rel, duration_audit))
         source_frame_cursor += slide_frames
         playback_frame_cursor += slide_frames
         previous_slide_last_source_frame = source_frame_cursor - 1
@@ -1210,6 +1281,18 @@ def _segment_mixed_assets(
                 ),
             )
         )
+    if duration_corrections:
+        hiccups.append(
+            Hiccup(
+                "chunk_duration_corrected",
+                "warning",
+                (
+                    f"ffprobe found {len(duration_corrections)} chunk duration drift(s); "
+                    "ffmpeg retimed them to the intended durations without dropping frames."
+                ),
+                details={"chunks": duration_corrections},
+            )
+        )
     meta = {
         "timeline_skip_frames": skipped_source_frames,
         "timeline_skip_sec": round(skipped_source_frames / float(fps), 3),
@@ -1225,6 +1308,82 @@ def _segment_mixed_assets(
         "timeline_frames": playback_frame_cursor,
     }
     return legacy, extended, hiccups, meta
+
+
+def _finalize_video_chunk_duration(
+    *,
+    ffmpeg_bin: Path,
+    ffprobe_bin: Path,
+    path: Path,
+    target_duration_s: float,
+    duration_tolerance_sec: float,
+    max_chunk_mb: float,
+    mute_output: bool,
+) -> dict[str, Any]:
+    """Make the chunk duration contract explicit: encode, probe, correct, probe."""
+
+    enforce_chunk_size(ffmpeg_bin, path, max_chunk_mb, mute_output=mute_output)
+    audit = reconcile_video_duration(
+        ffmpeg_bin=ffmpeg_bin,
+        ffprobe_bin=ffprobe_bin,
+        media_path=path,
+        target_duration_s=target_duration_s,
+        tolerance_s=duration_tolerance_sec,
+        mute_output=mute_output,
+    )
+    enforce_chunk_size(ffmpeg_bin, path, max_chunk_mb, mute_output=mute_output)
+    final_duration = ffprobe_duration(ffprobe_bin, path)
+    if abs(final_duration - target_duration_s) > duration_tolerance_sec:
+        raise PipelineError(
+            f"Chunk duration drift after finalize for {path.name}: "
+            f"target={target_duration_s:.6f}s actual={final_duration:.6f}s "
+            f"tolerance={duration_tolerance_sec:.6f}s"
+        )
+    audit["actual_duration_after_s"] = float(final_duration)
+    audit["delta_after_s"] = float(final_duration - target_duration_s)
+    decode_check(ffprobe_bin, path)
+    return audit
+
+
+def _attach_duration_audit_fields(
+    entry: dict[str, Any], audit: dict[str, Any], *, extended: bool
+) -> None:
+    target = float(audit.get("target_duration_s", 0.0) or 0.0)
+    before = float(audit.get("actual_duration_before_s", target) or target)
+    after = float(audit.get("actual_duration_after_s", before) or before)
+    corrected = bool(audit.get("duration_corrected", False))
+    if extended:
+        entry["intended_duration_sec"] = round(target, 3)
+        entry["ffprobe_duration_sec"] = round(after, 3)
+    else:
+        entry["intended_duration"] = round(target, 3)
+        entry["ffprobe_duration"] = round(after, 3)
+    entry["duration_checked"] = True
+    entry["duration_reconciled"] = corrected
+    if corrected:
+        entry["duration_correction"] = {
+            "method": str(audit.get("correction_method", "ffmpeg_setpts_preserve_frames")),
+            "before_sec": round(before, 6),
+            "after_sec": round(after, 6),
+            "target_sec": round(target, 6),
+            "delta_before_sec": round(before - target, 6),
+            "delta_after_sec": round(after - target, 6),
+        }
+
+
+def _duration_correction_detail(file_rel: str, audit: dict[str, Any]) -> dict[str, Any]:
+    target = float(audit.get("target_duration_s", 0.0) or 0.0)
+    before = float(audit.get("actual_duration_before_s", target) or target)
+    after = float(audit.get("actual_duration_after_s", before) or before)
+    return {
+        "file": file_rel,
+        "target_sec": round(target, 6),
+        "before_sec": round(before, 6),
+        "after_sec": round(after, 6),
+        "delta_before_sec": round(before - target, 6),
+        "delta_after_sec": round(after - target, 6),
+        "method": str(audit.get("correction_method", "ffmpeg_setpts_preserve_frames")),
+    }
 
 
 def _resolve_timing_decisions(
@@ -1999,6 +2158,15 @@ def _filename_seconds_token(seconds: float) -> str:
     token = f"{value:.3f}".replace(".", "p")
     token = token.rstrip("0").rstrip("p")
     return token or "0"
+
+
+def _duration_check_tolerance(fps: int | float) -> float:
+    # Tight enough to catch one-frame/container drift at normal export rates,
+    # but not so tight that MP4 timescale rounding becomes a false failure.
+    fps_value = float(fps or 30)
+    if fps_value <= 0:
+        fps_value = 30.0
+    return max(0.02, 0.5 / fps_value)
 
 
 def _transition_mode_token(mode: str | None) -> str:

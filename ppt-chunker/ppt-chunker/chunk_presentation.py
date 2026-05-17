@@ -51,6 +51,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_build.add_argument("--ffprobe-bin")
     p_build.add_argument("--max-chunk-mb", type=float, default=95.0)
     p_build.add_argument(
+        "--duration-tolerance-sec",
+        type=float,
+        default=None,
+        help="Maximum ffprobe-vs-manifest duration drift before an ffmpeg correction pass is required.",
+    )
+    p_build.add_argument(
         "--transition-fit-policy",
         choices=["target-preserve-frames", "measured"],
         default="target-preserve-frames",
@@ -131,6 +137,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_fast.add_argument("--ffmpeg-bin")
     p_fast.add_argument("--ffprobe-bin")
     p_fast.add_argument("--max-chunk-mb", type=float, default=95.0)
+    p_fast.add_argument(
+        "--duration-tolerance-sec",
+        type=float,
+        default=None,
+        help="Maximum ffprobe-vs-manifest duration drift before an ffmpeg correction pass is required.",
+    )
     p_fast.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
     p_fast.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
     p_fast.add_argument("--reuse-master", action="store_true")
@@ -172,6 +184,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--ffmpeg-bin")
     p_run.add_argument("--ffprobe-bin")
     p_run.add_argument("--max-chunk-mb", type=float, default=95.0)
+    p_run.add_argument("--duration-tolerance-sec", type=float, default=None)
     p_run.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
     p_run.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
     p_run.add_argument("--reuse-master", action="store_true")

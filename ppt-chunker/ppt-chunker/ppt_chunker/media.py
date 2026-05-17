@@ -259,6 +259,7 @@ def cut_chunk_retimed_preserve_frames(
     start_frame: int,
     frame_count: int,
     target_duration_s: float,
+    source_fps: float | None = None,
     mute_output: bool = True,
     crf: int = 16,
 ) -> None:
@@ -272,9 +273,14 @@ def cut_chunk_retimed_preserve_frames(
     # spaced output timeline. Do not force a CFR output rate here: if PowerPoint
     # rendered 93 frames and the target is 2s, the transition becomes ~46.5 fps
     # rather than dropping 33 frames to fit 30 fps.
+    setpts = _frame_preserving_setpts(
+        target_duration_s=target_duration_s,
+        frame_count=frame_count,
+        source_fps=source_fps,
+    )
     filter_expr = (
         f"trim=start_frame={start_frame}:end_frame={end_frame},"
-        f"setpts=N*{target_duration_s:.10f}/{frame_count}/TB"
+        f"setpts={setpts}"
     )
     cmd = [
         str(ffmpeg_bin),
@@ -304,6 +310,106 @@ def cut_chunk_retimed_preserve_frames(
         cmd.extend(["-an"])
     cmd.append(str(output_mp4))
     run_subprocess(cmd, f"cut retimed frame-preserving chunk {output_mp4.name}")
+
+
+def reconcile_video_duration(
+    ffmpeg_bin: Path,
+    ffprobe_bin: Path,
+    media_path: Path,
+    target_duration_s: float,
+    tolerance_s: float,
+    mute_output: bool = True,
+    crf: int = 16,
+) -> dict[str, float | bool | str]:
+    """Cross-check a rendered MP4 duration and retime it if needed.
+
+    The correction pass deliberately preserves every decoded video frame.  If a
+    chunk has the right visual frames but the container/playback duration is off,
+    we rewrite timestamps onto the desired timeline instead of dropping or
+    duplicating frames to satisfy a CFR grid.
+    """
+
+    if target_duration_s <= 0:
+        raise PipelineError(f"Target duration must be > 0 for {media_path.name}")
+    if tolerance_s < 0:
+        raise PipelineError(f"Duration tolerance must be >= 0, got {tolerance_s}")
+    if not media_path.exists() or media_path.stat().st_size == 0:
+        raise PipelineError(f"Cannot duration-check missing/empty file: {media_path}")
+
+    before_s = ffprobe_duration(ffprobe_bin, media_path)
+    result: dict[str, float | bool | str] = {
+        "target_duration_s": float(target_duration_s),
+        "actual_duration_before_s": float(before_s),
+        "actual_duration_after_s": float(before_s),
+        "delta_before_s": float(before_s - target_duration_s),
+        "delta_after_s": float(before_s - target_duration_s),
+        "duration_corrected": False,
+        "correction_method": "none",
+    }
+    if abs(before_s - target_duration_s) <= tolerance_s:
+        return result
+
+    stream_info = ffprobe_video_stream_info(ffprobe_bin, media_path)
+    frame_count = int(round(float(stream_info.get("nb_frames", 0.0) or 0.0)))
+    if frame_count <= 0:
+        raise PipelineError(f"Cannot duration-correct {media_path.name}: no video frames found")
+
+    temp_out = media_path.with_name(f"{media_path.stem}.durationfix{media_path.suffix}")
+    if temp_out.exists():
+        temp_out.unlink()
+    setpts = _frame_preserving_setpts(
+        target_duration_s=target_duration_s,
+        frame_count=frame_count,
+        source_fps=float(stream_info.get("fps", 0.0) or 0.0),
+    )
+    filter_expr = f"setpts={setpts}"
+    cmd = [
+        str(ffmpeg_bin),
+        "-y",
+        "-i",
+        str(media_path),
+        "-vf",
+        filter_expr,
+        "-fps_mode",
+        "passthrough",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "slow",
+        "-crf",
+        str(crf),
+        "-g",
+        str(max(15, min(frame_count, 60))),
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+    ]
+    if mute_output:
+        cmd.extend(["-an"])
+    else:
+        audio_speed = target_duration_s / before_s if before_s > 0 else 1.0
+        cmd.extend(["-filter:a", _atempo_chain(audio_speed), "-c:a", "aac", "-b:a", "128k"])
+    cmd.append(str(temp_out))
+    run_subprocess(cmd, f"duration-correct chunk {media_path.name}")
+    temp_out.replace(media_path)
+
+    after_s = ffprobe_duration(ffprobe_bin, media_path)
+    result.update(
+        {
+            "actual_duration_after_s": float(after_s),
+            "delta_after_s": float(after_s - target_duration_s),
+            "duration_corrected": True,
+            "correction_method": "ffmpeg_setpts_preserve_frames",
+        }
+    )
+    if abs(after_s - target_duration_s) > tolerance_s:
+        raise PipelineError(
+            f"Duration correction failed for {media_path.name}: "
+            f"target={target_duration_s:.6f}s actual={after_s:.6f}s "
+            f"tolerance={tolerance_s:.6f}s"
+        )
+    return result
 
 
 def synthesize_frame_fade_transition(
@@ -499,3 +605,27 @@ def _atempo_chain(speed: float) -> str:
         remaining /= 2.0
     factors.append(remaining)
     return ",".join(f"atempo={min(2.0, max(0.5, f)):.8f}" for f in factors)
+
+
+def _frame_preserving_setpts(
+    *, target_duration_s: float, frame_count: int, source_fps: float | None
+) -> str:
+    if frame_count <= 0:
+        raise PipelineError(f"Frame count must be > 0, got {frame_count}")
+    if target_duration_s <= 0:
+        raise PipelineError(f"Target duration must be > 0, got {target_duration_s}")
+    if frame_count == 1:
+        return "0"
+    source_frame_duration_s = (
+        1.0 / float(source_fps) if source_fps is not None and float(source_fps) > 0 else 0.0
+    )
+    # MP4 duration is effectively the final frame PTS plus its sample duration.
+    # Preserve all frames, but place the last frame so that this final sample
+    # closes exactly on the target duration.
+    if source_frame_duration_s <= 0 or source_frame_duration_s >= target_duration_s:
+        frame_interval_s = target_duration_s / float(frame_count)
+    else:
+        frame_interval_s = (target_duration_s - source_frame_duration_s) / float(
+            frame_count - 1
+        )
+    return f"N*{frame_interval_s:.10f}/TB"
