@@ -212,6 +212,12 @@
   let handoffTimeoutId = null;
   let autoAdvanceTimer = null;
   let autoAdvanceVideoHandler = null;
+  const slidePreloadVid = document.createElement("video");
+  slidePreloadVid.muted = true;
+  slidePreloadVid.playsInline = true;
+  slidePreloadVid.preload = "auto";
+  slidePreloadVid.style.display = "none";
+  document.body.appendChild(slidePreloadVid);
 
   fetch(MANIFEST_URL)
     .then(r => r.json())
@@ -300,17 +306,38 @@
 
   function loadInto(video, src, loop) {
     return new Promise((resolve, reject) => {
-      const onReady = () => { cleanup(); resolve(); };
-      const onError = () => { cleanup(); reject(new Error("Failed loading " + src)); };
+      let settled = false;
+      const onReady = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve();
+      };
+      const onError = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error("Failed loading " + src));
+      };
       const cleanup = () => {
+        video.removeEventListener("loadeddata", onReady);
+        video.removeEventListener("canplay", onReady);
         video.removeEventListener("canplaythrough", onReady);
         video.removeEventListener("error", onError);
       };
       video.loop = loop;
       video.muted = true;
+      video.preload = "auto";
+      video.addEventListener("loadeddata", onReady, { once: true });
+      video.addEventListener("canplay", onReady, { once: true });
       video.addEventListener("canplaythrough", onReady, { once: true });
       video.addEventListener("error", onError, { once: true });
-      if (video.src !== src) video.src = src;
+      if (video.src !== src) {
+        video.src = src;
+      } else if (video.readyState >= 2) {
+        onReady();
+        return;
+      }
       video.load();
     });
   }
@@ -416,6 +443,18 @@
     if (transChunk && (Number(transChunk.duration) || 0) > 0) {
       loadInto(standbyVid, BASE_PATH + transChunk.file, false).catch(() => {});
     }
+    preloadSlideAsset(slideIdx + 1);
+  }
+
+  function preloadSlideAsset(slideIdx) {
+    if (slideIdx < 0 || slideIdx >= slideChunks.length) return;
+    const slide = slideChunks[slideIdx];
+    const src = BASE_PATH + slide.file;
+    if (slide.asset_kind === "image") {
+      loadImage(src).catch(() => {});
+      return;
+    }
+    loadInto(slidePreloadVid, src, false).catch(() => {});
   }
 
   function goNext() {
