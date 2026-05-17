@@ -430,6 +430,18 @@ def validate_command(args: argparse.Namespace) -> None:
                         "Manifest uses image assets but player lacks image runtime support.",
                     )
                 )
+            if "#img-layer.visible" not in text:
+                hiccups.append(
+                    Hiccup(
+                        "player_static_image_visibility_incompatibility",
+                        "error",
+                        (
+                            "Manifest uses image assets but player CSS does not include a "
+                            "specific #img-layer.visible rule; plain .visible is overridden "
+                            "by the #img-layer hidden rule and static slides render black."
+                        ),
+                    )
+                )
 
     segments = manifest.get("segments", [])
     master_file = manifest.get("master_file")
