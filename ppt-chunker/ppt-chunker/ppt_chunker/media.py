@@ -252,6 +252,60 @@ def cut_chunk_frame_exact(
     run_subprocess(cmd, f"cut frame-exact chunk {output_mp4.name}")
 
 
+def cut_chunk_retimed_preserve_frames(
+    ffmpeg_bin: Path,
+    input_mp4: Path,
+    output_mp4: Path,
+    start_frame: int,
+    frame_count: int,
+    target_duration_s: float,
+    mute_output: bool = True,
+    crf: int = 16,
+) -> None:
+    if frame_count <= 0:
+        raise PipelineError(f"Frame count must be > 0 for {output_mp4.name}")
+    if target_duration_s <= 0:
+        raise PipelineError(f"Target duration must be > 0 for {output_mp4.name}")
+    output_mp4.parent.mkdir(parents=True, exist_ok=True)
+    end_frame = start_frame + frame_count
+    # Preserve every decoded source frame and rewrite timestamps onto an evenly
+    # spaced output timeline. Do not force a CFR output rate here: if PowerPoint
+    # rendered 93 frames and the target is 2s, the transition becomes ~46.5 fps
+    # rather than dropping 33 frames to fit 30 fps.
+    filter_expr = (
+        f"trim=start_frame={start_frame}:end_frame={end_frame},"
+        f"setpts=N*{target_duration_s:.10f}/{frame_count}/TB"
+    )
+    cmd = [
+        str(ffmpeg_bin),
+        "-y",
+        "-i",
+        str(input_mp4),
+        "-vf",
+        filter_expr,
+        "-fps_mode",
+        "passthrough",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "slow",
+        "-crf",
+        str(crf),
+        "-g",
+        str(max(15, min(frame_count, 60))),
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+    ]
+    if mute_output:
+        cmd.extend(["-an"])
+    else:
+        cmd.extend(["-an"])
+    cmd.append(str(output_mp4))
+    run_subprocess(cmd, f"cut retimed frame-preserving chunk {output_mp4.name}")
+
+
 def synthesize_frame_fade_transition(
     ffmpeg_bin: Path,
     input_mp4: Path,

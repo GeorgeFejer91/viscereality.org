@@ -50,6 +50,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_build.add_argument("--ffmpeg-bin")
     p_build.add_argument("--ffprobe-bin")
     p_build.add_argument("--max-chunk-mb", type=float, default=95.0)
+    p_build.add_argument(
+        "--transition-fit-policy",
+        choices=["target-preserve-frames", "measured"],
+        default="target-preserve-frames",
+        help=(
+            "For no-rewrite PowerPoint exports, either preserve measured rendered "
+            "transition durations or retime all rendered frames to the requested duration."
+        ),
+    )
     p_build.add_argument("--strict", action=argparse.BooleanOptionalAction, default=True)
     p_build.add_argument("--mute-output", action=argparse.BooleanOptionalAction, default=True)
     p_build.add_argument("--no-rewrite-timings", action="store_true")
@@ -91,6 +100,15 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["ppt", "synthetic"],
         default="ppt",
         help="Use authored PowerPoint transitions in the export, or synthesize fades after export.",
+    )
+    p_fast.add_argument(
+        "--transition-fit-policy",
+        choices=["target-preserve-frames", "measured"],
+        default="target-preserve-frames",
+        help=(
+            "For authored PowerPoint transitions, cut the real rendered frame span and "
+            "either retime all frames to --transition-sec or keep measured duration."
+        ),
     )
     p_fast.add_argument(
         "--normalize-gif-grid",

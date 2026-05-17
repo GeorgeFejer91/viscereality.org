@@ -16,6 +16,7 @@ from .gif_timing import normalize_gif_duration_to_export_grid
 from .manifest import build_manifest
 from .media import (
     cut_chunk_frame_exact,
+    cut_chunk_retimed_preserve_frames,
     decode_check,
     enforce_chunk_size,
     extract_frame_png,
@@ -114,6 +115,9 @@ def build_command(args: argparse.Namespace) -> None:
     )
     max_chunk_mb = float(getattr(args, "max_chunk_mb", profile["max_chunk_mb"]))
     mute_output = bool(getattr(args, "mute_output", True))
+    transition_fit_policy = _normalize_transition_fit_policy(
+        getattr(args, "transition_fit_policy", "target-preserve-frames")
+    )
 
     scan_media_scope = _normalize_media_scope(defaults.get("media_scope", "visible"))
     features = extract_slide_features(
@@ -203,6 +207,7 @@ def build_command(args: argparse.Namespace) -> None:
             ffprobe_bin=ffprobe_bin,
             fps=int(profile["fps"]),
             default_transition_sec=default_transition_sec,
+            transition_fit_policy=transition_fit_policy,
         )
         _append_hiccups(output_dir, "timing_compat", compat_hiccups)
         if strict and _has_error_hiccups(compat_hiccups):
@@ -233,6 +238,7 @@ def build_command(args: argparse.Namespace) -> None:
         png_by_slide={},
         source_gap_frames_by_slide=source_gap_frames_by_slide,
         source_transition_frames_by_slide=source_transition_frames_by_slide,
+        transition_fit_policy=transition_fit_policy,
         ffmpeg_bin=ffmpeg_bin,
         ffprobe_bin=ffprobe_bin,
         fps=int(profile["fps"]),
@@ -545,6 +551,9 @@ def fast_publish_command(args: argparse.Namespace) -> None:
     transition_renderer = _normalize_transition_renderer(
         getattr(args, "transition_renderer", "ppt")
     )
+    transition_fit_policy = _normalize_transition_fit_policy(
+        getattr(args, "transition_fit_policy", "target-preserve-frames")
+    )
     normalize_gif_grid = bool(getattr(args, "normalize_gif_grid", True))
     gif_duration_policy = str(getattr(args, "gif_duration_policy", "export-grid"))
 
@@ -611,6 +620,7 @@ def fast_publish_command(args: argparse.Namespace) -> None:
             "transition_sec": transition_sec,
             "media_scope": media_scope,
             "transition_renderer": transition_renderer,
+            "transition_fit_policy": transition_fit_policy,
             "normalize_gif_grid": normalize_gif_grid,
             "gif_duration_policy": gif_duration_policy,
             "slides": duration_plan,
@@ -644,6 +654,7 @@ def fast_publish_command(args: argparse.Namespace) -> None:
                 if normalize_gif_grid
                 else "source_gif_timing_preserved"
             ),
+            "transition_fit_policy": transition_fit_policy,
         },
     }
     if transition_renderer == "synthetic":
@@ -673,6 +684,7 @@ def fast_publish_command(args: argparse.Namespace) -> None:
             no_rewrite_timings=True,
             reuse_master=bool(getattr(args, "reuse_master", False)),
             skip_com_probe=True,
+            transition_fit_policy=transition_fit_policy,
         )
     )
     validate_command(
@@ -749,6 +761,7 @@ def chunk_command(args: argparse.Namespace) -> None:
         png_by_slide={},
         source_gap_frames_by_slide={},
         source_transition_frames_by_slide={},
+        transition_fit_policy="measured",
         ffmpeg_bin=ffmpeg_bin,
         ffprobe_bin=ffprobe_bin,
         fps=30,
@@ -812,6 +825,7 @@ def _segment_mixed_assets(
     png_by_slide: dict[int, Path],
     source_gap_frames_by_slide: dict[int, int] | None,
     source_transition_frames_by_slide: dict[int, int] | None,
+    transition_fit_policy: str,
     ffmpeg_bin: Path,
     ffprobe_bin: Path,
     fps: int,
@@ -850,6 +864,7 @@ def _segment_mixed_assets(
     transition_entries_extended: dict[int, dict[str, Any]] = {}
     gap_map = source_gap_frames_by_slide or {}
     transition_source_frame_map = source_transition_frames_by_slide or {}
+    transition_fit_policy = _normalize_transition_fit_policy(transition_fit_policy)
     sequence_width = _sequence_index_width(len(segments))
 
     for seg in segments:
@@ -950,16 +965,30 @@ def _segment_mixed_assets(
                         mute_output=mute_output,
                     )
                 else:
-                    cut_chunk_frame_exact(
-                        ffmpeg_bin=ffmpeg_bin,
-                        input_mp4=master_mp4,
-                        output_mp4=raw_transition,
-                        start_frame=source_transition_start_frame,
-                        frame_count=source_transition_frames,
-                        fps=fps,
-                        mute_output=mute_output,
-                        output_frame_count=playback_transition_frames,
-                    )
+                    if (
+                        transition_fit_policy == "target-preserve-frames"
+                        and source_transition_frames != playback_transition_frames
+                    ):
+                        cut_chunk_retimed_preserve_frames(
+                            ffmpeg_bin=ffmpeg_bin,
+                            input_mp4=master_mp4,
+                            output_mp4=raw_transition,
+                            start_frame=source_transition_start_frame,
+                            frame_count=source_transition_frames,
+                            target_duration_s=transition_duration_nominal,
+                            mute_output=mute_output,
+                        )
+                    else:
+                        cut_chunk_frame_exact(
+                            ffmpeg_bin=ffmpeg_bin,
+                            input_mp4=master_mp4,
+                            output_mp4=raw_transition,
+                            start_frame=source_transition_start_frame,
+                            frame_count=source_transition_frames,
+                            fps=fps,
+                            mute_output=mute_output,
+                            output_frame_count=playback_transition_frames,
+                        )
                 enforce_chunk_size(ffmpeg_bin, raw_transition, max_chunk_mb, mute_output=mute_output)
                 hashed_transition = rename_with_hash(raw_transition)
                 decode_check(ffprobe_bin, hashed_transition)
@@ -984,6 +1013,15 @@ def _segment_mixed_assets(
                 }
                 if synthetic_transition:
                     transition_entries_legacy[seg.slide_number]["transition_source"] = "synthetic"
+                if (
+                    transition_fit_policy == "target-preserve-frames"
+                    and not synthetic_transition
+                    and source_transition_frames != playback_transition_frames
+                ):
+                    transition_entries_legacy[seg.slide_number]["source_duration"] = round(
+                        source_transition_frames / float(fps), 3
+                    )
+                    transition_entries_legacy[seg.slide_number]["retimed_preserve_frames"] = True
                 transition_entries_extended[seg.slide_number] = {
                     "id": f"trans_{seg.slide_number:02d}",
                     "type": "transition",
@@ -1000,6 +1038,15 @@ def _segment_mixed_assets(
                 }
                 if synthetic_transition:
                     transition_entries_extended[seg.slide_number]["transition_source"] = "synthetic"
+                if (
+                    transition_fit_policy == "target-preserve-frames"
+                    and not synthetic_transition
+                    and source_transition_frames != playback_transition_frames
+                ):
+                    transition_entries_extended[seg.slide_number]["source_duration_sec"] = round(
+                        source_transition_frames / float(fps), 3
+                    )
+                    transition_entries_extended[seg.slide_number]["retimed_preserve_frames"] = True
             source_frame_cursor += source_transition_frames
             if emit_transition:
                 playback_frame_cursor += playback_transition_frames
@@ -1348,11 +1395,13 @@ def _apply_no_rewrite_export_compat(
     ffprobe_bin: Path,
     fps: int,
     default_transition_sec: float,
+    transition_fit_policy: str = "target-preserve-frames",
 ) -> tuple[list[TimingDecision], dict[int, int], dict[int, int], list[Hiccup]]:
     hiccups: list[Hiccup] = []
     source_gap_frames_by_slide: dict[int, int] = {}
     source_transition_frames_by_slide: dict[int, int] = {}
     promoted_transition_frames_by_slide: dict[int, int] = {}
+    transition_fit_policy = _normalize_transition_fit_policy(transition_fit_policy)
     source_frames = int(round(float(ffprobe_video_stream_info(ffprobe_bin, master_mp4)["nb_frames"])))
     expected_frames = _expected_source_frames(decisions, fps)
     delta = source_frames - expected_frames
@@ -1417,16 +1466,29 @@ def _apply_no_rewrite_export_compat(
             nominal_frames = int(round(float(decision.transition_duration_s) * fps))
             rendered_frames = nominal_frames + extra_frames
             source_transition_frames_by_slide[decision.slide_number] = rendered_frames
-            decision.transition_duration_s = round(rendered_frames / float(fps), 3)
-            decision.transition_reason = "authored_transition_rendered"
+            if transition_fit_policy == "target-preserve-frames":
+                decision.transition_duration_s = round(nominal_frames / float(fps), 3)
+                decision.transition_reason = "authored_transition_rendered_retimed"
+            else:
+                decision.transition_duration_s = round(rendered_frames / float(fps), 3)
+                decision.transition_reason = "authored_transition_rendered"
         hiccups.append(
             Hiccup(
-                "authored_transition_rendered_duration_measured",
+                (
+                    "authored_transition_rendered_retimed_preserve_frames"
+                    if transition_fit_policy == "target-preserve-frames"
+                    else "authored_transition_rendered_duration_measured"
+                ),
                 "warning",
                 (
                     "No-rewrite export produced extra frames during authored transitions; "
-                    "transition chunks will preserve the measured rendered duration "
-                    f"(delta_frames={delta})."
+                    + (
+                        "transition chunks preserve all rendered frames and retime them "
+                        "to the requested duration "
+                        if transition_fit_policy == "target-preserve-frames"
+                        else "transition chunks will preserve the measured rendered duration "
+                    )
+                    + f"(delta_frames={delta})."
                 ),
                 details={
                     "source_transition_frames_by_slide": source_transition_frames_by_slide,
@@ -1547,6 +1609,15 @@ def _normalize_transition_renderer(raw: Any) -> str:
     if value in {"synthetic", "synthetic_fade", "fade"}:
         return "synthetic"
     raise PipelineError("transition_renderer must be 'ppt' or 'synthetic'.")
+
+
+def _normalize_transition_fit_policy(raw: Any) -> str:
+    value = str(raw or "target-preserve-frames").strip().lower()
+    if value in {"target-preserve-frames", "target", "retime", "retime-preserve-frames"}:
+        return "target-preserve-frames"
+    if value in {"measured", "actual", "rendered"}:
+        return "measured"
+    raise PipelineError("transition_fit_policy must be 'target-preserve-frames' or 'measured'.")
 
 
 def _feature_media_count(feature: SlideFeature, media_scope: str) -> int:
