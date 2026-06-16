@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "assets/media/lung-mechanics-loop.mp4",
+  "frames": "lung-mechanics-loop.frames.txt",
+  "width": 720,
+  "height": 406,
+  "fps": 12.0,
+  "sourceFps": 24.0,
+  "frameCount": 48,
+  "sourceFrameCount": 95,
+  "cols": 104,
+  "rows": 29,
+  "palette": " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@"
+}

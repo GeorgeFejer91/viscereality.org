@@ -274,7 +274,7 @@
       z-index: 2;
     }
 
-    .video-container iframe, .video-container video {
+    .video-container iframe, .video-container video, .video-container .ascii-video {
       position: absolute;
       top: 0;
       left: 0;
@@ -515,6 +515,53 @@
       width: 100%;
       height: auto;
       display: block;
+    }
+
+    .ascii-video {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: var(--ascii-aspect, 16 / 9);
+      overflow: hidden;
+      background-color: #000;
+      background-image: var(--ascii-poster);
+      background-position: center;
+      background-size: cover;
+      contain: layout paint style;
+    }
+
+    .ascii-video.is-loaded {
+      background-image: none;
+    }
+
+    .ascii-video__frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      margin: 0;
+      color: rgba(245, 250, 255, 0.94);
+      font-family: "Courier New", Courier, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 10px;
+      letter-spacing: 0;
+      white-space: pre;
+      text-align: left;
+      text-shadow: 0 0 3px rgba(0, 99, 156, 0.55), 0 0 7px rgba(255, 255, 255, 0.18);
+      transform-origin: top left;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .ascii-video::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 58%, rgba(0, 0, 0, 0.28) 100%);
+      opacity: 0.55;
     }
 
     .ingredient-card h4 {
@@ -1236,7 +1283,7 @@
     .ingredient-loop {
       display: block;
       width: 100%;
-      background: #000;
+      background-color: #000;
     }
 
     .feature-video {

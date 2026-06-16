@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "assets/media/viscereality-hero-mobile.mp4",
+  "frames": "viscereality-hero-mobile.frames.txt",
+  "width": 640,
+  "height": 360,
+  "fps": 12.0,
+  "sourceFps": 24.0,
+  "frameCount": 578,
+  "sourceFrameCount": 1156,
+  "cols": 150,
+  "rows": 42,
+  "palette": " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@"
+}

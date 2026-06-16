@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "assets/media/viscereality-hero-desktop.mp4",
+  "frames": "viscereality-hero-desktop.frames.txt",
+  "width": 960,
+  "height": 540,
+  "fps": 15.0,
+  "sourceFps": 30.0,
+  "frameCount": 723,
+  "sourceFrameCount": 1445,
+  "cols": 180,
+  "rows": 51,
+  "palette": " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@"
+}

@@ -7,6 +7,18 @@
 
   document.documentElement.classList.toggle("low-power", lowPowerMode);
 
+  function addMediaQueryChangeListener(mediaQueryList, handler) {
+    if (!mediaQueryList) {
+      return;
+    }
+
+    if (typeof mediaQueryList.addEventListener === "function") {
+      mediaQueryList.addEventListener("change", handler);
+    } else if (typeof mediaQueryList.addListener === "function") {
+      mediaQueryList.addListener(handler);
+    }
+  }
+
   function initOrbVisualization() {
     const container = document.getElementById("orbContainer");
     const vizElement = document.getElementById("orbViz");
@@ -383,6 +395,247 @@
     });
   }
 
+  function initAsciiVideos() {
+    const asciiVideos = document.querySelectorAll(".ascii-video");
+
+    if (!asciiVideos.length) {
+      return;
+    }
+
+    const assetCache = new Map();
+    const resizeObserver = "ResizeObserver" in window
+      ? new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target;
+          if (video.__asciiState && video.__asciiState.asset) {
+            fitAsciiFrame(video, video.__asciiState);
+          }
+        });
+      })
+      : null;
+
+    function resolveManifest(video) {
+      const mobileSrc = video.dataset.asciiMobileSrc;
+      const desktopSrc = video.dataset.asciiDesktopSrc;
+
+      if (mobileSrc || desktopSrc) {
+        return isNarrowViewport.matches ? (mobileSrc || desktopSrc) : (desktopSrc || mobileSrc);
+      }
+
+      return video.dataset.asciiSrc;
+    }
+
+    async function loadAsciiAsset(url) {
+      if (assetCache.has(url)) {
+        return assetCache.get(url);
+      }
+
+      const promise = fetch(url)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Could not load ASCII manifest: ${url}`);
+          }
+          return response.json().then((manifest) => ({ manifest, responseUrl: response.url }));
+        })
+        .then(({ manifest, responseUrl }) => {
+          const framesUrl = new URL(manifest.frames, responseUrl).href;
+          return fetch(framesUrl).then((response) => {
+            if (!response.ok) {
+              throw new Error(`Could not load ASCII frames: ${framesUrl}`);
+            }
+            return response.text();
+          }).then((text) => ({
+            manifest,
+            frames: text.replace(/\r\n/g, "\n").split("\f"),
+          }));
+        });
+
+      assetCache.set(url, promise);
+      return promise;
+    }
+
+    function fitAsciiFrame(video, state) {
+      if (!state || !state.asset) {
+        return;
+      }
+
+      const frame = state.frame;
+      const manifest = state.asset.manifest;
+      const rect = video.getBoundingClientRect();
+
+      if (!rect.width || !rect.height) {
+        return;
+      }
+
+      const baseFontSize = 10;
+      const measureCanvas = fitAsciiFrame.measureCanvas || (fitAsciiFrame.measureCanvas = document.createElement("canvas"));
+      const measureContext = measureCanvas.getContext("2d");
+      measureContext.font = `700 ${baseFontSize}px "Courier New", Courier, monospace`;
+
+      const charWidth = measureContext.measureText("M").width || 6;
+      const baseWidth = charWidth * manifest.cols;
+      const baseHeight = baseFontSize * manifest.rows;
+      const scale = Math.min(rect.width / baseWidth, rect.height / baseHeight);
+      const fittedWidth = baseWidth * scale;
+      const fittedHeight = baseHeight * scale;
+      const offsetX = (rect.width - fittedWidth) / 2;
+      const offsetY = (rect.height - fittedHeight) / 2;
+
+      frame.style.width = `${baseWidth}px`;
+      frame.style.height = `${baseHeight}px`;
+      frame.style.fontSize = `${baseFontSize}px`;
+      frame.style.lineHeight = `${baseFontSize}px`;
+      frame.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function renderAsciiFrame(video, state, timestamp) {
+      if (!state.isVisible || document.hidden || !state.asset.frames.length) {
+        state.rafId = 0;
+        return;
+      }
+
+      if (!state.startTime) {
+        state.startTime = timestamp;
+      }
+
+      const manifest = state.asset.manifest;
+      const frameCount = state.asset.frames.length;
+      const elapsedSeconds = (timestamp - state.startTime) / 1000;
+      const frameIndex = Math.floor(elapsedSeconds * manifest.fps) % frameCount;
+
+      if (frameIndex !== state.frameIndex) {
+        state.frame.textContent = state.asset.frames[frameIndex];
+        state.frameIndex = frameIndex;
+      }
+
+      state.rafId = requestAnimationFrame((nextTimestamp) => {
+        renderAsciiFrame(video, state, nextTimestamp);
+      });
+    }
+
+    function startAsciiPlayback(video, state) {
+      if (!state.asset || state.rafId || document.hidden || !state.isVisible) {
+        return;
+      }
+
+      state.startTime = performance.now() - (state.frameIndex / state.asset.manifest.fps) * 1000;
+      state.rafId = requestAnimationFrame((timestamp) => {
+        renderAsciiFrame(video, state, timestamp);
+      });
+    }
+
+    function stopAsciiPlayback(state) {
+      if (state.rafId) {
+        cancelAnimationFrame(state.rafId);
+        state.rafId = 0;
+      }
+    }
+
+    async function hydrateAsciiVideo(video) {
+      const manifestUrl = resolveManifest(video);
+
+      if (!manifestUrl || video.dataset.loadedAscii === manifestUrl) {
+        return video.__asciiState;
+      }
+
+      const frame = video.querySelector(".ascii-video__frame");
+      if (!frame) {
+        return null;
+      }
+
+      const state = video.__asciiState || {
+        frame,
+        asset: null,
+        frameIndex: -1,
+        isVisible: false,
+        rafId: 0,
+        startTime: 0,
+      };
+
+      stopAsciiPlayback(state);
+      state.asset = await loadAsciiAsset(manifestUrl);
+      state.frameIndex = 0;
+      state.frame.textContent = state.asset.frames[0] || "";
+      video.__asciiState = state;
+      video.dataset.loadedAscii = manifestUrl;
+      video.classList.add("is-loaded");
+      video.style.setProperty("--ascii-aspect", `${state.asset.manifest.width} / ${state.asset.manifest.height}`);
+      fitAsciiFrame(video, state);
+      return state;
+    }
+
+    const asciiObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+
+        if (!video.__asciiState) {
+          video.__asciiState = {
+            frame: video.querySelector(".ascii-video__frame"),
+            asset: null,
+            frameIndex: -1,
+            isVisible: false,
+            rafId: 0,
+            startTime: 0,
+          };
+        }
+
+        video.__asciiState.isVisible = entry.isIntersecting;
+
+        if (entry.isIntersecting) {
+          hydrateAsciiVideo(video)
+            .then((state) => {
+              if (state) {
+                state.isVisible = true;
+                startAsciiPlayback(video, state);
+              }
+            })
+            .catch(() => {
+              video.classList.remove("is-loaded");
+            });
+        } else {
+          stopAsciiPlayback(video.__asciiState);
+        }
+      });
+    }, { rootMargin: "500px 0px", threshold: 0.15 });
+
+    asciiVideos.forEach((video) => {
+      asciiObserver.observe(video);
+      if (resizeObserver) {
+        resizeObserver.observe(video);
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      asciiVideos.forEach((video) => {
+        const state = video.__asciiState;
+        if (!state) {
+          return;
+        }
+
+        if (document.hidden) {
+          stopAsciiPlayback(state);
+        } else {
+          startAsciiPlayback(video, state);
+        }
+      });
+    });
+
+    addMediaQueryChangeListener(isNarrowViewport, () => {
+      asciiVideos.forEach((video) => {
+        if (video.dataset.asciiMobileSrc || video.dataset.asciiDesktopSrc) {
+          video.dataset.loadedAscii = "";
+          hydrateAsciiVideo(video)
+            .then((state) => {
+              if (state) {
+                startAsciiPlayback(video, state);
+              }
+            })
+            .catch(() => {});
+        }
+      });
+    });
+  }
+
   function initLiteYouTubeEmbeds() {
     const placeholders = document.querySelectorAll(".youtube-lite");
 
@@ -465,18 +718,6 @@
     const preparedLabelCache = new Map();
     const menuMeasureState = { scheduled: false };
     let currentNavSection = "";
-
-    function addMediaQueryChangeListener(mediaQueryList, handler) {
-      if (!mediaQueryList) {
-        return;
-      }
-
-      if (typeof mediaQueryList.addEventListener === "function") {
-        mediaQueryList.addEventListener("change", handler);
-      } else if (typeof mediaQueryList.addListener === "function") {
-        mediaQueryList.addListener(handler);
-      }
-    }
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
@@ -684,6 +925,7 @@
     setActiveNav("hero");
     scheduleMenuLayoutMeasurement();
 
+    initAsciiVideos();
     initDeferredVideos();
     initLiteYouTubeEmbeds();
     initOrbVisualization();

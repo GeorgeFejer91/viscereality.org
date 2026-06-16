@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>The Viscereality Project</title>
-  <link rel="preload" href="assets/css/site.css?v=20260504" as="style">
-  <link rel="stylesheet" href="assets/css/site.css?v=20260504">
+  <link rel="preload" href="assets/css/site.css?v=20260616" as="style">
+  <link rel="stylesheet" href="assets/css/site.css?v=20260616">
 </head>
 <body>
   <div class="breath-indicator"></div>
@@ -61,21 +61,17 @@
         <div class="breath-wave exhale-wave"></div>
         <div class="breath-light"></div>
         <div class="video-container">
-          <video
-            class="deferred-video hero-video"
-            autoplay
-            loop
-            muted
-            playsinline
-            preload="none"
-            poster="assets/media/viscereality-hero-poster.jpg"
-            data-defer-video
+          <div
+            class="ascii-video ascii-video--hero hero-video"
+            role="img"
+            aria-label="Viscereality dynamic background ASCII animation"
+            data-ascii-desktop-src="assets/ascii-media/viscereality-hero-desktop.json"
+            data-ascii-mobile-src="assets/ascii-media/viscereality-hero-mobile.json"
             data-play-when-visible
-            aria-label="Viscereality dynamic background video"
+            style="--ascii-aspect: 960 / 540; --ascii-poster: url('assets/media/viscereality-hero-poster.jpg');"
           >
-            <source data-desktop-src="assets/media/viscereality-hero-desktop.mp4" data-mobile-src="assets/media/viscereality-hero-mobile.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+            <pre class="ascii-video__frame" aria-hidden="true"></pre>
+          </div>
         </div>
       </div>
 
@@ -160,9 +156,16 @@
 
         <div class="ingredient-card exhale-section">
           <div class="ingredient-image">
-            <video class="ingredient-loop deferred-video" autoplay loop muted playsinline preload="none" poster="assets/media/lung-mechanics-poster.jpg" data-defer-video data-play-when-visible aria-label="Bioresponsive VR animation">
-              <source data-src="assets/media/lung-mechanics-loop.mp4" type="video/mp4">
-            </video>
+            <div
+              class="ascii-video ingredient-loop"
+              role="img"
+              aria-label="Bioresponsive VR ASCII animation"
+              data-ascii-src="assets/ascii-media/lung-mechanics-loop.json"
+              data-play-when-visible
+              style="--ascii-aspect: 720 / 406; --ascii-poster: url('assets/media/lung-mechanics-poster.jpg');"
+            >
+              <pre class="ascii-video__frame" aria-hidden="true"></pre>
+            </div>
           </div>
           <h4>Bioresponsive VR</h4>
           <p>Respiratory coupling of lung-mechanics to the <span class="inhale-term">contraction</span> and <span class="exhale-term">expansion</span> of virtual space.</p>
@@ -170,9 +173,16 @@
 
         <div class="ingredient-card inhale-section">
           <div class="ingredient-image">
-            <video class="ingredient-loop deferred-video" autoplay loop muted playsinline preload="none" poster="assets/media/breathink-poster.jpg" data-defer-video data-play-when-visible aria-label="Breathing affects perception animation">
-              <source data-src="assets/media/breathink-loop.mp4" type="video/mp4">
-            </video>
+            <div
+              class="ascii-video ingredient-loop"
+              role="img"
+              aria-label="Breathing affects perception ASCII animation"
+              data-ascii-src="assets/ascii-media/breathink-loop.json"
+              data-play-when-visible
+              style="--ascii-aspect: 720 / 406; --ascii-poster: url('assets/media/breathink-poster.jpg');"
+            >
+              <pre class="ascii-video__frame" aria-hidden="true"></pre>
+            </div>
           </div>
           <h4>Breathing affects the perception of quantities 
             <a href="https://link.springer.com/article/10.1007/s00221-021-06147-z" target="_blank" class="citation-badge">
@@ -639,6 +649,6 @@
   </section>
 
   <script src="assets/js/vendor/pretext.global.js?v=20260403" defer></script>
-  <script src="assets/js/site.js?v=20260403" defer></script>
+  <script src="assets/js/site.js?v=20260616" defer></script>
 </body>
 </html>
