@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT))
 from pptx_html_presenter.assets import (
     _prune_unreferenced_asset_files,
     _prune_unreferenced_source_assets,
+    _should_optimize_static_image,
     _should_transcode_gif,
     _try_convert_gif_with_ffmpeg,
 )
@@ -46,6 +47,7 @@ from pptx_html_presenter.qa import (
     _visual_audit_sample_plan,
 )
 from pptx_html_presenter.reference import _effective_slide_hold, _effective_use_timings
+import pptx_html_presenter.family as family_module
 from pptx_html_presenter.scene import (
     _annotate_scene_graph_v2,
     _annotate_panel_relationships,
@@ -364,6 +366,11 @@ class PresenterTests(unittest.TestCase):
             )
             config = load_config(path)
             self.assertTrue(config.asset_policy.prune_unreferenced_source_assets)
+
+    def test_config_defaults_to_strict_public_asset_policy(self) -> None:
+        config = load_config(None)
+        self.assertTrue(config.asset_policy.optimize_static_images)
+        self.assertFalse(config.asset_policy.allow_oversize_assets)
 
     def test_config_loads_auto_advance_rules(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -2692,6 +2699,25 @@ class PresenterTests(unittest.TestCase):
         self.assertTrue(_should_transcode_gif(asset, AssetPolicy(transcode_gif=True)))
         self.assertFalse(_should_transcode_gif(asset, AssetPolicy(transcode_gif=False)))
 
+    def test_large_static_images_are_publish_optimization_candidates(self) -> None:
+        asset = AssetRef(
+            source_path="ppt/media/large.png",
+            rel_id=None,
+            kind="image",
+            extension="png",
+            size_bytes=60 * 1024 * 1024,
+            sha256="c" * 64,
+            animated=False,
+            alpha=True,
+        )
+        self.assertTrue(_should_optimize_static_image(asset, AssetPolicy(soft_max_mb=50)))
+        self.assertFalse(
+            _should_optimize_static_image(
+                asset,
+                AssetPolicy(soft_max_mb=50, optimize_static_images=False),
+            )
+        )
+
     def test_prunes_unreferenced_source_assets(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp)
@@ -2805,6 +2831,52 @@ class PresenterTests(unittest.TestCase):
             self.assertFalse(optimized_asset.exists())
             index = json.loads((shared / "asset-index.json").read_text(encoding="utf-8"))
             self.assertEqual(len(index["assets"]), 2)
+
+    def test_share_deck_assets_skips_large_source_when_runtime_is_optimized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            build = root / "presentations" / "Demo-scene"
+            source_dir = build / "assets" / "source"
+            optimized_dir = build / "assets" / "optimized"
+            source_dir.mkdir(parents=True)
+            optimized_dir.mkdir(parents=True)
+            source_asset = source_dir / "huge.gif"
+            optimized_asset = optimized_dir / "loop.mp4"
+            source_asset.write_bytes(b"large-source" * 256)
+            optimized_asset.write_bytes(b"optimized-video")
+            scene = {
+                "deck": {"id": "Demo"},
+                "assets": [
+                    {
+                        "id": "asset-demo",
+                        "sourcePath": "ppt/media/huge.gif",
+                        "sourceFile": "assets/source/huge.gif",
+                        "file": "assets/optimized/loop.mp4",
+                        "kind": "video",
+                        "animated": True,
+                        "alpha": False,
+                    }
+                ],
+                "slides": [],
+                "transitions": [],
+            }
+            (build / "deck.scene.json").write_text(json.dumps(scene), encoding="utf-8")
+            (build / "build-report.json").write_text("{}", encoding="utf-8")
+            shared = root / "presentations" / "shared-assets" / "viscereality"
+            previous_soft_max = family_module.SHARED_SOURCE_SOFT_MAX_MB
+            family_module.SHARED_SOURCE_SOFT_MAX_MB = 0.001
+            try:
+                report = share_deck_assets(build, shared, deck_id="Demo", repo_root=root)
+            finally:
+                family_module.SHARED_SOURCE_SOFT_MAX_MB = previous_soft_max
+
+            self.assertEqual(report["status"], "ok")
+            rewritten = json.loads((build / "deck.scene.json").read_text(encoding="utf-8"))
+            asset = rewritten["assets"][0]
+            self.assertEqual(asset["sourceFile"], asset["file"])
+            self.assertIn("source-file-over-soft-limit-not-published", asset["warnings"])
+            self.assertEqual(list((shared / "source").glob("*")), [])
+            self.assertEqual(len(list((shared / "optimized").glob("*"))), 1)
 
     def test_family_oracle_qa_reports_missing_ffmpeg(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

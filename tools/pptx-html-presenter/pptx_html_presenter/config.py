@@ -22,9 +22,10 @@ class AssetPolicy:
     hard_max_mb: float = 100.0
     transcode_gif: bool = True
     transcode_video: bool = True
+    optimize_static_images: bool = True
     webp_quality: int = 88
     video_crf: int = 24
-    allow_oversize_assets: bool = True
+    allow_oversize_assets: bool = False
     prune_unreferenced_source_assets: bool = False
     transparent_animation: str = "preserve-alpha"
 
@@ -208,9 +209,10 @@ def load_config(path: Path | None = None) -> PresenterConfig:
             hard_max_mb=float(asset_raw.get("hard_max_mb", 100.0)),
             transcode_gif=bool(asset_raw.get("transcode_gif", True)),
             transcode_video=bool(asset_raw.get("transcode_video", True)),
+            optimize_static_images=bool(asset_raw.get("optimize_static_images", True)),
             webp_quality=int(asset_raw.get("webp_quality", 88)),
             video_crf=int(asset_raw.get("video_crf", 24)),
-            allow_oversize_assets=bool(asset_raw.get("allow_oversize_assets", True)),
+            allow_oversize_assets=bool(asset_raw.get("allow_oversize_assets", False)),
             prune_unreferenced_source_assets=bool(
                 asset_raw.get("prune_unreferenced_source_assets", False)
             ),

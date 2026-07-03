@@ -50,6 +50,7 @@ presentations/shared-assets/viscereality/
 - Shared asset index:
   - `presentations/shared-assets/viscereality/asset-index.json`
 - Latest family build status: `ok`.
+- Latest family inspect status: `blocked` only because the local disk free-space preflight is below the configured 8 GiB floor; source PPTX parsing still reports 3 decks and about 1.53 GiB unique source media.
 - Latest family HTML visual audit status: `ok`.
 - Latest family publish status: `ok`; the public presentation hub points at the three scene players and keeps chunked fallback links secondary.
 - PowerPoint MP4 oracle QA: slide-1 smoke passes have run for MuC, alpCHI, and BBD26. They are useful for calibration but still fail strict SSIM; do not claim oracle parity until full reference MP4 export/frame comparison passes or reviewed exceptions are written.
@@ -87,6 +88,7 @@ Current source PPTX parse results from family preflight:
 - GIF/video clocks should keep looping while objects move forward or backward.
 - Full-slide raster fallback is disabled by default; use only smallest-object fallback for unsupported effects.
 - Public runtime assets must be GitHub Pages-safe unless Git LFS or another hosting policy is explicitly approved.
+- Super-large public assets must be converted to HTML-friendly runtime formats before publish. The default asset policy now treats oversized assets as disallowed, optimizes oversized static images to WebP, transcodes GIF/video when useful, and reports both the 50 MiB preferred ceiling and the 100 MiB hard ceiling.
 
 ## Recent Problems And Solutions
 
@@ -111,6 +113,12 @@ Current source PPTX parse results from family preflight:
 - Problem: Visual audit capture initially hung because the capture server served only a deck folder while scene manifests referenced `../shared-assets/...`.
   - Solution: `browser_capture.mjs` now serves the enclosing presentations folder and opens `/<deck-folder>/index.html`, allowing shared asset URLs to resolve.
 - Durable rule: super-large assets must be converted to visually lossless or visually acceptable HTML-friendly formats that stay GitHub-compatible. Use MP4/WebM/WebP according to alpha/playback needs; do not publish giant original blobs unless LFS/external hosting is explicitly chosen.
+- Problem: The earlier default config still allowed oversized assets and did not attempt static-image optimization.
+  - Solution: `AssetPolicy.allow_oversize_assets` now defaults to `false`, `optimize_static_images` defaults to `true`, the family defaults file enables static-image WebP optimization, and the CLI exposes `--image-optimize/--no-image-optimize` for debugging.
+- Problem: A future deck could publish a large original `sourceFile` beside a safe optimized runtime asset.
+  - Solution: family asset sharing now uses a 50 MiB preferred public-asset ceiling. If an original source blob is above that ceiling and the runtime `file` is already a shared safe optimized asset, `sourceFile` is rewritten to the runtime file and the original remains represented by hash/path metadata rather than being copied into the public shared tree.
+- Problem: A future oversized static PNG/JPEG/TIFF/BMP could pass through unchanged if it was not GIF/video.
+  - Solution: oversized still images are now candidates for conservative WebP optimization: a high-quality 4K WebP first, then a 1080p WebP fallback only when needed to satisfy the hard limit.
 
 Current shared public asset library check after the MuC deterministic rebuild:
 
@@ -118,7 +126,7 @@ Current shared public asset library check after the MuC deterministic rebuild:
 - Largest shared asset is about 48.879 MiB.
 - Files above 50 MiB: 0.
 - Files above 100 MiB: 0.
-- Family builds now emit `sharedAssetLimits` so future agents can verify the public shared library gate without hunting through per-deck reports.
+- Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
 
 ## Latest HTML Visual Audit
 

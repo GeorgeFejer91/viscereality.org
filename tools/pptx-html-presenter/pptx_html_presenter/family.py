@@ -16,6 +16,7 @@ from .reference import export_reference_mp4
 from .scene import inspect_report
 from .utils import ensure_dir, find_binary, format_mb, read_json, repo_root_from, sha256_file, utc_now_iso, write_json
 
+SHARED_SOURCE_SOFT_MAX_MB = 50.0
 SHARED_SOURCE_HARD_MAX_MB = 100.0
 
 
@@ -165,6 +166,7 @@ def build_family(
         if all(row.get("status") in {"ok", "manifest-only"} for row in build_reports)
         and all(row.get("status") == "ok" for row in share_reports)
         and shared_asset_limits["githubPagesSafe"]
+        and shared_asset_limits.get("preferredAssetSafe", True)
         else "needs-review",
         "preflight": preflight,
         "sharedAssetRoot": _repo_rel(family.repo_root, family.shared_root),
@@ -444,10 +446,10 @@ def share_deck_assets(
                 and asset.get("file")
                 and _is_shared_asset_ref(str(asset.get("file")))
                 and source_abs.exists()
-                and format_mb(source_abs.stat().st_size) > SHARED_SOURCE_HARD_MAX_MB
+                and format_mb(source_abs.stat().st_size) > SHARED_SOURCE_SOFT_MAX_MB
             ):
                 asset[field] = asset["file"]
-                asset.setdefault("warnings", []).append("source-file-over-hard-limit-not-published")
+                asset.setdefault("warnings", []).append("source-file-over-soft-limit-not-published")
                 rewritten += 1
                 continue
             if not source_abs.exists():
@@ -508,8 +510,10 @@ def share_deck_assets(
     }
     shared_limit = _scene_shared_asset_limit_report(scene, repo_root)
     build_report["sharedAssets"]["githubPagesSafe"] = shared_limit["githubPagesSafe"]
+    build_report["sharedAssets"]["preferredAssetSafe"] = shared_limit["preferredAssetSafe"]
     build_report["sharedAssets"]["maxAssetMb"] = shared_limit["maxAssetMb"]
     build_report["sharedAssets"]["oversizeAssets"] = shared_limit["oversizeAssets"]
+    build_report["sharedAssets"]["softOversizeAssets"] = shared_limit["softOversizeAssets"]
     if build_report.get("assetMode") != "manifest-only" and shared_limit["githubPagesSafe"] and not missing:
         build_report["originalStatus"] = build_report.get("status")
         build_report["originalGithubPagesSafe"] = build_report.get("githubPagesSafe")
@@ -630,17 +634,18 @@ def _rewrite_oversize_shared_sources(scene: dict[str, Any], repo_root: Path) -> 
         if not _is_shared_asset_ref(str(source_file)) or not _is_shared_asset_ref(str(runtime_file)):
             continue
         source_path = _shared_ref_to_path(repo_root / "presentations" / "_deck", str(source_file))
-        if not source_path.exists() or format_mb(source_path.stat().st_size) <= SHARED_SOURCE_HARD_MAX_MB:
+        if not source_path.exists() or format_mb(source_path.stat().st_size) <= SHARED_SOURCE_SOFT_MAX_MB:
             continue
         runtime_path = _shared_ref_to_path(repo_root / "presentations" / "_deck", str(runtime_file))
         if not runtime_path.exists() or format_mb(runtime_path.stat().st_size) > SHARED_SOURCE_HARD_MAX_MB:
             continue
         asset["sourceFile"] = runtime_file
-        asset.setdefault("warnings", []).append("source-file-over-hard-limit-not-published")
+        asset.setdefault("warnings", []).append("source-file-over-soft-limit-not-published")
 
 
 def _scene_shared_asset_limit_report(scene: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     oversize: list[dict[str, Any]] = []
+    soft_oversize: list[dict[str, Any]] = []
     max_mb = 0.0
     for asset in scene.get("assets", []) or []:
         for field in ("file", "sourceFile"):
@@ -652,6 +657,15 @@ def _scene_shared_asset_limit_report(scene: dict[str, Any], repo_root: Path) -> 
                 continue
             mb = format_mb(path.stat().st_size)
             max_mb = max(max_mb, mb)
+            if mb > SHARED_SOURCE_SOFT_MAX_MB:
+                soft_oversize.append(
+                    {
+                        "assetId": asset.get("id"),
+                        "field": field,
+                        "path": _repo_rel(repo_root, path),
+                        "mb": mb,
+                    }
+                )
             if mb > SHARED_SOURCE_HARD_MAX_MB:
                 oversize.append(
                     {
@@ -663,7 +677,11 @@ def _scene_shared_asset_limit_report(scene: dict[str, Any], repo_root: Path) -> 
                 )
     return {
         "githubPagesSafe": not oversize,
+        "preferredAssetSafe": not soft_oversize,
+        "softMaxMb": SHARED_SOURCE_SOFT_MAX_MB,
+        "hardMaxMb": SHARED_SOURCE_HARD_MAX_MB,
         "maxAssetMb": max_mb,
+        "softOversizeAssets": soft_oversize,
         "oversizeAssets": oversize,
     }
 
@@ -672,6 +690,7 @@ def _shared_asset_library_limit_report(family: FamilyConfig) -> dict[str, Any]:
     files: list[dict[str, Any]] = []
     max_mb = 0.0
     oversize: list[dict[str, Any]] = []
+    soft_oversize: list[dict[str, Any]] = []
     source_count = 0
     optimized_count = 0
     total_bytes = 0
@@ -696,17 +715,22 @@ def _shared_asset_library_limit_report(family: FamilyConfig) -> dict[str, Any]:
                 "mb": mb,
             }
             files.append(row)
+            if mb > SHARED_SOURCE_SOFT_MAX_MB:
+                soft_oversize.append(row)
             if mb > SHARED_SOURCE_HARD_MAX_MB:
                 oversize.append(row)
     largest = sorted(files, key=lambda row: float(row["mb"]), reverse=True)[:10]
     return {
         "githubPagesSafe": not oversize,
+        "preferredAssetSafe": not soft_oversize,
+        "softMaxMb": SHARED_SOURCE_SOFT_MAX_MB,
         "hardMaxMb": SHARED_SOURCE_HARD_MAX_MB,
         "maxAssetMb": max_mb,
         "totalMb": format_mb(total_bytes),
         "sourceFileCount": source_count,
         "optimizedFileCount": optimized_count,
         "largestAssets": largest,
+        "softOversizeAssets": soft_oversize,
         "oversizeAssets": oversize,
     }
 

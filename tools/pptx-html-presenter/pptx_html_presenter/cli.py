@@ -47,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--hard-max-mb", type=float)
     build.add_argument("--gif-transcode", action=argparse.BooleanOptionalAction, default=None)
     build.add_argument("--video-transcode", action=argparse.BooleanOptionalAction, default=None)
+    build.add_argument("--image-optimize", action=argparse.BooleanOptionalAction, default=None)
     build.add_argument("--allow-oversize-assets", action=argparse.BooleanOptionalAction, default=None)
     build.add_argument("--qa", action="store_true")
     build.add_argument("--visual-audit", action="store_true")
@@ -533,6 +534,8 @@ def _config_from_args(args: argparse.Namespace) -> PresenterConfig:
         overrides["transcode_gif"] = args.gif_transcode
     if args.video_transcode is not None:
         overrides["transcode_video"] = args.video_transcode
+    if args.image_optimize is not None:
+        overrides["optimize_static_images"] = args.image_optimize
     if args.allow_oversize_assets is not None:
         overrides["allow_oversize_assets"] = args.allow_oversize_assets
     if overrides:

@@ -111,6 +111,9 @@ Extract original assets byte-for-byte first:
 - Keep SVG as SVG when browser-compatible.
 - Enforce GitHub Pages file-size limits with reports, not silent quality loss.
 - In family/shared-asset publishing, do not keep an oversized original source asset in the public shared asset tree when the runtime uses an optimized copy. Preserve the original asset hash/source path in reports and `asset-index.json`, but publish only GitHub-safe runtime assets unless the user explicitly approves large-file/LFS handling.
+- Treat 50 MiB as the preferred public-asset ceiling and 100 MiB as the hard GitHub-compatible ceiling. Future family builds should be `needs-review` if any public shared asset remains above the preferred ceiling, and blocked from ordinary publish if any runtime asset remains above the hard ceiling.
+- Oversized static raster images are runtime optimization candidates too, not only GIFs/videos. Prefer high-quality WebP for PNG/JPEG/TIFF/BMP sources, preserving alpha when needed; only downscale to presentation-sized WebP when the larger visually lossless output cannot satisfy the hard limit.
+- Default policy should disallow oversize public assets (`allow_oversize_assets: false`) and optimize static images (`optimize_static_images: true`). Use explicit overrides only for debugging or when Git LFS/external hosting has been consciously chosen.
 - Optimized media must be reproducible, not merely small. FFmpeg transcodes should strip volatile metadata and avoid non-deterministic multithreaded encoder settings where practical, because shared asset filenames are content hashes and must not churn across identical rebuilds.
 
 ## Multi-Deck Family Strategy

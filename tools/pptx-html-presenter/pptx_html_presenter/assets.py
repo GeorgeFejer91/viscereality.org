@@ -87,6 +87,19 @@ def prepare_assets(
                             asset.extension = "webp"
                     else:
                         asset.warnings.append("gif-transcode-unavailable")
+                elif _should_optimize_static_image(asset, policy):
+                    converted = _try_optimize_static_image(
+                        source_path,
+                        optimized_dir,
+                        asset,
+                        policy,
+                    )
+                    if converted is not None:
+                        output_path = converted
+                        asset.kind = "image"
+                        asset.extension = converted.suffix.lower().lstrip(".")
+                    else:
+                        asset.warnings.append("static-image-optimize-unavailable")
                 elif _should_transcode_video(asset, policy):
                     converted = _try_optimize_video_with_ffmpeg(
                         source_path,
@@ -157,6 +170,7 @@ def prepare_assets(
             "hardMaxMb": policy.hard_max_mb,
             "transcodeGif": policy.transcode_gif,
             "transcodeVideo": policy.transcode_video,
+            "optimizeStaticImages": policy.optimize_static_images,
             "videoCrf": policy.video_crf,
             "allowOversizeAssets": policy.allow_oversize_assets,
             "pruneUnreferencedSourceAssets": policy.prune_unreferenced_source_assets,
@@ -353,6 +367,17 @@ def _should_transcode_video(asset: AssetRef, policy: AssetPolicy) -> bool:
     )
 
 
+def _should_optimize_static_image(asset: AssetRef, policy: AssetPolicy) -> bool:
+    return (
+        policy.mode != "source-only"
+        and policy.optimize_static_images
+        and asset.kind == "image"
+        and asset.extension.lower() not in {"gif", "svg"}
+        and asset.extension.lower() in {"bmp", "jpeg", "jpg", "png", "tif", "tiff"}
+        and format_mb(asset.size_bytes) > policy.soft_max_mb
+    )
+
+
 def _probe_image_metadata(asset: AssetRef, path: Path) -> None:
     if asset.kind not in {"image", "svg"}:
         return
@@ -431,6 +456,102 @@ def _try_convert_gif_to_webp(source: Path, output: Path, quality: int) -> Path |
         return output
     except Exception:
         return None
+
+
+def _try_optimize_static_image(
+    source: Path,
+    output_dir: Path,
+    asset: AssetRef,
+    policy: AssetPolicy,
+) -> Path | None:
+    try:
+        from PIL import Image
+    except Exception:
+        asset.warnings.append("pillow-unavailable")
+        return None
+    source_size = source.stat().st_size if source.exists() else asset.size_bytes
+    quality = max(1, min(100, int(policy.webp_quality)))
+    try:
+        with Image.open(source) as image:
+            has_alpha = bool(asset.alpha) or _image_has_alpha(image)
+            variants = _static_image_variants(has_alpha, quality)
+            for max_width, max_height, variant_quality, lossless, suffix in variants:
+                output_dir.mkdir(parents=True, exist_ok=True)
+                output = output_dir / f"{asset.sha256[:16]}-{suffix}.webp"
+                if output.exists() and output.stat().st_size > 0:
+                    if _accept_optimized_static_image(output, source_size, policy):
+                        asset.warnings.append(f"static-image-optimized-webp-{suffix}")
+                        return output
+                    output.unlink(missing_ok=True)
+                frame = image.copy()
+                frame.thumbnail(
+                    (max_width, max_height),
+                    _image_resample_lanczos(Image),
+                )
+                if has_alpha:
+                    frame = frame.convert("RGBA")
+                elif frame.mode != "RGB":
+                    frame = frame.convert("RGB")
+                save_kwargs: dict[str, Any] = {
+                    "format": "WEBP",
+                    "method": 6,
+                    "quality": max(1, min(100, int(variant_quality))),
+                }
+                if lossless:
+                    save_kwargs["lossless"] = True
+                    save_kwargs["quality"] = 100
+                frame.save(output, **save_kwargs)
+                if _accept_optimized_static_image(output, source_size, policy):
+                    asset.warnings.append(f"static-image-optimized-webp-{suffix}")
+                    return output
+                if output.exists():
+                    if format_mb(output.stat().st_size) > policy.hard_max_mb:
+                        asset.warnings.append(f"static-image-webp-{suffix}-over-hard-limit")
+                    else:
+                        asset.warnings.append(f"static-image-webp-{suffix}-not-smaller")
+                    output.unlink(missing_ok=True)
+    except Exception as exc:
+        asset.warnings.append(f"static-image-optimize-failed:{exc}")
+        return None
+    return None
+
+
+def _static_image_variants(
+    has_alpha: bool,
+    quality: int,
+) -> list[tuple[int, int, int, bool, str]]:
+    if has_alpha:
+        return [
+            (3840, 2160, 100, True, "lossless-w3840"),
+            (3840, 2160, max(quality, 90), False, f"q{max(quality, 90)}-w3840"),
+            (1920, 1080, min(quality, 88), False, f"q{min(quality, 88)}-w1920"),
+        ]
+    return [
+        (3840, 2160, max(quality, 90), False, f"q{max(quality, 90)}-w3840"),
+        (1920, 1080, quality, False, f"q{quality}-w1920"),
+    ]
+
+
+def _accept_optimized_static_image(output: Path, source_size: int, policy: AssetPolicy) -> bool:
+    if not output.exists() or output.stat().st_size <= 0:
+        return False
+    output_size = output.stat().st_size
+    if format_mb(output_size) > policy.hard_max_mb:
+        return False
+    return output_size < source_size or format_mb(source_size) > policy.hard_max_mb
+
+
+def _image_has_alpha(image: Any) -> bool:
+    return image.mode in {"RGBA", "LA"} or (
+        image.mode == "P" and "transparency" in getattr(image, "info", {})
+    )
+
+
+def _image_resample_lanczos(image_module: Any) -> Any:
+    resampling = getattr(image_module, "Resampling", None)
+    if resampling is not None:
+        return resampling.LANCZOS
+    return image_module.LANCZOS
 
 
 def _try_convert_gif_to_webp_with_ffmpeg(
