@@ -1,6 +1,6 @@
 # PPTX HTML Family Status
 
-Last updated: 2026-07-03
+Last updated: 2026-07-04
 
 This is the living implementation/status note for replacing the three Viscereality presentation players with object-based HTML scene players that share one asset library.
 
@@ -51,7 +51,7 @@ presentations/shared-assets/viscereality/
   - `presentations/shared-assets/viscereality/asset-index.json`
 - Latest family build status: `ok`.
 - Latest family inspect status: `blocked` only because the local disk free-space preflight is below the configured 8 GiB floor; source PPTX parsing still reports 3 decks and about 1.53 GiB unique source media.
-- Latest family HTML visual audit status: `ok`.
+- Latest family HTML visual audit status: `ok`; the latest direct public-folder audits also pass for all three decks.
 - Latest family publish status: `ok`; the public presentation hub points at the three scene players and keeps chunked fallback links secondary.
 - PowerPoint MP4 oracle QA: slide-1 smoke passes have run for MuC, alpCHI, and BBD26. They are useful for calibration but still fail strict SSIM; do not claim oracle parity until full reference MP4 export/frame comparison passes or reviewed exceptions are written.
 
@@ -134,8 +134,13 @@ Current source PPTX parse results from family preflight:
 - Problem: Manual unmatched-object fade timing changes for MuC transition 1->2 looked plausible but worsened the PowerPoint-oracle score when tested.
   - Solution: do not hard-code those guesses. `candidate-sweep` can now vary `enter-fade-end` and `exit-fade-end` by passing `unmatchedFadeOverride` through `browser_capture.mjs` into the runtime capture path. This lets future agents score fade timing candidates against oracle frames without rebuilding the deck or changing production scene JSON.
 - Calibration result: on 2026-07-03, MuC `trans-001-002-025` sweeps for `exit-fade-end` values `0.05:1:0.05` and `enter-fade-end` values `0.05:1:0.05` both failed to improve the current baseline; best score observed was `0.591602`, below the existing smoke baseline around `0.624`. Treat fade-window sweeps as a diagnostic tool, not a currently accepted production override.
+- Problem: Family default config values such as `visual_effects.glow_scale` were correctly merged by `_deck_presenter_config()` but were lost when `build_presentation()` copied fields into its title/slug-overlaid `effective_config`.
+  - Solution: `build_presentation()` now carries `visual_effects` through to scene compilation, and the build smoke test asserts that non-default glow settings appear in `deck.scene.json`. The rebuilt public manifests now show `runtime.visualEffects.glowScale = 0.5` for `MuC`, `alpCHI`, and `BBD26`.
+- Calibration result: on 2026-07-04, candidate sweeps showed a production `glow_scale` of `0.5` improves PowerPoint-oracle slide-1/early-transition samples for BBD26 and alpCHI without changing object structure. The family defaults now set `visual_effects.glow_scale` to `0.5`; `glow_alpha_scale` remains `1.0`.
+- Problem: BBD26 visual-audit capture failed on reverse transition `27->26` because visible WebM `track-0109` could remain at `readyState = 0` in deterministic capture mode.
+  - Solution: `browser_capture.mjs` now forces visible videos to `preload="auto"`, calls `load()` when metadata/data is absent, waits for metadata/current-frame readiness, seeks visible videos to their sample clocks, and only then screenshots. This does not reverse/restart media in the runtime player; it makes QA capture deterministic for visible media.
 
-Current shared public asset library check after the WDP/cache family rebuild:
+Current shared public asset library check after the visual-effects/public-audit rebuild:
 
 - `presentations/shared-assets/viscereality/` contains 76 runtime/source files, about 362.57 MiB total.
 - Largest shared asset is about 48.879 MiB.
@@ -147,7 +152,7 @@ Current shared public asset library check after the WDP/cache family rebuild:
   - `BBD26`: 22 cached optimized assets reused.
 - The latest build also converted one WDP/HDPhoto-derived asset per public deck into shared PNG runtime assets.
 - Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
-- Latest direct filesystem gate check on 2026-07-03: 76 shared public asset files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
+- Latest direct filesystem gate check on 2026-07-04: 76 shared public asset files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
 
 ## Latest HTML Visual Audit
 
@@ -165,7 +170,15 @@ After the first-transition calibration updates, current public HTML visual-audit
 - `alpCHI`: 217 samples, 0 failures.
 - `BBD26`: 280 samples, 0 failures.
 
-After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. After the subsequent `mediaEffects.brightnessContrast` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the `visualEffects.glow` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the transition-parenting fix for mismatched explicit wrapper groups, `family visual-audit` passed again for all three decks with 0 failures. After the clean rebuild/publish that removed the rejected MuC transition-specific fade override and added capture-only unmatched-fade candidate sweeps, `family visual-audit` passed again for all three public decks with 0 failures. This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, and reverse midpoint samples for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
+After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. After the subsequent `mediaEffects.brightnessContrast` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the `visualEffects.glow` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the transition-parenting fix for mismatched explicit wrapper groups, `family visual-audit` passed again for all three decks with 0 failures. After the clean rebuild/publish that removed the rejected MuC transition-specific fade override and added capture-only unmatched-fade candidate sweeps, `family visual-audit` passed again for all three public decks with 0 failures.
+
+After the `visual_effects` config propagation fix and deterministic visible-video capture hardening on 2026-07-04, direct public-folder audits passed:
+
+- `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+- `alpCHI`: 217 samples, 25 settled slides, 168 forward transition samples, 24 reverse midpoint samples, 0 failures, 0 warnings.
+- `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures, 0 warnings.
+
+This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, reverse midpoint samples, and the later BBD26 visible-video capture case for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
 
 ## Latest PowerPoint Oracle Smoke
 
@@ -177,16 +190,16 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presenta
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks BBD26 --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
 ```
 
-Current smoke results after the media-effects, conservative-glow, and mismatched-transition-parent rebuild/public publish:
+Current smoke results after the visual-effects config propagation fix, `glow_scale = 0.5`, and public visual-audit rebuild:
 
-- `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.626`, settled slide 1 about `0.789`, transition 25% about `0.626`, transition midpoint about `0.868`. This is the clean rebuild baseline after removing the rejected transition-specific fade override.
-- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.494`, settled slide 1 about `0.817`, transition start about `0.936`, transition endpoint about `0.922`.
-- `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.730`, settled slide 1 about `0.800`, transition start about `0.730`, transition midpoint about `0.917`, and transition 75%/90% about `0.874`. This replaced the previous catastrophic `0.323` late-transition failure caused by offscreen panel parenting.
+- `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.624`, settled slide 1 about `0.789`, transition start about `0.916`, transition 25% about `0.624`, transition midpoint about `0.868`, transition 75% about `0.857`.
+- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.503`, settled slide 1 about `0.839`, transition start about `0.957`, transition 25% about `0.503`, transition midpoint about `0.746`, transition 75% about `0.781`.
+- `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.754`, settled slide 1 about `0.826`, transition start about `0.754`, transition 25% about `0.898`, transition midpoint about `0.945`, transition 75% about `0.874`. This remains far above the previous catastrophic `0.323` late-transition failure caused by offscreen panel parenting.
 
 Interpretation:
 
 - The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
-- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects, and stable transition-parenting rule improved specific samples, but remaining differences include text/raster antialiasing, text placement/scale, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
+- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects with calibrated family scaling, deterministic visible-video QA capture, and stable transition-parenting rule improved specific samples, but remaining differences include text/raster antialiasing, text placement/scale, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
 - Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish
@@ -209,7 +222,7 @@ The previous chunked players were moved to:
 
 1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
 2. Continue fine-tuning deck-specific configs for oracle parity: first-transition smoke is improved but not passing on any deck.
-3. Continue improving oracle parity after the WDP/cache public rebuild. The public scene decks have been rebuilt, visually audited, and republished with WDP conversion and shared optimized cache reuse, but strict PowerPoint oracle QA is still the main unresolved quality gate.
+3. Continue improving oracle parity after the WDP/cache/visual-effects public rebuild. The public scene decks have been rebuilt, visually audited, and republished with WDP conversion, shared optimized cache reuse, calibrated glow scaling, and deterministic visible-video capture, but strict PowerPoint oracle QA is still the main unresolved quality gate.
 4. Continue calibrating text/layout metrics, media phase/brightness, additional Morph progress maps, and any remaining explicit-group wrapper transitions where PowerPoint changes group IDs but the visible object identity remains stable.
 5. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
 6. Commit and push only intended files; do not stage unrelated root `index.html` changes.

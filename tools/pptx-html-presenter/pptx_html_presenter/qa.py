@@ -1164,13 +1164,26 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "fade-exit-end": "exit-fade-end",
         "unmatched-exit-end": "exit-fade-end",
         "unmatched-fade-exit-end": "exit-fade-end",
+        "glow": "glow-scale",
+        "glow-radius": "glow-scale",
+        "glow-radius-scale": "glow-scale",
+        "glow-alpha": "glow-alpha-scale",
         "clock": "phase",
     }
     normalized = aliases.get(normalized, normalized)
-    if normalized not in {"progress", "phase", "phase-offset", "track-progress", "enter-fade-end", "exit-fade-end"}:
+    if normalized not in {
+        "progress",
+        "phase",
+        "phase-offset",
+        "track-progress",
+        "enter-fade-end",
+        "exit-fade-end",
+        "glow-scale",
+        "glow-alpha-scale",
+    }:
         raise PresenterError(
             "Candidate sweep --vary must be progress, track-progress, phase, phase-offset, "
-            "enter-fade-end, or exit-fade-end."
+            "enter-fade-end, exit-fade-end, glow-scale, or glow-alpha-scale."
         )
     return normalized
 
@@ -1229,6 +1242,10 @@ def _candidate_sweep_samples(
             candidate["unmatchedFadeOverride"] = {"enterStart": 0.0, "enterEnd": round(_clamp01(numeric), 4)}
         elif normalized == "exit-fade-end":
             candidate["unmatchedFadeOverride"] = {"exitStart": 0.0, "exitEnd": round(_clamp01(numeric), 4)}
+        elif normalized == "glow-scale":
+            candidate["visualEffectOverrides"] = {"glowScale": round(max(0.0, numeric), 4)}
+        elif normalized == "glow-alpha-scale":
+            candidate["visualEffectOverrides"] = {"glowAlphaScale": round(max(0.0, numeric), 4)}
         else:
             candidate["trackProgressOverrides"] = {str(track_id): round(_clamp01(numeric), 4)}
         out.append(candidate)

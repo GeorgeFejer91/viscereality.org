@@ -100,10 +100,13 @@ def build_parser() -> argparse.ArgumentParser:
             "exit-fade-end",
             "fade-enter-end",
             "fade-exit-end",
+            "glow-scale",
+            "glow-radius-scale",
+            "glow-alpha-scale",
         ],
         help=(
             "Field to vary: global Morph progress, one track's Morph progress, one track's media clock, "
-            "a media-clock offset, or unmatched enter/exit fade timing."
+            "a media-clock offset, unmatched enter/exit fade timing, or glow visual-effect strength."
         ),
     )
     candidate_sweep.add_argument("--values", required=True, help="Comma list or start:end:step range.")

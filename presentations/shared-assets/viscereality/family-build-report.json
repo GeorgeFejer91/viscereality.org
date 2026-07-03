@@ -4,7 +4,7 @@
       "assetCount": 39,
       "assetMode": "copy",
       "deckId": "MuC",
-      "generatedAtUtc": "2026-07-03T22:11:05+00:00",
+      "generatedAtUtc": "2026-07-03T22:55:34+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -44,7 +44,7 @@
       "assetCount": 48,
       "assetMode": "copy",
       "deckId": "alpCHI",
-      "generatedAtUtc": "2026-07-03T22:11:33+00:00",
+      "generatedAtUtc": "2026-07-03T22:56:01+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -84,7 +84,7 @@
       "assetCount": 57,
       "assetMode": "copy",
       "deckId": "BBD26",
-      "generatedAtUtc": "2026-07-03T22:12:02+00:00",
+      "generatedAtUtc": "2026-07-03T22:56:30+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -122,13 +122,13 @@
     }
   ],
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-03T22:12:02+00:00",
+  "generatedAtUtc": "2026-07-03T22:56:31+00:00",
   "preflight": {
-    "currentChunkedTotalMb": 195.718,
+    "currentChunkedTotalMb": 613.527,
     "decks": [
       {
         "assetCount": 39,
-        "currentPublicSizeMb": 79.728,
+        "currentPublicSizeMb": 80.494,
         "deckId": "MuC",
         "mediaSizeMb": 1161.801,
         "publicDir": "MuC",
@@ -143,7 +143,7 @@
       },
       {
         "assetCount": 48,
-        "currentPublicSizeMb": 48.555,
+        "currentPublicSizeMb": 192.36,
         "deckId": "alpCHI",
         "mediaSizeMb": 1073.739,
         "publicDir": "alpCHI",
@@ -159,7 +159,7 @@
       },
       {
         "assetCount": 57,
-        "currentPublicSizeMb": 67.435,
+        "currentPublicSizeMb": 340.673,
         "deckId": "BBD26",
         "mediaSizeMb": 1086.943,
         "publicDir": "BBD26",
@@ -175,7 +175,7 @@
       }
     ],
     "disk": {
-      "freeGb": 5.805,
+      "freeGb": 5.362,
       "minimumFreeGb": 8.0,
       "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org"
     },
@@ -185,7 +185,7 @@
     "failures": [
       {
         "code": "disk-free-below-minimum",
-        "message": "Only 5.80 GiB free; minimum is 8.00 GiB."
+        "message": "Only 5.36 GiB free; minimum is 8.00 GiB."
       }
     ],
     "warnings": []

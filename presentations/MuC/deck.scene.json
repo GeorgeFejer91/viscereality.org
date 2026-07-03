@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-03T22:11:05+00:00",
+  "generatedAtUtc": "2026-07-03T22:55:34+00:00",
   "qa": {
     "groupRows": [
       {
@@ -8054,7 +8054,11 @@
     },
     "reverse": "mirror",
     "unmatchedFadeEnd": 0.75,
-    "unmatchedFadeStart": 0.5
+    "unmatchedFadeStart": 0.5,
+    "visualEffects": {
+      "glowAlphaScale": 1.0,
+      "glowScale": 0.5
+    }
   },
   "schema": "pptx-html-presenter.scene.v2",
   "schemaVersion": 2,

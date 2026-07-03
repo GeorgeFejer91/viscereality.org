@@ -58,6 +58,7 @@ try {
               direction: s.direction || "forward",
               trackProgressOverrides: s.trackProgressOverrides || null,
               unmatchedFadeOverride: s.unmatchedFadeOverride || null,
+              visualEffectOverrides: s.visualEffectOverrides || null,
             },
           }));
         }, sample);
@@ -70,6 +71,7 @@ try {
               direction: s.direction || "forward",
               trackProgressOverrides: s.trackProgressOverrides || null,
               unmatchedFadeOverride: s.unmatchedFadeOverride || null,
+              visualEffectOverrides: s.visualEffectOverrides || null,
             },
           }));
         }, sample);
@@ -193,35 +195,86 @@ async function waitForRenderableFrame(page, mediaTimeSec, mediaClocks) {
 async function seekVideos(page, seconds, mediaClocks) {
   try {
     await page.evaluate(async ({ targetSeconds, trackSeconds }) => {
-    const videos = Array.from(document.querySelectorAll("#frame video"));
-    await Promise.all(videos.filter((video) => window.__pptxHtmlPresenterElementVisible(video)).map((video) => new Promise((resolve) => {
-      if (video.error) {
-        resolve();
-        return;
-      }
-      const trackId = video.closest(".obj")?.dataset.trackId || "";
-      const desiredSeconds = Number(trackSeconds?.[trackId] ?? targetSeconds);
-      const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
-      const loopTarget = duration > 0.08 ? (desiredSeconds % duration) : desiredSeconds;
-      const target = duration > 0
-        ? Math.max(0, Math.min(loopTarget, Math.max(0, duration - 0.05)))
-        : Math.max(0, desiredSeconds);
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
+      const videos = Array.from(document.querySelectorAll("#frame video"));
+      const waitForVideo = (video, predicate, events, timeoutMs) => new Promise((resolve) => {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+        let done = false;
+        let timer = null;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          if (timer) clearTimeout(timer);
+          for (const eventName of events) {
+            video.removeEventListener(eventName, onEvent);
+          }
+          resolve();
+        };
+        const onEvent = () => {
+          if (predicate()) finish();
+        };
+        for (const eventName of events) {
+          video.addEventListener(eventName, onEvent);
+        }
+        timer = setTimeout(finish, timeoutMs);
+      });
+      await Promise.all(videos.filter((video) => window.__pptxHtmlPresenterElementVisible(video)).map(async (video) => {
+        if (video.error) return;
+        video.preload = "auto";
         video.pause();
-        resolve();
-      };
-      video.pause();
-      if (Math.abs(video.currentTime - target) < 0.04 && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-        finish();
-        return;
-      }
-      video.addEventListener("seeked", finish, { once: true });
-      video.currentTime = target;
-      setTimeout(finish, 2500);
-    })));
+        if (video.readyState < HTMLMediaElement.HAVE_METADATA || video.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+          try {
+            video.load();
+          } catch {
+            // Keep going; diagnostics will report the unresolved media state.
+          }
+          await waitForVideo(
+            video,
+            () => video.error || video.readyState >= HTMLMediaElement.HAVE_METADATA,
+            ["loadedmetadata", "loadeddata", "canplay", "error"],
+            3500,
+          );
+        }
+        const trackId = video.closest(".obj")?.dataset.trackId || "";
+        const desiredSeconds = Number(trackSeconds?.[trackId] ?? targetSeconds);
+        const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+        const loopTarget = duration > 0.08 ? (desiredSeconds % duration) : desiredSeconds;
+        const target = duration > 0
+          ? Math.max(0, Math.min(loopTarget, Math.max(0, duration - 0.05)))
+          : Math.max(0, desiredSeconds);
+        if (Math.abs(video.currentTime - target) >= 0.04 || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          try {
+            video.currentTime = target;
+          } catch {
+            // Some browsers reject seeks before metadata; the readiness wait below catches this.
+          }
+          await waitForVideo(
+            video,
+            () => video.error || (
+              Math.abs(video.currentTime - target) < 0.08
+              && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+            ),
+            ["seeked", "loadeddata", "canplay", "timeupdate", "error"],
+            4000,
+          );
+        }
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA && !video.error) {
+          try {
+            video.load();
+          } catch {
+            // Diagnostics will surface the remaining not-ready video if this does not recover.
+          }
+          await waitForVideo(
+            video,
+            () => video.error || video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+            ["loadeddata", "canplay", "canplaythrough", "error"],
+            4000,
+          );
+        }
+        video.pause();
+      }));
     }, { targetSeconds: seconds, trackSeconds: mediaClocks || {} });
     return { ok: true };
   } catch (error) {

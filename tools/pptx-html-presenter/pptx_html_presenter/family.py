@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import shutil
 import tempfile
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .build import build_presentation
-from .config import PresenterConfig, load_config
+from .config import PresenterConfig, load_config, load_config_from_dict
 from .errors import PresenterError
 from .publish import publish_build
 from .qa import run_qa, run_visual_audit
@@ -915,11 +916,24 @@ def _preflight(family: FamilyConfig, *, parse_assets: bool) -> dict[str, Any]:
 
 
 def _deck_presenter_config(family: FamilyConfig, deck: FamilyDeck) -> PresenterConfig:
+    if family.presenter_config and deck.config:
+        merged = _deep_merge_dicts(read_json(family.presenter_config), read_json(deck.config))
+        return load_config_from_dict(merged, deck.config.parent)
     if deck.config:
         return load_config(deck.config)
     if family.presenter_config:
         return load_config(family.presenter_config)
     return PresenterConfig()
+
+
+def _deep_merge_dicts(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = deepcopy(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge_dicts(merged[key], value)
+        else:
+            merged[key] = deepcopy(value)
+    return merged
 
 
 def _resolve_repo_root(raw: dict[str, Any], config_path: Path) -> Path:

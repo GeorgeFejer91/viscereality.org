@@ -93,6 +93,12 @@ class VisualAuditPolicy:
 
 
 @dataclass(frozen=True)
+class VisualEffectsPolicy:
+    glow_scale: float = 1.0
+    glow_alpha_scale: float = 1.0
+
+
+@dataclass(frozen=True)
 class PresenterConfig:
     scene_schema_version: int = 2
     title: str | None = None
@@ -107,6 +113,7 @@ class PresenterConfig:
     morph_policy: MorphPolicy = field(default_factory=MorphPolicy)
     qa_policy: QaPolicy = field(default_factory=QaPolicy)
     visual_audit: VisualAuditPolicy = field(default_factory=VisualAuditPolicy)
+    visual_effects: VisualEffectsPolicy = field(default_factory=VisualEffectsPolicy)
     media_phase_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     transition_media_phase_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     transition_time_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
@@ -128,6 +135,10 @@ def load_config(path: Path | None = None) -> PresenterConfig:
         return PresenterConfig()
     raw = read_json(path)
     base_dir = path.parent
+    return load_config_from_dict(raw, base_dir)
+
+
+def load_config_from_dict(raw: dict[str, Any], base_dir: Path) -> PresenterConfig:
     profile_name = str(raw.get("profile", "github-pages-1080"))
     profile = PROFILE_PRESETS.get(profile_name, PROFILE_PRESETS["github-pages-1080"])
     asset_raw: dict[str, Any] = raw.get("asset_policy", {}) or {}
@@ -138,6 +149,7 @@ def load_config(path: Path | None = None) -> PresenterConfig:
     morph_raw: dict[str, Any] = raw.get("morph_policy", {}) or {}
     qa_raw: dict[str, Any] = raw.get("qa_policy", {}) or {}
     visual_raw: dict[str, Any] = raw.get("visual_audit", {}) or {}
+    effects_raw: dict[str, Any] = raw.get("visual_effects", {}) or {}
     runtime_raw: dict[str, Any] = raw.get("runtime", {}) or {}
     media_phase_overrides = _load_override_rows(
         raw,
@@ -285,6 +297,10 @@ def load_config(path: Path | None = None) -> PresenterConfig:
             ),
             reverse_midpoints=bool(visual_raw.get("reverse_midpoints", True)),
             fail_on_timeout=bool(visual_raw.get("fail_on_timeout", True)),
+        ),
+        visual_effects=VisualEffectsPolicy(
+            glow_scale=float(effects_raw.get("glow_scale", 1.0)),
+            glow_alpha_scale=float(effects_raw.get("glow_alpha_scale", 1.0)),
         ),
         media_phase_overrides=tuple(media_phase_overrides),
         transition_media_phase_overrides=tuple(transition_media_phase_overrides),

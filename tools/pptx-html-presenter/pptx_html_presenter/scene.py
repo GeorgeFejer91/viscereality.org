@@ -83,6 +83,10 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
                 "minPx": config.outline_policy.min_px,
                 "maxPx": config.outline_policy.max_px,
             },
+            "visualEffects": {
+                "glowScale": config.visual_effects.glow_scale,
+                "glowAlphaScale": config.visual_effects.glow_alpha_scale,
+            },
             "layerPolicy": _runtime_layer_policy(config),
             "autoAdvance": _runtime_auto_advance_rows(config.auto_advance),
             "autoSegments": _runtime_auto_advance_rows(config.auto_segments),

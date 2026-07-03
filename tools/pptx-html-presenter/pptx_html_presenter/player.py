@@ -229,7 +229,7 @@ PLAYER_HTML = r"""<!doctype html>
     cancelAutoAdvance();
     currentIndex = Math.max(0, Math.min(scene.slides.length - 1, index));
     const slide = slideAt(currentIndex);
-    reconcile(slideObjects(slide), new Map());
+    reconcile(slideObjects(slide), new Map(), options.captureOptions || null);
     updateHud();
     preload(currentIndex + 1);
     scheduleAutoAdvance(currentIndex, options);
@@ -239,7 +239,7 @@ PLAYER_HTML = r"""<!doctype html>
     return Array.isArray(slide?.nodes) && slide.nodes.length ? slide.nodes : (slide?.objects || []);
   }
 
-  function reconcile(objects, previousStates) {
+  function reconcile(objects, previousStates, captureOptions = null) {
     const activeTracks = new Set(objects.map((obj) => obj.trackId));
     for (const obj of objects) {
       ensureNode(obj);
@@ -247,7 +247,7 @@ PLAYER_HTML = r"""<!doctype html>
     for (const obj of objects) {
       const node = ensureNode(obj);
       attachNode(node, obj, obj, activeTracks);
-      applyState(node, obj, obj, 1, false, null);
+      applyState(node, obj, obj, 1, false, null, captureOptions);
       node.style.display = "";
     }
     for (const [track, node] of nodes.entries()) {
@@ -422,7 +422,7 @@ PLAYER_HTML = r"""<!doctype html>
     return asset;
   }
 
-  function applyState(node, from, to, progress, isTransition, transition = null) {
+  function applyState(node, from, to, progress, isTransition, transition = null, captureOptions = null) {
     const state = lerpState(from, to, progress, transition);
     const g = stateGeometryForNode(node, state);
     node.style.left = (g.leftPct * 100) + "%";
@@ -435,7 +435,7 @@ PLAYER_HTML = r"""<!doctype html>
     node.style.transform = `rotate(${g.rotation || 0}deg) scale(${sx}, ${sy})`;
     node.style.opacity = String(Math.max(0, Math.min(1, state.opacity)));
     if (node.dataset.nodeRole === "panel") {
-      applyPanelState(node, state);
+      applyPanelState(node, state, captureOptions);
       syncMediaPlayback(node, state, isTransition);
       return;
     }
@@ -443,7 +443,7 @@ PLAYER_HTML = r"""<!doctype html>
       return;
     }
     if (node.dataset.outlineMode === "top") {
-      applyOutlinedObjectState(node, state);
+      applyOutlinedObjectState(node, state, captureOptions);
       syncMediaPlayback(node, state, isTransition);
       return;
     }
@@ -455,7 +455,7 @@ PLAYER_HTML = r"""<!doctype html>
       content.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       content.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     } else {
       const content = contentBox(node);
       if (content) {
@@ -468,11 +468,11 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.borderColor = cssColor(state.stroke);
       child.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       child.style.borderRadius = cssShapeRadius(state);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     }
     if (child && child.classList.contains("shape-svg")) {
       applySvgShape(child, state);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     }
     if (child && child.classList.contains("text")) {
       child.style.background = cssColor(state.fill);
@@ -483,21 +483,21 @@ PLAYER_HTML = r"""<!doctype html>
       applyTextStyle(child, state.textStyle || {});
       renderText(child, state);
       fitText(child, state);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     }
     syncMediaPlayback(node, state, isTransition);
   }
 
-  function applyOutlinedObjectState(node, state) {
+  function applyOutlinedObjectState(node, state, captureOptions = null) {
     const content = contentBox(node);
     const contentChild = content?.firstElementChild || null;
     const outline = outlineBox(node);
     const outlineChild = outline?.firstElementChild || null;
     if (content && contentChild) {
-      applyVisualBoxState(content, contentChild, state, { border: false, fill: true });
+      applyVisualBoxState(content, contentChild, state, { border: false, fill: true }, captureOptions);
     }
     if (outline && outlineChild) {
-      applyVisualBoxState(outline, outlineChild, state, { border: true, fill: false });
+      applyVisualBoxState(outline, outlineChild, state, { border: true, fill: false }, captureOptions);
     }
   }
 
@@ -518,20 +518,20 @@ PLAYER_HTML = r"""<!doctype html>
     return contentBox(node)?.firstElementChild || outlineBox(node)?.firstElementChild || null;
   }
 
-  function applyPanelState(node, state) {
+  function applyPanelState(node, state, captureOptions = null) {
     const base = contentBox(node);
     const baseChild = base?.firstElementChild || null;
     const outline = outlineBox(node);
     const outlineChild = outline?.firstElementChild || null;
     if (base && baseChild) {
-      applyVisualBoxState(base, baseChild, state, { border: false, fill: true, defaultFill: "#000000" });
+      applyVisualBoxState(base, baseChild, state, { border: false, fill: true, defaultFill: "#000000" }, captureOptions);
     }
     if (outline && outlineChild) {
-      applyVisualBoxState(outline, outlineChild, state, { border: true, fill: false });
+      applyVisualBoxState(outline, outlineChild, state, { border: true, fill: false }, captureOptions);
     }
   }
 
-  function applyVisualBoxState(box, child, state, options) {
+  function applyVisualBoxState(box, child, state, options, captureOptions = null) {
     const stroke = options.border ? effectiveOutlineStroke(state) : null;
     const strokeWidth = options.border && stroke ? cssStrokeWidth(state) : "0";
     if (child.tagName === "IMG" || child.tagName === "VIDEO") {
@@ -540,7 +540,7 @@ PLAYER_HTML = r"""<!doctype html>
       box.style.borderWidth = strokeWidth;
       box.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
       return;
     }
     if (child.classList.contains("shape")) {
@@ -549,7 +549,7 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.borderStyle = stroke ? "solid" : "none";
       child.style.borderWidth = strokeWidth;
       child.style.borderRadius = cssShapeRadius(state);
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     }
     if (child.classList.contains("shape-svg")) {
       applySvgShape(child, {
@@ -558,7 +558,7 @@ PLAYER_HTML = r"""<!doctype html>
         stroke,
         strokeWidthPct: options.border && stroke ? normalizedStrokeWidthPct(state) : 0,
       });
-      applyVisualEffects(child, state);
+      applyVisualEffects(child, state, captureOptions);
     }
   }
 
@@ -725,7 +725,7 @@ PLAYER_HTML = r"""<!doctype html>
         const node = ensureNode(objForNode);
         attachNode(node, effectiveFrom, effectiveTo, activeTracks);
         node.style.display = "";
-        applyState(node, effectiveFrom, effectiveTo, eased, true, transition);
+        applyState(node, effectiveFrom, effectiveTo, eased, true, transition, captureOptions);
       }
     };
     if (typeof fixedProgress === "number") {
@@ -965,9 +965,9 @@ PLAYER_HTML = r"""<!doctype html>
       ? Math.max(0, fromIndex - 1)
       : Math.min(scene.slides.length - 1, fromIndex + 1);
     if (progress <= 0 || fromIndex === toIndex) {
-      showSlide(fromIndex, { autoAdvance: false });
+      showSlide(fromIndex, { autoAdvance: false, captureOptions: options });
     } else if (progress >= 1) {
-      showSlide(toIndex, { autoAdvance: false });
+      showSlide(toIndex, { autoAdvance: false, captureOptions: options });
     } else {
       runTransition(fromIndex, toIndex, progress, options);
     }
@@ -1282,7 +1282,7 @@ PLAYER_HTML = r"""<!doctype html>
     child.style.height = `${100 / visibleH}%`;
     child.style.clipPath = "none";
   }
-  function applyVisualEffects(child, state) {
+  function applyVisualEffects(child, state, captureOptions = null) {
     if (!child) return;
     const filters = [];
     const isMedia = child.tagName === "IMG" || child.tagName === "VIDEO";
@@ -1302,38 +1302,49 @@ PLAYER_HTML = r"""<!doctype html>
       }
     }
     const glow = state?.visualEffects?.glow || null;
+    const isText = child.classList.contains("text");
     if (glow) {
-      const dropShadow = cssGlowDropShadow(glow);
-      if (dropShadow) filters.push(dropShadow);
-      if (child.classList.contains("text")) {
-        child.style.textShadow = cssGlowTextShadow(glow);
+      const dropShadow = cssGlowDropShadow(glow, captureOptions);
+      if (dropShadow && !isText) filters.push(dropShadow);
+      if (isText) {
+        child.style.textShadow = cssGlowTextShadow(glow, captureOptions);
       }
-    } else if (child.classList.contains("text")) {
+    } else if (isText) {
       child.style.textShadow = "";
     }
     child.style.filter = filters.join(" ");
   }
 
-  function cssGlowDropShadow(glow) {
-    const radius = cssEffectRadiusPx(glow);
+  function cssGlowDropShadow(glow, captureOptions = null) {
+    const radius = cssEffectRadiusPx(glow, captureOptions);
     if (radius <= 0) return "";
-    const color = cssColorWithAlpha(glow.color || "scheme:bg1", Number(glow.alpha ?? 1));
+    const color = cssColorWithAlpha(glow.color || "scheme:bg1", scaledGlowAlpha(glow, captureOptions));
     return `drop-shadow(0 0 ${radius.toFixed(2)}px ${color})`;
   }
 
-  function cssGlowTextShadow(glow) {
-    const radius = cssEffectRadiusPx(glow);
+  function cssGlowTextShadow(glow, captureOptions = null) {
+    const radius = cssEffectRadiusPx(glow, captureOptions);
     if (radius <= 0) return "";
-    const color = cssColorWithAlpha(glow.color || "scheme:bg1", Number(glow.alpha ?? 1));
+    const color = cssColorWithAlpha(glow.color || "scheme:bg1", scaledGlowAlpha(glow, captureOptions));
     return `0 0 ${radius.toFixed(2)}px ${color}`;
   }
 
-  function cssEffectRadiusPx(effect) {
+  function cssEffectRadiusPx(effect, captureOptions = null) {
     const radiusEmu = Number(effect?.radiusEmu || 0);
     if (!Number.isFinite(radiusEmu) || radiusEmu <= 0) return 0;
     const slideWidth = Number(scene?.deck?.slideSize?.width || 12192000);
     const frameWidth = Number(frame?.clientWidth || scene?.deck?.renderProfile?.width || 1920);
-    return Math.max(0, Math.min(320, (radiusEmu / slideWidth) * frameWidth));
+    const scale = Number(captureOptions?.visualEffectOverrides?.glowScale ?? scene?.runtime?.visualEffects?.glowScale ?? 1);
+    const safeScale = Number.isFinite(scale) ? Math.max(0, scale) : 1;
+    return Math.max(0, Math.min(320, (radiusEmu / slideWidth) * frameWidth * safeScale));
+  }
+
+  function scaledGlowAlpha(glow, captureOptions = null) {
+    const rawAlpha = Number(glow?.alpha ?? 1);
+    const alpha = Number.isFinite(rawAlpha) ? rawAlpha : 1;
+    const scale = Number(captureOptions?.visualEffectOverrides?.glowAlphaScale ?? scene?.runtime?.visualEffects?.glowAlphaScale ?? 1);
+    const safeScale = Number.isFinite(scale) ? Math.max(0, scale) : 1;
+    return Math.max(0, Math.min(1, alpha * safeScale));
   }
 
   function cssColorWithAlpha(value, alpha) {

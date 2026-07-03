@@ -49,6 +49,10 @@
     "reverse_midpoints": true,
     "fail_on_timeout": true
   },
+  "visual_effects": {
+    "glow_scale": 0.5,
+    "glow_alpha_scale": 1
+  },
   "qa_policy": {
     "slide_ssim": 0.985,
     "morph_ssim": 0.965,

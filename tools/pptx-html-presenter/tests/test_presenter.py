@@ -23,7 +23,7 @@ from pptx_html_presenter.assets import (
 )
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
-from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, load_config
+from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, VisualEffectsPolicy, load_config
 from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
@@ -125,7 +125,13 @@ class PresenterTests(unittest.TestCase):
             _write_demo_pptx(pptx)
             report = inspect_pptx(pptx, tmp_path / "inspect")
             self.assertEqual(report["slideCount"], 2)
-            build = build_presentation(pptx, out, PresenterConfig(), title="Demo", slug="demo")
+            build = build_presentation(
+                pptx,
+                out,
+                PresenterConfig(visual_effects=VisualEffectsPolicy(glow_scale=0.5, glow_alpha_scale=0.8)),
+                title="Demo",
+                slug="demo",
+            )
             self.assertEqual(build["status"], "ok")
             scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
             self.assertEqual(scene["schema"], "pptx-html-presenter.scene.v2")
@@ -145,6 +151,13 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(scene["runtime"]["unmatchedFadeEnd"], 1.0)
             self.assertTrue(scene["runtime"]["groupRenderer"])
             self.assertEqual(scene["runtime"]["reverse"], "mirror")
+            self.assertEqual(
+                scene["runtime"]["visualEffects"],
+                {
+                    "glowScale": 0.5,
+                    "glowAlphaScale": 0.8,
+                },
+            )
             self.assertEqual(
                 scene["runtime"]["outlineStyle"],
                 {
@@ -375,6 +388,24 @@ class PresenterTests(unittest.TestCase):
         config = load_config(None)
         self.assertTrue(config.asset_policy.optimize_static_images)
         self.assertFalse(config.asset_policy.allow_oversize_assets)
+
+    def test_config_loads_visual_effects_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "visual_effects": {
+                            "glow_scale": 0.5,
+                            "glow_alpha_scale": 0.8,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            self.assertEqual(config.visual_effects.glow_scale, 0.5)
+            self.assertEqual(config.visual_effects.glow_alpha_scale, 0.8)
 
     def test_config_loads_auto_advance_rules(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -1033,6 +1064,17 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("captureOptions?.unmatchedFadeOverride", PLAYER_HTML)
         self.assertIn(
             "unmatchedFadeOverride: s.unmatchedFadeOverride || null",
+            (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8"),
+        )
+
+    def test_player_does_not_double_apply_glow_to_text(self) -> None:
+        self.assertIn('const isText = child.classList.contains("text");', PLAYER_HTML)
+        self.assertIn("if (dropShadow && !isText) filters.push(dropShadow);", PLAYER_HTML)
+        self.assertIn("child.style.textShadow = cssGlowTextShadow(glow, captureOptions);", PLAYER_HTML)
+        self.assertIn("captureOptions?.visualEffectOverrides?.glowScale", PLAYER_HTML)
+        self.assertIn("captureOptions?.visualEffectOverrides?.glowAlphaScale", PLAYER_HTML)
+        self.assertIn(
+            "visualEffectOverrides: s.visualEffectOverrides || null",
             (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8"),
         )
 
@@ -2120,6 +2162,23 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(exit_candidates[0]["unmatchedFadeOverride"], {"exitStart": 0.0, "exitEnd": 0.2})
         self.assertEqual(exit_candidates[0]["candidateSweep"]["vary"], "exit-fade-end")
 
+    def test_candidate_sweep_glow_samples_can_target_settled_slides(self) -> None:
+        sample = {
+            "id": "slide-001-settled",
+            "kind": "slide",
+            "slide": 1,
+            "progress": 0,
+            "mediaSec": 0,
+        }
+        radius_candidates = _candidate_sweep_samples(sample, "glow-radius", [0.0, 0.5, 1.25])
+        alpha_candidates = _candidate_sweep_samples(sample, "glow-alpha-scale", [0.2])
+        self.assertEqual(radius_candidates[0]["visualEffectOverrides"], {"glowScale": 0.0})
+        self.assertEqual(radius_candidates[1]["visualEffectOverrides"], {"glowScale": 0.5})
+        self.assertEqual(radius_candidates[2]["visualEffectOverrides"], {"glowScale": 1.25})
+        self.assertEqual(radius_candidates[2]["candidateSweep"]["vary"], "glow-scale")
+        self.assertEqual(alpha_candidates[0]["visualEffectOverrides"], {"glowAlphaScale": 0.2})
+        self.assertEqual(alpha_candidates[0]["candidateSweep"]["vary"], "glow-alpha-scale")
+
     def test_track_progress_candidate_samples_include_scene_baseline(self) -> None:
         sample = {
             "id": "trans-001-002-050",
@@ -2969,6 +3028,61 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(family.shared_root, (root / "presentations/shared-assets/demo").resolve())
             self.assertEqual(family.decks[0].source, (root / "presentations/demo.pptx").resolve())
             self.assertEqual(family.decks[0].staging, (root / "presentations/Demo-scene").resolve())
+
+    def test_family_deck_config_merges_presenter_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            presentations = root / "presentations"
+            presentations.mkdir()
+            (presentations / "defaults.json").write_text(
+                json.dumps(
+                    {
+                        "morph_policy": {
+                            "unmatched_fade_start": 0.5,
+                            "unmatched_fade_end": 0.75,
+                        },
+                        "visual_effects": {
+                            "glow_scale": 0.5,
+                            "glow_alpha_scale": 1.0,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (presentations / "deck.json").write_text(
+                json.dumps(
+                    {
+                        "morph_policy": {
+                            "duration_default_sec": 1.25,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = presentations / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "presenter_config_file": "presentations/defaults.json",
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "config": "presentations/deck.json",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            family = load_family_config(config)
+            merged = family_module._deck_presenter_config(family, family.decks[0])
+            self.assertEqual(merged.visual_effects.glow_scale, 0.5)
+            self.assertEqual(merged.morph_policy.duration_default_sec, 1.25)
+            self.assertEqual(merged.morph_policy.unmatched_fade_start, 0.5)
 
     def test_share_deck_assets_rewrites_scene_to_shared_library(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
