@@ -269,7 +269,8 @@
       "slide": 1,
       "trackId": "track-0012",
       "unsupported": [
-        "hdphoto-layer-selected-for-conversion"
+        "hdphoto-layer-selected-for-conversion",
+        "media-brightness-contrast-effect"
       ]
     },
     {
@@ -888,6 +889,7 @@
       "trackId": "track-0012",
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "media-brightness-contrast-effect",
         "off-canvas"
       ]
     },

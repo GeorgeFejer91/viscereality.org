@@ -16,19 +16,19 @@
       "animated": false,
       "durationSec": null,
       "extension": "png",
-      "height": 376,
+      "height": null,
       "id": "asset-643435dc60035768",
       "kind": "image",
-      "outputFile": "assets/optimized/643435dc60035768-wdp.png",
+      "outputFile": "assets/optimized/643435dc60035768-cached.png",
       "outputSizeMb": 0.177,
       "sha256": "643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f",
       "sourceFile": "assets/source/643435dc60035768.wdp",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "sourceSizeMb": 0.155,
       "warnings": [
-        "wdp-converted-to-png-wic"
+        "optimized-asset-reused-from-shared-cache"
       ],
-      "width": 1500
+      "width": null
     },
     {
       "alpha": false,
@@ -1029,9 +1029,9 @@
   ],
   "githubPagesSafe": true,
   "prunedOptimizedAssets": {
-    "bytes": 238337845,
-    "count": 22,
-    "mb": 227.297
+    "bytes": 0,
+    "count": 0,
+    "mb": 0.0
   },
   "prunedSourceAssets": {
     "bytes": 1060539845,

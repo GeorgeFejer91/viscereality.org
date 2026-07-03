@@ -455,6 +455,7 @@ PLAYER_HTML = r"""<!doctype html>
       content.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       content.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
+      applyMediaEffects(child, state.mediaEffects);
     } else {
       const content = contentBox(node);
       if (content) {
@@ -536,6 +537,7 @@ PLAYER_HTML = r"""<!doctype html>
       box.style.borderWidth = strokeWidth;
       box.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
+      applyMediaEffects(child, state.mediaEffects);
       return;
     }
     if (child.classList.contains("shape")) {
@@ -608,6 +610,7 @@ PLAYER_HTML = r"""<!doctype html>
         state.kind = mediaObj.kind;
         state.assetId = mediaObj.assetId;
         state.posterAssetId = mediaObj.posterAssetId;
+        state.mediaEffects = structuredClone(mediaObj.mediaEffects || {});
         state.mediaTiming = structuredClone(mediaObj.mediaTiming || {});
         const phaseOverride = transitionMediaPhaseOverride(state, transition);
         if (phaseOverride !== null) {
@@ -1250,6 +1253,26 @@ PLAYER_HTML = r"""<!doctype html>
     child.style.width = `${100 / visibleW}%`;
     child.style.height = `${100 / visibleH}%`;
     child.style.clipPath = "none";
+  }
+  function applyMediaEffects(child, effects) {
+    if (!child || !(child.tagName === "IMG" || child.tagName === "VIDEO")) return;
+    const filters = [];
+    const bc = effects?.brightnessContrast || null;
+    if (bc) {
+      const bright = Number(bc.bright || 0);
+      const contrast = Number(bc.contrast || 0);
+      if (bright >= 0.999) {
+        filters.push("brightness(0)", "invert(1)");
+      } else if (bright > 0) {
+        filters.push(`brightness(${1 + bright})`);
+      } else if (bright < 0) {
+        filters.push(`brightness(${Math.max(0, 1 + bright)})`);
+      }
+      if (Math.abs(contrast) > 0.001) {
+        filters.push(`contrast(${Math.max(0, 1 + contrast)})`);
+      }
+    }
+    child.style.filter = filters.join(" ");
   }
   function applyTextStyle(child, style) {
     const size = Number(style.fontSizePt || 18);

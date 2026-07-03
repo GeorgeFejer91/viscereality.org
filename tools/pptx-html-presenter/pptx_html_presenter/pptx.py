@@ -541,9 +541,12 @@ def _parse_shape(
     stroke = _solid_color(node, ".//p:spPr/a:ln/a:solidFill")
     stroke_width = _line_width(node)
     opacity = _opacity(node, media=asset_id is not None)
+    media_effects = _media_effects(node) if asset_id is not None else {}
     if asset_id is not None and opacity <= 0:
         opacity = 1.0
         unsupported.append("media-alpha-ignored")
+    if media_effects.get("brightnessContrast"):
+        unsupported.append("media-brightness-contrast-effect")
     obj = SceneObject(
         id=f"{object_prefix}-o{shape_id or z_start}",
         shape_id=str(shape_id) if shape_id is not None else None,
@@ -563,6 +566,7 @@ def _parse_shape(
         stroke_width=stroke_width,
         opacity=opacity,
         crop=crop,
+        media_effects=media_effects,
         media_timing=media_timings.get(str(shape_id), {}),
         provenance={
             "sourcePath": source_path,
@@ -867,6 +871,32 @@ def _crop(node: ET.Element) -> dict[str, float] | None:
         if value is not None:
             out[key] = int(value) / 100000.0
     return out or None
+
+
+def _media_effects(node: ET.Element) -> dict[str, Any]:
+    effects: dict[str, Any] = {}
+    brightness = node.find(".//a14:imgLayer/a14:imgEffect/a14:brightnessContrast", NS)
+    if brightness is not None:
+        item: dict[str, Any] = {}
+        if brightness.get("bright") is not None:
+            item["bright"] = _ratio_100k(brightness.get("bright"), signed=True)
+        if brightness.get("contrast") is not None:
+            item["contrast"] = _ratio_100k(brightness.get("contrast"), signed=True)
+        if item:
+            effects["brightnessContrast"] = item
+    return effects
+
+
+def _ratio_100k(value: str | None, *, signed: bool = False) -> float:
+    try:
+        raw = int(value or "0")
+    except ValueError:
+        raw = 0
+    if signed:
+        raw = max(-100000, min(100000, raw))
+    else:
+        raw = max(0, min(100000, raw))
+    return raw / 100000.0
 
 
 def _truthy_attr(node: ET.Element | None, name: str, default: bool) -> bool:

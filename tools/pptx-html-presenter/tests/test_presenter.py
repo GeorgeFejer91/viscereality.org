@@ -7,6 +7,7 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -26,7 +27,7 @@ from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy,
 from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
-from pptx_html_presenter.pptx import _selected_media_target, parse_pptx
+from pptx_html_presenter.pptx import _media_effects, _selected_media_target, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
     _candidate_sweep_samples,
@@ -2817,6 +2818,36 @@ class PresenterTests(unittest.TestCase):
                 prefer_hdphoto=True,
             ),
             "ppt/media/hdphoto1.wdp",
+        )
+
+    def test_hdphoto_image_layer_brightness_contrast_is_parsed(self) -> None:
+        node = ET.fromstring(
+            """
+            <p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+                   xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main"
+                   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+              <p:blipFill>
+                <a:blip r:embed="rId1">
+                  <a:extLst>
+                    <a:ext uri="{BEBA8EAE-BF5A-486C-A8C5-ECC9F3942E4B}">
+                      <a14:imgProps>
+                        <a14:imgLayer r:embed="rId2">
+                          <a14:imgEffect>
+                            <a14:brightnessContrast bright="100000" contrast="-20000"/>
+                          </a14:imgEffect>
+                        </a14:imgLayer>
+                      </a14:imgProps>
+                    </a:ext>
+                  </a:extLst>
+                </a:blip>
+              </p:blipFill>
+            </p:pic>
+            """
+        )
+        self.assertEqual(
+            _media_effects(node),
+            {"brightnessContrast": {"bright": 1.0, "contrast": -0.2}},
         )
 
     def test_prunes_unreferenced_source_assets(self) -> None:

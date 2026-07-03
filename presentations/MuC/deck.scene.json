@@ -264,7 +264,7 @@
       "durationSec": null,
       "extension": "png",
       "file": "../shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
-      "height": 1024,
+      "height": null,
       "id": "asset-4a816c8511ec19db",
       "kind": "image",
       "sha256": "4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc",
@@ -272,10 +272,10 @@
       "sourceFile": "../shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "warnings": [
-        "wdp-converted-to-png-wic",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
-      "width": 1536
+      "width": null
     },
     {
       "alpha": true,
@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-03T20:07:41+00:00",
+  "generatedAtUtc": "2026-07-03T20:37:07+00:00",
   "qa": {
     "groupRows": [
       {
@@ -11663,6 +11663,11 @@
           "groupPath": [],
           "id": "s1-o1034",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 10",
           "opacity": 1.0,
@@ -11691,7 +11696,8 @@
           "textStyle": {},
           "trackId": "track-0031",
           "unsupported": [
-            "hdphoto-layer-selected-for-conversion"
+            "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect"
           ],
           "z": 32
         }
@@ -14293,6 +14299,11 @@
           "groupPath": [],
           "id": "s1-o1034",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 10",
           "opacity": 1.0,
@@ -14321,7 +14332,8 @@
           "textStyle": {},
           "trackId": "track-0031",
           "unsupported": [
-            "hdphoto-layer-selected-for-conversion"
+            "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect"
           ],
           "z": 32
         }

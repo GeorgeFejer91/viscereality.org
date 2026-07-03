@@ -93,6 +93,7 @@ class SceneObject:
     stroke_width: float | None = None
     opacity: float = 1.0
     crop: dict[str, float] | None = None
+    media_effects: dict[str, Any] = field(default_factory=dict)
     media_timing: dict[str, Any] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
     unsupported: list[str] = field(default_factory=list)
@@ -100,7 +101,7 @@ class SceneObject:
 
     def to_scene(self, slide_w: float, slide_h: float) -> dict[str, Any]:
         group_path = self.provenance.get("groupPath") if isinstance(self.provenance, dict) else None
-        return {
+        scene = {
             "id": self.id,
             "trackId": self.track_id or self.id,
             "shapeId": self.shape_id,
@@ -126,6 +127,9 @@ class SceneObject:
             "provenance": self.provenance,
             "unsupported": self.unsupported,
         }
+        if self.media_effects:
+            scene["mediaEffects"] = self.media_effects
+        return scene
 
 
 @dataclass

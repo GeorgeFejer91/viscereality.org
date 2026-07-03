@@ -125,6 +125,8 @@ Current source PPTX parse results from family preflight:
   - Solution: family builds now seed an optimized-asset cache from the existing shared asset index and the current public/staging scene manifests. `prepare_assets()` consults this cache by original PPT media SHA before starting WDP/GIF/static-image/video conversion, copies the previously accepted runtime file into the local build, and records `optimized-asset-reused-from-shared-cache`. Path-only fallback is used only when no source SHA is available, to avoid accidentally reusing stale media when a future PPTX changes bytes but keeps an internal `ppt/media/...` filename.
 - Problem: shared optimized assets previously did not retain the original PPT media SHA, making future cache reuse harder and less deterministic.
   - Solution: `share_deck_assets()` now writes `sourceSha256` and `sourceSha256s` into `asset-index.json` for each shared entry when the scene asset provides a source hash. Current shared index has source SHA metadata for all optimized entries.
+- Problem: PowerPoint HDPhoto image layers can include `a14:brightnessContrast` effects. BBD26 and alpCHI slide 1 used `bright="100000"` on the HDPhoto layer, so selecting the WDP asset without the image-layer effect made white logos render as colored/dark variants.
+  - Solution: the scene schema now carries object-level `mediaEffects.brightnessContrast`, the parser reads `a14:imgLayer/a14:imgEffect/a14:brightnessContrast`, and the HTML runtime applies a CSS filter to the media element. The `bright=100000` case maps visible pixels to white while preserving alpha. This is object-level, so it fits the one-to-one mapper direction better than baking a deck-specific asset.
 
 Current shared public asset library check after the WDP/cache family rebuild:
 
@@ -155,7 +157,7 @@ After the first-transition calibration updates, current public HTML visual-audit
 - `alpCHI`: 217 samples, 0 failures.
 - `BBD26`: 280 samples, 0 failures.
 
-After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, and reverse midpoint samples for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
+After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. After the subsequent `mediaEffects.brightnessContrast` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, and reverse midpoint samples for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
 
 ## Latest PowerPoint Oracle Smoke
 
@@ -167,16 +169,16 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presenta
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks BBD26 --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
 ```
 
-Current smoke results:
+Current smoke results after the media-effects rebuild/public publish:
 
-- `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.624`, settled slide 1 about `0.789`.
-- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.496`, settled slide 1 about `0.813`, transition endpoint about `0.922`.
-- `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.323`, settled slide 1 about `0.784`, calibrated middle samples now reach about `0.865`.
+- `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.623`, settled slide 1 about `0.789`, transition start about `0.916`.
+- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.497`, settled slide 1 improved to about `0.814`, transition start improved to about `0.932`, transition endpoint about `0.922`.
+- `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM still about `0.323`, settled slide 1 improved to about `0.785`, transition start improved to about `0.714`, calibrated middle samples now reach about `0.862`.
 
 Interpretation:
 
 - The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
-- The transition 1->2 Morph progress calibrations improved the first transition on all three decks, but remaining differences include text placement/scale, background/video brightness/phase, panel timing late in BBD26, and full-frame composition differences.
+- The transition 1->2 Morph progress calibrations and HDPhoto brightness effects improved specific samples, but remaining differences include PowerPoint glow/soft-edge effects, text/raster antialiasing, text placement/scale, background/video brightness/phase, panel timing late in BBD26, and full-frame composition differences.
 - Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish

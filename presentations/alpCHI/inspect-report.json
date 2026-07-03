@@ -586,7 +586,8 @@
       "object": "s1-o2050",
       "slide": 1,
       "unsupported": [
-        "hdphoto-layer-selected-for-conversion"
+        "hdphoto-layer-selected-for-conversion",
+        "media-brightness-contrast-effect"
       ]
     },
     {
@@ -739,6 +740,7 @@
       "slide": 2,
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "media-brightness-contrast-effect",
         "off-canvas"
       ]
     },

@@ -417,7 +417,7 @@
       "durationSec": null,
       "extension": "png",
       "file": "../shared-assets/viscereality/optimized/33509396bc146fd6ca8d277d94afdc108784aca6a9befc4c711213437c5db55e.png",
-      "height": 376,
+      "height": null,
       "id": "asset-643435dc60035768",
       "kind": "image",
       "sha256": "643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f",
@@ -425,10 +425,10 @@
       "sourceFile": "../shared-assets/viscereality/optimized/33509396bc146fd6ca8d277d94afdc108784aca6a9befc4c711213437c5db55e.png",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "warnings": [
-        "wdp-converted-to-png-wic",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
-      "width": 1500
+      "width": null
     },
     {
       "alpha": null,
@@ -1000,7 +1000,7 @@
     "sourceSha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe",
     "title": "Viscereality - Berlin Breathwork Days"
   },
-  "generatedAtUtc": "2026-07-03T20:08:37+00:00",
+  "generatedAtUtc": "2026-07-03T20:38:03+00:00",
   "qa": {
     "groupRows": [
       {
@@ -8913,6 +8913,11 @@
           "groupPath": [],
           "id": "s1-o3",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 2",
           "opacity": 1.0,
@@ -8941,7 +8946,8 @@
           "textStyle": {},
           "trackId": "track-0010",
           "unsupported": [
-            "hdphoto-layer-selected-for-conversion"
+            "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect"
           ],
           "z": 11
         },
@@ -9886,6 +9892,11 @@
           "groupPath": [],
           "id": "s1-o3",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 2",
           "opacity": 1.0,
@@ -9914,7 +9925,8 @@
           "textStyle": {},
           "trackId": "track-0010",
           "unsupported": [
-            "hdphoto-layer-selected-for-conversion"
+            "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect"
           ],
           "z": 11
         },
@@ -11728,6 +11740,11 @@
           "groupPath": [],
           "id": "s2-o50",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 49",
           "opacity": 1.0,
@@ -11757,6 +11774,7 @@
           "trackId": "track-0010",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect",
             "off-canvas"
           ],
           "z": 14
@@ -13356,6 +13374,11 @@
           "groupPath": [],
           "id": "s2-o50",
           "kind": "image",
+          "mediaEffects": {
+            "brightnessContrast": {
+              "bright": 1.0
+            }
+          },
           "mediaTiming": {},
           "name": "Picture 49",
           "opacity": 1.0,
@@ -13385,6 +13408,7 @@
           "trackId": "track-0010",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "media-brightness-contrast-effect",
             "off-canvas"
           ],
           "z": 14
