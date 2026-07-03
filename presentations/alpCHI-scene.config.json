@@ -1,0 +1,77 @@
+{
+  "scene_schema_version": 2,
+  "profile": "github-pages-1080",
+  "asset_policy": {
+    "mode": "copy",
+    "soft_max_mb": 50,
+    "hard_max_mb": 100,
+    "transcode_gif": true,
+    "transcode_video": true,
+    "webp_quality": 88,
+    "video_crf": 24,
+    "allow_oversize_assets": true,
+    "prune_unreferenced_source_assets": true,
+    "transparent_animation": "preserve-alpha"
+  },
+  "group_policy": {
+    "explicit_groups": true,
+    "infer_panels": true,
+    "panel_border_on_top": true
+  },
+  "outline_policy": {
+    "normalize_white_outlines": true,
+    "border_on_top": true,
+    "width_pct": 0.0055,
+    "min_px": 3,
+    "max_px": 7
+  },
+  "fallback_policy": {
+    "full_slide_static": false
+  },
+  "layer_policy": {
+    "panel_outline_on_top": true,
+    "decorative_tracks": [],
+    "transition_layer_overrides": []
+  },
+  "morph_policy": {
+    "match_threshold": 55,
+    "duration_default_sec": 2,
+    "easing": "easeInOutQuad",
+    "fade_unmatched": true,
+    "unmatched_fade_start": 0.5,
+    "unmatched_fade_end": 0.75,
+    "reverse": "mirror",
+    "transition_progress_overrides": [
+      {
+        "from": 1,
+        "to": 2,
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.1 },
+          { "progress": 0.25, "value": 0.4 },
+          { "progress": 0.5, "value": 0.8 },
+          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "source": "alpCHI-slide-1-2-powerpoint-oracle-calibration"
+      }
+    ]
+  },
+  "visual_audit": {
+    "enabled": true,
+    "samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+    "reverse_midpoints": true,
+    "fail_on_timeout": true
+  },
+  "qa_policy": {
+    "slide_ssim": 0.985,
+    "morph_ssim": 0.965,
+    "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+    "slide_hold_sec": 3,
+    "settled_offset_sec": 0.5,
+    "transition_reference_lead_fraction": 0.0,
+    "slide_timed_video_phase_sec": 0
+  },
+  "publish_replace": false
+}

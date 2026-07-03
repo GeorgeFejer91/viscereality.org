@@ -22,12 +22,12 @@
     "id": "trans-001-002-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 0.0,
-      "track-0008": 0.0
+      "track-0003": 2.0,
+      "track-0008": 2.0
     },
-    "mediaSec": 0.0,
+    "mediaSec": 2.0,
     "progress": 0.0,
-    "referenceSec": 0.0,
+    "referenceSec": 2.0,
     "to": 2
   },
   {
@@ -38,12 +38,12 @@
     "id": "trans-001-002-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 0.125,
-      "track-0008": 0.125
+      "track-0003": 2.125,
+      "track-0008": 2.125
     },
-    "mediaSec": 0.125,
+    "mediaSec": 2.125,
     "progress": 0.1,
-    "referenceSec": 0.125,
+    "referenceSec": 2.125,
     "to": 2
   },
   {
@@ -54,12 +54,12 @@
     "id": "trans-001-002-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 0.5,
-      "track-0008": 0.5
+      "track-0003": 2.5,
+      "track-0008": 2.5
     },
-    "mediaSec": 0.5,
+    "mediaSec": 2.5,
     "progress": 0.25,
-    "referenceSec": 0.5,
+    "referenceSec": 2.5,
     "to": 2
   },
   {
@@ -70,12 +70,12 @@
     "id": "trans-001-002-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 1.0,
-      "track-0008": 1.0
+      "track-0003": 3.0,
+      "track-0008": 3.0
     },
-    "mediaSec": 1.0,
+    "mediaSec": 3.0,
     "progress": 0.5,
-    "referenceSec": 1.0,
+    "referenceSec": 3.0,
     "to": 2
   },
   {
@@ -86,12 +86,12 @@
     "id": "trans-001-002-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 3.5,
-      "track-0008": 3.5
+      "track-0003": 5.5,
+      "track-0008": 5.5
     },
-    "mediaSec": 3.5,
+    "mediaSec": 5.5,
     "progress": 0.75,
-    "referenceSec": 3.5,
+    "referenceSec": 5.5,
     "to": 2
   },
   {
@@ -102,12 +102,12 @@
     "id": "trans-001-002-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 3.75,
-      "track-0008": 3.75
+      "track-0003": 5.75,
+      "track-0008": 5.75
     },
-    "mediaSec": 3.75,
+    "mediaSec": 5.75,
     "progress": 0.9,
-    "referenceSec": 3.75,
+    "referenceSec": 5.75,
     "to": 2
   },
   {
@@ -118,12 +118,12 @@
     "id": "trans-001-002-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 4.0,
-      "track-0008": 4.0
+      "track-0003": 6.0,
+      "track-0008": 6.0
     },
-    "mediaSec": 4.0,
+    "mediaSec": 6.0,
     "progress": 1.0,
-    "referenceSec": 4.0,
+    "referenceSec": 6.0,
     "to": 2
   },
   {
@@ -149,12 +149,12 @@
     "id": "trans-002-003-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 6.875,
-      "track-0008": 6.875
+      "track-0003": 8.875,
+      "track-0008": 8.875
     },
-    "mediaSec": 6.875,
+    "mediaSec": 8.875,
     "progress": 0.0,
-    "referenceSec": 6.875,
+    "referenceSec": 8.875,
     "to": 3
   },
   {
@@ -165,12 +165,12 @@
     "id": "trans-002-003-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 6.875,
-      "track-0008": 6.875
+      "track-0003": 8.875,
+      "track-0008": 8.875
     },
-    "mediaSec": 6.875,
+    "mediaSec": 8.875,
     "progress": 0.1,
-    "referenceSec": 6.875,
+    "referenceSec": 8.875,
     "to": 3
   },
   {
@@ -181,12 +181,12 @@
     "id": "trans-002-003-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 6.875,
-      "track-0008": 6.875
+      "track-0003": 8.875,
+      "track-0008": 8.875
     },
-    "mediaSec": 6.875,
+    "mediaSec": 8.875,
     "progress": 0.25,
-    "referenceSec": 6.875,
+    "referenceSec": 8.875,
     "to": 3
   },
   {
@@ -197,12 +197,12 @@
     "id": "trans-002-003-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 6.875,
-      "track-0008": 6.875
+      "track-0003": 8.875,
+      "track-0008": 8.875
     },
-    "mediaSec": 6.875,
+    "mediaSec": 8.875,
     "progress": 0.5,
-    "referenceSec": 6.875,
+    "referenceSec": 8.875,
     "to": 3
   },
   {
@@ -213,12 +213,12 @@
     "id": "trans-002-003-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 8.175,
-      "track-0008": 8.175
+      "track-0003": 10.175,
+      "track-0008": 10.175
     },
-    "mediaSec": 8.175,
+    "mediaSec": 10.175,
     "progress": 0.75,
-    "referenceSec": 8.175,
+    "referenceSec": 10.175,
     "to": 3
   },
   {
@@ -229,12 +229,12 @@
     "id": "trans-002-003-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 8.475,
-      "track-0008": 8.475
+      "track-0003": 10.475,
+      "track-0008": 10.475
     },
-    "mediaSec": 8.475,
+    "mediaSec": 10.475,
     "progress": 0.9,
-    "referenceSec": 8.475,
+    "referenceSec": 10.475,
     "to": 3
   },
   {
@@ -245,12 +245,12 @@
     "id": "trans-002-003-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 9.0,
-      "track-0008": 9.0
+      "track-0003": 11.0,
+      "track-0008": 11.0
     },
-    "mediaSec": 9.0,
+    "mediaSec": 11.0,
     "progress": 1.0,
-    "referenceSec": 9.0,
+    "referenceSec": 11.0,
     "to": 3
   },
   {
@@ -273,9 +273,9 @@
     "id": "trans-003-004-000",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 10.0,
+    "mediaSec": 12.0,
     "progress": 0.0,
-    "referenceSec": 10.0,
+    "referenceSec": 12.0,
     "to": 4
   },
   {
@@ -286,9 +286,9 @@
     "id": "trans-003-004-010",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 10.125,
+    "mediaSec": 12.125,
     "progress": 0.1,
-    "referenceSec": 10.125,
+    "referenceSec": 12.125,
     "to": 4
   },
   {
@@ -299,9 +299,9 @@
     "id": "trans-003-004-025",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 10.5,
+    "mediaSec": 12.5,
     "progress": 0.25,
-    "referenceSec": 10.5,
+    "referenceSec": 12.5,
     "to": 4
   },
   {
@@ -312,9 +312,9 @@
     "id": "trans-003-004-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 11.0,
+    "mediaSec": 13.0,
     "progress": 0.5,
-    "referenceSec": 11.0,
+    "referenceSec": 13.0,
     "to": 4
   },
   {
@@ -325,9 +325,9 @@
     "id": "trans-003-004-075",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 11.5,
+    "mediaSec": 13.5,
     "progress": 0.75,
-    "referenceSec": 11.5,
+    "referenceSec": 13.5,
     "to": 4
   },
   {
@@ -338,9 +338,9 @@
     "id": "trans-003-004-090",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 11.75,
+    "mediaSec": 13.75,
     "progress": 0.9,
-    "referenceSec": 11.75,
+    "referenceSec": 13.75,
     "to": 4
   },
   {
@@ -351,9 +351,9 @@
     "id": "trans-003-004-100",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 12.0,
+    "mediaSec": 14.0,
     "progress": 1.0,
-    "referenceSec": 12.0,
+    "referenceSec": 14.0,
     "to": 4
   },
   {
@@ -376,9 +376,9 @@
     "id": "trans-004-005-000",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 16.635,
+    "mediaSec": 18.635,
     "progress": 0.0,
-    "referenceSec": 16.635,
+    "referenceSec": 18.635,
     "to": 5
   },
   {
@@ -389,9 +389,9 @@
     "id": "trans-004-005-010",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 16.834,
+    "mediaSec": 18.834,
     "progress": 0.1,
-    "referenceSec": 16.834,
+    "referenceSec": 18.834,
     "to": 5
   },
   {
@@ -402,9 +402,9 @@
     "id": "trans-004-005-025",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 17.133,
+    "mediaSec": 19.133,
     "progress": 0.25,
-    "referenceSec": 17.133,
+    "referenceSec": 19.133,
     "to": 5
   },
   {
@@ -415,9 +415,9 @@
     "id": "trans-004-005-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 15.88,
+    "mediaSec": 17.88,
     "progress": 0.5,
-    "referenceSec": 15.88,
+    "referenceSec": 17.88,
     "to": 5
   },
   {
@@ -428,9 +428,9 @@
     "id": "trans-004-005-075",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 16.378,
+    "mediaSec": 18.378,
     "progress": 0.75,
-    "referenceSec": 16.378,
+    "referenceSec": 18.378,
     "to": 5
   },
   {
@@ -441,9 +441,9 @@
     "id": "trans-004-005-090",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 16.676,
+    "mediaSec": 18.676,
     "progress": 0.9,
-    "referenceSec": 16.676,
+    "referenceSec": 18.676,
     "to": 5
   },
   {
@@ -454,9 +454,9 @@
     "id": "trans-004-005-100",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 18.625,
+    "mediaSec": 20.625,
     "progress": 1.0,
-    "referenceSec": 18.625,
+    "referenceSec": 20.625,
     "to": 5
   },
   {
@@ -479,11 +479,11 @@
     "id": "trans-005-006-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 0.615
     },
-    "mediaSec": 21.615,
+    "mediaSec": 23.615,
     "progress": 0.0,
-    "referenceSec": 21.615,
+    "referenceSec": 23.615,
     "to": 6
   },
   {
@@ -494,11 +494,11 @@
     "id": "trans-005-006-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 0.615
     },
-    "mediaSec": 21.615,
+    "mediaSec": 23.615,
     "progress": 0.1,
-    "referenceSec": 21.615,
+    "referenceSec": 23.615,
     "to": 6
   },
   {
@@ -509,11 +509,11 @@
     "id": "trans-005-006-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 0.615
     },
-    "mediaSec": 21.615,
+    "mediaSec": 23.615,
     "progress": 0.25,
-    "referenceSec": 21.615,
+    "referenceSec": 23.615,
     "to": 6
   },
   {
@@ -524,11 +524,11 @@
     "id": "trans-005-006-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 0.615
     },
-    "mediaSec": 21.615,
+    "mediaSec": 23.615,
     "progress": 0.5,
-    "referenceSec": 21.615,
+    "referenceSec": 23.615,
     "to": 6
   },
   {
@@ -539,11 +539,11 @@
     "id": "trans-005-006-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 1.865
     },
-    "mediaSec": 22.865,
+    "mediaSec": 24.865,
     "progress": 0.75,
-    "referenceSec": 22.865,
+    "referenceSec": 24.865,
     "to": 6
   },
   {
@@ -554,11 +554,11 @@
     "id": "trans-005-006-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 1.99
     },
-    "mediaSec": 22.99,
+    "mediaSec": 24.99,
     "progress": 0.9,
-    "referenceSec": 22.99,
+    "referenceSec": 24.99,
     "to": 6
   },
   {
@@ -569,11 +569,11 @@
     "id": "trans-005-006-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 1.99
     },
-    "mediaSec": 22.99,
+    "mediaSec": 24.99,
     "progress": 1.0,
-    "referenceSec": 22.99,
+    "referenceSec": 24.99,
     "to": 6
   },
   {
@@ -598,13 +598,13 @@
     "id": "trans-006-007-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 2.615,
+      "track-0038": 4.615,
       "track-0044": 0.0,
       "track-0050": 0.0
     },
-    "mediaSec": 25.615,
+    "mediaSec": 27.615,
     "progress": 0.0,
-    "referenceSec": 25.615,
+    "referenceSec": 27.615,
     "to": 7
   },
   {
@@ -615,13 +615,13 @@
     "id": "trans-006-007-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 3.24,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 5.24,
+      "track-0044": 0.24,
+      "track-0050": 0.24
     },
-    "mediaSec": 26.24,
+    "mediaSec": 28.24,
     "progress": 0.1,
-    "referenceSec": 26.24,
+    "referenceSec": 28.24,
     "to": 7
   },
   {
@@ -632,13 +632,13 @@
     "id": "trans-006-007-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 3.365,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 5.365,
+      "track-0044": 0.365,
+      "track-0050": 0.365
     },
-    "mediaSec": 26.365,
+    "mediaSec": 28.365,
     "progress": 0.25,
-    "referenceSec": 26.365,
+    "referenceSec": 28.365,
     "to": 7
   },
   {
@@ -649,13 +649,13 @@
     "id": "trans-006-007-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 3.865,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 5.865,
+      "track-0044": 0.865,
+      "track-0050": 0.865
     },
-    "mediaSec": 26.865,
+    "mediaSec": 28.865,
     "progress": 0.5,
-    "referenceSec": 26.865,
+    "referenceSec": 28.865,
     "to": 7
   },
   {
@@ -666,13 +666,13 @@
     "id": "trans-006-007-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 4.49,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 6.49,
+      "track-0044": 1.49,
+      "track-0050": 1.49
     },
-    "mediaSec": 27.49,
+    "mediaSec": 29.49,
     "progress": 0.75,
-    "referenceSec": 27.49,
+    "referenceSec": 29.49,
     "to": 7
   },
   {
@@ -683,13 +683,13 @@
     "id": "trans-006-007-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 4.865,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 6.865,
+      "track-0044": 1.865,
+      "track-0050": 1.865
     },
-    "mediaSec": 27.865,
+    "mediaSec": 29.865,
     "progress": 0.9,
-    "referenceSec": 27.865,
+    "referenceSec": 29.865,
     "to": 7
   },
   {
@@ -700,13 +700,13 @@
     "id": "trans-006-007-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 5.115,
-      "track-0044": 0.115,
-      "track-0050": 0.115
+      "track-0038": 7.115,
+      "track-0044": 2.115,
+      "track-0050": 2.115
     },
-    "mediaSec": 28.115,
+    "mediaSec": 30.115,
     "progress": 1.0,
-    "referenceSec": 28.115,
+    "referenceSec": 30.115,
     "to": 7
   },
   {
@@ -733,15 +733,15 @@
     "id": "trans-007-008-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 9.605,
-      "track-0044": 4.605,
-      "track-0050": 4.605,
+      "track-0038": 9.615,
+      "track-0044": 4.615,
+      "track-0050": 4.615,
       "track-0051": 0.0,
       "track-0053": 0.0
     },
-    "mediaSec": 32.605,
+    "mediaSec": 32.615,
     "progress": 0.0,
-    "referenceSec": 32.605,
+    "referenceSec": 32.615,
     "to": 8
   },
   {
@@ -752,15 +752,15 @@
     "id": "trans-007-008-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 10.031,
-      "track-0044": 5.031,
-      "track-0050": 5.031,
-      "track-0051": 0.031,
-      "track-0053": 0.031
+      "track-0038": 10.041,
+      "track-0044": 5.041,
+      "track-0050": 5.041,
+      "track-0051": 0.041,
+      "track-0053": 0.041
     },
-    "mediaSec": 33.031,
+    "mediaSec": 33.041,
     "progress": 0.1,
-    "referenceSec": 33.031,
+    "referenceSec": 33.041,
     "to": 8
   },
   {
@@ -771,15 +771,15 @@
     "id": "trans-007-008-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 9.983,
-      "track-0044": 4.983,
-      "track-0050": 4.983,
+      "track-0038": 9.992,
+      "track-0044": 4.992,
+      "track-0050": 4.992,
       "track-0051": 0.0,
       "track-0053": 0.0
     },
-    "mediaSec": 32.983,
+    "mediaSec": 32.992,
     "progress": 0.25,
-    "referenceSec": 32.983,
+    "referenceSec": 32.992,
     "to": 8
   },
   {
@@ -790,15 +790,15 @@
     "id": "trans-007-008-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 9.86,
-      "track-0044": 4.86,
-      "track-0050": 4.86,
+      "track-0038": 9.87,
+      "track-0044": 4.87,
+      "track-0050": 4.87,
       "track-0051": 0.0,
       "track-0053": 0.0
     },
-    "mediaSec": 32.86,
+    "mediaSec": 32.87,
     "progress": 0.5,
-    "referenceSec": 32.86,
+    "referenceSec": 32.87,
     "to": 8
   },
   {
@@ -809,15 +809,15 @@
     "id": "trans-007-008-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 9.988,
-      "track-0044": 4.988,
-      "track-0050": 4.988,
+      "track-0038": 9.998,
+      "track-0044": 4.998,
+      "track-0050": 4.998,
       "track-0051": 0.0,
       "track-0053": 0.0
     },
-    "mediaSec": 32.988,
+    "mediaSec": 32.998,
     "progress": 0.75,
-    "referenceSec": 32.988,
+    "referenceSec": 32.998,
     "to": 8
   },
   {
@@ -828,15 +828,15 @@
     "id": "trans-007-008-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 10.064,
-      "track-0044": 5.064,
-      "track-0050": 5.064,
-      "track-0051": 0.064,
-      "track-0053": 0.064
+      "track-0038": 10.074,
+      "track-0044": 5.074,
+      "track-0050": 5.074,
+      "track-0051": 0.074,
+      "track-0053": 0.074
     },
-    "mediaSec": 33.064,
+    "mediaSec": 33.074,
     "progress": 0.9,
-    "referenceSec": 33.064,
+    "referenceSec": 33.074,
     "to": 8
   },
   {
@@ -847,15 +847,15 @@
     "id": "trans-007-008-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 10.74,
-      "track-0044": 5.74,
-      "track-0050": 5.74,
-      "track-0051": 0.74,
-      "track-0053": 0.74
+      "track-0038": 10.75,
+      "track-0044": 5.75,
+      "track-0050": 5.75,
+      "track-0051": 0.75,
+      "track-0053": 0.75
     },
-    "mediaSec": 33.74,
+    "mediaSec": 33.75,
     "progress": 1.0,
-    "referenceSec": 33.74,
+    "referenceSec": 33.75,
     "to": 8
   },
   {
@@ -883,14 +883,14 @@
     "id": "trans-008-009-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 12.24,
-      "track-0044": 7.24,
-      "track-0051": 2.24,
-      "track-0053": 2.24
+      "track-0038": 12.25,
+      "track-0044": 7.25,
+      "track-0051": 2.25,
+      "track-0053": 2.25
     },
-    "mediaSec": 35.24,
+    "mediaSec": 35.25,
     "progress": 0.0,
-    "referenceSec": 35.24,
+    "referenceSec": 35.25,
     "to": 9
   },
   {
@@ -901,14 +901,14 @@
     "id": "trans-008-009-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 13.166,
-      "track-0044": 8.166,
-      "track-0051": 3.166,
-      "track-0053": 3.166
+      "track-0038": 13.176,
+      "track-0044": 8.176,
+      "track-0051": 3.176,
+      "track-0053": 3.176
     },
-    "mediaSec": 36.166,
+    "mediaSec": 36.176,
     "progress": 0.1,
-    "referenceSec": 36.166,
+    "referenceSec": 36.176,
     "to": 9
   },
   {
@@ -919,14 +919,14 @@
     "id": "trans-008-009-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 12.992,
-      "track-0044": 7.992,
-      "track-0051": 2.992,
-      "track-0053": 2.992
+      "track-0038": 13.002,
+      "track-0044": 8.002,
+      "track-0051": 3.002,
+      "track-0053": 3.002
     },
-    "mediaSec": 35.992,
+    "mediaSec": 36.002,
     "progress": 0.25,
-    "referenceSec": 35.992,
+    "referenceSec": 36.002,
     "to": 9
   },
   {
@@ -937,14 +937,14 @@
     "id": "trans-008-009-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 12.245,
-      "track-0044": 7.245,
-      "track-0051": 2.245,
-      "track-0053": 2.245
+      "track-0038": 12.255,
+      "track-0044": 7.255,
+      "track-0051": 2.255,
+      "track-0053": 2.255
     },
-    "mediaSec": 35.245,
+    "mediaSec": 35.255,
     "progress": 0.5,
-    "referenceSec": 35.245,
+    "referenceSec": 35.255,
     "to": 9
   },
   {
@@ -955,14 +955,14 @@
     "id": "trans-008-009-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 13.498,
-      "track-0044": 8.498,
-      "track-0051": 3.498,
-      "track-0053": 3.498
+      "track-0038": 13.508,
+      "track-0044": 8.508,
+      "track-0051": 3.508,
+      "track-0053": 3.508
     },
-    "mediaSec": 36.498,
+    "mediaSec": 36.508,
     "progress": 0.75,
-    "referenceSec": 36.498,
+    "referenceSec": 36.508,
     "to": 9
   },
   {
@@ -973,14 +973,14 @@
     "id": "trans-008-009-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 13.574,
-      "track-0044": 8.574,
-      "track-0051": 3.574,
-      "track-0053": 3.574
+      "track-0038": 13.584,
+      "track-0044": 8.584,
+      "track-0051": 3.584,
+      "track-0053": 3.584
     },
-    "mediaSec": 36.574,
+    "mediaSec": 36.584,
     "progress": 0.9,
-    "referenceSec": 36.574,
+    "referenceSec": 36.584,
     "to": 9
   },
   {
@@ -991,14 +991,14 @@
     "id": "trans-008-009-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 13.25,
-      "track-0044": 8.25,
-      "track-0051": 3.25,
-      "track-0053": 3.25
+      "track-0038": 13.26,
+      "track-0044": 8.26,
+      "track-0051": 3.26,
+      "track-0053": 3.26
     },
-    "mediaSec": 36.25,
+    "mediaSec": 36.26,
     "progress": 1.0,
-    "referenceSec": 36.25,
+    "referenceSec": 36.26,
     "to": 9
   },
   {
@@ -1024,15 +1024,15 @@
     "id": "trans-009-010-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 3.385,
-      "track-0053": 3.385,
+      "track-0051": 5.385,
+      "track-0053": 5.385,
       "track-0056": 0.0,
       "track-0060": 0.0,
       "track-0061": 0.0
     },
-    "mediaSec": 36.385,
+    "mediaSec": 38.385,
     "progress": 0.0,
-    "referenceSec": 36.385,
+    "referenceSec": 38.385,
     "to": 10
   },
   {
@@ -1043,15 +1043,15 @@
     "id": "trans-009-010-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 4.385,
-      "track-0053": 4.385,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 6.385,
+      "track-0053": 6.385,
+      "track-0056": 0.365,
+      "track-0060": 0.365,
+      "track-0061": 0.365
     },
-    "mediaSec": 37.385,
+    "mediaSec": 39.385,
     "progress": 0.1,
-    "referenceSec": 37.385,
+    "referenceSec": 39.385,
     "to": 10
   },
   {
@@ -1062,15 +1062,15 @@
     "id": "trans-009-010-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 4.635,
-      "track-0053": 4.635,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 6.635,
+      "track-0053": 6.635,
+      "track-0056": 0.615,
+      "track-0060": 0.615,
+      "track-0061": 0.615
     },
-    "mediaSec": 37.635,
+    "mediaSec": 39.635,
     "progress": 0.25,
-    "referenceSec": 37.635,
+    "referenceSec": 39.635,
     "to": 10
   },
   {
@@ -1081,15 +1081,15 @@
     "id": "trans-009-010-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 5.01,
-      "track-0053": 5.01,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 7.01,
+      "track-0053": 7.01,
+      "track-0056": 0.99,
+      "track-0060": 0.99,
+      "track-0061": 0.99
     },
-    "mediaSec": 38.01,
+    "mediaSec": 40.01,
     "progress": 0.5,
-    "referenceSec": 38.01,
+    "referenceSec": 40.01,
     "to": 10
   },
   {
@@ -1100,15 +1100,15 @@
     "id": "trans-009-010-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 5.635,
-      "track-0053": 5.635,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 7.635,
+      "track-0053": 7.635,
+      "track-0056": 1.615,
+      "track-0060": 1.615,
+      "track-0061": 1.615
     },
-    "mediaSec": 38.635,
+    "mediaSec": 40.635,
     "progress": 0.75,
-    "referenceSec": 38.635,
+    "referenceSec": 40.635,
     "to": 10
   },
   {
@@ -1119,15 +1119,15 @@
     "id": "trans-009-010-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 6.01,
-      "track-0053": 6.01,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 8.01,
+      "track-0053": 8.01,
+      "track-0056": 1.99,
+      "track-0060": 1.99,
+      "track-0061": 1.99
     },
-    "mediaSec": 39.01,
+    "mediaSec": 41.01,
     "progress": 0.9,
-    "referenceSec": 39.01,
+    "referenceSec": 41.01,
     "to": 10
   },
   {
@@ -1138,15 +1138,15 @@
     "id": "trans-009-010-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 6.385,
-      "track-0053": 6.385,
-      "track-0056": 0.365,
-      "track-0060": 0.365,
-      "track-0061": 0.365
+      "track-0051": 8.385,
+      "track-0053": 8.385,
+      "track-0056": 2.365,
+      "track-0060": 2.365,
+      "track-0061": 2.365
     },
-    "mediaSec": 39.385,
+    "mediaSec": 41.385,
     "progress": 1.0,
-    "referenceSec": 39.385,
+    "referenceSec": 41.385,
     "to": 10
   },
   {
@@ -1174,17 +1174,17 @@
     "id": "trans-010-011-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 8.26,
-      "track-0056": 2.24,
-      "track-0060": 2.24,
-      "track-0061": 2.24,
+      "track-0053": 10.26,
+      "track-0056": 4.24,
+      "track-0060": 4.24,
+      "track-0061": 4.24,
       "track-0066": 0.0,
       "track-0067": 0.0,
       "track-0071": 0.0
     },
-    "mediaSec": 41.26,
+    "mediaSec": 43.26,
     "progress": 0.0,
-    "referenceSec": 41.26,
+    "referenceSec": 43.26,
     "to": 11
   },
   {
@@ -1195,17 +1195,17 @@
     "id": "trans-010-011-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 8.26,
-      "track-0056": 2.24,
-      "track-0060": 2.24,
-      "track-0061": 2.24,
+      "track-0053": 10.26,
+      "track-0056": 4.24,
+      "track-0060": 4.24,
+      "track-0061": 4.24,
       "track-0066": 0.0,
       "track-0067": 0.0,
       "track-0071": 0.0
     },
-    "mediaSec": 41.26,
+    "mediaSec": 43.26,
     "progress": 0.1,
-    "referenceSec": 41.26,
+    "referenceSec": 43.26,
     "to": 11
   },
   {
@@ -1216,17 +1216,17 @@
     "id": "trans-010-011-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 9.635,
-      "track-0056": 3.615,
-      "track-0060": 3.615,
-      "track-0061": 3.615,
-      "track-0066": 0.0,
-      "track-0067": 0.0,
-      "track-0071": 0.0
+      "track-0053": 11.635,
+      "track-0056": 5.615,
+      "track-0060": 5.615,
+      "track-0061": 5.615,
+      "track-0066": 0.615,
+      "track-0067": 0.615,
+      "track-0071": 0.615
     },
-    "mediaSec": 42.635,
+    "mediaSec": 44.635,
     "progress": 0.25,
-    "referenceSec": 42.635,
+    "referenceSec": 44.635,
     "to": 11
   },
   {
@@ -1237,17 +1237,17 @@
     "id": "trans-010-011-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 10.01,
-      "track-0056": 3.99,
-      "track-0060": 3.99,
-      "track-0061": 3.99,
-      "track-0066": 0.0,
-      "track-0067": 0.0,
-      "track-0071": 0.0
+      "track-0053": 12.01,
+      "track-0056": 5.99,
+      "track-0060": 5.99,
+      "track-0061": 5.99,
+      "track-0066": 0.99,
+      "track-0067": 0.99,
+      "track-0071": 0.99
     },
-    "mediaSec": 43.01,
+    "mediaSec": 45.01,
     "progress": 0.5,
-    "referenceSec": 43.01,
+    "referenceSec": 45.01,
     "to": 11
   },
   {
@@ -1258,17 +1258,17 @@
     "id": "trans-010-011-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 10.635,
-      "track-0056": 4.615,
-      "track-0060": 4.615,
-      "track-0061": 4.615,
-      "track-0066": 0.0,
-      "track-0067": 0.0,
-      "track-0071": 0.0
+      "track-0053": 12.635,
+      "track-0056": 6.615,
+      "track-0060": 6.615,
+      "track-0061": 6.615,
+      "track-0066": 1.615,
+      "track-0067": 1.615,
+      "track-0071": 1.615
     },
-    "mediaSec": 43.635,
+    "mediaSec": 45.635,
     "progress": 0.75,
-    "referenceSec": 43.635,
+    "referenceSec": 45.635,
     "to": 11
   },
   {
@@ -1279,17 +1279,17 @@
     "id": "trans-010-011-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 11.135,
-      "track-0056": 5.115,
-      "track-0060": 5.115,
-      "track-0061": 5.115,
-      "track-0066": 0.115,
-      "track-0067": 0.115,
-      "track-0071": 0.115
+      "track-0053": 13.135,
+      "track-0056": 7.115,
+      "track-0060": 7.115,
+      "track-0061": 7.115,
+      "track-0066": 2.115,
+      "track-0067": 2.115,
+      "track-0071": 2.115
     },
-    "mediaSec": 44.135,
+    "mediaSec": 46.135,
     "progress": 0.9,
-    "referenceSec": 44.135,
+    "referenceSec": 46.135,
     "to": 11
   },
   {
@@ -1300,17 +1300,17 @@
     "id": "trans-010-011-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 11.385,
-      "track-0056": 5.365,
-      "track-0060": 5.365,
-      "track-0061": 5.365,
-      "track-0066": 0.365,
-      "track-0067": 0.365,
-      "track-0071": 0.365
+      "track-0053": 13.385,
+      "track-0056": 7.365,
+      "track-0060": 7.365,
+      "track-0061": 7.365,
+      "track-0066": 2.365,
+      "track-0067": 2.365,
+      "track-0071": 2.365
     },
-    "mediaSec": 44.385,
+    "mediaSec": 46.385,
     "progress": 1.0,
-    "referenceSec": 44.385,
+    "referenceSec": 46.385,
     "to": 11
   },
   {
@@ -1341,18 +1341,18 @@
     "id": "trans-011-012-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 13.135,
-      "track-0056": 7.115,
-      "track-0060": 7.115,
-      "track-0061": 7.115,
-      "track-0066": 2.115,
-      "track-0067": 2.115,
-      "track-0071": 2.115,
+      "track-0053": 15.135,
+      "track-0056": 9.115,
+      "track-0060": 9.115,
+      "track-0061": 9.115,
+      "track-0066": 4.115,
+      "track-0067": 4.115,
+      "track-0071": 4.115,
       "track-0073": 0.0
     },
-    "mediaSec": 46.135,
+    "mediaSec": 48.135,
     "progress": 0.0,
-    "referenceSec": 46.135,
+    "referenceSec": 48.135,
     "to": 12
   },
   {
@@ -1363,18 +1363,18 @@
     "id": "trans-011-012-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 13.135,
-      "track-0056": 7.115,
-      "track-0060": 7.115,
-      "track-0061": 7.115,
-      "track-0066": 2.115,
-      "track-0067": 2.115,
-      "track-0071": 2.115,
+      "track-0053": 15.135,
+      "track-0056": 9.115,
+      "track-0060": 9.115,
+      "track-0061": 9.115,
+      "track-0066": 4.115,
+      "track-0067": 4.115,
+      "track-0071": 4.115,
       "track-0073": 0.0
     },
-    "mediaSec": 46.135,
+    "mediaSec": 48.135,
     "progress": 0.1,
-    "referenceSec": 46.135,
+    "referenceSec": 48.135,
     "to": 12
   },
   {
@@ -1385,18 +1385,18 @@
     "id": "trans-011-012-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 14.135,
-      "track-0056": 8.115,
-      "track-0060": 8.115,
-      "track-0061": 8.115,
-      "track-0066": 3.115,
-      "track-0067": 3.115,
-      "track-0071": 3.115,
-      "track-0073": 0.0
+      "track-0053": 16.135,
+      "track-0056": 10.115,
+      "track-0060": 10.115,
+      "track-0061": 10.115,
+      "track-0066": 5.115,
+      "track-0067": 5.115,
+      "track-0071": 5.115,
+      "track-0073": 0.115
     },
-    "mediaSec": 47.135,
+    "mediaSec": 49.135,
     "progress": 0.25,
-    "referenceSec": 47.135,
+    "referenceSec": 49.135,
     "to": 12
   },
   {
@@ -1407,18 +1407,18 @@
     "id": "trans-011-012-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 14.135,
-      "track-0056": 8.115,
-      "track-0060": 8.115,
-      "track-0061": 8.115,
-      "track-0066": 3.115,
-      "track-0067": 3.115,
-      "track-0071": 3.115,
-      "track-0073": 0.0
+      "track-0053": 16.135,
+      "track-0056": 10.115,
+      "track-0060": 10.115,
+      "track-0061": 10.115,
+      "track-0066": 5.115,
+      "track-0067": 5.115,
+      "track-0071": 5.115,
+      "track-0073": 0.115
     },
-    "mediaSec": 47.135,
+    "mediaSec": 49.135,
     "progress": 0.5,
-    "referenceSec": 47.135,
+    "referenceSec": 49.135,
     "to": 12
   },
   {
@@ -1429,18 +1429,18 @@
     "id": "trans-011-012-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 15.135,
-      "track-0056": 9.115,
-      "track-0060": 9.115,
-      "track-0061": 9.115,
-      "track-0066": 4.115,
-      "track-0067": 4.115,
-      "track-0071": 4.115,
-      "track-0073": 0.0
+      "track-0053": 17.135,
+      "track-0056": 11.115,
+      "track-0060": 11.115,
+      "track-0061": 11.115,
+      "track-0066": 6.115,
+      "track-0067": 6.115,
+      "track-0071": 6.115,
+      "track-0073": 1.115
     },
-    "mediaSec": 48.135,
+    "mediaSec": 50.135,
     "progress": 0.75,
-    "referenceSec": 48.135,
+    "referenceSec": 50.135,
     "to": 12
   },
   {
@@ -1451,18 +1451,18 @@
     "id": "trans-011-012-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 15.135,
-      "track-0056": 9.115,
-      "track-0060": 9.115,
-      "track-0061": 9.115,
-      "track-0066": 4.115,
-      "track-0067": 4.115,
-      "track-0071": 4.115,
-      "track-0073": 0.0
+      "track-0053": 17.135,
+      "track-0056": 11.115,
+      "track-0060": 11.115,
+      "track-0061": 11.115,
+      "track-0066": 6.115,
+      "track-0067": 6.115,
+      "track-0071": 6.115,
+      "track-0073": 1.115
     },
-    "mediaSec": 48.135,
+    "mediaSec": 50.135,
     "progress": 0.9,
-    "referenceSec": 48.135,
+    "referenceSec": 50.135,
     "to": 12
   },
   {
@@ -1473,18 +1473,18 @@
     "id": "trans-011-012-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 15.135,
-      "track-0056": 9.115,
-      "track-0060": 9.115,
-      "track-0061": 9.115,
-      "track-0066": 4.115,
-      "track-0067": 4.115,
-      "track-0071": 4.115,
-      "track-0073": 0.0
+      "track-0053": 17.135,
+      "track-0056": 11.115,
+      "track-0060": 11.115,
+      "track-0061": 11.115,
+      "track-0066": 6.115,
+      "track-0067": 6.115,
+      "track-0071": 6.115,
+      "track-0073": 1.115
     },
-    "mediaSec": 48.135,
+    "mediaSec": 50.135,
     "progress": 1.0,
-    "referenceSec": 48.135,
+    "referenceSec": 50.135,
     "to": 12
   },
   {
@@ -1512,15 +1512,15 @@
     "id": "trans-012-013-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 7.115,
-      "track-0067": 7.115,
-      "track-0071": 7.115,
-      "track-0073": 2.115,
+      "track-0066": 9.115,
+      "track-0067": 9.115,
+      "track-0071": 9.115,
+      "track-0073": 4.115,
       "track-0078": 0.0
     },
-    "mediaSec": 51.135,
+    "mediaSec": 53.135,
     "progress": 0.0,
-    "referenceSec": 51.135,
+    "referenceSec": 53.135,
     "to": 13
   },
   {
@@ -1531,15 +1531,15 @@
     "id": "trans-012-013-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 7.115,
-      "track-0067": 7.115,
-      "track-0071": 7.115,
-      "track-0073": 2.115,
+      "track-0066": 9.115,
+      "track-0067": 9.115,
+      "track-0071": 9.115,
+      "track-0073": 4.115,
       "track-0078": 0.0
     },
-    "mediaSec": 51.135,
+    "mediaSec": 53.135,
     "progress": 0.1,
-    "referenceSec": 51.135,
+    "referenceSec": 53.135,
     "to": 13
   },
   {
@@ -1550,15 +1550,15 @@
     "id": "trans-012-013-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 8.74,
-      "track-0067": 8.74,
-      "track-0071": 8.74,
-      "track-0073": 3.74,
-      "track-0078": 0.0
+      "track-0066": 10.74,
+      "track-0067": 10.74,
+      "track-0071": 10.74,
+      "track-0073": 5.74,
+      "track-0078": 0.74
     },
-    "mediaSec": 52.76,
+    "mediaSec": 54.76,
     "progress": 0.25,
-    "referenceSec": 52.76,
+    "referenceSec": 54.76,
     "to": 13
   },
   {
@@ -1569,15 +1569,15 @@
     "id": "trans-012-013-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 9.115,
-      "track-0067": 9.115,
-      "track-0071": 9.115,
-      "track-0073": 4.115,
-      "track-0078": 0.0
+      "track-0066": 11.115,
+      "track-0067": 11.115,
+      "track-0071": 11.115,
+      "track-0073": 6.115,
+      "track-0078": 1.115
     },
-    "mediaSec": 53.135,
+    "mediaSec": 55.135,
     "progress": 0.5,
-    "referenceSec": 53.135,
+    "referenceSec": 55.135,
     "to": 13
   },
   {
@@ -1588,15 +1588,15 @@
     "id": "trans-012-013-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 9.74,
-      "track-0067": 9.74,
-      "track-0071": 9.74,
-      "track-0073": 4.74,
-      "track-0078": 0.0
+      "track-0066": 11.74,
+      "track-0067": 11.74,
+      "track-0071": 11.74,
+      "track-0073": 6.74,
+      "track-0078": 1.74
     },
-    "mediaSec": 53.76,
+    "mediaSec": 55.76,
     "progress": 0.75,
-    "referenceSec": 53.76,
+    "referenceSec": 55.76,
     "to": 13
   },
   {
@@ -1607,15 +1607,15 @@
     "id": "trans-012-013-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 10.115,
-      "track-0067": 10.115,
-      "track-0071": 10.115,
-      "track-0073": 5.115,
-      "track-0078": 0.115
+      "track-0066": 12.115,
+      "track-0067": 12.115,
+      "track-0071": 12.115,
+      "track-0073": 7.115,
+      "track-0078": 2.115
     },
-    "mediaSec": 54.135,
+    "mediaSec": 56.135,
     "progress": 0.9,
-    "referenceSec": 54.135,
+    "referenceSec": 56.135,
     "to": 13
   },
   {
@@ -1626,15 +1626,15 @@
     "id": "trans-012-013-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 10.99,
-      "track-0067": 10.99,
-      "track-0071": 10.99,
-      "track-0073": 5.99,
-      "track-0078": 0.99
+      "track-0066": 12.99,
+      "track-0067": 12.99,
+      "track-0071": 12.99,
+      "track-0073": 7.99,
+      "track-0078": 2.99
     },
-    "mediaSec": 55.01,
+    "mediaSec": 57.01,
     "progress": 1.0,
-    "referenceSec": 55.01,
+    "referenceSec": 57.01,
     "to": 13
   },
   {
@@ -1663,16 +1663,16 @@
     "id": "trans-013-014-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 11.99,
-      "track-0067": 11.99,
-      "track-0071": 11.99,
-      "track-0073": 6.99,
-      "track-0078": 1.99,
+      "track-0066": 13.99,
+      "track-0067": 13.99,
+      "track-0071": 13.99,
+      "track-0073": 8.99,
+      "track-0078": 3.99,
       "track-0081": 0.0
     },
-    "mediaSec": 56.01,
+    "mediaSec": 58.01,
     "progress": 0.0,
-    "referenceSec": 56.01,
+    "referenceSec": 58.01,
     "to": 14
   },
   {
@@ -1683,16 +1683,16 @@
     "id": "trans-013-014-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 13.615,
-      "track-0067": 13.615,
-      "track-0071": 13.615,
-      "track-0073": 8.615,
-      "track-0078": 3.615,
-      "track-0081": 0.0
+      "track-0066": 15.615,
+      "track-0067": 15.615,
+      "track-0071": 15.615,
+      "track-0073": 10.615,
+      "track-0078": 5.615,
+      "track-0081": 0.615
     },
-    "mediaSec": 57.635,
+    "mediaSec": 59.635,
     "progress": 0.1,
-    "referenceSec": 57.635,
+    "referenceSec": 59.635,
     "to": 14
   },
   {
@@ -1703,16 +1703,16 @@
     "id": "trans-013-014-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 13.74,
-      "track-0067": 13.74,
-      "track-0071": 13.74,
-      "track-0073": 8.74,
-      "track-0078": 3.74,
-      "track-0081": 0.0
+      "track-0066": 15.74,
+      "track-0067": 15.74,
+      "track-0071": 15.74,
+      "track-0073": 10.74,
+      "track-0078": 5.74,
+      "track-0081": 0.74
     },
-    "mediaSec": 57.76,
+    "mediaSec": 59.76,
     "progress": 0.25,
-    "referenceSec": 57.76,
+    "referenceSec": 59.76,
     "to": 14
   },
   {
@@ -1723,16 +1723,16 @@
     "id": "trans-013-014-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 14.24,
-      "track-0067": 14.24,
-      "track-0071": 14.24,
-      "track-0073": 9.24,
-      "track-0078": 4.24,
-      "track-0081": 0.0
+      "track-0066": 16.24,
+      "track-0067": 16.24,
+      "track-0071": 16.24,
+      "track-0073": 11.24,
+      "track-0078": 6.24,
+      "track-0081": 1.24
     },
-    "mediaSec": 58.26,
+    "mediaSec": 60.26,
     "progress": 0.5,
-    "referenceSec": 58.26,
+    "referenceSec": 60.26,
     "to": 14
   },
   {
@@ -1743,16 +1743,16 @@
     "id": "trans-013-014-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 14.74,
-      "track-0067": 14.74,
-      "track-0071": 14.74,
-      "track-0073": 9.74,
-      "track-0078": 4.74,
-      "track-0081": 0.0
+      "track-0066": 16.74,
+      "track-0067": 16.74,
+      "track-0071": 16.74,
+      "track-0073": 11.74,
+      "track-0078": 6.74,
+      "track-0081": 1.74
     },
-    "mediaSec": 58.76,
+    "mediaSec": 60.76,
     "progress": 0.75,
-    "referenceSec": 58.76,
+    "referenceSec": 60.76,
     "to": 14
   },
   {
@@ -1763,16 +1763,16 @@
     "id": "trans-013-014-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 15.24,
-      "track-0067": 15.24,
-      "track-0071": 15.24,
-      "track-0073": 10.24,
-      "track-0078": 5.24,
-      "track-0081": 0.24
+      "track-0066": 17.24,
+      "track-0067": 17.24,
+      "track-0071": 17.24,
+      "track-0073": 12.24,
+      "track-0078": 7.24,
+      "track-0081": 2.24
     },
-    "mediaSec": 59.26,
+    "mediaSec": 61.26,
     "progress": 0.9,
-    "referenceSec": 59.26,
+    "referenceSec": 61.26,
     "to": 14
   },
   {
@@ -1783,16 +1783,16 @@
     "id": "trans-013-014-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 15.99,
-      "track-0067": 15.99,
-      "track-0071": 15.99,
-      "track-0073": 10.99,
-      "track-0078": 5.99,
-      "track-0081": 0.99
+      "track-0066": 17.99,
+      "track-0067": 17.99,
+      "track-0071": 17.99,
+      "track-0073": 12.99,
+      "track-0078": 7.99,
+      "track-0081": 2.99
     },
-    "mediaSec": 60.01,
+    "mediaSec": 62.01,
     "progress": 1.0,
-    "referenceSec": 60.01,
+    "referenceSec": 62.01,
     "to": 14
   },
   {
@@ -1819,14 +1819,14 @@
     "id": "trans-014-015-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 12.865,
-      "track-0078": 7.865,
-      "track-0081": 2.865,
+      "track-0073": 14.865,
+      "track-0078": 9.865,
+      "track-0081": 4.865,
       "track-0084": 0.0
     },
-    "mediaSec": 61.885,
+    "mediaSec": 63.885,
     "progress": 0.0,
-    "referenceSec": 61.885,
+    "referenceSec": 63.885,
     "to": 15
   },
   {
@@ -1837,14 +1837,14 @@
     "id": "trans-014-015-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 12.865,
-      "track-0078": 7.865,
-      "track-0081": 2.865,
+      "track-0073": 14.865,
+      "track-0078": 9.865,
+      "track-0081": 4.865,
       "track-0084": 0.0
     },
-    "mediaSec": 61.885,
+    "mediaSec": 63.885,
     "progress": 0.1,
-    "referenceSec": 61.885,
+    "referenceSec": 63.885,
     "to": 15
   },
   {
@@ -1855,14 +1855,14 @@
     "id": "trans-014-015-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 12.865,
-      "track-0078": 7.865,
-      "track-0081": 2.865,
+      "track-0073": 14.865,
+      "track-0078": 9.865,
+      "track-0081": 4.865,
       "track-0084": 0.0
     },
-    "mediaSec": 61.885,
+    "mediaSec": 63.885,
     "progress": 0.25,
-    "referenceSec": 61.885,
+    "referenceSec": 63.885,
     "to": 15
   },
   {
@@ -1873,14 +1873,14 @@
     "id": "trans-014-015-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 13.865,
-      "track-0078": 8.865,
-      "track-0081": 3.865,
-      "track-0084": 0.0
+      "track-0073": 15.865,
+      "track-0078": 10.865,
+      "track-0081": 5.865,
+      "track-0084": 0.865
     },
-    "mediaSec": 62.885,
+    "mediaSec": 64.885,
     "progress": 0.5,
-    "referenceSec": 62.885,
+    "referenceSec": 64.885,
     "to": 15
   },
   {
@@ -1891,14 +1891,14 @@
     "id": "trans-014-015-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 13.865,
-      "track-0078": 8.865,
-      "track-0081": 3.865,
-      "track-0084": 0.0
+      "track-0073": 15.865,
+      "track-0078": 10.865,
+      "track-0081": 5.865,
+      "track-0084": 0.865
     },
-    "mediaSec": 62.885,
+    "mediaSec": 64.885,
     "progress": 0.75,
-    "referenceSec": 62.885,
+    "referenceSec": 64.885,
     "to": 15
   },
   {
@@ -1909,14 +1909,14 @@
     "id": "trans-014-015-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 13.865,
-      "track-0078": 8.865,
-      "track-0081": 3.865,
-      "track-0084": 0.0
+      "track-0073": 15.865,
+      "track-0078": 10.865,
+      "track-0081": 5.865,
+      "track-0084": 0.865
     },
-    "mediaSec": 62.885,
+    "mediaSec": 64.885,
     "progress": 0.9,
-    "referenceSec": 62.885,
+    "referenceSec": 64.885,
     "to": 15
   },
   {
@@ -1927,14 +1927,14 @@
     "id": "trans-014-015-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 14.865,
-      "track-0078": 9.865,
-      "track-0081": 4.865,
-      "track-0084": 0.0
+      "track-0073": 16.865,
+      "track-0078": 11.865,
+      "track-0081": 6.865,
+      "track-0084": 1.865
     },
-    "mediaSec": 63.885,
+    "mediaSec": 65.885,
     "progress": 1.0,
-    "referenceSec": 63.885,
+    "referenceSec": 65.885,
     "to": 15
   },
   {
@@ -1961,13 +1961,13 @@
     "id": "trans-015-016-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 12.865,
-      "track-0081": 7.865,
-      "track-0084": 2.865
+      "track-0078": 14.865,
+      "track-0081": 9.865,
+      "track-0084": 4.865
     },
-    "mediaSec": 66.885,
+    "mediaSec": 68.885,
     "progress": 0.0,
-    "referenceSec": 66.885,
+    "referenceSec": 68.885,
     "to": 16
   },
   {
@@ -1978,13 +1978,13 @@
     "id": "trans-015-016-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 12.865,
-      "track-0081": 7.865,
-      "track-0084": 2.865
+      "track-0078": 14.865,
+      "track-0081": 9.865,
+      "track-0084": 4.865
     },
-    "mediaSec": 66.885,
+    "mediaSec": 68.885,
     "progress": 0.1,
-    "referenceSec": 66.885,
+    "referenceSec": 68.885,
     "to": 16
   },
   {
@@ -1995,13 +1995,13 @@
     "id": "trans-015-016-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 13.865,
-      "track-0081": 8.865,
-      "track-0084": 3.865
+      "track-0078": 15.865,
+      "track-0081": 10.865,
+      "track-0084": 5.865
     },
-    "mediaSec": 67.885,
+    "mediaSec": 69.885,
     "progress": 0.25,
-    "referenceSec": 67.885,
+    "referenceSec": 69.885,
     "to": 16
   },
   {
@@ -2012,13 +2012,13 @@
     "id": "trans-015-016-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 14.24,
-      "track-0081": 9.24,
-      "track-0084": 4.24
+      "track-0078": 16.24,
+      "track-0081": 11.24,
+      "track-0084": 6.24
     },
-    "mediaSec": 68.26,
+    "mediaSec": 70.26,
     "progress": 0.5,
-    "referenceSec": 68.26,
+    "referenceSec": 70.26,
     "to": 16
   },
   {
@@ -2029,13 +2029,13 @@
     "id": "trans-015-016-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 14.865,
-      "track-0081": 9.865,
-      "track-0084": 4.865
+      "track-0078": 16.865,
+      "track-0081": 11.865,
+      "track-0084": 6.865
     },
-    "mediaSec": 68.885,
+    "mediaSec": 70.885,
     "progress": 0.75,
-    "referenceSec": 68.885,
+    "referenceSec": 70.885,
     "to": 16
   },
   {
@@ -2046,13 +2046,13 @@
     "id": "trans-015-016-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 15.24,
-      "track-0081": 10.24,
-      "track-0084": 5.24
+      "track-0078": 17.24,
+      "track-0081": 12.24,
+      "track-0084": 7.24
     },
-    "mediaSec": 69.26,
+    "mediaSec": 71.26,
     "progress": 0.9,
-    "referenceSec": 69.26,
+    "referenceSec": 71.26,
     "to": 16
   },
   {
@@ -2063,13 +2063,13 @@
     "id": "trans-015-016-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 15.74,
-      "track-0081": 10.74,
-      "track-0084": 5.74
+      "track-0078": 17.74,
+      "track-0081": 12.74,
+      "track-0084": 7.74
     },
-    "mediaSec": 69.76,
+    "mediaSec": 71.76,
     "progress": 1.0,
-    "referenceSec": 69.76,
+    "referenceSec": 71.76,
     "to": 16
   },
   {
@@ -2096,14 +2096,14 @@
     "id": "trans-016-017-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 17.74,
-      "track-0081": 12.74,
-      "track-0084": 7.74,
+      "track-0078": 19.74,
+      "track-0081": 14.74,
+      "track-0084": 9.74,
       "track-0087": 0.0
     },
-    "mediaSec": 71.76,
+    "mediaSec": 73.76,
     "progress": 0.0,
-    "referenceSec": 71.76,
+    "referenceSec": 73.76,
     "to": 17
   },
   {
@@ -2114,14 +2114,14 @@
     "id": "trans-016-017-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 18.74,
-      "track-0081": 13.74,
-      "track-0084": 8.74,
-      "track-0087": 0.0
+      "track-0078": 20.74,
+      "track-0081": 15.74,
+      "track-0084": 10.74,
+      "track-0087": 0.74
     },
-    "mediaSec": 72.76,
+    "mediaSec": 74.76,
     "progress": 0.1,
-    "referenceSec": 72.76,
+    "referenceSec": 74.76,
     "to": 17
   },
   {
@@ -2132,14 +2132,14 @@
     "id": "trans-016-017-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 18.99,
-      "track-0081": 13.99,
-      "track-0084": 8.99,
-      "track-0087": 0.0
+      "track-0078": 20.99,
+      "track-0081": 15.99,
+      "track-0084": 10.99,
+      "track-0087": 0.99
     },
-    "mediaSec": 73.01,
+    "mediaSec": 75.01,
     "progress": 0.25,
-    "referenceSec": 73.01,
+    "referenceSec": 75.01,
     "to": 17
   },
   {
@@ -2150,14 +2150,14 @@
     "id": "trans-016-017-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 19.365,
-      "track-0081": 14.365,
-      "track-0084": 9.365,
-      "track-0087": 0.0
+      "track-0078": 21.365,
+      "track-0081": 16.365,
+      "track-0084": 11.365,
+      "track-0087": 1.365
     },
-    "mediaSec": 73.385,
+    "mediaSec": 75.385,
     "progress": 0.5,
-    "referenceSec": 73.385,
+    "referenceSec": 75.385,
     "to": 17
   },
   {
@@ -2168,14 +2168,14 @@
     "id": "trans-016-017-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 19.99,
-      "track-0081": 14.99,
-      "track-0084": 9.99,
-      "track-0087": 0.0
+      "track-0078": 21.99,
+      "track-0081": 16.99,
+      "track-0084": 11.99,
+      "track-0087": 1.99
     },
-    "mediaSec": 74.01,
+    "mediaSec": 76.01,
     "progress": 0.75,
-    "referenceSec": 74.01,
+    "referenceSec": 76.01,
     "to": 17
   },
   {
@@ -2186,14 +2186,14 @@
     "id": "trans-016-017-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 20.365,
-      "track-0081": 15.365,
-      "track-0084": 10.365,
-      "track-0087": 0.365
+      "track-0078": 22.365,
+      "track-0081": 17.365,
+      "track-0084": 12.365,
+      "track-0087": 2.365
     },
-    "mediaSec": 74.385,
+    "mediaSec": 76.385,
     "progress": 0.9,
-    "referenceSec": 74.385,
+    "referenceSec": 76.385,
     "to": 17
   },
   {
@@ -2204,14 +2204,14 @@
     "id": "trans-016-017-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 20.865,
-      "track-0081": 15.865,
-      "track-0084": 10.865,
-      "track-0087": 0.865
+      "track-0078": 22.865,
+      "track-0081": 17.865,
+      "track-0084": 12.865,
+      "track-0087": 2.865
     },
-    "mediaSec": 74.885,
+    "mediaSec": 76.885,
     "progress": 1.0,
-    "referenceSec": 74.885,
+    "referenceSec": 76.885,
     "to": 17
   },
   {
@@ -2238,14 +2238,14 @@
     "id": "trans-017-018-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 17.865,
-      "track-0084": 12.865,
-      "track-0087": 2.865,
+      "track-0081": 19.865,
+      "track-0084": 14.865,
+      "track-0087": 4.865,
       "track-0091": 0.0
     },
-    "mediaSec": 76.885,
+    "mediaSec": 78.885,
     "progress": 0.0,
-    "referenceSec": 76.885,
+    "referenceSec": 78.885,
     "to": 18
   },
   {
@@ -2256,14 +2256,14 @@
     "id": "trans-017-018-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 17.865,
-      "track-0084": 12.865,
-      "track-0087": 2.865,
+      "track-0081": 19.865,
+      "track-0084": 14.865,
+      "track-0087": 4.865,
       "track-0091": 0.0
     },
-    "mediaSec": 76.885,
+    "mediaSec": 78.885,
     "progress": 0.1,
-    "referenceSec": 76.885,
+    "referenceSec": 78.885,
     "to": 18
   },
   {
@@ -2274,14 +2274,14 @@
     "id": "trans-017-018-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 19.115,
-      "track-0084": 14.115,
-      "track-0087": 4.115,
-      "track-0091": 0.0
+      "track-0081": 21.115,
+      "track-0084": 16.115,
+      "track-0087": 6.115,
+      "track-0091": 1.115
     },
-    "mediaSec": 78.135,
+    "mediaSec": 80.135,
     "progress": 0.25,
-    "referenceSec": 78.135,
+    "referenceSec": 80.135,
     "to": 18
   },
   {
@@ -2292,14 +2292,14 @@
     "id": "trans-017-018-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 19.49,
-      "track-0084": 14.49,
-      "track-0087": 4.49,
-      "track-0091": 0.0
+      "track-0081": 21.49,
+      "track-0084": 16.49,
+      "track-0087": 6.49,
+      "track-0091": 1.49
     },
-    "mediaSec": 78.51,
+    "mediaSec": 80.51,
     "progress": 0.5,
-    "referenceSec": 78.51,
+    "referenceSec": 80.51,
     "to": 18
   },
   {
@@ -2310,14 +2310,14 @@
     "id": "trans-017-018-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 20.115,
-      "track-0084": 15.115,
-      "track-0087": 5.115,
-      "track-0091": 0.115
+      "track-0081": 22.115,
+      "track-0084": 17.115,
+      "track-0087": 7.115,
+      "track-0091": 2.115
     },
-    "mediaSec": 79.135,
+    "mediaSec": 81.135,
     "progress": 0.75,
-    "referenceSec": 79.135,
+    "referenceSec": 81.135,
     "to": 18
   },
   {
@@ -2328,14 +2328,14 @@
     "id": "trans-017-018-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 20.49,
-      "track-0084": 15.49,
-      "track-0087": 5.49,
-      "track-0091": 0.49
+      "track-0081": 22.49,
+      "track-0084": 17.49,
+      "track-0087": 7.49,
+      "track-0091": 2.49
     },
-    "mediaSec": 79.51,
+    "mediaSec": 81.51,
     "progress": 0.9,
-    "referenceSec": 79.51,
+    "referenceSec": 81.51,
     "to": 18
   },
   {
@@ -2346,14 +2346,14 @@
     "id": "trans-017-018-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 20.99,
-      "track-0084": 15.99,
-      "track-0087": 5.99,
-      "track-0091": 0.99
+      "track-0081": 22.99,
+      "track-0084": 17.99,
+      "track-0087": 7.99,
+      "track-0091": 2.99
     },
-    "mediaSec": 80.01,
+    "mediaSec": 82.01,
     "progress": 1.0,
-    "referenceSec": 80.01,
+    "referenceSec": 82.01,
     "to": 18
   },
   {
@@ -2380,13 +2380,13 @@
     "id": "trans-018-019-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 17.615,
-      "track-0087": 7.615,
-      "track-0091": 2.615
+      "track-0084": 19.615,
+      "track-0087": 9.615,
+      "track-0091": 4.615
     },
-    "mediaSec": 81.635,
+    "mediaSec": 83.635,
     "progress": 0.0,
-    "referenceSec": 81.635,
+    "referenceSec": 83.635,
     "to": 19
   },
   {
@@ -2397,13 +2397,13 @@
     "id": "trans-018-019-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 18.99,
-      "track-0087": 8.99,
-      "track-0091": 3.99
+      "track-0084": 20.99,
+      "track-0087": 10.99,
+      "track-0091": 5.99
     },
-    "mediaSec": 83.01,
+    "mediaSec": 85.01,
     "progress": 0.1,
-    "referenceSec": 83.01,
+    "referenceSec": 85.01,
     "to": 19
   },
   {
@@ -2414,13 +2414,13 @@
     "id": "trans-018-019-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 19.24,
-      "track-0087": 9.24,
-      "track-0091": 4.24
+      "track-0084": 21.24,
+      "track-0087": 11.24,
+      "track-0091": 6.24
     },
-    "mediaSec": 83.26,
+    "mediaSec": 85.26,
     "progress": 0.25,
-    "referenceSec": 83.26,
+    "referenceSec": 85.26,
     "to": 19
   },
   {
@@ -2431,13 +2431,13 @@
     "id": "trans-018-019-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 19.615,
-      "track-0087": 9.615,
-      "track-0091": 4.615
+      "track-0084": 21.615,
+      "track-0087": 11.615,
+      "track-0091": 6.615
     },
-    "mediaSec": 83.635,
+    "mediaSec": 85.635,
     "progress": 0.5,
-    "referenceSec": 83.635,
+    "referenceSec": 85.635,
     "to": 19
   },
   {
@@ -2448,13 +2448,13 @@
     "id": "trans-018-019-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 20.24,
-      "track-0087": 10.24,
-      "track-0091": 5.24
+      "track-0084": 22.24,
+      "track-0087": 12.24,
+      "track-0091": 7.24
     },
-    "mediaSec": 84.26,
+    "mediaSec": 86.26,
     "progress": 0.75,
-    "referenceSec": 84.26,
+    "referenceSec": 86.26,
     "to": 19
   },
   {
@@ -2465,13 +2465,13 @@
     "id": "trans-018-019-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 20.615,
-      "track-0087": 10.615,
-      "track-0091": 5.615
+      "track-0084": 22.615,
+      "track-0087": 12.615,
+      "track-0091": 7.615
     },
-    "mediaSec": 84.635,
+    "mediaSec": 86.635,
     "progress": 0.9,
-    "referenceSec": 84.635,
+    "referenceSec": 86.635,
     "to": 19
   },
   {
@@ -2482,13 +2482,13 @@
     "id": "trans-018-019-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 20.99,
-      "track-0087": 10.99,
-      "track-0091": 5.99
+      "track-0084": 22.99,
+      "track-0087": 12.99,
+      "track-0091": 7.99
     },
-    "mediaSec": 85.01,
+    "mediaSec": 87.01,
     "progress": 1.0,
-    "referenceSec": 85.01,
+    "referenceSec": 87.01,
     "to": 19
   },
   {
@@ -2515,15 +2515,15 @@
     "id": "trans-019-020-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 23.865,
-      "track-0087": 13.865,
-      "track-0091": 8.865,
-      "track-0093": 0.0,
-      "track-0094": 0.0
+      "track-0084": 25.865,
+      "track-0087": 15.865,
+      "track-0091": 10.865,
+      "track-0093": 0.865,
+      "track-0094": 0.865
     },
-    "mediaSec": 87.885,
+    "mediaSec": 89.885,
     "progress": 0.0,
-    "referenceSec": 87.885,
+    "referenceSec": 89.885,
     "to": 20
   },
   {
@@ -2534,15 +2534,15 @@
     "id": "trans-019-020-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 23.065,
-      "track-0087": 13.065,
-      "track-0091": 8.065,
-      "track-0093": 0.0,
-      "track-0094": 0.0
+      "track-0084": 25.065,
+      "track-0087": 15.065,
+      "track-0091": 10.065,
+      "track-0093": 0.065,
+      "track-0094": 0.065
     },
-    "mediaSec": 87.085,
+    "mediaSec": 89.085,
     "progress": 0.1,
-    "referenceSec": 87.085,
+    "referenceSec": 89.085,
     "to": 20
   },
   {
@@ -2553,15 +2553,15 @@
     "id": "trans-019-020-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 24.365,
-      "track-0087": 14.365,
-      "track-0091": 9.365,
-      "track-0093": 0.0,
-      "track-0094": 0.0
+      "track-0084": 26.365,
+      "track-0087": 16.365,
+      "track-0091": 11.365,
+      "track-0093": 1.365,
+      "track-0094": 1.365
     },
-    "mediaSec": 88.385,
+    "mediaSec": 90.385,
     "progress": 0.25,
-    "referenceSec": 88.385,
+    "referenceSec": 90.385,
     "to": 20
   },
   {
@@ -2572,15 +2572,15 @@
     "id": "trans-019-020-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 24.74,
-      "track-0087": 14.74,
-      "track-0091": 9.74,
-      "track-0093": 0.0,
-      "track-0094": 0.0
+      "track-0084": 26.74,
+      "track-0087": 16.74,
+      "track-0091": 11.74,
+      "track-0093": 1.74,
+      "track-0094": 1.74
     },
-    "mediaSec": 88.76,
+    "mediaSec": 90.76,
     "progress": 0.5,
-    "referenceSec": 88.76,
+    "referenceSec": 90.76,
     "to": 20
   },
   {
@@ -2591,15 +2591,15 @@
     "id": "trans-019-020-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 25.365,
-      "track-0087": 15.365,
-      "track-0091": 10.365,
-      "track-0093": 0.365,
-      "track-0094": 0.365
+      "track-0084": 27.365,
+      "track-0087": 17.365,
+      "track-0091": 12.365,
+      "track-0093": 2.365,
+      "track-0094": 2.365
     },
-    "mediaSec": 89.385,
+    "mediaSec": 91.385,
     "progress": 0.75,
-    "referenceSec": 89.385,
+    "referenceSec": 91.385,
     "to": 20
   },
   {
@@ -2610,15 +2610,15 @@
     "id": "trans-019-020-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 25.74,
-      "track-0087": 15.74,
-      "track-0091": 10.74,
-      "track-0093": 0.74,
-      "track-0094": 0.74
+      "track-0084": 27.74,
+      "track-0087": 17.74,
+      "track-0091": 12.74,
+      "track-0093": 2.74,
+      "track-0094": 2.74
     },
-    "mediaSec": 89.76,
+    "mediaSec": 91.76,
     "progress": 0.9,
-    "referenceSec": 89.76,
+    "referenceSec": 91.76,
     "to": 20
   },
   {
@@ -2629,15 +2629,15 @@
     "id": "trans-019-020-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 26.74,
-      "track-0087": 16.74,
-      "track-0091": 11.74,
-      "track-0093": 1.74,
-      "track-0094": 1.74
+      "track-0084": 28.74,
+      "track-0087": 18.74,
+      "track-0091": 13.74,
+      "track-0093": 3.74,
+      "track-0094": 3.74
     },
-    "mediaSec": 90.76,
+    "mediaSec": 92.76,
     "progress": 1.0,
-    "referenceSec": 90.76,
+    "referenceSec": 92.76,
     "to": 20
   },
   {
@@ -2665,17 +2665,17 @@
     "id": "trans-020-021-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 17.74,
-      "track-0091": 12.74,
-      "track-0093": 2.74,
-      "track-0094": 0.74,
+      "track-0087": 19.74,
+      "track-0091": 14.74,
+      "track-0093": 4.74,
+      "track-0094": 2.74,
       "track-0096": 0.0,
       "track-0097": 0.0,
       "track-0098": 0.0
     },
-    "mediaSec": 91.76,
+    "mediaSec": 93.76,
     "progress": 0.0,
-    "referenceSec": 91.76,
+    "referenceSec": 93.76,
     "to": 21
   },
   {
@@ -2686,17 +2686,17 @@
     "id": "trans-020-021-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 17.24,
-      "track-0091": 12.24,
-      "track-0093": 2.24,
-      "track-0094": 0.24,
+      "track-0087": 19.24,
+      "track-0091": 14.24,
+      "track-0093": 4.24,
+      "track-0094": 2.24,
       "track-0096": 0.0,
       "track-0097": 0.0,
       "track-0098": 0.0
     },
-    "mediaSec": 91.26,
+    "mediaSec": 93.26,
     "progress": 0.1,
-    "referenceSec": 91.26,
+    "referenceSec": 93.26,
     "to": 21
   },
   {
@@ -2707,17 +2707,17 @@
     "id": "trans-020-021-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 19.49,
-      "track-0091": 14.49,
-      "track-0093": 4.49,
-      "track-0094": 2.49,
-      "track-0096": 0.0,
-      "track-0097": 0.0,
-      "track-0098": 0.0
+      "track-0087": 21.49,
+      "track-0091": 16.49,
+      "track-0093": 6.49,
+      "track-0094": 4.49,
+      "track-0096": 1.49,
+      "track-0097": 1.49,
+      "track-0098": 1.49
     },
-    "mediaSec": 93.51,
+    "mediaSec": 95.51,
     "progress": 0.25,
-    "referenceSec": 93.51,
+    "referenceSec": 95.51,
     "to": 21
   },
   {
@@ -2728,17 +2728,17 @@
     "id": "trans-020-021-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 19.865,
-      "track-0091": 14.865,
-      "track-0093": 4.865,
-      "track-0094": 2.865,
-      "track-0096": 0.0,
-      "track-0097": 0.0,
-      "track-0098": 0.0
+      "track-0087": 21.865,
+      "track-0091": 16.865,
+      "track-0093": 6.865,
+      "track-0094": 4.865,
+      "track-0096": 1.865,
+      "track-0097": 1.865,
+      "track-0098": 1.865
     },
-    "mediaSec": 93.885,
+    "mediaSec": 95.885,
     "progress": 0.5,
-    "referenceSec": 93.885,
+    "referenceSec": 95.885,
     "to": 21
   },
   {
@@ -2749,17 +2749,17 @@
     "id": "trans-020-021-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 20.49,
-      "track-0091": 15.49,
-      "track-0093": 5.49,
-      "track-0094": 3.49,
-      "track-0096": 0.49,
-      "track-0097": 0.49,
-      "track-0098": 0.49
+      "track-0087": 22.49,
+      "track-0091": 17.49,
+      "track-0093": 7.49,
+      "track-0094": 5.49,
+      "track-0096": 2.49,
+      "track-0097": 2.49,
+      "track-0098": 2.49
     },
-    "mediaSec": 94.51,
+    "mediaSec": 96.51,
     "progress": 0.75,
-    "referenceSec": 94.51,
+    "referenceSec": 96.51,
     "to": 21
   },
   {
@@ -2770,17 +2770,17 @@
     "id": "trans-020-021-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 20.615,
-      "track-0091": 15.615,
-      "track-0093": 5.615,
-      "track-0094": 3.615,
-      "track-0096": 0.615,
-      "track-0097": 0.615,
-      "track-0098": 0.615
+      "track-0087": 22.615,
+      "track-0091": 17.615,
+      "track-0093": 7.615,
+      "track-0094": 5.615,
+      "track-0096": 2.615,
+      "track-0097": 2.615,
+      "track-0098": 2.615
     },
-    "mediaSec": 94.635,
+    "mediaSec": 96.635,
     "progress": 0.9,
-    "referenceSec": 94.635,
+    "referenceSec": 96.635,
     "to": 21
   },
   {
@@ -2791,17 +2791,17 @@
     "id": "trans-020-021-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 20.99,
-      "track-0091": 15.99,
-      "track-0093": 5.99,
-      "track-0094": 3.99,
-      "track-0096": 0.99,
-      "track-0097": 0.99,
-      "track-0098": 0.99
+      "track-0087": 22.99,
+      "track-0091": 17.99,
+      "track-0093": 7.99,
+      "track-0094": 5.99,
+      "track-0096": 2.99,
+      "track-0097": 2.99,
+      "track-0098": 2.99
     },
-    "mediaSec": 95.01,
+    "mediaSec": 97.01,
     "progress": 1.0,
-    "referenceSec": 95.01,
+    "referenceSec": 97.01,
     "to": 21
   },
   {
@@ -2831,15 +2831,15 @@
     "id": "trans-021-022-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 18.74,
-      "track-0093": 8.74,
-      "track-0094": 1.74,
-      "track-0096": 3.74,
-      "track-0098": 1.74
+      "track-0091": 20.74,
+      "track-0093": 10.74,
+      "track-0094": 3.74,
+      "track-0096": 5.74,
+      "track-0098": 3.74
     },
-    "mediaSec": 97.76,
+    "mediaSec": 99.76,
     "progress": 0.0,
-    "referenceSec": 97.76,
+    "referenceSec": 99.76,
     "to": 22
   },
   {
@@ -2850,15 +2850,15 @@
     "id": "trans-021-022-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 17.865,
-      "track-0093": 7.865,
-      "track-0094": 0.865,
-      "track-0096": 2.865,
-      "track-0098": 0.865
+      "track-0091": 19.865,
+      "track-0093": 9.865,
+      "track-0094": 2.865,
+      "track-0096": 4.865,
+      "track-0098": 2.865
     },
-    "mediaSec": 96.885,
+    "mediaSec": 98.885,
     "progress": 0.1,
-    "referenceSec": 96.885,
+    "referenceSec": 98.885,
     "to": 22
   },
   {
@@ -2869,15 +2869,15 @@
     "id": "trans-021-022-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 19.49,
-      "track-0093": 9.49,
-      "track-0094": 2.49,
-      "track-0096": 4.49,
-      "track-0098": 2.49
+      "track-0091": 21.49,
+      "track-0093": 11.49,
+      "track-0094": 4.49,
+      "track-0096": 6.49,
+      "track-0098": 4.49
     },
-    "mediaSec": 98.51,
+    "mediaSec": 100.51,
     "progress": 0.25,
-    "referenceSec": 98.51,
+    "referenceSec": 100.51,
     "to": 22
   },
   {
@@ -2888,15 +2888,15 @@
     "id": "trans-021-022-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 19.99,
-      "track-0093": 9.99,
-      "track-0094": 2.99,
-      "track-0096": 4.99,
-      "track-0098": 2.99
+      "track-0091": 21.99,
+      "track-0093": 11.99,
+      "track-0094": 4.99,
+      "track-0096": 6.99,
+      "track-0098": 4.99
     },
-    "mediaSec": 99.01,
+    "mediaSec": 101.01,
     "progress": 0.5,
-    "referenceSec": 99.01,
+    "referenceSec": 101.01,
     "to": 22
   },
   {
@@ -2907,15 +2907,15 @@
     "id": "trans-021-022-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 20.49,
-      "track-0093": 10.49,
-      "track-0094": 3.49,
-      "track-0096": 5.49,
-      "track-0098": 3.49
+      "track-0091": 22.49,
+      "track-0093": 12.49,
+      "track-0094": 5.49,
+      "track-0096": 7.49,
+      "track-0098": 5.49
     },
-    "mediaSec": 99.51,
+    "mediaSec": 101.51,
     "progress": 0.75,
-    "referenceSec": 99.51,
+    "referenceSec": 101.51,
     "to": 22
   },
   {
@@ -2926,15 +2926,15 @@
     "id": "trans-021-022-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 20.74,
-      "track-0093": 10.74,
-      "track-0094": 3.74,
-      "track-0096": 5.74,
-      "track-0098": 3.74
+      "track-0091": 22.74,
+      "track-0093": 12.74,
+      "track-0094": 5.74,
+      "track-0096": 7.74,
+      "track-0098": 5.74
     },
-    "mediaSec": 99.76,
+    "mediaSec": 101.76,
     "progress": 0.9,
-    "referenceSec": 99.76,
+    "referenceSec": 101.76,
     "to": 22
   },
   {
@@ -2945,15 +2945,15 @@
     "id": "trans-021-022-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 20.99,
-      "track-0093": 10.99,
-      "track-0094": 3.99,
-      "track-0096": 5.99,
-      "track-0098": 3.99
+      "track-0091": 22.99,
+      "track-0093": 12.99,
+      "track-0094": 5.99,
+      "track-0096": 7.99,
+      "track-0098": 5.99
     },
-    "mediaSec": 100.01,
+    "mediaSec": 102.01,
     "progress": 1.0,
-    "referenceSec": 100.01,
+    "referenceSec": 102.01,
     "to": 22
   },
   {
@@ -2978,14 +2978,14 @@
     "id": "trans-022-023-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 12.24,
+      "track-0093": 14.24,
       "track-0094": 0.0,
       "track-0102": 0.0,
       "track-0103": 0.0
     },
-    "mediaSec": 101.26,
+    "mediaSec": 103.26,
     "progress": 0.0,
-    "referenceSec": 101.26,
+    "referenceSec": 103.26,
     "to": 23
   },
   {
@@ -2996,14 +2996,14 @@
     "id": "trans-022-023-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 13.24,
-      "track-0094": 0.0,
-      "track-0102": 0.0,
-      "track-0103": 0.0
+      "track-0093": 15.24,
+      "track-0094": 0.24,
+      "track-0102": 0.24,
+      "track-0103": 0.24
     },
-    "mediaSec": 102.26,
+    "mediaSec": 104.26,
     "progress": 0.1,
-    "referenceSec": 102.26,
+    "referenceSec": 104.26,
     "to": 23
   },
   {
@@ -3014,14 +3014,14 @@
     "id": "trans-022-023-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 14.49,
-      "track-0094": 0.0,
-      "track-0102": 0.0,
-      "track-0103": 0.0
+      "track-0093": 16.49,
+      "track-0094": 1.49,
+      "track-0102": 1.49,
+      "track-0103": 1.49
     },
-    "mediaSec": 103.51,
+    "mediaSec": 105.51,
     "progress": 0.25,
-    "referenceSec": 103.51,
+    "referenceSec": 105.51,
     "to": 23
   },
   {
@@ -3032,14 +3032,14 @@
     "id": "trans-022-023-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 14.99,
-      "track-0094": 0.0,
-      "track-0102": 0.0,
-      "track-0103": 0.0
+      "track-0093": 16.99,
+      "track-0094": 1.99,
+      "track-0102": 1.99,
+      "track-0103": 1.99
     },
-    "mediaSec": 104.01,
+    "mediaSec": 106.01,
     "progress": 0.5,
-    "referenceSec": 104.01,
+    "referenceSec": 106.01,
     "to": 23
   },
   {
@@ -3050,14 +3050,14 @@
     "id": "trans-022-023-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 15.49,
-      "track-0094": 0.49,
-      "track-0102": 0.49,
-      "track-0103": 0.49
+      "track-0093": 17.49,
+      "track-0094": 2.49,
+      "track-0102": 2.49,
+      "track-0103": 2.49
     },
-    "mediaSec": 104.51,
+    "mediaSec": 106.51,
     "progress": 0.75,
-    "referenceSec": 104.51,
+    "referenceSec": 106.51,
     "to": 23
   },
   {
@@ -3068,14 +3068,14 @@
     "id": "trans-022-023-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 15.74,
-      "track-0094": 0.74,
-      "track-0102": 0.74,
-      "track-0103": 0.74
+      "track-0093": 17.74,
+      "track-0094": 2.74,
+      "track-0102": 2.74,
+      "track-0103": 2.74
     },
-    "mediaSec": 104.76,
+    "mediaSec": 106.76,
     "progress": 0.9,
-    "referenceSec": 104.76,
+    "referenceSec": 106.76,
     "to": 23
   },
   {
@@ -3086,14 +3086,14 @@
     "id": "trans-022-023-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 15.99,
-      "track-0094": 0.99,
-      "track-0102": 0.99,
-      "track-0103": 0.99
+      "track-0093": 17.99,
+      "track-0094": 2.99,
+      "track-0102": 2.99,
+      "track-0103": 2.99
     },
-    "mediaSec": 105.01,
+    "mediaSec": 107.01,
     "progress": 1.0,
-    "referenceSec": 105.01,
+    "referenceSec": 107.01,
     "to": 23
   },
   {
@@ -3122,15 +3122,15 @@
     "id": "trans-023-024-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 17.115,
-      "track-0094": 0.115,
-      "track-0097": 0.115,
-      "track-0102": 0.115,
-      "track-0103": 0.115
+      "track-0093": 19.115,
+      "track-0094": 2.115,
+      "track-0097": 2.115,
+      "track-0102": 2.115,
+      "track-0103": 2.115
     },
-    "mediaSec": 106.135,
+    "mediaSec": 108.135,
     "progress": 0.0,
-    "referenceSec": 106.135,
+    "referenceSec": 108.135,
     "to": 24
   },
   {
@@ -3141,15 +3141,15 @@
     "id": "trans-023-024-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 17.115,
-      "track-0094": 0.115,
-      "track-0097": 0.115,
-      "track-0102": 0.115,
-      "track-0103": 0.115
+      "track-0093": 19.115,
+      "track-0094": 2.115,
+      "track-0097": 2.115,
+      "track-0102": 2.115,
+      "track-0103": 2.115
     },
-    "mediaSec": 106.135,
+    "mediaSec": 108.135,
     "progress": 0.1,
-    "referenceSec": 106.135,
+    "referenceSec": 108.135,
     "to": 24
   },
   {
@@ -3160,15 +3160,15 @@
     "id": "trans-023-024-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 18.115,
-      "track-0094": 1.115,
-      "track-0097": 1.115,
-      "track-0102": 1.115,
-      "track-0103": 1.115
+      "track-0093": 20.115,
+      "track-0094": 3.115,
+      "track-0097": 3.115,
+      "track-0102": 3.115,
+      "track-0103": 3.115
     },
-    "mediaSec": 107.135,
+    "mediaSec": 109.135,
     "progress": 0.25,
-    "referenceSec": 107.135,
+    "referenceSec": 109.135,
     "to": 24
   },
   {
@@ -3179,15 +3179,15 @@
     "id": "trans-023-024-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 18.115,
-      "track-0094": 1.115,
-      "track-0097": 1.115,
-      "track-0102": 1.115,
-      "track-0103": 1.115
+      "track-0093": 20.115,
+      "track-0094": 3.115,
+      "track-0097": 3.115,
+      "track-0102": 3.115,
+      "track-0103": 3.115
     },
-    "mediaSec": 107.135,
+    "mediaSec": 109.135,
     "progress": 0.5,
-    "referenceSec": 107.135,
+    "referenceSec": 109.135,
     "to": 24
   },
   {
@@ -3198,15 +3198,15 @@
     "id": "trans-023-024-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 20.49,
-      "track-0094": 3.49,
-      "track-0097": 3.49,
-      "track-0102": 3.49,
-      "track-0103": 3.49
+      "track-0093": 22.49,
+      "track-0094": 5.49,
+      "track-0097": 5.49,
+      "track-0102": 5.49,
+      "track-0103": 5.49
     },
-    "mediaSec": 109.51,
+    "mediaSec": 111.51,
     "progress": 0.75,
-    "referenceSec": 109.51,
+    "referenceSec": 111.51,
     "to": 24
   },
   {
@@ -3217,15 +3217,15 @@
     "id": "trans-023-024-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 20.74,
-      "track-0094": 3.74,
-      "track-0097": 3.74,
-      "track-0102": 3.74,
-      "track-0103": 3.74
+      "track-0093": 22.74,
+      "track-0094": 5.74,
+      "track-0097": 5.74,
+      "track-0102": 5.74,
+      "track-0103": 5.74
     },
-    "mediaSec": 109.76,
+    "mediaSec": 111.76,
     "progress": 0.9,
-    "referenceSec": 109.76,
+    "referenceSec": 111.76,
     "to": 24
   },
   {
@@ -3236,15 +3236,15 @@
     "id": "trans-023-024-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 20.99,
-      "track-0094": 3.99,
-      "track-0097": 3.99,
-      "track-0102": 3.99,
-      "track-0103": 3.99
+      "track-0093": 22.99,
+      "track-0094": 5.99,
+      "track-0097": 5.99,
+      "track-0102": 5.99,
+      "track-0103": 5.99
     },
-    "mediaSec": 110.01,
+    "mediaSec": 112.01,
     "progress": 1.0,
-    "referenceSec": 110.01,
+    "referenceSec": 112.01,
     "to": 24
   },
   {
@@ -3271,13 +3271,13 @@
     "id": "trans-024-025-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 21.99,
-      "track-0102": 0.0,
-      "track-0103": 0.0
+      "track-0093": 23.99,
+      "track-0102": 1.99,
+      "track-0103": 1.99
     },
-    "mediaSec": 111.01,
+    "mediaSec": 113.01,
     "progress": 0.0,
-    "referenceSec": 111.01,
+    "referenceSec": 113.01,
     "to": 25
   },
   {
@@ -3288,13 +3288,13 @@
     "id": "trans-024-025-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 23.115,
-      "track-0102": 1.115,
-      "track-0103": 1.115
+      "track-0093": 25.115,
+      "track-0102": 3.115,
+      "track-0103": 3.115
     },
-    "mediaSec": 112.135,
+    "mediaSec": 114.135,
     "progress": 0.1,
-    "referenceSec": 112.135,
+    "referenceSec": 114.135,
     "to": 25
   },
   {
@@ -3305,13 +3305,13 @@
     "id": "trans-024-025-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 24.49,
-      "track-0102": 2.49,
-      "track-0103": 2.49
+      "track-0093": 26.49,
+      "track-0102": 4.49,
+      "track-0103": 4.49
     },
-    "mediaSec": 113.51,
+    "mediaSec": 115.51,
     "progress": 0.25,
-    "referenceSec": 113.51,
+    "referenceSec": 115.51,
     "to": 25
   },
   {
@@ -3322,13 +3322,13 @@
     "id": "trans-024-025-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 24.99,
-      "track-0102": 2.99,
-      "track-0103": 2.99
+      "track-0093": 26.99,
+      "track-0102": 4.99,
+      "track-0103": 4.99
     },
-    "mediaSec": 114.01,
+    "mediaSec": 116.01,
     "progress": 0.5,
-    "referenceSec": 114.01,
+    "referenceSec": 116.01,
     "to": 25
   },
   {
@@ -3339,13 +3339,13 @@
     "id": "trans-024-025-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 25.115,
-      "track-0102": 3.115,
-      "track-0103": 3.115
+      "track-0093": 27.115,
+      "track-0102": 5.115,
+      "track-0103": 5.115
     },
-    "mediaSec": 114.135,
+    "mediaSec": 116.135,
     "progress": 0.75,
-    "referenceSec": 114.135,
+    "referenceSec": 116.135,
     "to": 25
   },
   {
@@ -3356,13 +3356,13 @@
     "id": "trans-024-025-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 25.24,
-      "track-0102": 3.24,
-      "track-0103": 3.24
+      "track-0093": 27.24,
+      "track-0102": 5.24,
+      "track-0103": 5.24
     },
-    "mediaSec": 114.26,
+    "mediaSec": 116.26,
     "progress": 0.9,
-    "referenceSec": 114.26,
+    "referenceSec": 116.26,
     "to": 25
   },
   {
@@ -3373,13 +3373,13 @@
     "id": "trans-024-025-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 25.99,
-      "track-0102": 3.99,
-      "track-0103": 3.99
+      "track-0093": 27.99,
+      "track-0102": 5.99,
+      "track-0103": 5.99
     },
-    "mediaSec": 115.01,
+    "mediaSec": 117.01,
     "progress": 1.0,
-    "referenceSec": 115.01,
+    "referenceSec": 117.01,
     "to": 25
   },
   {
@@ -3404,12 +3404,12 @@
     "id": "trans-025-026-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 28.115,
-      "track-0109": 0.0
+      "track-0093": 30.115,
+      "track-0109": 0.115
     },
-    "mediaSec": 117.135,
+    "mediaSec": 119.135,
     "progress": 0.0,
-    "referenceSec": 117.135,
+    "referenceSec": 119.135,
     "to": 26
   },
   {
@@ -3420,12 +3420,12 @@
     "id": "trans-025-026-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 28.115,
-      "track-0109": 0.0
+      "track-0093": 30.115,
+      "track-0109": 0.115
     },
-    "mediaSec": 117.135,
+    "mediaSec": 119.135,
     "progress": 0.1,
-    "referenceSec": 117.135,
+    "referenceSec": 119.135,
     "to": 26
   },
   {
@@ -3436,12 +3436,12 @@
     "id": "trans-025-026-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 28.115,
-      "track-0109": 0.0
+      "track-0093": 30.115,
+      "track-0109": 0.115
     },
-    "mediaSec": 117.135,
+    "mediaSec": 119.135,
     "progress": 0.25,
-    "referenceSec": 117.135,
+    "referenceSec": 119.135,
     "to": 26
   },
   {
@@ -3452,12 +3452,12 @@
     "id": "trans-025-026-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 27.99,
+      "track-0093": 29.99,
       "track-0109": 0.0
     },
-    "mediaSec": 117.01,
+    "mediaSec": 119.01,
     "progress": 0.5,
-    "referenceSec": 117.01,
+    "referenceSec": 119.01,
     "to": 26
   },
   {
@@ -3468,12 +3468,12 @@
     "id": "trans-025-026-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 30.49,
-      "track-0109": 0.49
+      "track-0093": 32.49,
+      "track-0109": 2.49
     },
-    "mediaSec": 119.51,
+    "mediaSec": 121.51,
     "progress": 0.75,
-    "referenceSec": 119.51,
+    "referenceSec": 121.51,
     "to": 26
   },
   {
@@ -3484,12 +3484,12 @@
     "id": "trans-025-026-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 30.74,
-      "track-0109": 0.74
+      "track-0093": 32.74,
+      "track-0109": 2.74
     },
-    "mediaSec": 119.76,
+    "mediaSec": 121.76,
     "progress": 0.9,
-    "referenceSec": 119.76,
+    "referenceSec": 121.76,
     "to": 26
   },
   {
@@ -3500,12 +3500,12 @@
     "id": "trans-025-026-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 30.865,
-      "track-0109": 0.865
+      "track-0093": 32.865,
+      "track-0109": 2.865
     },
-    "mediaSec": 119.885,
+    "mediaSec": 121.885,
     "progress": 1.0,
-    "referenceSec": 119.885,
+    "referenceSec": 121.885,
     "to": 26
   },
   {
@@ -3531,12 +3531,12 @@
     "id": "trans-026-027-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 33.0,
-      "track-0109": 3.0
+      "track-0093": 35.0,
+      "track-0109": 5.0
     },
-    "mediaSec": 122.02,
+    "mediaSec": 124.02,
     "progress": 0.0,
-    "referenceSec": 122.02,
+    "referenceSec": 124.02,
     "to": 27
   },
   {
@@ -3547,12 +3547,12 @@
     "id": "trans-026-027-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 33.2,
-      "track-0109": 3.2
+      "track-0093": 35.2,
+      "track-0109": 5.2
     },
-    "mediaSec": 122.22,
+    "mediaSec": 124.22,
     "progress": 0.1,
-    "referenceSec": 122.22,
+    "referenceSec": 124.22,
     "to": 27
   },
   {
@@ -3563,12 +3563,12 @@
     "id": "trans-026-027-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 33.5,
-      "track-0109": 3.5
+      "track-0093": 35.5,
+      "track-0109": 5.5
     },
-    "mediaSec": 122.52,
+    "mediaSec": 124.52,
     "progress": 0.25,
-    "referenceSec": 122.52,
+    "referenceSec": 124.52,
     "to": 27
   },
   {
@@ -3579,12 +3579,12 @@
     "id": "trans-026-027-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 34.0,
-      "track-0109": 4.0
+      "track-0093": 36.0,
+      "track-0109": 6.0
     },
-    "mediaSec": 123.02,
+    "mediaSec": 125.02,
     "progress": 0.5,
-    "referenceSec": 123.02,
+    "referenceSec": 125.02,
     "to": 27
   },
   {
@@ -3595,12 +3595,12 @@
     "id": "trans-026-027-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 34.5,
-      "track-0109": 4.5
+      "track-0093": 36.5,
+      "track-0109": 6.5
     },
-    "mediaSec": 123.52,
+    "mediaSec": 125.52,
     "progress": 0.75,
-    "referenceSec": 123.52,
+    "referenceSec": 125.52,
     "to": 27
   },
   {
@@ -3611,12 +3611,12 @@
     "id": "trans-026-027-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 34.8,
-      "track-0109": 4.8
+      "track-0093": 36.8,
+      "track-0109": 6.8
     },
-    "mediaSec": 123.82,
+    "mediaSec": 125.82,
     "progress": 0.9,
-    "referenceSec": 123.82,
+    "referenceSec": 125.82,
     "to": 27
   },
   {
@@ -3627,12 +3627,12 @@
     "id": "trans-026-027-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 35.0,
-      "track-0109": 5.0
+      "track-0093": 37.0,
+      "track-0109": 7.0
     },
-    "mediaSec": 124.02,
+    "mediaSec": 126.02,
     "progress": 1.0,
-    "referenceSec": 124.02,
+    "referenceSec": 126.02,
     "to": 27
   },
   {
@@ -3658,12 +3658,12 @@
     "id": "trans-027-028-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 38.0,
-      "track-0109": 8.0
+      "track-0093": 40.0,
+      "track-0109": 10.0
     },
-    "mediaSec": 127.02,
+    "mediaSec": 129.02,
     "progress": 0.0,
-    "referenceSec": 127.02,
+    "referenceSec": 129.02,
     "to": 28
   },
   {
@@ -3674,12 +3674,12 @@
     "id": "trans-027-028-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 38.2,
-      "track-0109": 8.2
+      "track-0093": 40.2,
+      "track-0109": 10.2
     },
-    "mediaSec": 127.22,
+    "mediaSec": 129.22,
     "progress": 0.1,
-    "referenceSec": 127.22,
+    "referenceSec": 129.22,
     "to": 28
   },
   {
@@ -3690,12 +3690,12 @@
     "id": "trans-027-028-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 38.5,
-      "track-0109": 8.5
+      "track-0093": 40.5,
+      "track-0109": 10.5
     },
-    "mediaSec": 127.52,
+    "mediaSec": 129.52,
     "progress": 0.25,
-    "referenceSec": 127.52,
+    "referenceSec": 129.52,
     "to": 28
   },
   {
@@ -3706,12 +3706,12 @@
     "id": "trans-027-028-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 39.0,
-      "track-0109": 9.0
+      "track-0093": 41.0,
+      "track-0109": 11.0
     },
-    "mediaSec": 128.02,
+    "mediaSec": 130.02,
     "progress": 0.5,
-    "referenceSec": 128.02,
+    "referenceSec": 130.02,
     "to": 28
   },
   {
@@ -3722,12 +3722,12 @@
     "id": "trans-027-028-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 39.5,
-      "track-0109": 9.5
+      "track-0093": 41.5,
+      "track-0109": 11.5
     },
-    "mediaSec": 128.52,
+    "mediaSec": 130.52,
     "progress": 0.75,
-    "referenceSec": 128.52,
+    "referenceSec": 130.52,
     "to": 28
   },
   {
@@ -3738,12 +3738,12 @@
     "id": "trans-027-028-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 39.8,
-      "track-0109": 9.8
+      "track-0093": 41.8,
+      "track-0109": 11.8
     },
-    "mediaSec": 128.82,
+    "mediaSec": 130.82,
     "progress": 0.9,
-    "referenceSec": 128.82,
+    "referenceSec": 130.82,
     "to": 28
   },
   {
@@ -3754,12 +3754,12 @@
     "id": "trans-027-028-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 40.0,
-      "track-0109": 10.0
+      "track-0093": 42.0,
+      "track-0109": 12.0
     },
-    "mediaSec": 129.02,
+    "mediaSec": 131.02,
     "progress": 1.0,
-    "referenceSec": 129.02,
+    "referenceSec": 131.02,
     "to": 28
   },
   {
@@ -3784,12 +3784,12 @@
     "id": "trans-028-029-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 13.0,
+      "track-0109": 15.0,
       "track-0116": 0.0
     },
-    "mediaSec": 132.02,
+    "mediaSec": 134.02,
     "progress": 0.0,
-    "referenceSec": 132.02,
+    "referenceSec": 134.02,
     "to": 29
   },
   {
@@ -3800,12 +3800,12 @@
     "id": "trans-028-029-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 13.2,
-      "track-0116": 0.0
+      "track-0109": 15.2,
+      "track-0116": 0.2
     },
-    "mediaSec": 132.22,
+    "mediaSec": 134.22,
     "progress": 0.1,
-    "referenceSec": 132.22,
+    "referenceSec": 134.22,
     "to": 29
   },
   {
@@ -3816,12 +3816,12 @@
     "id": "trans-028-029-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 13.5,
-      "track-0116": 0.0
+      "track-0109": 15.5,
+      "track-0116": 0.5
     },
-    "mediaSec": 132.52,
+    "mediaSec": 134.52,
     "progress": 0.25,
-    "referenceSec": 132.52,
+    "referenceSec": 134.52,
     "to": 29
   },
   {
@@ -3832,12 +3832,12 @@
     "id": "trans-028-029-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 14.0,
-      "track-0116": 0.0
+      "track-0109": 16.0,
+      "track-0116": 1.0
     },
-    "mediaSec": 133.02,
+    "mediaSec": 135.02,
     "progress": 0.5,
-    "referenceSec": 133.02,
+    "referenceSec": 135.02,
     "to": 29
   },
   {
@@ -3848,12 +3848,12 @@
     "id": "trans-028-029-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 14.5,
-      "track-0116": 0.0
+      "track-0109": 16.5,
+      "track-0116": 1.5
     },
-    "mediaSec": 133.52,
+    "mediaSec": 135.52,
     "progress": 0.75,
-    "referenceSec": 133.52,
+    "referenceSec": 135.52,
     "to": 29
   },
   {
@@ -3864,12 +3864,12 @@
     "id": "trans-028-029-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 14.8,
-      "track-0116": 0.0
+      "track-0109": 16.8,
+      "track-0116": 1.8
     },
-    "mediaSec": 133.82,
+    "mediaSec": 135.82,
     "progress": 0.9,
-    "referenceSec": 133.82,
+    "referenceSec": 135.82,
     "to": 29
   },
   {
@@ -3880,12 +3880,12 @@
     "id": "trans-028-029-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 15.0,
-      "track-0116": 0.0
+      "track-0109": 17.0,
+      "track-0116": 2.0
     },
-    "mediaSec": 134.02,
+    "mediaSec": 136.02,
     "progress": 1.0,
-    "referenceSec": 134.02,
+    "referenceSec": 136.02,
     "to": 29
   },
   {
@@ -3911,12 +3911,12 @@
     "id": "trans-029-030-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 18.0,
-      "track-0116": 3.0
+      "track-0109": 20.0,
+      "track-0116": 5.0
     },
-    "mediaSec": 137.02,
+    "mediaSec": 139.02,
     "progress": 0.0,
-    "referenceSec": 137.02,
+    "referenceSec": 139.02,
     "to": 30
   },
   {
@@ -3927,12 +3927,12 @@
     "id": "trans-029-030-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 18.2,
-      "track-0116": 3.2
+      "track-0109": 20.2,
+      "track-0116": 5.2
     },
-    "mediaSec": 137.22,
+    "mediaSec": 139.22,
     "progress": 0.1,
-    "referenceSec": 137.22,
+    "referenceSec": 139.22,
     "to": 30
   },
   {
@@ -3943,12 +3943,12 @@
     "id": "trans-029-030-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 18.5,
-      "track-0116": 3.5
+      "track-0109": 20.5,
+      "track-0116": 5.5
     },
-    "mediaSec": 137.52,
+    "mediaSec": 139.52,
     "progress": 0.25,
-    "referenceSec": 137.52,
+    "referenceSec": 139.52,
     "to": 30
   },
   {
@@ -3959,12 +3959,12 @@
     "id": "trans-029-030-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 19.0,
-      "track-0116": 4.0
+      "track-0109": 21.0,
+      "track-0116": 6.0
     },
-    "mediaSec": 138.02,
+    "mediaSec": 140.02,
     "progress": 0.5,
-    "referenceSec": 138.02,
+    "referenceSec": 140.02,
     "to": 30
   },
   {
@@ -3975,12 +3975,12 @@
     "id": "trans-029-030-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 19.5,
-      "track-0116": 4.5
+      "track-0109": 21.5,
+      "track-0116": 6.5
     },
-    "mediaSec": 138.52,
+    "mediaSec": 140.52,
     "progress": 0.75,
-    "referenceSec": 138.52,
+    "referenceSec": 140.52,
     "to": 30
   },
   {
@@ -3991,12 +3991,12 @@
     "id": "trans-029-030-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 19.8,
-      "track-0116": 4.8
+      "track-0109": 21.8,
+      "track-0116": 6.8
     },
-    "mediaSec": 138.82,
+    "mediaSec": 140.82,
     "progress": 0.9,
-    "referenceSec": 138.82,
+    "referenceSec": 140.82,
     "to": 30
   },
   {
@@ -4007,12 +4007,12 @@
     "id": "trans-029-030-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 20.0,
-      "track-0116": 5.0
+      "track-0109": 22.0,
+      "track-0116": 7.0
     },
-    "mediaSec": 139.02,
+    "mediaSec": 141.02,
     "progress": 1.0,
-    "referenceSec": 139.02,
+    "referenceSec": 141.02,
     "to": 30
   },
   {
@@ -4035,9 +4035,9 @@
     "id": "trans-030-031-000",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 142.02,
+    "mediaSec": 144.02,
     "progress": 0.0,
-    "referenceSec": 142.02,
+    "referenceSec": 144.02,
     "to": 31
   },
   {
@@ -4048,9 +4048,9 @@
     "id": "trans-030-031-010",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 142.22,
+    "mediaSec": 144.22,
     "progress": 0.1,
-    "referenceSec": 142.22,
+    "referenceSec": 144.22,
     "to": 31
   },
   {
@@ -4061,9 +4061,9 @@
     "id": "trans-030-031-025",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 142.52,
+    "mediaSec": 144.52,
     "progress": 0.25,
-    "referenceSec": 142.52,
+    "referenceSec": 144.52,
     "to": 31
   },
   {
@@ -4074,9 +4074,9 @@
     "id": "trans-030-031-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 143.02,
+    "mediaSec": 145.02,
     "progress": 0.5,
-    "referenceSec": 143.02,
+    "referenceSec": 145.02,
     "to": 31
   },
   {
@@ -4087,9 +4087,9 @@
     "id": "trans-030-031-075",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 143.52,
+    "mediaSec": 145.52,
     "progress": 0.75,
-    "referenceSec": 143.52,
+    "referenceSec": 145.52,
     "to": 31
   },
   {
@@ -4100,9 +4100,9 @@
     "id": "trans-030-031-090",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 143.82,
+    "mediaSec": 145.82,
     "progress": 0.9,
-    "referenceSec": 143.82,
+    "referenceSec": 145.82,
     "to": 31
   },
   {
@@ -4113,9 +4113,9 @@
     "id": "trans-030-031-100",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 144.02,
+    "mediaSec": 146.02,
     "progress": 1.0,
-    "referenceSec": 144.02,
+    "referenceSec": 146.02,
     "to": 31
   },
   {
@@ -4138,9 +4138,9 @@
     "id": "trans-031-032-000",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 147.02,
+    "mediaSec": 149.02,
     "progress": 0.0,
-    "referenceSec": 147.02,
+    "referenceSec": 149.02,
     "to": 32
   },
   {
@@ -4151,9 +4151,9 @@
     "id": "trans-031-032-010",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 147.22,
+    "mediaSec": 149.22,
     "progress": 0.1,
-    "referenceSec": 147.22,
+    "referenceSec": 149.22,
     "to": 32
   },
   {
@@ -4164,9 +4164,9 @@
     "id": "trans-031-032-025",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 147.52,
+    "mediaSec": 149.52,
     "progress": 0.25,
-    "referenceSec": 147.52,
+    "referenceSec": 149.52,
     "to": 32
   },
   {
@@ -4177,9 +4177,9 @@
     "id": "trans-031-032-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 148.02,
+    "mediaSec": 150.02,
     "progress": 0.5,
-    "referenceSec": 148.02,
+    "referenceSec": 150.02,
     "to": 32
   },
   {
@@ -4190,9 +4190,9 @@
     "id": "trans-031-032-075",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 148.52,
+    "mediaSec": 150.52,
     "progress": 0.75,
-    "referenceSec": 148.52,
+    "referenceSec": 150.52,
     "to": 32
   },
   {
@@ -4203,9 +4203,9 @@
     "id": "trans-031-032-090",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 148.82,
+    "mediaSec": 150.82,
     "progress": 0.9,
-    "referenceSec": 148.82,
+    "referenceSec": 150.82,
     "to": 32
   },
   {
@@ -4216,9 +4216,9 @@
     "id": "trans-031-032-100",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 149.02,
+    "mediaSec": 151.02,
     "progress": 1.0,
-    "referenceSec": 149.02,
+    "referenceSec": 151.02,
     "to": 32
   },
   {
@@ -4241,12 +4241,12 @@
     "id": "reverse-002-001-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 1.0,
-      "track-0008": 1.0
+      "track-0003": 3.0,
+      "track-0008": 3.0
     },
-    "mediaSec": 1.0,
+    "mediaSec": 3.0,
     "progress": 0.5,
-    "referenceSec": 1.0,
+    "referenceSec": 3.0,
     "to": 1
   },
   {
@@ -4257,12 +4257,12 @@
     "id": "reverse-003-002-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 6.875,
-      "track-0008": 6.875
+      "track-0003": 8.875,
+      "track-0008": 8.875
     },
-    "mediaSec": 6.875,
+    "mediaSec": 8.875,
     "progress": 0.5,
-    "referenceSec": 6.875,
+    "referenceSec": 8.875,
     "to": 2
   },
   {
@@ -4273,9 +4273,9 @@
     "id": "reverse-004-003-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 11.0,
+    "mediaSec": 13.0,
     "progress": 0.5,
-    "referenceSec": 11.0,
+    "referenceSec": 13.0,
     "to": 3
   },
   {
@@ -4286,9 +4286,9 @@
     "id": "reverse-005-004-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 15.88,
+    "mediaSec": 17.88,
     "progress": 0.5,
-    "referenceSec": 15.88,
+    "referenceSec": 17.88,
     "to": 4
   },
   {
@@ -4299,11 +4299,11 @@
     "id": "reverse-006-005-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 0.0
+      "track-0038": 0.615
     },
-    "mediaSec": 21.615,
+    "mediaSec": 23.615,
     "progress": 0.5,
-    "referenceSec": 21.615,
+    "referenceSec": 23.615,
     "to": 5
   },
   {
@@ -4314,13 +4314,13 @@
     "id": "reverse-007-006-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 3.865,
-      "track-0044": 0.0,
-      "track-0050": 0.0
+      "track-0038": 5.865,
+      "track-0044": 0.865,
+      "track-0050": 0.865
     },
-    "mediaSec": 26.865,
+    "mediaSec": 28.865,
     "progress": 0.5,
-    "referenceSec": 26.865,
+    "referenceSec": 28.865,
     "to": 6
   },
   {
@@ -4331,15 +4331,15 @@
     "id": "reverse-008-007-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 9.86,
-      "track-0044": 4.86,
-      "track-0050": 4.86,
+      "track-0038": 9.87,
+      "track-0044": 4.87,
+      "track-0050": 4.87,
       "track-0051": 0.0,
       "track-0053": 0.0
     },
-    "mediaSec": 32.86,
+    "mediaSec": 32.87,
     "progress": 0.5,
-    "referenceSec": 32.86,
+    "referenceSec": 32.87,
     "to": 7
   },
   {
@@ -4350,14 +4350,14 @@
     "id": "reverse-009-008-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 12.245,
-      "track-0044": 7.245,
-      "track-0051": 2.245,
-      "track-0053": 2.245
+      "track-0038": 12.255,
+      "track-0044": 7.255,
+      "track-0051": 2.255,
+      "track-0053": 2.255
     },
-    "mediaSec": 35.245,
+    "mediaSec": 35.255,
     "progress": 0.5,
-    "referenceSec": 35.245,
+    "referenceSec": 35.255,
     "to": 8
   },
   {
@@ -4368,15 +4368,15 @@
     "id": "reverse-010-009-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0051": 5.01,
-      "track-0053": 5.01,
-      "track-0056": 0.0,
-      "track-0060": 0.0,
-      "track-0061": 0.0
+      "track-0051": 7.01,
+      "track-0053": 7.01,
+      "track-0056": 0.99,
+      "track-0060": 0.99,
+      "track-0061": 0.99
     },
-    "mediaSec": 38.01,
+    "mediaSec": 40.01,
     "progress": 0.5,
-    "referenceSec": 38.01,
+    "referenceSec": 40.01,
     "to": 9
   },
   {
@@ -4387,17 +4387,17 @@
     "id": "reverse-011-010-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 10.01,
-      "track-0056": 3.99,
-      "track-0060": 3.99,
-      "track-0061": 3.99,
-      "track-0066": 0.0,
-      "track-0067": 0.0,
-      "track-0071": 0.0
+      "track-0053": 12.01,
+      "track-0056": 5.99,
+      "track-0060": 5.99,
+      "track-0061": 5.99,
+      "track-0066": 0.99,
+      "track-0067": 0.99,
+      "track-0071": 0.99
     },
-    "mediaSec": 43.01,
+    "mediaSec": 45.01,
     "progress": 0.5,
-    "referenceSec": 43.01,
+    "referenceSec": 45.01,
     "to": 10
   },
   {
@@ -4408,18 +4408,18 @@
     "id": "reverse-012-011-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0053": 14.135,
-      "track-0056": 8.115,
-      "track-0060": 8.115,
-      "track-0061": 8.115,
-      "track-0066": 3.115,
-      "track-0067": 3.115,
-      "track-0071": 3.115,
-      "track-0073": 0.0
+      "track-0053": 16.135,
+      "track-0056": 10.115,
+      "track-0060": 10.115,
+      "track-0061": 10.115,
+      "track-0066": 5.115,
+      "track-0067": 5.115,
+      "track-0071": 5.115,
+      "track-0073": 0.115
     },
-    "mediaSec": 47.135,
+    "mediaSec": 49.135,
     "progress": 0.5,
-    "referenceSec": 47.135,
+    "referenceSec": 49.135,
     "to": 11
   },
   {
@@ -4430,15 +4430,15 @@
     "id": "reverse-013-012-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 9.115,
-      "track-0067": 9.115,
-      "track-0071": 9.115,
-      "track-0073": 4.115,
-      "track-0078": 0.0
+      "track-0066": 11.115,
+      "track-0067": 11.115,
+      "track-0071": 11.115,
+      "track-0073": 6.115,
+      "track-0078": 1.115
     },
-    "mediaSec": 53.135,
+    "mediaSec": 55.135,
     "progress": 0.5,
-    "referenceSec": 53.135,
+    "referenceSec": 55.135,
     "to": 12
   },
   {
@@ -4449,16 +4449,16 @@
     "id": "reverse-014-013-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0066": 14.24,
-      "track-0067": 14.24,
-      "track-0071": 14.24,
-      "track-0073": 9.24,
-      "track-0078": 4.24,
-      "track-0081": 0.0
+      "track-0066": 16.24,
+      "track-0067": 16.24,
+      "track-0071": 16.24,
+      "track-0073": 11.24,
+      "track-0078": 6.24,
+      "track-0081": 1.24
     },
-    "mediaSec": 58.26,
+    "mediaSec": 60.26,
     "progress": 0.5,
-    "referenceSec": 58.26,
+    "referenceSec": 60.26,
     "to": 13
   },
   {
@@ -4469,14 +4469,14 @@
     "id": "reverse-015-014-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0073": 13.865,
-      "track-0078": 8.865,
-      "track-0081": 3.865,
-      "track-0084": 0.0
+      "track-0073": 15.865,
+      "track-0078": 10.865,
+      "track-0081": 5.865,
+      "track-0084": 0.865
     },
-    "mediaSec": 62.885,
+    "mediaSec": 64.885,
     "progress": 0.5,
-    "referenceSec": 62.885,
+    "referenceSec": 64.885,
     "to": 14
   },
   {
@@ -4487,13 +4487,13 @@
     "id": "reverse-016-015-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 14.24,
-      "track-0081": 9.24,
-      "track-0084": 4.24
+      "track-0078": 16.24,
+      "track-0081": 11.24,
+      "track-0084": 6.24
     },
-    "mediaSec": 68.26,
+    "mediaSec": 70.26,
     "progress": 0.5,
-    "referenceSec": 68.26,
+    "referenceSec": 70.26,
     "to": 15
   },
   {
@@ -4504,14 +4504,14 @@
     "id": "reverse-017-016-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0078": 19.365,
-      "track-0081": 14.365,
-      "track-0084": 9.365,
-      "track-0087": 0.0
+      "track-0078": 21.365,
+      "track-0081": 16.365,
+      "track-0084": 11.365,
+      "track-0087": 1.365
     },
-    "mediaSec": 73.385,
+    "mediaSec": 75.385,
     "progress": 0.5,
-    "referenceSec": 73.385,
+    "referenceSec": 75.385,
     "to": 16
   },
   {
@@ -4522,14 +4522,14 @@
     "id": "reverse-018-017-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0081": 19.49,
-      "track-0084": 14.49,
-      "track-0087": 4.49,
-      "track-0091": 0.0
+      "track-0081": 21.49,
+      "track-0084": 16.49,
+      "track-0087": 6.49,
+      "track-0091": 1.49
     },
-    "mediaSec": 78.51,
+    "mediaSec": 80.51,
     "progress": 0.5,
-    "referenceSec": 78.51,
+    "referenceSec": 80.51,
     "to": 17
   },
   {
@@ -4540,13 +4540,13 @@
     "id": "reverse-019-018-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 19.615,
-      "track-0087": 9.615,
-      "track-0091": 4.615
+      "track-0084": 21.615,
+      "track-0087": 11.615,
+      "track-0091": 6.615
     },
-    "mediaSec": 83.635,
+    "mediaSec": 85.635,
     "progress": 0.5,
-    "referenceSec": 83.635,
+    "referenceSec": 85.635,
     "to": 18
   },
   {
@@ -4557,15 +4557,15 @@
     "id": "reverse-020-019-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0084": 24.74,
-      "track-0087": 14.74,
-      "track-0091": 9.74,
-      "track-0093": 0.0,
-      "track-0094": 0.0
+      "track-0084": 26.74,
+      "track-0087": 16.74,
+      "track-0091": 11.74,
+      "track-0093": 1.74,
+      "track-0094": 1.74
     },
-    "mediaSec": 88.76,
+    "mediaSec": 90.76,
     "progress": 0.5,
-    "referenceSec": 88.76,
+    "referenceSec": 90.76,
     "to": 19
   },
   {
@@ -4576,17 +4576,17 @@
     "id": "reverse-021-020-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0087": 19.865,
-      "track-0091": 14.865,
-      "track-0093": 4.865,
-      "track-0094": 2.865,
-      "track-0096": 0.0,
-      "track-0097": 0.0,
-      "track-0098": 0.0
+      "track-0087": 21.865,
+      "track-0091": 16.865,
+      "track-0093": 6.865,
+      "track-0094": 4.865,
+      "track-0096": 1.865,
+      "track-0097": 1.865,
+      "track-0098": 1.865
     },
-    "mediaSec": 93.885,
+    "mediaSec": 95.885,
     "progress": 0.5,
-    "referenceSec": 93.885,
+    "referenceSec": 95.885,
     "to": 20
   },
   {
@@ -4597,15 +4597,15 @@
     "id": "reverse-022-021-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0091": 19.99,
-      "track-0093": 9.99,
-      "track-0094": 2.99,
-      "track-0096": 4.99,
-      "track-0098": 2.99
+      "track-0091": 21.99,
+      "track-0093": 11.99,
+      "track-0094": 4.99,
+      "track-0096": 6.99,
+      "track-0098": 4.99
     },
-    "mediaSec": 99.01,
+    "mediaSec": 101.01,
     "progress": 0.5,
-    "referenceSec": 99.01,
+    "referenceSec": 101.01,
     "to": 21
   },
   {
@@ -4616,14 +4616,14 @@
     "id": "reverse-023-022-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 14.99,
-      "track-0094": 0.0,
-      "track-0102": 0.0,
-      "track-0103": 0.0
+      "track-0093": 16.99,
+      "track-0094": 1.99,
+      "track-0102": 1.99,
+      "track-0103": 1.99
     },
-    "mediaSec": 104.01,
+    "mediaSec": 106.01,
     "progress": 0.5,
-    "referenceSec": 104.01,
+    "referenceSec": 106.01,
     "to": 22
   },
   {
@@ -4634,15 +4634,15 @@
     "id": "reverse-024-023-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 18.115,
-      "track-0094": 1.115,
-      "track-0097": 1.115,
-      "track-0102": 1.115,
-      "track-0103": 1.115
+      "track-0093": 20.115,
+      "track-0094": 3.115,
+      "track-0097": 3.115,
+      "track-0102": 3.115,
+      "track-0103": 3.115
     },
-    "mediaSec": 107.135,
+    "mediaSec": 109.135,
     "progress": 0.5,
-    "referenceSec": 107.135,
+    "referenceSec": 109.135,
     "to": 23
   },
   {
@@ -4653,13 +4653,13 @@
     "id": "reverse-025-024-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 24.99,
-      "track-0102": 2.99,
-      "track-0103": 2.99
+      "track-0093": 26.99,
+      "track-0102": 4.99,
+      "track-0103": 4.99
     },
-    "mediaSec": 114.01,
+    "mediaSec": 116.01,
     "progress": 0.5,
-    "referenceSec": 114.01,
+    "referenceSec": 116.01,
     "to": 24
   },
   {
@@ -4670,12 +4670,12 @@
     "id": "reverse-026-025-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 27.99,
+      "track-0093": 29.99,
       "track-0109": 0.0
     },
-    "mediaSec": 117.01,
+    "mediaSec": 119.01,
     "progress": 0.5,
-    "referenceSec": 117.01,
+    "referenceSec": 119.01,
     "to": 25
   },
   {
@@ -4686,12 +4686,12 @@
     "id": "reverse-027-026-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 34.0,
-      "track-0109": 4.0
+      "track-0093": 36.0,
+      "track-0109": 6.0
     },
-    "mediaSec": 123.02,
+    "mediaSec": 125.02,
     "progress": 0.5,
-    "referenceSec": 123.02,
+    "referenceSec": 125.02,
     "to": 26
   },
   {
@@ -4702,12 +4702,12 @@
     "id": "reverse-028-027-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0093": 39.0,
-      "track-0109": 9.0
+      "track-0093": 41.0,
+      "track-0109": 11.0
     },
-    "mediaSec": 128.02,
+    "mediaSec": 130.02,
     "progress": 0.5,
-    "referenceSec": 128.02,
+    "referenceSec": 130.02,
     "to": 27
   },
   {
@@ -4718,12 +4718,12 @@
     "id": "reverse-029-028-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 14.0,
-      "track-0116": 0.0
+      "track-0109": 16.0,
+      "track-0116": 1.0
     },
-    "mediaSec": 133.02,
+    "mediaSec": 135.02,
     "progress": 0.5,
-    "referenceSec": 133.02,
+    "referenceSec": 135.02,
     "to": 28
   },
   {
@@ -4734,12 +4734,12 @@
     "id": "reverse-030-029-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0109": 19.0,
-      "track-0116": 4.0
+      "track-0109": 21.0,
+      "track-0116": 6.0
     },
-    "mediaSec": 138.02,
+    "mediaSec": 140.02,
     "progress": 0.5,
-    "referenceSec": 138.02,
+    "referenceSec": 140.02,
     "to": 29
   },
   {
@@ -4750,9 +4750,9 @@
     "id": "reverse-031-030-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 143.02,
+    "mediaSec": 145.02,
     "progress": 0.5,
-    "referenceSec": 143.02,
+    "referenceSec": 145.02,
     "to": 30
   },
   {
@@ -4763,9 +4763,9 @@
     "id": "reverse-032-031-050",
     "kind": "transition",
     "mediaClocks": {},
-    "mediaSec": 148.02,
+    "mediaSec": 150.02,
     "progress": 0.5,
-    "referenceSec": 148.02,
+    "referenceSec": 150.02,
     "to": 31
   }
 ]

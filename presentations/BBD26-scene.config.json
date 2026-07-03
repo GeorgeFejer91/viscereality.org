@@ -95,6 +95,20 @@
     ],
     "transition_progress_overrides": [
       {
+        "from": 1,
+        "to": 2,
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.0 },
+          { "progress": 0.5, "value": 0.0 },
+          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "source": "BBD26-slide-1-2-powerpoint-oracle-calibration"
+      },
+      {
         "from": 17,
         "to": 18,
         "points": [
@@ -158,7 +172,7 @@
     "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
     "slide_hold_sec": 3,
     "settled_offset_sec": 0.5,
-    "transition_reference_lead_fraction": 1.0,
+    "transition_reference_lead_fraction": 0.0,
     "slide_timed_video_phase_sec": 0.0
   },
   "transition_time_overrides_file": "BBD26-scene/qa/transition-time-overrides.json",

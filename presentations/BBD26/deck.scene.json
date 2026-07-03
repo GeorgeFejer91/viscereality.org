@@ -6760,7 +6760,7 @@
     "settledOffsetSec": 0.5,
     "slideHoldSec": 3.0,
     "slideTimedVideoPhaseSec": 0.0,
-    "transitionReferenceLeadFraction": 1.0,
+    "transitionReferenceLeadFraction": 0.0,
     "transitionSamples": [
       0.0,
       0.1,
@@ -92930,6 +92930,36 @@
           },
           "toObjectId": "s2-o16",
           "trackId": "track-0015"
+        }
+      ],
+      "progressMap": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 0.25,
+          "value": 0.0
+        },
+        {
+          "progress": 0.5,
+          "value": 0.0
+        },
+        {
+          "progress": 0.75,
+          "value": 1.0
+        },
+        {
+          "progress": 0.9,
+          "value": 1.0
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
         }
       ],
       "to": 2

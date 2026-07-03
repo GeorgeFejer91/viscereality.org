@@ -1,0 +1,859 @@
+{
+  "blockers": [],
+  "calibratedComparisons": [],
+  "calibration": {
+    "enabled": false
+  },
+  "comparisons": [
+    {
+      "diffFile": "qa/diff/slide-001-settled.png",
+      "kind": "slide",
+      "meanDelta": 6.919,
+      "p95Delta": 26.0,
+      "passed": false,
+      "sampleId": "slide-001-settled",
+      "sideBySideFile": "qa/side-by-side/slide-001-settled.png",
+      "ssim": 0.813142,
+      "threshold": 0.985
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-000.png",
+      "kind": "transition",
+      "meanDelta": 4.229,
+      "p95Delta": 19.0,
+      "passed": false,
+      "sampleId": "trans-001-002-000",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-000.png",
+      "ssim": 0.934762,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-010.png",
+      "kind": "transition",
+      "meanDelta": 25.323,
+      "p95Delta": 239.0,
+      "passed": false,
+      "sampleId": "trans-001-002-010",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-010.png",
+      "ssim": 0.62415,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-025.png",
+      "kind": "transition",
+      "meanDelta": 27.238,
+      "p95Delta": 233.0,
+      "passed": false,
+      "sampleId": "trans-001-002-025",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-025.png",
+      "ssim": 0.501074,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-050.png",
+      "kind": "transition",
+      "meanDelta": 15.492,
+      "p95Delta": 90.0,
+      "passed": false,
+      "sampleId": "trans-001-002-050",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-050.png",
+      "ssim": 0.745624,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-075.png",
+      "kind": "transition",
+      "meanDelta": 13.144,
+      "p95Delta": 79.0,
+      "passed": false,
+      "sampleId": "trans-001-002-075",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-075.png",
+      "ssim": 0.780549,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-090.png",
+      "kind": "transition",
+      "meanDelta": 8.252,
+      "p95Delta": 34.0,
+      "passed": false,
+      "sampleId": "trans-001-002-090",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-090.png",
+      "ssim": 0.871352,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-001-002-100.png",
+      "kind": "transition",
+      "meanDelta": 6.335,
+      "p95Delta": 15.0,
+      "passed": false,
+      "sampleId": "trans-001-002-100",
+      "sideBySideFile": "qa/side-by-side/trans-001-002-100.png",
+      "ssim": 0.921866,
+      "threshold": 0.965
+    }
+  ],
+  "generatedAtUtc": "2026-07-03T18:59:23+00:00",
+  "htmlCapture": {
+    "failures": 0,
+    "generatedAt": "2026-07-03T18:59:18.475Z",
+    "sampleCount": 8,
+    "samples": [
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1280,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
+              "trackId": "track-0002"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8.svg",
+              "trackId": "track-0010"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1500,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+              "trackId": "track-0012"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 7,
+          "objectsVisible": 13,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+              "trackId": "track-0003"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 2
+        },
+        "file": "slide-001-settled.png",
+        "id": "slide-001-settled",
+        "kind": "slide",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1280,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
+              "trackId": "track-0002"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8.svg",
+              "trackId": "track-0010"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1500,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+              "trackId": "track-0012"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 7,
+          "objectsVisible": 13,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+              "trackId": "track-0003"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 2
+        },
+        "file": "trans-001-002-000.png",
+        "id": "trans-001-002-000",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1280,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
+              "trackId": "track-0002"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8.svg",
+              "trackId": "track-0010"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1500,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+              "trackId": "track-0012"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 7,
+          "objectsVisible": 14,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+              "trackId": "track-0003"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 3
+        },
+        "file": "trans-001-002-010.png",
+        "id": "trans-001-002-010",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1280,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
+              "trackId": "track-0002"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8.svg",
+              "trackId": "track-0010"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1500,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+              "trackId": "track-0012"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 7,
+          "objectsVisible": 14,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+              "trackId": "track-0003"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 3
+        },
+        "file": "trans-001-002-025.png",
+        "id": "trans-001-002-025",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1500,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+              "trackId": "track-0012"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 13333,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
+              "trackId": "track-0013"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 6,
+          "objectsVisible": 10,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+              "trackId": "track-0003"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 3
+        },
+        "file": "trans-001-002-050.png",
+        "id": "trans-001-002-050",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 13333,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
+              "trackId": "track-0013"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 5,
+          "objectsVisible": 7,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 2
+        },
+        "file": "trans-001-002-075.png",
+        "id": "trans-001-002-075",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 1106,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0007"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1719,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+              "trackId": "track-0005"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 13333,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
+              "trackId": "track-0013"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 5,
+          "objectsVisible": 7,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+              "trackId": "track-0008"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 2
+        },
+        "file": "trans-001-002-090.png",
+        "id": "trans-001-002-090",
+        "kind": "transition",
+        "status": "ok"
+      },
+      {
+        "diagnostics": {
+          "frame": true,
+          "images": [
+            {
+              "complete": true,
+              "naturalWidth": 332,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+              "trackId": "track-0009"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 13333,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
+              "trackId": "track-0013"
+            }
+          ],
+          "imagesPending": 0,
+          "imagesVisible": 2,
+          "objectsVisible": 3,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "http://127.0.0.1:63015/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+              "trackId": "track-0011"
+            }
+          ],
+          "videosPending": 0,
+          "videosVisible": 1
+        },
+        "file": "trans-001-002-100.png",
+        "id": "trans-001-002-100",
+        "kind": "transition",
+        "status": "ok"
+      }
+    ]
+  },
+  "htmlFrames": [
+    {
+      "file": "qa/html/slide-001-settled.png",
+      "sampleId": "slide-001-settled"
+    },
+    {
+      "file": "qa/html/trans-001-002-000.png",
+      "sampleId": "trans-001-002-000"
+    },
+    {
+      "file": "qa/html/trans-001-002-010.png",
+      "sampleId": "trans-001-002-010"
+    },
+    {
+      "file": "qa/html/trans-001-002-025.png",
+      "sampleId": "trans-001-002-025"
+    },
+    {
+      "file": "qa/html/trans-001-002-050.png",
+      "sampleId": "trans-001-002-050"
+    },
+    {
+      "file": "qa/html/trans-001-002-075.png",
+      "sampleId": "trans-001-002-075"
+    },
+    {
+      "file": "qa/html/trans-001-002-090.png",
+      "sampleId": "trans-001-002-090"
+    },
+    {
+      "file": "qa/html/trans-001-002-100.png",
+      "sampleId": "trans-001-002-100"
+    }
+  ],
+  "notes": [
+    "HTML frame capture is routed through window.PptxHtmlPresenter.captureAt().",
+    "Strict pass/fail uses predicted PowerPoint MP4 timestamps; calibratedComparisons are diagnostic only.",
+    "Install ffmpeg, Node, and Playwright to run the complete automated comparison."
+  ],
+  "referenceFrames": [
+    {
+      "file": "qa/reference/slide-001-settled.png",
+      "sampleId": "slide-001-settled"
+    },
+    {
+      "file": "qa/reference/trans-001-002-000.png",
+      "sampleId": "trans-001-002-000"
+    },
+    {
+      "file": "qa/reference/trans-001-002-010.png",
+      "sampleId": "trans-001-002-010"
+    },
+    {
+      "file": "qa/reference/trans-001-002-025.png",
+      "sampleId": "trans-001-002-025"
+    },
+    {
+      "file": "qa/reference/trans-001-002-050.png",
+      "sampleId": "trans-001-002-050"
+    },
+    {
+      "file": "qa/reference/trans-001-002-075.png",
+      "sampleId": "trans-001-002-075"
+    },
+    {
+      "file": "qa/reference/trans-001-002-090.png",
+      "sampleId": "trans-001-002-090"
+    },
+    {
+      "file": "qa/reference/trans-001-002-100.png",
+      "sampleId": "trans-001-002-100"
+    }
+  ],
+  "samples": [
+    {
+      "id": "slide-001-settled",
+      "kind": "slide",
+      "mediaClocks": {
+        "track-0003": 0.5,
+        "track-0008": 0.5,
+        "track-0011": 0.5
+      },
+      "mediaSec": 0.5,
+      "progress": 1.0,
+      "referenceSec": 0.5,
+      "slide": 1
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-000",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 3.0,
+        "track-0008": 3.0,
+        "track-0011": 3.0,
+        "track-0017": 0.0,
+        "track-0023": 0.0
+      },
+      "mediaSec": 3.0,
+      "progress": 0.0,
+      "referenceSec": 3.0,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-010",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 3.2,
+        "track-0008": 3.2,
+        "track-0011": 3.2,
+        "track-0017": 0.2,
+        "track-0023": 0.2
+      },
+      "mediaSec": 3.2,
+      "progress": 0.1,
+      "referenceSec": 3.2,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-025",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 3.5,
+        "track-0008": 3.5,
+        "track-0011": 3.5,
+        "track-0017": 0.5,
+        "track-0023": 0.5
+      },
+      "mediaSec": 3.5,
+      "progress": 0.25,
+      "referenceSec": 3.5,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-050",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 4.0,
+        "track-0008": 4.0,
+        "track-0011": 4.0,
+        "track-0017": 1.0,
+        "track-0023": 1.0
+      },
+      "mediaSec": 4.0,
+      "progress": 0.5,
+      "referenceSec": 4.0,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-075",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 4.5,
+        "track-0008": 4.5,
+        "track-0011": 4.5,
+        "track-0017": 1.5,
+        "track-0023": 1.5
+      },
+      "mediaSec": 4.5,
+      "progress": 0.75,
+      "referenceSec": 4.5,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-090",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 4.8,
+        "track-0008": 4.8,
+        "track-0011": 4.8,
+        "track-0017": 1.8,
+        "track-0023": 1.8
+      },
+      "mediaSec": 4.8,
+      "progress": 0.9,
+      "referenceSec": 4.8,
+      "to": 2
+    },
+    {
+      "from": 1,
+      "id": "trans-001-002-100",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0003": 5.0,
+        "track-0008": 5.0,
+        "track-0011": 5.0,
+        "track-0017": 2.0,
+        "track-0023": 2.0
+      },
+      "mediaSec": 5.0,
+      "progress": 1.0,
+      "referenceSec": 5.0,
+      "to": 2
+    }
+  ],
+  "schema": "pptx-html-presenter.qa.v1",
+  "status": "failed",
+  "thresholds": {
+    "morphSsim": 0.965,
+    "slideSsim": 0.985,
+    "ssimMethod": "local-uniform-11-luma"
+  },
+  "visualAudit": null
+}

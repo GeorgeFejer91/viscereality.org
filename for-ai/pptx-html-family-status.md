@@ -33,6 +33,8 @@ presentations/shared-assets/viscereality/
 - Family config: `presentations/viscereality-family.config.json`.
 - Shared default presenter config: `presentations/viscereality-family.defaults.json`.
 - MuC deck-specific presenter config: `presentations/MuC-scene.config.json`.
+- alpCHI deck-specific presenter config: `presentations/alpCHI-scene.config.json`.
+- BBD26 deck-specific presenter config: `presentations/BBD26-scene.config.json`.
 - Current staging output targets:
   - `presentations/MuC-scene/`
   - `presentations/alpCHI-scene/`
@@ -50,7 +52,7 @@ presentations/shared-assets/viscereality/
 - Latest family build status: `ok`.
 - Latest family HTML visual audit status: `ok`.
 - Latest family publish status: `ok`; the public presentation hub points at the three scene players and keeps chunked fallback links secondary.
-- PowerPoint MP4 oracle QA: only a MuC slide-1 smoke pass has run in the current pass. It is useful for calibration but still fails strict SSIM; do not claim oracle parity until full reference MP4 export/frame comparison passes or reviewed exceptions are written.
+- PowerPoint MP4 oracle QA: slide-1 smoke passes have run for MuC, alpCHI, and BBD26. They are useful for calibration but still fail strict SSIM; do not claim oracle parity until full reference MP4 export/frame comparison passes or reviewed exceptions are written.
 
 Implemented family CLI commands:
 
@@ -100,8 +102,8 @@ Current source PPTX parse results from family preflight:
   - Solution: family builds now publish only referenced GitHub-safe runtime assets in the shared library; oversized originals remain represented by hashes/source metadata in reports rather than copied into the public asset tree.
 - Problem: Rebuilding MuC changed optimized media content hashes even when source assets were unchanged, causing avoidable shared-asset churn.
   - Solution: ffmpeg transcodes now strip metadata/chapters and use single-threaded bitexact-oriented WebM/MP4/WebP output settings. This is slower, especially for VP9-alpha, but should make content-hashed optimized assets reproducible across rebuilds.
-- Problem: MuC PowerPoint-oracle timing compared transition frames with the wrong reference lead behavior inherited from BBD26-style defaults.
-  - Solution: shared family QA defaults now use `transition_reference_lead_fraction: 0.0`; BBD26 keeps its own deck config. MuC has a deck-specific config with a calibrated transition 1->2 Morph progress map.
+- Problem: PowerPoint-oracle timing compared transition frames with the wrong reference lead behavior inherited from earlier BBD26-style defaults.
+  - Solution: shared family QA defaults now use `transition_reference_lead_fraction: 0.0`; MuC, alpCHI, and BBD26 public/staging scene metadata now use that lead value. Each deck has a deck-specific transition 1->2 Morph progress map.
 - Problem: MuC oracle capture briefly blocked on `visible-video-not-ready` for a newly encoded WebM even though the frame could be captured.
   - Solution: `browser_capture.mjs` now waits longer for visible videos to reach `HAVE_CURRENT_DATA` after seek and reports readiness diagnostics if that still fails.
 - Problem: Visual audit initially failed with `playwright-missing`.
@@ -128,31 +130,32 @@ The latest browser-based visual audit captured and passed:
 
 Contact sheets were manually inspected at audit scale for settled slides and transition midpoints. No blank frames, missing shared media, or obvious panel-child drift were observed in that review. This is not a substitute for PowerPoint oracle SSIM QA.
 
-MuC was re-audited after the deterministic rebuild and still passed 145 public HTML samples with 0 failures.
+After the first-transition calibration updates, current public HTML visual-audit status is:
+
+- `MuC`: 145 samples, 0 failures.
+- `alpCHI`: 217 samples, 0 failures.
+- `BBD26`: 280 samples, 0 failures.
 
 ## Latest PowerPoint Oracle Smoke
 
-Only the MuC slide-1 smoke pass has been run after adding `family oracle-qa`:
+Slide-1 smoke passes have now run after adding `family oracle-qa`:
 
 ```powershell
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks MuC --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks alpCHI --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks BBD26 --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
 ```
 
-Current result:
+Current smoke results:
 
-- Family oracle status: `failed`, not blocked.
-- Deck: `MuC`.
-- Scope: slide 1 settled frame plus transition 1->2 samples.
-- Samples/comparisons: 8.
-- Failed comparisons: 8.
-- Minimum SSIM: about `0.624`.
-- Settled slide 1 SSIM: about `0.789`.
-- Best transition endpoint/midpoint values are improved by the MuC progress map, but still below the strict Morph threshold `0.965`.
+- `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.624`, settled slide 1 about `0.789`.
+- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.496`, settled slide 1 about `0.813`, transition endpoint about `0.922`.
+- `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.323`, settled slide 1 about `0.784`, calibrated middle samples now reach about `0.865`.
 
 Interpretation:
 
 - The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
-- The transition 1->2 Morph progress calibration improved the worst mismatch substantially compared with the earlier uncalibrated smoke, but remaining differences include text placement/scale, background/video brightness/phase, and full-frame composition differences.
+- The transition 1->2 Morph progress calibrations improved the first transition on all three decks, but remaining differences include text placement/scale, background/video brightness/phase, panel timing late in BBD26, and full-frame composition differences.
 - Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish
@@ -174,8 +177,8 @@ The previous chunked players were moved to:
 ## Remaining Work
 
 1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
-2. Add/fine-tune deck-specific config for alpCHI if its oracle smoke shows the same transition timing behavior as MuC.
-3. Continue calibrating MuC visual parity: text/layout metrics, media phase/brightness, and additional Morph progress maps.
+2. Continue fine-tuning deck-specific configs for oracle parity: first-transition smoke is improved but not passing on any deck.
+3. Continue calibrating text/layout metrics, media phase/brightness, and additional Morph progress maps.
 4. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
 5. Commit and push only intended files; do not stage unrelated root `index.html` changes.
 

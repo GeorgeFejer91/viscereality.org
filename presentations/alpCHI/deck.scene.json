@@ -4537,7 +4537,7 @@
     "settledOffsetSec": 0.5,
     "slideHoldSec": 3.0,
     "slideTimedVideoPhaseSec": 0.0,
-    "transitionReferenceLeadFraction": 1.0,
+    "transitionReferenceLeadFraction": 0.0,
     "transitionSamples": [
       0.0,
       0.1,
@@ -21449,7 +21449,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -21487,7 +21487,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -21497,7 +21497,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -24041,7 +24041,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -24079,7 +24079,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -24089,7 +24089,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -25153,7 +25153,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -25790,7 +25790,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -25828,7 +25828,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -25838,7 +25838,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -26489,7 +26489,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -27231,7 +27231,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -27269,7 +27269,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -27279,7 +27279,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -28471,7 +28471,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -28784,7 +28784,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -29348,7 +29348,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -29386,7 +29386,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -29396,7 +29396,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -30183,7 +30183,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -30496,7 +30496,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -31060,7 +31060,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 },
                 {
                   "style": {
@@ -31098,7 +31098,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "⇈"
+                  "text": "\u21c8"
                 }
               ]
             }
@@ -31108,7 +31108,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
+          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32361,7 +32361,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32672,7 +32672,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32869,7 +32869,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33463,7 +33463,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​1. Icosphere Particle Distribution",
+          "text": "\u200b1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33774,7 +33774,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33879,7 +33879,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35008,7 +35008,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35205,7 +35205,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35421,7 +35421,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36187,7 +36187,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36294,7 +36294,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36418,7 +36418,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37529,7 +37529,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37726,7 +37726,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37942,7 +37942,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38708,7 +38708,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​2. Tracers for depth enhancement",
+          "text": "\u200b2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38815,7 +38815,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38939,7 +38939,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -39932,7 +39932,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -40148,7 +40148,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -41084,7 +41084,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​3. Continuous particle scaling",
+          "text": "\u200b3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -41210,7 +41210,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -42227,7 +42227,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -43289,7 +43289,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -44602,7 +44602,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -45664,7 +45664,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "​4. Structured noise",
+          "text": "\u200b4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -63350,6 +63350,36 @@
           },
           "toObjectId": "s2-o17",
           "trackId": "track-0012"
+        }
+      ],
+      "progressMap": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.1
+        },
+        {
+          "progress": 0.25,
+          "value": 0.4
+        },
+        {
+          "progress": 0.5,
+          "value": 0.8
+        },
+        {
+          "progress": 0.75,
+          "value": 1.0
+        },
+        {
+          "progress": 0.9,
+          "value": 1.0
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
         }
       ],
       "to": 2
