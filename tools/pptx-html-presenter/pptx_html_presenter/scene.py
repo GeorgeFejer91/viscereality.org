@@ -83,7 +83,9 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
                 "minPx": config.outline_policy.min_px,
                 "maxPx": config.outline_policy.max_px,
             },
+            "layerPolicy": _runtime_layer_policy(config),
             "autoAdvance": _runtime_auto_advance_rows(config.auto_advance),
+            "autoSegments": _runtime_auto_advance_rows(config.auto_segments),
         },
         "qa": {
             "slideHoldSec": config.qa_policy.slide_hold_sec,
@@ -103,6 +105,12 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
             "relationshipsApplied": graph_report["relationshipCount"],
             "panelTransitionRows": panel_transition_report["rows"],
             "panelTransitionRowsApplied": panel_transition_report["appliedCount"],
+            "visualAudit": {
+                "enabled": config.visual_audit.enabled,
+                "samples": list(config.visual_audit.samples),
+                "reverseMidpoints": config.visual_audit.reverse_midpoints,
+                "failOnTimeout": config.visual_audit.fail_on_timeout,
+            },
         },
     }
     write_json(out_dir / "deck.scene.json", scene)
@@ -185,6 +193,63 @@ def _runtime_auto_advance_rows(rows: tuple[dict[str, Any], ...]) -> list[dict[st
             }
         )
     return out
+
+
+def _runtime_layer_policy(config: PresenterConfig) -> dict[str, Any]:
+    overrides: list[dict[str, Any]] = []
+    for row in config.layer_policy.transition_layer_overrides:
+        try:
+            from_slide = int(_override_value(row, "from", "from_slide", "fromSlide") or 0)
+            to_slide = int(_override_value(row, "to", "to_slide", "toSlide") or 0)
+        except (TypeError, ValueError):
+            continue
+        if from_slide <= 0 or to_slide <= 0:
+            continue
+        override: dict[str, Any] = {
+            "from": from_slide,
+            "to": to_slide,
+            "mode": str(_override_value(row, "mode") or "panels-above-decorative"),
+        }
+        for source_key, output_key in {
+            "panel_tracks": "panelTracks",
+            "panelTracks": "panelTracks",
+            "decorative_tracks": "decorativeTracks",
+            "decorativeTracks": "decorativeTracks",
+        }.items():
+            if source_key in row:
+                override[output_key] = list(_string_values(row[source_key]))
+        for source_key, output_key in {
+            "z_boost": "zBoost",
+            "zBoost": "zBoost",
+            "decorative_z_drop": "decorativeZDrop",
+            "decorativeZDrop": "decorativeZDrop",
+        }.items():
+            value = row.get(source_key)
+            if value is None:
+                continue
+            try:
+                override[output_key] = float(value)
+            except (TypeError, ValueError):
+                pass
+        if row.get("source"):
+            override["source"] = row.get("source")
+        overrides.append(override)
+    return {
+        "panelOutlineOnTop": config.layer_policy.panel_outline_on_top,
+        "decorativeTracks": list(config.layer_policy.decorative_tracks),
+        "transitionLayerOverrides": sorted(
+            overrides,
+            key=lambda item: (int(item["from"]), int(item["to"]), str(item.get("source", ""))),
+        ),
+    }
+
+
+def _string_values(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return tuple(part.strip() for part in value.split(",") if part.strip())
+    return tuple(str(part).strip() for part in value if str(part).strip())
 
 
 def _media_phase_override_matches(obj: dict[str, Any], override: dict[str, Any]) -> bool:

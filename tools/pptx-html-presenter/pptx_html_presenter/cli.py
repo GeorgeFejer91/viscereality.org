@@ -17,6 +17,7 @@ from .qa import (
     run_static_fallback_generation,
     run_track_progress_calibration,
     run_transition_time_calibration,
+    run_visual_audit,
 )
 from .reference import export_reference_mp4
 from .utils import write_json
@@ -47,6 +48,7 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--video-transcode", action=argparse.BooleanOptionalAction, default=None)
     build.add_argument("--allow-oversize-assets", action=argparse.BooleanOptionalAction, default=None)
     build.add_argument("--qa", action="store_true")
+    build.add_argument("--visual-audit", action="store_true")
     build.add_argument("--reference-mp4")
     build.add_argument("--ffmpeg-bin")
     build.add_argument("--node-bin")
@@ -64,10 +66,16 @@ def build_parser() -> argparse.ArgumentParser:
     qa.add_argument("--playwright-dir")
     qa.add_argument("--reuse-html", action="store_true")
     qa.add_argument("--calibrate", action="store_true")
+    qa.add_argument("--visual-audit", action="store_true")
     qa.add_argument("--slide-hold-sec", type=float)
     qa.add_argument("--settled-offset-sec", type=float)
     qa.add_argument("--transition-reference-lead-fraction", type=float)
     qa.add_argument("--slides", help="Comma-separated slide numbers to sample.")
+
+    visual_audit = sub.add_parser("visual-audit", help="Capture every slide and transition for visual overlap/layer review.")
+    visual_audit.add_argument("build_dir")
+    visual_audit.add_argument("--node-bin")
+    visual_audit.add_argument("--playwright-dir")
 
     candidate_sweep = sub.add_parser(
         "candidate-sweep",
@@ -228,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
                 slide_hold_sec=args.qa_slide_hold_sec,
                 settled_offset_sec=args.qa_settled_offset_sec,
                 transition_reference_lead_fraction=args.qa_transition_reference_lead_fraction,
+                visual_audit=args.visual_audit,
             )
             print(f"built={report['outputDir']} status={report['status']}")
             return 0
@@ -244,8 +253,17 @@ def main(argv: list[str] | None = None) -> int:
                 settled_offset_sec=args.settled_offset_sec,
                 transition_reference_lead_fraction=args.transition_reference_lead_fraction,
                 slides=_parse_slide_filter(args.slides),
+                visual_audit=args.visual_audit,
             )
             print(f"qa={report['status']} samples={len(report['samples'])}")
+            return 0
+        if args.command == "visual-audit":
+            report = run_visual_audit(
+                Path(args.build_dir),
+                node_bin=args.node_bin,
+                playwright_dir=Path(args.playwright_dir) if args.playwright_dir else None,
+            )
+            print(f"visual-audit={report['status']} samples={report['summary']['sampleCount']}")
             return 0
         if args.command == "candidate-sweep":
             report = run_candidate_sweep(

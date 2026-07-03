@@ -194,16 +194,22 @@ def _prune_unreferenced_asset_files(
         return {"count": 0, "bytes": 0}
     count = 0
     size_bytes = 0
+    skipped = 0
     for asset_file in asset_dir.rglob("*"):
         if not asset_file.is_file():
             continue
         rel = asset_file.relative_to(out_dir).as_posix()
         if rel in referenced_output_files:
             continue
-        size_bytes += asset_file.stat().st_size
-        asset_file.unlink()
+        file_size = asset_file.stat().st_size
+        try:
+            asset_file.unlink()
+        except OSError:
+            skipped += 1
+            continue
+        size_bytes += file_size
         count += 1
-    return {"count": count, "bytes": size_bytes}
+    return {"count": count, "bytes": size_bytes, "skipped": skipped}
 
 
 def _should_transcode_gif(asset: AssetRef, policy: AssetPolicy) -> bool:

@@ -46,6 +46,13 @@ class OutlinePolicy:
 
 
 @dataclass(frozen=True)
+class LayerPolicy:
+    panel_outline_on_top: bool = True
+    decorative_tracks: tuple[str, ...] = field(default_factory=tuple)
+    transition_layer_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
 class FallbackPolicy:
     full_slide_static: bool = False
 
@@ -77,6 +84,14 @@ class QaPolicy:
 
 
 @dataclass(frozen=True)
+class VisualAuditPolicy:
+    enabled: bool = False
+    samples: tuple[float, ...] = (0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0)
+    reverse_midpoints: bool = True
+    fail_on_timeout: bool = True
+
+
+@dataclass(frozen=True)
 class PresenterConfig:
     scene_schema_version: int = 2
     title: str | None = None
@@ -86,13 +101,16 @@ class PresenterConfig:
     asset_policy: AssetPolicy = field(default_factory=AssetPolicy)
     group_policy: GroupPolicy = field(default_factory=GroupPolicy)
     outline_policy: OutlinePolicy = field(default_factory=OutlinePolicy)
+    layer_policy: LayerPolicy = field(default_factory=LayerPolicy)
     fallback_policy: FallbackPolicy = field(default_factory=FallbackPolicy)
     morph_policy: MorphPolicy = field(default_factory=MorphPolicy)
     qa_policy: QaPolicy = field(default_factory=QaPolicy)
+    visual_audit: VisualAuditPolicy = field(default_factory=VisualAuditPolicy)
     media_phase_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     transition_media_phase_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     transition_time_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     auto_advance: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+    auto_segments: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     raster_fallback_overrides: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     publish_replace: bool = False
 
@@ -114,9 +132,12 @@ def load_config(path: Path | None = None) -> PresenterConfig:
     asset_raw: dict[str, Any] = raw.get("asset_policy", {}) or {}
     group_raw: dict[str, Any] = raw.get("group_policy", {}) or {}
     outline_raw: dict[str, Any] = raw.get("outline_policy", {}) or {}
+    layer_raw: dict[str, Any] = raw.get("layer_policy", {}) or {}
     fallback_raw: dict[str, Any] = raw.get("fallback_policy", {}) or {}
     morph_raw: dict[str, Any] = raw.get("morph_policy", {}) or {}
     qa_raw: dict[str, Any] = raw.get("qa_policy", {}) or {}
+    visual_raw: dict[str, Any] = raw.get("visual_audit", {}) or {}
+    runtime_raw: dict[str, Any] = raw.get("runtime", {}) or {}
     media_phase_overrides = _load_override_rows(
         raw,
         "media_phase_overrides",
@@ -135,6 +156,13 @@ def load_config(path: Path | None = None) -> PresenterConfig:
         "auto_advance_file",
         base_dir,
     )
+    auto_segments = _load_override_rows(
+        raw,
+        "auto_segments",
+        "auto_segments_file",
+        base_dir,
+    )
+    auto_segments.extend(dict(row) for row in (runtime_raw.get("auto_segments", []) or []))
     transition_media_phase_overrides = _load_override_rows(
         raw,
         "transition_media_phase_overrides",
@@ -145,6 +173,13 @@ def load_config(path: Path | None = None) -> PresenterConfig:
         raw,
         "raster_fallback_overrides",
         "raster_fallback_overrides_file",
+        base_dir,
+    )
+    transition_layer_overrides = _load_nested_override_rows(
+        raw,
+        layer_raw,
+        "transition_layer_overrides",
+        "transition_layer_overrides_file",
         base_dir,
     )
     transition_progress_overrides = _load_nested_override_rows(
@@ -195,6 +230,11 @@ def load_config(path: Path | None = None) -> PresenterConfig:
             min_px=float(outline_raw.get("min_px", 3.0)),
             max_px=float(outline_raw.get("max_px", 7.0)),
         ),
+        layer_policy=LayerPolicy(
+            panel_outline_on_top=bool(layer_raw.get("panel_outline_on_top", True)),
+            decorative_tracks=_string_tuple(layer_raw.get("decorative_tracks", [])),
+            transition_layer_overrides=tuple(transition_layer_overrides),
+        ),
         fallback_policy=FallbackPolicy(
             full_slide_static=bool(fallback_raw.get("full_slide_static", False)),
         ),
@@ -233,10 +273,22 @@ def load_config(path: Path | None = None) -> PresenterConfig:
             ),
             slide_timed_video_phase_sec=float(qa_raw.get("slide_timed_video_phase_sec", 0.0)),
         ),
+        visual_audit=VisualAuditPolicy(
+            enabled=bool(visual_raw.get("enabled", False)),
+            samples=tuple(
+                float(v)
+                for v in visual_raw.get(
+                    "samples", [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]
+                )
+            ),
+            reverse_midpoints=bool(visual_raw.get("reverse_midpoints", True)),
+            fail_on_timeout=bool(visual_raw.get("fail_on_timeout", True)),
+        ),
         media_phase_overrides=tuple(media_phase_overrides),
         transition_media_phase_overrides=tuple(transition_media_phase_overrides),
         transition_time_overrides=tuple(transition_time_overrides),
         auto_advance=tuple(auto_advance),
+        auto_segments=tuple(auto_segments),
         raster_fallback_overrides=tuple(raster_fallback_overrides),
         publish_replace=bool(raw.get("publish_replace", False)),
     )
@@ -284,3 +336,11 @@ def _load_nested_override_rows(
     else:
         rows.extend(dict(row) for row in (payload.get(inline_key, []) or []))
     return rows
+
+
+def _string_tuple(value: Any) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        return tuple(part.strip() for part in value.split(",") if part.strip())
+    return tuple(str(part).strip() for part in value if str(part).strip())

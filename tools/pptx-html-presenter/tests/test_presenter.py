@@ -18,7 +18,7 @@ from pptx_html_presenter.assets import (
 )
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
-from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, load_config
+from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, load_config
 from pptx_html_presenter.models import AssetRef, Geometry, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import parse_pptx
@@ -42,6 +42,7 @@ from pptx_html_presenter.qa import (
     _transition_media_phase_config_overrides,
     _transition_time_config_overrides,
     _visible_asset_patch,
+    _visual_audit_sample_plan,
 )
 from pptx_html_presenter.reference import _effective_slide_hold, _effective_use_timings
 from pptx_html_presenter.scene import (
@@ -147,7 +148,25 @@ class PresenterTests(unittest.TestCase):
                     "maxPx": 7.0,
                 },
             )
+            self.assertEqual(
+                scene["runtime"]["layerPolicy"],
+                {
+                    "decorativeTracks": [],
+                    "panelOutlineOnTop": True,
+                    "transitionLayerOverrides": [],
+                },
+            )
             self.assertEqual(scene["runtime"]["autoAdvance"], [])
+            self.assertEqual(scene["runtime"]["autoSegments"], [])
+            self.assertEqual(
+                scene["qa"]["visualAudit"],
+                {
+                    "enabled": False,
+                    "failOnTimeout": True,
+                    "reverseMidpoints": True,
+                    "samples": [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0],
+                },
+            )
             self.assertEqual(scene["transitions"][0]["kind"], "morph")
             self.assertEqual(scene["transitions"][0]["durationSec"], 2.0)
             self.assertEqual(scene["transitions"][0]["matches"][0]["motion"]["delta"]["x"], 1000000.0)
@@ -366,6 +385,78 @@ class PresenterTests(unittest.TestCase):
             config = load_config(path)
             self.assertEqual(config.auto_advance[0]["from"], 3)
             self.assertEqual(config.auto_advance[0]["to"], 4)
+
+    def test_config_loads_runtime_auto_segments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "runtime": {
+                            "auto_segments": [
+                                {
+                                    "from": 3,
+                                    "to": 4,
+                                    "delay_sec": 0,
+                                    "source": "combine-slide-3-4",
+                                }
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            self.assertEqual(config.auto_segments[0]["from"], 3)
+            self.assertEqual(config.auto_segments[0]["to"], 4)
+
+    def test_config_loads_layer_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "layer_policy": {
+                            "panel_outline_on_top": True,
+                            "decorative_tracks": ["track-0076"],
+                            "transition_layer_overrides": [
+                                {
+                                    "from": 19,
+                                    "to": 20,
+                                    "mode": "panels-above-decorative",
+                                    "decorative_tracks": ["track-0076"],
+                                    "z_boost": 1000,
+                                }
+                            ],
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            self.assertEqual(config.layer_policy.decorative_tracks, ("track-0076",))
+            self.assertEqual(config.layer_policy.transition_layer_overrides[0]["from"], 19)
+
+    def test_config_loads_visual_audit_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "visual_audit": {
+                            "enabled": True,
+                            "samples": [0, 0.5, 1],
+                            "reverse_midpoints": False,
+                            "fail_on_timeout": True,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            self.assertTrue(config.visual_audit.enabled)
+            self.assertEqual(config.visual_audit.samples, (0.0, 0.5, 1.0))
+            self.assertFalse(config.visual_audit.reverse_midpoints)
 
     def test_config_loads_schema_group_and_fallback_policies(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -998,6 +1089,7 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("function scheduleAutoAdvance", PLAYER_HTML)
         self.assertIn("function autoAdvanceRule", PLAYER_HTML)
         self.assertIn("scene?.runtime?.autoAdvance", PLAYER_HTML)
+        self.assertIn("scene?.runtime?.autoSegments", PLAYER_HTML)
         self.assertIn("options.autoAdvance === false", PLAYER_HTML)
         self.assertIn("options.direction === \"reverse\"", PLAYER_HTML)
 
@@ -1052,6 +1144,26 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(transition_sample["mediaClocks"], {"track-1": 2.0, "track-2": 1.0})
         slide_2 = next(sample for sample in samples if sample["id"] == "slide-002-settled")
         self.assertEqual(slide_2["mediaClocks"], {"track-1": 3.12, "track-2": 2.12})
+
+    def test_visual_audit_sample_plan_includes_reverse_midpoints(self) -> None:
+        scene = {
+            "assets": [],
+            "qa": {"slideHoldSec": 1.0, "settledOffsetSec": 0.12},
+            "slides": [
+                {"index": 1, "objects": []},
+                {"index": 2, "objects": []},
+            ],
+            "transitions": [{"from": 1, "to": 2, "durationSec": 2.0}],
+        }
+        samples = _visual_audit_sample_plan(scene, samples=(0.0, 0.5, 1.0), reverse_midpoints=True)
+        ids = {sample["id"] for sample in samples}
+        self.assertIn("slide-001-settled", ids)
+        self.assertIn("trans-001-002-050", ids)
+        self.assertIn("reverse-002-001-050", ids)
+        reverse = next(sample for sample in samples if sample["id"] == "reverse-002-001-050")
+        self.assertEqual(reverse["direction"], "reverse")
+        self.assertEqual(reverse["from"], 2)
+        self.assertEqual(reverse["to"], 1)
 
     def test_qa_samples_start_slide_timed_video_even_when_offscreen(self) -> None:
         visible = {"leftPct": 0.1, "topPct": 0.1, "widthPct": 0.5, "heightPct": 0.5}

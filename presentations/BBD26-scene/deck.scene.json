@@ -860,7 +860,7 @@
     "sourceSha256": "a62f47849636ecd0ddbf493a9319d43b3d38448663f66d443aac8a68a13db9cf",
     "title": "Berlin Breathwork Days 2026"
   },
-  "generatedAtUtc": "2026-07-03T14:19:43+00:00",
+  "generatedAtUtc": "2026-07-03T15:34:50+00:00",
   "qa": {
     "groupRows": [
       {
@@ -6020,10 +6020,25 @@
         "source": "transition-time",
         "to": 26
       }
-    ]
+    ],
+    "visualAudit": {
+      "enabled": true,
+      "failOnTimeout": true,
+      "reverseMidpoints": true,
+      "samples": [
+        0.0,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        1.0
+      ]
+    }
   },
   "runtime": {
-    "autoAdvance": [
+    "autoAdvance": [],
+    "autoSegments": [
       {
         "delaySec": 0.0,
         "from": 3,
@@ -6034,6 +6049,54 @@
     "easing": "easeInOutQuad",
     "fadeUnmatched": true,
     "groupRenderer": true,
+    "layerPolicy": {
+      "decorativeTracks": [
+        "track-0076"
+      ],
+      "panelOutlineOnTop": true,
+      "transitionLayerOverrides": [
+        {
+          "decorativeTracks": [
+            "track-0076"
+          ],
+          "from": 17,
+          "mode": "panels-above-decorative",
+          "source": "carousel-panels-above-heart",
+          "to": 18,
+          "zBoost": 1000.0
+        },
+        {
+          "decorativeTracks": [
+            "track-0076"
+          ],
+          "from": 18,
+          "mode": "panels-above-decorative",
+          "source": "carousel-panels-above-heart",
+          "to": 19,
+          "zBoost": 1000.0
+        },
+        {
+          "decorativeTracks": [
+            "track-0076"
+          ],
+          "from": 19,
+          "mode": "panels-above-decorative",
+          "source": "carousel-panels-above-heart",
+          "to": 20,
+          "zBoost": 1000.0
+        },
+        {
+          "decorativeTracks": [
+            "track-0076"
+          ],
+          "from": 20,
+          "mode": "panels-above-decorative",
+          "source": "carousel-panels-above-heart",
+          "to": 21,
+          "zBoost": 1000.0
+        }
+      ]
+    },
     "outlineStyle": {
       "borderOnTop": true,
       "maxPx": 7.0,
@@ -71370,7 +71433,14 @@
           "trackId": "track-0026"
         }
       ],
-      "to": 16
+      "to": 16,
+      "unmatchedFade": {
+        "enterEnd": 0.25,
+        "enterStart": 0.0,
+        "exitEnd": 1.0,
+        "exitStart": 0.75,
+        "source": "slide16-fast-background-reveal"
+      }
     },
     {
       "durationSec": 2.0,

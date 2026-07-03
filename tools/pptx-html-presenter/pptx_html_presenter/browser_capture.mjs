@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 import { createReadStream } from "node:fs";
-import { readFile, stat } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import path from "node:path";
 
@@ -16,43 +16,94 @@ if (!buildDir || !samplesFile || !outputDir) {
 }
 
 const samples = JSON.parse(await readFile(samplesFile, "utf8"));
+await mkdir(outputDir, { recursive: true });
 const server = await startStaticServer(buildDir);
 const browser = await launchBrowserWithMediaCodecs();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
 const baseUrl = `http://127.0.0.1:${server.port}/index.html`;
+const report = [];
+const pageEvents = [];
+page.on("pageerror", (error) => {
+  pageEvents.push({
+    type: "pageerror",
+    text: String(error?.stack || error?.message || error),
+  });
+});
+page.on("console", (message) => {
+  if (!["error", "warning"].includes(message.type())) return;
+  pageEvents.push({
+    type: `console:${message.type()}`,
+    text: message.text(),
+  });
+});
 
 try {
+  await page.goto(`${baseUrl}?captureSlide=1&progress=0`, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await page.waitForFunction(() => document.querySelector("#loading")?.classList.contains("hidden"), null, { timeout: 45000 });
   for (const sample of samples) {
-    const captureSlide = sample.kind === "slide" ? sample.slide : sample.from;
-    const progress = sample.kind === "slide" ? 0 : sample.progress;
-    await page.goto(`${baseUrl}?captureSlide=${captureSlide}&progress=${progress}`);
-    await page.waitForFunction(() => document.querySelector("#loading")?.classList.contains("hidden"));
-    if (sample.kind === "slide") {
-      await page.evaluate((s) => {
-        document.dispatchEvent(new CustomEvent("pptx-html-presenter:capture-at", {
-          detail: {
-            slide: s.slide,
-            progress: 0,
-            trackProgressOverrides: s.trackProgressOverrides || null,
-          },
-        }));
-      }, sample);
-    } else {
-      await page.evaluate((s) => {
-        document.dispatchEvent(new CustomEvent("pptx-html-presenter:capture-at", {
-          detail: {
-            slide: s.from,
-            progress: s.progress,
-            trackProgressOverrides: s.trackProgressOverrides || null,
-          },
-        }));
-      }, sample);
+    const eventStart = pageEvents.length;
+    const row = {
+      id: sample.id,
+      kind: sample.kind,
+      status: "pending",
+      file: `${sample.id}.png`,
+    };
+    try {
+      if (sample.kind === "slide") {
+        await page.evaluate((s) => {
+          document.dispatchEvent(new CustomEvent("pptx-html-presenter:capture-at", {
+            detail: {
+              slide: s.slide,
+              progress: 0,
+              direction: s.direction || "forward",
+              trackProgressOverrides: s.trackProgressOverrides || null,
+            },
+          }));
+        }, sample);
+      } else {
+        await page.evaluate((s) => {
+          document.dispatchEvent(new CustomEvent("pptx-html-presenter:capture-at", {
+            detail: {
+              slide: s.from,
+              progress: s.progress,
+              direction: s.direction || "forward",
+              trackProgressOverrides: s.trackProgressOverrides || null,
+            },
+          }));
+        }, sample);
+      }
+      const mediaTime = Number(sample.mediaSec ?? 0);
+      const ready = await waitForRenderableFrame(page, Number.isFinite(mediaTime) ? mediaTime : 0, sample.mediaClocks || {});
+      row.status = ready.ok ? "ok" : "failed";
+      row.diagnostics = ready.diagnostics;
+      if (!ready.ok) row.error = ready.error;
+      const sampleEvents = pageEvents.slice(eventStart);
+      if (sampleEvents.length) row.pageEvents = sampleEvents;
+      const pageErrors = sampleEvents.filter((event) => event.type === "pageerror");
+      if (pageErrors.length) {
+        row.status = "failed";
+        row.error = `page-error:${pageErrors[0].text}`;
+      }
+      await page.screenshot({ path: `${outputDir}/${sample.id}.png`, fullPage: false });
+    } catch (error) {
+      row.status = "failed";
+      row.error = String(error?.message || error);
+      const sampleEvents = pageEvents.slice(eventStart);
+      if (sampleEvents.length) row.pageEvents = sampleEvents;
+      row.diagnostics = await collectRenderableDiagnostics(page).catch((diagnosticError) => ({
+        diagnosticError: String(diagnosticError?.message || diagnosticError),
+      }));
+      await page.screenshot({ path: `${outputDir}/${sample.id}.png`, fullPage: false }).catch(() => {});
     }
-    const mediaTime = Number(sample.mediaSec ?? 0);
-    await waitForRenderableFrame(page, Number.isFinite(mediaTime) ? mediaTime : 0, sample.mediaClocks || {});
-    await page.screenshot({ path: `${outputDir}/${sample.id}.png`, fullPage: false });
+    report.push(row);
   }
 } finally {
+  await writeFile(`${outputDir}/capture-report.json`, JSON.stringify({
+    generatedAt: new Date().toISOString(),
+    sampleCount: samples.length,
+    failures: report.filter((row) => row.status !== "ok").length,
+    samples: report,
+  }, null, 2));
   await closeBrowser(browser);
   await closeStaticServer(server.instance);
 }
@@ -103,23 +154,36 @@ async function launchBrowserWithMediaCodecs() {
 }
 
 async function waitForRenderableFrame(page, mediaTimeSec, mediaClocks) {
-  await page.waitForFunction(() => {
-    const frame = document.querySelector("#frame");
-    if (!frame) return false;
-    const images = Array.from(frame.querySelectorAll("img"));
-    const videos = Array.from(frame.querySelectorAll("video"));
-    const imagesReady = images.every((image) => image.complete && image.naturalWidth > 0);
-    const videosReady = videos.every((video) => !video.error && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA);
-    return imagesReady && videosReady;
-  }, null, { timeout: 30000 });
-  await seekVideos(page, mediaTimeSec, mediaClocks);
-  await page.waitForTimeout(500);
+  await ensureDiagnosticsHelpers(page);
+  try {
+    await page.waitForFunction(() => {
+      const diagnostics = window.__pptxHtmlPresenterDiagnostics();
+      return diagnostics.imagesPending === 0;
+    }, null, { timeout: 8000 });
+  } catch (error) {
+    return {
+      ok: false,
+      error: `image-timeout:${error?.message || error}`,
+      diagnostics: await collectRenderableDiagnostics(page),
+    };
+  }
+  const seek = await seekVideos(page, mediaTimeSec, mediaClocks);
+  await page.waitForTimeout(300);
+  const diagnostics = await collectRenderableDiagnostics(page);
+  if (!seek.ok) {
+    return { ok: false, error: seek.error, diagnostics };
+  }
+  if (Number(diagnostics.videosPending || 0) > 0) {
+    return { ok: false, error: "visible-video-not-ready", diagnostics };
+  }
+  return { ok: true, diagnostics };
 }
 
 async function seekVideos(page, seconds, mediaClocks) {
-  await page.evaluate(async ({ targetSeconds, trackSeconds }) => {
+  try {
+    await page.evaluate(async ({ targetSeconds, trackSeconds }) => {
     const videos = Array.from(document.querySelectorAll("#frame video"));
-    await Promise.all(videos.map((video) => new Promise((resolve) => {
+    await Promise.all(videos.filter((video) => window.__pptxHtmlPresenterElementVisible(video)).map((video) => new Promise((resolve) => {
       if (video.error) {
         resolve();
         return;
@@ -147,7 +211,74 @@ async function seekVideos(page, seconds, mediaClocks) {
       video.currentTime = target;
       setTimeout(finish, 1200);
     })));
-  }, { targetSeconds: seconds, trackSeconds: mediaClocks || {} });
+    }, { targetSeconds: seconds, trackSeconds: mediaClocks || {} });
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, error: `seek-failed:${error?.message || error}` };
+  }
+}
+
+async function collectRenderableDiagnostics(page) {
+  await ensureDiagnosticsHelpers(page);
+  return page.evaluate(() => window.__pptxHtmlPresenterDiagnostics());
+}
+
+async function ensureDiagnosticsHelpers(page) {
+  await page.evaluate(() => {
+    if (window.__pptxHtmlPresenterDiagnostics) return;
+    window.__pptxHtmlPresenterElementVisible = (element) => {
+      const frame = document.querySelector("#frame");
+      if (!frame || !element) return false;
+      const obj = element.closest(".obj") || element;
+      const rect = obj.getBoundingClientRect();
+      const frameRect = frame.getBoundingClientRect();
+      const style = window.getComputedStyle(obj);
+      const opacity = Number(style.opacity || 1);
+      return (
+        style.display !== "none"
+        && style.visibility !== "hidden"
+        && opacity > 0.005
+        && rect.width > 1
+        && rect.height > 1
+        && rect.left < frameRect.right
+        && rect.right > frameRect.left
+        && rect.top < frameRect.bottom
+        && rect.bottom > frameRect.top
+      );
+    };
+    window.__pptxHtmlPresenterDiagnostics = () => {
+      const frame = document.querySelector("#frame");
+      if (!frame) {
+        return { frame: false, imagesVisible: 0, imagesPending: 0, videosVisible: 0, videosPending: 0, objectsVisible: 0 };
+      }
+      const visibleObjects = Array.from(frame.querySelectorAll(".obj")).filter((obj) => window.__pptxHtmlPresenterElementVisible(obj));
+      const images = Array.from(frame.querySelectorAll("img")).filter((image) => window.__pptxHtmlPresenterElementVisible(image));
+      const videos = Array.from(frame.querySelectorAll("video")).filter((video) => window.__pptxHtmlPresenterElementVisible(video));
+      const imageRows = images.map((image) => ({
+        src: image.currentSrc || image.src,
+        complete: image.complete,
+        naturalWidth: image.naturalWidth,
+        trackId: image.closest(".obj")?.dataset.trackId || "",
+      }));
+      const videoRows = videos.map((video) => ({
+        src: video.currentSrc || video.src,
+        readyState: video.readyState,
+        paused: video.paused,
+        error: video.error ? String(video.error.code || video.error.message || "video-error") : null,
+        trackId: video.closest(".obj")?.dataset.trackId || "",
+      }));
+      return {
+        frame: true,
+        objectsVisible: visibleObjects.length,
+        imagesVisible: images.length,
+        imagesPending: imageRows.filter((image) => !image.complete || image.naturalWidth <= 0).length,
+        videosVisible: videos.length,
+        videosPending: videoRows.filter((video) => video.error || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA).length,
+        images: imageRows,
+        videos: videoRows,
+      };
+    };
+  });
 }
 
 async function startStaticServer(rootDir) {

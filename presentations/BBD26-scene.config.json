@@ -14,14 +14,60 @@
     "allow_oversize_assets": true,
     "prune_unreferenced_source_assets": true
   },
-  "auto_advance": [
-    {
-      "from": 3,
-      "to": 4,
-      "delay_sec": 0,
-      "source": "combine-slide-3-4"
-    }
-  ],
+  "runtime": {
+    "auto_segments": [
+      {
+        "from": 3,
+        "to": 4,
+        "delay_sec": 0,
+        "source": "combine-slide-3-4"
+      }
+    ]
+  },
+  "visual_audit": {
+    "enabled": true,
+    "samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+    "reverse_midpoints": true,
+    "fail_on_timeout": true
+  },
+  "layer_policy": {
+    "panel_outline_on_top": true,
+    "decorative_tracks": ["track-0076"],
+    "transition_layer_overrides": [
+      {
+        "from": 17,
+        "to": 18,
+        "mode": "panels-above-decorative",
+        "decorative_tracks": ["track-0076"],
+        "z_boost": 1000,
+        "source": "carousel-panels-above-heart"
+      },
+      {
+        "from": 18,
+        "to": 19,
+        "mode": "panels-above-decorative",
+        "decorative_tracks": ["track-0076"],
+        "z_boost": 1000,
+        "source": "carousel-panels-above-heart"
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "mode": "panels-above-decorative",
+        "decorative_tracks": ["track-0076"],
+        "z_boost": 1000,
+        "source": "carousel-panels-above-heart"
+      },
+      {
+        "from": 20,
+        "to": 21,
+        "mode": "panels-above-decorative",
+        "decorative_tracks": ["track-0076"],
+        "z_boost": 1000,
+        "source": "carousel-panels-above-heart"
+      }
+    ]
+  },
   "morph_policy": {
     "match_threshold": 55,
     "duration_default_sec": 2,
@@ -36,6 +82,15 @@
         "enter_start": 1.0,
         "enter_end": 1.0,
         "source": "slide02-focused-qa"
+      },
+      {
+        "from": 15,
+        "to": 16,
+        "enter_start": 0.0,
+        "enter_end": 0.25,
+        "exit_start": 0.75,
+        "exit_end": 1.0,
+        "source": "slide16-fast-background-reveal"
       }
     ],
     "transition_progress_overrides": [

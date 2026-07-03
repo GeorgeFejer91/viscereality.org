@@ -20,10 +20,24 @@
     "unmatched_fade_start": 0,
     "unmatched_fade_end": 1
   },
+  "layer_policy": {
+    "panel_outline_on_top": true,
+    "decorative_tracks": [],
+    "transition_layer_overrides": []
+  },
+  "runtime": {
+    "auto_segments": []
+  },
   "qa_policy": {
     "slide_ssim": 0.985,
     "morph_ssim": 0.965,
     "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]
+  },
+  "visual_audit": {
+    "enabled": false,
+    "samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+    "reverse_midpoints": true,
+    "fail_on_timeout": true
   },
   "publish_replace": false
 }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import math
 import re
 import subprocess
 import tempfile
@@ -26,6 +27,7 @@ def run_qa(
     settled_offset_sec: float | None = None,
     transition_reference_lead_fraction: float | None = None,
     slides: set[int] | None = None,
+    visual_audit: bool | None = None,
 ) -> dict[str, Any]:
     build_dir = build_dir.expanduser().resolve()
     scene_path = build_dir / "deck.scene.json"
@@ -69,14 +71,21 @@ def run_qa(
             _extract_reference_frame(ffmpeg, reference_mp4.expanduser().resolve(), out, sample["referenceSec"])
             extracted_frames.append({"sampleId": sample["id"], "file": out.relative_to(build_dir).as_posix()})
     html_frames: list[dict[str, Any]] = []
+    html_capture_report: dict[str, Any] = {}
     samples_path = qa_dir / "samples.json"
     write_json(samples_path, samples)
     if reuse_existing_html or (not html_blockers and node is not None):
         if not reuse_existing_html:
-            _capture_html_frames(node, build_dir, samples_path, html_dir, playwright_dir)
+            html_capture_report = _capture_html_frames(node, build_dir, samples_path, html_dir, playwright_dir)
+        else:
+            html_capture_report = _read_capture_report(html_dir)
+        capture_failures = int(html_capture_report.get("failures", 0) or 0)
+        if capture_failures:
+            html_blockers.append(f"html-capture-failed:{capture_failures}")
         html_frames = [
             {"sampleId": sample["id"], "file": (html_dir / f"{sample['id']}.png").relative_to(build_dir).as_posix()}
             for sample in samples
+            if (html_dir / f"{sample['id']}.png").exists()
         ]
     comparisons = []
     if extracted_frames and html_frames:
@@ -93,6 +102,24 @@ def run_qa(
         )
         calibration_summary = _calibration_summary(calibrated_comparisons)
         calibration_summary["enabled"] = True
+    blockers = [*reference_blockers, *html_blockers]
+    visual_audit_report: dict[str, Any] | None = None
+    visual_audit_enabled = (
+        bool(visual_audit)
+        if visual_audit is not None
+        else bool(((scene.get("qa") or {}).get("visualAudit") or {}).get("enabled", False))
+    )
+    if visual_audit_enabled:
+        visual_audit_report = run_visual_audit(
+            build_dir,
+            node_bin=str(node) if node else node_bin,
+            playwright_dir=playwright_dir,
+        )
+        if visual_audit_report.get("status") != "passed":
+            blockers.append(
+                f"visual-audit-{visual_audit_report.get('status')}:{visual_audit_report.get('summary', {}).get('failureCount', 0)}"
+            )
+
     failed = [row for row in comparisons if not row.get("passed", False)]
     if blockers:
         status = "blocked"
@@ -116,9 +143,11 @@ def run_qa(
         "samples": samples,
         "referenceFrames": extracted_frames,
         "htmlFrames": html_frames,
+        "htmlCapture": html_capture_report,
         "comparisons": comparisons,
         "calibration": calibration_summary,
         "calibratedComparisons": calibrated_comparisons,
+        "visualAudit": visual_audit_report,
         "notes": [
             "HTML frame capture is routed through window.PptxHtmlPresenter.captureAt().",
             "Strict pass/fail uses predicted PowerPoint MP4 timestamps; calibratedComparisons are diagnostic only.",
@@ -128,6 +157,383 @@ def run_qa(
     write_json(qa_dir / "report.json", report)
     _write_contact_sheet_stub(qa_dir, report)
     return report
+
+
+def run_visual_audit(
+    build_dir: Path,
+    *,
+    node_bin: str | None = None,
+    playwright_dir: Path | None = None,
+    samples: tuple[float, ...] | None = None,
+    fail_on_timeout: bool | None = None,
+) -> dict[str, Any]:
+    build_dir = build_dir.expanduser().resolve()
+    scene_path = build_dir / "deck.scene.json"
+    if not scene_path.exists():
+        raise PresenterError(f"Missing deck.scene.json in {build_dir}")
+    scene = read_json(scene_path)
+    audit_config = ((scene.get("qa") or {}).get("visualAudit") or {})
+    audit_dir = ensure_dir(build_dir / "qa" / "visual-audit")
+    node = find_binary("node.exe", node_bin) or find_binary("node", node_bin)
+    blockers: list[str] = []
+    if node is None:
+        blockers.append("node-missing")
+    elif not _node_has_playwright(node, playwright_dir):
+        blockers.append("playwright-missing")
+
+    audit_samples = _visual_audit_sample_plan(
+        scene,
+        samples=tuple(float(v) for v in (samples or audit_config.get("samples") or (0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0))),
+        reverse_midpoints=bool(audit_config.get("reverseMidpoints", True)),
+    )
+    samples_path = audit_dir / "samples.json"
+    write_json(samples_path, audit_samples)
+    html_dir = ensure_dir(audit_dir / "html")
+    for stale in [
+        *html_dir.glob("*.png"),
+        html_dir / "capture-report.json",
+        audit_dir / "settled-slides-contact-sheet.png",
+        audit_dir / "transition-midpoints-contact-sheet.png",
+        audit_dir / "failures-contact-sheet.png",
+    ]:
+        if stale.exists():
+            stale.unlink()
+    capture_report: dict[str, Any] = {}
+    if not blockers and node is not None:
+        capture_report = _capture_html_frames(node, build_dir, samples_path, html_dir, playwright_dir)
+
+    frames = _visual_audit_frame_rows(build_dir, html_dir, audit_samples, capture_report)
+    failure_count = sum(1 for row in frames if row["status"] == "failed")
+    warning_count = sum(1 for row in frames if row["status"] == "warning")
+    fail_on_timeout_effective = bool(
+        audit_config.get("failOnTimeout", True) if fail_on_timeout is None else fail_on_timeout
+    )
+    if blockers:
+        status = "blocked"
+    elif failure_count and fail_on_timeout_effective:
+        status = "failed"
+    else:
+        status = "passed" if not failure_count else "warning"
+
+    contact_sheets = _write_visual_audit_contact_sheets(build_dir, audit_dir, frames)
+    report = {
+        "schema": "pptx-html-presenter.visual-audit.v1",
+        "generatedAtUtc": utc_now_iso(),
+        "status": status,
+        "blockers": blockers,
+        "samples": audit_samples,
+        "capture": capture_report,
+        "frames": frames,
+        "contactSheets": contact_sheets,
+        "summary": {
+            "sampleCount": len(audit_samples),
+            "capturedCount": sum(1 for row in frames if row.get("file")),
+            "failureCount": failure_count,
+            "warningCount": warning_count,
+            "settledSlideCount": sum(1 for row in frames if row.get("kind") == "slide"),
+            "forwardTransitionCount": sum(1 for row in frames if row.get("direction") == "forward" and row.get("kind") == "transition"),
+            "reverseTransitionCount": sum(1 for row in frames if row.get("direction") == "reverse" and row.get("kind") == "transition"),
+        },
+        "notes": [
+            "Failures include capture timeouts, missing screenshots, and near-uniform blank frames.",
+            "Contact sheets are intended for human review of overlap, layering, and object continuity.",
+        ],
+    }
+    write_json(audit_dir / "report.json", report)
+    return report
+
+
+def _visual_audit_sample_plan(
+    scene: dict[str, Any],
+    *,
+    samples: tuple[float, ...],
+    reverse_midpoints: bool,
+) -> list[dict[str, Any]]:
+    audit_scene = copy.deepcopy(scene)
+    audit_scene.setdefault("qa", {})["transitionSamples"] = list(samples)
+    planned = _sample_plan(audit_scene)
+    out: list[dict[str, Any]] = []
+    forward_midpoints: dict[tuple[int, int], dict[str, Any]] = {}
+    for sample in planned:
+        row = copy.deepcopy(sample)
+        if row.get("kind") == "slide":
+            row["direction"] = "forward"
+            row["auditKind"] = "settled-slide"
+            row["expectedVisibleObjects"] = _expected_visible_object_floor(
+                scene, int(row.get("slide") or 0)
+            )
+            out.append(row)
+            continue
+        if row.get("kind") == "transition":
+            row["direction"] = "forward"
+            row["auditKind"] = "forward-transition"
+            row["expectedVisibleObjects"] = _expected_transition_visible_object_floor(
+                scene, int(row.get("from") or 0), int(row.get("to") or 0)
+            )
+            out.append(row)
+            if abs(float(row.get("progress", 0.0) or 0.0) - 0.5) <= 0.0001:
+                forward_midpoints[(int(row["from"]), int(row["to"]))] = row
+
+    if reverse_midpoints:
+        for transition in scene.get("transitions", []) or []:
+            try:
+                from_slide = int(transition["from"])
+                to_slide = int(transition["to"])
+            except (TypeError, ValueError, KeyError):
+                continue
+            source = forward_midpoints.get((from_slide, to_slide), {})
+            reverse = copy.deepcopy(source)
+            reverse.update(
+                {
+                    "id": f"reverse-{to_slide:03d}-{from_slide:03d}-050",
+                    "kind": "transition",
+                    "from": to_slide,
+                    "to": from_slide,
+                    "progress": 0.5,
+                    "direction": "reverse",
+                    "auditKind": "reverse-transition",
+                    "referenceSec": source.get("referenceSec", 0.0),
+                    "mediaSec": source.get("mediaSec", 0.0),
+                    "mediaClocks": source.get("mediaClocks", {}),
+                    "expectedVisibleObjects": source.get("expectedVisibleObjects"),
+                }
+            )
+            out.append(reverse)
+    return out
+
+
+def _expected_visible_object_floor(scene: dict[str, Any], *slide_numbers: int) -> int:
+    counts: list[int] = []
+    slides = scene.get("slides", []) or []
+    for slide_number in slide_numbers:
+        if slide_number <= 0 or slide_number > len(slides):
+            continue
+        slide = slides[slide_number - 1]
+        objects = slide.get("nodes") or slide.get("objects") or []
+        visible = [obj for obj in objects if _object_can_intersect_slide(obj)]
+        if visible:
+            counts.append(len(visible))
+    if not counts:
+        return 1
+    return max(1, min(3, max(counts)))
+
+
+def _expected_transition_visible_object_floor(
+    scene: dict[str, Any],
+    from_slide_number: int,
+    to_slide_number: int,
+) -> int:
+    from_tracks = _visible_track_ids(scene, from_slide_number)
+    to_tracks = _visible_track_ids(scene, to_slide_number)
+    common_tracks = from_tracks & to_tracks
+    if len(common_tracks) <= 1:
+        return 0
+    return max(2, min(3, len(common_tracks)))
+
+
+def _visible_track_ids(scene: dict[str, Any], slide_number: int) -> set[str]:
+    slides = scene.get("slides", []) or []
+    if slide_number <= 0 or slide_number > len(slides):
+        return set()
+    slide = slides[slide_number - 1]
+    objects = slide.get("nodes") or slide.get("objects") or []
+    return {
+        str(obj.get("trackId"))
+        for obj in objects
+        if obj.get("trackId") and _object_can_intersect_slide(obj)
+    }
+
+
+def _object_can_intersect_slide(obj: dict[str, Any]) -> bool:
+    if (obj.get("rasterFallback") or {}).get("settledOnly"):
+        return False
+    if float(obj.get("opacity", 1.0) or 0.0) <= 0.005:
+        return False
+    geometry = obj.get("geometry") or {}
+    try:
+        left = float(geometry.get("leftPct", 0.0) or 0.0)
+        top = float(geometry.get("topPct", 0.0) or 0.0)
+        width = float(geometry.get("widthPct", 0.0) or 0.0)
+        height = float(geometry.get("heightPct", 0.0) or 0.0)
+    except (TypeError, ValueError):
+        return True
+    return width > 0 and height > 0 and left < 1 and left + width > 0 and top < 1 and top + height > 0
+
+
+def _read_capture_report(html_dir: Path) -> dict[str, Any]:
+    report_path = html_dir / "capture-report.json"
+    if not report_path.exists():
+        return {}
+    try:
+        return read_json(report_path)
+    except Exception:
+        return {}
+
+
+def _visual_audit_frame_rows(
+    build_dir: Path,
+    html_dir: Path,
+    samples: list[dict[str, Any]],
+    capture_report: dict[str, Any],
+) -> list[dict[str, Any]]:
+    capture_by_id = {
+        str(row.get("id")): row
+        for row in (capture_report.get("samples", []) or [])
+        if isinstance(row, dict)
+    }
+    rows: list[dict[str, Any]] = []
+    for sample in samples:
+        sample_id = str(sample["id"])
+        path = html_dir / f"{sample_id}.png"
+        capture = capture_by_id.get(sample_id, {})
+        diagnostics = capture.get("diagnostics") or {}
+        quality = _visual_frame_quality(path) if path.exists() else {"exists": False}
+        reasons: list[str] = []
+        if not path.exists():
+            reasons.append("missing-screenshot")
+        if capture.get("status") and capture.get("status") != "ok":
+            reasons.append(str(capture.get("error") or "capture-failed"))
+        if quality.get("nearUniform"):
+            reasons.append("near-uniform-frame")
+        visible_objects: int | None = None
+        try:
+            visible_objects = int(diagnostics.get("objectsVisible", 1))
+            if visible_objects <= 0:
+                reasons.append("no-visible-objects")
+        except (TypeError, ValueError):
+            pass
+        expected_visible = int(sample.get("expectedVisibleObjects") or 0)
+        progress = float(sample.get("progress") or 0.0)
+        if (
+            sample.get("kind") == "transition"
+            and 0.0 < progress < 1.0
+            and expected_visible > 1
+            and visible_objects is not None
+            and visible_objects < expected_visible
+        ):
+            reasons.append(f"visible-objects-below-floor:{visible_objects}<{expected_visible}")
+        status = "failed" if reasons else "ok"
+        row = {
+            "sampleId": sample_id,
+            "kind": sample.get("kind"),
+            "auditKind": sample.get("auditKind"),
+            "direction": sample.get("direction", "forward"),
+            "from": sample.get("from"),
+            "to": sample.get("to"),
+            "slide": sample.get("slide"),
+            "progress": sample.get("progress"),
+            "status": status,
+            "reasons": reasons,
+            "file": _path_for_report(path, build_dir) if path.exists() else None,
+            "diagnostics": diagnostics,
+            "quality": quality,
+        }
+        if sample.get("expectedVisibleObjects") is not None:
+            row["expectedVisibleObjects"] = sample.get("expectedVisibleObjects")
+        if capture.get("pageEvents"):
+            row["pageEvents"] = capture.get("pageEvents")
+        rows.append(row)
+    return rows
+
+
+def _visual_frame_quality(path: Path) -> dict[str, Any]:
+    try:
+        import numpy as np
+        from PIL import Image
+    except Exception:
+        return {"exists": path.exists()}
+    if not path.exists():
+        return {"exists": False}
+    with Image.open(path).convert("RGB") as image:
+        arr = np.asarray(image, dtype=np.float32)
+    luma = arr[:, :, 0] * 0.2126 + arr[:, :, 1] * 0.7152 + arr[:, :, 2] * 0.0722
+    std = float(luma.std())
+    mean = float(luma.mean())
+    return {
+        "exists": True,
+        "meanLuma": round(mean, 3),
+        "stdLuma": round(std, 3),
+        "nearUniform": std < 1.5,
+    }
+
+
+def _write_visual_audit_contact_sheets(
+    build_dir: Path,
+    audit_dir: Path,
+    frames: list[dict[str, Any]],
+) -> list[str]:
+    sheets: list[str] = []
+    sheets.extend(
+        _write_contact_sheet_png(
+            build_dir,
+            audit_dir / "settled-slides-contact-sheet.png",
+            [row for row in frames if row.get("kind") == "slide"],
+        )
+    )
+    sheets.extend(
+        _write_contact_sheet_png(
+            build_dir,
+            audit_dir / "transition-midpoints-contact-sheet.png",
+            [
+                row
+                for row in frames
+                if row.get("kind") == "transition"
+                and abs(float(row.get("progress", 0.0) or 0.0) - 0.5) <= 0.0001
+            ],
+        )
+    )
+    sheets.extend(
+        _write_contact_sheet_png(
+            build_dir,
+            audit_dir / "failures-contact-sheet.png",
+            [row for row in frames if row.get("status") == "failed"],
+        )
+    )
+    return sheets
+
+
+def _write_contact_sheet_png(
+    build_dir: Path,
+    out: Path,
+    rows: list[dict[str, Any]],
+) -> list[str]:
+    if not rows:
+        return []
+    try:
+        from PIL import Image, ImageDraw
+    except Exception:
+        return []
+    tile_w = 320
+    image_h = 180
+    label_h = 34
+    gap = 12
+    cols = 5
+    rows_count = math.ceil(len(rows) / cols)
+    sheet = Image.new("RGB", (cols * tile_w + (cols + 1) * gap, rows_count * (image_h + label_h) + (rows_count + 1) * gap), "#111111")
+    draw = ImageDraw.Draw(sheet)
+    for index, row in enumerate(rows):
+        col = index % cols
+        row_index = index // cols
+        x = gap + col * (tile_w + gap)
+        y = gap + row_index * (image_h + label_h + gap)
+        file_value = row.get("file")
+        image_path = build_dir / file_value if file_value else None
+        if image_path and image_path.exists():
+            with Image.open(image_path).convert("RGB") as thumb:
+                thumb.thumbnail((tile_w, image_h), Image.Resampling.LANCZOS)
+                canvas = Image.new("RGB", (tile_w, image_h), "#000000")
+                canvas.paste(thumb, ((tile_w - thumb.width) // 2, (image_h - thumb.height) // 2))
+                sheet.paste(canvas, (x, y))
+        else:
+            draw.rectangle([x, y, x + tile_w, y + image_h], fill="#202020", outline="#555555")
+            draw.text((x + 10, y + 78), "missing", fill="#dddddd")
+        status = str(row.get("status") or "")
+        label = f"{row.get('sampleId')}  {status}"
+        draw.rectangle([x, y + image_h, x + tile_w, y + image_h + label_h], fill="#181818")
+        draw.text((x + 6, y + image_h + 7), label[:56], fill="#ff7777" if status == "failed" else "#e6e6e6")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    sheet.save(out)
+    return [_path_for_report(out, build_dir)]
 
 
 def _filter_samples_for_slides(samples: list[dict[str, Any]], slides: set[int]) -> list[dict[str, Any]]:
@@ -1538,7 +1944,7 @@ def _capture_html_frames(
     samples_path: Path,
     html_dir: Path,
     playwright_dir: Path | None,
-) -> None:
+) -> dict[str, Any]:
     script = Path(__file__).with_name("browser_capture.mjs")
     env = None
     if playwright_dir is not None:
@@ -1551,6 +1957,7 @@ def _capture_html_frames(
         check=True,
         env=env,
     )
+    return _read_capture_report(html_dir)
 
 
 def _capture_html_frames_with_scene_override(

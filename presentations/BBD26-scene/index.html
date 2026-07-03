@@ -250,6 +250,15 @@
     }
   }
 
+  function removeInactiveTransitionNodes(activeTracks) {
+    for (const [track, node] of [...nodes.entries()]) {
+      if (activeTracks.has(track)) continue;
+      pauseMedia(node);
+      node.remove();
+      nodes.delete(track);
+    }
+  }
+
   function ensureNode(obj) {
     const renderAsset = renderAssetForObject(obj);
     const renderAssetId = renderAsset?.id || obj.assetId || "";
@@ -411,7 +420,7 @@
     node.style.top = (g.topPct * 100) + "%";
     node.style.width = (g.widthPct * 100) + "%";
     node.style.height = (g.heightPct * 100) + "%";
-    node.style.zIndex = String(Math.round(state.renderZ ?? state.panelClusterMaxZ ?? state.z ?? 0));
+    node.style.zIndex = String(transitionZIndex(state, isTransition, transition));
     const sx = g.flipH ? -1 : 1;
     const sy = g.flipV ? -1 : 1;
     node.style.transform = `rotate(${g.rotation || 0}deg) scale(${sx}, ${sy})`;
@@ -653,7 +662,10 @@
   }
 
   function autoAdvanceRule(slideNumber) {
-    const rows = scene?.runtime?.autoAdvance || [];
+    const rows = [
+      ...(scene?.runtime?.autoAdvance || []),
+      ...(scene?.runtime?.autoSegments || []),
+    ];
     return rows.find((row) => Number(row.from) === Number(slideNumber)) || null;
   }
 
@@ -679,6 +691,7 @@
         return { track, effectiveFrom, effectiveTo, objForNode };
       }).sort((a, b) => transitionRenderOrder(a.objForNode) - transitionRenderOrder(b.objForNode));
       const activeTracks = new Set(rows.map((row) => row.track));
+      removeInactiveTransitionNodes(activeTracks);
       for (const row of rows) {
         ensureNode(row.objForNode);
       }
@@ -770,6 +783,48 @@
     if (nodeRoleForObject(obj) === "group") return -200000 + Number(obj.z || 0);
     if (nodeRoleForObject(obj) === "panel") return -100000 + Number(obj.z || 0);
     return Number(obj.z || 0);
+  }
+
+  function transitionZIndex(state, isTransition, transition) {
+    const base = Number(state?.renderZ ?? state?.panelClusterMaxZ ?? state?.z ?? 0);
+    if (!isTransition || !transition) return Math.round(base);
+    const override = transitionLayerOverride(transition);
+    if (!override) return Math.round(base);
+    const runtimeConfig = scene?.runtime || {};
+    const track = String(state?.trackId || "");
+    const decorativeTracks = new Set([
+      ...((runtimeConfig.layerPolicy || {}).decorativeTracks || []),
+      ...(override.decorativeTracks || []),
+    ].map(String));
+    if (decorativeTracks.has(track)) {
+      return Math.round(base - Number(override.decorativeZDrop ?? 0));
+    }
+    if (shouldLiftPanelForTransition(state, override)) {
+      return Math.round(base + Number(override.zBoost ?? 1000));
+    }
+    return Math.round(base);
+  }
+
+  function transitionLayerOverride(transition) {
+    const runtimeConfig = scene?.runtime || {};
+    const policy = runtimeConfig.layerPolicy || {};
+    const rows = policy.transitionLayerOverrides || [];
+    return rows.find((row) => (
+      Number(row.from) === Number(transition.from)
+      && Number(row.to) === Number(transition.to)
+      && String(row.mode || "panels-above-decorative") === "panels-above-decorative"
+    )) || null;
+  }
+
+  function shouldLiftPanelForTransition(state, override) {
+    const panelTracks = new Set((override.panelTracks || []).map(String));
+    const track = String(state?.trackId || "");
+    const parentTrack = String(state?.parentTrackId || state?.panelParentTrackId || "");
+    const panelCluster = String(state?.panelClusterId || "");
+    const isPanelState = nodeRoleForObject(state) === "panel" || Boolean(panelCluster);
+    if (!isPanelState) return false;
+    if (!panelTracks.size) return true;
+    return panelTracks.has(track) || panelTracks.has(parentTrack) || panelTracks.has(panelCluster);
   }
 
   function transitionMediaObject(from, to) {
