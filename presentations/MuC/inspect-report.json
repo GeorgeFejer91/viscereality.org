@@ -1,0 +1,3191 @@
+{
+  "assetBytes": 1218237127,
+  "assetCount": 39,
+  "mediaByExtension": {
+    "gif": {
+      "bytes": 1159026025,
+      "count": 15,
+      "kind": "image"
+    },
+    "jpeg": {
+      "bytes": 48778,
+      "count": 1,
+      "kind": "image"
+    },
+    "jpg": {
+      "bytes": 124574,
+      "count": 1,
+      "kind": "image"
+    },
+    "png": {
+      "bytes": 58723443,
+      "count": 21,
+      "kind": "image"
+    },
+    "wdp": {
+      "bytes": 314307,
+      "count": 1,
+      "kind": "image"
+    }
+  },
+  "slideCount": 17,
+  "slideSizeEmu": {
+    "height": 6858000,
+    "width": 12192000
+  },
+  "slides": [
+    {
+      "index": 1,
+      "mediaObjectCount": 19,
+      "objectCount": 31,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 2,
+      "mediaObjectCount": 20,
+      "objectCount": 33,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 3,
+      "mediaObjectCount": 19,
+      "objectCount": 42,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 4,
+      "mediaObjectCount": 19,
+      "objectCount": 42,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 5,
+      "mediaObjectCount": 19,
+      "objectCount": 42,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 6,
+      "mediaObjectCount": 19,
+      "objectCount": 42,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 7,
+      "mediaObjectCount": 16,
+      "objectCount": 34,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 8,
+      "mediaObjectCount": 15,
+      "objectCount": 31,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 9,
+      "mediaObjectCount": 14,
+      "objectCount": 30,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 10,
+      "mediaObjectCount": 13,
+      "objectCount": 27,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 11,
+      "mediaObjectCount": 12,
+      "objectCount": 24,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 12,
+      "mediaObjectCount": 12,
+      "objectCount": 24,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 13,
+      "mediaObjectCount": 10,
+      "objectCount": 20,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 14,
+      "mediaObjectCount": 9,
+      "objectCount": 17,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 15,
+      "mediaObjectCount": 8,
+      "objectCount": 14,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 16,
+      "mediaObjectCount": 17,
+      "objectCount": 30,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 17,
+      "mediaObjectCount": 17,
+      "objectCount": 30,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    }
+  ],
+  "sourcePath": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\Viscereality_MuC.pptx",
+  "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
+  "title": "Viscereality_MuC",
+  "topAssetReuse": [
+    {
+      "assetId": "asset-263f37bb7c07f8e8",
+      "slideCount": 17,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-7997219068d65f9d",
+      "slideCount": 17,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-b43ce781d1819c88",
+      "slideCount": 17,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-32b2e0232f04aa13",
+      "slideCount": 16,
+      "slides": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-792ec06b75656dfc",
+      "slideCount": 15,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-ceabe477dce6f31c",
+      "slideCount": 13,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    {
+      "assetId": "asset-0e357a18aa7c9a6a",
+      "slideCount": 12,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "assetId": "asset-de15ac9d4fa9ad4b",
+      "slideCount": 12,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    {
+      "assetId": "asset-164b535c99e4dff0",
+      "slideCount": 11,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    },
+    {
+      "assetId": "asset-9452a5d845b484a6",
+      "slideCount": 11,
+      "slides": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "assetId": "asset-fc99bea418f76236",
+      "slideCount": 10,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "assetId": "asset-21036503160e8e82",
+      "slideCount": 8,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "assetId": "asset-d34f035df2da0ebc",
+      "slideCount": 8,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "assetId": "asset-2f76abf7d3625d6d",
+      "slideCount": 7,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "assetId": "asset-ae2ffbb9731dbf54",
+      "slideCount": 7,
+      "slides": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "assetId": "asset-1850186bcee7fe56",
+      "slideCount": 6,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "assetId": "asset-248f2c669fd993cb",
+      "slideCount": 6,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "assetId": "asset-b5dbd11d0793086a",
+      "slideCount": 6,
+      "slides": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "assetId": "asset-5bf4a43a4b6e37e9",
+      "slideCount": 5,
+      "slides": [
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-ffaba73de449df5c",
+      "slideCount": 5,
+      "slides": [
+        13,
+        14,
+        15,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-e02331508eb6a056",
+      "slideCount": 4,
+      "slides": [
+        1,
+        2,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-e2fc514621cac09e",
+      "slideCount": 4,
+      "slides": [
+        1,
+        2,
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-06271c4a6c0a3db8",
+      "slideCount": 2,
+      "slides": [
+        1,
+        2
+      ]
+    },
+    {
+      "assetId": "asset-06c569f1a9cfd080",
+      "slideCount": 2,
+      "slides": [
+        16,
+        17
+      ]
+    },
+    {
+      "assetId": "asset-10781074dea1c73c",
+      "slideCount": 2,
+      "slides": [
+        1,
+        2
+      ]
+    }
+  ],
+  "transitionCounts": {
+    "morph": 17
+  },
+  "unsupportedObjects": [
+    {
+      "name": "Picture 7",
+      "object": "s1-o8",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 9",
+      "object": "s1-o10",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s1-o11",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s1-o12",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 50",
+      "object": "s1-o51",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 53",
+      "object": "s1-o54",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s1-o15",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s1-o49",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 49",
+      "object": "s1-o50",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 16",
+      "object": "s1-o17",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s1-o18",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 45",
+      "object": "s1-o46",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 46",
+      "object": "s1-o47",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 47",
+      "object": "s1-o48",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 43",
+      "object": "s1-o44",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 44",
+      "object": "s1-o45",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 40",
+      "object": "s1-o41",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 41",
+      "object": "s1-o42",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 24",
+      "object": "s1-o25",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 28",
+      "object": "s1-o29",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 30",
+      "object": "s1-o31",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 33",
+      "object": "s1-o34",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 26",
+      "object": "s2-o27",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 27",
+      "object": "s2-o28",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 29",
+      "object": "s2-o30",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 31",
+      "object": "s2-o32",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 1034",
+      "object": "s2-o1035",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1036",
+      "object": "s2-o1037",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 35",
+      "object": "s2-o36",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 1030",
+      "object": "s2-o1031",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s2-o1033",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 38",
+      "object": "s2-o39",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s2-o40",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 1024",
+      "object": "s2-o1025",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1026",
+      "object": "s2-o1027",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 1028",
+      "object": "s2-o1029",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 59",
+      "object": "s2-o60",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 62",
+      "object": "s2-o63",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1023",
+      "object": "s2-o1024",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s2-o62",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 55",
+      "object": "s2-o56",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 56",
+      "object": "s2-o57",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s2-o58",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 58",
+      "object": "s2-o59",
+      "slide": 2,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s3-o65",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s3-o64",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s3-o8",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s3-o9",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s3-o14",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s3-o15",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s3-o17",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s3-o18",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s3-o20",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s3-o21",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 43",
+      "object": "s3-o44",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 44",
+      "object": "s3-o45",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 45",
+      "object": "s3-o46",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 34",
+      "object": "s3-o35",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 35",
+      "object": "s3-o36",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 37",
+      "object": "s3-o38",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 46",
+      "object": "s3-o47",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s3-o29",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s3-o69",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 4",
+      "object": "s3-o5",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 5",
+      "object": "s3-o6",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 54",
+      "object": "s3-o55",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s3-o11",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s3-o12",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s3-o56",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s3-o58",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s3-o60",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s3-o61",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s3-o93",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s3-o23",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s3-o62",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s3-o95",
+      "slide": 3,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s4-o65",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s4-o64",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s4-o8",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s4-o9",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s4-o14",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s4-o15",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s4-o17",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s4-o18",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s4-o20",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s4-o21",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 43",
+      "object": "s4-o44",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 44",
+      "object": "s4-o45",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 45",
+      "object": "s4-o46",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 46",
+      "object": "s4-o47",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s4-o29",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s4-o69",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 4",
+      "object": "s4-o5",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 5",
+      "object": "s4-o6",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 54",
+      "object": "s4-o55",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s4-o11",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s4-o12",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s4-o56",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s4-o58",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s4-o60",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s4-o61",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s4-o93",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s4-o23",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s4-o62",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s4-o95",
+      "slide": 4,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s5-o65",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s5-o64",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s5-o8",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s5-o9",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s5-o14",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s5-o15",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s5-o17",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s5-o18",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s5-o20",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s5-o21",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 38",
+      "object": "s5-o39",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 41",
+      "object": "s5-o42",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 42",
+      "object": "s5-o43",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 40",
+      "object": "s5-o41",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 46",
+      "object": "s5-o47",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s5-o29",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s5-o69",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 4",
+      "object": "s5-o5",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 5",
+      "object": "s5-o6",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 54",
+      "object": "s5-o55",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s5-o11",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s5-o12",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s5-o56",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s5-o58",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s5-o60",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s5-o61",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s5-o93",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s5-o23",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s5-o62",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s5-o95",
+      "slide": 5,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s6-o65",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s6-o64",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s6-o8",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s6-o9",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s6-o14",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s6-o15",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s6-o17",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s6-o18",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s6-o20",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s6-o21",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 38",
+      "object": "s6-o39",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 41",
+      "object": "s6-o42",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 42",
+      "object": "s6-o43",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 40",
+      "object": "s6-o41",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 34",
+      "object": "s6-o35",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 35",
+      "object": "s6-o36",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 36",
+      "object": "s6-o37",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 37",
+      "object": "s6-o38",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s6-o29",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s6-o69",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 4",
+      "object": "s6-o5",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 5",
+      "object": "s6-o6",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 54",
+      "object": "s6-o55",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s6-o11",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s6-o12",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s6-o56",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s6-o58",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s6-o60",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s6-o61",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s6-o93",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s6-o23",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s6-o62",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s6-o95",
+      "slide": 6,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s7-o65",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s7-o64",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s7-o8",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s7-o9",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s7-o14",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s7-o15",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s7-o17",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s7-o18",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s7-o20",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s7-o21",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 43",
+      "object": "s7-o44",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 44",
+      "object": "s7-o45",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 45",
+      "object": "s7-o46",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s7-o29",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s7-o69",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s7-o11",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s7-o12",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s7-o56",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s7-o58",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s7-o60",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s7-o61",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s7-o93",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s7-o23",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s7-o62",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s7-o95",
+      "slide": 7,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s8-o65",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s8-o64",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s8-o8",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s8-o9",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s8-o14",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s8-o15",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s8-o17",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s8-o18",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s8-o20",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s8-o21",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 46",
+      "object": "s8-o47",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s8-o29",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s8-o69",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s8-o58",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s8-o60",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s8-o61",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s8-o93",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s8-o23",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s8-o62",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s8-o95",
+      "slide": 8,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 4",
+      "object": "s9-o5",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 5",
+      "object": "s9-o6",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 54",
+      "object": "s9-o55",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s9-o65",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s9-o64",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s9-o8",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s9-o9",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s9-o17",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s9-o18",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s9-o20",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s9-o21",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s9-o29",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s9-o69",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 59",
+      "object": "s9-o60",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s9-o61",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s9-o93",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s9-o23",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s9-o62",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s9-o95",
+      "slide": 9,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s10-o11",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s10-o12",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 55",
+      "object": "s10-o56",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s10-o65",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s10-o64",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s10-o8",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s10-o9",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s10-o20",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s10-o21",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s10-o29",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s10-o69",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 60",
+      "object": "s10-o61",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s10-o93",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s10-o23",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s10-o62",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s10-o95",
+      "slide": 10,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s11-o65",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s11-o64",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s11-o8",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s11-o9",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s11-o14",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s11-o15",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s11-o29",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s11-o69",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s11-o58",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s11-o93",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s11-o23",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s11-o62",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s11-o95",
+      "slide": 11,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s12-o65",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s12-o64",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s12-o8",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s12-o9",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 13",
+      "object": "s12-o14",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s12-o15",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s12-o29",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s12-o69",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 57",
+      "object": "s12-o58",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s12-o93",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s12-o23",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s12-o62",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s12-o95",
+      "slide": 12,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s13-o8",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s13-o9",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s13-o11",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s13-o12",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 16",
+      "object": "s13-o17",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 17",
+      "object": "s13-o18",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s13-o23",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 23",
+      "object": "s13-o24",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 26",
+      "object": "s13-o27",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 28",
+      "object": "s13-o29",
+      "slide": 13,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s14-o8",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s14-o9",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 19",
+      "object": "s14-o20",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 20",
+      "object": "s14-o21",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s14-o23",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 23",
+      "object": "s14-o24",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 27",
+      "object": "s14-o28",
+      "slide": 14,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s15-o8",
+      "slide": 15,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s15-o9",
+      "slide": 15,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 30",
+      "object": "s15-o31",
+      "slide": 15,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 31",
+      "object": "s15-o32",
+      "slide": 15,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 32",
+      "object": "s15-o33",
+      "slide": 15,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s16-o11",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s16-o12",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 28",
+      "object": "s16-o29",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s16-o6",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s16-o13",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s16-o14",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 10",
+      "object": "s16-o15",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 12",
+      "object": "s16-o16",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s16-o17",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 16",
+      "object": "s16-o18",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 18",
+      "object": "s16-o19",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 19",
+      "object": "s16-o20",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 20",
+      "object": "s16-o21",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 25",
+      "object": "s16-o26",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 26",
+      "object": "s16-o27",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 27",
+      "object": "s16-o28",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 33",
+      "object": "s16-o34",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 34",
+      "object": "s16-o35",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 35",
+      "object": "s16-o36",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 38",
+      "object": "s16-o39",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 39",
+      "object": "s16-o40",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 37",
+      "object": "s16-o38",
+      "slide": 16,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s17-o7172",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s17-o8",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s17-o9",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s17-o23",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 23",
+      "object": "s17-o24",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 10",
+      "object": "s17-o11",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 11",
+      "object": "s17-o12",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 28",
+      "object": "s17-o29",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 24",
+      "object": "s17-o25",
+      "slide": 17,
+      "unsupported": [
+        "off-canvas"
+      ]
+    }
+  ],
+  "warnings": []
+}

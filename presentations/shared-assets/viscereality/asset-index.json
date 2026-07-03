@@ -1,0 +1,1780 @@
+{
+  "assets": {
+    "0141287dc91e8112fc7bdd813d15d4d6653d7ead4a375b432c9bdf9a3cd0bf61": {
+      "alpha": false,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1143619,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 1.091,
+      "path": "presentations/shared-assets/viscereality/optimized/0141287dc91e8112fc7bdd813d15d4d6653d7ead4a375b432c9bdf9a3cd0bf61.mp4",
+      "sha256": "0141287dc91e8112fc7bdd813d15d4d6653d7ead4a375b432c9bdf9a3cd0bf61",
+      "sourcePaths": [
+        "ppt/media/image19.gif",
+        "ppt/media/image24.gif"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "01d3a244222380a4978f45d1f4bdf497234cbf9d5f8a555f1585c60177d3d33d": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 17353123,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 16.549,
+      "path": "presentations/shared-assets/viscereality/optimized/01d3a244222380a4978f45d1f4bdf497234cbf9d5f8a555f1585c60177d3d33d.webm",
+      "sha256": "01d3a244222380a4978f45d1f4bdf497234cbf9d5f8a555f1585c60177d3d33d",
+      "sourcePaths": [
+        "ppt/media/image25.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "05a25a6cdea2b3b2b1c47a62d2c48f852e4097251d0cd146689b22a2e40be113": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 3383,
+      "extension": "svg",
+      "kind": "svg",
+      "mb": 0.003,
+      "path": "presentations/shared-assets/viscereality/source/05a25a6cdea2b3b2b1c47a62d2c48f852e4097251d0cd146689b22a2e40be113.svg",
+      "sha256": "05a25a6cdea2b3b2b1c47a62d2c48f852e4097251d0cd146689b22a2e40be113",
+      "sourcePaths": [
+        "ppt/media/image44.svg"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 130748,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.125,
+      "path": "presentations/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
+      "sha256": "06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f",
+      "sourcePaths": [
+        "ppt/media/image4.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "06c569f1a9cfd080fc27451e5aff51be241b16f22cdf1d2cc169ca7182d11551": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 12837,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.012,
+      "path": "presentations/shared-assets/viscereality/source/06c569f1a9cfd080fc27451e5aff51be241b16f22cdf1d2cc169ca7182d11551.png",
+      "sha256": "06c569f1a9cfd080fc27451e5aff51be241b16f22cdf1d2cc169ca7182d11551",
+      "sourcePaths": [
+        "ppt/media/image31.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 7339816,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 7.0,
+      "path": "presentations/shared-assets/viscereality/optimized/06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf.webm",
+      "sha256": "06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf",
+      "sourcePaths": [
+        "ppt/media/image26.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 14614792,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 13.938,
+      "path": "presentations/shared-assets/viscereality/optimized/0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52.webm",
+      "sha256": "0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52",
+      "sourcePaths": [
+        "ppt/media/image19.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 777169,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.741,
+      "path": "presentations/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
+      "sha256": "0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09",
+      "sourcePaths": [
+        "ppt/media/image2.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 48778,
+      "extension": "jpeg",
+      "kind": "image",
+      "mb": 0.047,
+      "path": "presentations/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+      "sha256": "10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369",
+      "sourcePaths": [
+        "ppt/media/image5.jpeg"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 6442019,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 6.144,
+      "path": "presentations/shared-assets/viscereality/optimized/1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a.webm",
+      "sha256": "1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a",
+      "sourcePaths": [
+        "ppt/media/image25.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "1512d9dc6b0459c00603f5c41141581099c73b152fcce0054401f5e46fe9538c": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 20061,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.019,
+      "path": "presentations/shared-assets/viscereality/source/1512d9dc6b0459c00603f5c41141581099c73b152fcce0054401f5e46fe9538c.png",
+      "sha256": "1512d9dc6b0459c00603f5c41141581099c73b152fcce0054401f5e46fe9538c",
+      "sourcePaths": [
+        "ppt/media/image35.png",
+        "ppt/media/image39.png",
+        "ppt/media/image48.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 7339816,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 7.0,
+      "path": "presentations/shared-assets/viscereality/optimized/19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857.webm",
+      "sha256": "19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857",
+      "sourcePaths": [
+        "ppt/media/image31.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "1a85824b14478f94bc00f8ff1b2413886eae78a0b73f26b0a2a60745f1cdfb0f": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 393407,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.375,
+      "path": "presentations/shared-assets/viscereality/optimized/1a85824b14478f94bc00f8ff1b2413886eae78a0b73f26b0a2a60745f1cdfb0f.webm",
+      "sha256": "1a85824b14478f94bc00f8ff1b2413886eae78a0b73f26b0a2a60745f1cdfb0f",
+      "sourcePaths": [
+        "ppt/media/image7.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "optimized",
+      "bytes": 39539631,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 37.708,
+      "path": "presentations/shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4",
+      "sha256": "1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022",
+      "sourcePaths": [
+        "ppt/media/media3.mp4"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "1c0a595e15df85cec1d9c4dbeededcd78bc8996603a58dbb4847a6ad78e7fa4b": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 839527,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.801,
+      "path": "presentations/shared-assets/viscereality/optimized/1c0a595e15df85cec1d9c4dbeededcd78bc8996603a58dbb4847a6ad78e7fa4b.webm",
+      "sha256": "1c0a595e15df85cec1d9c4dbeededcd78bc8996603a58dbb4847a6ad78e7fa4b",
+      "sourcePaths": [
+        "ppt/media/image15.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "optimized",
+      "bytes": 36611613,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 34.916,
+      "path": "presentations/shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4",
+      "sha256": "1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad",
+      "sourcePaths": [
+        "ppt/media/media1.mp4"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "226f963a1b00a3fdb352aa2da09c028f7056f4ce60a238790771d51c72b76f16": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 12902165,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 12.304,
+      "path": "presentations/shared-assets/viscereality/optimized/226f963a1b00a3fdb352aa2da09c028f7056f4ce60a238790771d51c72b76f16.webm",
+      "sha256": "226f963a1b00a3fdb352aa2da09c028f7056f4ce60a238790771d51c72b76f16",
+      "sourcePaths": [
+        "ppt/media/image24.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 99710,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.095,
+      "path": "presentations/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
+      "sha256": "263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00",
+      "sourcePaths": [
+        "ppt/media/image12.png",
+        "ppt/media/image19.png",
+        "ppt/media/image8.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "272c91265a91f2a7aad8dd0e658888402ea521ca93bacd9c6299b2520b21508c": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 16128836,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 15.382,
+      "path": "presentations/shared-assets/viscereality/optimized/272c91265a91f2a7aad8dd0e658888402ea521ca93bacd9c6299b2520b21508c.webm",
+      "sha256": "272c91265a91f2a7aad8dd0e658888402ea521ca93bacd9c6299b2520b21508c",
+      "sourcePaths": [
+        "ppt/media/image28.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 17353123,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 16.549,
+      "path": "presentations/shared-assets/viscereality/optimized/27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b.webm",
+      "sha256": "27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b",
+      "sourcePaths": [
+        "ppt/media/image33.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "306c6a965da8d2a7dbcc1f9902a1c487fa71a3f503c8a4e7cdc904f55d08ca44": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 22663,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.022,
+      "path": "presentations/shared-assets/viscereality/source/306c6a965da8d2a7dbcc1f9902a1c487fa71a3f503c8a4e7cdc904f55d08ca44.png",
+      "sha256": "306c6a965da8d2a7dbcc1f9902a1c487fa71a3f503c8a4e7cdc904f55d08ca44",
+      "sourcePaths": [
+        "ppt/media/image9.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 30882400,
+      "extension": "png",
+      "kind": "image",
+      "mb": 29.452,
+      "path": "presentations/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
+      "sha256": "32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1",
+      "sourcePaths": [
+        "ppt/media/image1.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 726074,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.692,
+      "path": "presentations/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
+      "sha256": "3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990",
+      "sourcePaths": [
+        "ppt/media/image23.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "34972bf9690c0d40c6d4d152ade29b327e3845ca9c136d97d4eaf8f85f07130d": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 12790,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.012,
+      "path": "presentations/shared-assets/viscereality/source/34972bf9690c0d40c6d4d152ade29b327e3845ca9c136d97d4eaf8f85f07130d.png",
+      "sha256": "34972bf9690c0d40c6d4d152ade29b327e3845ca9c136d97d4eaf8f85f07130d",
+      "sourcePaths": [
+        "ppt/media/image34.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 12902165,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 12.304,
+      "path": "presentations/shared-assets/viscereality/optimized/34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80.webm",
+      "sha256": "34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80",
+      "sourcePaths": [
+        "ppt/media/image32.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "3567a5c556bbe84646c78533320dbbcc1694c7b765ad5f3186f9c30fe1222713": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2441238,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.328,
+      "path": "presentations/shared-assets/viscereality/source/3567a5c556bbe84646c78533320dbbcc1694c7b765ad5f3186f9c30fe1222713.png",
+      "sha256": "3567a5c556bbe84646c78533320dbbcc1694c7b765ad5f3186f9c30fe1222713",
+      "sourcePaths": [
+        "ppt/media/image37.png",
+        "ppt/media/image42.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "36274648da82e4e8ce13c8e893f31f8b8fa336362b23409521ca11dc12a026d4": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 13545,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.013,
+      "path": "presentations/shared-assets/viscereality/source/36274648da82e4e8ce13c8e893f31f8b8fa336362b23409521ca11dc12a026d4.png",
+      "sha256": "36274648da82e4e8ce13c8e893f31f8b8fa336362b23409521ca11dc12a026d4",
+      "sourcePaths": [
+        "ppt/media/image32.png",
+        "ppt/media/image38.png",
+        "ppt/media/image47.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "36f7c32a9dfc174856082e5cc69a40cec9e74fb8d1ea36fc7fb671daf737fcaa": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2191069,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.09,
+      "path": "presentations/shared-assets/viscereality/source/36f7c32a9dfc174856082e5cc69a40cec9e74fb8d1ea36fc7fb671daf737fcaa.png",
+      "sha256": "36f7c32a9dfc174856082e5cc69a40cec9e74fb8d1ea36fc7fb671daf737fcaa",
+      "sourcePaths": [
+        "ppt/media/image33.png",
+        "ppt/media/image38.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "optimized",
+      "bytes": 51253535,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 48.879,
+      "path": "presentations/shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
+      "sha256": "3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9",
+      "sourcePaths": [
+        "ppt/media/media4.mp4"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "3ee8c0b7c58565f3e679f162d06fad0d6706358cc7ba9f7c16aa06b58e414a9c": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 7339816,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 7.0,
+      "path": "presentations/shared-assets/viscereality/optimized/3ee8c0b7c58565f3e679f162d06fad0d6706358cc7ba9f7c16aa06b58e414a9c.webm",
+      "sha256": "3ee8c0b7c58565f3e679f162d06fad0d6706358cc7ba9f7c16aa06b58e414a9c",
+      "sourcePaths": [
+        "ppt/media/image23.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "477ae53194604ba376e3b72b9b62b62bca23a22cf66a983e7902a72c1662dda2": {
+      "alpha": false,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 174186,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 0.166,
+      "path": "presentations/shared-assets/viscereality/optimized/477ae53194604ba376e3b72b9b62b62bca23a22cf66a983e7902a72c1662dda2.mp4",
+      "sha256": "477ae53194604ba376e3b72b9b62b62bca23a22cf66a983e7902a72c1662dda2",
+      "sourcePaths": [
+        "ppt/media/image22.gif",
+        "ppt/media/image27.gif"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 314307,
+      "extension": "wdp",
+      "kind": "image",
+      "mb": 0.3,
+      "path": "presentations/shared-assets/viscereality/source/4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc.wdp",
+      "sha256": "4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc",
+      "sourcePaths": [
+        "ppt/media/hdphoto1.wdp"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 14614792,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 13.938,
+      "path": "presentations/shared-assets/viscereality/optimized/4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82.webm",
+      "sha256": "4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82",
+      "sourcePaths": [
+        "ppt/media/image14.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "4ae23674e0da1640a5ce284a1715a9335ae22efd774b79006695127d66c8a216": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 22070,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.021,
+      "path": "presentations/shared-assets/viscereality/source/4ae23674e0da1640a5ce284a1715a9335ae22efd774b79006695127d66c8a216.png",
+      "sha256": "4ae23674e0da1640a5ce284a1715a9335ae22efd774b79006695127d66c8a216",
+      "sourcePaths": [
+        "ppt/media/image33.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "51f085819f7b3736ef912dc725de3c1670b26ff5ce096774a31d835355968665": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 1719753,
+      "extension": "png",
+      "kind": "image",
+      "mb": 1.64,
+      "path": "presentations/shared-assets/viscereality/source/51f085819f7b3736ef912dc725de3c1670b26ff5ce096774a31d835355968665.png",
+      "sha256": "51f085819f7b3736ef912dc725de3c1670b26ff5ce096774a31d835355968665",
+      "sourcePaths": [
+        "ppt/media/image10.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "5983c6acf79e6e5605442a5188aae882795295de25a6491549c62501214466a2": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2259313,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.155,
+      "path": "presentations/shared-assets/viscereality/source/5983c6acf79e6e5605442a5188aae882795295de25a6491549c62501214466a2.png",
+      "sha256": "5983c6acf79e6e5605442a5188aae882795295de25a6491549c62501214466a2",
+      "sourcePaths": [
+        "ppt/media/image32.png",
+        "ppt/media/image37.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "5b0858ed7682ac6f8c3994c607a1dca2ae901d91ca3bf86a53c6d7dc17c53b6d": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 661714,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.631,
+      "path": "presentations/shared-assets/viscereality/source/5b0858ed7682ac6f8c3994c607a1dca2ae901d91ca3bf86a53c6d7dc17c53b6d.png",
+      "sha256": "5b0858ed7682ac6f8c3994c607a1dca2ae901d91ca3bf86a53c6d7dc17c53b6d",
+      "sourcePaths": [
+        "ppt/media/image35.png",
+        "ppt/media/image40.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2901966,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.768,
+      "path": "presentations/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+      "sha256": "5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0",
+      "sourcePaths": [
+        "ppt/media/image29.png",
+        "ppt/media/image34.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 68736,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.066,
+      "path": "presentations/shared-assets/viscereality/optimized/60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960.webm",
+      "sha256": "60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960",
+      "sourcePaths": [
+        "ppt/media/image26.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "63ac9249e020c95f8e1bab824d2fb582eb9689d2ac0581e82c99683e8129357b": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 368508,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.351,
+      "path": "presentations/shared-assets/viscereality/optimized/63ac9249e020c95f8e1bab824d2fb582eb9689d2ac0581e82c99683e8129357b.webm",
+      "sha256": "63ac9249e020c95f8e1bab824d2fb582eb9689d2ac0581e82c99683e8129357b",
+      "sourcePaths": [
+        "ppt/media/image43.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 162742,
+      "extension": "wdp",
+      "kind": "image",
+      "mb": 0.155,
+      "path": "presentations/shared-assets/viscereality/source/643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f.wdp",
+      "sha256": "643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f",
+      "sourcePaths": [
+        "ppt/media/hdphoto1.wdp"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "6df2f308c42258aa1e1e8737c58b9f2dd5b63208923d36212a832f0731f54c22": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2901,
+      "extension": "svg",
+      "kind": "svg",
+      "mb": 0.003,
+      "path": "presentations/shared-assets/viscereality/source/6df2f308c42258aa1e1e8737c58b9f2dd5b63208923d36212a832f0731f54c22.svg",
+      "sha256": "6df2f308c42258aa1e1e8737c58b9f2dd5b63208923d36212a832f0731f54c22",
+      "sourcePaths": [
+        "ppt/media/image45.svg"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 26060,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.025,
+      "path": "presentations/shared-assets/viscereality/source/7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a.png",
+      "sha256": "7041a89b6a87c7c8ded17cae588735d5dc188035fcf9dd18b68e64c3c5b21e6a",
+      "sourcePaths": [
+        "ppt/media/image12.png"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1887012,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 1.8,
+      "path": "presentations/shared-assets/viscereality/optimized/767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94.webm",
+      "sha256": "767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94",
+      "sourcePaths": [
+        "ppt/media/image17.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 16128836,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 15.382,
+      "path": "presentations/shared-assets/viscereality/optimized/78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f.webm",
+      "sha256": "78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f",
+      "sourcePaths": [
+        "ppt/media/image21.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "7997219068d65f9d57e8b4abdb272f22b9cc311a81736c9cfae7f23e38a9b612": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 20968882,
+      "extension": "png",
+      "kind": "image",
+      "mb": 19.997,
+      "path": "presentations/shared-assets/viscereality/source/7997219068d65f9d57e8b4abdb272f22b9cc311a81736c9cfae7f23e38a9b612.png",
+      "sha256": "7997219068d65f9d57e8b4abdb272f22b9cc311a81736c9cfae7f23e38a9b612",
+      "sourcePaths": [
+        "ppt/media/image11.png",
+        "ppt/media/image15.png",
+        "ppt/media/image20.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "7bfaf4e37749aa36932aaed72d00464c1f8da4adb04d8ce12fcaf24de9a3e7c4": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1554662,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 1.483,
+      "path": "presentations/shared-assets/viscereality/optimized/7bfaf4e37749aa36932aaed72d00464c1f8da4adb04d8ce12fcaf24de9a3e7c4.webm",
+      "sha256": "7bfaf4e37749aa36932aaed72d00464c1f8da4adb04d8ce12fcaf24de9a3e7c4",
+      "sourcePaths": [
+        "ppt/media/image3.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "7d0faee481907e7f0345a1056da1cdbeab252bfa96f482415012ecccb1ee558a": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 24946,
+      "extension": "svg",
+      "kind": "svg",
+      "mb": 0.024,
+      "path": "presentations/shared-assets/viscereality/source/7d0faee481907e7f0345a1056da1cdbeab252bfa96f482415012ecccb1ee558a.svg",
+      "sha256": "7d0faee481907e7f0345a1056da1cdbeab252bfa96f482415012ecccb1ee558a",
+      "sourcePaths": [
+        "ppt/media/image11.svg"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "83705c388c75b1681af63ee2305b16d7b653cf18afc2b93ee3a26d72b5d45076": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 830731,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.792,
+      "path": "presentations/shared-assets/viscereality/source/83705c388c75b1681af63ee2305b16d7b653cf18afc2b93ee3a26d72b5d45076.png",
+      "sha256": "83705c388c75b1681af63ee2305b16d7b653cf18afc2b93ee3a26d72b5d45076",
+      "sourcePaths": [
+        "ppt/media/image13.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 68736,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.066,
+      "path": "presentations/shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
+      "sha256": "8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9",
+      "sourcePaths": [
+        "ppt/media/image21.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 393407,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.375,
+      "path": "presentations/shared-assets/viscereality/optimized/85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe.webm",
+      "sha256": "85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe",
+      "sourcePaths": [
+        "ppt/media/image7.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "890e34aba160dc601eafb96cfb1ae9b8239a49f9422325c6c57093bc8feb9a1d": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2181839,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.081,
+      "path": "presentations/shared-assets/viscereality/source/890e34aba160dc601eafb96cfb1ae9b8239a49f9422325c6c57093bc8feb9a1d.png",
+      "sha256": "890e34aba160dc601eafb96cfb1ae9b8239a49f9422325c6c57093bc8feb9a1d",
+      "sourcePaths": [
+        "ppt/media/image46.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 785497,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.749,
+      "path": "presentations/shared-assets/viscereality/optimized/89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab.webm",
+      "sha256": "89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab",
+      "sourcePaths": [
+        "ppt/media/image17.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 393407,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.375,
+      "path": "presentations/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+      "sha256": "8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8",
+      "sourcePaths": [
+        "ppt/media/image7.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 75459,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.072,
+      "path": "presentations/shared-assets/viscereality/optimized/918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924.webm",
+      "sha256": "918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924",
+      "sourcePaths": [
+        "ppt/media/image23.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "924b941e96fcbc924948625dd8b988e71a0d34d1176a93302fca677c1eef7997": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 887977,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.847,
+      "path": "presentations/shared-assets/viscereality/source/924b941e96fcbc924948625dd8b988e71a0d34d1176a93302fca677c1eef7997.png",
+      "sha256": "924b941e96fcbc924948625dd8b988e71a0d34d1176a93302fca677c1eef7997",
+      "sourcePaths": [
+        "ppt/media/image14.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 162742,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.155,
+      "path": "presentations/shared-assets/viscereality/source/9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1.png",
+      "sha256": "9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1",
+      "sourcePaths": [
+        "ppt/media/image21.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "9a2cc9c3c608d14dd93ac0c3a2bfc7c89648aa57ec2698b68cf45a431677407e": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 1411391,
+      "extension": "png",
+      "kind": "image",
+      "mb": 1.346,
+      "path": "presentations/shared-assets/viscereality/source/9a2cc9c3c608d14dd93ac0c3a2bfc7c89648aa57ec2698b68cf45a431677407e.png",
+      "sha256": "9a2cc9c3c608d14dd93ac0c3a2bfc7c89648aa57ec2698b68cf45a431677407e",
+      "sourcePaths": [
+        "ppt/media/image16.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "9b92ac5fdaee11f8496c45bc607d9b75b73b208e554fa91e9422987c26e07777": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 14614792,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 13.938,
+      "path": "presentations/shared-assets/viscereality/optimized/9b92ac5fdaee11f8496c45bc607d9b75b73b208e554fa91e9422987c26e07777.webm",
+      "sha256": "9b92ac5fdaee11f8496c45bc607d9b75b73b208e554fa91e9422987c26e07777",
+      "sourcePaths": [
+        "ppt/media/image22.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "9c2133f7d17b5673625720314275eb08e1e54a38f1ed531ed0dfd86a2ed08655": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 899887,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.858,
+      "path": "presentations/shared-assets/viscereality/source/9c2133f7d17b5673625720314275eb08e1e54a38f1ed531ed0dfd86a2ed08655.png",
+      "sha256": "9c2133f7d17b5673625720314275eb08e1e54a38f1ed531ed0dfd86a2ed08655",
+      "sourcePaths": [
+        "ppt/media/image14.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "9cde1fe8ee683b801d0cce906adb4f70416db16c413b3600817406240739d597": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 665462,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.635,
+      "path": "presentations/shared-assets/viscereality/optimized/9cde1fe8ee683b801d0cce906adb4f70416db16c413b3600817406240739d597.webm",
+      "sha256": "9cde1fe8ee683b801d0cce906adb4f70416db16c413b3600817406240739d597",
+      "sourcePaths": [
+        "ppt/media/image18.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "a13cd62808a6e19f52b12956064025588526cf243fd9e32ca1edfaafda4391d9": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 270372,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.258,
+      "path": "presentations/shared-assets/viscereality/source/a13cd62808a6e19f52b12956064025588526cf243fd9e32ca1edfaafda4391d9.png",
+      "sha256": "a13cd62808a6e19f52b12956064025588526cf243fd9e32ca1edfaafda4391d9",
+      "sourcePaths": [
+        "ppt/media/image43.png",
+        "ppt/media/image52.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 12902165,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 12.304,
+      "path": "presentations/shared-assets/viscereality/optimized/a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4.webm",
+      "sha256": "a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4",
+      "sourcePaths": [
+        "ppt/media/image27.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 785497,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.749,
+      "path": "presentations/shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
+      "sha256": "a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b",
+      "sourcePaths": [
+        "ppt/media/image11.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 16128836,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 15.382,
+      "path": "presentations/shared-assets/viscereality/optimized/a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06.webm",
+      "sha256": "a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06",
+      "sourcePaths": [
+        "ppt/media/image16.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "a4713bb29c841f13de78b82f4b32e347620c4e57253a7413400222a970643dc3": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2501032,
+      "extension": "png",
+      "kind": "image",
+      "mb": 2.385,
+      "path": "presentations/shared-assets/viscereality/source/a4713bb29c841f13de78b82f4b32e347620c4e57253a7413400222a970643dc3.png",
+      "sha256": "a4713bb29c841f13de78b82f4b32e347620c4e57253a7413400222a970643dc3",
+      "sourcePaths": [
+        "ppt/media/image34.png",
+        "ppt/media/image39.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "a5e4b87310656323a2e1f945ce3d5cf89aa86c0a91d6fdee1f123227b05b71fa": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 6442019,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 6.144,
+      "path": "presentations/shared-assets/viscereality/optimized/a5e4b87310656323a2e1f945ce3d5cf89aa86c0a91d6fdee1f123227b05b71fa.webm",
+      "sha256": "a5e4b87310656323a2e1f945ce3d5cf89aa86c0a91d6fdee1f123227b05b71fa",
+      "sourcePaths": [
+        "ppt/media/image27.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 91032,
+      "extension": "svg",
+      "kind": "svg",
+      "mb": 0.087,
+      "path": "presentations/shared-assets/viscereality/source/a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8.svg",
+      "sha256": "a6d39beb99b23807ff7a2fe17853753d45cf5bdd663b2c8d69fe65d1057cd9d8",
+      "sourcePaths": [
+        "ppt/media/image10.svg"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "acc7363b4a123fae87cf219c5bd962443065974ac873ecf22e26cbd4bc8f0fb3": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 2013445,
+      "extension": "png",
+      "kind": "image",
+      "mb": 1.92,
+      "path": "presentations/shared-assets/viscereality/source/acc7363b4a123fae87cf219c5bd962443065974ac873ecf22e26cbd4bc8f0fb3.png",
+      "sha256": "acc7363b4a123fae87cf219c5bd962443065974ac873ecf22e26cbd4bc8f0fb3",
+      "sourcePaths": [
+        "ppt/media/image30.png",
+        "ppt/media/image35.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "af7c3bc55e1aaad03c32c7fa959b1a878bc4cfb715d526db9f992cc32b590a1f": {
+      "alpha": false,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 26247040,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 25.031,
+      "path": "presentations/shared-assets/viscereality/optimized/af7c3bc55e1aaad03c32c7fa959b1a878bc4cfb715d526db9f992cc32b590a1f.mp4",
+      "sha256": "af7c3bc55e1aaad03c32c7fa959b1a878bc4cfb715d526db9f992cc32b590a1f",
+      "sourcePaths": [
+        "ppt/media/image10.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "b43ce781d1819c88df14e0892356a7646092619c768e83531da46ea7ed58d86a": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 745910,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.711,
+      "path": "presentations/shared-assets/viscereality/source/b43ce781d1819c88df14e0892356a7646092619c768e83531da46ea7ed58d86a.png",
+      "sha256": "b43ce781d1819c88df14e0892356a7646092619c768e83531da46ea7ed58d86a",
+      "sourcePaths": [
+        "ppt/media/image13.png",
+        "ppt/media/image18.png",
+        "ppt/media/image8.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "b766a738afcd696ed76248d2f8641c0179a2c204de6ba196eae7311ed11fd811": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 35176,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.034,
+      "path": "presentations/shared-assets/viscereality/optimized/b766a738afcd696ed76248d2f8641c0179a2c204de6ba196eae7311ed11fd811.webm",
+      "sha256": "b766a738afcd696ed76248d2f8641c0179a2c204de6ba196eae7311ed11fd811",
+      "sourcePaths": [
+        "ppt/media/image16.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "b7ecee47fb0c4df28a8ed2a48ff32704b9964829c2ef68c82a261e47de79742c": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 12720,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.012,
+      "path": "presentations/shared-assets/viscereality/source/b7ecee47fb0c4df28a8ed2a48ff32704b9964829c2ef68c82a261e47de79742c.png",
+      "sha256": "b7ecee47fb0c4df28a8ed2a48ff32704b9964829c2ef68c82a261e47de79742c",
+      "sourcePaths": [
+        "ppt/media/image20.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 6442019,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 6.144,
+      "path": "presentations/shared-assets/viscereality/optimized/cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4.webm",
+      "sha256": "cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4",
+      "sourcePaths": [
+        "ppt/media/image30.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 75459,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.072,
+      "path": "presentations/shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
+      "sha256": "cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469",
+      "sourcePaths": [
+        "ppt/media/image18.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "cd778e867c201f1709d2bc692da0682e27d69c722b7cdcea950aba981a8315a5": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 38060,
+      "extension": "svg",
+      "kind": "svg",
+      "mb": 0.036,
+      "path": "presentations/shared-assets/viscereality/source/cd778e867c201f1709d2bc692da0682e27d69c722b7cdcea950aba981a8315a5.svg",
+      "sha256": "cd778e867c201f1709d2bc692da0682e27d69c722b7cdcea950aba981a8315a5",
+      "sourcePaths": [
+        "ppt/media/image8.svg"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 103853,
+      "extension": "wdp",
+      "kind": "image",
+      "mb": 0.099,
+      "path": "presentations/shared-assets/viscereality/source/ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58.wdp",
+      "sha256": "ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58",
+      "sourcePaths": [
+        "ppt/media/hdphoto1.wdp"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "cf37f61efda0361077aa2812d7aaaef86eb197fb693b66ef2396adfa4a7cbed0": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 29448,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.028,
+      "path": "presentations/shared-assets/viscereality/source/cf37f61efda0361077aa2812d7aaaef86eb197fb693b66ef2396adfa4a7cbed0.png",
+      "sha256": "cf37f61efda0361077aa2812d7aaaef86eb197fb693b66ef2396adfa4a7cbed0",
+      "sourcePaths": [
+        "ppt/media/image37.png",
+        "ppt/media/image41.png",
+        "ppt/media/image50.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "d2d318cbf3bc37327a8b6869e024a8c220aeec87370781c40dfd06b42effb3ea": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 24108,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.023,
+      "path": "presentations/shared-assets/viscereality/source/d2d318cbf3bc37327a8b6869e024a8c220aeec87370781c40dfd06b42effb3ea.png",
+      "sha256": "d2d318cbf3bc37327a8b6869e024a8c220aeec87370781c40dfd06b42effb3ea",
+      "sourcePaths": [
+        "ppt/media/image36.png",
+        "ppt/media/image40.png",
+        "ppt/media/image49.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1554662,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 1.483,
+      "path": "presentations/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+      "sha256": "d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1",
+      "sourcePaths": [
+        "ppt/media/image3.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "d34f035df2da0ebc589b7f2abeb1d0f01a89b71d0d76fbb4b1a1e97f91e9a634": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 530198,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.506,
+      "path": "presentations/shared-assets/viscereality/source/d34f035df2da0ebc589b7f2abeb1d0f01a89b71d0d76fbb4b1a1e97f91e9a634.png",
+      "sha256": "d34f035df2da0ebc589b7f2abeb1d0f01a89b71d0d76fbb4b1a1e97f91e9a634",
+      "sourcePaths": [
+        "ppt/media/image13.png",
+        "ppt/media/image20.png",
+        "ppt/media/image25.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "d68efd24c1a1ce4bd454e6fe4faded35a5be50861c499744e6a986b071f5f68c": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 675518,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.644,
+      "path": "presentations/shared-assets/viscereality/source/d68efd24c1a1ce4bd454e6fe4faded35a5be50861c499744e6a986b071f5f68c.png",
+      "sha256": "d68efd24c1a1ce4bd454e6fe4faded35a5be50861c499744e6a986b071f5f68c",
+      "sourcePaths": [
+        "ppt/media/image15.png"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 726074,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.692,
+      "path": "presentations/shared-assets/viscereality/optimized/dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a.webm",
+      "sha256": "dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a",
+      "sourcePaths": [
+        "ppt/media/image28.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "dd5706fe993087a4c74fb20c0c8d86b83a15c981802290ce88b65bd114cdd5a0": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 4462858,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 4.256,
+      "path": "presentations/shared-assets/viscereality/optimized/dd5706fe993087a4c74fb20c0c8d86b83a15c981802290ce88b65bd114cdd5a0.webm",
+      "sha256": "dd5706fe993087a4c74fb20c0c8d86b83a15c981802290ce88b65bd114cdd5a0",
+      "sourcePaths": [
+        "ppt/media/image26.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 2272727,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 2.167,
+      "path": "presentations/shared-assets/viscereality/optimized/df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890.webm",
+      "sha256": "df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890",
+      "sourcePaths": [
+        "ppt/media/image36.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 14921,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.014,
+      "path": "presentations/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+      "sha256": "e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56",
+      "sourcePaths": [
+        "ppt/media/image6.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 4462858,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 4.256,
+      "path": "presentations/shared-assets/viscereality/optimized/e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10.webm",
+      "sha256": "e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10",
+      "sourcePaths": [
+        "ppt/media/image29.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 17353123,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 16.549,
+      "path": "presentations/shared-assets/viscereality/optimized/e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3.webm",
+      "sha256": "e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3",
+      "sourcePaths": [
+        "ppt/media/image28.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 4462858,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 4.256,
+      "path": "presentations/shared-assets/viscereality/optimized/e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72.webm",
+      "sha256": "e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72",
+      "sourcePaths": [
+        "ppt/media/image24.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6": {
+      "alpha": null,
+      "animated": false,
+      "bucket": "optimized",
+      "bytes": 44745117,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 42.672,
+      "path": "presentations/shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4",
+      "sha256": "ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6",
+      "sourcePaths": [
+        "ppt/media/media2.mp4"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "eaa4ec39de9bc170f6d7ae920a3ac6a67d85866781aa63b4f99f87815415d8ed": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 102698,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.098,
+      "path": "presentations/shared-assets/viscereality/source/eaa4ec39de9bc170f6d7ae920a3ac6a67d85866781aa63b4f99f87815415d8ed.png",
+      "sha256": "eaa4ec39de9bc170f6d7ae920a3ac6a67d85866781aa63b4f99f87815415d8ed",
+      "sourcePaths": [
+        "ppt/media/image12.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "eb1ea08663c2720ed4bb896f39ee545c11adc43d3f4088b4c13286cad27091a8": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 127641,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.122,
+      "path": "presentations/shared-assets/viscereality/source/eb1ea08663c2720ed4bb896f39ee545c11adc43d3f4088b4c13286cad27091a8.png",
+      "sha256": "eb1ea08663c2720ed4bb896f39ee545c11adc43d3f4088b4c13286cad27091a8",
+      "sourcePaths": [
+        "ppt/media/image9.png"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "ec79bab8146a8f80cdf959a981f083846ab859256d7ea991abe770cf2808ea60": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 28932,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 0.028,
+      "path": "presentations/shared-assets/viscereality/optimized/ec79bab8146a8f80cdf959a981f083846ab859256d7ea991abe770cf2808ea60.webm",
+      "sha256": "ec79bab8146a8f80cdf959a981f083846ab859256d7ea991abe770cf2808ea60",
+      "sourcePaths": [
+        "ppt/media/image17.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 2272727,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 2.167,
+      "path": "presentations/shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
+      "sha256": "ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52",
+      "sourcePaths": [
+        "ppt/media/image31.gif"
+      ],
+      "usedBy": [
+        "alpCHI"
+      ]
+    },
+    "ee44f269392a4f5993ecdb27d6cba21db8d29e6dc3430f0a47e92912539cfff0": {
+      "alpha": false,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 124574,
+      "extension": "jpg",
+      "kind": "image",
+      "mb": 0.119,
+      "path": "presentations/shared-assets/viscereality/source/ee44f269392a4f5993ecdb27d6cba21db8d29e6dc3430f0a47e92912539cfff0.jpg",
+      "sha256": "ee44f269392a4f5993ecdb27d6cba21db8d29e6dc3430f0a47e92912539cfff0",
+      "sourcePaths": [
+        "ppt/media/image38.jpg",
+        "ppt/media/image42.jpg",
+        "ppt/media/image51.jpg"
+      ],
+      "usedBy": [
+        "BBD26",
+        "MuC",
+        "alpCHI"
+      ]
+    },
+    "eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1887012,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 1.8,
+      "path": "presentations/shared-assets/viscereality/optimized/eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e.webm",
+      "sha256": "eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e",
+      "sourcePaths": [
+        "ppt/media/image22.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4": {
+      "alpha": true,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 1554662,
+      "extension": "webm",
+      "kind": "video",
+      "mb": 1.483,
+      "path": "presentations/shared-assets/viscereality/optimized/f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4.webm",
+      "sha256": "f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4",
+      "sourcePaths": [
+        "ppt/media/image3.gif"
+      ],
+      "usedBy": [
+        "BBD26"
+      ]
+    },
+    "f48c9a5a1946bc536d7b537a1bd45265c56485a67cb27aed1ddf8ac99ed0172b": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 1753010,
+      "extension": "png",
+      "kind": "image",
+      "mb": 1.672,
+      "path": "presentations/shared-assets/viscereality/source/f48c9a5a1946bc536d7b537a1bd45265c56485a67cb27aed1ddf8ac99ed0172b.png",
+      "sha256": "f48c9a5a1946bc536d7b537a1bd45265c56485a67cb27aed1ddf8ac99ed0172b",
+      "sourcePaths": [
+        "ppt/media/image36.png",
+        "ppt/media/image41.png"
+      ],
+      "usedBy": [
+        "BBD26",
+        "alpCHI"
+      ]
+    },
+    "ffaba73de449df5c62ddf02a57ddb5c9752ddc15784cee5c0d1a259a4e1cb801": {
+      "alpha": true,
+      "animated": false,
+      "bucket": "source",
+      "bytes": 358633,
+      "extension": "png",
+      "kind": "image",
+      "mb": 0.342,
+      "path": "presentations/shared-assets/viscereality/source/ffaba73de449df5c62ddf02a57ddb5c9752ddc15784cee5c0d1a259a4e1cb801.png",
+      "sha256": "ffaba73de449df5c62ddf02a57ddb5c9752ddc15784cee5c0d1a259a4e1cb801",
+      "sourcePaths": [
+        "ppt/media/image30.png"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    },
+    "ffac3aea6671ac67c5248969af56d489f1aa8c9629f2309cf68a68bc9682d238": {
+      "alpha": false,
+      "animated": true,
+      "bucket": "optimized",
+      "bytes": 9855336,
+      "extension": "mp4",
+      "kind": "video",
+      "mb": 9.399,
+      "path": "presentations/shared-assets/viscereality/optimized/ffac3aea6671ac67c5248969af56d489f1aa8c9629f2309cf68a68bc9682d238.mp4",
+      "sha256": "ffac3aea6671ac67c5248969af56d489f1aa8c9629f2309cf68a68bc9682d238",
+      "sourcePaths": [
+        "ppt/media/image9.gif"
+      ],
+      "usedBy": [
+        "MuC"
+      ]
+    }
+  },
+  "familyId": "viscereality",
+  "generatedAtUtc": "2026-07-03T17:21:51+00:00",
+  "schema": "pptx-html-presenter.shared-assets.v1"
+}

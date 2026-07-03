@@ -1,16 +1,18 @@
 # Active Constraints
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 These are the current durable constraints for `viscereality.org`. Update this file when the site's expected behavior changes.
 
 ## AI Workflow
 
+- Read [README.md](README.md), this file, [subprojects.md](subprojects.md), and any relevant subproject status file in `for-ai/` before making architectural or workflow changes.
 - Preserve existing user changes. Check `git status --short` before editing and do not revert unrelated modified or untracked files.
 - Keep changes scoped to the requested website or subproject behavior.
 - Prefer the site's existing static HTML, CSS, and plain JavaScript patterns unless a subproject already uses another stack.
 - For scientific or clinical claims, use cautious wording, keep citations attached to claims, and verify new evidence before adding it.
 - When adding durable project rules, update this `for-ai` folder as part of the same change.
+- When working on `tools/pptx-html-presenter` or generated presentation folders, update [pptx-html-family-status.md](pptx-html-family-status.md) with solved problems, remaining blockers, and next validation steps before final commit.
 
 ## Site Identity
 
@@ -40,6 +42,8 @@ These are the current durable constraints for `viscereality.org`. Update this fi
 - Prefer optimized posters and lazy loading for video-heavy sections.
 - Do not move or rename generated presentation chunks without updating their manifests and player references.
 - Avoid committing private source paths, credentials, or machine-specific absolute paths into user-facing pages.
+- For scene-rendered presentations, public runtime assets should be GitHub Pages-safe. Avoid publishing source/provenance blobs above 100 MiB when an optimized runtime asset exists; keep provenance in reports/JSON instead.
+- Super-large presentation media should be converted into visually lossless or visually acceptable HTML-friendly formats before publication. Prefer MP4 for opaque video-like GIFs/videos, alpha-capable WebM/WebP for transparent animations, and preserve original GIF only when it is small enough or no faithful alpha-safe conversion exists.
 
 ## Accessibility And Mobile
 

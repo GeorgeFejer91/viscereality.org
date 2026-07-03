@@ -1,0 +1,37 @@
+{
+  "assetCount": 39,
+  "assetMode": "copy",
+  "generatedAtUtc": "2026-07-03T17:21:40+00:00",
+  "githubPagesSafe": true,
+  "originalGithubPagesSafe": true,
+  "originalStatus": "ok",
+  "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
+  "playerFile": "index.html",
+  "prunedFallbackAssets": {
+    "bytes": 0,
+    "count": 0
+  },
+  "sceneFile": "deck.scene.json",
+  "schema": "pptx-html-presenter.build.v1",
+  "sharedAssets": {
+    "deckId": "MuC",
+    "githubPagesSafe": true,
+    "index": "presentations/shared-assets/viscereality/asset-index.json",
+    "maxAssetMb": 29.452,
+    "missingReferences": [],
+    "oversizeAssets": [],
+    "prunedLocalAssets": {
+      "bytes": 178074253,
+      "count": 39,
+      "mb": 169.825
+    },
+    "rewrittenReferences": 78,
+    "root": "presentations/shared-assets/viscereality"
+  },
+  "slideCount": 17,
+  "source": {
+    "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\Viscereality_MuC.pptx",
+    "sha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608"
+  },
+  "status": "ok"
+}

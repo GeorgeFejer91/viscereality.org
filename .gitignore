@@ -7,7 +7,13 @@ ppt-chunker/ppt-chunker/output_*/
 
 # Local presentation source decks and heavy research/video bundles.
 presentations/*.pptx
-alpCHI/
+/alpCHI/
+
+# Rebuildable PPTX-to-HTML staging outputs. Public scene players live in
+# presentations/MuC, presentations/alpCHI, and presentations/BBD26.
+presentations/MuC-scene/
+presentations/alpCHI-scene/
+presentations/BBD26-scene-new/
 
 # Visual QA screenshots and candidate sweeps are local artifacts; keep direct
 # QA JSON overrides/reports available for reproducible presenter builds.

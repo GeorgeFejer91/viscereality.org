@@ -1,6 +1,6 @@
 # PPTX-To-HTML One-To-One Mapper Plan
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 This is the target architecture for `tools/pptx-html-presenter/`: a PowerPoint-to-HTML compiler that recreates the PPTX object model as browser objects. The goal is not to export full-slide screenshots or video chunks. The goal is a static website presentation where every PowerPoint element that can remain an object does remain an object, and Morph transitions move those objects or object groups directly.
 
@@ -110,6 +110,18 @@ Extract original assets byte-for-byte first:
 - Keep video as video when source video exists.
 - Keep SVG as SVG when browser-compatible.
 - Enforce GitHub Pages file-size limits with reports, not silent quality loss.
+- In family/shared-asset publishing, do not keep an oversized original source asset in the public shared asset tree when the runtime uses an optimized copy. Preserve the original asset hash/source path in reports and `asset-index.json`, but publish only GitHub-safe runtime assets unless the user explicitly approves large-file/LFS handling.
+
+## Multi-Deck Family Strategy
+
+The current reusable target includes deck families, not only single decks:
+
+- Three public deck URLs (`/presentations/MuC/`, `/presentations/alpCHI/`, `/presentations/BBD26/`) must remain separate and clickable.
+- Shared media should be stored once under `presentations/shared-assets/viscereality/`.
+- Each `deck.scene.json` should reference shared assets with relative URLs such as `../shared-assets/viscereality/optimized/<hash>.<ext>`.
+- Public sharing must be invisible to users: browser history, fullscreen, navigation, and player state remain per deck.
+- Duplicate assets are deduped by SHA-256 across the family; optimized outputs are deduped by output content hash.
+- Existing chunked players may be archived as `MuC-chunked`, `alpCHI-chunked`, and `BBD26-chunked` after scene QA passes.
 
 ## QA Workflow
 

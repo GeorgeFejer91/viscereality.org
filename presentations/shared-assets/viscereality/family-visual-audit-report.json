@@ -1,0 +1,53 @@
+{
+  "decks": [
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
+      "deckId": "MuC",
+      "report": "presentations\\MuC-scene\\qa\\visual-audit\\report.json",
+      "status": "passed",
+      "summary": {
+        "capturedCount": 145,
+        "failureCount": 0,
+        "forwardTransitionCount": 112,
+        "reverseTransitionCount": 16,
+        "sampleCount": 145,
+        "settledSlideCount": 17,
+        "warningCount": 0
+      }
+    },
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
+      "deckId": "alpCHI",
+      "report": "presentations\\alpCHI-scene\\qa\\visual-audit\\report.json",
+      "status": "passed",
+      "summary": {
+        "capturedCount": 217,
+        "failureCount": 0,
+        "forwardTransitionCount": 168,
+        "reverseTransitionCount": 24,
+        "sampleCount": 217,
+        "settledSlideCount": 25,
+        "warningCount": 0
+      }
+    },
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
+      "deckId": "BBD26",
+      "report": "presentations\\BBD26-scene-new\\qa\\visual-audit\\report.json",
+      "status": "passed",
+      "summary": {
+        "capturedCount": 280,
+        "failureCount": 0,
+        "forwardTransitionCount": 217,
+        "reverseTransitionCount": 31,
+        "sampleCount": 280,
+        "settledSlideCount": 32,
+        "warningCount": 0
+      }
+    }
+  ],
+  "familyId": "viscereality",
+  "generatedAtUtc": "2026-07-03T17:42:16+00:00",
+  "schema": "pptx-html-presenter.family.visual-audit.v1",
+  "status": "ok"
+}

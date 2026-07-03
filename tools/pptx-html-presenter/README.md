@@ -57,7 +57,51 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py reference deck.pptx `
 
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py publish presentations\MyDeck `
   --deck MyDeck
+
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family inspect `
+  presentations\viscereality-family.config.json
+
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build `
+  presentations\viscereality-family.config.json
+
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit `
+  presentations\viscereality-family.config.json
+
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family publish `
+  presentations\viscereality-family.config.json
 ```
+
+## Family Mode
+
+Family mode compiles several related PPTX decks as separate playable
+presentations while sharing one content-hashed asset library underneath the UI.
+For Viscereality, the family config is:
+
+```text
+presentations/viscereality-family.config.json
+```
+
+It maps:
+
+- `presentations/Viscereality_MuC.pptx` to `presentations/MuC-scene`, then public `presentations/MuC`.
+- `presentations/Viscereality_alpCHI_v2.pptx` to `presentations/alpCHI-scene`, then public `presentations/alpCHI`.
+- `presentations/20260512_BreathworkDays_Berlin_new.pptx` to `presentations/BBD26-scene-new`, then public `presentations/BBD26`.
+
+Shared media is written once under:
+
+```text
+presentations/shared-assets/viscereality/
+```
+
+Each generated `deck.scene.json` keeps normal browser object layers but rewrites
+asset URLs to `../shared-assets/viscereality/...`, so `/presentations/MuC/`,
+`/presentations/alpCHI/`, and `/presentations/BBD26/` stay independent public
+players while duplicate images, GIFs, videos, and SVGs live only once in Git.
+
+`family publish` archives current chunked public folders as `*-chunked` before
+copying validated scene builds into the canonical deck URLs, then rewrites
+`presentations/shared/decks.js` and `presentations/index.html` for the three
+public deck IDs.
 
 ## Output Contract
 

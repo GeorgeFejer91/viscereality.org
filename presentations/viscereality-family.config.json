@@ -1,0 +1,52 @@
+{
+  "family_id": "viscereality",
+  "title": "Viscereality presentation family",
+  "repo_root": "..",
+  "presenter_config_file": "presentations/viscereality-family.defaults.json",
+  "preflight": {
+    "min_free_gb": 8
+  },
+  "shared_assets": {
+    "root": "presentations/shared-assets/viscereality",
+    "prune_local_deck_assets": true
+  },
+  "decks": [
+    {
+      "id": "MuC",
+      "title": "Viscereality - MuC 2025",
+      "source": "presentations/Viscereality_MuC.pptx",
+      "staging": "presentations/MuC-scene",
+      "public_dir": "MuC",
+      "fallback_dir": "MuC-chunked",
+      "slug": "MuC",
+      "expected_slides": 17,
+      "conference_url": "https://muc2025.mensch-und-computer.de/en/",
+      "conference_label": "MuC 2025"
+    },
+    {
+      "id": "alpCHI",
+      "title": "Viscereality - alpCHI 2026",
+      "source": "presentations/Viscereality_alpCHI_v2.pptx",
+      "staging": "presentations/alpCHI-scene",
+      "public_dir": "alpCHI",
+      "fallback_dir": "alpCHI-chunked",
+      "slug": "alpCHI",
+      "expected_slides": 25,
+      "conference_url": "https://alpchi.org/",
+      "conference_label": "alpCHI 2026"
+    },
+    {
+      "id": "BBD26",
+      "title": "Viscereality - Berlin Breathwork Days",
+      "source": "presentations/20260512_BreathworkDays_Berlin_new.pptx",
+      "staging": "presentations/BBD26-scene-new",
+      "public_dir": "BBD26",
+      "fallback_dir": "BBD26-chunked",
+      "slug": "BBD26",
+      "expected_slides": 32,
+      "config": "presentations/BBD26-scene.config.json",
+      "conference_url": "https://www.berlinbreathwork.org/en/bbd26-programm",
+      "conference_label": "Berlin Breathwork Days"
+    }
+  ]
+}

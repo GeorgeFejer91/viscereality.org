@@ -19,6 +19,7 @@ from pptx_html_presenter.assets import (
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
 from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, load_config
+from pptx_html_presenter.family import load_family_config, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import parse_pptx
@@ -2726,6 +2727,84 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(report["count"], 1)
             self.assertTrue(keep.exists())
             self.assertFalse(remove.exists())
+
+    def test_family_config_resolves_paths_from_repo_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            presentations = root / "presentations"
+            presentations.mkdir()
+            config = presentations / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "presenter_config_file": "presentations/defaults.json",
+                        "shared_assets": {
+                            "root": "presentations/shared-assets/demo",
+                        },
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            family = load_family_config(config)
+            self.assertEqual(family.repo_root, root.resolve())
+            self.assertEqual(family.shared_root, (root / "presentations/shared-assets/demo").resolve())
+            self.assertEqual(family.decks[0].source, (root / "presentations/demo.pptx").resolve())
+            self.assertEqual(family.decks[0].staging, (root / "presentations/Demo-scene").resolve())
+
+    def test_share_deck_assets_rewrites_scene_to_shared_library(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            build = root / "presentations" / "Demo-scene"
+            source_dir = build / "assets" / "source"
+            optimized_dir = build / "assets" / "optimized"
+            source_dir.mkdir(parents=True)
+            optimized_dir.mkdir(parents=True)
+            source_asset = source_dir / "source.png"
+            optimized_asset = optimized_dir / "loop.mp4"
+            source_asset.write_bytes(b"same-image")
+            optimized_asset.write_bytes(b"optimized-video")
+            scene = {
+                "deck": {"id": "Demo"},
+                "assets": [
+                    {
+                        "id": "asset-demo",
+                        "sourcePath": "ppt/media/image1.png",
+                        "sourceFile": "assets/source/source.png",
+                        "file": "assets/optimized/loop.mp4",
+                        "kind": "video",
+                        "animated": True,
+                        "alpha": False,
+                    }
+                ],
+                "slides": [],
+                "transitions": [],
+            }
+            (build / "deck.scene.json").write_text(json.dumps(scene), encoding="utf-8")
+            (build / "build-report.json").write_text("{}", encoding="utf-8")
+            shared = root / "presentations" / "shared-assets" / "viscereality"
+
+            report = share_deck_assets(build, shared, deck_id="Demo", repo_root=root)
+
+            self.assertEqual(report["status"], "ok")
+            rewritten = json.loads((build / "deck.scene.json").read_text(encoding="utf-8"))
+            asset = rewritten["assets"][0]
+            self.assertTrue(asset["sourceFile"].startswith("../shared-assets/viscereality/source/"))
+            self.assertTrue(asset["file"].startswith("../shared-assets/viscereality/optimized/"))
+            self.assertFalse(source_asset.exists())
+            self.assertFalse(optimized_asset.exists())
+            index = json.loads((shared / "asset-index.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(index["assets"]), 2)
 
 
 def _write_demo_pptx(path: Path, *, slide2_morph: bool = True, slide2_zero_transition: bool = False) -> None:

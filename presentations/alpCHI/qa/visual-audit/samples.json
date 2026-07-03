@@ -1,0 +1,3846 @@
+[
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-001-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0003": 0.5,
+      "track-0008": 0.5,
+      "track-0011": 0.5
+    },
+    "mediaSec": 0.5,
+    "progress": 1.0,
+    "referenceSec": 0.5,
+    "slide": 1
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 1.0,
+      "track-0008": 1.0,
+      "track-0011": 1.0,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 1.0,
+    "progress": 0.0,
+    "referenceSec": 1.0,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 1.2,
+      "track-0008": 1.2,
+      "track-0011": 1.2,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 1.2,
+    "progress": 0.1,
+    "referenceSec": 1.2,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 1.5,
+      "track-0008": 1.5,
+      "track-0011": 1.5,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 1.5,
+    "progress": 0.25,
+    "referenceSec": 1.5,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 2.0,
+      "track-0008": 2.0,
+      "track-0011": 2.0,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 2.0,
+    "progress": 0.5,
+    "referenceSec": 2.0,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 2.5,
+      "track-0008": 2.5,
+      "track-0011": 2.5,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 2.5,
+    "progress": 0.75,
+    "referenceSec": 2.5,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 2.8,
+      "track-0008": 2.8,
+      "track-0011": 2.8,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 2.8,
+    "progress": 0.9,
+    "referenceSec": 2.8,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 0,
+    "from": 1,
+    "id": "trans-001-002-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 3.0,
+      "track-0008": 3.0,
+      "track-0011": 3.0,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 3.0,
+    "progress": 1.0,
+    "referenceSec": 3.0,
+    "to": 2
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-002-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0003": 5.5,
+      "track-0008": 5.5,
+      "track-0011": 5.5,
+      "track-0017": 2.5,
+      "track-0023": 2.5
+    },
+    "mediaSec": 5.5,
+    "progress": 1.0,
+    "referenceSec": 5.5,
+    "slide": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 6.0,
+      "track-0008": 6.0,
+      "track-0011": 6.0,
+      "track-0017": 3.0,
+      "track-0023": 3.0,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 6.0,
+    "progress": 0.0,
+    "referenceSec": 6.0,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 6.2,
+      "track-0008": 6.2,
+      "track-0011": 6.2,
+      "track-0017": 3.2,
+      "track-0023": 3.2,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 6.2,
+    "progress": 0.1,
+    "referenceSec": 6.2,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 6.5,
+      "track-0008": 6.5,
+      "track-0011": 6.5,
+      "track-0017": 3.5,
+      "track-0023": 3.5,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 6.5,
+    "progress": 0.25,
+    "referenceSec": 6.5,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 7.0,
+      "track-0008": 7.0,
+      "track-0011": 7.0,
+      "track-0017": 4.0,
+      "track-0023": 4.0,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 7.0,
+    "progress": 0.5,
+    "referenceSec": 7.0,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 7.5,
+      "track-0008": 7.5,
+      "track-0011": 7.5,
+      "track-0017": 4.5,
+      "track-0023": 4.5,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 7.5,
+    "progress": 0.75,
+    "referenceSec": 7.5,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 7.8,
+      "track-0008": 7.8,
+      "track-0011": 7.8,
+      "track-0017": 4.8,
+      "track-0023": 4.8,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 7.8,
+    "progress": 0.9,
+    "referenceSec": 7.8,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 2,
+    "id": "trans-002-003-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 8.0,
+      "track-0008": 8.0,
+      "track-0011": 8.0,
+      "track-0017": 5.0,
+      "track-0023": 5.0,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 8.0,
+    "progress": 1.0,
+    "referenceSec": 8.0,
+    "to": 3
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-003-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0011": 10.5,
+      "track-0017": 7.5,
+      "track-0026": 2.5,
+      "track-0028": 2.5
+    },
+    "mediaSec": 10.5,
+    "progress": 1.0,
+    "referenceSec": 10.5,
+    "slide": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.99,
+      "track-0017": 9.99,
+      "track-0026": 4.99,
+      "track-0028": 4.99
+    },
+    "mediaSec": 12.99,
+    "progress": 0.0,
+    "referenceSec": 12.99,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.991,
+      "track-0017": 9.991,
+      "track-0026": 4.991,
+      "track-0028": 4.991
+    },
+    "mediaSec": 12.991,
+    "progress": 0.1,
+    "referenceSec": 12.991,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.992,
+      "track-0017": 9.992,
+      "track-0026": 4.992,
+      "track-0028": 4.992
+    },
+    "mediaSec": 12.992,
+    "progress": 0.25,
+    "referenceSec": 12.992,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.995,
+      "track-0017": 9.995,
+      "track-0026": 4.995,
+      "track-0028": 4.995
+    },
+    "mediaSec": 12.995,
+    "progress": 0.5,
+    "referenceSec": 12.995,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.998,
+      "track-0017": 9.998,
+      "track-0026": 4.998,
+      "track-0028": 4.998
+    },
+    "mediaSec": 12.998,
+    "progress": 0.75,
+    "referenceSec": 12.998,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.999,
+      "track-0017": 9.999,
+      "track-0026": 4.999,
+      "track-0028": 4.999
+    },
+    "mediaSec": 12.999,
+    "progress": 0.9,
+    "referenceSec": 12.999,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "trans-003-004-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 13.0,
+      "track-0017": 10.0,
+      "track-0026": 5.0,
+      "track-0028": 5.0
+    },
+    "mediaSec": 13.0,
+    "progress": 1.0,
+    "referenceSec": 13.0,
+    "to": 4
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-004-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0026": 5.51,
+      "track-0028": 5.51
+    },
+    "mediaSec": 13.51,
+    "progress": 1.0,
+    "referenceSec": 13.51,
+    "slide": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 6.01,
+      "track-0028": 6.01,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 14.01,
+    "progress": 0.0,
+    "referenceSec": 14.01,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 6.21,
+      "track-0028": 6.21,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 14.21,
+    "progress": 0.1,
+    "referenceSec": 14.21,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 6.51,
+      "track-0028": 6.51,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 14.51,
+    "progress": 0.25,
+    "referenceSec": 14.51,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 7.01,
+      "track-0028": 7.01,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 15.01,
+    "progress": 0.5,
+    "referenceSec": 15.01,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 7.51,
+      "track-0028": 7.51,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 15.51,
+    "progress": 0.75,
+    "referenceSec": 15.51,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 7.81,
+      "track-0028": 7.81,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 15.81,
+    "progress": 0.9,
+    "referenceSec": 15.81,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 8.01,
+      "track-0028": 8.01,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 16.01,
+    "progress": 1.0,
+    "referenceSec": 16.01,
+    "to": 5
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-005-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0028": 10.51,
+      "track-0031": 2.5,
+      "track-0035": 2.5,
+      "track-0036": 2.5
+    },
+    "mediaSec": 18.51,
+    "progress": 1.0,
+    "referenceSec": 18.51,
+    "slide": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 11.01,
+      "track-0031": 3.0,
+      "track-0035": 3.0,
+      "track-0036": 3.0,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 19.01,
+    "progress": 0.0,
+    "referenceSec": 19.01,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 11.21,
+      "track-0031": 3.2,
+      "track-0035": 3.2,
+      "track-0036": 3.2,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 19.21,
+    "progress": 0.1,
+    "referenceSec": 19.21,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 11.51,
+      "track-0031": 3.5,
+      "track-0035": 3.5,
+      "track-0036": 3.5,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 19.51,
+    "progress": 0.25,
+    "referenceSec": 19.51,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 12.01,
+      "track-0031": 4.0,
+      "track-0035": 4.0,
+      "track-0036": 4.0,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 20.01,
+    "progress": 0.5,
+    "referenceSec": 20.01,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 12.51,
+      "track-0031": 4.5,
+      "track-0035": 4.5,
+      "track-0036": 4.5,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 20.51,
+    "progress": 0.75,
+    "referenceSec": 20.51,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 12.81,
+      "track-0031": 4.8,
+      "track-0035": 4.8,
+      "track-0036": 4.8,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 20.81,
+    "progress": 0.9,
+    "referenceSec": 20.81,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 5,
+    "id": "trans-005-006-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 13.01,
+      "track-0031": 5.0,
+      "track-0035": 5.0,
+      "track-0036": 5.0,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 21.01,
+    "progress": 1.0,
+    "referenceSec": 21.01,
+    "to": 6
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-006-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0028": 15.51,
+      "track-0031": 7.5,
+      "track-0035": 7.5,
+      "track-0036": 7.5,
+      "track-0041": 2.5,
+      "track-0042": 2.5,
+      "track-0046": 2.5
+    },
+    "mediaSec": 23.51,
+    "progress": 1.0,
+    "referenceSec": 23.51,
+    "slide": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 16.01,
+      "track-0031": 8.0,
+      "track-0035": 8.0,
+      "track-0036": 8.0,
+      "track-0041": 3.0,
+      "track-0042": 3.0,
+      "track-0046": 3.0,
+      "track-0048": 0.0
+    },
+    "mediaSec": 24.01,
+    "progress": 0.0,
+    "referenceSec": 24.01,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 16.21,
+      "track-0031": 8.2,
+      "track-0035": 8.2,
+      "track-0036": 8.2,
+      "track-0041": 3.2,
+      "track-0042": 3.2,
+      "track-0046": 3.2,
+      "track-0048": 0.0
+    },
+    "mediaSec": 24.21,
+    "progress": 0.1,
+    "referenceSec": 24.21,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 16.51,
+      "track-0031": 8.5,
+      "track-0035": 8.5,
+      "track-0036": 8.5,
+      "track-0041": 3.5,
+      "track-0042": 3.5,
+      "track-0046": 3.5,
+      "track-0048": 0.0
+    },
+    "mediaSec": 24.51,
+    "progress": 0.25,
+    "referenceSec": 24.51,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 17.01,
+      "track-0031": 9.0,
+      "track-0035": 9.0,
+      "track-0036": 9.0,
+      "track-0041": 4.0,
+      "track-0042": 4.0,
+      "track-0046": 4.0,
+      "track-0048": 0.0
+    },
+    "mediaSec": 25.01,
+    "progress": 0.5,
+    "referenceSec": 25.01,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 17.51,
+      "track-0031": 9.5,
+      "track-0035": 9.5,
+      "track-0036": 9.5,
+      "track-0041": 4.5,
+      "track-0042": 4.5,
+      "track-0046": 4.5,
+      "track-0048": 0.0
+    },
+    "mediaSec": 25.51,
+    "progress": 0.75,
+    "referenceSec": 25.51,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 17.81,
+      "track-0031": 9.8,
+      "track-0035": 9.8,
+      "track-0036": 9.8,
+      "track-0041": 4.8,
+      "track-0042": 4.8,
+      "track-0046": 4.8,
+      "track-0048": 0.0
+    },
+    "mediaSec": 25.81,
+    "progress": 0.9,
+    "referenceSec": 25.81,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "trans-006-007-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 18.01,
+      "track-0031": 10.0,
+      "track-0035": 10.0,
+      "track-0036": 10.0,
+      "track-0041": 5.0,
+      "track-0042": 5.0,
+      "track-0046": 5.0,
+      "track-0048": 0.0
+    },
+    "mediaSec": 26.01,
+    "progress": 1.0,
+    "referenceSec": 26.01,
+    "to": 7
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-007-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0041": 7.5,
+      "track-0042": 7.5,
+      "track-0046": 7.5,
+      "track-0048": 2.5
+    },
+    "mediaSec": 28.51,
+    "progress": 1.0,
+    "referenceSec": 28.51,
+    "slide": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 8.0,
+      "track-0042": 8.0,
+      "track-0046": 8.0,
+      "track-0048": 3.0,
+      "track-0051": 0.0
+    },
+    "mediaSec": 29.01,
+    "progress": 0.0,
+    "referenceSec": 29.01,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 8.2,
+      "track-0042": 8.2,
+      "track-0046": 8.2,
+      "track-0048": 3.2,
+      "track-0051": 0.0
+    },
+    "mediaSec": 29.21,
+    "progress": 0.1,
+    "referenceSec": 29.21,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 8.5,
+      "track-0042": 8.5,
+      "track-0046": 8.5,
+      "track-0048": 3.5,
+      "track-0051": 0.0
+    },
+    "mediaSec": 29.51,
+    "progress": 0.25,
+    "referenceSec": 29.51,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 9.0,
+      "track-0042": 9.0,
+      "track-0046": 9.0,
+      "track-0048": 4.0,
+      "track-0051": 0.0
+    },
+    "mediaSec": 30.01,
+    "progress": 0.5,
+    "referenceSec": 30.01,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 9.5,
+      "track-0042": 9.5,
+      "track-0046": 9.5,
+      "track-0048": 4.5,
+      "track-0051": 0.0
+    },
+    "mediaSec": 30.51,
+    "progress": 0.75,
+    "referenceSec": 30.51,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 9.8,
+      "track-0042": 9.8,
+      "track-0046": 9.8,
+      "track-0048": 4.8,
+      "track-0051": 0.0
+    },
+    "mediaSec": 30.81,
+    "progress": 0.9,
+    "referenceSec": 30.81,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "trans-007-008-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 10.0,
+      "track-0042": 10.0,
+      "track-0046": 10.0,
+      "track-0048": 5.0,
+      "track-0051": 0.0
+    },
+    "mediaSec": 31.01,
+    "progress": 1.0,
+    "referenceSec": 31.01,
+    "to": 8
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-008-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0041": 12.5,
+      "track-0042": 12.5,
+      "track-0046": 12.5,
+      "track-0048": 7.5,
+      "track-0051": 2.5
+    },
+    "mediaSec": 33.51,
+    "progress": 1.0,
+    "referenceSec": 33.51,
+    "slide": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 13.0,
+      "track-0042": 13.0,
+      "track-0046": 13.0,
+      "track-0048": 8.0,
+      "track-0051": 3.0,
+      "track-0054": 0.0
+    },
+    "mediaSec": 34.01,
+    "progress": 0.0,
+    "referenceSec": 34.01,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 13.2,
+      "track-0042": 13.2,
+      "track-0046": 13.2,
+      "track-0048": 8.2,
+      "track-0051": 3.2,
+      "track-0054": 0.0
+    },
+    "mediaSec": 34.21,
+    "progress": 0.1,
+    "referenceSec": 34.21,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 13.5,
+      "track-0042": 13.5,
+      "track-0046": 13.5,
+      "track-0048": 8.5,
+      "track-0051": 3.5,
+      "track-0054": 0.0
+    },
+    "mediaSec": 34.51,
+    "progress": 0.25,
+    "referenceSec": 34.51,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 14.0,
+      "track-0042": 14.0,
+      "track-0046": 14.0,
+      "track-0048": 9.0,
+      "track-0051": 4.0,
+      "track-0054": 0.0
+    },
+    "mediaSec": 35.01,
+    "progress": 0.5,
+    "referenceSec": 35.01,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 14.5,
+      "track-0042": 14.5,
+      "track-0046": 14.5,
+      "track-0048": 9.5,
+      "track-0051": 4.5,
+      "track-0054": 0.0
+    },
+    "mediaSec": 35.51,
+    "progress": 0.75,
+    "referenceSec": 35.51,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 14.8,
+      "track-0042": 14.8,
+      "track-0046": 14.8,
+      "track-0048": 9.8,
+      "track-0051": 4.8,
+      "track-0054": 0.0
+    },
+    "mediaSec": 35.81,
+    "progress": 0.9,
+    "referenceSec": 35.81,
+    "to": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "trans-008-009-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 15.0,
+      "track-0042": 15.0,
+      "track-0046": 15.0,
+      "track-0048": 10.0,
+      "track-0051": 5.0,
+      "track-0054": 0.0
+    },
+    "mediaSec": 36.01,
+    "progress": 1.0,
+    "referenceSec": 36.01,
+    "to": 9
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-009-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0048": 12.5,
+      "track-0051": 7.5,
+      "track-0054": 2.5
+    },
+    "mediaSec": 38.51,
+    "progress": 1.0,
+    "referenceSec": 38.51,
+    "slide": 9
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 13.0,
+      "track-0051": 8.0,
+      "track-0054": 3.0,
+      "track-0057": 0.0
+    },
+    "mediaSec": 39.01,
+    "progress": 0.0,
+    "referenceSec": 39.01,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 13.2,
+      "track-0051": 8.2,
+      "track-0054": 3.2,
+      "track-0057": 0.0
+    },
+    "mediaSec": 39.21,
+    "progress": 0.1,
+    "referenceSec": 39.21,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 13.5,
+      "track-0051": 8.5,
+      "track-0054": 3.5,
+      "track-0057": 0.0
+    },
+    "mediaSec": 39.51,
+    "progress": 0.25,
+    "referenceSec": 39.51,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 14.0,
+      "track-0051": 9.0,
+      "track-0054": 4.0,
+      "track-0057": 0.0
+    },
+    "mediaSec": 40.01,
+    "progress": 0.5,
+    "referenceSec": 40.01,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 14.5,
+      "track-0051": 9.5,
+      "track-0054": 4.5,
+      "track-0057": 0.0
+    },
+    "mediaSec": 40.51,
+    "progress": 0.75,
+    "referenceSec": 40.51,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 14.8,
+      "track-0051": 9.8,
+      "track-0054": 4.8,
+      "track-0057": 0.0
+    },
+    "mediaSec": 40.81,
+    "progress": 0.9,
+    "referenceSec": 40.81,
+    "to": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "trans-009-010-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 15.0,
+      "track-0051": 10.0,
+      "track-0054": 5.0,
+      "track-0057": 0.0
+    },
+    "mediaSec": 41.01,
+    "progress": 1.0,
+    "referenceSec": 41.01,
+    "to": 10
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-010-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0051": 12.5,
+      "track-0054": 7.5,
+      "track-0057": 2.5
+    },
+    "mediaSec": 43.51,
+    "progress": 1.0,
+    "referenceSec": 43.51,
+    "slide": 10
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 13.0,
+      "track-0054": 8.0,
+      "track-0057": 3.0
+    },
+    "mediaSec": 44.01,
+    "progress": 0.0,
+    "referenceSec": 44.01,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 13.2,
+      "track-0054": 8.2,
+      "track-0057": 3.2
+    },
+    "mediaSec": 44.21,
+    "progress": 0.1,
+    "referenceSec": 44.21,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 13.5,
+      "track-0054": 8.5,
+      "track-0057": 3.5
+    },
+    "mediaSec": 44.51,
+    "progress": 0.25,
+    "referenceSec": 44.51,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 14.0,
+      "track-0054": 9.0,
+      "track-0057": 4.0
+    },
+    "mediaSec": 45.01,
+    "progress": 0.5,
+    "referenceSec": 45.01,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 14.5,
+      "track-0054": 9.5,
+      "track-0057": 4.5
+    },
+    "mediaSec": 45.51,
+    "progress": 0.75,
+    "referenceSec": 45.51,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 14.8,
+      "track-0054": 9.8,
+      "track-0057": 4.8
+    },
+    "mediaSec": 45.81,
+    "progress": 0.9,
+    "referenceSec": 45.81,
+    "to": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 10,
+    "id": "trans-010-011-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 15.0,
+      "track-0054": 10.0,
+      "track-0057": 5.0
+    },
+    "mediaSec": 46.01,
+    "progress": 1.0,
+    "referenceSec": 46.01,
+    "to": 11
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-011-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0051": 17.5,
+      "track-0054": 12.5,
+      "track-0057": 7.5
+    },
+    "mediaSec": 48.51,
+    "progress": 1.0,
+    "referenceSec": 48.51,
+    "slide": 11
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 18.0,
+      "track-0054": 13.0,
+      "track-0057": 8.0,
+      "track-0060": 0.0
+    },
+    "mediaSec": 49.01,
+    "progress": 0.0,
+    "referenceSec": 49.01,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 18.2,
+      "track-0054": 13.2,
+      "track-0057": 8.2,
+      "track-0060": 0.0
+    },
+    "mediaSec": 49.21,
+    "progress": 0.1,
+    "referenceSec": 49.21,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 18.5,
+      "track-0054": 13.5,
+      "track-0057": 8.5,
+      "track-0060": 0.0
+    },
+    "mediaSec": 49.51,
+    "progress": 0.25,
+    "referenceSec": 49.51,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 19.0,
+      "track-0054": 14.0,
+      "track-0057": 9.0,
+      "track-0060": 0.0
+    },
+    "mediaSec": 50.01,
+    "progress": 0.5,
+    "referenceSec": 50.01,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 19.5,
+      "track-0054": 14.5,
+      "track-0057": 9.5,
+      "track-0060": 0.0
+    },
+    "mediaSec": 50.51,
+    "progress": 0.75,
+    "referenceSec": 50.51,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 19.8,
+      "track-0054": 14.8,
+      "track-0057": 9.8,
+      "track-0060": 0.0
+    },
+    "mediaSec": 50.81,
+    "progress": 0.9,
+    "referenceSec": 50.81,
+    "to": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "trans-011-012-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 20.0,
+      "track-0054": 15.0,
+      "track-0057": 10.0,
+      "track-0060": 0.0
+    },
+    "mediaSec": 51.01,
+    "progress": 1.0,
+    "referenceSec": 51.01,
+    "to": 12
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-012-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0054": 17.5,
+      "track-0057": 12.5,
+      "track-0060": 2.5
+    },
+    "mediaSec": 53.51,
+    "progress": 1.0,
+    "referenceSec": 53.51,
+    "slide": 12
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 18.0,
+      "track-0057": 13.0,
+      "track-0060": 3.0,
+      "track-0064": 0.0
+    },
+    "mediaSec": 54.01,
+    "progress": 0.0,
+    "referenceSec": 54.01,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 18.2,
+      "track-0057": 13.2,
+      "track-0060": 3.2,
+      "track-0064": 0.0
+    },
+    "mediaSec": 54.21,
+    "progress": 0.1,
+    "referenceSec": 54.21,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 18.5,
+      "track-0057": 13.5,
+      "track-0060": 3.5,
+      "track-0064": 0.0
+    },
+    "mediaSec": 54.51,
+    "progress": 0.25,
+    "referenceSec": 54.51,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 19.0,
+      "track-0057": 14.0,
+      "track-0060": 4.0,
+      "track-0064": 0.0
+    },
+    "mediaSec": 55.01,
+    "progress": 0.5,
+    "referenceSec": 55.01,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 19.5,
+      "track-0057": 14.5,
+      "track-0060": 4.5,
+      "track-0064": 0.0
+    },
+    "mediaSec": 55.51,
+    "progress": 0.75,
+    "referenceSec": 55.51,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 19.8,
+      "track-0057": 14.8,
+      "track-0060": 4.8,
+      "track-0064": 0.0
+    },
+    "mediaSec": 55.81,
+    "progress": 0.9,
+    "referenceSec": 55.81,
+    "to": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 12,
+    "id": "trans-012-013-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 20.0,
+      "track-0057": 15.0,
+      "track-0060": 5.0,
+      "track-0064": 0.0
+    },
+    "mediaSec": 56.01,
+    "progress": 1.0,
+    "referenceSec": 56.01,
+    "to": 13
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-013-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0057": 17.5,
+      "track-0060": 7.5,
+      "track-0064": 2.5
+    },
+    "mediaSec": 58.51,
+    "progress": 1.0,
+    "referenceSec": 58.51,
+    "slide": 13
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 18.0,
+      "track-0060": 8.0,
+      "track-0064": 3.0
+    },
+    "mediaSec": 59.01,
+    "progress": 0.0,
+    "referenceSec": 59.01,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 18.2,
+      "track-0060": 8.2,
+      "track-0064": 3.2
+    },
+    "mediaSec": 59.21,
+    "progress": 0.1,
+    "referenceSec": 59.21,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 18.5,
+      "track-0060": 8.5,
+      "track-0064": 3.5
+    },
+    "mediaSec": 59.51,
+    "progress": 0.25,
+    "referenceSec": 59.51,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 19.0,
+      "track-0060": 9.0,
+      "track-0064": 4.0
+    },
+    "mediaSec": 60.01,
+    "progress": 0.5,
+    "referenceSec": 60.01,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 19.5,
+      "track-0060": 9.5,
+      "track-0064": 4.5
+    },
+    "mediaSec": 60.51,
+    "progress": 0.75,
+    "referenceSec": 60.51,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 19.8,
+      "track-0060": 9.8,
+      "track-0064": 4.8
+    },
+    "mediaSec": 60.81,
+    "progress": 0.9,
+    "referenceSec": 60.81,
+    "to": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 13,
+    "id": "trans-013-014-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 20.0,
+      "track-0060": 10.0,
+      "track-0064": 5.0
+    },
+    "mediaSec": 61.01,
+    "progress": 1.0,
+    "referenceSec": 61.01,
+    "to": 14
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-014-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0057": 22.5,
+      "track-0060": 12.5,
+      "track-0064": 7.5
+    },
+    "mediaSec": 63.51,
+    "progress": 1.0,
+    "referenceSec": 63.51,
+    "slide": 14
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 23.0,
+      "track-0060": 13.0,
+      "track-0064": 8.0,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 64.01,
+    "progress": 0.0,
+    "referenceSec": 64.01,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 23.2,
+      "track-0060": 13.2,
+      "track-0064": 8.2,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 64.21,
+    "progress": 0.1,
+    "referenceSec": 64.21,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 23.5,
+      "track-0060": 13.5,
+      "track-0064": 8.5,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 64.51,
+    "progress": 0.25,
+    "referenceSec": 64.51,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 24.0,
+      "track-0060": 14.0,
+      "track-0064": 9.0,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 65.01,
+    "progress": 0.5,
+    "referenceSec": 65.01,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 24.5,
+      "track-0060": 14.5,
+      "track-0064": 9.5,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 65.51,
+    "progress": 0.75,
+    "referenceSec": 65.51,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 24.8,
+      "track-0060": 14.8,
+      "track-0064": 9.8,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 65.81,
+    "progress": 0.9,
+    "referenceSec": 65.81,
+    "to": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "trans-014-015-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 25.0,
+      "track-0060": 15.0,
+      "track-0064": 10.0,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 66.01,
+    "progress": 1.0,
+    "referenceSec": 66.01,
+    "to": 15
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-015-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0060": 17.5,
+      "track-0064": 12.5,
+      "track-0066": 2.5,
+      "track-0067": 0.5
+    },
+    "mediaSec": 68.51,
+    "progress": 1.0,
+    "referenceSec": 68.51,
+    "slide": 15
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 18.0,
+      "track-0064": 13.0,
+      "track-0066": 3.0,
+      "track-0067": 1.0,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 69.01,
+    "progress": 0.0,
+    "referenceSec": 69.01,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 18.2,
+      "track-0064": 13.2,
+      "track-0066": 3.2,
+      "track-0067": 1.2,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 69.21,
+    "progress": 0.1,
+    "referenceSec": 69.21,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 18.5,
+      "track-0064": 13.5,
+      "track-0066": 3.5,
+      "track-0067": 1.5,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 69.51,
+    "progress": 0.25,
+    "referenceSec": 69.51,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 19.0,
+      "track-0064": 14.0,
+      "track-0066": 4.0,
+      "track-0067": 2.0,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 70.01,
+    "progress": 0.5,
+    "referenceSec": 70.01,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 19.5,
+      "track-0064": 14.5,
+      "track-0066": 4.5,
+      "track-0067": 2.5,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 70.51,
+    "progress": 0.75,
+    "referenceSec": 70.51,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 19.8,
+      "track-0064": 14.8,
+      "track-0066": 4.8,
+      "track-0067": 2.8,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 70.81,
+    "progress": 0.9,
+    "referenceSec": 70.81,
+    "to": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 15,
+    "id": "trans-015-016-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 20.0,
+      "track-0064": 15.0,
+      "track-0066": 5.0,
+      "track-0067": 3.0,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 71.01,
+    "progress": 1.0,
+    "referenceSec": 71.01,
+    "to": 16
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-016-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0064": 17.5,
+      "track-0066": 7.5,
+      "track-0067": 0.5,
+      "track-0069": 2.5,
+      "track-0070": 0.5,
+      "track-0071": 0.5
+    },
+    "mediaSec": 73.51,
+    "progress": 1.0,
+    "referenceSec": 73.51,
+    "slide": 16
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 18.0,
+      "track-0066": 8.0,
+      "track-0067": 1.0,
+      "track-0069": 3.0,
+      "track-0071": 1.0
+    },
+    "mediaSec": 74.01,
+    "progress": 0.0,
+    "referenceSec": 74.01,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 18.2,
+      "track-0066": 8.2,
+      "track-0067": 1.2,
+      "track-0069": 3.2,
+      "track-0071": 1.2
+    },
+    "mediaSec": 74.21,
+    "progress": 0.1,
+    "referenceSec": 74.21,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 18.5,
+      "track-0066": 8.5,
+      "track-0067": 1.5,
+      "track-0069": 3.5,
+      "track-0071": 1.5
+    },
+    "mediaSec": 74.51,
+    "progress": 0.25,
+    "referenceSec": 74.51,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 19.0,
+      "track-0066": 9.0,
+      "track-0067": 2.0,
+      "track-0069": 4.0,
+      "track-0071": 2.0
+    },
+    "mediaSec": 75.01,
+    "progress": 0.5,
+    "referenceSec": 75.01,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 19.5,
+      "track-0066": 9.5,
+      "track-0067": 2.5,
+      "track-0069": 4.5,
+      "track-0071": 2.5
+    },
+    "mediaSec": 75.51,
+    "progress": 0.75,
+    "referenceSec": 75.51,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 19.8,
+      "track-0066": 9.8,
+      "track-0067": 2.8,
+      "track-0069": 4.8,
+      "track-0071": 2.8
+    },
+    "mediaSec": 75.81,
+    "progress": 0.9,
+    "referenceSec": 75.81,
+    "to": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 16,
+    "id": "trans-016-017-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 20.0,
+      "track-0066": 10.0,
+      "track-0067": 3.0,
+      "track-0069": 5.0,
+      "track-0071": 3.0
+    },
+    "mediaSec": 76.01,
+    "progress": 1.0,
+    "referenceSec": 76.01,
+    "to": 17
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-017-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 12.5
+    },
+    "mediaSec": 78.51,
+    "progress": 1.0,
+    "referenceSec": 78.51,
+    "slide": 17
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 13.0,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 79.01,
+    "progress": 0.0,
+    "referenceSec": 79.01,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 13.2,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 79.21,
+    "progress": 0.1,
+    "referenceSec": 79.21,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 13.5,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 79.51,
+    "progress": 0.25,
+    "referenceSec": 79.51,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 14.0,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 80.01,
+    "progress": 0.5,
+    "referenceSec": 80.01,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 14.5,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 80.51,
+    "progress": 0.75,
+    "referenceSec": 80.51,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 14.8,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 80.81,
+    "progress": 0.9,
+    "referenceSec": 80.81,
+    "to": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "trans-017-018-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 15.0,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 81.01,
+    "progress": 1.0,
+    "referenceSec": 81.01,
+    "to": 18
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-018-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 17.5,
+      "track-0067": 0.5,
+      "track-0070": 0.5,
+      "track-0075": 0.5,
+      "track-0076": 0.5
+    },
+    "mediaSec": 83.51,
+    "progress": 1.0,
+    "referenceSec": 83.51,
+    "slide": 18
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 18.0,
+      "track-0067": 1.0,
+      "track-0070": 1.0,
+      "track-0075": 1.0,
+      "track-0076": 1.0
+    },
+    "mediaSec": 84.01,
+    "progress": 0.0,
+    "referenceSec": 84.01,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 18.2,
+      "track-0067": 1.2,
+      "track-0070": 1.2,
+      "track-0075": 1.2,
+      "track-0076": 1.2
+    },
+    "mediaSec": 84.21,
+    "progress": 0.1,
+    "referenceSec": 84.21,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 18.5,
+      "track-0067": 1.5,
+      "track-0070": 1.5,
+      "track-0075": 1.5,
+      "track-0076": 1.5
+    },
+    "mediaSec": 84.51,
+    "progress": 0.25,
+    "referenceSec": 84.51,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 19.0,
+      "track-0067": 2.0,
+      "track-0070": 2.0,
+      "track-0075": 2.0,
+      "track-0076": 2.0
+    },
+    "mediaSec": 85.01,
+    "progress": 0.5,
+    "referenceSec": 85.01,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 19.5,
+      "track-0067": 2.5,
+      "track-0070": 2.5,
+      "track-0075": 2.5,
+      "track-0076": 2.5
+    },
+    "mediaSec": 85.51,
+    "progress": 0.75,
+    "referenceSec": 85.51,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 19.8,
+      "track-0067": 2.8,
+      "track-0070": 2.8,
+      "track-0075": 2.8,
+      "track-0076": 2.8
+    },
+    "mediaSec": 85.81,
+    "progress": 0.9,
+    "referenceSec": 85.81,
+    "to": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "trans-018-019-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 20.0,
+      "track-0067": 3.0,
+      "track-0070": 3.0,
+      "track-0075": 3.0,
+      "track-0076": 3.0
+    },
+    "mediaSec": 86.01,
+    "progress": 1.0,
+    "referenceSec": 86.01,
+    "to": 19
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-019-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 22.5,
+      "track-0075": 0.5,
+      "track-0076": 0.5
+    },
+    "mediaSec": 88.51,
+    "progress": 1.0,
+    "referenceSec": 88.51,
+    "slide": 19
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 23.0,
+      "track-0075": 1.0,
+      "track-0076": 1.0
+    },
+    "mediaSec": 89.01,
+    "progress": 0.0,
+    "referenceSec": 89.01,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 23.2,
+      "track-0075": 1.2,
+      "track-0076": 1.2
+    },
+    "mediaSec": 89.21,
+    "progress": 0.1,
+    "referenceSec": 89.21,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 23.5,
+      "track-0075": 1.5,
+      "track-0076": 1.5
+    },
+    "mediaSec": 89.51,
+    "progress": 0.25,
+    "referenceSec": 89.51,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 24.0,
+      "track-0075": 2.0,
+      "track-0076": 2.0
+    },
+    "mediaSec": 90.01,
+    "progress": 0.5,
+    "referenceSec": 90.01,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 24.5,
+      "track-0075": 2.5,
+      "track-0076": 2.5
+    },
+    "mediaSec": 90.51,
+    "progress": 0.75,
+    "referenceSec": 90.51,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 24.8,
+      "track-0075": 2.8,
+      "track-0076": 2.8
+    },
+    "mediaSec": 90.81,
+    "progress": 0.9,
+    "referenceSec": 90.81,
+    "to": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 19,
+    "id": "trans-019-020-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 25.0,
+      "track-0075": 3.0,
+      "track-0076": 3.0
+    },
+    "mediaSec": 91.01,
+    "progress": 1.0,
+    "referenceSec": 91.01,
+    "to": 20
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-020-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 27.5
+    },
+    "mediaSec": 93.51,
+    "progress": 1.0,
+    "referenceSec": 93.51,
+    "slide": 20
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 28.0
+    },
+    "mediaSec": 94.01,
+    "progress": 0.0,
+    "referenceSec": 94.01,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 28.2
+    },
+    "mediaSec": 94.21,
+    "progress": 0.1,
+    "referenceSec": 94.21,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 28.5
+    },
+    "mediaSec": 94.51,
+    "progress": 0.25,
+    "referenceSec": 94.51,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 29.0
+    },
+    "mediaSec": 95.01,
+    "progress": 0.5,
+    "referenceSec": 95.01,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 29.5
+    },
+    "mediaSec": 95.51,
+    "progress": 0.75,
+    "referenceSec": 95.51,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 29.8
+    },
+    "mediaSec": 95.81,
+    "progress": 0.9,
+    "referenceSec": 95.81,
+    "to": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "trans-020-021-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 30.0
+    },
+    "mediaSec": 96.01,
+    "progress": 1.0,
+    "referenceSec": 96.01,
+    "to": 21
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-021-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 32.5
+    },
+    "mediaSec": 98.51,
+    "progress": 1.0,
+    "referenceSec": 98.51,
+    "slide": 21
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 33.0
+    },
+    "mediaSec": 99.01,
+    "progress": 0.0,
+    "referenceSec": 99.01,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 33.2
+    },
+    "mediaSec": 99.21,
+    "progress": 0.1,
+    "referenceSec": 99.21,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 33.5
+    },
+    "mediaSec": 99.51,
+    "progress": 0.25,
+    "referenceSec": 99.51,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 34.0
+    },
+    "mediaSec": 100.01,
+    "progress": 0.5,
+    "referenceSec": 100.01,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 34.5
+    },
+    "mediaSec": 100.51,
+    "progress": 0.75,
+    "referenceSec": 100.51,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 34.8
+    },
+    "mediaSec": 100.81,
+    "progress": 0.9,
+    "referenceSec": 100.81,
+    "to": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "trans-021-022-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 35.0
+    },
+    "mediaSec": 101.01,
+    "progress": 1.0,
+    "referenceSec": 101.01,
+    "to": 22
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-022-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0066": 37.5
+    },
+    "mediaSec": 103.51,
+    "progress": 1.0,
+    "referenceSec": 103.51,
+    "slide": 22
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 38.0
+    },
+    "mediaSec": 104.01,
+    "progress": 0.0,
+    "referenceSec": 104.01,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 38.2
+    },
+    "mediaSec": 104.21,
+    "progress": 0.1,
+    "referenceSec": 104.21,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 38.5
+    },
+    "mediaSec": 104.51,
+    "progress": 0.25,
+    "referenceSec": 104.51,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 39.0
+    },
+    "mediaSec": 105.01,
+    "progress": 0.5,
+    "referenceSec": 105.01,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 39.5
+    },
+    "mediaSec": 105.51,
+    "progress": 0.75,
+    "referenceSec": 105.51,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 39.8
+    },
+    "mediaSec": 105.81,
+    "progress": 0.9,
+    "referenceSec": 105.81,
+    "to": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "trans-022-023-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 40.0
+    },
+    "mediaSec": 106.01,
+    "progress": 1.0,
+    "referenceSec": 106.01,
+    "to": 23
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-023-settled",
+    "kind": "slide",
+    "mediaClocks": {},
+    "mediaSec": 108.51,
+    "progress": 1.0,
+    "referenceSec": 108.51,
+    "slide": 23
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-000",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 109.01,
+    "progress": 0.0,
+    "referenceSec": 109.01,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-010",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 109.21,
+    "progress": 0.1,
+    "referenceSec": 109.21,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-025",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 109.51,
+    "progress": 0.25,
+    "referenceSec": 109.51,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-050",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 110.01,
+    "progress": 0.5,
+    "referenceSec": 110.01,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-075",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 110.51,
+    "progress": 0.75,
+    "referenceSec": 110.51,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-090",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 110.81,
+    "progress": 0.9,
+    "referenceSec": 110.81,
+    "to": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 23,
+    "id": "trans-023-024-100",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 111.01,
+    "progress": 1.0,
+    "referenceSec": 111.01,
+    "to": 24
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-024-settled",
+    "kind": "slide",
+    "mediaClocks": {},
+    "mediaSec": 113.51,
+    "progress": 1.0,
+    "referenceSec": 113.51,
+    "slide": 24
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-000",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 114.01,
+    "progress": 0.0,
+    "referenceSec": 114.01,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-010",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 114.21,
+    "progress": 0.1,
+    "referenceSec": 114.21,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-025",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 114.51,
+    "progress": 0.25,
+    "referenceSec": 114.51,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-050",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 115.01,
+    "progress": 0.5,
+    "referenceSec": 115.01,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-075",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 115.51,
+    "progress": 0.75,
+    "referenceSec": 115.51,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-090",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 115.81,
+    "progress": 0.9,
+    "referenceSec": 115.81,
+    "to": 25
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 2,
+    "from": 24,
+    "id": "trans-024-025-100",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 116.01,
+    "progress": 1.0,
+    "referenceSec": 116.01,
+    "to": 25
+  },
+  {
+    "auditKind": "settled-slide",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "id": "slide-025-settled",
+    "kind": "slide",
+    "mediaClocks": {},
+    "mediaSec": 118.51,
+    "progress": 1.0,
+    "referenceSec": 118.51,
+    "slide": 25
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 0,
+    "from": 2,
+    "id": "reverse-002-001-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 2.0,
+      "track-0008": 2.0,
+      "track-0011": 2.0,
+      "track-0017": 0.0,
+      "track-0023": 0.0
+    },
+    "mediaSec": 2.0,
+    "progress": 0.5,
+    "referenceSec": 2.0,
+    "to": 1
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 3,
+    "id": "reverse-003-002-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 7.0,
+      "track-0008": 7.0,
+      "track-0011": 7.0,
+      "track-0017": 4.0,
+      "track-0023": 4.0,
+      "track-0026": 0.0,
+      "track-0028": 0.0
+    },
+    "mediaSec": 7.0,
+    "progress": 0.5,
+    "referenceSec": 7.0,
+    "to": 2
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 4,
+    "id": "reverse-004-003-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0011": 12.995,
+      "track-0017": 9.995,
+      "track-0026": 4.995,
+      "track-0028": 4.995
+    },
+    "mediaSec": 12.995,
+    "progress": 0.5,
+    "referenceSec": 12.995,
+    "to": 3
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "reverse-005-004-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0026": 7.01,
+      "track-0028": 7.01,
+      "track-0031": 0.0,
+      "track-0035": 0.0,
+      "track-0036": 0.0
+    },
+    "mediaSec": 15.01,
+    "progress": 0.5,
+    "referenceSec": 15.01,
+    "to": 4
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 6,
+    "id": "reverse-006-005-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 12.01,
+      "track-0031": 4.0,
+      "track-0035": 4.0,
+      "track-0036": 4.0,
+      "track-0041": 0.0,
+      "track-0042": 0.0,
+      "track-0046": 0.0
+    },
+    "mediaSec": 20.01,
+    "progress": 0.5,
+    "referenceSec": 20.01,
+    "to": 5
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 7,
+    "id": "reverse-007-006-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0028": 17.01,
+      "track-0031": 9.0,
+      "track-0035": 9.0,
+      "track-0036": 9.0,
+      "track-0041": 4.0,
+      "track-0042": 4.0,
+      "track-0046": 4.0,
+      "track-0048": 0.0
+    },
+    "mediaSec": 25.01,
+    "progress": 0.5,
+    "referenceSec": 25.01,
+    "to": 6
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 8,
+    "id": "reverse-008-007-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 9.0,
+      "track-0042": 9.0,
+      "track-0046": 9.0,
+      "track-0048": 4.0,
+      "track-0051": 0.0
+    },
+    "mediaSec": 30.01,
+    "progress": 0.5,
+    "referenceSec": 30.01,
+    "to": 7
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 9,
+    "id": "reverse-009-008-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0041": 14.0,
+      "track-0042": 14.0,
+      "track-0046": 14.0,
+      "track-0048": 9.0,
+      "track-0051": 4.0,
+      "track-0054": 0.0
+    },
+    "mediaSec": 35.01,
+    "progress": 0.5,
+    "referenceSec": 35.01,
+    "to": 8
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 10,
+    "id": "reverse-010-009-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0048": 14.0,
+      "track-0051": 9.0,
+      "track-0054": 4.0,
+      "track-0057": 0.0
+    },
+    "mediaSec": 40.01,
+    "progress": 0.5,
+    "referenceSec": 40.01,
+    "to": 9
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 11,
+    "id": "reverse-011-010-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 14.0,
+      "track-0054": 9.0,
+      "track-0057": 4.0
+    },
+    "mediaSec": 45.01,
+    "progress": 0.5,
+    "referenceSec": 45.01,
+    "to": 10
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 12,
+    "id": "reverse-012-011-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0051": 19.0,
+      "track-0054": 14.0,
+      "track-0057": 9.0,
+      "track-0060": 0.0
+    },
+    "mediaSec": 50.01,
+    "progress": 0.5,
+    "referenceSec": 50.01,
+    "to": 11
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 13,
+    "id": "reverse-013-012-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0054": 19.0,
+      "track-0057": 14.0,
+      "track-0060": 4.0,
+      "track-0064": 0.0
+    },
+    "mediaSec": 55.01,
+    "progress": 0.5,
+    "referenceSec": 55.01,
+    "to": 12
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 14,
+    "id": "reverse-014-013-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 19.0,
+      "track-0060": 9.0,
+      "track-0064": 4.0
+    },
+    "mediaSec": 60.01,
+    "progress": 0.5,
+    "referenceSec": 60.01,
+    "to": 13
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 15,
+    "id": "reverse-015-014-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0057": 24.0,
+      "track-0060": 14.0,
+      "track-0064": 9.0,
+      "track-0066": 0.0,
+      "track-0067": 0.0
+    },
+    "mediaSec": 65.01,
+    "progress": 0.5,
+    "referenceSec": 65.01,
+    "to": 14
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 16,
+    "id": "reverse-016-015-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0060": 19.0,
+      "track-0064": 14.0,
+      "track-0066": 4.0,
+      "track-0067": 2.0,
+      "track-0069": 0.0,
+      "track-0070": 0.0,
+      "track-0071": 0.0
+    },
+    "mediaSec": 70.01,
+    "progress": 0.5,
+    "referenceSec": 70.01,
+    "to": 15
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 17,
+    "id": "reverse-017-016-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0064": 19.0,
+      "track-0066": 9.0,
+      "track-0067": 2.0,
+      "track-0069": 4.0,
+      "track-0071": 2.0
+    },
+    "mediaSec": 75.01,
+    "progress": 0.5,
+    "referenceSec": 75.01,
+    "to": 16
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 18,
+    "id": "reverse-018-017-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 14.0,
+      "track-0067": 0.0,
+      "track-0075": 0.0,
+      "track-0076": 0.0
+    },
+    "mediaSec": 80.01,
+    "progress": 0.5,
+    "referenceSec": 80.01,
+    "to": 17
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 19,
+    "id": "reverse-019-018-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 19.0,
+      "track-0067": 2.0,
+      "track-0070": 2.0,
+      "track-0075": 2.0,
+      "track-0076": 2.0
+    },
+    "mediaSec": 85.01,
+    "progress": 0.5,
+    "referenceSec": 85.01,
+    "to": 18
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 20,
+    "id": "reverse-020-019-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 24.0,
+      "track-0075": 2.0,
+      "track-0076": 2.0
+    },
+    "mediaSec": 90.01,
+    "progress": 0.5,
+    "referenceSec": 90.01,
+    "to": 19
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 21,
+    "id": "reverse-021-020-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 29.0
+    },
+    "mediaSec": 95.01,
+    "progress": 0.5,
+    "referenceSec": 95.01,
+    "to": 20
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 22,
+    "id": "reverse-022-021-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 34.0
+    },
+    "mediaSec": 100.01,
+    "progress": 0.5,
+    "referenceSec": 100.01,
+    "to": 21
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 23,
+    "id": "reverse-023-022-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0066": 39.0
+    },
+    "mediaSec": 105.01,
+    "progress": 0.5,
+    "referenceSec": 105.01,
+    "to": 22
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 3,
+    "from": 24,
+    "id": "reverse-024-023-050",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 110.01,
+    "progress": 0.5,
+    "referenceSec": 110.01,
+    "to": 23
+  },
+  {
+    "auditKind": "reverse-transition",
+    "direction": "reverse",
+    "expectedVisibleObjects": 2,
+    "from": 25,
+    "id": "reverse-025-024-050",
+    "kind": "transition",
+    "mediaClocks": {},
+    "mediaSec": 115.01,
+    "progress": 0.5,
+    "referenceSec": 115.01,
+    "to": 24
+  }
+]

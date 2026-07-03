@@ -265,6 +265,41 @@ def _try_convert_gif_for_publish(
         ffmpeg=ffmpeg,
         quality=policy.webp_quality,
     )
+    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
+        asset.warnings.append("gif-mp4-over-hard-limit-trying-smaller-mp4")
+        converted.unlink(missing_ok=True)
+        converted = _try_convert_opaque_gif_to_smaller_mp4(
+            source,
+            output_dir,
+            asset,
+            policy,
+            ffmpeg=ffmpeg,
+        )
+    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
+        asset.warnings.append("gif-small-mp4-over-hard-limit-trying-webm")
+        converted.unlink(missing_ok=True)
+        converted = None
+    if converted is None:
+        converted = _try_convert_gif_to_webm_with_ffmpeg(
+            source,
+            output_dir,
+            asset,
+            ffmpeg=ffmpeg,
+        )
+    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
+        asset.warnings.append("gif-webm-over-hard-limit-trying-webp")
+        converted.unlink(missing_ok=True)
+        converted = _try_convert_gif_to_webp_with_ffmpeg(
+            source,
+            output_dir,
+            asset,
+            ffmpeg=ffmpeg,
+            quality=policy.webp_quality,
+        )
+    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
+        asset.warnings.append("gif-transcode-over-hard-limit")
+        converted.unlink(missing_ok=True)
+        converted = None
     if converted is None and format_mb(asset.size_bytes) <= 30:
         converted = _try_convert_gif_to_webp(
             source,
@@ -276,6 +311,37 @@ def _try_convert_gif_for_publish(
     elif converted is not None and converted.suffix.lower() == ".webp":
         asset.warnings.append("gif-opaque-converted-to-webp")
     return converted
+
+
+def _try_convert_opaque_gif_to_smaller_mp4(
+    source: Path,
+    output_dir: Path,
+    asset: AssetRef,
+    policy: AssetPolicy,
+    *,
+    ffmpeg: Path | None,
+) -> Path | None:
+    if asset.alpha or ffmpeg is None:
+        return None
+    for crf, max_width in ((28, 1280), (32, 1280), (34, 960)):
+        converted = _try_convert_gif_with_ffmpeg(
+            source,
+            output_dir,
+            asset,
+            ffmpeg=ffmpeg,
+            quality=policy.webp_quality,
+            crf=crf,
+            max_width=max_width,
+            suffix=f"-crf{crf}-w{max_width}",
+        )
+        if converted is None:
+            continue
+        if format_mb(converted.stat().st_size) <= policy.hard_max_mb:
+            asset.warnings.append(f"gif-opaque-converted-to-small-mp4-crf{crf}")
+            return converted
+        asset.warnings.append(f"gif-small-mp4-crf{crf}-over-hard-limit")
+        converted.unlink(missing_ok=True)
+    return None
 
 
 def _should_transcode_video(asset: AssetRef, policy: AssetPolicy) -> bool:
@@ -475,12 +541,15 @@ def _try_convert_gif_with_ffmpeg(
     *,
     ffmpeg: Path | None,
     quality: int,
+    crf: int = 20,
+    max_width: int = 1920,
+    suffix: str = "",
 ) -> Path | None:
     if ffmpeg is None:
         asset.warnings.append("ffmpeg-missing")
         return None
     output_dir.mkdir(parents=True, exist_ok=True)
-    output = output_dir / f"{asset.sha256[:16]}.mp4"
+    output = output_dir / f"{asset.sha256[:16]}{suffix}.mp4"
     if output.exists() and output.stat().st_size > 0:
         return output
     if asset.alpha:
@@ -493,7 +562,7 @@ def _try_convert_gif_with_ffmpeg(
         str(source),
         "-an",
         "-vf",
-        "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+        f"scale='min({max_width},iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
         "-movflags",
         "+faststart",
         "-pix_fmt",
@@ -503,7 +572,7 @@ def _try_convert_gif_with_ffmpeg(
         "-preset",
         "medium",
         "-crf",
-        "20",
+        str(crf),
         str(output),
     ]
     try:

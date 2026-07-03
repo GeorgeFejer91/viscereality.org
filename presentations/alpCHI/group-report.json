@@ -1,0 +1,1219 @@
+{
+  "groupCount": 127,
+  "relationshipCount": 322,
+  "rows": [
+    {
+      "groupId": "s1-group-359a2f3d924c",
+      "name": "Group 27",
+      "path": [
+        "Group 27"
+      ],
+      "slide": 1,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s1-group-d29b5a6fd2e7",
+      "name": "Group 13",
+      "path": [
+        "Group 27",
+        "Group 13"
+      ],
+      "slide": 1,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-657689675ca3",
+      "name": "Group 50",
+      "path": [
+        "Group 50"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-557165349a9e",
+      "name": "Group 6",
+      "path": [
+        "Group 6"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-1d8ff5411d4b",
+      "name": "Group 53",
+      "path": [
+        "Group 53"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-244634d0143f",
+      "name": "Group 95",
+      "path": [
+        "Group 95"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-6b7af032a8ad",
+      "name": "Group 5",
+      "path": [
+        "Group 5"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s2-group-33897e4a0887",
+      "name": "Group 11",
+      "path": [
+        "Group 5",
+        "Group 11"
+      ],
+      "slide": 2,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0015"
+      ],
+      "groupId": "panel-track-0014",
+      "panelTrackId": "track-0014",
+      "slide": 2,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0017",
+        "track-0020"
+      ],
+      "groupId": "panel-track-0016",
+      "panelTrackId": "track-0016",
+      "slide": 2,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0019"
+      ],
+      "groupId": "panel-track-0018",
+      "panelTrackId": "track-0018",
+      "slide": 2,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0022",
+        "track-0023"
+      ],
+      "groupId": "panel-track-0021",
+      "panelTrackId": "track-0021",
+      "slide": 2,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s3-group-399c066d6408",
+      "name": "Group 50",
+      "path": [
+        "Group 50"
+      ],
+      "slide": 3,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s3-group-f39f7a6c087c",
+      "name": "Group 6",
+      "path": [
+        "Group 6"
+      ],
+      "slide": 3,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s3-group-1c7eb85ae797",
+      "name": "Group 53",
+      "path": [
+        "Group 53"
+      ],
+      "slide": 3,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0015"
+      ],
+      "groupId": "panel-track-0014",
+      "panelTrackId": "track-0014",
+      "slide": 3,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0017",
+        "track-0020"
+      ],
+      "groupId": "panel-track-0016",
+      "panelTrackId": "track-0016",
+      "slide": 3,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0019"
+      ],
+      "groupId": "panel-track-0018",
+      "panelTrackId": "track-0018",
+      "slide": 3,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0028",
+        "track-0029"
+      ],
+      "groupId": "panel-track-0027",
+      "panelTrackId": "track-0027",
+      "slide": 3,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s4-group-96ab0efd16cc",
+      "name": "Group 50",
+      "path": [
+        "Group 50"
+      ],
+      "slide": 4,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s4-group-ac6bb2a340a5",
+      "name": "Group 53",
+      "path": [
+        "Group 53"
+      ],
+      "slide": 4,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0015"
+      ],
+      "groupId": "panel-track-0014",
+      "panelTrackId": "track-0014",
+      "slide": 4,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0019"
+      ],
+      "groupId": "panel-track-0018",
+      "panelTrackId": "track-0018",
+      "slide": 4,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0028",
+        "track-0029"
+      ],
+      "groupId": "panel-track-0027",
+      "panelTrackId": "track-0027",
+      "slide": 4,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s5-group-5b13aa91f96d",
+      "name": "Group 50",
+      "path": [
+        "Group 50"
+      ],
+      "slide": 5,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s5-group-be8a107f5778",
+      "name": "Group 6",
+      "path": [
+        "Group 6"
+      ],
+      "slide": 5,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s5-group-2bcb549b7e36",
+      "name": "Group 53",
+      "path": [
+        "Group 53"
+      ],
+      "slide": 5,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s5-group-0fa94f6329a5",
+      "name": "Group 95",
+      "path": [
+        "Group 95"
+      ],
+      "slide": 5,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0015"
+      ],
+      "groupId": "panel-track-0014",
+      "panelTrackId": "track-0014",
+      "slide": 5,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0031",
+        "track-0032"
+      ],
+      "groupId": "panel-track-0030",
+      "panelTrackId": "track-0030",
+      "slide": 5,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0019"
+      ],
+      "groupId": "panel-track-0018",
+      "panelTrackId": "track-0018",
+      "slide": 5,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0034",
+        "track-0035"
+      ],
+      "groupId": "panel-track-0033",
+      "panelTrackId": "track-0033",
+      "slide": 5,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0036",
+        "track-0028",
+        "track-0029",
+        "track-0037"
+      ],
+      "groupId": "panel-track-0027",
+      "panelTrackId": "track-0027",
+      "slide": 5,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s6-group-d80f64dc1100",
+      "name": "Group 50",
+      "path": [
+        "Group 50"
+      ],
+      "slide": 6,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s6-group-d8c37da5171a",
+      "name": "Group 6",
+      "path": [
+        "Group 6"
+      ],
+      "slide": 6,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s6-group-f73b8d68c976",
+      "name": "Group 53",
+      "path": [
+        "Group 53"
+      ],
+      "slide": 6,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s6-group-920e3a5652da",
+      "name": "Group 95",
+      "path": [
+        "Group 95"
+      ],
+      "slide": 6,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s6-group-4f2326154d24",
+      "name": "Group 12",
+      "path": [
+        "Group 12"
+      ],
+      "slide": 6,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0015"
+      ],
+      "groupId": "panel-track-0014",
+      "panelTrackId": "track-0014",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0031",
+        "track-0032"
+      ],
+      "groupId": "panel-track-0030",
+      "panelTrackId": "track-0030",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0019"
+      ],
+      "groupId": "panel-track-0018",
+      "panelTrackId": "track-0018",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0034",
+        "track-0035"
+      ],
+      "groupId": "panel-track-0033",
+      "panelTrackId": "track-0033",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0036",
+        "track-0028",
+        "track-0029",
+        "track-0037"
+      ],
+      "groupId": "panel-track-0027",
+      "panelTrackId": "track-0027",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0040",
+        "track-0041",
+        "track-0042",
+        "track-0043",
+        "track-0044",
+        "track-0045",
+        "track-0046"
+      ],
+      "groupId": "panel-track-0039",
+      "panelTrackId": "track-0039",
+      "slide": 6,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s7-group-ac14666d6991",
+      "name": "Group 2",
+      "path": [
+        "Group 2"
+      ],
+      "slide": 7,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s7-group-5439d72cfdc3",
+      "name": "Group 6",
+      "path": [
+        "Group 2",
+        "Group 6"
+      ],
+      "slide": 7,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s7-group-c934d20d9513",
+      "name": "Group 3",
+      "path": [
+        "Group 3"
+      ],
+      "slide": 7,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0048",
+        "track-0049"
+      ],
+      "groupId": "panel-track-0047",
+      "panelTrackId": "track-0047",
+      "slide": 7,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0040",
+        "track-0041",
+        "track-0042",
+        "track-0043",
+        "track-0044",
+        "track-0045",
+        "track-0046"
+      ],
+      "groupId": "panel-track-0039",
+      "panelTrackId": "track-0039",
+      "slide": 7,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s8-group-bff9ccde0bbb",
+      "name": "Group 2",
+      "path": [
+        "Group 2"
+      ],
+      "slide": 8,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s8-group-c6ef216f4335",
+      "name": "Group 58",
+      "path": [
+        "Group 58"
+      ],
+      "slide": 8,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s8-group-72a1b385e948",
+      "name": "Group 3",
+      "path": [
+        "Group 58",
+        "Group 3"
+      ],
+      "slide": 8,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s8-group-59ecc6c51c6f",
+      "name": "Group 56",
+      "path": [
+        "Group 56"
+      ],
+      "slide": 8,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s8-group-d225d549f7d4",
+      "name": "Group 9",
+      "path": [
+        "Group 56",
+        "Group 9"
+      ],
+      "slide": 8,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0040",
+        "track-0041",
+        "track-0042",
+        "track-0043",
+        "track-0044",
+        "track-0045",
+        "track-0046"
+      ],
+      "groupId": "panel-track-0039",
+      "panelTrackId": "track-0039",
+      "slide": 8,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0048",
+        "track-0049"
+      ],
+      "groupId": "panel-track-0047",
+      "panelTrackId": "track-0047",
+      "slide": 8,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0051",
+        "track-0052"
+      ],
+      "groupId": "panel-track-0050",
+      "panelTrackId": "track-0050",
+      "slide": 8,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s9-group-adf1e00f06f7",
+      "name": "Group 12",
+      "path": [
+        "Group 12"
+      ],
+      "slide": 9,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s9-group-66c90818cfda",
+      "name": "Group 58",
+      "path": [
+        "Group 58"
+      ],
+      "slide": 9,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s9-group-7a8a831a49a1",
+      "name": "Group 3",
+      "path": [
+        "Group 58",
+        "Group 3"
+      ],
+      "slide": 9,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s9-group-d313c1fdf3c1",
+      "name": "Group 56",
+      "path": [
+        "Group 56"
+      ],
+      "slide": 9,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s9-group-4538a728fdac",
+      "name": "Group 9",
+      "path": [
+        "Group 56",
+        "Group 9"
+      ],
+      "slide": 9,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0054",
+        "track-0055"
+      ],
+      "groupId": "panel-track-0053",
+      "panelTrackId": "track-0053",
+      "slide": 9,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0048",
+        "track-0049"
+      ],
+      "groupId": "panel-track-0047",
+      "panelTrackId": "track-0047",
+      "slide": 9,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0051",
+        "track-0052"
+      ],
+      "groupId": "panel-track-0050",
+      "panelTrackId": "track-0050",
+      "slide": 9,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s10-group-20629051fca8",
+      "name": "Group 12",
+      "path": [
+        "Group 12"
+      ],
+      "slide": 10,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s10-group-2c4d6d160141",
+      "name": "Group 15",
+      "path": [
+        "Group 15"
+      ],
+      "slide": 10,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s10-group-25e1f3d4850a",
+      "name": "Group 56",
+      "path": [
+        "Group 56"
+      ],
+      "slide": 10,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s10-group-bc81bd16fffd",
+      "name": "Group 9",
+      "path": [
+        "Group 56",
+        "Group 9"
+      ],
+      "slide": 10,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0054",
+        "track-0055"
+      ],
+      "groupId": "panel-track-0053",
+      "panelTrackId": "track-0053",
+      "slide": 10,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0057",
+        "track-0058"
+      ],
+      "groupId": "panel-track-0056",
+      "panelTrackId": "track-0056",
+      "slide": 10,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0051",
+        "track-0052"
+      ],
+      "groupId": "panel-track-0050",
+      "panelTrackId": "track-0050",
+      "slide": 10,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s11-group-eae2f3e5462b",
+      "name": "Group 12",
+      "path": [
+        "Group 12"
+      ],
+      "slide": 11,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s11-group-72ce220a7c06",
+      "name": "Group 15",
+      "path": [
+        "Group 15"
+      ],
+      "slide": 11,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s11-group-f6ccd4da4ff3",
+      "name": "Group 56",
+      "path": [
+        "Group 56"
+      ],
+      "slide": 11,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s11-group-383f0904d25a",
+      "name": "Group 9",
+      "path": [
+        "Group 56",
+        "Group 9"
+      ],
+      "slide": 11,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0054",
+        "track-0055"
+      ],
+      "groupId": "panel-track-0053",
+      "panelTrackId": "track-0053",
+      "slide": 11,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0057",
+        "track-0058"
+      ],
+      "groupId": "panel-track-0056",
+      "panelTrackId": "track-0056",
+      "slide": 11,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0051",
+        "track-0052"
+      ],
+      "groupId": "panel-track-0050",
+      "panelTrackId": "track-0050",
+      "slide": 11,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s12-group-39a31dffdb23",
+      "name": "Group 12",
+      "path": [
+        "Group 12"
+      ],
+      "slide": 12,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s12-group-2402a59ea1a9",
+      "name": "Group 15",
+      "path": [
+        "Group 15"
+      ],
+      "slide": 12,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s12-group-abda9ebde5d0",
+      "name": "Group 18",
+      "path": [
+        "Group 18"
+      ],
+      "slide": 12,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0054",
+        "track-0055"
+      ],
+      "groupId": "panel-track-0053",
+      "panelTrackId": "track-0053",
+      "slide": 12,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0057",
+        "track-0058"
+      ],
+      "groupId": "panel-track-0056",
+      "panelTrackId": "track-0056",
+      "slide": 12,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0060",
+        "track-0061"
+      ],
+      "groupId": "panel-track-0059",
+      "panelTrackId": "track-0059",
+      "slide": 12,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s13-group-cdf2ebb528ed",
+      "name": "Group 15",
+      "path": [
+        "Group 15"
+      ],
+      "slide": 13,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s13-group-a1d180a75571",
+      "name": "Group 18",
+      "path": [
+        "Group 18"
+      ],
+      "slide": 13,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s13-group-2b6f4d8d4f3b",
+      "name": "Group 95",
+      "path": [
+        "Group 95"
+      ],
+      "slide": 13,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0057",
+        "track-0058"
+      ],
+      "groupId": "panel-track-0056",
+      "panelTrackId": "track-0056",
+      "slide": 13,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0060",
+        "track-0061"
+      ],
+      "groupId": "panel-track-0059",
+      "panelTrackId": "track-0059",
+      "slide": 13,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0063",
+        "track-0064"
+      ],
+      "groupId": "panel-track-0062",
+      "panelTrackId": "track-0062",
+      "slide": 13,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s14-group-6730e968f537",
+      "name": "Group 15",
+      "path": [
+        "Group 15"
+      ],
+      "slide": 14,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s14-group-c970bb6447e7",
+      "name": "Group 18",
+      "path": [
+        "Group 18"
+      ],
+      "slide": 14,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s14-group-9bc729d09f25",
+      "name": "Group 95",
+      "path": [
+        "Group 95"
+      ],
+      "slide": 14,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0057",
+        "track-0058"
+      ],
+      "groupId": "panel-track-0056",
+      "panelTrackId": "track-0056",
+      "slide": 14,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0060",
+        "track-0061"
+      ],
+      "groupId": "panel-track-0059",
+      "panelTrackId": "track-0059",
+      "slide": 14,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0063",
+        "track-0064"
+      ],
+      "groupId": "panel-track-0062",
+      "panelTrackId": "track-0062",
+      "slide": 14,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s15-group-8a4db1b92da2",
+      "name": "Group 30",
+      "path": [
+        "Group 30"
+      ],
+      "slide": 15,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s15-group-5273a657a8a5",
+      "name": "Group 43",
+      "path": [
+        "Group 43"
+      ],
+      "slide": 15,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0060",
+        "track-0061"
+      ],
+      "groupId": "panel-track-0059",
+      "panelTrackId": "track-0059",
+      "slide": 15,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0063",
+        "track-0064"
+      ],
+      "groupId": "panel-track-0062",
+      "panelTrackId": "track-0062",
+      "slide": 15,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0067"
+      ],
+      "groupId": "panel-track-0068",
+      "panelTrackId": "track-0068",
+      "slide": 15,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s16-group-62a3085bbc0b",
+      "name": "Group 43",
+      "path": [
+        "Group 43"
+      ],
+      "slide": 16,
+      "status": "explicit-group-path"
+    },
+    {
+      "childTrackIds": [
+        "track-0069",
+        "track-0063",
+        "track-0064"
+      ],
+      "groupId": "panel-track-0062",
+      "panelTrackId": "track-0062",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0071"
+      ],
+      "groupId": "panel-track-0072",
+      "panelTrackId": "track-0072",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0067",
+        "track-0066"
+      ],
+      "groupId": "panel-track-0068",
+      "panelTrackId": "track-0068",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0070"
+      ],
+      "groupId": "panel-track-0073",
+      "panelTrackId": "track-0073",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0067"
+      ],
+      "groupId": "panel-track-0068",
+      "panelTrackId": "track-0068",
+      "slide": 17,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0075"
+      ],
+      "groupId": "panel-track-0074",
+      "panelTrackId": "track-0074",
+      "slide": 17,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0070"
+      ],
+      "groupId": "panel-track-0073",
+      "panelTrackId": "track-0073",
+      "slide": 17,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0075"
+      ],
+      "groupId": "panel-track-0074",
+      "panelTrackId": "track-0074",
+      "slide": 18,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0076"
+      ],
+      "groupId": "panel-track-0077",
+      "panelTrackId": "track-0077",
+      "slide": 18,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0067"
+      ],
+      "groupId": "panel-track-0068",
+      "panelTrackId": "track-0068",
+      "slide": 18,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0070"
+      ],
+      "groupId": "panel-track-0073",
+      "panelTrackId": "track-0073",
+      "slide": 18,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0076"
+      ],
+      "groupId": "panel-track-0077",
+      "panelTrackId": "track-0077",
+      "slide": 19,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0075"
+      ],
+      "groupId": "panel-track-0074",
+      "panelTrackId": "track-0074",
+      "slide": 19,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0076"
+      ],
+      "groupId": "panel-track-0077",
+      "panelTrackId": "track-0077",
+      "slide": 20,
+      "status": "inferred-panel"
+    },
+    {
+      "groupId": "s23-group-da7e98194716",
+      "name": "Group 7",
+      "path": [
+        "Group 7"
+      ],
+      "slide": 23,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s23-group-d0a5e5ef72b1",
+      "name": "Group 9",
+      "path": [
+        "Group 9"
+      ],
+      "slide": 23,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s23-group-c94521945a59",
+      "name": "Group 8",
+      "path": [
+        "Group 8"
+      ],
+      "slide": 23,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s23-group-c1a6155bc524",
+      "name": "Group 2",
+      "path": [
+        "Group 2"
+      ],
+      "slide": 23,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s23-group-ead55dfbcf18",
+      "name": "Group 10",
+      "path": [
+        "Group 10"
+      ],
+      "slide": 23,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s24-group-1458c1044c4c",
+      "name": "Group 7",
+      "path": [
+        "Group 7"
+      ],
+      "slide": 24,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s24-group-c038203982f7",
+      "name": "Group 9",
+      "path": [
+        "Group 9"
+      ],
+      "slide": 24,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s24-group-a16ec883a64d",
+      "name": "Group 8",
+      "path": [
+        "Group 8"
+      ],
+      "slide": 24,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s24-group-abc5f6ec23e9",
+      "name": "Group 2",
+      "path": [
+        "Group 2"
+      ],
+      "slide": 24,
+      "status": "explicit-group-path"
+    },
+    {
+      "groupId": "s24-group-e0c8393ca47f",
+      "name": "Group 10",
+      "path": [
+        "Group 10"
+      ],
+      "slide": 24,
+      "status": "explicit-group-path"
+    }
+  ],
+  "schema": "pptx-html-presenter.group-report.v1",
+  "slideCount": 25
+}

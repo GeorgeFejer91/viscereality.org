@@ -6,6 +6,7 @@
   <title>Viscereality Presentations</title>
   <style>
     :root {
+      color-scheme: dark;
       --bg: #050708;
       --panel: #11161d;
       --text: #e7edf7;
@@ -13,117 +14,34 @@
       --accent: #66b2ff;
       --line: #213040;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
-      background:
-        radial-gradient(1100px 500px at 20% -10%, #17324f 0%, transparent 60%),
-        radial-gradient(900px 450px at 100% 0%, #1e1a3e 0%, transparent 55%),
-        var(--bg);
+      background: #050708;
       color: var(--text);
       font-family: "Segoe UI", system-ui, sans-serif;
       padding: 48px 20px 56px;
     }
-
-    .wrap {
-      max-width: 1080px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: clamp(1.8rem, 2.4vw, 2.6rem);
-      margin-bottom: 8px;
-      letter-spacing: 0.01em;
-    }
-
-    .subtitle {
-      color: var(--dim);
-      margin-bottom: 28px;
-      line-height: 1.5;
-    }
-
-    .grid {
-      display: grid;
-      gap: 20px;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-
+    .wrap { max-width: 1080px; margin: 0 auto; }
+    h1 { font-size: clamp(1.8rem, 2.4vw, 2.6rem); margin-bottom: 8px; }
+    .subtitle { color: var(--dim); margin-bottom: 28px; line-height: 1.5; }
+    .grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
     .card {
       color: inherit;
-      background: linear-gradient(180deg, #121924 0%, #0f141d 100%);
+      background: #10151d;
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 8px;
       overflow: hidden;
-      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
       box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
     }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: #39628a;
-      box-shadow: 0 20px 42px rgba(0, 0, 0, 0.44);
-    }
-
-    .thumb {
-      width: 100%;
-      height: 190px;
-      object-fit: cover;
-      display: block;
-      background: #0d1218;
-    }
-
-    .thumb.placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background:
-        radial-gradient(500px 200px at 80% 20%, rgba(116, 67, 255, 0.3), transparent 60%),
-        radial-gradient(500px 220px at 20% 80%, rgba(64, 151, 255, 0.3), transparent 60%),
-        #0d1218;
-      color: #ced8e5;
-      font-size: 0.95rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .body {
-      padding: 15px 16px 18px;
-    }
-
-    .kicker {
-      color: var(--accent);
-      font-size: 0.84rem;
-      margin-bottom: 5px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .title {
-      font-size: 1.15rem;
-      margin-bottom: 8px;
-      font-weight: 650;
-    }
-
-    .meta {
-      color: var(--dim);
-      line-height: 1.45;
-      font-size: 0.94rem;
-    }
-
-    .actions {
-      margin-top: 12px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
+    .card:hover { transform: translateY(-3px); border-color: #39628a; box-shadow: 0 20px 42px rgba(0,0,0,0.44); }
+    .thumb { width: 100%; height: 190px; object-fit: cover; display: block; background: #0d1218; }
+    .body { padding: 15px 16px 18px; }
+    .kicker { color: var(--accent); font-size: 0.84rem; margin-bottom: 5px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 600; }
+    .title { font-size: 1.15rem; margin-bottom: 8px; font-weight: 650; }
+    .meta { color: var(--dim); line-height: 1.45; font-size: 0.94rem; }
+    .actions { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; }
     .btn {
       display: inline-block;
       text-decoration: none;
@@ -134,87 +52,60 @@
       padding: 7px 11px;
       font-size: 0.86rem;
     }
-
-    .btn:hover {
-      background: rgba(56, 91, 127, 0.6);
-    }
-
-    .foot {
-      margin-top: 30px;
-      color: var(--dim);
-      font-size: 0.9rem;
-    }
-
-    .foot a {
-      color: #b8d8ff;
-      text-decoration: none;
-    }
+    .btn:hover { background: rgba(56, 91, 127, 0.6); }
+    .btn.ghost { border-color: #2b3b4d; color: #aebdcd; background: rgba(18, 24, 32, 0.65); }
+    .foot { margin-top: 30px; color: var(--dim); font-size: 0.9rem; }
+    .foot a { color: #b8d8ff; text-decoration: none; }
   </style>
 </head>
 <body>
   <main class="wrap">
     <h1>Presentations</h1>
-    <p class="subtitle">
-      Select a presentation. Each opens in a dedicated subpage player with chapter navigation.
-    </p>
+    <p class="subtitle">Select a presentation. Each opens as its own player; shared assets stay invisible underneath the UI.</p>
 
     <section class="grid">
       <article class="card">
-        <img class="thumb" src="./MuC/preview.jpg" alt="MuC 2025 presentation preview frame">
+        <img class="thumb" src="./MuC/preview.jpg" alt="Viscereality - MuC 2025 preview frame">
         <div class="body">
-          <div class="kicker">Mensch und Computer 2025</div>
+          <div class="kicker">MuC 2025</div>
           <div class="title">Viscereality - MuC 2025</div>
-          <div class="meta">Interactive player with manual next/prev transition flow.</div>
+          <div class="meta">HTML scene recreation with shared media assets and reversible Morph-style navigation.</div>
           <div class="actions">
-            <a class="btn" href="./MuC/" aria-label="Open MuC presentation player">Open Player</a>
-            <a class="btn" href="https://muc2025.mensch-und-computer.de/en/" target="_blank" rel="noopener noreferrer" aria-label="Open MuC conference page">Conference</a>
+            <a class="btn" href="./MuC/">Open Player</a>
+            <a class="btn" href="https://muc2025.mensch-und-computer.de/en/" target="_blank" rel="noopener noreferrer">MuC 2025</a>
+            <a class="btn ghost" href="./MuC-chunked/">Chunked fallback</a>
           </div>
         </div>
       </article>
-
       <article class="card">
-        <img class="thumb" src="./alpCHI/preview.jpg" alt="alpCHI presentation preview frame">
+        <img class="thumb" src="./alpCHI/preview.jpg" alt="Viscereality - alpCHI 2026 preview frame">
         <div class="body">
           <div class="kicker">alpCHI 2026</div>
           <div class="title">Viscereality - alpCHI 2026</div>
-          <div class="meta">Interactive player with strict authored transition/timing behavior.</div>
+          <div class="meta">HTML scene recreation with shared media assets and reversible Morph-style navigation.</div>
           <div class="actions">
-            <a class="btn" href="./alpCHI/" aria-label="Open alpCHI presentation player">Open Player</a>
-            <a class="btn" href="https://alpchi.org/" target="_blank" rel="noopener noreferrer" aria-label="Open alpCHI conference page">Conference</a>
+            <a class="btn" href="./alpCHI/">Open Player</a>
+            <a class="btn" href="https://alpchi.org/" target="_blank" rel="noopener noreferrer">alpCHI 2026</a>
+            <a class="btn ghost" href="./alpCHI-chunked/">Chunked fallback</a>
           </div>
         </div>
       </article>
-
       <article class="card">
-        <img class="thumb" src="./BBD26/preview.jpg" alt="Berlin Breathwork Days 2026 presentation preview frame">
+        <img class="thumb" src="./BBD26/preview.jpg" alt="Viscereality - Berlin Breathwork Days preview frame">
         <div class="body">
-          <div class="kicker">Berlin Breathwork Days 2026</div>
+          <div class="kicker">Berlin Breathwork Days</div>
           <div class="title">Viscereality - Berlin Breathwork Days</div>
-          <div class="meta">Interactive player with exact media-length slide loops and 2s generated transitions.</div>
+          <div class="meta">HTML scene recreation with shared media assets and reversible Morph-style navigation.</div>
           <div class="actions">
-            <a class="btn" href="./BBD26/" aria-label="Open Berlin Breathwork Days presentation player">Open Player</a>
-            <a class="btn" href="https://www.berlinbreathwork.org/en/bbd26-programm" target="_blank" rel="noopener noreferrer" aria-label="Open Berlin Breathwork Days program page">Program</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="card">
-        <img class="thumb" src="./BBD26-scene/preview.jpg" alt="Berlin Breathwork Days 2026 scene-rendered presentation preview frame">
-        <div class="body">
-          <div class="kicker">Berlin Breathwork Days 2026</div>
-          <div class="title">Viscereality - Scene Player</div>
-          <div class="meta">PPTX-to-HTML scene reconstruction with reusable assets and browser-rendered Morph transitions.</div>
-          <div class="actions">
-            <a class="btn" href="./BBD26-scene/" aria-label="Open Berlin Breathwork Days scene-rendered presentation player">Open Scene Player</a>
-            <a class="btn" href="./BBD26/" aria-label="Open Berlin Breathwork Days chunked fallback player">Fallback Player</a>
+            <a class="btn" href="./BBD26/">Open Player</a>
+            <a class="btn" href="https://www.berlinbreathwork.org/en/bbd26-programm" target="_blank" rel="noopener noreferrer">Berlin Breathwork Days</a>
+            <a class="btn ghost" href="./BBD26-chunked/">Chunked fallback</a>
           </div>
         </div>
       </article>
     </section>
 
-    <p class="foot">
-      Return to <a href="/">viscereality.org</a>.
-    </p>
+    <p class="foot">Return to <a href="/">viscereality.org</a>.</p>
   </main>
 </body>
 </html>

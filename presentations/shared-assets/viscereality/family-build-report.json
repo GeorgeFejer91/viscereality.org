@@ -1,0 +1,257 @@
+{
+  "decks": [
+    {
+      "assetCount": 39,
+      "assetMode": "copy",
+      "deckId": "MuC",
+      "generatedAtUtc": "2026-07-03T17:21:40+00:00",
+      "githubPagesSafe": true,
+      "originalGithubPagesSafe": true,
+      "originalStatus": "ok",
+      "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
+      "playerFile": "index.html",
+      "prunedFallbackAssets": {
+        "bytes": 0,
+        "count": 0
+      },
+      "sceneFile": "deck.scene.json",
+      "schema": "pptx-html-presenter.build.v1",
+      "sharedAssets": {
+        "deckId": "MuC",
+        "githubPagesSafe": true,
+        "index": "presentations/shared-assets/viscereality/asset-index.json",
+        "maxAssetMb": 29.452,
+        "missingReferences": [],
+        "oversizeAssets": [],
+        "prunedLocalAssets": {
+          "bytes": 178074253,
+          "count": 39,
+          "mb": 169.825
+        },
+        "rewrittenReferences": 78,
+        "root": "presentations/shared-assets/viscereality"
+      },
+      "slideCount": 17,
+      "source": {
+        "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\Viscereality_MuC.pptx",
+        "sha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608"
+      },
+      "status": "ok"
+    },
+    {
+      "assetCount": 48,
+      "assetMode": "copy",
+      "deckId": "alpCHI",
+      "generatedAtUtc": "2026-07-03T17:00:03+00:00",
+      "githubPagesSafe": true,
+      "originalGithubPagesSafe": true,
+      "originalStatus": "ok",
+      "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
+      "playerFile": "index.html",
+      "prunedFallbackAssets": {
+        "bytes": 0,
+        "count": 0
+      },
+      "sceneFile": "deck.scene.json",
+      "schema": "pptx-html-presenter.build.v1",
+      "sharedAssets": {
+        "deckId": "alpCHI",
+        "githubPagesSafe": true,
+        "index": "presentations/shared-assets/viscereality/asset-index.json",
+        "maxAssetMb": 48.879,
+        "missingReferences": [],
+        "oversizeAssets": [],
+        "prunedLocalAssets": {
+          "bytes": 0,
+          "count": 0,
+          "mb": 0.0
+        },
+        "rewrittenReferences": 0,
+        "root": "presentations/shared-assets/viscereality"
+      },
+      "slideCount": 25,
+      "source": {
+        "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\Viscereality_alpCHI_v2.pptx",
+        "sha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c"
+      },
+      "status": "ok"
+    },
+    {
+      "assetCount": 57,
+      "assetMode": "copy",
+      "deckId": "BBD26",
+      "generatedAtUtc": "2026-07-03T17:04:42+00:00",
+      "githubPagesSafe": true,
+      "originalGithubPagesSafe": true,
+      "originalStatus": "ok",
+      "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
+      "playerFile": "index.html",
+      "prunedFallbackAssets": {
+        "bytes": 0,
+        "count": 0
+      },
+      "sceneFile": "deck.scene.json",
+      "schema": "pptx-html-presenter.build.v1",
+      "sharedAssets": {
+        "deckId": "BBD26",
+        "githubPagesSafe": true,
+        "index": "presentations/shared-assets/viscereality/asset-index.json",
+        "maxAssetMb": 48.879,
+        "missingReferences": [],
+        "oversizeAssets": [],
+        "prunedLocalAssets": {
+          "bytes": 0,
+          "count": 0,
+          "mb": 0.0
+        },
+        "rewrittenReferences": 0,
+        "root": "presentations/shared-assets/viscereality"
+      },
+      "slideCount": 32,
+      "source": {
+        "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\20260512_BreathworkDays_Berlin_new.pptx",
+        "sha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe"
+      },
+      "status": "ok"
+    }
+  ],
+  "familyId": "viscereality",
+  "generatedAtUtc": "2026-07-03T17:21:51+00:00",
+  "preflight": {
+    "currentChunkedTotalMb": 1121.883,
+    "decks": [
+      {
+        "assetCount": 39,
+        "currentPublicSizeMb": 136.255,
+        "deckId": "MuC",
+        "mediaSizeMb": 1161.801,
+        "publicDir": "MuC",
+        "slideCount": 17,
+        "source": "presentations/Viscereality_MuC.pptx",
+        "sourceExists": true,
+        "sourceSizeMb": 1161.955,
+        "staging": "presentations/MuC-scene",
+        "transitionCounts": {
+          "morph": 17
+        }
+      },
+      {
+        "assetCount": 48,
+        "currentPublicSizeMb": 383.266,
+        "deckId": "alpCHI",
+        "mediaSizeMb": 1073.739,
+        "publicDir": "alpCHI",
+        "slideCount": 25,
+        "source": "presentations/Viscereality_alpCHI_v2.pptx",
+        "sourceExists": true,
+        "sourceSizeMb": 1073.899,
+        "staging": "presentations/alpCHI-scene",
+        "transitionCounts": {
+          "custom": 1,
+          "morph": 24
+        }
+      },
+      {
+        "assetCount": 57,
+        "currentPublicSizeMb": 602.361,
+        "deckId": "BBD26",
+        "mediaSizeMb": 1086.943,
+        "publicDir": "BBD26",
+        "slideCount": 32,
+        "source": "presentations/20260512_BreathworkDays_Berlin_new.pptx",
+        "sourceExists": true,
+        "sourceSizeMb": 1087.132,
+        "staging": "presentations/BBD26-scene-new",
+        "transitionCounts": {
+          "custom": 1,
+          "morph": 31
+        }
+      }
+    ],
+    "disk": {
+      "freeGb": 9.207,
+      "minimumFreeGb": 8.0,
+      "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org"
+    },
+    "estimatedSourceDedupSavingsMb": 1796.631,
+    "estimatedSourceMediaTotalMb": 3322.483,
+    "estimatedUniqueSourceMediaMb": 1525.852,
+    "failures": [],
+    "warnings": []
+  },
+  "prunedSharedAssets": {
+    "bytes": 488311051,
+    "count": 14,
+    "files": [
+      "presentations/shared-assets/viscereality/optimized/2b935b0d146d3db4fded5ce7c1f8c0a122394003f08e622f4279df18e08dbb9a.webm",
+      "presentations/shared-assets/viscereality/optimized/2d2ce216d17b9f5a414ce1aac68c23a32106362c7dbbc7c8ae22c43dff50c29a.webm",
+      "presentations/shared-assets/viscereality/optimized/2f8b6a4402c33efed39330d146797c72bf587567c5fbd8cc8c7e255b74e01b32.webm",
+      "presentations/shared-assets/viscereality/optimized/466144fa90b6bc0f19240e71b8e297bf5e4af7b1bd93c5fa59a7c4364fdb8aeb.webm",
+      "presentations/shared-assets/viscereality/optimized/4ce2055a6046d0547ba5363d08588b77ccf56ba47943a2812b8b681b29ec6f1a.webm",
+      "presentations/shared-assets/viscereality/optimized/6148f2813dd63acdcf39d764cd2fb3954a625885fe00ad75111f470dcc503462.webm",
+      "presentations/shared-assets/viscereality/optimized/a71a7f086efb380b046b3fc7d4768b5127c4854365d467decd49cccf5af17f4f.webm",
+      "presentations/shared-assets/viscereality/optimized/d614e6df3d76365a8a4df7153c4dc7ddd5bf8a196b84a7f40431f4f60a7d618e.webm",
+      "presentations/shared-assets/viscereality/optimized/e3cc446ed4db74e292363de0bfccdfc2413eff27fa88e855c0697a9b5d8f34fc.webm",
+      "presentations/shared-assets/viscereality/optimized/f215dc5d87e86639f0f2546ce8d971cfb2fb94c6773a8a9d426e2e9f290a2959.webm",
+      "presentations/shared-assets/viscereality/optimized/f51c61fbe8f3cdf1a1eb47b2887eb984b6c46ab9a8211e551def42c54a999211.webm",
+      "presentations/shared-assets/viscereality/optimized/f901384df08f96bb985b8ae673e6146d2fa48001339e64eccf8a3b13258b2afb.webm",
+      "presentations/shared-assets/viscereality/optimized/fa063ff8de66d954d15f47b8d1224d1eda1b1d2c8ebeaace1c54540d020d813d.webm",
+      "presentations/shared-assets/viscereality/source/8e82652ecf1c208f1d02a967943ffdda54fed2cd2ae0708228c24a880df0e827.gif"
+    ],
+    "mb": 465.69,
+    "truncated": false
+  },
+  "schema": "pptx-html-presenter.family.build.v1",
+  "sharedAssetRoot": "presentations/shared-assets/viscereality",
+  "sharedAssets": [
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
+      "bytesCopied": 109007815,
+      "copied": 14,
+      "deckId": "MuC",
+      "mbCopied": 103.958,
+      "missingReferences": [],
+      "prunedLocalAssets": {
+        "bytes": 178074253,
+        "count": 39,
+        "mb": 169.825
+      },
+      "reused": 49,
+      "rewrittenReferences": 78,
+      "status": "ok"
+    },
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
+      "bytesCopied": 0,
+      "copied": 0,
+      "deckId": "alpCHI",
+      "mbCopied": 0.0,
+      "missingReferences": [],
+      "prunedLocalAssets": {
+        "bytes": 0,
+        "count": 0,
+        "mb": 0.0
+      },
+      "reused": 0,
+      "rewrittenReferences": 0,
+      "status": "ok"
+    },
+    {
+      "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
+      "bytesCopied": 0,
+      "copied": 0,
+      "deckId": "BBD26",
+      "mbCopied": 0.0,
+      "missingReferences": [],
+      "prunedLocalAssets": {
+        "bytes": 0,
+        "count": 0,
+        "mb": 0.0
+      },
+      "reused": 0,
+      "rewrittenReferences": 0,
+      "status": "ok"
+    }
+  ],
+  "status": "ok"
+}

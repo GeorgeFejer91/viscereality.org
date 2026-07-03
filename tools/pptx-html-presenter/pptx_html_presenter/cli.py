@@ -8,6 +8,7 @@ from pathlib import Path
 from .build import build_presentation, inspect_pptx
 from .config import PROFILE_PRESETS, PresenterConfig, load_config
 from .errors import PresenterError
+from .family import build_family, inspect_family, publish_family, visual_audit_family
 from .publish import publish_build
 from .qa import (
     run_candidate_sweep,
@@ -197,6 +198,27 @@ def build_parser() -> argparse.ArgumentParser:
     publish.add_argument("--repo-root")
     publish.add_argument("--force", action="store_true")
     publish.add_argument("--update-shared-decks", action=argparse.BooleanOptionalAction, default=True)
+
+    family = sub.add_parser("family", help="Build, audit, and publish a multi-deck shared-asset family.")
+    family_sub = family.add_subparsers(dest="family_command", required=True)
+
+    family_inspect = family_sub.add_parser("inspect", help="Inspect all decks in a family config.")
+    family_inspect.add_argument("family_config")
+
+    family_build = family_sub.add_parser("build", help="Build all family decks and hoist shared assets.")
+    family_build.add_argument("family_config")
+    family_build.add_argument("--ffmpeg-bin")
+    family_build.add_argument("--force", action="store_true")
+
+    family_audit = family_sub.add_parser("visual-audit", help="Run full visual audit for all family staging builds.")
+    family_audit.add_argument("family_config")
+    family_audit.add_argument("--node-bin")
+    family_audit.add_argument("--playwright-dir")
+
+    family_publish = family_sub.add_parser("publish", help="Publish family staging builds to public deck folders.")
+    family_publish.add_argument("family_config")
+    family_publish.add_argument("--force", action="store_true")
+    family_publish.add_argument("--archive-chunked", action=argparse.BooleanOptionalAction, default=True)
 
     return parser
 
@@ -424,6 +446,39 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"published={report['target']}")
             return 0
+        if args.command == "family":
+            config_path = Path(args.family_config).expanduser().resolve()
+            if args.family_command == "inspect":
+                report = inspect_family(config_path)
+                print(
+                    f"family-inspect={report['status']} decks={len(report['preflight']['decks'])} "
+                    f"unique-media-mb={report['preflight']['estimatedUniqueSourceMediaMb']}"
+                )
+                return 0
+            if args.family_command == "build":
+                report = build_family(
+                    config_path,
+                    ffmpeg_bin=args.ffmpeg_bin,
+                    force=args.force,
+                )
+                print(f"family-build={report['status']} decks={len(report['decks'])}")
+                return 0
+            if args.family_command == "visual-audit":
+                report = visual_audit_family(
+                    config_path,
+                    node_bin=args.node_bin,
+                    playwright_dir=Path(args.playwright_dir) if args.playwright_dir else None,
+                )
+                print(f"family-visual-audit={report['status']} decks={len(report['decks'])}")
+                return 0
+            if args.family_command == "publish":
+                report = publish_family(
+                    config_path,
+                    force=args.force,
+                    archive_chunked=args.archive_chunked,
+                )
+                print(f"family-publish={report['status']} decks={len(report['decks'])}")
+                return 0
     except PresenterError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

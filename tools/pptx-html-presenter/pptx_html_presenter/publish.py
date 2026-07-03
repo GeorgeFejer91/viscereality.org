@@ -46,7 +46,7 @@ def publish_build(
             continue
         rel = item.relative_to(build_dir)
         rel_posix = rel.as_posix()
-        if rel_posix.startswith(("qa/reference/", "qa/html/", "qa/diff/")):
+        if rel_posix.startswith(("qa/reference/", "qa/html/", "qa/diff/", "qa/visual-audit/html/")):
             continue
         if rel_posix.startswith("assets/source/") and rel_posix not in referenced_asset_files:
             continue

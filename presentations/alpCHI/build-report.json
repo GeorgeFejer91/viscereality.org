@@ -1,0 +1,37 @@
+{
+  "assetCount": 48,
+  "assetMode": "copy",
+  "generatedAtUtc": "2026-07-03T17:00:03+00:00",
+  "githubPagesSafe": true,
+  "originalGithubPagesSafe": true,
+  "originalStatus": "ok",
+  "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
+  "playerFile": "index.html",
+  "prunedFallbackAssets": {
+    "bytes": 0,
+    "count": 0
+  },
+  "sceneFile": "deck.scene.json",
+  "schema": "pptx-html-presenter.build.v1",
+  "sharedAssets": {
+    "deckId": "alpCHI",
+    "githubPagesSafe": true,
+    "index": "presentations/shared-assets/viscereality/asset-index.json",
+    "maxAssetMb": 48.879,
+    "missingReferences": [],
+    "oversizeAssets": [],
+    "prunedLocalAssets": {
+      "bytes": 0,
+      "count": 0,
+      "mb": 0.0
+    },
+    "rewrittenReferences": 0,
+    "root": "presentations/shared-assets/viscereality"
+  },
+  "slideCount": 25,
+  "source": {
+    "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\Viscereality_alpCHI_v2.pptx",
+    "sha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c"
+  },
+  "status": "ok"
+}

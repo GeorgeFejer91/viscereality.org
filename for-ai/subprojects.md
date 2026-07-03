@@ -1,6 +1,6 @@
 # Subprojects
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 This is the working map of website-adjacent subprojects. Update it when a subproject is added, retired, or gains durable behavioral constraints.
 
@@ -24,9 +24,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Presentation Players
 
-- Paths: `presentations/MuC/`, `presentations/alpCHI/`, `presentations/BBD26/`, `presentations/shared/`
-- Purpose: browser-based presentation playback with slide chunks, transitions, and manifests.
-- Constraints: preserve authored chunk order and timing; update `manifest.json` and `presentations/shared/decks.js` together when changing a deck; keep controls usable on touch and keyboard.
+- Paths: `presentations/MuC/`, `presentations/alpCHI/`, `presentations/BBD26/`, `presentations/shared/`, `presentations/shared-assets/viscereality/`
+- Purpose: browser-based presentation playback. The target public players are scene-rendered HTML recreations with shared content-hashed media assets; chunked players remain fallback/reference artifacts only.
+- Constraints: preserve authored timing and navigation; update `deck.scene.json`, shared asset references, and `presentations/shared/decks.js` together when changing a scene deck; keep controls usable on touch and keyboard. If chunked fallbacks are archived as `*-chunked`, keep their links secondary on the presentation hub.
 
 ## Sync Relay
 
@@ -45,7 +45,8 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Path: `tools/pptx-html-presenter/`, generated decks under `presentations/*-scene/`
 - Purpose: reusable static-site compiler for PowerPoint decks into object-based HTML presentation players.
 - Constraints: target a one-to-one PPTX object mapper, not full-slide video chunks or screenshots. Preserve PowerPoint layering, object identities, groups, media clocks, text, shapes, crops, and Morph transitions. Inferred panel/carousel clusters, such as rounded white frames with contents inside, must become HTML groups with children locked to the frame and the frame/border rendered on top. Reverse navigation should play the same Morph animation backward.
-- Workflow: follow [pptx-html-one-to-one-mapper.md](pptx-html-one-to-one-mapper.md) before changing compiler/runtime behavior.
+- Family mode: `presentations/viscereality-family.config.json` maps `MuC`, `alpCHI`, and `BBD26` source PPTX files to staging scene builds and a shared asset library under `presentations/shared-assets/viscereality/`.
+- Workflow: follow [pptx-html-one-to-one-mapper.md](pptx-html-one-to-one-mapper.md) and [pptx-html-family-status.md](pptx-html-family-status.md) before changing compiler/runtime behavior.
 
 ## Generated Documents
 

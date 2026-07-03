@@ -20,7 +20,7 @@ await mkdir(outputDir, { recursive: true });
 const server = await startStaticServer(buildDir);
 const browser = await launchBrowserWithMediaCodecs();
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
-const baseUrl = `http://127.0.0.1:${server.port}/index.html`;
+const baseUrl = `http://127.0.0.1:${server.port}/${server.basePath}/index.html`;
 const report = [];
 const pageEvents = [];
 page.on("pageerror", (error) => {
@@ -282,7 +282,9 @@ async function ensureDiagnosticsHelpers(page) {
 }
 
 async function startStaticServer(rootDir) {
-  const root = path.resolve(rootDir);
+  const deckRoot = path.resolve(rootDir);
+  const root = path.dirname(deckRoot);
+  const basePath = path.basename(deckRoot);
   const mime = {
     ".html": "text/html; charset=utf-8",
     ".json": "application/json; charset=utf-8",
@@ -347,5 +349,5 @@ async function startStaticServer(rootDir) {
     }
   });
   await new Promise((resolve) => instance.listen(0, "127.0.0.1", resolve));
-  return { instance, port: instance.address().port };
+  return { instance, port: instance.address().port, basePath };
 }
