@@ -46,6 +46,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4",
       "sourcePath": "ppt/media/media3.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -55,16 +56,16 @@
       "animated": true,
       "durationSec": 3.26,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4.webm",
+      "file": "../shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
       "height": 1080,
       "id": "asset-0928f3a3fc7358dc",
       "kind": "video",
       "sha256": "0928f3a3fc7358dcaddc4bb2c6bf3b1d482c96992301f2c6e26426d832c72626",
       "sizeBytes": 32825145,
-      "sourceFile": "../shared-assets/viscereality/optimized/f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
       "sourcePath": "ppt/media/image3.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1920
@@ -122,16 +123,16 @@
       "animated": true,
       "durationSec": 40.86,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80.webm",
+      "file": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
       "height": 360,
       "id": "asset-164b535c99e4dff0",
       "kind": "video",
       "sha256": "164b535c99e4dff0daec08df43560254e7ed8cb00928f9f1c7b13643a8059764",
       "sizeBytes": 127416004,
-      "sourceFile": "../shared-assets/viscereality/optimized/34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
       "sourcePath": "ppt/media/image32.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -150,7 +151,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/477ae53194604ba376e3b72b9b62b62bca23a22cf66a983e7902a72c1662dda2.mp4",
       "sourcePath": "ppt/media/image27.gif",
       "warnings": [
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 320
@@ -169,7 +170,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/63ac9249e020c95f8e1bab824d2fb582eb9689d2ac0581e82c99683e8129357b.webm",
       "sourcePath": "ppt/media/image43.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 3200
@@ -179,16 +180,16 @@
       "animated": true,
       "durationSec": 21.16,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4.webm",
+      "file": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
       "height": 360,
       "id": "asset-21036503160e8e82",
       "kind": "video",
       "sha256": "21036503160e8e826ae0c281e692ce8812e1cc1999cfa693ea6273dd5d3b2f33",
       "sizeBytes": 67585215,
-      "sourceFile": "../shared-assets/viscereality/optimized/cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
       "sourcePath": "ppt/media/image30.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -198,16 +199,16 @@
       "animated": true,
       "durationSec": 8.12,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890.webm",
+      "file": "../shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
       "height": 1080,
       "id": "asset-2361b03b194a1b72",
       "kind": "video",
       "sha256": "2361b03b194a1b72ff7dcc86e1406dbeaaf983619582d6864a69e46bd3d9a4a4",
       "sizeBytes": 53955472,
-      "sourceFile": "../shared-assets/viscereality/optimized/df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
       "sourcePath": "ppt/media/image36.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1080
@@ -274,6 +275,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4",
       "sourcePath": "ppt/media/media2.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -331,16 +333,16 @@
       "animated": true,
       "durationSec": 6.0,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924.webm",
+      "file": "../shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
       "height": 500,
       "id": "asset-3db148e4034f6c1f",
       "kind": "video",
       "sha256": "3db148e4034f6c1f4279b9223985e801bb37068354483dc0686795ed8796028c",
       "sizeBytes": 402448,
-      "sourceFile": "../shared-assets/viscereality/optimized/918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
       "sourcePath": "ppt/media/image23.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 500
@@ -410,22 +412,23 @@
       "width": 1536
     },
     {
-      "alpha": null,
+      "alpha": true,
       "animated": false,
       "durationSec": null,
-      "extension": "wdp",
-      "file": "../shared-assets/viscereality/source/643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f.wdp",
-      "height": null,
+      "extension": "png",
+      "file": "../shared-assets/viscereality/optimized/33509396bc146fd6ca8d277d94afdc108784aca6a9befc4c711213437c5db55e.png",
+      "height": 376,
       "id": "asset-643435dc60035768",
       "kind": "image",
       "sha256": "643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f",
       "sizeBytes": 162742,
-      "sourceFile": "../shared-assets/viscereality/source/643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f.wdp",
+      "sourceFile": "../shared-assets/viscereality/optimized/33509396bc146fd6ca8d277d94afdc108784aca6a9befc4c711213437c5db55e.png",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "warnings": [
-        "image-probe-failed:cannot identify image file 'C:\\\\Users\\\\gfeje\\\\Documents\\\\GitHub\\\\viscereality.org\\\\presentations\\\\BBD26-scene-new\\\\assets\\\\source\\\\643435dc60035768.wdp'"
+        "wdp-converted-to-png-wic",
+        "source-file-pruned-shared-runtime-file-used"
       ],
-      "width": null
+      "width": 1500
     },
     {
       "alpha": null,
@@ -448,16 +451,16 @@
       "animated": true,
       "durationSec": 40.66,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52.webm",
+      "file": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
       "height": 360,
       "id": "asset-792ec06b75656dfc",
       "kind": "video",
       "sha256": "792ec06b75656dfcfb1107fe8cc0939f1ebf7e5136fcf3fc27e009c5cd56c219",
       "sizeBytes": 107751908,
-      "sourceFile": "../shared-assets/viscereality/optimized/0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
       "sourcePath": "ppt/media/image19.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -563,16 +566,16 @@
       "animated": true,
       "durationSec": 5.0,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960.webm",
+      "file": "../shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
       "height": 320,
       "id": "asset-9b21110a5cda13a9",
       "kind": "video",
       "sha256": "9b21110a5cda13a9c51ea266cae84bb1b9e5c6075a007fe3fc2a5117bc8db78a",
       "sizeBytes": 364830,
-      "sourceFile": "../shared-assets/viscereality/optimized/60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
       "sourcePath": "ppt/media/image26.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 800
@@ -598,16 +601,16 @@
       "animated": true,
       "durationSec": 12.0,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab.webm",
+      "file": "../shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
       "height": 924,
       "id": "asset-a2d751aea592182c",
       "kind": "video",
       "sha256": "a2d751aea592182c25a7e311e86b2af0b405984888ed660436c8866acabd02f4",
       "sizeBytes": 11278122,
-      "sourceFile": "../shared-assets/viscereality/optimized/89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
       "sourcePath": "ppt/media/image17.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1326
@@ -642,6 +645,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
       "sourcePath": "ppt/media/media4.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -667,16 +671,16 @@
       "animated": true,
       "durationSec": 20.9,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10.webm",
+      "file": "../shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
       "height": 360,
       "id": "asset-ae2ffbb9731dbf54",
       "kind": "video",
       "sha256": "ae2ffbb9731dbf54c3b4c8fce7c069a2651df1b4b5645ffc721f9514e97f65b1",
       "sizeBytes": 27724367,
-      "sourceFile": "../shared-assets/viscereality/optimized/e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
       "sourcePath": "ppt/media/image29.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -686,16 +690,16 @@
       "animated": true,
       "durationSec": 7.04,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a.webm",
+      "file": "../shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
       "height": 1080,
       "id": "asset-b34ce151f7018046",
       "kind": "video",
       "sha256": "b34ce151f7018046b01f0a37efbeef5cb3e5058dfafbc480f5f3436badc87589",
       "sizeBytes": 6460970,
-      "sourceFile": "../shared-assets/viscereality/optimized/dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
       "sourcePath": "ppt/media/image28.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 810
@@ -730,6 +734,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4",
       "sourcePath": "ppt/media/media1.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -739,16 +744,16 @@
       "animated": true,
       "durationSec": 12.0,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e.webm",
+      "file": "../shared-assets/viscereality/optimized/767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94.webm",
       "height": 924,
       "id": "asset-caba9aca5ff1c30c",
       "kind": "video",
       "sha256": "caba9aca5ff1c30cfb1b6ce480e824bbba9eaeac3b4d723f44c0f93d2d868d51",
       "sizeBytes": 29963310,
-      "sourceFile": "../shared-assets/viscereality/optimized/eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94.webm",
       "sourcePath": "ppt/media/image22.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1326
@@ -774,16 +779,16 @@
       "animated": true,
       "durationSec": 40.96,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f.webm",
+      "file": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
       "height": 360,
       "id": "asset-ceabe477dce6f31c",
       "kind": "video",
       "sha256": "ceabe477dce6f31c9795b68fbed9411e7c450f881e14657eaca2a44afa0a5d6f",
       "sizeBytes": 117441442,
-      "sourceFile": "../shared-assets/viscereality/optimized/78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
       "sourcePath": "ppt/media/image21.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -857,16 +862,16 @@
       "animated": true,
       "durationSec": 41.03,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b.webm",
+      "file": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
       "height": 360,
       "id": "asset-de15ac9d4fa9ad4b",
       "kind": "video",
       "sha256": "de15ac9d4fa9ad4b523c10b3555bb95673cb8aff3fb52ba861c397f4d76f9ba9",
       "sizeBytes": 147466612,
-      "sourceFile": "../shared-assets/viscereality/optimized/27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
       "sourcePath": "ppt/media/image33.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -892,16 +897,16 @@
       "animated": true,
       "durationSec": 3.54,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe.webm",
+      "file": "../shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
       "height": 921,
       "id": "asset-e2fc514621cac09e",
       "kind": "video",
       "sha256": "e2fc514621cac09e58c8905772e83f37004af7d3856c414be0412da4eb39937d",
       "sizeBytes": 2033579,
-      "sourceFile": "../shared-assets/viscereality/optimized/85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
       "sourcePath": "ppt/media/image7.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 899
@@ -936,7 +941,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/0141287dc91e8112fc7bdd813d15d4d6653d7ead4a375b432c9bdf9a3cd0bf61.mp4",
       "sourcePath": "ppt/media/image24.gif",
       "warnings": [
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 500
@@ -962,16 +967,16 @@
       "animated": true,
       "durationSec": 20.96,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857.webm",
+      "file": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
       "height": 360,
       "id": "asset-fc99bea418f76236",
       "kind": "video",
       "sha256": "fc99bea418f76236f9a96f556336316c32da7c574da619a3244acbe065d4e821",
       "sizeBytes": 70799510,
-      "sourceFile": "../shared-assets/viscereality/optimized/19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
       "sourcePath": "ppt/media/image31.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -995,7 +1000,7 @@
     "sourceSha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe",
     "title": "Viscereality - Berlin Breathwork Days"
   },
-  "generatedAtUtc": "2026-07-03T17:04:42+00:00",
+  "generatedAtUtc": "2026-07-03T20:08:37+00:00",
   "qa": {
     "groupRows": [
       {
@@ -8888,7 +8893,7 @@
           "z": 10
         },
         {
-          "assetId": "asset-306c6a965da8d2a7",
+          "assetId": "asset-643435dc60035768",
           "creationId": "{76B61203-639A-629B-70B1-5352396B4C58}",
           "crop": null,
           "fill": null,
@@ -8935,7 +8940,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0010",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 11
         },
         {
@@ -9859,7 +9866,7 @@
           "z": 10
         },
         {
-          "assetId": "asset-306c6a965da8d2a7",
+          "assetId": "asset-643435dc60035768",
           "creationId": "{76B61203-639A-629B-70B1-5352396B4C58}",
           "crop": null,
           "fill": null,
@@ -9906,7 +9913,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0010",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 11
         },
         {
@@ -11699,7 +11708,7 @@
           "z": 13
         },
         {
-          "assetId": "asset-306c6a965da8d2a7",
+          "assetId": "asset-643435dc60035768",
           "creationId": "{58D6E929-9998-CB88-94EC-7BDCE245A9CC}",
           "crop": null,
           "fill": null,
@@ -11747,6 +11756,7 @@
           "textStyle": {},
           "trackId": "track-0010",
           "unsupported": [
+            "hdphoto-layer-selected-for-conversion",
             "off-canvas"
           ],
           "z": 14
@@ -13326,7 +13336,7 @@
           "z": 13
         },
         {
-          "assetId": "asset-306c6a965da8d2a7",
+          "assetId": "asset-643435dc60035768",
           "creationId": "{58D6E929-9998-CB88-94EC-7BDCE245A9CC}",
           "crop": null,
           "fill": null,
@@ -13374,6 +13384,7 @@
           "textStyle": {},
           "trackId": "track-0010",
           "unsupported": [
+            "hdphoto-layer-selected-for-conversion",
             "off-canvas"
           ],
           "z": 14

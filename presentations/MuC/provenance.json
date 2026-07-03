@@ -891,7 +891,7 @@
       "unsupported": []
     },
     {
-      "assetId": "asset-b7ecee47fb0c4df2",
+      "assetId": "asset-4a816c8511ec19db",
       "creationId": "{352C9620-731A-5F56-22BB-458F7C1744DD}",
       "kind": "image",
       "name": "Picture 10",
@@ -912,7 +912,9 @@
       },
       "slide": 1,
       "trackId": "track-0031",
-      "unsupported": []
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
     },
     {
       "assetId": "asset-32b2e0232f04aa13",

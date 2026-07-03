@@ -122,14 +122,21 @@ Current source PPTX parse results from family preflight:
 - Problem: PowerPoint can store a high-fidelity HDPhoto/WDP image layer plus a lower-fidelity PNG fallback for a single visible object. MuC slide 1 `Picture 10` used this for the raster title/text block, but the compiler selected the PNG fallback.
   - Solution: the parser now detects PowerPoint image layers (`a14:imgLayer`), prefers the related `.wdp` media asset for that object, and asset preparation converts WDP to browser-safe PNG via Windows WIC. A diagnostic MuC build rendered slide 1 with the converted WDP title object and improved settled slide-1 SSIM from `0.788991` to `0.865641` against the PowerPoint reference.
 - Problem: full family rebuilds are still slow because large transparent GIFs transcode to deterministic VP9-alpha WebM single-threaded.
-  - Current status: the large static-image optimizer was fixed to resize once and skip expensive lossless WebP for >24 MPixel sources, but full family rebuilds can still spend many minutes in transparent GIF/WebM conversion. A future performance pass should reuse shared optimized outputs earlier or add a reviewed faster alpha-transcode profile.
+  - Solution: family builds now seed an optimized-asset cache from the existing shared asset index and the current public/staging scene manifests. `prepare_assets()` consults this cache by original PPT media SHA before starting WDP/GIF/static-image/video conversion, copies the previously accepted runtime file into the local build, and records `optimized-asset-reused-from-shared-cache`. Path-only fallback is used only when no source SHA is available, to avoid accidentally reusing stale media when a future PPTX changes bytes but keeps an internal `ppt/media/...` filename.
+- Problem: shared optimized assets previously did not retain the original PPT media SHA, making future cache reuse harder and less deterministic.
+  - Solution: `share_deck_assets()` now writes `sourceSha256` and `sourceSha256s` into `asset-index.json` for each shared entry when the scene asset provides a source hash. Current shared index has source SHA metadata for all optimized entries.
 
-Current shared public asset library check after the MuC deterministic rebuild:
+Current shared public asset library check after the WDP/cache family rebuild:
 
-- `presentations/shared-assets/viscereality/` contains 100 runtime/source files, about 522.95 MiB total.
+- `presentations/shared-assets/viscereality/` contains 76 runtime/source files, about 362.57 MiB total.
 - Largest shared asset is about 48.879 MiB.
 - Files above 50 MiB: 0.
 - Files above 100 MiB: 0.
+- Optimized cache reuse in the latest build:
+  - `MuC`: 15 cached optimized assets reused.
+  - `alpCHI`: 21 cached optimized assets reused.
+  - `BBD26`: 22 cached optimized assets reused.
+- The latest build also converted one WDP/HDPhoto-derived asset per public deck into shared PNG runtime assets.
 - Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
 
 ## Latest HTML Visual Audit
@@ -147,6 +154,8 @@ After the first-transition calibration updates, current public HTML visual-audit
 - `MuC`: 145 samples, 0 failures.
 - `alpCHI`: 217 samples, 0 failures.
 - `BBD26`: 280 samples, 0 failures.
+
+After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, and reverse midpoint samples for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
 
 ## Latest PowerPoint Oracle Smoke
 
@@ -190,7 +199,7 @@ The previous chunked players were moved to:
 
 1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
 2. Continue fine-tuning deck-specific configs for oracle parity: first-transition smoke is improved but not passing on any deck.
-3. Rebuild and publish the public scene decks after the WDP conversion path and large-media rebuild performance are validated end to end.
+3. Continue improving oracle parity after the WDP/cache public rebuild. The public scene decks have been rebuilt, visually audited, and republished with WDP conversion and shared optimized cache reuse, but strict PowerPoint oracle QA is still the main unresolved quality gate.
 4. Continue calibrating text/layout metrics, media phase/brightness, and additional Morph progress maps.
 5. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
 6. Commit and push only intended files; do not stage unrelated root `index.html` changes.

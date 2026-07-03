@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import shutil
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -16,6 +17,7 @@ def prepare_assets(
     policy: AssetPolicy,
     *,
     ffmpeg_bin: str | None = None,
+    optimized_asset_cache: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     assets_dir = ensure_dir(out_dir / "assets")
     source_dir = ensure_dir(assets_dir / "source")
@@ -70,7 +72,15 @@ def prepare_assets(
             output_rel = by_hash[asset.sha256].get("output")
             if output_rel is None:
                 output_path = source_path
-                if _should_convert_wdp(asset, policy):
+                cached = _try_reuse_cached_optimized_asset(
+                    asset,
+                    optimized_dir,
+                    policy,
+                    optimized_asset_cache,
+                )
+                if cached is not None:
+                    output_path = cached
+                elif _should_convert_wdp(asset, policy):
                     converted = _try_convert_wdp_to_png_with_wic(
                         source_path,
                         optimized_dir,
@@ -394,6 +404,71 @@ def _should_optimize_static_image(asset: AssetRef, policy: AssetPolicy) -> bool:
 
 def _should_convert_wdp(asset: AssetRef, policy: AssetPolicy) -> bool:
     return policy.mode != "source-only" and asset.extension.lower() == "wdp"
+
+
+def _should_consult_optimized_cache(asset: AssetRef, policy: AssetPolicy) -> bool:
+    return (
+        policy.mode not in {"source-only", "manifest-only"}
+        and (
+            _should_convert_wdp(asset, policy)
+            or _should_transcode_gif(asset, policy)
+            or _should_optimize_static_image(asset, policy)
+            or _should_transcode_video(asset, policy)
+        )
+    )
+
+
+def _try_reuse_cached_optimized_asset(
+    asset: AssetRef,
+    optimized_dir: Path,
+    policy: AssetPolicy,
+    optimized_asset_cache: dict[str, Any] | None,
+) -> Path | None:
+    if not optimized_asset_cache or not _should_consult_optimized_cache(asset, policy):
+        return None
+    entry = _cached_entry_for_asset(asset, optimized_asset_cache)
+    if not entry:
+        return None
+    cached_path = Path(str(entry.get("path", "")))
+    if not cached_path.exists() or not cached_path.is_file():
+        return None
+    if format_mb(cached_path.stat().st_size) > policy.hard_max_mb:
+        return None
+    cached_ext = cached_path.suffix.lower().lstrip(".") or str(entry.get("extension", ""))
+    if bool(asset.alpha) and cached_ext == "mp4":
+        return None
+    optimized_dir.mkdir(parents=True, exist_ok=True)
+    output = optimized_dir / f"{asset.sha256[:16]}-cached.{cached_ext}"
+    if not output.exists() or output.stat().st_size != cached_path.stat().st_size:
+        shutil.copy2(cached_path, output)
+    asset.kind = str(entry.get("kind") or _kind_for_cached_extension(cached_ext))
+    asset.extension = cached_ext
+    if entry.get("animated") is not None:
+        asset.animated = bool(entry.get("animated"))
+    if entry.get("alpha") is not None:
+        asset.alpha = bool(entry.get("alpha"))
+    asset.warnings.append("optimized-asset-reused-from-shared-cache")
+    return output
+
+
+def _cached_entry_for_asset(asset: AssetRef, optimized_asset_cache: dict[str, Any]) -> dict[str, Any] | None:
+    by_source_sha = optimized_asset_cache.get("bySourceSha256", {})
+    if isinstance(by_source_sha, dict) and asset.sha256 in by_source_sha:
+        entry = by_source_sha[asset.sha256]
+        if isinstance(entry, dict):
+            return entry
+    by_source_path = optimized_asset_cache.get("bySourcePath", {})
+    if isinstance(by_source_path, dict) and asset.source_path in by_source_path:
+        entry = by_source_path[asset.source_path]
+        if isinstance(entry, dict):
+            return entry
+    return None
+
+
+def _kind_for_cached_extension(extension: str) -> str:
+    if extension.lower() in {"mp4", "webm", "mov", "m4v"}:
+        return "video"
+    return "image"
 
 
 def _probe_image_metadata(asset: AssetRef, path: Path) -> None:

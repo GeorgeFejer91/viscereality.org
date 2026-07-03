@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import tempfile
 import unittest
@@ -17,12 +18,13 @@ from pptx_html_presenter.assets import (
     _should_convert_wdp,
     _should_transcode_gif,
     _try_convert_gif_with_ffmpeg,
+    prepare_assets,
 )
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
 from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, load_config
 from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
-from pptx_html_presenter.models import AssetRef, Geometry, SceneObject, Slide, Transition
+from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import _selected_media_target, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
@@ -2731,6 +2733,63 @@ class PresenterTests(unittest.TestCase):
         self.assertTrue(_should_convert_wdp(asset, AssetPolicy()))
         self.assertFalse(_should_convert_wdp(asset, AssetPolicy(mode="source-only")))
 
+    def test_prepare_assets_reuses_shared_optimized_cache(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = b"fake animated gif payload"
+            source_sha = hashlib.sha256(raw).hexdigest()
+            pptx = root / "demo.pptx"
+            with zipfile.ZipFile(pptx, "w") as zf:
+                zf.writestr("ppt/media/loop.gif", raw)
+            cached = root / "presentations" / "shared-assets" / "viscereality" / "optimized" / "cached.webm"
+            cached.parent.mkdir(parents=True)
+            cached.write_bytes(b"cached-webm-runtime")
+            deck = PptxDeck(
+                source_path=str(pptx),
+                source_sha256=hashlib.sha256(pptx.read_bytes()).hexdigest(),
+                title="Demo",
+                slide_width=16,
+                slide_height=9,
+                slides=[],
+                assets={
+                    "ppt/media/loop.gif": AssetRef(
+                        source_path="ppt/media/loop.gif",
+                        rel_id="rId1",
+                        kind="image",
+                        extension="gif",
+                        size_bytes=len(raw),
+                        sha256=source_sha,
+                        animated=True,
+                        alpha=True,
+                    )
+                },
+            )
+
+            prepare_assets(
+                deck,
+                root / "out",
+                AssetPolicy(),
+                optimized_asset_cache={
+                    "bySourceSha256": {
+                        source_sha: {
+                            "path": str(cached),
+                            "extension": "webm",
+                            "kind": "video",
+                            "animated": True,
+                            "alpha": True,
+                        }
+                    }
+                },
+            )
+
+            asset = deck.assets["ppt/media/loop.gif"]
+            self.assertEqual(asset.kind, "video")
+            self.assertEqual(asset.extension, "webm")
+            self.assertEqual(asset.output_file, f"assets/optimized/{source_sha[:16]}-cached.webm")
+            self.assertEqual((root / "out" / asset.output_file).read_bytes(), b"cached-webm-runtime")
+            self.assertIn("optimized-asset-reused-from-shared-cache", asset.warnings)
+            self.assertNotIn("gif-transcode-unavailable", asset.warnings)
+
     def test_hdphoto_media_target_is_preferred_when_powerpoint_marks_image_layer(self) -> None:
         assets = {
             "ppt/media/fallback.png": AssetRef(
@@ -2851,6 +2910,7 @@ class PresenterTests(unittest.TestCase):
                         "sourceFile": "assets/source/source.png",
                         "file": "assets/optimized/loop.mp4",
                         "kind": "video",
+                        "sha256": "sourcehashdemo",
                         "animated": True,
                         "alpha": False,
                     }
@@ -2873,6 +2933,9 @@ class PresenterTests(unittest.TestCase):
             self.assertFalse(optimized_asset.exists())
             index = json.loads((shared / "asset-index.json").read_text(encoding="utf-8"))
             self.assertEqual(len(index["assets"]), 2)
+            optimized_entries = [entry for entry in index["assets"].values() if entry["bucket"] == "optimized"]
+            self.assertEqual(optimized_entries[0]["sourceSha256"], "sourcehashdemo")
+            self.assertEqual(optimized_entries[0]["sourceSha256s"], ["sourcehashdemo"])
 
     def test_share_deck_assets_skips_large_source_when_runtime_is_optimized(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

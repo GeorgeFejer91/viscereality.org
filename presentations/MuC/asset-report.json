@@ -1,8 +1,9 @@
 {
   "assetPolicy": {
-    "allowOversizeAssets": true,
+    "allowOversizeAssets": false,
     "hardMaxMb": 100.0,
     "mode": "copy",
+    "optimizeStaticImages": true,
     "pruneUnreferencedSourceAssets": true,
     "softMaxMb": 50.0,
     "transcodeGif": true,
@@ -11,23 +12,23 @@
   },
   "assets": [
     {
-      "alpha": null,
+      "alpha": true,
       "animated": false,
       "durationSec": null,
-      "extension": "wdp",
-      "height": null,
+      "extension": "png",
+      "height": 1024,
       "id": "asset-4a816c8511ec19db",
       "kind": "image",
-      "outputFile": "assets/source/4a816c8511ec19db.wdp",
-      "outputSizeMb": 0.3,
+      "outputFile": "assets/optimized/4a816c8511ec19db-wdp.png",
+      "outputSizeMb": 0.319,
       "sha256": "4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc",
       "sourceFile": "assets/source/4a816c8511ec19db.wdp",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "sourceSizeMb": 0.3,
       "warnings": [
-        "image-probe-failed:cannot identify image file 'C:\\\\Users\\\\gfeje\\\\Documents\\\\GitHub\\\\viscereality.org\\\\presentations\\\\MuC-scene\\\\assets\\\\source\\\\4a816c8511ec19db.wdp'"
+        "wdp-converted-to-png-wic"
       ],
-      "width": null
+      "width": 1536
     },
     {
       "alpha": false,
@@ -54,16 +55,14 @@
       "height": 720,
       "id": "asset-8e82652ecf1c208f",
       "kind": "video",
-      "outputFile": "assets/optimized/8e82652ecf1c208f-crf28-w1280.mp4",
+      "outputFile": "assets/optimized/8e82652ecf1c208f-cached.mp4",
       "outputSizeMb": 24.891,
       "sha256": "8e82652ecf1c208f1d02a967943ffdda54fed2cd2ae0708228c24a880df0e827",
       "sourceFile": "assets/source/8e82652ecf1c208f.gif",
       "sourcePath": "ppt/media/image10.gif",
       "sourceSizeMb": 386.763,
       "warnings": [
-        "gif-mp4-over-hard-limit-trying-smaller-mp4",
-        "gif-opaque-converted-to-small-mp4-crf28",
-        "gif-opaque-converted-to-mp4"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 1280
     },
@@ -143,14 +142,14 @@
       "height": 1080,
       "id": "asset-2f76abf7d3625d6d",
       "kind": "video",
-      "outputFile": "assets/optimized/2f76abf7d3625d6d.webm",
+      "outputFile": "assets/optimized/2f76abf7d3625d6d-cached.webm",
       "outputSizeMb": 0.8,
       "sha256": "2f76abf7d3625d6d21241976755fdcc67f58a073be83cfdb8a8868e4b0b20e0e",
       "sourceFile": "assets/source/2f76abf7d3625d6d.gif",
       "sourcePath": "ppt/media/image15.gif",
       "sourceSizeMb": 12.633,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 1920
     },
@@ -162,14 +161,14 @@
       "height": 301,
       "id": "asset-b5dbd11d0793086a",
       "kind": "video",
-      "outputFile": "assets/optimized/b5dbd11d0793086a.webm",
+      "outputFile": "assets/optimized/b5dbd11d0793086a-cached.webm",
       "outputSizeMb": 0.034,
       "sha256": "b5dbd11d0793086a5ba34b80ca134c2c0eb653cf6bd990c34501642a8ed2b191",
       "sourceFile": "assets/source/b5dbd11d0793086a.gif",
       "sourcePath": "ppt/media/image16.gif",
       "sourceSizeMb": 0.964,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 331
     },
@@ -181,14 +180,14 @@
       "height": 338,
       "id": "asset-1850186bcee7fe56",
       "kind": "video",
-      "outputFile": "assets/optimized/1850186bcee7fe56.webm",
+      "outputFile": "assets/optimized/1850186bcee7fe56-cached.webm",
       "outputSizeMb": 0.028,
       "sha256": "1850186bcee7fe56551a3fabd7be686034355ed8efa3c7987d8cf5f5d1eb3bd9",
       "sourceFile": "assets/source/1850186bcee7fe56.gif",
       "sourcePath": "ppt/media/image17.gif",
       "sourceSizeMb": 0.386,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 319
     },
@@ -200,14 +199,14 @@
       "height": 1080,
       "id": "asset-248f2c669fd993cb",
       "kind": "video",
-      "outputFile": "assets/optimized/248f2c669fd993cb.webm",
+      "outputFile": "assets/optimized/248f2c669fd993cb-cached.webm",
       "outputSizeMb": 0.636,
       "sha256": "248f2c669fd993cbd59c69f28d3a59cf6a93308c00f6af80f7cd49cf07ca9f03",
       "sourceFile": "assets/source/248f2c669fd993cb.gif",
       "sourcePath": "ppt/media/image18.gif",
       "sourceSizeMb": 5.682,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 1920
     },
@@ -287,14 +286,14 @@
       "height": 360,
       "id": "asset-792ec06b75656dfc",
       "kind": "video",
-      "outputFile": "assets/optimized/792ec06b75656dfc.webm",
+      "outputFile": "assets/optimized/792ec06b75656dfc-cached.webm",
       "outputSizeMb": 13.961,
       "sha256": "792ec06b75656dfcfb1107fe8cc0939f1ebf7e5136fcf3fc27e009c5cd56c219",
       "sourceFile": "assets/source/792ec06b75656dfc.gif",
       "sourcePath": "ppt/media/image22.gif",
       "sourceSizeMb": 102.76,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -306,14 +305,14 @@
       "height": 360,
       "id": "asset-fc99bea418f76236",
       "kind": "video",
-      "outputFile": "assets/optimized/fc99bea418f76236.webm",
+      "outputFile": "assets/optimized/fc99bea418f76236-cached.webm",
       "outputSizeMb": 7.013,
       "sha256": "fc99bea418f76236f9a96f556336316c32da7c574da619a3244acbe065d4e821",
       "sourceFile": "assets/source/fc99bea418f76236.gif",
       "sourcePath": "ppt/media/image23.gif",
       "sourceSizeMb": 67.52,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -325,14 +324,14 @@
       "height": 360,
       "id": "asset-164b535c99e4dff0",
       "kind": "video",
-      "outputFile": "assets/optimized/164b535c99e4dff0.webm",
+      "outputFile": "assets/optimized/164b535c99e4dff0-cached.webm",
       "outputSizeMb": 12.326,
       "sha256": "164b535c99e4dff0daec08df43560254e7ed8cb00928f9f1c7b13643a8059764",
       "sourceFile": "assets/source/164b535c99e4dff0.gif",
       "sourcePath": "ppt/media/image24.gif",
       "sourceSizeMb": 121.513,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -344,14 +343,14 @@
       "height": 360,
       "id": "asset-de15ac9d4fa9ad4b",
       "kind": "video",
-      "outputFile": "assets/optimized/de15ac9d4fa9ad4b.webm",
+      "outputFile": "assets/optimized/de15ac9d4fa9ad4b-cached.webm",
       "outputSizeMb": 16.576,
       "sha256": "de15ac9d4fa9ad4b523c10b3555bb95673cb8aff3fb52ba861c397f4d76f9ba9",
       "sourceFile": "assets/source/de15ac9d4fa9ad4b.gif",
       "sourcePath": "ppt/media/image25.gif",
       "sourceSizeMb": 140.635,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -363,14 +362,14 @@
       "height": 360,
       "id": "asset-ae2ffbb9731dbf54",
       "kind": "video",
-      "outputFile": "assets/optimized/ae2ffbb9731dbf54.webm",
+      "outputFile": "assets/optimized/ae2ffbb9731dbf54-cached.webm",
       "outputSizeMb": 4.259,
       "sha256": "ae2ffbb9731dbf54c3b4c8fce7c069a2651df1b4b5645ffc721f9514e97f65b1",
       "sourceFile": "assets/source/ae2ffbb9731dbf54.gif",
       "sourcePath": "ppt/media/image26.gif",
       "sourceSizeMb": 26.44,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -382,14 +381,14 @@
       "height": 360,
       "id": "asset-21036503160e8e82",
       "kind": "video",
-      "outputFile": "assets/optimized/21036503160e8e82.webm",
+      "outputFile": "assets/optimized/21036503160e8e82-cached.webm",
       "outputSizeMb": 6.156,
       "sha256": "21036503160e8e826ae0c281e692ce8812e1cc1999cfa693ea6273dd5d3b2f33",
       "sourceFile": "assets/source/21036503160e8e82.gif",
       "sourcePath": "ppt/media/image27.gif",
       "sourceSizeMb": 64.454,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -401,14 +400,14 @@
       "height": 360,
       "id": "asset-ceabe477dce6f31c",
       "kind": "video",
-      "outputFile": "assets/optimized/ceabe477dce6f31c.webm",
+      "outputFile": "assets/optimized/ceabe477dce6f31c-cached.webm",
       "outputSizeMb": 15.406,
       "sha256": "ceabe477dce6f31c9795b68fbed9411e7c450f881e14657eaca2a44afa0a5d6f",
       "sourceFile": "assets/source/ceabe477dce6f31c.gif",
       "sourcePath": "ppt/media/image28.gif",
       "sourceSizeMb": 112.001,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 640
     },
@@ -437,14 +436,14 @@
       "height": 1080,
       "id": "asset-0928f3a3fc7358dc",
       "kind": "video",
-      "outputFile": "assets/optimized/0928f3a3fc7358dc.webm",
+      "outputFile": "assets/optimized/0928f3a3fc7358dc-cached.webm",
       "outputSizeMb": 1.519,
       "sha256": "0928f3a3fc7358dcaddc4bb2c6bf3b1d482c96992301f2c6e26426d832c72626",
       "sourceFile": "assets/source/0928f3a3fc7358dc.gif",
       "sourcePath": "ppt/media/image3.gif",
       "sourceSizeMb": 31.304,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 1920
     },
@@ -660,14 +659,14 @@
       "height": 921,
       "id": "asset-e2fc514621cac09e",
       "kind": "video",
-      "outputFile": "assets/optimized/e2fc514621cac09e.webm",
+      "outputFile": "assets/optimized/e2fc514621cac09e-cached.webm",
       "outputSizeMb": 0.377,
       "sha256": "e2fc514621cac09e58c8905772e83f37004af7d3856c414be0412da4eb39937d",
       "sourceFile": "assets/source/e2fc514621cac09e.gif",
       "sourcePath": "ppt/media/image7.gif",
       "sourceSizeMb": 1.939,
       "warnings": [
-        "gif-alpha-preserved-webm"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 899
     },
@@ -696,14 +695,14 @@
       "height": 1080,
       "id": "asset-614f91c2c546a1dc",
       "kind": "video",
-      "outputFile": "assets/optimized/614f91c2c546a1dc.mp4",
+      "outputFile": "assets/optimized/614f91c2c546a1dc-cached.mp4",
       "outputSizeMb": 9.402,
       "sha256": "614f91c2c546a1dc05a189475dca572a1ab507e7a04878d6db5583db15d6d88c",
       "sourceFile": "assets/source/614f91c2c546a1dc.gif",
       "sourcePath": "ppt/media/image9.gif",
       "sourceSizeMb": 30.339,
       "warnings": [
-        "gif-opaque-converted-to-mp4"
+        "optimized-asset-reused-from-shared-cache"
       ],
       "width": 1093
     }
@@ -715,8 +714,8 @@
     "mb": 0.0
   },
   "prunedSourceAssets": {
-    "bytes": 1159026025,
-    "count": 15,
-    "mb": 1105.333
+    "bytes": 1159340332,
+    "count": 16,
+    "mb": 1105.633
   }
 }

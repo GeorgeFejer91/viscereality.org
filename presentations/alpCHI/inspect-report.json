@@ -582,6 +582,14 @@
       ]
     },
     {
+      "name": "Picture 2",
+      "object": "s1-o2050",
+      "slide": 1,
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 64",
       "object": "s2-o65",
       "slide": 2,
@@ -730,6 +738,7 @@
       "object": "s2-o17",
       "slide": 2,
       "unsupported": [
+        "hdphoto-layer-selected-for-conversion",
         "off-canvas"
       ]
     },

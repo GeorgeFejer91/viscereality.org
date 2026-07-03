@@ -46,7 +46,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
       "sourcePath": "ppt/media/image3.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1920
@@ -113,7 +113,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
       "sourcePath": "ppt/media/image24.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -132,7 +132,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
       "sourcePath": "ppt/media/image17.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 319
@@ -151,7 +151,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
       "sourcePath": "ppt/media/image27.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -170,7 +170,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/a40f30b7dc122dd7c756e2e61ed60f04d6863687c3a91b528c96e7c159a2afd2.webm",
       "sourcePath": "ppt/media/image18.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1920
@@ -205,7 +205,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/6fc6e87580c6d1fa4593c2877d0b254125fa7a7848506ce5fe8dd77ea0e536e4.webm",
       "sourcePath": "ppt/media/image15.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1920
@@ -259,22 +259,23 @@
       "width": 97
     },
     {
-      "alpha": null,
+      "alpha": true,
       "animated": false,
       "durationSec": null,
-      "extension": "wdp",
-      "file": "../shared-assets/viscereality/source/4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc.wdp",
-      "height": null,
+      "extension": "png",
+      "file": "../shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
+      "height": 1024,
       "id": "asset-4a816c8511ec19db",
       "kind": "image",
       "sha256": "4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc",
       "sizeBytes": 314307,
-      "sourceFile": "../shared-assets/viscereality/source/4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc.wdp",
+      "sourceFile": "../shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "warnings": [
-        "image-probe-failed:cannot identify image file 'C:\\\\Users\\\\gfeje\\\\Documents\\\\GitHub\\\\viscereality.org\\\\presentations\\\\MuC-scene\\\\assets\\\\source\\\\4a816c8511ec19db.wdp'"
+        "wdp-converted-to-png-wic",
+        "source-file-pruned-shared-runtime-file-used"
       ],
-      "width": null
+      "width": 1536
     },
     {
       "alpha": true,
@@ -322,7 +323,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/6490834acd7697f88b71e95206309df389323dad5c2534ff4a25df31088f2d67.mp4",
       "sourcePath": "ppt/media/image9.gif",
       "warnings": [
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1093
@@ -341,7 +342,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
       "sourcePath": "ppt/media/image22.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -376,9 +377,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ebbc88015ea08d653a1e36df9332ad443493fa005a7c7bb263555758191907e9.mp4",
       "sourcePath": "ppt/media/image10.gif",
       "warnings": [
-        "gif-mp4-over-hard-limit-trying-smaller-mp4",
-        "gif-opaque-converted-to-small-mp4-crf28",
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1280
@@ -429,7 +428,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
       "sourcePath": "ppt/media/image26.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -464,7 +463,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
       "sourcePath": "ppt/media/image16.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 331
@@ -499,7 +498,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
       "sourcePath": "ppt/media/image28.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -566,7 +565,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
       "sourcePath": "ppt/media/image25.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -601,7 +600,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
       "sourcePath": "ppt/media/image7.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 899
@@ -652,7 +651,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
       "sourcePath": "ppt/media/image23.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -692,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-03T18:23:36+00:00",
+  "generatedAtUtc": "2026-07-03T20:07:41+00:00",
   "qa": {
     "groupRows": [
       {
@@ -11644,7 +11643,7 @@
           "z": 31
         },
         {
-          "assetId": "asset-b7ecee47fb0c4df2",
+          "assetId": "asset-4a816c8511ec19db",
           "creationId": "{352C9620-731A-5F56-22BB-458F7C1744DD}",
           "crop": null,
           "fill": null,
@@ -11691,7 +11690,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0031",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 32
         }
       ],
@@ -14272,7 +14273,7 @@
           "z": 31
         },
         {
-          "assetId": "asset-b7ecee47fb0c4df2",
+          "assetId": "asset-4a816c8511ec19db",
           "creationId": "{352C9620-731A-5F56-22BB-458F7C1744DD}",
           "crop": null,
           "fill": null,
@@ -14319,7 +14320,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0031",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 32
         }
       ],

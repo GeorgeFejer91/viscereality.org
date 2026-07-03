@@ -199,7 +199,7 @@
       "unsupported": []
     },
     {
-      "assetId": "asset-306c6a965da8d2a7",
+      "assetId": "asset-643435dc60035768",
       "creationId": "{76B61203-639A-629B-70B1-5352396B4C58}",
       "kind": "image",
       "name": "Picture 2",
@@ -220,7 +220,9 @@
       },
       "slide": 1,
       "trackId": "track-0010",
-      "unsupported": []
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
     },
     {
       "assetId": null,
@@ -681,7 +683,7 @@
       ]
     },
     {
-      "assetId": "asset-306c6a965da8d2a7",
+      "assetId": "asset-643435dc60035768",
       "creationId": "{58D6E929-9998-CB88-94EC-7BDCE245A9CC}",
       "kind": "image",
       "name": "Picture 49",
@@ -703,6 +705,7 @@
       "slide": 2,
       "trackId": "track-0010",
       "unsupported": [
+        "hdphoto-layer-selected-for-conversion",
         "off-canvas"
       ]
     },

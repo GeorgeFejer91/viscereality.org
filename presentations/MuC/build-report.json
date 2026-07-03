@@ -1,7 +1,7 @@
 {
   "assetCount": 39,
   "assetMode": "copy",
-  "generatedAtUtc": "2026-07-03T18:23:36+00:00",
+  "generatedAtUtc": "2026-07-03T20:07:41+00:00",
   "githubPagesSafe": true,
   "originalGithubPagesSafe": true,
   "originalStatus": "ok",
@@ -20,13 +20,15 @@
     "maxAssetMb": 29.452,
     "missingReferences": [],
     "oversizeAssets": [],
+    "preferredAssetSafe": true,
     "prunedLocalAssets": {
-      "bytes": 178101365,
+      "bytes": 178121248,
       "count": 39,
-      "mb": 169.851
+      "mb": 169.87
     },
     "rewrittenReferences": 78,
-    "root": "presentations/shared-assets/viscereality"
+    "root": "presentations/shared-assets/viscereality",
+    "softOversizeAssets": []
   },
   "slideCount": 17,
   "source": {

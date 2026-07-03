@@ -126,6 +126,7 @@ def build_family(
         )
     ensure_dir(family.shared_root / "source")
     ensure_dir(family.shared_root / "optimized")
+    optimized_asset_cache = _shared_optimized_asset_cache(family)
     share_reports: list[dict[str, Any]] = []
     for deck in family.decks:
         config = _deck_presenter_config(family, deck)
@@ -136,6 +137,7 @@ def build_family(
             title=deck.title,
             slug=deck.slug,
             ffmpeg_bin=ffmpeg_bin,
+            optimized_asset_cache=_deck_optimized_asset_cache(optimized_asset_cache, deck.id),
         )
         if deck.expected_slides and int(report.get("slideCount", 0)) != deck.expected_slides:
             report = {
@@ -566,6 +568,88 @@ def prune_unreferenced_shared_assets(family: FamilyConfig) -> dict[str, Any]:
     }
 
 
+def _shared_optimized_asset_cache(family: FamilyConfig) -> dict[str, Any]:
+    cache: dict[str, Any] = {"bySourceSha256": {}, "byDeckSourcePath": {}}
+    index = _load_asset_index(family.shared_root / "asset-index.json")
+    for entry in (index.get("assets", {}) or {}).values():
+        if not isinstance(entry, dict) or entry.get("bucket") != "optimized":
+            continue
+        path = family.repo_root / str(entry.get("path", ""))
+        if not path.exists() or format_mb(path.stat().st_size) > SHARED_SOURCE_HARD_MAX_MB:
+            continue
+        cache_entry = _optimized_cache_entry_from_index(entry, path)
+        source_shas = entry.get("sourceSha256s") or []
+        if entry.get("sourceSha256"):
+            source_shas = [*source_shas, entry.get("sourceSha256")]
+        for source_sha in sorted({str(item) for item in source_shas if item}):
+            cache["bySourceSha256"].setdefault(source_sha, cache_entry)
+        if not source_shas:
+            for deck_id in entry.get("usedBy", []) or []:
+                by_path = cache["byDeckSourcePath"].setdefault(str(deck_id), {})
+                for source_path in entry.get("sourcePaths", []) or []:
+                    by_path.setdefault(str(source_path), cache_entry)
+    for deck in family.decks:
+        public_scene = family.repo_root / "presentations" / deck.public_dir / "deck.scene.json"
+        staging_scene = deck.staging / "deck.scene.json"
+        for scene_path in (public_scene, staging_scene):
+            _seed_optimized_cache_from_scene(cache, scene_path, deck.id)
+    return cache
+
+
+def _deck_optimized_asset_cache(cache: dict[str, Any], deck_id: str) -> dict[str, Any]:
+    return {
+        "bySourceSha256": dict(cache.get("bySourceSha256", {}) or {}),
+        "bySourcePath": dict((cache.get("byDeckSourcePath", {}) or {}).get(deck_id, {}) or {}),
+    }
+
+
+def _seed_optimized_cache_from_scene(cache: dict[str, Any], scene_path: Path, deck_id: str) -> None:
+    if not scene_path.exists():
+        return
+    try:
+        scene = read_json(scene_path)
+    except Exception:
+        return
+    for asset in scene.get("assets", []) or []:
+        if not isinstance(asset, dict):
+            continue
+        value = str(asset.get("file") or "")
+        if not value or "shared-assets/viscereality/optimized/" not in value.replace("\\", "/"):
+            continue
+        shared_path = _shared_ref_to_path(scene_path.parent, value)
+        if not shared_path.exists() or format_mb(shared_path.stat().st_size) > SHARED_SOURCE_HARD_MAX_MB:
+            continue
+        entry = _optimized_cache_entry_from_scene_asset(asset, shared_path)
+        source_sha = asset.get("sha256")
+        if source_sha:
+            cache["bySourceSha256"].setdefault(str(source_sha), entry)
+        source_path = asset.get("sourcePath")
+        if source_path and not source_sha:
+            cache["byDeckSourcePath"].setdefault(deck_id, {}).setdefault(str(source_path), entry)
+
+
+def _optimized_cache_entry_from_index(entry: dict[str, Any], path: Path) -> dict[str, Any]:
+    return {
+        "path": str(path.resolve()),
+        "extension": str(entry.get("extension") or path.suffix.lstrip(".")),
+        "kind": entry.get("kind"),
+        "animated": entry.get("animated"),
+        "alpha": entry.get("alpha"),
+        "bytes": path.stat().st_size,
+    }
+
+
+def _optimized_cache_entry_from_scene_asset(asset: dict[str, Any], path: Path) -> dict[str, Any]:
+    return {
+        "path": str(path.resolve()),
+        "extension": path.suffix.lower().lstrip(".") or str(asset.get("extension", "")),
+        "kind": asset.get("kind"),
+        "animated": asset.get("animated"),
+        "alpha": asset.get("alpha"),
+        "bytes": path.stat().st_size,
+    }
+
+
 def _final_build_report(deck: FamilyDeck) -> dict[str, Any]:
     path = deck.staging / "build-report.json"
     report = read_json(path) if path.exists() else {}
@@ -912,6 +996,13 @@ def _upsert_asset_index_entry(
     if source_path and source_path not in entry["sourcePaths"]:
         entry["sourcePaths"].append(source_path)
         entry["sourcePaths"].sort()
+    source_sha = asset.get("sha256")
+    if source_sha:
+        source_shas = entry.setdefault("sourceSha256s", [])
+        if source_sha not in source_shas:
+            source_shas.append(source_sha)
+            source_shas.sort()
+        entry.setdefault("sourceSha256", source_sha)
 
 
 def _is_shared_asset_ref(value: str) -> bool:

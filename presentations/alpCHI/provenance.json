@@ -247,7 +247,7 @@
       ]
     },
     {
-      "assetId": "asset-7041a89b6a87c7c8",
+      "assetId": "asset-ce4bde01b87b86d5",
       "creationId": "{4C14B169-3A40-896D-808B-124668C7930B}",
       "kind": "image",
       "name": "Picture 2",
@@ -268,7 +268,9 @@
       },
       "slide": 1,
       "trackId": "track-0012",
-      "unsupported": []
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
     },
     {
       "assetId": "asset-32b2e0232f04aa13",
@@ -863,7 +865,7 @@
       ]
     },
     {
-      "assetId": "asset-7041a89b6a87c7c8",
+      "assetId": "asset-ce4bde01b87b86d5",
       "creationId": "{308D6514-9235-8F69-B4E4-B465C6834674}",
       "kind": "image",
       "name": "Picture 2",
@@ -885,6 +887,7 @@
       "slide": 2,
       "trackId": "track-0012",
       "unsupported": [
+        "hdphoto-layer-selected-for-conversion",
         "off-canvas"
       ]
     },

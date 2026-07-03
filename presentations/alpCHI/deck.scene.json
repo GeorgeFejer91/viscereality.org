@@ -30,6 +30,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4",
       "sourcePath": "ppt/media/media3.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -39,16 +40,16 @@
       "animated": true,
       "durationSec": 3.26,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+      "file": "../shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
       "height": 1080,
       "id": "asset-0928f3a3fc7358dc",
       "kind": "video",
       "sha256": "0928f3a3fc7358dcaddc4bb2c6bf3b1d482c96992301f2c6e26426d832c72626",
       "sizeBytes": 32825145,
-      "sourceFile": "../shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
       "sourcePath": "ppt/media/image3.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1920
@@ -106,16 +107,16 @@
       "animated": true,
       "durationSec": 40.86,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4.webm",
+      "file": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
       "height": 360,
       "id": "asset-164b535c99e4dff0",
       "kind": "video",
       "sha256": "164b535c99e4dff0daec08df43560254e7ed8cb00928f9f1c7b13643a8059764",
       "sizeBytes": 127416004,
-      "sourceFile": "../shared-assets/viscereality/optimized/a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
       "sourcePath": "ppt/media/image27.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -134,7 +135,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/477ae53194604ba376e3b72b9b62b62bca23a22cf66a983e7902a72c1662dda2.mp4",
       "sourcePath": "ppt/media/image22.gif",
       "warnings": [
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 320
@@ -144,16 +145,16 @@
       "animated": true,
       "durationSec": 21.16,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a.webm",
+      "file": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
       "height": 360,
       "id": "asset-21036503160e8e82",
       "kind": "video",
       "sha256": "21036503160e8e826ae0c281e692ce8812e1cc1999cfa693ea6273dd5d3b2f33",
       "sizeBytes": 67585215,
-      "sourceFile": "../shared-assets/viscereality/optimized/1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
       "sourcePath": "ppt/media/image25.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -172,7 +173,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
       "sourcePath": "ppt/media/image31.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1080
@@ -223,6 +224,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4",
       "sourcePath": "ppt/media/media2.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -289,7 +291,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
       "sourcePath": "ppt/media/image18.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 500
@@ -363,16 +365,16 @@
       "animated": true,
       "durationSec": 40.66,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82.webm",
+      "file": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
       "height": 360,
       "id": "asset-792ec06b75656dfc",
       "kind": "video",
       "sha256": "792ec06b75656dfcfb1107fe8cc0939f1ebf7e5136fcf3fc27e009c5cd56c219",
       "sizeBytes": 107751908,
-      "sourceFile": "../shared-assets/viscereality/optimized/4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
       "sourcePath": "ppt/media/image14.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -407,7 +409,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
       "sourcePath": "ppt/media/image21.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 800
@@ -442,7 +444,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/a3363b60517e4e98ff2948b219a44dd20b8718eb4432af7047260fe5a8ce3a0b.webm",
       "sourcePath": "ppt/media/image11.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1326
@@ -493,6 +495,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
       "sourcePath": "ppt/media/media4.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -518,16 +521,16 @@
       "animated": true,
       "durationSec": 20.9,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72.webm",
+      "file": "../shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
       "height": 360,
       "id": "asset-ae2ffbb9731dbf54",
       "kind": "video",
       "sha256": "ae2ffbb9731dbf54c3b4c8fce7c069a2651df1b4b5645ffc721f9514e97f65b1",
       "sizeBytes": 27724367,
-      "sourceFile": "../shared-assets/viscereality/optimized/e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
       "sourcePath": "ppt/media/image24.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -546,7 +549,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
       "sourcePath": "ppt/media/image23.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 810
@@ -581,6 +584,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4",
       "sourcePath": "ppt/media/media1.mp4",
       "warnings": [
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": null
@@ -599,44 +603,45 @@
       "sourceFile": "../shared-assets/viscereality/optimized/767648289ae3cc6a64ce0c30b417676a769cbd2d90a36a86ab14772fa5e48a94.webm",
       "sourcePath": "ppt/media/image17.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 1326
     },
     {
-      "alpha": null,
+      "alpha": true,
       "animated": false,
       "durationSec": null,
-      "extension": "wdp",
-      "file": "../shared-assets/viscereality/source/ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58.wdp",
-      "height": null,
+      "extension": "png",
+      "file": "../shared-assets/viscereality/optimized/d33cbcd598ab3dfb9ed48618a8697e6eceb0a5bde7fe29986528594d086178b9.png",
+      "height": 1500,
       "id": "asset-ce4bde01b87b86d5",
       "kind": "image",
       "sha256": "ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58",
       "sizeBytes": 103853,
-      "sourceFile": "../shared-assets/viscereality/source/ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58.wdp",
+      "sourceFile": "../shared-assets/viscereality/optimized/d33cbcd598ab3dfb9ed48618a8697e6eceb0a5bde7fe29986528594d086178b9.png",
       "sourcePath": "ppt/media/hdphoto1.wdp",
       "warnings": [
-        "image-probe-failed:cannot identify image file 'C:\\\\Users\\\\gfeje\\\\Documents\\\\GitHub\\\\viscereality.org\\\\presentations\\\\alpCHI-scene\\\\assets\\\\source\\\\ce4bde01b87b86d5.wdp'"
+        "wdp-converted-to-png-wic",
+        "source-file-pruned-shared-runtime-file-used"
       ],
-      "width": null
+      "width": 1500
     },
     {
       "alpha": true,
       "animated": true,
       "durationSec": 40.96,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06.webm",
+      "file": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
       "height": 360,
       "id": "asset-ceabe477dce6f31c",
       "kind": "video",
       "sha256": "ceabe477dce6f31c9795b68fbed9411e7c450f881e14657eaca2a44afa0a5d6f",
       "sizeBytes": 117441442,
-      "sourceFile": "../shared-assets/viscereality/optimized/a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
       "sourcePath": "ppt/media/image16.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -694,16 +699,16 @@
       "animated": true,
       "durationSec": 41.03,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3.webm",
+      "file": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
       "height": 360,
       "id": "asset-de15ac9d4fa9ad4b",
       "kind": "video",
       "sha256": "de15ac9d4fa9ad4b523c10b3555bb95673cb8aff3fb52ba861c397f4d76f9ba9",
       "sizeBytes": 147466612,
-      "sourceFile": "../shared-assets/viscereality/optimized/e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
       "sourcePath": "ppt/media/image28.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -729,16 +734,16 @@
       "animated": true,
       "durationSec": 3.54,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+      "file": "../shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
       "height": 921,
       "id": "asset-e2fc514621cac09e",
       "kind": "video",
       "sha256": "e2fc514621cac09e58c8905772e83f37004af7d3856c414be0412da4eb39937d",
       "sizeBytes": 2033579,
-      "sourceFile": "../shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
       "sourcePath": "ppt/media/image7.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 899
@@ -789,7 +794,7 @@
       "sourceFile": "../shared-assets/viscereality/optimized/0141287dc91e8112fc7bdd813d15d4d6653d7ead4a375b432c9bdf9a3cd0bf61.mp4",
       "sourcePath": "ppt/media/image19.gif",
       "warnings": [
-        "gif-opaque-converted-to-mp4",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 500
@@ -815,16 +820,16 @@
       "animated": true,
       "durationSec": 20.96,
       "extension": "webm",
-      "file": "../shared-assets/viscereality/optimized/06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf.webm",
+      "file": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
       "height": 360,
       "id": "asset-fc99bea418f76236",
       "kind": "video",
       "sha256": "fc99bea418f76236f9a96f556336316c32da7c574da619a3244acbe065d4e821",
       "sizeBytes": 70799510,
-      "sourceFile": "../shared-assets/viscereality/optimized/06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf.webm",
+      "sourceFile": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
       "sourcePath": "ppt/media/image26.gif",
       "warnings": [
-        "gif-alpha-preserved-webm",
+        "optimized-asset-reused-from-shared-cache",
         "source-file-pruned-shared-runtime-file-used"
       ],
       "width": 640
@@ -848,7 +853,7 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-03T17:00:03+00:00",
+  "generatedAtUtc": "2026-07-03T20:08:09+00:00",
   "qa": {
     "groupRows": [
       {
@@ -5388,7 +5393,7 @@
           "z": 12
         },
         {
-          "assetId": "asset-7041a89b6a87c7c8",
+          "assetId": "asset-ce4bde01b87b86d5",
           "creationId": "{4C14B169-3A40-896D-808B-124668C7930B}",
           "crop": null,
           "fill": null,
@@ -5435,7 +5440,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0012",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 13
         }
       ],
@@ -6069,7 +6076,7 @@
           "z": 12
         },
         {
-          "assetId": "asset-7041a89b6a87c7c8",
+          "assetId": "asset-ce4bde01b87b86d5",
           "creationId": "{4C14B169-3A40-896D-808B-124668C7930B}",
           "crop": null,
           "fill": null,
@@ -6116,7 +6123,9 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0012",
-          "unsupported": [],
+          "unsupported": [
+            "hdphoto-layer-selected-for-conversion"
+          ],
           "z": 13
         }
       ],
@@ -8321,7 +8330,7 @@
           "z": 22
         },
         {
-          "assetId": "asset-7041a89b6a87c7c8",
+          "assetId": "asset-ce4bde01b87b86d5",
           "creationId": "{308D6514-9235-8F69-B4E4-B465C6834674}",
           "crop": null,
           "fill": null,
@@ -8369,6 +8378,7 @@
           "textStyle": {},
           "trackId": "track-0012",
           "unsupported": [
+            "hdphoto-layer-selected-for-conversion",
             "off-canvas"
           ],
           "z": 23
@@ -9967,7 +9977,7 @@
           "z": 22
         },
         {
-          "assetId": "asset-7041a89b6a87c7c8",
+          "assetId": "asset-ce4bde01b87b86d5",
           "creationId": "{308D6514-9235-8F69-B4E4-B465C6834674}",
           "crop": null,
           "fill": null,
@@ -10015,6 +10025,7 @@
           "textStyle": {},
           "trackId": "track-0012",
           "unsupported": [
+            "hdphoto-layer-selected-for-conversion",
             "off-canvas"
           ],
           "z": 23
@@ -21449,7 +21460,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -21487,7 +21498,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -21497,7 +21508,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -24041,7 +24052,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -24079,7 +24090,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -24089,7 +24100,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -25153,7 +25164,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -25790,7 +25801,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -25828,7 +25839,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -25838,7 +25849,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -26489,7 +26500,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -27231,7 +27242,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -27269,7 +27280,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -27279,7 +27290,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -28471,7 +28482,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -28784,7 +28795,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -29348,7 +29359,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -29386,7 +29397,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -29396,7 +29407,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -30183,7 +30194,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -30496,7 +30507,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -31060,7 +31071,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 },
                 {
                   "style": {
@@ -31098,7 +31109,7 @@
                     "bold": true,
                     "color": "#C00000"
                   },
-                  "text": "\u21c8"
+                  "text": "⇈"
                 }
               ]
             }
@@ -31108,7 +31119,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "Optimizing for increased      \u21c8 Heart Rate Variability \u21c8",
+          "text": "Optimizing for increased      ⇈ Heart Rate Variability ⇈",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32361,7 +32372,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32672,7 +32683,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -32869,7 +32880,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33463,7 +33474,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b1. Icosphere Particle Distribution",
+          "text": "​1. Icosphere Particle Distribution",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33774,7 +33785,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -33879,7 +33890,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35008,7 +35019,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35205,7 +35216,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -35421,7 +35432,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36187,7 +36198,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36294,7 +36305,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -36418,7 +36429,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37529,7 +37540,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37726,7 +37737,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -37942,7 +37953,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38708,7 +38719,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b2. Tracers for depth enhancement",
+          "text": "​2. Tracers for depth enhancement",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38815,7 +38826,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -38939,7 +38950,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -39932,7 +39943,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -40148,7 +40159,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -41084,7 +41095,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b3. Continuous particle scaling",
+          "text": "​3. Continuous particle scaling",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -41210,7 +41221,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -42227,7 +42238,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -43289,7 +43300,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -44602,7 +44613,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",
@@ -45664,7 +45675,7 @@
           "stroke": null,
           "strokeWidth": null,
           "strokeWidthPct": 0.0,
-          "text": "\u200b4. Structured noise",
+          "text": "​4. Structured noise",
           "textStyle": {
             "align": "ctr",
             "autoFit": "shape",

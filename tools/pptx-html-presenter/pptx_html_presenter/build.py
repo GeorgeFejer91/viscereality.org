@@ -28,6 +28,7 @@ def build_presentation(
     title: str | None = None,
     slug: str | None = None,
     ffmpeg_bin: str | None = None,
+    optimized_asset_cache: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     out_dir = ensure_dir(out_dir)
     deck = parse_pptx(pptx)
@@ -60,6 +61,7 @@ def build_presentation(
         out_dir,
         effective_config.asset_policy,
         ffmpeg_bin=ffmpeg_bin,
+        optimized_asset_cache=optimized_asset_cache,
     )
     scene = compile_scene(deck, effective_config, out_dir)
     referenced_asset_files = {

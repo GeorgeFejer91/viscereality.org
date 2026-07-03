@@ -4,7 +4,7 @@
       "assetCount": 39,
       "assetMode": "copy",
       "deckId": "MuC",
-      "generatedAtUtc": "2026-07-03T17:21:40+00:00",
+      "generatedAtUtc": "2026-07-03T20:07:41+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -23,13 +23,15 @@
         "maxAssetMb": 29.452,
         "missingReferences": [],
         "oversizeAssets": [],
+        "preferredAssetSafe": true,
         "prunedLocalAssets": {
-          "bytes": 178074253,
+          "bytes": 178121248,
           "count": 39,
-          "mb": 169.825
+          "mb": 169.87
         },
         "rewrittenReferences": 78,
-        "root": "presentations/shared-assets/viscereality"
+        "root": "presentations/shared-assets/viscereality",
+        "softOversizeAssets": []
       },
       "slideCount": 17,
       "source": {
@@ -42,7 +44,7 @@
       "assetCount": 48,
       "assetMode": "copy",
       "deckId": "alpCHI",
-      "generatedAtUtc": "2026-07-03T17:00:03+00:00",
+      "generatedAtUtc": "2026-07-03T20:08:09+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -61,13 +63,15 @@
         "maxAssetMb": 48.879,
         "missingReferences": [],
         "oversizeAssets": [],
+        "preferredAssetSafe": true,
         "prunedLocalAssets": {
-          "bytes": 0,
-          "count": 0,
-          "mb": 0.0
+          "bytes": 332381622,
+          "count": 48,
+          "mb": 316.984
         },
-        "rewrittenReferences": 0,
-        "root": "presentations/shared-assets/viscereality"
+        "rewrittenReferences": 96,
+        "root": "presentations/shared-assets/viscereality",
+        "softOversizeAssets": []
       },
       "slideCount": 25,
       "source": {
@@ -80,7 +84,7 @@
       "assetCount": 57,
       "assetMode": "copy",
       "deckId": "BBD26",
-      "generatedAtUtc": "2026-07-03T17:04:42+00:00",
+      "generatedAtUtc": "2026-07-03T20:08:37+00:00",
       "githubPagesSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
@@ -99,13 +103,15 @@
         "maxAssetMb": 48.879,
         "missingReferences": [],
         "oversizeAssets": [],
+        "preferredAssetSafe": true,
         "prunedLocalAssets": {
-          "bytes": 0,
-          "count": 0,
-          "mb": 0.0
+          "bytes": 340401101,
+          "count": 57,
+          "mb": 324.632
         },
-        "rewrittenReferences": 0,
-        "root": "presentations/shared-assets/viscereality"
+        "rewrittenReferences": 114,
+        "root": "presentations/shared-assets/viscereality",
+        "softOversizeAssets": []
       },
       "slideCount": 32,
       "source": {
@@ -116,13 +122,13 @@
     }
   ],
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-03T17:21:51+00:00",
+  "generatedAtUtc": "2026-07-03T20:08:38+00:00",
   "preflight": {
-    "currentChunkedTotalMb": 1121.883,
+    "currentChunkedTotalMb": 183.907,
     "decks": [
       {
         "assetCount": 39,
-        "currentPublicSizeMb": 136.255,
+        "currentPublicSizeMb": 166.861,
         "deckId": "MuC",
         "mediaSizeMb": 1161.801,
         "publicDir": "MuC",
@@ -137,7 +143,7 @@
       },
       {
         "assetCount": 48,
-        "currentPublicSizeMb": 383.266,
+        "currentPublicSizeMb": 7.341,
         "deckId": "alpCHI",
         "mediaSizeMb": 1073.739,
         "publicDir": "alpCHI",
@@ -153,7 +159,7 @@
       },
       {
         "assetCount": 57,
-        "currentPublicSizeMb": 602.361,
+        "currentPublicSizeMb": 9.705,
         "deckId": "BBD26",
         "mediaSizeMb": 1086.943,
         "publicDir": "BBD26",
@@ -169,87 +175,169 @@
       }
     ],
     "disk": {
-      "freeGb": 9.207,
+      "freeGb": 4.467,
       "minimumFreeGb": 8.0,
       "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org"
     },
     "estimatedSourceDedupSavingsMb": 1796.631,
     "estimatedSourceMediaTotalMb": 3322.483,
     "estimatedUniqueSourceMediaMb": 1525.852,
-    "failures": [],
+    "failures": [
+      {
+        "code": "disk-free-below-minimum",
+        "message": "Only 4.47 GiB free; minimum is 8.00 GiB."
+      }
+    ],
     "warnings": []
   },
   "prunedSharedAssets": {
-    "bytes": 488311051,
-    "count": 14,
+    "bytes": 168779763,
+    "count": 27,
     "files": [
-      "presentations/shared-assets/viscereality/optimized/2b935b0d146d3db4fded5ce7c1f8c0a122394003f08e622f4279df18e08dbb9a.webm",
-      "presentations/shared-assets/viscereality/optimized/2d2ce216d17b9f5a414ce1aac68c23a32106362c7dbbc7c8ae22c43dff50c29a.webm",
-      "presentations/shared-assets/viscereality/optimized/2f8b6a4402c33efed39330d146797c72bf587567c5fbd8cc8c7e255b74e01b32.webm",
-      "presentations/shared-assets/viscereality/optimized/466144fa90b6bc0f19240e71b8e297bf5e4af7b1bd93c5fa59a7c4364fdb8aeb.webm",
-      "presentations/shared-assets/viscereality/optimized/4ce2055a6046d0547ba5363d08588b77ccf56ba47943a2812b8b681b29ec6f1a.webm",
-      "presentations/shared-assets/viscereality/optimized/6148f2813dd63acdcf39d764cd2fb3954a625885fe00ad75111f470dcc503462.webm",
-      "presentations/shared-assets/viscereality/optimized/a71a7f086efb380b046b3fc7d4768b5127c4854365d467decd49cccf5af17f4f.webm",
-      "presentations/shared-assets/viscereality/optimized/d614e6df3d76365a8a4df7153c4dc7ddd5bf8a196b84a7f40431f4f60a7d618e.webm",
-      "presentations/shared-assets/viscereality/optimized/e3cc446ed4db74e292363de0bfccdfc2413eff27fa88e855c0697a9b5d8f34fc.webm",
-      "presentations/shared-assets/viscereality/optimized/f215dc5d87e86639f0f2546ce8d971cfb2fb94c6773a8a9d426e2e9f290a2959.webm",
-      "presentations/shared-assets/viscereality/optimized/f51c61fbe8f3cdf1a1eb47b2887eb984b6c46ab9a8211e551def42c54a999211.webm",
-      "presentations/shared-assets/viscereality/optimized/f901384df08f96bb985b8ae673e6146d2fa48001339e64eccf8a3b13258b2afb.webm",
-      "presentations/shared-assets/viscereality/optimized/fa063ff8de66d954d15f47b8d1224d1eda1b1d2c8ebeaace1c54540d020d813d.webm",
-      "presentations/shared-assets/viscereality/source/8e82652ecf1c208f1d02a967943ffdda54fed2cd2ae0708228c24a880df0e827.gif"
+      "presentations/shared-assets/viscereality/optimized/06c871eb71adcc0fe558c5d81ea05929d66e2d157f360b6c987ff256f55d95bf.webm",
+      "presentations/shared-assets/viscereality/optimized/0a2ad25947413fd639a9cdd0cbfe3e8af397f01e921e4b5e5f17c66e5524dc52.webm",
+      "presentations/shared-assets/viscereality/optimized/1086997f4ba08d614af3b281d8b7808a871fa3a2dddff33961b769805d2e173a.webm",
+      "presentations/shared-assets/viscereality/optimized/19b6144b8865329960f51dc7ce0fcc9ff346e1c26ce29f68d32d47a8e1da2857.webm",
+      "presentations/shared-assets/viscereality/optimized/27ddf8d47cefa7cdbed22ccadf17dfae77ec10bcfb25527b3af62ac50ae72a9b.webm",
+      "presentations/shared-assets/viscereality/optimized/34be2ca6d079dbee21dd40ab97d948e1d1c36a34e5f886a005fd77db0c7a3b80.webm",
+      "presentations/shared-assets/viscereality/optimized/4ac898a7e06dae4eece5a59763f10fc6ca20efb825fd73079a88c0914cbc7e82.webm",
+      "presentations/shared-assets/viscereality/optimized/60671fd511a44f5ff52574ea81dc1eae5dc0538007fb6004588c10cd6f313960.webm",
+      "presentations/shared-assets/viscereality/optimized/78b8ed66f02c3753c11696c0f2035737e05b35d1f567d5ce5cbb9f611bde477f.webm",
+      "presentations/shared-assets/viscereality/optimized/85231b46fa62782954a5b5593ca808f7f8e8e458194071c8d377d2fcef4d7bbe.webm",
+      "presentations/shared-assets/viscereality/optimized/89f20dc3848eeccce59dff75db93fe1da9babf20d590a75ab3bddd0c64b68aab.webm",
+      "presentations/shared-assets/viscereality/optimized/8d4444ffae9d84add7b08caccc8c9b8458e9bfeabce94f1e8b33b97280c6c7a8.webm",
+      "presentations/shared-assets/viscereality/optimized/918cf36ac70077aced74bf30f9ef8970e2f0724591508deb26aa6c5ba5cf4924.webm",
+      "presentations/shared-assets/viscereality/optimized/a150c5d45a34e293a58769473d47be0e71680b14eb2e67ab6eaf5cc89911edd4.webm",
+      "presentations/shared-assets/viscereality/optimized/a3f9b05ac26feab436e1adf8519e91a9672a5ab85a34912e4f5b8a82cb13eb06.webm",
+      "presentations/shared-assets/viscereality/optimized/cb582cde77055625f62bace545689f7070501e5b73857579d8bd4ad2f7a895f4.webm",
+      "presentations/shared-assets/viscereality/optimized/d338512cd2604dba2f4e20eb785b577ee58836615e63cefb803c11d85931b3a1.webm",
+      "presentations/shared-assets/viscereality/optimized/dae3e1c5dee8f0b4af8e11146e7ee69106ef3b729129f8665ac7e9993899378a.webm",
+      "presentations/shared-assets/viscereality/optimized/df33ca9d4638b924dce1d8a93b976e4f0bb4f097f519b6f2d80f0056a45a4890.webm",
+      "presentations/shared-assets/viscereality/optimized/e3e5b9ab9f87c3156fb6de44139c75e79952b63389ad4fc50516a9ba4283dd10.webm",
+      "presentations/shared-assets/viscereality/optimized/e5cff8c6d9b69dda98e31baef65214e0b887f89a12ae609a05b58db7910ad0a3.webm",
+      "presentations/shared-assets/viscereality/optimized/e6e73656a307195b9b378e6667e24510f393a412ca46c15dc69f15738b891a72.webm",
+      "presentations/shared-assets/viscereality/optimized/eeda8fec20302d7a8ccd76c797eaae48cfe4f7764809f64084ca2b2d84e4636e.webm",
+      "presentations/shared-assets/viscereality/optimized/f3a03dc1ccb3f46a87cff0b14dac248bb7e7ba03f76edd7517583207abebb1d4.webm",
+      "presentations/shared-assets/viscereality/source/4a816c8511ec19db20792b0b1d007d9cea6d623b225b12a8591d5ad562111cbc.wdp",
+      "presentations/shared-assets/viscereality/source/643435dc60035768d8d4938a6fc4743b7c9a6b6a367c5f38e8569f1d1602fb5f.wdp",
+      "presentations/shared-assets/viscereality/source/ce4bde01b87b86d5cf625d7ca2f14a90481a8ca29ccbe26109ce67d39f141c58.wdp"
     ],
-    "mb": 465.69,
+    "mb": 160.961,
     "truncated": false
   },
   "schema": "pptx-html-presenter.family.build.v1",
+  "sharedAssetLimits": {
+    "githubPagesSafe": true,
+    "hardMaxMb": 100.0,
+    "largestAssets": [
+      {
+        "bucket": "optimized",
+        "mb": 48.879,
+        "path": "presentations/shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 42.672,
+        "path": "presentations/shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 37.708,
+        "path": "presentations/shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 34.916,
+        "path": "presentations/shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4"
+      },
+      {
+        "bucket": "source",
+        "mb": 29.452,
+        "path": "presentations/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 24.891,
+        "path": "presentations/shared-assets/viscereality/optimized/ebbc88015ea08d653a1e36df9332ad443493fa005a7c7bb263555758191907e9.mp4"
+      },
+      {
+        "bucket": "source",
+        "mb": 19.997,
+        "path": "presentations/shared-assets/viscereality/source/7997219068d65f9d57e8b4abdb272f22b9cc311a81736c9cfae7f23e38a9b612.png"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 16.576,
+        "path": "presentations/shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 15.406,
+        "path": "presentations/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 13.961,
+        "path": "presentations/shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm"
+      }
+    ],
+    "maxAssetMb": 48.879,
+    "optimizedFileCount": 31,
+    "oversizeAssets": [],
+    "preferredAssetSafe": true,
+    "softMaxMb": 50.0,
+    "softOversizeAssets": [],
+    "sourceFileCount": 45,
+    "totalMb": 362.57
+  },
   "sharedAssetRoot": "presentations/shared-assets/viscereality",
   "sharedAssets": [
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
-      "bytesCopied": 109007815,
-      "copied": 14,
+      "bytesCopied": 334190,
+      "copied": 1,
       "deckId": "MuC",
-      "mbCopied": 103.958,
+      "mbCopied": 0.319,
       "missingReferences": [],
       "prunedLocalAssets": {
-        "bytes": 178074253,
+        "bytes": 178121248,
         "count": 39,
-        "mb": 169.825
+        "mb": 169.87
       },
-      "reused": 49,
+      "reused": 61,
       "rewrittenReferences": 78,
       "status": "ok"
     },
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
-      "bytesCopied": 0,
-      "copied": 0,
+      "bytesCopied": 88761,
+      "copied": 1,
       "deckId": "alpCHI",
-      "mbCopied": 0.0,
+      "mbCopied": 0.085,
       "missingReferences": [],
       "prunedLocalAssets": {
-        "bytes": 0,
-        "count": 0,
-        "mb": 0.0
+        "bytes": 332381622,
+        "count": 48,
+        "mb": 316.984
       },
-      "reused": 0,
-      "rewrittenReferences": 0,
+      "reused": 73,
+      "rewrittenReferences": 96,
       "status": "ok"
     },
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
-      "bytesCopied": 0,
-      "copied": 0,
+      "bytesCopied": 185303,
+      "copied": 1,
       "deckId": "BBD26",
-      "mbCopied": 0.0,
+      "mbCopied": 0.177,
       "missingReferences": [],
       "prunedLocalAssets": {
-        "bytes": 0,
-        "count": 0,
-        "mb": 0.0
+        "bytes": 340401101,
+        "count": 57,
+        "mb": 324.632
       },
-      "reused": 0,
-      "rewrittenReferences": 0,
+      "reused": 90,
+      "rewrittenReferences": 114,
       "status": "ok"
     }
   ],

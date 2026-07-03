@@ -3,7 +3,7 @@
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
       "deckId": "MuC",
-      "report": "presentations\\MuC-scene\\qa\\visual-audit\\report.json",
+      "report": "presentations/MuC-scene/qa/visual-audit/report.json",
       "status": "passed",
       "summary": {
         "capturedCount": 145,
@@ -18,7 +18,7 @@
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
       "deckId": "alpCHI",
-      "report": "presentations\\alpCHI-scene\\qa\\visual-audit\\report.json",
+      "report": "presentations/alpCHI-scene/qa/visual-audit/report.json",
       "status": "passed",
       "summary": {
         "capturedCount": 217,
@@ -33,7 +33,7 @@
     {
       "buildDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
       "deckId": "BBD26",
-      "report": "presentations\\BBD26-scene-new\\qa\\visual-audit\\report.json",
+      "report": "presentations/BBD26-scene-new/qa/visual-audit/report.json",
       "status": "passed",
       "summary": {
         "capturedCount": 280,
@@ -47,7 +47,7 @@
     }
   ],
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-03T17:42:16+00:00",
+  "generatedAtUtc": "2026-07-03T20:13:46+00:00",
   "schema": "pptx-html-presenter.family.visual-audit.v1",
   "status": "ok"
 }

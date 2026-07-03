@@ -652,6 +652,14 @@
   },
   "unsupportedObjects": [
     {
+      "name": "Picture 2",
+      "object": "s1-o3",
+      "slide": 1,
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
+    },
+    {
       "name": "Content boundary frame",
       "object": "s1-o12",
       "slide": 1,
@@ -744,6 +752,7 @@
       "object": "s2-o50",
       "slide": 2,
       "unsupported": [
+        "hdphoto-layer-selected-for-conversion",
         "off-canvas"
       ]
     },

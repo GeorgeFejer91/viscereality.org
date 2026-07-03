@@ -747,6 +747,14 @@
       ]
     },
     {
+      "name": "Picture 10",
+      "object": "s1-o1034",
+      "slide": 1,
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 26",
       "object": "s2-o27",
       "slide": 2,
