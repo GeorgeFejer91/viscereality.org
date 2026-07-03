@@ -171,11 +171,11 @@
     },
     {
       "childTrackIds": [
-        "track-0028",
-        "track-0029"
+        "track-0027",
+        "track-0028"
       ],
-      "groupId": "panel-track-0027",
-      "panelTrackId": "track-0027",
+      "groupId": "panel-track-0026",
+      "panelTrackId": "track-0026",
       "slide": 3,
       "status": "inferred-panel"
     },
@@ -217,11 +217,11 @@
     },
     {
       "childTrackIds": [
-        "track-0028",
-        "track-0029"
+        "track-0027",
+        "track-0028"
       ],
-      "groupId": "panel-track-0027",
-      "panelTrackId": "track-0027",
+      "groupId": "panel-track-0026",
+      "panelTrackId": "track-0026",
       "slide": 4,
       "status": "inferred-panel"
     },
@@ -272,11 +272,11 @@
     },
     {
       "childTrackIds": [
-        "track-0031",
-        "track-0032"
+        "track-0030",
+        "track-0031"
       ],
-      "groupId": "panel-track-0030",
-      "panelTrackId": "track-0030",
+      "groupId": "panel-track-0029",
+      "panelTrackId": "track-0029",
       "slide": 5,
       "status": "inferred-panel"
     },
@@ -291,23 +291,23 @@
     },
     {
       "childTrackIds": [
-        "track-0034",
-        "track-0035"
+        "track-0033",
+        "track-0034"
       ],
-      "groupId": "panel-track-0033",
-      "panelTrackId": "track-0033",
+      "groupId": "panel-track-0032",
+      "panelTrackId": "track-0032",
       "slide": 5,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0036",
+        "track-0035",
+        "track-0027",
         "track-0028",
-        "track-0029",
-        "track-0037"
+        "track-0036"
       ],
-      "groupId": "panel-track-0027",
-      "panelTrackId": "track-0027",
+      "groupId": "panel-track-0026",
+      "panelTrackId": "track-0026",
       "slide": 5,
       "status": "inferred-panel"
     },
@@ -367,11 +367,11 @@
     },
     {
       "childTrackIds": [
-        "track-0031",
-        "track-0032"
+        "track-0030",
+        "track-0031"
       ],
-      "groupId": "panel-track-0030",
-      "panelTrackId": "track-0030",
+      "groupId": "panel-track-0029",
+      "panelTrackId": "track-0029",
       "slide": 6,
       "status": "inferred-panel"
     },
@@ -386,38 +386,38 @@
     },
     {
       "childTrackIds": [
-        "track-0034",
-        "track-0035"
+        "track-0033",
+        "track-0034"
       ],
-      "groupId": "panel-track-0033",
-      "panelTrackId": "track-0033",
+      "groupId": "panel-track-0032",
+      "panelTrackId": "track-0032",
       "slide": 6,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0036",
+        "track-0035",
+        "track-0027",
         "track-0028",
-        "track-0029",
-        "track-0037"
+        "track-0036"
       ],
-      "groupId": "panel-track-0027",
-      "panelTrackId": "track-0027",
+      "groupId": "panel-track-0026",
+      "panelTrackId": "track-0026",
       "slide": 6,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
+        "track-0039",
         "track-0040",
         "track-0041",
         "track-0042",
         "track-0043",
         "track-0044",
-        "track-0045",
-        "track-0046"
+        "track-0045"
       ],
-      "groupId": "panel-track-0039",
-      "panelTrackId": "track-0039",
+      "groupId": "panel-track-0038",
+      "panelTrackId": "track-0038",
       "slide": 6,
       "status": "inferred-panel"
     },
@@ -451,26 +451,26 @@
     },
     {
       "childTrackIds": [
-        "track-0048",
-        "track-0049"
+        "track-0047",
+        "track-0048"
       ],
-      "groupId": "panel-track-0047",
-      "panelTrackId": "track-0047",
+      "groupId": "panel-track-0046",
+      "panelTrackId": "track-0046",
       "slide": 7,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
+        "track-0039",
         "track-0040",
         "track-0041",
         "track-0042",
         "track-0043",
         "track-0044",
-        "track-0045",
-        "track-0046"
+        "track-0045"
       ],
-      "groupId": "panel-track-0039",
-      "panelTrackId": "track-0039",
+      "groupId": "panel-track-0038",
+      "panelTrackId": "track-0038",
       "slide": 7,
       "status": "inferred-panel"
     },
@@ -523,36 +523,36 @@
     },
     {
       "childTrackIds": [
+        "track-0039",
         "track-0040",
         "track-0041",
         "track-0042",
         "track-0043",
         "track-0044",
-        "track-0045",
-        "track-0046"
+        "track-0045"
       ],
-      "groupId": "panel-track-0039",
-      "panelTrackId": "track-0039",
+      "groupId": "panel-track-0038",
+      "panelTrackId": "track-0038",
       "slide": 8,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0048",
-        "track-0049"
+        "track-0047",
+        "track-0048"
       ],
-      "groupId": "panel-track-0047",
-      "panelTrackId": "track-0047",
+      "groupId": "panel-track-0046",
+      "panelTrackId": "track-0046",
       "slide": 8,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0051",
-        "track-0052"
+        "track-0050",
+        "track-0051"
       ],
-      "groupId": "panel-track-0050",
-      "panelTrackId": "track-0050",
+      "groupId": "panel-track-0049",
+      "panelTrackId": "track-0049",
       "slide": 8,
       "status": "inferred-panel"
     },
@@ -605,31 +605,31 @@
     },
     {
       "childTrackIds": [
-        "track-0054",
-        "track-0055"
+        "track-0053",
+        "track-0054"
       ],
-      "groupId": "panel-track-0053",
-      "panelTrackId": "track-0053",
+      "groupId": "panel-track-0052",
+      "panelTrackId": "track-0052",
       "slide": 9,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0048",
-        "track-0049"
+        "track-0047",
+        "track-0048"
       ],
-      "groupId": "panel-track-0047",
-      "panelTrackId": "track-0047",
+      "groupId": "panel-track-0046",
+      "panelTrackId": "track-0046",
       "slide": 9,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0051",
-        "track-0052"
+        "track-0050",
+        "track-0051"
       ],
-      "groupId": "panel-track-0050",
-      "panelTrackId": "track-0050",
+      "groupId": "panel-track-0049",
+      "panelTrackId": "track-0049",
       "slide": 9,
       "status": "inferred-panel"
     },
@@ -672,31 +672,31 @@
     },
     {
       "childTrackIds": [
-        "track-0054",
-        "track-0055"
+        "track-0053",
+        "track-0054"
       ],
-      "groupId": "panel-track-0053",
-      "panelTrackId": "track-0053",
+      "groupId": "panel-track-0052",
+      "panelTrackId": "track-0052",
       "slide": 10,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0057",
-        "track-0058"
+        "track-0056",
+        "track-0057"
       ],
-      "groupId": "panel-track-0056",
-      "panelTrackId": "track-0056",
+      "groupId": "panel-track-0055",
+      "panelTrackId": "track-0055",
       "slide": 10,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0051",
-        "track-0052"
+        "track-0050",
+        "track-0051"
       ],
-      "groupId": "panel-track-0050",
-      "panelTrackId": "track-0050",
+      "groupId": "panel-track-0049",
+      "panelTrackId": "track-0049",
       "slide": 10,
       "status": "inferred-panel"
     },
@@ -739,31 +739,31 @@
     },
     {
       "childTrackIds": [
-        "track-0054",
-        "track-0055"
+        "track-0053",
+        "track-0054"
       ],
-      "groupId": "panel-track-0053",
-      "panelTrackId": "track-0053",
+      "groupId": "panel-track-0052",
+      "panelTrackId": "track-0052",
       "slide": 11,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0057",
-        "track-0058"
+        "track-0056",
+        "track-0057"
       ],
-      "groupId": "panel-track-0056",
-      "panelTrackId": "track-0056",
+      "groupId": "panel-track-0055",
+      "panelTrackId": "track-0055",
       "slide": 11,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0051",
-        "track-0052"
+        "track-0050",
+        "track-0051"
       ],
-      "groupId": "panel-track-0050",
-      "panelTrackId": "track-0050",
+      "groupId": "panel-track-0049",
+      "panelTrackId": "track-0049",
       "slide": 11,
       "status": "inferred-panel"
     },
@@ -796,31 +796,31 @@
     },
     {
       "childTrackIds": [
-        "track-0054",
-        "track-0055"
+        "track-0053",
+        "track-0054"
       ],
-      "groupId": "panel-track-0053",
-      "panelTrackId": "track-0053",
+      "groupId": "panel-track-0052",
+      "panelTrackId": "track-0052",
       "slide": 12,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0057",
-        "track-0058"
+        "track-0056",
+        "track-0057"
       ],
-      "groupId": "panel-track-0056",
-      "panelTrackId": "track-0056",
+      "groupId": "panel-track-0055",
+      "panelTrackId": "track-0055",
       "slide": 12,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0060",
-        "track-0061"
+        "track-0059",
+        "track-0060"
       ],
-      "groupId": "panel-track-0059",
-      "panelTrackId": "track-0059",
+      "groupId": "panel-track-0058",
+      "panelTrackId": "track-0058",
       "slide": 12,
       "status": "inferred-panel"
     },
@@ -853,31 +853,31 @@
     },
     {
       "childTrackIds": [
-        "track-0057",
-        "track-0058"
+        "track-0056",
+        "track-0057"
       ],
-      "groupId": "panel-track-0056",
-      "panelTrackId": "track-0056",
+      "groupId": "panel-track-0055",
+      "panelTrackId": "track-0055",
       "slide": 13,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0060",
-        "track-0061"
+        "track-0059",
+        "track-0060"
       ],
-      "groupId": "panel-track-0059",
-      "panelTrackId": "track-0059",
+      "groupId": "panel-track-0058",
+      "panelTrackId": "track-0058",
       "slide": 13,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0063",
-        "track-0064"
+        "track-0062",
+        "track-0063"
       ],
-      "groupId": "panel-track-0062",
-      "panelTrackId": "track-0062",
+      "groupId": "panel-track-0061",
+      "panelTrackId": "track-0061",
       "slide": 13,
       "status": "inferred-panel"
     },
@@ -910,31 +910,31 @@
     },
     {
       "childTrackIds": [
-        "track-0057",
-        "track-0058"
+        "track-0056",
+        "track-0057"
       ],
-      "groupId": "panel-track-0056",
-      "panelTrackId": "track-0056",
+      "groupId": "panel-track-0055",
+      "panelTrackId": "track-0055",
       "slide": 14,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0060",
-        "track-0061"
+        "track-0059",
+        "track-0060"
       ],
-      "groupId": "panel-track-0059",
-      "panelTrackId": "track-0059",
+      "groupId": "panel-track-0058",
+      "panelTrackId": "track-0058",
       "slide": 14,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0063",
-        "track-0064"
+        "track-0062",
+        "track-0063"
       ],
-      "groupId": "panel-track-0062",
-      "panelTrackId": "track-0062",
+      "groupId": "panel-track-0061",
+      "panelTrackId": "track-0061",
       "slide": 14,
       "status": "inferred-panel"
     },
@@ -958,30 +958,30 @@
     },
     {
       "childTrackIds": [
-        "track-0060",
-        "track-0061"
+        "track-0059",
+        "track-0060"
       ],
-      "groupId": "panel-track-0059",
-      "panelTrackId": "track-0059",
+      "groupId": "panel-track-0058",
+      "panelTrackId": "track-0058",
       "slide": 15,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0063",
-        "track-0064"
+        "track-0062",
+        "track-0063"
       ],
-      "groupId": "panel-track-0062",
-      "panelTrackId": "track-0062",
+      "groupId": "panel-track-0061",
+      "panelTrackId": "track-0061",
       "slide": 15,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0067"
+        "track-0066"
       ],
-      "groupId": "panel-track-0068",
-      "panelTrackId": "track-0068",
+      "groupId": "panel-track-0067",
+      "panelTrackId": "track-0067",
       "slide": 15,
       "status": "inferred-panel"
     },
@@ -996,18 +996,37 @@
     },
     {
       "childTrackIds": [
-        "track-0069",
-        "track-0063",
-        "track-0064"
+        "track-0068",
+        "track-0062",
+        "track-0063"
       ],
-      "groupId": "panel-track-0062",
-      "panelTrackId": "track-0062",
+      "groupId": "panel-track-0061",
+      "panelTrackId": "track-0061",
       "slide": 16,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0071"
+        "track-0070"
+      ],
+      "groupId": "panel-track-0071",
+      "panelTrackId": "track-0071",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0066",
+        "track-0065"
+      ],
+      "groupId": "panel-track-0067",
+      "panelTrackId": "track-0067",
+      "slide": 16,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0069"
       ],
       "groupId": "panel-track-0072",
       "panelTrackId": "track-0072",
@@ -1016,92 +1035,82 @@
     },
     {
       "childTrackIds": [
-        "track-0067",
         "track-0066"
       ],
-      "groupId": "panel-track-0068",
-      "panelTrackId": "track-0068",
-      "slide": 16,
+      "groupId": "panel-track-0067",
+      "panelTrackId": "track-0067",
+      "slide": 17,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0070"
+        "track-0074"
       ],
       "groupId": "panel-track-0073",
       "panelTrackId": "track-0073",
-      "slide": 16,
+      "slide": 17,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0067"
+        "track-0069"
       ],
-      "groupId": "panel-track-0068",
-      "panelTrackId": "track-0068",
+      "groupId": "panel-track-0072",
+      "panelTrackId": "track-0072",
       "slide": 17,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0074"
+      ],
+      "groupId": "panel-track-0073",
+      "panelTrackId": "track-0073",
+      "slide": 18,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
         "track-0075"
       ],
-      "groupId": "panel-track-0074",
-      "panelTrackId": "track-0074",
-      "slide": 17,
+      "groupId": "panel-track-0076",
+      "panelTrackId": "track-0076",
+      "slide": 18,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0070"
+        "track-0066"
       ],
-      "groupId": "panel-track-0073",
-      "panelTrackId": "track-0073",
-      "slide": 17,
+      "groupId": "panel-track-0067",
+      "panelTrackId": "track-0067",
+      "slide": 18,
+      "status": "inferred-panel"
+    },
+    {
+      "childTrackIds": [
+        "track-0069"
+      ],
+      "groupId": "panel-track-0072",
+      "panelTrackId": "track-0072",
+      "slide": 18,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
         "track-0075"
       ],
-      "groupId": "panel-track-0074",
-      "panelTrackId": "track-0074",
-      "slide": 18,
+      "groupId": "panel-track-0076",
+      "panelTrackId": "track-0076",
+      "slide": 19,
       "status": "inferred-panel"
     },
     {
       "childTrackIds": [
-        "track-0076"
-      ],
-      "groupId": "panel-track-0077",
-      "panelTrackId": "track-0077",
-      "slide": 18,
-      "status": "inferred-panel"
-    },
-    {
-      "childTrackIds": [
-        "track-0067"
-      ],
-      "groupId": "panel-track-0068",
-      "panelTrackId": "track-0068",
-      "slide": 18,
-      "status": "inferred-panel"
-    },
-    {
-      "childTrackIds": [
-        "track-0070"
+        "track-0074"
       ],
       "groupId": "panel-track-0073",
       "panelTrackId": "track-0073",
-      "slide": 18,
-      "status": "inferred-panel"
-    },
-    {
-      "childTrackIds": [
-        "track-0076"
-      ],
-      "groupId": "panel-track-0077",
-      "panelTrackId": "track-0077",
       "slide": 19,
       "status": "inferred-panel"
     },
@@ -1109,17 +1118,8 @@
       "childTrackIds": [
         "track-0075"
       ],
-      "groupId": "panel-track-0074",
-      "panelTrackId": "track-0074",
-      "slide": 19,
-      "status": "inferred-panel"
-    },
-    {
-      "childTrackIds": [
-        "track-0076"
-      ],
-      "groupId": "panel-track-0077",
-      "panelTrackId": "track-0077",
+      "groupId": "panel-track-0076",
+      "panelTrackId": "track-0076",
       "slide": 20,
       "status": "inferred-panel"
     },

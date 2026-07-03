@@ -273,6 +273,23 @@ async function seekVideos(page, seconds, mediaClocks) {
             4000,
           );
         }
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA && !video.error) {
+          const wasMuted = video.muted;
+          video.muted = true;
+          try {
+            await video.play();
+          } catch {
+            // Headless browsers can still reject autoplay; diagnostics will report remaining state.
+          }
+          await waitForVideo(
+            video,
+            () => video.error || video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA,
+            ["loadeddata", "canplay", "canplaythrough", "timeupdate", "error"],
+            4000,
+          );
+          video.pause();
+          video.muted = wasMuted;
+        }
         video.pause();
       }));
     }, { targetSeconds: seconds, trackSeconds: mediaClocks || {} });

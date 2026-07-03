@@ -874,9 +874,9 @@
   ],
   "githubPagesSafe": true,
   "prunedOptimizedAssets": {
-    "bytes": 0,
-    "count": 0,
-    "mb": 0.0
+    "bytes": 125228247,
+    "count": 19,
+    "mb": 119.427
   },
   "prunedSourceAssets": {
     "bytes": 1054248742,

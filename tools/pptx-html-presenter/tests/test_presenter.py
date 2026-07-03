@@ -2907,6 +2907,34 @@ class PresenterTests(unittest.TestCase):
             "ppt/media/hdphoto1.wdp",
         )
 
+    def test_svg_media_target_is_preferred_over_bitmap_fallback(self) -> None:
+        assets = {
+            "ppt/media/fallback.png": AssetRef(
+                source_path="ppt/media/fallback.png",
+                rel_id=None,
+                kind="image",
+                extension="png",
+                size_bytes=1,
+                sha256="e" * 64,
+            ),
+            "ppt/media/vector.svg": AssetRef(
+                source_path="ppt/media/vector.svg",
+                rel_id=None,
+                kind="svg",
+                extension="svg",
+                size_bytes=1,
+                sha256="f" * 64,
+            ),
+        }
+        self.assertEqual(
+            _selected_media_target(
+                ["ppt/media/fallback.png", "ppt/media/vector.svg"],
+                assets,
+                prefer_video=False,
+            ),
+            "ppt/media/vector.svg",
+        )
+
     def test_hdphoto_image_layer_brightness_contrast_is_parsed(self) -> None:
         node = ET.fromstring(
             """

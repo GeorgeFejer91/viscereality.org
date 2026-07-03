@@ -696,6 +696,10 @@ def _selected_media_target(
             asset = assets.get(target)
             if asset is not None and asset.extension.lower() == "wdp":
                 return target
+    for target in media_targets:
+        asset = assets.get(target)
+        if asset is not None and (asset.kind == "svg" or asset.extension.lower() == "svg"):
+            return target
     return media_targets[0]
 
 

@@ -69,7 +69,7 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family publish presentati
 
 Current source PPTX parse results from family preflight:
 
-- `MuC`: 17 slides, 39 assets, all parsed transitions are Morph.
+- `MuC`: 17 slides, 39 assets, all parsed transitions are Morph. Note that an older planning note expected 18 slides, but the current source PPTX and generated scene manifest both verify 17 slides.
 - `alpCHI`: 25 slides, 48 assets, 24 Morph transitions and 1 custom transition.
 - `BBD26`: 32 slides, 57 assets, 31 Morph transitions and 1 custom transition.
 - Current chunked public folders total about 1.12 GiB.
@@ -139,6 +139,10 @@ Current source PPTX parse results from family preflight:
 - Calibration result: on 2026-07-04, candidate sweeps showed a production `glow_scale` of `0.5` improves PowerPoint-oracle slide-1/early-transition samples for BBD26 and alpCHI without changing object structure. The family defaults now set `visual_effects.glow_scale` to `0.5`; `glow_alpha_scale` remains `1.0`.
 - Problem: BBD26 visual-audit capture failed on reverse transition `27->26` because visible WebM `track-0109` could remain at `readyState = 0` in deterministic capture mode.
   - Solution: `browser_capture.mjs` now forces visible videos to `preload="auto"`, calls `load()` when metadata/data is absent, waits for metadata/current-frame readiness, seeks visible videos to their sample clocks, and only then screenshots. This does not reverse/restart media in the runtime player; it makes QA capture deterministic for visible media.
+- Problem: alpCHI transition `1->2` treated the large title/text SVG block as an unmatched exit/enter pair (`Graphic 2` / `Graphic 15`) because one slide selected the SVG media layer and the next selected the PNG fallback for the same PowerPoint graphic.
+  - Solution: `_selected_media_target()` now prefers SVG media over bitmap fallbacks when PowerPoint provides both. The public alpCHI scene now has `Graphic 2` and `Graphic 15` sharing `track-0010` and the same SVG asset, so the title block moves as a Morph object instead of fading in place.
+- Problem: alpCHI public visual audit later hit `visible-video-not-ready` on endpoint sample `trans-006-007-100`, with visible WebM `track-0045` stuck at metadata-only `readyState = 1`.
+  - Solution: browser capture now briefly plays stubborn visible videos muted if load/seek alone does not decode a current frame, then pauses them before screenshot. This is capture-only determinism; runtime media still loops independently during navigation.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -172,13 +176,13 @@ After the first-transition calibration updates, current public HTML visual-audit
 
 After the WDP/cache rebuild and public publish on 2026-07-03, `family visual-audit` passed again for all three decks with 0 failures. After the subsequent `mediaEffects.brightnessContrast` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the `visualEffects.glow` runtime/parser change, `family visual-audit` passed again for all three decks with 0 failures. After the transition-parenting fix for mismatched explicit wrapper groups, `family visual-audit` passed again for all three decks with 0 failures. After the clean rebuild/publish that removed the rejected MuC transition-specific fade override and added capture-only unmatched-fade candidate sweeps, `family visual-audit` passed again for all three public decks with 0 failures.
 
-After the `visual_effects` config propagation fix and deterministic visible-video capture hardening on 2026-07-04, direct public-folder audits passed:
+After the `visual_effects` config propagation fix, deterministic visible-video capture hardening, and SVG-over-bitmap fallback preference on 2026-07-04, direct public-folder audits passed:
 
 - `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
 - `alpCHI`: 217 samples, 25 settled slides, 168 forward transition samples, 24 reverse midpoint samples, 0 failures, 0 warnings.
 - `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures, 0 warnings.
 
-This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, reverse midpoint samples, and the later BBD26 visible-video capture case for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
+This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, reverse midpoint samples, the later BBD26 visible-video capture case, and the later alpCHI endpoint WebM capture case for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
 
 ## Latest PowerPoint Oracle Smoke
 
@@ -190,16 +194,16 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presenta
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks BBD26 --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
 ```
 
-Current smoke results after the visual-effects config propagation fix, `glow_scale = 0.5`, and public visual-audit rebuild:
+Current smoke results after the visual-effects config propagation fix, `glow_scale = 0.5`, SVG fallback preference, and public visual-audit rebuild:
 
 - `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.624`, settled slide 1 about `0.789`, transition start about `0.916`, transition 25% about `0.624`, transition midpoint about `0.868`, transition 75% about `0.857`.
-- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.503`, settled slide 1 about `0.839`, transition start about `0.957`, transition 25% about `0.503`, transition midpoint about `0.746`, transition 75% about `0.781`.
+- `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.508`, settled slide 1 about `0.839`, transition start about `0.957`, transition 10% about `0.609`, transition 25% about `0.508`, transition midpoint about `0.746`, transition 75% about `0.781`. The 25% frame is visually improved because the large title block now slides left as a matched SVG object, though strict SSIM remains low and the 10% score dropped relative to the previous smoke.
 - `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.754`, settled slide 1 about `0.826`, transition start about `0.754`, transition 25% about `0.898`, transition midpoint about `0.945`, transition 75% about `0.874`. This remains far above the previous catastrophic `0.323` late-transition failure caused by offscreen panel parenting.
 
 Interpretation:
 
 - The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
-- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects with calibrated family scaling, deterministic visible-video QA capture, and stable transition-parenting rule improved specific samples, but remaining differences include text/raster antialiasing, text placement/scale, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
+- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects with calibrated family scaling, SVG fallback consistency, deterministic visible-video QA capture, and stable transition-parenting rule improved specific samples, but remaining differences include text/raster antialiasing, text placement/scale, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
 - Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish
@@ -222,7 +226,7 @@ The previous chunked players were moved to:
 
 1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
 2. Continue fine-tuning deck-specific configs for oracle parity: first-transition smoke is improved but not passing on any deck.
-3. Continue improving oracle parity after the WDP/cache/visual-effects public rebuild. The public scene decks have been rebuilt, visually audited, and republished with WDP conversion, shared optimized cache reuse, calibrated glow scaling, and deterministic visible-video capture, but strict PowerPoint oracle QA is still the main unresolved quality gate.
+3. Continue improving oracle parity after the WDP/cache/visual-effects/SVG fallback public rebuild. The public scene decks have been rebuilt, visually audited, and republished with WDP conversion, shared optimized cache reuse, calibrated glow scaling, SVG fallback consistency, and deterministic visible-video capture, but strict PowerPoint oracle QA is still the main unresolved quality gate.
 4. Continue calibrating text/layout metrics, media phase/brightness, additional Morph progress maps, and any remaining explicit-group wrapper transitions where PowerPoint changes group IDs but the visible object identity remains stable.
 5. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
 6. Commit and push only intended files; do not stage unrelated root `index.html` changes.
