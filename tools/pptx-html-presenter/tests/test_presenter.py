@@ -14,6 +14,7 @@ from pptx_html_presenter.assets import (
     _prune_unreferenced_asset_files,
     _prune_unreferenced_source_assets,
     _should_optimize_static_image,
+    _should_convert_wdp,
     _should_transcode_gif,
     _try_convert_gif_with_ffmpeg,
 )
@@ -23,7 +24,7 @@ from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy,
 from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
-from pptx_html_presenter.pptx import parse_pptx
+from pptx_html_presenter.pptx import _selected_media_target, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
     _candidate_sweep_samples,
@@ -2716,6 +2717,47 @@ class PresenterTests(unittest.TestCase):
                 asset,
                 AssetPolicy(soft_max_mb=50, optimize_static_images=False),
             )
+        )
+
+    def test_wdp_assets_are_conversion_candidates(self) -> None:
+        asset = AssetRef(
+            source_path="ppt/media/hdphoto1.wdp",
+            rel_id=None,
+            kind="image",
+            extension="wdp",
+            size_bytes=1024,
+            sha256="d" * 64,
+        )
+        self.assertTrue(_should_convert_wdp(asset, AssetPolicy()))
+        self.assertFalse(_should_convert_wdp(asset, AssetPolicy(mode="source-only")))
+
+    def test_hdphoto_media_target_is_preferred_when_powerpoint_marks_image_layer(self) -> None:
+        assets = {
+            "ppt/media/fallback.png": AssetRef(
+                source_path="ppt/media/fallback.png",
+                rel_id=None,
+                kind="image",
+                extension="png",
+                size_bytes=1,
+                sha256="e" * 64,
+            ),
+            "ppt/media/hdphoto1.wdp": AssetRef(
+                source_path="ppt/media/hdphoto1.wdp",
+                rel_id=None,
+                kind="image",
+                extension="wdp",
+                size_bytes=1,
+                sha256="f" * 64,
+            ),
+        }
+        self.assertEqual(
+            _selected_media_target(
+                ["ppt/media/fallback.png", "ppt/media/hdphoto1.wdp"],
+                assets,
+                prefer_video=False,
+                prefer_hdphoto=True,
+            ),
+            "ppt/media/hdphoto1.wdp",
         )
 
     def test_prunes_unreferenced_source_assets(self) -> None:

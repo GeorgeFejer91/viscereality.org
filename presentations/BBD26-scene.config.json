@@ -9,9 +9,10 @@
     "hard_max_mb": 100,
     "transcode_gif": true,
     "transcode_video": true,
+    "optimize_static_images": true,
     "webp_quality": 88,
     "video_crf": 24,
-    "allow_oversize_assets": true,
+    "allow_oversize_assets": false,
     "prune_unreferenced_source_assets": true
   },
   "runtime": {

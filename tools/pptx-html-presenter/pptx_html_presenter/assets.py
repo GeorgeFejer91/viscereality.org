@@ -64,12 +64,26 @@ def prepare_assets(
                 source_path.write_bytes(raw)
                 by_hash[asset.sha256] = {"source": f"assets/source/{source_name}"}
             asset.source_file = by_hash[asset.sha256]["source"]
-            _probe_image_metadata(asset, source_path)
+            if asset.extension.lower() != "wdp":
+                _probe_image_metadata(asset, source_path)
 
             output_rel = by_hash[asset.sha256].get("output")
             if output_rel is None:
                 output_path = source_path
-                if _should_transcode_gif(asset, policy):
+                if _should_convert_wdp(asset, policy):
+                    converted = _try_convert_wdp_to_png_with_wic(
+                        source_path,
+                        optimized_dir,
+                        asset,
+                    )
+                    if converted is not None:
+                        output_path = converted
+                        asset.kind = "image"
+                        asset.extension = "png"
+                        _probe_image_metadata(asset, converted)
+                    else:
+                        asset.warnings.append("wdp-conversion-unavailable")
+                elif _should_transcode_gif(asset, policy):
                     converted = _try_convert_gif_for_publish(
                         source_path,
                         optimized_dir,
@@ -378,6 +392,10 @@ def _should_optimize_static_image(asset: AssetRef, policy: AssetPolicy) -> bool:
     )
 
 
+def _should_convert_wdp(asset: AssetRef, policy: AssetPolicy) -> bool:
+    return policy.mode != "source-only" and asset.extension.lower() == "wdp"
+
+
 def _probe_image_metadata(asset: AssetRef, path: Path) -> None:
     if asset.kind not in {"image", "svg"}:
         return
@@ -474,7 +492,18 @@ def _try_optimize_static_image(
     try:
         with Image.open(source) as image:
             has_alpha = bool(asset.alpha) or _image_has_alpha(image)
-            variants = _static_image_variants(has_alpha, quality)
+            pixel_count = int(image.width) * int(image.height)
+            variants = _static_image_variants(has_alpha, quality, pixel_count=pixel_count)
+            if not variants:
+                asset.warnings.append("static-image-optimization-skipped-no-variants")
+                return None
+            max_width = max(width for width, _height, _quality, _lossless, _suffix in variants)
+            max_height = max(height for _width, height, _quality, _lossless, _suffix in variants)
+            base = image.copy()
+            base.thumbnail(
+                (max_width, max_height),
+                _image_resample_lanczos(Image),
+            )
             for max_width, max_height, variant_quality, lossless, suffix in variants:
                 output_dir.mkdir(parents=True, exist_ok=True)
                 output = output_dir / f"{asset.sha256[:16]}-{suffix}.webp"
@@ -483,7 +512,7 @@ def _try_optimize_static_image(
                         asset.warnings.append(f"static-image-optimized-webp-{suffix}")
                         return output
                     output.unlink(missing_ok=True)
-                frame = image.copy()
+                frame = base.copy()
                 frame.thumbnail(
                     (max_width, max_height),
                     _image_resample_lanczos(Image),
@@ -516,16 +545,79 @@ def _try_optimize_static_image(
     return None
 
 
+def _try_convert_wdp_to_png_with_wic(
+    source: Path,
+    output_dir: Path,
+    asset: AssetRef,
+) -> Path | None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output = output_dir / f"{asset.sha256[:16]}-wdp.png"
+    if output.exists() and output.stat().st_size > 0:
+        asset.warnings.append("wdp-converted-to-png-wic")
+        return output
+    powershell = find_binary("powershell.exe") or find_binary("powershell")
+    if powershell is None:
+        asset.warnings.append("powershell-missing-for-wdp-conversion")
+        return None
+    script = f"""
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName PresentationCore
+$src = {_powershell_quote(str(source.resolve()))}
+$out = {_powershell_quote(str(output.resolve()))}
+$stream = [System.IO.File]::OpenRead($src)
+try {{
+  $decoder = New-Object System.Windows.Media.Imaging.WmpBitmapDecoder($stream, [System.Windows.Media.Imaging.BitmapCreateOptions]::PreservePixelFormat, [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad)
+  $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
+  $encoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($decoder.Frames[0]))
+  $outStream = [System.IO.File]::Create($out)
+  try {{ $encoder.Save($outStream) }} finally {{ $outStream.Close() }}
+}} finally {{
+  $stream.Close()
+}}
+"""
+    try:
+        subprocess.run(
+            [
+                str(powershell),
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                script,
+            ],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+        )
+    except Exception as exc:
+        asset.warnings.append(f"wdp-wic-conversion-failed:{exc}")
+        output.unlink(missing_ok=True)
+        return None
+    if not output.exists() or output.stat().st_size <= 0:
+        return None
+    asset.warnings.append("wdp-converted-to-png-wic")
+    return output
+
+
+def _powershell_quote(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
+
+
 def _static_image_variants(
     has_alpha: bool,
     quality: int,
+    *,
+    pixel_count: int,
 ) -> list[tuple[int, int, int, bool, str]]:
+    allow_lossless = pixel_count <= 24_000_000
     if has_alpha:
-        return [
-            (3840, 2160, 100, True, "lossless-w3840"),
+        variants = [
             (3840, 2160, max(quality, 90), False, f"q{max(quality, 90)}-w3840"),
             (1920, 1080, min(quality, 88), False, f"q{min(quality, 88)}-w1920"),
         ]
+        if allow_lossless:
+            variants.insert(0, (3840, 2160, 100, True, "lossless-w3840"))
+        return variants
     return [
         (3840, 2160, max(quality, 90), False, f"q{max(quality, 90)}-w3840"),
         (1920, 1080, quality, False, f"q{quality}-w1920"),

@@ -18,8 +18,17 @@ R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PKG_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 P14_NS = "http://schemas.microsoft.com/office/powerpoint/2010/main"
 P159_NS = "http://schemas.microsoft.com/office/powerpoint/2015/09/main"
+A14_NS = "http://schemas.microsoft.com/office/drawing/2010/main"
 
-NS = {"p": P_NS, "a": A_NS, "r": R_NS, "rel": PKG_REL_NS, "p14": P14_NS, "p159": P159_NS}
+NS = {
+    "p": P_NS,
+    "a": A_NS,
+    "r": R_NS,
+    "rel": PKG_REL_NS,
+    "p14": P14_NS,
+    "p159": P159_NS,
+    "a14": A14_NS,
+}
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".wdp", ".bmp", ".tif", ".tiff"}
 VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".webm", ".wmv", ".avi", ".mpeg", ".mpg"}
@@ -491,16 +500,22 @@ def _parse_shape(
     crop = _crop(node)
     unsupported: list[str] = []
     media_targets = _media_targets(rel_ids, rels)
+    prefer_hdphoto = _has_hdphoto_image_layer(node)
     if media_targets:
         target = _selected_media_target(
             media_targets,
             assets,
             prefer_video=bool(media_timings.get(str(shape_id), {})),
+            prefer_hdphoto=prefer_hdphoto,
         )
         asset = assets.get(target)
         if asset is not None:
             asset_id = asset.id
             kind = "video" if asset.kind == "video" else "image"
+            if prefer_hdphoto and asset.extension.lower() == "wdp":
+                unsupported.append("hdphoto-layer-selected-for-conversion")
+            elif prefer_hdphoto:
+                unsupported.append("hdphoto-layer-fallback-media-selected")
             if asset.kind == "video":
                 poster = _selected_poster_target(media_targets, assets, selected_target=target)
                 if poster is not None:
@@ -661,13 +676,26 @@ def _selected_media_target(
     assets: dict[str, AssetRef],
     *,
     prefer_video: bool,
+    prefer_hdphoto: bool = False,
 ) -> str:
     if prefer_video:
         for target in media_targets:
             asset = assets.get(target)
             if asset is not None and asset.kind == "video":
                 return target
+    if prefer_hdphoto:
+        for target in media_targets:
+            asset = assets.get(target)
+            if asset is not None and asset.extension.lower() == "wdp":
+                return target
     return media_targets[0]
+
+
+def _has_hdphoto_image_layer(node: ET.Element) -> bool:
+    for child in node.iter():
+        if _local(child.tag) == "imgLayer":
+            return True
+    return False
 
 
 def _selected_poster_target(

@@ -119,6 +119,10 @@ Current source PPTX parse results from family preflight:
   - Solution: family asset sharing now uses a 50 MiB preferred public-asset ceiling. If an original source blob is above that ceiling and the runtime `file` is already a shared safe optimized asset, `sourceFile` is rewritten to the runtime file and the original remains represented by hash/path metadata rather than being copied into the public shared tree.
 - Problem: A future oversized static PNG/JPEG/TIFF/BMP could pass through unchanged if it was not GIF/video.
   - Solution: oversized still images are now candidates for conservative WebP optimization: a high-quality 4K WebP first, then a 1080p WebP fallback only when needed to satisfy the hard limit.
+- Problem: PowerPoint can store a high-fidelity HDPhoto/WDP image layer plus a lower-fidelity PNG fallback for a single visible object. MuC slide 1 `Picture 10` used this for the raster title/text block, but the compiler selected the PNG fallback.
+  - Solution: the parser now detects PowerPoint image layers (`a14:imgLayer`), prefers the related `.wdp` media asset for that object, and asset preparation converts WDP to browser-safe PNG via Windows WIC. A diagnostic MuC build rendered slide 1 with the converted WDP title object and improved settled slide-1 SSIM from `0.788991` to `0.865641` against the PowerPoint reference.
+- Problem: full family rebuilds are still slow because large transparent GIFs transcode to deterministic VP9-alpha WebM single-threaded.
+  - Current status: the large static-image optimizer was fixed to resize once and skip expensive lossless WebP for >24 MPixel sources, but full family rebuilds can still spend many minutes in transparent GIF/WebM conversion. A future performance pass should reuse shared optimized outputs earlier or add a reviewed faster alpha-transcode profile.
 
 Current shared public asset library check after the MuC deterministic rebuild:
 
@@ -186,9 +190,10 @@ The previous chunked players were moved to:
 
 1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
 2. Continue fine-tuning deck-specific configs for oracle parity: first-transition smoke is improved but not passing on any deck.
-3. Continue calibrating text/layout metrics, media phase/brightness, and additional Morph progress maps.
-4. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
-5. Commit and push only intended files; do not stage unrelated root `index.html` changes.
+3. Rebuild and publish the public scene decks after the WDP conversion path and large-media rebuild performance are validated end to end.
+4. Continue calibrating text/layout metrics, media phase/brightness, and additional Morph progress maps.
+5. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
+6. Commit and push only intended files; do not stage unrelated root `index.html` changes.
 
 ## Verification Commands
 
