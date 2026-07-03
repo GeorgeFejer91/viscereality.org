@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -9,10 +10,11 @@ from .build import build_presentation
 from .config import PresenterConfig, load_config
 from .errors import PresenterError
 from .publish import publish_build
-from .qa import run_visual_audit
+from .qa import run_qa, run_visual_audit
 from .pptx import parse_pptx
+from .reference import export_reference_mp4
 from .scene import inspect_report
-from .utils import ensure_dir, format_mb, read_json, repo_root_from, sha256_file, utc_now_iso, write_json
+from .utils import ensure_dir, find_binary, format_mb, read_json, repo_root_from, sha256_file, utc_now_iso, write_json
 
 SHARED_SOURCE_HARD_MAX_MB = 100.0
 
@@ -153,6 +155,7 @@ def build_family(
             )
         )
     pruned_shared_assets = prune_unreferenced_shared_assets(family)
+    shared_asset_limits = _shared_asset_library_limit_report(family)
     build_reports = [_final_build_report(deck) for deck in family.decks]
     report = {
         "schema": "pptx-html-presenter.family.build.v1",
@@ -161,9 +164,11 @@ def build_family(
         "status": "ok"
         if all(row.get("status") in {"ok", "manifest-only"} for row in build_reports)
         and all(row.get("status") == "ok" for row in share_reports)
+        and shared_asset_limits["githubPagesSafe"]
         else "needs-review",
         "preflight": preflight,
         "sharedAssetRoot": _repo_rel(family.repo_root, family.shared_root),
+        "sharedAssetLimits": shared_asset_limits,
         "decks": build_reports,
         "sharedAssets": share_reports,
         "prunedSharedAssets": pruned_shared_assets,
@@ -204,6 +209,148 @@ def visual_audit_family(
         "decks": deck_reports,
     }
     write_json(family.shared_root / "family-visual-audit-report.json", report)
+    return report
+
+
+def oracle_qa_family(
+    config_path: Path,
+    *,
+    ffmpeg_bin: str | None = None,
+    node_bin: str | None = None,
+    playwright_dir: Path | None = None,
+    target: str = "public",
+    keep_reference: bool = False,
+    force: bool = False,
+    slides: set[int] | None = None,
+    deck_ids: set[str] | None = None,
+    min_free_gb: float | None = None,
+    transition_reference_lead_fraction: float | None = None,
+) -> dict[str, Any]:
+    family = load_family_config(config_path)
+    target = target.lower().strip()
+    if target not in {"public", "staging"}:
+        raise PresenterError("Family oracle QA target must be 'public' or 'staging'.")
+    required_free_gb = family.min_free_gb if min_free_gb is None else float(min_free_gb)
+    ffmpeg = find_binary("ffmpeg.exe", ffmpeg_bin) or find_binary("ffmpeg", ffmpeg_bin)
+    free_gb = _free_gb(family.repo_root)
+    blockers: list[str] = []
+    if ffmpeg is None:
+        blockers.append("ffmpeg-missing")
+    if required_free_gb > 0 and free_gb < required_free_gb and not force:
+        blockers.append(f"disk-free-below-minimum:{free_gb:.2f}GiB<{required_free_gb:.2f}GiB")
+
+    deck_reports: list[dict[str, Any]] = []
+    selected_decks = [deck for deck in family.decks if deck_ids is None or deck.id in deck_ids]
+    if deck_ids is not None and not selected_decks:
+        raise PresenterError(f"No family decks matched: {', '.join(sorted(deck_ids))}")
+    for deck in selected_decks:
+        build_dir = _deck_qa_target(family, deck, target)
+        scene_path = build_dir / "deck.scene.json"
+        deck_blockers = list(blockers)
+        if not deck.source.exists():
+            deck_blockers.append(f"source-pptx-missing:{_repo_rel(family.repo_root, deck.source)}")
+        if not scene_path.exists():
+            deck_blockers.append(f"scene-missing:{_repo_rel(family.repo_root, scene_path)}")
+        if deck_blockers:
+            deck_reports.append(
+                {
+                    "deckId": deck.id,
+                    "status": "blocked",
+                    "target": _repo_rel(family.repo_root, build_dir),
+                    "blockers": deck_blockers,
+                }
+            )
+            continue
+
+        qa_oracle_dir = ensure_dir(build_dir / "qa" / "oracle")
+        try:
+            if keep_reference:
+                reference_mp4 = qa_oracle_dir / f"{deck.id}-powerpoint-reference.mp4"
+                reference_mp4.unlink(missing_ok=True)
+                export_reference_mp4(
+                    deck.source,
+                    reference_mp4,
+                    scene_path=build_dir,
+                    ffmpeg_bin=str(ffmpeg) if ffmpeg else ffmpeg_bin,
+                )
+                qa_report = run_qa(
+                    build_dir,
+                    reference_mp4=reference_mp4,
+                    ffmpeg_bin=str(ffmpeg) if ffmpeg else ffmpeg_bin,
+                    node_bin=node_bin,
+                    playwright_dir=playwright_dir,
+                    reuse_html=False,
+                    slides=slides,
+                    visual_audit=False,
+                    transition_reference_lead_fraction=transition_reference_lead_fraction,
+                )
+                deck_reports.append(_oracle_deck_report(family, deck, build_dir, qa_report, reference_mp4, True))
+            else:
+                with tempfile.TemporaryDirectory(prefix=f"{deck.id}-", dir=qa_oracle_dir) as temp_dir:
+                    reference_mp4 = Path(temp_dir) / f"{deck.id}-powerpoint-reference.mp4"
+                    export_reference_mp4(
+                        deck.source,
+                        reference_mp4,
+                        scene_path=build_dir,
+                        ffmpeg_bin=str(ffmpeg) if ffmpeg else ffmpeg_bin,
+                    )
+                    qa_report = run_qa(
+                        build_dir,
+                        reference_mp4=reference_mp4,
+                        ffmpeg_bin=str(ffmpeg) if ffmpeg else ffmpeg_bin,
+                        node_bin=node_bin,
+                        playwright_dir=playwright_dir,
+                        reuse_html=False,
+                        slides=slides,
+                        visual_audit=False,
+                        transition_reference_lead_fraction=transition_reference_lead_fraction,
+                    )
+                    deck_reports.append(_oracle_deck_report(family, deck, build_dir, qa_report, reference_mp4, False))
+        except Exception as exc:
+            deck_reports.append(
+                {
+                    "deckId": deck.id,
+                    "status": "blocked",
+                    "target": _repo_rel(family.repo_root, build_dir),
+                    "blockers": [f"{type(exc).__name__}: {exc}"],
+                }
+            )
+
+    full_scope = slides is None
+    if all(row.get("status") == "passed" for row in deck_reports) and full_scope:
+        status = "ok"
+    elif all(row.get("status") == "passed" for row in deck_reports):
+        status = "partial"
+    elif any(row.get("status") == "blocked" for row in deck_reports):
+        status = "blocked"
+    else:
+        status = "failed"
+    report = {
+        "schema": "pptx-html-presenter.family.oracle-qa.v1",
+        "generatedAtUtc": utc_now_iso(),
+        "familyId": family.family_id,
+        "status": status,
+        "target": target,
+        "deckFilter": sorted(deck_ids) if deck_ids else None,
+        "fullScope": full_scope,
+        "slides": sorted(slides) if slides else None,
+        "disk": {
+            "freeGbAtStart": round(free_gb, 3),
+            "minimumFreeGb": required_free_gb,
+            "force": force,
+        },
+        "ffmpeg": str(ffmpeg) if ffmpeg else None,
+        "keepReference": keep_reference,
+        "transitionReferenceLeadFractionOverride": transition_reference_lead_fraction,
+        "decks": deck_reports,
+        "notes": [
+            "PowerPoint MP4 references are exported through PowerPoint COM using the deck scene timing.",
+            "Strict pass/fail uses qa/report.json SSIM thresholds: slides >= 0.985 and transitions >= 0.965.",
+            "Large raw frame folders are local QA artifacts and should stay out of Git unless explicitly requested.",
+        ],
+    }
+    ensure_dir(family.shared_root)
+    write_json(family.shared_root / "family-oracle-qa-report.json", report)
     return report
 
 
@@ -421,6 +568,43 @@ def _final_build_report(deck: FamilyDeck) -> dict[str, Any]:
     return {"deckId": deck.id, **report}
 
 
+def _deck_qa_target(family: FamilyConfig, deck: FamilyDeck, target: str) -> Path:
+    if target == "public":
+        return family.repo_root / "presentations" / deck.public_dir
+    return deck.staging
+
+
+def _oracle_deck_report(
+    family: FamilyConfig,
+    deck: FamilyDeck,
+    build_dir: Path,
+    qa_report: dict[str, Any],
+    reference_mp4: Path,
+    reference_kept: bool,
+) -> dict[str, Any]:
+    comparisons = qa_report.get("comparisons", []) or []
+    failed = [row for row in comparisons if not row.get("passed", False)]
+    reference_size = reference_mp4.stat().st_size if reference_mp4.exists() else 0
+    return {
+        "deckId": deck.id,
+        "status": qa_report.get("status"),
+        "target": _repo_rel(family.repo_root, build_dir),
+        "report": _repo_rel(family.repo_root, build_dir / "qa" / "report.json"),
+        "referenceKept": reference_kept,
+        "referenceSizeMb": format_mb(reference_size),
+        "sampleCount": len(qa_report.get("samples", []) or []),
+        "comparisonCount": len(comparisons),
+        "failedCount": len(failed),
+        "blockers": qa_report.get("blockers", []),
+        "minSsim": min((float(row.get("ssim", 1.0)) for row in comparisons), default=None),
+    }
+
+
+def _free_gb(path: Path) -> float:
+    disk = shutil.disk_usage(path.anchor or path)
+    return disk.free / (1024.0**3)
+
+
 def _family_shared_asset_refs(family: FamilyConfig) -> set[Path]:
     refs: set[Path] = set()
     for deck in family.decks:
@@ -480,6 +664,49 @@ def _scene_shared_asset_limit_report(scene: dict[str, Any], repo_root: Path) -> 
     return {
         "githubPagesSafe": not oversize,
         "maxAssetMb": max_mb,
+        "oversizeAssets": oversize,
+    }
+
+
+def _shared_asset_library_limit_report(family: FamilyConfig) -> dict[str, Any]:
+    files: list[dict[str, Any]] = []
+    max_mb = 0.0
+    oversize: list[dict[str, Any]] = []
+    source_count = 0
+    optimized_count = 0
+    total_bytes = 0
+    for bucket in ("source", "optimized"):
+        bucket_dir = family.shared_root / bucket
+        if not bucket_dir.exists():
+            continue
+        for item in sorted(bucket_dir.rglob("*")):
+            if not item.is_file():
+                continue
+            size = item.stat().st_size
+            mb = format_mb(size)
+            total_bytes += size
+            max_mb = max(max_mb, mb)
+            if bucket == "source":
+                source_count += 1
+            else:
+                optimized_count += 1
+            row = {
+                "path": _repo_rel(family.repo_root, item),
+                "bucket": bucket,
+                "mb": mb,
+            }
+            files.append(row)
+            if mb > SHARED_SOURCE_HARD_MAX_MB:
+                oversize.append(row)
+    largest = sorted(files, key=lambda row: float(row["mb"]), reverse=True)[:10]
+    return {
+        "githubPagesSafe": not oversize,
+        "hardMaxMb": SHARED_SOURCE_HARD_MAX_MB,
+        "maxAssetMb": max_mb,
+        "totalMb": format_mb(total_bytes),
+        "sourceFileCount": source_count,
+        "optimizedFileCount": optimized_count,
+        "largestAssets": largest,
         "oversizeAssets": oversize,
     }
 

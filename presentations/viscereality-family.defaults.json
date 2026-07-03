@@ -54,7 +54,7 @@
     "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
     "slide_hold_sec": 3,
     "settled_offset_sec": 0.5,
-    "transition_reference_lead_fraction": 1.0,
+    "transition_reference_lead_fraction": 0.0,
     "slide_timed_video_phase_sec": 0
   },
   "publish_replace": false

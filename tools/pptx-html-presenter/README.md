@@ -67,6 +67,17 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build `
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit `
   presentations\viscereality-family.config.json
 
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa `
+  presentations\viscereality-family.config.json `
+  --ffmpeg-bin "C:\path\to\ffmpeg.exe"
+
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa `
+  presentations\viscereality-family.config.json `
+  --decks MuC `
+  --slides 1 `
+  --transition-reference-lead-fraction 0 `
+  --ffmpeg-bin "C:\path\to\ffmpeg.exe"
+
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family publish `
   presentations\viscereality-family.config.json
 ```
@@ -103,6 +114,17 @@ copying validated scene builds into the canonical deck URLs, then rewrites
 `presentations/shared/decks.js` and `presentations/index.html` for the three
 public deck IDs.
 
+`family oracle-qa` is the PowerPoint reference gate for a deck family. It exports
+each source PPTX through PowerPoint COM using the generated scene timing, runs
+`qa --reference` against either the public or staging scene player, and writes
+`presentations/shared-assets/viscereality/family-oracle-qa-report.json`. Use
+`--target public` after publish to verify the canonical URLs, or
+`--target staging` before publish. Use `--transition-reference-lead-fraction`
+for deck-family timing calibration when a PowerPoint export includes transition
+lead-in differently from the scene manifest. Raw reference/html/diff/side-by-side
+frames are local QA artifacts; commit the report JSON unless the visual frame set
+is explicitly needed for review.
+
 ## Output Contract
 
 - `index.html`: static browser player.
@@ -118,8 +140,10 @@ public deck IDs.
 - `qa/report.json`: frame sample plan and QA status.
 - `qa/media-phase-report.json`: optional per-object video/GIF phase calibration
   against the PowerPoint reference.
-- `qa/reference/*.png`, `qa/html/*.png`, `qa/diff/*.png`: emitted when
-  `ffmpeg`, Node, Playwright, and a reference MP4 are available.
+- `qa/reference/*.png`, `qa/html/*.png`, `qa/diff/*.png`,
+  `qa/side-by-side/*.png`: emitted when `ffmpeg`, Node, Playwright, and a
+  reference MP4 are available. These raw frame sets are reproducible and usually
+  ignored by Git for public deck folders.
 
 ## Config
 
@@ -298,21 +322,28 @@ settled-only.
 
 ## GitHub Pages Policy
 
-The compiler flags files above 50 MiB and marks builds blocked when output files
-exceed 100 MiB. It can still build local staging output, but `publish` refuses
-blocked builds unless `--force` is used after manual review.
+The compiler flags files above 50 MiB and treats files above 100 MiB as public
+GitHub Pages blockers. It can still build local staging output for inspection,
+but family build/publish reports must show that the shared public runtime library
+is GitHub-safe before the scene decks replace public URLs.
 
 Set `asset_policy.prune_unreferenced_source_assets` for public GitHub Pages
 builds. The compiler still extracts originals first so transcoding and reports
 are based on source bytes, but it removes source copies that are not the actual
-render asset after optimized publish copies have been created.
+render asset after optimized publish copies have been created. In family mode,
+`family-build-report.json` includes `sharedAssetLimits`, including the largest
+public runtime assets and any hard-limit violators.
 Use `asset_policy.video_crf` to tune MP4 publish quality; lower values produce
 larger, more faithful video layers, while higher values favor smaller output.
+The bundled ffmpeg commands strip volatile metadata and use deterministic-leaning
+single-threaded output settings for optimized media so content-hashed shared
+asset filenames do not churn across identical rebuilds.
 
-Animated media is not flattened into slide frames. Original GIFs are always
-preserved in `assets/source`, but animated GIF publish copies are made
-clock-controllable when `transcode_gif` is enabled. Opaque GIF loops may become
-MP4 when that is the smaller faithful representation of a video-like GIF.
+Animated media is not flattened into slide frames. Original GIFs are extracted
+locally first for hashing/provenance and conversion, but oversized originals are
+not kept in the public shared asset tree when the runtime uses a smaller faithful
+optimized equivalent. Opaque GIF loops may become MP4 when that is the smaller
+faithful representation of a video-like GIF.
 Transparent GIF loops are never flattened to opaque MP4; they use
 alpha-preserving output first: VP9 WebM with alpha, then animated WebP, then
 the original GIF if no better alpha-safe copy can be made.

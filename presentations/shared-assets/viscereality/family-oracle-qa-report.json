@@ -1,0 +1,42 @@
+{
+  "deckFilter": [
+    "MuC"
+  ],
+  "decks": [
+    {
+      "blockers": [],
+      "comparisonCount": 8,
+      "deckId": "MuC",
+      "failedCount": 8,
+      "minSsim": 0.623969,
+      "referenceKept": false,
+      "referenceSizeMb": 86.241,
+      "report": "presentations/MuC/qa/report.json",
+      "sampleCount": 8,
+      "status": "failed",
+      "target": "presentations/MuC"
+    }
+  ],
+  "disk": {
+    "force": true,
+    "freeGbAtStart": 6.59,
+    "minimumFreeGb": 0.0
+  },
+  "familyId": "viscereality",
+  "ffmpeg": "C:\\Users\\gfeje\\Proton Drive\\George.Fejer\\My files\\Project1_CouplingKernelStudy\\ffmpeg_standalone\\bin\\ffmpeg.exe",
+  "fullScope": false,
+  "generatedAtUtc": "2026-07-03T18:29:02+00:00",
+  "keepReference": false,
+  "notes": [
+    "PowerPoint MP4 references are exported through PowerPoint COM using the deck scene timing.",
+    "Strict pass/fail uses qa/report.json SSIM thresholds: slides >= 0.985 and transitions >= 0.965.",
+    "Large raw frame folders are local QA artifacts and should stay out of Git unless explicitly requested."
+  ],
+  "schema": "pptx-html-presenter.family.oracle-qa.v1",
+  "slides": [
+    1
+  ],
+  "status": "failed",
+  "target": "public",
+  "transitionReferenceLeadFractionOverride": null
+}

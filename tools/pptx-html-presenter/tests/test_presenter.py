@@ -19,7 +19,7 @@ from pptx_html_presenter.assets import (
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
 from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, load_config
-from pptx_html_presenter.family import load_family_config, share_deck_assets
+from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import parse_pptx
@@ -2805,6 +2805,59 @@ class PresenterTests(unittest.TestCase):
             self.assertFalse(optimized_asset.exists())
             index = json.loads((shared / "asset-index.json").read_text(encoding="utf-8"))
             self.assertEqual(len(index["assets"]), 2)
+
+    def test_family_oracle_qa_reports_missing_ffmpeg(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            presentations = root / "presentations"
+            public = presentations / "Demo"
+            public.mkdir(parents=True)
+            (presentations / "demo.pptx").write_bytes(b"not-a-real-pptx")
+            (public / "deck.scene.json").write_text(
+                json.dumps(
+                    {
+                        "deck": {"id": "Demo", "slideCount": 0},
+                        "slides": [],
+                        "transitions": [],
+                        "assets": [],
+                        "qa": {"transitionSamples": []},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = presentations / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = oracle_qa_family(
+                config,
+                ffmpeg_bin=str(root / "missing-ffmpeg.exe"),
+                force=True,
+                transition_reference_lead_fraction=0.25,
+            )
+
+            self.assertEqual(report["status"], "blocked")
+            self.assertEqual(report["transitionReferenceLeadFractionOverride"], 0.25)
+            self.assertEqual(report["decks"][0]["status"], "blocked")
+            self.assertIn("ffmpeg-missing", report["decks"][0]["blockers"])
+            self.assertTrue((presentations / "shared-assets" / "demo" / "family-oracle-qa-report.json").exists())
 
 
 def _write_demo_pptx(path: Path, *, slide2_morph: bool = True, slide2_zero_transition: bool = False) -> None:

@@ -20,3 +20,18 @@ presentations/BBD26-scene-new/
 presentations/BBD26-scene/qa/**
 !presentations/BBD26-scene/qa/
 !presentations/BBD26-scene/qa/*.json
+
+# PowerPoint-oracle QA emits large reproducible frame sets. Keep reports and
+# contact sheets in Git, but leave raw frames and temporary MP4 references local.
+presentations/*/qa/html/**
+presentations/*/qa/reference/**
+presentations/*/qa/diff/**
+presentations/*/qa/side-by-side/**
+presentations/*/qa/oracle/**
+presentations/*/qa/visual-audit/html/**
+presentations/*/qa/morph-progress/html/**
+presentations/*/qa/morph-progress/reference/**
+presentations/*/qa/morph-progress/diff/**
+presentations/*/qa/morph-progress/side-by-side/**
+presentations/*/qa/morph-progress/candidate-samples.json
+presentations/*/qa/*powerpoint-reference*.mp4

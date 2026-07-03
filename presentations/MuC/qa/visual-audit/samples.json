@@ -28,138 +28,6 @@
     "id": "trans-001-002-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 1.0,
-      "track-0007": 1.0,
-      "track-0011": 1.0,
-      "track-0012": 1.0,
-      "track-0019": 1.0,
-      "track-0022": 1.0,
-      "track-0023": 1.0,
-      "track-0027": 1.0
-    },
-    "mediaSec": 1.0,
-    "progress": 0.0,
-    "referenceSec": 1.0,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0003": 1.2,
-      "track-0007": 1.2,
-      "track-0011": 1.2,
-      "track-0012": 1.2,
-      "track-0019": 1.2,
-      "track-0022": 1.2,
-      "track-0023": 1.2,
-      "track-0027": 1.2
-    },
-    "mediaSec": 1.2,
-    "progress": 0.1,
-    "referenceSec": 1.2,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0003": 1.5,
-      "track-0007": 1.5,
-      "track-0011": 1.5,
-      "track-0012": 1.5,
-      "track-0019": 1.5,
-      "track-0022": 1.5,
-      "track-0023": 1.5,
-      "track-0027": 1.5
-    },
-    "mediaSec": 1.5,
-    "progress": 0.25,
-    "referenceSec": 1.5,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0003": 2.0,
-      "track-0007": 2.0,
-      "track-0011": 2.0,
-      "track-0012": 2.0,
-      "track-0019": 2.0,
-      "track-0022": 2.0,
-      "track-0023": 2.0,
-      "track-0027": 2.0
-    },
-    "mediaSec": 2.0,
-    "progress": 0.5,
-    "referenceSec": 2.0,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0003": 2.5,
-      "track-0007": 2.5,
-      "track-0011": 2.5,
-      "track-0012": 2.5,
-      "track-0019": 2.5,
-      "track-0022": 2.5,
-      "track-0023": 2.5,
-      "track-0027": 2.5
-    },
-    "mediaSec": 2.5,
-    "progress": 0.75,
-    "referenceSec": 2.5,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0003": 2.8,
-      "track-0007": 2.8,
-      "track-0011": 2.8,
-      "track-0012": 2.8,
-      "track-0019": 2.8,
-      "track-0022": 2.8,
-      "track-0023": 2.8,
-      "track-0027": 2.8
-    },
-    "mediaSec": 2.8,
-    "progress": 0.9,
-    "referenceSec": 2.8,
-    "to": 2
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 1,
-    "id": "trans-001-002-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0003": 3.0,
       "track-0007": 3.0,
       "track-0011": 3.0,
@@ -170,8 +38,140 @@
       "track-0027": 3.0
     },
     "mediaSec": 3.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 3.0,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 3.2,
+      "track-0007": 3.2,
+      "track-0011": 3.2,
+      "track-0012": 3.2,
+      "track-0019": 3.2,
+      "track-0022": 3.2,
+      "track-0023": 3.2,
+      "track-0027": 3.2
+    },
+    "mediaSec": 3.2,
+    "progress": 0.1,
+    "referenceSec": 3.2,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 3.5,
+      "track-0007": 3.5,
+      "track-0011": 3.5,
+      "track-0012": 3.5,
+      "track-0019": 3.5,
+      "track-0022": 3.5,
+      "track-0023": 3.5,
+      "track-0027": 3.5
+    },
+    "mediaSec": 3.5,
+    "progress": 0.25,
+    "referenceSec": 3.5,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 4.0,
+      "track-0007": 4.0,
+      "track-0011": 4.0,
+      "track-0012": 4.0,
+      "track-0019": 4.0,
+      "track-0022": 4.0,
+      "track-0023": 4.0,
+      "track-0027": 4.0
+    },
+    "mediaSec": 4.0,
+    "progress": 0.5,
+    "referenceSec": 4.0,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 4.5,
+      "track-0007": 4.5,
+      "track-0011": 4.5,
+      "track-0012": 4.5,
+      "track-0019": 4.5,
+      "track-0022": 4.5,
+      "track-0023": 4.5,
+      "track-0027": 4.5
+    },
+    "mediaSec": 4.5,
+    "progress": 0.75,
+    "referenceSec": 4.5,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 4.8,
+      "track-0007": 4.8,
+      "track-0011": 4.8,
+      "track-0012": 4.8,
+      "track-0019": 4.8,
+      "track-0022": 4.8,
+      "track-0023": 4.8,
+      "track-0027": 4.8
+    },
+    "mediaSec": 4.8,
+    "progress": 0.9,
+    "referenceSec": 4.8,
+    "to": 2
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 1,
+    "id": "trans-001-002-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0003": 5.0,
+      "track-0007": 5.0,
+      "track-0011": 5.0,
+      "track-0012": 5.0,
+      "track-0019": 5.0,
+      "track-0022": 5.0,
+      "track-0023": 5.0,
+      "track-0027": 5.0
+    },
+    "mediaSec": 5.0,
+    "progress": 1.0,
+    "referenceSec": 5.0,
     "to": 2
   },
   {
@@ -202,174 +202,6 @@
     "id": "trans-002-003-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0007": 6.0,
-      "track-0011": 6.0,
-      "track-0012": 6.0,
-      "track-0019": 6.0,
-      "track-0022": 6.0,
-      "track-0023": 6.0,
-      "track-0027": 6.0,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 6.0,
-    "progress": 0.0,
-    "referenceSec": 6.0,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0007": 6.2,
-      "track-0011": 6.2,
-      "track-0012": 6.2,
-      "track-0019": 6.2,
-      "track-0022": 6.2,
-      "track-0023": 6.2,
-      "track-0027": 6.2,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 6.2,
-    "progress": 0.1,
-    "referenceSec": 6.2,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0007": 6.5,
-      "track-0011": 6.5,
-      "track-0012": 6.5,
-      "track-0019": 6.5,
-      "track-0022": 6.5,
-      "track-0023": 6.5,
-      "track-0027": 6.5,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 6.5,
-    "progress": 0.25,
-    "referenceSec": 6.5,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0007": 7.0,
-      "track-0011": 7.0,
-      "track-0012": 7.0,
-      "track-0019": 7.0,
-      "track-0022": 7.0,
-      "track-0023": 7.0,
-      "track-0027": 7.0,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 7.0,
-    "progress": 0.5,
-    "referenceSec": 7.0,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0007": 7.5,
-      "track-0011": 7.5,
-      "track-0012": 7.5,
-      "track-0019": 7.5,
-      "track-0022": 7.5,
-      "track-0023": 7.5,
-      "track-0027": 7.5,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 7.5,
-    "progress": 0.75,
-    "referenceSec": 7.5,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0007": 7.8,
-      "track-0011": 7.8,
-      "track-0012": 7.8,
-      "track-0019": 7.8,
-      "track-0022": 7.8,
-      "track-0023": 7.8,
-      "track-0027": 7.8,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
-    },
-    "mediaSec": 7.8,
-    "progress": 0.9,
-    "referenceSec": 7.8,
-    "to": 3
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 2,
-    "id": "trans-002-003-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0007": 8.0,
       "track-0011": 8.0,
       "track-0012": 8.0,
@@ -386,8 +218,176 @@
       "track-0058": 0.0
     },
     "mediaSec": 8.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 8.0,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 8.2,
+      "track-0011": 8.2,
+      "track-0012": 8.2,
+      "track-0019": 8.2,
+      "track-0022": 8.2,
+      "track-0023": 8.2,
+      "track-0027": 8.2,
+      "track-0038": 0.2,
+      "track-0040": 0.2,
+      "track-0042": 0.2,
+      "track-0044": 0.2,
+      "track-0047": 0.2,
+      "track-0050": 0.2,
+      "track-0058": 0.2
+    },
+    "mediaSec": 8.2,
+    "progress": 0.1,
+    "referenceSec": 8.2,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 8.5,
+      "track-0011": 8.5,
+      "track-0012": 8.5,
+      "track-0019": 8.5,
+      "track-0022": 8.5,
+      "track-0023": 8.5,
+      "track-0027": 8.5,
+      "track-0038": 0.5,
+      "track-0040": 0.5,
+      "track-0042": 0.5,
+      "track-0044": 0.5,
+      "track-0047": 0.5,
+      "track-0050": 0.5,
+      "track-0058": 0.5
+    },
+    "mediaSec": 8.5,
+    "progress": 0.25,
+    "referenceSec": 8.5,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 9.0,
+      "track-0011": 9.0,
+      "track-0012": 9.0,
+      "track-0019": 9.0,
+      "track-0022": 9.0,
+      "track-0023": 9.0,
+      "track-0027": 9.0,
+      "track-0038": 1.0,
+      "track-0040": 1.0,
+      "track-0042": 1.0,
+      "track-0044": 1.0,
+      "track-0047": 1.0,
+      "track-0050": 1.0,
+      "track-0058": 1.0
+    },
+    "mediaSec": 9.0,
+    "progress": 0.5,
+    "referenceSec": 9.0,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 9.5,
+      "track-0011": 9.5,
+      "track-0012": 9.5,
+      "track-0019": 9.5,
+      "track-0022": 9.5,
+      "track-0023": 9.5,
+      "track-0027": 9.5,
+      "track-0038": 1.5,
+      "track-0040": 1.5,
+      "track-0042": 1.5,
+      "track-0044": 1.5,
+      "track-0047": 1.5,
+      "track-0050": 1.5,
+      "track-0058": 1.5
+    },
+    "mediaSec": 9.5,
+    "progress": 0.75,
+    "referenceSec": 9.5,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 9.8,
+      "track-0011": 9.8,
+      "track-0012": 9.8,
+      "track-0019": 9.8,
+      "track-0022": 9.8,
+      "track-0023": 9.8,
+      "track-0027": 9.8,
+      "track-0038": 1.8,
+      "track-0040": 1.8,
+      "track-0042": 1.8,
+      "track-0044": 1.8,
+      "track-0047": 1.8,
+      "track-0050": 1.8,
+      "track-0058": 1.8
+    },
+    "mediaSec": 9.8,
+    "progress": 0.9,
+    "referenceSec": 9.8,
+    "to": 3
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 2,
+    "id": "trans-002-003-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0007": 10.0,
+      "track-0011": 10.0,
+      "track-0012": 10.0,
+      "track-0019": 10.0,
+      "track-0022": 10.0,
+      "track-0023": 10.0,
+      "track-0027": 10.0,
+      "track-0038": 2.0,
+      "track-0040": 2.0,
+      "track-0042": 2.0,
+      "track-0044": 2.0,
+      "track-0047": 2.0,
+      "track-0050": 2.0,
+      "track-0058": 2.0
+    },
+    "mediaSec": 10.0,
+    "progress": 1.0,
+    "referenceSec": 10.0,
     "to": 3
   },
   {
@@ -422,156 +422,6 @@
     "id": "trans-003-004-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 11.0,
-      "track-0022": 11.0,
-      "track-0023": 11.0,
-      "track-0027": 11.0,
-      "track-0038": 3.0,
-      "track-0040": 3.0,
-      "track-0042": 3.0,
-      "track-0044": 3.0,
-      "track-0047": 3.0,
-      "track-0050": 3.0,
-      "track-0058": 3.0
-    },
-    "mediaSec": 11.0,
-    "progress": 0.0,
-    "referenceSec": 11.0,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 11.2,
-      "track-0022": 11.2,
-      "track-0023": 11.2,
-      "track-0027": 11.2,
-      "track-0038": 3.2,
-      "track-0040": 3.2,
-      "track-0042": 3.2,
-      "track-0044": 3.2,
-      "track-0047": 3.2,
-      "track-0050": 3.2,
-      "track-0058": 3.2
-    },
-    "mediaSec": 11.2,
-    "progress": 0.1,
-    "referenceSec": 11.2,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 11.5,
-      "track-0022": 11.5,
-      "track-0023": 11.5,
-      "track-0027": 11.5,
-      "track-0038": 3.5,
-      "track-0040": 3.5,
-      "track-0042": 3.5,
-      "track-0044": 3.5,
-      "track-0047": 3.5,
-      "track-0050": 3.5,
-      "track-0058": 3.5
-    },
-    "mediaSec": 11.5,
-    "progress": 0.25,
-    "referenceSec": 11.5,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 12.0,
-      "track-0022": 12.0,
-      "track-0023": 12.0,
-      "track-0027": 12.0,
-      "track-0038": 4.0,
-      "track-0040": 4.0,
-      "track-0042": 4.0,
-      "track-0044": 4.0,
-      "track-0047": 4.0,
-      "track-0050": 4.0,
-      "track-0058": 4.0
-    },
-    "mediaSec": 12.0,
-    "progress": 0.5,
-    "referenceSec": 12.0,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 12.5,
-      "track-0022": 12.5,
-      "track-0023": 12.5,
-      "track-0027": 12.5,
-      "track-0038": 4.5,
-      "track-0040": 4.5,
-      "track-0042": 4.5,
-      "track-0044": 4.5,
-      "track-0047": 4.5,
-      "track-0050": 4.5,
-      "track-0058": 4.5
-    },
-    "mediaSec": 12.5,
-    "progress": 0.75,
-    "referenceSec": 12.5,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 12.8,
-      "track-0022": 12.8,
-      "track-0023": 12.8,
-      "track-0027": 12.8,
-      "track-0038": 4.8,
-      "track-0040": 4.8,
-      "track-0042": 4.8,
-      "track-0044": 4.8,
-      "track-0047": 4.8,
-      "track-0050": 4.8,
-      "track-0058": 4.8
-    },
-    "mediaSec": 12.8,
-    "progress": 0.9,
-    "referenceSec": 12.8,
-    "to": 4
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 3,
-    "id": "trans-003-004-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0019": 13.0,
       "track-0022": 13.0,
       "track-0023": 13.0,
@@ -585,8 +435,158 @@
       "track-0058": 5.0
     },
     "mediaSec": 13.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 13.0,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 13.2,
+      "track-0022": 13.2,
+      "track-0023": 13.2,
+      "track-0027": 13.2,
+      "track-0038": 5.2,
+      "track-0040": 5.2,
+      "track-0042": 5.2,
+      "track-0044": 5.2,
+      "track-0047": 5.2,
+      "track-0050": 5.2,
+      "track-0058": 5.2
+    },
+    "mediaSec": 13.2,
+    "progress": 0.1,
+    "referenceSec": 13.2,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 13.5,
+      "track-0022": 13.5,
+      "track-0023": 13.5,
+      "track-0027": 13.5,
+      "track-0038": 5.5,
+      "track-0040": 5.5,
+      "track-0042": 5.5,
+      "track-0044": 5.5,
+      "track-0047": 5.5,
+      "track-0050": 5.5,
+      "track-0058": 5.5
+    },
+    "mediaSec": 13.5,
+    "progress": 0.25,
+    "referenceSec": 13.5,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 14.0,
+      "track-0022": 14.0,
+      "track-0023": 14.0,
+      "track-0027": 14.0,
+      "track-0038": 6.0,
+      "track-0040": 6.0,
+      "track-0042": 6.0,
+      "track-0044": 6.0,
+      "track-0047": 6.0,
+      "track-0050": 6.0,
+      "track-0058": 6.0
+    },
+    "mediaSec": 14.0,
+    "progress": 0.5,
+    "referenceSec": 14.0,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 14.5,
+      "track-0022": 14.5,
+      "track-0023": 14.5,
+      "track-0027": 14.5,
+      "track-0038": 6.5,
+      "track-0040": 6.5,
+      "track-0042": 6.5,
+      "track-0044": 6.5,
+      "track-0047": 6.5,
+      "track-0050": 6.5,
+      "track-0058": 6.5
+    },
+    "mediaSec": 14.5,
+    "progress": 0.75,
+    "referenceSec": 14.5,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 14.8,
+      "track-0022": 14.8,
+      "track-0023": 14.8,
+      "track-0027": 14.8,
+      "track-0038": 6.8,
+      "track-0040": 6.8,
+      "track-0042": 6.8,
+      "track-0044": 6.8,
+      "track-0047": 6.8,
+      "track-0050": 6.8,
+      "track-0058": 6.8
+    },
+    "mediaSec": 14.8,
+    "progress": 0.9,
+    "referenceSec": 14.8,
+    "to": 4
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 3,
+    "id": "trans-003-004-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 15.0,
+      "track-0022": 15.0,
+      "track-0023": 15.0,
+      "track-0027": 15.0,
+      "track-0038": 7.0,
+      "track-0040": 7.0,
+      "track-0042": 7.0,
+      "track-0044": 7.0,
+      "track-0047": 7.0,
+      "track-0050": 7.0,
+      "track-0058": 7.0
+    },
+    "mediaSec": 15.0,
+    "progress": 1.0,
+    "referenceSec": 15.0,
     "to": 4
   },
   {
@@ -621,156 +621,6 @@
     "id": "trans-004-005-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 16.0,
-      "track-0022": 16.0,
-      "track-0023": 16.0,
-      "track-0027": 16.0,
-      "track-0038": 8.0,
-      "track-0040": 8.0,
-      "track-0042": 8.0,
-      "track-0044": 8.0,
-      "track-0047": 8.0,
-      "track-0050": 8.0,
-      "track-0058": 8.0
-    },
-    "mediaSec": 16.0,
-    "progress": 0.0,
-    "referenceSec": 16.0,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 16.2,
-      "track-0022": 16.2,
-      "track-0023": 16.2,
-      "track-0027": 16.2,
-      "track-0038": 8.2,
-      "track-0040": 8.2,
-      "track-0042": 8.2,
-      "track-0044": 8.2,
-      "track-0047": 8.2,
-      "track-0050": 8.2,
-      "track-0058": 8.2
-    },
-    "mediaSec": 16.2,
-    "progress": 0.1,
-    "referenceSec": 16.2,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 16.5,
-      "track-0022": 16.5,
-      "track-0023": 16.5,
-      "track-0027": 16.5,
-      "track-0038": 8.5,
-      "track-0040": 8.5,
-      "track-0042": 8.5,
-      "track-0044": 8.5,
-      "track-0047": 8.5,
-      "track-0050": 8.5,
-      "track-0058": 8.5
-    },
-    "mediaSec": 16.5,
-    "progress": 0.25,
-    "referenceSec": 16.5,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 17.0,
-      "track-0022": 17.0,
-      "track-0023": 17.0,
-      "track-0027": 17.0,
-      "track-0038": 9.0,
-      "track-0040": 9.0,
-      "track-0042": 9.0,
-      "track-0044": 9.0,
-      "track-0047": 9.0,
-      "track-0050": 9.0,
-      "track-0058": 9.0
-    },
-    "mediaSec": 17.0,
-    "progress": 0.5,
-    "referenceSec": 17.0,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 17.5,
-      "track-0022": 17.5,
-      "track-0023": 17.5,
-      "track-0027": 17.5,
-      "track-0038": 9.5,
-      "track-0040": 9.5,
-      "track-0042": 9.5,
-      "track-0044": 9.5,
-      "track-0047": 9.5,
-      "track-0050": 9.5,
-      "track-0058": 9.5
-    },
-    "mediaSec": 17.5,
-    "progress": 0.75,
-    "referenceSec": 17.5,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 17.8,
-      "track-0022": 17.8,
-      "track-0023": 17.8,
-      "track-0027": 17.8,
-      "track-0038": 9.8,
-      "track-0040": 9.8,
-      "track-0042": 9.8,
-      "track-0044": 9.8,
-      "track-0047": 9.8,
-      "track-0050": 9.8,
-      "track-0058": 9.8
-    },
-    "mediaSec": 17.8,
-    "progress": 0.9,
-    "referenceSec": 17.8,
-    "to": 5
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 4,
-    "id": "trans-004-005-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0019": 18.0,
       "track-0022": 18.0,
       "track-0023": 18.0,
@@ -784,8 +634,158 @@
       "track-0058": 10.0
     },
     "mediaSec": 18.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 18.0,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 18.2,
+      "track-0022": 18.2,
+      "track-0023": 18.2,
+      "track-0027": 18.2,
+      "track-0038": 10.2,
+      "track-0040": 10.2,
+      "track-0042": 10.2,
+      "track-0044": 10.2,
+      "track-0047": 10.2,
+      "track-0050": 10.2,
+      "track-0058": 10.2
+    },
+    "mediaSec": 18.2,
+    "progress": 0.1,
+    "referenceSec": 18.2,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 18.5,
+      "track-0022": 18.5,
+      "track-0023": 18.5,
+      "track-0027": 18.5,
+      "track-0038": 10.5,
+      "track-0040": 10.5,
+      "track-0042": 10.5,
+      "track-0044": 10.5,
+      "track-0047": 10.5,
+      "track-0050": 10.5,
+      "track-0058": 10.5
+    },
+    "mediaSec": 18.5,
+    "progress": 0.25,
+    "referenceSec": 18.5,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 19.0,
+      "track-0022": 19.0,
+      "track-0023": 19.0,
+      "track-0027": 19.0,
+      "track-0038": 11.0,
+      "track-0040": 11.0,
+      "track-0042": 11.0,
+      "track-0044": 11.0,
+      "track-0047": 11.0,
+      "track-0050": 11.0,
+      "track-0058": 11.0
+    },
+    "mediaSec": 19.0,
+    "progress": 0.5,
+    "referenceSec": 19.0,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 19.5,
+      "track-0022": 19.5,
+      "track-0023": 19.5,
+      "track-0027": 19.5,
+      "track-0038": 11.5,
+      "track-0040": 11.5,
+      "track-0042": 11.5,
+      "track-0044": 11.5,
+      "track-0047": 11.5,
+      "track-0050": 11.5,
+      "track-0058": 11.5
+    },
+    "mediaSec": 19.5,
+    "progress": 0.75,
+    "referenceSec": 19.5,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 19.8,
+      "track-0022": 19.8,
+      "track-0023": 19.8,
+      "track-0027": 19.8,
+      "track-0038": 11.8,
+      "track-0040": 11.8,
+      "track-0042": 11.8,
+      "track-0044": 11.8,
+      "track-0047": 11.8,
+      "track-0050": 11.8,
+      "track-0058": 11.8
+    },
+    "mediaSec": 19.8,
+    "progress": 0.9,
+    "referenceSec": 19.8,
+    "to": 5
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 4,
+    "id": "trans-004-005-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 20.0,
+      "track-0022": 20.0,
+      "track-0023": 20.0,
+      "track-0027": 20.0,
+      "track-0038": 12.0,
+      "track-0040": 12.0,
+      "track-0042": 12.0,
+      "track-0044": 12.0,
+      "track-0047": 12.0,
+      "track-0050": 12.0,
+      "track-0058": 12.0
+    },
+    "mediaSec": 20.0,
+    "progress": 1.0,
+    "referenceSec": 20.0,
     "to": 5
   },
   {
@@ -820,156 +820,6 @@
     "id": "trans-005-006-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 21.0,
-      "track-0022": 21.0,
-      "track-0023": 21.0,
-      "track-0027": 21.0,
-      "track-0038": 13.0,
-      "track-0040": 13.0,
-      "track-0042": 13.0,
-      "track-0044": 13.0,
-      "track-0047": 13.0,
-      "track-0050": 13.0,
-      "track-0058": 13.0
-    },
-    "mediaSec": 21.0,
-    "progress": 0.0,
-    "referenceSec": 21.0,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 21.2,
-      "track-0022": 21.2,
-      "track-0023": 21.2,
-      "track-0027": 21.2,
-      "track-0038": 13.2,
-      "track-0040": 13.2,
-      "track-0042": 13.2,
-      "track-0044": 13.2,
-      "track-0047": 13.2,
-      "track-0050": 13.2,
-      "track-0058": 13.2
-    },
-    "mediaSec": 21.2,
-    "progress": 0.1,
-    "referenceSec": 21.2,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 21.5,
-      "track-0022": 21.5,
-      "track-0023": 21.5,
-      "track-0027": 21.5,
-      "track-0038": 13.5,
-      "track-0040": 13.5,
-      "track-0042": 13.5,
-      "track-0044": 13.5,
-      "track-0047": 13.5,
-      "track-0050": 13.5,
-      "track-0058": 13.5
-    },
-    "mediaSec": 21.5,
-    "progress": 0.25,
-    "referenceSec": 21.5,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 22.0,
-      "track-0022": 22.0,
-      "track-0023": 22.0,
-      "track-0027": 22.0,
-      "track-0038": 14.0,
-      "track-0040": 14.0,
-      "track-0042": 14.0,
-      "track-0044": 14.0,
-      "track-0047": 14.0,
-      "track-0050": 14.0,
-      "track-0058": 14.0
-    },
-    "mediaSec": 22.0,
-    "progress": 0.5,
-    "referenceSec": 22.0,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 22.5,
-      "track-0022": 22.5,
-      "track-0023": 22.5,
-      "track-0027": 22.5,
-      "track-0038": 14.5,
-      "track-0040": 14.5,
-      "track-0042": 14.5,
-      "track-0044": 14.5,
-      "track-0047": 14.5,
-      "track-0050": 14.5,
-      "track-0058": 14.5
-    },
-    "mediaSec": 22.5,
-    "progress": 0.75,
-    "referenceSec": 22.5,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 22.8,
-      "track-0022": 22.8,
-      "track-0023": 22.8,
-      "track-0027": 22.8,
-      "track-0038": 14.8,
-      "track-0040": 14.8,
-      "track-0042": 14.8,
-      "track-0044": 14.8,
-      "track-0047": 14.8,
-      "track-0050": 14.8,
-      "track-0058": 14.8
-    },
-    "mediaSec": 22.8,
-    "progress": 0.9,
-    "referenceSec": 22.8,
-    "to": 6
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 5,
-    "id": "trans-005-006-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0019": 23.0,
       "track-0022": 23.0,
       "track-0023": 23.0,
@@ -983,8 +833,158 @@
       "track-0058": 15.0
     },
     "mediaSec": 23.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 23.0,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 23.2,
+      "track-0022": 23.2,
+      "track-0023": 23.2,
+      "track-0027": 23.2,
+      "track-0038": 15.2,
+      "track-0040": 15.2,
+      "track-0042": 15.2,
+      "track-0044": 15.2,
+      "track-0047": 15.2,
+      "track-0050": 15.2,
+      "track-0058": 15.2
+    },
+    "mediaSec": 23.2,
+    "progress": 0.1,
+    "referenceSec": 23.2,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 23.5,
+      "track-0022": 23.5,
+      "track-0023": 23.5,
+      "track-0027": 23.5,
+      "track-0038": 15.5,
+      "track-0040": 15.5,
+      "track-0042": 15.5,
+      "track-0044": 15.5,
+      "track-0047": 15.5,
+      "track-0050": 15.5,
+      "track-0058": 15.5
+    },
+    "mediaSec": 23.5,
+    "progress": 0.25,
+    "referenceSec": 23.5,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 24.0,
+      "track-0022": 24.0,
+      "track-0023": 24.0,
+      "track-0027": 24.0,
+      "track-0038": 16.0,
+      "track-0040": 16.0,
+      "track-0042": 16.0,
+      "track-0044": 16.0,
+      "track-0047": 16.0,
+      "track-0050": 16.0,
+      "track-0058": 16.0
+    },
+    "mediaSec": 24.0,
+    "progress": 0.5,
+    "referenceSec": 24.0,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 24.5,
+      "track-0022": 24.5,
+      "track-0023": 24.5,
+      "track-0027": 24.5,
+      "track-0038": 16.5,
+      "track-0040": 16.5,
+      "track-0042": 16.5,
+      "track-0044": 16.5,
+      "track-0047": 16.5,
+      "track-0050": 16.5,
+      "track-0058": 16.5
+    },
+    "mediaSec": 24.5,
+    "progress": 0.75,
+    "referenceSec": 24.5,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 24.8,
+      "track-0022": 24.8,
+      "track-0023": 24.8,
+      "track-0027": 24.8,
+      "track-0038": 16.8,
+      "track-0040": 16.8,
+      "track-0042": 16.8,
+      "track-0044": 16.8,
+      "track-0047": 16.8,
+      "track-0050": 16.8,
+      "track-0058": 16.8
+    },
+    "mediaSec": 24.8,
+    "progress": 0.9,
+    "referenceSec": 24.8,
+    "to": 6
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 5,
+    "id": "trans-005-006-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 25.0,
+      "track-0022": 25.0,
+      "track-0023": 25.0,
+      "track-0027": 25.0,
+      "track-0038": 17.0,
+      "track-0040": 17.0,
+      "track-0042": 17.0,
+      "track-0044": 17.0,
+      "track-0047": 17.0,
+      "track-0050": 17.0,
+      "track-0058": 17.0
+    },
+    "mediaSec": 25.0,
+    "progress": 1.0,
+    "referenceSec": 25.0,
     "to": 6
   },
   {
@@ -1019,156 +1019,6 @@
     "id": "trans-006-007-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 26.0,
-      "track-0022": 26.0,
-      "track-0023": 26.0,
-      "track-0027": 26.0,
-      "track-0038": 18.0,
-      "track-0040": 18.0,
-      "track-0042": 18.0,
-      "track-0044": 18.0,
-      "track-0047": 18.0,
-      "track-0050": 18.0,
-      "track-0058": 18.0
-    },
-    "mediaSec": 26.0,
-    "progress": 0.0,
-    "referenceSec": 26.0,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 26.2,
-      "track-0022": 26.2,
-      "track-0023": 26.2,
-      "track-0027": 26.2,
-      "track-0038": 18.2,
-      "track-0040": 18.2,
-      "track-0042": 18.2,
-      "track-0044": 18.2,
-      "track-0047": 18.2,
-      "track-0050": 18.2,
-      "track-0058": 18.2
-    },
-    "mediaSec": 26.2,
-    "progress": 0.1,
-    "referenceSec": 26.2,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 26.5,
-      "track-0022": 26.5,
-      "track-0023": 26.5,
-      "track-0027": 26.5,
-      "track-0038": 18.5,
-      "track-0040": 18.5,
-      "track-0042": 18.5,
-      "track-0044": 18.5,
-      "track-0047": 18.5,
-      "track-0050": 18.5,
-      "track-0058": 18.5
-    },
-    "mediaSec": 26.5,
-    "progress": 0.25,
-    "referenceSec": 26.5,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 27.0,
-      "track-0022": 27.0,
-      "track-0023": 27.0,
-      "track-0027": 27.0,
-      "track-0038": 19.0,
-      "track-0040": 19.0,
-      "track-0042": 19.0,
-      "track-0044": 19.0,
-      "track-0047": 19.0,
-      "track-0050": 19.0,
-      "track-0058": 19.0
-    },
-    "mediaSec": 27.0,
-    "progress": 0.5,
-    "referenceSec": 27.0,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 27.5,
-      "track-0022": 27.5,
-      "track-0023": 27.5,
-      "track-0027": 27.5,
-      "track-0038": 19.5,
-      "track-0040": 19.5,
-      "track-0042": 19.5,
-      "track-0044": 19.5,
-      "track-0047": 19.5,
-      "track-0050": 19.5,
-      "track-0058": 19.5
-    },
-    "mediaSec": 27.5,
-    "progress": 0.75,
-    "referenceSec": 27.5,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 27.8,
-      "track-0022": 27.8,
-      "track-0023": 27.8,
-      "track-0027": 27.8,
-      "track-0038": 19.8,
-      "track-0040": 19.8,
-      "track-0042": 19.8,
-      "track-0044": 19.8,
-      "track-0047": 19.8,
-      "track-0050": 19.8,
-      "track-0058": 19.8
-    },
-    "mediaSec": 27.8,
-    "progress": 0.9,
-    "referenceSec": 27.8,
-    "to": 7
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 6,
-    "id": "trans-006-007-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0019": 28.0,
       "track-0022": 28.0,
       "track-0023": 28.0,
@@ -1182,8 +1032,158 @@
       "track-0058": 20.0
     },
     "mediaSec": 28.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 28.0,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 28.2,
+      "track-0022": 28.2,
+      "track-0023": 28.2,
+      "track-0027": 28.2,
+      "track-0038": 20.2,
+      "track-0040": 20.2,
+      "track-0042": 20.2,
+      "track-0044": 20.2,
+      "track-0047": 20.2,
+      "track-0050": 20.2,
+      "track-0058": 20.2
+    },
+    "mediaSec": 28.2,
+    "progress": 0.1,
+    "referenceSec": 28.2,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 28.5,
+      "track-0022": 28.5,
+      "track-0023": 28.5,
+      "track-0027": 28.5,
+      "track-0038": 20.5,
+      "track-0040": 20.5,
+      "track-0042": 20.5,
+      "track-0044": 20.5,
+      "track-0047": 20.5,
+      "track-0050": 20.5,
+      "track-0058": 20.5
+    },
+    "mediaSec": 28.5,
+    "progress": 0.25,
+    "referenceSec": 28.5,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 29.0,
+      "track-0022": 29.0,
+      "track-0023": 29.0,
+      "track-0027": 29.0,
+      "track-0038": 21.0,
+      "track-0040": 21.0,
+      "track-0042": 21.0,
+      "track-0044": 21.0,
+      "track-0047": 21.0,
+      "track-0050": 21.0,
+      "track-0058": 21.0
+    },
+    "mediaSec": 29.0,
+    "progress": 0.5,
+    "referenceSec": 29.0,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 29.5,
+      "track-0022": 29.5,
+      "track-0023": 29.5,
+      "track-0027": 29.5,
+      "track-0038": 21.5,
+      "track-0040": 21.5,
+      "track-0042": 21.5,
+      "track-0044": 21.5,
+      "track-0047": 21.5,
+      "track-0050": 21.5,
+      "track-0058": 21.5
+    },
+    "mediaSec": 29.5,
+    "progress": 0.75,
+    "referenceSec": 29.5,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 29.8,
+      "track-0022": 29.8,
+      "track-0023": 29.8,
+      "track-0027": 29.8,
+      "track-0038": 21.8,
+      "track-0040": 21.8,
+      "track-0042": 21.8,
+      "track-0044": 21.8,
+      "track-0047": 21.8,
+      "track-0050": 21.8,
+      "track-0058": 21.8
+    },
+    "mediaSec": 29.8,
+    "progress": 0.9,
+    "referenceSec": 29.8,
+    "to": 7
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 6,
+    "id": "trans-006-007-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 30.0,
+      "track-0022": 30.0,
+      "track-0023": 30.0,
+      "track-0027": 30.0,
+      "track-0038": 22.0,
+      "track-0040": 22.0,
+      "track-0042": 22.0,
+      "track-0044": 22.0,
+      "track-0047": 22.0,
+      "track-0050": 22.0,
+      "track-0058": 22.0
+    },
+    "mediaSec": 30.0,
+    "progress": 1.0,
+    "referenceSec": 30.0,
     "to": 7
   },
   {
@@ -1215,138 +1215,6 @@
     "id": "trans-007-008-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 31.0,
-      "track-0038": 23.0,
-      "track-0040": 23.0,
-      "track-0042": 23.0,
-      "track-0044": 23.0,
-      "track-0047": 23.0,
-      "track-0050": 23.0,
-      "track-0058": 23.0
-    },
-    "mediaSec": 31.0,
-    "progress": 0.0,
-    "referenceSec": 31.0,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-010",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 31.2,
-      "track-0038": 23.2,
-      "track-0040": 23.2,
-      "track-0042": 23.2,
-      "track-0044": 23.2,
-      "track-0047": 23.2,
-      "track-0050": 23.2,
-      "track-0058": 23.2
-    },
-    "mediaSec": 31.2,
-    "progress": 0.1,
-    "referenceSec": 31.2,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-025",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 31.5,
-      "track-0038": 23.5,
-      "track-0040": 23.5,
-      "track-0042": 23.5,
-      "track-0044": 23.5,
-      "track-0047": 23.5,
-      "track-0050": 23.5,
-      "track-0058": 23.5
-    },
-    "mediaSec": 31.5,
-    "progress": 0.25,
-    "referenceSec": 31.5,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-050",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 32.0,
-      "track-0038": 24.0,
-      "track-0040": 24.0,
-      "track-0042": 24.0,
-      "track-0044": 24.0,
-      "track-0047": 24.0,
-      "track-0050": 24.0,
-      "track-0058": 24.0
-    },
-    "mediaSec": 32.0,
-    "progress": 0.5,
-    "referenceSec": 32.0,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-075",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 32.5,
-      "track-0038": 24.5,
-      "track-0040": 24.5,
-      "track-0042": 24.5,
-      "track-0044": 24.5,
-      "track-0047": 24.5,
-      "track-0050": 24.5,
-      "track-0058": 24.5
-    },
-    "mediaSec": 32.5,
-    "progress": 0.75,
-    "referenceSec": 32.5,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-090",
-    "kind": "transition",
-    "mediaClocks": {
-      "track-0019": 32.8,
-      "track-0038": 24.8,
-      "track-0040": 24.8,
-      "track-0042": 24.8,
-      "track-0044": 24.8,
-      "track-0047": 24.8,
-      "track-0050": 24.8,
-      "track-0058": 24.8
-    },
-    "mediaSec": 32.8,
-    "progress": 0.9,
-    "referenceSec": 32.8,
-    "to": 8
-  },
-  {
-    "auditKind": "forward-transition",
-    "direction": "forward",
-    "expectedVisibleObjects": 3,
-    "from": 7,
-    "id": "trans-007-008-100",
-    "kind": "transition",
-    "mediaClocks": {
       "track-0019": 33.0,
       "track-0038": 25.0,
       "track-0040": 25.0,
@@ -1357,8 +1225,140 @@
       "track-0058": 25.0
     },
     "mediaSec": 33.0,
-    "progress": 1.0,
+    "progress": 0.0,
     "referenceSec": 33.0,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 33.2,
+      "track-0038": 25.2,
+      "track-0040": 25.2,
+      "track-0042": 25.2,
+      "track-0044": 25.2,
+      "track-0047": 25.2,
+      "track-0050": 25.2,
+      "track-0058": 25.2
+    },
+    "mediaSec": 33.2,
+    "progress": 0.1,
+    "referenceSec": 33.2,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 33.5,
+      "track-0038": 25.5,
+      "track-0040": 25.5,
+      "track-0042": 25.5,
+      "track-0044": 25.5,
+      "track-0047": 25.5,
+      "track-0050": 25.5,
+      "track-0058": 25.5
+    },
+    "mediaSec": 33.5,
+    "progress": 0.25,
+    "referenceSec": 33.5,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 34.0,
+      "track-0038": 26.0,
+      "track-0040": 26.0,
+      "track-0042": 26.0,
+      "track-0044": 26.0,
+      "track-0047": 26.0,
+      "track-0050": 26.0,
+      "track-0058": 26.0
+    },
+    "mediaSec": 34.0,
+    "progress": 0.5,
+    "referenceSec": 34.0,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 34.5,
+      "track-0038": 26.5,
+      "track-0040": 26.5,
+      "track-0042": 26.5,
+      "track-0044": 26.5,
+      "track-0047": 26.5,
+      "track-0050": 26.5,
+      "track-0058": 26.5
+    },
+    "mediaSec": 34.5,
+    "progress": 0.75,
+    "referenceSec": 34.5,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 34.8,
+      "track-0038": 26.8,
+      "track-0040": 26.8,
+      "track-0042": 26.8,
+      "track-0044": 26.8,
+      "track-0047": 26.8,
+      "track-0050": 26.8,
+      "track-0058": 26.8
+    },
+    "mediaSec": 34.8,
+    "progress": 0.9,
+    "referenceSec": 34.8,
+    "to": 8
+  },
+  {
+    "auditKind": "forward-transition",
+    "direction": "forward",
+    "expectedVisibleObjects": 3,
+    "from": 7,
+    "id": "trans-007-008-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0019": 35.0,
+      "track-0038": 27.0,
+      "track-0040": 27.0,
+      "track-0042": 27.0,
+      "track-0044": 27.0,
+      "track-0047": 27.0,
+      "track-0050": 27.0,
+      "track-0058": 27.0
+    },
+    "mediaSec": 35.0,
+    "progress": 1.0,
+    "referenceSec": 35.0,
     "to": 8
   },
   {
@@ -1389,17 +1389,17 @@
     "id": "trans-008-009-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 28.0,
-      "track-0040": 28.0,
-      "track-0042": 28.0,
-      "track-0044": 28.0,
-      "track-0047": 28.0,
-      "track-0050": 28.0,
-      "track-0058": 28.0
+      "track-0038": 30.0,
+      "track-0040": 30.0,
+      "track-0042": 30.0,
+      "track-0044": 30.0,
+      "track-0047": 30.0,
+      "track-0050": 30.0,
+      "track-0058": 30.0
     },
-    "mediaSec": 36.0,
+    "mediaSec": 38.0,
     "progress": 0.0,
-    "referenceSec": 36.0,
+    "referenceSec": 38.0,
     "to": 9
   },
   {
@@ -1410,17 +1410,17 @@
     "id": "trans-008-009-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 28.2,
-      "track-0040": 28.2,
-      "track-0042": 28.2,
-      "track-0044": 28.2,
-      "track-0047": 28.2,
-      "track-0050": 28.2,
-      "track-0058": 28.2
+      "track-0038": 30.2,
+      "track-0040": 30.2,
+      "track-0042": 30.2,
+      "track-0044": 30.2,
+      "track-0047": 30.2,
+      "track-0050": 30.2,
+      "track-0058": 30.2
     },
-    "mediaSec": 36.2,
+    "mediaSec": 38.2,
     "progress": 0.1,
-    "referenceSec": 36.2,
+    "referenceSec": 38.2,
     "to": 9
   },
   {
@@ -1431,17 +1431,17 @@
     "id": "trans-008-009-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 28.5,
-      "track-0040": 28.5,
-      "track-0042": 28.5,
-      "track-0044": 28.5,
-      "track-0047": 28.5,
-      "track-0050": 28.5,
-      "track-0058": 28.5
+      "track-0038": 30.5,
+      "track-0040": 30.5,
+      "track-0042": 30.5,
+      "track-0044": 30.5,
+      "track-0047": 30.5,
+      "track-0050": 30.5,
+      "track-0058": 30.5
     },
-    "mediaSec": 36.5,
+    "mediaSec": 38.5,
     "progress": 0.25,
-    "referenceSec": 36.5,
+    "referenceSec": 38.5,
     "to": 9
   },
   {
@@ -1452,17 +1452,17 @@
     "id": "trans-008-009-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 29.0,
-      "track-0040": 29.0,
-      "track-0042": 29.0,
-      "track-0044": 29.0,
-      "track-0047": 29.0,
-      "track-0050": 29.0,
-      "track-0058": 29.0
+      "track-0038": 31.0,
+      "track-0040": 31.0,
+      "track-0042": 31.0,
+      "track-0044": 31.0,
+      "track-0047": 31.0,
+      "track-0050": 31.0,
+      "track-0058": 31.0
     },
-    "mediaSec": 37.0,
+    "mediaSec": 39.0,
     "progress": 0.5,
-    "referenceSec": 37.0,
+    "referenceSec": 39.0,
     "to": 9
   },
   {
@@ -1473,17 +1473,17 @@
     "id": "trans-008-009-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 29.5,
-      "track-0040": 29.5,
-      "track-0042": 29.5,
-      "track-0044": 29.5,
-      "track-0047": 29.5,
-      "track-0050": 29.5,
-      "track-0058": 29.5
+      "track-0038": 31.5,
+      "track-0040": 31.5,
+      "track-0042": 31.5,
+      "track-0044": 31.5,
+      "track-0047": 31.5,
+      "track-0050": 31.5,
+      "track-0058": 31.5
     },
-    "mediaSec": 37.5,
+    "mediaSec": 39.5,
     "progress": 0.75,
-    "referenceSec": 37.5,
+    "referenceSec": 39.5,
     "to": 9
   },
   {
@@ -1494,17 +1494,17 @@
     "id": "trans-008-009-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 29.8,
-      "track-0040": 29.8,
-      "track-0042": 29.8,
-      "track-0044": 29.8,
-      "track-0047": 29.8,
-      "track-0050": 29.8,
-      "track-0058": 29.8
+      "track-0038": 31.8,
+      "track-0040": 31.8,
+      "track-0042": 31.8,
+      "track-0044": 31.8,
+      "track-0047": 31.8,
+      "track-0050": 31.8,
+      "track-0058": 31.8
     },
-    "mediaSec": 37.8,
+    "mediaSec": 39.8,
     "progress": 0.9,
-    "referenceSec": 37.8,
+    "referenceSec": 39.8,
     "to": 9
   },
   {
@@ -1515,17 +1515,17 @@
     "id": "trans-008-009-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 30.0,
-      "track-0040": 30.0,
-      "track-0042": 30.0,
-      "track-0044": 30.0,
-      "track-0047": 30.0,
-      "track-0050": 30.0,
-      "track-0058": 30.0
+      "track-0038": 32.0,
+      "track-0040": 32.0,
+      "track-0042": 32.0,
+      "track-0044": 32.0,
+      "track-0047": 32.0,
+      "track-0050": 32.0,
+      "track-0058": 32.0
     },
-    "mediaSec": 38.0,
+    "mediaSec": 40.0,
     "progress": 1.0,
-    "referenceSec": 38.0,
+    "referenceSec": 40.0,
     "to": 9
   },
   {
@@ -1556,17 +1556,17 @@
     "id": "trans-009-010-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 33.0,
-      "track-0040": 33.0,
-      "track-0042": 33.0,
-      "track-0044": 33.0,
-      "track-0047": 33.0,
-      "track-0050": 33.0,
-      "track-0058": 33.0
+      "track-0038": 35.0,
+      "track-0040": 35.0,
+      "track-0042": 35.0,
+      "track-0044": 35.0,
+      "track-0047": 35.0,
+      "track-0050": 35.0,
+      "track-0058": 35.0
     },
-    "mediaSec": 41.0,
+    "mediaSec": 43.0,
     "progress": 0.0,
-    "referenceSec": 41.0,
+    "referenceSec": 43.0,
     "to": 10
   },
   {
@@ -1577,17 +1577,17 @@
     "id": "trans-009-010-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 33.2,
-      "track-0040": 33.2,
-      "track-0042": 33.2,
-      "track-0044": 33.2,
-      "track-0047": 33.2,
-      "track-0050": 33.2,
-      "track-0058": 33.2
+      "track-0038": 35.2,
+      "track-0040": 35.2,
+      "track-0042": 35.2,
+      "track-0044": 35.2,
+      "track-0047": 35.2,
+      "track-0050": 35.2,
+      "track-0058": 35.2
     },
-    "mediaSec": 41.2,
+    "mediaSec": 43.2,
     "progress": 0.1,
-    "referenceSec": 41.2,
+    "referenceSec": 43.2,
     "to": 10
   },
   {
@@ -1598,17 +1598,17 @@
     "id": "trans-009-010-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 33.5,
-      "track-0040": 33.5,
-      "track-0042": 33.5,
-      "track-0044": 33.5,
-      "track-0047": 33.5,
-      "track-0050": 33.5,
-      "track-0058": 33.5
+      "track-0038": 35.5,
+      "track-0040": 35.5,
+      "track-0042": 35.5,
+      "track-0044": 35.5,
+      "track-0047": 35.5,
+      "track-0050": 35.5,
+      "track-0058": 35.5
     },
-    "mediaSec": 41.5,
+    "mediaSec": 43.5,
     "progress": 0.25,
-    "referenceSec": 41.5,
+    "referenceSec": 43.5,
     "to": 10
   },
   {
@@ -1619,17 +1619,17 @@
     "id": "trans-009-010-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 34.0,
-      "track-0040": 34.0,
-      "track-0042": 34.0,
-      "track-0044": 34.0,
-      "track-0047": 34.0,
-      "track-0050": 34.0,
-      "track-0058": 34.0
+      "track-0038": 36.0,
+      "track-0040": 36.0,
+      "track-0042": 36.0,
+      "track-0044": 36.0,
+      "track-0047": 36.0,
+      "track-0050": 36.0,
+      "track-0058": 36.0
     },
-    "mediaSec": 42.0,
+    "mediaSec": 44.0,
     "progress": 0.5,
-    "referenceSec": 42.0,
+    "referenceSec": 44.0,
     "to": 10
   },
   {
@@ -1640,17 +1640,17 @@
     "id": "trans-009-010-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 34.5,
-      "track-0040": 34.5,
-      "track-0042": 34.5,
-      "track-0044": 34.5,
-      "track-0047": 34.5,
-      "track-0050": 34.5,
-      "track-0058": 34.5
+      "track-0038": 36.5,
+      "track-0040": 36.5,
+      "track-0042": 36.5,
+      "track-0044": 36.5,
+      "track-0047": 36.5,
+      "track-0050": 36.5,
+      "track-0058": 36.5
     },
-    "mediaSec": 42.5,
+    "mediaSec": 44.5,
     "progress": 0.75,
-    "referenceSec": 42.5,
+    "referenceSec": 44.5,
     "to": 10
   },
   {
@@ -1661,17 +1661,17 @@
     "id": "trans-009-010-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 34.8,
-      "track-0040": 34.8,
-      "track-0042": 34.8,
-      "track-0044": 34.8,
-      "track-0047": 34.8,
-      "track-0050": 34.8,
-      "track-0058": 34.8
+      "track-0038": 36.8,
+      "track-0040": 36.8,
+      "track-0042": 36.8,
+      "track-0044": 36.8,
+      "track-0047": 36.8,
+      "track-0050": 36.8,
+      "track-0058": 36.8
     },
-    "mediaSec": 42.8,
+    "mediaSec": 44.8,
     "progress": 0.9,
-    "referenceSec": 42.8,
+    "referenceSec": 44.8,
     "to": 10
   },
   {
@@ -1682,17 +1682,17 @@
     "id": "trans-009-010-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 35.0,
-      "track-0040": 35.0,
-      "track-0042": 35.0,
-      "track-0044": 35.0,
-      "track-0047": 35.0,
-      "track-0050": 35.0,
-      "track-0058": 35.0
+      "track-0038": 37.0,
+      "track-0040": 37.0,
+      "track-0042": 37.0,
+      "track-0044": 37.0,
+      "track-0047": 37.0,
+      "track-0050": 37.0,
+      "track-0058": 37.0
     },
-    "mediaSec": 43.0,
+    "mediaSec": 45.0,
     "progress": 1.0,
-    "referenceSec": 43.0,
+    "referenceSec": 45.0,
     "to": 10
   },
   {
@@ -1722,16 +1722,16 @@
     "id": "trans-010-011-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 38.0,
-      "track-0040": 38.0,
-      "track-0042": 38.0,
-      "track-0044": 38.0,
-      "track-0050": 38.0,
-      "track-0058": 38.0
+      "track-0038": 40.0,
+      "track-0040": 40.0,
+      "track-0042": 40.0,
+      "track-0044": 40.0,
+      "track-0050": 40.0,
+      "track-0058": 40.0
     },
-    "mediaSec": 46.0,
+    "mediaSec": 48.0,
     "progress": 0.0,
-    "referenceSec": 46.0,
+    "referenceSec": 48.0,
     "to": 11
   },
   {
@@ -1742,16 +1742,16 @@
     "id": "trans-010-011-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 38.2,
-      "track-0040": 38.2,
-      "track-0042": 38.2,
-      "track-0044": 38.2,
-      "track-0050": 38.2,
-      "track-0058": 38.2
+      "track-0038": 40.2,
+      "track-0040": 40.2,
+      "track-0042": 40.2,
+      "track-0044": 40.2,
+      "track-0050": 40.2,
+      "track-0058": 40.2
     },
-    "mediaSec": 46.2,
+    "mediaSec": 48.2,
     "progress": 0.1,
-    "referenceSec": 46.2,
+    "referenceSec": 48.2,
     "to": 11
   },
   {
@@ -1762,16 +1762,16 @@
     "id": "trans-010-011-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 38.5,
-      "track-0040": 38.5,
-      "track-0042": 38.5,
-      "track-0044": 38.5,
-      "track-0050": 38.5,
-      "track-0058": 38.5
+      "track-0038": 40.5,
+      "track-0040": 40.5,
+      "track-0042": 40.5,
+      "track-0044": 40.5,
+      "track-0050": 40.5,
+      "track-0058": 40.5
     },
-    "mediaSec": 46.5,
+    "mediaSec": 48.5,
     "progress": 0.25,
-    "referenceSec": 46.5,
+    "referenceSec": 48.5,
     "to": 11
   },
   {
@@ -1782,16 +1782,16 @@
     "id": "trans-010-011-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 39.0,
-      "track-0040": 39.0,
-      "track-0042": 39.0,
-      "track-0044": 39.0,
-      "track-0050": 39.0,
-      "track-0058": 39.0
+      "track-0038": 41.0,
+      "track-0040": 41.0,
+      "track-0042": 41.0,
+      "track-0044": 41.0,
+      "track-0050": 41.0,
+      "track-0058": 41.0
     },
-    "mediaSec": 47.0,
+    "mediaSec": 49.0,
     "progress": 0.5,
-    "referenceSec": 47.0,
+    "referenceSec": 49.0,
     "to": 11
   },
   {
@@ -1802,16 +1802,16 @@
     "id": "trans-010-011-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 39.5,
-      "track-0040": 39.5,
-      "track-0042": 39.5,
-      "track-0044": 39.5,
-      "track-0050": 39.5,
-      "track-0058": 39.5
+      "track-0038": 41.5,
+      "track-0040": 41.5,
+      "track-0042": 41.5,
+      "track-0044": 41.5,
+      "track-0050": 41.5,
+      "track-0058": 41.5
     },
-    "mediaSec": 47.5,
+    "mediaSec": 49.5,
     "progress": 0.75,
-    "referenceSec": 47.5,
+    "referenceSec": 49.5,
     "to": 11
   },
   {
@@ -1822,16 +1822,16 @@
     "id": "trans-010-011-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 39.8,
-      "track-0040": 39.8,
-      "track-0042": 39.8,
-      "track-0044": 39.8,
-      "track-0050": 39.8,
-      "track-0058": 39.8
+      "track-0038": 41.8,
+      "track-0040": 41.8,
+      "track-0042": 41.8,
+      "track-0044": 41.8,
+      "track-0050": 41.8,
+      "track-0058": 41.8
     },
-    "mediaSec": 47.8,
+    "mediaSec": 49.8,
     "progress": 0.9,
-    "referenceSec": 47.8,
+    "referenceSec": 49.8,
     "to": 11
   },
   {
@@ -1842,16 +1842,16 @@
     "id": "trans-010-011-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 40.0,
-      "track-0040": 40.0,
-      "track-0042": 40.0,
-      "track-0044": 40.0,
-      "track-0050": 40.0,
-      "track-0058": 40.0
+      "track-0038": 42.0,
+      "track-0040": 42.0,
+      "track-0042": 42.0,
+      "track-0044": 42.0,
+      "track-0050": 42.0,
+      "track-0058": 42.0
     },
-    "mediaSec": 48.0,
+    "mediaSec": 50.0,
     "progress": 1.0,
-    "referenceSec": 48.0,
+    "referenceSec": 50.0,
     "to": 11
   },
   {
@@ -1880,15 +1880,15 @@
     "id": "trans-011-012-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 43.0,
-      "track-0040": 43.0,
-      "track-0042": 43.0,
-      "track-0044": 43.0,
-      "track-0058": 43.0
+      "track-0038": 45.0,
+      "track-0040": 45.0,
+      "track-0042": 45.0,
+      "track-0044": 45.0,
+      "track-0058": 45.0
     },
-    "mediaSec": 51.0,
+    "mediaSec": 53.0,
     "progress": 0.0,
-    "referenceSec": 51.0,
+    "referenceSec": 53.0,
     "to": 12
   },
   {
@@ -1899,15 +1899,15 @@
     "id": "trans-011-012-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 43.2,
-      "track-0040": 43.2,
-      "track-0042": 43.2,
-      "track-0044": 43.2,
-      "track-0058": 43.2
+      "track-0038": 45.2,
+      "track-0040": 45.2,
+      "track-0042": 45.2,
+      "track-0044": 45.2,
+      "track-0058": 45.2
     },
-    "mediaSec": 51.2,
+    "mediaSec": 53.2,
     "progress": 0.1,
-    "referenceSec": 51.2,
+    "referenceSec": 53.2,
     "to": 12
   },
   {
@@ -1918,15 +1918,15 @@
     "id": "trans-011-012-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 43.5,
-      "track-0040": 43.5,
-      "track-0042": 43.5,
-      "track-0044": 43.5,
-      "track-0058": 43.5
+      "track-0038": 45.5,
+      "track-0040": 45.5,
+      "track-0042": 45.5,
+      "track-0044": 45.5,
+      "track-0058": 45.5
     },
-    "mediaSec": 51.5,
+    "mediaSec": 53.5,
     "progress": 0.25,
-    "referenceSec": 51.5,
+    "referenceSec": 53.5,
     "to": 12
   },
   {
@@ -1937,15 +1937,15 @@
     "id": "trans-011-012-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 44.0,
-      "track-0040": 44.0,
-      "track-0042": 44.0,
-      "track-0044": 44.0,
-      "track-0058": 44.0
+      "track-0038": 46.0,
+      "track-0040": 46.0,
+      "track-0042": 46.0,
+      "track-0044": 46.0,
+      "track-0058": 46.0
     },
-    "mediaSec": 52.0,
+    "mediaSec": 54.0,
     "progress": 0.5,
-    "referenceSec": 52.0,
+    "referenceSec": 54.0,
     "to": 12
   },
   {
@@ -1956,15 +1956,15 @@
     "id": "trans-011-012-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 44.5,
-      "track-0040": 44.5,
-      "track-0042": 44.5,
-      "track-0044": 44.5,
-      "track-0058": 44.5
+      "track-0038": 46.5,
+      "track-0040": 46.5,
+      "track-0042": 46.5,
+      "track-0044": 46.5,
+      "track-0058": 46.5
     },
-    "mediaSec": 52.5,
+    "mediaSec": 54.5,
     "progress": 0.75,
-    "referenceSec": 52.5,
+    "referenceSec": 54.5,
     "to": 12
   },
   {
@@ -1975,15 +1975,15 @@
     "id": "trans-011-012-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 44.8,
-      "track-0040": 44.8,
-      "track-0042": 44.8,
-      "track-0044": 44.8,
-      "track-0058": 44.8
+      "track-0038": 46.8,
+      "track-0040": 46.8,
+      "track-0042": 46.8,
+      "track-0044": 46.8,
+      "track-0058": 46.8
     },
-    "mediaSec": 52.8,
+    "mediaSec": 54.8,
     "progress": 0.9,
-    "referenceSec": 52.8,
+    "referenceSec": 54.8,
     "to": 12
   },
   {
@@ -1994,15 +1994,15 @@
     "id": "trans-011-012-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 45.0,
-      "track-0040": 45.0,
-      "track-0042": 45.0,
-      "track-0044": 45.0,
-      "track-0058": 45.0
+      "track-0038": 47.0,
+      "track-0040": 47.0,
+      "track-0042": 47.0,
+      "track-0044": 47.0,
+      "track-0058": 47.0
     },
-    "mediaSec": 53.0,
+    "mediaSec": 55.0,
     "progress": 1.0,
-    "referenceSec": 53.0,
+    "referenceSec": 55.0,
     "to": 12
   },
   {
@@ -2031,15 +2031,15 @@
     "id": "trans-012-013-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 48.0,
-      "track-0040": 48.0,
-      "track-0042": 48.0,
-      "track-0044": 48.0,
-      "track-0058": 48.0
+      "track-0038": 50.0,
+      "track-0040": 50.0,
+      "track-0042": 50.0,
+      "track-0044": 50.0,
+      "track-0058": 50.0
     },
-    "mediaSec": 56.0,
+    "mediaSec": 58.0,
     "progress": 0.0,
-    "referenceSec": 56.0,
+    "referenceSec": 58.0,
     "to": 13
   },
   {
@@ -2050,15 +2050,15 @@
     "id": "trans-012-013-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 48.2,
-      "track-0040": 48.2,
-      "track-0042": 48.2,
-      "track-0044": 48.2,
-      "track-0058": 48.2
+      "track-0038": 50.2,
+      "track-0040": 50.2,
+      "track-0042": 50.2,
+      "track-0044": 50.2,
+      "track-0058": 50.2
     },
-    "mediaSec": 56.2,
+    "mediaSec": 58.2,
     "progress": 0.1,
-    "referenceSec": 56.2,
+    "referenceSec": 58.2,
     "to": 13
   },
   {
@@ -2069,15 +2069,15 @@
     "id": "trans-012-013-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 48.5,
-      "track-0040": 48.5,
-      "track-0042": 48.5,
-      "track-0044": 48.5,
-      "track-0058": 48.5
+      "track-0038": 50.5,
+      "track-0040": 50.5,
+      "track-0042": 50.5,
+      "track-0044": 50.5,
+      "track-0058": 50.5
     },
-    "mediaSec": 56.5,
+    "mediaSec": 58.5,
     "progress": 0.25,
-    "referenceSec": 56.5,
+    "referenceSec": 58.5,
     "to": 13
   },
   {
@@ -2088,15 +2088,15 @@
     "id": "trans-012-013-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 49.0,
-      "track-0040": 49.0,
-      "track-0042": 49.0,
-      "track-0044": 49.0,
-      "track-0058": 49.0
+      "track-0038": 51.0,
+      "track-0040": 51.0,
+      "track-0042": 51.0,
+      "track-0044": 51.0,
+      "track-0058": 51.0
     },
-    "mediaSec": 57.0,
+    "mediaSec": 59.0,
     "progress": 0.5,
-    "referenceSec": 57.0,
+    "referenceSec": 59.0,
     "to": 13
   },
   {
@@ -2107,15 +2107,15 @@
     "id": "trans-012-013-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 49.5,
-      "track-0040": 49.5,
-      "track-0042": 49.5,
-      "track-0044": 49.5,
-      "track-0058": 49.5
+      "track-0038": 51.5,
+      "track-0040": 51.5,
+      "track-0042": 51.5,
+      "track-0044": 51.5,
+      "track-0058": 51.5
     },
-    "mediaSec": 57.5,
+    "mediaSec": 59.5,
     "progress": 0.75,
-    "referenceSec": 57.5,
+    "referenceSec": 59.5,
     "to": 13
   },
   {
@@ -2126,15 +2126,15 @@
     "id": "trans-012-013-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 49.8,
-      "track-0040": 49.8,
-      "track-0042": 49.8,
-      "track-0044": 49.8,
-      "track-0058": 49.8
+      "track-0038": 51.8,
+      "track-0040": 51.8,
+      "track-0042": 51.8,
+      "track-0044": 51.8,
+      "track-0058": 51.8
     },
-    "mediaSec": 57.8,
+    "mediaSec": 59.8,
     "progress": 0.9,
-    "referenceSec": 57.8,
+    "referenceSec": 59.8,
     "to": 13
   },
   {
@@ -2145,15 +2145,15 @@
     "id": "trans-012-013-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 50.0,
-      "track-0040": 50.0,
-      "track-0042": 50.0,
-      "track-0044": 50.0,
-      "track-0058": 50.0
+      "track-0038": 52.0,
+      "track-0040": 52.0,
+      "track-0042": 52.0,
+      "track-0044": 52.0,
+      "track-0058": 52.0
     },
-    "mediaSec": 58.0,
+    "mediaSec": 60.0,
     "progress": 1.0,
-    "referenceSec": 58.0,
+    "referenceSec": 60.0,
     "to": 13
   },
   {
@@ -2181,14 +2181,14 @@
     "id": "trans-013-014-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 53.0,
-      "track-0042": 53.0,
-      "track-0044": 53.0,
-      "track-0058": 53.0
+      "track-0038": 55.0,
+      "track-0042": 55.0,
+      "track-0044": 55.0,
+      "track-0058": 55.0
     },
-    "mediaSec": 61.0,
+    "mediaSec": 63.0,
     "progress": 0.0,
-    "referenceSec": 61.0,
+    "referenceSec": 63.0,
     "to": 14
   },
   {
@@ -2199,14 +2199,14 @@
     "id": "trans-013-014-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 53.2,
-      "track-0042": 53.2,
-      "track-0044": 53.2,
-      "track-0058": 53.2
+      "track-0038": 55.2,
+      "track-0042": 55.2,
+      "track-0044": 55.2,
+      "track-0058": 55.2
     },
-    "mediaSec": 61.2,
+    "mediaSec": 63.2,
     "progress": 0.1,
-    "referenceSec": 61.2,
+    "referenceSec": 63.2,
     "to": 14
   },
   {
@@ -2217,14 +2217,14 @@
     "id": "trans-013-014-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 53.5,
-      "track-0042": 53.5,
-      "track-0044": 53.5,
-      "track-0058": 53.5
+      "track-0038": 55.5,
+      "track-0042": 55.5,
+      "track-0044": 55.5,
+      "track-0058": 55.5
     },
-    "mediaSec": 61.5,
+    "mediaSec": 63.5,
     "progress": 0.25,
-    "referenceSec": 61.5,
+    "referenceSec": 63.5,
     "to": 14
   },
   {
@@ -2235,14 +2235,14 @@
     "id": "trans-013-014-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 54.0,
-      "track-0042": 54.0,
-      "track-0044": 54.0,
-      "track-0058": 54.0
+      "track-0038": 56.0,
+      "track-0042": 56.0,
+      "track-0044": 56.0,
+      "track-0058": 56.0
     },
-    "mediaSec": 62.0,
+    "mediaSec": 64.0,
     "progress": 0.5,
-    "referenceSec": 62.0,
+    "referenceSec": 64.0,
     "to": 14
   },
   {
@@ -2253,14 +2253,14 @@
     "id": "trans-013-014-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 54.5,
-      "track-0042": 54.5,
-      "track-0044": 54.5,
-      "track-0058": 54.5
+      "track-0038": 56.5,
+      "track-0042": 56.5,
+      "track-0044": 56.5,
+      "track-0058": 56.5
     },
-    "mediaSec": 62.5,
+    "mediaSec": 64.5,
     "progress": 0.75,
-    "referenceSec": 62.5,
+    "referenceSec": 64.5,
     "to": 14
   },
   {
@@ -2271,14 +2271,14 @@
     "id": "trans-013-014-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 54.8,
-      "track-0042": 54.8,
-      "track-0044": 54.8,
-      "track-0058": 54.8
+      "track-0038": 56.8,
+      "track-0042": 56.8,
+      "track-0044": 56.8,
+      "track-0058": 56.8
     },
-    "mediaSec": 62.8,
+    "mediaSec": 64.8,
     "progress": 0.9,
-    "referenceSec": 62.8,
+    "referenceSec": 64.8,
     "to": 14
   },
   {
@@ -2289,14 +2289,14 @@
     "id": "trans-013-014-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 55.0,
-      "track-0042": 55.0,
-      "track-0044": 55.0,
-      "track-0058": 55.0
+      "track-0038": 57.0,
+      "track-0042": 57.0,
+      "track-0044": 57.0,
+      "track-0058": 57.0
     },
-    "mediaSec": 63.0,
+    "mediaSec": 65.0,
     "progress": 1.0,
-    "referenceSec": 63.0,
+    "referenceSec": 65.0,
     "to": 14
   },
   {
@@ -2323,13 +2323,13 @@
     "id": "trans-014-015-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 58.0,
-      "track-0044": 58.0,
-      "track-0058": 58.0
+      "track-0038": 60.0,
+      "track-0044": 60.0,
+      "track-0058": 60.0
     },
-    "mediaSec": 66.0,
+    "mediaSec": 68.0,
     "progress": 0.0,
-    "referenceSec": 66.0,
+    "referenceSec": 68.0,
     "to": 15
   },
   {
@@ -2340,13 +2340,13 @@
     "id": "trans-014-015-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 58.2,
-      "track-0044": 58.2,
-      "track-0058": 58.2
+      "track-0038": 60.2,
+      "track-0044": 60.2,
+      "track-0058": 60.2
     },
-    "mediaSec": 66.2,
+    "mediaSec": 68.2,
     "progress": 0.1,
-    "referenceSec": 66.2,
+    "referenceSec": 68.2,
     "to": 15
   },
   {
@@ -2357,13 +2357,13 @@
     "id": "trans-014-015-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 58.5,
-      "track-0044": 58.5,
-      "track-0058": 58.5
+      "track-0038": 60.5,
+      "track-0044": 60.5,
+      "track-0058": 60.5
     },
-    "mediaSec": 66.5,
+    "mediaSec": 68.5,
     "progress": 0.25,
-    "referenceSec": 66.5,
+    "referenceSec": 68.5,
     "to": 15
   },
   {
@@ -2374,13 +2374,13 @@
     "id": "trans-014-015-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 59.0,
-      "track-0044": 59.0,
-      "track-0058": 59.0
+      "track-0038": 61.0,
+      "track-0044": 61.0,
+      "track-0058": 61.0
     },
-    "mediaSec": 67.0,
+    "mediaSec": 69.0,
     "progress": 0.5,
-    "referenceSec": 67.0,
+    "referenceSec": 69.0,
     "to": 15
   },
   {
@@ -2391,13 +2391,13 @@
     "id": "trans-014-015-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 59.5,
-      "track-0044": 59.5,
-      "track-0058": 59.5
+      "track-0038": 61.5,
+      "track-0044": 61.5,
+      "track-0058": 61.5
     },
-    "mediaSec": 67.5,
+    "mediaSec": 69.5,
     "progress": 0.75,
-    "referenceSec": 67.5,
+    "referenceSec": 69.5,
     "to": 15
   },
   {
@@ -2408,13 +2408,13 @@
     "id": "trans-014-015-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 59.8,
-      "track-0044": 59.8,
-      "track-0058": 59.8
+      "track-0038": 61.8,
+      "track-0044": 61.8,
+      "track-0058": 61.8
     },
-    "mediaSec": 67.8,
+    "mediaSec": 69.8,
     "progress": 0.9,
-    "referenceSec": 67.8,
+    "referenceSec": 69.8,
     "to": 15
   },
   {
@@ -2425,13 +2425,13 @@
     "id": "trans-014-015-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 60.0,
-      "track-0044": 60.0,
-      "track-0058": 60.0
+      "track-0038": 62.0,
+      "track-0044": 62.0,
+      "track-0058": 62.0
     },
-    "mediaSec": 68.0,
+    "mediaSec": 70.0,
     "progress": 1.0,
-    "referenceSec": 68.0,
+    "referenceSec": 70.0,
     "to": 15
   },
   {
@@ -2457,13 +2457,13 @@
     "id": "trans-015-016-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 63.0,
-      "track-0058": 63.0,
+      "track-0038": 65.0,
+      "track-0058": 65.0,
       "track-0078": 0.0
     },
-    "mediaSec": 71.0,
+    "mediaSec": 73.0,
     "progress": 0.0,
-    "referenceSec": 71.0,
+    "referenceSec": 73.0,
     "to": 16
   },
   {
@@ -2474,13 +2474,13 @@
     "id": "trans-015-016-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 63.2,
-      "track-0058": 63.2,
-      "track-0078": 0.0
+      "track-0038": 65.2,
+      "track-0058": 65.2,
+      "track-0078": 0.2
     },
-    "mediaSec": 71.2,
+    "mediaSec": 73.2,
     "progress": 0.1,
-    "referenceSec": 71.2,
+    "referenceSec": 73.2,
     "to": 16
   },
   {
@@ -2491,13 +2491,13 @@
     "id": "trans-015-016-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 63.5,
-      "track-0058": 63.5,
-      "track-0078": 0.0
+      "track-0038": 65.5,
+      "track-0058": 65.5,
+      "track-0078": 0.5
     },
-    "mediaSec": 71.5,
+    "mediaSec": 73.5,
     "progress": 0.25,
-    "referenceSec": 71.5,
+    "referenceSec": 73.5,
     "to": 16
   },
   {
@@ -2508,13 +2508,13 @@
     "id": "trans-015-016-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 64.0,
-      "track-0058": 64.0,
-      "track-0078": 0.0
+      "track-0038": 66.0,
+      "track-0058": 66.0,
+      "track-0078": 1.0
     },
-    "mediaSec": 72.0,
+    "mediaSec": 74.0,
     "progress": 0.5,
-    "referenceSec": 72.0,
+    "referenceSec": 74.0,
     "to": 16
   },
   {
@@ -2525,13 +2525,13 @@
     "id": "trans-015-016-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 64.5,
-      "track-0058": 64.5,
-      "track-0078": 0.0
+      "track-0038": 66.5,
+      "track-0058": 66.5,
+      "track-0078": 1.5
     },
-    "mediaSec": 72.5,
+    "mediaSec": 74.5,
     "progress": 0.75,
-    "referenceSec": 72.5,
+    "referenceSec": 74.5,
     "to": 16
   },
   {
@@ -2542,13 +2542,13 @@
     "id": "trans-015-016-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 64.8,
-      "track-0058": 64.8,
-      "track-0078": 0.0
+      "track-0038": 66.8,
+      "track-0058": 66.8,
+      "track-0078": 1.8
     },
-    "mediaSec": 72.8,
+    "mediaSec": 74.8,
     "progress": 0.9,
-    "referenceSec": 72.8,
+    "referenceSec": 74.8,
     "to": 16
   },
   {
@@ -2559,13 +2559,13 @@
     "id": "trans-015-016-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 65.0,
-      "track-0058": 65.0,
-      "track-0078": 0.0
+      "track-0038": 67.0,
+      "track-0058": 67.0,
+      "track-0078": 2.0
     },
-    "mediaSec": 73.0,
+    "mediaSec": 75.0,
     "progress": 1.0,
-    "referenceSec": 73.0,
+    "referenceSec": 75.0,
     "to": 16
   },
   {
@@ -2591,12 +2591,12 @@
     "id": "trans-016-017-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 68.0,
-      "track-0078": 3.0
+      "track-0038": 70.0,
+      "track-0078": 5.0
     },
-    "mediaSec": 76.0,
+    "mediaSec": 78.0,
     "progress": 0.0,
-    "referenceSec": 76.0,
+    "referenceSec": 78.0,
     "to": 17
   },
   {
@@ -2607,12 +2607,12 @@
     "id": "trans-016-017-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 68.2,
-      "track-0078": 3.2
+      "track-0038": 70.2,
+      "track-0078": 5.2
     },
-    "mediaSec": 76.2,
+    "mediaSec": 78.2,
     "progress": 0.1,
-    "referenceSec": 76.2,
+    "referenceSec": 78.2,
     "to": 17
   },
   {
@@ -2623,12 +2623,12 @@
     "id": "trans-016-017-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 68.5,
-      "track-0078": 3.5
+      "track-0038": 70.5,
+      "track-0078": 5.5
     },
-    "mediaSec": 76.5,
+    "mediaSec": 78.5,
     "progress": 0.25,
-    "referenceSec": 76.5,
+    "referenceSec": 78.5,
     "to": 17
   },
   {
@@ -2639,12 +2639,12 @@
     "id": "trans-016-017-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 69.0,
-      "track-0078": 4.0
+      "track-0038": 71.0,
+      "track-0078": 6.0
     },
-    "mediaSec": 77.0,
+    "mediaSec": 79.0,
     "progress": 0.5,
-    "referenceSec": 77.0,
+    "referenceSec": 79.0,
     "to": 17
   },
   {
@@ -2655,12 +2655,12 @@
     "id": "trans-016-017-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 69.5,
-      "track-0078": 4.5
+      "track-0038": 71.5,
+      "track-0078": 6.5
     },
-    "mediaSec": 77.5,
+    "mediaSec": 79.5,
     "progress": 0.75,
-    "referenceSec": 77.5,
+    "referenceSec": 79.5,
     "to": 17
   },
   {
@@ -2671,12 +2671,12 @@
     "id": "trans-016-017-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 69.8,
-      "track-0078": 4.8
+      "track-0038": 71.8,
+      "track-0078": 6.8
     },
-    "mediaSec": 77.8,
+    "mediaSec": 79.8,
     "progress": 0.9,
-    "referenceSec": 77.8,
+    "referenceSec": 79.8,
     "to": 17
   },
   {
@@ -2687,12 +2687,12 @@
     "id": "trans-016-017-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 70.0,
-      "track-0078": 5.0
+      "track-0038": 72.0,
+      "track-0078": 7.0
     },
-    "mediaSec": 78.0,
+    "mediaSec": 80.0,
     "progress": 1.0,
-    "referenceSec": 78.0,
+    "referenceSec": 80.0,
     "to": 17
   },
   {
@@ -2718,18 +2718,18 @@
     "id": "reverse-002-001-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 2.0,
-      "track-0007": 2.0,
-      "track-0011": 2.0,
-      "track-0012": 2.0,
-      "track-0019": 2.0,
-      "track-0022": 2.0,
-      "track-0023": 2.0,
-      "track-0027": 2.0
+      "track-0003": 4.0,
+      "track-0007": 4.0,
+      "track-0011": 4.0,
+      "track-0012": 4.0,
+      "track-0019": 4.0,
+      "track-0022": 4.0,
+      "track-0023": 4.0,
+      "track-0027": 4.0
     },
-    "mediaSec": 2.0,
+    "mediaSec": 4.0,
     "progress": 0.5,
-    "referenceSec": 2.0,
+    "referenceSec": 4.0,
     "to": 1
   },
   {
@@ -2740,24 +2740,24 @@
     "id": "reverse-003-002-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0007": 7.0,
-      "track-0011": 7.0,
-      "track-0012": 7.0,
-      "track-0019": 7.0,
-      "track-0022": 7.0,
-      "track-0023": 7.0,
-      "track-0027": 7.0,
-      "track-0038": 0.0,
-      "track-0040": 0.0,
-      "track-0042": 0.0,
-      "track-0044": 0.0,
-      "track-0047": 0.0,
-      "track-0050": 0.0,
-      "track-0058": 0.0
+      "track-0007": 9.0,
+      "track-0011": 9.0,
+      "track-0012": 9.0,
+      "track-0019": 9.0,
+      "track-0022": 9.0,
+      "track-0023": 9.0,
+      "track-0027": 9.0,
+      "track-0038": 1.0,
+      "track-0040": 1.0,
+      "track-0042": 1.0,
+      "track-0044": 1.0,
+      "track-0047": 1.0,
+      "track-0050": 1.0,
+      "track-0058": 1.0
     },
-    "mediaSec": 7.0,
+    "mediaSec": 9.0,
     "progress": 0.5,
-    "referenceSec": 7.0,
+    "referenceSec": 9.0,
     "to": 2
   },
   {
@@ -2768,21 +2768,21 @@
     "id": "reverse-004-003-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 12.0,
-      "track-0022": 12.0,
-      "track-0023": 12.0,
-      "track-0027": 12.0,
-      "track-0038": 4.0,
-      "track-0040": 4.0,
-      "track-0042": 4.0,
-      "track-0044": 4.0,
-      "track-0047": 4.0,
-      "track-0050": 4.0,
-      "track-0058": 4.0
+      "track-0019": 14.0,
+      "track-0022": 14.0,
+      "track-0023": 14.0,
+      "track-0027": 14.0,
+      "track-0038": 6.0,
+      "track-0040": 6.0,
+      "track-0042": 6.0,
+      "track-0044": 6.0,
+      "track-0047": 6.0,
+      "track-0050": 6.0,
+      "track-0058": 6.0
     },
-    "mediaSec": 12.0,
+    "mediaSec": 14.0,
     "progress": 0.5,
-    "referenceSec": 12.0,
+    "referenceSec": 14.0,
     "to": 3
   },
   {
@@ -2793,21 +2793,21 @@
     "id": "reverse-005-004-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 17.0,
-      "track-0022": 17.0,
-      "track-0023": 17.0,
-      "track-0027": 17.0,
-      "track-0038": 9.0,
-      "track-0040": 9.0,
-      "track-0042": 9.0,
-      "track-0044": 9.0,
-      "track-0047": 9.0,
-      "track-0050": 9.0,
-      "track-0058": 9.0
+      "track-0019": 19.0,
+      "track-0022": 19.0,
+      "track-0023": 19.0,
+      "track-0027": 19.0,
+      "track-0038": 11.0,
+      "track-0040": 11.0,
+      "track-0042": 11.0,
+      "track-0044": 11.0,
+      "track-0047": 11.0,
+      "track-0050": 11.0,
+      "track-0058": 11.0
     },
-    "mediaSec": 17.0,
+    "mediaSec": 19.0,
     "progress": 0.5,
-    "referenceSec": 17.0,
+    "referenceSec": 19.0,
     "to": 4
   },
   {
@@ -2818,21 +2818,21 @@
     "id": "reverse-006-005-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 22.0,
-      "track-0022": 22.0,
-      "track-0023": 22.0,
-      "track-0027": 22.0,
-      "track-0038": 14.0,
-      "track-0040": 14.0,
-      "track-0042": 14.0,
-      "track-0044": 14.0,
-      "track-0047": 14.0,
-      "track-0050": 14.0,
-      "track-0058": 14.0
+      "track-0019": 24.0,
+      "track-0022": 24.0,
+      "track-0023": 24.0,
+      "track-0027": 24.0,
+      "track-0038": 16.0,
+      "track-0040": 16.0,
+      "track-0042": 16.0,
+      "track-0044": 16.0,
+      "track-0047": 16.0,
+      "track-0050": 16.0,
+      "track-0058": 16.0
     },
-    "mediaSec": 22.0,
+    "mediaSec": 24.0,
     "progress": 0.5,
-    "referenceSec": 22.0,
+    "referenceSec": 24.0,
     "to": 5
   },
   {
@@ -2843,21 +2843,21 @@
     "id": "reverse-007-006-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 27.0,
-      "track-0022": 27.0,
-      "track-0023": 27.0,
-      "track-0027": 27.0,
-      "track-0038": 19.0,
-      "track-0040": 19.0,
-      "track-0042": 19.0,
-      "track-0044": 19.0,
-      "track-0047": 19.0,
-      "track-0050": 19.0,
-      "track-0058": 19.0
+      "track-0019": 29.0,
+      "track-0022": 29.0,
+      "track-0023": 29.0,
+      "track-0027": 29.0,
+      "track-0038": 21.0,
+      "track-0040": 21.0,
+      "track-0042": 21.0,
+      "track-0044": 21.0,
+      "track-0047": 21.0,
+      "track-0050": 21.0,
+      "track-0058": 21.0
     },
-    "mediaSec": 27.0,
+    "mediaSec": 29.0,
     "progress": 0.5,
-    "referenceSec": 27.0,
+    "referenceSec": 29.0,
     "to": 6
   },
   {
@@ -2868,18 +2868,18 @@
     "id": "reverse-008-007-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0019": 32.0,
-      "track-0038": 24.0,
-      "track-0040": 24.0,
-      "track-0042": 24.0,
-      "track-0044": 24.0,
-      "track-0047": 24.0,
-      "track-0050": 24.0,
-      "track-0058": 24.0
+      "track-0019": 34.0,
+      "track-0038": 26.0,
+      "track-0040": 26.0,
+      "track-0042": 26.0,
+      "track-0044": 26.0,
+      "track-0047": 26.0,
+      "track-0050": 26.0,
+      "track-0058": 26.0
     },
-    "mediaSec": 32.0,
+    "mediaSec": 34.0,
     "progress": 0.5,
-    "referenceSec": 32.0,
+    "referenceSec": 34.0,
     "to": 7
   },
   {
@@ -2890,17 +2890,17 @@
     "id": "reverse-009-008-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 29.0,
-      "track-0040": 29.0,
-      "track-0042": 29.0,
-      "track-0044": 29.0,
-      "track-0047": 29.0,
-      "track-0050": 29.0,
-      "track-0058": 29.0
+      "track-0038": 31.0,
+      "track-0040": 31.0,
+      "track-0042": 31.0,
+      "track-0044": 31.0,
+      "track-0047": 31.0,
+      "track-0050": 31.0,
+      "track-0058": 31.0
     },
-    "mediaSec": 37.0,
+    "mediaSec": 39.0,
     "progress": 0.5,
-    "referenceSec": 37.0,
+    "referenceSec": 39.0,
     "to": 8
   },
   {
@@ -2911,17 +2911,17 @@
     "id": "reverse-010-009-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 34.0,
-      "track-0040": 34.0,
-      "track-0042": 34.0,
-      "track-0044": 34.0,
-      "track-0047": 34.0,
-      "track-0050": 34.0,
-      "track-0058": 34.0
+      "track-0038": 36.0,
+      "track-0040": 36.0,
+      "track-0042": 36.0,
+      "track-0044": 36.0,
+      "track-0047": 36.0,
+      "track-0050": 36.0,
+      "track-0058": 36.0
     },
-    "mediaSec": 42.0,
+    "mediaSec": 44.0,
     "progress": 0.5,
-    "referenceSec": 42.0,
+    "referenceSec": 44.0,
     "to": 9
   },
   {
@@ -2932,16 +2932,16 @@
     "id": "reverse-011-010-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 39.0,
-      "track-0040": 39.0,
-      "track-0042": 39.0,
-      "track-0044": 39.0,
-      "track-0050": 39.0,
-      "track-0058": 39.0
+      "track-0038": 41.0,
+      "track-0040": 41.0,
+      "track-0042": 41.0,
+      "track-0044": 41.0,
+      "track-0050": 41.0,
+      "track-0058": 41.0
     },
-    "mediaSec": 47.0,
+    "mediaSec": 49.0,
     "progress": 0.5,
-    "referenceSec": 47.0,
+    "referenceSec": 49.0,
     "to": 10
   },
   {
@@ -2952,15 +2952,15 @@
     "id": "reverse-012-011-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 44.0,
-      "track-0040": 44.0,
-      "track-0042": 44.0,
-      "track-0044": 44.0,
-      "track-0058": 44.0
+      "track-0038": 46.0,
+      "track-0040": 46.0,
+      "track-0042": 46.0,
+      "track-0044": 46.0,
+      "track-0058": 46.0
     },
-    "mediaSec": 52.0,
+    "mediaSec": 54.0,
     "progress": 0.5,
-    "referenceSec": 52.0,
+    "referenceSec": 54.0,
     "to": 11
   },
   {
@@ -2971,15 +2971,15 @@
     "id": "reverse-013-012-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 49.0,
-      "track-0040": 49.0,
-      "track-0042": 49.0,
-      "track-0044": 49.0,
-      "track-0058": 49.0
+      "track-0038": 51.0,
+      "track-0040": 51.0,
+      "track-0042": 51.0,
+      "track-0044": 51.0,
+      "track-0058": 51.0
     },
-    "mediaSec": 57.0,
+    "mediaSec": 59.0,
     "progress": 0.5,
-    "referenceSec": 57.0,
+    "referenceSec": 59.0,
     "to": 12
   },
   {
@@ -2990,14 +2990,14 @@
     "id": "reverse-014-013-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 54.0,
-      "track-0042": 54.0,
-      "track-0044": 54.0,
-      "track-0058": 54.0
+      "track-0038": 56.0,
+      "track-0042": 56.0,
+      "track-0044": 56.0,
+      "track-0058": 56.0
     },
-    "mediaSec": 62.0,
+    "mediaSec": 64.0,
     "progress": 0.5,
-    "referenceSec": 62.0,
+    "referenceSec": 64.0,
     "to": 13
   },
   {
@@ -3008,13 +3008,13 @@
     "id": "reverse-015-014-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 59.0,
-      "track-0044": 59.0,
-      "track-0058": 59.0
+      "track-0038": 61.0,
+      "track-0044": 61.0,
+      "track-0058": 61.0
     },
-    "mediaSec": 67.0,
+    "mediaSec": 69.0,
     "progress": 0.5,
-    "referenceSec": 67.0,
+    "referenceSec": 69.0,
     "to": 14
   },
   {
@@ -3025,13 +3025,13 @@
     "id": "reverse-016-015-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 64.0,
-      "track-0058": 64.0,
-      "track-0078": 0.0
+      "track-0038": 66.0,
+      "track-0058": 66.0,
+      "track-0078": 1.0
     },
-    "mediaSec": 72.0,
+    "mediaSec": 74.0,
     "progress": 0.5,
-    "referenceSec": 72.0,
+    "referenceSec": 74.0,
     "to": 15
   },
   {
@@ -3042,12 +3042,12 @@
     "id": "reverse-017-016-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0038": 69.0,
-      "track-0078": 4.0
+      "track-0038": 71.0,
+      "track-0078": 6.0
     },
-    "mediaSec": 77.0,
+    "mediaSec": 79.0,
     "progress": 0.5,
-    "referenceSec": 77.0,
+    "referenceSec": 79.0,
     "to": 16
   }
 ]

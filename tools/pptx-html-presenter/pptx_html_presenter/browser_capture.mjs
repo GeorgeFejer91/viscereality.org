@@ -168,11 +168,20 @@ async function waitForRenderableFrame(page, mediaTimeSec, mediaClocks) {
     };
   }
   const seek = await seekVideos(page, mediaTimeSec, mediaClocks);
-  await page.waitForTimeout(300);
-  const diagnostics = await collectRenderableDiagnostics(page);
   if (!seek.ok) {
+    const diagnostics = await collectRenderableDiagnostics(page);
     return { ok: false, error: seek.error, diagnostics };
   }
+  try {
+    await page.waitForFunction(() => {
+      const diagnostics = window.__pptxHtmlPresenterDiagnostics();
+      return diagnostics.videosPending === 0;
+    }, null, { timeout: 5000 });
+  } catch {
+    const diagnostics = await collectRenderableDiagnostics(page);
+    return { ok: false, error: "visible-video-not-ready", diagnostics };
+  }
+  const diagnostics = await collectRenderableDiagnostics(page);
   if (Number(diagnostics.videosPending || 0) > 0) {
     return { ok: false, error: "visible-video-not-ready", diagnostics };
   }
@@ -209,7 +218,7 @@ async function seekVideos(page, seconds, mediaClocks) {
       }
       video.addEventListener("seeked", finish, { once: true });
       video.currentTime = target;
-      setTimeout(finish, 1200);
+      setTimeout(finish, 2500);
     })));
     }, { targetSeconds: seconds, trackSeconds: mediaClocks || {} });
     return { ok: true };

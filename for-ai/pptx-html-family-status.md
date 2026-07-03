@@ -32,6 +32,7 @@ presentations/shared-assets/viscereality/
 - Main tool directory: `tools/pptx-html-presenter/`.
 - Family config: `presentations/viscereality-family.config.json`.
 - Shared default presenter config: `presentations/viscereality-family.defaults.json`.
+- MuC deck-specific presenter config: `presentations/MuC-scene.config.json`.
 - Current staging output targets:
   - `presentations/MuC-scene/`
   - `presentations/alpCHI-scene/`
@@ -49,7 +50,7 @@ presentations/shared-assets/viscereality/
 - Latest family build status: `ok`.
 - Latest family HTML visual audit status: `ok`.
 - Latest family publish status: `ok`; the public presentation hub points at the three scene players and keeps chunked fallback links secondary.
-- PowerPoint MP4 oracle QA: not yet run for the full three-deck family in the current pass; do not claim oracle parity until reference MP4 export/frame comparison is completed.
+- PowerPoint MP4 oracle QA: only a MuC slide-1 smoke pass has run in the current pass. It is useful for calibration but still fails strict SSIM; do not claim oracle parity until full reference MP4 export/frame comparison passes or reviewed exceptions are written.
 
 Implemented family CLI commands:
 
@@ -57,6 +58,7 @@ Implemented family CLI commands:
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family inspect presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit presentations\viscereality-family.config.json
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --ffmpeg-bin "C:\path\to\ffmpeg.exe"
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family publish presentations\viscereality-family.config.json
 ```
 
@@ -96,11 +98,25 @@ Current source PPTX parse results from family preflight:
   - Solution: for opaque GIFs, the optimizer now tries MP4 first, then progressively smaller MP4 variants before animated WebP fallback. The MuC oversized GIF now builds as an under-limit MP4 runtime asset.
 - Problem: Public GitHub Pages cannot safely host very large original animation blobs just for provenance when the runtime uses a smaller optimized equivalent.
   - Solution: family builds now publish only referenced GitHub-safe runtime assets in the shared library; oversized originals remain represented by hashes/source metadata in reports rather than copied into the public asset tree.
+- Problem: Rebuilding MuC changed optimized media content hashes even when source assets were unchanged, causing avoidable shared-asset churn.
+  - Solution: ffmpeg transcodes now strip metadata/chapters and use single-threaded bitexact-oriented WebM/MP4/WebP output settings. This is slower, especially for VP9-alpha, but should make content-hashed optimized assets reproducible across rebuilds.
+- Problem: MuC PowerPoint-oracle timing compared transition frames with the wrong reference lead behavior inherited from BBD26-style defaults.
+  - Solution: shared family QA defaults now use `transition_reference_lead_fraction: 0.0`; BBD26 keeps its own deck config. MuC has a deck-specific config with a calibrated transition 1->2 Morph progress map.
+- Problem: MuC oracle capture briefly blocked on `visible-video-not-ready` for a newly encoded WebM even though the frame could be captured.
+  - Solution: `browser_capture.mjs` now waits longer for visible videos to reach `HAVE_CURRENT_DATA` after seek and reports readiness diagnostics if that still fails.
 - Problem: Visual audit initially failed with `playwright-missing`.
   - Solution: use the bundled Node executable with Playwright's pnpm package root, for example `--node-bin C:\Users\gfeje\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe --playwright-dir C:\Users\gfeje\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules\.pnpm\playwright@1.61.1`.
 - Problem: Visual audit capture initially hung because the capture server served only a deck folder while scene manifests referenced `../shared-assets/...`.
   - Solution: `browser_capture.mjs` now serves the enclosing presentations folder and opens `/<deck-folder>/index.html`, allowing shared asset URLs to resolve.
 - Durable rule: super-large assets must be converted to visually lossless or visually acceptable HTML-friendly formats that stay GitHub-compatible. Use MP4/WebM/WebP according to alpha/playback needs; do not publish giant original blobs unless LFS/external hosting is explicitly chosen.
+
+Current shared public asset library check after the MuC deterministic rebuild:
+
+- `presentations/shared-assets/viscereality/` contains 100 runtime/source files, about 522.95 MiB total.
+- Largest shared asset is about 48.879 MiB.
+- Files above 50 MiB: 0.
+- Files above 100 MiB: 0.
+- Family builds now emit `sharedAssetLimits` so future agents can verify the public shared library gate without hunting through per-deck reports.
 
 ## Latest HTML Visual Audit
 
@@ -111,6 +127,33 @@ The latest browser-based visual audit captured and passed:
 - `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures.
 
 Contact sheets were manually inspected at audit scale for settled slides and transition midpoints. No blank frames, missing shared media, or obvious panel-child drift were observed in that review. This is not a substitute for PowerPoint oracle SSIM QA.
+
+MuC was re-audited after the deterministic rebuild and still passed 145 public HTML samples with 0 failures.
+
+## Latest PowerPoint Oracle Smoke
+
+Only the MuC slide-1 smoke pass has been run after adding `family oracle-qa`:
+
+```powershell
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family oracle-qa presentations\viscereality-family.config.json --decks MuC --slides 1 --target public --force --min-free-gb 0 --ffmpeg-bin "C:\path\to\ffmpeg.exe"
+```
+
+Current result:
+
+- Family oracle status: `failed`, not blocked.
+- Deck: `MuC`.
+- Scope: slide 1 settled frame plus transition 1->2 samples.
+- Samples/comparisons: 8.
+- Failed comparisons: 8.
+- Minimum SSIM: about `0.624`.
+- Settled slide 1 SSIM: about `0.789`.
+- Best transition endpoint/midpoint values are improved by the MuC progress map, but still below the strict Morph threshold `0.965`.
+
+Interpretation:
+
+- The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
+- The transition 1->2 Morph progress calibration improved the worst mismatch substantially compared with the earlier uncalibrated smoke, but remaining differences include text placement/scale, background/video brightness/phase, and full-frame composition differences.
+- Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish
 
@@ -130,9 +173,11 @@ The previous chunked players were moved to:
 
 ## Remaining Work
 
-1. Run PowerPoint MP4 oracle QA when disk space allows; do not claim full oracle pass without it.
-2. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
-3. Commit and push only intended files; do not stage unrelated root `index.html` changes.
+1. Run full PowerPoint MP4 oracle QA for MuC, alpCHI, and BBD26 when disk space allows; do not claim full oracle pass without it.
+2. Add/fine-tune deck-specific config for alpCHI if its oracle smoke shows the same transition timing behavior as MuC.
+3. Continue calibrating MuC visual parity: text/layout metrics, media phase/brightness, and additional Morph progress maps.
+4. Continue comparing future PPTX revisions against contact sheets and PowerPoint oracle frames before replacing public decks again.
+5. Commit and push only intended files; do not stage unrelated root `index.html` changes.
 
 ## Verification Commands
 

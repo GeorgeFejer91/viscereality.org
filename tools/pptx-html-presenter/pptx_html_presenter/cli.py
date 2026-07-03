@@ -8,7 +8,7 @@ from pathlib import Path
 from .build import build_presentation, inspect_pptx
 from .config import PROFILE_PRESETS, PresenterConfig, load_config
 from .errors import PresenterError
-from .family import build_family, inspect_family, publish_family, visual_audit_family
+from .family import build_family, inspect_family, oracle_qa_family, publish_family, visual_audit_family
 from .publish import publish_build
 from .qa import (
     run_candidate_sweep,
@@ -214,6 +214,23 @@ def build_parser() -> argparse.ArgumentParser:
     family_audit.add_argument("family_config")
     family_audit.add_argument("--node-bin")
     family_audit.add_argument("--playwright-dir")
+
+    family_oracle = family_sub.add_parser("oracle-qa", help="Run PowerPoint MP4 oracle QA for all family decks.")
+    family_oracle.add_argument("family_config")
+    family_oracle.add_argument("--ffmpeg-bin")
+    family_oracle.add_argument("--node-bin")
+    family_oracle.add_argument("--playwright-dir")
+    family_oracle.add_argument("--target", choices=["public", "staging"], default="public")
+    family_oracle.add_argument("--keep-reference", action="store_true")
+    family_oracle.add_argument("--force", action="store_true")
+    family_oracle.add_argument("--min-free-gb", type=float)
+    family_oracle.add_argument(
+        "--transition-reference-lead-fraction",
+        type=float,
+        help="Override QA reference transition lead fraction for timing calibration.",
+    )
+    family_oracle.add_argument("--slides", help="Comma-separated slide numbers to sample.")
+    family_oracle.add_argument("--decks", help="Comma-separated family deck IDs to run.")
 
     family_publish = family_sub.add_parser("publish", help="Publish family staging builds to public deck folders.")
     family_publish.add_argument("family_config")
@@ -471,6 +488,22 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print(f"family-visual-audit={report['status']} decks={len(report['decks'])}")
                 return 0
+            if args.family_command == "oracle-qa":
+                report = oracle_qa_family(
+                    config_path,
+                    ffmpeg_bin=args.ffmpeg_bin,
+                    node_bin=args.node_bin,
+                    playwright_dir=Path(args.playwright_dir) if args.playwright_dir else None,
+                    target=args.target,
+                    keep_reference=args.keep_reference,
+                    force=args.force,
+                    min_free_gb=args.min_free_gb,
+                    slides=_parse_slide_filter(args.slides),
+                    deck_ids=_parse_deck_filter(args.decks),
+                    transition_reference_lead_fraction=args.transition_reference_lead_fraction,
+                )
+                print(f"family-oracle-qa={report['status']} decks={len(report['decks'])}")
+                return 0
             if args.family_command == "publish":
                 report = publish_family(
                     config_path,
@@ -562,6 +595,12 @@ def _parse_float_list(value: str) -> list[float]:
 
 
 def _parse_track_filter(value: str | None) -> set[str] | None:
+    if not value:
+        return None
+    return {part.strip() for part in value.split(",") if part.strip()}
+
+
+def _parse_deck_filter(value: str | None) -> set[str] | None:
     if not value:
         return None
     return {part.strip() for part in value.split(",") if part.strip()}

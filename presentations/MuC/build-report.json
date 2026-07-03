@@ -1,7 +1,7 @@
 {
   "assetCount": 39,
   "assetMode": "copy",
-  "generatedAtUtc": "2026-07-03T17:21:40+00:00",
+  "generatedAtUtc": "2026-07-03T18:23:36+00:00",
   "githubPagesSafe": true,
   "originalGithubPagesSafe": true,
   "originalStatus": "ok",
@@ -21,9 +21,9 @@
     "missingReferences": [],
     "oversizeAssets": [],
     "prunedLocalAssets": {
-      "bytes": 178074253,
+      "bytes": 178101365,
       "count": 39,
-      "mb": 169.825
+      "mb": 169.851
     },
     "rewrittenReferences": 78,
     "root": "presentations/shared-assets/viscereality"

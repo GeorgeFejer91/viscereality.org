@@ -18,6 +18,7 @@
       "staging": "presentations/MuC-scene",
       "public_dir": "MuC",
       "fallback_dir": "MuC-chunked",
+      "config": "presentations/MuC-scene.config.json",
       "slug": "MuC",
       "expected_slides": 17,
       "conference_url": "https://muc2025.mensch-und-computer.de/en/",
