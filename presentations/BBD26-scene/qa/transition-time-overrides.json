@@ -1,0 +1,1144 @@
+{
+  "transition_time_overrides": [
+    {
+      "from": 1,
+      "median_aligned_ssim": 0.893115,
+      "median_alignment_delta_sec": -1.0,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -1.0,
+          "score": 0.983086
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -1.075,
+          "score": 0.98363
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -1.0,
+          "score": 0.968376
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -1.0,
+          "score": 0.83099
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 1.0,
+          "score": 0.401203
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.95,
+          "score": 0.733822
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 1.0,
+          "score": 0.893115
+        }
+      ],
+      "reference_offset_sec": -1.0,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 2
+    },
+    {
+      "from": 2,
+      "median_aligned_ssim": 0.965486,
+      "median_alignment_delta_sec": 0.675,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.875,
+          "score": 0.965486
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.675,
+          "score": 0.965486
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.375,
+          "score": 0.965486
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.125,
+          "score": 0.965486
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 1.0,
+          "score": 0.329447
+        }
+      ],
+      "reference_offset_sec": 0.675,
+      "sample_count": 5,
+      "source": "transition-time",
+      "to": 3
+    },
+    {
+      "from": 3,
+      "median_aligned_ssim": 0.739102,
+      "median_alignment_delta_sec": -1.0,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -1.0,
+          "score": 0.866439
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -1.075,
+          "score": 0.736393
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -1.0,
+          "score": 0.597209
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -1.0,
+          "score": 0.336765
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -1.0,
+          "score": 0.739102
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": -1.05,
+          "score": 0.798095
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": -1.0,
+          "score": 0.797521
+        }
+      ],
+      "reference_offset_sec": -1.0,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 4
+    },
+    {
+      "from": 4,
+      "median_aligned_ssim": 0.619988,
+      "median_alignment_delta_sec": 0.625,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.635,
+          "score": 0.629914
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.634,
+          "score": 0.597682
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.633,
+          "score": 0.438206
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -1.12,
+          "score": 0.377823
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -1.122,
+          "score": 0.619988
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": -1.124,
+          "score": 0.813521
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.625,
+          "score": 0.92353
+        }
+      ],
+      "reference_offset_sec": 0.625,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 5
+    },
+    {
+      "from": 5,
+      "median_aligned_ssim": 0.895291,
+      "median_alignment_delta_sec": 0.19,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.615,
+          "score": 0.926009
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.415,
+          "score": 0.895291
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.115,
+          "score": 0.896566
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.385,
+          "score": 0.921349
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.365,
+          "score": 0.819557
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.19,
+          "score": 0.817614
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": -0.01,
+          "score": 0.815094
+        }
+      ],
+      "reference_offset_sec": 0.19,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 6
+    },
+    {
+      "from": 6,
+      "median_aligned_ssim": 0.692912,
+      "median_alignment_delta_sec": -0.01,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.385,
+          "score": 0.798872
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.04,
+          "score": 0.678765
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.135,
+          "score": 0.547028
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.135,
+          "score": 0.571128
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -0.01,
+          "score": 0.692912
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.065,
+          "score": 0.864918
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.115,
+          "score": 0.879914
+        }
+      ],
+      "reference_offset_sec": -0.01,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 7
+    },
+    {
+      "from": 7,
+      "median_aligned_ssim": 0.739476,
+      "median_alignment_delta_sec": -0.01,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.385,
+          "score": 0.87889
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.04,
+          "score": 0.725605
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.01,
+          "score": 0.85021
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.135,
+          "score": 0.756624
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -0.01,
+          "score": 0.677516
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.065,
+          "score": 0.687605
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.74,
+          "score": 0.739476
+        }
+      ],
+      "reference_offset_sec": -0.01,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 8
+    },
+    {
+      "from": 8,
+      "median_aligned_ssim": 0.589927,
+      "median_alignment_delta_sec": 0.165,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.76,
+          "score": 0.749865
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.165,
+          "score": 0.719565
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.01,
+          "score": 0.577761
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.76,
+          "score": 0.423314
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.49,
+          "score": 0.491346
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.565,
+          "score": 0.60381
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.24,
+          "score": 0.589927
+        }
+      ],
+      "reference_offset_sec": 0.165,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 9
+    },
+    {
+      "from": 9,
+      "median_aligned_ssim": 0.561467,
+      "median_alignment_delta_sec": 0.115,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.635,
+          "score": 0.865213
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.165,
+          "score": 0.574693
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.115,
+          "score": 0.48208
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.01,
+          "score": 0.489035
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.115,
+          "score": 0.497347
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.19,
+          "score": 0.561467
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.365,
+          "score": 0.571636
+        }
+      ],
+      "reference_offset_sec": 0.115,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 10
+    },
+    {
+      "from": 10,
+      "median_aligned_ssim": 0.550504,
+      "median_alignment_delta_sec": 0.115,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.76,
+          "score": 0.875825
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.96,
+          "score": 0.52751
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.115,
+          "score": 0.605193
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.01,
+          "score": 0.488524
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.115,
+          "score": 0.550504
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.315,
+          "score": 0.545166
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.365,
+          "score": 0.577231
+        }
+      ],
+      "reference_offset_sec": 0.115,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 11
+    },
+    {
+      "from": 11,
+      "median_aligned_ssim": 0.637301,
+      "median_alignment_delta_sec": -0.885,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.885,
+          "score": 0.637301
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -1.085,
+          "score": 0.572234
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.385,
+          "score": 0.553944
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.885,
+          "score": 0.569982
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -0.385,
+          "score": 0.65051
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": -0.685,
+          "score": 0.748047
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": -0.885,
+          "score": 0.821388
+        }
+      ],
+      "reference_offset_sec": -0.885,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 12
+    },
+    {
+      "from": 12,
+      "median_aligned_ssim": 0.547137,
+      "median_alignment_delta_sec": 0.24,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.885,
+          "score": 0.59462
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -1.085,
+          "score": 0.540623
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.24,
+          "score": 0.547137
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.115,
+          "score": 0.512473
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.24,
+          "score": 0.517289
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.315,
+          "score": 0.574021
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.579015
+        }
+      ],
+      "reference_offset_sec": 0.24,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 13
+    },
+    {
+      "from": 13,
+      "median_aligned_ssim": 0.540587,
+      "median_alignment_delta_sec": 0.24,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -1.01,
+          "score": 0.580158
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.415,
+          "score": 0.575476
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.24,
+          "score": 0.513015
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.24,
+          "score": 0.458822
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.24,
+          "score": 0.502878
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.44,
+          "score": 0.540587
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.594148
+        }
+      ],
+      "reference_offset_sec": 0.24,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 14
+    },
+    {
+      "from": 14,
+      "median_aligned_ssim": 0.549936,
+      "median_alignment_delta_sec": -0.335,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.135,
+          "score": 0.559556
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.335,
+          "score": 0.55521
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.635,
+          "score": 0.554061
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.135,
+          "score": 0.549936
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": -0.635,
+          "score": 0.547772
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": -0.935,
+          "score": 0.549824
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": -0.135,
+          "score": 0.5484
+        }
+      ],
+      "reference_offset_sec": -0.335,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 15
+    },
+    {
+      "from": 15,
+      "median_aligned_ssim": 0.498562,
+      "median_alignment_delta_sec": 0.365,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.135,
+          "score": 0.547446
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.335,
+          "score": 0.498082
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.365,
+          "score": 0.498562
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.24,
+          "score": 0.444509
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.365,
+          "score": 0.46905
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.44,
+          "score": 0.52663
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.74,
+          "score": 0.552971
+        }
+      ],
+      "reference_offset_sec": 0.365,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 16
+    },
+    {
+      "from": 16,
+      "median_aligned_ssim": 0.528361,
+      "median_alignment_delta_sec": 0.49,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.26,
+          "score": 0.552966
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.54,
+          "score": 0.524317
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.49,
+          "score": 0.548479
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.365,
+          "score": 0.354461
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.49,
+          "score": 0.528361
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.565,
+          "score": 0.451737
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.604088
+        }
+      ],
+      "reference_offset_sec": 0.49,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 17
+    },
+    {
+      "from": 17,
+      "median_aligned_ssim": 0.502383,
+      "median_alignment_delta_sec": 0.615,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.135,
+          "score": 0.856614
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.335,
+          "score": 0.375701
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.615,
+          "score": 0.502383
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.49,
+          "score": 0.42995
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.615,
+          "score": 0.365012
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.69,
+          "score": 0.657126
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.876103
+        }
+      ],
+      "reference_offset_sec": 0.615,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 18
+    },
+    {
+      "from": 18,
+      "median_aligned_ssim": 0.496043,
+      "median_alignment_delta_sec": 0.74,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.385,
+          "score": 0.876041
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.79,
+          "score": 0.419589
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.74,
+          "score": 0.404287
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.615,
+          "score": 0.508964
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.74,
+          "score": 0.405915
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.815,
+          "score": 0.496043
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.607993
+        }
+      ],
+      "reference_offset_sec": 0.74,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 19
+    },
+    {
+      "from": 19,
+      "median_aligned_ssim": 0.789748,
+      "median_alignment_delta_sec": 0.0,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.950224
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.135,
+          "score": 0.885817
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.865,
+          "score": 0.356688
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.74,
+          "score": 0.429422
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.865,
+          "score": 0.328182
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.94,
+          "score": 0.620102
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 1.74,
+          "score": 0.693678
+        }
+      ],
+      "reference_offset_sec": 0.865,
+      "sample_count": 7,
+      "source": "transition-time-hybrid-reviewed",
+      "to": 20
+    },
+    {
+      "from": 20,
+      "median_aligned_ssim": 0.541255,
+      "median_alignment_delta_sec": 0.865,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.26,
+          "score": 0.730715
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.96,
+          "score": 0.314798
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.99,
+          "score": 0.333657
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.865,
+          "score": 0.501227
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.99,
+          "score": 0.569913
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.815,
+          "score": 0.566559
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.541255
+        }
+      ],
+      "reference_offset_sec": 0.865,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 21
+    },
+    {
+      "from": 21,
+      "median_aligned_ssim": 0.486463,
+      "median_alignment_delta_sec": 0.99,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.74,
+          "score": 0.75732
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.335,
+          "score": 0.486463
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.99,
+          "score": 0.392791
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.99,
+          "score": 0.541037
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.99,
+          "score": 0.518818
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.94,
+          "score": 0.432294
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.453223
+        }
+      ],
+      "reference_offset_sec": 0.99,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 22
+    },
+    {
+      "from": 22,
+      "median_aligned_ssim": 0.603385,
+      "median_alignment_delta_sec": 0.99,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.76,
+          "score": 0.765336
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.04,
+          "score": 0.435667
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.99,
+          "score": 0.339776
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.99,
+          "score": 0.642014
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.99,
+          "score": 0.569553
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.94,
+          "score": 0.603385
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.689779
+        }
+      ],
+      "reference_offset_sec": 0.99,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 23
+    },
+    {
+      "from": 23,
+      "median_aligned_ssim": 0.83288,
+      "median_alignment_delta_sec": -0.385,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -0.885,
+          "score": 0.83288
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -1.085,
+          "score": 0.83288
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.385,
+          "score": 0.83288
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -0.885,
+          "score": 0.83288
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.99,
+          "score": 0.722344
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.94,
+          "score": 0.762261
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.767667
+        }
+      ],
+      "reference_offset_sec": -0.385,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 24
+    },
+    {
+      "from": 24,
+      "median_aligned_ssim": 0.670656,
+      "median_alignment_delta_sec": 0.615,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": -1.01,
+          "score": 0.768528
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.085,
+          "score": 0.743095
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": 0.99,
+          "score": 0.670656
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": 0.99,
+          "score": 0.679765
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.615,
+          "score": 0.540846
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.44,
+          "score": 0.526802
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.99,
+          "score": 0.591123
+        }
+      ],
+      "reference_offset_sec": 0.615,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 25
+    },
+    {
+      "from": 25,
+      "median_aligned_ssim": 0.788948,
+      "median_alignment_delta_sec": 0.115,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.115,
+          "score": 0.788948
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": -0.085,
+          "score": 0.788948
+        },
+        {
+          "progress": 0.25,
+          "reference_offset_sec": -0.385,
+          "score": 0.788948
+        },
+        {
+          "progress": 0.5,
+          "reference_offset_sec": -1.01,
+          "score": 0.788939
+        },
+        {
+          "progress": 0.75,
+          "reference_offset_sec": 0.99,
+          "score": 0.84471
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.94,
+          "score": 0.845882
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.846034
+        }
+      ],
+      "reference_offset_sec": 0.115,
+      "sample_count": 7,
+      "source": "transition-time",
+      "to": 26
+    }
+  ]
+}

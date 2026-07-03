@@ -1,0 +1,29 @@
+{
+  "transition_progress_overrides": [
+    {
+      "anchor_tracks": [
+        "track-0084",
+        "track-0087"
+      ],
+      "from": 19,
+      "median_score": 0.944072,
+      "points": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
+        }
+      ],
+      "sample_count": 3,
+      "source": "morph-progress",
+      "to": 20
+    }
+  ]
+}

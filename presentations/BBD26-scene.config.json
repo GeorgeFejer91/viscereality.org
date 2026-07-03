@@ -1,0 +1,189 @@
+{
+  "title": "Berlin Breathwork Days 2026",
+  "slug": "BBD26-scene",
+  "output_path": "presentations/BBD26-scene",
+  "profile": "github-pages-1080",
+  "asset_policy": {
+    "mode": "copy",
+    "soft_max_mb": 50,
+    "hard_max_mb": 100,
+    "transcode_gif": true,
+    "transcode_video": true,
+    "webp_quality": 88,
+    "video_crf": 24,
+    "allow_oversize_assets": true,
+    "prune_unreferenced_source_assets": true
+  },
+  "auto_advance": [
+    {
+      "from": 3,
+      "to": 4,
+      "delay_sec": 0,
+      "source": "combine-slide-3-4"
+    }
+  ],
+  "morph_policy": {
+    "match_threshold": 55,
+    "duration_default_sec": 2,
+    "easing": "easeInOutQuad",
+    "fade_unmatched": true,
+    "unmatched_fade_start": 0.5,
+    "unmatched_fade_end": 0.75,
+    "transition_unmatched_fade_overrides": [
+      {
+        "from": 2,
+        "to": 3,
+        "enter_start": 1.0,
+        "enter_end": 1.0,
+        "source": "slide02-focused-qa"
+      }
+    ],
+    "transition_progress_overrides": [
+      {
+        "from": 17,
+        "to": 18,
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.125 },
+          { "progress": 0.5, "value": 0.467 },
+          { "progress": 0.75, "value": 0.875 },
+          { "progress": 0.9, "value": 0.98 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "source": "slide17-panel-bound-calibration"
+      }
+    ],
+    "transition_progress_overrides_file": "BBD26-scene/qa/morph-progress-overrides.json",
+    "transition_track_progress_overrides": [
+      {
+        "from": 19,
+        "to": 20,
+        "track_id": "track-0084",
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.1 },
+          { "progress": 0.5, "value": 0.5 },
+          { "progress": 0.75, "value": 0.9 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "source": "track-progress-current-panel-calibration",
+        "score": 0.539362
+      },
+      {
+        "from": 19,
+        "to": 20,
+        "track_id": "track-0087",
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.3 },
+          { "progress": 0.5, "value": 0.4 },
+          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "source": "track-progress-current-panel-calibration",
+        "score": 0.542942
+      }
+    ]
+  },
+  "outline_policy": {
+    "normalize_white_outlines": true,
+    "border_on_top": true,
+    "width_pct": 0.0055,
+    "min_px": 3,
+    "max_px": 7
+  },
+  "qa_policy": {
+    "slide_ssim": 0.985,
+    "morph_ssim": 0.965,
+    "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
+    "slide_hold_sec": 3,
+    "settled_offset_sec": 0.5,
+    "transition_reference_lead_fraction": 1.0,
+    "slide_timed_video_phase_sec": 0.0
+  },
+  "transition_time_overrides_file": "BBD26-scene/qa/transition-time-overrides.json",
+  "raster_fallback_overrides_file": "BBD26-scene-fallbacks/combined-fallback-overrides.json",
+  "media_phase_overrides": [
+    {
+      "slide": 16,
+      "object_id": "s16-o3",
+      "track_id": "track-0077",
+      "asset_id": "asset-b34ce151f7018046",
+      "name": "Picture 2",
+      "phase_sec": -2.0,
+      "score": 0.545308,
+      "source": "media-phase-persistent-loop-origin",
+      "observed_slide": 17,
+      "observed_object_id": "s17-o49",
+      "target_reason": "persistent-loop-origin"
+    },
+    {
+      "slide": 17,
+      "object_id": "s17-o9",
+      "track_id": "track-0078",
+      "asset_id": "asset-c1478e568641a55a",
+      "name": "Combined01_spedup_30s_hq_playback",
+      "phase_sec": 1.2,
+      "score": 0.912288,
+      "source": "media-phase-finer"
+    },
+    {
+      "slide": 18,
+      "object_id": "s18-o11",
+      "track_id": "track-0081",
+      "asset_id": "asset-34a2f729c61b7c79",
+      "name": "Combined02_spedup_30s_hq_playback",
+      "phase_sec": 0.0,
+      "score": 0.940162,
+      "source": "media-phase"
+    },
+    {
+      "slide": 19,
+      "object_id": "s19-o10",
+      "track_id": "track-0085",
+      "asset_id": "asset-a94bc7da5c6d4913",
+      "name": "Combined04_spedup_30s_hq_playback",
+      "phase_sec": 1.0,
+      "score": 0.909543,
+      "source": "media-phase"
+    },
+    {
+      "slide": 20,
+      "object_id": "s20-o3",
+      "track_id": "track-0086",
+      "asset_id": "asset-0902201da080c1fe",
+      "name": "Combined06_spedup_30s_hq_playback",
+      "phase_sec": 2.0,
+      "score": 0.519615,
+      "source": "media-phase-verified-full-slide"
+    }
+  ],
+  "transition_media_phase_overrides": [
+    {
+      "from": 18,
+      "to": 19,
+      "track_id": "track-0086",
+      "asset_id": "asset-a94bc7da5c6d4913",
+      "name": "Combined04_spedup_30s_hq_playback",
+      "phase_sec": -0.115,
+      "score": 0.84789,
+      "source": "media-phase-transition-live-incoming"
+    },
+    {
+      "from": 19,
+      "to": 20,
+      "track_id": "track-0086",
+      "asset_id": "asset-0902201da080c1fe",
+      "name": "Combined06_spedup_30s_hq_playback",
+      "phase_sec": 0.0,
+      "score": 0.637699,
+      "source": "transition-phase-scan-reviewed"
+    }
+  ],
+  "publish_replace": false
+}

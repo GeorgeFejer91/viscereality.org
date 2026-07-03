@@ -39,5 +39,14 @@
       conferenceUrl: "https://www.berlinbreathwork.org/en/bbd26-programm",
       conferenceLabel: "Berlin Breathwork Days",
     }),
+    "BBD26-scene": Object.freeze({
+      id: "BBD26-scene",
+      title: "Berlin Breathwork Days 2026 - Scene Player",
+      viewerPath: "/presentations/BBD26-scene/",
+      manifestPath: "/presentations/BBD26-scene/deck.scene.json",
+      previewImage: "/presentations/BBD26-scene/preview.jpg",
+      conferenceUrl: "https://www.berlinbreathwork.org/en/bbd26-programm",
+      conferenceLabel: "Berlin Breathwork Days",
+    }),
   });
 })();

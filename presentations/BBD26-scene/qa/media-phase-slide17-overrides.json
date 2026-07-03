@@ -1,0 +1,14 @@
+{
+  "media_phase_overrides": [
+    {
+      "asset_id": "asset-c1478e568641a55a",
+      "name": "Combined01_spedup_30s_hq_playback",
+      "object_id": "s17-o9",
+      "phase_sec": 1.2,
+      "score": 0.912288,
+      "slide": 17,
+      "source": "media-phase",
+      "track_id": "track-0078"
+    }
+  ]
+}

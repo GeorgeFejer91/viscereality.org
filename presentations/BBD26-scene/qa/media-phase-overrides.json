@@ -1,0 +1,34 @@
+{
+  "media_phase_overrides": [
+    {
+      "asset_id": "asset-c1478e568641a55a",
+      "name": "Combined01_spedup_30s_hq_playback",
+      "object_id": "s17-o9",
+      "phase_sec": 7.5,
+      "score": 0.794536,
+      "slide": 17,
+      "source": "media-phase",
+      "track_id": "track-0078"
+    },
+    {
+      "asset_id": "asset-34a2f729c61b7c79",
+      "name": "Combined02_spedup_30s_hq_playback",
+      "object_id": "s18-o11",
+      "phase_sec": 0.0,
+      "score": 0.940162,
+      "slide": 18,
+      "source": "media-phase",
+      "track_id": "track-0081"
+    },
+    {
+      "asset_id": "asset-a94bc7da5c6d4913",
+      "name": "Combined04_spedup_30s_hq_playback",
+      "object_id": "s19-o10",
+      "phase_sec": 1.0,
+      "score": 0.909543,
+      "slide": 19,
+      "source": "media-phase",
+      "track_id": "track-0086"
+    }
+  ]
+}

@@ -1,0 +1,1346 @@
+[
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.0,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p05",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.05,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p10",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.1,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p15",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.15,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p20",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.2,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p25",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.25,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p30",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.3,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p35",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.35,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p40",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.4,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p45",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.45,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p50",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.5,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p55",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.55,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p60",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.6,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p65",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.65,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p70",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.7,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p75",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.75,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p80",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.8,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p85",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.85,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p90",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.9,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-0p95",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.95,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025-htmlp-1p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 1.0,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.0,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p05",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.05,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p10",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.1,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p15",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.15,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p20",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.2,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p25",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.25,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p30",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.3,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p35",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.35,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p40",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.4,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p45",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.45,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p50",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.5,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p55",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.55,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p60",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.6,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p65",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.65,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p70",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.7,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p75",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.75,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p80",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.8,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p85",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.85,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p90",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.9,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-0p95",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.95,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050-htmlp-1p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 1.0,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.0,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p05",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.05,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p10",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.1,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p15",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.15,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p20",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.2,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p25",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.25,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p30",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.3,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p35",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.35,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p40",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.4,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p45",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.45,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p50",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.5,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p55",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.55,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p60",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.6,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p65",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.65,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p70",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.7,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p75",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.75,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p80",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.8,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p85",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.85,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p90",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.9,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-0p95",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.95,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075-htmlp-1p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 1.0,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.0,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p05",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.05,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p10",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.1,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p15",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.15,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p20",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.2,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p25",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.25,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p30",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.3,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p35",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.35,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p40",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.4,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p45",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.45,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p50",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.5,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p55",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.55,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p60",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.6,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p65",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.65,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p70",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.7,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p75",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.75,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p80",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.8,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p85",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.85,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p90",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.9,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-0p95",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.95,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090-htmlp-1p00",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 1.0,
+    "referenceSec": 81.5,
+    "to": 18
+  }
+]

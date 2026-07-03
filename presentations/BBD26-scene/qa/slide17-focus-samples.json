@@ -1,0 +1,130 @@
+[
+  {
+    "id": "slide-017-settled",
+    "kind": "slide",
+    "mediaClocks": {
+      "track-0075": 17.5,
+      "track-0077": 5.5,
+      "track-0078": 1.7,
+      "track-0080": 2.5,
+      "track-0081": 0.5,
+      "track-0082": 0.5
+    },
+    "mediaSec": 78.51,
+    "progress": 1.0,
+    "referenceSec": 78.51,
+    "slide": 17
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-000",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 17.865,
+      "track-0077": 5.865,
+      "track-0078": 2.065,
+      "track-0080": 2.865,
+      "track-0082": 0.865
+    },
+    "mediaSec": 78.875,
+    "progress": 0.0,
+    "referenceSec": 78.875,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-010",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 17.865,
+      "track-0077": 5.865,
+      "track-0078": 2.065,
+      "track-0080": 2.865,
+      "track-0082": 0.865
+    },
+    "mediaSec": 78.875,
+    "progress": 0.1,
+    "referenceSec": 78.875,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-025",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.115,
+      "track-0077": 7.115,
+      "track-0078": 3.315,
+      "track-0080": 4.115,
+      "track-0082": 2.115
+    },
+    "mediaSec": 80.125,
+    "progress": 0.25,
+    "referenceSec": 80.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-050",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 19.49,
+      "track-0077": 7.49,
+      "track-0078": 3.69,
+      "track-0080": 4.49,
+      "track-0082": 2.49
+    },
+    "mediaSec": 80.5,
+    "progress": 0.5,
+    "referenceSec": 80.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-075",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.115,
+      "track-0077": 8.115,
+      "track-0078": 4.315,
+      "track-0080": 5.115,
+      "track-0082": 3.115
+    },
+    "mediaSec": 81.125,
+    "progress": 0.75,
+    "referenceSec": 81.125,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-090",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.49,
+      "track-0077": 8.49,
+      "track-0078": 4.69,
+      "track-0080": 5.49,
+      "track-0082": 3.49
+    },
+    "mediaSec": 81.5,
+    "progress": 0.9,
+    "referenceSec": 81.5,
+    "to": 18
+  },
+  {
+    "from": 17,
+    "id": "trans-017-018-100",
+    "kind": "transition",
+    "mediaClocks": {
+      "track-0075": 20.99,
+      "track-0077": 8.99,
+      "track-0078": 5.19,
+      "track-0080": 5.99,
+      "track-0082": 3.99
+    },
+    "mediaSec": 82.0,
+    "progress": 1.0,
+    "referenceSec": 82.0,
+    "to": 18
+  }
+]

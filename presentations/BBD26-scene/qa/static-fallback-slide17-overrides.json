@@ -1,0 +1,14 @@
+{
+  "raster_fallback_overrides": [
+    {
+      "file": "assets/fallback/static-slide-017-e6f67984b0843d19.png",
+      "name": "PowerPoint static fallback 17",
+      "object_id": "s17-static-fallback-e6f67984",
+      "settled_only": true,
+      "slide": 17,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-017",
+      "z": 1014
+    }
+  ]
+}

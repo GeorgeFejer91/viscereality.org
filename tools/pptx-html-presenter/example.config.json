@@ -1,0 +1,29 @@
+{
+  "title": "Deck title",
+  "slug": "deck-slug",
+  "output_path": "presentations/DeckSlug",
+  "profile": "github-pages-1080",
+  "asset_policy": {
+    "mode": "copy",
+    "soft_max_mb": 50,
+    "hard_max_mb": 100,
+    "transcode_gif": true,
+    "transcode_video": true,
+    "webp_quality": 88,
+    "allow_oversize_assets": true
+  },
+  "morph_policy": {
+    "match_threshold": 55,
+    "duration_default_sec": 2,
+    "easing": "cubic-bezier(.2,0,.2,1)",
+    "fade_unmatched": true,
+    "unmatched_fade_start": 0,
+    "unmatched_fade_end": 1
+  },
+  "qa_policy": {
+    "slide_ssim": 0.985,
+    "morph_ssim": 0.965,
+    "transition_samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1]
+  },
+  "publish_replace": false
+}

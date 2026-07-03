@@ -1,0 +1,307 @@
+{
+  "blockers": [],
+  "calibratedComparisons": [],
+  "calibration": {
+    "enabled": false
+  },
+  "comparisons": [
+    {
+      "diffFile": "qa/diff/slide-019-settled.png",
+      "kind": "slide",
+      "meanDelta": 8.001,
+      "p95Delta": 47.0,
+      "passed": false,
+      "sampleId": "slide-019-settled",
+      "sideBySideFile": "qa/side-by-side/slide-019-settled.png",
+      "ssim": 0.905952,
+      "threshold": 0.985
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-000.png",
+      "kind": "transition",
+      "meanDelta": 6.97,
+      "p95Delta": 40.0,
+      "passed": false,
+      "sampleId": "trans-019-020-000",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-000.png",
+      "ssim": 0.93916,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-010.png",
+      "kind": "transition",
+      "meanDelta": 10.451,
+      "p95Delta": 45.0,
+      "passed": false,
+      "sampleId": "trans-019-020-010",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-010.png",
+      "ssim": 0.916059,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-025.png",
+      "kind": "transition",
+      "meanDelta": 32.106,
+      "p95Delta": 200.0,
+      "passed": false,
+      "sampleId": "trans-019-020-025",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-025.png",
+      "ssim": 0.58381,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-050.png",
+      "kind": "transition",
+      "meanDelta": 32.478,
+      "p95Delta": 203.0,
+      "passed": false,
+      "sampleId": "trans-019-020-050",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-050.png",
+      "ssim": 0.492075,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-075.png",
+      "kind": "transition",
+      "meanDelta": 11.627,
+      "p95Delta": 43.0,
+      "passed": false,
+      "sampleId": "trans-019-020-075",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-075.png",
+      "ssim": 0.65178,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-090.png",
+      "kind": "transition",
+      "meanDelta": 20.233,
+      "p95Delta": 88.0,
+      "passed": false,
+      "sampleId": "trans-019-020-090",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-090.png",
+      "ssim": 0.452332,
+      "threshold": 0.965
+    },
+    {
+      "diffFile": "qa/diff/trans-019-020-100.png",
+      "kind": "transition",
+      "meanDelta": 11.371,
+      "p95Delta": 46.0,
+      "passed": false,
+      "sampleId": "trans-019-020-100",
+      "sideBySideFile": "qa/side-by-side/trans-019-020-100.png",
+      "ssim": 0.629664,
+      "threshold": 0.965
+    }
+  ],
+  "generatedAtUtc": "2026-07-02T14:49:04+00:00",
+  "htmlFrames": [
+    {
+      "file": "qa/html/slide-019-settled.png",
+      "sampleId": "slide-019-settled"
+    },
+    {
+      "file": "qa/html/trans-019-020-000.png",
+      "sampleId": "trans-019-020-000"
+    },
+    {
+      "file": "qa/html/trans-019-020-010.png",
+      "sampleId": "trans-019-020-010"
+    },
+    {
+      "file": "qa/html/trans-019-020-025.png",
+      "sampleId": "trans-019-020-025"
+    },
+    {
+      "file": "qa/html/trans-019-020-050.png",
+      "sampleId": "trans-019-020-050"
+    },
+    {
+      "file": "qa/html/trans-019-020-075.png",
+      "sampleId": "trans-019-020-075"
+    },
+    {
+      "file": "qa/html/trans-019-020-090.png",
+      "sampleId": "trans-019-020-090"
+    },
+    {
+      "file": "qa/html/trans-019-020-100.png",
+      "sampleId": "trans-019-020-100"
+    }
+  ],
+  "notes": [
+    "HTML frame capture is routed through window.PptxHtmlPresenter.captureAt().",
+    "Strict pass/fail uses predicted PowerPoint MP4 timestamps; calibratedComparisons are diagnostic only.",
+    "Install ffmpeg, Node, and Playwright to run the complete automated comparison."
+  ],
+  "referenceFrames": [
+    {
+      "file": "qa/reference/slide-019-settled.png",
+      "sampleId": "slide-019-settled"
+    },
+    {
+      "file": "qa/reference/trans-019-020-000.png",
+      "sampleId": "trans-019-020-000"
+    },
+    {
+      "file": "qa/reference/trans-019-020-010.png",
+      "sampleId": "trans-019-020-010"
+    },
+    {
+      "file": "qa/reference/trans-019-020-025.png",
+      "sampleId": "trans-019-020-025"
+    },
+    {
+      "file": "qa/reference/trans-019-020-050.png",
+      "sampleId": "trans-019-020-050"
+    },
+    {
+      "file": "qa/reference/trans-019-020-075.png",
+      "sampleId": "trans-019-020-075"
+    },
+    {
+      "file": "qa/reference/trans-019-020-090.png",
+      "sampleId": "trans-019-020-090"
+    },
+    {
+      "file": "qa/reference/trans-019-020-100.png",
+      "sampleId": "trans-019-020-100"
+    }
+  ],
+  "samples": [
+    {
+      "id": "slide-019-settled",
+      "kind": "slide",
+      "mediaClocks": {
+        "track-0076": 17.5,
+        "track-0077": 0.5,
+        "track-0080": 0.5,
+        "track-0085": 1.5,
+        "track-0086": 0.5
+      },
+      "mediaSec": 88.51,
+      "progress": 1.0,
+      "referenceSec": 88.51,
+      "slide": 19
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-000",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 18.865,
+        "track-0077": 1.865,
+        "track-0080": 1.865,
+        "track-0085": 2.865,
+        "track-0086": 0.0
+      },
+      "mediaSec": 89.875,
+      "progress": 0.0,
+      "referenceSec": 89.875,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-010",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 18.065,
+        "track-0077": 1.065,
+        "track-0080": 1.065,
+        "track-0085": 2.065,
+        "track-0086": 0.0
+      },
+      "mediaSec": 89.075,
+      "progress": 0.1,
+      "referenceSec": 89.075,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-025",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 19.365,
+        "track-0077": 2.365,
+        "track-0080": 2.365,
+        "track-0085": 3.365,
+        "track-0086": 0.0
+      },
+      "mediaSec": 90.375,
+      "progress": 0.25,
+      "referenceSec": 90.375,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-050",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 19.74,
+        "track-0077": 2.74,
+        "track-0080": 2.74,
+        "track-0085": 3.74,
+        "track-0086": 0.0
+      },
+      "mediaSec": 90.75,
+      "progress": 0.5,
+      "referenceSec": 90.75,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-075",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 20.365,
+        "track-0077": 3.365,
+        "track-0080": 3.365,
+        "track-0085": 4.365,
+        "track-0086": 0.365
+      },
+      "mediaSec": 91.375,
+      "progress": 0.75,
+      "referenceSec": 91.375,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-090",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 20.74,
+        "track-0077": 3.74,
+        "track-0080": 3.74,
+        "track-0085": 4.74,
+        "track-0086": 0.74
+      },
+      "mediaSec": 91.75,
+      "progress": 0.9,
+      "referenceSec": 91.75,
+      "to": 20
+    },
+    {
+      "from": 19,
+      "id": "trans-019-020-100",
+      "kind": "transition",
+      "mediaClocks": {
+        "track-0076": 21.74,
+        "track-0077": 4.74,
+        "track-0080": 4.74,
+        "track-0085": 5.74,
+        "track-0086": 1.74
+      },
+      "mediaSec": 92.75,
+      "progress": 1.0,
+      "referenceSec": 92.75,
+      "to": 20
+    }
+  ],
+  "schema": "pptx-html-presenter.qa.v1",
+  "status": "failed",
+  "thresholds": {
+    "morphSsim": 0.965,
+    "slideSsim": 0.985,
+    "ssimMethod": "local-uniform-11-luma"
+  }
+}

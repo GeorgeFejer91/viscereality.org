@@ -1,0 +1,135 @@
+{
+  "applied": false,
+  "configOverrides": [
+    {
+      "from": 19,
+      "median_aligned_ssim": 0.825704,
+      "median_alignment_delta_sec": 0.0,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.936867
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.915,
+          "score": 0.894269
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.865,
+          "score": 0.552525
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.757139
+        }
+      ],
+      "reference_offset_sec": 0.865,
+      "sample_count": 4,
+      "source": "transition-time",
+      "to": 20
+    }
+  ],
+  "fps": 8,
+  "generatedAtUtc": "2026-07-02T14:12:42+00:00",
+  "minScore": 0.55,
+  "reference": "C:\\Users\\gfeje\\AppData\\Local\\Temp\\pptx-html-presenter-bbd26-reference-hold3.mp4",
+  "rows": [
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 89.875,
+      "alignedSsim": 0.936867,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 89.875,
+      "sampleId": "trans-019-020-000",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 89.125,
+      "alignedSsim": 0.894269,
+      "alignmentDeltaSec": 0.05,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 89.075,
+      "sampleId": "trans-019-020-010",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 90.375,
+      "alignedSsim": 0.365275,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 90.375,
+      "sampleId": "trans-019-020-025",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 90.75,
+      "alignedSsim": 0.33794,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 90.75,
+      "sampleId": "trans-019-020-050",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 91.375,
+      "alignedSsim": 0.33992,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 91.375,
+      "sampleId": "trans-019-020-075",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 91.75,
+      "alignedSsim": 0.552525,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 91.75,
+      "sampleId": "trans-019-020-090",
+      "strictSsim": null,
+      "threshold": 0.965
+    },
+    {
+      "alignedPassed": false,
+      "alignedReferenceSec": 92.75,
+      "alignedSsim": 0.757139,
+      "alignmentDeltaSec": 0.0,
+      "diagnosticOnly": true,
+      "kind": "transition",
+      "predictedReferenceSec": 92.75,
+      "sampleId": "trans-019-020-100",
+      "strictSsim": null,
+      "threshold": 0.965
+    }
+  ],
+  "schema": "pptx-html-presenter.transition-time.v1",
+  "summary": {
+    "overrideCount": 1,
+    "sampleCount": 7,
+    "slides": [
+      19
+    ]
+  },
+  "windowSec": 1.0
+}

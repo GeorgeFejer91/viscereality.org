@@ -1,0 +1,35 @@
+{
+  "transition_time_overrides": [
+    {
+      "from": 19,
+      "median_aligned_ssim": 0.825704,
+      "median_alignment_delta_sec": 0.0,
+      "progress_offsets": [
+        {
+          "progress": 0.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.936867
+        },
+        {
+          "progress": 0.1,
+          "reference_offset_sec": 0.915,
+          "score": 0.894269
+        },
+        {
+          "progress": 0.9,
+          "reference_offset_sec": 0.865,
+          "score": 0.552525
+        },
+        {
+          "progress": 1.0,
+          "reference_offset_sec": 0.865,
+          "score": 0.757139
+        }
+      ],
+      "reference_offset_sec": 0.865,
+      "sample_count": 4,
+      "source": "transition-time",
+      "to": 20
+    }
+  ]
+}

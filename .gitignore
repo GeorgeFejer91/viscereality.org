@@ -4,3 +4,13 @@ ppt-chunker.zip
 ppt-chunker/ppt-chunker/output_muc/
 ppt-chunker/ppt-chunker/output_muc_fit/
 ppt-chunker/ppt-chunker/output_*/
+
+# Local presentation source decks and heavy research/video bundles.
+presentations/*.pptx
+alpCHI/
+
+# Visual QA screenshots and candidate sweeps are local artifacts; keep direct
+# QA JSON overrides/reports available for reproducible presenter builds.
+presentations/BBD26-scene/qa/**
+!presentations/BBD26-scene/qa/
+!presentations/BBD26-scene/qa/*.json

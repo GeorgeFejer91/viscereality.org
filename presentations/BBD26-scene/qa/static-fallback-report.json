@@ -1,0 +1,1090 @@
+{
+  "configOverrides": [
+    {
+      "file": "assets/fallback/static-slide-001-48d28545c981c611.png",
+      "name": "PowerPoint static fallback 1",
+      "object_id": "s1-static-fallback-48d28545",
+      "settled_only": true,
+      "slide": 1,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-001",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-002-ea4a34c0478a3f94.png",
+      "name": "PowerPoint static fallback 2",
+      "object_id": "s2-static-fallback-ea4a34c0",
+      "settled_only": true,
+      "slide": 2,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-002",
+      "z": 1004
+    },
+    {
+      "file": "assets/fallback/static-slide-003-cf43ef97b3077ed2.png",
+      "name": "PowerPoint static fallback 3",
+      "object_id": "s3-static-fallback-cf43ef97",
+      "settled_only": true,
+      "slide": 3,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-003",
+      "z": 1023
+    },
+    {
+      "file": "assets/fallback/static-slide-004-0f01df4cd934114e.png",
+      "name": "PowerPoint static fallback 4",
+      "object_id": "s4-static-fallback-0f01df4c",
+      "settled_only": true,
+      "slide": 4,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-004",
+      "z": 1015
+    },
+    {
+      "file": "assets/fallback/static-slide-005-ac7c2fd547650445.png",
+      "name": "PowerPoint static fallback 5",
+      "object_id": "s5-static-fallback-ac7c2fd5",
+      "settled_only": true,
+      "slide": 5,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-005",
+      "z": 1011
+    },
+    {
+      "file": "assets/fallback/static-slide-006-0aa0a3c7f058b80b.png",
+      "name": "PowerPoint static fallback 6",
+      "object_id": "s6-static-fallback-0aa0a3c7",
+      "settled_only": true,
+      "slide": 6,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-006",
+      "z": 1019
+    },
+    {
+      "file": "assets/fallback/static-slide-007-d8f5577bc369618f.png",
+      "name": "PowerPoint static fallback 7",
+      "object_id": "s7-static-fallback-d8f5577b",
+      "settled_only": true,
+      "slide": 7,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-007",
+      "z": 1027
+    },
+    {
+      "file": "assets/fallback/static-slide-008-6840f07605957264.png",
+      "name": "PowerPoint static fallback 8",
+      "object_id": "s8-static-fallback-6840f076",
+      "settled_only": true,
+      "slide": 8,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-008",
+      "z": 1015
+    },
+    {
+      "file": "assets/fallback/static-slide-009-dcb09af6f4c8c440.png",
+      "name": "PowerPoint static fallback 9",
+      "object_id": "s9-static-fallback-dcb09af6",
+      "settled_only": true,
+      "slide": 9,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-009",
+      "z": 1017
+    },
+    {
+      "file": "assets/fallback/static-slide-010-9e5b149d595f7439.png",
+      "name": "PowerPoint static fallback 10",
+      "object_id": "s10-static-fallback-9e5b149d",
+      "settled_only": true,
+      "slide": 10,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-010",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-011-bf7158850443b2ff.png",
+      "name": "PowerPoint static fallback 11",
+      "object_id": "s11-static-fallback-bf715885",
+      "settled_only": true,
+      "slide": 11,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-011",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-012-74904e14bf5deeac.png",
+      "name": "PowerPoint static fallback 12",
+      "object_id": "s12-static-fallback-74904e14",
+      "settled_only": true,
+      "slide": 12,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-012",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-013-ac7db95da0f050d3.png",
+      "name": "PowerPoint static fallback 13",
+      "object_id": "s13-static-fallback-ac7db95d",
+      "settled_only": true,
+      "slide": 13,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-013",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-014-645b0b680ee33de8.png",
+      "name": "PowerPoint static fallback 14",
+      "object_id": "s14-static-fallback-645b0b68",
+      "settled_only": true,
+      "slide": 14,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-014",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-015-645b0b680ee33de8.png",
+      "name": "PowerPoint static fallback 15",
+      "object_id": "s15-static-fallback-645b0b68",
+      "settled_only": true,
+      "slide": 15,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-015",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-016-7ca06f08353f2ec9.png",
+      "name": "PowerPoint static fallback 16",
+      "object_id": "s16-static-fallback-7ca06f08",
+      "settled_only": true,
+      "slide": 16,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-016",
+      "z": 1013
+    },
+    {
+      "file": "assets/fallback/static-slide-017-e6f67984b0843d19.png",
+      "name": "PowerPoint static fallback 17",
+      "object_id": "s17-static-fallback-e6f67984",
+      "settled_only": true,
+      "slide": 17,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-017",
+      "z": 2014
+    },
+    {
+      "file": "assets/fallback/static-slide-018-59db2ee91b86b0c3.png",
+      "name": "PowerPoint static fallback 18",
+      "object_id": "s18-static-fallback-59db2ee9",
+      "settled_only": true,
+      "slide": 18,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-018",
+      "z": 1010
+    },
+    {
+      "file": "assets/fallback/static-slide-019-9c28caa4581e9734.png",
+      "name": "PowerPoint static fallback 19",
+      "object_id": "s19-static-fallback-9c28caa4",
+      "settled_only": true,
+      "slide": 19,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-019",
+      "z": 1012
+    },
+    {
+      "file": "assets/fallback/static-slide-020-e2a4cb55ee8bc21f.png",
+      "name": "PowerPoint static fallback 20",
+      "object_id": "s20-static-fallback-e2a4cb55",
+      "settled_only": true,
+      "slide": 20,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-020",
+      "z": 1011
+    },
+    {
+      "file": "assets/fallback/static-slide-021-47d5ca5286bf5d91.png",
+      "name": "PowerPoint static fallback 21",
+      "object_id": "s21-static-fallback-47d5ca52",
+      "settled_only": true,
+      "slide": 21,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-021",
+      "z": 1009
+    },
+    {
+      "file": "assets/fallback/static-slide-022-20b67bd9d99a2989.png",
+      "name": "PowerPoint static fallback 22",
+      "object_id": "s22-static-fallback-20b67bd9",
+      "settled_only": true,
+      "slide": 22,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-022",
+      "z": 1007
+    },
+    {
+      "file": "assets/fallback/static-slide-023-26774b3366e3de22.png",
+      "name": "PowerPoint static fallback 23",
+      "object_id": "s23-static-fallback-26774b33",
+      "settled_only": true,
+      "slide": 23,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-023",
+      "z": 1006
+    },
+    {
+      "file": "assets/fallback/static-slide-024-684b51402d789fff.png",
+      "name": "PowerPoint static fallback 24",
+      "object_id": "s24-static-fallback-684b5140",
+      "settled_only": true,
+      "slide": 24,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-024",
+      "z": 1017
+    },
+    {
+      "file": "assets/fallback/static-slide-025-a10629884281d66c.png",
+      "name": "PowerPoint static fallback 25",
+      "object_id": "s25-static-fallback-a1062988",
+      "settled_only": true,
+      "slide": 25,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-025",
+      "z": 1015
+    },
+    {
+      "file": "assets/fallback/static-slide-026-e3c00b23946854e2.png",
+      "name": "PowerPoint static fallback 26",
+      "object_id": "s26-static-fallback-e3c00b23",
+      "settled_only": true,
+      "slide": 26,
+      "source": "static-fallback",
+      "track_id": "track-static-fallback-026",
+      "z": 1004
+    }
+  ],
+  "generatedAtUtc": "2026-07-02T10:26:22+00:00",
+  "holePaddingPx": 2,
+  "reference": "C:\\Users\\gfeje\\AppData\\Local\\Temp\\pptx-html-presenter-bbd26-reference-hold3.mp4",
+  "rows": [
+    {
+      "bytes": 11443,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-001-48d28545c981c611.png",
+        "name": "PowerPoint static fallback 1",
+        "object_id": "s1-static-fallback-48d28545",
+        "settled_only": true,
+        "slide": 1,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-001",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-001-48d28545c981c611.png",
+      "holeCount": 2,
+      "holes": [
+        {
+          "assetId": "asset-0928f3a3fc7358dc",
+          "bbox": [
+            0,
+            0,
+            1917,
+            1068
+          ],
+          "objectId": "s1-o21",
+          "trackId": "track-0003"
+        },
+        {
+          "assetId": "asset-e2fc514621cac09e",
+          "bbox": [
+            876,
+            942,
+            957,
+            1025
+          ],
+          "objectId": "s1-o9",
+          "trackId": "track-0008"
+        }
+      ],
+      "sampleId": "slide-001-settled",
+      "sha256": "48d28545c981c6112bd21df9622580ca15b1a1f8e1914adbf7cb69c064037560",
+      "slide": 1
+    },
+    {
+      "bytes": 1695883,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-002-ea4a34c0478a3f94.png",
+        "name": "PowerPoint static fallback 2",
+        "object_id": "s2-static-fallback-ea4a34c0",
+        "settled_only": true,
+        "slide": 2,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-002",
+        "z": 1004
+      },
+      "file": "assets/fallback/static-slide-002-ea4a34c0478a3f94.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-002-settled",
+      "sha256": "ea4a34c0478a3f9488355483f1f1d1ca9f9f946b2925b883a77b231bc44ccf85",
+      "slide": 2
+    },
+    {
+      "bytes": 695115,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-003-cf43ef97b3077ed2.png",
+        "name": "PowerPoint static fallback 3",
+        "object_id": "s3-static-fallback-cf43ef97",
+        "settled_only": true,
+        "slide": 3,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-003",
+        "z": 1023
+      },
+      "file": "assets/fallback/static-slide-003-cf43ef97b3077ed2.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-a2d751aea592182c",
+          "bbox": [
+            359,
+            57,
+            1743,
+            1023
+          ],
+          "objectId": "s3-o25",
+          "trackId": "track-0025"
+        }
+      ],
+      "sampleId": "slide-003-settled",
+      "sha256": "cf43ef97b3077ed26921405605b7359c34e1564d2b049df09505e578e990dff1",
+      "slide": 3
+    },
+    {
+      "bytes": 687395,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-004-0f01df4cd934114e.png",
+        "name": "PowerPoint static fallback 4",
+        "object_id": "s4-static-fallback-0f01df4c",
+        "settled_only": true,
+        "slide": 4,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-004",
+        "z": 1015
+      },
+      "file": "assets/fallback/static-slide-004-0f01df4cd934114e.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-caba9aca5ff1c30c",
+          "bbox": [
+            356,
+            57,
+            1744,
+            1025
+          ],
+          "objectId": "s4-o28",
+          "trackId": "track-0036"
+        }
+      ],
+      "sampleId": "slide-004-settled",
+      "sha256": "0f01df4cd934114eca297c0e48274775ce72b63fc7f5efd76d87c13dece5c4f6",
+      "slide": 4
+    },
+    {
+      "bytes": 651248,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-005-ac7c2fd547650445.png",
+        "name": "PowerPoint static fallback 5",
+        "object_id": "s5-static-fallback-ac7c2fd5",
+        "settled_only": true,
+        "slide": 5,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-005",
+        "z": 1011
+      },
+      "file": "assets/fallback/static-slide-005-ac7c2fd547650445.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-3db148e4034f6c1f",
+          "bbox": [
+            376,
+            136,
+            1109,
+            847
+          ],
+          "objectId": "s5-o28",
+          "trackId": "track-0038"
+        }
+      ],
+      "sampleId": "slide-005-settled",
+      "sha256": "ac7c2fd5476504457f29f3c1aa62aac58ae2923555fb48ad369dc5b60c883afc",
+      "slide": 5
+    },
+    {
+      "bytes": 674311,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-006-0aa0a3c7f058b80b.png",
+        "name": "PowerPoint static fallback 6",
+        "object_id": "s6-static-fallback-0aa0a3c7",
+        "settled_only": true,
+        "slide": 6,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-006",
+        "z": 1019
+      },
+      "file": "assets/fallback/static-slide-006-0aa0a3c7f058b80b.png",
+      "holeCount": 2,
+      "holes": [
+        {
+          "assetId": "asset-f1bc37cc325dd86b",
+          "bbox": [
+            1087,
+            234,
+            1850,
+            938
+          ],
+          "objectId": "s6-o26",
+          "trackId": "track-0046"
+        },
+        {
+          "assetId": "asset-3db148e4034f6c1f",
+          "bbox": [
+            376,
+            142,
+            1109,
+            847
+          ],
+          "objectId": "s6-o28",
+          "trackId": "track-0038"
+        }
+      ],
+      "sampleId": "slide-006-settled",
+      "sha256": "0aa0a3c7f058b80b7e25b8a20c471e35de17387a31a9a6acbd6e9fc80cb0bd8f",
+      "slide": 6
+    },
+    {
+      "bytes": 1453035,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-007-d8f5577bc369618f.png",
+        "name": "PowerPoint static fallback 7",
+        "object_id": "s7-static-fallback-d8f5577b",
+        "settled_only": true,
+        "slide": 7,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-007",
+        "z": 1027
+      },
+      "file": "assets/fallback/static-slide-007-d8f5577bc369618f.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-007-settled",
+      "sha256": "d8f5577bc369618f3b4d724e36423bec74837411d15427e2a093ae515b27f092",
+      "slide": 7
+    },
+    {
+      "bytes": 718144,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-008-6840f07605957264.png",
+        "name": "PowerPoint static fallback 8",
+        "object_id": "s8-static-fallback-6840f076",
+        "settled_only": true,
+        "slide": 8,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-008",
+        "z": 1015
+      },
+      "file": "assets/fallback/static-slide-008-6840f07605957264.png",
+      "holeCount": 3,
+      "holes": [
+        {
+          "assetId": "asset-9b21110a5cda13a9",
+          "bbox": [
+            302,
+            235,
+            1142,
+            573
+          ],
+          "objectId": "s8-o10",
+          "trackId": "track-0051"
+        },
+        {
+          "assetId": "asset-1ccea100414c1319",
+          "bbox": [
+            1173,
+            235,
+            1657,
+            989
+          ],
+          "objectId": "s8-o11",
+          "trackId": "track-0052"
+        },
+        {
+          "assetId": "asset-b34ce151f7018046",
+          "bbox": [
+            689,
+            575,
+            801,
+            724
+          ],
+          "objectId": "s8-o15",
+          "trackId": "track-0056"
+        }
+      ],
+      "sampleId": "slide-008-settled",
+      "sha256": "6840f0760595726471bcf4c0c93a9685328012c2e8e596cb233e166467fd48c5",
+      "slide": 8
+    },
+    {
+      "bytes": 876513,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-009-dcb09af6f4c8c440.png",
+        "name": "PowerPoint static fallback 9",
+        "object_id": "s9-static-fallback-dcb09af6",
+        "settled_only": true,
+        "slide": 9,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-009",
+        "z": 1017
+      },
+      "file": "assets/fallback/static-slide-009-dcb09af6f4c8c440.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-ae2ffbb9731dbf54",
+          "bbox": [
+            514,
+            210,
+            1687,
+            871
+          ],
+          "objectId": "s9-o6",
+          "trackId": "track-0058"
+        }
+      ],
+      "sampleId": "slide-009-settled",
+      "sha256": "dcb09af6f4c8c440b2491befc82141c9aa2be2993f93fc8d0e28d07a342bcc73",
+      "slide": 9
+    },
+    {
+      "bytes": 866565,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-010-9e5b149d595f7439.png",
+        "name": "PowerPoint static fallback 10",
+        "object_id": "s10-static-fallback-9e5b149d",
+        "settled_only": true,
+        "slide": 10,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-010",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-010-9e5b149d595f7439.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-21036503160e8e82",
+          "bbox": [
+            453,
+            202,
+            1626,
+            864
+          ],
+          "objectId": "s10-o12",
+          "trackId": "track-0062"
+        }
+      ],
+      "sampleId": "slide-010-settled",
+      "sha256": "9e5b149d595f7439e3808e07f7fd91afdc23f864a3244ac06c0f497d6ffea768",
+      "slide": 10
+    },
+    {
+      "bytes": 873707,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-011-bf7158850443b2ff.png",
+        "name": "PowerPoint static fallback 11",
+        "object_id": "s11-static-fallback-bf715885",
+        "settled_only": true,
+        "slide": 11,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-011",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-011-bf7158850443b2ff.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-fc99bea418f76236",
+          "bbox": [
+            508,
+            202,
+            1681,
+            864
+          ],
+          "objectId": "s11-o15",
+          "trackId": "track-0065"
+        }
+      ],
+      "sampleId": "slide-011-settled",
+      "sha256": "bf7158850443b2ff94b9770e41c3092281dfbaab7a42f7a4a26515d4a2638e82",
+      "slide": 11
+    },
+    {
+      "bytes": 873683,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-012-74904e14bf5deeac.png",
+        "name": "PowerPoint static fallback 12",
+        "object_id": "s12-static-fallback-74904e14",
+        "settled_only": true,
+        "slide": 12,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-012",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-012-74904e14bf5deeac.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-fc99bea418f76236",
+          "bbox": [
+            508,
+            202,
+            1681,
+            864
+          ],
+          "objectId": "s12-o15",
+          "trackId": "track-0065"
+        }
+      ],
+      "sampleId": "slide-012-settled",
+      "sha256": "74904e14bf5deeac474d9ce68ba247fcc2e3c60583152f85e03220bde3b65689",
+      "slide": 12
+    },
+    {
+      "bytes": 864780,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-013-ac7db95da0f050d3.png",
+        "name": "PowerPoint static fallback 13",
+        "object_id": "s13-static-fallback-ac7db95d",
+        "settled_only": true,
+        "slide": 13,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-013",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-013-ac7db95da0f050d3.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-164b535c99e4dff0",
+          "bbox": [
+            490,
+            202,
+            1663,
+            864
+          ],
+          "objectId": "s13-o18",
+          "trackId": "track-0068"
+        }
+      ],
+      "sampleId": "slide-013-settled",
+      "sha256": "ac7db95da0f050d3f4ebce2b090a6628328c0a56281e7cb71d5639da0cac33d7",
+      "slide": 13
+    },
+    {
+      "bytes": 880449,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-014-645b0b680ee33de8.png",
+        "name": "PowerPoint static fallback 14",
+        "object_id": "s14-static-fallback-645b0b68",
+        "settled_only": true,
+        "slide": 14,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-014",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-014-645b0b680ee33de8.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-de15ac9d4fa9ad4b",
+          "bbox": [
+            523,
+            202,
+            1697,
+            864
+          ],
+          "objectId": "s14-o21",
+          "trackId": "track-0071"
+        }
+      ],
+      "sampleId": "slide-014-settled",
+      "sha256": "645b0b680ee33de84256be64731e415c321ffb7d13e5e9523d6eb1ee8e7ef9a1",
+      "slide": 14
+    },
+    {
+      "bytes": 880449,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-015-645b0b680ee33de8.png",
+        "name": "PowerPoint static fallback 15",
+        "object_id": "s15-static-fallback-645b0b68",
+        "settled_only": true,
+        "slide": 15,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-015",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-015-645b0b680ee33de8.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-de15ac9d4fa9ad4b",
+          "bbox": [
+            523,
+            202,
+            1697,
+            864
+          ],
+          "objectId": "s15-o21",
+          "trackId": "track-0071"
+        }
+      ],
+      "sampleId": "slide-015-settled",
+      "sha256": "645b0b680ee33de84256be64731e415c321ffb7d13e5e9523d6eb1ee8e7ef9a1",
+      "slide": 15
+    },
+    {
+      "bytes": 1018901,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-016-7ca06f08353f2ec9.png",
+        "name": "PowerPoint static fallback 16",
+        "object_id": "s16-static-fallback-7ca06f08",
+        "settled_only": true,
+        "slide": 16,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-016",
+        "z": 1013
+      },
+      "file": "assets/fallback/static-slide-016-7ca06f08353f2ec9.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-ceabe477dce6f31c",
+          "bbox": [
+            471,
+            221,
+            1644,
+            883
+          ],
+          "objectId": "s16-o47",
+          "trackId": "track-0075"
+        }
+      ],
+      "sampleId": "slide-016-settled",
+      "sha256": "7ca06f08353f2ec94b2c24d34ab5f2b37ffab69f991b55b112ed88175e3935dc",
+      "slide": 16
+    },
+    {
+      "bytes": 419520,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-017-e6f67984b0843d19.png",
+        "name": "PowerPoint static fallback 17",
+        "object_id": "s17-static-fallback-e6f67984",
+        "settled_only": true,
+        "slide": 17,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-017",
+        "z": 2014
+      },
+      "file": "assets/fallback/static-slide-017-e6f67984b0843d19.png",
+      "holeCount": 2,
+      "holes": [
+        {
+          "assetId": "asset-c1478e568641a55a",
+          "bbox": [
+            58,
+            62,
+            1733,
+            1006
+          ],
+          "objectId": "s17-o9",
+          "trackId": "track-0078"
+        },
+        {
+          "assetId": "asset-b34ce151f7018046",
+          "bbox": [
+            1683,
+            652,
+            1901,
+            941
+          ],
+          "objectId": "s17-o49",
+          "trackId": "track-0077"
+        }
+      ],
+      "sampleId": "slide-017-settled",
+      "sha256": "e6f67984b0843d194d88bac702a6cae1ae1d931534e80e49ffff21b4ae322fed",
+      "slide": 17
+    },
+    {
+      "bytes": 1759289,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-018-59db2ee91b86b0c3.png",
+        "name": "PowerPoint static fallback 18",
+        "object_id": "s18-static-fallback-59db2ee9",
+        "settled_only": true,
+        "slide": 18,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-018",
+        "z": 1010
+      },
+      "file": "assets/fallback/static-slide-018-59db2ee91b86b0c3.png",
+      "holeCount": 1,
+      "holes": [
+        {
+          "assetId": "asset-b34ce151f7018046",
+          "bbox": [
+            1683,
+            652,
+            1901,
+            941
+          ],
+          "objectId": "s18-o49",
+          "trackId": "track-0077"
+        }
+      ],
+      "sampleId": "slide-018-settled",
+      "sha256": "59db2ee91b86b0c35c63f695d2c62bb46314fc87195a461dc24776c6366f16be",
+      "slide": 18
+    },
+    {
+      "bytes": 398829,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-019-9c28caa4581e9734.png",
+        "name": "PowerPoint static fallback 19",
+        "object_id": "s19-static-fallback-9c28caa4",
+        "settled_only": true,
+        "slide": 19,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-019",
+        "z": 1012
+      },
+      "file": "assets/fallback/static-slide-019-9c28caa4581e9734.png",
+      "holeCount": 2,
+      "holes": [
+        {
+          "assetId": "asset-a94bc7da5c6d4913",
+          "bbox": [
+            21,
+            73,
+            1689,
+            1017
+          ],
+          "objectId": "s19-o10",
+          "trackId": "track-0086"
+        },
+        {
+          "assetId": "asset-b34ce151f7018046",
+          "bbox": [
+            1683,
+            652,
+            1901,
+            941
+          ],
+          "objectId": "s19-o49",
+          "trackId": "track-0077"
+        }
+      ],
+      "sampleId": "slide-019-settled",
+      "sha256": "9c28caa4581e9734787d849e4b9f73fe51ed7de599a26c51901fa237e2be8aa3",
+      "slide": 19
+    },
+    {
+      "bytes": 404218,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-020-e2a4cb55ee8bc21f.png",
+        "name": "PowerPoint static fallback 20",
+        "object_id": "s20-static-fallback-e2a4cb55",
+        "settled_only": true,
+        "slide": 20,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-020",
+        "z": 1011
+      },
+      "file": "assets/fallback/static-slide-020-e2a4cb55ee8bc21f.png",
+      "holeCount": 2,
+      "holes": [
+        {
+          "assetId": "asset-0902201da080c1fe",
+          "bbox": [
+            17,
+            64,
+            1692,
+            1008
+          ],
+          "objectId": "s20-o3",
+          "trackId": "track-0087"
+        },
+        {
+          "assetId": "asset-b34ce151f7018046",
+          "bbox": [
+            1683,
+            652,
+            1901,
+            941
+          ],
+          "objectId": "s20-o49",
+          "trackId": "track-0077"
+        }
+      ],
+      "sampleId": "slide-020-settled",
+      "sha256": "e2a4cb55ee8bc21fc5fe0420e078cf1a9e2852c5fbda5b9f6082d89f464b0d0f",
+      "slide": 20
+    },
+    {
+      "bytes": 1602363,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-021-47d5ca5286bf5d91.png",
+        "name": "PowerPoint static fallback 21",
+        "object_id": "s21-static-fallback-47d5ca52",
+        "settled_only": true,
+        "slide": 21,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-021",
+        "z": 1009
+      },
+      "file": "assets/fallback/static-slide-021-47d5ca5286bf5d91.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-021-settled",
+      "sha256": "47d5ca5286bf5d913bb784dcd9facaad61f8d501bc058a20329c29d51142b6bc",
+      "slide": 21
+    },
+    {
+      "bytes": 1092248,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-022-20b67bd9d99a2989.png",
+        "name": "PowerPoint static fallback 22",
+        "object_id": "s22-static-fallback-20b67bd9",
+        "settled_only": true,
+        "slide": 22,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-022",
+        "z": 1007
+      },
+      "file": "assets/fallback/static-slide-022-20b67bd9d99a2989.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-022-settled",
+      "sha256": "20b67bd9d99a298975afb31c21ae4a940429d1ee497cacaef38594f070d80166",
+      "slide": 22
+    },
+    {
+      "bytes": 1326620,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-023-26774b3366e3de22.png",
+        "name": "PowerPoint static fallback 23",
+        "object_id": "s23-static-fallback-26774b33",
+        "settled_only": true,
+        "slide": 23,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-023",
+        "z": 1006
+      },
+      "file": "assets/fallback/static-slide-023-26774b3366e3de22.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-023-settled",
+      "sha256": "26774b3366e3de22e50cac4a54163983fdb35a2efffb413eeaadb8137d7564da",
+      "slide": 23
+    },
+    {
+      "bytes": 2358700,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-024-684b51402d789fff.png",
+        "name": "PowerPoint static fallback 24",
+        "object_id": "s24-static-fallback-684b5140",
+        "settled_only": true,
+        "slide": 24,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-024",
+        "z": 1017
+      },
+      "file": "assets/fallback/static-slide-024-684b51402d789fff.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-024-settled",
+      "sha256": "684b51402d789fff8b5d330179536858852563f4b6edd74c05712aaf99a1e77f",
+      "slide": 24
+    },
+    {
+      "bytes": 2502000,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-025-a10629884281d66c.png",
+        "name": "PowerPoint static fallback 25",
+        "object_id": "s25-static-fallback-a1062988",
+        "settled_only": true,
+        "slide": 25,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-025",
+        "z": 1015
+      },
+      "file": "assets/fallback/static-slide-025-a10629884281d66c.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-025-settled",
+      "sha256": "a10629884281d66cbbb52bb1b773e429c258b4e52c7a0e0c215d7cd2e82e628c",
+      "slide": 25
+    },
+    {
+      "bytes": 2398009,
+      "configOverride": {
+        "file": "assets/fallback/static-slide-026-e3c00b23946854e2.png",
+        "name": "PowerPoint static fallback 26",
+        "object_id": "s26-static-fallback-e3c00b23",
+        "settled_only": true,
+        "slide": 26,
+        "source": "static-fallback",
+        "track_id": "track-static-fallback-026",
+        "z": 1004
+      },
+      "file": "assets/fallback/static-slide-026-e3c00b23946854e2.png",
+      "holeCount": 0,
+      "holes": [],
+      "sampleId": "slide-026-settled",
+      "sha256": "e3c00b23946854e2dadb9521d8d2cb05345498a1b61d6e1216b6e6f36714274b",
+      "slide": 26
+    }
+  ],
+  "schema": "pptx-html-presenter.static-fallback.v1",
+  "settledOnly": true,
+  "summary": {
+    "count": 26,
+    "slides": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26
+    ],
+    "totalBytes": 27983417
+  }
+}

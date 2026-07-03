@@ -1,0 +1,87 @@
+{
+  "transition_progress_overrides": [
+    {
+      "anchor_tracks": [
+        "track-0079",
+        "track-0084",
+        "track-0085"
+      ],
+      "from": 18,
+      "median_score": 0.501651,
+      "points": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 0.25,
+          "value": 0.125
+        },
+        {
+          "progress": 0.5,
+          "value": 0.45
+        },
+        {
+          "progress": 0.75,
+          "value": 0.875
+        },
+        {
+          "progress": 0.9,
+          "value": 0.98
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
+        }
+      ],
+      "sample_count": 7,
+      "source": "morph-progress-hybrid-reviewed",
+      "to": 19
+    },
+    {
+      "anchor_tracks": [
+        "track-0085",
+        "track-0088"
+      ],
+      "from": 19,
+      "median_score": 0.500028,
+      "points": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 0.25,
+          "value": 0.125
+        },
+        {
+          "progress": 0.5,
+          "value": 0.45
+        },
+        {
+          "progress": 0.75,
+          "value": 0.875
+        },
+        {
+          "progress": 0.9,
+          "value": 0.98
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
+        }
+      ],
+      "sample_count": 7,
+      "source": "morph-progress-hybrid-reviewed",
+      "to": 20
+    }
+  ]
+}

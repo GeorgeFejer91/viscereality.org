@@ -1,0 +1,84 @@
+{
+  "transition_track_progress_overrides": [
+    {
+      "baseline_score": 0.536132,
+      "from": 19,
+      "improved_count": 3,
+      "points": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 0.25,
+          "value": 0.1
+        },
+        {
+          "progress": 0.5,
+          "value": 0.5
+        },
+        {
+          "progress": 0.75,
+          "value": 0.9
+        },
+        {
+          "progress": 0.9,
+          "value": 1.0
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
+        }
+      ],
+      "sample_count": 4,
+      "score": 0.539362,
+      "source": "track-progress",
+      "to": 20,
+      "track_id": "track-0084"
+    },
+    {
+      "baseline_score": 0.536132,
+      "from": 19,
+      "improved_count": 3,
+      "points": [
+        {
+          "progress": 0.0,
+          "value": 0.0
+        },
+        {
+          "progress": 0.1,
+          "value": 0.0
+        },
+        {
+          "progress": 0.25,
+          "value": 0.3
+        },
+        {
+          "progress": 0.5,
+          "value": 0.4
+        },
+        {
+          "progress": 0.75,
+          "value": 1.0
+        },
+        {
+          "progress": 0.9,
+          "value": 1.0
+        },
+        {
+          "progress": 1.0,
+          "value": 1.0
+        }
+      ],
+      "sample_count": 4,
+      "score": 0.542942,
+      "source": "track-progress",
+      "to": 20,
+      "track_id": "track-0087"
+    }
+  ]
+}

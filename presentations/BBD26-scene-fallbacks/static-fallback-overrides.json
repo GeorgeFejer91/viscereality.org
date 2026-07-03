@@ -1,0 +1,264 @@
+{
+    "raster_fallback_overrides":  [
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-001-48d28545c981c611.png",
+                                          "name":  "PowerPoint static fallback 1",
+                                          "object_id":  "s1-static-fallback-48d28545",
+                                          "settled_only":  true,
+                                          "slide":  1,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-001",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-002-ea4a34c0478a3f94.png",
+                                          "name":  "PowerPoint static fallback 2",
+                                          "object_id":  "s2-static-fallback-ea4a34c0",
+                                          "settled_only":  true,
+                                          "slide":  2,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-002",
+                                          "z":  1004
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-003-cf43ef97b3077ed2.png",
+                                          "name":  "PowerPoint static fallback 3",
+                                          "object_id":  "s3-static-fallback-cf43ef97",
+                                          "settled_only":  true,
+                                          "slide":  3,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-003",
+                                          "z":  1023
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-004-0f01df4cd934114e.png",
+                                          "name":  "PowerPoint static fallback 4",
+                                          "object_id":  "s4-static-fallback-0f01df4c",
+                                          "settled_only":  true,
+                                          "slide":  4,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-004",
+                                          "z":  1015
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-005-ac7c2fd547650445.png",
+                                          "name":  "PowerPoint static fallback 5",
+                                          "object_id":  "s5-static-fallback-ac7c2fd5",
+                                          "settled_only":  true,
+                                          "slide":  5,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-005",
+                                          "z":  1011
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-006-0aa0a3c7f058b80b.png",
+                                          "name":  "PowerPoint static fallback 6",
+                                          "object_id":  "s6-static-fallback-0aa0a3c7",
+                                          "settled_only":  true,
+                                          "slide":  6,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-006",
+                                          "z":  1019
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-007-d8f5577bc369618f.png",
+                                          "name":  "PowerPoint static fallback 7",
+                                          "object_id":  "s7-static-fallback-d8f5577b",
+                                          "settled_only":  true,
+                                          "slide":  7,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-007",
+                                          "z":  1027
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-008-6840f07605957264.png",
+                                          "name":  "PowerPoint static fallback 8",
+                                          "object_id":  "s8-static-fallback-6840f076",
+                                          "settled_only":  true,
+                                          "slide":  8,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-008",
+                                          "z":  1015
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-009-dcb09af6f4c8c440.png",
+                                          "name":  "PowerPoint static fallback 9",
+                                          "object_id":  "s9-static-fallback-dcb09af6",
+                                          "settled_only":  true,
+                                          "slide":  9,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-009",
+                                          "z":  1017
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-010-9e5b149d595f7439.png",
+                                          "name":  "PowerPoint static fallback 10",
+                                          "object_id":  "s10-static-fallback-9e5b149d",
+                                          "settled_only":  true,
+                                          "slide":  10,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-010",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-011-bf7158850443b2ff.png",
+                                          "name":  "PowerPoint static fallback 11",
+                                          "object_id":  "s11-static-fallback-bf715885",
+                                          "settled_only":  true,
+                                          "slide":  11,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-011",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-012-74904e14bf5deeac.png",
+                                          "name":  "PowerPoint static fallback 12",
+                                          "object_id":  "s12-static-fallback-74904e14",
+                                          "settled_only":  true,
+                                          "slide":  12,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-012",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-013-ac7db95da0f050d3.png",
+                                          "name":  "PowerPoint static fallback 13",
+                                          "object_id":  "s13-static-fallback-ac7db95d",
+                                          "settled_only":  true,
+                                          "slide":  13,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-013",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-014-645b0b680ee33de8.png",
+                                          "name":  "PowerPoint static fallback 14",
+                                          "object_id":  "s14-static-fallback-645b0b68",
+                                          "settled_only":  true,
+                                          "slide":  14,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-014",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-015-645b0b680ee33de8.png",
+                                          "name":  "PowerPoint static fallback 15",
+                                          "object_id":  "s15-static-fallback-645b0b68",
+                                          "settled_only":  true,
+                                          "slide":  15,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-015",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-016-7ca06f08353f2ec9.png",
+                                          "name":  "PowerPoint static fallback 16",
+                                          "object_id":  "s16-static-fallback-7ca06f08",
+                                          "settled_only":  true,
+                                          "slide":  16,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-016",
+                                          "z":  1013
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-017-e6f67984b0843d19.png",
+                                          "name":  "PowerPoint static fallback 17",
+                                          "object_id":  "s17-static-fallback-e6f67984",
+                                          "settled_only":  true,
+                                          "slide":  17,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-017",
+                                          "z":  2014
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-018-59db2ee91b86b0c3.png",
+                                          "name":  "PowerPoint static fallback 18",
+                                          "object_id":  "s18-static-fallback-59db2ee9",
+                                          "settled_only":  true,
+                                          "slide":  18,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-018",
+                                          "z":  1010
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-019-9c28caa4581e9734.png",
+                                          "name":  "PowerPoint static fallback 19",
+                                          "object_id":  "s19-static-fallback-9c28caa4",
+                                          "settled_only":  true,
+                                          "slide":  19,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-019",
+                                          "z":  1012
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-020-e2a4cb55ee8bc21f.png",
+                                          "name":  "PowerPoint static fallback 20",
+                                          "object_id":  "s20-static-fallback-e2a4cb55",
+                                          "settled_only":  true,
+                                          "slide":  20,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-020",
+                                          "z":  1011
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-021-47d5ca5286bf5d91.png",
+                                          "name":  "PowerPoint static fallback 21",
+                                          "object_id":  "s21-static-fallback-47d5ca52",
+                                          "settled_only":  true,
+                                          "slide":  21,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-021",
+                                          "z":  1009
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-022-20b67bd9d99a2989.png",
+                                          "name":  "PowerPoint static fallback 22",
+                                          "object_id":  "s22-static-fallback-20b67bd9",
+                                          "settled_only":  true,
+                                          "slide":  22,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-022",
+                                          "z":  1007
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-023-26774b3366e3de22.png",
+                                          "name":  "PowerPoint static fallback 23",
+                                          "object_id":  "s23-static-fallback-26774b33",
+                                          "settled_only":  true,
+                                          "slide":  23,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-023",
+                                          "z":  1006
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-024-684b51402d789fff.png",
+                                          "name":  "PowerPoint static fallback 24",
+                                          "object_id":  "s24-static-fallback-684b5140",
+                                          "settled_only":  true,
+                                          "slide":  24,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-024",
+                                          "z":  1017
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-025-a10629884281d66c.png",
+                                          "name":  "PowerPoint static fallback 25",
+                                          "object_id":  "s25-static-fallback-a1062988",
+                                          "settled_only":  true,
+                                          "slide":  25,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-025",
+                                          "z":  1015
+                                      },
+                                      {
+                                          "file":  "../BBD26-scene-fallbacks/static-slide-026-e3c00b23946854e2.png",
+                                          "name":  "PowerPoint static fallback 26",
+                                          "object_id":  "s26-static-fallback-e3c00b23",
+                                          "settled_only":  true,
+                                          "slide":  26,
+                                          "source":  "static-fallback",
+                                          "track_id":  "track-static-fallback-026",
+                                          "z":  1004
+                                      }
+                                  ]
+}
