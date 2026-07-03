@@ -57,6 +57,7 @@ try {
               progress: 0,
               direction: s.direction || "forward",
               trackProgressOverrides: s.trackProgressOverrides || null,
+              unmatchedFadeOverride: s.unmatchedFadeOverride || null,
             },
           }));
         }, sample);
@@ -68,6 +69,7 @@ try {
               progress: s.progress,
               direction: s.direction || "forward",
               trackProgressOverrides: s.trackProgressOverrides || null,
+              unmatchedFadeOverride: s.unmatchedFadeOverride || null,
             },
           }));
         }, sample);

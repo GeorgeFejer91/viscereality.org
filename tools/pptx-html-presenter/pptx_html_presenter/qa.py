@@ -1158,11 +1158,20 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "media-phase-offset": "phase-offset",
         "media-clock-offset": "phase-offset",
         "clock-offset": "phase-offset",
+        "fade-enter-end": "enter-fade-end",
+        "unmatched-enter-end": "enter-fade-end",
+        "unmatched-fade-enter-end": "enter-fade-end",
+        "fade-exit-end": "exit-fade-end",
+        "unmatched-exit-end": "exit-fade-end",
+        "unmatched-fade-exit-end": "exit-fade-end",
         "clock": "phase",
     }
     normalized = aliases.get(normalized, normalized)
-    if normalized not in {"progress", "phase", "phase-offset", "track-progress"}:
-        raise PresenterError("Candidate sweep --vary must be progress, track-progress, phase, or phase-offset.")
+    if normalized not in {"progress", "phase", "phase-offset", "track-progress", "enter-fade-end", "exit-fade-end"}:
+        raise PresenterError(
+            "Candidate sweep --vary must be progress, track-progress, phase, phase-offset, "
+            "enter-fade-end, or exit-fade-end."
+        )
     return normalized
 
 
@@ -1177,6 +1186,8 @@ def _candidate_sweep_samples(
         raise PresenterError("Progress sweeps require a transition sample.")
     if normalized == "track-progress" and base_sample.get("kind") != "transition":
         raise PresenterError("Track-progress sweeps require a transition sample.")
+    if normalized in {"enter-fade-end", "exit-fade-end"} and base_sample.get("kind") != "transition":
+        raise PresenterError(f"{normalized} sweeps require a transition sample.")
     if normalized in {"phase", "track-progress"} and not track_id:
         raise PresenterError(f"{normalized} sweeps require --track-id.")
     if normalized == "phase" and track_id not in (base_sample.get("mediaClocks") or {}):
@@ -1214,6 +1225,10 @@ def _candidate_sweep_samples(
                 clocks[target_track] = round(float(clocks[target_track]) + numeric, 3)
             candidate["mediaClocks"] = clocks
             candidate["candidateSweep"]["trackIds"] = target_tracks
+        elif normalized == "enter-fade-end":
+            candidate["unmatchedFadeOverride"] = {"enterStart": 0.0, "enterEnd": round(_clamp01(numeric), 4)}
+        elif normalized == "exit-fade-end":
+            candidate["unmatchedFadeOverride"] = {"exitStart": 0.0, "exitEnd": round(_clamp01(numeric), 4)}
         else:
             candidate["trackProgressOverrides"] = {str(track_id): round(_clamp01(numeric), 4)}
         out.append(candidate)

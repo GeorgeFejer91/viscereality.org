@@ -1029,6 +1029,12 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("transition?.unmatchedFade", PLAYER_HTML)
         self.assertIn('direction === "exit" ? "exit" : "enter"', PLAYER_HTML)
         self.assertIn("fade[`${prefix}Start`]", PLAYER_HTML)
+        self.assertIn("function transitionWithCaptureOverrides", PLAYER_HTML)
+        self.assertIn("captureOptions?.unmatchedFadeOverride", PLAYER_HTML)
+        self.assertIn(
+            "unmatchedFadeOverride: s.unmatchedFadeOverride || null",
+            (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8"),
+        )
 
     def test_player_supports_configurable_transition_easing(self) -> None:
         self.assertIn("function easeForTransition", PLAYER_HTML)
@@ -2093,6 +2099,26 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(candidates[0]["trackProgressOverrides"], {"track-video": 0.35})
         self.assertEqual(candidates[1]["trackProgressOverrides"], {"track-video": 0.65})
         self.assertEqual(candidates[1]["mediaClocks"], {"track-video": 1.3})
+
+    def test_candidate_sweep_unmatched_fade_samples_keep_global_progress(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-video": 1.3},
+        }
+        enter_candidates = _candidate_sweep_samples(sample, "fade-enter-end", [0.25, 0.75])
+        exit_candidates = _candidate_sweep_samples(sample, "unmatched-exit-end", [0.2])
+        self.assertEqual(enter_candidates[0]["progress"], 0.5)
+        self.assertEqual(enter_candidates[0]["unmatchedFadeOverride"], {"enterStart": 0.0, "enterEnd": 0.25})
+        self.assertEqual(enter_candidates[1]["unmatchedFadeOverride"], {"enterStart": 0.0, "enterEnd": 0.75})
+        self.assertEqual(enter_candidates[1]["candidateSweep"]["vary"], "enter-fade-end")
+        self.assertEqual(enter_candidates[1]["mediaClocks"], {"track-video": 1.3})
+        self.assertEqual(exit_candidates[0]["unmatchedFadeOverride"], {"exitStart": 0.0, "exitEnd": 0.2})
+        self.assertEqual(exit_candidates[0]["candidateSweep"]["vary"], "exit-fade-end")
 
     def test_track_progress_candidate_samples_include_scene_baseline(self) -> None:
         sample = {

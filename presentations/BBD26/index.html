@@ -682,7 +682,8 @@
     cancelAutoAdvance();
     const fromSlide = slideAt(fromIndex);
     const toSlide = slideAt(toIndex);
-    const transition = transitionFor(fromIndex, toIndex) || { durationSec: 0 };
+    let transition = transitionFor(fromIndex, toIndex) || { durationSec: 0 };
+    transition = transitionWithCaptureOverrides(transition, captureOptions);
     const duration = Math.max(0, Number(transition.durationSec || 0)) * 1000;
     const fromByTrack = new Map(slideObjects(fromSlide).filter((obj) => !isSettledOnlyRasterFallback(obj)).map((obj) => [obj.trackId, obj]));
     const toByTrack = new Map(slideObjects(toSlide).filter((obj) => !isSettledOnlyRasterFallback(obj)).map((obj) => [obj.trackId, obj]));
@@ -744,6 +745,18 @@
   function transitionNodeObject(from, to) {
     if (!from || !to) return to || from;
     return transitionMediaObject(from, to) || to;
+  }
+
+  function transitionWithCaptureOverrides(transition, captureOptions) {
+    const override = captureOptions?.unmatchedFadeOverride || null;
+    if (!override) return transition;
+    return {
+      ...transition,
+      unmatchedFade: {
+        ...(transition?.unmatchedFade || {}),
+        ...override,
+      },
+    };
   }
 
   function inferredMotionMap(transition) {

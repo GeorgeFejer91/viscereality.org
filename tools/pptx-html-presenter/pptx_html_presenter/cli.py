@@ -88,8 +88,23 @@ def build_parser() -> argparse.ArgumentParser:
     candidate_sweep.add_argument(
         "--vary",
         required=True,
-        choices=["progress", "track-progress", "phase", "media-phase", "media-clock", "phase-offset", "media-phase-offset"],
-        help="Field to vary: global Morph progress, one track's Morph progress, one track's media clock, or a media-clock offset.",
+        choices=[
+            "progress",
+            "track-progress",
+            "phase",
+            "media-phase",
+            "media-clock",
+            "phase-offset",
+            "media-phase-offset",
+            "enter-fade-end",
+            "exit-fade-end",
+            "fade-enter-end",
+            "fade-exit-end",
+        ],
+        help=(
+            "Field to vary: global Morph progress, one track's Morph progress, one track's media clock, "
+            "a media-clock offset, or unmatched enter/exit fade timing."
+        ),
     )
     candidate_sweep.add_argument("--values", required=True, help="Comma list or start:end:step range.")
     candidate_sweep.add_argument("--track-id", help="Track id, comma track list, or all. Required for phase/media-clock sweeps.")
