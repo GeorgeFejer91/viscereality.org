@@ -587,6 +587,7 @@
       "slide": 1,
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "glow-effect",
         "media-brightness-contrast-effect"
       ]
     },
@@ -740,6 +741,7 @@
       "slide": 2,
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "glow-effect",
         "media-brightness-contrast-effect",
         "off-canvas"
       ]
@@ -1505,6 +1507,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s15-o2",
+      "slide": 15,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 31",
       "object": "s15-o32",
       "slide": 15,
@@ -1550,6 +1560,14 @@
       "slide": 15,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s16-o2",
+      "slide": 16,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1626,6 +1644,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s17-o2",
+      "slide": 17,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Combined01_spedup_30s_hq_playback",
       "object": "s17-o9",
       "slide": 17,
@@ -1657,6 +1683,14 @@
       "unsupported": [
         "video-media-preferred-over-poster",
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s18-o2",
+      "slide": 18,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1711,6 +1745,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s19-o2",
+      "slide": 19,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 16",
       "object": "s19-o17",
       "slide": 19,
@@ -1749,6 +1791,14 @@
       "unsupported": [
         "video-media-preferred-over-poster",
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s20-o2",
+      "slide": 20,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1792,6 +1842,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s21-o2",
+      "slide": 21,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 48",
       "object": "s21-o49",
       "slide": 21,
@@ -1816,6 +1874,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s22-o2",
+      "slide": 22,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 48",
       "object": "s22-o49",
       "slide": 22,
@@ -1829,6 +1895,14 @@
       "slide": 22,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s23-o2",
+      "slide": 23,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1909,6 +1983,22 @@
       "slide": 23,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s24-o2",
+      "slide": 24,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s25-o2",
+      "slide": 25,
+      "unsupported": [
+        "glow-effect"
       ]
     }
   ],

@@ -455,7 +455,7 @@ PLAYER_HTML = r"""<!doctype html>
       content.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       content.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
-      applyMediaEffects(child, state.mediaEffects);
+      applyVisualEffects(child, state);
     } else {
       const content = contentBox(node);
       if (content) {
@@ -468,9 +468,11 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.borderColor = cssColor(state.stroke);
       child.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       child.style.borderRadius = cssShapeRadius(state);
+      applyVisualEffects(child, state);
     }
     if (child && child.classList.contains("shape-svg")) {
       applySvgShape(child, state);
+      applyVisualEffects(child, state);
     }
     if (child && child.classList.contains("text")) {
       child.style.background = cssColor(state.fill);
@@ -481,6 +483,7 @@ PLAYER_HTML = r"""<!doctype html>
       applyTextStyle(child, state.textStyle || {});
       renderText(child, state);
       fitText(child, state);
+      applyVisualEffects(child, state);
     }
     syncMediaPlayback(node, state, isTransition);
   }
@@ -537,7 +540,7 @@ PLAYER_HTML = r"""<!doctype html>
       box.style.borderWidth = strokeWidth;
       box.style.borderRadius = cssShapeRadius(state);
       applyMediaCrop(child, state.crop);
-      applyMediaEffects(child, state.mediaEffects);
+      applyVisualEffects(child, state);
       return;
     }
     if (child.classList.contains("shape")) {
@@ -546,6 +549,7 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.borderStyle = stroke ? "solid" : "none";
       child.style.borderWidth = strokeWidth;
       child.style.borderRadius = cssShapeRadius(state);
+      applyVisualEffects(child, state);
     }
     if (child.classList.contains("shape-svg")) {
       applySvgShape(child, {
@@ -554,6 +558,7 @@ PLAYER_HTML = r"""<!doctype html>
         stroke,
         strokeWidthPct: options.border && stroke ? normalizedStrokeWidthPct(state) : 0,
       });
+      applyVisualEffects(child, state);
     }
   }
 
@@ -610,6 +615,7 @@ PLAYER_HTML = r"""<!doctype html>
         state.kind = mediaObj.kind;
         state.assetId = mediaObj.assetId;
         state.posterAssetId = mediaObj.posterAssetId;
+        state.visualEffects = structuredClone(mediaObj.visualEffects || {});
         state.mediaEffects = structuredClone(mediaObj.mediaEffects || {});
         state.mediaTiming = structuredClone(mediaObj.mediaTiming || {});
         const phaseOverride = transitionMediaPhaseOverride(state, transition);
@@ -1254,10 +1260,11 @@ PLAYER_HTML = r"""<!doctype html>
     child.style.height = `${100 / visibleH}%`;
     child.style.clipPath = "none";
   }
-  function applyMediaEffects(child, effects) {
-    if (!child || !(child.tagName === "IMG" || child.tagName === "VIDEO")) return;
+  function applyVisualEffects(child, state) {
+    if (!child) return;
     const filters = [];
-    const bc = effects?.brightnessContrast || null;
+    const isMedia = child.tagName === "IMG" || child.tagName === "VIDEO";
+    const bc = isMedia ? state?.mediaEffects?.brightnessContrast || null : null;
     if (bc) {
       const bright = Number(bc.bright || 0);
       const contrast = Number(bc.contrast || 0);
@@ -1272,8 +1279,53 @@ PLAYER_HTML = r"""<!doctype html>
         filters.push(`contrast(${Math.max(0, 1 + contrast)})`);
       }
     }
+    const glow = state?.visualEffects?.glow || null;
+    if (glow) {
+      const dropShadow = cssGlowDropShadow(glow);
+      if (dropShadow) filters.push(dropShadow);
+      if (child.classList.contains("text")) {
+        child.style.textShadow = cssGlowTextShadow(glow);
+      }
+    } else if (child.classList.contains("text")) {
+      child.style.textShadow = "";
+    }
     child.style.filter = filters.join(" ");
   }
+
+  function cssGlowDropShadow(glow) {
+    const radius = cssEffectRadiusPx(glow);
+    if (radius <= 0) return "";
+    const color = cssColorWithAlpha(glow.color || "scheme:bg1", Number(glow.alpha ?? 1));
+    return `drop-shadow(0 0 ${radius.toFixed(2)}px ${color})`;
+  }
+
+  function cssGlowTextShadow(glow) {
+    const radius = cssEffectRadiusPx(glow);
+    if (radius <= 0) return "";
+    const color = cssColorWithAlpha(glow.color || "scheme:bg1", Number(glow.alpha ?? 1));
+    return `0 0 ${radius.toFixed(2)}px ${color}`;
+  }
+
+  function cssEffectRadiusPx(effect) {
+    const radiusEmu = Number(effect?.radiusEmu || 0);
+    if (!Number.isFinite(radiusEmu) || radiusEmu <= 0) return 0;
+    const slideWidth = Number(scene?.deck?.slideSize?.width || 12192000);
+    const frameWidth = Number(frame?.clientWidth || scene?.deck?.renderProfile?.width || 1920);
+    return Math.max(0, Math.min(320, (radiusEmu / slideWidth) * frameWidth));
+  }
+
+  function cssColorWithAlpha(value, alpha) {
+    const color = cssColor(value || "scheme:bg1");
+    const clamped = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
+    const hex = /^#([0-9a-f]{6})$/i.exec(color);
+    if (!hex) return color;
+    const raw = hex[1];
+    const r = parseInt(raw.slice(0, 2), 16);
+    const g = parseInt(raw.slice(2, 4), 16);
+    const b = parseInt(raw.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${clamped})`;
+  }
+
   function applyTextStyle(child, style) {
     const size = Number(style.fontSizePt || 18);
     child.style.fontSize = cssFontSize(size);

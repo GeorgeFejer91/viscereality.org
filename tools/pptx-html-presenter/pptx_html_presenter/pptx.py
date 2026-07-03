@@ -541,10 +541,13 @@ def _parse_shape(
     stroke = _solid_color(node, ".//p:spPr/a:ln/a:solidFill")
     stroke_width = _line_width(node)
     opacity = _opacity(node, media=asset_id is not None)
+    visual_effects = _visual_effects(node)
     media_effects = _media_effects(node) if asset_id is not None else {}
     if asset_id is not None and opacity <= 0:
         opacity = 1.0
         unsupported.append("media-alpha-ignored")
+    if visual_effects.get("glow"):
+        unsupported.append("glow-effect")
     if media_effects.get("brightnessContrast"):
         unsupported.append("media-brightness-contrast-effect")
     obj = SceneObject(
@@ -566,6 +569,7 @@ def _parse_shape(
         stroke_width=stroke_width,
         opacity=opacity,
         crop=crop,
+        visual_effects=visual_effects,
         media_effects=media_effects,
         media_timing=media_timings.get(str(shape_id), {}),
         provenance={
@@ -873,6 +877,21 @@ def _crop(node: ET.Element) -> dict[str, float] | None:
     return out or None
 
 
+def _visual_effects(node: ET.Element) -> dict[str, Any]:
+    effects: dict[str, Any] = {}
+    glow = node.find(".//a:effectLst/a:glow", NS)
+    if glow is not None and glow.get("rad") is not None:
+        item: dict[str, Any] = {"radiusEmu": _int_or_zero(glow.get("rad"))}
+        color = _color_from_node(glow)
+        if color:
+            item["color"] = color
+        alpha = glow.find(".//a:alpha", NS)
+        if alpha is not None:
+            item["alpha"] = _ratio_100k(alpha.get("val"))
+        effects["glow"] = item
+    return effects
+
+
 def _media_effects(node: ET.Element) -> dict[str, Any]:
     effects: dict[str, Any] = {}
     brightness = node.find(".//a14:imgLayer/a14:imgEffect/a14:brightnessContrast", NS)
@@ -885,6 +904,23 @@ def _media_effects(node: ET.Element) -> dict[str, Any]:
         if item:
             effects["brightnessContrast"] = item
     return effects
+
+
+def _color_from_node(node: ET.Element) -> str | None:
+    srgb = node.find(".//a:srgbClr", NS)
+    if srgb is not None and srgb.get("val"):
+        return "#" + srgb.get("val")
+    scheme = node.find(".//a:schemeClr", NS)
+    if scheme is not None and scheme.get("val"):
+        return f"scheme:{scheme.get('val')}"
+    return None
+
+
+def _int_or_zero(value: str | None) -> int:
+    try:
+        return int(value or "0")
+    except ValueError:
+        return 0
 
 
 def _ratio_100k(value: str | None, *, signed: bool = False) -> float:

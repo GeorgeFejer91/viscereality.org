@@ -853,7 +853,7 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-03T20:37:34+00:00",
+  "generatedAtUtc": "2026-07-03T20:59:29+00:00",
   "qa": {
     "groupRows": [
       {
@@ -5447,8 +5447,16 @@
           "trackId": "track-0012",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "glow-effect",
             "media-brightness-contrast-effect"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 381000
+            }
+          },
           "z": 13
         }
       ],
@@ -6136,8 +6144,16 @@
           "trackId": "track-0012",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "glow-effect",
             "media-brightness-contrast-effect"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 381000
+            }
+          },
           "z": 13
         }
       ],
@@ -8396,9 +8412,17 @@
           "trackId": "track-0012",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "glow-effect",
             "media-brightness-contrast-effect",
             "off-canvas"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 381000
+            }
+          },
           "z": 23
         }
       ],
@@ -10049,9 +10073,17 @@
           "trackId": "track-0012",
           "unsupported": [
             "hdphoto-layer-selected-for-conversion",
+            "glow-effect",
             "media-brightness-contrast-effect",
             "off-canvas"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 381000
+            }
+          },
           "z": 23
         }
       ],
@@ -46617,7 +46649,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -47545,7 +47586,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -48762,7 +48812,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -49789,7 +49848,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -51009,7 +51077,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -51629,7 +51706,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -52406,7 +52492,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -53181,7 +53276,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -54075,7 +54179,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -54687,7 +54800,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -55364,7 +55486,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -55823,7 +55954,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -56306,7 +56446,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -56607,7 +56756,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -56917,7 +57075,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -57167,7 +57334,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -57787,7 +57963,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -58950,7 +59135,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -60564,7 +60758,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -61583,7 +61786,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -62692,7 +62904,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -62921,7 +63142,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0065",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {

@@ -756,6 +756,14 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s2-o1042",
+      "slide": 2,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 26",
       "object": "s2-o27",
       "slide": 2,
@@ -929,6 +937,14 @@
       "slide": 2,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s2-o16",
+      "slide": 2,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1188,6 +1204,38 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s3-o97",
+      "slide": 3,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s3-o98",
+      "slide": 3,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s4-o97",
+      "slide": 4,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s4-o98",
+      "slide": 4,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 64",
       "object": "s4-o65",
       "slide": 4,
@@ -1417,6 +1465,22 @@
       "slide": 4,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s5-o97",
+      "slide": 5,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s5-o98",
+      "slide": 5,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1657,6 +1721,22 @@
       "slide": 5,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s6-o97",
+      "slide": 6,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s6-o98",
+      "slide": 6,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -1924,6 +2004,22 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s7-o97",
+      "slide": 7,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s7-o98",
+      "slide": 7,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 64",
       "object": "s7-o65",
       "slide": 7,
@@ -2124,6 +2220,22 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s8-o97",
+      "slide": 8,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s8-o98",
+      "slide": 8,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 64",
       "object": "s8-o65",
       "slide": 8,
@@ -2284,6 +2396,22 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s9-o97",
+      "slide": 9,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s9-o98",
+      "slide": 9,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 4",
       "object": "s9-o5",
       "slide": 9,
@@ -2436,6 +2564,22 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s10-o97",
+      "slide": 10,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s10-o98",
+      "slide": 10,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 10",
       "object": "s10-o11",
       "slide": 10,
@@ -2564,6 +2708,22 @@
       ]
     },
     {
+      "name": "Picture 18",
+      "object": "s11-o97",
+      "slide": 11,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s11-o98",
+      "slide": 11,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 64",
       "object": "s11-o65",
       "slide": 11,
@@ -2665,6 +2825,22 @@
       "slide": 11,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s12-o97",
+      "slide": 12,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 18",
+      "object": "s12-o98",
+      "slide": 12,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2772,6 +2948,22 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s13-o2",
+      "slide": 13,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s13-o7172",
+      "slide": 13,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 7",
       "object": "s13-o8",
       "slide": 13,
@@ -2852,6 +3044,22 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s14-o2",
+      "slide": 14,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s14-o7172",
+      "slide": 14,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 7",
       "object": "s14-o8",
       "slide": 14,
@@ -2908,6 +3116,22 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s15-o2",
+      "slide": 15,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s15-o7172",
+      "slide": 15,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 7",
       "object": "s15-o8",
       "slide": 15,
@@ -2945,6 +3169,22 @@
       "slide": 15,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s16-o2",
+      "slide": 16,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 4",
+      "object": "s16-o7172",
+      "slide": 16,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -3124,10 +3364,19 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s17-o2",
+      "slide": 17,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 4",
       "object": "s17-o7172",
       "slide": 17,
       "unsupported": [
+        "glow-effect",
         "off-canvas"
       ]
     },

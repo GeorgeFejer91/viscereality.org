@@ -652,6 +652,14 @@
   },
   "unsupportedObjects": [
     {
+      "name": "Graphic 7",
+      "object": "s1-o8",
+      "slide": 1,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 2",
       "object": "s1-o3",
       "slide": 1,
@@ -745,6 +753,7 @@
       "object": "s2-o49",
       "slide": 2,
       "unsupported": [
+        "glow-effect",
         "off-canvas"
       ]
     },
@@ -2023,6 +2032,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s20-o2",
+      "slide": 20,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Rectangle: Rounded Corners 31",
       "object": "s20-o32",
       "slide": 20,
@@ -2068,6 +2085,14 @@
       "slide": 20,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s21-o2",
+      "slide": 21,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2144,6 +2169,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s22-o2",
+      "slide": 22,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Combined01_spedup_30s_hq_playback",
       "object": "s22-o9",
       "slide": 22,
@@ -2175,6 +2208,14 @@
       "unsupported": [
         "video-media-preferred-over-poster",
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s23-o2",
+      "slide": 23,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2229,6 +2270,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s24-o2",
+      "slide": 24,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 16",
       "object": "s24-o17",
       "slide": 24,
@@ -2267,6 +2316,14 @@
       "unsupported": [
         "video-media-preferred-over-poster",
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s25-o2",
+      "slide": 25,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2310,6 +2367,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s26-o2",
+      "slide": 26,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 48",
       "object": "s26-o49",
       "slide": 26,
@@ -2342,6 +2407,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s27-o2",
+      "slide": 27,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 48",
       "object": "s27-o49",
       "slide": 27,
@@ -2371,6 +2444,14 @@
       "slide": 27,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s28-o2",
+      "slide": 28,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2422,6 +2503,14 @@
       ]
     },
     {
+      "name": "Picture 1",
+      "object": "s29-o2",
+      "slide": 29,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
       "name": "Picture 48",
       "object": "s29-o49",
       "slide": 29,
@@ -2443,6 +2532,22 @@
       "slide": 29,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Graphic 3",
+      "object": "s29-o4",
+      "slide": 29,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s30-o2",
+      "slide": 30,
+      "unsupported": [
+        "glow-effect"
       ]
     },
     {
@@ -2523,6 +2628,22 @@
       "slide": 30,
       "unsupported": [
         "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s31-o2",
+      "slide": 31,
+      "unsupported": [
+        "glow-effect"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s32-o2",
+      "slide": 32,
+      "unsupported": [
+        "glow-effect"
       ]
     }
   ],

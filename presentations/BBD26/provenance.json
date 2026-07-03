@@ -196,7 +196,9 @@
       },
       "slide": 1,
       "trackId": "track-0009",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-643435dc60035768",
@@ -680,6 +682,7 @@
       "slide": 2,
       "trackId": "track-0009",
       "unsupported": [
+        "glow-effect",
         "off-canvas"
       ]
     },
@@ -8738,7 +8741,9 @@
       },
       "slide": 20,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -9082,7 +9087,9 @@
       },
       "slide": 21,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-2361b03b194a1b72",
@@ -9488,7 +9495,9 @@
       },
       "slide": 22,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-34a2f729c61b7c79",
@@ -9748,7 +9757,9 @@
       },
       "slide": 23,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -10075,7 +10086,9 @@
       },
       "slide": 24,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-0902201da080c1fe",
@@ -10340,7 +10353,9 @@
       },
       "slide": 25,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-0902201da080c1fe",
@@ -10542,7 +10557,9 @@
       },
       "slide": 26,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-b34ce151f7018046",
@@ -10727,7 +10744,9 @@
       },
       "slide": 27,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-b34ce151f7018046",
@@ -10923,7 +10942,9 @@
       },
       "slide": 28,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -11195,7 +11216,9 @@
       },
       "slide": 29,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-b34ce151f7018046",
@@ -11345,7 +11368,9 @@
       },
       "slide": 29,
       "trackId": "track-0111",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -11505,7 +11530,9 @@
       },
       "slide": 30,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -11863,7 +11890,9 @@
       },
       "slide": 31,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -12165,7 +12194,9 @@
       },
       "slide": 32,
       "trackId": "track-0092",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,

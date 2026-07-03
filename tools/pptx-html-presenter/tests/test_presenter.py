@@ -27,7 +27,7 @@ from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy,
 from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
-from pptx_html_presenter.pptx import _media_effects, _selected_media_target, parse_pptx
+from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _visual_effects, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
     _candidate_sweep_samples,
@@ -2848,6 +2848,28 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(
             _media_effects(node),
             {"brightnessContrast": {"bright": 1.0, "contrast": -0.2}},
+        )
+
+    def test_powerpoint_glow_effect_is_parsed(self) -> None:
+        node = ET.fromstring(
+            """
+            <p:pic xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:spPr>
+                <a:effectLst>
+                  <a:glow rad="381000">
+                    <a:schemeClr val="bg1">
+                      <a:alpha val="40000"/>
+                    </a:schemeClr>
+                  </a:glow>
+                </a:effectLst>
+              </p:spPr>
+            </p:pic>
+            """
+        )
+        self.assertEqual(
+            _visual_effects(node),
+            {"glow": {"radiusEmu": 381000, "color": "scheme:bg1", "alpha": 0.4}},
         )
 
     def test_prunes_unreferenced_source_assets(self) -> None:

@@ -270,6 +270,7 @@
       "trackId": "track-0012",
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "glow-effect",
         "media-brightness-contrast-effect"
       ]
     },
@@ -889,6 +890,7 @@
       "trackId": "track-0012",
       "unsupported": [
         "hdphoto-layer-selected-for-conversion",
+        "glow-effect",
         "media-brightness-contrast-effect",
         "off-canvas"
       ]
@@ -5861,7 +5863,9 @@
       },
       "slide": 15,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -6205,7 +6209,9 @@
       },
       "slide": 16,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-2361b03b194a1b72",
@@ -6611,7 +6617,9 @@
       },
       "slide": 17,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-34a2f729c61b7c79",
@@ -6871,7 +6879,9 @@
       },
       "slide": 18,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -7198,7 +7208,9 @@
       },
       "slide": 19,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-0902201da080c1fe",
@@ -7463,7 +7475,9 @@
       },
       "slide": 20,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-0902201da080c1fe",
@@ -7665,7 +7679,9 @@
       },
       "slide": 21,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-b34ce151f7018046",
@@ -7801,7 +7817,9 @@
       },
       "slide": 22,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": "asset-b34ce151f7018046",
@@ -7913,7 +7931,9 @@
       },
       "slide": 23,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -8271,7 +8291,9 @@
       },
       "slide": 24,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,
@@ -8573,7 +8595,9 @@
       },
       "slide": 25,
       "trackId": "track-0065",
-      "unsupported": []
+      "unsupported": [
+        "glow-effect"
+      ]
     },
     {
       "assetId": null,

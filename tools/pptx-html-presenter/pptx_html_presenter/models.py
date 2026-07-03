@@ -93,6 +93,7 @@ class SceneObject:
     stroke_width: float | None = None
     opacity: float = 1.0
     crop: dict[str, float] | None = None
+    visual_effects: dict[str, Any] = field(default_factory=dict)
     media_effects: dict[str, Any] = field(default_factory=dict)
     media_timing: dict[str, Any] = field(default_factory=dict)
     provenance: dict[str, Any] = field(default_factory=dict)
@@ -127,6 +128,8 @@ class SceneObject:
             "provenance": self.provenance,
             "unsupported": self.unsupported,
         }
+        if self.visual_effects:
+            scene["visualEffects"] = self.visual_effects
         if self.media_effects:
             scene["mediaEffects"] = self.media_effects
         return scene

@@ -1000,7 +1000,7 @@
     "sourceSha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe",
     "title": "Viscereality - Berlin Breathwork Days"
   },
-  "generatedAtUtc": "2026-07-03T20:38:03+00:00",
+  "generatedAtUtc": "2026-07-03T20:59:57+00:00",
   "qa": {
     "groupRows": [
       {
@@ -8889,7 +8889,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0009",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.69,
+              "color": "scheme:bg1",
+              "radiusEmu": 38100
+            }
+          },
           "z": 10
         },
         {
@@ -9868,7 +9877,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0009",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.69,
+              "color": "scheme:bg1",
+              "radiusEmu": 38100
+            }
+          },
           "z": 10
         },
         {
@@ -11715,8 +11733,16 @@
           "textStyle": {},
           "trackId": "track-0009",
           "unsupported": [
+            "glow-effect",
             "off-canvas"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.69,
+              "color": "scheme:bg1",
+              "radiusEmu": 38100
+            }
+          },
           "z": 13
         },
         {
@@ -13349,8 +13375,16 @@
           "textStyle": {},
           "trackId": "track-0009",
           "unsupported": [
+            "glow-effect",
             "off-canvas"
           ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.69,
+              "color": "scheme:bg1",
+              "radiusEmu": 38100
+            }
+          },
           "z": 13
         },
         {
@@ -71656,7 +71690,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -72584,7 +72627,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -73801,7 +73853,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -74828,7 +74889,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -76048,7 +76118,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -76668,7 +76747,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -77445,7 +77533,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -78220,7 +78317,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -79114,7 +79220,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -79726,7 +79841,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -80403,7 +80527,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -80862,7 +80995,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -81373,7 +81515,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -81805,7 +81956,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -82296,7 +82456,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -82744,7 +82913,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -83271,7 +83449,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -84007,7 +84194,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -84854,7 +85050,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -85212,7 +85417,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0111",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 50800
+            }
+          },
           "z": 8
         },
         {
@@ -85699,7 +85913,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -86057,7 +86280,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0111",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:bg1",
+              "radiusEmu": 50800
+            }
+          },
           "z": 8
         },
         {
@@ -86975,7 +87207,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -88138,7 +88379,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -89752,7 +90002,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -90789,7 +91048,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -91916,7 +92184,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
@@ -92145,7 +92422,16 @@
           "text": "",
           "textStyle": {},
           "trackId": "track-0092",
-          "unsupported": [],
+          "unsupported": [
+            "glow-effect"
+          ],
+          "visualEffects": {
+            "glow": {
+              "alpha": 0.4,
+              "color": "scheme:accent1",
+              "radiusEmu": 12700
+            }
+          },
           "z": 3
         },
         {
