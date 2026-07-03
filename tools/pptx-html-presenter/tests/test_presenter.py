@@ -1075,6 +1075,8 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("inferred.preserveOpacity", PLAYER_HTML)
         self.assertIn("function slideObjects", PLAYER_HTML)
         self.assertIn("function attachNode", PLAYER_HTML)
+        self.assertIn("function parentTrackForObject", PLAYER_HTML)
+        self.assertIn("return fromParent === toParent ? fromParent : null", PLAYER_HTML)
         self.assertIn("state.localGeometry", PLAYER_HTML)
         self.assertIn("node.dataset.nodeRole === \"panel\"", PLAYER_HTML)
         self.assertIn("node.dataset.nodeRole === \"group\"", PLAYER_HTML)

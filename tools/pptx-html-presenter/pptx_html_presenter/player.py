@@ -793,7 +793,16 @@ PLAYER_HTML = r"""<!doctype html>
   }
 
   function panelParentTrack(from, to) {
-    return from?.parentTrackId || to?.parentTrackId || from?.panelParentTrackId || to?.panelParentTrackId || null;
+    const fromParent = parentTrackForObject(from);
+    const toParent = parentTrackForObject(to);
+    if (fromParent && toParent) {
+      return fromParent === toParent ? fromParent : null;
+    }
+    return fromParent || toParent || null;
+  }
+
+  function parentTrackForObject(obj) {
+    return obj?.parentTrackId || obj?.panelParentTrackId || null;
   }
 
   function transitionRenderOrder(obj) {
