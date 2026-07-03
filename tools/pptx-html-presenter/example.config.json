@@ -10,7 +10,7 @@
     "transcode_gif": true,
     "transcode_video": true,
     "webp_quality": 88,
-    "allow_oversize_assets": true
+    "allow_oversize_assets": false
   },
   "morph_policy": {
     "match_threshold": 55,

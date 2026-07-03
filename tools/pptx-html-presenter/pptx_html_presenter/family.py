@@ -517,11 +517,23 @@ def share_deck_assets(
     build_report["sharedAssets"]["maxAssetMb"] = shared_limit["maxAssetMb"]
     build_report["sharedAssets"]["oversizeAssets"] = shared_limit["oversizeAssets"]
     build_report["sharedAssets"]["softOversizeAssets"] = shared_limit["softOversizeAssets"]
-    if build_report.get("assetMode") != "manifest-only" and shared_limit["githubPagesSafe"] and not missing:
+    if (
+        build_report.get("assetMode") != "manifest-only"
+        and shared_limit["githubPagesSafe"]
+        and shared_limit.get("preferredAssetSafe", True)
+        and not missing
+    ):
         build_report["originalStatus"] = build_report.get("status")
         build_report["originalGithubPagesSafe"] = build_report.get("githubPagesSafe")
         build_report["githubPagesSafe"] = True
+        build_report["publishAssetSafe"] = True
         build_report["status"] = "ok"
+    elif build_report.get("assetMode") != "manifest-only" and (
+        not shared_limit["githubPagesSafe"] or not shared_limit.get("preferredAssetSafe", True)
+    ):
+        build_report["githubPagesSafe"] = False
+        build_report["publishAssetSafe"] = False
+        build_report["status"] = "blocked-by-asset-size"
     write_json(build_report_path, build_report)
     return {
         "deckId": deck_id,

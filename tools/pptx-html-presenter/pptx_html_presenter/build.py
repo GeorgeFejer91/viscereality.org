@@ -78,7 +78,7 @@ def build_presentation(
     write_player(out_dir)
     if effective_config.asset_policy.mode == "manifest-only":
         status = "manifest-only"
-    elif asset_report.get("githubPagesSafe"):
+    elif asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe")):
         status = "ok"
     else:
         status = "blocked-by-asset-size"
@@ -92,7 +92,10 @@ def build_presentation(
         "outputDir": str(out_dir.resolve()),
         "sceneFile": "deck.scene.json",
         "playerFile": "index.html",
-        "githubPagesSafe": bool(asset_report.get("githubPagesSafe")),
+        "githubPagesSafe": bool(asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe"))),
+        "hardLimitSafe": bool(asset_report.get("hardLimitSafe", asset_report.get("githubPagesSafe"))),
+        "preferredAssetSafe": bool(asset_report.get("preferredAssetSafe", asset_report.get("githubPagesSafe"))),
+        "publishAssetSafe": bool(asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe"))),
         "assetMode": effective_config.asset_policy.mode,
         "slideCount": len(scene["slides"]),
         "assetCount": len(scene["assets"]),

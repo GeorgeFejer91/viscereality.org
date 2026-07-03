@@ -25,7 +25,9 @@ def prepare_assets(
     ffmpeg = find_binary("ffmpeg.exe", ffmpeg_bin) or find_binary("ffmpeg", ffmpeg_bin)
     by_hash: dict[str, dict[str, str]] = {}
     report_assets: list[dict[str, Any]] = []
-    github_safe = True
+    hard_limit_safe = True
+    preferred_asset_safe = True
+    publish_asset_safe = True
 
     with zipfile.ZipFile(deck.source_path) as zf:
         for asset in sorted(deck.assets.values(), key=lambda item: item.source_path):
@@ -34,11 +36,14 @@ def prepare_assets(
                 asset.output_file = None
                 asset.source_file = asset.source_path
                 asset.warnings.append("manifest-only-asset-not-copied")
-                if format_mb(asset.size_bytes) > policy.soft_max_mb:
-                    asset.warnings.append("github-soft-limit-warning")
-                if format_mb(asset.size_bytes) > policy.hard_max_mb:
-                    asset.warnings.append("github-hard-limit-blocker")
-                    github_safe = False
+                hard_ok, preferred_ok, publish_ok = _apply_asset_size_policy(
+                    asset,
+                    asset.size_bytes,
+                    policy,
+                )
+                hard_limit_safe = hard_limit_safe and hard_ok
+                preferred_asset_safe = preferred_asset_safe and preferred_ok
+                publish_asset_safe = publish_asset_safe and publish_ok
                 report_assets.append(
                     {
                         "id": asset.id,
@@ -142,11 +147,14 @@ def prepare_assets(
 
             output_abs = out_dir / output_rel
             output_size = output_abs.stat().st_size if output_abs.exists() else asset.size_bytes
-            if format_mb(output_size) > policy.soft_max_mb:
-                asset.warnings.append("github-soft-limit-warning")
-            if format_mb(output_size) > policy.hard_max_mb:
-                asset.warnings.append("github-hard-limit-blocker")
-                github_safe = False
+            hard_ok, preferred_ok, publish_ok = _apply_asset_size_policy(
+                asset,
+                output_size,
+                policy,
+            )
+            hard_limit_safe = hard_limit_safe and hard_ok
+            preferred_asset_safe = preferred_asset_safe and preferred_ok
+            publish_asset_safe = publish_asset_safe and publish_ok
             report_assets.append(
                 {
                     "id": asset.id,
@@ -187,7 +195,10 @@ def prepare_assets(
         )
 
     report = {
-        "githubPagesSafe": github_safe,
+        "githubPagesSafe": publish_asset_safe,
+        "hardLimitSafe": hard_limit_safe,
+        "preferredAssetSafe": preferred_asset_safe,
+        "publishAssetSafe": publish_asset_safe,
         "assetPolicy": {
             "mode": policy.mode,
             "softMaxMb": policy.soft_max_mb,
@@ -198,6 +209,7 @@ def prepare_assets(
             "videoCrf": policy.video_crf,
             "allowOversizeAssets": policy.allow_oversize_assets,
             "pruneUnreferencedSourceAssets": policy.prune_unreferenced_source_assets,
+            "softLimitIsBlocker": not policy.allow_oversize_assets,
         },
         "prunedSourceAssets": {
             "count": pruned_source_assets["count"],
@@ -250,6 +262,44 @@ def _prune_unreferenced_asset_files(
     return {"count": count, "bytes": size_bytes, "skipped": skipped}
 
 
+def _apply_asset_size_policy(
+    asset: AssetRef,
+    size_bytes: int,
+    policy: AssetPolicy,
+) -> tuple[bool, bool, bool]:
+    mb = format_mb(size_bytes)
+    hard_ok = mb <= policy.hard_max_mb
+    preferred_ok = mb <= policy.soft_max_mb
+    publish_ok = hard_ok and (preferred_ok or policy.allow_oversize_assets)
+    if not preferred_ok:
+        _append_warning_once(asset, "github-soft-limit-warning")
+        if not policy.allow_oversize_assets:
+            _append_warning_once(asset, "github-soft-limit-blocker")
+    if not hard_ok:
+        _append_warning_once(asset, "github-hard-limit-blocker")
+    return hard_ok, preferred_ok, publish_ok
+
+
+def _publish_size_ok(path: Path, policy: AssetPolicy) -> bool:
+    if not path.exists() or path.stat().st_size <= 0:
+        return False
+    _hard_ok, _preferred_ok, publish_ok = _size_policy_flags(path.stat().st_size, policy)
+    return publish_ok
+
+
+def _size_policy_flags(size_bytes: int, policy: AssetPolicy) -> tuple[bool, bool, bool]:
+    mb = format_mb(size_bytes)
+    hard_ok = mb <= policy.hard_max_mb
+    preferred_ok = mb <= policy.soft_max_mb
+    publish_ok = hard_ok and (preferred_ok or policy.allow_oversize_assets)
+    return hard_ok, preferred_ok, publish_ok
+
+
+def _append_warning_once(asset: AssetRef, warning: str) -> None:
+    if warning not in asset.warnings:
+        asset.warnings.append(warning)
+
+
 def _should_transcode_gif(asset: AssetRef, policy: AssetPolicy) -> bool:
     return (
         policy.mode != "source-only"
@@ -274,6 +324,10 @@ def _try_convert_gif_for_publish(
             asset,
             ffmpeg=ffmpeg,
         )
+        if converted is not None and not _publish_size_ok(converted, policy):
+            asset.warnings.append("gif-alpha-webm-over-publish-limit-trying-webp")
+            converted.unlink(missing_ok=True)
+            converted = None
         if converted is None:
             converted = _try_convert_gif_to_webp_with_ffmpeg(
                 source,
@@ -282,12 +336,20 @@ def _try_convert_gif_for_publish(
                 ffmpeg=ffmpeg,
                 quality=policy.webp_quality,
             )
+        if converted is not None and not _publish_size_ok(converted, policy):
+            asset.warnings.append("gif-alpha-webp-over-publish-limit")
+            converted.unlink(missing_ok=True)
+            converted = None
         if converted is None and format_mb(asset.size_bytes) <= 30:
             converted = _try_convert_gif_to_webp(
                 source,
                 output_dir / f"{asset.sha256[:16]}.webp",
                 quality=policy.webp_quality,
             )
+        if converted is not None and not _publish_size_ok(converted, policy):
+            asset.warnings.append("gif-alpha-pillow-webp-over-publish-limit")
+            converted.unlink(missing_ok=True)
+            converted = None
         if converted is None:
             asset.warnings.append("gif-alpha-preserved-original")
         elif converted.suffix.lower() == ".webm":
@@ -303,8 +365,8 @@ def _try_convert_gif_for_publish(
         ffmpeg=ffmpeg,
         quality=policy.webp_quality,
     )
-    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
-        asset.warnings.append("gif-mp4-over-hard-limit-trying-smaller-mp4")
+    if converted is not None and not _publish_size_ok(converted, policy):
+        asset.warnings.append("gif-mp4-over-publish-limit-trying-smaller-mp4")
         converted.unlink(missing_ok=True)
         converted = _try_convert_opaque_gif_to_smaller_mp4(
             source,
@@ -313,8 +375,8 @@ def _try_convert_gif_for_publish(
             policy,
             ffmpeg=ffmpeg,
         )
-    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
-        asset.warnings.append("gif-small-mp4-over-hard-limit-trying-webm")
+    if converted is not None and not _publish_size_ok(converted, policy):
+        asset.warnings.append("gif-small-mp4-over-publish-limit-trying-webm")
         converted.unlink(missing_ok=True)
         converted = None
     if converted is None:
@@ -324,8 +386,8 @@ def _try_convert_gif_for_publish(
             asset,
             ffmpeg=ffmpeg,
         )
-    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
-        asset.warnings.append("gif-webm-over-hard-limit-trying-webp")
+    if converted is not None and not _publish_size_ok(converted, policy):
+        asset.warnings.append("gif-webm-over-publish-limit-trying-webp")
         converted.unlink(missing_ok=True)
         converted = _try_convert_gif_to_webp_with_ffmpeg(
             source,
@@ -334,8 +396,8 @@ def _try_convert_gif_for_publish(
             ffmpeg=ffmpeg,
             quality=policy.webp_quality,
         )
-    if converted is not None and format_mb(converted.stat().st_size) > policy.hard_max_mb:
-        asset.warnings.append("gif-transcode-over-hard-limit")
+    if converted is not None and not _publish_size_ok(converted, policy):
+        asset.warnings.append("gif-transcode-over-publish-limit")
         converted.unlink(missing_ok=True)
         converted = None
     if converted is None and format_mb(asset.size_bytes) <= 30:
@@ -344,6 +406,10 @@ def _try_convert_gif_for_publish(
             output_dir / f"{asset.sha256[:16]}.webp",
             quality=policy.webp_quality,
         )
+    if converted is not None and not _publish_size_ok(converted, policy):
+        asset.warnings.append("gif-pillow-webp-over-publish-limit")
+        converted.unlink(missing_ok=True)
+        converted = None
     if converted is not None and converted.suffix.lower() == ".mp4":
         asset.warnings.append("gif-opaque-converted-to-mp4")
     elif converted is not None and converted.suffix.lower() == ".webp":
@@ -374,10 +440,10 @@ def _try_convert_opaque_gif_to_smaller_mp4(
         )
         if converted is None:
             continue
-        if format_mb(converted.stat().st_size) <= policy.hard_max_mb:
+        if _publish_size_ok(converted, policy):
             asset.warnings.append(f"gif-opaque-converted-to-small-mp4-crf{crf}")
             return converted
-        asset.warnings.append(f"gif-small-mp4-crf{crf}-over-hard-limit")
+        asset.warnings.append(f"gif-small-mp4-crf{crf}-over-publish-limit")
         converted.unlink(missing_ok=True)
     return None
 
@@ -609,8 +675,8 @@ def _try_optimize_static_image(
                     asset.warnings.append(f"static-image-optimized-webp-{suffix}")
                     return output
                 if output.exists():
-                    if format_mb(output.stat().st_size) > policy.hard_max_mb:
-                        asset.warnings.append(f"static-image-webp-{suffix}-over-hard-limit")
+                    if not _publish_size_ok(output, policy):
+                        asset.warnings.append(f"static-image-webp-{suffix}-over-publish-limit")
                     else:
                         asset.warnings.append(f"static-image-webp-{suffix}-not-smaller")
                     output.unlink(missing_ok=True)
@@ -703,9 +769,9 @@ def _accept_optimized_static_image(output: Path, source_size: int, policy: Asset
     if not output.exists() or output.stat().st_size <= 0:
         return False
     output_size = output.stat().st_size
-    if format_mb(output_size) > policy.hard_max_mb:
+    if not _publish_size_ok(output, policy):
         return False
-    return output_size < source_size or format_mb(source_size) > policy.hard_max_mb
+    return output_size < source_size or format_mb(source_size) > policy.soft_max_mb
 
 
 def _image_has_alpha(image: Any) -> bool:
@@ -910,52 +976,80 @@ def _try_optimize_video_with_ffmpeg(
         asset.warnings.append("ffmpeg-missing")
         return None
     output_dir.mkdir(parents=True, exist_ok=True)
-    crf = max(0, min(51, int(policy.video_crf)))
-    output = output_dir / f"{asset.sha256[:16]}-crf{crf}.mp4"
-    if output.exists() and output.stat().st_size > 0:
-        if output.stat().st_size < source.stat().st_size:
-            return output
-        output.unlink(missing_ok=True)
-    cmd = [
-        str(ffmpeg),
-        "-y",
-        "-fflags",
-        "+bitexact",
-        "-i",
-        str(source),
-        "-an",
-        "-map_metadata",
-        "-1",
-        "-map_chapters",
-        "-1",
-        "-vf",
-        "scale='min(1920,iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
-        "-movflags",
-        "+faststart",
-        "-pix_fmt",
-        "yuv420p",
-        "-c:v",
-        "libx264",
-        "-preset",
-        "medium",
-        "-threads",
-        "1",
-        "-flags:v",
-        "+bitexact",
-        "-crf",
-        str(crf),
-        str(output),
+    primary_crf = max(0, min(51, int(policy.video_crf)))
+    variants: list[tuple[int, int, str]] = [
+        (primary_crf, 1920, f"crf{primary_crf}"),
+        (max(primary_crf, 26), 1600, f"crf{max(primary_crf, 26)}-w1600"),
+        (max(primary_crf, 28), 1280, f"crf{max(primary_crf, 28)}-w1280"),
+        (max(primary_crf, 32), 1280, f"crf{max(primary_crf, 32)}-w1280"),
+        (max(primary_crf, 34), 960, f"crf{max(primary_crf, 34)}-w960"),
     ]
-    try:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-    except Exception as exc:
-        asset.warnings.append(f"ffmpeg-video-optimize-failed:{exc}")
-        output.unlink(missing_ok=True)
-        return None
+    seen: set[tuple[int, int]] = set()
+    for crf, max_width, suffix in variants:
+        key = (crf, max_width)
+        if key in seen:
+            continue
+        seen.add(key)
+        output = output_dir / f"{asset.sha256[:16]}-{suffix}.mp4"
+        if output.exists() and output.stat().st_size > 0:
+            if _accept_optimized_video(output, source, policy):
+                if suffix != f"crf{primary_crf}":
+                    asset.warnings.append(f"video-optimized-to-smaller-mp4-{suffix}")
+                return output
+            output.unlink(missing_ok=True)
+        cmd = [
+            str(ffmpeg),
+            "-y",
+            "-fflags",
+            "+bitexact",
+            "-i",
+            str(source),
+            "-an",
+            "-map_metadata",
+            "-1",
+            "-map_chapters",
+            "-1",
+            "-vf",
+            f"scale='min({max_width},iw)':'min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+            "-movflags",
+            "+faststart",
+            "-pix_fmt",
+            "yuv420p",
+            "-c:v",
+            "libx264",
+            "-preset",
+            "medium",
+            "-threads",
+            "1",
+            "-flags:v",
+            "+bitexact",
+            "-crf",
+            str(crf),
+            str(output),
+        ]
+        try:
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        except Exception as exc:
+            asset.warnings.append(f"ffmpeg-video-optimize-failed:{suffix}:{exc}")
+            output.unlink(missing_ok=True)
+            continue
+        if _accept_optimized_video(output, source, policy):
+            if suffix != f"crf{primary_crf}":
+                asset.warnings.append(f"video-optimized-to-smaller-mp4-{suffix}")
+            return output
+        if output.exists():
+            if not _publish_size_ok(output, policy):
+                asset.warnings.append(f"video-mp4-{suffix}-over-publish-limit")
+            elif output.stat().st_size >= source.stat().st_size:
+                asset.warnings.append(f"video-mp4-{suffix}-not-smaller")
+            output.unlink(missing_ok=True)
+    return None
+
+
+def _accept_optimized_video(output: Path, source: Path, policy: AssetPolicy) -> bool:
     if not output.exists() or output.stat().st_size <= 0:
-        return None
-    if output.stat().st_size >= source.stat().st_size:
-        asset.warnings.append("video-optimized-output-not-smaller")
-        output.unlink(missing_ok=True)
-        return None
-    return output
+        return False
+    if not _publish_size_ok(output, policy):
+        return False
+    source_size = source.stat().st_size if source.exists() else 0
+    return source_size <= 0 or output.stat().st_size < source_size or format_mb(source_size) > policy.soft_max_mb

@@ -163,7 +163,7 @@ is explicitly needed for review.
     "transcode_video": true,
     "webp_quality": 88,
     "video_crf": 18,
-    "allow_oversize_assets": true,
+    "allow_oversize_assets": false,
     "prune_unreferenced_source_assets": true
   },
   "morph_policy": {
@@ -322,17 +322,20 @@ settled-only.
 
 ## GitHub Pages Policy
 
-The compiler flags files above 50 MiB and treats files above 100 MiB as public
-GitHub Pages blockers. It can still build local staging output for inspection,
-but family build/publish reports must show that the shared public runtime library
-is GitHub-safe before the scene decks replace public URLs.
+The compiler targets a 50 MiB preferred maximum for public runtime assets and
+treats files above 100 MiB as hard GitHub Pages blockers. With the default
+`asset_policy.allow_oversize_assets: false`, files above 50 MiB are also
+publish blockers: the optimizer should keep trying smaller visually faithful
+HTML formats, or the build must remain staged for review. Set
+`allow_oversize_assets: true` only for explicitly reviewed local/staging output;
+it never makes >100 MiB assets GitHub-safe.
 
 Set `asset_policy.prune_unreferenced_source_assets` for public GitHub Pages
 builds. The compiler still extracts originals first so transcoding and reports
 are based on source bytes, but it removes source copies that are not the actual
 render asset after optimized publish copies have been created. In family mode,
 `family-build-report.json` includes `sharedAssetLimits`, including the largest
-public runtime assets and any hard-limit violators.
+public runtime assets, preferred-limit violators, and hard-limit violators.
 Use `asset_policy.video_crf` to tune MP4 publish quality; lower values produce
 larger, more faithful video layers, while higher values favor smaller output.
 The bundled ffmpeg commands strip volatile metadata and use deterministic-leaning

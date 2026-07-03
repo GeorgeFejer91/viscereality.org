@@ -2809,6 +2809,89 @@ class PresenterTests(unittest.TestCase):
             )
         )
 
+    def test_soft_oversize_asset_blocks_publish_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = b"<svg viewBox='0 0 1 1'></svg>" * 256
+            source_sha = hashlib.sha256(raw).hexdigest()
+            pptx = root / "demo.pptx"
+            with zipfile.ZipFile(pptx, "w") as zf:
+                zf.writestr("ppt/media/large.svg", raw)
+            deck = PptxDeck(
+                source_path=str(pptx),
+                source_sha256=hashlib.sha256(pptx.read_bytes()).hexdigest(),
+                title="Demo",
+                slide_width=16,
+                slide_height=9,
+                slides=[],
+                assets={
+                    "ppt/media/large.svg": AssetRef(
+                        source_path="ppt/media/large.svg",
+                        rel_id="rId1",
+                        kind="svg",
+                        extension="svg",
+                        size_bytes=len(raw),
+                        sha256=source_sha,
+                    )
+                },
+            )
+
+            report = prepare_assets(
+                deck,
+                root / "out",
+                AssetPolicy(soft_max_mb=0.001, hard_max_mb=1, allow_oversize_assets=False),
+            )
+
+            row = report["assets"][0]
+            self.assertFalse(report["githubPagesSafe"])
+            self.assertTrue(report["hardLimitSafe"])
+            self.assertFalse(report["preferredAssetSafe"])
+            self.assertFalse(report["publishAssetSafe"])
+            self.assertIn("github-soft-limit-warning", row["warnings"])
+            self.assertIn("github-soft-limit-blocker", row["warnings"])
+            self.assertNotIn("github-hard-limit-blocker", row["warnings"])
+
+    def test_soft_oversize_asset_can_be_allowed_for_reviewed_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = b"<svg viewBox='0 0 1 1'></svg>" * 256
+            source_sha = hashlib.sha256(raw).hexdigest()
+            pptx = root / "demo.pptx"
+            with zipfile.ZipFile(pptx, "w") as zf:
+                zf.writestr("ppt/media/large.svg", raw)
+            deck = PptxDeck(
+                source_path=str(pptx),
+                source_sha256=hashlib.sha256(pptx.read_bytes()).hexdigest(),
+                title="Demo",
+                slide_width=16,
+                slide_height=9,
+                slides=[],
+                assets={
+                    "ppt/media/large.svg": AssetRef(
+                        source_path="ppt/media/large.svg",
+                        rel_id="rId1",
+                        kind="svg",
+                        extension="svg",
+                        size_bytes=len(raw),
+                        sha256=source_sha,
+                    )
+                },
+            )
+
+            report = prepare_assets(
+                deck,
+                root / "out",
+                AssetPolicy(soft_max_mb=0.001, hard_max_mb=1, allow_oversize_assets=True),
+            )
+
+            row = report["assets"][0]
+            self.assertTrue(report["githubPagesSafe"])
+            self.assertTrue(report["hardLimitSafe"])
+            self.assertFalse(report["preferredAssetSafe"])
+            self.assertTrue(report["publishAssetSafe"])
+            self.assertIn("github-soft-limit-warning", row["warnings"])
+            self.assertNotIn("github-soft-limit-blocker", row["warnings"])
+
     def test_wdp_assets_are_conversion_candidates(self) -> None:
         asset = AssetRef(
             source_path="ppt/media/hdphoto1.wdp",

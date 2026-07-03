@@ -49,6 +49,11 @@ presentations/shared-assets/viscereality/
   - `presentations/BBD26-chunked/`
 - Shared asset index:
   - `presentations/shared-assets/viscereality/asset-index.json`
+- Public asset-size policy:
+  - default public/runtime target is under 50 MiB per file.
+  - files above 100 MiB remain hard GitHub Pages blockers.
+  - `asset_policy.allow_oversize_assets: false` now makes files above the 50 MiB preferred limit publish blockers too, not just warnings.
+  - `allow_oversize_assets: true` is only for explicitly reviewed local/staging exceptions and does not make >100 MiB files GitHub-safe.
 - Latest family build status: `ok`.
 - Latest family inspect status: `blocked` only because the local disk free-space preflight is below the configured 8 GiB floor; source PPTX parsing still reports 3 decks and about 1.53 GiB unique source media.
 - Latest family HTML visual audit status: `ok`; the latest direct public-folder audits also pass for all three decks.
@@ -119,6 +124,12 @@ Current source PPTX parse results from family preflight:
   - Solution: family asset sharing now uses a 50 MiB preferred public-asset ceiling. If an original source blob is above that ceiling and the runtime `file` is already a shared safe optimized asset, `sourceFile` is rewritten to the runtime file and the original remains represented by hash/path metadata rather than being copied into the public shared tree.
 - Problem: A future oversized static PNG/JPEG/TIFF/BMP could pass through unchanged if it was not GIF/video.
   - Solution: oversized still images are now candidates for conservative WebP optimization: a high-quality 4K WebP first, then a 1080p WebP fallback only when needed to satisfy the hard limit.
+- Problem: A future public build could still accept an asset between 50 MiB and 100 MiB because the earlier per-deck asset report treated the 50 MiB limit as only a warning.
+  - Solution: `prepare_assets()` now reports `hardLimitSafe`, `preferredAssetSafe`, and `publishAssetSafe`. With `allow_oversize_assets: false`, a post-optimization asset above the 50 MiB preferred limit gets `github-soft-limit-blocker`, `publishAssetSafe: false`, and the build status becomes `blocked-by-asset-size`.
+- Problem: Oversized alpha GIFs, opaque GIFs, and videos could stop after one acceptable-under-100-MiB transcode even when the result was still too large for the preferred public asset ceiling.
+  - Solution: GIF and video conversion now targets the publish policy, not only the hard limit. Transparent GIFs keep alpha and try alpha-safe WebM/WebP outputs; opaque GIF/video-like loops and large videos try progressively smaller MP4/WebM/WebP variants before falling back to a blocked staged build.
+- Problem: Family sharing could upgrade a deck build back to `ok` when the shared library was hard-limit safe but still had preferred-limit violators.
+  - Solution: `share_deck_assets()` now only restores `ok` when shared assets are both `githubPagesSafe` and `preferredAssetSafe`; otherwise the staged deck remains `blocked-by-asset-size`.
 - Problem: PowerPoint can store a high-fidelity HDPhoto/WDP image layer plus a lower-fidelity PNG fallback for a single visible object. MuC slide 1 `Picture 10` used this for the raster title/text block, but the compiler selected the PNG fallback.
   - Solution: the parser now detects PowerPoint image layers (`a14:imgLayer`), prefers the related `.wdp` media asset for that object, and asset preparation converts WDP to browser-safe PNG via Windows WIC. A diagnostic MuC build rendered slide 1 with the converted WDP title object and improved settled slide-1 SSIM from `0.788991` to `0.865641` against the PowerPoint reference.
 - Problem: full family rebuilds are still slow because large transparent GIFs transcode to deterministic VP9-alpha WebM single-threaded.
@@ -157,6 +168,7 @@ Current shared public asset library check after the visual-effects/public-audit 
 - The latest build also converted one WDP/HDPhoto-derived asset per public deck into shared PNG runtime assets.
 - Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
 - Latest direct filesystem gate check on 2026-07-04: 76 shared public asset files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
+- Latest stricter asset-policy verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 125 tests, including soft-limit blocker tests. A direct shared-library filesystem gate again found 76 files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB. A full family rebuild was intentionally not run in this pass because `family inspect` reported only 4.85 GiB free against the configured 8 GiB preflight floor.
 
 ## Latest HTML Visual Audit
 
