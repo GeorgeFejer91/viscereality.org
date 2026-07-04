@@ -336,6 +336,15 @@ are based on source bytes, but it removes source copies that are not the actual
 render asset after optimized publish copies have been created. In family mode,
 `family-build-report.json` includes `sharedAssetLimits`, including the largest
 public runtime assets, preferred-limit violators, and hard-limit violators.
+Run the explicit shared-library gate after a family build whenever assets are
+touched:
+
+```powershell
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family asset-check presentations\viscereality-family.config.json
+```
+
+It writes `family-asset-check-report.json` under the shared asset root and exits
+nonzero if any public shared asset exceeds the preferred or hard size limit.
 Use `asset_policy.video_crf` to tune MP4 publish quality; lower values produce
 larger, more faithful video layers, while higher values favor smaller output.
 The bundled ffmpeg commands strip volatile metadata and use deterministic-leaning

@@ -112,6 +112,32 @@ def inspect_family(config_path: Path) -> dict[str, Any]:
     return report
 
 
+def asset_check_family(config_path: Path) -> dict[str, Any]:
+    family = load_family_config(config_path)
+    limits = _shared_asset_library_limit_report(family)
+    status = (
+        "ok"
+        if limits["githubPagesSafe"] and limits.get("preferredAssetSafe", True)
+        else "blocked-by-asset-size"
+    )
+    report = {
+        "schema": "pptx-html-presenter.family.asset-check.v1",
+        "generatedAtUtc": utc_now_iso(),
+        "familyId": family.family_id,
+        "status": status,
+        "sharedAssetRoot": _repo_rel(family.repo_root, family.shared_root),
+        "limits": limits,
+        "notes": [
+            "Public GitHub Pages assets should stay below the preferred soft maximum.",
+            "Assets above the hard maximum are always blockers.",
+            "Oversized PPT source media should be represented by optimized runtime media or kept out of the public shared tree.",
+        ],
+    }
+    ensure_dir(family.shared_root)
+    write_json(family.shared_root / "family-asset-check-report.json", report)
+    return report
+
+
 def build_family(
     config_path: Path,
     *,

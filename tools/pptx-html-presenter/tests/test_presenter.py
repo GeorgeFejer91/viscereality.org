@@ -24,7 +24,7 @@ from pptx_html_presenter.assets import (
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
 from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, VisualEffectsPolicy, load_config
-from pptx_html_presenter.family import load_family_config, oracle_qa_family, share_deck_assets
+from pptx_html_presenter.family import asset_check_family, load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _visual_effects, parse_pptx
@@ -3562,6 +3562,52 @@ class PresenterTests(unittest.TestCase):
             self.assertIn("source-file-over-soft-limit-not-published", asset["warnings"])
             self.assertEqual(list((shared / "source").glob("*")), [])
             self.assertEqual(len(list((shared / "optimized").glob("*"))), 1)
+
+    def test_family_asset_check_blocks_shared_public_oversize_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "presentations" / "shared-assets" / "demo"
+            optimized = shared / "optimized"
+            optimized.mkdir(parents=True)
+            large_asset = optimized / "large.mp4"
+            large_asset.write_bytes(b"x" * 2048)
+            config = root / "presentations" / "family.json"
+            config.parent.mkdir(parents=True, exist_ok=True)
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            previous_soft_max = family_module.SHARED_SOURCE_SOFT_MAX_MB
+            previous_hard_max = family_module.SHARED_SOURCE_HARD_MAX_MB
+            family_module.SHARED_SOURCE_SOFT_MAX_MB = 0.001
+            family_module.SHARED_SOURCE_HARD_MAX_MB = 0.0005
+            try:
+                report = asset_check_family(config)
+            finally:
+                family_module.SHARED_SOURCE_SOFT_MAX_MB = previous_soft_max
+                family_module.SHARED_SOURCE_HARD_MAX_MB = previous_hard_max
+
+            self.assertEqual(report["status"], "blocked-by-asset-size")
+            self.assertFalse(report["limits"]["githubPagesSafe"])
+            self.assertFalse(report["limits"]["preferredAssetSafe"])
+            self.assertEqual(len(report["limits"]["softOversizeAssets"]), 1)
+            self.assertEqual(len(report["limits"]["oversizeAssets"]), 1)
+            self.assertTrue((shared / "family-asset-check-report.json").exists())
 
     def test_family_oracle_qa_reports_missing_ffmpeg(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

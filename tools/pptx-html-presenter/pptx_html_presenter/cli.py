@@ -8,7 +8,7 @@ from pathlib import Path
 from .build import build_presentation, inspect_pptx
 from .config import PROFILE_PRESETS, PresenterConfig, load_config
 from .errors import PresenterError
-from .family import build_family, inspect_family, oracle_qa_family, publish_family, visual_audit_family
+from .family import asset_check_family, build_family, inspect_family, oracle_qa_family, publish_family, visual_audit_family
 from .publish import publish_build
 from .qa import (
     run_candidate_sweep,
@@ -238,6 +238,9 @@ def build_parser() -> argparse.ArgumentParser:
     family_build.add_argument("family_config")
     family_build.add_argument("--ffmpeg-bin")
     family_build.add_argument("--force", action="store_true")
+
+    family_asset_check = family_sub.add_parser("asset-check", help="Verify shared family assets meet public size limits.")
+    family_asset_check.add_argument("family_config")
 
     family_audit = family_sub.add_parser("visual-audit", help="Run full visual audit for all family staging builds.")
     family_audit.add_argument("family_config")
@@ -509,6 +512,16 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 print(f"family-build={report['status']} decks={len(report['decks'])}")
                 return 0
+            if args.family_command == "asset-check":
+                report = asset_check_family(config_path)
+                limits = report["limits"]
+                print(
+                    f"family-asset-check={report['status']} "
+                    f"max-mb={limits['maxAssetMb']} "
+                    f"soft-oversize={len(limits['softOversizeAssets'])} "
+                    f"hard-oversize={len(limits['oversizeAssets'])}"
+                )
+                return 0 if report["status"] == "ok" else 1
             if args.family_command == "visual-audit":
                 report = visual_audit_family(
                     config_path,

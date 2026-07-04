@@ -1,0 +1,76 @@
+{
+  "familyId": "viscereality",
+  "generatedAtUtc": "2026-07-04T03:18:17+00:00",
+  "limits": {
+    "githubPagesSafe": true,
+    "hardMaxMb": 100.0,
+    "largestAssets": [
+      {
+        "bucket": "optimized",
+        "mb": 48.879,
+        "path": "presentations/shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 42.672,
+        "path": "presentations/shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 37.708,
+        "path": "presentations/shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 34.916,
+        "path": "presentations/shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4"
+      },
+      {
+        "bucket": "source",
+        "mb": 29.452,
+        "path": "presentations/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 24.891,
+        "path": "presentations/shared-assets/viscereality/optimized/ebbc88015ea08d653a1e36df9332ad443493fa005a7c7bb263555758191907e9.mp4"
+      },
+      {
+        "bucket": "source",
+        "mb": 19.997,
+        "path": "presentations/shared-assets/viscereality/source/7997219068d65f9d57e8b4abdb272f22b9cc311a81736c9cfae7f23e38a9b612.png"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 16.576,
+        "path": "presentations/shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 15.406,
+        "path": "presentations/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm"
+      },
+      {
+        "bucket": "optimized",
+        "mb": 13.961,
+        "path": "presentations/shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm"
+      }
+    ],
+    "maxAssetMb": 48.879,
+    "optimizedFileCount": 31,
+    "oversizeAssets": [],
+    "preferredAssetSafe": true,
+    "softMaxMb": 50.0,
+    "softOversizeAssets": [],
+    "sourceFileCount": 45,
+    "totalMb": 362.57
+  },
+  "notes": [
+    "Public GitHub Pages assets should stay below the preferred soft maximum.",
+    "Assets above the hard maximum are always blockers.",
+    "Oversized PPT source media should be represented by optimized runtime media or kept out of the public shared tree."
+  ],
+  "schema": "pptx-html-presenter.family.asset-check.v1",
+  "sharedAssetRoot": "presentations/shared-assets/viscereality",
+  "status": "ok"
+}
