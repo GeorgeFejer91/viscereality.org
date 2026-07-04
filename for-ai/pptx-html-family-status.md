@@ -158,6 +158,9 @@ Current source PPTX parse results from family preflight:
   - Solution: scene schema and runtime now support per-track unmatched fade overrides. `transition_unmatched_fade_overrides` accepts `track_id`, `track_ids`, or `tracks`, and the runtime checks `transition.unmatchedFade.tracks[trackId]` before falling back to transition/global unmatched fade timing. MuC config now fades `track-0031` out from `0.0` to `0.25` only for transition `1->2`.
 - Calibration result: after the MuC `track-0031` per-track fade override and rebuild/publish on 2026-07-04, the targeted candidate check for `MuC` sample `trans-001-002-025` improved from the previous smoke baseline around `0.624` to `0.688544`. This is useful progress but still below the strict Morph target, so do not treat it as an oracle pass.
 - Durable asset rule update from user: super-large source assets should be converted into visually lossless or visually acceptable HTML-friendly runtime formats before public publish. Preserve transparency and looping semantics when needed; use video formats for opaque/video-like animations when smaller; keep runtime files GitHub-compatible and do not publish giant originals merely for provenance.
+- Problem: The first-transition oracle failures involve object clusters, especially panel/frame/media clusters, but `candidate-sweep --vary track-progress` could previously vary only one track at a time. That made it too hard to test the user's core requirement that grouped/panel contents move together.
+  - Solution: candidate sweeps now accept comma-separated track clusters for `--track-id` on `track-progress` and `phase` sweeps. For example, `--track-id track-0011,track-0012` applies the same candidate progress or media phase to both tracks and records `candidateSweep.trackIds` in the generated samples.
+- Calibration result: on 2026-07-04, alpCHI `trans-001-002-025` was tested with global progress, `track-0010` title progress, `track-0011` panel/media progress, media phase for `track-0011`, and clustered `track-0011,track-0012` progress. The best cluster score was only `0.518489`, and the best individual tests stayed around `0.52`, so do not commit those as production overrides. The remaining alpCHI gap is likely a combination of PowerPoint export timing, full-frame composition, object effects, and/or deeper grouping semantics rather than a simple per-track progress tweak.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -264,6 +267,7 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family inspect presentati
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\MuC --sample trans-001-002-025 --vary exit-fade-end --values 0.05:1:0.05 --reference-frame presentations\MuC\qa\reference\trans-001-002-025.png
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\alpCHI --sample trans-001-002-025 --vary track-progress --track-id track-0011,track-0012 --values 0:1:0.05 --reference-frame presentations\alpCHI\qa\reference\trans-001-002-025.png
 ```
 
 PowerPoint oracle QA still requires enough free disk for reference MP4 export and frame extraction.

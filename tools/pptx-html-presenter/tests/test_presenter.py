@@ -2173,6 +2173,47 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(candidates[1]["trackProgressOverrides"], {"track-video": 0.65})
         self.assertEqual(candidates[1]["mediaClocks"], {"track-video": 1.3})
 
+    def test_candidate_sweep_track_progress_can_target_track_cluster(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-panel": 1.3, "track-video": 1.3},
+        }
+        candidates = _candidate_sweep_samples(
+            sample,
+            "track-progress",
+            [0.35],
+            "track-panel,track-video",
+        )
+        self.assertEqual(
+            candidates[0]["trackProgressOverrides"],
+            {"track-panel": 0.35, "track-video": 0.35},
+        )
+        self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-panel", "track-video"])
+
+    def test_candidate_sweep_phase_can_target_track_cluster(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-panel": 1.3, "track-video": 2.4},
+        }
+        candidates = _candidate_sweep_samples(
+            sample,
+            "phase",
+            [3.5],
+            "track-panel,track-video",
+        )
+        self.assertEqual(candidates[0]["mediaClocks"], {"track-panel": 3.5, "track-video": 3.5})
+        self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-panel", "track-video"])
+
     def test_candidate_sweep_unmatched_fade_samples_keep_global_progress(self) -> None:
         sample = {
             "id": "trans-001-002-050",

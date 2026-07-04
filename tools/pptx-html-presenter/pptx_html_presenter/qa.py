@@ -1203,8 +1203,14 @@ def _candidate_sweep_samples(
         raise PresenterError(f"{normalized} sweeps require a transition sample.")
     if normalized in {"phase", "track-progress"} and not track_id:
         raise PresenterError(f"{normalized} sweeps require --track-id.")
-    if normalized == "phase" and track_id not in (base_sample.get("mediaClocks") or {}):
-        raise PresenterError(f"Track {track_id} is not present in sample mediaClocks.")
+    if normalized == "phase":
+        missing = [
+            candidate
+            for candidate in _candidate_sweep_track_ids(base_sample, track_id)
+            if candidate not in (base_sample.get("mediaClocks") or {})
+        ]
+        if missing:
+            raise PresenterError(f"Tracks are not present in sample mediaClocks: {', '.join(missing)}")
     if normalized == "phase-offset":
         missing = [
             candidate
@@ -1229,8 +1235,11 @@ def _candidate_sweep_samples(
             candidate["progress"] = round(_clamp01(numeric), 4)
         elif normalized == "phase":
             clocks = dict(candidate.get("mediaClocks") or {})
-            clocks[str(track_id)] = round(numeric, 3)
+            target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
+            for target_track in target_tracks:
+                clocks[target_track] = round(numeric, 3)
             candidate["mediaClocks"] = clocks
+            candidate["candidateSweep"]["trackIds"] = target_tracks
         elif normalized == "phase-offset":
             clocks = dict(candidate.get("mediaClocks") or {})
             target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
@@ -1247,7 +1256,11 @@ def _candidate_sweep_samples(
         elif normalized == "glow-alpha-scale":
             candidate["visualEffectOverrides"] = {"glowAlphaScale": round(max(0.0, numeric), 4)}
         else:
-            candidate["trackProgressOverrides"] = {str(track_id): round(_clamp01(numeric), 4)}
+            target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
+            candidate["trackProgressOverrides"] = {
+                target_track: round(_clamp01(numeric), 4) for target_track in target_tracks
+            }
+            candidate["candidateSweep"]["trackIds"] = target_tracks
         out.append(candidate)
     return out
 
