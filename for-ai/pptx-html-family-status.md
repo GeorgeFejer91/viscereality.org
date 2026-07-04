@@ -184,6 +184,8 @@ Current source PPTX parse results from family preflight:
   - Solution: `presentations/MuC-scene.config.json` now applies a deck-specific `media_phase_overrides` row for slide 1 `track-0003` / asset `asset-0928f3a3fc7358dc` with `phase_sec: 2.75`. This preserves the independent looping-media model; it does not reverse/restart media during Morph.
 - Problem: MuC transition `2->3` had a bogus inferred carousel foreground motion for `track-0004`, a bottom sponsor/footer strip that is missing on slide 3. The object was being kept opaque and moved with the carousel, making the 75% oracle frame worse and violating the intended panel/cluster logic.
   - Solution: the inferred panel/foreground motion heuristic now excludes shallow, wide objects in the global slide footer region. The regression test `test_inferred_motions_do_not_slide_footer_sponsor_strips_with_carousel` ensures footer sponsor strips are not treated as panel children or carousel foreground, while the existing large VR/body foreground test still passes.
+- Problem: The remaining MuC `2->3` oracle gap visibly includes PowerPoint-vs-browser text metric differences: HTML text was slightly too large/heavy inside the moving panel, but candidate sweeps previously had no way to isolate text rendering from Morph timing.
+  - Solution: the presenter now has a reusable `text_rendering` runtime policy (`font_scale`, `regular_weight`, `bold_weight`) and `candidate-sweep --vary text-scale|bold-weight` diagnostics. Capture plumbing passes `textRenderOverrides` into the browser runtime so future agents can test text metric hypotheses without manually editing generated HTML. Focused sweeps on MuC showed `font_scale: 0.9` improved `trans-002-003-075` from about `0.766` to about `0.772`, and improved `slide-003-settled` from about `0.898814` to `0.902273`, so `presentations/MuC-scene.config.json` now applies `text_rendering.font_scale: 0.9` only for MuC. This is a small oracle-parity gain, not a pass; the remaining gap is still mostly full-frame composition/effects/timing.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -203,6 +205,7 @@ Current shared public asset library check after the visual-effects/public-audit 
 - Latest post-rebuild filesystem asset gate on 2026-07-04: `presentations/shared-assets/viscereality/` contains 81 public shared files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. Largest files are optimized MP4s at about 48.879 MiB, 42.672 MiB, 37.708 MiB, and 34.916 MiB. This is the current proof point for the rule that super-large PPT assets must be converted to visually acceptable, HTML-friendly, GitHub-compatible runtime formats.
 - Latest post-MuC-calibration asset gate on 2026-07-04: still 81 public shared files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest asset about 48.879 MiB. The clean family build report generated at `2026-07-04T02:34:29+00:00` has sane public-size preflight numbers again after deleting local candidate-sweep scratch output: `MuC` about 433.147 MiB, `alpCHI` about 368.839 MiB, `BBD26` about 452.66 MiB.
 - Latest explicit user constraint revalidated on 2026-07-04: super-large PPT assets must never be published as giant public blobs just for convenience or provenance. The family defaults enforce `allow_oversize_assets: false`, `transcode_gif: true`, `transcode_video: true`, `optimize_static_images: true`, and `transparent_animation: preserve-alpha`. Targeted asset tests passed (`py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter -k asset`, 13 tests). Direct filesystem gate still reports 81 shared public files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB. `presentations/shared-assets/viscereality/family-build-report.json` reports `status: ok`, `githubPagesSafe: true`, `preferredAssetSafe: true`, `softOversizeAssets: []`, and `oversizeAssets: []`. The shared index has 76 content-hashed asset records, including source SHA metadata for all entries, so future builds can reuse optimized outputs without re-copying oversized originals.
+- Latest post-text-calibration asset gate on 2026-07-04: after rebuilding/publishing all three public scene players with the shared text-rendering runtime, the shared public asset library is unchanged at 81 files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB. `family-build-report.json` still reports `status: ok`, `githubPagesSafe: true`, and `preferredAssetSafe: true`.
 
 ## Latest HTML Visual Audit
 
@@ -278,6 +281,17 @@ After the MuC slide-1 media phase override and footer-strip inferred-motion excl
 
 This verifies the phase/config change and shared heuristic do not break browser playback/capture. It is still not a PowerPoint-oracle SSIM pass.
 
+After adding text-rendering runtime/candidate-sweep support and applying MuC `text_rendering.font_scale: 0.9` on 2026-07-04:
+
+- `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 133 tests.
+- Direct `visual-audit presentations\MuC` passed 145 samples.
+- Full `family visual-audit presentations\viscereality-family.config.json` passed all 3 decks again:
+  - `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+  - `alpCHI`: 217 samples, 25 settled slides, 168 forward transition samples, 24 reverse midpoint samples, 0 failures, 0 warnings.
+  - `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures, 0 warnings.
+
+This verifies the shared runtime update and MuC text-scale calibration do not break browser playback/capture. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -318,10 +332,14 @@ Additional bounded MuC oracle result after the MuC media-phase and footer-strip 
 
 - `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM improved to `0.766376`. Current lowest samples are `trans-002-003-075` (`0.766376`), `trans-002-003-050` (`0.781949`), `trans-002-003-025` (`0.785634`), `trans-001-002-010` (`0.789210`), and `trans-001-002-025` (`0.789845`). This is real progress from the prior `0.740554` floor, but still below the strict transition target `0.965`.
 
+Additional bounded MuC oracle result after the MuC `text_rendering.font_scale: 0.9` calibration:
+
+- `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM improved from `0.766376` to `0.772079`. Current lowest samples are `trans-002-003-075` (`0.772079`), `trans-002-003-050` (`0.781949`), `trans-002-003-025` (`0.785634`), `trans-001-002-010` (`0.789210`), `trans-003-004-075` (`0.792089`), and `trans-001-002-025` (`0.792934`). This confirms text metrics contribute to the mismatch, but the strict `0.965` Morph threshold remains unresolved.
+
 Interpretation:
 
 - The player is coherent and assets load, but strict PowerPoint visual parity is not achieved yet.
-- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects with calibrated family scaling, SVG fallback consistency, deterministic visible-video QA capture, and stable transition-parenting rule improved specific samples, but remaining differences include text/raster antialiasing, text placement/scale, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
+- The transition 1->2 Morph progress calibrations, HDPhoto brightness effects, conservative glow effects with calibrated family scaling, SVG fallback consistency, deterministic visible-video QA capture, stable transition-parenting rule, and MuC text-scale calibration improved specific samples, but remaining differences include text/raster antialiasing, remaining PowerPoint effects, background/video brightness/phase, early transition timing, and full-frame composition differences.
 - Do not publish claims of PowerPoint-oracle success until all three decks pass full oracle QA or have reviewed exceptions.
 
 ## Latest Public Publish

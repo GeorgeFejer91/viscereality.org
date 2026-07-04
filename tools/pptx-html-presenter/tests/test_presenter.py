@@ -420,6 +420,26 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(config.visual_effects.glow_scale, 0.5)
             self.assertEqual(config.visual_effects.glow_alpha_scale, 0.8)
 
+    def test_config_loads_text_rendering_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "text_rendering": {
+                            "font_scale": 0.92,
+                            "regular_weight": 350,
+                            "bold_weight": 620,
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            self.assertEqual(config.text_rendering.font_scale, 0.92)
+            self.assertEqual(config.text_rendering.regular_weight, 350)
+            self.assertEqual(config.text_rendering.bold_weight, 620)
+
     def test_config_loads_auto_advance_rules(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
@@ -2298,6 +2318,22 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(radius_candidates[2]["candidateSweep"]["vary"], "glow-scale")
         self.assertEqual(alpha_candidates[0]["visualEffectOverrides"], {"glowAlphaScale": 0.2})
         self.assertEqual(alpha_candidates[0]["candidateSweep"]["vary"], "glow-alpha-scale")
+
+    def test_candidate_sweep_text_metric_samples_can_target_settled_slides(self) -> None:
+        sample = {
+            "id": "slide-001-settled",
+            "kind": "slide",
+            "slide": 1,
+            "progress": 0,
+            "mediaSec": 0,
+        }
+        scale_candidates = _candidate_sweep_samples(sample, "font-scale", [0.86, 1.0])
+        weight_candidates = _candidate_sweep_samples(sample, "text-bold-weight", [560, 640])
+
+        self.assertEqual(scale_candidates[0]["textRenderOverrides"], {"fontScale": 0.86})
+        self.assertEqual(scale_candidates[0]["candidateSweep"]["vary"], "text-scale")
+        self.assertEqual(weight_candidates[1]["textRenderOverrides"], {"boldWeight": 640.0})
+        self.assertEqual(weight_candidates[1]["candidateSweep"]["vary"], "bold-weight")
 
     def test_track_progress_candidate_samples_include_scene_baseline(self) -> None:
         sample = {

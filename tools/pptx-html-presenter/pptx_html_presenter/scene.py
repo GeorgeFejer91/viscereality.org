@@ -87,6 +87,11 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
                 "glowScale": config.visual_effects.glow_scale,
                 "glowAlphaScale": config.visual_effects.glow_alpha_scale,
             },
+            "textRendering": {
+                "fontScale": config.text_rendering.font_scale,
+                "regularWeight": config.text_rendering.regular_weight,
+                "boldWeight": config.text_rendering.bold_weight,
+            },
             "layerPolicy": _runtime_layer_policy(config),
             "autoAdvance": _runtime_auto_advance_rows(config.auto_advance),
             "autoSegments": _runtime_auto_advance_rows(config.auto_segments),

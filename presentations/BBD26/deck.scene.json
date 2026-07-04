@@ -1000,7 +1000,7 @@
     "sourceSha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe",
     "title": "Viscereality - Berlin Breathwork Days"
   },
-  "generatedAtUtc": "2026-07-04T02:34:28+00:00",
+  "generatedAtUtc": "2026-07-04T02:51:19+00:00",
   "qa": {
     "groupRows": [
       {
@@ -8001,6 +8001,11 @@
       "widthPct": 0.0055
     },
     "reverse": "mirror",
+    "textRendering": {
+      "boldWeight": 700.0,
+      "fontScale": 1.0,
+      "regularWeight": 400.0
+    },
     "unmatchedFadeEnd": 0.75,
     "unmatchedFadeStart": 0.5,
     "visualEffects": {

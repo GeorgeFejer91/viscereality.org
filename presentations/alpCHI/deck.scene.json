@@ -853,7 +853,7 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-04T02:34:00+00:00",
+  "generatedAtUtc": "2026-07-04T02:50:52+00:00",
   "qa": {
     "groupRows": [
       {
@@ -4587,6 +4587,11 @@
       "widthPct": 0.0055
     },
     "reverse": "mirror",
+    "textRendering": {
+      "boldWeight": 700.0,
+      "fontScale": 1.0,
+      "regularWeight": 400.0
+    },
     "unmatchedFadeEnd": 0.75,
     "unmatchedFadeStart": 0.5,
     "visualEffects": {

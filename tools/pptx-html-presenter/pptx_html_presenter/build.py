@@ -47,6 +47,7 @@ def build_presentation(
         qa_policy=config.qa_policy,
         visual_audit=config.visual_audit,
         visual_effects=config.visual_effects,
+        text_rendering=config.text_rendering,
         media_phase_overrides=config.media_phase_overrides,
         transition_media_phase_overrides=config.transition_media_phase_overrides,
         transition_time_overrides=config.transition_time_overrides,

@@ -59,6 +59,7 @@ try {
               trackProgressOverrides: s.trackProgressOverrides || null,
               unmatchedFadeOverride: s.unmatchedFadeOverride || null,
               visualEffectOverrides: s.visualEffectOverrides || null,
+              textRenderOverrides: s.textRenderOverrides || s.textRenderingOverrides || null,
             },
           }));
         }, sample);
@@ -72,6 +73,7 @@ try {
               trackProgressOverrides: s.trackProgressOverrides || null,
               unmatchedFadeOverride: s.unmatchedFadeOverride || null,
               visualEffectOverrides: s.visualEffectOverrides || null,
+              textRenderOverrides: s.textRenderOverrides || s.textRenderingOverrides || null,
             },
           }));
         }, sample);

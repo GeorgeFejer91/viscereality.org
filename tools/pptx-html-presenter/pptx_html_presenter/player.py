@@ -480,9 +480,9 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.borderStyle = state.stroke ? "solid" : "none";
       child.style.borderWidth = state.stroke ? cssStrokeWidth(state) : "0";
       child.style.borderRadius = cssShapeRadius(state);
-      applyTextStyle(child, state.textStyle || {});
-      renderText(child, state);
-      fitText(child, state);
+      applyTextStyle(child, state.textStyle || {}, captureOptions);
+      renderText(child, state, captureOptions);
+      fitText(child, state, captureOptions);
       applyVisualEffects(child, state, captureOptions);
     }
     syncMediaPlayback(node, state, isTransition);
@@ -1364,11 +1364,11 @@ PLAYER_HTML = r"""<!doctype html>
     return `rgba(${r}, ${g}, ${b}, ${clamped})`;
   }
 
-  function applyTextStyle(child, style) {
+  function applyTextStyle(child, style, captureOptions = null) {
     const size = Number(style.fontSizePt || 18);
-    child.style.fontSize = cssFontSize(size);
+    child.style.fontSize = cssFontSize(size, captureOptions);
     child.style.lineHeight = "1.08";
-    child.style.fontWeight = style.bold ? "700" : "400";
+    child.style.fontWeight = cssTextWeight(style.bold, captureOptions);
     child.style.fontStyle = style.italic ? "italic" : "normal";
     child.style.color = cssColor(style.color || "scheme:bg1");
     child.style.textAlign = cssTextAlign(style.align);
@@ -1380,9 +1380,14 @@ PLAYER_HTML = r"""<!doctype html>
       child.style.fontFamily = `"${String(style.typeface).replaceAll('"', '\\"')}", sans-serif`;
     }
   }
-  function renderText(child, state) {
+  function renderText(child, state, captureOptions = null) {
     const richText = Array.isArray(state.richText) ? state.richText : [];
-    const signature = JSON.stringify([state.text || "", richText, state.textStyle || {}]);
+    const signature = JSON.stringify([
+      state.text || "",
+      richText,
+      state.textStyle || {},
+      captureOptions?.textRenderOverrides || captureOptions?.textRenderingOverrides || null,
+    ]);
     if (child.dataset.textSignature === signature) return;
     child.dataset.textSignature = signature;
     child.replaceChildren();
@@ -1398,13 +1403,13 @@ PLAYER_HTML = r"""<!doctype html>
       for (const run of paragraph.runs || []) {
         const span = document.createElement("span");
         span.textContent = run.text || "";
-        applyRunStyle(span, run.style || {}, state.textStyle || {});
+        applyRunStyle(span, run.style || {}, state.textStyle || {}, captureOptions);
         line.appendChild(span);
       }
       child.appendChild(line);
     }
   }
-  function fitText(child, state) {
+  function fitText(child, state, captureOptions = null) {
     if (!state.textStyle?.autoFit) return;
     const lines = Array.from(child.querySelectorAll(".text-line"));
     const targets = lines.length ? lines : [child];
@@ -1419,20 +1424,35 @@ PLAYER_HTML = r"""<!doctype html>
       target.style.transform = scale < 1 ? `scale(${Math.max(0.1, scale)})` : "";
     }
   }
-  function applyRunStyle(span, runStyle, fallbackStyle) {
+  function applyRunStyle(span, runStyle, fallbackStyle, captureOptions = null) {
     const style = { ...fallbackStyle, ...runStyle };
-    if (style.fontSizePt) span.style.fontSize = cssFontSize(Number(style.fontSizePt));
-    span.style.fontWeight = style.bold ? "700" : "400";
+    if (style.fontSizePt) span.style.fontSize = cssFontSize(Number(style.fontSizePt), captureOptions);
+    span.style.fontWeight = cssTextWeight(style.bold, captureOptions);
     span.style.fontStyle = style.italic ? "italic" : "normal";
     span.style.color = cssColor(style.color || fallbackStyle.color || "scheme:bg1");
     if (style.typeface) {
       span.style.fontFamily = `"${String(style.typeface).replaceAll('"', '\\"')}", sans-serif`;
     }
   }
-  function cssFontSize(points) {
+  function cssFontSize(points, captureOptions = null) {
     const slideHeight = Number(scene.deck.slideSize.height || 6858000);
-    const px = (Number(points || 18) * 12700 / slideHeight) * frame.clientHeight;
+    const px = (Number(points || 18) * 12700 / slideHeight) * frame.clientHeight * textFontScale(captureOptions);
     return Math.max(6, px) + "px";
+  }
+  function textFontScale(captureOptions = null) {
+    return clampedTextRenderNumber(captureOptions, "fontScale", 1, 0.2, 3);
+  }
+  function cssTextWeight(bold, captureOptions = null) {
+    const key = bold ? "boldWeight" : "regularWeight";
+    const fallback = bold ? 700 : 400;
+    return String(Math.round(clampedTextRenderNumber(captureOptions, key, fallback, 100, 1000)));
+  }
+  function clampedTextRenderNumber(captureOptions, key, fallback, min, max) {
+    const overrides = captureOptions?.textRenderOverrides || captureOptions?.textRenderingOverrides || null;
+    const raw = overrides?.[key] ?? scene?.runtime?.textRendering?.[key] ?? fallback;
+    const value = Number(raw);
+    if (!Number.isFinite(value)) return fallback;
+    return Math.max(min, Math.min(max, value));
   }
   function cssInsets(insets) {
     const slideWidth = Number(scene.deck.slideSize.width || 12192000);

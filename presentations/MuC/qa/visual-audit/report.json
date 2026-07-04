@@ -2,7 +2,7 @@
   "blockers": [],
   "capture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T02:28:45.361Z",
+    "generatedAt": "2026-07-04T02:53:27.575Z",
     "sampleCount": 145,
     "samples": [
       {
@@ -1579,14 +1579,14 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
               "trackId": "track-0022"
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
               "trackId": "track-0023"
@@ -2138,7 +2138,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/6fc6e87580c6d1fa4593c2877d0b254125fa7a7848506ce5fe8dd77ea0e536e4.webm",
               "trackId": "track-0019"
@@ -2393,7 +2393,7 @@
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/a40f30b7dc122dd7c756e2e61ed60f04d6863687c3a91b528c96e7c159a2afd2.webm",
               "trackId": "track-0027"
@@ -3336,7 +3336,7 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
               "trackId": "track-0047"
@@ -4221,7 +4221,7 @@
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
               "trackId": "track-0050"
@@ -8550,14 +8550,14 @@
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
               "trackId": "track-0022"
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
               "trackId": "track-0023"
@@ -10574,9 +10574,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 29.38,
+        "meanLuma": 29.239,
         "nearUniform": false,
-        "stdLuma": 45.744
+        "stdLuma": 45.328
       },
       "reasons": [],
       "sampleId": "trans-002-003-075",
@@ -10650,9 +10650,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 29.364,
+        "meanLuma": 29.245,
         "nearUniform": false,
-        "stdLuma": 45.573
+        "stdLuma": 45.322
       },
       "reasons": [],
       "sampleId": "trans-002-003-090",
@@ -10726,9 +10726,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.36,
+        "meanLuma": 29.239,
         "nearUniform": false,
-        "stdLuma": 45.695
+        "stdLuma": 45.447
       },
       "reasons": [],
       "sampleId": "trans-002-003-100",
@@ -10802,9 +10802,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.387,
+        "meanLuma": 29.269,
         "nearUniform": false,
-        "stdLuma": 45.813
+        "stdLuma": 45.563
       },
       "reasons": [],
       "sampleId": "slide-003-settled",
@@ -10878,9 +10878,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.36,
+        "meanLuma": 29.242,
         "nearUniform": false,
-        "stdLuma": 45.695
+        "stdLuma": 45.445
       },
       "reasons": [],
       "sampleId": "trans-003-004-000",
@@ -10954,9 +10954,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 29.376,
+        "meanLuma": 29.258,
         "nearUniform": false,
-        "stdLuma": 45.769
+        "stdLuma": 45.519
       },
       "reasons": [],
       "sampleId": "trans-003-004-010",
@@ -11037,9 +11037,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 28.652,
+        "meanLuma": 28.534,
         "nearUniform": false,
-        "stdLuma": 47.254
+        "stdLuma": 47.012
       },
       "reasons": [],
       "sampleId": "trans-003-004-025",
@@ -11120,9 +11120,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.557,
+        "meanLuma": 25.439,
         "nearUniform": false,
-        "stdLuma": 48.051
+        "stdLuma": 47.804
       },
       "reasons": [],
       "sampleId": "trans-003-004-050",
@@ -11203,9 +11203,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 24.261,
+        "meanLuma": 24.143,
         "nearUniform": false,
-        "stdLuma": 49.159
+        "stdLuma": 48.916
       },
       "reasons": [],
       "sampleId": "trans-003-004-075",
@@ -11255,14 +11255,14 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
             "trackId": "track-0022"
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
             "trackId": "track-0023"
@@ -11286,9 +11286,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 24.302,
+        "meanLuma": 24.184,
         "nearUniform": false,
-        "stdLuma": 49.177
+        "stdLuma": 48.933
       },
       "reasons": [],
       "sampleId": "trans-003-004-090",
@@ -11369,9 +11369,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.302,
+        "meanLuma": 24.184,
         "nearUniform": false,
-        "stdLuma": 49.176
+        "stdLuma": 48.933
       },
       "reasons": [],
       "sampleId": "trans-003-004-100",
@@ -11452,9 +11452,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.264,
+        "meanLuma": 24.146,
         "nearUniform": false,
-        "stdLuma": 49.061
+        "stdLuma": 48.817
       },
       "reasons": [],
       "sampleId": "slide-004-settled",
@@ -11535,9 +11535,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.302,
+        "meanLuma": 24.184,
         "nearUniform": false,
-        "stdLuma": 49.176
+        "stdLuma": 48.933
       },
       "reasons": [],
       "sampleId": "trans-004-005-000",
@@ -11618,9 +11618,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 24.358,
+        "meanLuma": 24.241,
         "nearUniform": false,
-        "stdLuma": 49.119
+        "stdLuma": 48.875
       },
       "reasons": [],
       "sampleId": "trans-004-005-010",
@@ -11701,9 +11701,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 24.414,
+        "meanLuma": 24.297,
         "nearUniform": false,
-        "stdLuma": 49.441
+        "stdLuma": 49.2
       },
       "reasons": [],
       "sampleId": "trans-004-005-025",
@@ -11791,9 +11791,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 23.625,
+        "meanLuma": 23.335,
         "nearUniform": false,
-        "stdLuma": 48.628
+        "stdLuma": 48.079
       },
       "reasons": [],
       "sampleId": "trans-004-005-050",
@@ -11874,9 +11874,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 23.339,
+        "meanLuma": 22.884,
         "nearUniform": false,
-        "stdLuma": 48.49
+        "stdLuma": 47.646
       },
       "reasons": [],
       "sampleId": "trans-004-005-075",
@@ -11926,7 +11926,7 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/6fc6e87580c6d1fa4593c2877d0b254125fa7a7848506ce5fe8dd77ea0e536e4.webm",
             "trackId": "track-0019"
@@ -11950,9 +11950,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 23.188,
+        "meanLuma": 22.747,
         "nearUniform": false,
-        "stdLuma": 48.388
+        "stdLuma": 47.564
       },
       "reasons": [],
       "sampleId": "trans-004-005-090",
@@ -12026,9 +12026,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 23.251,
+        "meanLuma": 22.802,
         "nearUniform": false,
-        "stdLuma": 48.405
+        "stdLuma": 47.568
       },
       "reasons": [],
       "sampleId": "trans-004-005-100",
@@ -12102,9 +12102,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 23.219,
+        "meanLuma": 22.77,
         "nearUniform": false,
-        "stdLuma": 48.509
+        "stdLuma": 47.674
       },
       "reasons": [],
       "sampleId": "slide-005-settled",
@@ -12178,9 +12178,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 23.216,
+        "meanLuma": 22.767,
         "nearUniform": false,
-        "stdLuma": 48.516
+        "stdLuma": 47.681
       },
       "reasons": [],
       "sampleId": "trans-005-006-000",
@@ -12237,7 +12237,7 @@
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/a40f30b7dc122dd7c756e2e61ed60f04d6863687c3a91b528c96e7c159a2afd2.webm",
             "trackId": "track-0027"
@@ -12254,9 +12254,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 23.352,
+        "meanLuma": 22.901,
         "nearUniform": false,
-        "stdLuma": 48.431
+        "stdLuma": 47.605
       },
       "reasons": [],
       "sampleId": "trans-005-006-010",
@@ -12336,9 +12336,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 24.679,
+        "meanLuma": 24.229,
         "nearUniform": false,
-        "stdLuma": 49.088
+        "stdLuma": 48.276
       },
       "reasons": [],
       "sampleId": "trans-005-006-025",
@@ -12418,9 +12418,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 35.108,
+        "meanLuma": 34.658,
         "nearUniform": false,
-        "stdLuma": 52.12
+        "stdLuma": 51.447
       },
       "reasons": [],
       "sampleId": "trans-005-006-050",
@@ -12493,9 +12493,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 40.866,
+        "meanLuma": 40.416,
         "nearUniform": false,
-        "stdLuma": 55.238
+        "stdLuma": 54.65
       },
       "reasons": [],
       "sampleId": "trans-005-006-075",
@@ -12568,9 +12568,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 42.092,
+        "meanLuma": 41.642,
         "nearUniform": false,
-        "stdLuma": 55.971
+        "stdLuma": 55.402
       },
       "reasons": [],
       "sampleId": "trans-005-006-090",
@@ -12643,9 +12643,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 42.182,
+        "meanLuma": 41.732,
         "nearUniform": false,
-        "stdLuma": 56.071
+        "stdLuma": 55.503
       },
       "reasons": [],
       "sampleId": "trans-005-006-100",
@@ -12718,9 +12718,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 42.175,
+        "meanLuma": 41.725,
         "nearUniform": false,
-        "stdLuma": 56.187
+        "stdLuma": 55.62
       },
       "reasons": [],
       "sampleId": "slide-006-settled",
@@ -12793,9 +12793,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 42.23,
+        "meanLuma": 41.78,
         "nearUniform": false,
-        "stdLuma": 55.864
+        "stdLuma": 55.294
       },
       "reasons": [],
       "sampleId": "trans-006-007-000",
@@ -12868,9 +12868,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 42.216,
+        "meanLuma": 41.761,
         "nearUniform": false,
-        "stdLuma": 55.782
+        "stdLuma": 55.217
       },
       "reasons": [],
       "sampleId": "trans-006-007-010",
@@ -12950,9 +12950,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 41.648,
+        "meanLuma": 41.157,
         "nearUniform": false,
-        "stdLuma": 54.791
+        "stdLuma": 54.145
       },
       "reasons": [],
       "sampleId": "trans-006-007-025",
@@ -13032,9 +13032,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 42.206,
+        "meanLuma": 41.914,
         "nearUniform": false,
-        "stdLuma": 51.844
+        "stdLuma": 51.436
       },
       "reasons": [],
       "sampleId": "trans-006-007-050",
@@ -13107,9 +13107,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 39.503,
+        "meanLuma": 39.272,
         "nearUniform": false,
-        "stdLuma": 51.973
+        "stdLuma": 51.596
       },
       "reasons": [],
       "sampleId": "trans-006-007-075",
@@ -13182,9 +13182,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 38.735,
+        "meanLuma": 38.48,
         "nearUniform": false,
-        "stdLuma": 52.903
+        "stdLuma": 52.493
       },
       "reasons": [],
       "sampleId": "trans-006-007-090",
@@ -13257,9 +13257,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 38.612,
+        "meanLuma": 38.357,
         "nearUniform": false,
-        "stdLuma": 52.896
+        "stdLuma": 52.485
       },
       "reasons": [],
       "sampleId": "trans-006-007-100",
@@ -13332,9 +13332,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 38.613,
+        "meanLuma": 38.358,
         "nearUniform": false,
-        "stdLuma": 52.894
+        "stdLuma": 52.483
       },
       "reasons": [],
       "sampleId": "slide-007-settled",
@@ -13390,7 +13390,7 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
             "trackId": "track-0047"
@@ -13407,9 +13407,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 37.797,
+        "meanLuma": 37.541,
         "nearUniform": false,
-        "stdLuma": 53.115
+        "stdLuma": 52.701
       },
       "reasons": [],
       "sampleId": "trans-007-008-000",
@@ -13482,9 +13482,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 37.615,
+        "meanLuma": 37.36,
         "nearUniform": false,
-        "stdLuma": 53.093
+        "stdLuma": 52.678
       },
       "reasons": [],
       "sampleId": "trans-007-008-010",
@@ -13557,9 +13557,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 35.92,
+        "meanLuma": 35.665,
         "nearUniform": false,
-        "stdLuma": 51.105
+        "stdLuma": 50.666
       },
       "reasons": [],
       "sampleId": "trans-007-008-025",
@@ -13639,9 +13639,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.6,
+        "meanLuma": 29.244,
         "nearUniform": false,
-        "stdLuma": 48.757
+        "stdLuma": 48.065
       },
       "reasons": [],
       "sampleId": "trans-007-008-050",
@@ -13721,9 +13721,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 25.583,
+        "meanLuma": 25.168,
         "nearUniform": false,
-        "stdLuma": 48.54
+        "stdLuma": 47.691
       },
       "reasons": [],
       "sampleId": "trans-007-008-075",
@@ -13797,9 +13797,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 25.044,
+        "meanLuma": 24.547,
         "nearUniform": false,
-        "stdLuma": 48.829
+        "stdLuma": 47.814
       },
       "reasons": [],
       "sampleId": "trans-007-008-090",
@@ -13873,9 +13873,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.555,
+        "meanLuma": 24.058,
         "nearUniform": false,
-        "stdLuma": 48.65
+        "stdLuma": 47.626
       },
       "reasons": [],
       "sampleId": "trans-007-008-100",
@@ -13949,9 +13949,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.009,
+        "meanLuma": 23.512,
         "nearUniform": false,
-        "stdLuma": 48.583
+        "stdLuma": 47.552
       },
       "reasons": [],
       "sampleId": "slide-008-settled",
@@ -14025,9 +14025,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 27.426,
+        "meanLuma": 26.929,
         "nearUniform": false,
-        "stdLuma": 49.049
+        "stdLuma": 48.063
       },
       "reasons": [],
       "sampleId": "trans-008-009-000",
@@ -14101,9 +14101,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 27.664,
+        "meanLuma": 27.167,
         "nearUniform": false,
-        "stdLuma": 49.03
+        "stdLuma": 48.046
       },
       "reasons": [],
       "sampleId": "trans-008-009-010",
@@ -14177,9 +14177,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 28.114,
+        "meanLuma": 27.617,
         "nearUniform": false,
-        "stdLuma": 49.301
+        "stdLuma": 48.327
       },
       "reasons": [],
       "sampleId": "trans-008-009-025",
@@ -14253,9 +14253,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.527,
+        "meanLuma": 29.141,
         "nearUniform": false,
-        "stdLuma": 47.021
+        "stdLuma": 46.24
       },
       "reasons": [],
       "sampleId": "trans-008-009-050",
@@ -14336,9 +14336,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 33.96,
+        "meanLuma": 33.55,
         "nearUniform": false,
-        "stdLuma": 54.328
+        "stdLuma": 53.651
       },
       "reasons": [],
       "sampleId": "trans-008-009-075",
@@ -14412,9 +14412,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 32.983,
+        "meanLuma": 32.511,
         "nearUniform": false,
-        "stdLuma": 54.58
+        "stdLuma": 53.798
       },
       "reasons": [],
       "sampleId": "trans-008-009-090",
@@ -14471,7 +14471,7 @@
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
             "trackId": "track-0050"
@@ -14488,9 +14488,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.571,
+        "meanLuma": 31.905,
         "nearUniform": false,
-        "stdLuma": 54.207
+        "stdLuma": 53.263
       },
       "reasons": [],
       "sampleId": "trans-008-009-100",
@@ -14564,9 +14564,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.792,
+        "meanLuma": 29.321,
         "nearUniform": false,
-        "stdLuma": 51.06
+        "stdLuma": 50.193
       },
       "reasons": [],
       "sampleId": "slide-009-settled",
@@ -14640,9 +14640,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 31.664,
+        "meanLuma": 31.192,
         "nearUniform": false,
-        "stdLuma": 50.899
+        "stdLuma": 50.047
       },
       "reasons": [],
       "sampleId": "trans-009-010-000",
@@ -14716,9 +14716,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 30.531,
+        "meanLuma": 30.059,
         "nearUniform": false,
-        "stdLuma": 50.124
+        "stdLuma": 49.247
       },
       "reasons": [],
       "sampleId": "trans-009-010-010",
@@ -14792,9 +14792,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 28.735,
+        "meanLuma": 28.263,
         "nearUniform": false,
-        "stdLuma": 49.497
+        "stdLuma": 48.592
       },
       "reasons": [],
       "sampleId": "trans-009-010-025",
@@ -14875,9 +14875,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 26.125,
+        "meanLuma": 25.682,
         "nearUniform": false,
-        "stdLuma": 47.627
+        "stdLuma": 46.728
       },
       "reasons": [],
       "sampleId": "trans-009-010-050",
@@ -14951,9 +14951,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 24.664,
+        "meanLuma": 24.286,
         "nearUniform": false,
-        "stdLuma": 47.267
+        "stdLuma": 46.485
       },
       "reasons": [],
       "sampleId": "trans-009-010-075",
@@ -15027,9 +15027,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 26.075,
+        "meanLuma": 25.697,
         "nearUniform": false,
-        "stdLuma": 49.342
+        "stdLuma": 48.604
       },
       "reasons": [],
       "sampleId": "trans-009-010-090",
@@ -15103,9 +15103,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 27.091,
+        "meanLuma": 26.713,
         "nearUniform": false,
-        "stdLuma": 49.955
+        "stdLuma": 49.234
       },
       "reasons": [],
       "sampleId": "trans-009-010-100",
@@ -15179,9 +15179,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 28.053,
+        "meanLuma": 27.675,
         "nearUniform": false,
-        "stdLuma": 50.733
+        "stdLuma": 50.031
       },
       "reasons": [],
       "sampleId": "slide-010-settled",
@@ -15255,9 +15255,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 33.047,
+        "meanLuma": 32.669,
         "nearUniform": false,
-        "stdLuma": 52.37
+        "stdLuma": 51.726
       },
       "reasons": [],
       "sampleId": "trans-010-011-000",
@@ -15331,9 +15331,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 34.055,
+        "meanLuma": 33.677,
         "nearUniform": false,
-        "stdLuma": 53.237
+        "stdLuma": 52.612
       },
       "reasons": [],
       "sampleId": "trans-010-011-010",
@@ -15407,9 +15407,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 33.081,
+        "meanLuma": 32.703,
         "nearUniform": false,
-        "stdLuma": 53.031
+        "stdLuma": 52.395
       },
       "reasons": [],
       "sampleId": "trans-010-011-025",
@@ -15483,9 +15483,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 30.963,
+        "meanLuma": 30.693,
         "nearUniform": false,
-        "stdLuma": 47.764
+        "stdLuma": 47.249
       },
       "reasons": [],
       "sampleId": "trans-010-011-050",
@@ -15566,9 +15566,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 32.189,
+        "meanLuma": 31.897,
         "nearUniform": false,
-        "stdLuma": 51.107
+        "stdLuma": 50.583
       },
       "reasons": [],
       "sampleId": "trans-010-011-075",
@@ -15642,9 +15642,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 32.4,
+        "meanLuma": 32.017,
         "nearUniform": false,
-        "stdLuma": 52.538
+        "stdLuma": 51.872
       },
       "reasons": [],
       "sampleId": "trans-010-011-090",
@@ -15718,9 +15718,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 31.891,
+        "meanLuma": 31.507,
         "nearUniform": false,
-        "stdLuma": 51.837
+        "stdLuma": 51.157
       },
       "reasons": [],
       "sampleId": "trans-010-011-100",
@@ -15794,9 +15794,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 31.901,
+        "meanLuma": 31.518,
         "nearUniform": false,
-        "stdLuma": 52.012
+        "stdLuma": 51.335
       },
       "reasons": [],
       "sampleId": "slide-011-settled",
@@ -15870,9 +15870,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.239,
+        "meanLuma": 31.855,
         "nearUniform": false,
-        "stdLuma": 52.413
+        "stdLuma": 51.743
       },
       "reasons": [],
       "sampleId": "trans-011-012-000",
@@ -15946,9 +15946,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 32.159,
+        "meanLuma": 31.775,
         "nearUniform": false,
-        "stdLuma": 52.388
+        "stdLuma": 51.718
       },
       "reasons": [],
       "sampleId": "trans-011-012-010",
@@ -16022,9 +16022,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 32.263,
+        "meanLuma": 31.88,
         "nearUniform": false,
-        "stdLuma": 52.54
+        "stdLuma": 51.872
       },
       "reasons": [],
       "sampleId": "trans-011-012-025",
@@ -16098,9 +16098,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 32.109,
+        "meanLuma": 31.725,
         "nearUniform": false,
-        "stdLuma": 52.276
+        "stdLuma": 51.603
       },
       "reasons": [],
       "sampleId": "trans-011-012-050",
@@ -16174,9 +16174,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 32.012,
+        "meanLuma": 31.629,
         "nearUniform": false,
-        "stdLuma": 52.036
+        "stdLuma": 51.36
       },
       "reasons": [],
       "sampleId": "trans-011-012-075",
@@ -16250,9 +16250,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 32.007,
+        "meanLuma": 31.624,
         "nearUniform": false,
-        "stdLuma": 52.047
+        "stdLuma": 51.371
       },
       "reasons": [],
       "sampleId": "trans-011-012-090",
@@ -16326,9 +16326,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 31.851,
+        "meanLuma": 31.467,
         "nearUniform": false,
-        "stdLuma": 51.925
+        "stdLuma": 51.246
       },
       "reasons": [],
       "sampleId": "trans-011-012-100",
@@ -16402,9 +16402,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.338,
+        "meanLuma": 31.954,
         "nearUniform": false,
-        "stdLuma": 52.559
+        "stdLuma": 51.892
       },
       "reasons": [],
       "sampleId": "slide-012-settled",
@@ -16478,9 +16478,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 30.073,
+        "meanLuma": 29.689,
         "nearUniform": false,
-        "stdLuma": 49.49
+        "stdLuma": 48.763
       },
       "reasons": [],
       "sampleId": "trans-012-013-000",
@@ -16560,9 +16560,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 29.837,
+        "meanLuma": 29.453,
         "nearUniform": false,
-        "stdLuma": 51.436
+        "stdLuma": 50.735
       },
       "reasons": [],
       "sampleId": "trans-012-013-010",
@@ -16642,9 +16642,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 29.289,
+        "meanLuma": 28.906,
         "nearUniform": false,
-        "stdLuma": 51.207
+        "stdLuma": 50.499
       },
       "reasons": [],
       "sampleId": "trans-012-013-025",
@@ -16731,9 +16731,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 27.712,
+        "meanLuma": 27.336,
         "nearUniform": false,
-        "stdLuma": 50.296
+        "stdLuma": 49.574
       },
       "reasons": [],
       "sampleId": "trans-012-013-050",
@@ -16808,9 +16808,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 20.017,
+        "meanLuma": 19.728,
         "nearUniform": false,
-        "stdLuma": 47.77
+        "stdLuma": 47.155
       },
       "reasons": [],
       "sampleId": "trans-012-013-075",
@@ -16878,9 +16878,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 19.83,
+        "meanLuma": 19.495,
         "nearUniform": false,
-        "stdLuma": 47.57
+        "stdLuma": 46.781
       },
       "reasons": [],
       "sampleId": "trans-012-013-090",
@@ -16948,9 +16948,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 20.115,
+        "meanLuma": 19.749,
         "nearUniform": false,
-        "stdLuma": 47.825
+        "stdLuma": 47.021
       },
       "reasons": [],
       "sampleId": "trans-012-013-100",
@@ -17018,9 +17018,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 20.248,
+        "meanLuma": 19.815,
         "nearUniform": false,
-        "stdLuma": 47.738
+        "stdLuma": 46.827
       },
       "reasons": [],
       "sampleId": "slide-013-settled",
@@ -17088,9 +17088,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.93,
+        "meanLuma": 19.564,
         "nearUniform": false,
-        "stdLuma": 47.501
+        "stdLuma": 46.69
       },
       "reasons": [],
       "sampleId": "trans-013-014-000",
@@ -17158,9 +17158,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 20.077,
+        "meanLuma": 19.711,
         "nearUniform": false,
-        "stdLuma": 47.525
+        "stdLuma": 46.715
       },
       "reasons": [],
       "sampleId": "trans-013-014-010",
@@ -17228,9 +17228,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 20.474,
+        "meanLuma": 20.231,
         "nearUniform": false,
-        "stdLuma": 48.311
+        "stdLuma": 47.695
       },
       "reasons": [],
       "sampleId": "trans-013-014-025",
@@ -17305,9 +17305,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.925,
+        "meanLuma": 18.596,
         "nearUniform": false,
-        "stdLuma": 46.55
+        "stdLuma": 45.803
       },
       "reasons": [],
       "sampleId": "trans-013-014-050",
@@ -17375,9 +17375,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 18.208,
+        "meanLuma": 17.934,
         "nearUniform": false,
-        "stdLuma": 44.547
+        "stdLuma": 43.898
       },
       "reasons": [],
       "sampleId": "trans-013-014-075",
@@ -17445,9 +17445,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 17.887,
+        "meanLuma": 17.613,
         "nearUniform": false,
-        "stdLuma": 44.901
+        "stdLuma": 44.256
       },
       "reasons": [],
       "sampleId": "trans-013-014-090",
@@ -17515,9 +17515,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 17.53,
+        "meanLuma": 17.256,
         "nearUniform": false,
-        "stdLuma": 44.817
+        "stdLuma": 44.168
       },
       "reasons": [],
       "sampleId": "trans-013-014-100",
@@ -17585,9 +17585,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 17.28,
+        "meanLuma": 17.006,
         "nearUniform": false,
-        "stdLuma": 44.475
+        "stdLuma": 43.819
       },
       "reasons": [],
       "sampleId": "slide-014-settled",
@@ -17655,9 +17655,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 20.35,
+        "meanLuma": 20.076,
         "nearUniform": false,
-        "stdLuma": 45.397
+        "stdLuma": 44.773
       },
       "reasons": [],
       "sampleId": "trans-014-015-000",
@@ -17725,9 +17725,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 20.604,
+        "meanLuma": 20.33,
         "nearUniform": false,
-        "stdLuma": 45.59
+        "stdLuma": 44.971
       },
       "reasons": [],
       "sampleId": "trans-014-015-010",
@@ -17795,9 +17795,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 20.744,
+        "meanLuma": 20.47,
         "nearUniform": false,
-        "stdLuma": 45.911
+        "stdLuma": 45.297
       },
       "reasons": [],
       "sampleId": "trans-014-015-025",
@@ -17871,9 +17871,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.759,
+        "meanLuma": 21.546,
         "nearUniform": false,
-        "stdLuma": 48.056
+        "stdLuma": 47.605
       },
       "reasons": [],
       "sampleId": "trans-014-015-050",
@@ -17947,9 +17947,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 24.505,
+        "meanLuma": 24.362,
         "nearUniform": false,
-        "stdLuma": 50.752
+        "stdLuma": 50.477
       },
       "reasons": [],
       "sampleId": "trans-014-015-075",
@@ -18016,9 +18016,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 24.49,
+        "meanLuma": 24.346,
         "nearUniform": false,
-        "stdLuma": 50.835
+        "stdLuma": 50.56
       },
       "reasons": [],
       "sampleId": "trans-014-015-090",
@@ -18085,9 +18085,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.03,
+        "meanLuma": 24.06,
         "nearUniform": false,
-        "stdLuma": 50.48
+        "stdLuma": 50.331
       },
       "reasons": [],
       "sampleId": "trans-014-015-100",
@@ -18154,9 +18154,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 23.723,
+        "meanLuma": 23.579,
         "nearUniform": false,
-        "stdLuma": 50.435
+        "stdLuma": 50.157
       },
       "reasons": [],
       "sampleId": "slide-015-settled",
@@ -18223,9 +18223,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.602,
+        "meanLuma": 24.459,
         "nearUniform": false,
-        "stdLuma": 50.626
+        "stdLuma": 50.351
       },
       "reasons": [],
       "sampleId": "trans-015-016-000",
@@ -18292,9 +18292,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 24.313,
+        "meanLuma": 24.169,
         "nearUniform": false,
-        "stdLuma": 50.582
+        "stdLuma": 50.306
       },
       "reasons": [],
       "sampleId": "trans-015-016-010",
@@ -18367,9 +18367,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 23.27,
+        "meanLuma": 22.991,
         "nearUniform": false,
-        "stdLuma": 51.291
+        "stdLuma": 50.976
       },
       "reasons": [],
       "sampleId": "trans-015-016-025",
@@ -18442,9 +18442,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.787,
+        "meanLuma": 21.704,
         "nearUniform": false,
-        "stdLuma": 50.189
+        "stdLuma": 50.025
       },
       "reasons": [],
       "sampleId": "trans-015-016-050",
@@ -18937,9 +18937,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 21.659,
+        "meanLuma": 21.506,
         "nearUniform": false,
-        "stdLuma": 48.067
+        "stdLuma": 47.739
       },
       "reasons": [],
       "sampleId": "trans-016-017-025",
@@ -19030,9 +19030,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.144,
+        "meanLuma": 24.56,
         "nearUniform": false,
-        "stdLuma": 49.133
+        "stdLuma": 47.872
       },
       "reasons": [],
       "sampleId": "trans-016-017-050",
@@ -19135,9 +19135,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 35.202,
+        "meanLuma": 34.199,
         "nearUniform": false,
-        "stdLuma": 57.867
+        "stdLuma": 56.148
       },
       "reasons": [],
       "sampleId": "trans-016-017-075",
@@ -19240,9 +19240,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 36.176,
+        "meanLuma": 34.975,
         "nearUniform": false,
-        "stdLuma": 59.349
+        "stdLuma": 57.398
       },
       "reasons": [],
       "sampleId": "trans-016-017-090",
@@ -19345,9 +19345,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 36.216,
+        "meanLuma": 34.982,
         "nearUniform": false,
-        "stdLuma": 59.422
+        "stdLuma": 57.404
       },
       "reasons": [],
       "sampleId": "trans-016-017-100",
@@ -19450,9 +19450,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 36.213,
+        "meanLuma": 34.98,
         "nearUniform": false,
-        "stdLuma": 59.422
+        "stdLuma": 57.403
       },
       "reasons": [],
       "sampleId": "slide-017-settled",
@@ -19707,9 +19707,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.556,
+        "meanLuma": 25.438,
         "nearUniform": false,
-        "stdLuma": 48.048
+        "stdLuma": 47.802
       },
       "reasons": [],
       "sampleId": "reverse-004-003-050",
@@ -19766,14 +19766,14 @@
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
             "trackId": "track-0022"
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
             "trackId": "track-0023"
@@ -19797,9 +19797,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 23.624,
+        "meanLuma": 23.329,
         "nearUniform": false,
-        "stdLuma": 48.626
+        "stdLuma": 48.079
       },
       "reasons": [],
       "sampleId": "reverse-005-004-050",
@@ -19879,9 +19879,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 35.107,
+        "meanLuma": 34.657,
         "nearUniform": false,
-        "stdLuma": 52.118
+        "stdLuma": 51.445
       },
       "reasons": [],
       "sampleId": "reverse-006-005-050",
@@ -19961,9 +19961,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 42.205,
+        "meanLuma": 41.948,
         "nearUniform": false,
-        "stdLuma": 51.842
+        "stdLuma": 51.433
       },
       "reasons": [],
       "sampleId": "reverse-007-006-050",
@@ -20043,9 +20043,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.599,
+        "meanLuma": 29.243,
         "nearUniform": false,
-        "stdLuma": 48.755
+        "stdLuma": 48.063
       },
       "reasons": [],
       "sampleId": "reverse-008-007-050",
@@ -20119,9 +20119,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.526,
+        "meanLuma": 29.14,
         "nearUniform": false,
-        "stdLuma": 47.018
+        "stdLuma": 46.238
       },
       "reasons": [],
       "sampleId": "reverse-009-008-050",
@@ -20202,9 +20202,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 26.124,
+        "meanLuma": 25.681,
         "nearUniform": false,
-        "stdLuma": 47.624
+        "stdLuma": 46.725
       },
       "reasons": [],
       "sampleId": "reverse-010-009-050",
@@ -20278,9 +20278,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 30.962,
+        "meanLuma": 30.692,
         "nearUniform": false,
-        "stdLuma": 47.762
+        "stdLuma": 47.247
       },
       "reasons": [],
       "sampleId": "reverse-011-010-050",
@@ -20354,9 +20354,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 32.108,
+        "meanLuma": 31.724,
         "nearUniform": false,
-        "stdLuma": 52.274
+        "stdLuma": 51.601
       },
       "reasons": [],
       "sampleId": "reverse-012-011-050",
@@ -20431,9 +20431,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.406,
+        "meanLuma": 21.03,
         "nearUniform": false,
-        "stdLuma": 48.443
+        "stdLuma": 47.643
       },
       "reasons": [],
       "sampleId": "reverse-013-012-050",
@@ -20508,9 +20508,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.953,
+        "meanLuma": 18.614,
         "nearUniform": false,
-        "stdLuma": 46.591
+        "stdLuma": 45.841
       },
       "reasons": [],
       "sampleId": "reverse-014-013-050",
@@ -20584,9 +20584,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.759,
+        "meanLuma": 21.546,
         "nearUniform": false,
-        "stdLuma": 48.056
+        "stdLuma": 47.605
       },
       "reasons": [],
       "sampleId": "reverse-015-014-050",
@@ -20659,9 +20659,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.787,
+        "meanLuma": 21.704,
         "nearUniform": false,
-        "stdLuma": 50.189
+        "stdLuma": 50.025
       },
       "reasons": [],
       "sampleId": "reverse-016-015-050",
@@ -20752,9 +20752,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.144,
+        "meanLuma": 24.56,
         "nearUniform": false,
-        "stdLuma": 49.133
+        "stdLuma": 47.872
       },
       "reasons": [],
       "sampleId": "reverse-017-016-050",
@@ -20763,7 +20763,7 @@
       "to": 16
     }
   ],
-  "generatedAtUtc": "2026-07-04T02:28:54+00:00",
+  "generatedAtUtc": "2026-07-04T02:53:36+00:00",
   "notes": [
     "Failures include capture timeouts, missing screenshots, and near-uniform blank frames.",
     "Contact sheets are intended for human review of overlap, layering, and object continuity."

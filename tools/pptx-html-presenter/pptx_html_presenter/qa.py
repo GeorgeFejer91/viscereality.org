@@ -1168,6 +1168,13 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "glow-radius": "glow-scale",
         "glow-radius-scale": "glow-scale",
         "glow-alpha": "glow-alpha-scale",
+        "font-scale": "text-scale",
+        "text-font-scale": "text-scale",
+        "text-size": "text-scale",
+        "bold": "bold-weight",
+        "font-weight": "bold-weight",
+        "text-bold": "bold-weight",
+        "text-bold-weight": "bold-weight",
         "clock": "phase",
     }
     normalized = aliases.get(normalized, normalized)
@@ -1180,10 +1187,13 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "exit-fade-end",
         "glow-scale",
         "glow-alpha-scale",
+        "text-scale",
+        "bold-weight",
     }:
         raise PresenterError(
             "Candidate sweep --vary must be progress, track-progress, phase, phase-offset, "
-            "enter-fade-end, exit-fade-end, glow-scale, or glow-alpha-scale."
+            "enter-fade-end, exit-fade-end, glow-scale, glow-alpha-scale, "
+            "text-scale, or bold-weight."
         )
     return normalized
 
@@ -1267,6 +1277,10 @@ def _candidate_sweep_samples(
             candidate["visualEffectOverrides"] = {"glowScale": round(max(0.0, numeric), 4)}
         elif normalized == "glow-alpha-scale":
             candidate["visualEffectOverrides"] = {"glowAlphaScale": round(max(0.0, numeric), 4)}
+        elif normalized == "text-scale":
+            candidate["textRenderOverrides"] = {"fontScale": round(max(0.0, numeric), 4)}
+        elif normalized == "bold-weight":
+            candidate["textRenderOverrides"] = {"boldWeight": round(max(100.0, numeric), 4)}
         else:
             target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
             candidate["trackProgressOverrides"] = {

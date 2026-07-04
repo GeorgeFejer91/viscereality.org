@@ -53,6 +53,11 @@
     "glow_scale": 0.5,
     "glow_alpha_scale": 1
   },
+  "text_rendering": {
+    "font_scale": 1,
+    "regular_weight": 400,
+    "bold_weight": 700
+  },
   "qa_policy": {
     "slide_ssim": 0.985,
     "morph_ssim": 0.965,
