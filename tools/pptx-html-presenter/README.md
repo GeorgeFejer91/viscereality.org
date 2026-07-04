@@ -345,6 +345,11 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family asset-check presen
 
 It writes `family-asset-check-report.json` under the shared asset root and exits
 nonzero if any public shared asset exceeds the preferred or hard size limit.
+The same report also scans the public and staging `deck.scene.json` manifests:
+every runtime `asset.file` must resolve, stay under the same size limits, and
+use a browser-friendly format such as PNG, JPEG, SVG, GIF, WebP, MP4, or WebM.
+This catches accidental runtime references to PowerPoint-native assets such as
+WDP/HDPhoto, TIFF, or BMP even when those files are small.
 Use `asset_policy.video_crf` to tune MP4 publish quality; lower values produce
 larger, more faithful video layers, while higher values favor smaller output.
 The bundled ffmpeg commands strip volatile metadata and use deterministic-leaning

@@ -3614,6 +3614,66 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(len(report["limits"]["oversizeAssets"]), 1)
             self.assertTrue((shared / "family-asset-check-report.json").exists())
 
+    def test_family_asset_check_blocks_non_web_runtime_asset_references(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "presentations" / "shared-assets" / "demo"
+            source = shared / "source"
+            source.mkdir(parents=True)
+            (source / "image.wdp").write_bytes(b"hdphoto")
+            public = root / "presentations" / "Demo"
+            public.mkdir(parents=True)
+            (public / "deck.scene.json").write_text(
+                json.dumps(
+                    {
+                        "deck": {"id": "Demo"},
+                        "assets": [
+                            {
+                                "id": "asset-wdp",
+                                "file": "../shared-assets/demo/source/image.wdp",
+                                "sourceFile": "../shared-assets/demo/source/image.wdp",
+                                "kind": "image",
+                                "extension": "wdp",
+                            }
+                        ],
+                        "slides": [],
+                        "transitions": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = root / "presentations" / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = asset_check_family(config)
+
+            self.assertEqual(report["status"], "blocked-by-runtime-assets")
+            self.assertTrue(report["limits"]["preferredAssetSafe"])
+            self.assertFalse(report["runtimeAssets"]["runtimeFormatSafe"])
+            self.assertFalse(report["runtimeAssets"]["runtimeAssetSafe"])
+            self.assertEqual(
+                report["runtimeAssets"]["unsupportedRuntimeFormats"][0]["extension"],
+                "wdp",
+            )
+
     def test_family_oracle_qa_reports_missing_ffmpeg(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

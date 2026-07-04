@@ -1,6 +1,6 @@
 {
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-04T03:18:17+00:00",
+  "generatedAtUtc": "2026-07-04T03:32:54+00:00",
   "limits": {
     "githubPagesSafe": true,
     "hardMaxMb": 100.0,
@@ -68,8 +68,80 @@
   "notes": [
     "Public GitHub Pages assets should stay below the preferred soft maximum.",
     "Assets above the hard maximum are always blockers.",
+    "HTML scene runtime asset references must resolve to browser-friendly media formats.",
     "Oversized PPT source media should be represented by optimized runtime media or kept out of the public shared tree."
   ],
+  "runtimeAssets": {
+    "allowedRuntimeExtensions": [
+      "gif",
+      "jpeg",
+      "jpg",
+      "mp4",
+      "png",
+      "svg",
+      "webm",
+      "webp"
+    ],
+    "checkedSceneCount": 6,
+    "checkedScenes": [
+      {
+        "deckId": "MuC",
+        "runtimeAssetCount": 39,
+        "scene": "presentations/MuC/deck.scene.json",
+        "target": "public"
+      },
+      {
+        "deckId": "MuC",
+        "runtimeAssetCount": 39,
+        "scene": "presentations/MuC-scene/deck.scene.json",
+        "target": "staging"
+      },
+      {
+        "deckId": "alpCHI",
+        "runtimeAssetCount": 48,
+        "scene": "presentations/alpCHI/deck.scene.json",
+        "target": "public"
+      },
+      {
+        "deckId": "alpCHI",
+        "runtimeAssetCount": 48,
+        "scene": "presentations/alpCHI-scene/deck.scene.json",
+        "target": "staging"
+      },
+      {
+        "deckId": "BBD26",
+        "runtimeAssetCount": 57,
+        "scene": "presentations/BBD26/deck.scene.json",
+        "target": "public"
+      },
+      {
+        "deckId": "BBD26",
+        "runtimeAssetCount": 57,
+        "scene": "presentations/BBD26-scene-new/deck.scene.json",
+        "target": "staging"
+      }
+    ],
+    "extensionCounts": {
+      "jpeg": 6,
+      "jpg": 6,
+      "mp4": 28,
+      "png": 150,
+      "svg": 10,
+      "webm": 88
+    },
+    "maxRuntimeAssetMb": 48.879,
+    "missingRuntimeFiles": [],
+    "missingSceneManifests": [],
+    "oversizeRuntimeAssets": [],
+    "runtimeAssetSafe": true,
+    "runtimeFileCount": 288,
+    "runtimeFilesExist": true,
+    "runtimeFormatSafe": true,
+    "runtimeHardLimitSafe": true,
+    "runtimePreferredAssetSafe": true,
+    "softOversizeRuntimeAssets": [],
+    "unsupportedRuntimeFormats": []
+  },
   "schema": "pptx-html-presenter.family.asset-check.v1",
   "sharedAssetRoot": "presentations/shared-assets/viscereality",
   "status": "ok"

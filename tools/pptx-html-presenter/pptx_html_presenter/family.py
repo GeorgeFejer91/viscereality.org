@@ -19,6 +19,16 @@ from .utils import ensure_dir, find_binary, format_mb, read_json, repo_root_from
 
 SHARED_SOURCE_SOFT_MAX_MB = 50.0
 SHARED_SOURCE_HARD_MAX_MB = 100.0
+WEB_RUNTIME_ASSET_EXTENSIONS = {
+    "gif",
+    "jpeg",
+    "jpg",
+    "mp4",
+    "png",
+    "svg",
+    "webm",
+    "webp",
+}
 
 
 @dataclass(frozen=True)
@@ -115,11 +125,20 @@ def inspect_family(config_path: Path) -> dict[str, Any]:
 def asset_check_family(config_path: Path) -> dict[str, Any]:
     family = load_family_config(config_path)
     limits = _shared_asset_library_limit_report(family)
-    status = (
-        "ok"
-        if limits["githubPagesSafe"] and limits.get("preferredAssetSafe", True)
-        else "blocked-by-asset-size"
+    runtime_assets = _family_runtime_asset_report(family)
+    size_safe = (
+        limits["githubPagesSafe"]
+        and limits.get("preferredAssetSafe", True)
+        and runtime_assets["runtimeHardLimitSafe"]
+        and runtime_assets.get("runtimePreferredAssetSafe", True)
     )
+    runtime_safe = runtime_assets["runtimeAssetSafe"]
+    if size_safe and runtime_safe:
+        status = "ok"
+    elif not size_safe:
+        status = "blocked-by-asset-size"
+    else:
+        status = "blocked-by-runtime-assets"
     report = {
         "schema": "pptx-html-presenter.family.asset-check.v1",
         "generatedAtUtc": utc_now_iso(),
@@ -127,9 +146,11 @@ def asset_check_family(config_path: Path) -> dict[str, Any]:
         "status": status,
         "sharedAssetRoot": _repo_rel(family.repo_root, family.shared_root),
         "limits": limits,
+        "runtimeAssets": runtime_assets,
         "notes": [
             "Public GitHub Pages assets should stay below the preferred soft maximum.",
             "Assets above the hard maximum are always blockers.",
+            "HTML scene runtime asset references must resolve to browser-friendly media formats.",
             "Oversized PPT source media should be represented by optimized runtime media or kept out of the public shared tree.",
         ],
     }
@@ -856,6 +877,117 @@ def _shared_asset_library_limit_report(family: FamilyConfig) -> dict[str, Any]:
         "softOversizeAssets": soft_oversize,
         "oversizeAssets": oversize,
     }
+
+
+def _family_runtime_asset_report(family: FamilyConfig) -> dict[str, Any]:
+    checked_scenes: list[dict[str, Any]] = []
+    missing_scene_manifests: list[dict[str, Any]] = []
+    missing_files: list[dict[str, Any]] = []
+    unsupported_formats: list[dict[str, Any]] = []
+    soft_oversize: list[dict[str, Any]] = []
+    oversize: list[dict[str, Any]] = []
+    extension_counts: dict[str, int] = {}
+    max_mb = 0.0
+    runtime_file_count = 0
+
+    for deck in family.decks:
+        scene_targets = _runtime_asset_scene_targets(family, deck)
+        found_target = False
+        for target_name, build_dir in scene_targets:
+            scene_path = build_dir / "deck.scene.json"
+            if not scene_path.exists():
+                continue
+            found_target = True
+            scene = read_json(scene_path)
+            target_count = 0
+            for asset in scene.get("assets", []) or []:
+                value = asset.get("file")
+                if not value:
+                    continue
+                target_count += 1
+                runtime_file_count += 1
+                ref = str(value)
+                ext = _runtime_asset_extension(ref)
+                extension_counts[ext or "<none>"] = extension_counts.get(ext or "<none>", 0) + 1
+                row = {
+                    "deckId": deck.id,
+                    "target": target_name,
+                    "assetId": asset.get("id"),
+                    "path": ref,
+                    "extension": ext or "",
+                }
+                if ext not in WEB_RUNTIME_ASSET_EXTENSIONS:
+                    unsupported_formats.append(row)
+                path = _shared_ref_to_path(build_dir, ref)
+                if not path.exists():
+                    missing_files.append({**row, "resolvedPath": str(path)})
+                    continue
+                mb = format_mb(path.stat().st_size)
+                max_mb = max(max_mb, mb)
+                if mb > SHARED_SOURCE_SOFT_MAX_MB:
+                    soft_oversize.append({**row, "resolvedPath": _repo_rel(family.repo_root, path), "mb": mb})
+                if mb > SHARED_SOURCE_HARD_MAX_MB:
+                    oversize.append({**row, "resolvedPath": _repo_rel(family.repo_root, path), "mb": mb})
+            checked_scenes.append(
+                {
+                    "deckId": deck.id,
+                    "target": target_name,
+                    "scene": _repo_rel(family.repo_root, scene_path),
+                    "runtimeAssetCount": target_count,
+                }
+            )
+        if not found_target:
+            missing_scene_manifests.append(
+                {
+                    "deckId": deck.id,
+                    "targets": [
+                        _repo_rel(family.repo_root, build_dir / "deck.scene.json")
+                        for _target_name, build_dir in scene_targets
+                    ],
+                }
+            )
+
+    return {
+        "runtimeAssetSafe": not missing_files and not unsupported_formats and not soft_oversize and not oversize,
+        "runtimeFilesExist": not missing_files,
+        "runtimeFormatSafe": not unsupported_formats,
+        "runtimeHardLimitSafe": not oversize,
+        "runtimePreferredAssetSafe": not soft_oversize,
+        "allowedRuntimeExtensions": sorted(WEB_RUNTIME_ASSET_EXTENSIONS),
+        "checkedSceneCount": len(checked_scenes),
+        "runtimeFileCount": runtime_file_count,
+        "maxRuntimeAssetMb": max_mb,
+        "extensionCounts": dict(sorted(extension_counts.items())),
+        "checkedScenes": checked_scenes,
+        "missingSceneManifests": missing_scene_manifests,
+        "missingRuntimeFiles": missing_files,
+        "unsupportedRuntimeFormats": unsupported_formats,
+        "softOversizeRuntimeAssets": soft_oversize,
+        "oversizeRuntimeAssets": oversize,
+    }
+
+
+def _runtime_asset_scene_targets(family: FamilyConfig, deck: FamilyDeck) -> list[tuple[str, Path]]:
+    presentations_dir = family.repo_root / "presentations"
+    targets = [
+        ("public", presentations_dir / deck.public_dir),
+        ("staging", deck.staging),
+    ]
+    seen: set[Path] = set()
+    unique: list[tuple[str, Path]] = []
+    for name, path in targets:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique.append((name, path))
+    return unique
+
+
+def _runtime_asset_extension(value: str) -> str:
+    clean = value.replace("\\", "/").split("?", 1)[0].split("#", 1)[0]
+    suffix = Path(clean).suffix.lower().lstrip(".")
+    return suffix
 
 
 def _shared_ref_to_path(base_dir: Path, value: str) -> Path:
