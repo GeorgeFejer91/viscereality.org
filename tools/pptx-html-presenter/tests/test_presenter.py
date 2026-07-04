@@ -386,6 +386,35 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(row["track_id"], "track-0087")
             self.assertEqual(row["points"][1]["value"], 0.58)
 
+    def test_config_loads_clustered_transition_track_progress_overrides(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "config.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "morph_policy": {
+                            "transition_track_progress_overrides": [
+                                {
+                                    "from": 1,
+                                    "to": 2,
+                                    "track_ids": ["track-panel", "track-panel-child"],
+                                    "points": [
+                                        {"progress": 0.0, "value": 0.0},
+                                        {"progress": 0.5, "value": 0.45},
+                                        {"progress": 1.0, "value": 1.0},
+                                    ],
+                                }
+                            ]
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+            row = config.morph_policy.transition_track_progress_overrides[0]
+            self.assertEqual(row["track_ids"], ["track-panel", "track-panel-child"])
+            self.assertEqual(row["points"][1]["value"], 0.45)
+
     def test_config_loads_public_asset_pruning_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "config.json"
@@ -1072,6 +1101,58 @@ class PresenterTests(unittest.TestCase):
                             {"progress": 1.0, "value": 1.0},
                         ],
                     }
+                ],
+            )
+
+    def test_build_expands_clustered_transition_track_progress_overrides(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pptx = tmp_path / "demo.pptx"
+            out = tmp_path / "site"
+            _write_demo_pptx(pptx)
+            build_presentation(
+                pptx,
+                out,
+                PresenterConfig(
+                    morph_policy=MorphPolicy(
+                        transition_track_progress_overrides=(
+                            {
+                                "from": 1,
+                                "to": 2,
+                                "track_ids": ["track-0001", "track-0002", "track-0001"],
+                                "points": [
+                                    {"progress": 0.0, "value": 0.0},
+                                    {"progress": 0.5, "value": 0.4},
+                                    {"progress": 1.0, "value": 1.0},
+                                ],
+                                "source": "clustered-panel-calibration",
+                            },
+                        )
+                    )
+                ),
+            )
+            scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                scene["transitions"][0]["trackProgressOverrides"],
+                [
+                    {
+                        "trackId": "track-0001",
+                        "points": [
+                            {"progress": 0.0, "value": 0.0},
+                            {"progress": 0.5, "value": 0.4},
+                            {"progress": 1.0, "value": 1.0},
+                        ],
+                        "source": "clustered-panel-calibration",
+                    },
+                    {
+                        "trackId": "track-0002",
+                        "points": [
+                            {"progress": 0.0, "value": 0.0},
+                            {"progress": 0.5, "value": 0.4},
+                            {"progress": 1.0, "value": 1.0},
+                        ],
+                        "source": "clustered-panel-calibration",
+                    },
                 ],
             )
 

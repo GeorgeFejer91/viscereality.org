@@ -1749,8 +1749,8 @@ def _transition_track_progress_overrides(
             to_slide = int(_override_value(row, "to", "to_slide", "toSlide"))
         except (TypeError, ValueError):
             continue
-        track_id = _override_value(row, "track_id", "trackId")
-        if not track_id:
+        track_ids = _override_track_ids(row)
+        if not track_ids:
             continue
         raw_points = _override_value(row, "points", "progress_map", "progressMap")
         if not isinstance(raw_points, list):
@@ -1778,8 +1778,7 @@ def _transition_track_progress_overrides(
             points.append({"progress": round(progress, 4), "value": round(value, 4)})
         if len(points) < 2:
             continue
-        normalized: dict[str, Any] = {
-            "trackId": str(track_id),
+        base: dict[str, Any] = {
             "points": sorted(points, key=lambda item: item["progress"]),
         }
         for output_key, keys in {
@@ -1788,10 +1787,37 @@ def _transition_track_progress_overrides(
         }.items():
             value = _override_value(row, *keys)
             if value is not None:
-                normalized[output_key] = value
-        out.setdefault((from_slide, to_slide), []).append(normalized)
+                base[output_key] = value
+        for track_id in track_ids:
+            out.setdefault((from_slide, to_slide), []).append(
+                {
+                    **base,
+                    "trackId": track_id,
+                }
+            )
     for key in list(out):
         out[key] = sorted(out[key], key=lambda item: str(item.get("trackId", "")))
+    return out
+
+
+def _override_track_ids(row: dict[str, Any]) -> list[str]:
+    raw = _override_value(row, "track_ids", "trackIds", "tracks", "track_id", "trackId")
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        values = raw.split(",")
+    elif isinstance(raw, (list, tuple, set)):
+        values = list(raw)
+    else:
+        values = [raw]
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        track_id = str(value).strip()
+        if not track_id or track_id in seen:
+            continue
+        seen.add(track_id)
+        out.append(track_id)
     return out
 
 
