@@ -498,7 +498,8 @@ def _try_reuse_cached_optimized_asset(
     cached_path = Path(str(entry.get("path", "")))
     if not cached_path.exists() or not cached_path.is_file():
         return None
-    if format_mb(cached_path.stat().st_size) > policy.hard_max_mb:
+    if not _publish_size_ok(cached_path, policy):
+        asset.warnings.append("cached-optimized-asset-over-publish-limit")
         return None
     cached_ext = cached_path.suffix.lower().lstrip(".") or str(entry.get("extension", ""))
     if bool(asset.alpha) and cached_ext == "mp4":

@@ -3144,6 +3144,61 @@ class PresenterTests(unittest.TestCase):
             self.assertIn("optimized-asset-reused-from-shared-cache", asset.warnings)
             self.assertNotIn("gif-transcode-unavailable", asset.warnings)
 
+    def test_prepare_assets_rejects_cached_optimized_asset_over_publish_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw = b"fake animated gif payload" * 128
+            source_sha = hashlib.sha256(raw).hexdigest()
+            pptx = root / "demo.pptx"
+            with zipfile.ZipFile(pptx, "w") as zf:
+                zf.writestr("ppt/media/loop.gif", raw)
+            cached = root / "presentations" / "shared-assets" / "viscereality" / "optimized" / "cached.webm"
+            cached.parent.mkdir(parents=True)
+            cached.write_bytes(b"x" * 2048)
+            deck = PptxDeck(
+                source_path=str(pptx),
+                source_sha256=hashlib.sha256(pptx.read_bytes()).hexdigest(),
+                title="Demo",
+                slide_width=16,
+                slide_height=9,
+                slides=[],
+                assets={
+                    "ppt/media/loop.gif": AssetRef(
+                        source_path="ppt/media/loop.gif",
+                        rel_id="rId1",
+                        kind="image",
+                        extension="gif",
+                        size_bytes=len(raw),
+                        sha256=source_sha,
+                        animated=True,
+                        alpha=True,
+                    )
+                },
+            )
+
+            report = prepare_assets(
+                deck,
+                root / "out",
+                AssetPolicy(soft_max_mb=0.001, hard_max_mb=1.0, allow_oversize_assets=False),
+                optimized_asset_cache={
+                    "bySourceSha256": {
+                        source_sha: {
+                            "path": str(cached),
+                            "extension": "webm",
+                            "kind": "video",
+                            "animated": True,
+                            "alpha": True,
+                        }
+                    }
+                },
+            )
+
+            asset = deck.assets["ppt/media/loop.gif"]
+            self.assertNotEqual(asset.output_file, f"assets/optimized/{source_sha[:16]}-cached.webm")
+            self.assertIn("cached-optimized-asset-over-publish-limit", asset.warnings)
+            self.assertNotIn("optimized-asset-reused-from-shared-cache", asset.warnings)
+            self.assertFalse(report["publishAssetSafe"])
+
     def test_hdphoto_media_target_is_preferred_when_powerpoint_marks_image_layer(self) -> None:
         assets = {
             "ppt/media/fallback.png": AssetRef(
