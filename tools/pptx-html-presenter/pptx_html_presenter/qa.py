@@ -1248,9 +1248,21 @@ def _candidate_sweep_samples(
             candidate["mediaClocks"] = clocks
             candidate["candidateSweep"]["trackIds"] = target_tracks
         elif normalized == "enter-fade-end":
-            candidate["unmatchedFadeOverride"] = {"enterStart": 0.0, "enterEnd": round(_clamp01(numeric), 4)}
+            fade = {"enterStart": 0.0, "enterEnd": round(_clamp01(numeric), 4)}
+            target_tracks = _candidate_sweep_track_ids(base_sample, track_id) if track_id else []
+            if target_tracks:
+                candidate["unmatchedFadeOverride"] = {"tracks": {target_track: fade for target_track in target_tracks}}
+                candidate["candidateSweep"]["trackIds"] = target_tracks
+            else:
+                candidate["unmatchedFadeOverride"] = fade
         elif normalized == "exit-fade-end":
-            candidate["unmatchedFadeOverride"] = {"exitStart": 0.0, "exitEnd": round(_clamp01(numeric), 4)}
+            fade = {"exitStart": 0.0, "exitEnd": round(_clamp01(numeric), 4)}
+            target_tracks = _candidate_sweep_track_ids(base_sample, track_id) if track_id else []
+            if target_tracks:
+                candidate["unmatchedFadeOverride"] = {"tracks": {target_track: fade for target_track in target_tracks}}
+                candidate["candidateSweep"]["trackIds"] = target_tracks
+            else:
+                candidate["unmatchedFadeOverride"] = fade
         elif normalized == "glow-scale":
             candidate["visualEffectOverrides"] = {"glowScale": round(max(0.0, numeric), 4)}
         elif normalized == "glow-alpha-scale":

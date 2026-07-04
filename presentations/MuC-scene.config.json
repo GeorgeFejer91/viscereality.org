@@ -94,6 +94,22 @@
         "exit_start": 0.0,
         "exit_end": 0.25,
         "source": "MuC-slide-1-title-raster-exits-before-lung-focus"
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "track_id": "track-0003",
+        "exit_start": 0.0,
+        "exit_end": 1.0,
+        "source": "MuC-slide-1-person-background-slow-crossfade-oracle-calibration"
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "track_ids": ["track-0032", "track-0033", "track-0034", "track-0035", "track-0036"],
+        "enter_start": 0.0,
+        "enter_end": 1.0,
+        "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
       }
     ]
   },

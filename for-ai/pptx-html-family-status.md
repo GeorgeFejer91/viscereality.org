@@ -167,10 +167,13 @@ Current source PPTX parse results from family preflight:
 - Problem: MuC transition `3->4` still had carousel-panel ghosting and an oracle midpoint around `0.710758`, with the HTML Morph timing lagging the PowerPoint reference.
   - Solution: candidate sweeps were run against the PowerPoint oracle frames for `trans-003-004` and MuC config now adds a `3->4` progress map: `0%=0.0`, `10%=0.1`, `25%=0.35`, `50%=0.6`, `75%=0.8`, `90%=0.9`, `100%=1.0`. This is mirrored by the runtime for reverse navigation.
 - Calibration result: after rebuilding/publishing the MuC `3->4` map, the bounded MuC slides `1-3` oracle run still fails strict thresholds with minimum SSIM `0.658322`, but `3->4` improves at the most visually important early/mid samples: `25% 0.776646 -> 0.809591`, `50% 0.710758 -> 0.753245`, and `100% 0.825763 -> 0.825751` effectively unchanged. It regresses `10% 0.895287 -> 0.837739`, `75% 0.769792 -> 0.736685`, and `90% 0.805204 -> 0.743021`, so treat this as a partial timing calibration, not solved oracle parity.
+- Problem: MuC transition `1->2` at 25% was still the bounded oracle minimum at `0.658322`. The side-by-side showed the PowerPoint reference using a gentler crossfade between the slide-1 animated person/background layer and the slide-2 lung/background/title layers than the global unmatched fade window (`0.5 -> 0.75`) provided.
+  - Solution: `candidate-sweep` now supports track-scoped unmatched fade sweeps for `enter-fade-end` and `exit-fade-end` via `--track-id`, including comma-separated track clusters. This lets agents score fade timing for one object or group without disturbing the full transition.
+- Calibration result: MuC config now keeps `track-0003` (slide-1 person/background WebM) fading out across the full `1->2` transition and fades in slide-2 tracks `track-0032` through `track-0036` across the full transition, while preserving the earlier fast exit for `track-0031` (title raster). After rebuilding/publishing and rerunning `family oracle-qa --decks MuC --slides 1-3 --target public --force --min-free-gb 0`, bounded MuC minimum SSIM improved from `0.658322` to `0.736685`. The targeted `trans-001-002-025` sample improved to `0.740554`. Strict oracle thresholds are still not met; the new worst sample is now `trans-003-004-075`.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
-- `presentations/shared-assets/viscereality/` contains 76 runtime/source files, about 362.57 MiB total.
+- `presentations/shared-assets/viscereality/` contains 81 runtime/source files, about 362.645 MiB total.
 - Largest shared asset is about 48.879 MiB.
 - Files above 50 MiB: 0.
 - Files above 100 MiB: 0.
@@ -230,6 +233,12 @@ After adding the MuC `3->4` carousel-speed progress map on 2026-07-04, direct pu
 
 This validates that the new `3->4` progress map remains playable forward and backward, keeps media clocks available during capture, and does not introduce blank/partial frames. It is still not a PowerPoint-oracle SSIM pass.
 
+After adding track-scoped unmatched fade sweep support and the MuC `1->2` slow crossfade overrides on 2026-07-04, direct public MuC visual audit passed again:
+
+- `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+
+This validates that the track-scoped crossfade calibration did not introduce blank frames, capture failures, or forward/reverse browser-playback regressions. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -253,6 +262,10 @@ Additional bounded MuC oracle result after the `2->3` hold-then-snap calibration
 Additional bounded MuC oracle result after the subsequent `3->4` carousel-speed calibration:
 
 - `MuC` slides `1-3`: status `failed`, no blockers, 24 comparisons, minimum SSIM `0.658322`. `3->4` early/mid samples improved, but late samples regressed; the main remaining blocker is still first-transition and full-composition parity, not browser playability.
+
+Additional bounded MuC oracle result after the subsequent `1->2` track-scoped crossfade calibration:
+
+- `MuC` slides `1-3`: status `failed`, no blockers, 24 comparisons, minimum SSIM `0.736685`. `trans-001-002-025` improved from `0.658322` to `0.740554`; the worst current samples are now `trans-003-004-075` (`0.736685`) and `trans-003-004-090` (`0.743021`). The remaining gap is still large and should be treated as unresolved PowerPoint-oracle parity work.
 
 Interpretation:
 
@@ -293,6 +306,7 @@ py -3 tools\pptx-html-presenter\pptx-html-presenter.py family inspect presentati
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\MuC --sample trans-001-002-025 --vary exit-fade-end --values 0.05:1:0.05 --reference-frame presentations\MuC\qa\reference\trans-001-002-025.png
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\MuC --sample trans-001-002-025 --vary enter-fade-end --track-id track-0032,track-0033,track-0034,track-0035,track-0036 --values 0.05:1:0.05 --reference-frame presentations\MuC\qa\reference\trans-001-002-025.png
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\alpCHI --sample trans-001-002-025 --vary track-progress --track-id track-0011,track-0012 --values 0:1:0.05 --reference-frame presentations\alpCHI\qa\reference\trans-001-002-025.png
 ```
 

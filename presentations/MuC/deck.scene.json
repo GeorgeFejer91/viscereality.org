@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-04T00:38:07+00:00",
+  "generatedAtUtc": "2026-07-04T00:51:20+00:00",
   "qa": {
     "groupRows": [
       {
@@ -122408,10 +122408,40 @@
       "to": 2,
       "unmatchedFade": {
         "tracks": {
+          "track-0003": {
+            "exitEnd": 1.0,
+            "exitStart": 0.0,
+            "source": "MuC-slide-1-person-background-slow-crossfade-oracle-calibration"
+          },
           "track-0031": {
             "exitEnd": 0.25,
             "exitStart": 0.0,
             "source": "MuC-slide-1-title-raster-exits-before-lung-focus"
+          },
+          "track-0032": {
+            "enterEnd": 1.0,
+            "enterStart": 0.0,
+            "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
+          },
+          "track-0033": {
+            "enterEnd": 1.0,
+            "enterStart": 0.0,
+            "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
+          },
+          "track-0034": {
+            "enterEnd": 1.0,
+            "enterStart": 0.0,
+            "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
+          },
+          "track-0035": {
+            "enterEnd": 1.0,
+            "enterStart": 0.0,
+            "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
+          },
+          "track-0036": {
+            "enterEnd": 1.0,
+            "enterStart": 0.0,
+            "source": "MuC-slide-2-lung-background-slow-crossfade-oracle-calibration"
           }
         }
       }

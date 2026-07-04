@@ -2234,6 +2234,34 @@ class PresenterTests(unittest.TestCase):
         self.assertEqual(exit_candidates[0]["unmatchedFadeOverride"], {"exitStart": 0.0, "exitEnd": 0.2})
         self.assertEqual(exit_candidates[0]["candidateSweep"]["vary"], "exit-fade-end")
 
+    def test_candidate_sweep_unmatched_fade_can_target_track_cluster(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-bg": 1.3, "track-title": 1.3},
+        }
+        candidates = _candidate_sweep_samples(
+            sample,
+            "exit-fade-end",
+            [0.2],
+            "track-bg,track-title",
+        )
+        self.assertEqual(
+            candidates[0]["unmatchedFadeOverride"],
+            {
+                "tracks": {
+                    "track-bg": {"exitStart": 0.0, "exitEnd": 0.2},
+                    "track-title": {"exitStart": 0.0, "exitEnd": 0.2},
+                }
+            },
+        )
+        self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-bg", "track-title"])
+        self.assertEqual(candidates[0]["progress"], 0.5)
+
     def test_candidate_sweep_glow_samples_can_target_settled_slides(self) -> None:
         sample = {
             "id": "slide-001-settled",
