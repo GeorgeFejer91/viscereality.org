@@ -31,6 +31,7 @@ from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _solid_color, _visual_effects, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
+    _candidate_sweep_baseline,
     _candidate_sweep_candidate_id,
     _candidate_sweep_dir_name,
     _candidate_sweep_samples,
@@ -2363,6 +2364,34 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("tracks-40-", dirname)
         self.assertIn("tracks-40-", candidate_id)
         self.assertNotIn("track-0039", dirname)
+
+    def test_candidate_sweep_baseline_reads_existing_qa_report(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            qa_dir = Path(tmp) / "qa"
+            qa_dir.mkdir()
+            (qa_dir / "report.json").write_text(
+                json.dumps(
+                    {
+                        "comparisons": [
+                            {
+                                "sampleId": "trans-001-002-050",
+                                "ssim": 0.812345,
+                                "passed": False,
+                                "threshold": 0.965,
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            baseline = _candidate_sweep_baseline(qa_dir, "trans-001-002-050")
+            missing = _candidate_sweep_baseline(qa_dir, "trans-009-010-050")
+
+            self.assertEqual(baseline["ssim"], 0.812345)
+            self.assertEqual(baseline["threshold"], 0.965)
+            self.assertFalse(baseline["passed"])
+            self.assertIsNone(missing["ssim"])
 
     def test_candidate_sweep_track_progress_samples_keep_global_progress(self) -> None:
         sample = {

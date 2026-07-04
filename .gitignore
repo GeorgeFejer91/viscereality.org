@@ -28,6 +28,7 @@ presentations/*/qa/reference/**
 presentations/*/qa/diff/**
 presentations/*/qa/side-by-side/**
 presentations/*/qa/oracle/**
+presentations/*/qa/candidate-sweep/**
 presentations/*/qa/visual-audit/html/**
 presentations/*/qa/morph-progress/html/**
 presentations/*/qa/morph-progress/reference/**

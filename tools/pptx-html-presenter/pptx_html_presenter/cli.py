@@ -355,8 +355,10 @@ def main(argv: list[str] | None = None) -> int:
             best = report.get("best") or {}
             best_value = best.get("value", "none")
             best_score = best.get("ssim", "none")
+            best_delta = report.get("summary", {}).get("bestDelta")
+            delta_text = f" delta={best_delta}" if best_delta is not None else ""
             print(
-                f"candidate-sweep sample={report['sampleId']} candidates={report['summary']['scoredCount']} best={best_value} ssim={best_score}"
+                f"candidate-sweep sample={report['sampleId']} candidates={report['summary']['scoredCount']} best={best_value} ssim={best_score}{delta_text}"
             )
             return 0
         if args.command == "media-phase":

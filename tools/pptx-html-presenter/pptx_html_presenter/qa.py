@@ -650,11 +650,16 @@ def run_candidate_sweep(
             )
 
     best = max(rows, key=lambda row: float(row.get("ssim", 0.0) or 0.0), default=None)
+    baseline = _candidate_sweep_baseline(qa_dir, str(base_sample["id"]))
+    best_delta = None
+    if best is not None and baseline.get("ssim") is not None:
+        best_delta = round(float(best.get("ssim", 0.0) or 0.0) - float(baseline["ssim"]), 6)
     report = {
         "schema": "pptx-html-presenter.candidate-sweep.v1",
         "generatedAtUtc": utc_now_iso(),
         "sampleId": base_sample["id"],
         "sourceSample": base_sample,
+        "baseline": baseline,
         "vary": sweep_vary,
         "trackId": track_id,
         "values": [round(float(value), 6) for value in values],
@@ -665,11 +670,36 @@ def run_candidate_sweep(
         "summary": {
             "candidateCount": len(candidate_samples),
             "scoredCount": len(rows),
+            "baselineSsim": baseline.get("ssim"),
+            "bestDelta": best_delta,
+            "improvesBaseline": bool(best_delta is not None and best_delta > 0),
+            "meaningfulImprovement": bool(best_delta is not None and best_delta >= 0.002),
             "outputDir": _path_for_report(sweep_dir, build_dir),
         },
     }
     write_json(sweep_dir / "report.json", report)
     return report
+
+
+def _candidate_sweep_baseline(qa_dir: Path, sample_id: str) -> dict[str, Any]:
+    report_path = qa_dir / "report.json"
+    if not report_path.exists():
+        return {"sampleId": sample_id, "ssim": None, "source": None}
+    try:
+        report = read_json(report_path)
+    except Exception:
+        return {"sampleId": sample_id, "ssim": None, "source": _path_for_report(report_path, qa_dir.parent)}
+    for row in report.get("comparisons", []) or []:
+        if str(row.get("sampleId") or "") != sample_id:
+            continue
+        return {
+            "sampleId": sample_id,
+            "ssim": row.get("ssim"),
+            "passed": row.get("passed"),
+            "threshold": row.get("threshold"),
+            "source": _path_for_report(report_path, qa_dir.parent),
+        }
+    return {"sampleId": sample_id, "ssim": None, "source": _path_for_report(report_path, qa_dir.parent)}
 
 
 def run_transition_time_calibration(
