@@ -161,6 +161,9 @@ Current source PPTX parse results from family preflight:
 - Problem: The first-transition oracle failures involve object clusters, especially panel/frame/media clusters, but `candidate-sweep --vary track-progress` could previously vary only one track at a time. That made it too hard to test the user's core requirement that grouped/panel contents move together.
   - Solution: candidate sweeps now accept comma-separated track clusters for `--track-id` on `track-progress` and `phase` sweeps. For example, `--track-id track-0011,track-0012` applies the same candidate progress or media phase to both tracks and records `candidateSweep.trackIds` in the generated samples.
 - Calibration result: on 2026-07-04, alpCHI `trans-001-002-025` was tested with global progress, `track-0010` title progress, `track-0011` panel/media progress, media phase for `track-0011`, and clustered `track-0011,track-0012` progress. The best cluster score was only `0.518489`, and the best individual tests stayed around `0.52`, so do not commit those as production overrides. The remaining alpCHI gap is likely a combination of PowerPoint export timing, full-frame composition, object effects, and/or deeper grouping semantics rather than a simple per-track progress tweak.
+- Problem: A broader MuC PowerPoint-oracle pass for slides `1-3` found a worse failure after the opener: transition `2->3` midpoint scored only `0.621540`. The side-by-side showed PowerPoint effectively holding slide 2 through the early/mid samples and then reaching slide 3 quickly, while HTML interpolated linearly and left the incoming measurement panel too far to the right.
+  - Solution: MuC config now adds a transition `2->3` progress map that holds at `0.0` through progress `0.5` and jumps to `1.0` by progress `0.75`, mirrored for reverse navigation by the runtime's existing progress-map mirror.
+- Calibration result: after rebuilding/publishing that MuC `2->3` hold-then-snap map, rerunning `family oracle-qa --decks MuC --slides 1-3 --target public --force --min-free-gb 0` improved the bounded MuC minimum SSIM from `0.621540` to `0.658322`. Transition `2->3` samples improved from `0.747345 -> 0.785634` at 25%, `0.621540 -> 0.781949` at 50%, `0.647073 -> 0.742557` at 75%, and `0.803880 -> 0.853141` at 90%. Strict oracle thresholds are still not met.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -212,6 +215,12 @@ After adding the per-track unmatched fade override support and republishing MuC 
 
 This confirms the new runtime fade-map logic did not break settled rendering, forward Morph captures, reverse midpoint captures, or shared-media loading. It is still not a PowerPoint-oracle SSIM pass.
 
+After adding the MuC `2->3` hold-then-snap progress map on 2026-07-04, direct public MuC visual audit passed again:
+
+- `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+
+This validates the new transition map does not create browser capture failures or obvious reverse-transition structural problems. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -227,6 +236,10 @@ Current smoke results after the visual-effects config propagation fix, `glow_sca
 - `MuC`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.624`, settled slide 1 about `0.789`, transition start about `0.916`, transition 25% about `0.624`, transition midpoint about `0.868`, transition 75% about `0.857`.
 - `alpCHI`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.508`, settled slide 1 about `0.839`, transition start about `0.957`, transition 10% about `0.609`, transition 25% about `0.508`, transition midpoint about `0.746`, transition 75% about `0.781`. The 25% frame is visually improved because the large title block now slides left as a matched SVG object, though strict SSIM remains low and the 10% score dropped relative to the previous smoke.
 - `BBD26`: status `failed`, no blockers, 8 comparisons, minimum SSIM about `0.754`, settled slide 1 about `0.826`, transition start about `0.754`, transition 25% about `0.898`, transition midpoint about `0.945`, transition 75% about `0.874`. This remains far above the previous catastrophic `0.323` late-transition failure caused by offscreen panel parenting.
+
+Additional bounded MuC oracle result after the `2->3` hold-then-snap calibration:
+
+- `MuC` slides `1-3`: status `failed`, no blockers, 24 comparisons, minimum SSIM `0.658322`. This is better than the pre-calibration bounded run minimum `0.621540`, but all samples still remain below strict slide/transition thresholds.
 
 Interpretation:
 

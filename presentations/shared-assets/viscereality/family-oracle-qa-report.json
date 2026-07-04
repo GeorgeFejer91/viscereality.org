@@ -1,59 +1,31 @@
 {
   "deckFilter": [
-    "BBD26",
-    "MuC",
-    "alpCHI"
+    "MuC"
   ],
   "decks": [
     {
       "blockers": [],
-      "comparisonCount": 8,
+      "comparisonCount": 24,
       "deckId": "MuC",
-      "failedCount": 8,
-      "minSsim": 0.624214,
+      "failedCount": 24,
+      "minSsim": 0.658322,
       "referenceKept": false,
-      "referenceSizeMb": 86.135,
+      "referenceSizeMb": 86.088,
       "report": "presentations/MuC/qa/report.json",
-      "sampleCount": 8,
+      "sampleCount": 24,
       "status": "failed",
       "target": "presentations/MuC"
-    },
-    {
-      "blockers": [],
-      "comparisonCount": 8,
-      "deckId": "alpCHI",
-      "failedCount": 8,
-      "minSsim": 0.507551,
-      "referenceKept": false,
-      "referenceSizeMb": 140.707,
-      "report": "presentations/alpCHI/qa/report.json",
-      "sampleCount": 8,
-      "status": "failed",
-      "target": "presentations/alpCHI"
-    },
-    {
-      "blockers": [],
-      "comparisonCount": 8,
-      "deckId": "BBD26",
-      "failedCount": 8,
-      "minSsim": 0.753613,
-      "referenceKept": false,
-      "referenceSizeMb": 178.611,
-      "report": "presentations/BBD26/qa/report.json",
-      "sampleCount": 8,
-      "status": "failed",
-      "target": "presentations/BBD26"
     }
   ],
   "disk": {
     "force": true,
-    "freeGbAtStart": 4.716,
+    "freeGbAtStart": 4.246,
     "minimumFreeGb": 0.0
   },
   "familyId": "viscereality",
   "ffmpeg": "C:\\Users\\gfeje\\Proton Drive\\George.Fejer\\My files\\Project1_CouplingKernelStudy\\ffmpeg_standalone\\bin\\ffmpeg.exe",
   "fullScope": false,
-  "generatedAtUtc": "2026-07-03T23:33:04+00:00",
+  "generatedAtUtc": "2026-07-04T00:27:50+00:00",
   "keepReference": false,
   "notes": [
     "PowerPoint MP4 references are exported through PowerPoint COM using the deck scene timing.",
@@ -62,7 +34,9 @@
   ],
   "schema": "pptx-html-presenter.family.oracle-qa.v1",
   "slides": [
-    1
+    1,
+    2,
+    3
   ],
   "status": "failed",
   "target": "public",
