@@ -433,7 +433,11 @@ PLAYER_HTML = r"""<!doctype html>
     const sx = g.flipH ? -1 : 1;
     const sy = g.flipV ? -1 : 1;
     node.style.transform = `rotate(${g.rotation || 0}deg) scale(${sx}, ${sy})`;
-    node.style.opacity = String(Math.max(0, Math.min(1, state.opacity)));
+    const opacity = Math.max(
+      0,
+      Math.min(1, state.opacity * captureTrackOpacityMultiplier(state.trackId, captureOptions)),
+    );
+    node.style.opacity = String(opacity);
     if (node.dataset.nodeRole === "panel") {
       applyPanelState(node, state, captureOptions);
       syncMediaPlayback(node, state, isTransition);
@@ -1527,6 +1531,23 @@ PLAYER_HTML = r"""<!doctype html>
       if (Array.isArray(value)) return progressMapValue(t, value);
     }
     return null;
+  }
+  function captureTrackOpacityMultiplier(trackId, captureOptions) {
+    const overrides = captureOptions?.trackOpacityOverrides ?? captureOptions?.trackOpacity ?? null;
+    if (!overrides || !trackId) return 1;
+    if (Array.isArray(overrides)) {
+      for (const row of overrides) {
+        if (row?.trackId && String(row.trackId) !== String(trackId)) continue;
+        const value = Number(row?.value ?? row?.opacity ?? row?.multiplier);
+        if (Number.isFinite(value)) return Math.max(0, Math.min(2, value));
+      }
+      return 1;
+    }
+    if (typeof overrides === "object") {
+      const value = Number(overrides[trackId]);
+      if (Number.isFinite(value)) return Math.max(0, Math.min(2, value));
+    }
+    return 1;
   }
   function progressMapValue(t, points) {
     if (!Array.isArray(points) || points.length < 2) return null;

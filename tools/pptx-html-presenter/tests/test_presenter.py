@@ -1147,6 +1147,13 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("transition?.trackProgressOverrides", PLAYER_HTML)
         self.assertIn("trackProgressOverrides: s.trackProgressOverrides || null", (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8"))
 
+    def test_player_supports_capture_track_opacity_overrides(self) -> None:
+        capture_js = (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8")
+        self.assertIn("function captureTrackOpacityMultiplier", PLAYER_HTML)
+        self.assertIn("captureOptions?.trackOpacityOverrides", PLAYER_HTML)
+        self.assertIn("state.opacity * captureTrackOpacityMultiplier", PLAYER_HTML)
+        self.assertIn("trackOpacityOverrides: s.trackOpacityOverrides || null", capture_js)
+
     def test_browser_capture_reports_stable_diagnostic_asset_paths(self) -> None:
         capture_js = (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8")
         self.assertIn("const stableSrc = (value) =>", capture_js)
@@ -2234,6 +2241,35 @@ class PresenterTests(unittest.TestCase):
             {"track-panel": 0.35, "track-video": 0.35},
         )
         self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-panel", "track-video"])
+
+    def test_candidate_sweep_track_opacity_can_target_track_cluster(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-panel": 1.3, "track-video": 1.3},
+        }
+        candidates = _candidate_sweep_samples(
+            sample,
+            "object-opacity",
+            [0.45, 1.25],
+            "track-panel,track-video",
+        )
+        self.assertEqual(candidates[0]["progress"], 0.5)
+        self.assertEqual(
+            candidates[0]["trackOpacityOverrides"],
+            {"track-panel": 0.45, "track-video": 0.45},
+        )
+        self.assertEqual(
+            candidates[1]["trackOpacityOverrides"],
+            {"track-panel": 1.25, "track-video": 1.25},
+        )
+        self.assertEqual(candidates[0]["candidateSweep"]["vary"], "track-opacity")
+        self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-panel", "track-video"])
+        self.assertEqual(candidates[1]["mediaClocks"], {"track-panel": 1.3, "track-video": 1.3})
 
     def test_candidate_sweep_phase_can_target_track_cluster(self) -> None:
         sample = {

@@ -1175,6 +1175,10 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "font-weight": "bold-weight",
         "text-bold": "bold-weight",
         "text-bold-weight": "bold-weight",
+        "opacity": "track-opacity",
+        "object-opacity": "track-opacity",
+        "per-track-opacity": "track-opacity",
+        "track-opacity-multiplier": "track-opacity",
         "clock": "phase",
     }
     normalized = aliases.get(normalized, normalized)
@@ -1189,11 +1193,12 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "glow-alpha-scale",
         "text-scale",
         "bold-weight",
+        "track-opacity",
     }:
         raise PresenterError(
             "Candidate sweep --vary must be progress, track-progress, phase, phase-offset, "
             "enter-fade-end, exit-fade-end, glow-scale, glow-alpha-scale, "
-            "text-scale, or bold-weight."
+            "text-scale, bold-weight, or track-opacity."
         )
     return normalized
 
@@ -1213,6 +1218,8 @@ def _candidate_sweep_samples(
         raise PresenterError(f"{normalized} sweeps require a transition sample.")
     if normalized in {"phase", "track-progress"} and not track_id:
         raise PresenterError(f"{normalized} sweeps require --track-id.")
+    if normalized == "track-opacity" and not track_id:
+        raise PresenterError("track-opacity sweeps require --track-id.")
     if normalized == "phase":
         missing = [
             candidate
@@ -1281,6 +1288,12 @@ def _candidate_sweep_samples(
             candidate["textRenderOverrides"] = {"fontScale": round(max(0.0, numeric), 4)}
         elif normalized == "bold-weight":
             candidate["textRenderOverrides"] = {"boldWeight": round(max(100.0, numeric), 4)}
+        elif normalized == "track-opacity":
+            target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
+            candidate["trackOpacityOverrides"] = {
+                target_track: round(max(0.0, min(2.0, numeric)), 4) for target_track in target_tracks
+            }
+            candidate["candidateSweep"]["trackIds"] = target_tracks
         else:
             target_tracks = _candidate_sweep_track_ids(base_sample, track_id)
             candidate["trackProgressOverrides"] = {
