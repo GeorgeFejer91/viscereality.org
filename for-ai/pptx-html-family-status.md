@@ -164,6 +164,9 @@ Current source PPTX parse results from family preflight:
 - Problem: A broader MuC PowerPoint-oracle pass for slides `1-3` found a worse failure after the opener: transition `2->3` midpoint scored only `0.621540`. The side-by-side showed PowerPoint effectively holding slide 2 through the early/mid samples and then reaching slide 3 quickly, while HTML interpolated linearly and left the incoming measurement panel too far to the right.
   - Solution: MuC config now adds a transition `2->3` progress map that holds at `0.0` through progress `0.5` and jumps to `1.0` by progress `0.75`, mirrored for reverse navigation by the runtime's existing progress-map mirror.
 - Calibration result: after rebuilding/publishing that MuC `2->3` hold-then-snap map, rerunning `family oracle-qa --decks MuC --slides 1-3 --target public --force --min-free-gb 0` improved the bounded MuC minimum SSIM from `0.621540` to `0.658322`. Transition `2->3` samples improved from `0.747345 -> 0.785634` at 25%, `0.621540 -> 0.781949` at 50%, `0.647073 -> 0.742557` at 75%, and `0.803880 -> 0.853141` at 90%. Strict oracle thresholds are still not met.
+- Problem: MuC transition `3->4` still had carousel-panel ghosting and an oracle midpoint around `0.710758`, with the HTML Morph timing lagging the PowerPoint reference.
+  - Solution: candidate sweeps were run against the PowerPoint oracle frames for `trans-003-004` and MuC config now adds a `3->4` progress map: `0%=0.0`, `10%=0.1`, `25%=0.35`, `50%=0.6`, `75%=0.8`, `90%=0.9`, `100%=1.0`. This is mirrored by the runtime for reverse navigation.
+- Calibration result: after rebuilding/publishing the MuC `3->4` map, the bounded MuC slides `1-3` oracle run still fails strict thresholds with minimum SSIM `0.658322`, but `3->4` improves at the most visually important early/mid samples: `25% 0.776646 -> 0.809591`, `50% 0.710758 -> 0.753245`, and `100% 0.825763 -> 0.825751` effectively unchanged. It regresses `10% 0.895287 -> 0.837739`, `75% 0.769792 -> 0.736685`, and `90% 0.805204 -> 0.743021`, so treat this as a partial timing calibration, not solved oracle parity.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -177,8 +180,8 @@ Current shared public asset library check after the visual-effects/public-audit 
   - `BBD26`: 22 cached optimized assets reused.
 - The latest build also converted one WDP/HDPhoto-derived asset per public deck into shared PNG runtime assets.
 - Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
-- Latest direct filesystem gate check on 2026-07-04: 76 shared public asset files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
-- Latest stricter asset-policy verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 125 tests, including soft-limit blocker tests. A direct shared-library filesystem gate again found 76 files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB. A full family rebuild was intentionally not run in this pass because `family inspect` reported only 4.85 GiB free against the configured 8 GiB preflight floor.
+- Latest direct filesystem gate check on 2026-07-04: 81 shared public asset files, 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
+- Latest stricter asset-policy verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 127 tests, including soft-limit blocker tests. A direct shared-library filesystem gate again found 81 files, 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB.
 - Latest post-publish shared-asset gate after the MuC per-track fade rebuild on 2026-07-04: `family-build-report.json` reports `githubPagesSafe: true`, `preferredAssetSafe: true`, `maxAssetMb: 48.879`, `softOversizeAssets: []`, `oversizeAssets: []`, 31 optimized files, 45 source/provenance-safe files, and about 362.57 MiB total. This confirms the current public build still follows the super-large-asset conversion policy.
 
 ## Latest HTML Visual Audit
@@ -221,6 +224,12 @@ After adding the MuC `2->3` hold-then-snap progress map on 2026-07-04, direct pu
 
 This validates the new transition map does not create browser capture failures or obvious reverse-transition structural problems. It is still not a PowerPoint-oracle SSIM pass.
 
+After adding the MuC `3->4` carousel-speed progress map on 2026-07-04, direct public MuC visual audit passed again:
+
+- `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+
+This validates that the new `3->4` progress map remains playable forward and backward, keeps media clocks available during capture, and does not introduce blank/partial frames. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -240,6 +249,10 @@ Current smoke results after the visual-effects config propagation fix, `glow_sca
 Additional bounded MuC oracle result after the `2->3` hold-then-snap calibration:
 
 - `MuC` slides `1-3`: status `failed`, no blockers, 24 comparisons, minimum SSIM `0.658322`. This is better than the pre-calibration bounded run minimum `0.621540`, but all samples still remain below strict slide/transition thresholds.
+
+Additional bounded MuC oracle result after the subsequent `3->4` carousel-speed calibration:
+
+- `MuC` slides `1-3`: status `failed`, no blockers, 24 comparisons, minimum SSIM `0.658322`. `3->4` early/mid samples improved, but late samples regressed; the main remaining blocker is still first-transition and full-composition parity, not browser playability.
 
 Interpretation:
 
