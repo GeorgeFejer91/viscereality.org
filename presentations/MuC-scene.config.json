@@ -57,6 +57,16 @@
         ],
         "source": "MuC-slide-1-2-powerpoint-oracle-calibration"
       }
+    ],
+    "transition_unmatched_fade_overrides": [
+      {
+        "from": 1,
+        "to": 2,
+        "track_id": "track-0031",
+        "exit_start": 0.0,
+        "exit_end": 0.25,
+        "source": "MuC-slide-1-title-raster-exits-before-lung-focus"
+      }
     ]
   },
   "visual_audit": {

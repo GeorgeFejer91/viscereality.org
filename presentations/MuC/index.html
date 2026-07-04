@@ -555,13 +555,13 @@
 
   function lerpState(from, to, progress, transition) {
     if (!from) {
-      const fadeProgress = unmatchedFadeProgress(progress, transition, "enter");
+      const fadeProgress = unmatchedFadeProgress(progress, transition, "enter", to?.trackId || null);
       const state = structuredClone(to);
       state.opacity = (to.opacity ?? 1) * fadeProgress;
       return state;
     }
     if (!to) {
-      const fadeProgress = unmatchedFadeProgress(progress, transition, "exit");
+      const fadeProgress = unmatchedFadeProgress(progress, transition, "exit", from?.trackId || null);
       const state = structuredClone(from);
       state.opacity = (from.opacity ?? 1) * (1 - fadeProgress);
       return state;
@@ -618,15 +618,16 @@
     return state;
   }
 
-  function unmatchedFadeProgress(progress, transition, direction) {
+  function unmatchedFadeProgress(progress, transition, direction, trackId = null) {
     const runtime = scene.runtime || {};
     if (runtime.fadeUnmatched === false) {
       return progress >= 1 ? 1 : 0;
     }
     const fade = transition?.unmatchedFade || {};
+    const trackFade = trackId && fade.tracks ? (fade.tracks[trackId] || {}) : {};
     const prefix = direction === "exit" ? "exit" : "enter";
-    const rawStart = Number(fade[`${prefix}Start`] ?? runtime.unmatchedFadeStart ?? 0);
-    const rawEnd = Number(fade[`${prefix}End`] ?? runtime.unmatchedFadeEnd ?? 1);
+    const rawStart = Number(trackFade[`${prefix}Start`] ?? fade[`${prefix}Start`] ?? runtime.unmatchedFadeStart ?? 0);
+    const rawEnd = Number(trackFade[`${prefix}End`] ?? fade[`${prefix}End`] ?? runtime.unmatchedFadeEnd ?? 1);
     const start = Math.max(0, Math.min(1, Number.isFinite(rawStart) ? rawStart : 0));
     const end = Math.max(0, Math.min(1, Number.isFinite(rawEnd) ? rawEnd : 1));
     if (end <= start) {
@@ -755,6 +756,10 @@
       unmatchedFade: {
         ...(transition?.unmatchedFade || {}),
         ...override,
+        tracks: {
+          ...((transition?.unmatchedFade || {}).tracks || {}),
+          ...(override.tracks || {}),
+        },
       },
     };
   }

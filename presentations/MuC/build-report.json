@@ -1,16 +1,19 @@
 {
   "assetCount": 39,
   "assetMode": "copy",
-  "generatedAtUtc": "2026-07-03T23:30:03+00:00",
+  "generatedAtUtc": "2026-07-04T00:04:37+00:00",
   "githubPagesSafe": true,
+  "hardLimitSafe": true,
   "originalGithubPagesSafe": true,
   "originalStatus": "ok",
   "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
   "playerFile": "index.html",
+  "preferredAssetSafe": true,
   "prunedFallbackAssets": {
     "bytes": 0,
     "count": 0
   },
+  "publishAssetSafe": true,
   "sceneFile": "deck.scene.json",
   "schema": "pptx-html-presenter.build.v1",
   "sharedAssets": {

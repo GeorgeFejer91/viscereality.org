@@ -4,16 +4,19 @@
       "assetCount": 39,
       "assetMode": "copy",
       "deckId": "MuC",
-      "generatedAtUtc": "2026-07-03T23:30:03+00:00",
+      "generatedAtUtc": "2026-07-04T00:04:37+00:00",
       "githubPagesSafe": true,
+      "hardLimitSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
       "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
       "playerFile": "index.html",
+      "preferredAssetSafe": true,
       "prunedFallbackAssets": {
         "bytes": 0,
         "count": 0
       },
+      "publishAssetSafe": true,
       "sceneFile": "deck.scene.json",
       "schema": "pptx-html-presenter.build.v1",
       "sharedAssets": {
@@ -44,16 +47,19 @@
       "assetCount": 48,
       "assetMode": "copy",
       "deckId": "alpCHI",
-      "generatedAtUtc": "2026-07-03T23:30:31+00:00",
+      "generatedAtUtc": "2026-07-04T00:05:03+00:00",
       "githubPagesSafe": true,
+      "hardLimitSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
       "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
       "playerFile": "index.html",
+      "preferredAssetSafe": true,
       "prunedFallbackAssets": {
         "bytes": 0,
         "count": 0
       },
+      "publishAssetSafe": true,
       "sceneFile": "deck.scene.json",
       "schema": "pptx-html-presenter.build.v1",
       "sharedAssets": {
@@ -84,16 +90,19 @@
       "assetCount": 57,
       "assetMode": "copy",
       "deckId": "BBD26",
-      "generatedAtUtc": "2026-07-03T23:31:00+00:00",
+      "generatedAtUtc": "2026-07-04T00:05:30+00:00",
       "githubPagesSafe": true,
+      "hardLimitSafe": true,
       "originalGithubPagesSafe": true,
       "originalStatus": "ok",
       "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
       "playerFile": "index.html",
+      "preferredAssetSafe": true,
       "prunedFallbackAssets": {
         "bytes": 0,
         "count": 0
       },
+      "publishAssetSafe": true,
       "sceneFile": "deck.scene.json",
       "schema": "pptx-html-presenter.build.v1",
       "sharedAssets": {
@@ -122,13 +131,13 @@
     }
   ],
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-03T23:31:00+00:00",
+  "generatedAtUtc": "2026-07-04T00:05:31+00:00",
   "preflight": {
-    "currentChunkedTotalMb": 1230.038,
+    "currentChunkedTotalMb": 1132.871,
     "decks": [
       {
         "assetCount": 39,
-        "currentPublicSizeMb": 311.31,
+        "currentPublicSizeMb": 311.297,
         "deckId": "MuC",
         "mediaSizeMb": 1161.801,
         "publicDir": "MuC",
@@ -143,7 +152,7 @@
       },
       {
         "assetCount": 48,
-        "currentPublicSizeMb": 465.986,
+        "currentPublicSizeMb": 368.868,
         "deckId": "alpCHI",
         "mediaSizeMb": 1073.739,
         "publicDir": "alpCHI",
@@ -159,7 +168,7 @@
       },
       {
         "assetCount": 57,
-        "currentPublicSizeMb": 452.742,
+        "currentPublicSizeMb": 452.706,
         "deckId": "BBD26",
         "mediaSizeMb": 1086.943,
         "publicDir": "BBD26",
@@ -175,7 +184,7 @@
       }
     ],
     "disk": {
-      "freeGb": 3.718,
+      "freeGb": 4.839,
       "minimumFreeGb": 8.0,
       "path": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org"
     },
@@ -185,7 +194,7 @@
     "failures": [
       {
         "code": "disk-free-below-minimum",
-        "message": "Only 3.72 GiB free; minimum is 8.00 GiB."
+        "message": "Only 4.84 GiB free; minimum is 8.00 GiB."
       }
     ],
     "warnings": []

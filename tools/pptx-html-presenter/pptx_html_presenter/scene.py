@@ -1617,10 +1617,38 @@ def _transition_unmatched_fade_overrides(
             except (TypeError, ValueError):
                 continue
         if fade:
+            track_ids = _override_track_ids(row)
             if row.get("source"):
                 fade["source"] = row.get("source")
-            out[(from_slide, to_slide)] = fade
+            target = out.setdefault((from_slide, to_slide), {})
+            if track_ids:
+                tracks = target.setdefault("tracks", {})
+                for track_id in track_ids:
+                    tracks[track_id] = fade
+            else:
+                target.update(fade)
     return out
+
+
+def _override_track_ids(row: dict[str, Any]) -> list[str]:
+    raw = _override_value(row, "track_id", "trackId", "track")
+    values: list[Any] = []
+    if raw is not None:
+        values.append(raw)
+    for key in ("track_ids", "trackIds", "tracks"):
+        extra = row.get(key)
+        if extra is None:
+            continue
+        if isinstance(extra, (list, tuple, set)):
+            values.extend(extra)
+        else:
+            values.append(extra)
+    track_ids: list[str] = []
+    for value in values:
+        text = str(value).strip()
+        if text and text not in track_ids:
+            track_ids.append(text)
+    return track_ids
 
 
 def _transition_easing_overrides(

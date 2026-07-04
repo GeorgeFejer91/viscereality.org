@@ -5,6 +5,7 @@
     "mode": "copy",
     "optimizeStaticImages": true,
     "pruneUnreferencedSourceAssets": true,
+    "softLimitIsBlocker": true,
     "softMaxMb": 50.0,
     "transcodeGif": true,
     "transcodeVideo": true,
@@ -708,6 +709,8 @@
     }
   ],
   "githubPagesSafe": true,
+  "hardLimitSafe": true,
+  "preferredAssetSafe": true,
   "prunedOptimizedAssets": {
     "bytes": 0,
     "count": 0,
@@ -717,5 +720,6 @@
     "bytes": 1159340332,
     "count": 16,
     "mb": 1105.633
-  }
+  },
+  "publishAssetSafe": true
 }

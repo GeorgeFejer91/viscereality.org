@@ -230,6 +230,13 @@ class PresenterTests(unittest.TestCase):
                                     "to": 3,
                                     "enter_start": 0.95,
                                     "enter_end": 1.0,
+                                },
+                                {
+                                    "from": 2,
+                                    "to": 3,
+                                    "track_ids": ["track-title"],
+                                    "exit_start": 0.0,
+                                    "exit_end": 0.25,
                                 }
                             ]
                         }
@@ -241,6 +248,10 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(
                 config.morph_policy.transition_unmatched_fade_overrides[0]["enter_start"],
                 0.95,
+            )
+            self.assertEqual(
+                config.morph_policy.transition_unmatched_fade_overrides[1]["track_ids"],
+                ["track-title"],
             )
 
     def test_config_loads_transition_easing_overrides(self) -> None:
@@ -908,6 +919,14 @@ class PresenterTests(unittest.TestCase):
                                 "enter_end": 1.0,
                                 "source": "test",
                             },
+                            {
+                                "from": 1,
+                                "to": 2,
+                                "track_id": "track-0002",
+                                "exit_start": 0.0,
+                                "exit_end": 0.25,
+                                "source": "track-test",
+                            },
                         )
                     )
                 ),
@@ -915,7 +934,18 @@ class PresenterTests(unittest.TestCase):
             scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
             self.assertEqual(
                 scene["transitions"][0]["unmatchedFade"],
-                {"enterStart": 0.95, "enterEnd": 1.0, "source": "test"},
+                {
+                    "enterStart": 0.95,
+                    "enterEnd": 1.0,
+                    "source": "test",
+                    "tracks": {
+                        "track-0002": {
+                            "exitStart": 0.0,
+                            "exitEnd": 0.25,
+                            "source": "track-test",
+                        }
+                    },
+                },
             )
 
     def test_build_applies_transition_easing_overrides(self) -> None:
@@ -1059,6 +1089,7 @@ class PresenterTests(unittest.TestCase):
     def test_player_supports_per_transition_unmatched_fade(self) -> None:
         self.assertIn("transition?.unmatchedFade", PLAYER_HTML)
         self.assertIn('direction === "exit" ? "exit" : "enter"', PLAYER_HTML)
+        self.assertIn("fade.tracks[trackId]", PLAYER_HTML)
         self.assertIn("fade[`${prefix}Start`]", PLAYER_HTML)
         self.assertIn("function transitionWithCaptureOverrides", PLAYER_HTML)
         self.assertIn("captureOptions?.unmatchedFadeOverride", PLAYER_HTML)

@@ -154,6 +154,10 @@ Current source PPTX parse results from family preflight:
   - Solution: `_selected_media_target()` now prefers SVG media over bitmap fallbacks when PowerPoint provides both. The public alpCHI scene now has `Graphic 2` and `Graphic 15` sharing `track-0010` and the same SVG asset, so the title block moves as a Morph object instead of fading in place.
 - Problem: alpCHI public visual audit later hit `visible-video-not-ready` on endpoint sample `trans-006-007-100`, with visible WebM `track-0045` stuck at metadata-only `readyState = 1`.
   - Solution: browser capture now briefly plays stubborn visible videos muted if load/seek alone does not decode a current frame, then pauses them before screenshot. This is capture-only determinism; runtime media still loops independently during navigation.
+- Problem: MuC transition `1->2` still showed the slide-1 title/text raster layer (`track-0031`, `Picture 10`) too visibly at the 25% PowerPoint-oracle sample, even after global progress calibration. The desired reference frame has already cleared most of that title block by the time the lung/body focus appears.
+  - Solution: scene schema and runtime now support per-track unmatched fade overrides. `transition_unmatched_fade_overrides` accepts `track_id`, `track_ids`, or `tracks`, and the runtime checks `transition.unmatchedFade.tracks[trackId]` before falling back to transition/global unmatched fade timing. MuC config now fades `track-0031` out from `0.0` to `0.25` only for transition `1->2`.
+- Calibration result: after the MuC `track-0031` per-track fade override and rebuild/publish on 2026-07-04, the targeted candidate check for `MuC` sample `trans-001-002-025` improved from the previous smoke baseline around `0.624` to `0.688544`. This is useful progress but still below the strict Morph target, so do not treat it as an oracle pass.
+- Durable asset rule update from user: super-large source assets should be converted into visually lossless or visually acceptable HTML-friendly runtime formats before public publish. Preserve transparency and looping semantics when needed; use video formats for opaque/video-like animations when smaller; keep runtime files GitHub-compatible and do not publish giant originals merely for provenance.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -169,6 +173,7 @@ Current shared public asset library check after the visual-effects/public-audit 
 - Family builds now emit `sharedAssetLimits` with `preferredAssetSafe`, `softOversizeAssets`, and `oversizeAssets` so future agents can verify the public shared library gate without hunting through per-deck reports.
 - Latest direct filesystem gate check on 2026-07-04: 76 shared public asset files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. The largest runtime file is `optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4` at about 48.879 MiB. This confirms the current public build follows the visually-lossless/html-friendly/GitHub-compatible asset rule.
 - Latest stricter asset-policy verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 125 tests, including soft-limit blocker tests. A direct shared-library filesystem gate again found 76 files, 362.57 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB. A full family rebuild was intentionally not run in this pass because `family inspect` reported only 4.85 GiB free against the configured 8 GiB preflight floor.
+- Latest post-publish shared-asset gate after the MuC per-track fade rebuild on 2026-07-04: `family-build-report.json` reports `githubPagesSafe: true`, `preferredAssetSafe: true`, `maxAssetMb: 48.879`, `softOversizeAssets: []`, `oversizeAssets: []`, 31 optimized files, 45 source/provenance-safe files, and about 362.57 MiB total. This confirms the current public build still follows the super-large-asset conversion policy.
 
 ## Latest HTML Visual Audit
 
@@ -195,6 +200,14 @@ After the `visual_effects` config propagation fix, deterministic visible-video c
 - `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures, 0 warnings.
 
 This validates browser load/capture, shared asset URLs, settled slides, forward transition samples, reverse midpoint samples, the later BBD26 visible-video capture case, and the later alpCHI endpoint WebM capture case for the rebuilt scene players. It is still not a PowerPoint-oracle SSIM pass.
+
+After adding the per-track unmatched fade override support and republishing MuC on 2026-07-04, direct public-folder audits again passed:
+
+- `MuC`: 145 samples, 17 settled slides, 112 forward transition samples, 16 reverse midpoint samples, 0 failures, 0 warnings.
+- `alpCHI`: 217 samples, 25 settled slides, 168 forward transition samples, 24 reverse midpoint samples, 0 failures, 0 warnings.
+- `BBD26`: 280 samples, 32 settled slides, 217 forward transition samples, 31 reverse midpoint samples, 0 failures, 0 warnings.
+
+This confirms the new runtime fade-map logic did not break settled rendering, forward Morph captures, reverse midpoint captures, or shared-media loading. It is still not a PowerPoint-oracle SSIM pass.
 
 ## Latest PowerPoint Oracle Smoke
 

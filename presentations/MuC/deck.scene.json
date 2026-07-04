@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-03T23:30:03+00:00",
+  "generatedAtUtc": "2026-07-04T00:04:37+00:00",
   "qa": {
     "groupRows": [
       {
@@ -122405,7 +122405,16 @@
           "value": 1.0
         }
       ],
-      "to": 2
+      "to": 2,
+      "unmatchedFade": {
+        "tracks": {
+          "track-0031": {
+            "exitEnd": 0.25,
+            "exitStart": 0.0,
+            "source": "MuC-slide-1-title-raster-exits-before-lung-focus"
+          }
+        }
+      }
     },
     {
       "durationSec": 2.0,

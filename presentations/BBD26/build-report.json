@@ -1,16 +1,19 @@
 {
   "assetCount": 57,
   "assetMode": "copy",
-  "generatedAtUtc": "2026-07-03T23:31:00+00:00",
+  "generatedAtUtc": "2026-07-04T00:05:30+00:00",
   "githubPagesSafe": true,
+  "hardLimitSafe": true,
   "originalGithubPagesSafe": true,
   "originalStatus": "ok",
   "outputDir": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
   "playerFile": "index.html",
+  "preferredAssetSafe": true,
   "prunedFallbackAssets": {
     "bytes": 0,
     "count": 0
   },
+  "publishAssetSafe": true,
   "sceneFile": "deck.scene.json",
   "schema": "pptx-html-presenter.build.v1",
   "sharedAssets": {
