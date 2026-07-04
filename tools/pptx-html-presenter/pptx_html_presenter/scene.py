@@ -48,6 +48,12 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
         deck.slide_width,
         deck.slide_height,
     )
+    config_override_validation = _config_override_validation_report(
+        deck,
+        config,
+        phase_override_report,
+        raster_fallback_report,
+    )
     scene = {
         "schema": f"pptx-html-presenter.scene.v{config.scene_schema_version}",
         "schemaVersion": config.scene_schema_version,
@@ -114,6 +120,7 @@ def compile_scene(deck: PptxDeck, config: PresenterConfig, out_dir: Path) -> dic
             "relationshipsApplied": graph_report["relationshipCount"],
             "panelTransitionRows": panel_transition_report["rows"],
             "panelTransitionRowsApplied": panel_transition_report["appliedCount"],
+            "configOverrideValidation": config_override_validation,
             "visualAudit": {
                 "enabled": config.visual_audit.enabled,
                 "samples": list(config.visual_audit.samples),
@@ -181,6 +188,390 @@ def _apply_media_phase_overrides(
         applied_count += 1
         rows.append(row)
     return {"appliedCount": applied_count, "rows": rows}
+
+
+def _config_override_validation_report(
+    deck: PptxDeck,
+    config: PresenterConfig,
+    phase_override_report: dict[str, Any],
+    raster_fallback_report: dict[str, Any],
+) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    transition_contexts = _transition_contexts(deck)
+
+    def add_issue(
+        group: str,
+        status: str,
+        *,
+        severity: str = "blocker",
+        index: int | None = None,
+        row: dict[str, Any] | None = None,
+        **details: Any,
+    ) -> None:
+        issue: dict[str, Any] = {
+            "group": group,
+            "status": status,
+            "severity": severity,
+        }
+        if index is not None:
+            issue["index"] = index
+        if row is not None:
+            for source_key, output_key in (
+                ("slide", "slide"),
+                ("from", "from"),
+                ("to", "to"),
+                ("track_id", "trackId"),
+                ("trackId", "trackId"),
+                ("object_id", "objectId"),
+                ("objectId", "objectId"),
+                ("asset_id", "assetId"),
+                ("assetId", "assetId"),
+                ("name", "name"),
+                ("source", "source"),
+            ):
+                if source_key in row and output_key not in issue:
+                    issue[output_key] = row[source_key]
+        issue.update({key: value for key, value in details.items() if value is not None})
+        rows.append(issue)
+
+    for row in phase_override_report.get("rows", []):
+        if row.get("status") != "applied":
+            add_issue(
+                "media_phase_overrides",
+                str(row.get("status") or "not-applied"),
+                index=row.get("index"),
+                row=row,
+                matchCount=row.get("matchCount"),
+            )
+
+    for row in raster_fallback_report.get("rows", []):
+        if row.get("status") != "applied":
+            add_issue(
+                "raster_fallback_overrides",
+                str(row.get("status") or "not-applied"),
+                index=row.get("index"),
+                row=row,
+                reason=row.get("reason"),
+                replaceIds=row.get("replaceIds"),
+            )
+
+    _validate_transition_presence_rows(
+        rows,
+        "transition_progress_overrides",
+        config.morph_policy.transition_progress_overrides,
+        transition_contexts,
+    )
+    _validate_transition_presence_rows(
+        rows,
+        "transition_unmatched_fade_overrides",
+        config.morph_policy.transition_unmatched_fade_overrides,
+        transition_contexts,
+        validate_track_ids=True,
+    )
+    _validate_transition_presence_rows(
+        rows,
+        "transition_easing_overrides",
+        config.morph_policy.transition_easing_overrides,
+        transition_contexts,
+    )
+    _validate_transition_presence_rows(
+        rows,
+        "transition_time_overrides",
+        config.transition_time_overrides,
+        transition_contexts,
+    )
+    _validate_transition_track_progress_rows(
+        rows,
+        config.morph_policy.transition_track_progress_overrides,
+        transition_contexts,
+    )
+    _validate_transition_media_phase_rows(
+        rows,
+        config.transition_media_phase_overrides,
+        transition_contexts,
+    )
+    _validate_transition_layer_rows(
+        rows,
+        config.layer_policy.transition_layer_overrides,
+        transition_contexts,
+    )
+
+    blocker_count = sum(1 for row in rows if row.get("severity") == "blocker")
+    warning_count = sum(1 for row in rows if row.get("severity") == "warning")
+    return {
+        "safe": blocker_count == 0,
+        "blockerCount": blocker_count,
+        "warningCount": warning_count,
+        "rows": rows,
+    }
+
+
+def _transition_contexts(deck: PptxDeck) -> dict[tuple[int, int], dict[str, Any]]:
+    contexts: dict[tuple[int, int], dict[str, Any]] = {}
+    for prev, current in zip(deck.slides, deck.slides[1:]):
+        objects = list(prev.objects) + list(current.objects)
+        contexts[(prev.index, current.index)] = {
+            "tracks": {str(obj.track_id) for obj in objects if obj.track_id},
+            "objects": objects,
+        }
+    return contexts
+
+
+def _transition_pair_from_row(row: dict[str, Any]) -> tuple[int, int] | None:
+    try:
+        return (
+            int(_override_value(row, "from", "from_slide", "fromSlide")),
+            int(_override_value(row, "to", "to_slide", "toSlide")),
+        )
+    except (TypeError, ValueError):
+        return None
+
+
+def _validate_transition_presence_rows(
+    rows: list[dict[str, Any]],
+    group: str,
+    overrides: tuple[dict[str, Any], ...],
+    contexts: dict[tuple[int, int], dict[str, Any]],
+    *,
+    validate_track_ids: bool = False,
+) -> None:
+    for index, row in enumerate(overrides):
+        pair = _transition_pair_from_row(row)
+        if pair is None:
+            rows.append(
+                {
+                    "group": group,
+                    "index": index,
+                    "status": "invalid-transition",
+                    "severity": "blocker",
+                }
+            )
+            continue
+        context = contexts.get(pair)
+        if context is None:
+            rows.append(
+                {
+                    "group": group,
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-transition",
+                    "severity": "blocker",
+                    "source": row.get("source"),
+                }
+            )
+            continue
+        if validate_track_ids:
+            _validate_transition_row_track_ids(rows, group, index, row, pair, context)
+
+
+def _validate_transition_track_progress_rows(
+    rows: list[dict[str, Any]],
+    overrides: tuple[dict[str, Any], ...],
+    contexts: dict[tuple[int, int], dict[str, Any]],
+) -> None:
+    for index, row in enumerate(overrides):
+        pair = _transition_pair_from_row(row)
+        if pair is None:
+            rows.append(
+                {
+                    "group": "transition_track_progress_overrides",
+                    "index": index,
+                    "status": "invalid-transition",
+                    "severity": "blocker",
+                }
+            )
+            continue
+        context = contexts.get(pair)
+        if context is None:
+            rows.append(
+                {
+                    "group": "transition_track_progress_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-transition",
+                    "severity": "blocker",
+                    "source": row.get("source"),
+                }
+            )
+            continue
+        _validate_transition_row_track_ids(
+            rows,
+            "transition_track_progress_overrides",
+            index,
+            row,
+            pair,
+            context,
+        )
+        if _override_track_ids(row) and not _row_has_semantic_selector(row):
+            rows.append(
+                {
+                    "group": "transition_track_progress_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "trackIds": _override_track_ids(row),
+                    "status": "track-only-selector",
+                    "severity": "warning",
+                    "source": row.get("source"),
+                    "reason": "track IDs can shift when the source deck changes; add object/name/asset selectors where possible",
+                }
+            )
+
+
+def _validate_transition_media_phase_rows(
+    rows: list[dict[str, Any]],
+    overrides: tuple[dict[str, Any], ...],
+    contexts: dict[tuple[int, int], dict[str, Any]],
+) -> None:
+    for index, row in enumerate(overrides):
+        pair = _transition_pair_from_row(row)
+        if pair is None:
+            rows.append(
+                {
+                    "group": "transition_media_phase_overrides",
+                    "index": index,
+                    "status": "invalid-transition",
+                    "severity": "blocker",
+                }
+            )
+            continue
+        context = contexts.get(pair)
+        if context is None:
+            rows.append(
+                {
+                    "group": "transition_media_phase_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-transition",
+                    "severity": "blocker",
+                    "source": row.get("source"),
+                }
+            )
+            continue
+        if not any(_transition_override_object_matches(obj, row) for obj in context["objects"]):
+            rows.append(
+                {
+                    "group": "transition_media_phase_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-object",
+                    "severity": "blocker",
+                    "trackIds": _override_track_ids(row),
+                    "assetId": _override_value(row, "asset_id", "assetId"),
+                    "objectId": _override_value(row, "object_id", "objectId"),
+                    "name": _override_value(row, "name"),
+                    "source": row.get("source"),
+                }
+            )
+
+
+def _validate_transition_layer_rows(
+    rows: list[dict[str, Any]],
+    overrides: tuple[dict[str, Any], ...],
+    contexts: dict[tuple[int, int], dict[str, Any]],
+) -> None:
+    for index, row in enumerate(overrides):
+        pair = _transition_pair_from_row(row)
+        if pair is None:
+            rows.append(
+                {
+                    "group": "transition_layer_overrides",
+                    "index": index,
+                    "status": "invalid-transition",
+                    "severity": "blocker",
+                }
+            )
+            continue
+        context = contexts.get(pair)
+        if context is None:
+            rows.append(
+                {
+                    "group": "transition_layer_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-transition",
+                    "severity": "blocker",
+                    "source": row.get("source"),
+                }
+            )
+            continue
+        decorative_tracks = _string_values(_override_value(row, "decorative_tracks", "decorativeTracks"))
+        missing = [track_id for track_id in decorative_tracks if track_id not in context["tracks"]]
+        if missing:
+            rows.append(
+                {
+                    "group": "transition_layer_overrides",
+                    "index": index,
+                    "from": pair[0],
+                    "to": pair[1],
+                    "status": "missing-track",
+                    "severity": "blocker",
+                    "missingTrackIds": missing,
+                    "source": row.get("source"),
+                }
+            )
+
+
+def _validate_transition_row_track_ids(
+    rows: list[dict[str, Any]],
+    group: str,
+    index: int,
+    row: dict[str, Any],
+    pair: tuple[int, int],
+    context: dict[str, Any],
+) -> None:
+    track_ids = _override_track_ids(row)
+    missing = [track_id for track_id in track_ids if track_id not in context["tracks"]]
+    if missing:
+        rows.append(
+            {
+                "group": group,
+                "index": index,
+                "from": pair[0],
+                "to": pair[1],
+                "status": "missing-track",
+                "severity": "blocker",
+                "trackIds": track_ids,
+                "missingTrackIds": missing,
+                "source": row.get("source"),
+            }
+        )
+
+
+def _transition_override_object_matches(obj: SceneObject, row: dict[str, Any]) -> bool:
+    selectors: list[tuple[Any, Any]] = [
+        (_override_track_ids(row), obj.track_id),
+        (_override_value(row, "object_id", "objectId"), obj.id),
+        (_override_value(row, "asset_id", "assetId"), obj.asset_id),
+        (_override_value(row, "name"), obj.name),
+    ]
+    saw_selector = False
+    for expected, actual in selectors:
+        if expected in (None, "", []):
+            continue
+        saw_selector = True
+        if isinstance(expected, list):
+            if str(actual or "") not in {str(item) for item in expected}:
+                return False
+        elif str(actual or "") != str(expected):
+            return False
+    return saw_selector
+
+
+def _row_has_semantic_selector(row: dict[str, Any]) -> bool:
+    return any(
+        _override_value(row, *keys) is not None
+        for keys in (
+            ("object_id", "objectId"),
+            ("asset_id", "assetId"),
+            ("name",),
+        )
+    )
 
 
 def _runtime_auto_advance_rows(rows: tuple[dict[str, Any], ...]) -> list[dict[str, Any]]:
@@ -1801,15 +2192,17 @@ def _transition_track_progress_overrides(
 
 
 def _override_track_ids(row: dict[str, Any]) -> list[str]:
-    raw = _override_value(row, "track_ids", "trackIds", "tracks", "track_id", "trackId")
-    if raw is None:
-        return []
-    if isinstance(raw, str):
-        values = raw.split(",")
-    elif isinstance(raw, (list, tuple, set)):
-        values = list(raw)
-    else:
-        values = [raw]
+    values: list[Any] = []
+    for key in ("track_id", "trackId", "track", "track_ids", "trackIds", "tracks"):
+        raw = row.get(key)
+        if raw is None:
+            continue
+        if isinstance(raw, str):
+            values.extend(raw.split(","))
+        elif isinstance(raw, (list, tuple, set)):
+            values.extend(raw)
+        else:
+            values.append(raw)
     out: list[str] = []
     seen: set[str] = set()
     for value in values:

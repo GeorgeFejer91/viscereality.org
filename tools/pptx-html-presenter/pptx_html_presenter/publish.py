@@ -29,6 +29,11 @@ def publish_build(
             "Build is blocked by GitHub Pages asset-size policy. Re-run publish with --force "
             "only for reviewed local/staging output."
         )
+    status = str(build_report.get("status") or "ok")
+    if status not in {"ok", "manifest-only"} and not force:
+        raise PresenterError(
+            f"Build status is {status}; re-run publish with --force only for reviewed output."
+        )
     scene = read_json(build_dir / "deck.scene.json")
     referenced_asset_files = {
         str(asset.get("file"))

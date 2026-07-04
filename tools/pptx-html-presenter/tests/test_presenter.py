@@ -24,7 +24,8 @@ from pptx_html_presenter.assets import (
 from pptx_html_presenter.build import build_presentation, inspect_pptx
 from pptx_html_presenter.cli import _parse_float_list, _parse_slide_filter, _parse_track_filter
 from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy, LayerPolicy, MorphPolicy, OutlinePolicy, PresenterConfig, VisualAuditPolicy, VisualEffectsPolicy, load_config
-from pptx_html_presenter.family import asset_check_family, load_family_config, oracle_qa_family, share_deck_assets
+from pptx_html_presenter.errors import PresenterError
+from pptx_html_presenter.family import asset_check_family, load_family_config, oracle_qa_family, publish_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _solid_color, _visual_effects, parse_pptx
@@ -734,7 +735,7 @@ class PresenterTests(unittest.TestCase):
             pptx = tmp_path / "demo.pptx"
             out = tmp_path / "site"
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -757,10 +758,41 @@ class PresenterTests(unittest.TestCase):
             )
             self.assertEqual(slide_two_picture["mediaTiming"]["phaseSec"], 2.5)
             self.assertEqual(scene["qa"]["mediaPhaseOverridesApplied"], 1)
+            self.assertTrue(scene["qa"]["configOverrideValidation"]["safe"])
+            self.assertTrue(report["configOverrideSafe"])
+            self.assertEqual(report["status"], "ok")
             self.assertEqual(
                 slide_two_picture["provenance"]["mediaPhaseOverride"]["source"],
                 "test",
             )
+
+    def test_build_blocks_stale_media_phase_overrides(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pptx = tmp_path / "demo.pptx"
+            out = tmp_path / "site"
+            _write_demo_pptx(pptx)
+            report = build_presentation(
+                pptx,
+                out,
+                PresenterConfig(
+                    media_phase_overrides=(
+                        {
+                            "slide": 2,
+                            "track_id": "track-does-not-exist",
+                            "phase_sec": 2.5,
+                            "source": "stale-test",
+                        },
+                    )
+                ),
+            )
+            scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
+            validation = scene["qa"]["configOverrideValidation"]
+            self.assertFalse(validation["safe"])
+            self.assertEqual(report["status"], "blocked-by-stale-overrides")
+            self.assertEqual(report["configOverrideBlockers"], 1)
+            self.assertEqual(validation["rows"][0]["group"], "media_phase_overrides")
+            self.assertEqual(validation["rows"][0]["status"], "missing-object")
 
     def test_build_applies_transition_media_phase_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -768,7 +800,7 @@ class PresenterTests(unittest.TestCase):
             pptx = tmp_path / "demo.pptx"
             out = tmp_path / "site"
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -786,6 +818,9 @@ class PresenterTests(unittest.TestCase):
             scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
             self.assertEqual(scene["transitions"][0]["mediaPhaseOverrides"][0]["trackId"], "track-0001")
             self.assertEqual(scene["transitions"][0]["mediaPhaseOverrides"][0]["phaseSec"], -0.115)
+            self.assertTrue(scene["qa"]["configOverrideValidation"]["safe"])
+            self.assertTrue(report["configOverrideSafe"])
+            self.assertEqual(report["status"], "ok")
 
     def test_build_applies_raster_fallback_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -795,7 +830,7 @@ class PresenterTests(unittest.TestCase):
             fallback = tmp_path / "static.png"
             fallback.write_bytes(b"fake-png")
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -962,7 +997,7 @@ class PresenterTests(unittest.TestCase):
             pptx = tmp_path / "demo.pptx"
             out = tmp_path / "site"
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -1010,7 +1045,7 @@ class PresenterTests(unittest.TestCase):
             pptx = tmp_path / "demo.pptx"
             out = tmp_path / "site"
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -1069,7 +1104,7 @@ class PresenterTests(unittest.TestCase):
             pptx = tmp_path / "demo.pptx"
             out = tmp_path / "site"
             _write_demo_pptx(pptx)
-            build_presentation(
+            report = build_presentation(
                 pptx,
                 out,
                 PresenterConfig(
@@ -1103,6 +1138,45 @@ class PresenterTests(unittest.TestCase):
                     }
                 ],
             )
+            self.assertTrue(scene["qa"]["configOverrideValidation"]["safe"])
+            self.assertEqual(scene["qa"]["configOverrideValidation"]["warningCount"], 1)
+            self.assertEqual(report["status"], "ok")
+            self.assertEqual(report["configOverrideWarnings"], 1)
+
+    def test_build_blocks_stale_transition_track_progress_overrides(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pptx = tmp_path / "demo.pptx"
+            out = tmp_path / "site"
+            _write_demo_pptx(pptx)
+            report = build_presentation(
+                pptx,
+                out,
+                PresenterConfig(
+                    morph_policy=MorphPolicy(
+                        transition_track_progress_overrides=(
+                            {
+                                "from": 1,
+                                "to": 2,
+                                "track_id": "track-does-not-exist",
+                                "points": [
+                                    {"progress": 0.0, "value": 0.0},
+                                    {"progress": 1.0, "value": 1.0},
+                                ],
+                                "source": "stale-test",
+                            },
+                        )
+                    )
+                ),
+            )
+            scene = json.loads((out / "deck.scene.json").read_text(encoding="utf-8"))
+            validation = scene["qa"]["configOverrideValidation"]
+            self.assertFalse(validation["safe"])
+            self.assertEqual(report["status"], "blocked-by-stale-overrides")
+            self.assertEqual(report["configOverrideBlockers"], 1)
+            self.assertEqual(validation["rows"][0]["group"], "transition_track_progress_overrides")
+            self.assertEqual(validation["rows"][0]["status"], "missing-track")
+            self.assertEqual(validation["rows"][0]["missingTrackIds"], ["track-does-not-exist"])
 
     def test_build_expands_clustered_transition_track_progress_overrides(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -3865,6 +3939,71 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(
                 report["runtimeAssets"]["unsupportedRuntimeFormats"][0]["extension"],
                 "wdp",
+            )
+
+    def test_family_publish_blocks_oversized_shared_assets_without_force(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "presentations" / "shared-assets" / "demo"
+            optimized = shared / "optimized"
+            optimized.mkdir(parents=True)
+            large_asset = optimized / "large.mp4"
+            large_asset.write_bytes(b"x" * 2048)
+            presentations = root / "presentations"
+            staging = presentations / "Demo-scene"
+            staging.mkdir(parents=True)
+            (staging / "deck.scene.json").write_text(
+                json.dumps(
+                    {
+                        "deck": {"id": "Demo"},
+                        "assets": [
+                            {
+                                "id": "asset-large",
+                                "file": "../shared-assets/demo/optimized/large.mp4",
+                                "sourceFile": "../shared-assets/demo/optimized/large.mp4",
+                                "kind": "video",
+                                "extension": "mp4",
+                            }
+                        ],
+                        "slides": [],
+                        "transitions": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (staging / "build-report.json").write_text(json.dumps({"status": "ok"}), encoding="utf-8")
+            config = presentations / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            previous_soft_max = family_module.SHARED_SOURCE_SOFT_MAX_MB
+            family_module.SHARED_SOURCE_SOFT_MAX_MB = 0.001
+            try:
+                with self.assertRaisesRegex(PresenterError, "Family asset check failed before publish"):
+                    publish_family(config)
+            finally:
+                family_module.SHARED_SOURCE_SOFT_MAX_MB = previous_soft_max
+
+            self.assertFalse((presentations / "Demo").exists())
+            self.assertEqual(
+                json.loads((shared / "family-asset-check-report.json").read_text(encoding="utf-8"))["status"],
+                "blocked-by-asset-size",
             )
 
     def test_family_oracle_qa_reports_missing_ffmpeg(self) -> None:

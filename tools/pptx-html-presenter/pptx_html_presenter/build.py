@@ -66,6 +66,9 @@ def build_presentation(
         optimized_asset_cache=optimized_asset_cache,
     )
     scene = compile_scene(deck, effective_config, out_dir)
+    config_override_validation = (
+        scene.get("qa", {}).get("configOverrideValidation", {}) if isinstance(scene.get("qa"), dict) else {}
+    )
     referenced_asset_files = {
         str(asset.get("file"))
         for asset in scene.get("assets", [])
@@ -79,6 +82,10 @@ def build_presentation(
     write_player(out_dir)
     if effective_config.asset_policy.mode == "manifest-only":
         status = "manifest-only"
+    elif not asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe")):
+        status = "blocked-by-asset-size"
+    elif not config_override_validation.get("safe", True):
+        status = "blocked-by-stale-overrides"
     elif asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe")):
         status = "ok"
     else:
@@ -97,6 +104,9 @@ def build_presentation(
         "hardLimitSafe": bool(asset_report.get("hardLimitSafe", asset_report.get("githubPagesSafe"))),
         "preferredAssetSafe": bool(asset_report.get("preferredAssetSafe", asset_report.get("githubPagesSafe"))),
         "publishAssetSafe": bool(asset_report.get("publishAssetSafe", asset_report.get("githubPagesSafe"))),
+        "configOverrideSafe": bool(config_override_validation.get("safe", True)),
+        "configOverrideBlockers": int(config_override_validation.get("blockerCount", 0) or 0),
+        "configOverrideWarnings": int(config_override_validation.get("warningCount", 0) or 0),
         "assetMode": effective_config.asset_policy.mode,
         "slideCount": len(scene["slides"]),
         "assetCount": len(scene["assets"]),

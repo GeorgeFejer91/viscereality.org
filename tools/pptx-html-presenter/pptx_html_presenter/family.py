@@ -413,6 +413,13 @@ def publish_family(
     archive_chunked: bool = True,
 ) -> dict[str, Any]:
     family = load_family_config(config_path)
+    asset_gate = asset_check_family(config_path)
+    if asset_gate.get("status") != "ok" and not force:
+        raise PresenterError(
+            "Family asset check failed before publish: "
+            f"{asset_gate.get('status')}. Convert or remove oversized/non-web assets, "
+            "or re-run publish with --force only after explicit review."
+        )
     presentations_dir = ensure_dir(family.repo_root / "presentations")
     publish_reports: list[dict[str, Any]] = []
     for deck in family.decks:
@@ -453,6 +460,10 @@ def publish_family(
         "generatedAtUtc": utc_now_iso(),
         "familyId": family.family_id,
         "status": "ok",
+        "assetCheck": {
+            "status": asset_gate.get("status"),
+            "report": _repo_rel(family.repo_root, family.shared_root / "family-asset-check-report.json"),
+        },
         "decks": publish_reports,
         "sharedDecks": _repo_rel(family.repo_root, family.repo_root / "presentations" / "shared" / "decks.js"),
         "index": _repo_rel(family.repo_root, family.repo_root / "presentations" / "index.html"),
