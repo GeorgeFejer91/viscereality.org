@@ -61,17 +61,23 @@
         <div class="breath-wave exhale-wave"></div>
         <div class="breath-light"></div>
         <div class="video-container">
-          <div
-            class="ascii-video ascii-video--hero hero-video"
-            role="img"
-            aria-label="Viscereality dynamic background ASCII animation"
-            data-ascii-desktop-src="assets/ascii-media/viscereality-hero-desktop.json"
-            data-ascii-mobile-src="assets/ascii-media/viscereality-hero-mobile.json"
+          <video
+            class="hero-video"
+            muted
+            loop
+            playsinline
+            preload="none"
+            poster="assets/media/viscereality-hero-poster.jpg"
+            aria-label="Viscereality dynamic background video"
+            data-defer-video
             data-play-when-visible
-            style="--ascii-aspect: 960 / 540; --ascii-poster: url('assets/media/viscereality-hero-poster.jpg');"
           >
-            <pre class="ascii-video__frame" aria-hidden="true"></pre>
-          </div>
+            <source
+              data-desktop-src="assets/media/viscereality-hero-desktop.mp4"
+              data-mobile-src="assets/media/viscereality-hero-mobile.mp4"
+              type="video/mp4"
+            >
+          </video>
         </div>
       </div>
 
@@ -156,16 +162,21 @@
 
         <div class="ingredient-card exhale-section">
           <div class="ingredient-image">
-            <div
-              class="ascii-video ingredient-loop"
-              role="img"
-              aria-label="Bioresponsive VR ASCII animation"
-              data-ascii-src="assets/ascii-media/lung-mechanics-loop.json"
+            <video
+              class="ingredient-loop"
+              muted
+              loop
+              playsinline
+              preload="none"
+              poster="assets/media/lung-mechanics-poster.jpg"
+              aria-label="Bioresponsive VR animation"
+              width="720"
+              height="406"
+              data-defer-video
               data-play-when-visible
-              style="--ascii-aspect: 720 / 406; --ascii-poster: url('assets/media/lung-mechanics-poster.jpg');"
             >
-              <pre class="ascii-video__frame" aria-hidden="true"></pre>
-            </div>
+              <source data-src="assets/media/lung-mechanics-loop.mp4" type="video/mp4">
+            </video>
           </div>
           <h4>Bioresponsive VR</h4>
           <p>Respiratory coupling of lung-mechanics to the <span class="inhale-term">contraction</span> and <span class="exhale-term">expansion</span> of virtual space.</p>
@@ -173,16 +184,21 @@
 
         <div class="ingredient-card inhale-section">
           <div class="ingredient-image">
-            <div
-              class="ascii-video ingredient-loop"
-              role="img"
-              aria-label="Breathing affects perception ASCII animation"
-              data-ascii-src="assets/ascii-media/breathink-loop.json"
+            <video
+              class="ingredient-loop"
+              muted
+              loop
+              playsinline
+              preload="none"
+              poster="assets/media/breathink-poster.jpg"
+              aria-label="Breathing affects perception animation"
+              width="720"
+              height="406"
+              data-defer-video
               data-play-when-visible
-              style="--ascii-aspect: 720 / 406; --ascii-poster: url('assets/media/breathink-poster.jpg');"
             >
-              <pre class="ascii-video__frame" aria-hidden="true"></pre>
-            </div>
+              <source data-src="assets/media/breathink-loop.mp4" type="video/mp4">
+            </video>
           </div>
           <h4>Breathing affects the perception of quantities 
             <a href="https://link.springer.com/article/10.1007/s00221-021-06147-z" target="_blank" class="citation-badge">
