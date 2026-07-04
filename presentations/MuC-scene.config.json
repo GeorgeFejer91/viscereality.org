@@ -76,14 +76,14 @@
         "to": 4,
         "points": [
           { "progress": 0.0, "value": 0.0 },
-          { "progress": 0.1, "value": 0.1 },
-          { "progress": 0.25, "value": 0.35 },
-          { "progress": 0.5, "value": 0.6 },
-          { "progress": 0.75, "value": 0.8 },
-          { "progress": 0.9, "value": 0.9 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.2667 },
+          { "progress": 0.5, "value": 0.68 },
+          { "progress": 0.75, "value": 0.95 },
+          { "progress": 0.9, "value": 1.0 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "MuC-slide-3-4-powerpoint-oracle-carousel-speed-calibration"
+        "source": "MuC-slide-3-4-powerpoint-oracle-carousel-speed-calibration-v2"
       }
     ],
     "transition_unmatched_fade_overrides": [

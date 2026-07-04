@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-04T00:51:20+00:00",
+  "generatedAtUtc": "2026-07-04T01:01:23+00:00",
   "qa": {
     "groupRows": [
       {
@@ -125531,23 +125531,23 @@
         },
         {
           "progress": 0.1,
-          "value": 0.1
+          "value": 0.0
         },
         {
           "progress": 0.25,
-          "value": 0.35
+          "value": 0.2667
         },
         {
           "progress": 0.5,
-          "value": 0.6
+          "value": 0.68
         },
         {
           "progress": 0.75,
-          "value": 0.8
+          "value": 0.95
         },
         {
           "progress": 0.9,
-          "value": 0.9
+          "value": 1.0
         },
         {
           "progress": 1.0,
