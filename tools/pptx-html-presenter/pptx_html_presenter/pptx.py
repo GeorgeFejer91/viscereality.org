@@ -32,6 +32,17 @@ NS = {
 
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".wdp", ".bmp", ".tif", ".tiff"}
 VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".webm", ".wmv", ".avi", ".mpeg", ".mpg"}
+COLOR_TRANSFORMS = {
+    "alpha",
+    "alphaMod",
+    "alphaOff",
+    "lumMod",
+    "lumOff",
+    "satMod",
+    "satOff",
+    "shade",
+    "tint",
+}
 
 
 def parse_pptx(path: Path) -> PptxDeck:
@@ -540,7 +551,7 @@ def _parse_shape(
     if text and kind == "shape":
         kind = "text"
     shape = _preset_geometry(node)
-    fill = _solid_color(node, ".//p:spPr/a:solidFill")
+    fill = _solid_color(node, ".//p:spPr/a:solidFill", include_alpha=False)
     stroke = _solid_color(node, ".//p:spPr/a:ln/a:solidFill")
     stroke_width = _line_width(node)
     opacity = _opacity(node, media=asset_id is not None)
@@ -830,17 +841,11 @@ def _preset_geometry(node: ET.Element) -> str | None:
     return geom.get("prst") if geom is not None else None
 
 
-def _solid_color(node: ET.Element, query: str) -> str | None:
+def _solid_color(node: ET.Element, query: str, *, include_alpha: bool = True) -> str | None:
     fill = node.find(query, NS)
     if fill is None:
         return None
-    srgb = fill.find(".//a:srgbClr", NS)
-    if srgb is not None and srgb.get("val"):
-        return "#" + srgb.get("val")
-    scheme = fill.find(".//a:schemeClr", NS)
-    if scheme is not None and scheme.get("val"):
-        return f"scheme:{scheme.get('val')}"
-    return None
+    return _color_from_node(fill, include_alpha=include_alpha)
 
 
 def _line_width(node: ET.Element) -> float | None:
@@ -893,7 +898,7 @@ def _visual_effects(node: ET.Element) -> dict[str, Any]:
     glow = node.find(".//a:effectLst/a:glow", NS)
     if glow is not None and glow.get("rad") is not None:
         item: dict[str, Any] = {"radiusEmu": _int_or_zero(glow.get("rad"))}
-        color = _color_from_node(glow)
+        color = _color_from_node(glow, include_alpha=False)
         if color:
             item["color"] = color
         alpha = glow.find(".//a:alpha", NS)
@@ -927,14 +932,82 @@ def _brightness_contrast_effect(node: ET.Element | None) -> dict[str, float]:
     return item
 
 
-def _color_from_node(node: ET.Element) -> str | None:
+def _color_from_node(node: ET.Element, *, include_alpha: bool = True) -> str | None:
     srgb = node.find(".//a:srgbClr", NS)
     if srgb is not None and srgb.get("val"):
-        return "#" + srgb.get("val")
+        return _srgb_color_value(srgb, include_alpha=include_alpha)
     scheme = node.find(".//a:schemeClr", NS)
     if scheme is not None and scheme.get("val"):
-        return f"scheme:{scheme.get('val')}"
+        return _scheme_color_value(scheme, include_alpha=include_alpha)
     return None
+
+
+def _srgb_color_value(node: ET.Element, *, include_alpha: bool = True) -> str:
+    raw = str(node.get("val") or "000000").strip()
+    if not re.fullmatch(r"[0-9A-Fa-f]{6}", raw):
+        return "#" + raw
+    transforms = _color_transform_parts(node, include_alpha=include_alpha)
+    if not transforms:
+        return "#" + raw
+    r = int(raw[0:2], 16)
+    g = int(raw[2:4], 16)
+    b = int(raw[4:6], 16)
+    alpha = 1.0
+    r_f, g_f, b_f = float(r), float(g), float(b)
+    for name, value in transforms:
+        ratio = _ratio_100k(value)
+        if name in {"lumMod", "shade"}:
+            r_f *= ratio
+            g_f *= ratio
+            b_f *= ratio
+        elif name == "lumOff":
+            r_f += 255.0 * ratio
+            g_f += 255.0 * ratio
+            b_f += 255.0 * ratio
+        elif name == "tint":
+            r_f = r_f * ratio + 255.0 * (1.0 - ratio)
+            g_f = g_f * ratio + 255.0 * (1.0 - ratio)
+            b_f = b_f * ratio + 255.0 * (1.0 - ratio)
+        elif name == "alpha":
+            alpha = ratio
+        elif name == "alphaMod":
+            alpha *= ratio
+        elif name == "alphaOff":
+            alpha += ratio
+        r_f, g_f, b_f = (_clamp_channel(r_f), _clamp_channel(g_f), _clamp_channel(b_f))
+        alpha = max(0.0, min(1.0, alpha))
+    r_i, g_i, b_i = (int(round(r_f)), int(round(g_f)), int(round(b_f)))
+    if alpha < 0.999:
+        return f"rgba({r_i}, {g_i}, {b_i}, {round(alpha, 4)})"
+    return f"#{r_i:02X}{g_i:02X}{b_i:02X}"
+
+
+def _scheme_color_value(node: ET.Element, *, include_alpha: bool = True) -> str:
+    value = f"scheme:{node.get('val')}"
+    transforms = _color_transform_parts(node, include_alpha=include_alpha)
+    if not transforms:
+        return value
+    suffix = "|".join(f"{name}={amount}" for name, amount in transforms)
+    return f"{value}|{suffix}"
+
+
+def _color_transform_parts(node: ET.Element, *, include_alpha: bool = True) -> list[tuple[str, str]]:
+    transforms: list[tuple[str, str]] = []
+    for child in list(node):
+        name = _local(child.tag)
+        if name not in COLOR_TRANSFORMS:
+            continue
+        if not include_alpha and name in {"alpha", "alphaMod", "alphaOff"}:
+            continue
+        value = child.get("val")
+        if value is None:
+            continue
+        transforms.append((name, value))
+    return transforms
+
+
+def _clamp_channel(value: float) -> float:
+    return max(0.0, min(255.0, value))
 
 
 def _int_or_zero(value: str | None) -> int:

@@ -27,7 +27,7 @@ from pptx_html_presenter.config import AssetPolicy, FallbackPolicy, GroupPolicy,
 from pptx_html_presenter.family import asset_check_family, load_family_config, oracle_qa_family, share_deck_assets
 from pptx_html_presenter.models import AssetRef, Geometry, PptxDeck, SceneObject, Slide, Transition
 from pptx_html_presenter.player import PLAYER_HTML
-from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _visual_effects, parse_pptx
+from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _solid_color, _visual_effects, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
     _candidate_sweep_candidate_id,
@@ -3348,6 +3348,79 @@ class PresenterTests(unittest.TestCase):
             _visual_effects(node),
             {"glow": {"radiusEmu": 381000, "color": "scheme:bg1", "alpha": 0.4}},
         )
+
+    def test_srgb_color_transforms_are_applied_to_css_color(self) -> None:
+        node = ET.fromstring(
+            """
+            <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:spPr>
+                <a:solidFill>
+                  <a:srgbClr val="808080">
+                    <a:lumMod val="50000"/>
+                    <a:lumOff val="10000"/>
+                    <a:alpha val="40000"/>
+                  </a:srgbClr>
+                </a:solidFill>
+              </p:spPr>
+            </p:sp>
+            """
+        )
+        self.assertEqual(
+            _solid_color(node, ".//p:spPr/a:solidFill"),
+            "rgba(90, 90, 90, 0.4)",
+        )
+
+    def test_scheme_color_transforms_are_preserved_for_runtime_resolution(self) -> None:
+        node = ET.fromstring(
+            """
+            <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:spPr>
+                <a:ln>
+                  <a:solidFill>
+                    <a:schemeClr val="bg1">
+                      <a:lumMod val="50000"/>
+                      <a:tint val="82000"/>
+                      <a:alpha val="80000"/>
+                    </a:schemeClr>
+                  </a:solidFill>
+                </a:ln>
+              </p:spPr>
+            </p:sp>
+            """
+        )
+        self.assertEqual(
+            _solid_color(node, ".//p:spPr/a:ln/a:solidFill"),
+            "scheme:bg1|lumMod=50000|tint=82000|alpha=80000",
+        )
+
+    def test_shape_fill_color_can_leave_alpha_for_object_opacity(self) -> None:
+        node = ET.fromstring(
+            """
+            <p:sp xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
+                  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+              <p:spPr>
+                <a:solidFill>
+                  <a:schemeClr val="tx1">
+                    <a:alpha val="62000"/>
+                  </a:schemeClr>
+                </a:solidFill>
+              </p:spPr>
+            </p:sp>
+            """
+        )
+        self.assertEqual(
+            _solid_color(node, ".//p:spPr/a:solidFill", include_alpha=False),
+            "scheme:tx1",
+        )
+
+    def test_runtime_resolves_powerpoint_color_transform_tokens(self) -> None:
+        self.assertIn("function parsePowerPointColorToken", PLAYER_HTML)
+        self.assertIn("function applyColorTransforms", PLAYER_HTML)
+        self.assertIn('case "lumMod":', PLAYER_HTML)
+        self.assertIn('case "tint":', PLAYER_HTML)
+        self.assertIn("parseCssColor(cssColor(value))", PLAYER_HTML)
 
     def test_prunes_unreferenced_source_assets(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

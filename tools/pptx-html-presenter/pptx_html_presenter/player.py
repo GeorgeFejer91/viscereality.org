@@ -1166,27 +1166,183 @@ PLAYER_HTML = r"""<!doctype html>
 
   function cssColor(value) {
     if (!value) return "transparent";
-    if (value.startsWith("scheme:")) {
-      const key = value.slice("scheme:".length).toLowerCase();
-      const map = {
-        bg1: "#fff",
-        lt1: "#fff",
-        tx1: "#000",
-        dk1: "#000",
-        bg2: "#1f1f1f",
-        tx2: "#f2f2f2",
-        dk2: "#1f1f1f",
-        lt2: "#f2f2f2",
-        accent1: "#2f80ed",
-        accent2: "#eb5757",
-        accent3: "#27ae60",
-        accent4: "#f2c94c",
-        accent5: "#9b51e0",
-        accent6: "#56ccf2",
-      };
-      return map[key] || "currentColor";
+    const raw = String(value).trim();
+    if (raw.startsWith("scheme:")) {
+      const token = parsePowerPointColorToken(raw);
+      const base = themeColorMap()[token.key] || "currentColor";
+      return applyColorTransforms(base, token.transforms);
     }
-    return value;
+    return raw;
+  }
+
+  function themeColorMap() {
+    return {
+      bg1: "#fff",
+      lt1: "#fff",
+      tx1: "#000",
+      dk1: "#000",
+      bg2: "#1f1f1f",
+      tx2: "#f2f2f2",
+      dk2: "#1f1f1f",
+      lt2: "#f2f2f2",
+      accent1: "#2f80ed",
+      accent2: "#eb5757",
+      accent3: "#27ae60",
+      accent4: "#f2c94c",
+      accent5: "#9b51e0",
+      accent6: "#56ccf2",
+    };
+  }
+
+  function parsePowerPointColorToken(value) {
+    const parts = String(value || "").split("|");
+    const key = parts.shift().slice("scheme:".length).toLowerCase();
+    const transforms = parts.map((part) => {
+      const [name, rawAmount] = part.split("=", 2);
+      return { name, amount: Number(rawAmount) };
+    }).filter((item) => item.name && Number.isFinite(item.amount));
+    return { key, transforms };
+  }
+
+  function applyColorTransforms(baseColor, transforms) {
+    if (!transforms?.length) return baseColor;
+    const parsed = parseCssColor(baseColor);
+    if (!parsed) return baseColor;
+    let r = parsed.r;
+    let g = parsed.g;
+    let b = parsed.b;
+    let a = parsed.a;
+    for (const transform of transforms) {
+      const amount = Math.max(0, Math.min(100000, Number(transform.amount || 0))) / 100000;
+      switch (transform.name) {
+        case "lumMod":
+        case "shade":
+          r *= amount;
+          g *= amount;
+          b *= amount;
+          break;
+        case "lumOff":
+          r += 255 * amount;
+          g += 255 * amount;
+          b += 255 * amount;
+          break;
+        case "tint":
+          r = r * amount + 255 * (1 - amount);
+          g = g * amount + 255 * (1 - amount);
+          b = b * amount + 255 * (1 - amount);
+          break;
+        case "satMod":
+        case "satOff": {
+          const hsl = rgbToHsl(r, g, b);
+          hsl.s = transform.name === "satMod" ? hsl.s * amount : hsl.s + amount;
+          const rgb = hslToRgb(hsl.h, Math.max(0, Math.min(1, hsl.s)), hsl.l);
+          r = rgb.r;
+          g = rgb.g;
+          b = rgb.b;
+          break;
+        }
+        case "alpha":
+          a = amount;
+          break;
+        case "alphaMod":
+          a *= amount;
+          break;
+        case "alphaOff":
+          a += amount;
+          break;
+      }
+      r = clampChannel(r);
+      g = clampChannel(g);
+      b = clampChannel(b);
+      a = Math.max(0, Math.min(1, a));
+    }
+    return rgbaOrHex(r, g, b, a);
+  }
+
+  function parseCssColor(value) {
+    const raw = String(value || "").trim();
+    const short = /^#([0-9a-f]{3})$/i.exec(raw);
+    if (short) {
+      const chars = short[1].split("");
+      return {
+        r: parseInt(chars[0] + chars[0], 16),
+        g: parseInt(chars[1] + chars[1], 16),
+        b: parseInt(chars[2] + chars[2], 16),
+        a: 1,
+      };
+    }
+    const hex = /^#([0-9a-f]{6})$/i.exec(raw);
+    if (hex) {
+      const value = hex[1];
+      return {
+        r: parseInt(value.slice(0, 2), 16),
+        g: parseInt(value.slice(2, 4), 16),
+        b: parseInt(value.slice(4, 6), 16),
+        a: 1,
+      };
+    }
+    const rgba = /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+)\s*)?\)$/i.exec(raw);
+    if (rgba) {
+      return {
+        r: clampChannel(Number(rgba[1])),
+        g: clampChannel(Number(rgba[2])),
+        b: clampChannel(Number(rgba[3])),
+        a: rgba[4] === undefined ? 1 : Math.max(0, Math.min(1, Number(rgba[4]))),
+      };
+    }
+    return null;
+  }
+
+  function rgbaOrHex(r, g, b, a = 1) {
+    const rr = Math.round(clampChannel(r));
+    const gg = Math.round(clampChannel(g));
+    const bb = Math.round(clampChannel(b));
+    const aa = Math.max(0, Math.min(1, Number.isFinite(a) ? a : 1));
+    if (aa < 0.999) return `rgba(${rr}, ${gg}, ${bb}, ${Number(aa.toFixed(4))})`;
+    return `#${rr.toString(16).padStart(2, "0")}${gg.toString(16).padStart(2, "0")}${bb.toString(16).padStart(2, "0")}`;
+  }
+
+  function clampChannel(value) {
+    return Math.max(0, Math.min(255, Number.isFinite(value) ? value : 0));
+  }
+
+  function rgbToHsl(r, g, b) {
+    r = clampChannel(r) / 255;
+    g = clampChannel(g) / 255;
+    b = clampChannel(b) / 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    if (max === min) return { h: 0, s: 0, l };
+    const d = max - min;
+    const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    let h;
+    if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    return { h: h / 6, s, l };
+  }
+
+  function hslToRgb(h, s, l) {
+    if (s === 0) {
+      const value = l * 255;
+      return { r: value, g: value, b: value };
+    }
+    const hueToRgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    return {
+      r: hueToRgb(p, q, h + 1 / 3) * 255,
+      g: hueToRgb(p, q, h) * 255,
+      b: hueToRgb(p, q, h - 1 / 3) * 255,
+    };
   }
 
   function outlineStyle() {
@@ -1214,10 +1370,9 @@ PLAYER_HTML = r"""<!doctype html>
   }
 
   function isWhiteStroke(value) {
-    const raw = String(value || "").trim().toLowerCase();
-    if (!raw) return false;
-    if (["#fff", "#ffffff", "white", "rgb(255,255,255)", "rgb(255, 255, 255)"].includes(raw)) return true;
-    return raw === "scheme:bg1" || raw === "scheme:lt1";
+    const color = parseCssColor(cssColor(value));
+    if (!color) return false;
+    return color.a > 0.5 && color.r >= 250 && color.g >= 250 && color.b >= 250;
   }
 
   function cssStrokeWidth(state) {
@@ -1359,13 +1514,9 @@ PLAYER_HTML = r"""<!doctype html>
   function cssColorWithAlpha(value, alpha) {
     const color = cssColor(value || "scheme:bg1");
     const clamped = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
-    const hex = /^#([0-9a-f]{6})$/i.exec(color);
-    if (!hex) return color;
-    const raw = hex[1];
-    const r = parseInt(raw.slice(0, 2), 16);
-    const g = parseInt(raw.slice(2, 4), 16);
-    const b = parseInt(raw.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${clamped})`;
+    const parsed = parseCssColor(color);
+    if (!parsed) return color;
+    return `rgba(${Math.round(parsed.r)}, ${Math.round(parsed.g)}, ${Math.round(parsed.b)}, ${clamped})`;
   }
 
   function applyTextStyle(child, style, captureOptions = null) {

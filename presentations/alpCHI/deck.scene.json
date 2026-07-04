@@ -853,7 +853,7 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-04T02:50:52+00:00",
+  "generatedAtUtc": "2026-07-04T03:49:47+00:00",
   "qa": {
     "groupRows": [
       {
@@ -11425,7 +11425,7 @@
             "r": 0.03905,
             "t": 0.0698
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -12646,7 +12646,7 @@
             "r": 0.03905,
             "t": 0.0698
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -13733,7 +13733,7 @@
             "r": 0.03905,
             "t": 0.0698
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -14602,7 +14602,7 @@
             "r": 0.03905,
             "t": 0.0698
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -16387,7 +16387,7 @@
           "crop": {
             "t": 0.07707
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -16469,7 +16469,7 @@
             "r": 0.03905,
             "t": 0.07686
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -18058,7 +18058,7 @@
           "crop": {
             "t": 0.07707
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -18140,7 +18140,7 @@
             "r": 0.03905,
             "t": 0.07686
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -20403,7 +20403,7 @@
           "crop": {
             "t": 0.07707
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -20487,7 +20487,7 @@
             "r": 0.03905,
             "t": 0.07686
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -22965,7 +22965,7 @@
           "crop": {
             "t": 0.07707
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -23049,7 +23049,7 @@
             "r": 0.03905,
             "t": 0.07686
           },
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -54406,7 +54406,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{F8EDE1F3-2B21-2CC0-6C03-164070A8E05E}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -54457,7 +54457,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{231A65AC-CAB8-2AD7-C4A8-6F9431EB6CE7}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -54508,7 +54508,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{D471197B-4ABF-8A49-2871-C83E043FC524}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55027,7 +55027,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{F8EDE1F3-2B21-2CC0-6C03-164070A8E05E}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55078,7 +55078,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{231A65AC-CAB8-2AD7-C4A8-6F9431EB6CE7}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55129,7 +55129,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{D471197B-4ABF-8A49-2871-C83E043FC524}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55720,7 +55720,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{1D151079-9498-254A-BB84-AEA4B1F59506}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55771,7 +55771,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{E5E4DD67-1311-F65C-2A32-6D98FA50AD02}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -55820,7 +55820,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{D1B49964-6811-F82A-FAAD-7A4ABBA2E2E2}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56188,7 +56188,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{1D151079-9498-254A-BB84-AEA4B1F59506}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56239,7 +56239,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{E5E4DD67-1311-F65C-2A32-6D98FA50AD02}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56288,7 +56288,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{D1B49964-6811-F82A-FAAD-7A4ABBA2E2E2}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56522,7 +56522,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{F57A803E-E280-EC7E-5640-D3A67D7602AE}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56573,7 +56573,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{7CF94C19-339D-2A39-CA99-0FEAF73BC673}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56624,7 +56624,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{B6A8ABE9-88A1-C452-8485-789905342346}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56832,7 +56832,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{F57A803E-E280-EC7E-5640-D3A67D7602AE}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56883,7 +56883,7 @@
           "assetId": "asset-f48c9a5a1946bc53",
           "creationId": "{7CF94C19-339D-2A39-CA99-0FEAF73BC673}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -56934,7 +56934,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{B6A8ABE9-88A1-C452-8485-789905342346}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -57151,7 +57151,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{9F0DE5AD-0023-2401-2A96-65C402CDB03F}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -57200,7 +57200,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{9A670A62-9D13-0E4E-3C99-E78B08D93178}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -57410,7 +57410,7 @@
           "assetId": "asset-5b0858ed7682ac6f",
           "creationId": "{9F0DE5AD-0023-2401-2A96-65C402CDB03F}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,
@@ -57459,7 +57459,7 @@
           "assetId": "asset-3567a5c556bbe846",
           "creationId": "{9A670A62-9D13-0E4E-3C99-E78B08D93178}",
           "crop": null,
-          "fill": "#FFFFFF",
+          "fill": "#D9D9D9",
           "geometry": {
             "flipH": false,
             "flipV": false,

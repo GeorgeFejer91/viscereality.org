@@ -193,6 +193,9 @@ Current source PPTX parse results from family preflight:
 - Diagnostic result: on 2026-07-04, targeted track-opacity sweeps did not materially improve the current worst oracle samples. For alpCHI `trans-001-002-025`, `track-0010`, `track-0011`, `track-0012`, and the broad cluster `track-0003..track-0008,track-0010` all bested at opacity `0.0` with SSIM only about `0.512105`, barely above the existing failed baseline around `0.508`. For MuC `trans-002-003-075`, a panel/content cluster also bested at `0.0` with SSIM about `0.772081`, effectively unchanged from the current floor. Treat opacity as a useful diagnostic axis, not an accepted production fix.
 - Problem: inherited PowerPoint background image fills were emitted as plain media even though `<p:bg>` can carry the same crop, media alpha, luminance, and visual-effect metadata as a normal picture fill.
   - Solution: `_background_object()` now propagates background `crop`, media opacity, `visualEffects`, and `mediaEffects` into scene objects. `_media_effects()` now also reads DrawingML `<a:blip><a:lum bright="..." contrast="..."/></a:blip>` into the existing `brightnessContrast` runtime filter path. Verification: `test_inherits_master_background` now asserts inherited background `srcRect` and luminance metadata, and the full `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` suite passed 137 tests.
+- Problem: DrawingML color transforms were previously discarded. PowerPoint uses `lumMod`, `lumOff`, `tint`, `shade`, `satMod`, `satOff`, and `alpha` on theme/RGB colors in these decks, especially MuC text colors and alpha-filled overlay rectangles.
+  - Solution: `_solid_color()` / `_color_from_node()` now preserve transformed scheme colors as deterministic runtime tokens such as `scheme:tx1|lumMod=50000|lumOff=50000`, resolve transformed RGB colors to CSS `#rrggbb`/`rgba(...)`, and the browser runtime resolves transformed scheme colors against its theme color map. The runtime also resolves transformed colors for outline detection and glow colors. Important nuance: shape fill alpha is still represented once through object `opacity`; the parser intentionally strips alpha from shape fill color tokens to avoid double-applying transparency. Text colors and stroke colors can still carry alpha transforms.
+  - Verification: full `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 142 tests. Family rebuild and publish passed. `family asset-check` passed with max public runtime asset 48.879 MiB and no oversize assets. `family visual-audit` passed all three decks after the corrected color/alpha build. Public manifests now show MuC transformed rich-text colors while alpCHI/BBD26 alpha overlay rectangles render as `fill: scheme:tx1` plus `opacity: 0.62`, avoiding the rejected double-alpha regression.
 - Diagnostic result: on 2026-07-04, MuC `trans-002-003-075` was checked against the current PowerPoint reference after the opacity diagnostics. Media phase sweeps for the two visible panel animation tracks were not useful production fixes: `track-0022` bested at `-3.0s` with SSIM `0.772273`, and `track-0023` bested at `+0.25s` with SSIM `0.772059`, essentially unchanged from the current failed floor. A `trans-002-003-090` phase sweep for `track-0022` bested at `+2.75s` with SSIM `0.883435`, only a small improvement. Global progress sweeps for `trans-002-003-050/075/090` also produced no meaningful improvement (`0.0`, `0.75`, and `0.75` best raw values respectively). A quick offline brightness/contrast transform suggested only tiny transition-frame gains. Do not commit a MuC 2->3 phase/progress/brightness override without a stronger scoped oracle result.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
@@ -303,6 +306,16 @@ After adding text-rendering runtime/candidate-sweep support and applying MuC `te
 
 This verifies the shared runtime update and MuC text-scale calibration do not break browser playback/capture. It is still not a PowerPoint-oracle SSIM pass.
 
+After adding DrawingML color-transform parsing/runtime resolution and fixing shape fill alpha so it is not double-applied on 2026-07-04:
+
+- `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 142 tests.
+- `py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build presentations\viscereality-family.config.json --force ...` passed.
+- `py -3 tools\pptx-html-presenter\pptx-html-presenter.py family publish presentations\viscereality-family.config.json --force --no-archive-chunked` passed.
+- `py -3 tools\pptx-html-presenter\pptx-html-presenter.py family asset-check presentations\viscereality-family.config.json` passed.
+- `py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit presentations\viscereality-family.config.json ...` passed all three decks.
+
+This validates browser playback/capture and asset safety for the corrected color-transform build. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -346,6 +359,14 @@ Additional bounded MuC oracle result after the MuC media-phase and footer-strip 
 Additional bounded MuC oracle result after the MuC `text_rendering.font_scale: 0.9` calibration:
 
 - `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM improved from `0.766376` to `0.772079`. Current lowest samples are `trans-002-003-075` (`0.772079`), `trans-002-003-050` (`0.781949`), `trans-002-003-025` (`0.785634`), `trans-001-002-010` (`0.789210`), `trans-003-004-075` (`0.792089`), and `trans-001-002-025` (`0.792934`). This confirms text metrics contribute to the mismatch, but the strict `0.965` Morph threshold remains unresolved.
+
+Additional oracle refresh after DrawingML color-transform parsing/runtime resolution and the corrected single-application shape fill alpha:
+
+- `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM `0.768571`. Current lowest samples are `trans-002-003-075` (`0.768571`), `trans-002-003-050` (`0.781917`), `trans-002-003-025` (`0.785626`), `trans-001-002-010` (`0.789210`), and `trans-003-004-075` (`0.792079`).
+- `alpCHI` slide `1`: status `failed`, 8 comparisons, minimum SSIM `0.506195`. Current lowest samples are `trans-001-002-025` (`0.506195`), `trans-001-002-010` (`0.608198`), and `trans-001-002-050` (`0.746171`).
+- `BBD26` slide `1`: status `failed`, 8 comparisons, minimum SSIM `0.742680`. Current lowest samples are `trans-001-002-000` (`0.742680`), `trans-001-002-010` (`0.774193`), and `slide-001-settled` (`0.814801`).
+
+Interpretation: color transforms are now represented more faithfully in the scene/runtime, but strict oracle parity remains unresolved and the bounded scores are roughly comparable to the previous failed baseline rather than a pass. A temporary build that applied shape fill alpha both in `fill` and object `opacity` regressed BBD26/alpCHI substantially; that double-alpha behavior was fixed before commit.
 
 Interpretation:
 

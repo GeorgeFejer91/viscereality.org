@@ -1,31 +1,45 @@
 {
   "deckFilter": [
-    "MuC"
+    "BBD26",
+    "alpCHI"
   ],
   "decks": [
     {
       "blockers": [],
-      "comparisonCount": 24,
-      "deckId": "MuC",
-      "failedCount": 24,
-      "minSsim": 0.772079,
+      "comparisonCount": 8,
+      "deckId": "alpCHI",
+      "failedCount": 8,
+      "minSsim": 0.506195,
       "referenceKept": false,
-      "referenceSizeMb": 86.201,
-      "report": "presentations/MuC/qa/report.json",
-      "sampleCount": 24,
+      "referenceSizeMb": 140.62,
+      "report": "presentations/alpCHI/qa/report.json",
+      "sampleCount": 8,
       "status": "failed",
-      "target": "presentations/MuC"
+      "target": "presentations/alpCHI"
+    },
+    {
+      "blockers": [],
+      "comparisonCount": 8,
+      "deckId": "BBD26",
+      "failedCount": 8,
+      "minSsim": 0.74268,
+      "referenceKept": false,
+      "referenceSizeMb": 178.756,
+      "report": "presentations/BBD26/qa/report.json",
+      "sampleCount": 8,
+      "status": "failed",
+      "target": "presentations/BBD26"
     }
   ],
   "disk": {
     "force": true,
-    "freeGbAtStart": 4.2,
+    "freeGbAtStart": 5.57,
     "minimumFreeGb": 0.0
   },
   "familyId": "viscereality",
   "ffmpeg": "C:\\Users\\gfeje\\Proton Drive\\George.Fejer\\My files\\Project1_CouplingKernelStudy\\ffmpeg_standalone\\bin\\ffmpeg.exe",
   "fullScope": false,
-  "generatedAtUtc": "2026-07-04T02:52:19+00:00",
+  "generatedAtUtc": "2026-07-04T03:57:12+00:00",
   "keepReference": false,
   "notes": [
     "PowerPoint MP4 references are exported through PowerPoint COM using the deck scene timing.",
@@ -34,9 +48,7 @@
   ],
   "schema": "pptx-html-presenter.family.oracle-qa.v1",
   "slides": [
-    1,
-    2,
-    3
+    1
   ],
   "status": "failed",
   "target": "public",
