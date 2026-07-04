@@ -8944,6 +8944,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": -2.0,
+          "score": 0.545308,
+          "source": "media-phase-persistent-loop-origin"
+        },
         "mediaTargets": [
           "ppt/media/image28.gif"
         ],
@@ -9172,6 +9177,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": 1.2,
+          "score": 0.912288,
+          "source": "media-phase-finer"
+        },
         "mediaTargets": [
           "ppt/media/image35.png",
           "ppt/media/media1.mp4",
@@ -9508,6 +9518,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": 0.0,
+          "score": 0.940162,
+          "source": "media-phase"
+        },
         "mediaTargets": [
           "ppt/media/media2.mp4",
           "ppt/media/image37.png",
@@ -9796,6 +9811,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": 1.0,
+          "score": 0.909543,
+          "source": "media-phase"
+        },
         "mediaTargets": [
           "ppt/media/media4.mp4",
           "ppt/media/image39.png",
@@ -10099,6 +10119,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": 2.0,
+          "score": 0.519615,
+          "source": "media-phase-verified-full-slide"
+        },
         "mediaTargets": [
           "ppt/media/media3.mp4",
           "ppt/media/media3.mp4",

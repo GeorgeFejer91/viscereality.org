@@ -2,7 +2,7 @@
   "blockers": [],
   "capture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T03:44:34.352Z",
+    "generatedAt": "2026-07-04T04:50:54.034Z",
     "sampleCount": 280,
     "samples": [
       {
@@ -84,10 +84,6 @@
         "id": "slide-001-settled",
         "kind": "slide",
         "pageEvents": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "type": "console:error"
-          },
           {
             "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
             "type": "console:error"
@@ -3762,7 +3758,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
               "trackId": "track-0066"
@@ -4364,7 +4360,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
               "trackId": "track-0078"
@@ -4519,7 +4515,7 @@
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
               "trackId": "track-0081"
@@ -6010,11 +6006,17 @@
               "naturalWidth": 13333,
               "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
               "trackId": "track-0016"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+              "trackId": "track-0092"
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 2,
-          "objectsVisible": 9,
+          "imagesVisible": 3,
+          "objectsVisible": 11,
           "videos": [
             {
               "error": null,
@@ -6047,11 +6049,17 @@
               "naturalWidth": 13333,
               "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
               "trackId": "track-0016"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+              "trackId": "track-0092"
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 2,
-          "objectsVisible": 10,
+          "imagesVisible": 3,
+          "objectsVisible": 12,
           "videos": [
             {
               "error": null,
@@ -6091,11 +6099,17 @@
               "naturalWidth": 13333,
               "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
               "trackId": "track-0016"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 1536,
+              "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+              "trackId": "track-0092"
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 2,
-          "objectsVisible": 10,
+          "imagesVisible": 3,
+          "objectsVisible": 12,
           "videos": [
             {
               "error": null,
@@ -6145,7 +6159,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 3,
-          "objectsVisible": 10,
+          "objectsVisible": 12,
           "videos": [
             {
               "error": null,
@@ -6195,7 +6209,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 3,
-          "objectsVisible": 7,
+          "objectsVisible": 9,
           "videos": [
             {
               "error": null,
@@ -6465,14 +6479,14 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
               "trackId": "track-0091"
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
               "trackId": "track-0096"
@@ -7478,7 +7492,7 @@
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
               "trackId": "track-0093"
@@ -7624,7 +7638,7 @@
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
               "trackId": "track-0093"
@@ -7664,15 +7678,8 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 2,
-          "objectsVisible": 7,
+          "objectsVisible": 5,
           "videos": [
-            {
-              "error": null,
-              "paused": true,
-              "readyState": 4,
-              "src": "/shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
-              "trackId": "track-0102"
-            },
             {
               "error": null,
               "paused": true,
@@ -7689,7 +7696,7 @@
             }
           ],
           "videosPending": 0,
-          "videosVisible": 3
+          "videosVisible": 2
         },
         "file": "trans-023-024-090.png",
         "id": "trans-023-024-090",
@@ -7719,7 +7726,7 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
               "trackId": "track-0093"
@@ -7851,7 +7858,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
               "trackId": "track-0093"
@@ -10888,7 +10895,7 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
               "trackId": "track-0053"
@@ -11383,7 +11390,7 @@
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
               "trackId": "track-0091"
@@ -12038,18 +12045,14 @@
         {
           "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
           "type": "console:error"
-        },
-        {
-          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-          "type": "console:error"
         }
       ],
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 26.407,
+        "meanLuma": 23.117,
         "nearUniform": false,
-        "stdLuma": 56.803
+        "stdLuma": 56.255
       },
       "reasons": [],
       "sampleId": "slide-001-settled",
@@ -12141,9 +12144,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.508,
+        "meanLuma": 19.768,
         "nearUniform": false,
-        "stdLuma": 57.704
+        "stdLuma": 56.373
       },
       "reasons": [],
       "sampleId": "trans-001-002-000",
@@ -12235,9 +12238,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 27.63,
+        "meanLuma": 19.811,
         "nearUniform": false,
-        "stdLuma": 57.032
+        "stdLuma": 56.364
       },
       "reasons": [],
       "sampleId": "trans-001-002-010",
@@ -12329,9 +12332,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 23.108,
+        "meanLuma": 20.741,
         "nearUniform": false,
-        "stdLuma": 56.307
+        "stdLuma": 56.279
       },
       "reasons": [],
       "sampleId": "trans-001-002-025",
@@ -12423,9 +12426,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 20.94,
+        "meanLuma": 25.158,
         "nearUniform": false,
-        "stdLuma": 56.3
+        "stdLuma": 56.484
       },
       "reasons": [],
       "sampleId": "trans-001-002-050",
@@ -14495,9 +14498,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.903,
+        "meanLuma": 18.853,
         "nearUniform": false,
-        "stdLuma": 48.859
+        "stdLuma": 48.853
       },
       "reasons": [],
       "sampleId": "trans-006-007-050",
@@ -14552,9 +14555,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 16.864,
+        "meanLuma": 16.861,
         "nearUniform": false,
-        "stdLuma": 44.423
+        "stdLuma": 44.422
       },
       "reasons": [],
       "sampleId": "trans-006-007-075",
@@ -14603,9 +14606,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 17.948,
+        "meanLuma": 17.95,
         "nearUniform": false,
-        "stdLuma": 44.933
+        "stdLuma": 44.936
       },
       "reasons": [],
       "sampleId": "trans-006-007-090",
@@ -14654,9 +14657,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 18.12,
+        "meanLuma": 17.887,
         "nearUniform": false,
-        "stdLuma": 44.988
+        "stdLuma": 44.922
       },
       "reasons": [],
       "sampleId": "trans-006-007-100",
@@ -14756,9 +14759,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 18.732,
+        "meanLuma": 18.703,
         "nearUniform": false,
-        "stdLuma": 45.234
+        "stdLuma": 45.321
       },
       "reasons": [],
       "sampleId": "trans-007-008-000",
@@ -14807,9 +14810,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 18.905,
+        "meanLuma": 18.732,
         "nearUniform": false,
-        "stdLuma": 44.991
+        "stdLuma": 44.994
       },
       "reasons": [],
       "sampleId": "trans-007-008-010",
@@ -14858,9 +14861,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 19.013,
+        "meanLuma": 19.308,
         "nearUniform": false,
-        "stdLuma": 44.449
+        "stdLuma": 44.337
       },
       "reasons": [],
       "sampleId": "trans-007-008-025",
@@ -14909,9 +14912,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.226,
+        "meanLuma": 21.665,
         "nearUniform": false,
-        "stdLuma": 37.438
+        "stdLuma": 37.276
       },
       "reasons": [],
       "sampleId": "trans-007-008-050",
@@ -14967,9 +14970,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 11.959,
+        "meanLuma": 16.649,
         "nearUniform": false,
-        "stdLuma": 38.187
+        "stdLuma": 45.702
       },
       "reasons": [],
       "sampleId": "trans-007-008-075",
@@ -15018,9 +15021,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 17.77,
+        "meanLuma": 13.1,
         "nearUniform": false,
-        "stdLuma": 44.927
+        "stdLuma": 37.429
       },
       "reasons": [],
       "sampleId": "trans-007-008-090",
@@ -15069,9 +15072,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 18.428,
+        "meanLuma": 15.348,
         "nearUniform": false,
-        "stdLuma": 45.592
+        "stdLuma": 39.081
       },
       "reasons": [],
       "sampleId": "trans-007-008-100",
@@ -15171,9 +15174,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 18.925,
+        "meanLuma": 18.657,
         "nearUniform": false,
-        "stdLuma": 45.851
+        "stdLuma": 46.08
       },
       "reasons": [],
       "sampleId": "trans-008-009-000",
@@ -15222,9 +15225,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 18.513,
+        "meanLuma": 18.561,
         "nearUniform": false,
-        "stdLuma": 45.892
+        "stdLuma": 45.935
       },
       "reasons": [],
       "sampleId": "trans-008-009-010",
@@ -15338,9 +15341,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 15.01,
+        "meanLuma": 14.409,
         "nearUniform": false,
-        "stdLuma": 44.515
+        "stdLuma": 44.005
       },
       "reasons": [],
       "sampleId": "trans-008-009-050",
@@ -15396,9 +15399,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 14.451,
+        "meanLuma": 14.448,
         "nearUniform": false,
-        "stdLuma": 43.704
+        "stdLuma": 43.697
       },
       "reasons": [],
       "sampleId": "trans-008-009-075",
@@ -15454,9 +15457,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 15.283,
+        "meanLuma": 15.281,
         "nearUniform": false,
-        "stdLuma": 45.687
+        "stdLuma": 45.681
       },
       "reasons": [],
       "sampleId": "trans-008-009-090",
@@ -15505,9 +15508,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 15.117,
+        "meanLuma": 15.118,
         "nearUniform": false,
-        "stdLuma": 45.409
+        "stdLuma": 45.411
       },
       "reasons": [],
       "sampleId": "trans-008-009-100",
@@ -15607,9 +15610,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 15.12,
+        "meanLuma": 15.144,
         "nearUniform": false,
-        "stdLuma": 45.413
+        "stdLuma": 45.471
       },
       "reasons": [],
       "sampleId": "trans-009-010-000",
@@ -15665,9 +15668,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 19.021,
+        "meanLuma": 19.054,
         "nearUniform": false,
-        "stdLuma": 49.463
+        "stdLuma": 49.491
       },
       "reasons": [],
       "sampleId": "trans-009-010-010",
@@ -15723,9 +15726,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 18.991,
+        "meanLuma": 18.992,
         "nearUniform": false,
-        "stdLuma": 49.452
+        "stdLuma": 49.44
       },
       "reasons": [],
       "sampleId": "trans-009-010-025",
@@ -15839,9 +15842,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 19.177,
+        "meanLuma": 19.141,
         "nearUniform": false,
-        "stdLuma": 49.727
+        "stdLuma": 49.682
       },
       "reasons": [],
       "sampleId": "trans-009-010-075",
@@ -15897,9 +15900,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 19.363,
+        "meanLuma": 19.219,
         "nearUniform": false,
-        "stdLuma": 50.053
+        "stdLuma": 49.779
       },
       "reasons": [],
       "sampleId": "trans-009-010-090",
@@ -15955,9 +15958,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.372,
+        "meanLuma": 19.363,
         "nearUniform": false,
-        "stdLuma": 50.032
+        "stdLuma": 50.053
       },
       "reasons": [],
       "sampleId": "trans-009-010-100",
@@ -16071,9 +16074,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.79,
+        "meanLuma": 19.864,
         "nearUniform": false,
-        "stdLuma": 50.697
+        "stdLuma": 50.869
       },
       "reasons": [],
       "sampleId": "trans-010-011-000",
@@ -16129,9 +16132,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 19.605,
+        "meanLuma": 19.741,
         "nearUniform": false,
-        "stdLuma": 50.492
+        "stdLuma": 50.739
       },
       "reasons": [],
       "sampleId": "trans-010-011-010",
@@ -16193,9 +16196,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 19.375,
+        "meanLuma": 19.377,
         "nearUniform": false,
-        "stdLuma": 48.003
+        "stdLuma": 47.984
       },
       "reasons": [],
       "sampleId": "trans-010-011-025",
@@ -16657,9 +16660,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 40.424,
+        "meanLuma": 40.38,
         "nearUniform": false,
-        "stdLuma": 58.358
+        "stdLuma": 58.33
       },
       "reasons": [],
       "sampleId": "trans-011-012-050",
@@ -16728,9 +16731,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 23.921,
+        "meanLuma": 23.953,
         "nearUniform": false,
-        "stdLuma": 56.848
+        "stdLuma": 56.896
       },
       "reasons": [],
       "sampleId": "trans-011-012-075",
@@ -16793,9 +16796,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 21.675,
+        "meanLuma": 21.714,
         "nearUniform": false,
-        "stdLuma": 56.797
+        "stdLuma": 56.864
       },
       "reasons": [],
       "sampleId": "trans-011-012-090",
@@ -16858,9 +16861,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.719,
+        "meanLuma": 19.748,
         "nearUniform": false,
-        "stdLuma": 52.756
+        "stdLuma": 52.778
       },
       "reasons": [],
       "sampleId": "trans-011-012-100",
@@ -16957,7 +16960,7 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/8483391e40c3fbf2000e53111159c18affce41ec89f9c68047dcdeb4f0eb18a9.webm",
             "trackId": "track-0066"
@@ -16988,9 +16991,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.957,
+        "meanLuma": 19.623,
         "nearUniform": false,
-        "stdLuma": 53.04
+        "stdLuma": 52.62
       },
       "reasons": [],
       "sampleId": "trans-012-013-000",
@@ -17053,9 +17056,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 21.779,
+        "meanLuma": 21.468,
         "nearUniform": false,
-        "stdLuma": 56.405
+        "stdLuma": 56.032
       },
       "reasons": [],
       "sampleId": "trans-012-013-010",
@@ -17118,9 +17121,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 21.391,
+        "meanLuma": 21.368,
         "nearUniform": false,
-        "stdLuma": 54.115
+        "stdLuma": 54.109
       },
       "reasons": [],
       "sampleId": "trans-012-013-025",
@@ -17183,9 +17186,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.172,
+        "meanLuma": 18.18,
         "nearUniform": false,
-        "stdLuma": 46.068
+        "stdLuma": 46.056
       },
       "reasons": [],
       "sampleId": "trans-012-013-050",
@@ -17241,9 +17244,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 17.47,
+        "meanLuma": 17.469,
         "nearUniform": false,
-        "stdLuma": 44.198
+        "stdLuma": 44.219
       },
       "reasons": [],
       "sampleId": "trans-012-013-075",
@@ -17292,9 +17295,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 19.149,
+        "meanLuma": 19.072,
         "nearUniform": false,
-        "stdLuma": 45.171
+        "stdLuma": 45.18
       },
       "reasons": [],
       "sampleId": "trans-012-013-090",
@@ -17343,9 +17346,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 19.389,
+        "meanLuma": 18.877,
         "nearUniform": false,
-        "stdLuma": 44.652
+        "stdLuma": 44.698
       },
       "reasons": [],
       "sampleId": "trans-012-013-100",
@@ -17445,9 +17448,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 20.316,
+        "meanLuma": 21.149,
         "nearUniform": false,
-        "stdLuma": 44.639
+        "stdLuma": 44.721
       },
       "reasons": [],
       "sampleId": "trans-013-014-000",
@@ -17496,7 +17499,7 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 21.755,
+        "meanLuma": 21.681,
         "nearUniform": false,
         "stdLuma": 46.026
       },
@@ -17554,9 +17557,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 20.368,
+        "meanLuma": 20.37,
         "nearUniform": false,
-        "stdLuma": 46.115
+        "stdLuma": 46.099
       },
       "reasons": [],
       "sampleId": "trans-013-014-025",
@@ -17612,9 +17615,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.885,
+        "meanLuma": 19.054,
         "nearUniform": false,
-        "stdLuma": 47.577
+        "stdLuma": 47.668
       },
       "reasons": [],
       "sampleId": "trans-013-014-050",
@@ -17670,9 +17673,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 20.742,
+        "meanLuma": 20.612,
         "nearUniform": false,
-        "stdLuma": 48.998
+        "stdLuma": 48.837
       },
       "reasons": [],
       "sampleId": "trans-013-014-075",
@@ -17721,9 +17724,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 24.094,
+        "meanLuma": 21.598,
         "nearUniform": false,
-        "stdLuma": 48.511
+        "stdLuma": 48.137
       },
       "reasons": [],
       "sampleId": "trans-013-014-090",
@@ -17755,7 +17758,7 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
             "trackId": "track-0078"
@@ -17772,9 +17775,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 26.239,
+        "meanLuma": 22.969,
         "nearUniform": false,
-        "stdLuma": 48.62
+        "stdLuma": 49.059
       },
       "reasons": [],
       "sampleId": "trans-013-014-100",
@@ -17874,9 +17877,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.217,
+        "meanLuma": 29.162,
         "nearUniform": false,
-        "stdLuma": 50.448
+        "stdLuma": 50.539
       },
       "reasons": [],
       "sampleId": "trans-014-015-000",
@@ -17925,9 +17928,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 28.9,
+        "meanLuma": 29.395,
         "nearUniform": false,
-        "stdLuma": 50.149
+        "stdLuma": 51.312
       },
       "reasons": [],
       "sampleId": "trans-014-015-010",
@@ -17966,7 +17969,7 @@
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
             "trackId": "track-0081"
@@ -17983,9 +17986,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 28.926,
+        "meanLuma": 29.283,
         "nearUniform": false,
-        "stdLuma": 50.743
+        "stdLuma": 52.617
       },
       "reasons": [],
       "sampleId": "trans-014-015-025",
@@ -18041,9 +18044,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.666,
+        "meanLuma": 20.974,
         "nearUniform": false,
-        "stdLuma": 48.978
+        "stdLuma": 48.409
       },
       "reasons": [],
       "sampleId": "trans-014-015-050",
@@ -18099,9 +18102,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 19.778,
+        "meanLuma": 19.251,
         "nearUniform": false,
-        "stdLuma": 46.775
+        "stdLuma": 46.736
       },
       "reasons": [],
       "sampleId": "trans-014-015-075",
@@ -18150,9 +18153,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 20.551,
+        "meanLuma": 22.916,
         "nearUniform": false,
-        "stdLuma": 46.259
+        "stdLuma": 48.25
       },
       "reasons": [],
       "sampleId": "trans-014-015-090",
@@ -18201,9 +18204,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 22.512,
+        "meanLuma": 24.839,
         "nearUniform": false,
-        "stdLuma": 47.043
+        "stdLuma": 48.404
       },
       "reasons": [],
       "sampleId": "trans-014-015-100",
@@ -18303,9 +18306,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 28.844,
+        "meanLuma": 31.192,
         "nearUniform": false,
-        "stdLuma": 50.579
+        "stdLuma": 52.866
       },
       "reasons": [],
       "sampleId": "trans-015-016-000",
@@ -18354,9 +18357,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 29.086,
+        "meanLuma": 34.359,
         "nearUniform": false,
-        "stdLuma": 50.587
+        "stdLuma": 56.908
       },
       "reasons": [],
       "sampleId": "trans-015-016-010",
@@ -18405,9 +18408,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 33.279,
+        "meanLuma": 34.808,
         "nearUniform": false,
-        "stdLuma": 57.199
+        "stdLuma": 58.525
       },
       "reasons": [],
       "sampleId": "trans-015-016-025",
@@ -18456,9 +18459,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 32.659,
+        "meanLuma": 33.82,
         "nearUniform": false,
-        "stdLuma": 55.481
+        "stdLuma": 57.495
       },
       "reasons": [],
       "sampleId": "trans-015-016-050",
@@ -18507,9 +18510,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 23.469,
+        "meanLuma": 28.636,
         "nearUniform": false,
-        "stdLuma": 46.389
+        "stdLuma": 50.872
       },
       "reasons": [],
       "sampleId": "trans-015-016-075",
@@ -18558,9 +18561,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 22.035,
+        "meanLuma": 23.82,
         "nearUniform": false,
-        "stdLuma": 45.16
+        "stdLuma": 46.733
       },
       "reasons": [],
       "sampleId": "trans-015-016-090",
@@ -18609,9 +18612,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 26.764,
+        "meanLuma": 22.202,
         "nearUniform": false,
-        "stdLuma": 48.201
+        "stdLuma": 45.435
       },
       "reasons": [],
       "sampleId": "trans-015-016-100",
@@ -18711,9 +18714,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 21.94,
+        "meanLuma": 20.029,
         "nearUniform": false,
-        "stdLuma": 44.944
+        "stdLuma": 44.164
       },
       "reasons": [],
       "sampleId": "trans-016-017-000",
@@ -18762,9 +18765,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 22.672,
+        "meanLuma": 20.192,
         "nearUniform": false,
-        "stdLuma": 48.561
+        "stdLuma": 45.699
       },
       "reasons": [],
       "sampleId": "trans-016-017-010",
@@ -18820,9 +18823,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 23.55,
+        "meanLuma": 19.484,
         "nearUniform": false,
-        "stdLuma": 50.738
+        "stdLuma": 46.313
       },
       "reasons": [],
       "sampleId": "trans-016-017-025",
@@ -18878,9 +18881,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 23.154,
+        "meanLuma": 22.176,
         "nearUniform": false,
-        "stdLuma": 51.723
+        "stdLuma": 49.84
       },
       "reasons": [],
       "sampleId": "trans-016-017-050",
@@ -18936,9 +18939,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 22.436,
+        "meanLuma": 22.213,
         "nearUniform": false,
-        "stdLuma": 48.13
+        "stdLuma": 48.138
       },
       "reasons": [],
       "sampleId": "trans-016-017-075",
@@ -18987,9 +18990,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 22.194,
+        "meanLuma": 22.126,
         "nearUniform": false,
-        "stdLuma": 47.004
+        "stdLuma": 46.823
       },
       "reasons": [],
       "sampleId": "trans-016-017-090",
@@ -19038,9 +19041,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 22.036,
+        "meanLuma": 22.289,
         "nearUniform": false,
-        "stdLuma": 46.751
+        "stdLuma": 47.239
       },
       "reasons": [],
       "sampleId": "trans-016-017-100",
@@ -19140,9 +19143,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 22.196,
+        "meanLuma": 22.239,
         "nearUniform": false,
-        "stdLuma": 47.045
+        "stdLuma": 47.195
       },
       "reasons": [],
       "sampleId": "trans-017-018-000",
@@ -19191,9 +19194,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 22.055,
+        "meanLuma": 22.05,
         "nearUniform": false,
-        "stdLuma": 46.757
+        "stdLuma": 46.828
       },
       "reasons": [],
       "sampleId": "trans-017-018-010",
@@ -19249,9 +19252,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 22.806,
+        "meanLuma": 22.703,
         "nearUniform": false,
-        "stdLuma": 48.712
+        "stdLuma": 48.437
       },
       "reasons": [],
       "sampleId": "trans-017-018-025",
@@ -19307,9 +19310,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 30.207,
+        "meanLuma": 29.737,
         "nearUniform": false,
-        "stdLuma": 54.102
+        "stdLuma": 53.492
       },
       "reasons": [],
       "sampleId": "trans-017-018-050",
@@ -19365,9 +19368,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 31.93,
+        "meanLuma": 32.429,
         "nearUniform": false,
-        "stdLuma": 53.807
+        "stdLuma": 54.56
       },
       "reasons": [],
       "sampleId": "trans-017-018-075",
@@ -19416,9 +19419,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 31.124,
+        "meanLuma": 32.238,
         "nearUniform": false,
-        "stdLuma": 52.059
+        "stdLuma": 53.416
       },
       "reasons": [],
       "sampleId": "trans-017-018-090",
@@ -19467,9 +19470,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 30.63,
+        "meanLuma": 31.442,
         "nearUniform": false,
-        "stdLuma": 51.511
+        "stdLuma": 52.447
       },
       "reasons": [],
       "sampleId": "trans-017-018-100",
@@ -19569,9 +19572,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 26.519,
+        "meanLuma": 25.436,
         "nearUniform": false,
-        "stdLuma": 49.034
+        "stdLuma": 48.999
       },
       "reasons": [],
       "sampleId": "trans-018-019-000",
@@ -19620,9 +19623,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 24.354,
+        "meanLuma": 24.722,
         "nearUniform": false,
-        "stdLuma": 48.565
+        "stdLuma": 48.509
       },
       "reasons": [],
       "sampleId": "trans-018-019-010",
@@ -19671,9 +19674,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 24.77,
+        "meanLuma": 24.275,
         "nearUniform": false,
-        "stdLuma": 48.91
+        "stdLuma": 48.516
       },
       "reasons": [],
       "sampleId": "trans-018-019-025",
@@ -19722,9 +19725,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 24.378,
+        "meanLuma": 24.609,
         "nearUniform": false,
-        "stdLuma": 48.416
+        "stdLuma": 48.937
       },
       "reasons": [],
       "sampleId": "trans-018-019-050",
@@ -19773,9 +19776,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 23.979,
+        "meanLuma": 24.763,
         "nearUniform": false,
-        "stdLuma": 48.543
+        "stdLuma": 48.9
       },
       "reasons": [],
       "sampleId": "trans-018-019-075",
@@ -19824,9 +19827,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 24.534,
+        "meanLuma": 24.288,
         "nearUniform": false,
-        "stdLuma": 48.796
+        "stdLuma": 48.856
       },
       "reasons": [],
       "sampleId": "trans-018-019-090",
@@ -19875,9 +19878,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.615,
+        "meanLuma": 23.773,
         "nearUniform": false,
-        "stdLuma": 48.736
+        "stdLuma": 48.405
       },
       "reasons": [],
       "sampleId": "trans-018-019-100",
@@ -19977,9 +19980,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.477,
+        "meanLuma": 24.138,
         "nearUniform": false,
-        "stdLuma": 48.556
+        "stdLuma": 48.919
       },
       "reasons": [],
       "sampleId": "trans-019-020-000",
@@ -20003,11 +20006,17 @@
             "naturalWidth": 13333,
             "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
             "trackId": "track-0016"
+          },
+          {
+            "complete": true,
+            "naturalWidth": 1536,
+            "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+            "trackId": "track-0092"
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 2,
-        "objectsVisible": 9,
+        "imagesVisible": 3,
+        "objectsVisible": 11,
         "videos": [
           {
             "error": null,
@@ -20028,9 +20037,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 24.09,
+        "meanLuma": 23.625,
         "nearUniform": false,
-        "stdLuma": 48.877
+        "stdLuma": 48.844
       },
       "reasons": [],
       "sampleId": "trans-019-020-010",
@@ -20054,11 +20063,17 @@
             "naturalWidth": 13333,
             "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
             "trackId": "track-0016"
+          },
+          {
+            "complete": true,
+            "naturalWidth": 1536,
+            "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+            "trackId": "track-0092"
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 2,
-        "objectsVisible": 10,
+        "imagesVisible": 3,
+        "objectsVisible": 12,
         "videos": [
           {
             "error": null,
@@ -20086,9 +20101,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 22.498,
+        "meanLuma": 21.077,
         "nearUniform": false,
-        "stdLuma": 49.48
+        "stdLuma": 48.125
       },
       "reasons": [],
       "sampleId": "trans-019-020-025",
@@ -20112,11 +20127,17 @@
             "naturalWidth": 13333,
             "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
             "trackId": "track-0016"
+          },
+          {
+            "complete": true,
+            "naturalWidth": 1536,
+            "src": "/shared-assets/viscereality/source/5bf4a43a4b6e37e98ca9b900af263c02b5c7dddeba96bdac2fb2a36111d444e0.png",
+            "trackId": "track-0092"
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 2,
-        "objectsVisible": 10,
+        "imagesVisible": 3,
+        "objectsVisible": 12,
         "videos": [
           {
             "error": null,
@@ -20144,9 +20165,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 19.788,
+        "meanLuma": 18.71,
         "nearUniform": false,
-        "stdLuma": 45.621
+        "stdLuma": 47.024
       },
       "reasons": [],
       "sampleId": "trans-019-020-050",
@@ -20180,7 +20201,7 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 3,
-        "objectsVisible": 10,
+        "objectsVisible": 12,
         "videos": [
           {
             "error": null,
@@ -20208,9 +20229,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 15.459,
+        "meanLuma": 15.997,
         "nearUniform": false,
-        "stdLuma": 41.818
+        "stdLuma": 41.917
       },
       "reasons": [],
       "sampleId": "trans-019-020-075",
@@ -20244,7 +20265,7 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 3,
-        "objectsVisible": 7,
+        "objectsVisible": 9,
         "videos": [
           {
             "error": null,
@@ -20265,9 +20286,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 15.204,
+        "meanLuma": 15.52,
         "nearUniform": false,
-        "stdLuma": 40.437
+        "stdLuma": 40.611
       },
       "reasons": [],
       "sampleId": "trans-019-020-090",
@@ -20322,9 +20343,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 14.777,
+        "meanLuma": 14.98,
         "nearUniform": false,
-        "stdLuma": 40.075
+        "stdLuma": 40.226
       },
       "reasons": [],
       "sampleId": "trans-019-020-100",
@@ -20436,9 +20457,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 15.329,
+        "meanLuma": 15.019,
         "nearUniform": false,
-        "stdLuma": 40.439
+        "stdLuma": 40.329
       },
       "reasons": [],
       "sampleId": "trans-020-021-000",
@@ -20500,9 +20521,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 15.763,
+        "meanLuma": 15.561,
         "nearUniform": false,
-        "stdLuma": 41.236
+        "stdLuma": 41.201
       },
       "reasons": [],
       "sampleId": "trans-020-021-010",
@@ -20564,9 +20585,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 13.895,
+        "meanLuma": 14.274,
         "nearUniform": false,
-        "stdLuma": 37.439
+        "stdLuma": 37.598
       },
       "reasons": [],
       "sampleId": "trans-020-021-025",
@@ -20598,14 +20619,14 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
             "trackId": "track-0091"
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
             "trackId": "track-0096"
@@ -20629,9 +20650,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 27.85,
+        "meanLuma": 25.977,
         "nearUniform": false,
-        "stdLuma": 55.279
+        "stdLuma": 51.084
       },
       "reasons": [],
       "sampleId": "trans-020-021-050",
@@ -20687,9 +20708,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 31.19,
+        "meanLuma": 31.954,
         "nearUniform": false,
-        "stdLuma": 61.409
+        "stdLuma": 60.586
       },
       "reasons": [],
       "sampleId": "trans-020-021-075",
@@ -20745,9 +20766,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 33.128,
+        "meanLuma": 30.141,
         "nearUniform": false,
-        "stdLuma": 64.25
+        "stdLuma": 59.457
       },
       "reasons": [],
       "sampleId": "trans-020-021-090",
@@ -20803,9 +20824,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 36.16,
+        "meanLuma": 29.291,
         "nearUniform": false,
-        "stdLuma": 68.723
+        "stdLuma": 58.597
       },
       "reasons": [],
       "sampleId": "trans-020-021-100",
@@ -20861,9 +20882,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 33.351,
+        "meanLuma": 29.384,
         "nearUniform": false,
-        "stdLuma": 62.487
+        "stdLuma": 59.757
       },
       "reasons": [],
       "sampleId": "slide-021-settled",
@@ -20919,9 +20940,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.996,
+        "meanLuma": 32.346,
         "nearUniform": false,
-        "stdLuma": 60.572
+        "stdLuma": 61.859
       },
       "reasons": [],
       "sampleId": "trans-021-022-000",
@@ -20977,9 +20998,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 31.675,
+        "meanLuma": 34.895,
         "nearUniform": false,
-        "stdLuma": 60.982
+        "stdLuma": 63.637
       },
       "reasons": [],
       "sampleId": "trans-021-022-010",
@@ -21041,9 +21062,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 35.099,
+        "meanLuma": 34.814,
         "nearUniform": false,
-        "stdLuma": 63.985
+        "stdLuma": 64.303
       },
       "reasons": [],
       "sampleId": "trans-021-022-025",
@@ -21105,9 +21126,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 47.515,
+        "meanLuma": 44.73,
         "nearUniform": false,
-        "stdLuma": 79.837
+        "stdLuma": 78.418
       },
       "reasons": [],
       "sampleId": "trans-021-022-050",
@@ -21169,9 +21190,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 52.369,
+        "meanLuma": 51.677,
         "nearUniform": false,
-        "stdLuma": 85.037
+        "stdLuma": 85.223
       },
       "reasons": [],
       "sampleId": "trans-021-022-075",
@@ -21290,9 +21311,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 50.746,
+        "meanLuma": 50.703,
         "nearUniform": false,
-        "stdLuma": 82.971
+        "stdLuma": 82.929
       },
       "reasons": [],
       "sampleId": "trans-021-022-100",
@@ -21347,9 +21368,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 50.575,
+        "meanLuma": 50.746,
         "nearUniform": false,
-        "stdLuma": 82.829
+        "stdLuma": 82.971
       },
       "reasons": [],
       "sampleId": "slide-022-settled",
@@ -21404,9 +21425,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 50.703,
+        "meanLuma": 50.746,
         "nearUniform": false,
-        "stdLuma": 82.928
+        "stdLuma": 82.971
       },
       "reasons": [],
       "sampleId": "trans-022-023-000",
@@ -21461,9 +21482,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 50.182,
+        "meanLuma": 50.251,
         "nearUniform": false,
-        "stdLuma": 82.365
+        "stdLuma": 82.432
       },
       "reasons": [],
       "sampleId": "trans-022-023-010",
@@ -21518,7 +21539,7 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 47.176,
+        "meanLuma": 47.175,
         "nearUniform": false,
         "stdLuma": 78.853
       },
@@ -21582,9 +21603,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 47.088,
+        "meanLuma": 46.994,
         "nearUniform": false,
-        "stdLuma": 81.305
+        "stdLuma": 82.132
       },
       "reasons": [],
       "sampleId": "trans-022-023-050",
@@ -21646,9 +21667,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 53.065,
+        "meanLuma": 53.327,
         "nearUniform": false,
-        "stdLuma": 86.186
+        "stdLuma": 86.913
       },
       "reasons": [],
       "sampleId": "trans-022-023-075",
@@ -21704,9 +21725,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 53.964,
+        "meanLuma": 53.706,
         "nearUniform": false,
-        "stdLuma": 86.502
+        "stdLuma": 86.567
       },
       "reasons": [],
       "sampleId": "trans-022-023-090",
@@ -21762,9 +21783,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 53.629,
+        "meanLuma": 53.683,
         "nearUniform": false,
-        "stdLuma": 86.537
+        "stdLuma": 86.42
       },
       "reasons": [],
       "sampleId": "trans-022-023-100",
@@ -21820,9 +21841,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 52.603,
+        "meanLuma": 53.337,
         "nearUniform": false,
-        "stdLuma": 86.045
+        "stdLuma": 86.81
       },
       "reasons": [],
       "sampleId": "slide-023-settled",
@@ -21878,9 +21899,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 53.688,
+        "meanLuma": 50.178,
         "nearUniform": false,
-        "stdLuma": 86.538
+        "stdLuma": 82.334
       },
       "reasons": [],
       "sampleId": "trans-023-024-000",
@@ -21919,7 +21940,7 @@
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
             "trackId": "track-0093"
@@ -21936,9 +21957,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 53.538,
+        "meanLuma": 51.299,
         "nearUniform": false,
-        "stdLuma": 86.236
+        "stdLuma": 84.982
       },
       "reasons": [],
       "sampleId": "trans-023-024-010",
@@ -22001,9 +22022,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 50.579,
+        "meanLuma": 56.749,
         "nearUniform": false,
-        "stdLuma": 83.18
+        "stdLuma": 86.306
       },
       "reasons": [],
       "sampleId": "trans-023-024-025",
@@ -22066,9 +22087,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 36.011,
+        "meanLuma": 33.375,
         "nearUniform": false,
-        "stdLuma": 63.512
+        "stdLuma": 60.984
       },
       "reasons": [],
       "sampleId": "trans-023-024-050",
@@ -22107,7 +22128,7 @@
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
             "trackId": "track-0093"
@@ -22131,9 +22152,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 32.286,
+        "meanLuma": 28.199,
         "nearUniform": false,
-        "stdLuma": 61.753
+        "stdLuma": 56.617
       },
       "reasons": [],
       "sampleId": "trans-023-024-075",
@@ -22161,15 +22182,8 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 2,
-        "objectsVisible": 7,
+        "objectsVisible": 5,
         "videos": [
-          {
-            "error": null,
-            "paused": true,
-            "readyState": 4,
-            "src": "/shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
-            "trackId": "track-0102"
-          },
           {
             "error": null,
             "paused": true,
@@ -22186,7 +22200,7 @@
           }
         ],
         "videosPending": 0,
-        "videosVisible": 3
+        "videosVisible": 2
       },
       "direction": "forward",
       "expectedVisibleObjects": 3,
@@ -22196,9 +22210,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 33.186,
+        "meanLuma": 28.286,
         "nearUniform": false,
-        "stdLuma": 62.011
+        "stdLuma": 56.02
       },
       "reasons": [],
       "sampleId": "trans-023-024-090",
@@ -22230,7 +22244,7 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
             "trackId": "track-0093"
@@ -22254,9 +22268,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 34.017,
+        "meanLuma": 28.138,
         "nearUniform": false,
-        "stdLuma": 62.709
+        "stdLuma": 55.908
       },
       "reasons": [],
       "sampleId": "trans-023-024-100",
@@ -22312,9 +22326,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 27.682,
+        "meanLuma": 28.251,
         "nearUniform": false,
-        "stdLuma": 55.623
+        "stdLuma": 55.951
       },
       "reasons": [],
       "sampleId": "slide-024-settled",
@@ -22370,9 +22384,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 27.968,
+        "meanLuma": 30.228,
         "nearUniform": false,
-        "stdLuma": 55.59
+        "stdLuma": 58.125
       },
       "reasons": [],
       "sampleId": "trans-024-025-000",
@@ -22404,7 +22418,7 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/3301152db048a5e6782acb92aa8dc72a239600d4426c8af2fa5192741f408990.webm",
             "trackId": "track-0093"
@@ -22428,9 +22442,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 28.216,
+        "meanLuma": 29.83,
         "nearUniform": false,
-        "stdLuma": 55.45
+        "stdLuma": 57.331
       },
       "reasons": [],
       "sampleId": "trans-024-025-010",
@@ -22486,9 +22500,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 27.921,
+        "meanLuma": 30.394,
         "nearUniform": false,
-        "stdLuma": 54.519
+        "stdLuma": 57.484
       },
       "reasons": [],
       "sampleId": "trans-024-025-025",
@@ -22550,9 +22564,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.267,
+        "meanLuma": 30.194,
         "nearUniform": false,
-        "stdLuma": 55.309
+        "stdLuma": 56.121
       },
       "reasons": [],
       "sampleId": "trans-024-025-050",
@@ -22607,9 +22621,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 48.447,
+        "meanLuma": 48.445,
         "nearUniform": false,
-        "stdLuma": 67.385
+        "stdLuma": 67.383
       },
       "reasons": [],
       "sampleId": "trans-024-025-075",
@@ -26040,9 +26054,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 20.94,
+        "meanLuma": 25.451,
         "nearUniform": false,
-        "stdLuma": 56.3
+        "stdLuma": 56.542
       },
       "reasons": [],
       "sampleId": "reverse-002-001-050",
@@ -26329,9 +26343,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.903,
+        "meanLuma": 18.853,
         "nearUniform": false,
-        "stdLuma": 48.859
+        "stdLuma": 48.853
       },
       "reasons": [],
       "sampleId": "reverse-007-006-050",
@@ -26387,9 +26401,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 11.531,
+        "meanLuma": 11.827,
         "nearUniform": false,
-        "stdLuma": 39.785
+        "stdLuma": 39.741
       },
       "reasons": [],
       "sampleId": "reverse-008-007-050",
@@ -26421,7 +26435,7 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/cbe3c79d2b79f6c2c47b4ed1579b02dc631fbcfb5b53a66e5d3fb091d64be469.webm",
             "trackId": "track-0053"
@@ -26445,9 +26459,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 16.743,
+        "meanLuma": 16.311,
         "nearUniform": false,
-        "stdLuma": 47.369
+        "stdLuma": 47.17
       },
       "reasons": [],
       "sampleId": "reverse-009-008-050",
@@ -26624,9 +26638,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 39.939,
+        "meanLuma": 40.012,
         "nearUniform": false,
-        "stdLuma": 57.475
+        "stdLuma": 57.541
       },
       "reasons": [],
       "sampleId": "reverse-012-011-050",
@@ -26689,9 +26703,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.172,
+        "meanLuma": 18.18,
         "nearUniform": false,
-        "stdLuma": 46.068
+        "stdLuma": 46.056
       },
       "reasons": [],
       "sampleId": "reverse-013-012-050",
@@ -26747,9 +26761,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 18.885,
+        "meanLuma": 19.054,
         "nearUniform": false,
-        "stdLuma": 47.577
+        "stdLuma": 47.668
       },
       "reasons": [],
       "sampleId": "reverse-014-013-050",
@@ -26805,9 +26819,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 21.666,
+        "meanLuma": 20.974,
         "nearUniform": false,
-        "stdLuma": 48.978
+        "stdLuma": 48.409
       },
       "reasons": [],
       "sampleId": "reverse-015-014-050",
@@ -26856,9 +26870,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 32.659,
+        "meanLuma": 33.82,
         "nearUniform": false,
-        "stdLuma": 55.481
+        "stdLuma": 57.495
       },
       "reasons": [],
       "sampleId": "reverse-016-015-050",
@@ -26914,9 +26928,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 22.915,
+        "meanLuma": 22.176,
         "nearUniform": false,
-        "stdLuma": 51.378
+        "stdLuma": 49.84
       },
       "reasons": [],
       "sampleId": "reverse-017-016-050",
@@ -26972,9 +26986,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 30.378,
+        "meanLuma": 29.925,
         "nearUniform": false,
-        "stdLuma": 54.375
+        "stdLuma": 53.857
       },
       "reasons": [],
       "sampleId": "reverse-018-017-050",
@@ -27023,9 +27037,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 24.378,
+        "meanLuma": 24.609,
         "nearUniform": false,
-        "stdLuma": 48.416
+        "stdLuma": 48.937
       },
       "reasons": [],
       "sampleId": "reverse-019-018-050",
@@ -27070,7 +27084,7 @@
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
             "trackId": "track-0091"
@@ -27087,9 +27101,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 17.927,
+        "meanLuma": 18.71,
         "nearUniform": false,
-        "stdLuma": 44.249
+        "stdLuma": 47.024
       },
       "reasons": [],
       "sampleId": "reverse-020-019-050",
@@ -27152,9 +27166,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 27.642,
+        "meanLuma": 25.977,
         "nearUniform": false,
-        "stdLuma": 55.331
+        "stdLuma": 51.084
       },
       "reasons": [],
       "sampleId": "reverse-021-020-050",
@@ -27216,9 +27230,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 47.515,
+        "meanLuma": 44.73,
         "nearUniform": false,
-        "stdLuma": 79.837
+        "stdLuma": 78.418
       },
       "reasons": [],
       "sampleId": "reverse-022-021-050",
@@ -27280,9 +27294,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 47.088,
+        "meanLuma": 46.994,
         "nearUniform": false,
-        "stdLuma": 81.305
+        "stdLuma": 82.132
       },
       "reasons": [],
       "sampleId": "reverse-023-022-050",
@@ -27345,9 +27359,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 34.858,
+        "meanLuma": 33.375,
         "nearUniform": false,
-        "stdLuma": 62.994
+        "stdLuma": 60.984
       },
       "reasons": [],
       "sampleId": "reverse-024-023-050",
@@ -27409,9 +27423,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 29.267,
+        "meanLuma": 30.194,
         "nearUniform": false,
-        "stdLuma": 55.309
+        "stdLuma": 56.121
       },
       "reasons": [],
       "sampleId": "reverse-025-024-050",
@@ -27815,7 +27829,7 @@
       "to": 31
     }
   ],
-  "generatedAtUtc": "2026-07-04T03:44:50+00:00",
+  "generatedAtUtc": "2026-07-04T04:51:10+00:00",
   "notes": [
     "Failures include capture timeouts, missing screenshots, and near-uniform blank frames.",
     "Contact sheets are intended for human review of overlap, layering, and object continuity."
@@ -27844,12 +27858,12 @@
       "id": "trans-001-002-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 2.0,
-        "track-0008": 2.0
+        "track-0003": 3.0,
+        "track-0008": 3.0
       },
-      "mediaSec": 2.0,
+      "mediaSec": 3.0,
       "progress": 0.0,
-      "referenceSec": 2.0,
+      "referenceSec": 3.0,
       "to": 2
     },
     {
@@ -27860,12 +27874,12 @@
       "id": "trans-001-002-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 2.125,
-        "track-0008": 2.125
+        "track-0003": 3.2,
+        "track-0008": 3.2
       },
-      "mediaSec": 2.125,
+      "mediaSec": 3.2,
       "progress": 0.1,
-      "referenceSec": 2.125,
+      "referenceSec": 3.2,
       "to": 2
     },
     {
@@ -27876,12 +27890,12 @@
       "id": "trans-001-002-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 2.5,
-        "track-0008": 2.5
+        "track-0003": 3.5,
+        "track-0008": 3.5
       },
-      "mediaSec": 2.5,
+      "mediaSec": 3.5,
       "progress": 0.25,
-      "referenceSec": 2.5,
+      "referenceSec": 3.5,
       "to": 2
     },
     {
@@ -27892,12 +27906,12 @@
       "id": "trans-001-002-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.0,
-        "track-0008": 3.0
+        "track-0003": 4.0,
+        "track-0008": 4.0
       },
-      "mediaSec": 3.0,
+      "mediaSec": 4.0,
       "progress": 0.5,
-      "referenceSec": 3.0,
+      "referenceSec": 4.0,
       "to": 2
     },
     {
@@ -27908,12 +27922,12 @@
       "id": "trans-001-002-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 5.5,
-        "track-0008": 5.5
+        "track-0003": 4.5,
+        "track-0008": 4.5
       },
-      "mediaSec": 5.5,
+      "mediaSec": 4.5,
       "progress": 0.75,
-      "referenceSec": 5.5,
+      "referenceSec": 4.5,
       "to": 2
     },
     {
@@ -27924,12 +27938,12 @@
       "id": "trans-001-002-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 5.75,
-        "track-0008": 5.75
+        "track-0003": 4.8,
+        "track-0008": 4.8
       },
-      "mediaSec": 5.75,
+      "mediaSec": 4.8,
       "progress": 0.9,
-      "referenceSec": 5.75,
+      "referenceSec": 4.8,
       "to": 2
     },
     {
@@ -27940,12 +27954,12 @@
       "id": "trans-001-002-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 6.0,
-        "track-0008": 6.0
+        "track-0003": 5.0,
+        "track-0008": 5.0
       },
-      "mediaSec": 6.0,
+      "mediaSec": 5.0,
       "progress": 1.0,
-      "referenceSec": 6.0,
+      "referenceSec": 5.0,
       "to": 2
     },
     {
@@ -27971,12 +27985,12 @@
       "id": "trans-002-003-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 8.875,
-        "track-0008": 8.875
+        "track-0003": 8.0,
+        "track-0008": 8.0
       },
-      "mediaSec": 8.875,
+      "mediaSec": 8.0,
       "progress": 0.0,
-      "referenceSec": 8.875,
+      "referenceSec": 8.0,
       "to": 3
     },
     {
@@ -27987,12 +28001,12 @@
       "id": "trans-002-003-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 8.875,
-        "track-0008": 8.875
+        "track-0003": 8.2,
+        "track-0008": 8.2
       },
-      "mediaSec": 8.875,
+      "mediaSec": 8.2,
       "progress": 0.1,
-      "referenceSec": 8.875,
+      "referenceSec": 8.2,
       "to": 3
     },
     {
@@ -28003,12 +28017,12 @@
       "id": "trans-002-003-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 8.875,
-        "track-0008": 8.875
+        "track-0003": 8.5,
+        "track-0008": 8.5
       },
-      "mediaSec": 8.875,
+      "mediaSec": 8.5,
       "progress": 0.25,
-      "referenceSec": 8.875,
+      "referenceSec": 8.5,
       "to": 3
     },
     {
@@ -28019,12 +28033,12 @@
       "id": "trans-002-003-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 8.875,
-        "track-0008": 8.875
+        "track-0003": 9.0,
+        "track-0008": 9.0
       },
-      "mediaSec": 8.875,
+      "mediaSec": 9.0,
       "progress": 0.5,
-      "referenceSec": 8.875,
+      "referenceSec": 9.0,
       "to": 3
     },
     {
@@ -28035,12 +28049,12 @@
       "id": "trans-002-003-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 10.175,
-        "track-0008": 10.175
+        "track-0003": 9.5,
+        "track-0008": 9.5
       },
-      "mediaSec": 10.175,
+      "mediaSec": 9.5,
       "progress": 0.75,
-      "referenceSec": 10.175,
+      "referenceSec": 9.5,
       "to": 3
     },
     {
@@ -28051,12 +28065,12 @@
       "id": "trans-002-003-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 10.475,
-        "track-0008": 10.475
+        "track-0003": 9.8,
+        "track-0008": 9.8
       },
-      "mediaSec": 10.475,
+      "mediaSec": 9.8,
       "progress": 0.9,
-      "referenceSec": 10.475,
+      "referenceSec": 9.8,
       "to": 3
     },
     {
@@ -28067,12 +28081,12 @@
       "id": "trans-002-003-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 11.0,
-        "track-0008": 11.0
+        "track-0003": 10.0,
+        "track-0008": 10.0
       },
-      "mediaSec": 11.0,
+      "mediaSec": 10.0,
       "progress": 1.0,
-      "referenceSec": 11.0,
+      "referenceSec": 10.0,
       "to": 3
     },
     {
@@ -28095,9 +28109,9 @@
       "id": "trans-003-004-000",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 12.0,
+      "mediaSec": 13.0,
       "progress": 0.0,
-      "referenceSec": 12.0,
+      "referenceSec": 13.0,
       "to": 4
     },
     {
@@ -28108,9 +28122,9 @@
       "id": "trans-003-004-010",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 12.125,
+      "mediaSec": 13.2,
       "progress": 0.1,
-      "referenceSec": 12.125,
+      "referenceSec": 13.2,
       "to": 4
     },
     {
@@ -28121,9 +28135,9 @@
       "id": "trans-003-004-025",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 12.5,
+      "mediaSec": 13.5,
       "progress": 0.25,
-      "referenceSec": 12.5,
+      "referenceSec": 13.5,
       "to": 4
     },
     {
@@ -28134,9 +28148,9 @@
       "id": "trans-003-004-050",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 13.0,
+      "mediaSec": 14.0,
       "progress": 0.5,
-      "referenceSec": 13.0,
+      "referenceSec": 14.0,
       "to": 4
     },
     {
@@ -28147,9 +28161,9 @@
       "id": "trans-003-004-075",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 13.5,
+      "mediaSec": 14.5,
       "progress": 0.75,
-      "referenceSec": 13.5,
+      "referenceSec": 14.5,
       "to": 4
     },
     {
@@ -28160,9 +28174,9 @@
       "id": "trans-003-004-090",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 13.75,
+      "mediaSec": 14.8,
       "progress": 0.9,
-      "referenceSec": 13.75,
+      "referenceSec": 14.8,
       "to": 4
     },
     {
@@ -28173,9 +28187,9 @@
       "id": "trans-003-004-100",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 14.0,
+      "mediaSec": 15.0,
       "progress": 1.0,
-      "referenceSec": 14.0,
+      "referenceSec": 15.0,
       "to": 4
     },
     {
@@ -28198,9 +28212,9 @@
       "id": "trans-004-005-000",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 18.635,
+      "mediaSec": 18.0,
       "progress": 0.0,
-      "referenceSec": 18.635,
+      "referenceSec": 18.0,
       "to": 5
     },
     {
@@ -28211,9 +28225,9 @@
       "id": "trans-004-005-010",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 18.834,
+      "mediaSec": 18.2,
       "progress": 0.1,
-      "referenceSec": 18.834,
+      "referenceSec": 18.2,
       "to": 5
     },
     {
@@ -28224,9 +28238,9 @@
       "id": "trans-004-005-025",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 19.133,
+      "mediaSec": 18.5,
       "progress": 0.25,
-      "referenceSec": 19.133,
+      "referenceSec": 18.5,
       "to": 5
     },
     {
@@ -28237,9 +28251,9 @@
       "id": "trans-004-005-050",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 17.88,
+      "mediaSec": 19.0,
       "progress": 0.5,
-      "referenceSec": 17.88,
+      "referenceSec": 19.0,
       "to": 5
     },
     {
@@ -28250,9 +28264,9 @@
       "id": "trans-004-005-075",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 18.378,
+      "mediaSec": 19.5,
       "progress": 0.75,
-      "referenceSec": 18.378,
+      "referenceSec": 19.5,
       "to": 5
     },
     {
@@ -28263,9 +28277,9 @@
       "id": "trans-004-005-090",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 18.676,
+      "mediaSec": 19.8,
       "progress": 0.9,
-      "referenceSec": 18.676,
+      "referenceSec": 19.8,
       "to": 5
     },
     {
@@ -28276,9 +28290,9 @@
       "id": "trans-004-005-100",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 20.625,
+      "mediaSec": 20.0,
       "progress": 1.0,
-      "referenceSec": 20.625,
+      "referenceSec": 20.0,
       "to": 5
     },
     {
@@ -28301,11 +28315,11 @@
       "id": "trans-005-006-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 0.615
+        "track-0038": 0.0
       },
-      "mediaSec": 23.615,
+      "mediaSec": 23.0,
       "progress": 0.0,
-      "referenceSec": 23.615,
+      "referenceSec": 23.0,
       "to": 6
     },
     {
@@ -28316,11 +28330,11 @@
       "id": "trans-005-006-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 0.615
+        "track-0038": 0.2
       },
-      "mediaSec": 23.615,
+      "mediaSec": 23.2,
       "progress": 0.1,
-      "referenceSec": 23.615,
+      "referenceSec": 23.2,
       "to": 6
     },
     {
@@ -28331,11 +28345,11 @@
       "id": "trans-005-006-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 0.615
+        "track-0038": 0.5
       },
-      "mediaSec": 23.615,
+      "mediaSec": 23.5,
       "progress": 0.25,
-      "referenceSec": 23.615,
+      "referenceSec": 23.5,
       "to": 6
     },
     {
@@ -28346,11 +28360,11 @@
       "id": "trans-005-006-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 0.615
+        "track-0038": 1.0
       },
-      "mediaSec": 23.615,
+      "mediaSec": 24.0,
       "progress": 0.5,
-      "referenceSec": 23.615,
+      "referenceSec": 24.0,
       "to": 6
     },
     {
@@ -28361,11 +28375,11 @@
       "id": "trans-005-006-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 1.865
+        "track-0038": 1.5
       },
-      "mediaSec": 24.865,
+      "mediaSec": 24.5,
       "progress": 0.75,
-      "referenceSec": 24.865,
+      "referenceSec": 24.5,
       "to": 6
     },
     {
@@ -28376,11 +28390,11 @@
       "id": "trans-005-006-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 1.99
+        "track-0038": 1.8
       },
-      "mediaSec": 24.99,
+      "mediaSec": 24.8,
       "progress": 0.9,
-      "referenceSec": 24.99,
+      "referenceSec": 24.8,
       "to": 6
     },
     {
@@ -28391,11 +28405,11 @@
       "id": "trans-005-006-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 1.99
+        "track-0038": 2.0
       },
-      "mediaSec": 24.99,
+      "mediaSec": 25.0,
       "progress": 1.0,
-      "referenceSec": 24.99,
+      "referenceSec": 25.0,
       "to": 6
     },
     {
@@ -28420,13 +28434,13 @@
       "id": "trans-006-007-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 4.615,
+        "track-0038": 5.0,
         "track-0044": 0.0,
         "track-0050": 0.0
       },
-      "mediaSec": 27.615,
+      "mediaSec": 28.0,
       "progress": 0.0,
-      "referenceSec": 27.615,
+      "referenceSec": 28.0,
       "to": 7
     },
     {
@@ -28437,13 +28451,13 @@
       "id": "trans-006-007-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 5.24,
-        "track-0044": 0.24,
-        "track-0050": 0.24
+        "track-0038": 5.2,
+        "track-0044": 0.2,
+        "track-0050": 0.2
       },
-      "mediaSec": 28.24,
+      "mediaSec": 28.2,
       "progress": 0.1,
-      "referenceSec": 28.24,
+      "referenceSec": 28.2,
       "to": 7
     },
     {
@@ -28454,13 +28468,13 @@
       "id": "trans-006-007-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 5.365,
-        "track-0044": 0.365,
-        "track-0050": 0.365
+        "track-0038": 5.5,
+        "track-0044": 0.5,
+        "track-0050": 0.5
       },
-      "mediaSec": 28.365,
+      "mediaSec": 28.5,
       "progress": 0.25,
-      "referenceSec": 28.365,
+      "referenceSec": 28.5,
       "to": 7
     },
     {
@@ -28471,13 +28485,13 @@
       "id": "trans-006-007-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 5.865,
-        "track-0044": 0.865,
-        "track-0050": 0.865
+        "track-0038": 6.0,
+        "track-0044": 1.0,
+        "track-0050": 1.0
       },
-      "mediaSec": 28.865,
+      "mediaSec": 29.0,
       "progress": 0.5,
-      "referenceSec": 28.865,
+      "referenceSec": 29.0,
       "to": 7
     },
     {
@@ -28488,13 +28502,13 @@
       "id": "trans-006-007-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 6.49,
-        "track-0044": 1.49,
-        "track-0050": 1.49
+        "track-0038": 6.5,
+        "track-0044": 1.5,
+        "track-0050": 1.5
       },
-      "mediaSec": 29.49,
+      "mediaSec": 29.5,
       "progress": 0.75,
-      "referenceSec": 29.49,
+      "referenceSec": 29.5,
       "to": 7
     },
     {
@@ -28505,13 +28519,13 @@
       "id": "trans-006-007-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 6.865,
-        "track-0044": 1.865,
-        "track-0050": 1.865
+        "track-0038": 6.8,
+        "track-0044": 1.8,
+        "track-0050": 1.8
       },
-      "mediaSec": 29.865,
+      "mediaSec": 29.8,
       "progress": 0.9,
-      "referenceSec": 29.865,
+      "referenceSec": 29.8,
       "to": 7
     },
     {
@@ -28522,13 +28536,13 @@
       "id": "trans-006-007-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 7.115,
-        "track-0044": 2.115,
-        "track-0050": 2.115
+        "track-0038": 7.0,
+        "track-0044": 2.0,
+        "track-0050": 2.0
       },
-      "mediaSec": 30.115,
+      "mediaSec": 30.0,
       "progress": 1.0,
-      "referenceSec": 30.115,
+      "referenceSec": 30.0,
       "to": 7
     },
     {
@@ -28555,15 +28569,15 @@
       "id": "trans-007-008-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 9.615,
-        "track-0044": 4.615,
-        "track-0050": 4.615,
+        "track-0038": 10.0,
+        "track-0044": 5.0,
+        "track-0050": 5.0,
         "track-0051": 0.0,
         "track-0053": 0.0
       },
-      "mediaSec": 32.615,
+      "mediaSec": 33.0,
       "progress": 0.0,
-      "referenceSec": 32.615,
+      "referenceSec": 33.0,
       "to": 8
     },
     {
@@ -28574,15 +28588,15 @@
       "id": "trans-007-008-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 10.041,
-        "track-0044": 5.041,
-        "track-0050": 5.041,
-        "track-0051": 0.041,
-        "track-0053": 0.041
+        "track-0038": 10.001,
+        "track-0044": 5.001,
+        "track-0050": 5.001,
+        "track-0051": 0.001,
+        "track-0053": 0.001
       },
-      "mediaSec": 33.041,
+      "mediaSec": 33.001,
       "progress": 0.1,
-      "referenceSec": 33.041,
+      "referenceSec": 33.001,
       "to": 8
     },
     {
@@ -28593,15 +28607,15 @@
       "id": "trans-007-008-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 9.992,
-        "track-0044": 4.992,
-        "track-0050": 4.992,
-        "track-0051": 0.0,
-        "track-0053": 0.0
+        "track-0038": 10.002,
+        "track-0044": 5.002,
+        "track-0050": 5.002,
+        "track-0051": 0.002,
+        "track-0053": 0.002
       },
-      "mediaSec": 32.992,
+      "mediaSec": 33.002,
       "progress": 0.25,
-      "referenceSec": 32.992,
+      "referenceSec": 33.002,
       "to": 8
     },
     {
@@ -28612,15 +28626,15 @@
       "id": "trans-007-008-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 9.87,
-        "track-0044": 4.87,
-        "track-0050": 4.87,
-        "track-0051": 0.0,
-        "track-0053": 0.0
+        "track-0038": 10.005,
+        "track-0044": 5.005,
+        "track-0050": 5.005,
+        "track-0051": 0.005,
+        "track-0053": 0.005
       },
-      "mediaSec": 32.87,
+      "mediaSec": 33.005,
       "progress": 0.5,
-      "referenceSec": 32.87,
+      "referenceSec": 33.005,
       "to": 8
     },
     {
@@ -28631,15 +28645,15 @@
       "id": "trans-007-008-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 9.998,
-        "track-0044": 4.998,
-        "track-0050": 4.998,
-        "track-0051": 0.0,
-        "track-0053": 0.0
+        "track-0038": 10.008,
+        "track-0044": 5.008,
+        "track-0050": 5.008,
+        "track-0051": 0.008,
+        "track-0053": 0.008
       },
-      "mediaSec": 32.998,
+      "mediaSec": 33.008,
       "progress": 0.75,
-      "referenceSec": 32.998,
+      "referenceSec": 33.008,
       "to": 8
     },
     {
@@ -28650,15 +28664,15 @@
       "id": "trans-007-008-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 10.074,
-        "track-0044": 5.074,
-        "track-0050": 5.074,
-        "track-0051": 0.074,
-        "track-0053": 0.074
+        "track-0038": 10.009,
+        "track-0044": 5.009,
+        "track-0050": 5.009,
+        "track-0051": 0.009,
+        "track-0053": 0.009
       },
-      "mediaSec": 33.074,
+      "mediaSec": 33.009,
       "progress": 0.9,
-      "referenceSec": 33.074,
+      "referenceSec": 33.009,
       "to": 8
     },
     {
@@ -28669,15 +28683,15 @@
       "id": "trans-007-008-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 10.75,
-        "track-0044": 5.75,
-        "track-0050": 5.75,
-        "track-0051": 0.75,
-        "track-0053": 0.75
+        "track-0038": 10.01,
+        "track-0044": 5.01,
+        "track-0050": 5.01,
+        "track-0051": 0.01,
+        "track-0053": 0.01
       },
-      "mediaSec": 33.75,
+      "mediaSec": 33.01,
       "progress": 1.0,
-      "referenceSec": 33.75,
+      "referenceSec": 33.01,
       "to": 8
     },
     {
@@ -28705,14 +28719,14 @@
       "id": "trans-008-009-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 12.25,
-        "track-0044": 7.25,
-        "track-0051": 2.25,
-        "track-0053": 2.25
+        "track-0038": 13.01,
+        "track-0044": 8.01,
+        "track-0051": 3.01,
+        "track-0053": 3.01
       },
-      "mediaSec": 35.25,
+      "mediaSec": 36.01,
       "progress": 0.0,
-      "referenceSec": 35.25,
+      "referenceSec": 36.01,
       "to": 9
     },
     {
@@ -28723,14 +28737,14 @@
       "id": "trans-008-009-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 13.176,
-        "track-0044": 8.176,
-        "track-0051": 3.176,
-        "track-0053": 3.176
+        "track-0038": 13.011,
+        "track-0044": 8.011,
+        "track-0051": 3.011,
+        "track-0053": 3.011
       },
-      "mediaSec": 36.176,
+      "mediaSec": 36.011,
       "progress": 0.1,
-      "referenceSec": 36.176,
+      "referenceSec": 36.011,
       "to": 9
     },
     {
@@ -28741,14 +28755,14 @@
       "id": "trans-008-009-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 13.002,
-        "track-0044": 8.002,
-        "track-0051": 3.002,
-        "track-0053": 3.002
+        "track-0038": 13.012,
+        "track-0044": 8.012,
+        "track-0051": 3.012,
+        "track-0053": 3.012
       },
-      "mediaSec": 36.002,
+      "mediaSec": 36.012,
       "progress": 0.25,
-      "referenceSec": 36.002,
+      "referenceSec": 36.012,
       "to": 9
     },
     {
@@ -28759,14 +28773,14 @@
       "id": "trans-008-009-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 12.255,
-        "track-0044": 7.255,
-        "track-0051": 2.255,
-        "track-0053": 2.255
+        "track-0038": 13.015,
+        "track-0044": 8.015,
+        "track-0051": 3.015,
+        "track-0053": 3.015
       },
-      "mediaSec": 35.255,
+      "mediaSec": 36.015,
       "progress": 0.5,
-      "referenceSec": 35.255,
+      "referenceSec": 36.015,
       "to": 9
     },
     {
@@ -28777,14 +28791,14 @@
       "id": "trans-008-009-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 13.508,
-        "track-0044": 8.508,
-        "track-0051": 3.508,
-        "track-0053": 3.508
+        "track-0038": 13.017,
+        "track-0044": 8.017,
+        "track-0051": 3.017,
+        "track-0053": 3.017
       },
-      "mediaSec": 36.508,
+      "mediaSec": 36.017,
       "progress": 0.75,
-      "referenceSec": 36.508,
+      "referenceSec": 36.017,
       "to": 9
     },
     {
@@ -28795,14 +28809,14 @@
       "id": "trans-008-009-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 13.584,
-        "track-0044": 8.584,
-        "track-0051": 3.584,
-        "track-0053": 3.584
+        "track-0038": 13.019,
+        "track-0044": 8.019,
+        "track-0051": 3.019,
+        "track-0053": 3.019
       },
-      "mediaSec": 36.584,
+      "mediaSec": 36.019,
       "progress": 0.9,
-      "referenceSec": 36.584,
+      "referenceSec": 36.019,
       "to": 9
     },
     {
@@ -28813,14 +28827,14 @@
       "id": "trans-008-009-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 13.26,
-        "track-0044": 8.26,
-        "track-0051": 3.26,
-        "track-0053": 3.26
+        "track-0038": 13.02,
+        "track-0044": 8.02,
+        "track-0051": 3.02,
+        "track-0053": 3.02
       },
-      "mediaSec": 36.26,
+      "mediaSec": 36.02,
       "progress": 1.0,
-      "referenceSec": 36.26,
+      "referenceSec": 36.02,
       "to": 9
     },
     {
@@ -28846,15 +28860,15 @@
       "id": "trans-009-010-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 5.385,
-        "track-0053": 5.385,
+        "track-0051": 6.02,
+        "track-0053": 6.02,
         "track-0056": 0.0,
         "track-0060": 0.0,
         "track-0061": 0.0
       },
-      "mediaSec": 38.385,
+      "mediaSec": 39.02,
       "progress": 0.0,
-      "referenceSec": 38.385,
+      "referenceSec": 39.02,
       "to": 10
     },
     {
@@ -28865,15 +28879,15 @@
       "id": "trans-009-010-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 6.385,
-        "track-0053": 6.385,
-        "track-0056": 0.365,
-        "track-0060": 0.365,
-        "track-0061": 0.365
+        "track-0051": 6.22,
+        "track-0053": 6.22,
+        "track-0056": 0.2,
+        "track-0060": 0.2,
+        "track-0061": 0.2
       },
-      "mediaSec": 39.385,
+      "mediaSec": 39.22,
       "progress": 0.1,
-      "referenceSec": 39.385,
+      "referenceSec": 39.22,
       "to": 10
     },
     {
@@ -28884,15 +28898,15 @@
       "id": "trans-009-010-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 6.635,
-        "track-0053": 6.635,
-        "track-0056": 0.615,
-        "track-0060": 0.615,
-        "track-0061": 0.615
+        "track-0051": 6.52,
+        "track-0053": 6.52,
+        "track-0056": 0.5,
+        "track-0060": 0.5,
+        "track-0061": 0.5
       },
-      "mediaSec": 39.635,
+      "mediaSec": 39.52,
       "progress": 0.25,
-      "referenceSec": 39.635,
+      "referenceSec": 39.52,
       "to": 10
     },
     {
@@ -28903,15 +28917,15 @@
       "id": "trans-009-010-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 7.01,
-        "track-0053": 7.01,
-        "track-0056": 0.99,
-        "track-0060": 0.99,
-        "track-0061": 0.99
+        "track-0051": 7.02,
+        "track-0053": 7.02,
+        "track-0056": 1.0,
+        "track-0060": 1.0,
+        "track-0061": 1.0
       },
-      "mediaSec": 40.01,
+      "mediaSec": 40.02,
       "progress": 0.5,
-      "referenceSec": 40.01,
+      "referenceSec": 40.02,
       "to": 10
     },
     {
@@ -28922,15 +28936,15 @@
       "id": "trans-009-010-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 7.635,
-        "track-0053": 7.635,
-        "track-0056": 1.615,
-        "track-0060": 1.615,
-        "track-0061": 1.615
+        "track-0051": 7.52,
+        "track-0053": 7.52,
+        "track-0056": 1.5,
+        "track-0060": 1.5,
+        "track-0061": 1.5
       },
-      "mediaSec": 40.635,
+      "mediaSec": 40.52,
       "progress": 0.75,
-      "referenceSec": 40.635,
+      "referenceSec": 40.52,
       "to": 10
     },
     {
@@ -28941,15 +28955,15 @@
       "id": "trans-009-010-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 8.01,
-        "track-0053": 8.01,
-        "track-0056": 1.99,
-        "track-0060": 1.99,
-        "track-0061": 1.99
+        "track-0051": 7.82,
+        "track-0053": 7.82,
+        "track-0056": 1.8,
+        "track-0060": 1.8,
+        "track-0061": 1.8
       },
-      "mediaSec": 41.01,
+      "mediaSec": 40.82,
       "progress": 0.9,
-      "referenceSec": 41.01,
+      "referenceSec": 40.82,
       "to": 10
     },
     {
@@ -28960,15 +28974,15 @@
       "id": "trans-009-010-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 8.385,
-        "track-0053": 8.385,
-        "track-0056": 2.365,
-        "track-0060": 2.365,
-        "track-0061": 2.365
+        "track-0051": 8.02,
+        "track-0053": 8.02,
+        "track-0056": 2.0,
+        "track-0060": 2.0,
+        "track-0061": 2.0
       },
-      "mediaSec": 41.385,
+      "mediaSec": 41.02,
       "progress": 1.0,
-      "referenceSec": 41.385,
+      "referenceSec": 41.02,
       "to": 10
     },
     {
@@ -28996,17 +29010,17 @@
       "id": "trans-010-011-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 10.26,
-        "track-0056": 4.24,
-        "track-0060": 4.24,
-        "track-0061": 4.24,
+        "track-0053": 11.02,
+        "track-0056": 5.0,
+        "track-0060": 5.0,
+        "track-0061": 5.0,
         "track-0066": 0.0,
         "track-0067": 0.0,
         "track-0071": 0.0
       },
-      "mediaSec": 43.26,
+      "mediaSec": 44.02,
       "progress": 0.0,
-      "referenceSec": 43.26,
+      "referenceSec": 44.02,
       "to": 11
     },
     {
@@ -29017,17 +29031,17 @@
       "id": "trans-010-011-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 10.26,
-        "track-0056": 4.24,
-        "track-0060": 4.24,
-        "track-0061": 4.24,
-        "track-0066": 0.0,
-        "track-0067": 0.0,
-        "track-0071": 0.0
+        "track-0053": 11.22,
+        "track-0056": 5.2,
+        "track-0060": 5.2,
+        "track-0061": 5.2,
+        "track-0066": 0.2,
+        "track-0067": 0.2,
+        "track-0071": 0.2
       },
-      "mediaSec": 43.26,
+      "mediaSec": 44.22,
       "progress": 0.1,
-      "referenceSec": 43.26,
+      "referenceSec": 44.22,
       "to": 11
     },
     {
@@ -29038,17 +29052,17 @@
       "id": "trans-010-011-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 11.635,
-        "track-0056": 5.615,
-        "track-0060": 5.615,
-        "track-0061": 5.615,
-        "track-0066": 0.615,
-        "track-0067": 0.615,
-        "track-0071": 0.615
+        "track-0053": 11.52,
+        "track-0056": 5.5,
+        "track-0060": 5.5,
+        "track-0061": 5.5,
+        "track-0066": 0.5,
+        "track-0067": 0.5,
+        "track-0071": 0.5
       },
-      "mediaSec": 44.635,
+      "mediaSec": 44.52,
       "progress": 0.25,
-      "referenceSec": 44.635,
+      "referenceSec": 44.52,
       "to": 11
     },
     {
@@ -29059,17 +29073,17 @@
       "id": "trans-010-011-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 12.01,
-        "track-0056": 5.99,
-        "track-0060": 5.99,
-        "track-0061": 5.99,
-        "track-0066": 0.99,
-        "track-0067": 0.99,
-        "track-0071": 0.99
+        "track-0053": 12.02,
+        "track-0056": 6.0,
+        "track-0060": 6.0,
+        "track-0061": 6.0,
+        "track-0066": 1.0,
+        "track-0067": 1.0,
+        "track-0071": 1.0
       },
-      "mediaSec": 45.01,
+      "mediaSec": 45.02,
       "progress": 0.5,
-      "referenceSec": 45.01,
+      "referenceSec": 45.02,
       "to": 11
     },
     {
@@ -29080,17 +29094,17 @@
       "id": "trans-010-011-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 12.635,
-        "track-0056": 6.615,
-        "track-0060": 6.615,
-        "track-0061": 6.615,
-        "track-0066": 1.615,
-        "track-0067": 1.615,
-        "track-0071": 1.615
+        "track-0053": 12.52,
+        "track-0056": 6.5,
+        "track-0060": 6.5,
+        "track-0061": 6.5,
+        "track-0066": 1.5,
+        "track-0067": 1.5,
+        "track-0071": 1.5
       },
-      "mediaSec": 45.635,
+      "mediaSec": 45.52,
       "progress": 0.75,
-      "referenceSec": 45.635,
+      "referenceSec": 45.52,
       "to": 11
     },
     {
@@ -29101,17 +29115,17 @@
       "id": "trans-010-011-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 13.135,
-        "track-0056": 7.115,
-        "track-0060": 7.115,
-        "track-0061": 7.115,
-        "track-0066": 2.115,
-        "track-0067": 2.115,
-        "track-0071": 2.115
+        "track-0053": 12.82,
+        "track-0056": 6.8,
+        "track-0060": 6.8,
+        "track-0061": 6.8,
+        "track-0066": 1.8,
+        "track-0067": 1.8,
+        "track-0071": 1.8
       },
-      "mediaSec": 46.135,
+      "mediaSec": 45.82,
       "progress": 0.9,
-      "referenceSec": 46.135,
+      "referenceSec": 45.82,
       "to": 11
     },
     {
@@ -29122,17 +29136,17 @@
       "id": "trans-010-011-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 13.385,
-        "track-0056": 7.365,
-        "track-0060": 7.365,
-        "track-0061": 7.365,
-        "track-0066": 2.365,
-        "track-0067": 2.365,
-        "track-0071": 2.365
+        "track-0053": 13.02,
+        "track-0056": 7.0,
+        "track-0060": 7.0,
+        "track-0061": 7.0,
+        "track-0066": 2.0,
+        "track-0067": 2.0,
+        "track-0071": 2.0
       },
-      "mediaSec": 46.385,
+      "mediaSec": 46.02,
       "progress": 1.0,
-      "referenceSec": 46.385,
+      "referenceSec": 46.02,
       "to": 11
     },
     {
@@ -29163,18 +29177,18 @@
       "id": "trans-011-012-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 15.135,
-        "track-0056": 9.115,
-        "track-0060": 9.115,
-        "track-0061": 9.115,
-        "track-0066": 4.115,
-        "track-0067": 4.115,
-        "track-0071": 4.115,
+        "track-0053": 16.02,
+        "track-0056": 10.0,
+        "track-0060": 10.0,
+        "track-0061": 10.0,
+        "track-0066": 5.0,
+        "track-0067": 5.0,
+        "track-0071": 5.0,
         "track-0073": 0.0
       },
-      "mediaSec": 48.135,
+      "mediaSec": 49.02,
       "progress": 0.0,
-      "referenceSec": 48.135,
+      "referenceSec": 49.02,
       "to": 12
     },
     {
@@ -29185,18 +29199,18 @@
       "id": "trans-011-012-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 15.135,
-        "track-0056": 9.115,
-        "track-0060": 9.115,
-        "track-0061": 9.115,
-        "track-0066": 4.115,
-        "track-0067": 4.115,
-        "track-0071": 4.115,
-        "track-0073": 0.0
+        "track-0053": 16.22,
+        "track-0056": 10.2,
+        "track-0060": 10.2,
+        "track-0061": 10.2,
+        "track-0066": 5.2,
+        "track-0067": 5.2,
+        "track-0071": 5.2,
+        "track-0073": 0.2
       },
-      "mediaSec": 48.135,
+      "mediaSec": 49.22,
       "progress": 0.1,
-      "referenceSec": 48.135,
+      "referenceSec": 49.22,
       "to": 12
     },
     {
@@ -29207,18 +29221,18 @@
       "id": "trans-011-012-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 16.135,
-        "track-0056": 10.115,
-        "track-0060": 10.115,
-        "track-0061": 10.115,
-        "track-0066": 5.115,
-        "track-0067": 5.115,
-        "track-0071": 5.115,
-        "track-0073": 0.115
+        "track-0053": 16.52,
+        "track-0056": 10.5,
+        "track-0060": 10.5,
+        "track-0061": 10.5,
+        "track-0066": 5.5,
+        "track-0067": 5.5,
+        "track-0071": 5.5,
+        "track-0073": 0.5
       },
-      "mediaSec": 49.135,
+      "mediaSec": 49.52,
       "progress": 0.25,
-      "referenceSec": 49.135,
+      "referenceSec": 49.52,
       "to": 12
     },
     {
@@ -29229,18 +29243,18 @@
       "id": "trans-011-012-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 16.135,
-        "track-0056": 10.115,
-        "track-0060": 10.115,
-        "track-0061": 10.115,
-        "track-0066": 5.115,
-        "track-0067": 5.115,
-        "track-0071": 5.115,
-        "track-0073": 0.115
+        "track-0053": 17.02,
+        "track-0056": 11.0,
+        "track-0060": 11.0,
+        "track-0061": 11.0,
+        "track-0066": 6.0,
+        "track-0067": 6.0,
+        "track-0071": 6.0,
+        "track-0073": 1.0
       },
-      "mediaSec": 49.135,
+      "mediaSec": 50.02,
       "progress": 0.5,
-      "referenceSec": 49.135,
+      "referenceSec": 50.02,
       "to": 12
     },
     {
@@ -29251,18 +29265,18 @@
       "id": "trans-011-012-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 17.135,
-        "track-0056": 11.115,
-        "track-0060": 11.115,
-        "track-0061": 11.115,
-        "track-0066": 6.115,
-        "track-0067": 6.115,
-        "track-0071": 6.115,
-        "track-0073": 1.115
+        "track-0053": 17.52,
+        "track-0056": 11.5,
+        "track-0060": 11.5,
+        "track-0061": 11.5,
+        "track-0066": 6.5,
+        "track-0067": 6.5,
+        "track-0071": 6.5,
+        "track-0073": 1.5
       },
-      "mediaSec": 50.135,
+      "mediaSec": 50.52,
       "progress": 0.75,
-      "referenceSec": 50.135,
+      "referenceSec": 50.52,
       "to": 12
     },
     {
@@ -29273,18 +29287,18 @@
       "id": "trans-011-012-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 17.135,
-        "track-0056": 11.115,
-        "track-0060": 11.115,
-        "track-0061": 11.115,
-        "track-0066": 6.115,
-        "track-0067": 6.115,
-        "track-0071": 6.115,
-        "track-0073": 1.115
+        "track-0053": 17.82,
+        "track-0056": 11.8,
+        "track-0060": 11.8,
+        "track-0061": 11.8,
+        "track-0066": 6.8,
+        "track-0067": 6.8,
+        "track-0071": 6.8,
+        "track-0073": 1.8
       },
-      "mediaSec": 50.135,
+      "mediaSec": 50.82,
       "progress": 0.9,
-      "referenceSec": 50.135,
+      "referenceSec": 50.82,
       "to": 12
     },
     {
@@ -29295,18 +29309,18 @@
       "id": "trans-011-012-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 17.135,
-        "track-0056": 11.115,
-        "track-0060": 11.115,
-        "track-0061": 11.115,
-        "track-0066": 6.115,
-        "track-0067": 6.115,
-        "track-0071": 6.115,
-        "track-0073": 1.115
+        "track-0053": 18.02,
+        "track-0056": 12.0,
+        "track-0060": 12.0,
+        "track-0061": 12.0,
+        "track-0066": 7.0,
+        "track-0067": 7.0,
+        "track-0071": 7.0,
+        "track-0073": 2.0
       },
-      "mediaSec": 50.135,
+      "mediaSec": 51.02,
       "progress": 1.0,
-      "referenceSec": 50.135,
+      "referenceSec": 51.02,
       "to": 12
     },
     {
@@ -29334,15 +29348,15 @@
       "id": "trans-012-013-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 9.115,
-        "track-0067": 9.115,
-        "track-0071": 9.115,
-        "track-0073": 4.115,
+        "track-0066": 10.0,
+        "track-0067": 10.0,
+        "track-0071": 10.0,
+        "track-0073": 5.0,
         "track-0078": 0.0
       },
-      "mediaSec": 53.135,
+      "mediaSec": 54.02,
       "progress": 0.0,
-      "referenceSec": 53.135,
+      "referenceSec": 54.02,
       "to": 13
     },
     {
@@ -29353,15 +29367,15 @@
       "id": "trans-012-013-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 9.115,
-        "track-0067": 9.115,
-        "track-0071": 9.115,
-        "track-0073": 4.115,
-        "track-0078": 0.0
+        "track-0066": 10.2,
+        "track-0067": 10.2,
+        "track-0071": 10.2,
+        "track-0073": 5.2,
+        "track-0078": 0.2
       },
-      "mediaSec": 53.135,
+      "mediaSec": 54.22,
       "progress": 0.1,
-      "referenceSec": 53.135,
+      "referenceSec": 54.22,
       "to": 13
     },
     {
@@ -29372,15 +29386,15 @@
       "id": "trans-012-013-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 10.74,
-        "track-0067": 10.74,
-        "track-0071": 10.74,
-        "track-0073": 5.74,
-        "track-0078": 0.74
+        "track-0066": 10.5,
+        "track-0067": 10.5,
+        "track-0071": 10.5,
+        "track-0073": 5.5,
+        "track-0078": 0.5
       },
-      "mediaSec": 54.76,
+      "mediaSec": 54.52,
       "progress": 0.25,
-      "referenceSec": 54.76,
+      "referenceSec": 54.52,
       "to": 13
     },
     {
@@ -29391,15 +29405,15 @@
       "id": "trans-012-013-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 11.115,
-        "track-0067": 11.115,
-        "track-0071": 11.115,
-        "track-0073": 6.115,
-        "track-0078": 1.115
+        "track-0066": 11.0,
+        "track-0067": 11.0,
+        "track-0071": 11.0,
+        "track-0073": 6.0,
+        "track-0078": 1.0
       },
-      "mediaSec": 55.135,
+      "mediaSec": 55.02,
       "progress": 0.5,
-      "referenceSec": 55.135,
+      "referenceSec": 55.02,
       "to": 13
     },
     {
@@ -29410,15 +29424,15 @@
       "id": "trans-012-013-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 11.74,
-        "track-0067": 11.74,
-        "track-0071": 11.74,
-        "track-0073": 6.74,
-        "track-0078": 1.74
+        "track-0066": 11.5,
+        "track-0067": 11.5,
+        "track-0071": 11.5,
+        "track-0073": 6.5,
+        "track-0078": 1.5
       },
-      "mediaSec": 55.76,
+      "mediaSec": 55.52,
       "progress": 0.75,
-      "referenceSec": 55.76,
+      "referenceSec": 55.52,
       "to": 13
     },
     {
@@ -29429,15 +29443,15 @@
       "id": "trans-012-013-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 12.115,
-        "track-0067": 12.115,
-        "track-0071": 12.115,
-        "track-0073": 7.115,
-        "track-0078": 2.115
+        "track-0066": 11.8,
+        "track-0067": 11.8,
+        "track-0071": 11.8,
+        "track-0073": 6.8,
+        "track-0078": 1.8
       },
-      "mediaSec": 56.135,
+      "mediaSec": 55.82,
       "progress": 0.9,
-      "referenceSec": 56.135,
+      "referenceSec": 55.82,
       "to": 13
     },
     {
@@ -29448,15 +29462,15 @@
       "id": "trans-012-013-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 12.99,
-        "track-0067": 12.99,
-        "track-0071": 12.99,
-        "track-0073": 7.99,
-        "track-0078": 2.99
+        "track-0066": 12.0,
+        "track-0067": 12.0,
+        "track-0071": 12.0,
+        "track-0073": 7.0,
+        "track-0078": 2.0
       },
-      "mediaSec": 57.01,
+      "mediaSec": 56.02,
       "progress": 1.0,
-      "referenceSec": 57.01,
+      "referenceSec": 56.02,
       "to": 13
     },
     {
@@ -29485,16 +29499,16 @@
       "id": "trans-013-014-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 13.99,
-        "track-0067": 13.99,
-        "track-0071": 13.99,
-        "track-0073": 8.99,
-        "track-0078": 3.99,
+        "track-0066": 15.0,
+        "track-0067": 15.0,
+        "track-0071": 15.0,
+        "track-0073": 10.0,
+        "track-0078": 5.0,
         "track-0081": 0.0
       },
-      "mediaSec": 58.01,
+      "mediaSec": 59.02,
       "progress": 0.0,
-      "referenceSec": 58.01,
+      "referenceSec": 59.02,
       "to": 14
     },
     {
@@ -29505,16 +29519,16 @@
       "id": "trans-013-014-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 15.615,
-        "track-0067": 15.615,
-        "track-0071": 15.615,
-        "track-0073": 10.615,
-        "track-0078": 5.615,
-        "track-0081": 0.615
+        "track-0066": 15.2,
+        "track-0067": 15.2,
+        "track-0071": 15.2,
+        "track-0073": 10.2,
+        "track-0078": 5.2,
+        "track-0081": 0.2
       },
-      "mediaSec": 59.635,
+      "mediaSec": 59.22,
       "progress": 0.1,
-      "referenceSec": 59.635,
+      "referenceSec": 59.22,
       "to": 14
     },
     {
@@ -29525,16 +29539,16 @@
       "id": "trans-013-014-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 15.74,
-        "track-0067": 15.74,
-        "track-0071": 15.74,
-        "track-0073": 10.74,
-        "track-0078": 5.74,
-        "track-0081": 0.74
+        "track-0066": 15.5,
+        "track-0067": 15.5,
+        "track-0071": 15.5,
+        "track-0073": 10.5,
+        "track-0078": 5.5,
+        "track-0081": 0.5
       },
-      "mediaSec": 59.76,
+      "mediaSec": 59.52,
       "progress": 0.25,
-      "referenceSec": 59.76,
+      "referenceSec": 59.52,
       "to": 14
     },
     {
@@ -29545,16 +29559,16 @@
       "id": "trans-013-014-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 16.24,
-        "track-0067": 16.24,
-        "track-0071": 16.24,
-        "track-0073": 11.24,
-        "track-0078": 6.24,
-        "track-0081": 1.24
+        "track-0066": 16.0,
+        "track-0067": 16.0,
+        "track-0071": 16.0,
+        "track-0073": 11.0,
+        "track-0078": 6.0,
+        "track-0081": 1.0
       },
-      "mediaSec": 60.26,
+      "mediaSec": 60.02,
       "progress": 0.5,
-      "referenceSec": 60.26,
+      "referenceSec": 60.02,
       "to": 14
     },
     {
@@ -29565,16 +29579,16 @@
       "id": "trans-013-014-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 16.74,
-        "track-0067": 16.74,
-        "track-0071": 16.74,
-        "track-0073": 11.74,
-        "track-0078": 6.74,
-        "track-0081": 1.74
+        "track-0066": 16.5,
+        "track-0067": 16.5,
+        "track-0071": 16.5,
+        "track-0073": 11.5,
+        "track-0078": 6.5,
+        "track-0081": 1.5
       },
-      "mediaSec": 60.76,
+      "mediaSec": 60.52,
       "progress": 0.75,
-      "referenceSec": 60.76,
+      "referenceSec": 60.52,
       "to": 14
     },
     {
@@ -29585,16 +29599,16 @@
       "id": "trans-013-014-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 17.24,
-        "track-0067": 17.24,
-        "track-0071": 17.24,
-        "track-0073": 12.24,
-        "track-0078": 7.24,
-        "track-0081": 2.24
+        "track-0066": 16.8,
+        "track-0067": 16.8,
+        "track-0071": 16.8,
+        "track-0073": 11.8,
+        "track-0078": 6.8,
+        "track-0081": 1.8
       },
-      "mediaSec": 61.26,
+      "mediaSec": 60.82,
       "progress": 0.9,
-      "referenceSec": 61.26,
+      "referenceSec": 60.82,
       "to": 14
     },
     {
@@ -29605,16 +29619,16 @@
       "id": "trans-013-014-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 17.99,
-        "track-0067": 17.99,
-        "track-0071": 17.99,
-        "track-0073": 12.99,
-        "track-0078": 7.99,
-        "track-0081": 2.99
+        "track-0066": 17.0,
+        "track-0067": 17.0,
+        "track-0071": 17.0,
+        "track-0073": 12.0,
+        "track-0078": 7.0,
+        "track-0081": 2.0
       },
-      "mediaSec": 62.01,
+      "mediaSec": 61.02,
       "progress": 1.0,
-      "referenceSec": 62.01,
+      "referenceSec": 61.02,
       "to": 14
     },
     {
@@ -29641,14 +29655,14 @@
       "id": "trans-014-015-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 14.865,
-        "track-0078": 9.865,
-        "track-0081": 4.865,
+        "track-0073": 15.0,
+        "track-0078": 10.0,
+        "track-0081": 5.0,
         "track-0084": 0.0
       },
-      "mediaSec": 63.885,
+      "mediaSec": 64.02,
       "progress": 0.0,
-      "referenceSec": 63.885,
+      "referenceSec": 64.02,
       "to": 15
     },
     {
@@ -29659,14 +29673,14 @@
       "id": "trans-014-015-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 14.865,
-        "track-0078": 9.865,
-        "track-0081": 4.865,
-        "track-0084": 0.0
+        "track-0073": 15.2,
+        "track-0078": 10.2,
+        "track-0081": 5.2,
+        "track-0084": 0.2
       },
-      "mediaSec": 63.885,
+      "mediaSec": 64.22,
       "progress": 0.1,
-      "referenceSec": 63.885,
+      "referenceSec": 64.22,
       "to": 15
     },
     {
@@ -29677,14 +29691,14 @@
       "id": "trans-014-015-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 14.865,
-        "track-0078": 9.865,
-        "track-0081": 4.865,
-        "track-0084": 0.0
+        "track-0073": 15.5,
+        "track-0078": 10.5,
+        "track-0081": 5.5,
+        "track-0084": 0.5
       },
-      "mediaSec": 63.885,
+      "mediaSec": 64.52,
       "progress": 0.25,
-      "referenceSec": 63.885,
+      "referenceSec": 64.52,
       "to": 15
     },
     {
@@ -29695,14 +29709,14 @@
       "id": "trans-014-015-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 15.865,
-        "track-0078": 10.865,
-        "track-0081": 5.865,
-        "track-0084": 0.865
+        "track-0073": 16.0,
+        "track-0078": 11.0,
+        "track-0081": 6.0,
+        "track-0084": 1.0
       },
-      "mediaSec": 64.885,
+      "mediaSec": 65.02,
       "progress": 0.5,
-      "referenceSec": 64.885,
+      "referenceSec": 65.02,
       "to": 15
     },
     {
@@ -29713,14 +29727,14 @@
       "id": "trans-014-015-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 15.865,
-        "track-0078": 10.865,
-        "track-0081": 5.865,
-        "track-0084": 0.865
+        "track-0073": 16.5,
+        "track-0078": 11.5,
+        "track-0081": 6.5,
+        "track-0084": 1.5
       },
-      "mediaSec": 64.885,
+      "mediaSec": 65.52,
       "progress": 0.75,
-      "referenceSec": 64.885,
+      "referenceSec": 65.52,
       "to": 15
     },
     {
@@ -29731,14 +29745,14 @@
       "id": "trans-014-015-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 15.865,
-        "track-0078": 10.865,
-        "track-0081": 5.865,
-        "track-0084": 0.865
+        "track-0073": 16.8,
+        "track-0078": 11.8,
+        "track-0081": 6.8,
+        "track-0084": 1.8
       },
-      "mediaSec": 64.885,
+      "mediaSec": 65.82,
       "progress": 0.9,
-      "referenceSec": 64.885,
+      "referenceSec": 65.82,
       "to": 15
     },
     {
@@ -29749,14 +29763,14 @@
       "id": "trans-014-015-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 16.865,
-        "track-0078": 11.865,
-        "track-0081": 6.865,
-        "track-0084": 1.865
+        "track-0073": 17.0,
+        "track-0078": 12.0,
+        "track-0081": 7.0,
+        "track-0084": 2.0
       },
-      "mediaSec": 65.885,
+      "mediaSec": 66.02,
       "progress": 1.0,
-      "referenceSec": 65.885,
+      "referenceSec": 66.02,
       "to": 15
     },
     {
@@ -29783,13 +29797,13 @@
       "id": "trans-015-016-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 14.865,
-        "track-0081": 9.865,
-        "track-0084": 4.865
+        "track-0078": 15.0,
+        "track-0081": 10.0,
+        "track-0084": 5.0
       },
-      "mediaSec": 68.885,
+      "mediaSec": 69.02,
       "progress": 0.0,
-      "referenceSec": 68.885,
+      "referenceSec": 69.02,
       "to": 16
     },
     {
@@ -29800,13 +29814,13 @@
       "id": "trans-015-016-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 14.865,
-        "track-0081": 9.865,
-        "track-0084": 4.865
+        "track-0078": 15.2,
+        "track-0081": 10.2,
+        "track-0084": 5.2
       },
-      "mediaSec": 68.885,
+      "mediaSec": 69.22,
       "progress": 0.1,
-      "referenceSec": 68.885,
+      "referenceSec": 69.22,
       "to": 16
     },
     {
@@ -29817,13 +29831,13 @@
       "id": "trans-015-016-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 15.865,
-        "track-0081": 10.865,
-        "track-0084": 5.865
+        "track-0078": 15.5,
+        "track-0081": 10.5,
+        "track-0084": 5.5
       },
-      "mediaSec": 69.885,
+      "mediaSec": 69.52,
       "progress": 0.25,
-      "referenceSec": 69.885,
+      "referenceSec": 69.52,
       "to": 16
     },
     {
@@ -29834,13 +29848,13 @@
       "id": "trans-015-016-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 16.24,
-        "track-0081": 11.24,
-        "track-0084": 6.24
+        "track-0078": 16.0,
+        "track-0081": 11.0,
+        "track-0084": 6.0
       },
-      "mediaSec": 70.26,
+      "mediaSec": 70.02,
       "progress": 0.5,
-      "referenceSec": 70.26,
+      "referenceSec": 70.02,
       "to": 16
     },
     {
@@ -29851,13 +29865,13 @@
       "id": "trans-015-016-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 16.865,
-        "track-0081": 11.865,
-        "track-0084": 6.865
+        "track-0078": 16.5,
+        "track-0081": 11.5,
+        "track-0084": 6.5
       },
-      "mediaSec": 70.885,
+      "mediaSec": 70.52,
       "progress": 0.75,
-      "referenceSec": 70.885,
+      "referenceSec": 70.52,
       "to": 16
     },
     {
@@ -29868,13 +29882,13 @@
       "id": "trans-015-016-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 17.24,
-        "track-0081": 12.24,
-        "track-0084": 7.24
+        "track-0078": 16.8,
+        "track-0081": 11.8,
+        "track-0084": 6.8
       },
-      "mediaSec": 71.26,
+      "mediaSec": 70.82,
       "progress": 0.9,
-      "referenceSec": 71.26,
+      "referenceSec": 70.82,
       "to": 16
     },
     {
@@ -29885,13 +29899,13 @@
       "id": "trans-015-016-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 17.74,
-        "track-0081": 12.74,
-        "track-0084": 7.74
+        "track-0078": 17.0,
+        "track-0081": 12.0,
+        "track-0084": 7.0
       },
-      "mediaSec": 71.76,
+      "mediaSec": 71.02,
       "progress": 1.0,
-      "referenceSec": 71.76,
+      "referenceSec": 71.02,
       "to": 16
     },
     {
@@ -29918,14 +29932,14 @@
       "id": "trans-016-017-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 19.74,
-        "track-0081": 14.74,
-        "track-0084": 9.74,
+        "track-0078": 20.0,
+        "track-0081": 15.0,
+        "track-0084": 10.0,
         "track-0087": 0.0
       },
-      "mediaSec": 73.76,
+      "mediaSec": 74.02,
       "progress": 0.0,
-      "referenceSec": 73.76,
+      "referenceSec": 74.02,
       "to": 17
     },
     {
@@ -29936,14 +29950,14 @@
       "id": "trans-016-017-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 20.74,
-        "track-0081": 15.74,
-        "track-0084": 10.74,
-        "track-0087": 0.74
+        "track-0078": 20.2,
+        "track-0081": 15.2,
+        "track-0084": 10.2,
+        "track-0087": 0.2
       },
-      "mediaSec": 74.76,
+      "mediaSec": 74.22,
       "progress": 0.1,
-      "referenceSec": 74.76,
+      "referenceSec": 74.22,
       "to": 17
     },
     {
@@ -29954,14 +29968,14 @@
       "id": "trans-016-017-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 20.99,
-        "track-0081": 15.99,
-        "track-0084": 10.99,
-        "track-0087": 0.99
+        "track-0078": 20.5,
+        "track-0081": 15.5,
+        "track-0084": 10.5,
+        "track-0087": 0.5
       },
-      "mediaSec": 75.01,
+      "mediaSec": 74.52,
       "progress": 0.25,
-      "referenceSec": 75.01,
+      "referenceSec": 74.52,
       "to": 17
     },
     {
@@ -29972,14 +29986,14 @@
       "id": "trans-016-017-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 21.365,
-        "track-0081": 16.365,
-        "track-0084": 11.365,
-        "track-0087": 1.365
+        "track-0078": 21.0,
+        "track-0081": 16.0,
+        "track-0084": 11.0,
+        "track-0087": 1.0
       },
-      "mediaSec": 75.385,
+      "mediaSec": 75.02,
       "progress": 0.5,
-      "referenceSec": 75.385,
+      "referenceSec": 75.02,
       "to": 17
     },
     {
@@ -29990,14 +30004,14 @@
       "id": "trans-016-017-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 21.99,
-        "track-0081": 16.99,
-        "track-0084": 11.99,
-        "track-0087": 1.99
+        "track-0078": 21.5,
+        "track-0081": 16.5,
+        "track-0084": 11.5,
+        "track-0087": 1.5
       },
-      "mediaSec": 76.01,
+      "mediaSec": 75.52,
       "progress": 0.75,
-      "referenceSec": 76.01,
+      "referenceSec": 75.52,
       "to": 17
     },
     {
@@ -30008,14 +30022,14 @@
       "id": "trans-016-017-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 22.365,
-        "track-0081": 17.365,
-        "track-0084": 12.365,
-        "track-0087": 2.365
+        "track-0078": 21.8,
+        "track-0081": 16.8,
+        "track-0084": 11.8,
+        "track-0087": 1.8
       },
-      "mediaSec": 76.385,
+      "mediaSec": 75.82,
       "progress": 0.9,
-      "referenceSec": 76.385,
+      "referenceSec": 75.82,
       "to": 17
     },
     {
@@ -30026,14 +30040,14 @@
       "id": "trans-016-017-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 22.865,
-        "track-0081": 17.865,
-        "track-0084": 12.865,
-        "track-0087": 2.865
+        "track-0078": 22.0,
+        "track-0081": 17.0,
+        "track-0084": 12.0,
+        "track-0087": 2.0
       },
-      "mediaSec": 76.885,
+      "mediaSec": 76.02,
       "progress": 1.0,
-      "referenceSec": 76.885,
+      "referenceSec": 76.02,
       "to": 17
     },
     {
@@ -30060,14 +30074,14 @@
       "id": "trans-017-018-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 19.865,
-        "track-0084": 14.865,
-        "track-0087": 4.865,
+        "track-0081": 20.0,
+        "track-0084": 15.0,
+        "track-0087": 5.0,
         "track-0091": 0.0
       },
-      "mediaSec": 78.885,
+      "mediaSec": 79.02,
       "progress": 0.0,
-      "referenceSec": 78.885,
+      "referenceSec": 79.02,
       "to": 18
     },
     {
@@ -30078,14 +30092,14 @@
       "id": "trans-017-018-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 19.865,
-        "track-0084": 14.865,
-        "track-0087": 4.865,
-        "track-0091": 0.0
+        "track-0081": 20.2,
+        "track-0084": 15.2,
+        "track-0087": 5.2,
+        "track-0091": 0.2
       },
-      "mediaSec": 78.885,
+      "mediaSec": 79.22,
       "progress": 0.1,
-      "referenceSec": 78.885,
+      "referenceSec": 79.22,
       "to": 18
     },
     {
@@ -30096,14 +30110,14 @@
       "id": "trans-017-018-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 21.115,
-        "track-0084": 16.115,
-        "track-0087": 6.115,
-        "track-0091": 1.115
+        "track-0081": 20.5,
+        "track-0084": 15.5,
+        "track-0087": 5.5,
+        "track-0091": 0.5
       },
-      "mediaSec": 80.135,
+      "mediaSec": 79.52,
       "progress": 0.25,
-      "referenceSec": 80.135,
+      "referenceSec": 79.52,
       "to": 18
     },
     {
@@ -30114,14 +30128,14 @@
       "id": "trans-017-018-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 21.49,
-        "track-0084": 16.49,
-        "track-0087": 6.49,
-        "track-0091": 1.49
+        "track-0081": 21.0,
+        "track-0084": 16.0,
+        "track-0087": 6.0,
+        "track-0091": 1.0
       },
-      "mediaSec": 80.51,
+      "mediaSec": 80.02,
       "progress": 0.5,
-      "referenceSec": 80.51,
+      "referenceSec": 80.02,
       "to": 18
     },
     {
@@ -30132,14 +30146,14 @@
       "id": "trans-017-018-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 22.115,
-        "track-0084": 17.115,
-        "track-0087": 7.115,
-        "track-0091": 2.115
+        "track-0081": 21.5,
+        "track-0084": 16.5,
+        "track-0087": 6.5,
+        "track-0091": 1.5
       },
-      "mediaSec": 81.135,
+      "mediaSec": 80.52,
       "progress": 0.75,
-      "referenceSec": 81.135,
+      "referenceSec": 80.52,
       "to": 18
     },
     {
@@ -30150,14 +30164,14 @@
       "id": "trans-017-018-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 22.49,
-        "track-0084": 17.49,
-        "track-0087": 7.49,
-        "track-0091": 2.49
+        "track-0081": 21.8,
+        "track-0084": 16.8,
+        "track-0087": 6.8,
+        "track-0091": 1.8
       },
-      "mediaSec": 81.51,
+      "mediaSec": 80.82,
       "progress": 0.9,
-      "referenceSec": 81.51,
+      "referenceSec": 80.82,
       "to": 18
     },
     {
@@ -30168,14 +30182,14 @@
       "id": "trans-017-018-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 22.99,
-        "track-0084": 17.99,
-        "track-0087": 7.99,
-        "track-0091": 2.99
+        "track-0081": 22.0,
+        "track-0084": 17.0,
+        "track-0087": 7.0,
+        "track-0091": 2.0
       },
-      "mediaSec": 82.01,
+      "mediaSec": 81.02,
       "progress": 1.0,
-      "referenceSec": 82.01,
+      "referenceSec": 81.02,
       "to": 18
     },
     {
@@ -30202,13 +30216,13 @@
       "id": "trans-018-019-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 19.615,
-        "track-0087": 9.615,
-        "track-0091": 4.615
+        "track-0084": 20.0,
+        "track-0087": 10.0,
+        "track-0091": 5.0
       },
-      "mediaSec": 83.635,
+      "mediaSec": 84.02,
       "progress": 0.0,
-      "referenceSec": 83.635,
+      "referenceSec": 84.02,
       "to": 19
     },
     {
@@ -30219,13 +30233,13 @@
       "id": "trans-018-019-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 20.99,
-        "track-0087": 10.99,
-        "track-0091": 5.99
+        "track-0084": 20.2,
+        "track-0087": 10.2,
+        "track-0091": 5.2
       },
-      "mediaSec": 85.01,
+      "mediaSec": 84.22,
       "progress": 0.1,
-      "referenceSec": 85.01,
+      "referenceSec": 84.22,
       "to": 19
     },
     {
@@ -30236,13 +30250,13 @@
       "id": "trans-018-019-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 21.24,
-        "track-0087": 11.24,
-        "track-0091": 6.24
+        "track-0084": 20.5,
+        "track-0087": 10.5,
+        "track-0091": 5.5
       },
-      "mediaSec": 85.26,
+      "mediaSec": 84.52,
       "progress": 0.25,
-      "referenceSec": 85.26,
+      "referenceSec": 84.52,
       "to": 19
     },
     {
@@ -30253,13 +30267,13 @@
       "id": "trans-018-019-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 21.615,
-        "track-0087": 11.615,
-        "track-0091": 6.615
+        "track-0084": 21.0,
+        "track-0087": 11.0,
+        "track-0091": 6.0
       },
-      "mediaSec": 85.635,
+      "mediaSec": 85.02,
       "progress": 0.5,
-      "referenceSec": 85.635,
+      "referenceSec": 85.02,
       "to": 19
     },
     {
@@ -30270,13 +30284,13 @@
       "id": "trans-018-019-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 22.24,
-        "track-0087": 12.24,
-        "track-0091": 7.24
+        "track-0084": 21.5,
+        "track-0087": 11.5,
+        "track-0091": 6.5
       },
-      "mediaSec": 86.26,
+      "mediaSec": 85.52,
       "progress": 0.75,
-      "referenceSec": 86.26,
+      "referenceSec": 85.52,
       "to": 19
     },
     {
@@ -30287,13 +30301,13 @@
       "id": "trans-018-019-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 22.615,
-        "track-0087": 12.615,
-        "track-0091": 7.615
+        "track-0084": 21.8,
+        "track-0087": 11.8,
+        "track-0091": 6.8
       },
-      "mediaSec": 86.635,
+      "mediaSec": 85.82,
       "progress": 0.9,
-      "referenceSec": 86.635,
+      "referenceSec": 85.82,
       "to": 19
     },
     {
@@ -30304,13 +30318,13 @@
       "id": "trans-018-019-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 22.99,
-        "track-0087": 12.99,
-        "track-0091": 7.99
+        "track-0084": 22.0,
+        "track-0087": 12.0,
+        "track-0091": 7.0
       },
-      "mediaSec": 87.01,
+      "mediaSec": 86.02,
       "progress": 1.0,
-      "referenceSec": 87.01,
+      "referenceSec": 86.02,
       "to": 19
     },
     {
@@ -30337,15 +30351,15 @@
       "id": "trans-019-020-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 25.865,
-        "track-0087": 15.865,
-        "track-0091": 10.865,
-        "track-0093": 0.865,
-        "track-0094": 0.865
+        "track-0084": 25.0,
+        "track-0087": 15.0,
+        "track-0091": 10.0,
+        "track-0093": -2.0,
+        "track-0094": 0.0
       },
-      "mediaSec": 89.885,
+      "mediaSec": 89.02,
       "progress": 0.0,
-      "referenceSec": 89.885,
+      "referenceSec": 89.02,
       "to": 20
     },
     {
@@ -30356,15 +30370,15 @@
       "id": "trans-019-020-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 25.065,
-        "track-0087": 15.065,
-        "track-0091": 10.065,
-        "track-0093": 0.065,
-        "track-0094": 0.065
+        "track-0084": 25.2,
+        "track-0087": 15.2,
+        "track-0091": 10.2,
+        "track-0093": -1.8,
+        "track-0094": 0.2
       },
-      "mediaSec": 89.085,
+      "mediaSec": 89.22,
       "progress": 0.1,
-      "referenceSec": 89.085,
+      "referenceSec": 89.22,
       "to": 20
     },
     {
@@ -30375,15 +30389,15 @@
       "id": "trans-019-020-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 26.365,
-        "track-0087": 16.365,
-        "track-0091": 11.365,
-        "track-0093": 1.365,
-        "track-0094": 1.365
+        "track-0084": 25.5,
+        "track-0087": 15.5,
+        "track-0091": 10.5,
+        "track-0093": -1.5,
+        "track-0094": 0.5
       },
-      "mediaSec": 90.385,
+      "mediaSec": 89.52,
       "progress": 0.25,
-      "referenceSec": 90.385,
+      "referenceSec": 89.52,
       "to": 20
     },
     {
@@ -30394,15 +30408,15 @@
       "id": "trans-019-020-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 26.74,
-        "track-0087": 16.74,
-        "track-0091": 11.74,
-        "track-0093": 1.74,
-        "track-0094": 1.74
+        "track-0084": 26.0,
+        "track-0087": 16.0,
+        "track-0091": 11.0,
+        "track-0093": -1.0,
+        "track-0094": 1.0
       },
-      "mediaSec": 90.76,
+      "mediaSec": 90.02,
       "progress": 0.5,
-      "referenceSec": 90.76,
+      "referenceSec": 90.02,
       "to": 20
     },
     {
@@ -30413,15 +30427,15 @@
       "id": "trans-019-020-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 27.365,
-        "track-0087": 17.365,
-        "track-0091": 12.365,
-        "track-0093": 2.365,
-        "track-0094": 2.365
+        "track-0084": 26.5,
+        "track-0087": 16.5,
+        "track-0091": 11.5,
+        "track-0093": -0.5,
+        "track-0094": 1.5
       },
-      "mediaSec": 91.385,
+      "mediaSec": 90.52,
       "progress": 0.75,
-      "referenceSec": 91.385,
+      "referenceSec": 90.52,
       "to": 20
     },
     {
@@ -30432,15 +30446,15 @@
       "id": "trans-019-020-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 27.74,
-        "track-0087": 17.74,
-        "track-0091": 12.74,
-        "track-0093": 2.74,
-        "track-0094": 2.74
+        "track-0084": 26.8,
+        "track-0087": 16.8,
+        "track-0091": 11.8,
+        "track-0093": -0.2,
+        "track-0094": 1.8
       },
-      "mediaSec": 91.76,
+      "mediaSec": 90.82,
       "progress": 0.9,
-      "referenceSec": 91.76,
+      "referenceSec": 90.82,
       "to": 20
     },
     {
@@ -30451,15 +30465,15 @@
       "id": "trans-019-020-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 28.74,
-        "track-0087": 18.74,
-        "track-0091": 13.74,
-        "track-0093": 3.74,
-        "track-0094": 3.74
+        "track-0084": 27.0,
+        "track-0087": 17.0,
+        "track-0091": 12.0,
+        "track-0093": 0.0,
+        "track-0094": 2.0
       },
-      "mediaSec": 92.76,
+      "mediaSec": 91.02,
       "progress": 1.0,
-      "referenceSec": 92.76,
+      "referenceSec": 91.02,
       "to": 20
     },
     {
@@ -30471,7 +30485,7 @@
       "mediaClocks": {
         "track-0087": 17.5,
         "track-0091": 12.5,
-        "track-0093": 2.5,
+        "track-0093": 0.5,
         "track-0094": 0.5
       },
       "mediaSec": 91.52,
@@ -30487,17 +30501,17 @@
       "id": "trans-020-021-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 19.74,
-        "track-0091": 14.74,
-        "track-0093": 4.74,
-        "track-0094": 2.74,
+        "track-0087": 20.0,
+        "track-0091": 15.0,
+        "track-0093": 3.0,
+        "track-0094": 1.2,
         "track-0096": 0.0,
         "track-0097": 0.0,
         "track-0098": 0.0
       },
-      "mediaSec": 93.76,
+      "mediaSec": 94.02,
       "progress": 0.0,
-      "referenceSec": 93.76,
+      "referenceSec": 94.02,
       "to": 21
     },
     {
@@ -30508,17 +30522,17 @@
       "id": "trans-020-021-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 19.24,
-        "track-0091": 14.24,
-        "track-0093": 4.24,
-        "track-0094": 2.24,
-        "track-0096": 0.0,
-        "track-0097": 0.0,
-        "track-0098": 0.0
+        "track-0087": 20.2,
+        "track-0091": 15.2,
+        "track-0093": 3.2,
+        "track-0094": 1.4,
+        "track-0096": 0.2,
+        "track-0097": 0.2,
+        "track-0098": 0.2
       },
-      "mediaSec": 93.26,
+      "mediaSec": 94.22,
       "progress": 0.1,
-      "referenceSec": 93.26,
+      "referenceSec": 94.22,
       "to": 21
     },
     {
@@ -30529,17 +30543,17 @@
       "id": "trans-020-021-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 21.49,
-        "track-0091": 16.49,
-        "track-0093": 6.49,
-        "track-0094": 4.49,
-        "track-0096": 1.49,
-        "track-0097": 1.49,
-        "track-0098": 1.49
+        "track-0087": 20.5,
+        "track-0091": 15.5,
+        "track-0093": 3.5,
+        "track-0094": 1.7,
+        "track-0096": 0.5,
+        "track-0097": 0.5,
+        "track-0098": 0.5
       },
-      "mediaSec": 95.51,
+      "mediaSec": 94.52,
       "progress": 0.25,
-      "referenceSec": 95.51,
+      "referenceSec": 94.52,
       "to": 21
     },
     {
@@ -30550,17 +30564,17 @@
       "id": "trans-020-021-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 21.865,
-        "track-0091": 16.865,
-        "track-0093": 6.865,
-        "track-0094": 4.865,
-        "track-0096": 1.865,
-        "track-0097": 1.865,
-        "track-0098": 1.865
+        "track-0087": 21.0,
+        "track-0091": 16.0,
+        "track-0093": 4.0,
+        "track-0094": 2.2,
+        "track-0096": 1.0,
+        "track-0097": 1.0,
+        "track-0098": 1.0
       },
-      "mediaSec": 95.885,
+      "mediaSec": 95.02,
       "progress": 0.5,
-      "referenceSec": 95.885,
+      "referenceSec": 95.02,
       "to": 21
     },
     {
@@ -30571,17 +30585,17 @@
       "id": "trans-020-021-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 22.49,
-        "track-0091": 17.49,
-        "track-0093": 7.49,
-        "track-0094": 5.49,
-        "track-0096": 2.49,
-        "track-0097": 2.49,
-        "track-0098": 2.49
+        "track-0087": 21.5,
+        "track-0091": 16.5,
+        "track-0093": 4.5,
+        "track-0094": 2.7,
+        "track-0096": 1.5,
+        "track-0097": 1.5,
+        "track-0098": 1.5
       },
-      "mediaSec": 96.51,
+      "mediaSec": 95.52,
       "progress": 0.75,
-      "referenceSec": 96.51,
+      "referenceSec": 95.52,
       "to": 21
     },
     {
@@ -30592,17 +30606,17 @@
       "id": "trans-020-021-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 22.615,
-        "track-0091": 17.615,
-        "track-0093": 7.615,
-        "track-0094": 5.615,
-        "track-0096": 2.615,
-        "track-0097": 2.615,
-        "track-0098": 2.615
+        "track-0087": 21.8,
+        "track-0091": 16.8,
+        "track-0093": 4.8,
+        "track-0094": 3.0,
+        "track-0096": 1.8,
+        "track-0097": 1.8,
+        "track-0098": 1.8
       },
-      "mediaSec": 96.635,
+      "mediaSec": 95.82,
       "progress": 0.9,
-      "referenceSec": 96.635,
+      "referenceSec": 95.82,
       "to": 21
     },
     {
@@ -30613,17 +30627,17 @@
       "id": "trans-020-021-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 22.99,
-        "track-0091": 17.99,
-        "track-0093": 7.99,
-        "track-0094": 5.99,
-        "track-0096": 2.99,
-        "track-0097": 2.99,
-        "track-0098": 2.99
+        "track-0087": 22.0,
+        "track-0091": 17.0,
+        "track-0093": 5.0,
+        "track-0094": 3.2,
+        "track-0096": 2.0,
+        "track-0097": 2.0,
+        "track-0098": 2.0
       },
-      "mediaSec": 97.01,
+      "mediaSec": 96.02,
       "progress": 1.0,
-      "referenceSec": 97.01,
+      "referenceSec": 96.02,
       "to": 21
     },
     {
@@ -30634,8 +30648,8 @@
       "kind": "slide",
       "mediaClocks": {
         "track-0091": 17.5,
-        "track-0093": 7.5,
-        "track-0094": 0.5,
+        "track-0093": 5.5,
+        "track-0094": 1.7,
         "track-0096": 2.5,
         "track-0097": 0.5,
         "track-0098": 0.5
@@ -30653,15 +30667,15 @@
       "id": "trans-021-022-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 20.74,
-        "track-0093": 10.74,
-        "track-0094": 3.74,
-        "track-0096": 5.74,
-        "track-0098": 3.74
+        "track-0091": 20.0,
+        "track-0093": 8.0,
+        "track-0094": 4.2,
+        "track-0096": 5.0,
+        "track-0098": 3.0
       },
-      "mediaSec": 99.76,
+      "mediaSec": 99.02,
       "progress": 0.0,
-      "referenceSec": 99.76,
+      "referenceSec": 99.02,
       "to": 22
     },
     {
@@ -30672,15 +30686,15 @@
       "id": "trans-021-022-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 19.865,
-        "track-0093": 9.865,
-        "track-0094": 2.865,
-        "track-0096": 4.865,
-        "track-0098": 2.865
+        "track-0091": 20.2,
+        "track-0093": 8.2,
+        "track-0094": 4.4,
+        "track-0096": 5.2,
+        "track-0098": 3.2
       },
-      "mediaSec": 98.885,
+      "mediaSec": 99.22,
       "progress": 0.1,
-      "referenceSec": 98.885,
+      "referenceSec": 99.22,
       "to": 22
     },
     {
@@ -30691,15 +30705,15 @@
       "id": "trans-021-022-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 21.49,
-        "track-0093": 11.49,
-        "track-0094": 4.49,
-        "track-0096": 6.49,
-        "track-0098": 4.49
+        "track-0091": 20.5,
+        "track-0093": 8.5,
+        "track-0094": 4.7,
+        "track-0096": 5.5,
+        "track-0098": 3.5
       },
-      "mediaSec": 100.51,
+      "mediaSec": 99.52,
       "progress": 0.25,
-      "referenceSec": 100.51,
+      "referenceSec": 99.52,
       "to": 22
     },
     {
@@ -30710,15 +30724,15 @@
       "id": "trans-021-022-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 21.99,
-        "track-0093": 11.99,
-        "track-0094": 4.99,
-        "track-0096": 6.99,
-        "track-0098": 4.99
+        "track-0091": 21.0,
+        "track-0093": 9.0,
+        "track-0094": 5.2,
+        "track-0096": 6.0,
+        "track-0098": 4.0
       },
-      "mediaSec": 101.01,
+      "mediaSec": 100.02,
       "progress": 0.5,
-      "referenceSec": 101.01,
+      "referenceSec": 100.02,
       "to": 22
     },
     {
@@ -30729,15 +30743,15 @@
       "id": "trans-021-022-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 22.49,
-        "track-0093": 12.49,
-        "track-0094": 5.49,
-        "track-0096": 7.49,
-        "track-0098": 5.49
+        "track-0091": 21.5,
+        "track-0093": 9.5,
+        "track-0094": 5.7,
+        "track-0096": 6.5,
+        "track-0098": 4.5
       },
-      "mediaSec": 101.51,
+      "mediaSec": 100.52,
       "progress": 0.75,
-      "referenceSec": 101.51,
+      "referenceSec": 100.52,
       "to": 22
     },
     {
@@ -30748,15 +30762,15 @@
       "id": "trans-021-022-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 22.74,
-        "track-0093": 12.74,
-        "track-0094": 5.74,
-        "track-0096": 7.74,
-        "track-0098": 5.74
+        "track-0091": 21.8,
+        "track-0093": 9.8,
+        "track-0094": 6.0,
+        "track-0096": 6.8,
+        "track-0098": 4.8
       },
-      "mediaSec": 101.76,
+      "mediaSec": 100.82,
       "progress": 0.9,
-      "referenceSec": 101.76,
+      "referenceSec": 100.82,
       "to": 22
     },
     {
@@ -30767,15 +30781,15 @@
       "id": "trans-021-022-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 22.99,
-        "track-0093": 12.99,
-        "track-0094": 5.99,
-        "track-0096": 7.99,
-        "track-0098": 5.99
+        "track-0091": 22.0,
+        "track-0093": 10.0,
+        "track-0094": 6.2,
+        "track-0096": 7.0,
+        "track-0098": 5.0
       },
-      "mediaSec": 102.01,
+      "mediaSec": 101.02,
       "progress": 1.0,
-      "referenceSec": 102.01,
+      "referenceSec": 101.02,
       "to": 22
     },
     {
@@ -30785,7 +30799,7 @@
       "id": "slide-022-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 12.5
+        "track-0093": 10.5
       },
       "mediaSec": 101.52,
       "progress": 1.0,
@@ -30800,14 +30814,14 @@
       "id": "trans-022-023-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 14.24,
+        "track-0093": 13.0,
         "track-0094": 0.0,
-        "track-0102": 0.0,
-        "track-0103": 0.0
+        "track-0102": 1.0,
+        "track-0103": -0.115
       },
-      "mediaSec": 103.26,
+      "mediaSec": 104.02,
       "progress": 0.0,
-      "referenceSec": 103.26,
+      "referenceSec": 104.02,
       "to": 23
     },
     {
@@ -30818,14 +30832,14 @@
       "id": "trans-022-023-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 15.24,
-        "track-0094": 0.24,
-        "track-0102": 0.24,
-        "track-0103": 0.24
+        "track-0093": 13.2,
+        "track-0094": 0.2,
+        "track-0102": 1.2,
+        "track-0103": 0.085
       },
-      "mediaSec": 104.26,
+      "mediaSec": 104.22,
       "progress": 0.1,
-      "referenceSec": 104.26,
+      "referenceSec": 104.22,
       "to": 23
     },
     {
@@ -30836,14 +30850,14 @@
       "id": "trans-022-023-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 16.49,
-        "track-0094": 1.49,
-        "track-0102": 1.49,
-        "track-0103": 1.49
+        "track-0093": 13.5,
+        "track-0094": 0.5,
+        "track-0102": 1.5,
+        "track-0103": 0.385
       },
-      "mediaSec": 105.51,
+      "mediaSec": 104.52,
       "progress": 0.25,
-      "referenceSec": 105.51,
+      "referenceSec": 104.52,
       "to": 23
     },
     {
@@ -30854,14 +30868,14 @@
       "id": "trans-022-023-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 16.99,
-        "track-0094": 1.99,
-        "track-0102": 1.99,
-        "track-0103": 1.99
+        "track-0093": 14.0,
+        "track-0094": 1.0,
+        "track-0102": 2.0,
+        "track-0103": 0.885
       },
-      "mediaSec": 106.01,
+      "mediaSec": 105.02,
       "progress": 0.5,
-      "referenceSec": 106.01,
+      "referenceSec": 105.02,
       "to": 23
     },
     {
@@ -30872,14 +30886,14 @@
       "id": "trans-022-023-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 17.49,
-        "track-0094": 2.49,
-        "track-0102": 2.49,
-        "track-0103": 2.49
+        "track-0093": 14.5,
+        "track-0094": 1.5,
+        "track-0102": 2.5,
+        "track-0103": 1.385
       },
-      "mediaSec": 106.51,
+      "mediaSec": 105.52,
       "progress": 0.75,
-      "referenceSec": 106.51,
+      "referenceSec": 105.52,
       "to": 23
     },
     {
@@ -30890,14 +30904,14 @@
       "id": "trans-022-023-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 17.74,
-        "track-0094": 2.74,
-        "track-0102": 2.74,
-        "track-0103": 2.74
+        "track-0093": 14.8,
+        "track-0094": 1.8,
+        "track-0102": 2.8,
+        "track-0103": 1.685
       },
-      "mediaSec": 106.76,
+      "mediaSec": 105.82,
       "progress": 0.9,
-      "referenceSec": 106.76,
+      "referenceSec": 105.82,
       "to": 23
     },
     {
@@ -30908,14 +30922,14 @@
       "id": "trans-022-023-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 17.99,
-        "track-0094": 2.99,
-        "track-0102": 2.99,
-        "track-0103": 2.99
+        "track-0093": 15.0,
+        "track-0094": 2.0,
+        "track-0102": 3.0,
+        "track-0103": 1.885
       },
-      "mediaSec": 107.01,
+      "mediaSec": 106.02,
       "progress": 1.0,
-      "referenceSec": 107.01,
+      "referenceSec": 106.02,
       "to": 23
     },
     {
@@ -30925,10 +30939,10 @@
       "id": "slide-023-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 17.5,
+        "track-0093": 15.5,
         "track-0094": 0.5,
         "track-0097": 0.5,
-        "track-0102": 0.5,
+        "track-0102": 1.5,
         "track-0103": 0.5
       },
       "mediaSec": 106.52,
@@ -30944,15 +30958,15 @@
       "id": "trans-023-024-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 19.115,
-        "track-0094": 2.115,
-        "track-0097": 2.115,
-        "track-0102": 2.115,
-        "track-0103": 2.115
+        "track-0093": 18.0,
+        "track-0094": 3.0,
+        "track-0097": 3.0,
+        "track-0102": 4.0,
+        "track-0103": 0.0
       },
-      "mediaSec": 108.135,
+      "mediaSec": 109.02,
       "progress": 0.0,
-      "referenceSec": 108.135,
+      "referenceSec": 109.02,
       "to": 24
     },
     {
@@ -30963,15 +30977,15 @@
       "id": "trans-023-024-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 19.115,
-        "track-0094": 2.115,
-        "track-0097": 2.115,
-        "track-0102": 2.115,
-        "track-0103": 2.115
+        "track-0093": 18.2,
+        "track-0094": 3.2,
+        "track-0097": 3.2,
+        "track-0102": 4.2,
+        "track-0103": 0.2
       },
-      "mediaSec": 108.135,
+      "mediaSec": 109.22,
       "progress": 0.1,
-      "referenceSec": 108.135,
+      "referenceSec": 109.22,
       "to": 24
     },
     {
@@ -30982,15 +30996,15 @@
       "id": "trans-023-024-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 20.115,
-        "track-0094": 3.115,
-        "track-0097": 3.115,
-        "track-0102": 3.115,
-        "track-0103": 3.115
+        "track-0093": 18.5,
+        "track-0094": 3.5,
+        "track-0097": 3.5,
+        "track-0102": 4.5,
+        "track-0103": 0.5
       },
-      "mediaSec": 109.135,
+      "mediaSec": 109.52,
       "progress": 0.25,
-      "referenceSec": 109.135,
+      "referenceSec": 109.52,
       "to": 24
     },
     {
@@ -31001,15 +31015,15 @@
       "id": "trans-023-024-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 20.115,
-        "track-0094": 3.115,
-        "track-0097": 3.115,
-        "track-0102": 3.115,
-        "track-0103": 3.115
+        "track-0093": 19.0,
+        "track-0094": 4.0,
+        "track-0097": 4.0,
+        "track-0102": 5.0,
+        "track-0103": 1.0
       },
-      "mediaSec": 109.135,
+      "mediaSec": 110.02,
       "progress": 0.5,
-      "referenceSec": 109.135,
+      "referenceSec": 110.02,
       "to": 24
     },
     {
@@ -31020,15 +31034,15 @@
       "id": "trans-023-024-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 22.49,
-        "track-0094": 5.49,
-        "track-0097": 5.49,
-        "track-0102": 5.49,
-        "track-0103": 5.49
+        "track-0093": 19.5,
+        "track-0094": 4.5,
+        "track-0097": 4.5,
+        "track-0102": 5.5,
+        "track-0103": 1.5
       },
-      "mediaSec": 111.51,
+      "mediaSec": 110.52,
       "progress": 0.75,
-      "referenceSec": 111.51,
+      "referenceSec": 110.52,
       "to": 24
     },
     {
@@ -31039,15 +31053,15 @@
       "id": "trans-023-024-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 22.74,
-        "track-0094": 5.74,
-        "track-0097": 5.74,
-        "track-0102": 5.74,
-        "track-0103": 5.74
+        "track-0093": 19.8,
+        "track-0094": 4.8,
+        "track-0097": 4.8,
+        "track-0102": 5.8,
+        "track-0103": 1.8
       },
-      "mediaSec": 111.76,
+      "mediaSec": 110.82,
       "progress": 0.9,
-      "referenceSec": 111.76,
+      "referenceSec": 110.82,
       "to": 24
     },
     {
@@ -31058,15 +31072,15 @@
       "id": "trans-023-024-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 22.99,
-        "track-0094": 5.99,
-        "track-0097": 5.99,
-        "track-0102": 5.99,
-        "track-0103": 5.99
+        "track-0093": 20.0,
+        "track-0094": 5.0,
+        "track-0097": 5.0,
+        "track-0102": 6.0,
+        "track-0103": 2.0
       },
-      "mediaSec": 112.01,
+      "mediaSec": 111.02,
       "progress": 1.0,
-      "referenceSec": 112.01,
+      "referenceSec": 111.02,
       "to": 24
     },
     {
@@ -31076,9 +31090,9 @@
       "id": "slide-024-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 22.5,
+        "track-0093": 20.5,
         "track-0102": 0.5,
-        "track-0103": 0.5
+        "track-0103": 2.5
       },
       "mediaSec": 111.52,
       "progress": 1.0,
@@ -31093,13 +31107,13 @@
       "id": "trans-024-025-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 23.99,
-        "track-0102": 1.99,
-        "track-0103": 1.99
+        "track-0093": 23.0,
+        "track-0102": 3.0,
+        "track-0103": 5.0
       },
-      "mediaSec": 113.01,
+      "mediaSec": 114.02,
       "progress": 0.0,
-      "referenceSec": 113.01,
+      "referenceSec": 114.02,
       "to": 25
     },
     {
@@ -31110,13 +31124,13 @@
       "id": "trans-024-025-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 25.115,
-        "track-0102": 3.115,
-        "track-0103": 3.115
+        "track-0093": 23.2,
+        "track-0102": 3.2,
+        "track-0103": 5.2
       },
-      "mediaSec": 114.135,
+      "mediaSec": 114.22,
       "progress": 0.1,
-      "referenceSec": 114.135,
+      "referenceSec": 114.22,
       "to": 25
     },
     {
@@ -31127,13 +31141,13 @@
       "id": "trans-024-025-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 26.49,
-        "track-0102": 4.49,
-        "track-0103": 4.49
+        "track-0093": 23.5,
+        "track-0102": 3.5,
+        "track-0103": 5.5
       },
-      "mediaSec": 115.51,
+      "mediaSec": 114.52,
       "progress": 0.25,
-      "referenceSec": 115.51,
+      "referenceSec": 114.52,
       "to": 25
     },
     {
@@ -31144,13 +31158,13 @@
       "id": "trans-024-025-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 26.99,
-        "track-0102": 4.99,
-        "track-0103": 4.99
+        "track-0093": 24.0,
+        "track-0102": 4.0,
+        "track-0103": 6.0
       },
-      "mediaSec": 116.01,
+      "mediaSec": 115.02,
       "progress": 0.5,
-      "referenceSec": 116.01,
+      "referenceSec": 115.02,
       "to": 25
     },
     {
@@ -31161,13 +31175,13 @@
       "id": "trans-024-025-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 27.115,
-        "track-0102": 5.115,
-        "track-0103": 5.115
+        "track-0093": 24.5,
+        "track-0102": 4.5,
+        "track-0103": 6.5
       },
-      "mediaSec": 116.135,
+      "mediaSec": 115.52,
       "progress": 0.75,
-      "referenceSec": 116.135,
+      "referenceSec": 115.52,
       "to": 25
     },
     {
@@ -31178,13 +31192,13 @@
       "id": "trans-024-025-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 27.24,
-        "track-0102": 5.24,
-        "track-0103": 5.24
+        "track-0093": 24.8,
+        "track-0102": 4.8,
+        "track-0103": 6.8
       },
-      "mediaSec": 116.26,
+      "mediaSec": 115.82,
       "progress": 0.9,
-      "referenceSec": 116.26,
+      "referenceSec": 115.82,
       "to": 25
     },
     {
@@ -31195,13 +31209,13 @@
       "id": "trans-024-025-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 27.99,
-        "track-0102": 5.99,
-        "track-0103": 5.99
+        "track-0093": 25.0,
+        "track-0102": 5.0,
+        "track-0103": 7.0
       },
-      "mediaSec": 117.01,
+      "mediaSec": 116.02,
       "progress": 1.0,
-      "referenceSec": 117.01,
+      "referenceSec": 116.02,
       "to": 25
     },
     {
@@ -31211,7 +31225,7 @@
       "id": "slide-025-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 27.5
+        "track-0093": 25.5
       },
       "mediaSec": 116.52,
       "progress": 1.0,
@@ -31226,12 +31240,12 @@
       "id": "trans-025-026-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 30.115,
-        "track-0109": 0.115
+        "track-0093": 28.0,
+        "track-0109": 0.0
       },
-      "mediaSec": 119.135,
+      "mediaSec": 119.02,
       "progress": 0.0,
-      "referenceSec": 119.135,
+      "referenceSec": 119.02,
       "to": 26
     },
     {
@@ -31242,12 +31256,12 @@
       "id": "trans-025-026-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 30.115,
-        "track-0109": 0.115
+        "track-0093": 28.2,
+        "track-0109": 0.2
       },
-      "mediaSec": 119.135,
+      "mediaSec": 119.22,
       "progress": 0.1,
-      "referenceSec": 119.135,
+      "referenceSec": 119.22,
       "to": 26
     },
     {
@@ -31258,12 +31272,12 @@
       "id": "trans-025-026-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 30.115,
-        "track-0109": 0.115
+        "track-0093": 28.5,
+        "track-0109": 0.5
       },
-      "mediaSec": 119.135,
+      "mediaSec": 119.52,
       "progress": 0.25,
-      "referenceSec": 119.135,
+      "referenceSec": 119.52,
       "to": 26
     },
     {
@@ -31274,12 +31288,12 @@
       "id": "trans-025-026-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 29.99,
-        "track-0109": 0.0
+        "track-0093": 29.0,
+        "track-0109": 1.0
       },
-      "mediaSec": 119.01,
+      "mediaSec": 120.02,
       "progress": 0.5,
-      "referenceSec": 119.01,
+      "referenceSec": 120.02,
       "to": 26
     },
     {
@@ -31290,12 +31304,12 @@
       "id": "trans-025-026-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 32.49,
-        "track-0109": 2.49
+        "track-0093": 29.5,
+        "track-0109": 1.5
       },
-      "mediaSec": 121.51,
+      "mediaSec": 120.52,
       "progress": 0.75,
-      "referenceSec": 121.51,
+      "referenceSec": 120.52,
       "to": 26
     },
     {
@@ -31306,12 +31320,12 @@
       "id": "trans-025-026-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 32.74,
-        "track-0109": 2.74
+        "track-0093": 29.8,
+        "track-0109": 1.8
       },
-      "mediaSec": 121.76,
+      "mediaSec": 120.82,
       "progress": 0.9,
-      "referenceSec": 121.76,
+      "referenceSec": 120.82,
       "to": 26
     },
     {
@@ -31322,12 +31336,12 @@
       "id": "trans-025-026-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 32.865,
-        "track-0109": 2.865
+        "track-0093": 30.0,
+        "track-0109": 2.0
       },
-      "mediaSec": 121.885,
+      "mediaSec": 121.02,
       "progress": 1.0,
-      "referenceSec": 121.885,
+      "referenceSec": 121.02,
       "to": 26
     },
     {
@@ -31337,7 +31351,7 @@
       "id": "slide-026-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 32.5,
+        "track-0093": 30.5,
         "track-0109": 2.5
       },
       "mediaSec": 121.52,
@@ -31353,7 +31367,7 @@
       "id": "trans-026-027-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 35.0,
+        "track-0093": 33.0,
         "track-0109": 5.0
       },
       "mediaSec": 124.02,
@@ -31369,7 +31383,7 @@
       "id": "trans-026-027-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 35.2,
+        "track-0093": 33.2,
         "track-0109": 5.2
       },
       "mediaSec": 124.22,
@@ -31385,7 +31399,7 @@
       "id": "trans-026-027-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 35.5,
+        "track-0093": 33.5,
         "track-0109": 5.5
       },
       "mediaSec": 124.52,
@@ -31401,7 +31415,7 @@
       "id": "trans-026-027-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 36.0,
+        "track-0093": 34.0,
         "track-0109": 6.0
       },
       "mediaSec": 125.02,
@@ -31417,7 +31431,7 @@
       "id": "trans-026-027-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 36.5,
+        "track-0093": 34.5,
         "track-0109": 6.5
       },
       "mediaSec": 125.52,
@@ -31433,7 +31447,7 @@
       "id": "trans-026-027-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 36.8,
+        "track-0093": 34.8,
         "track-0109": 6.8
       },
       "mediaSec": 125.82,
@@ -31449,7 +31463,7 @@
       "id": "trans-026-027-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 37.0,
+        "track-0093": 35.0,
         "track-0109": 7.0
       },
       "mediaSec": 126.02,
@@ -31464,7 +31478,7 @@
       "id": "slide-027-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0093": 37.5,
+        "track-0093": 35.5,
         "track-0109": 7.5
       },
       "mediaSec": 126.52,
@@ -31480,7 +31494,7 @@
       "id": "trans-027-028-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 40.0,
+        "track-0093": 38.0,
         "track-0109": 10.0
       },
       "mediaSec": 129.02,
@@ -31496,7 +31510,7 @@
       "id": "trans-027-028-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 40.2,
+        "track-0093": 38.2,
         "track-0109": 10.2
       },
       "mediaSec": 129.22,
@@ -31512,7 +31526,7 @@
       "id": "trans-027-028-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 40.5,
+        "track-0093": 38.5,
         "track-0109": 10.5
       },
       "mediaSec": 129.52,
@@ -31528,7 +31542,7 @@
       "id": "trans-027-028-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 41.0,
+        "track-0093": 39.0,
         "track-0109": 11.0
       },
       "mediaSec": 130.02,
@@ -31544,7 +31558,7 @@
       "id": "trans-027-028-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 41.5,
+        "track-0093": 39.5,
         "track-0109": 11.5
       },
       "mediaSec": 130.52,
@@ -31560,7 +31574,7 @@
       "id": "trans-027-028-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 41.8,
+        "track-0093": 39.8,
         "track-0109": 11.8
       },
       "mediaSec": 130.82,
@@ -31576,7 +31590,7 @@
       "id": "trans-027-028-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 42.0,
+        "track-0093": 40.0,
         "track-0109": 12.0
       },
       "mediaSec": 131.02,
@@ -32063,12 +32077,12 @@
       "id": "reverse-002-001-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.0,
-        "track-0008": 3.0
+        "track-0003": 4.0,
+        "track-0008": 4.0
       },
-      "mediaSec": 3.0,
+      "mediaSec": 4.0,
       "progress": 0.5,
-      "referenceSec": 3.0,
+      "referenceSec": 4.0,
       "to": 1
     },
     {
@@ -32079,12 +32093,12 @@
       "id": "reverse-003-002-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 8.875,
-        "track-0008": 8.875
+        "track-0003": 9.0,
+        "track-0008": 9.0
       },
-      "mediaSec": 8.875,
+      "mediaSec": 9.0,
       "progress": 0.5,
-      "referenceSec": 8.875,
+      "referenceSec": 9.0,
       "to": 2
     },
     {
@@ -32095,9 +32109,9 @@
       "id": "reverse-004-003-050",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 13.0,
+      "mediaSec": 14.0,
       "progress": 0.5,
-      "referenceSec": 13.0,
+      "referenceSec": 14.0,
       "to": 3
     },
     {
@@ -32108,9 +32122,9 @@
       "id": "reverse-005-004-050",
       "kind": "transition",
       "mediaClocks": {},
-      "mediaSec": 17.88,
+      "mediaSec": 19.0,
       "progress": 0.5,
-      "referenceSec": 17.88,
+      "referenceSec": 19.0,
       "to": 4
     },
     {
@@ -32121,11 +32135,11 @@
       "id": "reverse-006-005-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 0.615
+        "track-0038": 1.0
       },
-      "mediaSec": 23.615,
+      "mediaSec": 24.0,
       "progress": 0.5,
-      "referenceSec": 23.615,
+      "referenceSec": 24.0,
       "to": 5
     },
     {
@@ -32136,13 +32150,13 @@
       "id": "reverse-007-006-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 5.865,
-        "track-0044": 0.865,
-        "track-0050": 0.865
+        "track-0038": 6.0,
+        "track-0044": 1.0,
+        "track-0050": 1.0
       },
-      "mediaSec": 28.865,
+      "mediaSec": 29.0,
       "progress": 0.5,
-      "referenceSec": 28.865,
+      "referenceSec": 29.0,
       "to": 6
     },
     {
@@ -32153,15 +32167,15 @@
       "id": "reverse-008-007-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 9.87,
-        "track-0044": 4.87,
-        "track-0050": 4.87,
-        "track-0051": 0.0,
-        "track-0053": 0.0
+        "track-0038": 10.005,
+        "track-0044": 5.005,
+        "track-0050": 5.005,
+        "track-0051": 0.005,
+        "track-0053": 0.005
       },
-      "mediaSec": 32.87,
+      "mediaSec": 33.005,
       "progress": 0.5,
-      "referenceSec": 32.87,
+      "referenceSec": 33.005,
       "to": 7
     },
     {
@@ -32172,14 +32186,14 @@
       "id": "reverse-009-008-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0038": 12.255,
-        "track-0044": 7.255,
-        "track-0051": 2.255,
-        "track-0053": 2.255
+        "track-0038": 13.015,
+        "track-0044": 8.015,
+        "track-0051": 3.015,
+        "track-0053": 3.015
       },
-      "mediaSec": 35.255,
+      "mediaSec": 36.015,
       "progress": 0.5,
-      "referenceSec": 35.255,
+      "referenceSec": 36.015,
       "to": 8
     },
     {
@@ -32190,15 +32204,15 @@
       "id": "reverse-010-009-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0051": 7.01,
-        "track-0053": 7.01,
-        "track-0056": 0.99,
-        "track-0060": 0.99,
-        "track-0061": 0.99
+        "track-0051": 7.02,
+        "track-0053": 7.02,
+        "track-0056": 1.0,
+        "track-0060": 1.0,
+        "track-0061": 1.0
       },
-      "mediaSec": 40.01,
+      "mediaSec": 40.02,
       "progress": 0.5,
-      "referenceSec": 40.01,
+      "referenceSec": 40.02,
       "to": 9
     },
     {
@@ -32209,17 +32223,17 @@
       "id": "reverse-011-010-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 12.01,
-        "track-0056": 5.99,
-        "track-0060": 5.99,
-        "track-0061": 5.99,
-        "track-0066": 0.99,
-        "track-0067": 0.99,
-        "track-0071": 0.99
+        "track-0053": 12.02,
+        "track-0056": 6.0,
+        "track-0060": 6.0,
+        "track-0061": 6.0,
+        "track-0066": 1.0,
+        "track-0067": 1.0,
+        "track-0071": 1.0
       },
-      "mediaSec": 45.01,
+      "mediaSec": 45.02,
       "progress": 0.5,
-      "referenceSec": 45.01,
+      "referenceSec": 45.02,
       "to": 10
     },
     {
@@ -32230,18 +32244,18 @@
       "id": "reverse-012-011-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0053": 16.135,
-        "track-0056": 10.115,
-        "track-0060": 10.115,
-        "track-0061": 10.115,
-        "track-0066": 5.115,
-        "track-0067": 5.115,
-        "track-0071": 5.115,
-        "track-0073": 0.115
+        "track-0053": 17.02,
+        "track-0056": 11.0,
+        "track-0060": 11.0,
+        "track-0061": 11.0,
+        "track-0066": 6.0,
+        "track-0067": 6.0,
+        "track-0071": 6.0,
+        "track-0073": 1.0
       },
-      "mediaSec": 49.135,
+      "mediaSec": 50.02,
       "progress": 0.5,
-      "referenceSec": 49.135,
+      "referenceSec": 50.02,
       "to": 11
     },
     {
@@ -32252,15 +32266,15 @@
       "id": "reverse-013-012-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 11.115,
-        "track-0067": 11.115,
-        "track-0071": 11.115,
-        "track-0073": 6.115,
-        "track-0078": 1.115
+        "track-0066": 11.0,
+        "track-0067": 11.0,
+        "track-0071": 11.0,
+        "track-0073": 6.0,
+        "track-0078": 1.0
       },
-      "mediaSec": 55.135,
+      "mediaSec": 55.02,
       "progress": 0.5,
-      "referenceSec": 55.135,
+      "referenceSec": 55.02,
       "to": 12
     },
     {
@@ -32271,16 +32285,16 @@
       "id": "reverse-014-013-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0066": 16.24,
-        "track-0067": 16.24,
-        "track-0071": 16.24,
-        "track-0073": 11.24,
-        "track-0078": 6.24,
-        "track-0081": 1.24
+        "track-0066": 16.0,
+        "track-0067": 16.0,
+        "track-0071": 16.0,
+        "track-0073": 11.0,
+        "track-0078": 6.0,
+        "track-0081": 1.0
       },
-      "mediaSec": 60.26,
+      "mediaSec": 60.02,
       "progress": 0.5,
-      "referenceSec": 60.26,
+      "referenceSec": 60.02,
       "to": 13
     },
     {
@@ -32291,14 +32305,14 @@
       "id": "reverse-015-014-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0073": 15.865,
-        "track-0078": 10.865,
-        "track-0081": 5.865,
-        "track-0084": 0.865
+        "track-0073": 16.0,
+        "track-0078": 11.0,
+        "track-0081": 6.0,
+        "track-0084": 1.0
       },
-      "mediaSec": 64.885,
+      "mediaSec": 65.02,
       "progress": 0.5,
-      "referenceSec": 64.885,
+      "referenceSec": 65.02,
       "to": 14
     },
     {
@@ -32309,13 +32323,13 @@
       "id": "reverse-016-015-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 16.24,
-        "track-0081": 11.24,
-        "track-0084": 6.24
+        "track-0078": 16.0,
+        "track-0081": 11.0,
+        "track-0084": 6.0
       },
-      "mediaSec": 70.26,
+      "mediaSec": 70.02,
       "progress": 0.5,
-      "referenceSec": 70.26,
+      "referenceSec": 70.02,
       "to": 15
     },
     {
@@ -32326,14 +32340,14 @@
       "id": "reverse-017-016-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0078": 21.365,
-        "track-0081": 16.365,
-        "track-0084": 11.365,
-        "track-0087": 1.365
+        "track-0078": 21.0,
+        "track-0081": 16.0,
+        "track-0084": 11.0,
+        "track-0087": 1.0
       },
-      "mediaSec": 75.385,
+      "mediaSec": 75.02,
       "progress": 0.5,
-      "referenceSec": 75.385,
+      "referenceSec": 75.02,
       "to": 16
     },
     {
@@ -32344,14 +32358,14 @@
       "id": "reverse-018-017-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0081": 21.49,
-        "track-0084": 16.49,
-        "track-0087": 6.49,
-        "track-0091": 1.49
+        "track-0081": 21.0,
+        "track-0084": 16.0,
+        "track-0087": 6.0,
+        "track-0091": 1.0
       },
-      "mediaSec": 80.51,
+      "mediaSec": 80.02,
       "progress": 0.5,
-      "referenceSec": 80.51,
+      "referenceSec": 80.02,
       "to": 17
     },
     {
@@ -32362,13 +32376,13 @@
       "id": "reverse-019-018-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 21.615,
-        "track-0087": 11.615,
-        "track-0091": 6.615
+        "track-0084": 21.0,
+        "track-0087": 11.0,
+        "track-0091": 6.0
       },
-      "mediaSec": 85.635,
+      "mediaSec": 85.02,
       "progress": 0.5,
-      "referenceSec": 85.635,
+      "referenceSec": 85.02,
       "to": 18
     },
     {
@@ -32379,15 +32393,15 @@
       "id": "reverse-020-019-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0084": 26.74,
-        "track-0087": 16.74,
-        "track-0091": 11.74,
-        "track-0093": 1.74,
-        "track-0094": 1.74
+        "track-0084": 26.0,
+        "track-0087": 16.0,
+        "track-0091": 11.0,
+        "track-0093": -1.0,
+        "track-0094": 1.0
       },
-      "mediaSec": 90.76,
+      "mediaSec": 90.02,
       "progress": 0.5,
-      "referenceSec": 90.76,
+      "referenceSec": 90.02,
       "to": 19
     },
     {
@@ -32398,17 +32412,17 @@
       "id": "reverse-021-020-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0087": 21.865,
-        "track-0091": 16.865,
-        "track-0093": 6.865,
-        "track-0094": 4.865,
-        "track-0096": 1.865,
-        "track-0097": 1.865,
-        "track-0098": 1.865
+        "track-0087": 21.0,
+        "track-0091": 16.0,
+        "track-0093": 4.0,
+        "track-0094": 2.2,
+        "track-0096": 1.0,
+        "track-0097": 1.0,
+        "track-0098": 1.0
       },
-      "mediaSec": 95.885,
+      "mediaSec": 95.02,
       "progress": 0.5,
-      "referenceSec": 95.885,
+      "referenceSec": 95.02,
       "to": 20
     },
     {
@@ -32419,15 +32433,15 @@
       "id": "reverse-022-021-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0091": 21.99,
-        "track-0093": 11.99,
-        "track-0094": 4.99,
-        "track-0096": 6.99,
-        "track-0098": 4.99
+        "track-0091": 21.0,
+        "track-0093": 9.0,
+        "track-0094": 5.2,
+        "track-0096": 6.0,
+        "track-0098": 4.0
       },
-      "mediaSec": 101.01,
+      "mediaSec": 100.02,
       "progress": 0.5,
-      "referenceSec": 101.01,
+      "referenceSec": 100.02,
       "to": 21
     },
     {
@@ -32438,14 +32452,14 @@
       "id": "reverse-023-022-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 16.99,
-        "track-0094": 1.99,
-        "track-0102": 1.99,
-        "track-0103": 1.99
+        "track-0093": 14.0,
+        "track-0094": 1.0,
+        "track-0102": 2.0,
+        "track-0103": 0.885
       },
-      "mediaSec": 106.01,
+      "mediaSec": 105.02,
       "progress": 0.5,
-      "referenceSec": 106.01,
+      "referenceSec": 105.02,
       "to": 22
     },
     {
@@ -32456,15 +32470,15 @@
       "id": "reverse-024-023-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 20.115,
-        "track-0094": 3.115,
-        "track-0097": 3.115,
-        "track-0102": 3.115,
-        "track-0103": 3.115
+        "track-0093": 19.0,
+        "track-0094": 4.0,
+        "track-0097": 4.0,
+        "track-0102": 5.0,
+        "track-0103": 1.0
       },
-      "mediaSec": 109.135,
+      "mediaSec": 110.02,
       "progress": 0.5,
-      "referenceSec": 109.135,
+      "referenceSec": 110.02,
       "to": 23
     },
     {
@@ -32475,13 +32489,13 @@
       "id": "reverse-025-024-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 26.99,
-        "track-0102": 4.99,
-        "track-0103": 4.99
+        "track-0093": 24.0,
+        "track-0102": 4.0,
+        "track-0103": 6.0
       },
-      "mediaSec": 116.01,
+      "mediaSec": 115.02,
       "progress": 0.5,
-      "referenceSec": 116.01,
+      "referenceSec": 115.02,
       "to": 24
     },
     {
@@ -32492,12 +32506,12 @@
       "id": "reverse-026-025-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 29.99,
-        "track-0109": 0.0
+        "track-0093": 29.0,
+        "track-0109": 1.0
       },
-      "mediaSec": 119.01,
+      "mediaSec": 120.02,
       "progress": 0.5,
-      "referenceSec": 119.01,
+      "referenceSec": 120.02,
       "to": 25
     },
     {
@@ -32508,7 +32522,7 @@
       "id": "reverse-027-026-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 36.0,
+        "track-0093": 34.0,
         "track-0109": 6.0
       },
       "mediaSec": 125.02,
@@ -32524,7 +32538,7 @@
       "id": "reverse-028-027-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0093": 41.0,
+        "track-0093": 39.0,
         "track-0109": 11.0
       },
       "mediaSec": 130.02,

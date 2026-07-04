@@ -33,39 +33,39 @@
   },
   "layer_policy": {
     "panel_outline_on_top": true,
-    "decorative_tracks": ["track-0076"],
+    "decorative_tracks": ["track-0093", "track-0116"],
     "transition_layer_overrides": [
       {
-        "from": 17,
-        "to": 18,
+        "from": 21,
+        "to": 22,
         "mode": "panels-above-decorative",
-        "decorative_tracks": ["track-0076"],
+        "decorative_tracks": ["track-0093"],
         "z_boost": 1000,
-        "source": "carousel-panels-above-heart"
+        "source": "carousel-panels-above-heart-current-32-slide-remap"
       },
       {
-        "from": 18,
-        "to": 19,
+        "from": 22,
+        "to": 23,
         "mode": "panels-above-decorative",
-        "decorative_tracks": ["track-0076"],
+        "decorative_tracks": ["track-0093"],
         "z_boost": 1000,
-        "source": "carousel-panels-above-heart"
+        "source": "carousel-panels-above-heart-current-32-slide-remap"
       },
       {
-        "from": 19,
-        "to": 20,
+        "from": 23,
+        "to": 24,
         "mode": "panels-above-decorative",
-        "decorative_tracks": ["track-0076"],
+        "decorative_tracks": ["track-0093"],
         "z_boost": 1000,
-        "source": "carousel-panels-above-heart"
+        "source": "carousel-panels-above-heart-current-32-slide-remap"
       },
       {
-        "from": 20,
-        "to": 21,
+        "from": 24,
+        "to": 25,
         "mode": "panels-above-decorative",
-        "decorative_tracks": ["track-0076"],
+        "decorative_tracks": ["track-0093"],
         "z_boost": 1000,
-        "source": "carousel-panels-above-heart"
+        "source": "carousel-panels-above-heart-current-32-slide-remap"
       }
     ]
   },
@@ -85,13 +85,13 @@
         "source": "slide02-focused-qa"
       },
       {
-        "from": 15,
-        "to": 16,
+        "from": 19,
+        "to": 20,
         "enter_start": 0.0,
         "enter_end": 0.25,
         "exit_start": 0.75,
         "exit_end": 1.0,
-        "source": "slide16-fast-background-reveal"
+        "source": "slide20-fast-background-reveal-current-32-slide-remap"
       }
     ],
     "transition_progress_overrides": [
@@ -110,8 +110,8 @@
         "source": "BBD26-slide-1-2-powerpoint-oracle-calibration"
       },
       {
-        "from": 17,
-        "to": 18,
+        "from": 21,
+        "to": 22,
         "points": [
           { "progress": 0.0, "value": 0.0 },
           { "progress": 0.1, "value": 0.0 },
@@ -121,15 +121,14 @@
           { "progress": 0.9, "value": 0.98 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "slide17-panel-bound-calibration"
+        "source": "slide21-panel-bound-calibration-current-32-slide-remap"
       }
     ],
-    "transition_progress_overrides_file": "BBD26-scene/qa/morph-progress-overrides.json",
     "transition_track_progress_overrides": [
       {
-        "from": 19,
-        "to": 20,
-        "track_id": "track-0084",
+        "from": 23,
+        "to": 24,
+        "track_id": "track-0101",
         "points": [
           { "progress": 0.0, "value": 0.0 },
           { "progress": 0.1, "value": 0.0 },
@@ -139,13 +138,13 @@
           { "progress": 0.9, "value": 1.0 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "track-progress-current-panel-calibration",
+        "source": "track-progress-current-panel-calibration-current-32-slide-remap",
         "score": 0.539362
       },
       {
-        "from": 19,
-        "to": 20,
-        "track_id": "track-0087",
+        "from": 23,
+        "to": 24,
+        "track_id": "track-0104",
         "points": [
           { "progress": 0.0, "value": 0.0 },
           { "progress": 0.1, "value": 0.0 },
@@ -155,7 +154,7 @@
           { "progress": 0.9, "value": 1.0 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "track-progress-current-panel-calibration",
+        "source": "track-progress-current-panel-calibration-current-32-slide-remap",
         "score": 0.542942
       }
     ]
@@ -176,13 +175,11 @@
     "transition_reference_lead_fraction": 0.0,
     "slide_timed_video_phase_sec": 0.0
   },
-  "transition_time_overrides_file": "BBD26-scene/qa/transition-time-overrides.json",
-  "raster_fallback_overrides_file": "BBD26-scene-fallbacks/combined-fallback-overrides.json",
   "media_phase_overrides": [
     {
-      "slide": 16,
-      "object_id": "s16-o3",
-      "track_id": "track-0077",
+      "slide": 20,
+      "object_id": "s20-o3",
+      "track_id": "track-0093",
       "asset_id": "asset-b34ce151f7018046",
       "name": "Picture 2",
       "phase_sec": -2.0,
@@ -193,9 +190,9 @@
       "target_reason": "persistent-loop-origin"
     },
     {
-      "slide": 17,
-      "object_id": "s17-o9",
-      "track_id": "track-0078",
+      "slide": 21,
+      "object_id": "s21-o9",
+      "track_id": "track-0094",
       "asset_id": "asset-c1478e568641a55a",
       "name": "Combined01_spedup_30s_hq_playback",
       "phase_sec": 1.2,
@@ -203,9 +200,9 @@
       "source": "media-phase-finer"
     },
     {
-      "slide": 18,
-      "object_id": "s18-o11",
-      "track_id": "track-0081",
+      "slide": 22,
+      "object_id": "s22-o11",
+      "track_id": "track-0097",
       "asset_id": "asset-34a2f729c61b7c79",
       "name": "Combined02_spedup_30s_hq_playback",
       "phase_sec": 0.0,
@@ -213,9 +210,9 @@
       "source": "media-phase"
     },
     {
-      "slide": 19,
-      "object_id": "s19-o10",
-      "track_id": "track-0085",
+      "slide": 23,
+      "object_id": "s23-o10",
+      "track_id": "track-0102",
       "asset_id": "asset-a94bc7da5c6d4913",
       "name": "Combined04_spedup_30s_hq_playback",
       "phase_sec": 1.0,
@@ -223,9 +220,9 @@
       "source": "media-phase"
     },
     {
-      "slide": 20,
-      "object_id": "s20-o3",
-      "track_id": "track-0086",
+      "slide": 24,
+      "object_id": "s24-o3",
+      "track_id": "track-0103",
       "asset_id": "asset-0902201da080c1fe",
       "name": "Combined06_spedup_30s_hq_playback",
       "phase_sec": 2.0,
@@ -235,24 +232,24 @@
   ],
   "transition_media_phase_overrides": [
     {
-      "from": 18,
-      "to": 19,
-      "track_id": "track-0086",
-      "asset_id": "asset-a94bc7da5c6d4913",
-      "name": "Combined04_spedup_30s_hq_playback",
+      "from": 22,
+      "to": 23,
+      "track_id": "track-0103",
+      "asset_id": "asset-0902201da080c1fe",
+      "name": "Combined06_spedup_30s_hq_playback",
       "phase_sec": -0.115,
       "score": 0.84789,
-      "source": "media-phase-transition-live-incoming"
+      "source": "media-phase-transition-live-incoming-current-32-slide-remap"
     },
     {
-      "from": 19,
-      "to": 20,
-      "track_id": "track-0086",
+      "from": 23,
+      "to": 24,
+      "track_id": "track-0103",
       "asset_id": "asset-0902201da080c1fe",
       "name": "Combined06_spedup_30s_hq_playback",
       "phase_sec": 0.0,
       "score": 0.637699,
-      "source": "transition-phase-scan-reviewed"
+      "source": "transition-phase-scan-reviewed-current-32-slide-remap"
     }
   ],
   "publish_replace": false
