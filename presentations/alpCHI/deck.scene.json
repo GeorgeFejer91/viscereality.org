@@ -853,7 +853,7 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-04T03:49:47+00:00",
+  "generatedAtUtc": "2026-07-04T04:30:47+00:00",
   "qa": {
     "groupRows": [
       {
@@ -63687,7 +63687,114 @@
           "value": 1.0
         }
       ],
-      "to": 2
+      "to": 2,
+      "trackProgressOverrides": [
+        {
+          "points": [
+            {
+              "progress": 0.0,
+              "value": 0.0
+            },
+            {
+              "progress": 0.1,
+              "value": 0.8
+            },
+            {
+              "progress": 0.25,
+              "value": 0.8
+            },
+            {
+              "progress": 0.5,
+              "value": 0.8
+            },
+            {
+              "progress": 0.75,
+              "value": 1.0
+            },
+            {
+              "progress": 0.9,
+              "value": 1.0
+            },
+            {
+              "progress": 1.0,
+              "value": 1.0
+            }
+          ],
+          "score": 0.528427,
+          "source": "alpCHI-slide-1-2-title-cluster-progress-matrix-oracle-calibration",
+          "trackId": "track-0010"
+        },
+        {
+          "points": [
+            {
+              "progress": 0.0,
+              "value": 0.0
+            },
+            {
+              "progress": 0.1,
+              "value": 0.0
+            },
+            {
+              "progress": 0.25,
+              "value": 0.35
+            },
+            {
+              "progress": 0.5,
+              "value": 0.8
+            },
+            {
+              "progress": 0.75,
+              "value": 1.0
+            },
+            {
+              "progress": 0.9,
+              "value": 1.0
+            },
+            {
+              "progress": 1.0,
+              "value": 1.0
+            }
+          ],
+          "score": 0.528427,
+          "source": "alpCHI-slide-1-2-panel-cluster-progress-matrix-oracle-calibration",
+          "trackId": "track-0011"
+        },
+        {
+          "points": [
+            {
+              "progress": 0.0,
+              "value": 0.0
+            },
+            {
+              "progress": 0.1,
+              "value": 0.0
+            },
+            {
+              "progress": 0.25,
+              "value": 0.35
+            },
+            {
+              "progress": 0.5,
+              "value": 0.8
+            },
+            {
+              "progress": 0.75,
+              "value": 1.0
+            },
+            {
+              "progress": 0.9,
+              "value": 1.0
+            },
+            {
+              "progress": 1.0,
+              "value": 1.0
+            }
+          ],
+          "score": 0.528427,
+          "source": "alpCHI-slide-1-2-panel-cluster-progress-matrix-oracle-calibration",
+          "trackId": "track-0012"
+        }
+      ]
     },
     {
       "durationSec": 2.0,

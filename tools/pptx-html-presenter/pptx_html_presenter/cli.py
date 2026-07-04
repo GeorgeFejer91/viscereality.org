@@ -91,6 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
         choices=[
             "progress",
             "track-progress",
+            "track-progress-matrix",
+            "cluster-progress",
             "phase",
             "media-phase",
             "media-clock",
@@ -115,12 +117,12 @@ def build_parser() -> argparse.ArgumentParser:
         ],
         help=(
             "Field to vary: global Morph progress, one track's Morph progress, one track's media clock, "
-            "a media-clock offset, unmatched enter/exit fade timing, glow strength, text metrics, "
+            "clustered track progress, a media-clock offset, unmatched enter/exit fade timing, glow strength, text metrics, "
             "or a track opacity multiplier."
         ),
     )
     candidate_sweep.add_argument("--values", required=True, help="Comma list or start:end:step range.")
-    candidate_sweep.add_argument("--track-id", help="Track id, comma track list, or all. Required for phase/media-clock sweeps.")
+    candidate_sweep.add_argument("--track-id", help="Track id, comma track list, semicolon-separated clusters for track-progress-matrix, or all.")
     candidate_sweep.add_argument("--reference-frame", help="Reference PNG for the source sample.")
     candidate_sweep.add_argument("--reference", dest="reference_mp4", help="Reference MP4 if the frame is missing.")
     candidate_sweep.add_argument("--ffmpeg-bin")

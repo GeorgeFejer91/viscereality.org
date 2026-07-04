@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import itertools
 import math
 import re
 import subprocess
@@ -1152,6 +1153,9 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "morph-progress": "progress",
         "object-progress": "track-progress",
         "per-track-progress": "track-progress",
+        "cluster-progress": "track-progress-matrix",
+        "cluster-track-progress": "track-progress-matrix",
+        "track-progress-clusters": "track-progress-matrix",
         "media-phase": "phase",
         "media-clock": "phase",
         "phase-delta": "phase-offset",
@@ -1187,6 +1191,7 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "phase",
         "phase-offset",
         "track-progress",
+        "track-progress-matrix",
         "enter-fade-end",
         "exit-fade-end",
         "glow-scale",
@@ -1196,7 +1201,7 @@ def _normalize_candidate_sweep_vary(vary: str) -> str:
         "track-opacity",
     }:
         raise PresenterError(
-            "Candidate sweep --vary must be progress, track-progress, phase, phase-offset, "
+            "Candidate sweep --vary must be progress, track-progress, track-progress-matrix, phase, phase-offset, "
             "enter-fade-end, exit-fade-end, glow-scale, glow-alpha-scale, "
             "text-scale, bold-weight, or track-opacity."
         )
@@ -1214,10 +1219,14 @@ def _candidate_sweep_samples(
         raise PresenterError("Progress sweeps require a transition sample.")
     if normalized == "track-progress" and base_sample.get("kind") != "transition":
         raise PresenterError("Track-progress sweeps require a transition sample.")
+    if normalized == "track-progress-matrix" and base_sample.get("kind") != "transition":
+        raise PresenterError("Track-progress matrix sweeps require a transition sample.")
     if normalized in {"enter-fade-end", "exit-fade-end"} and base_sample.get("kind") != "transition":
         raise PresenterError(f"{normalized} sweeps require a transition sample.")
     if normalized in {"phase", "track-progress"} and not track_id:
         raise PresenterError(f"{normalized} sweeps require --track-id.")
+    if normalized == "track-progress-matrix" and not track_id:
+        raise PresenterError("track-progress-matrix sweeps require --track-id clusters separated by semicolons.")
     if normalized == "track-opacity" and not track_id:
         raise PresenterError("track-opacity sweeps require --track-id.")
     if normalized == "phase":
@@ -1236,6 +1245,9 @@ def _candidate_sweep_samples(
         ]
         if missing:
             raise PresenterError(f"Tracks are not present in sample mediaClocks: {', '.join(missing)}")
+
+    if normalized == "track-progress-matrix":
+        return _candidate_sweep_track_progress_matrix_samples(base_sample, values, track_id)
 
     out: list[dict[str, Any]] = []
     for value in values:
@@ -1309,6 +1321,56 @@ def _candidate_sweep_track_ids(base_sample: dict[str, Any], track_id: str | None
     if not track_id or str(track_id).strip().lower() == "all":
         return sorted(str(track) for track in clocks)
     return [part.strip() for part in str(track_id).split(",") if part.strip()]
+
+
+def _candidate_sweep_track_progress_matrix_samples(
+    base_sample: dict[str, Any],
+    values: list[float],
+    track_id: str | None,
+) -> list[dict[str, Any]]:
+    clusters = _candidate_sweep_track_clusters(track_id)
+    if not clusters:
+        raise PresenterError("track-progress-matrix sweeps need at least one track cluster.")
+    numeric_values = [round(_clamp01(float(value)), 4) for value in values]
+    out: list[dict[str, Any]] = []
+    for combo in itertools.product(numeric_values, repeat=len(clusters)):
+        candidate = copy.deepcopy(base_sample)
+        overrides: dict[str, float] = {}
+        cluster_meta = []
+        for cluster, value in zip(clusters, combo):
+            for target_track in cluster:
+                overrides[target_track] = value
+            cluster_meta.append({"trackIds": cluster, "value": value})
+        candidate["id"] = _candidate_sweep_matrix_candidate_id(
+            str(base_sample["id"]),
+            combo,
+            clusters,
+        )
+        candidate["sourceSampleId"] = base_sample["id"]
+        candidate["trackProgressOverrides"] = overrides
+        candidate["candidateSweep"] = {
+            "vary": "track-progress-matrix",
+            "clusters": cluster_meta,
+            "value": [round(float(value), 4) for value in combo],
+        }
+        out.append(candidate)
+    return out
+
+
+def _candidate_sweep_track_clusters(track_id: str | None) -> list[list[str]]:
+    clusters: list[list[str]] = []
+    for raw_cluster in str(track_id or "").split(";"):
+        tracks = []
+        seen: set[str] = set()
+        for raw_track in raw_cluster.split(","):
+            track = raw_track.strip()
+            if not track or track in seen:
+                continue
+            seen.add(track)
+            tracks.append(track)
+        if tracks:
+            clusters.append(tracks)
+    return clusters
 
 
 def _track_progress_candidate_samples(
@@ -1611,6 +1673,17 @@ def _candidate_sweep_candidate_id(
 ) -> str:
     track_part = f"-{_candidate_sweep_track_label(track_id)}" if track_id else ""
     return f"{_safe_slug(sample_id)}-{_safe_slug(vary)}{track_part}-{_candidate_value_label(value)}"
+
+
+def _candidate_sweep_matrix_candidate_id(
+    sample_id: str,
+    values: tuple[float, ...],
+    clusters: list[list[str]],
+) -> str:
+    cluster_signature = ";".join(",".join(cluster) for cluster in clusters)
+    digest = sha256(cluster_signature.encode("utf-8")).hexdigest()[:10]
+    value_part = "-".join(_candidate_value_label(value) for value in values)
+    return f"{_safe_slug(sample_id)}-track-progress-matrix-c{len(clusters)}-{digest}-{value_part}"
 
 
 def _candidate_sweep_dir_name(sample_id: str, vary: str, track_id: str | None) -> str:

@@ -2328,6 +2328,45 @@ class PresenterTests(unittest.TestCase):
         )
         self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-panel", "track-video"])
 
+    def test_candidate_sweep_track_progress_matrix_can_vary_clusters_independently(self) -> None:
+        sample = {
+            "id": "trans-001-002-050",
+            "kind": "transition",
+            "from": 1,
+            "to": 2,
+            "progress": 0.5,
+            "mediaSec": 4.2,
+            "mediaClocks": {"track-a": 1.3},
+        }
+        candidates = _candidate_sweep_samples(
+            sample,
+            "track-progress-matrix",
+            [0.0, 0.5],
+            "track-a,track-b;track-c",
+        )
+        self.assertEqual(len(candidates), 4)
+        self.assertEqual(candidates[0]["progress"], 0.5)
+        self.assertEqual(
+            candidates[0]["trackProgressOverrides"],
+            {"track-a": 0.0, "track-b": 0.0, "track-c": 0.0},
+        )
+        self.assertEqual(
+            candidates[1]["trackProgressOverrides"],
+            {"track-a": 0.0, "track-b": 0.0, "track-c": 0.5},
+        )
+        self.assertEqual(
+            candidates[-1]["trackProgressOverrides"],
+            {"track-a": 0.5, "track-b": 0.5, "track-c": 0.5},
+        )
+        self.assertEqual(
+            candidates[1]["candidateSweep"]["clusters"],
+            [
+                {"trackIds": ["track-a", "track-b"], "value": 0.0},
+                {"trackIds": ["track-c"], "value": 0.5},
+            ],
+        )
+        self.assertIn("track-progress-matrix-c2-", candidates[1]["id"])
+
     def test_candidate_sweep_track_opacity_can_target_track_cluster(self) -> None:
         sample = {
             "id": "trans-001-002-050",

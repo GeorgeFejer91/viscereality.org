@@ -57,6 +57,40 @@
         ],
         "source": "alpCHI-slide-1-2-powerpoint-oracle-calibration"
       }
+    ],
+    "transition_track_progress_overrides": [
+      {
+        "from": 1,
+        "to": 2,
+        "track_id": "track-0010",
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.8 },
+          { "progress": 0.25, "value": 0.8 },
+          { "progress": 0.5, "value": 0.8 },
+          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "score": 0.528427,
+        "source": "alpCHI-slide-1-2-title-cluster-progress-matrix-oracle-calibration"
+      },
+      {
+        "from": 1,
+        "to": 2,
+        "track_ids": ["track-0011", "track-0012"],
+        "points": [
+          { "progress": 0.0, "value": 0.0 },
+          { "progress": 0.1, "value": 0.0 },
+          { "progress": 0.25, "value": 0.35 },
+          { "progress": 0.5, "value": 0.8 },
+          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.9, "value": 1.0 },
+          { "progress": 1.0, "value": 1.0 }
+        ],
+        "score": 0.528427,
+        "source": "alpCHI-slide-1-2-panel-cluster-progress-matrix-oracle-calibration"
+      }
     ]
   },
   "visual_audit": {
