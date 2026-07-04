@@ -8,56 +8,56 @@
     {
       "diffFile": "qa/diff/slide-001-settled.png",
       "kind": "slide",
-      "meanDelta": 9.083,
-      "p95Delta": 50.0,
+      "meanDelta": 1.56,
+      "p95Delta": 5.0,
       "passed": false,
       "sampleId": "slide-001-settled",
       "sideBySideFile": "qa/side-by-side/slide-001-settled.png",
-      "ssim": 0.788892,
+      "ssim": 0.975002,
       "threshold": 0.985
     },
     {
       "diffFile": "qa/diff/trans-001-002-000.png",
       "kind": "transition",
-      "meanDelta": 2.152,
-      "p95Delta": 10.0,
+      "meanDelta": 4.46,
+      "p95Delta": 22.0,
       "passed": false,
       "sampleId": "trans-001-002-000",
       "sideBySideFile": "qa/side-by-side/trans-001-002-000.png",
-      "ssim": 0.916027,
+      "ssim": 0.85921,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-001-002-010.png",
       "kind": "transition",
-      "meanDelta": 14.145,
+      "meanDelta": 14.882,
       "p95Delta": 91.0,
       "passed": false,
       "sampleId": "trans-001-002-010",
       "sideBySideFile": "qa/side-by-side/trans-001-002-010.png",
-      "ssim": 0.84306,
+      "ssim": 0.78921,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-001-002-025.png",
       "kind": "transition",
-      "meanDelta": 13.35,
-      "p95Delta": 59.0,
+      "meanDelta": 11.648,
+      "p95Delta": 66.0,
       "passed": false,
       "sampleId": "trans-001-002-025",
       "sideBySideFile": "qa/side-by-side/trans-001-002-025.png",
-      "ssim": 0.740554,
+      "ssim": 0.789845,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-001-002-050.png",
       "kind": "transition",
-      "meanDelta": 7.542,
-      "p95Delta": 26.0,
+      "meanDelta": 5.882,
+      "p95Delta": 16.0,
       "passed": false,
       "sampleId": "trans-001-002-050",
       "sideBySideFile": "qa/side-by-side/trans-001-002-050.png",
-      "ssim": 0.883413,
+      "ssim": 0.916781,
       "threshold": 0.965
     },
     {
@@ -151,23 +151,23 @@
     {
       "diffFile": "qa/diff/trans-002-003-075.png",
       "kind": "transition",
-      "meanDelta": 9.64,
-      "p95Delta": 39.0,
+      "meanDelta": 8.326,
+      "p95Delta": 30.0,
       "passed": false,
       "sampleId": "trans-002-003-075",
       "sideBySideFile": "qa/side-by-side/trans-002-003-075.png",
-      "ssim": 0.743023,
+      "ssim": 0.766376,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-002-003-090.png",
       "kind": "transition",
-      "meanDelta": 8.343,
-      "p95Delta": 26.0,
+      "meanDelta": 7.014,
+      "p95Delta": 19.0,
       "passed": false,
       "sampleId": "trans-002-003-090",
       "sideBySideFile": "qa/side-by-side/trans-002-003-090.png",
-      "ssim": 0.853141,
+      "ssim": 0.876965,
       "threshold": 0.965
     },
     {
@@ -206,12 +206,12 @@
     {
       "diffFile": "qa/diff/trans-003-004-010.png",
       "kind": "transition",
-      "meanDelta": 7.917,
+      "meanDelta": 7.914,
       "p95Delta": 22.0,
       "passed": false,
       "sampleId": "trans-003-004-010",
       "sideBySideFile": "qa/side-by-side/trans-003-004-010.png",
-      "ssim": 0.879681,
+      "ssim": 0.879604,
       "threshold": 0.965
     },
     {
@@ -270,10 +270,10 @@
       "threshold": 0.965
     }
   ],
-  "generatedAtUtc": "2026-07-04T02:05:09+00:00",
+  "generatedAtUtc": "2026-07-04T02:25:40+00:00",
   "htmlCapture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T02:04:52.099Z",
+    "generatedAt": "2026-07-04T02:25:22.626Z",
     "sampleCount": 24,
     "samples": [
       {
@@ -343,6 +343,10 @@
         "id": "slide-001-settled",
         "kind": "slide",
         "pageEvents": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "type": "console:error"
+          },
           {
             "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
             "type": "console:error"
@@ -552,7 +556,7 @@
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
               "trackId": "track-0003"
@@ -1242,12 +1246,6 @@
             },
             {
               "complete": true,
-              "naturalWidth": 1719,
-              "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-              "trackId": "track-0004"
-            },
-            {
-              "complete": true,
               "naturalWidth": 332,
               "src": "/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
               "trackId": "track-0030"
@@ -1272,8 +1270,8 @@
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 6,
-          "objectsVisible": 14,
+          "imagesVisible": 5,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -1310,12 +1308,6 @@
             },
             {
               "complete": true,
-              "naturalWidth": 1719,
-              "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-              "trackId": "track-0004"
-            },
-            {
-              "complete": true,
               "naturalWidth": 332,
               "src": "/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
               "trackId": "track-0030"
@@ -1340,8 +1332,8 @@
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 6,
-          "objectsVisible": 14,
+          "imagesVisible": 5,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -1862,14 +1854,14 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
               "trackId": "track-0022"
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
               "trackId": "track-0023"
@@ -2167,7 +2159,7 @@
       "id": "slide-001-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0003": 0.5,
+        "track-0003": 3.25,
         "track-0007": 0.5,
         "track-0011": 0.5,
         "track-0012": 0.5,
@@ -2186,7 +2178,7 @@
       "id": "trans-001-002-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.0,
+        "track-0003": 5.75,
         "track-0007": 3.0,
         "track-0011": 3.0,
         "track-0012": 3.0,
@@ -2205,7 +2197,7 @@
       "id": "trans-001-002-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.2,
+        "track-0003": 5.95,
         "track-0007": 3.2,
         "track-0011": 3.2,
         "track-0012": 3.2,
@@ -2224,7 +2216,7 @@
       "id": "trans-001-002-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.5,
+        "track-0003": 6.25,
         "track-0007": 3.5,
         "track-0011": 3.5,
         "track-0012": 3.5,
@@ -2243,7 +2235,7 @@
       "id": "trans-001-002-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.0,
+        "track-0003": 6.75,
         "track-0007": 4.0,
         "track-0011": 4.0,
         "track-0012": 4.0,
@@ -2262,7 +2254,7 @@
       "id": "trans-001-002-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.5,
+        "track-0003": 7.25,
         "track-0007": 4.5,
         "track-0011": 4.5,
         "track-0012": 4.5,
@@ -2281,7 +2273,7 @@
       "id": "trans-001-002-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.8,
+        "track-0003": 7.55,
         "track-0007": 4.8,
         "track-0011": 4.8,
         "track-0012": 4.8,
@@ -2300,7 +2292,7 @@
       "id": "trans-001-002-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 5.0,
+        "track-0003": 7.75,
         "track-0007": 5.0,
         "track-0011": 5.0,
         "track-0012": 5.0,

@@ -180,6 +180,10 @@ Current source PPTX parse results from family preflight:
 - Diagnostic result: MuC `trans-001-002-025` global progress sweep best was raw `0.25` at SSIM `0.780312`; `track-0003` phase-offset sweep best was `-0.5s` at SSIM `0.793062`. MuC `slide-001-settled` phase-offset sweep for `track-0003` scored `0.975002` for several negative offsets, but the transition sample prefers a different offset. Do not add a transition-only media-phase hack unless it preserves continuous loop playback; this needs a coherent PowerPoint-vs-browser media-clock model.
 - Diagnostic result: MuC `trans-002-003-075` global progress sweep best was endpoint `1.0` at SSIM `0.769885`, while global, central-panel, and broad incoming enter/exit fade sweeps were neutral around `0.746083`. Visual inspection of the single 1920x1080 frames suggests the remaining gap is not simple timing: HTML panel fills/text render more opaque/larger than the PowerPoint reference. Next likely work is shape fill/opacity semantics, panel-local text autofit/metrics, and possibly panel fill vs outline opacity separation.
 - Rejected experiment: on 2026-07-04, applying raw-time/global unmatched fade behavior to inferred synthetic Morph endpoints regressed bounded MuC oracle QA badly (`trans-001-002-025` dropped to `0.441867` and `trans-001-002-050` to `0.536599`). The experiment was backed out before commit. Future agents should not make inferred panel/object Morph endpoints obey global unmatched fade timing unless a focused oracle sweep proves it improves the target samples without harming transition `1->2`.
+- Problem: MuC `trans-001-002-025` still had a large visual gap even after geometry/fade calibration. A phase-offset candidate sweep for looped slide-1 track `track-0003` found that the PowerPoint MP4 oracle is closer when that loop starts at a different phase (`+2.75s` scored `0.793067` for `trans-001-002-025`; slide 1 settled can reach about `0.975` under several equivalent loop offsets).
+  - Solution: `presentations/MuC-scene.config.json` now applies a deck-specific `media_phase_overrides` row for slide 1 `track-0003` / asset `asset-0928f3a3fc7358dc` with `phase_sec: 2.75`. This preserves the independent looping-media model; it does not reverse/restart media during Morph.
+- Problem: MuC transition `2->3` had a bogus inferred carousel foreground motion for `track-0004`, a bottom sponsor/footer strip that is missing on slide 3. The object was being kept opaque and moved with the carousel, making the 75% oracle frame worse and violating the intended panel/cluster logic.
+  - Solution: the inferred panel/foreground motion heuristic now excludes shallow, wide objects in the global slide footer region. The regression test `test_inferred_motions_do_not_slide_footer_sponsor_strips_with_carousel` ensures footer sponsor strips are not treated as panel children or carousel foreground, while the existing large VR/body foreground test still passes.
 
 Current shared public asset library check after the visual-effects/public-audit rebuild:
 
@@ -197,6 +201,7 @@ Current shared public asset library check after the visual-effects/public-audit 
 - Latest stricter asset-policy/tooling verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 130 tests, including soft-limit blocker tests, track-scoped candidate-sweep fade tests, stable browser-capture diagnostic asset paths, and compact output IDs for long clustered sweeps. A direct shared-library filesystem gate again found 81 files, 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest about 48.879 MiB.
 - Latest post-publish shared-asset gate after the MuC per-track fade rebuild on 2026-07-04: `family-build-report.json` reports `githubPagesSafe: true`, `preferredAssetSafe: true`, `maxAssetMb: 48.879`, `softOversizeAssets: []`, `oversizeAssets: []`, 31 optimized files, 45 source/provenance-safe files, and about 362.57 MiB total. This confirms the current public build still follows the super-large-asset conversion policy.
 - Latest post-rebuild filesystem asset gate on 2026-07-04: `presentations/shared-assets/viscereality/` contains 81 public shared files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB. Largest files are optimized MP4s at about 48.879 MiB, 42.672 MiB, 37.708 MiB, and 34.916 MiB. This is the current proof point for the rule that super-large PPT assets must be converted to visually acceptable, HTML-friendly, GitHub-compatible runtime formats.
+- Latest post-MuC-calibration asset gate on 2026-07-04: still 81 public shared files, about 362.645 MiB total, 0 files above 50 MiB, 0 files above 100 MiB, largest asset about 48.879 MiB. The clean family build report generated at `2026-07-04T02:34:29+00:00` has sane public-size preflight numbers again after deleting local candidate-sweep scratch output: `MuC` about 433.147 MiB, `alpCHI` about 368.839 MiB, `BBD26` about 452.66 MiB.
 
 ## Latest HTML Visual Audit
 
@@ -264,6 +269,14 @@ After the final 2026-07-04 clean rebuild/publish and asset-gate verification, fu
 
 This verifies the public scene players still load shared assets correctly and capture settled slides, forward transition samples, and reverse midpoint samples without browser failures. It remains separate from strict PowerPoint-oracle parity.
 
+After the MuC slide-1 media phase override and footer-strip inferred-motion exclusion on 2026-07-04:
+
+- `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 131 tests.
+- Direct `visual-audit presentations\MuC` passed 145 samples.
+- Full `family visual-audit presentations\viscereality-family.config.json` passed all 3 decks again.
+
+This verifies the phase/config change and shared heuristic do not break browser playback/capture. It is still not a PowerPoint-oracle SSIM pass.
+
 ## Latest PowerPoint Oracle Smoke
 
 Slide-1 smoke passes have now run after adding `family oracle-qa`:
@@ -299,6 +312,10 @@ Additional bounded MuC oracle result after the subsequent `3->4` v2 progress-map
 Additional bounded MuC oracle regression check after the final 2026-07-04 clean rebuild/publish:
 
 - `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM `0.740554`. Lowest samples were `trans-001-002-025` (`0.740554`), `trans-002-003-075` (`0.743023`), `trans-002-003-050` (`0.781949`), `trans-002-003-025` (`0.785634`), and `slide-001-settled` (`0.788892`). This confirms the rejected inferred-fade experiment was not present in the public output, but strict oracle parity is still unresolved.
+
+Additional bounded MuC oracle result after the MuC media-phase and footer-strip inferred-motion fixes:
+
+- `MuC` slides `1-3`: status `failed`, 24 comparisons, minimum SSIM improved to `0.766376`. Current lowest samples are `trans-002-003-075` (`0.766376`), `trans-002-003-050` (`0.781949`), `trans-002-003-025` (`0.785634`), `trans-001-002-010` (`0.789210`), and `trans-001-002-025` (`0.789845`). This is real progress from the prior `0.740554` floor, but still below the strict transition target `0.965`.
 
 Interpretation:
 

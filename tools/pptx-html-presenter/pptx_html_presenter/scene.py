@@ -1532,6 +1532,8 @@ def _is_carousel_foreground_object(obj: SceneObject, slide_w: float, slide_h: fl
     height = obj.geometry.cy
     if width >= slide_w * 0.92 and height >= slide_h * 0.92:
         return False
+    if _is_slide_footer_strip(obj, slide_w, slide_h):
+        return False
     area = width * height
     slide_area = max(slide_w * slide_h, 1.0)
     return area >= slide_area * 0.025
@@ -1546,6 +1548,21 @@ def _object_intersects_slide(obj: SceneObject, slide_w: float, slide_h: float) -
     )
 
 
+def _is_slide_footer_strip(obj: SceneObject, slide_w: float, slide_h: float) -> bool:
+    if slide_w <= 0 or slide_h <= 0:
+        return False
+    width = obj.geometry.cx
+    height = obj.geometry.cy
+    center_y = obj.geometry.y + height / 2.0
+    bottom = obj.geometry.y + height
+    return (
+        width >= slide_w * 0.18
+        and height <= slide_h * 0.18
+        and center_y >= slide_h * 0.86
+        and bottom >= slide_h * 0.94
+    )
+
+
 def _panel_delta_for_object(
     obj: SceneObject,
     objects: list[SceneObject],
@@ -1553,6 +1570,8 @@ def _panel_delta_for_object(
     slide_w: float,
     slide_h: float,
 ) -> tuple[tuple[float, float], str | None] | None:
+    if _is_slide_footer_strip(obj, slide_w, slide_h):
+        return None
     best: tuple[SceneObject, str] | None = None
     for panel in objects:
         track_id = str(panel.track_id or "")
@@ -2062,6 +2081,8 @@ def _is_panel_related(
 ) -> bool:
     if _is_panel_container(obj, slide_w, slide_h):
         return True
+    if _is_slide_footer_strip(obj, slide_w, slide_h):
+        return False
     for panel in objects:
         if panel.id == obj.id or not _is_panel_container(panel, slide_w, slide_h):
             continue

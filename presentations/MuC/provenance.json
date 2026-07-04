@@ -47,6 +47,11 @@
       "provenance": {
         "groupPath": [],
         "layer": "slide",
+        "mediaPhaseOverride": {
+          "phaseSec": 2.75,
+          "score": 0.793067,
+          "source": "MuC-slide-1-person-background-phase-offset-oracle-sweep"
+        },
         "mediaTargets": [
           "ppt/media/image3.gif"
         ],

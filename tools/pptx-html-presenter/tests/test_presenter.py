@@ -2690,6 +2690,33 @@ class PresenterTests(unittest.TestCase):
         self.assertTrue(by_track["track-figure"]["preserveOpacity"])
         self.assertAlmostEqual(by_track["track-figure"]["toGeometry"]["x"], -5_900_000)
 
+    def test_inferred_motions_do_not_slide_footer_sponsor_strips_with_carousel(self) -> None:
+        slide_w = 10_000_000
+        slide_h = 6_000_000
+        prev_panel = _scene_object("panel-prev", "Rectangle: Rounded Corners 1", "shape", None)
+        next_panel = _scene_object("panel-next", "Rectangle: Rounded Corners 1", "shape", None)
+        sponsor_strip = _scene_object("sponsor-strip", "Sponsor logos", "image", "asset-sponsor")
+        prev_panel.shape = next_panel.shape = "roundRect"
+        prev_panel.track_id = next_panel.track_id = "track-panel"
+        sponsor_strip.track_id = "track-sponsor"
+        prev_panel.geometry = Geometry(x=2_000_000, y=400_000, cx=6_000_000, cy=5_000_000)
+        next_panel.geometry = Geometry(x=-4_000_000, y=400_000, cx=6_000_000, cy=5_000_000)
+        sponsor_strip.geometry = Geometry(x=5_500_000, y=5_250_000, cx=4_000_000, cy=600_000)
+        prev = Slide(2, "ppt/slides/slide2.xml", Transition("morph", 2.0), [prev_panel, sponsor_strip])
+        current = Slide(3, "ppt/slides/slide3.xml", Transition("morph", 2.0), [next_panel])
+        motions = _inferred_panel_motions(
+            prev,
+            current,
+            {"track-panel", "track-sponsor"},
+            {"track-panel"},
+            2.0,
+            slide_w,
+            slide_h,
+        )
+
+        by_track = {row["trackId"]: row for row in motions}
+        self.assertNotIn("track-sponsor", by_track)
+
     def test_panel_relationship_annotation_links_panel_border_children(self) -> None:
         slides = [
             {

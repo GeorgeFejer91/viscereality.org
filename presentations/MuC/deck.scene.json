@@ -691,7 +691,7 @@
     "sourceSha256": "d1a4b062dbf0bb7a43fe6abc31e71d6589676040ded52138d3f286ab7d5ae608",
     "title": "Viscereality - MuC 2025"
   },
-  "generatedAtUtc": "2026-07-04T01:58:48+00:00",
+  "generatedAtUtc": "2026-07-04T02:33:33+00:00",
   "qa": {
     "groupRows": [
       {
@@ -3555,8 +3555,19 @@
       }
     ],
     "groupsApplied": 303,
-    "mediaPhaseOverrideRows": [],
-    "mediaPhaseOverridesApplied": 0,
+    "mediaPhaseOverrideRows": [
+      {
+        "assetId": "asset-0928f3a3fc7358dc",
+        "index": 0,
+        "name": "Picture 20",
+        "objectId": "s1-o21",
+        "phaseSec": 2.75,
+        "slide": 1,
+        "status": "applied",
+        "trackId": "track-0003"
+      }
+    ],
+    "mediaPhaseOverridesApplied": 1,
     "panelRelationshipRows": [
       {
         "name": "Rectangle: Rounded Corners 9",
@@ -9188,13 +9199,20 @@
           "groupPath": [],
           "id": "s1-o21",
           "kind": "image",
-          "mediaTiming": {},
+          "mediaTiming": {
+            "phaseSec": 2.75
+          },
           "name": "Picture 20",
           "opacity": 1.0,
           "posterAssetId": null,
           "provenance": {
             "groupPath": [],
             "layer": "slide",
+            "mediaPhaseOverride": {
+              "phaseSec": 2.75,
+              "score": 0.793067,
+              "source": "MuC-slide-1-person-background-phase-offset-oracle-sweep"
+            },
             "mediaTargets": [
               "ppt/media/image3.gif"
             ],
@@ -11824,13 +11842,20 @@
           "groupPath": [],
           "id": "s1-o21",
           "kind": "image",
-          "mediaTiming": {},
+          "mediaTiming": {
+            "phaseSec": 2.75
+          },
           "name": "Picture 20",
           "opacity": 1.0,
           "posterAssetId": null,
           "provenance": {
             "groupPath": [],
             "layer": "slide",
+            "mediaPhaseOverride": {
+              "phaseSec": 2.75,
+              "score": 0.793067,
+              "source": "MuC-slide-1-person-background-phase-offset-oracle-sweep"
+            },
             "mediaTargets": [
               "ppt/media/image3.gif"
             ],
@@ -122489,38 +122514,6 @@
       ],
       "from": 2,
       "inferredMotions": [
-        {
-          "durationSec": 2.0,
-          "fromGeometry": {
-            "flipH": false,
-            "flipV": false,
-            "h": 664684.0,
-            "heightPct": 0.0969209682123068,
-            "leftPct": 0.5668751640419948,
-            "rotation": 0.0,
-            "topPct": 0.8905148731408574,
-            "w": 5280658.0,
-            "widthPct": 0.43312483595800527,
-            "x": 6911342.0,
-            "y": 6107151.0
-          },
-          "preserveOpacity": true,
-          "source": "inferred-carousel-foreground-motion",
-          "toGeometry": {
-            "flipH": false,
-            "flipV": false,
-            "h": 664684.0,
-            "heightPct": 0.0969209682123068,
-            "leftPct": 0.10045029527559055,
-            "rotation": 0.0,
-            "topPct": 0.8921694371536891,
-            "w": 5280658.0,
-            "widthPct": 0.43312483595800527,
-            "x": 1224690.0,
-            "y": 6118498.0
-          },
-          "trackId": "track-0004"
-        },
         {
           "durationSec": 2.0,
           "fromGeometry": {

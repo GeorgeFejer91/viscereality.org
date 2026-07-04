@@ -2,7 +2,7 @@
   "blockers": [],
   "capture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T01:52:34.864Z",
+    "generatedAt": "2026-07-04T02:28:45.361Z",
     "sampleCount": 145,
     "samples": [
       {
@@ -71,6 +71,12 @@
         "file": "slide-001-settled.png",
         "id": "slide-001-settled",
         "kind": "slide",
+        "pageEvents": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+            "type": "console:error"
+          }
+        ],
         "status": "ok"
       },
       {
@@ -180,29 +186,11 @@
               "naturalWidth": 1536,
               "src": "/shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
               "trackId": "track-0031"
-            },
-            {
-              "complete": true,
-              "naturalWidth": 13333,
-              "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
-              "trackId": "track-0032"
-            },
-            {
-              "complete": true,
-              "naturalWidth": 1316,
-              "src": "/shared-assets/viscereality/source/9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1.png",
-              "trackId": "track-0035"
-            },
-            {
-              "complete": true,
-              "naturalWidth": 1316,
-              "src": "/shared-assets/viscereality/source/9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1.png",
-              "trackId": "track-0036"
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 9,
-          "objectsVisible": 15,
+          "imagesVisible": 6,
+          "objectsVisible": 10,
           "videos": [
             {
               "error": null,
@@ -362,7 +350,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 8,
-          "objectsVisible": 14,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -442,7 +430,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 8,
-          "objectsVisible": 13,
+          "objectsVisible": 12,
           "videos": [
             {
               "error": null,
@@ -450,17 +438,10 @@
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
               "trackId": "track-0007"
-            },
-            {
-              "error": null,
-              "paused": true,
-              "readyState": 4,
-              "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
-              "trackId": "track-0003"
             }
           ],
           "videosPending": 0,
-          "videosVisible": 2
+          "videosVisible": 1
         },
         "file": "trans-001-002-075.png",
         "id": "trans-001-002-075",
@@ -522,7 +503,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 8,
-          "objectsVisible": 13,
+          "objectsVisible": 12,
           "videos": [
             {
               "error": null,
@@ -530,17 +511,10 @@
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
               "trackId": "track-0007"
-            },
-            {
-              "error": null,
-              "paused": true,
-              "readyState": 4,
-              "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
-              "trackId": "track-0003"
             }
           ],
           "videosPending": 0,
-          "videosVisible": 2
+          "videosVisible": 1
         },
         "file": "trans-001-002-090.png",
         "id": "trans-001-002-090",
@@ -997,12 +971,6 @@
             },
             {
               "complete": true,
-              "naturalWidth": 1719,
-              "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-              "trackId": "track-0004"
-            },
-            {
-              "complete": true,
               "naturalWidth": 332,
               "src": "/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
               "trackId": "track-0030"
@@ -1027,8 +995,8 @@
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 6,
-          "objectsVisible": 14,
+          "imagesVisible": 5,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -1065,12 +1033,6 @@
             },
             {
               "complete": true,
-              "naturalWidth": 1719,
-              "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-              "trackId": "track-0004"
-            },
-            {
-              "complete": true,
               "naturalWidth": 332,
               "src": "/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
               "trackId": "track-0030"
@@ -1095,8 +1057,8 @@
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 6,
-          "objectsVisible": 14,
+          "imagesVisible": 5,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -1617,14 +1579,14 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
               "trackId": "track-0022"
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
               "trackId": "track-0023"
@@ -2176,7 +2138,7 @@
           "videos": [
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/6fc6e87580c6d1fa4593c2877d0b254125fa7a7848506ce5fe8dd77ea0e536e4.webm",
               "trackId": "track-0019"
@@ -2431,7 +2393,7 @@
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/a40f30b7dc122dd7c756e2e61ed60f04d6863687c3a91b528c96e7c159a2afd2.webm",
               "trackId": "track-0027"
@@ -3374,7 +3336,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
               "trackId": "track-0047"
@@ -8416,6 +8378,12 @@
             },
             {
               "complete": true,
+              "naturalWidth": 1106,
+              "src": "/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+              "trackId": "track-0006"
+            },
+            {
+              "complete": true,
               "naturalWidth": 1280,
               "src": "/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
               "trackId": "track-0002"
@@ -8425,6 +8393,12 @@
               "naturalWidth": 1719,
               "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
               "trackId": "track-0004"
+            },
+            {
+              "complete": true,
+              "naturalWidth": 591,
+              "src": "/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+              "trackId": "track-0005"
             },
             {
               "complete": true,
@@ -8440,11 +8414,19 @@
             }
           ],
           "imagesPending": 0,
-          "imagesVisible": 6,
-          "objectsVisible": 9,
-          "videos": [],
+          "imagesVisible": 8,
+          "objectsVisible": 12,
+          "videos": [
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
+              "trackId": "track-0007"
+            }
+          ],
           "videosPending": 0,
-          "videosVisible": 0
+          "videosVisible": 1
         },
         "file": "reverse-003-002-050.png",
         "id": "reverse-003-002-050",
@@ -8979,7 +8961,7 @@
             },
             {
               "error": null,
-              "paused": false,
+              "paused": true,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
               "trackId": "track-0042"
@@ -9459,12 +9441,18 @@
       "file": "qa/visual-audit/html/slide-001-settled.png",
       "from": null,
       "kind": "slide",
+      "pageEvents": [
+        {
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "type": "console:error"
+        }
+      ],
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.582,
+        "meanLuma": 24.441,
         "nearUniform": false,
-        "stdLuma": 65.5
+        "stdLuma": 63.819
       },
       "reasons": [],
       "sampleId": "slide-001-settled",
@@ -9544,9 +9532,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.326,
+        "meanLuma": 27.602,
         "nearUniform": false,
-        "stdLuma": 63.837
+        "stdLuma": 64.078
       },
       "reasons": [],
       "sampleId": "trans-001-002-000",
@@ -9594,29 +9582,11 @@
             "naturalWidth": 1536,
             "src": "/shared-assets/viscereality/optimized/049d834987be616472c8efa3a66f4c18ffdf9c8d48fb76f774a9221abaadc992.png",
             "trackId": "track-0031"
-          },
-          {
-            "complete": true,
-            "naturalWidth": 13333,
-            "src": "/shared-assets/viscereality/source/32b2e0232f04aa1316f964d1b3d7ff2127debde66b949277e9e4c8940b9ec8b1.png",
-            "trackId": "track-0032"
-          },
-          {
-            "complete": true,
-            "naturalWidth": 1316,
-            "src": "/shared-assets/viscereality/source/9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1.png",
-            "trackId": "track-0035"
-          },
-          {
-            "complete": true,
-            "naturalWidth": 1316,
-            "src": "/shared-assets/viscereality/source/9452a5d845b484a6943ff8484ae3b874da20ae8fb573f83e59a435b7d3f9dea1.png",
-            "trackId": "track-0036"
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 9,
-        "objectsVisible": 15,
+        "imagesVisible": 6,
+        "objectsVisible": 10,
         "videos": [
           {
             "error": null,
@@ -9644,9 +9614,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 28.241,
+        "meanLuma": 31.381,
         "nearUniform": false,
-        "stdLuma": 57.138
+        "stdLuma": 64.532
       },
       "reasons": [],
       "sampleId": "trans-001-002-010",
@@ -9738,9 +9708,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 17.453,
+        "meanLuma": 24.97,
         "nearUniform": false,
-        "stdLuma": 41.431
+        "stdLuma": 42.344
       },
       "reasons": [],
       "sampleId": "trans-001-002-025",
@@ -9804,7 +9774,7 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 8,
-        "objectsVisible": 14,
+        "objectsVisible": 13,
         "videos": [
           {
             "error": null,
@@ -9832,9 +9802,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.15,
+        "meanLuma": 27.907,
         "nearUniform": false,
-        "stdLuma": 41.69
+        "stdLuma": 42.566
       },
       "reasons": [],
       "sampleId": "trans-001-002-050",
@@ -9898,7 +9868,7 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 8,
-        "objectsVisible": 13,
+        "objectsVisible": 12,
         "videos": [
           {
             "error": null,
@@ -9906,17 +9876,10 @@
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
             "trackId": "track-0007"
-          },
-          {
-            "error": null,
-            "paused": true,
-            "readyState": 4,
-            "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
-            "trackId": "track-0003"
           }
         ],
         "videosPending": 0,
-        "videosVisible": 2
+        "videosVisible": 1
       },
       "direction": "forward",
       "expectedVisibleObjects": 3,
@@ -9926,9 +9889,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 29.034,
+        "meanLuma": 34.258,
         "nearUniform": false,
-        "stdLuma": 40.705
+        "stdLuma": 45.724
       },
       "reasons": [],
       "sampleId": "trans-001-002-075",
@@ -9992,7 +9955,7 @@
         ],
         "imagesPending": 0,
         "imagesVisible": 8,
-        "objectsVisible": 13,
+        "objectsVisible": 12,
         "videos": [
           {
             "error": null,
@@ -10000,17 +9963,10 @@
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
             "trackId": "track-0007"
-          },
-          {
-            "error": null,
-            "paused": true,
-            "readyState": 4,
-            "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
-            "trackId": "track-0003"
           }
         ],
         "videosPending": 0,
-        "videosVisible": 2
+        "videosVisible": 1
       },
       "direction": "forward",
       "expectedVisibleObjects": 3,
@@ -10020,9 +9976,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 31.889,
+        "meanLuma": 34.259,
         "nearUniform": false,
-        "stdLuma": 42.897
+        "stdLuma": 45.726
       },
       "reasons": [],
       "sampleId": "trans-001-002-090",
@@ -10565,12 +10521,6 @@
           },
           {
             "complete": true,
-            "naturalWidth": 1719,
-            "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-            "trackId": "track-0004"
-          },
-          {
-            "complete": true,
             "naturalWidth": 332,
             "src": "/shared-assets/viscereality/source/263f37bb7c07f8e85ba4f9dff120b68e5faa6fb760525908e534e50f5e383e00.png",
             "trackId": "track-0030"
@@ -10595,8 +10545,8 @@
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 6,
-        "objectsVisible": 14,
+        "imagesVisible": 5,
+        "objectsVisible": 13,
         "videos": [
           {
             "error": null,
@@ -10624,9 +10574,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 30.428,
+        "meanLuma": 29.38,
         "nearUniform": false,
-        "stdLuma": 47.469
+        "stdLuma": 45.744
       },
       "reasons": [],
       "sampleId": "trans-002-003-075",
@@ -10644,12 +10594,6 @@
             "naturalWidth": 1280,
             "src": "/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
             "trackId": "track-0002"
-          },
-          {
-            "complete": true,
-            "naturalWidth": 1719,
-            "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
-            "trackId": "track-0004"
           },
           {
             "complete": true,
@@ -10677,8 +10621,8 @@
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 6,
-        "objectsVisible": 14,
+        "imagesVisible": 5,
+        "objectsVisible": 13,
         "videos": [
           {
             "error": null,
@@ -10706,9 +10650,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 30.442,
+        "meanLuma": 29.364,
         "nearUniform": false,
-        "stdLuma": 47.361
+        "stdLuma": 45.573
       },
       "reasons": [],
       "sampleId": "trans-002-003-090",
@@ -10782,9 +10726,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 29.357,
+        "meanLuma": 29.36,
         "nearUniform": false,
-        "stdLuma": 45.697
+        "stdLuma": 45.695
       },
       "reasons": [],
       "sampleId": "trans-002-003-100",
@@ -11010,9 +10954,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 29.387,
+        "meanLuma": 29.376,
         "nearUniform": false,
-        "stdLuma": 45.813
+        "stdLuma": 45.769
       },
       "reasons": [],
       "sampleId": "trans-003-004-010",
@@ -11311,14 +11255,14 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
             "trackId": "track-0022"
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
             "trackId": "track-0023"
@@ -11982,7 +11926,7 @@
         "videos": [
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/6fc6e87580c6d1fa4593c2877d0b254125fa7a7848506ce5fe8dd77ea0e536e4.webm",
             "trackId": "track-0019"
@@ -12006,9 +11950,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 23.193,
+        "meanLuma": 23.188,
         "nearUniform": false,
-        "stdLuma": 48.387
+        "stdLuma": 48.388
       },
       "reasons": [],
       "sampleId": "trans-004-005-090",
@@ -12293,7 +12237,7 @@
           },
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/a40f30b7dc122dd7c756e2e61ed60f04d6863687c3a91b528c96e7c159a2afd2.webm",
             "trackId": "track-0027"
@@ -12310,9 +12254,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 23.351,
+        "meanLuma": 23.352,
         "nearUniform": false,
-        "stdLuma": 48.441
+        "stdLuma": 48.431
       },
       "reasons": [],
       "sampleId": "trans-005-006-010",
@@ -12924,9 +12868,9 @@
       "progress": 0.1,
       "quality": {
         "exists": true,
-        "meanLuma": 42.211,
+        "meanLuma": 42.216,
         "nearUniform": false,
-        "stdLuma": 55.788
+        "stdLuma": 55.782
       },
       "reasons": [],
       "sampleId": "trans-006-007-010",
@@ -13446,7 +13390,7 @@
         "videos": [
           {
             "error": null,
-            "paused": true,
+            "paused": false,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/2b4e0d406e8a2728602e740621e58d1eb382e08fcac1f1f0f28fd2a3fbc5345a.webm",
             "trackId": "track-0047"
@@ -15926,9 +15870,9 @@
       "progress": 0.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.416,
+        "meanLuma": 32.239,
         "nearUniform": false,
-        "stdLuma": 52.69
+        "stdLuma": 52.413
       },
       "reasons": [],
       "sampleId": "trans-011-012-000",
@@ -16382,9 +16326,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 32.078,
+        "meanLuma": 31.851,
         "nearUniform": false,
-        "stdLuma": 52.259
+        "stdLuma": 51.925
       },
       "reasons": [],
       "sampleId": "trans-011-012-100",
@@ -16864,9 +16808,9 @@
       "progress": 0.75,
       "quality": {
         "exists": true,
-        "meanLuma": 20.094,
+        "meanLuma": 20.017,
         "nearUniform": false,
-        "stdLuma": 47.957
+        "stdLuma": 47.77
       },
       "reasons": [],
       "sampleId": "trans-012-013-075",
@@ -16934,9 +16878,9 @@
       "progress": 0.9,
       "quality": {
         "exists": true,
-        "meanLuma": 19.862,
+        "meanLuma": 19.83,
         "nearUniform": false,
-        "stdLuma": 47.591
+        "stdLuma": 47.57
       },
       "reasons": [],
       "sampleId": "trans-012-013-090",
@@ -17074,9 +17018,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 20.181,
+        "meanLuma": 20.248,
         "nearUniform": false,
-        "stdLuma": 47.634
+        "stdLuma": 47.738
       },
       "reasons": [],
       "sampleId": "slide-013-settled",
@@ -17284,9 +17228,9 @@
       "progress": 0.25,
       "quality": {
         "exists": true,
-        "meanLuma": 20.597,
+        "meanLuma": 20.474,
         "nearUniform": false,
-        "stdLuma": 48.484
+        "stdLuma": 48.311
       },
       "reasons": [],
       "sampleId": "trans-013-014-025",
@@ -18141,9 +18085,9 @@
       "progress": 1.0,
       "quality": {
         "exists": true,
-        "meanLuma": 24.203,
+        "meanLuma": 24.03,
         "nearUniform": false,
-        "stdLuma": 50.608
+        "stdLuma": 50.48
       },
       "reasons": [],
       "sampleId": "trans-014-015-100",
@@ -19622,6 +19566,12 @@
           },
           {
             "complete": true,
+            "naturalWidth": 1106,
+            "src": "/shared-assets/viscereality/source/e02331508eb6a056251455d32d7c46ae753c852a10a2b5b7d17468d6206deb56.png",
+            "trackId": "track-0006"
+          },
+          {
+            "complete": true,
             "naturalWidth": 1280,
             "src": "/shared-assets/viscereality/source/0e357a18aa7c9a6a5439b6298899c65b8c7db3e4c3b8144a303fde789ad5ae09.png",
             "trackId": "track-0002"
@@ -19631,6 +19581,12 @@
             "naturalWidth": 1719,
             "src": "/shared-assets/viscereality/source/06271c4a6c0a3db865f5c4fc32bd3ae024a4b95b46ba8f2e111648a55b70060f.png",
             "trackId": "track-0004"
+          },
+          {
+            "complete": true,
+            "naturalWidth": 591,
+            "src": "/shared-assets/viscereality/source/10781074dea1c73c66ebe1bd3f16f6c96f63897ce50b7305446842eeb4ce4369.jpeg",
+            "trackId": "track-0005"
           },
           {
             "complete": true,
@@ -19646,11 +19602,19 @@
           }
         ],
         "imagesPending": 0,
-        "imagesVisible": 6,
-        "objectsVisible": 9,
-        "videos": [],
+        "imagesVisible": 8,
+        "objectsVisible": 12,
+        "videos": [
+          {
+            "error": null,
+            "paused": true,
+            "readyState": 4,
+            "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
+            "trackId": "track-0007"
+          }
+        ],
         "videosPending": 0,
-        "videosVisible": 0
+        "videosVisible": 1
       },
       "direction": "reverse",
       "expectedVisibleObjects": 3,
@@ -19660,9 +19624,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 31.141,
+        "meanLuma": 34.259,
         "nearUniform": false,
-        "stdLuma": 39.062
+        "stdLuma": 45.722
       },
       "reasons": [],
       "sampleId": "reverse-003-002-050",
@@ -19743,9 +19707,9 @@
       "progress": 0.5,
       "quality": {
         "exists": true,
-        "meanLuma": 25.541,
+        "meanLuma": 25.556,
         "nearUniform": false,
-        "stdLuma": 47.961
+        "stdLuma": 48.048
       },
       "reasons": [],
       "sampleId": "reverse-004-003-050",
@@ -20297,7 +20261,7 @@
           },
           {
             "error": null,
-            "paused": false,
+            "paused": true,
             "readyState": 4,
             "src": "/shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
             "trackId": "track-0042"
@@ -20799,7 +20763,7 @@
       "to": 16
     }
   ],
-  "generatedAtUtc": "2026-07-04T01:52:43+00:00",
+  "generatedAtUtc": "2026-07-04T02:28:54+00:00",
   "notes": [
     "Failures include capture timeouts, missing screenshots, and near-uniform blank frames.",
     "Contact sheets are intended for human review of overlap, layering, and object continuity."
@@ -20812,7 +20776,7 @@
       "id": "slide-001-settled",
       "kind": "slide",
       "mediaClocks": {
-        "track-0003": 0.5,
+        "track-0003": 3.25,
         "track-0007": 0.5,
         "track-0011": 0.5,
         "track-0012": 0.5,
@@ -20834,7 +20798,7 @@
       "id": "trans-001-002-000",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.0,
+        "track-0003": 5.75,
         "track-0007": 3.0,
         "track-0011": 3.0,
         "track-0012": 3.0,
@@ -20856,7 +20820,7 @@
       "id": "trans-001-002-010",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.2,
+        "track-0003": 5.95,
         "track-0007": 3.2,
         "track-0011": 3.2,
         "track-0012": 3.2,
@@ -20878,7 +20842,7 @@
       "id": "trans-001-002-025",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 3.5,
+        "track-0003": 6.25,
         "track-0007": 3.5,
         "track-0011": 3.5,
         "track-0012": 3.5,
@@ -20900,7 +20864,7 @@
       "id": "trans-001-002-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.0,
+        "track-0003": 6.75,
         "track-0007": 4.0,
         "track-0011": 4.0,
         "track-0012": 4.0,
@@ -20922,7 +20886,7 @@
       "id": "trans-001-002-075",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.5,
+        "track-0003": 7.25,
         "track-0007": 4.5,
         "track-0011": 4.5,
         "track-0012": 4.5,
@@ -20944,7 +20908,7 @@
       "id": "trans-001-002-090",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.8,
+        "track-0003": 7.55,
         "track-0007": 4.8,
         "track-0011": 4.8,
         "track-0012": 4.8,
@@ -20966,7 +20930,7 @@
       "id": "trans-001-002-100",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 5.0,
+        "track-0003": 7.75,
         "track-0007": 5.0,
         "track-0011": 5.0,
         "track-0012": 5.0,
@@ -23524,7 +23488,7 @@
       "id": "reverse-002-001-050",
       "kind": "transition",
       "mediaClocks": {
-        "track-0003": 4.0,
+        "track-0003": 6.75,
         "track-0007": 4.0,
         "track-0011": 4.0,
         "track-0012": 4.0,

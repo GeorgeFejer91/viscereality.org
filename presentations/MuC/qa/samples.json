@@ -3,7 +3,7 @@
     "id": "slide-001-settled",
     "kind": "slide",
     "mediaClocks": {
-      "track-0003": 0.5,
+      "track-0003": 3.25,
       "track-0007": 0.5,
       "track-0011": 0.5,
       "track-0012": 0.5,
@@ -22,7 +22,7 @@
     "id": "trans-001-002-000",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 3.0,
+      "track-0003": 5.75,
       "track-0007": 3.0,
       "track-0011": 3.0,
       "track-0012": 3.0,
@@ -41,7 +41,7 @@
     "id": "trans-001-002-010",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 3.2,
+      "track-0003": 5.95,
       "track-0007": 3.2,
       "track-0011": 3.2,
       "track-0012": 3.2,
@@ -60,7 +60,7 @@
     "id": "trans-001-002-025",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 3.5,
+      "track-0003": 6.25,
       "track-0007": 3.5,
       "track-0011": 3.5,
       "track-0012": 3.5,
@@ -79,7 +79,7 @@
     "id": "trans-001-002-050",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 4.0,
+      "track-0003": 6.75,
       "track-0007": 4.0,
       "track-0011": 4.0,
       "track-0012": 4.0,
@@ -98,7 +98,7 @@
     "id": "trans-001-002-075",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 4.5,
+      "track-0003": 7.25,
       "track-0007": 4.5,
       "track-0011": 4.5,
       "track-0012": 4.5,
@@ -117,7 +117,7 @@
     "id": "trans-001-002-090",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 4.8,
+      "track-0003": 7.55,
       "track-0007": 4.8,
       "track-0011": 4.8,
       "track-0012": 4.8,
@@ -136,7 +136,7 @@
     "id": "trans-001-002-100",
     "kind": "transition",
     "mediaClocks": {
-      "track-0003": 5.0,
+      "track-0003": 7.75,
       "track-0007": 5.0,
       "track-0011": 5.0,
       "track-0012": 5.0,

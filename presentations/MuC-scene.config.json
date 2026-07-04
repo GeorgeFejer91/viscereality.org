@@ -113,6 +113,17 @@
       }
     ]
   },
+  "media_phase_overrides": [
+    {
+      "slide": 1,
+      "track_id": "track-0003",
+      "asset_id": "asset-0928f3a3fc7358dc",
+      "name": "Picture 20",
+      "phase_sec": 2.75,
+      "score": 0.793067,
+      "source": "MuC-slide-1-person-background-phase-offset-oracle-sweep"
+    }
+  ],
   "visual_audit": {
     "enabled": true,
     "samples": [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1],
