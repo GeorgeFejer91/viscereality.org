@@ -332,17 +332,25 @@ async function ensureDiagnosticsHelpers(page) {
       if (!frame) {
         return { frame: false, imagesVisible: 0, imagesPending: 0, videosVisible: 0, videosPending: 0, objectsVisible: 0 };
       }
+      const stableSrc = (value) => {
+        try {
+          const url = new URL(value || "", window.location.href);
+          return `${url.pathname}${url.search}${url.hash}`;
+        } catch {
+          return value || "";
+        }
+      };
       const visibleObjects = Array.from(frame.querySelectorAll(".obj")).filter((obj) => window.__pptxHtmlPresenterElementVisible(obj));
       const images = Array.from(frame.querySelectorAll("img")).filter((image) => window.__pptxHtmlPresenterElementVisible(image));
       const videos = Array.from(frame.querySelectorAll("video")).filter((video) => window.__pptxHtmlPresenterElementVisible(video));
       const imageRows = images.map((image) => ({
-        src: image.currentSrc || image.src,
+        src: stableSrc(image.currentSrc || image.src),
         complete: image.complete,
         naturalWidth: image.naturalWidth,
         trackId: image.closest(".obj")?.dataset.trackId || "",
       }));
       const videoRows = videos.map((video) => ({
-        src: video.currentSrc || video.src,
+        src: stableSrc(video.currentSrc || video.src),
         readyState: video.readyState,
         paused: video.paused,
         error: video.error ? String(video.error.code || video.error.message || "video-error") : null,

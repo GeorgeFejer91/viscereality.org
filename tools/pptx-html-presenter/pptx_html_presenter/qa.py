@@ -1582,13 +1582,23 @@ def _candidate_sweep_candidate_id(
     value: float,
     track_id: str | None = None,
 ) -> str:
-    track_part = f"-{_safe_slug(track_id)}" if track_id else ""
+    track_part = f"-{_candidate_sweep_track_label(track_id)}" if track_id else ""
     return f"{_safe_slug(sample_id)}-{_safe_slug(vary)}{track_part}-{_candidate_value_label(value)}"
 
 
 def _candidate_sweep_dir_name(sample_id: str, vary: str, track_id: str | None) -> str:
-    track_part = f"-{_safe_slug(track_id)}" if track_id else ""
+    track_part = f"-{_candidate_sweep_track_label(track_id)}" if track_id else ""
     return f"{_safe_slug(sample_id)}-{_safe_slug(vary)}{track_part}"
+
+
+def _candidate_sweep_track_label(track_id: str | None) -> str:
+    slug = _safe_slug(track_id)
+    if len(slug) <= 80:
+        return slug
+    tracks = [part.strip() for part in str(track_id or "").split(",") if part.strip()]
+    prefix = f"tracks-{len(tracks)}" if len(tracks) > 1 else "track"
+    digest = sha256(str(track_id or "").encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}-{digest}"
 
 
 def _candidate_value_label(value: float) -> str:

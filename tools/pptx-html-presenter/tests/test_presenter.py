@@ -30,6 +30,8 @@ from pptx_html_presenter.player import PLAYER_HTML
 from pptx_html_presenter.pptx import _media_effects, _selected_media_target, _visual_effects, parse_pptx
 from pptx_html_presenter.publish import _upsert_shared_deck
 from pptx_html_presenter.qa import (
+    _candidate_sweep_candidate_id,
+    _candidate_sweep_dir_name,
     _candidate_sweep_samples,
     _filter_samples_for_slides,
     _global_ssim,
@@ -1125,6 +1127,13 @@ class PresenterTests(unittest.TestCase):
         self.assertIn("transition?.trackProgressOverrides", PLAYER_HTML)
         self.assertIn("trackProgressOverrides: s.trackProgressOverrides || null", (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8"))
 
+    def test_browser_capture_reports_stable_diagnostic_asset_paths(self) -> None:
+        capture_js = (ROOT / "pptx_html_presenter" / "browser_capture.mjs").read_text(encoding="utf-8")
+        self.assertIn("const stableSrc = (value) =>", capture_js)
+        self.assertIn("return `${url.pathname}${url.search}${url.hash}`;", capture_js)
+        self.assertIn("src: stableSrc(image.currentSrc || image.src)", capture_js)
+        self.assertIn("src: stableSrc(video.currentSrc || video.src)", capture_js)
+
     def test_player_hides_settled_only_raster_fallbacks_during_transition(self) -> None:
         self.assertIn("function isSettledOnlyRasterFallback", PLAYER_HTML)
         self.assertIn("hideSettledOnlyFallbacks();", PLAYER_HTML)
@@ -2156,6 +2165,17 @@ class PresenterTests(unittest.TestCase):
         candidates = _candidate_sweep_samples(sample, "phase-offset", [0.5])
         self.assertEqual(candidates[0]["mediaClocks"], {"track-a": 1.8, "track-b": 9.5})
         self.assertEqual(candidates[0]["candidateSweep"]["trackIds"], ["track-a", "track-b"])
+
+    def test_candidate_sweep_output_ids_compact_long_track_clusters(self) -> None:
+        track_id = ",".join(f"track-{index:04d}" for index in range(40))
+        dirname = _candidate_sweep_dir_name("trans-001-002-075", "track-progress", track_id)
+        candidate_id = _candidate_sweep_candidate_id("trans-001-002-075", "track-progress", 0.5, track_id)
+
+        self.assertLess(len(dirname), 80)
+        self.assertLess(len(candidate_id), 90)
+        self.assertIn("tracks-40-", dirname)
+        self.assertIn("tracks-40-", candidate_id)
+        self.assertNotIn("track-0039", dirname)
 
     def test_candidate_sweep_track_progress_samples_keep_global_progress(self) -> None:
         sample = {

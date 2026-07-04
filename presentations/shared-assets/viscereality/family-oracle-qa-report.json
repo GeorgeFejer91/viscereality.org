@@ -8,9 +8,9 @@
       "comparisonCount": 24,
       "deckId": "MuC",
       "failedCount": 24,
-      "minSsim": 0.740554,
+      "minSsim": 0.739402,
       "referenceKept": false,
-      "referenceSizeMb": 86.133,
+      "referenceSizeMb": 86.221,
       "report": "presentations/MuC/qa/report.json",
       "sampleCount": 24,
       "status": "failed",
@@ -19,13 +19,13 @@
   ],
   "disk": {
     "force": true,
-    "freeGbAtStart": 4.087,
+    "freeGbAtStart": 4.629,
     "minimumFreeGb": 0.0
   },
   "familyId": "viscereality",
   "ffmpeg": "C:\\Users\\gfeje\\Proton Drive\\George.Fejer\\My files\\Project1_CouplingKernelStudy\\ffmpeg_standalone\\bin\\ffmpeg.exe",
   "fullScope": false,
-  "generatedAtUtc": "2026-07-04T01:03:22+00:00",
+  "generatedAtUtc": "2026-07-04T01:27:03+00:00",
   "keepReference": false,
   "notes": [
     "PowerPoint MP4 references are exported through PowerPoint COM using the deck scene timing.",
