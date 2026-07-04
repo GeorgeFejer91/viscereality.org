@@ -1,6 +1,271 @@
 {
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-04T05:03:59+00:00",
+  "generatedAtUtc": "2026-07-04T05:24:53+00:00",
+  "largeSourceConversions": {
+    "checkedLargeSourceCount": 12,
+    "largeSourceAssetSafe": true,
+    "largestOptimizedSources": [
+      {
+        "alpha": false,
+        "animated": true,
+        "assetId": "asset-8e82652ecf1c208f",
+        "compressionRatio": 0.0644,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "mp4",
+        "runtimePath": "../shared-assets/viscereality/optimized/ebbc88015ea08d653a1e36df9332ad443493fa005a7c7bb263555758191907e9.mp4",
+        "runtimeSizeMb": 24.891,
+        "sourceFile": "../shared-assets/viscereality/optimized/ebbc88015ea08d653a1e36df9332ad443493fa005a7c7bb263555758191907e9.mp4",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image10.gif",
+        "sourceSha256": "8e82652ecf1c208f1d02a967943ffdda54fed2cd2ae0708228c24a880df0e827",
+        "sourceSizeMb": 386.763,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-de15ac9d4fa9ad4b",
+        "compressionRatio": 0.1179,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
+        "runtimeSizeMb": 16.576,
+        "sourceFile": "../shared-assets/viscereality/optimized/b4c3b6a5ad9ac4276655cf7fd209e1a85407df753df6dc3beed255a8a97a390b.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image25.gif",
+        "sourceSha256": "de15ac9d4fa9ad4b523c10b3555bb95673cb8aff3fb52ba861c397f4d76f9ba9",
+        "sourceSizeMb": 140.635,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-164b535c99e4dff0",
+        "compressionRatio": 0.1014,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
+        "runtimeSizeMb": 12.326,
+        "sourceFile": "../shared-assets/viscereality/optimized/fccf6022b59c854d8b784b0b85cfcbc04ed4295085a69d8776e8eea4fbb0640a.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image24.gif",
+        "sourceSha256": "164b535c99e4dff0daec08df43560254e7ed8cb00928f9f1c7b13643a8059764",
+        "sourceSizeMb": 121.513,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-ceabe477dce6f31c",
+        "compressionRatio": 0.1376,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
+        "runtimeSizeMb": 15.406,
+        "sourceFile": "../shared-assets/viscereality/optimized/80832c112f48af3c72de02c12a92b9c5b0304c626bdf0214eccb0a9b2a8936e1.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image28.gif",
+        "sourceSha256": "ceabe477dce6f31c9795b68fbed9411e7c450f881e14657eaca2a44afa0a5d6f",
+        "sourceSizeMb": 112.001,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-792ec06b75656dfc",
+        "compressionRatio": 0.1359,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
+        "runtimeSizeMb": 13.961,
+        "sourceFile": "../shared-assets/viscereality/optimized/c98864a2a0073e0c035a76aa55fa03bc45d3707babed581bfeb0efcccaf4e2f6.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image22.gif",
+        "sourceSha256": "792ec06b75656dfcfb1107fe8cc0939f1ebf7e5136fcf3fc27e009c5cd56c219",
+        "sourceSizeMb": 102.76,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-fc99bea418f76236",
+        "compressionRatio": 0.1039,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
+        "runtimeSizeMb": 7.013,
+        "sourceFile": "../shared-assets/viscereality/optimized/5b1484f542465aee273d05bad9a072db22ac35c758217703c66e3f4432f27320.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image23.gif",
+        "sourceSha256": "fc99bea418f76236f9a96f556336316c32da7c574da619a3244acbe065d4e821",
+        "sourceSizeMb": 67.52,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-21036503160e8e82",
+        "compressionRatio": 0.0955,
+        "deckId": "MuC",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
+        "runtimeSizeMb": 6.156,
+        "sourceFile": "../shared-assets/viscereality/optimized/4c1210db2ffe74a1c6923b2b7fd27649015fb91120b7704b18c4ab29fab351ba.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image27.gif",
+        "sourceSha256": "21036503160e8e826ae0c281e692ce8812e1cc1999cfa693ea6273dd5d3b2f33",
+        "sourceSizeMb": 64.454,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": null,
+        "animated": false,
+        "assetId": "asset-c1478e568641a55a",
+        "compressionRatio": 0.5971,
+        "deckId": "alpCHI",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "mp4",
+        "runtimePath": "../shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4",
+        "runtimeSizeMb": 34.916,
+        "sourceFile": "../shared-assets/viscereality/optimized/1da2c70740460b2e12c478695c0734390d0cce08f531ee65fdb1d97d9bb387ad.mp4",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/media1.mp4",
+        "sourceSha256": "c1478e568641a55a80721d4c727d23eed3db27cb2433db5521d66654f4ed9cda",
+        "sourceSizeMb": 58.478,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": null,
+        "animated": false,
+        "assetId": "asset-34a2f729c61b7c79",
+        "compressionRatio": 0.7297,
+        "deckId": "alpCHI",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "mp4",
+        "runtimePath": "../shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4",
+        "runtimeSizeMb": 42.672,
+        "sourceFile": "../shared-assets/viscereality/optimized/ea01321ea08821897f9a748c6dd26ab1455f94d7e39ea921634498493d6811e6.mp4",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/media2.mp4",
+        "sourceSha256": "34a2f729c61b7c799d7bacbf386ad96fed08089051618b014a217a274da662f2",
+        "sourceSizeMb": 58.477,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": null,
+        "animated": false,
+        "assetId": "asset-a94bc7da5c6d4913",
+        "compressionRatio": 0.8409,
+        "deckId": "alpCHI",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "mp4",
+        "runtimePath": "../shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
+        "runtimeSizeMb": 48.879,
+        "sourceFile": "../shared-assets/viscereality/optimized/3a907ddc7cdfe95de185fc64f27eaf69f5251c46deff568927ade6b6b9bca5b9.mp4",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/media4.mp4",
+        "sourceSha256": "a94bc7da5c6d4913d0c616b5b947dee53b235305025b69f34d6193565fbdb063",
+        "sourceSizeMb": 58.131,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": null,
+        "animated": false,
+        "assetId": "asset-0902201da080c1fe",
+        "compressionRatio": 0.6512,
+        "deckId": "alpCHI",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "mp4",
+        "runtimePath": "../shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4",
+        "runtimeSizeMb": 37.708,
+        "sourceFile": "../shared-assets/viscereality/optimized/1b4d50ab5835c3f947c73b03057793e259226a3614826551724be970a0819022.mp4",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/media3.mp4",
+        "sourceSha256": "0902201da080c1feb66138561973046813ed23508e3836725d9130fc108e85ff",
+        "sourceSizeMb": 57.909,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      },
+      {
+        "alpha": true,
+        "animated": true,
+        "assetId": "asset-2361b03b194a1b72",
+        "compressionRatio": 0.0421,
+        "deckId": "alpCHI",
+        "runtimeBucket": "optimized",
+        "runtimeExtension": "webm",
+        "runtimePath": "../shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
+        "runtimeSizeMb": 2.167,
+        "sourceFile": "../shared-assets/viscereality/optimized/ec7be1d87325b05a025fdf34fd874b373fab8d7cd72f5c907f99f875035fca52.webm",
+        "sourceFileBucket": "optimized",
+        "sourcePath": "ppt/media/image31.gif",
+        "sourceSha256": "2361b03b194a1b72ff7dcc86e1406dbeaaf983619582d6864a69e46bd3d9a4a4",
+        "sourceSizeMb": 51.456,
+        "target": "public",
+        "warnings": [
+          "optimized-asset-reused-from-shared-cache",
+          "source-file-pruned-shared-runtime-file-used"
+        ]
+      }
+    ],
+    "leakedLargeOriginalSourceFiles": [],
+    "maxOptimizedRuntimeMb": 48.879,
+    "maxSourceMb": 386.763,
+    "missingRuntimeFiles": [],
+    "optimizedRuntimeCount": 12,
+    "softMaxMb": 50.0,
+    "unconvertedLargeSourceAssets": []
+  },
   "limits": {
     "githubPagesSafe": true,
     "hardMaxMb": 100.0,

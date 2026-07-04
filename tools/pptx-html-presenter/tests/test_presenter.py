@@ -3881,6 +3881,150 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(len(report["limits"]["oversizeAssets"]), 1)
             self.assertTrue((shared / "family-asset-check-report.json").exists())
 
+    def test_family_asset_check_reports_large_source_converted_to_safe_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "presentations" / "shared-assets" / "demo"
+            optimized = shared / "optimized"
+            optimized.mkdir(parents=True)
+            (optimized / "loop.mp4").write_bytes(b"x" * 512)
+            public = root / "presentations" / "Demo"
+            public.mkdir(parents=True)
+            (public / "deck.scene.json").write_text(
+                json.dumps(
+                    {
+                        "deck": {"id": "Demo"},
+                        "assets": [
+                            {
+                                "id": "asset-loop",
+                                "file": "../shared-assets/demo/optimized/loop.mp4",
+                                "sourceFile": "../shared-assets/demo/optimized/loop.mp4",
+                                "sourcePath": "ppt/media/huge.gif",
+                                "sha256": "source-sha",
+                                "sizeBytes": 2048,
+                                "kind": "video",
+                                "extension": "mp4",
+                                "animated": True,
+                                "alpha": False,
+                            }
+                        ],
+                        "slides": [],
+                        "transitions": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = root / "presentations" / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            previous_soft_max = family_module.SHARED_SOURCE_SOFT_MAX_MB
+            family_module.SHARED_SOURCE_SOFT_MAX_MB = 0.001
+            try:
+                report = asset_check_family(config)
+            finally:
+                family_module.SHARED_SOURCE_SOFT_MAX_MB = previous_soft_max
+
+            conversion = report["largeSourceConversions"]
+            self.assertEqual(report["status"], "ok")
+            self.assertTrue(conversion["largeSourceAssetSafe"])
+            self.assertEqual(conversion["checkedLargeSourceCount"], 1)
+            self.assertEqual(conversion["optimizedRuntimeCount"], 1)
+            self.assertEqual(conversion["largestOptimizedSources"][0]["runtimeBucket"], "optimized")
+            self.assertEqual(conversion["unconvertedLargeSourceAssets"], [])
+            self.assertEqual(conversion["leakedLargeOriginalSourceFiles"], [])
+
+    def test_family_asset_check_blocks_large_source_leak_even_with_safe_runtime(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shared = root / "presentations" / "shared-assets" / "demo"
+            optimized = shared / "optimized"
+            source = shared / "source"
+            optimized.mkdir(parents=True)
+            source.mkdir(parents=True)
+            (optimized / "loop.mp4").write_bytes(b"x" * 512)
+            (source / "huge.gif").write_bytes(b"x" * 2048)
+            public = root / "presentations" / "Demo"
+            public.mkdir(parents=True)
+            (public / "deck.scene.json").write_text(
+                json.dumps(
+                    {
+                        "deck": {"id": "Demo"},
+                        "assets": [
+                            {
+                                "id": "asset-loop",
+                                "file": "../shared-assets/demo/optimized/loop.mp4",
+                                "sourceFile": "../shared-assets/demo/source/huge.gif",
+                                "sourcePath": "ppt/media/huge.gif",
+                                "sha256": "source-sha",
+                                "sizeBytes": 2048,
+                                "kind": "video",
+                                "extension": "mp4",
+                                "animated": True,
+                                "alpha": False,
+                            }
+                        ],
+                        "slides": [],
+                        "transitions": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            config = root / "presentations" / "family.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "repo_root": "..",
+                        "family_id": "demo-family",
+                        "shared_assets": {"root": "presentations/shared-assets/demo"},
+                        "decks": [
+                            {
+                                "id": "Demo",
+                                "title": "Demo Deck",
+                                "source": "presentations/demo.pptx",
+                                "staging": "presentations/Demo-scene",
+                                "public_dir": "Demo",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            previous_soft_max = family_module.SHARED_SOURCE_SOFT_MAX_MB
+            previous_hard_max = family_module.SHARED_SOURCE_HARD_MAX_MB
+            family_module.SHARED_SOURCE_SOFT_MAX_MB = 0.001
+            family_module.SHARED_SOURCE_HARD_MAX_MB = 1.0
+            try:
+                report = asset_check_family(config)
+            finally:
+                family_module.SHARED_SOURCE_SOFT_MAX_MB = previous_soft_max
+                family_module.SHARED_SOURCE_HARD_MAX_MB = previous_hard_max
+
+            conversion = report["largeSourceConversions"]
+            self.assertEqual(report["status"], "blocked-by-asset-size")
+            self.assertFalse(conversion["largeSourceAssetSafe"])
+            self.assertEqual(len(conversion["leakedLargeOriginalSourceFiles"]), 1)
+            self.assertEqual(
+                conversion["leakedLargeOriginalSourceFiles"][0]["publishedSourceSizeMb"],
+                0.002,
+            )
+
     def test_family_asset_check_blocks_non_web_runtime_asset_references(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

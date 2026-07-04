@@ -54,6 +54,7 @@ presentations/shared-assets/viscereality/
   - files above 100 MiB remain hard GitHub Pages blockers.
   - `asset_policy.allow_oversize_assets: false` now makes files above the 50 MiB preferred limit publish blockers too, not just warnings.
   - `allow_oversize_assets: true` is only for explicitly reviewed local/staging exceptions and does not make >100 MiB files GitHub-safe.
+  - `family asset-check` now includes `largeSourceConversions`, a proof table for oversized PPT source assets. It confirms that each source asset above the 50 MiB preferred public limit is represented by a GitHub-safe optimized runtime asset and that no giant original leaked into `presentations/shared-assets/viscereality/source/`.
 - Latest family build status: `ok`.
 - Latest family inspect status: `blocked` only because the local disk free-space preflight is below the configured 8 GiB floor; source PPTX parsing still reports 3 decks and about 1.53 GiB unique source media.
 - Latest family HTML visual audit status: `ok`; the latest direct public-folder audits also pass for all three decks.
@@ -128,6 +129,9 @@ Current source PPTX parse results from family preflight:
   - Solution: `prepare_assets()` now reports `hardLimitSafe`, `preferredAssetSafe`, and `publishAssetSafe`. With `allow_oversize_assets: false`, a post-optimization asset above the 50 MiB preferred limit gets `github-soft-limit-blocker`, `publishAssetSafe: false`, and the build status becomes `blocked-by-asset-size`.
 - Problem: A future operator could run `family publish` without first running `family asset-check`, allowing a stale shared library or runtime scene reference to ship an oversized or non-web asset.
   - Solution: `publish_family()` now runs the family asset gate before copying public decks and refuses to publish unless the shared asset library and all runtime references pass, unless `--force` is used after explicit review. Verification on 2026-07-04: `py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter` passed 148 tests; `family asset-check` reports `max-mb=48.879`, `soft-oversize=0`, and `hard-oversize=0`.
+- Problem: It was hard to prove from the top-level asset report that super-large PPT media had actually been converted rather than merely hidden behind a passing max-file-size summary.
+  - Solution: `asset_check_family()` now emits `largeSourceConversions` with every source asset above the preferred 50 MiB limit, the optimized runtime file, source/runtime sizes, compression ratio, alpha/animation metadata, and leak/missing/unconverted lists. This report blocks publish if an oversized source remains unconverted, if its runtime file is missing or above the preferred limit, or if a large original source blob is still published in the shared source bucket.
+- Latest large-asset verification on 2026-07-04: `py -3 tools\pptx-html-presenter\pptx-html-presenter.py family asset-check presentations\viscereality-family.config.json` passed with `largeSourceAssetSafe=true`. It checked 12 large source assets; all 12 use optimized runtime files. The largest original source was `386.763 MiB`, the largest optimized runtime file was `48.879 MiB`, and the report found 0 unconverted, 0 leaked, and 0 missing large-source runtime assets.
 - Problem: Oversized alpha GIFs, opaque GIFs, and videos could stop after one acceptable-under-100-MiB transcode even when the result was still too large for the preferred public asset ceiling.
   - Solution: GIF and video conversion now targets the publish policy, not only the hard limit. Transparent GIFs keep alpha and try alpha-safe WebM/WebP outputs; opaque GIF/video-like loops and large videos try progressively smaller MP4/WebM/WebP variants before falling back to a blocked staged build.
 - Problem: Family sharing could upgrade a deck build back to `ok` when the shared library was hard-limit safe but still had preferred-limit violators.
@@ -414,6 +418,7 @@ The previous chunked players were moved to:
 py -3 -m unittest tools.pptx-html-presenter.tests.test_presenter
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family inspect presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family build presentations\viscereality-family.config.json
+py -3 tools\pptx-html-presenter\pptx-html-presenter.py family asset-check presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py family visual-audit presentations\viscereality-family.config.json
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\MuC --sample trans-001-002-025 --vary exit-fade-end --values 0.05:1:0.05 --reference-frame presentations\MuC\qa\reference\trans-001-002-025.png
 py -3 tools\pptx-html-presenter\pptx-html-presenter.py candidate-sweep presentations\MuC --sample trans-001-002-025 --vary enter-fade-end --track-id track-0032,track-0033,track-0034,track-0035,track-0036 --values 0.05:1:0.05 --reference-frame presentations\MuC\qa\reference\trans-001-002-025.png

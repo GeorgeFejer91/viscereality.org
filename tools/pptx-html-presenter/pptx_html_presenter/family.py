@@ -126,11 +126,13 @@ def asset_check_family(config_path: Path) -> dict[str, Any]:
     family = load_family_config(config_path)
     limits = _shared_asset_library_limit_report(family)
     runtime_assets = _family_runtime_asset_report(family)
+    large_source_conversions = _family_large_source_conversion_report(family)
     size_safe = (
         limits["githubPagesSafe"]
         and limits.get("preferredAssetSafe", True)
         and runtime_assets["runtimeHardLimitSafe"]
         and runtime_assets.get("runtimePreferredAssetSafe", True)
+        and large_source_conversions["largeSourceAssetSafe"]
     )
     runtime_safe = runtime_assets["runtimeAssetSafe"]
     if size_safe and runtime_safe:
@@ -147,6 +149,7 @@ def asset_check_family(config_path: Path) -> dict[str, Any]:
         "sharedAssetRoot": _repo_rel(family.repo_root, family.shared_root),
         "limits": limits,
         "runtimeAssets": runtime_assets,
+        "largeSourceConversions": large_source_conversions,
         "notes": [
             "Public GitHub Pages assets should stay below the preferred soft maximum.",
             "Assets above the hard maximum are always blockers.",
@@ -978,6 +981,93 @@ def _family_runtime_asset_report(family: FamilyConfig) -> dict[str, Any]:
     }
 
 
+def _family_large_source_conversion_report(family: FamilyConfig) -> dict[str, Any]:
+    """Prove large PPT source blobs are replaced by publish-safe runtime assets."""
+
+    checked: dict[tuple[str, str], dict[str, Any]] = {}
+    unconverted: list[dict[str, Any]] = []
+    leaked_sources: list[dict[str, Any]] = []
+    missing_runtime: list[dict[str, Any]] = []
+    max_source_mb = 0.0
+    max_runtime_mb = 0.0
+
+    for deck in family.decks:
+        for target_name, build_dir in _runtime_asset_scene_targets(family, deck):
+            scene_path = build_dir / "deck.scene.json"
+            if not scene_path.exists():
+                continue
+            scene = read_json(scene_path)
+            for asset in scene.get("assets", []) or []:
+                source_size_bytes = int(asset.get("sizeBytes") or 0)
+                source_mb = format_mb(source_size_bytes)
+                if source_mb <= SHARED_SOURCE_SOFT_MAX_MB:
+                    continue
+                source_sha = str(asset.get("sha256") or "")
+                source_path = str(asset.get("sourcePath") or "")
+                key = (source_sha or source_path or str(asset.get("id")), str(asset.get("file") or ""))
+                runtime_ref = str(asset.get("file") or "")
+                source_ref = str(asset.get("sourceFile") or "")
+                runtime_path = _shared_ref_to_path(build_dir, runtime_ref) if runtime_ref else None
+                source_file_path = _shared_ref_to_path(build_dir, source_ref) if source_ref else None
+                runtime_exists = bool(runtime_path and runtime_path.exists())
+                runtime_mb = format_mb(runtime_path.stat().st_size) if runtime_exists and runtime_path else 0.0
+                max_source_mb = max(max_source_mb, source_mb)
+                max_runtime_mb = max(max_runtime_mb, runtime_mb)
+                row = {
+                    "deckId": deck.id,
+                    "target": target_name,
+                    "assetId": asset.get("id"),
+                    "sourcePath": source_path,
+                    "sourceSha256": source_sha or None,
+                    "sourceSizeMb": source_mb,
+                    "runtimePath": runtime_ref,
+                    "runtimeSizeMb": runtime_mb if runtime_exists else None,
+                    "runtimeExtension": _runtime_asset_extension(runtime_ref),
+                    "runtimeBucket": _shared_asset_bucket(runtime_ref),
+                    "sourceFile": source_ref,
+                    "sourceFileBucket": _shared_asset_bucket(source_ref),
+                    "animated": asset.get("animated"),
+                    "alpha": asset.get("alpha"),
+                    "warnings": asset.get("warnings", []),
+                }
+                if runtime_exists and runtime_path is not None and source_size_bytes:
+                    row["compressionRatio"] = round(runtime_path.stat().st_size / source_size_bytes, 4)
+                if key not in checked:
+                    checked[key] = row
+                if not runtime_exists:
+                    missing_runtime.append({**row, "resolvedRuntimePath": str(runtime_path) if runtime_path else None})
+                    unconverted.append({**row, "reason": "runtime-missing"})
+                    continue
+                if runtime_mb > SHARED_SOURCE_SOFT_MAX_MB:
+                    unconverted.append({**row, "reason": "runtime-over-preferred-limit"})
+                if source_file_path and source_file_path.exists():
+                    source_file_mb = format_mb(source_file_path.stat().st_size)
+                    if (
+                        _shared_asset_bucket(source_ref) == "source"
+                        and source_file_mb > SHARED_SOURCE_SOFT_MAX_MB
+                    ):
+                        leaked_sources.append({**row, "publishedSourceSizeMb": source_file_mb})
+
+    largest = sorted(
+        checked.values(),
+        key=lambda row: float(row.get("sourceSizeMb") or 0.0),
+        reverse=True,
+    )[:20]
+    optimized_count = sum(1 for row in checked.values() if row.get("runtimeBucket") == "optimized")
+    return {
+        "largeSourceAssetSafe": not unconverted and not leaked_sources and not missing_runtime,
+        "softMaxMb": SHARED_SOURCE_SOFT_MAX_MB,
+        "checkedLargeSourceCount": len(checked),
+        "optimizedRuntimeCount": optimized_count,
+        "maxSourceMb": max_source_mb,
+        "maxOptimizedRuntimeMb": max_runtime_mb,
+        "largestOptimizedSources": largest,
+        "unconvertedLargeSourceAssets": unconverted,
+        "leakedLargeOriginalSourceFiles": leaked_sources,
+        "missingRuntimeFiles": missing_runtime,
+    }
+
+
 def _runtime_asset_scene_targets(family: FamilyConfig, deck: FamilyDeck) -> list[tuple[str, Path]]:
     presentations_dir = family.repo_root / "presentations"
     targets = [
@@ -999,6 +1089,16 @@ def _runtime_asset_extension(value: str) -> str:
     clean = value.replace("\\", "/").split("?", 1)[0].split("#", 1)[0]
     suffix = Path(clean).suffix.lower().lstrip(".")
     return suffix
+
+
+def _shared_asset_bucket(value: str) -> str:
+    normalized = value.replace("\\", "/")
+    marker = "shared-assets/"
+    if marker not in normalized:
+        return ""
+    suffix = normalized.split(marker, 1)[1]
+    parts = suffix.split("/")
+    return parts[1] if len(parts) >= 2 else ""
 
 
 def _shared_ref_to_path(base_dir: Path, value: str) -> Path:
