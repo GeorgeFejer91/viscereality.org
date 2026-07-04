@@ -79,7 +79,7 @@
       "passed": false,
       "sampleId": "trans-001-002-090",
       "sideBySideFile": "qa/side-by-side/trans-001-002-090.png",
-      "ssim": 0.84942,
+      "ssim": 0.849439,
       "threshold": 0.965
     },
     {
@@ -151,12 +151,12 @@
     {
       "diffFile": "qa/diff/trans-002-003-075.png",
       "kind": "transition",
-      "meanDelta": 9.819,
-      "p95Delta": 42.0,
+      "meanDelta": 9.64,
+      "p95Delta": 39.0,
       "passed": false,
       "sampleId": "trans-002-003-075",
       "sideBySideFile": "qa/side-by-side/trans-002-003-075.png",
-      "ssim": 0.739402,
+      "ssim": 0.743023,
       "threshold": 0.965
     },
     {
@@ -173,12 +173,12 @@
     {
       "diffFile": "qa/diff/trans-002-003-100.png",
       "kind": "transition",
-      "meanDelta": 6.668,
+      "meanDelta": 6.659,
       "p95Delta": 18.0,
       "passed": false,
       "sampleId": "trans-002-003-100",
       "sideBySideFile": "qa/side-by-side/trans-002-003-100.png",
-      "ssim": 0.900635,
+      "ssim": 0.90077,
       "threshold": 0.965
     },
     {
@@ -206,12 +206,12 @@
     {
       "diffFile": "qa/diff/trans-003-004-010.png",
       "kind": "transition",
-      "meanDelta": 7.914,
+      "meanDelta": 7.917,
       "p95Delta": 22.0,
       "passed": false,
       "sampleId": "trans-003-004-010",
       "sideBySideFile": "qa/side-by-side/trans-003-004-010.png",
-      "ssim": 0.879604,
+      "ssim": 0.879681,
       "threshold": 0.965
     },
     {
@@ -270,10 +270,10 @@
       "threshold": 0.965
     }
   ],
-  "generatedAtUtc": "2026-07-04T01:27:03+00:00",
+  "generatedAtUtc": "2026-07-04T02:05:09+00:00",
   "htmlCapture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T01:26:45.103Z",
+    "generatedAt": "2026-07-04T02:04:52.099Z",
     "sampleCount": 24,
     "samples": [
       {
@@ -1862,14 +1862,14 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/378a084f7997733e907a7992032004b7161c86d0b0f6625049a25a9534f54901.webm",
               "trackId": "track-0022"
             },
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ff25b6479b92bd95e3ecc5200a6a0bf863b44b13f080656d21754faa2083eb86.webm",
               "trackId": "track-0023"
