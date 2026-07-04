@@ -118,6 +118,11 @@ class PresenterTests(unittest.TestCase):
             self.assertEqual(background.provenance["layer"], "master-background")
             self.assertEqual(background.geometry.cx, deck.slide_width)
             self.assertEqual(background.geometry.cy, deck.slide_height)
+            self.assertEqual(background.crop, {"t": 0.01, "b": 0.02})
+            self.assertEqual(
+                background.media_effects,
+                {"brightnessContrast": {"bright": -0.2, "contrast": 0.1}},
+            )
 
     def test_inspect_and_build(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -3718,7 +3723,7 @@ def _write_master_background_pptx(path: Path) -> None:
         zf.writestr("ppt/media/image1.png", png)
         zf.writestr("ppt/slides/slide1.xml", """<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:cSld><p:spTree><p:nvGrpSpPr/><p:grpSpPr/></p:spTree></p:cSld></p:sld>""")
         zf.writestr("ppt/slideLayouts/slideLayout1.xml", """<p:sldLayout xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:cSld><p:spTree><p:nvGrpSpPr/><p:grpSpPr/></p:spTree></p:cSld></p:sldLayout>""")
-        zf.writestr("ppt/slideMasters/slideMaster1.xml", """<p:sldMaster xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:cSld><p:bg><p:bgPr><a:blipFill><a:blip r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr/><p:grpSpPr/></p:spTree></p:cSld></p:sldMaster>""")
+        zf.writestr("ppt/slideMasters/slideMaster1.xml", """<p:sldMaster xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:cSld><p:bg><p:bgPr><a:blipFill><a:blip r:embed="rId1"><a:lum bright="-20000" contrast="10000"/></a:blip><a:srcRect t="1000" b="2000"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr/><p:grpSpPr/></p:spTree></p:cSld></p:sldMaster>""")
 
 
 def _write_video_poster_pptx(path: Path) -> None:

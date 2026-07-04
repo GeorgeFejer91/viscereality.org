@@ -332,7 +332,10 @@ def _background_object(
         asset_id=asset_id,
         shape="rect",
         fill=fill,
-        opacity=1.0,
+        opacity=_opacity(bg, media=asset_id is not None),
+        crop=_crop(bg),
+        visual_effects=_visual_effects(bg),
+        media_effects=_media_effects(bg) if asset_id is not None else {},
         provenance={
             "sourcePath": source_path,
             "layer": layer,
@@ -858,6 +861,10 @@ def _opacity(node: ET.Element, *, media: bool = False) -> float:
         alpha = node.find(".//p:blipFill/a:blip/a:alpha", NS)
         if alpha is None:
             alpha = node.find(".//p:blipFill/a:blip/a:alphaModFix", NS)
+        if alpha is None:
+            alpha = node.find(".//a:blip/a:alpha", NS)
+        if alpha is None:
+            alpha = node.find(".//a:blip/a:alphaModFix", NS)
     else:
         alpha = node.find(".//p:spPr/a:solidFill//a:alpha", NS)
     if alpha is None:
@@ -899,15 +906,25 @@ def _visual_effects(node: ET.Element) -> dict[str, Any]:
 def _media_effects(node: ET.Element) -> dict[str, Any]:
     effects: dict[str, Any] = {}
     brightness = node.find(".//a14:imgLayer/a14:imgEffect/a14:brightnessContrast", NS)
-    if brightness is not None:
-        item: dict[str, Any] = {}
-        if brightness.get("bright") is not None:
-            item["bright"] = _ratio_100k(brightness.get("bright"), signed=True)
-        if brightness.get("contrast") is not None:
-            item["contrast"] = _ratio_100k(brightness.get("contrast"), signed=True)
-        if item:
-            effects["brightnessContrast"] = item
+    item = _brightness_contrast_effect(brightness)
+    if item:
+        effects["brightnessContrast"] = item
+    lum = node.find(".//a:blip/a:lum", NS)
+    item = _brightness_contrast_effect(lum)
+    if item and "brightnessContrast" not in effects:
+        effects["brightnessContrast"] = item
     return effects
+
+
+def _brightness_contrast_effect(node: ET.Element | None) -> dict[str, float]:
+    if node is None:
+        return {}
+    item: dict[str, float] = {}
+    if node.get("bright") is not None:
+        item["bright"] = _ratio_100k(node.get("bright"), signed=True)
+    if node.get("contrast") is not None:
+        item["contrast"] = _ratio_100k(node.get("contrast"), signed=True)
+    return item
 
 
 def _color_from_node(node: ET.Element) -> str | None:
