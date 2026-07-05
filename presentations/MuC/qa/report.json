@@ -41,34 +41,34 @@
     {
       "diffFile": "qa/diff/trans-001-002-025.png",
       "kind": "transition",
-      "meanDelta": 11.61,
-      "p95Delta": 66.0,
+      "meanDelta": 8.623,
+      "p95Delta": 53.0,
       "passed": false,
       "sampleId": "trans-001-002-025",
       "sideBySideFile": "qa/side-by-side/trans-001-002-025.png",
-      "ssim": 0.792806,
+      "ssim": 0.852974,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-001-002-050.png",
       "kind": "transition",
-      "meanDelta": 5.886,
+      "meanDelta": 5.62,
       "p95Delta": 16.0,
       "passed": false,
       "sampleId": "trans-001-002-050",
       "sideBySideFile": "qa/side-by-side/trans-001-002-050.png",
-      "ssim": 0.916742,
+      "ssim": 0.919047,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-001-002-075.png",
       "kind": "transition",
-      "meanDelta": 7.074,
-      "p95Delta": 28.0,
+      "meanDelta": 6.146,
+      "p95Delta": 24.0,
       "passed": false,
       "sampleId": "trans-001-002-075",
       "sideBySideFile": "qa/side-by-side/trans-001-002-075.png",
-      "ssim": 0.857157,
+      "ssim": 0.868708,
       "threshold": 0.965
     },
     {
@@ -134,7 +134,7 @@
       "passed": false,
       "sampleId": "trans-002-003-025",
       "sideBySideFile": "qa/side-by-side/trans-002-003-025.png",
-      "ssim": 0.785626,
+      "ssim": 0.785629,
       "threshold": 0.965
     },
     {
@@ -151,12 +151,12 @@
     {
       "diffFile": "qa/diff/trans-002-003-075.png",
       "kind": "transition",
-      "meanDelta": 8.014,
-      "p95Delta": 30.0,
+      "meanDelta": 7.908,
+      "p95Delta": 29.0,
       "passed": false,
       "sampleId": "trans-002-003-075",
       "sideBySideFile": "qa/side-by-side/trans-002-003-075.png",
-      "ssim": 0.768571,
+      "ssim": 0.772084,
       "threshold": 0.965
     },
     {
@@ -173,12 +173,12 @@
     {
       "diffFile": "qa/diff/trans-002-003-100.png",
       "kind": "transition",
-      "meanDelta": 6.299,
+      "meanDelta": 6.309,
       "p95Delta": 18.0,
       "passed": false,
       "sampleId": "trans-002-003-100",
       "sideBySideFile": "qa/side-by-side/trans-002-003-100.png",
-      "ssim": 0.904138,
+      "ssim": 0.903956,
       "threshold": 0.965
     },
     {
@@ -217,45 +217,45 @@
     {
       "diffFile": "qa/diff/trans-003-004-025.png",
       "kind": "transition",
-      "meanDelta": 11.887,
-      "p95Delta": 59.0,
+      "meanDelta": 13.114,
+      "p95Delta": 85.0,
       "passed": false,
       "sampleId": "trans-003-004-025",
       "sideBySideFile": "qa/side-by-side/trans-003-004-025.png",
-      "ssim": 0.856251,
+      "ssim": 0.843473,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-003-004-050.png",
       "kind": "transition",
-      "meanDelta": 15.907,
-      "p95Delta": 129.0,
+      "meanDelta": 14.375,
+      "p95Delta": 106.0,
       "passed": false,
       "sampleId": "trans-003-004-050",
       "sideBySideFile": "qa/side-by-side/trans-003-004-050.png",
-      "ssim": 0.801427,
+      "ssim": 0.824055,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-003-004-075.png",
       "kind": "transition",
-      "meanDelta": 16.846,
+      "meanDelta": 16.847,
       "p95Delta": 159.0,
       "passed": false,
       "sampleId": "trans-003-004-075",
       "sideBySideFile": "qa/side-by-side/trans-003-004-075.png",
-      "ssim": 0.792079,
+      "ssim": 0.792039,
       "threshold": 0.965
     },
     {
       "diffFile": "qa/diff/trans-003-004-090.png",
       "kind": "transition",
-      "meanDelta": 16.966,
+      "meanDelta": 16.965,
       "p95Delta": 159.0,
       "passed": false,
       "sampleId": "trans-003-004-090",
       "sideBySideFile": "qa/side-by-side/trans-003-004-090.png",
-      "ssim": 0.79285,
+      "ssim": 0.792872,
       "threshold": 0.965
     },
     {
@@ -266,14 +266,14 @@
       "passed": false,
       "sampleId": "trans-003-004-100",
       "sideBySideFile": "qa/side-by-side/trans-003-004-100.png",
-      "ssim": 0.828817,
+      "ssim": 0.828872,
       "threshold": 0.965
     }
   ],
-  "generatedAtUtc": "2026-07-04T03:56:02+00:00",
+  "generatedAtUtc": "2026-07-04T05:19:23+00:00",
   "htmlCapture": {
     "failures": 0,
-    "generatedAt": "2026-07-04T03:55:44.554Z",
+    "generatedAt": "2026-07-04T05:19:05.399Z",
     "sampleCount": 24,
     "samples": [
       {
@@ -342,12 +342,6 @@
         "file": "slide-001-settled.png",
         "id": "slide-001-settled",
         "kind": "slide",
-        "pageEvents": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "type": "console:error"
-          }
-        ],
         "status": "ok"
       },
       {
@@ -701,7 +695,7 @@
           ],
           "imagesPending": 0,
           "imagesVisible": 8,
-          "objectsVisible": 12,
+          "objectsVisible": 13,
           "videos": [
             {
               "error": null,
@@ -709,10 +703,17 @@
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
               "trackId": "track-0007"
+            },
+            {
+              "error": null,
+              "paused": true,
+              "readyState": 4,
+              "src": "/shared-assets/viscereality/optimized/3f9037caffc14375d1f89aaba1aa2e6fa942138200b6b4fe59fb846eece9145d.webm",
+              "trackId": "track-0003"
             }
           ],
           "videosPending": 0,
-          "videosVisible": 1
+          "videosVisible": 2
         },
         "file": "trans-001-002-075.png",
         "id": "trans-001-002-075",
@@ -1143,7 +1144,7 @@
           "videos": [
             {
               "error": null,
-              "paused": true,
+              "paused": false,
               "readyState": 4,
               "src": "/shared-assets/viscereality/optimized/ab897e594ab8c43019f37c490a322778965ae999d0ba211cde10b761d2a06e8f.webm",
               "trackId": "track-0007"

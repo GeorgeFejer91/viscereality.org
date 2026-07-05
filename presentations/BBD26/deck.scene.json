@@ -1000,8 +1000,41 @@
     "sourceSha256": "e9ee606389908ba12736d56edc44e4f6dacf5da9ec8470c6e94df5755c44befe",
     "title": "Viscereality - Berlin Breathwork Days"
   },
-  "generatedAtUtc": "2026-07-04T04:48:43+00:00",
+  "generatedAtUtc": "2026-07-04T05:18:02+00:00",
   "qa": {
+    "configOverrideValidation": {
+      "blockerCount": 0,
+      "rows": [
+        {
+          "from": 23,
+          "group": "transition_track_progress_overrides",
+          "index": 0,
+          "reason": "track IDs can shift when the source deck changes; add object/name/asset selectors where possible",
+          "severity": "warning",
+          "source": "track-progress-current-panel-calibration-current-32-slide-remap",
+          "status": "track-only-selector",
+          "to": 24,
+          "trackIds": [
+            "track-0101"
+          ]
+        },
+        {
+          "from": 23,
+          "group": "transition_track_progress_overrides",
+          "index": 1,
+          "reason": "track IDs can shift when the source deck changes; add object/name/asset selectors where possible",
+          "severity": "warning",
+          "source": "track-progress-current-panel-calibration-current-32-slide-remap",
+          "status": "track-only-selector",
+          "to": 24,
+          "trackIds": [
+            "track-0104"
+          ]
+        }
+      ],
+      "safe": true,
+      "warningCount": 2
+    },
     "groupRows": [
       {
         "groupId": "s1-group-359a2f3d924c",

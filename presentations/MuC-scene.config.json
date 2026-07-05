@@ -49,13 +49,13 @@
         "points": [
           { "progress": 0.0, "value": 0.0 },
           { "progress": 0.1, "value": 0.0 },
-          { "progress": 0.25, "value": 0.7 },
-          { "progress": 0.5, "value": 0.8 },
-          { "progress": 0.75, "value": 1.0 },
+          { "progress": 0.25, "value": 0.6 },
+          { "progress": 0.5, "value": 0.85 },
+          { "progress": 0.75, "value": 0.95 },
           { "progress": 0.9, "value": 1.0 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "MuC-slide-1-2-powerpoint-oracle-calibration"
+        "source": "MuC-slide-1-2-morph-progress-full-frame-calibration-2026-07-04"
       },
       {
         "from": 2,
@@ -77,13 +77,13 @@
         "points": [
           { "progress": 0.0, "value": 0.0 },
           { "progress": 0.1, "value": 0.0 },
-          { "progress": 0.25, "value": 0.2667 },
-          { "progress": 0.5, "value": 0.68 },
+          { "progress": 0.25, "value": 0.3 },
+          { "progress": 0.5, "value": 0.7 },
           { "progress": 0.75, "value": 0.95 },
           { "progress": 0.9, "value": 1.0 },
           { "progress": 1.0, "value": 1.0 }
         ],
-        "source": "MuC-slide-3-4-powerpoint-oracle-carousel-speed-calibration-v2"
+        "source": "MuC-slide-3-4-morph-progress-full-frame-calibration-2026-07-04"
       }
     ],
     "transition_unmatched_fade_overrides": [

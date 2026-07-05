@@ -1,9 +1,13 @@
 {
+  "assetCheck": {
+    "report": "presentations/shared-assets/viscereality/family-asset-check-report.json",
+    "status": "ok"
+  },
   "decks": [
     {
       "archivedChunked": false,
       "deckId": "MuC",
-      "generatedAtUtc": "2026-07-04T03:50:21+00:00",
+      "generatedAtUtc": "2026-07-04T05:18:14+00:00",
       "schema": "pptx-html-presenter.publish.v1",
       "sharedDecksUpdated": false,
       "sourceBuild": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\MuC-scene",
@@ -12,7 +16,7 @@
     {
       "archivedChunked": false,
       "deckId": "alpCHI",
-      "generatedAtUtc": "2026-07-04T03:50:21+00:00",
+      "generatedAtUtc": "2026-07-04T05:18:14+00:00",
       "schema": "pptx-html-presenter.publish.v1",
       "sharedDecksUpdated": false,
       "sourceBuild": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\alpCHI-scene",
@@ -21,7 +25,7 @@
     {
       "archivedChunked": false,
       "deckId": "BBD26",
-      "generatedAtUtc": "2026-07-04T03:50:21+00:00",
+      "generatedAtUtc": "2026-07-04T05:18:14+00:00",
       "schema": "pptx-html-presenter.publish.v1",
       "sharedDecksUpdated": false,
       "sourceBuild": "C:\\Users\\gfeje\\Documents\\GitHub\\viscereality.org\\presentations\\BBD26-scene-new",
@@ -29,7 +33,7 @@
     }
   ],
   "familyId": "viscereality",
-  "generatedAtUtc": "2026-07-04T03:50:21+00:00",
+  "generatedAtUtc": "2026-07-04T05:18:14+00:00",
   "index": "presentations/index.html",
   "schema": "pptx-html-presenter.family.publish.v1",
   "sharedDecks": "presentations/shared/decks.js",

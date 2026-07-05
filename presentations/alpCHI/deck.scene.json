@@ -853,8 +853,42 @@
     "sourceSha256": "9e9ee78e56388b5b566b0e09dc11d360184b59f101009f7beaecad293f32df9c",
     "title": "Viscereality - alpCHI 2026"
   },
-  "generatedAtUtc": "2026-07-04T04:30:47+00:00",
+  "generatedAtUtc": "2026-07-04T05:17:36+00:00",
   "qa": {
+    "configOverrideValidation": {
+      "blockerCount": 0,
+      "rows": [
+        {
+          "from": 1,
+          "group": "transition_track_progress_overrides",
+          "index": 0,
+          "reason": "track IDs can shift when the source deck changes; add object/name/asset selectors where possible",
+          "severity": "warning",
+          "source": "alpCHI-slide-1-2-title-cluster-progress-matrix-oracle-calibration",
+          "status": "track-only-selector",
+          "to": 2,
+          "trackIds": [
+            "track-0010"
+          ]
+        },
+        {
+          "from": 1,
+          "group": "transition_track_progress_overrides",
+          "index": 1,
+          "reason": "track IDs can shift when the source deck changes; add object/name/asset selectors where possible",
+          "severity": "warning",
+          "source": "alpCHI-slide-1-2-panel-cluster-progress-matrix-oracle-calibration",
+          "status": "track-only-selector",
+          "to": 2,
+          "trackIds": [
+            "track-0011",
+            "track-0012"
+          ]
+        }
+      ],
+      "safe": true,
+      "warningCount": 2
+    },
     "groupRows": [
       {
         "groupId": "s1-group-359a2f3d924c",

@@ -1,7 +1,10 @@
 {
   "assetCount": 57,
   "assetMode": "copy",
-  "generatedAtUtc": "2026-07-04T04:48:44+00:00",
+  "configOverrideBlockers": 0,
+  "configOverrideSafe": true,
+  "configOverrideWarnings": 2,
+  "generatedAtUtc": "2026-07-04T05:18:03+00:00",
   "githubPagesSafe": true,
   "hardLimitSafe": true,
   "originalGithubPagesSafe": true,
