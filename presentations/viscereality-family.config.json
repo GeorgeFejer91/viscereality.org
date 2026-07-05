@@ -20,6 +20,7 @@
       "fallback_dir": "MuC-chunked",
       "config": "presentations/MuC-scene.config.json",
       "slug": "MuC",
+      "preview_image": "/presentations/shared-assets/viscereality/previews/MuC.jpg",
       "expected_slides": 17,
       "conference_url": "https://muc2025.mensch-und-computer.de/en/",
       "conference_label": "MuC 2025"
@@ -33,6 +34,7 @@
       "fallback_dir": "alpCHI-chunked",
       "config": "presentations/alpCHI-scene.config.json",
       "slug": "alpCHI",
+      "preview_image": "/presentations/shared-assets/viscereality/previews/alpCHI.jpg",
       "expected_slides": 25,
       "conference_url": "https://alpchi.org/",
       "conference_label": "alpCHI 2026"
@@ -45,6 +47,7 @@
       "public_dir": "BBD26",
       "fallback_dir": "BBD26-chunked",
       "slug": "BBD26",
+      "preview_image": "/presentations/shared-assets/viscereality/previews/BBD26.jpg",
       "expected_slides": 32,
       "config": "presentations/BBD26-scene.config.json",
       "conference_url": "https://www.berlinbreathwork.org/en/bbd26-programm",
