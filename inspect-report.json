@@ -1,0 +1,330 @@
+{
+  "assetBytes": 316066334,
+  "assetCount": 15,
+  "mediaByExtension": {
+    "gif": {
+      "bytes": 260052074,
+      "count": 4,
+      "kind": "image"
+    },
+    "jpeg": {
+      "bytes": 48778,
+      "count": 1,
+      "kind": "image"
+    },
+    "png": {
+      "bytes": 55770597,
+      "count": 8,
+      "kind": "image"
+    },
+    "svg": {
+      "bytes": 91032,
+      "count": 1,
+      "kind": "svg"
+    },
+    "wdp": {
+      "bytes": 103853,
+      "count": 1,
+      "kind": "image"
+    }
+  },
+  "slideCount": 2,
+  "slideSizeEmu": {
+    "height": 6858000,
+    "width": 12192000
+  },
+  "slides": [
+    {
+      "index": 1,
+      "mediaObjectCount": 14,
+      "objectCount": 21,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    },
+    {
+      "index": 2,
+      "mediaObjectCount": 3,
+      "objectCount": 3,
+      "transition": {
+        "durationSec": 2.0,
+        "kind": "morph"
+      }
+    }
+  ],
+  "sourcePath": "presentations/background.pptx",
+  "sourceSha256": "cb8acdc217942510556f52a15c87f8501fe56e7bd09efe6a6e65307091358c8c",
+  "title": "background",
+  "topAssetReuse": [
+    {
+      "assetId": "asset-263f37bb7c07f8e8",
+      "slideCount": 2,
+      "slides": [
+        1,
+        2
+      ]
+    },
+    {
+      "assetId": "asset-32b2e0232f04aa13",
+      "slideCount": 2,
+      "slides": [
+        1,
+        2
+      ]
+    },
+    {
+      "assetId": "asset-06271c4a6c0a3db8",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-0928f3a3fc7358dc",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-10781074dea1c73c",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-5bf4a43a4b6e37e9",
+      "slideCount": 1,
+      "slides": [
+        2
+      ]
+    },
+    {
+      "assetId": "asset-792ec06b75656dfc",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-7997219068d65f9d",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-a6d39beb99b23807",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-b43ce781d1819c88",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-ce4bde01b87b86d5",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-ceabe477dce6f31c",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-e02331508eb6a056",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    },
+    {
+      "assetId": "asset-e2fc514621cac09e",
+      "slideCount": 1,
+      "slides": [
+        1
+      ]
+    }
+  ],
+  "transitionCounts": {
+    "morph": 2
+  },
+  "unsupportedObjects": [
+    {
+      "name": "Rectangle: Rounded Corners 64",
+      "object": "s1-o65",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 63",
+      "object": "s1-o64",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 7",
+      "object": "s1-o8",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 8",
+      "object": "s1-o9",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 28",
+      "object": "s1-o29",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 68",
+      "object": "s1-o69",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 92",
+      "object": "s1-o93",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle: Rounded Corners 22",
+      "object": "s1-o23",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "TextBox 61",
+      "object": "s1-o62",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 94",
+      "object": "s1-o95",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 3",
+      "object": "s1-o4",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Rectangle 4",
+      "object": "s1-o5",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 9",
+      "object": "s1-o10",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s1-o11",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 12",
+      "object": "s1-o13",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 13",
+      "object": "s1-o14",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 14",
+      "object": "s1-o15",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Graphic 15",
+      "object": "s1-o16",
+      "slide": 1,
+      "unsupported": [
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 2",
+      "object": "s1-o17",
+      "slide": 1,
+      "unsupported": [
+        "hdphoto-layer-selected-for-conversion",
+        "glow-effect",
+        "media-brightness-contrast-effect",
+        "off-canvas"
+      ]
+    },
+    {
+      "name": "Picture 1",
+      "object": "s2-o2",
+      "slide": 2,
+      "unsupported": [
+        "glow-effect"
+      ]
+    }
+  ],
+  "warnings": []
+}
