@@ -6,6 +6,7 @@ Read this folder first when starting work in this repository. Do not rely only o
 
 - [constraints.md](constraints.md) for active behavior, design, content, and workflow constraints.
 - [subprojects.md](subprojects.md) for the current map of website subprojects and their expected behavior.
+- [Atmungsraum guidance](../atmungsraum/for-ai/README.md) when working on the `/atmungsraum` subpage.
 - [pptx-html-one-to-one-mapper.md](pptx-html-one-to-one-mapper.md) for the target workflow for object-based PowerPoint-to-HTML presentation conversion.
 - [pptx-html-family-status.md](pptx-html-family-status.md) for the current three-deck shared-asset migration status.
 

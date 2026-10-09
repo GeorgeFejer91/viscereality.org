@@ -1,6 +1,6 @@
 # Subprojects
 
-Last updated: 2026-07-03
+Last updated: 2026-10-09
 
 This is the working map of website-adjacent subprojects. Update it when a subproject is added, retired, or gains durable behavioral constraints.
 
@@ -9,6 +9,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Path: `index.html`, `assets/css/site.css`, `assets/js/site.js`
 - Purpose: public project page for Viscereality, including overview, explainers, research ingredients, team, publications, collaborations, advisory, affiliations, hire-us, presentations, and contact.
 - Constraints: keep content readable without heavy media; preserve desktop and mobile navigation; keep research claims citation-backed or carefully framed.
+
+## Atmungsraum
+
+- Path: `atmungsraum/index.html`
+- Public URL: <https://viscereality.org/atmungsraum/> (the directory index also serves `/atmungsraum`).
+- Purpose: reserve a live subpage for future Atmungsraum work.
+- Current contract (2026-10-09): a completely blank black viewport; no visible content, controls, scripts, or media.
+- AI control plane: [atmungsraum/for-ai/README.md](../atmungsraum/for-ai/README.md), discovered through `atmungsraum/AGENTS.md`.
+- Workflow: share the existing GitHub Pages deployment from `main`, root `/`; keep the local checkout sparse and avoid downloading unrelated large assets.
 
 ## Media Assets
 
