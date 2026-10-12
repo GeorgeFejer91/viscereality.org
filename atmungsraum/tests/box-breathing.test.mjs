@@ -15,7 +15,8 @@ const buffers = Object.fromEntries(Object.entries(manifest.blocks).map(([id, blo
 
 class Context extends EventTarget {
   constructor() { super(); this.currentTime = 10; this.sampleRate = 48000; this.state = 'running'; this.nodes = []; this.destination = {}; }
-  async resume() { this.state = 'running'; }
+  async resume() { this.state = 'running'; this.dispatchEvent(new Event('statechange')); }
+  async suspend() { this.state = 'suspended'; this.dispatchEvent(new Event('statechange')); }
   createBuffer(channels, frames, rate) { return { numberOfChannels: channels, duration: frames / rate }; }
   createBufferSource() {
     const node = { connect() {}, disconnect() { this.disconnected = true; },
@@ -131,6 +132,42 @@ test('Engine verifies assets, rejects retrigger, aborts interrupted clocks, and 
   } finally { globalThis.fetch = originalFetch; await engine.dispose(); }
 });
 
+test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume stays stopped', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => new Response(await readFile(url));
+  const context = new Context();
+  const engine = new BoxBreathingEngine({ audioContext: context, manifestUrl: new URL('manifest.json', assetDir) });
+  try {
+    await engine.prepare();
+    const session = await engine.start(5);
+    const nodes = context.nodes.length;
+    context.currentTime = session.startAt + 12;
+    assert.equal(await engine.pause(), true);
+    assert.equal(context.state, 'suspended');
+    assert.equal(engine.position().status, 'paused');
+    assert.equal(engine.position().elapsed_seconds, 12);
+    assert.equal(engine.receipt().records.at(-1).type, 'pause');
+    await assert.rejects(engine.start(10), /already active/);
+    assert.equal(await engine.resume(), true);
+    assert.equal(engine.position().status, 'scheduled');
+    assert.equal(engine.position().elapsed_seconds, 12);
+    assert.equal(engine.run.start_at_audio_seconds, session.startAt);
+    assert.equal(engine.run.end_at_audio_seconds, session.endAt);
+    assert.equal(context.nodes.length, nodes);
+    assert.equal(engine.receipt().records.at(-1).type, 'resume');
+    assert.equal(await engine.pause(), true);
+    let unlock;
+    context.resume = () => new Promise(resolve => { unlock = resolve; });
+    const pending = engine.resume();
+    engine.abort('user-abort');
+    unlock();
+    assert.equal(await pending, false);
+    assert.equal((await session.done).status, 'aborted');
+    assert.equal(engine.run.status, 'aborted');
+    assert.equal(context.nodes.length, nodes);
+  } finally { globalThis.fetch = originalFetch; await engine.dispose(); }
+});
+
 test('Corrupted audio fails preparation before scheduling', async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => new Response(String(url).endsWith('manifest.json') ? manifestBytes : Buffer.alloc(10));
@@ -149,7 +186,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     querySelector() { return this.label ??= new Element(); }
     setAttribute(name, value) { this[name] = value; }
   }
-  const elements = Object.fromEntries(['session-start', 'play', 'stop', 'session-phase', 'session-time', 'start-status'].map(id => [id, new Element()]));
+  const elements = Object.fromEntries(['session-start', 'play', 'stop', 'session-phase', 'session-time', 'start-status', 'session-controls', 'session-resume', 'session-pause'].map(id => [id, new Element()]));
   const storage = new Map();
   const keys = ['document', 'window', 'AudioContext', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch'];
   const originals = Object.fromEntries(keys.map(key => [key, globalThis[key]]));
@@ -175,6 +212,20 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     await ready(() => elements['session-start'].dataset.audioState === 'ready');
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
+    assert.equal(elements['session-controls'].hidden, false);
+    assert.equal(elements['session-pause'].disabled, false);
+    assert.equal(elements['session-resume'].disabled, true);
+    const nodesBeforePause = context.nodes.length;
+    elements['session-pause'].dispatchEvent(new Event('click'));
+    await ready(() => elements['session-start'].dataset.audioState === 'paused');
+    assert.equal(context.state, 'suspended');
+    assert.equal(elements['session-resume'].disabled, false);
+    assert.equal(elements['session-pause'].disabled, true);
+    assert.equal(uiState.started, true);
+    elements['session-resume'].dispatchEvent(new Event('click'));
+    await ready(() => elements['session-start'].dataset.audioState === 'playing');
+    assert.equal(context.state, 'running');
+    assert.equal(context.nodes.length, nodesBeforePause, 'Start after Pause must not create a new session');
     elements.stop.dispatchEvent(new Event('click'));
     const previous = JSON.parse(storage.get('atmungsraum.audio-receipts'));
     assert.equal(previous.length, 1);

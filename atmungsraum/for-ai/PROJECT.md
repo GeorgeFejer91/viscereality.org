@@ -167,6 +167,11 @@ use British Breathing Instructor. See [audio/README.md](../audio/README.md) for
 the source analysis, scripts, timing contract, API, verification, and limits.
 The round menu's final Play button is wired to browser playback through
 `audio/session-ui.js`; Stop/Escape/navigation and interrupted clocks abort the run.
+The main start button remains visible after starting, with smaller Start/Pause
+buttons directly below it. Pause deliberately suspends the Web Audio context and
+freezes the countdown; Start resumes the existing schedule from the same position.
+Timed totals count active audio-clock time, so deliberate pauses extend wall-clock
+duration. Pause/resume records are included in the local scheduling receipt.
 No H10 or headset behavior is established by the audio checks.
 
 Alternative voice sourcing is local audition work: two neutral, two positive,

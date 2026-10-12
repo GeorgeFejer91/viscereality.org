@@ -53,12 +53,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid #c9d3bf; outline-offs
 .option > span { display: grid; gap: 6px; min-width: 0; width: 100%; }
 .option-hint { color: #bbb; font-size: .875rem; }
 .play-body { grid-template-rows: minmax(0, 1fr) auto auto; align-content: stretch; justify-items: stretch; }
+.play-stack { display: grid; align-content: center; justify-items: center; gap: var(--gap); min-width: 0; min-height: 0; }
+.session-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100%, 260px); min-width: 0; }
 .play-button { gap: var(--gap); width: min(100%, 260px); min-height: 140px; place-self: center; }
 .play-button svg { display: block; color: #c9d3bf; }
 .session-progress { display: grid; gap: 4px; min-width: 0; text-align: center; }
-#session-time { font-variant-numeric: tabular-nums; }
-#session-start:not([data-audio-state="playing"]):not([data-audio-state="starting"]) .session-progress,
-#session-start:not([data-audio-state="playing"]):not([data-audio-state="starting"]) #stop { display: none; }
+#session-time { min-width: 5ch; font-variant-numeric: tabular-nums; }
+#session-start[data-session-active="false"] .session-progress,
+#session-start[data-session-active="false"] #stop { display: none; }
 output { min-height: 1.5em; color: #bbb; text-align: center; }
 @media (max-width: 480px) and (min-height: 481px) {
   .round { aspect-ratio: auto; min-height: 220px; }
@@ -66,8 +68,9 @@ output { min-height: 1.5em; color: #bbb; text-align: center; }
 @media (max-height: 480px) and (min-width: 481px) {
   main { --gap: 8px; --inset: 10px; }
   h1 { font-size: 1.25rem; }
-  .play-button { min-height: 100px; gap: 8px; }
-  .play-button svg { width: 40px; height: 40px; }
+  .play-button { min-height: 88px; gap: 8px; }
+  .play-button svg { width: 32px; height: 32px; }
+  .session-progress { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 }
 /* Expose full document flow when enlarged text cannot fit the bounded panel. */
 html[data-layout="reflow"] main { height: auto; min-height: 100svh; }

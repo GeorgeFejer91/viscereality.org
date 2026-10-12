@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-10-12 — Start and Pause beneath the main start button
+
+Keep the final screen's main start button. After it starts a session, show a
+smaller Start/Pause row directly underneath. Pause freezes audio and the timer;
+Start resumes that same session without resetting or queuing another protocol.
+Disable the main button during the run and enable only the relevant smaller
+control. Stop/Escape/navigation and the existing signal-loss deadline also abort
+paused sessions. Explicit pauses extend wall-clock duration while preserving the
+selected active audio duration. Future VR-event synchronization must account for
+these pauses when that transport is implemented.
+
 ## 2026-10-12 — Publish the main VR-control navigation prototype
 
 The user approves publishing the current page online and adopts it as the main

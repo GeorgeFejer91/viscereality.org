@@ -1,5 +1,5 @@
 import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js';
-import { mountSessionAudio } from './audio/session-ui.js';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261012-pause';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -128,7 +128,7 @@ async function measureLabels() {
           if (square) square.dataset.textFit = wrap ? 'reflow' : 'fit';
         });
         const visible = byId(current);
-        const groups = [...visible.querySelectorAll('.screen-body, .actions, [data-measure]')];
+        const groups = [...visible.querySelectorAll('.screen-body, .actions, .play-stack, .session-controls, [data-measure]')];
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
@@ -141,7 +141,7 @@ async function measureLabels() {
       });
     };
     const observer = new ResizeObserver(measure);
-    document.querySelectorAll('[data-measure], .screen-body, .actions, .round').forEach((element) => observer.observe(element));
+    document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-stack, .session-controls').forEach((element) => observer.observe(element));
     new MutationObserver(measure).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
     window.addEventListener('resize', () => { root.dataset.layout = 'bounded'; measure(); });
     window.addEventListener('hashchange', measure);

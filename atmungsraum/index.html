@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261012-final-ui-2">
-  <script type="module" src="./app.js?v=20261012-final-ui-2"></script>
+  <link rel="stylesheet" href="./style.css?v=20261012-pause">
+  <script type="module" src="./app.js?v=20261012-pause"></script>
 </head>
 <body>
   <main>
@@ -71,13 +71,19 @@
       </div>
       <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
     </section>
-    <section class="screen" id="session-start" aria-labelledby="session-title" hidden>
+    <section class="screen" id="session-start" aria-labelledby="session-title" data-session-active="false" hidden>
       <h1 id="session-title" tabindex="-1" data-measure>Session starten</h1>
       <div class="screen-body play-body">
-        <button id="play" data-action="start" class="play-button" aria-label="Session starten">
-          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
-          <span data-measure>Session starten</span>
-        </button>
+        <div class="play-stack">
+          <button id="play" data-action="start" class="play-button" aria-label="Session starten">
+            <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
+            <span data-measure>Session starten</span>
+          </button>
+          <div id="session-controls" class="session-controls" role="group" aria-label="Wiedergabe steuern" hidden>
+            <button id="session-resume" disabled><span data-measure>Start</span></button>
+            <button id="session-pause" disabled><span data-measure>Pause</span></button>
+          </div>
+        </div>
         <div class="session-progress">
           <p id="session-phase" data-measure>Bereit</p>
           <output id="session-time" aria-label="Verbleibende Zeit" data-measure></output>

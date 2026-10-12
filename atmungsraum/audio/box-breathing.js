@@ -129,8 +129,14 @@ export class BoxBreathingEngine {
     this.run = null;
     this.token = 0;
     this.disposed = false;
+    this.pausing = false;
+    this.resuming = false;
     this.onStateChange = () => {
-      if (this.run?.status === 'scheduled' && this.context.state !== 'running') {
+      const status = this.run?.status;
+      const unexpectedPause = status === 'scheduled' && this.context.state !== 'running' && !this.pausing;
+      const unexpectedResume = status === 'paused' && this.context.state !== 'suspended'
+        && !(this.context.state === 'running' && this.resuming);
+      if (unexpectedPause || unexpectedResume) {
         this.abort(`audio-context-${this.context.state}`);
       }
     };
@@ -175,7 +181,7 @@ export class BoxBreathingEngine {
   // startAt lets the rest of an experiment share this audio-clock anchor.
   async start(minutes, { startAt } = {}) {
     if (this.disposed || !this.buffers) throw new Error('Prepare audio before starting.');
-    if (this.starting || this.run?.status === 'scheduled') throw new Error('A session is already active.');
+    if (this.starting || this.pausing || this.resuming || ['scheduled', 'paused'].includes(this.run?.status)) throw new Error('A session is already active.');
     if (typeof document !== 'undefined' && document.hidden) throw new Error('Keep the experiment page visible.');
     const protocol = createProtocol(minutes, this.manifest);
     const token = ++this.token;
@@ -206,7 +212,7 @@ export class BoxBreathingEngine {
             expected_end_audio_seconds: when + event.duration_frames / protocol.sample_rate });
           source.onended = () => {
             source.disconnect();
-            if (this.run !== run || run.status !== 'scheduled') return;
+            if (this.run !== run || !['scheduled', 'paused'].includes(run.status)) return;
             run.records.push({ type: 'ended-notification', id: event.id,
               offset_frames: event.offset_frames, observed_audio_seconds: this.context.currentTime,
               observed_performance_ms: performance.now() });
@@ -237,6 +243,44 @@ export class BoxBreathingEngine {
     return { status: run.status, elapsed_seconds: Math.max(0, elapsed), event: event ?? null };
   }
 
+  async pause() {
+    const run = this.run;
+    if (this.pausing || this.resuming || run?.status !== 'scheduled') return false;
+    const token = ++this.token;
+    this.pausing = true;
+    try {
+      await this.context.suspend();
+      if (token !== this.token || this.run !== run || run.status !== 'scheduled') return false;
+      if (this.context.state !== 'suspended') throw new Error('Audio context did not pause.');
+      run.status = 'paused';
+      run.records.push({ type: 'pause', observed_audio_seconds: this.context.currentTime,
+        observed_performance_ms: performance.now() });
+      return true;
+    } catch (error) {
+      if (this.run === run) this.abort('pause-failed');
+      throw error;
+    } finally { this.pausing = false; }
+  }
+
+  async resume() {
+    const run = this.run;
+    if (this.pausing || this.resuming || run?.status !== 'paused') return false;
+    const token = ++this.token;
+    this.resuming = true;
+    try {
+      await this.context.resume();
+      if (token !== this.token || this.run !== run || run.status !== 'paused') return false;
+      if (this.context.state !== 'running') throw new Error('Audio context did not resume.');
+      run.status = 'scheduled';
+      run.records.push({ type: 'resume', observed_audio_seconds: this.context.currentTime,
+        observed_performance_ms: performance.now() });
+      return true;
+    } catch (error) {
+      if (this.run === run) this.abort('resume-failed');
+      throw error;
+    } finally { this.resuming = false; }
+  }
+
   receipt() {
     if (!this.run) return null;
     const { sources, done, resolve, ...receipt } = this.run;
@@ -246,7 +290,7 @@ export class BoxBreathingEngine {
   abort(reason = 'user-abort') {
     ++this.token; // Also invalidate a start waiting for an autoplay unlock.
     const run = this.run;
-    if (!run || run.status !== 'scheduled') return;
+    if (!run || !['scheduled', 'paused'].includes(run.status)) return;
     run.status = 'aborted';
     run.records.push({ type: 'abort', reason, observed_audio_seconds: this.context.currentTime,
       observed_performance_ms: performance.now() });

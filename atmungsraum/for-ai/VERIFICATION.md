@@ -1,5 +1,24 @@
 # Verification
 
+## Observed Start/Pause controls — 2026-10-12
+
+All seven audio tests, the UI-state checker, context/source checker with the
+remote gate, JavaScript syntax checks, and Git whitespace check passed. The new
+engine test proves that pause/resume retains the original sources and audio-clock
+anchors, prevents a second start, records transitions, and leaves a cancelled
+resume aborted. Controller coverage checks button visibility and enabled states.
+
+Native browser playback showed the main start button followed by a smaller
+Start/Pause row. Pause held the phase and countdown across repeated size changes;
+Start resumed with identical start/end anchors and a moving countdown. Stop
+removed the smaller controls and enabled a fresh main start. No document overflow
+was observed at 320×568, 390×844, 768×1024, 1280×720, 1920×1080, 568×320, and
+844×390 CSS px. After giving the landscape countdown five character widths,
+Pretext reported every visible final-stage label fitting at 320×568 and 568×320.
+At 200% root text and 320×568, all labels fitted in deliberate document reflow,
+with no horizontal overflow or inner scroll container. Physical headset/VR-event
+pause synchronization remains unimplemented.
+
 ## Observed listening asset packaging — 2026-10-12
 
 `audio-assets/ready-to-listen/` contains 26 same-folder WAV/JSON pairs across

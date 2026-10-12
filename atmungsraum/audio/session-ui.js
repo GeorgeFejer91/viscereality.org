@@ -1,4 +1,4 @@
-import { BoxBreathingEngine } from './box-breathing.js';
+import { BoxBreathingEngine } from './box-breathing.js?v=20261012-pause';
 import { state, start } from '../ui-logic.js';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
@@ -6,6 +6,9 @@ export function mountSessionAudio() {
   const stage = document.getElementById('session-start');
   const play = document.getElementById('play');
   const stop = document.getElementById('stop');
+  const controls = document.getElementById('session-controls');
+  const resume = document.getElementById('session-resume');
+  const pause = document.getElementById('session-pause');
   const phase = document.getElementById('session-phase');
   const clock = document.getElementById('session-time');
   const status = document.getElementById('start-status');
@@ -16,15 +19,22 @@ export function mountSessionAudio() {
   const format = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   let engine, preparation, key = null, gate = false, mode = 'idle', message = '', token = 0, frame = 0;
   let active = null;
+  let tick = () => {};
+  let drawPosition = () => {};
 
   function paint() {
-    const busy = mode === 'playing' || mode === 'starting';
+    const busy = ['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode);
     stage.dataset.audioState = mode;
+    stage.dataset.sessionActive = String(busy);
     stage.dataset.protocolMinutes = state.selection?.value ?? '';
-    play.disabled = !key || !gate || state.sensor !== 'ecg' || busy || mode === 'loading' || Boolean(engine?.starting);
+    play.disabled = !key || !gate || state.sensor !== 'ecg' || busy || mode === 'loading'
+      || Boolean(engine?.starting || engine?.pausing || engine?.resuming);
+    controls.hidden = !busy;
+    pause.disabled = mode !== 'playing';
+    resume.disabled = mode !== 'paused' || !gate || state.sensor !== 'ecg';
     stop.disabled = !busy;
     const label = mode === 'error' && !engine?.buffers ? 'Audio erneut laden'
-      : busy ? 'Wiedergabe läuft' : state.selection?.minutes === null ? 'Anleitung anhören' : 'Session starten';
+      : state.selection?.minutes === null ? 'Anleitung starten' : 'Session starten';
     text(play.querySelector('[data-measure]'), label);
     play.setAttribute('aria-label', label);
     text(status, message);
@@ -57,7 +67,7 @@ export function mountSessionAudio() {
     const receipt = engine?.receipt();
     if (active?.startAt != null && receipt?.start_at_audio_seconds === active.startAt) save(receipt, active);
     state.started = false;
-    if (mode === 'playing' || mode === 'starting') {
+    if (['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode)) {
       mode = 'stopped';
       message = 'Session beendet.';
       text(phase, 'Beendet');
@@ -98,8 +108,7 @@ export function mountSessionAudio() {
       stage.dataset.audioStartTime = String(session.startAt);
       stage.dataset.audioEndTime = String(session.endAt);
       stage.dataset.audioSampleRate = String(engine.context.sampleRate);
-      const tick = () => {
-        if (ownToken !== token || mode !== 'playing') return;
+      drawPosition = () => {
         const position = engine.position();
         const event = position?.event;
         const beat = event?.cycle ? Math.min(4, 1 + Math.floor((position.elapsed_seconds
@@ -111,6 +120,10 @@ export function mountSessionAudio() {
         stage.dataset.audioPhase = event?.id ?? 'waiting';
         stage.dataset.audioVariant = event?.asset ?? '';
         stage.dataset.audioCycle = String(event?.cycle ?? '');
+      };
+      tick = () => {
+        if (ownToken !== token || mode !== 'playing') return;
+        drawPosition();
         frame = requestAnimationFrame(tick); // Display only; it never starts audio.
       };
       paint(); tick();
@@ -137,9 +150,47 @@ export function mountSessionAudio() {
       }
     } finally { paint(); }
   });
+  pause.addEventListener('click', async () => {
+    if (mode !== 'playing') return;
+    const ownToken = token;
+    const moveFocus = document.activeElement === pause;
+    mode = 'pausing';
+    cancelAnimationFrame(frame);
+    paint();
+    try {
+      const paused = await engine.pause();
+      if (ownToken !== token || mode !== 'pausing' || !paused) return;
+      mode = 'paused'; message = 'Pausiert.';
+      drawPosition(); paint();
+      if (moveFocus) resume.focus?.({ preventScroll: true });
+    } catch (error) {
+      if (ownToken === token) {
+        end('pause-failed'); mode = 'error'; message = 'Pause nicht möglich. Starte neu.';
+        console.warn('Audio pause failed.', error);
+      }
+    } finally { paint(); }
+  });
+  resume.addEventListener('click', async () => {
+    if (mode !== 'paused' || !gate || state.sensor !== 'ecg') return;
+    const ownToken = token;
+    const moveFocus = document.activeElement === resume;
+    mode = 'resuming'; paint();
+    try {
+      const resumed = await engine.resume();
+      if (ownToken !== token || mode !== 'resuming' || !resumed) return;
+      mode = 'playing'; message = 'Folge den Ansagen.';
+      paint(); tick();
+      if (moveFocus) pause.focus?.({ preventScroll: true });
+    } catch (error) {
+      if (ownToken === token) {
+        end('resume-failed'); mode = 'error'; message = 'Fortsetzen nicht möglich. Starte neu.';
+        console.warn('Audio resume failed.', error);
+      }
+    } finally { paint(); }
+  });
   stop.addEventListener('click', () => end());
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && ['playing', 'starting'].includes(mode)) { event.preventDefault(); end('escape'); }
+    if (event.key === 'Escape' && ['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode)) { event.preventDefault(); end('escape'); }
   });
   window.addEventListener('pagehide', () => end('page-hidden'));
 

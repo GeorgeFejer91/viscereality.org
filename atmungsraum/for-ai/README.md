@@ -10,7 +10,9 @@ UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See
 [PROJECT.md](PROJECT.md) for the contract, implementation status, and open decisions.
 
 The working tree is a browser-local UI demo: simulated headset/ECG check →
-round choice → four options → final Session starten play button. Anleitung is
+round choice → four options → final Session starten play button. Once started,
+smaller Start/Pause buttons appear underneath; Pause freezes audio and the timer,
+and Start resumes the same session. Anleitung is
 unlimited guided exploration. Real H10/headset connection and execution remain
 pending. See PROJECT.md for the precise demo and product boundaries.
 The UI has no global context header or ECG return button after Continue. Signal

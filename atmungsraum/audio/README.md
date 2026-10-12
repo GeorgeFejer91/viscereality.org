@@ -128,7 +128,12 @@ const receipt = await session.done;
 An existing audioContext may be supplied to the constructor. The caller may pass
 `startAt` to `start(minutes, { startAt })` to share an experimental audio anchor.
 Default scheduling lead is 250 ms, outside the measured session; explicit starts
-require at least 50 ms lead. There is no pause/resume within a valid timed run.
+require at least 50 ms lead. `pause()` suspends the context, freezes its clock and
+keeps all scheduled sources; `resume()` continues that same run. Both return
+whether the transition completed and add a receipt record. Explicit pauses extend
+wall-clock duration, while the selected active audio duration remains unchanged.
+Unplanned context interruption still aborts; aborting during a pending resume
+invalidates the transition and stops its sources.
 
 `tools/build-soft-box-cues.py --key-file <external-file> --sounds-dir <folder>`
 rebuilds the sample set using installed NumPy and FFmpeg. Successful ElevenLabs
