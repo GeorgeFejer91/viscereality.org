@@ -1,0 +1,6 @@
+node_modules/
+output/
+# Local source recordings, transcripts, and downloader dependencies.
+reference-audio/
+# Local listening assets and their adjacent timing/transcript sidecars.
+audio-assets/ready-to-listen/

@@ -1,0 +1,160 @@
+{
+  "id": "box-breathing-4-4-4-4-de-v1",
+  "version": 1,
+  "language": "de",
+  "sample_rate": 44100,
+  "block_frames": 176400,
+  "phase_order": [
+    "inhale",
+    "hold_in",
+    "exhale",
+    "hold_out"
+  ],
+  "supported_minutes": [
+    5,
+    10,
+    15,
+    20
+  ],
+  "remainder_policy": "quiet-recovery-after-ending",
+  "generated_on": "2026-10-12",
+  "voice": {
+    "name": "British Breathing Instructor",
+    "id": "rt9KyyQmwqa1uhHGJkMa"
+  },
+  "provider": "ElevenLabs",
+  "model_id": "eleven_multilingual_v2",
+  "voice_settings": {
+    "stability": 0.75,
+    "similarity_boost": 0.75,
+    "style": 0.0,
+    "use_speaker_boost": true,
+    "speed": 0.85
+  },
+  "seed": 42,
+  "format": "pcm_s16le_mono_wav",
+  "blocks": {
+    "instruction": {
+      "file": "instruction.wav",
+      "text": "Je vier Sekunden: ein, halten, aus, halten.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "6008310b23ad8692fef3a4d2e125a09abc578120575597c79d8605e0776f7075",
+      "processing": {
+        "source_mp3_sha256": "c88ecb43d2e9c4f4536bcda934ccf39b18a6c7c1426dc4dfa1aad976ab7e490f",
+        "source_duration_seconds": 4.458231292517007,
+        "trim_start_frame": 2848,
+        "trim_end_frame": 184971,
+        "tempo_factor": 1.072668374709191,
+        "speech_frames_after_processing": 169400,
+        "trailing_silence_frames": 7000,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220
+      }
+    },
+    "inhale": {
+      "file": "inhale.wav",
+      "text": "Durch die Nase einatmen.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "0ea9ded3391672489a0f4c78f3f0e24fe22c4e24a991c57d2c10bbbea033c764",
+      "processing": {
+        "source_mp3_sha256": "df26d58be7be25a372af7f5b1330e6eb7f5b01c6b9cbfac54dc9677dc0e80524",
+        "source_duration_seconds": 1.811156462585034,
+        "trim_start_frame": 3203,
+        "trim_end_frame": 70674,
+        "tempo_factor": 1.0,
+        "speech_frames_after_processing": 67471,
+        "trailing_silence_frames": 108929,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220
+      }
+    },
+    "hold_in": {
+      "file": "hold_in.wav",
+      "text": "Atem halten.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "5a9a7d0d94d487e5d035521aaf0ed496ea8b2b4342d799d2447f52adae6fbb12",
+      "processing": {
+        "source_mp3_sha256": "1155dbe53e8e710af7c5215bd05ecdef4c86088f62e4a7a80e4fa6f48797847c",
+        "source_duration_seconds": 1.207437641723356,
+        "trim_start_frame": 288,
+        "trim_end_frame": 43412,
+        "tempo_factor": 1.0,
+        "speech_frames_after_processing": 43124,
+        "trailing_silence_frames": 133276,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220
+      }
+    },
+    "exhale": {
+      "file": "exhale.wav",
+      "text": "Durch den Mund ausatmen.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "24bba7c63ce43e765f1e3e823063855e4769c33bfb5d2c805972eb8703509cc8",
+      "processing": {
+        "source_mp3_sha256": "57dec3fb757e70810b4b66d77eec935c72e333ca2da9cabea7d6770bc8140e52",
+        "source_duration_seconds": 1.8575963718820863,
+        "trim_start_frame": 3879,
+        "trim_end_frame": 81920,
+        "tempo_factor": 1.0,
+        "speech_frames_after_processing": 78041,
+        "trailing_silence_frames": 98359,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220
+      }
+    },
+    "hold_out": {
+      "file": "hold_out.wav",
+      "text": "Atem halten.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "5a9a7d0d94d487e5d035521aaf0ed496ea8b2b4342d799d2447f52adae6fbb12",
+      "processing": {
+        "source_mp3_sha256": "1155dbe53e8e710af7c5215bd05ecdef4c86088f62e4a7a80e4fa6f48797847c",
+        "source_duration_seconds": 1.207437641723356,
+        "trim_start_frame": 288,
+        "trim_end_frame": 43412,
+        "tempo_factor": 1.0,
+        "speech_frames_after_processing": 43124,
+        "trailing_silence_frames": 133276,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220,
+        "shared_speech_with": "hold_in"
+      }
+    },
+    "ending": {
+      "file": "ending.wav",
+      "text": "Atme jetzt wieder ganz natürlich.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "e4d71b22f107c4bddfaee651ac616ab1d76a2c65fe48a5ac391d29b7ed9f20d5",
+      "processing": {
+        "source_mp3_sha256": "1335c26fb960e2f2b785aee91a14064039b995d3717e5615a79573058789d1bf",
+        "source_duration_seconds": 2.3219954648526078,
+        "trim_start_frame": 0,
+        "trim_end_frame": 94647,
+        "tempo_factor": 1.0,
+        "speech_frames_after_processing": 94647,
+        "trailing_silence_frames": 81753,
+        "threshold_dbfs": -50,
+        "retained_leading_seconds": 0.01,
+        "peak_target_dbfs": -3,
+        "boundary_fade_frames": 220
+      }
+    }
+  },
+  "review_status": "Frame counts, hashes, waveform joins, Node scheduling/lifecycle checks, and native Chromium offline renders passed. Human listening and device acoustic/sensor timing remain pending."
+}

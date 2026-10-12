@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offline audio verification</title>
+<style>body { margin: 1rem; font: 16px/1.5 Arial, sans-serif; } pre { white-space: pre-wrap; overflow-wrap: anywhere; }</style>
+<h1>Offline audio verification</h1>
+<p>This diagnostic renders silently. It does not play sound.</p>
+<pre id="result" role="status">Running…</pre>
+<script type="module">
+import { BoxBreathingEngine, createProtocol, scheduleProtocol } from '../audio/box-breathing.js';
+const output = document.querySelector('#result');
+const reports = [];
+try {
+  for (const rate of [44100, 48000]) {
+    const decoder = new OfflineAudioContext(1, rate * 4, rate);
+    const engine = new BoxBreathingEngine({ audioContext: decoder });
+    const manifest = await engine.prepare();
+    for (const minutes of rate === 44100 ? [5, 10, 15, 20] : [5]) {
+      const plan = createProtocol(minutes, manifest);
+      const context = new OfflineAudioContext(1, minutes * 60 * rate, rate);
+      scheduleProtocol(context, engine.buffers, plan, 0);
+      const rendered = await context.startRendering();
+      const samples = rendered.getChannelData(0);
+      let maxError = 0;
+      for (const event of plan.events) {
+        const offset = Math.round(event.offset_frames / 44100 * rate);
+        const frames = Math.round(event.duration_frames / 44100 * rate);
+        const expected = event.id === 'recovery' ? null : engine.buffers[event.asset].getChannelData(0);
+        for (let frame = 0; frame < frames; frame++) {
+          maxError = Math.max(maxError, Math.abs(samples[offset + frame] - (expected?.[frame] ?? 0)));
+        }
+      }
+      if (rendered.length !== minutes * 60 * rate || maxError > 0.00001) throw new Error('Rendered PCM deviates from the protocol.');
+      reports.push({ minutes, sample_rate: rate, frames: rendered.length,
+        duration_seconds: rendered.duration, max_sample_error: maxError,
+        cycles: plan.cycles, recovery_seconds: plan.recovery_frames / 44100 });
+      output.textContent = JSON.stringify({ status: 'running', reports }, null, 2);
+    }
+    await engine.dispose();
+  }
+  output.textContent = JSON.stringify({ status: 'passed', reports,
+    note: 'Offline graph/sample verification; device acoustic timing and listening are separate checks.' }, null, 2);
+} catch (error) {
+  output.textContent = JSON.stringify({ status: 'failed', reports, error: String(error) }, null, 2);
+}
+</script>
+</html>

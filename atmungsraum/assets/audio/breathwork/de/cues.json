@@ -1,0 +1,87 @@
+{
+  "generated_on": "2026-10-12",
+  "provider": "ElevenLabs",
+  "voice": {
+    "name": "British Breathing Instructor",
+    "id": "rt9KyyQmwqa1uhHGJkMa"
+  },
+  "language": "de",
+  "model_id": "eleven_multilingual_v2",
+  "output_format": "mp3_44100_128",
+  "voice_settings": {
+    "stability": 0.75,
+    "similarity_boost": 0.75,
+    "style": 0.0,
+    "use_speaker_boost": true,
+    "speed": 0.85
+  },
+  "seed": 42,
+  "review_status": "All five MP3 files fully decoded and integrity checked; German pronunciation and subjective voice review pending.",
+  "cues": [
+    {
+      "id": "01-ankommen",
+      "file": "01-ankommen.mp3",
+      "text": "Mach es dir bequem. Lass deine Schultern locker werden.",
+      "bytes": 66499,
+      "sha256": "3a5311ca2643db528087a5aed27f4f9ba7d6f3ce4105c79c2e78b8368282d94f",
+      "character_cost": 24,
+      "duration_seconds": 4.087,
+      "sample_rate_hz": 44100,
+      "channels": 1,
+      "bit_rate": 130176,
+      "decode_verified": true
+    },
+    {
+      "id": "02-einatmen",
+      "file": "02-einatmen.mp3",
+      "text": "Atme sanft ein.",
+      "bytes": 23449,
+      "sha256": "210dfd9c0c5f7b2f7d0da9c61ee140cf3460185e78944bfa360ce29a642ba62b",
+      "character_cost": 7,
+      "duration_seconds": 1.393,
+      "sample_rate_hz": 44100,
+      "channels": 1,
+      "bit_rate": 134648,
+      "decode_verified": true
+    },
+    {
+      "id": "03-ausatmen",
+      "file": "03-ausatmen.mp3",
+      "text": "Atme langsam aus.",
+      "bytes": 26375,
+      "sha256": "087e59a7c94e0144efcbfe7ee49e8cb52a19c1d0b390817508adb3468378b198",
+      "character_cost": 7,
+      "duration_seconds": 1.579,
+      "sample_rate_hz": 44100,
+      "channels": 1,
+      "bit_rate": 133632,
+      "decode_verified": true
+    },
+    {
+      "id": "04-natuerlich-atmen",
+      "file": "04-natuerlich-atmen.mp3",
+      "text": "Lass deinen Atem wieder ganz natürlich fließen.",
+      "bytes": 52288,
+      "sha256": "9b81afabbe26afc749d2a14f8a07d364c77eb4fc5a83cf4e979370ebf8efe6d0",
+      "character_cost": 21,
+      "duration_seconds": 3.204,
+      "sample_rate_hz": 44100,
+      "channels": 1,
+      "bit_rate": 130542,
+      "decode_verified": true
+    },
+    {
+      "id": "05-abschluss",
+      "file": "05-abschluss.mp3",
+      "text": "Nimm dir noch einen Moment, bevor du die Übung beendest.",
+      "bytes": 58976,
+      "sha256": "27a42d8960c0fd69a1a90d106acc795d90f6c25f5e08c0278a61fecb36cec2bf",
+      "character_cost": 25,
+      "duration_seconds": 3.622,
+      "sample_rate_hz": 44100,
+      "channels": 1,
+      "bit_rate": 130250,
+      "decode_verified": true
+    }
+  ]
+}

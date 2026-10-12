@@ -10,12 +10,18 @@
 
 ## Conditional
 
-- Before HTML UI design or editing, read `uncodixfy-pretext` and its
-  `references/pretext.md`. Source:
+- Required for all menu UI functions: before HTML UI design or editing, read
+  `uncodixfy-pretext`, `references/pretext.md`, and
+  `references/accordion-stretch.md`. The user's spellings
+  `uncodexify_pretext`/`uncodexify` refer to this combined installed skill. Source:
   <https://github.com/GeorgeFejer91/uncodixfy-pretext>.
-- If visible text or bounded controls are introduced, follow that skill's locked
-  Pretext dependency, actual measurement, accessible no-fit behavior, and rendered
-  verification. The current empty page has no text regions to measure.
+- Apply outside-in stretch-accordion geometry to the H10 gate, centered ECG view,
+  round/session menu, and subsequent menu functions. Preserve anchors and group
+  order, distribute surplus space across both dimensions, and use no internal
+  panel scrolling. Reflow or revise supported minimum dimensions on no-fit.
+- Follow the skill's locked Pretext dependency, actual bounded-label and status
+  measurement, font parity, accessible no-fit/unavailable fallback, and rendered
+  verification. Keep `ponytail` active as the required companion.
 - Native app skills do not apply to this static web subpage unless the requested
   target changes.
 

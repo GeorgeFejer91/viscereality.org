@@ -1,0 +1,80 @@
+* { box-sizing: border-box; }
+html { background: #000; color: #e9ebe3; color-scheme: dark; }
+body { margin: 0; font-family: Arial, sans-serif; font-size: clamp(1rem, min(2.6vw, 2.8svh), 1.25rem); line-height: 1.5; }
+[hidden] { display: none !important; }
+main {
+  --gap: clamp(12px, min(3vw, 3svh), 28px);
+  --inset: clamp(12px, min(4vw, 3svh), 32px);
+  width: min(100%, 960px);
+  height: 100svh;
+  margin-inline: auto;
+  padding: var(--inset);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--gap);
+  min-width: 0;
+  min-height: 0;
+}
+.screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--gap); min-width: 0; min-height: 0; }
+#runde { grid-template-rows: auto minmax(0, 1fr); }
+h1 { margin: 0; font-size: clamp(1.375rem, min(4vw, 4.5svh), 1.75rem); line-height: 1.3; font-weight: 400; }
+h1:focus { outline: none; }
+p, figure { margin: 0; }
+[data-measure] { display: block; min-width: 0; overflow-wrap: break-word; }
+.screen-body { display: grid; align-content: space-between; gap: var(--gap); min-width: 0; min-height: 0; }
+.sensor-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--gap); min-width: 0; }
+.sensor-header h1 { flex: 1 1 220px; font-size: 1.125rem; }
+.sensor-header button { flex: 0 1 180px; }
+.sensor-body { grid-template-rows: minmax(0, 1fr); place-items: center; }
+.ecg-box { width: min(100%, 720px); min-height: 0; margin: 0; border: 1px solid #4a5148; border-radius: 12px; display: grid; height: min(100%, 280px); }
+canvas { display: block; width: 100%; height: 100%; min-height: 0; }
+.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; }
+.actions > :only-child { grid-column: 1 / -1; justify-self: start; width: min(100%, 180px); }
+button, .actions a { display: grid; place-items: center; min-width: 0; min-height: 48px; padding: 10px 12px; font: inherit; line-height: 1.3; border: 1px solid #4a5148; border-radius: 10px; color: #e9ebe3; background: #131712; text-align: center; text-decoration: none; cursor: pointer; }
+button > [data-measure], .actions a > [data-measure] { width: 100%; }
+button:hover:enabled, .actions a:hover, .round:hover, .option:hover { background: #1b2219; border-color: #7a8771; }
+button.primary, a.primary { color: #171c15; background: #c9d3bf; border-color: #c9d3bf; }
+button.primary:hover:enabled, a.primary:hover { background: #dde4d6; }
+button:disabled, .actions a[aria-disabled="true"] { color: #888; background: #111; border-color: #444; cursor: default; }
+a:focus-visible, button:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 3px; }
+#sensor-next[aria-disabled="true"] { background: #632f36; border-color: #9f5058; color: #f3dadd; }
+#sensor-next[aria-disabled="false"] { background: #315740; border-color: #528468; color: #e5f1e6; }
+.actions a.back { border-color: transparent; background: transparent; color: #b2b8ab; }
+.round-body, .choices-body { container-type: size; display: grid; grid-template-rows: minmax(0, 1fr); align-content: stretch; place-items: center; }
+.rounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100cqw, calc(200cqh + var(--gap)), 600px); }
+.round { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: center; justify-items: center; gap: var(--gap); aspect-ratio: 1; min-width: 0; min-height: 0; padding: clamp(10px, min(3vw, 3svh), 24px); border: 1px solid #3d463a; border-radius: 16px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; font-size: clamp(1.125rem, min(3vw, 3svh), 1.375rem); line-height: 1.3; }
+.round-description { font-size: .875rem; line-height: 1.5; color: #b2b8ab; }
+.round-symbol { display: block; width: clamp(44px, min(14vw, 14svh), 80px); height: auto; color: #b8c8aa; }
+.round:last-child .round-symbol { color: #d3c5ac; }
+.round > [data-measure] { width: 100%; }
+.round[data-text-fit="reflow"] { aspect-ratio: auto; min-height: 140px; }
+.options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100cqw, 100cqh, 640px); }
+.option { display: grid; place-items: center; aspect-ratio: 1; min-width: 0; min-height: 48px; padding: 12px; border: 1px solid #3d463a; border-radius: 12px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; }
+.option > span { display: grid; gap: 6px; min-width: 0; width: 100%; }
+.option-hint { color: #bbb; font-size: .875rem; }
+.play-body { grid-template-rows: minmax(0, 1fr) auto auto; align-content: stretch; justify-items: stretch; }
+.play-button { gap: var(--gap); width: min(100%, 260px); min-height: 140px; place-self: center; }
+.play-button svg { display: block; color: #c9d3bf; }
+.session-progress { display: grid; gap: 4px; min-width: 0; text-align: center; }
+#session-time { font-variant-numeric: tabular-nums; }
+#session-start:not([data-audio-state="playing"]):not([data-audio-state="starting"]) .session-progress,
+#session-start:not([data-audio-state="playing"]):not([data-audio-state="starting"]) #stop { display: none; }
+output { min-height: 1.5em; color: #bbb; text-align: center; }
+@media (max-width: 480px) and (min-height: 481px) {
+  .round { aspect-ratio: auto; min-height: 220px; }
+}
+@media (max-height: 480px) and (min-width: 481px) {
+  main { --gap: 8px; --inset: 10px; }
+  h1 { font-size: 1.25rem; }
+  .play-button { min-height: 100px; gap: 8px; }
+  .play-button svg { width: 40px; height: 40px; }
+}
+/* Expose full document flow when enlarged text cannot fit the bounded panel. */
+html[data-layout="reflow"] main { height: auto; min-height: 100svh; }
+html[data-layout="reflow"] .screen { grid-template-rows: auto auto auto; }
+html[data-layout="reflow"] .screen-body { min-height: auto; }
+html[data-layout="reflow"] .round-body, html[data-layout="reflow"] .choices-body { container-type: normal; }
+html[data-layout="reflow"] .rounds, html[data-layout="reflow"] .options { width: min(100%, 640px); }
+html[data-layout="reflow"] .options { grid-template-columns: minmax(0, 1fr); }
+html[data-layout="reflow"] .ecg-box { height: 160px; }
+html[data-layout="reflow"] .option { aspect-ratio: auto; min-height: 88px; }

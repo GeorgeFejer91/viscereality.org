@@ -1,0 +1,164 @@
+{
+  "id": "box-breathing-4-4-4-4-de-v2",
+  "version": 2,
+  "language": "de",
+  "sample_rate": 44100,
+  "block_frames": 176400,
+  "phase_order": [
+    "inhale",
+    "hold_in",
+    "exhale",
+    "hold_out"
+  ],
+  "supported_minutes": [
+    5,
+    10,
+    15,
+    20
+  ],
+  "cycles_per_block": 18,
+  "rest_frames": 882000,
+  "overlay_every_cycles": 3,
+  "remainder_policy": "quiet-recovery-after-ending",
+  "generated_on": "2026-10-12",
+  "voice": {
+    "name": "British Breathing Instructor",
+    "id": "rt9KyyQmwqa1uhHGJkMa"
+  },
+  "provider": "ElevenLabs",
+  "model_id": "eleven_v4",
+  "voice_settings": {
+    "stability": 0.5,
+    "similarity_boost": 0.65
+  },
+  "delivery_tags": "[softly] [calm] [slowly]",
+  "narration_tempo_factor": 0.8,
+  "format": "pcm_s16le_mono_wav",
+  "blocks": {
+    "inhale": {
+      "file": "inhale.wav",
+      "text": "Einatmen. Zwei. Drei. Vier.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "2f95ae8973dca77b5158fa009977fc6cc357d2b018381bf875e50f9702444127",
+      "processing": {
+        "word_onsets_frames": [
+          0,
+          44100,
+          88200,
+          132300
+        ],
+        "sample_peak_dbfs": -8
+      }
+    },
+    "hold_in": {
+      "file": "hold_in.wav",
+      "text": "Und halten.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "7768006729358f242df33325189c5e428b4587e9800a6a9a31a71a0644012f43",
+      "processing": {
+        "word_onsets_frames": [
+          0
+        ],
+        "sample_peak_dbfs": -8
+      }
+    },
+    "exhale": {
+      "file": "exhale.wav",
+      "text": "Ausatmen. Zwei. Drei. Vier.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "8c55fb895f8b8406b9461648f4250ee39d5e574e73e4a38b8991409fd2571a67",
+      "processing": {
+        "word_onsets_frames": [
+          0,
+          44100,
+          88200,
+          132300
+        ],
+        "sample_peak_dbfs": -8
+      }
+    },
+    "hold_out": {
+      "file": "hold_out.wav",
+      "text": "Und halten.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "7768006729358f242df33325189c5e428b4587e9800a6a9a31a71a0644012f43",
+      "processing": {
+        "word_onsets_frames": [
+          0
+        ],
+        "sample_peak_dbfs": -8
+      }
+    },
+    "instruction": {
+      "file": "instruction.wav",
+      "text": "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.",
+      "frames": 1764000,
+      "bytes": 3528044,
+      "sha256": "e8420f23c6537a7c0e7484e9602f501fa065d27617ba3bb8224c0af71abba21e",
+      "processing": {
+        "speech_frames": 1710001,
+        "sample_peak_dbfs": -8
+      }
+    },
+    "ending": {
+      "file": "ending.wav",
+      "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
+      "frames": 529200,
+      "bytes": 1058444,
+      "sha256": "1922cee5cd6e8c7ac26e9768d05d590aa50bde29ae0fe34adba0a2759032e87d",
+      "processing": {
+        "speech_frames": 481912,
+        "sample_peak_dbfs": -8
+      }
+    },
+    "rest": {
+      "file": "rest.wav",
+      "text": "Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.",
+      "frames": 882000,
+      "bytes": 1764044,
+      "sha256": "2dea8d7b03df86d041661e855beda5fcede7257f3727d0ea9819b95a3c16e344",
+      "processing": {
+        "resume_onset_frame": 705600
+      }
+    },
+    "inhale_breath": {
+      "file": "inhale_breath.wav",
+      "text": "Einatmen. Zwei. Drei. Vier.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "b68c51bf393d6974e304ad52838020c4d02ea4396af779e527d28b1dc72a7281",
+      "processing": {
+        "voice_block": "inhale",
+        "breath_peak_dbfs": -20,
+        "source_file": "inhale.wav",
+        "source": "User-supplied Proton Drive recording",
+        "source_sha256": "741f53d8df08cb8ccaeca31f77534e526109a279485567d4976486c67aba3761",
+        "source_duration_seconds": 3.502018140589569,
+        "breath_tempo_factor": 0.8755045351473922,
+        "target_duration_seconds": 4
+      }
+    },
+    "exhale_breath": {
+      "file": "exhale_breath.wav",
+      "text": "Ausatmen. Zwei. Drei. Vier.",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "3a8650778a528656a4a1cc4f601d43236606eaa750f8b294f43a23bbd0aa31f8",
+      "processing": {
+        "voice_block": "exhale",
+        "breath_peak_dbfs": -20,
+        "source_file": "Exhale.wav",
+        "source": "User-supplied Proton Drive recording",
+        "source_sha256": "079235531a867dd0a434b81c8054998656dab52c891842f455f496305422ac4d",
+        "source_duration_seconds": 4.411292517006803,
+        "breath_tempo_factor": 1.1028231292517008,
+        "target_duration_seconds": 4
+      }
+    }
+  },
+  "review_status": "Technical PCM integrity and exact session timing verified; human voice acceptance pending."
+}

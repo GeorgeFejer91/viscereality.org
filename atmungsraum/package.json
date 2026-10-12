@@ -1,0 +1,14 @@
+{
+  "name": "atmungsraum",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor": "node for-ai/scripts/vendor-pretext.mjs",
+    "check:ui": "node for-ai/scripts/check-ui.mjs",
+    "test:audio": "node --test tests/box-breathing.test.mjs",
+    "render:audio": "node tools/render-box-breathing.mjs"
+  },
+  "dependencies": {
+    "@chenglou/pretext": "0.0.9"
+  }
+}
