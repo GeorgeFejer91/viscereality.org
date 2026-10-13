@@ -33,8 +33,6 @@ canvas { display: block; width: 100%; height: 100%; min-height: 0; }
 button, .actions a { display: grid; place-items: center; min-width: 0; min-height: 48px; padding: 10px 12px; font: inherit; line-height: 1.3; border: 1px solid #4a5148; border-radius: 10px; color: #e9ebe3; background: #131712; text-align: center; text-decoration: none; cursor: pointer; }
 button > [data-measure], .actions a > [data-measure] { width: 100%; }
 button:hover:enabled, .actions a:hover, .round:hover, .option:hover { background: #1b2219; border-color: #7a8771; }
-button.primary, a.primary { color: #171c15; background: #c9d3bf; border-color: #c9d3bf; }
-button.primary:hover:enabled, a.primary:hover { background: #dde4d6; }
 button:disabled, .actions a[aria-disabled="true"] { color: #888; background: #111; border-color: #444; cursor: default; }
 a:focus-visible, button:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 3px; }
 #sensor-next[aria-disabled="true"] { background: #632f36; border-color: #9f5058; color: #f3dadd; }
@@ -42,29 +40,21 @@ a:focus-visible, button:focus-visible { outline: 3px solid #c9d3bf; outline-offs
 .actions a.back { border-color: transparent; background: transparent; color: #b2b8ab; }
 .round-body, .choices-body { container-type: size; display: grid; grid-template-rows: minmax(0, 1fr); align-content: stretch; place-items: center; }
 .rounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100cqw, calc(200cqh + var(--gap)), 600px); }
-.round { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; align-content: center; justify-items: center; gap: var(--gap); aspect-ratio: 1; min-width: 0; min-height: 0; padding: clamp(10px, min(3vw, 3svh), 24px); border: 1px solid #3d463a; border-radius: 16px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; font-size: clamp(1.125rem, min(3vw, 3svh), 1.375rem); line-height: 1.3; }
-.round-description { font-size: .875rem; line-height: 1.5; color: #b2b8ab; }
-.round-symbol { display: block; width: clamp(44px, min(14vw, 14svh), 80px); height: auto; color: #b8c8aa; }
-.round:last-child .round-symbol { color: #d3c5ac; }
+.round { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; aspect-ratio: 1; min-width: 0; min-height: 0; padding: clamp(10px, min(3vw, 3svh), 24px); border: 1px solid #3d463a; border-radius: 16px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; font-size: clamp(1.125rem, min(3vw, 3svh), 1.375rem); line-height: 1.3; }
 .round > [data-measure] { width: 100%; }
 .round[data-text-fit="reflow"] { aspect-ratio: auto; min-height: 140px; }
 .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100cqw, 100cqh, 640px); }
+html:not([data-layout="reflow"]) #haupt-runde .options { width: min(100cqw, calc(200cqh + var(--gap)), 640px); }
 .option { display: grid; place-items: center; aspect-ratio: 1; min-width: 0; min-height: 48px; padding: 12px; border: 1px solid #3d463a; border-radius: 12px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; }
 .option > span { display: grid; gap: 6px; min-width: 0; width: 100%; }
 .option-hint { color: #bbb; font-size: .875rem; }
 .play-body { grid-template-rows: minmax(0, 1fr) auto auto; align-content: stretch; justify-items: stretch; }
-.play-stack { display: grid; align-content: center; justify-items: center; gap: var(--gap); min-width: 0; min-height: 0; }
-.session-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100%, 260px); min-width: 0; }
 .play-button { gap: var(--gap); width: min(100%, 260px); min-height: 140px; place-self: center; }
 .play-button svg { display: block; color: #c9d3bf; }
 .session-progress { display: grid; gap: 4px; min-width: 0; text-align: center; }
 #session-time { min-width: 5ch; font-variant-numeric: tabular-nums; }
-#session-start[data-session-active="false"] .session-progress,
-#session-start[data-session-active="false"] #stop { display: none; }
+#session-start[data-session-active="false"] .session-progress { display: none; }
 output { min-height: 1.5em; color: #bbb; text-align: center; }
-@media (max-width: 480px) and (min-height: 481px) {
-  .round { aspect-ratio: auto; min-height: 220px; }
-}
 @media (max-height: 480px) and (min-width: 481px) {
   main { --gap: 8px; --inset: 10px; }
   h1 { font-size: 1.25rem; }

@@ -1,18 +1,15 @@
-import { BoxBreathingEngine } from './box-breathing.js?v=20261012-pause';
-import { state, start } from '../ui-logic.js';
+import { BoxBreathingEngine } from './box-breathing.js?v=20261012-baseline';
+import { state, start } from '../ui-logic.js?v=20261012-baseline';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
 export function mountSessionAudio() {
   const stage = document.getElementById('session-start');
   const play = document.getElementById('play');
-  const stop = document.getElementById('stop');
-  const controls = document.getElementById('session-controls');
-  const resume = document.getElementById('session-resume');
-  const pause = document.getElementById('session-pause');
+  const back = document.getElementById('session-back');
   const phase = document.getElementById('session-phase');
   const clock = document.getElementById('session-time');
   const status = document.getElementById('start-status');
-  const labels = { instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
+  const labels = { baseline: 'Normal atmen', instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
     exhale: 'Ausatmen', hold_out: 'Atempause', rest: 'Pause · natürlich atmen',
     ending: 'Ausklang', recovery: 'Natürlich atmen' };
   const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -27,17 +24,22 @@ export function mountSessionAudio() {
     stage.dataset.audioState = mode;
     stage.dataset.sessionActive = String(busy);
     stage.dataset.protocolMinutes = state.selection?.value ?? '';
-    play.disabled = !key || !gate || state.sensor !== 'ecg' || busy || mode === 'loading'
+    play.disabled = !key || (mode !== 'playing' && (!gate || state.sensor !== 'ecg'))
+      || ['loading', 'starting', 'pausing', 'resuming'].includes(mode)
       || Boolean(engine?.starting || engine?.pausing || engine?.resuming);
-    controls.hidden = !busy;
-    pause.disabled = mode !== 'playing';
-    resume.disabled = mode !== 'paused' || !gate || state.sensor !== 'ecg';
-    stop.disabled = !busy;
     const label = mode === 'error' && !engine?.buffers ? 'Audio erneut laden'
-      : state.selection?.minutes === null ? 'Anleitung starten' : 'Session starten';
+      : mode === 'playing' ? 'Pause' : mode === 'paused' ? 'Fortsetzen'
+      : mode === 'pausing' ? 'Pausieren …' : ['starting', 'resuming'].includes(mode) ? 'Startet …'
+      : mode === 'completed' ? 'Erneut starten' : 'Starten';
     text(play.querySelector('[data-measure]'), label);
     play.setAttribute('aria-label', label);
+    play.dataset.action = mode === 'playing' ? 'pause' : mode === 'paused' ? 'resume' : 'start';
+    play.querySelector('path').setAttribute('d', mode === 'playing'
+      ? 'M16 10H28V54H16ZM36 10H48V54H36Z' : 'M18 10 54 32 18 54Z');
+    text(back.querySelector('[data-measure]'), busy ? 'Beenden' : '← Zurück');
+    back.setAttribute('aria-label', busy ? 'Session beenden und zurück' : 'Zurück');
     text(status, message);
+    status.hidden = !message;
     clock.hidden = state.selection?.minutes === null;
   }
 
@@ -80,7 +82,7 @@ export function mountSessionAudio() {
     engine ??= new BoxBreathingEngine();
     mode = 'loading'; message = 'Audio wird geladen …'; paint();
     preparation = engine.prepare().then(() => {
-      mode = 'ready'; message = 'Audio bereit.';
+      mode = 'ready'; message = '';
       if (key) paint();
     }).catch((error) => {
       preparation = null;
@@ -92,6 +94,8 @@ export function mountSessionAudio() {
   }
 
   play.addEventListener('click', async () => {
+    if (mode === 'playing') { await pause(); return; }
+    if (mode === 'paused') { await resume(); return; }
     if (!key || !gate) return;
     if (!engine?.buffers) { prepare(); return; }
     if (!start()) return;
@@ -101,10 +105,11 @@ export function mountSessionAudio() {
     mode = 'starting'; message = 'Audio startet …'; paint();
     try {
       // resume() is called from this user action; assets were prepared beforehand.
-      const session = await engine.start(attempt.selection.minutes ?? 'anleitung');
+      const session = await engine.start(attempt.selection.boxMinutes ?? 'anleitung',
+        { baselineMinutes: attempt.selection.baselineMinutes });
       attempt.startAt = session.startAt;
       if (ownToken !== token) return;
-      mode = 'playing'; message = 'Folge den Ansagen.';
+      mode = 'playing'; message = '';
       stage.dataset.audioStartTime = String(session.startAt);
       stage.dataset.audioEndTime = String(session.endAt);
       stage.dataset.audioSampleRate = String(engine.context.sampleRate);
@@ -150,45 +155,41 @@ export function mountSessionAudio() {
       }
     } finally { paint(); }
   });
-  pause.addEventListener('click', async () => {
+  async function pause() {
     if (mode !== 'playing') return;
     const ownToken = token;
-    const moveFocus = document.activeElement === pause;
     mode = 'pausing';
     cancelAnimationFrame(frame);
     paint();
     try {
       const paused = await engine.pause();
       if (ownToken !== token || mode !== 'pausing' || !paused) return;
-      mode = 'paused'; message = 'Pausiert.';
+      mode = 'paused'; message = '';
       drawPosition(); paint();
-      if (moveFocus) resume.focus?.({ preventScroll: true });
     } catch (error) {
       if (ownToken === token) {
         end('pause-failed'); mode = 'error'; message = 'Pause nicht möglich. Starte neu.';
         console.warn('Audio pause failed.', error);
       }
     } finally { paint(); }
-  });
-  resume.addEventListener('click', async () => {
+  }
+  async function resume() {
     if (mode !== 'paused' || !gate || state.sensor !== 'ecg') return;
     const ownToken = token;
-    const moveFocus = document.activeElement === resume;
     mode = 'resuming'; paint();
     try {
       const resumed = await engine.resume();
       if (ownToken !== token || mode !== 'resuming' || !resumed) return;
-      mode = 'playing'; message = 'Folge den Ansagen.';
+      mode = 'playing'; message = '';
       paint(); tick();
-      if (moveFocus) pause.focus?.({ preventScroll: true });
     } catch (error) {
       if (ownToken === token) {
         end('resume-failed'); mode = 'error'; message = 'Fortsetzen nicht möglich. Starte neu.';
         console.warn('Audio resume failed.', error);
       }
     } finally { paint(); }
-  });
-  stop.addEventListener('click', () => end());
+  }
+  back.addEventListener('click', () => end('navigation'));
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && ['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode)) { event.preventDefault(); end('escape'); }
   });
@@ -204,7 +205,7 @@ export function mountSessionAudio() {
         key = next;
         active = null;
         mode = engine?.buffers ? 'ready' : preparation ? 'loading' : 'idle';
-        message = engine?.buffers ? 'Audio bereit.' : '';
+        message = '';
         text(phase, 'Bereit');
         text(clock, selection?.minutes ? format(selection.minutes * 60) : '');
         delete stage.dataset.audioPhase;

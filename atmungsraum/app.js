@@ -1,5 +1,5 @@
-import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261012-pause';
+import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js?v=20261012-baseline';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261012-minimal';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,6 +18,7 @@ function render() {
   const labels = { searching: 'Suche Polar … (Demo)', found: 'Polar H10 gefunden (Demo)', connecting: 'Verbinde Polar … (Demo)', ecg: 'ECG wird aufgezeichnet (Demo)', 'no-ecg': 'Warte auf ECG … (Demo)', disconnected: 'Polar getrennt (Demo)' };
   text('sensor-status', labels[state.sensor]);
   byId('select-polar').hidden = state.sensor !== 'found';
+  byId('connect').hidden = !['no-ecg', 'disconnected'].includes(state.sensor);
   document.querySelector('.ecg-box').hidden = !hasSignal();
   byId('sensor-next').setAttribute('aria-disabled', String(!hasSignal()));
   byId('sensor-next').tabIndex = hasSignal() ? 0 : -1;
@@ -27,7 +28,6 @@ function render() {
     byId('session-back').href = `#${branch}-runde`;
   }
   sessionAudio.update(next, state.selection, canNavigate());
-  if (!hasSignal()) byId('play').disabled = true;
   drawECG();
   byId(next).querySelector('h1').focus({ preventScroll: true });
   window.scrollTo(0, 0);
@@ -121,14 +121,14 @@ async function measureLabels() {
           const lineHeight = parseFloat(style.lineHeight);
           const stats = measureLineStats(prepared, Math.max(1, width - 2));
           const fits = stats.maxLineWidth <= width + 1 && stats.lineCount * lineHeight <= height + 2;
-          return { element, fits, square: element.classList.contains('round-description') ? null : element.closest('.round'), wrap: measureNaturalWidth(prepared) > width - 2 || !fits };
+          return { element, fits, square: element.closest('.round'), wrap: measureNaturalWidth(prepared) > width - 2 || !fits };
         });
         results.forEach(({ element, fits, square, wrap }) => {
           element.dataset.textFit = fits ? 'fit' : 'reflow';
           if (square) square.dataset.textFit = wrap ? 'reflow' : 'fit';
         });
         const visible = byId(current);
-        const groups = [...visible.querySelectorAll('.screen-body, .actions, .play-stack, .session-controls, [data-measure]')];
+        const groups = [...visible.querySelectorAll('.screen-body, .actions, [data-measure]')];
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
@@ -141,7 +141,7 @@ async function measureLabels() {
       });
     };
     const observer = new ResizeObserver(measure);
-    document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-stack, .session-controls').forEach((element) => observer.observe(element));
+    document.querySelectorAll('[data-measure], .screen-body, .actions, .round').forEach((element) => observer.observe(element));
     new MutationObserver(measure).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
     window.addEventListener('resize', () => { root.dataset.layout = 'bounded'; measure(); });
     window.addEventListener('hashchange', measure);

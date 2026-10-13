@@ -1,5 +1,12 @@
 # Calm German voice auditions
 
+**Current choice:** the user rejected the OmniVoice listening versions and chose
+the website's saved ElevenLabs **British Breathing Instructor** profile. Further
+cues use that profile. Ready-to-listen copies are in
+`audio-assets/ready-to-listen/elevenlabs/`; the rejected sets are archived locally.
+The corpus and OmniVoice work below is retained as provenance, not a selected
+voice or an active sourcing task.
+
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
 to establish those properties. Keep local auditions separate from the browser's
@@ -159,6 +166,43 @@ confirmed durations, beat gaps, descending voice/rising breath, power difference
 below 0.0001 dB, identical holds between mix versions, exact montage concatenation,
 and archive integrity. Current runtime asset hashes still match their manifest.
 Listening acceptance and the existing rights limits remain unchanged.
+
+## Selected website voice — ElevenLabs listening set
+
+`tools/build-elevenlabs-listening-cues.py` now uses complete, connected inhale and
+exhale phrases synthesized with the same website profile/settings. Both holds reuse a
+cached Halten! take with the literal exclamation mark and the same settings.
+The complete phrases and Halten! use British Breathing Instructor
+(`rt9KyyQmwqa1uhHGJkMa`), the same Eleven v4 model, soft/calm/slow tags, stability
+0.5, similarity 0.65, German language and seed 42. The saved profile's name/ID and
+the model's German TTS support were read from ElevenLabs before generation.
+
+The selected roles are counted Einatmen / Halten! once / counted Ausatmen /
+Halten! once. The user omitted hold counts and requested the exclamation mark.
+Each hold contains about 0.75 seconds of native-speed speech and 3.25 seconds
+of silence, with an exact four-second file duration. The user found
+Pause's pronunciation English and preferred Halten in both holds. The four
+inhale/exhale words fade by 4 dB per word; breath uses constant gain with natural
+source dynamics and only 10 ms boundary fades. The added rising envelope was
+rejected. The earlier ramped listening package is preserved under reference-audio.
+Both count phrases are synthesized as complete utterances. Provider character
+alignment locates word windows; native word samples retain their tempo while
+silence is adjusted. Actual count starts are recorded in JSON, with brief delays
+when a complete phase word exceeds a nominal one-second slot. This replaces
+assembling the guide from separate single-word synthesis requests.
+Full four-second voice/breath powers are matched before summation, with shared
+gain and at least 3 dB sample-peak headroom. Hold labels retain complete native
+speech and match the initial inhale cue's sample peak before the quiet tail.
+
+The current package has 13 WAV/JSON pairs: four separate voice cues, two breath
+components, four mixed cues, and three full 16-second voice/breath/mix cycles.
+Independent PCM checks passed exact durations, hashes, authored slots, gain
+progression, constant breath gain, component powers, sample reconstruction and
+concatenation. Unprompted Whisper-small review of the initial set recognized all
+sixteen requested words. Review of the current quiet-hold cycle recognized all
+ten words with no hold counts; its second hold reuses the first hold PCM exactly.
+Runtime assets and
+scheduling remain unchanged; this is a listening set for the selected voice.
 
 ## Rights and release boundary
 

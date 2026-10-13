@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261012-pause">
-  <script type="module" src="./app.js?v=20261012-pause"></script>
+  <link rel="stylesheet" href="./style.css?v=20261012-minimal">
+  <script type="module" src="./app.js?v=20261012-minimal"></script>
 </head>
 <body>
   <main>
@@ -27,22 +27,14 @@
       <noscript>Für diese UI-Demo brauchst du JavaScript. Es ist kein echtes Headset verbunden.</noscript>
     </section>
     <section class="screen" id="runde" aria-labelledby="start-title" hidden>
-      <h1 id="start-title" tabindex="-1" data-measure>Welche Übung wird durchgeführt?</h1>
+      <h1 id="start-title" tabindex="-1" data-measure>Übung wählen</h1>
       <div class="screen-body round-body">
         <nav class="rounds" aria-label="Übungsart auswählen">
-          <a class="round" href="#probe-runde" aria-labelledby="round-probe-label" aria-describedby="round-probe-description">
-            <svg class="round-symbol" viewBox="0 0 80 80" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M40 62V39M40 48C25 48 18 39 18 25c15 0 22 9 22 23ZM40 39c0-14 8-22 22-22 0 14-8 22-22 22Z"/>
-            </svg>
+          <a class="round" href="#probe-runde" aria-labelledby="round-probe-label">
             <span id="round-probe-label" data-measure>Probe-Runde</span>
-            <span id="round-probe-description" class="round-description" data-measure>Zur Eingewöhnung und für die erste Übung.</span>
           </a>
-          <a class="round" href="#haupt-runde" aria-labelledby="round-main-label" aria-describedby="round-main-description">
-            <svg class="round-symbol" viewBox="0 0 80 80" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M14 29c10-9 18-9 26 0s16 9 26 0M14 43c10-9 18-9 26 0s16 9 26 0M22 57c7-6 12-6 18 0s11 6 18 0"/>
-            </svg>
+          <a class="round" href="#haupt-runde" aria-labelledby="round-main-label">
             <span id="round-main-label" data-measure>Haupt-Runde</span>
-            <span id="round-main-description" class="round-description" data-measure>Für die Hauptstudie.</span>
           </a>
         </nav>
       </div>
@@ -52,21 +44,19 @@
       <div class="screen-body choices-body">
         <nav class="options" aria-label="Probe-Runde wählen">
           <a class="option" href="#start-probe-anleitung"><span><span data-measure>Anleitung</span><span class="option-hint" data-measure>Ohne Zeitlimit</span></span></a>
-          <a class="option" href="#start-probe-5"><span data-measure>5 Minuten atmen</span></a>
-          <a class="option" href="#start-probe-10"><span data-measure>10 Minuten atmen</span></a>
-          <a class="option" href="#start-probe-15"><span data-measure>15 Minuten atmen</span></a>
+          <a class="option" href="#start-probe-5"><span data-measure>5 Minuten</span></a>
+          <a class="option" href="#start-probe-10"><span data-measure>10 Minuten</span></a>
+          <a class="option" href="#start-probe-15"><span data-measure>15 Minuten</span></a>
         </nav>
       </div>
       <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
     </section>
     <section class="screen" id="haupt-runde" aria-labelledby="haupt-title" hidden>
-      <h1 id="haupt-title" tabindex="-1" data-measure>Wie lange möchtest du atmen?</h1>
+      <h1 id="haupt-title" tabindex="-1" data-measure>Haupt-Runde</h1>
       <div class="screen-body choices-body">
         <nav class="options" aria-label="Haupt-Runde wählen">
-          <a class="option" href="#start-haupt-5"><span data-measure>5 Minuten</span></a>
-          <a class="option" href="#start-haupt-10"><span data-measure>10 Minuten</span></a>
-          <a class="option" href="#start-haupt-15"><span data-measure>15 Minuten</span></a>
-          <a class="option" href="#start-haupt-20"><span data-measure>20 Minuten</span></a>
+          <a class="option" href="#start-haupt-10"><span><span data-measure>10 Minuten</span><span class="option-hint" data-measure>5 Min. normal atmen</span><span class="option-hint" data-measure>5 Min. Box-Atmung</span></span></a>
+          <a class="option" href="#start-haupt-15"><span><span data-measure>15 Minuten</span><span class="option-hint" data-measure>5 Min. normal atmen</span><span class="option-hint" data-measure>10 Min. Box-Atmung</span></span></a>
         </nav>
       </div>
       <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
@@ -74,25 +64,18 @@
     <section class="screen" id="session-start" aria-labelledby="session-title" data-session-active="false" hidden>
       <h1 id="session-title" tabindex="-1" data-measure>Session starten</h1>
       <div class="screen-body play-body">
-        <div class="play-stack">
-          <button id="play" data-action="start" class="play-button" aria-label="Session starten">
-            <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
-            <span data-measure>Session starten</span>
-          </button>
-          <div id="session-controls" class="session-controls" role="group" aria-label="Wiedergabe steuern" hidden>
-            <button id="session-resume" disabled><span data-measure>Start</span></button>
-            <button id="session-pause" disabled><span data-measure>Pause</span></button>
-          </div>
-        </div>
+        <button id="play" data-action="start" class="play-button" aria-label="Starten">
+          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
+          <span data-measure>Starten</span>
+        </button>
         <div class="session-progress">
           <p id="session-phase" data-measure>Bereit</p>
           <output id="session-time" aria-label="Verbleibende Zeit" data-measure></output>
         </div>
-        <output id="start-status" aria-live="polite" data-measure></output>
+        <output id="start-status" aria-live="polite" data-measure hidden></output>
       </div>
       <footer class="actions">
         <a id="session-back" class="back" href="#probe-runde"><span data-measure>← Zurück</span></a>
-        <button id="stop" disabled><span data-measure>Beenden</span></button>
       </footer>
     </section>
   </main>

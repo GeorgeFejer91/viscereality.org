@@ -1,5 +1,10 @@
 # Browser playback completion audit — 2026-10-12
 
+This records the earlier four-duration implementation. Haupt-Runde now offers
+10/15-minute totals with a five-minute silent normal-breathing control period;
+see the current baseline checks in [VERIFICATION.md](VERIFICATION.md). The
+5/10/15/20-minute standalone audio protocols below remain engine capabilities.
+
 Scope: actual local browser playback from the final Play screen for selected
 5/10/15/20-minute sessions. The final source uses four separate reusable German
 four-second phase WAVs, a welcome/ending once, quiet holds, 20-second rests,

@@ -70,31 +70,35 @@ text. See [SKILLS.md](SKILLS.md) and [VERIFICATION.md](VERIFICATION.md).
 
 ## Round menu and UI prototype — 2026-10-12
 
-Use easy, simple German throughout the interface. The working tree implements
+Use easy, simple German throughout the interface. The browser prototype implements
 this browser-local decision tree:
 
 1. Emulate the headset searching for Polar, finding it, selecting/connecting it,
    then waiting for ECG. One compact status line shows the current step, with
    Polar auswählen available when found. The ECG box appears only during
-   recording. Below it are only Erneut suchen and Weiter; Weiter is red/disabled
-   until recording, then green/enabled. The status and canvas identify the demo.
-2. Ask "Welche Übung wird durchgeführt?" and show Probe-Runde and Haupt-Runde
-   together, with small inline sprout/wave symbols. Their descriptions are
-   "Zur Eingewöhnung und für die erste Übung." and "Für die Hauptstudie."
-   Remove the global brand/technical header. Use soft dark surfaces, muted sage
-   and cream, gentle corners, and restrained borders. Narrow portrait choices
-   may grow taller to keep descriptions readable; normal wide choices are square.
-3. Show exactly four clickable boxes for the chosen round:
+   recording. Weiter is red/disabled until recording, then green/enabled.
+   Erneut suchen appears only when disconnected or waiting for ECG, where retry
+   aids recovery. The status and canvas identify the demo.
+2. Show "Übung wählen" with Probe-Runde and Haupt-Runde together. Use text-only
+   choices, soft dark surfaces, muted sage and cream, gentle corners, and
+   restrained borders. Choices are square where the measured labels fit.
+3. Show the clickable boxes for the chosen round:
    - Probe-Runde: Anleitung (guided free exploration, no time limit), 5, 10,
-     or 15 Minuten atmen. Anleitung and Frei ausprobieren are the same option.
-   - Haupt-Runde: 5, 10, 15, or 20 Minuten.
-4. Every box goes directly to a final screen with a **Session starten** play
+     or 15 Minuten. Anleitung and Frei ausprobieren are the same option.
+   - Haupt-Runde: only 10 or 15 Minuten total. Both begin with five minutes
+     of normal breathing as a control period, followed by the existing five-
+     or ten-minute guided box-breathing sequence. Each box shows this breakdown.
+4. Every box goes directly to a final screen with a **Starten** play
    button. The selected round/option is shown for orientation. Starting is
    browser-local; the separately integrated audio controller owns playback.
 
 There are no intermediate radio confirmations or separate instruction pages.
-The initial final screen shows the play action; runtime phase/time/stop controls
-appear only during playback. Real headset session execution remains pending.
+The initial final screen shows the play action. During playback that same button
+becomes Pause, or Fortsetzen while paused, and the back link becomes Beenden.
+Phase/time appear only during playback. Remove redundant descriptors, decoration,
+duplicate buttons, and routine ready/playback messages; keep the choice timing
+breakdown and actionable loading/completion/error feedback. Real headset session
+execution remains pending.
 Hash navigation supports Zurück and browser history; cold deep links still pass
 through the connection gate. After Weiter there is no ECG return button. Signal
 loss after this verified transition keeps the current screen and existing audio
@@ -155,6 +159,14 @@ cycle counts are 15/33/50/68, with 0/1/2/3 rests and 8/0/8/0 seconds quiet recov
 Every third complete cycle overlays both inhale and exhale with the supplied
 breath sounds. Use the Web Audio clock and preload
 all samples; JavaScript timers and ended callbacks must not trigger phase audio.
+Haupt-Runde prepends exactly 300 silent audio-clock seconds to the five- or
+ten-minute sequence. During this control period the UI displays Normal atmen;
+no instruction, phase cue, or breath overlay sounds. The welcome begins at
+t0 + 300 seconds and the first paced cycle at t0 + 340 seconds. The guided
+segment keeps its welcome, ending, rests and recovery within its five- or
+ten-minute budget, yielding exact 600/900-second main totals. Pause freezes
+the baseline clock too. Selection and protocol receipts retain the baseline,
+guided-segment and total durations separately.
 Hidden pages, interrupted audio clocks, failed preparation, or missed start
 deadlines invalidate/abort an attempt. Host-side saving of receipts and physical
 audio/sensor synchronization remain integration work. The browser controller
@@ -167,9 +179,10 @@ use British Breathing Instructor. See [audio/README.md](../audio/README.md) for
 the source analysis, scripts, timing contract, API, verification, and limits.
 The round menu's final Play button is wired to browser playback through
 `audio/session-ui.js`; Stop/Escape/navigation and interrupted clocks abort the run.
-The main start button remains visible after starting, with smaller Start/Pause
-buttons directly below it. Pause deliberately suspends the Web Audio context and
-freezes the countdown; Start resumes the existing schedule from the same position.
+The main button changes between Starten, Pause, and Fortsetzen. Pause deliberately
+suspends the Web Audio context and freezes the countdown; Fortsetzen resumes the
+existing schedule from the same position. Beenden returns to the choice menu and
+aborts the run; Escape stops in place. No separate Stop or Start/Pause row is shown.
 Timed totals count active audio-clock time, so deliberate pauses extend wall-clock
 duration. Pause/resume records are included in the local scheduling receipt.
 No H10 or headset behavior is established by the audio checks.
@@ -188,7 +201,7 @@ publish runtime samples as unrestricted clinic voices on this evidence. See
 
 The initial 2026-10-09 page was a blank black placeholder. The working tree now
 contains the functional German UI prototype described above, including synthetic
-ECG gating, four choices per round, and final play-button routes. Real H10 data,
+ECG gating, four practice/two main choices, and final play-button routes. Real H10 data,
 headset connection, and headset session execution remain unimplemented. Browser
 audio is wired separately through audio/session-ui.js. Keep the black visual
 foundation and preserve work in progress.

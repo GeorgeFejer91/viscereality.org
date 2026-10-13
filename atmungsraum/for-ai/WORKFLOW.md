@@ -63,6 +63,9 @@ MP3 cue set. Keep the four phase files separate and reuse them on every cycle.
 Run `pnpm run test:audio` and the silent `tests/offline-audio.html` diagnostic
 when changing the scheduler or sample set. `pnpm run render:audio -- 5` (or 10/15/20)
 provides an optional offline verification export; it is not the runtime strategy.
+For the main-round control period, open `tests/offline-audio.html?round=haupt`:
+it checks both 10/15-minute totals, the silent first 300 seconds, and the shifted
+guided samples at 44.1 and 48 kHz.
 Original downloads, full caption transcripts, raw synthesis, and concatenated
 exports stay under ignored `reference-audio/`. See [audio/README.md](../audio/README.md)
 for the reference analysis and reproducible timing/export workflow.
@@ -88,11 +91,28 @@ four-element sets per voice plus listening montages and a ZIP. Check the finishe
 PCM durations, beat gaps, power progression, montage identity, and archive; keep
 listening acceptance distinct from speech recognition and sample measurements.
 
-Run `python tools/package-listening-assets.py` to package the latest counted
-auditions in `audio-assets/ready-to-listen/`. Every WAV receives an adjacent JSON
-with timing/transcript/hash metadata; female/male sets expose separate voice,
+Run `python tools/build-elevenlabs-listening-cues.py` with cached connected phrases
+and standalone Halten!, then `python tools/package-listening-assets.py` to package
+the selected ElevenLabs counted cues in `audio-assets/ready-to-listen/elevenlabs/`.
+The selected wording uses Halten! once in both holds, followed by silence. Cache
+its synthesis as `halten-exclamation.mp3` and matching request JSON. Each hold
+stays four seconds; JSON records one word slot and speech/quiet segments. Breath
+uses constant gain with natural dynamics and 10 ms boundary fades; counts descend
+during inhale/exhale only.
+Inhale/exhale now require complete `inhale-connected.mp3`/`exhale-connected.mp3`
+takes with matching `.request.json` and `.response.json` from ElevenLabs'
+[speech-with-timing endpoint](https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps).
+Generate each whole phrase in one request with the website profile/settings.
+The helper uses character alignment to locate word windows, preserves native
+speech samples and adjusts only silence. It fails rather than speeding speech
+that cannot fit. Actual word starts can depart slightly from nominal beats and
+are saved in frame-indexed sidecars. Source responses stay local/ignored.
+Every WAV receives an adjacent JSON with timing/transcript/hash metadata;
+the current voice exposes separate voice,
 breath and mix layers plus complete 16-second cycles. It verifies component
 reconstruction and sample-identical concatenation without regeneration or API
 calls. Preserve differing existing outputs and choose a new `--output-dir` for
 a revised set. Only the folder guide and helper are source; generated copies
-stay ignored. See `audio-assets/README.md` for the layout.
+stay ignored. Historical OmniVoice sources require explicit `--source-dir` and
+a separate output path; rejected copies stay in `audio-assets/archived-omnivoice/`.
+See `audio-assets/README.md` for the layout.

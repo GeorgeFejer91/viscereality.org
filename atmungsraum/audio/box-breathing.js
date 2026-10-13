@@ -30,17 +30,21 @@ export function validateManifest(manifest) {
 }
 
 // Integer source frames are the timing contract; seconds are derived at playback.
-export function createProtocol(minutes, manifest) {
+export function createProtocol(minutes, manifest, { baselineMinutes = 0 } = {}) {
   validateManifest(manifest);
   const instruction = minutes === 'anleitung';
   if (!instruction && !MINUTES.includes(minutes)) throw new RangeError('Choose 5, 10, 15, or 20 minutes.');
+  if (baselineMinutes !== 0 && (baselineMinutes !== 5 || ![5, 10].includes(minutes))) {
+    throw new RangeError('Main sessions require 5 minutes of normal breathing followed by a 5- or 10-minute guided sequence.');
+  }
   const sampleRate = manifest.sample_rate;
   const blockFrames = manifest.block_frames;
   const introFrames = manifest.blocks.instruction.frames;
   const endingFrames = manifest.blocks.ending.frames;
   const cycleFrames = 4 * blockFrames;
-  const totalFrames = instruction ? introFrames + cycleFrames + endingFrames : minutes * 60 * sampleRate;
-  let remaining = totalFrames - introFrames - endingFrames;
+  const baselineFrames = baselineMinutes * 60 * sampleRate;
+  const totalFrames = baselineFrames + (instruction ? introFrames + cycleFrames + endingFrames : minutes * 60 * sampleRate);
+  let remaining = totalFrames - baselineFrames - introFrames - endingFrames;
   if (remaining < cycleFrames) throw new RangeError('No complete breathing cycle fits this session.');
   let cycles = 0, rests = 0, block = 1;
   const breathingBlocks = [];
@@ -51,6 +55,7 @@ export function createProtocol(minutes, manifest) {
       breathing_block: cycle === null ? null : block }));
     frame += frames;
   };
+  if (baselineFrames) add('baseline', baselineFrames, null, null);
   add('instruction', introFrames);
   while (remaining >= cycleFrames) {
     const count = Math.min(manifest.cycles_per_block, Math.floor(remaining / cycleFrames));
@@ -71,8 +76,9 @@ export function createProtocol(minutes, manifest) {
   add('ending', endingFrames);
   const recoveryFrames = totalFrames - frame;
   if (recoveryFrames) add('recovery', recoveryFrames);
-  return Object.freeze({ id: manifest.id, minutes: instruction ? null : minutes,
-    mode: instruction ? 'instruction-example' : 'session', sample_rate: sampleRate,
+  return Object.freeze({ id: manifest.id, minutes: instruction ? null : minutes + baselineMinutes,
+    box_minutes: instruction ? null : minutes, baseline_frames: baselineFrames,
+    mode: instruction ? 'instruction-example' : baselineFrames ? 'main-session' : 'session', sample_rate: sampleRate,
     total_frames: totalFrames, cycles, rests, breathing_blocks: Object.freeze(breathingBlocks),
     intro_frames: introFrames, ending_frames: endingFrames, recovery_frames: recoveryFrames,
     events: Object.freeze(events) });
@@ -87,6 +93,8 @@ export function scheduleProtocol(context, buffers, protocol, startAt, destinatio
   const sources = [];
   try {
     for (const event of protocol.events) {
+      // The control period is silent; no five-minute silent buffer is needed.
+      if (event.id === 'baseline') continue;
       const seconds = event.duration_frames / protocol.sample_rate;
       const buffer = event.id === 'recovery'
         ? context.createBuffer(1, Math.round(seconds * context.sampleRate), context.sampleRate)
@@ -179,11 +187,11 @@ export class BoxBreathingEngine {
 
   // Call after prepare(), directly from the host's Start action. An explicit
   // startAt lets the rest of an experiment share this audio-clock anchor.
-  async start(minutes, { startAt } = {}) {
+  async start(minutes, { startAt, baselineMinutes = 0 } = {}) {
     if (this.disposed || !this.buffers) throw new Error('Prepare audio before starting.');
     if (this.starting || this.pausing || this.resuming || ['scheduled', 'paused'].includes(this.run?.status)) throw new Error('A session is already active.');
     if (typeof document !== 'undefined' && document.hidden) throw new Error('Keep the experiment page visible.');
-    const protocol = createProtocol(minutes, this.manifest);
+    const protocol = createProtocol(minutes, this.manifest, { baselineMinutes });
     const token = ++this.token;
     this.starting = true;
     try {

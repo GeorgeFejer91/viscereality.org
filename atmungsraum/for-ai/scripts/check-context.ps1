@@ -26,15 +26,17 @@ foreach ($round in @('probe', 'haupt')) {
         throw "Missing $round decision branch"
     }
 }
-if ([regex]::Matches($html, 'class="round"').Count -ne 2 -or
-    [regex]::Matches($html, 'class="round-symbol"').Count -ne 2) {
-    throw 'The start must contain two round choices with simple SVG symbols'
+if ([regex]::Matches($html, 'class="round"').Count -ne 2) {
+    throw 'The start must contain two round choices'
+}
+if ($html -match 'round-symbol|round-description|session-controls|session-resume|session-pause|id="stop"|session-plan') {
+    throw 'Keep the UI minimal: no decorative round content or duplicate playback controls'
 }
 if ($html -match 'class="app-header"' -or $html -match 'href="#h10"') {
     throw 'The UI must not reintroduce a global context header or an ECG return link'
 }
 foreach ($round in @('probe', 'haupt')) {
-    $expected = if ($round -eq 'probe') { @('anleitung', '5', '10', '15') } else { @('5', '10', '15', '20') }
+    $expected = if ($round -eq 'probe') { @('anleitung', '5', '10', '15') } else { @('10', '15') }
     $actual = @([regex]::Matches($html, "href=`"#start-$round-([^`"]+)`"") | ForEach-Object { $_.Groups[1].Value })
     if (@(Compare-Object $expected $actual).Count -ne 0) { throw "Incorrect $round options" }
 }
@@ -53,4 +55,4 @@ if ($RequireRemote) {
     $remote = ($remoteLine -split '\s+')[0]
     if (-not $remote -or $local.Trim() -ne $remote) { throw 'Local HEAD differs from remote main' }
 }
-Write-Output 'PASS: Atmungsraum context, four choices per branch, local artwork, locked Pretext, and requested remote gate'
+Write-Output 'PASS: Atmungsraum context, four practice/two main choices, minimal playback UI, locked Pretext, and requested remote gate'

@@ -62,7 +62,15 @@ zwei … drei … vier, with voice-only and voice/breath versions. Their reusabl
 phase files are each exactly four seconds. They also remain auditions;
 see [counted variants](voice-sourcing.md#counted-halten-and-pause-variants--local-audition-only).
 
-Ready-to-listen copies live in `audio-assets/ready-to-listen/`, organized by voice.
+The selected voice is the website's ElevenLabs British Breathing Instructor;
+the user rejected the OmniVoice listening versions. Ready-to-listen copies live
+in `audio-assets/ready-to-listen/elevenlabs/`.
+The selected listening version says Halten! once in both hold phases, followed
+by silence. It keeps inhale/exhale count fades and constant-gain breathing
+recordings with natural dynamics.
+Inhale/exhale are now synthesized as complete count phrases, then fitted to four
+seconds by adjusting pauses while preserving native word speed. Their JSONs
+record actual word timing, including small count delays needed for complete words.
 Every WAV has an adjacent timing/transcript JSON. Separate voice, breath and mix
 components and full 16-second cycles are packaged together; see the
 [folder guide](../audio-assets/README.md). This local folder is ignored and does
@@ -93,8 +101,21 @@ not additional breath holds.
 ## Working browser UI
 
 The final Play button preloads and verifies the samples, then starts the selected
-5/10/15/20-minute scenario on a user action. It shows the current phase/count and
-remaining total time. Stop, Escape, navigation away, lost demo ECG state, and
+scenario on a user action. Practice offers Anleitung and 5/10/15 minutes.
+Haupt-Runde offers only 10 or 15 minutes total: exactly five minutes of silent
+normal breathing followed by the existing five- or ten-minute guided sequence.
+The guided segment includes its welcome, ending, rests and recovery as tabulated
+above. Its welcome starts at t0 + 300 seconds, and its first paced cycle at
+t0 + 340 seconds. No paced cue or breath overlay plays during the control
+period; the UI displays Normal atmen. The cards explain both durations; the
+final title shows the selected total. Receipts contain `baseline_frames`,
+`box_minutes` and total `minutes`.
+
+The player shows the current phase/count and
+remaining total time. The same button becomes Pause/Fortsetzen, retaining the
+audio schedule and countdown across deliberate pauses. The back link reads
+Beenden during playback and aborts before returning to the choice menu. Escape,
+navigation away, the expired demo ECG recovery deadline, and
 hidden/interrupted audio contexts cancel the attempt. Start is available again
 after completion/abort. The unlimited instruction screen plays a 68-second
 welcome/one-cycle/ending example; the screen itself has no time limit and the
@@ -127,6 +148,10 @@ const receipt = await session.done;
 
 An existing audioContext may be supplied to the constructor. The caller may pass
 `startAt` to `start(minutes, { startAt })` to share an experimental audio anchor.
+For a main round, use `start(5, { baselineMinutes: 5 })` (10 minutes total)
+or `start(10, { baselineMinutes: 5 })` (15 minutes total). The optional baseline
+is accepted only for those guided durations; `createProtocol()` accepts the
+same third-argument options. Baseline is a protocol event with no audio source.
 Default scheduling lead is 250 ms, outside the measured session; explicit starts
 require at least 50 ms lead. `pause()` suspends the context, freezes its clock and
 keeps all scheduled sources; `resume()` continues that same run. Both return
@@ -143,7 +168,9 @@ regeneration. The key is read into memory and never written or printed.
 
 Run `pnpm run test:audio` and `pnpm run check:ui`. Serve this tree over HTTP and
 open `tests/offline-audio.html` for a silent native Web Audio render of the actual
-scheduler, comparing all output samples to the planned reused assets. Optional
+scheduler, comparing all output samples to the planned reused assets. Adding
+`?round=haupt` checks both main totals, including all baseline samples, at both
+44.1 and 48 kHz. Optional
 `pnpm run render:audio -- 20` exports a full verification WAV and adjacent
 sample-indexed protocol. `--preview` exports the instruction example. Runtime
 playback uses reusable samples, not these concatenated verification exports.
@@ -152,7 +179,7 @@ Existing exports are not overwritten; defaults include the manifest version.
 Physical speaker latency, long-run device clock drift, phone/headset/Polar H10
 synchronization, and suitability of voice delivery for the intended patients
 require target-device and clinical listening review. This component does not
-define study consent, eligibility, baselines, or medical/therapeutic outcomes.
+define study consent, eligibility, or medical/therapeutic outcomes.
 
 ## Analysis of the supplied reference recordings
 

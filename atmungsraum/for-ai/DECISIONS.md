@@ -1,5 +1,34 @@
 # Decisions
 
+## 2026-10-12 — Ponytail applies to UI elements and copy
+
+Keep only controls, descriptors, and feedback needed to make a choice, understand
+the current state, or recover from a failure. Remove decoration and duplicated
+information rather than moving it elsewhere. This supersedes the separate
+Start/Pause row and the round illustrations/descriptions below.
+
+The final screen has one Starten/Pause/Fortsetzen button. Its existing back link
+reads Beenden during playback and stops the session before returning to the
+choice menu; Escape still stops in place. Keep phase/countdown, completion/error
+feedback, and the main-round timing breakdown on the choice menu. Hide the search
+retry when it cannot aid recovery. Ordinary loading-to-ready and playback
+transitions do not add explanatory messages. Preserve accessibility, measured
+full labels, and the existing audio/ECG gates.
+
+## 2026-10-12 — Main round normal-breathing control period
+
+Haupt-Runde offers only two total durations: 10 and 15 minutes. Both start
+with exactly five minutes of normal breathing, then run the existing five-
+or ten-minute guided box-breathing sequence. This supersedes the four main
+choices below. Probe-Runde keeps Anleitung and 5/10/15 minutes.
+
+The control period is silent and labelled Normal atmen. Schedule the following
+welcome at the 300-second boundary using the same Web Audio clock; pause/resume
+preserves that boundary. The existing welcome/ending/rest/recovery timing stays
+inside the guided-segment budget. Menu cards show the breakdown, and the final
+screen shows the selected total; receipts distinguish total, baseline and
+guided duration.
+
 ## 2026-10-12 — Start and Pause beneath the main start button
 
 Keep the final screen's main start button. After it starts a session, show a
@@ -19,6 +48,48 @@ completed headset integration. At the bottom level, Start should run an audio
 sequence and initiate a VR event sequence; event definitions, transport, timing,
 and synchronization remain to be worked out. Publish the existing browser audio
 and keep local audition/reference files out of the repository/deployment.
+
+## 2026-10-12 — Generate complete count phrases, then adjust pauses
+
+Always synthesize Einatmen … zwei … drei … vier and Ausatmen … zwei … drei …
+vier as complete phrases with the selected ElevenLabs voice. Preserve the native
+word audio and phrase prosody; adjust only gaps to make each phase exactly four
+seconds, alongside the existing count-level fades. Complete words take precedence
+over nominal one-second count starts: defer a count briefly when needed and store
+the actual output-frame timing in JSON. Do not accelerate speech or join separate
+single-word synthesis takes. Retain quiet Halten! holds and constant breath gain.
+
+## 2026-10-12 — Halten! once and quiet in both holds
+
+Omit zwei/drei/vier after each hold and synthesize literal Halten! with the
+selected website ElevenLabs profile and existing soft/calm/slow settings.
+Both independent four-second hold files contain the prompt once, then silence.
+Retain inhale/exhale count fades and constant-gain breathing clips. Every phase
+stays four seconds and every component cycle stays 16 seconds. Update transcripts,
+word slots and speech/silence segments; preserve the earlier counted-hold package
+locally. This supersedes counted holds in the selected listening set.
+
+## 2026-10-12 — Halten in both holds and constant breath gain
+
+The user prefers Halten to Pause because Pause sounds English in the chosen
+voice. Use the cached German Halten take in both independent hold roles, with
+the existing counts. Remove the added breath-volume ramp: apply one constant
+gain to each retimed inhale/exhale recording, retaining natural source dynamics
+and only short boundary fades. Keep descending voice counts and equal average
+four-second voice/breath component power. Update the local listening WAVs and
+adjacent JSONs, preserving the prior ramped listening set under reference-audio.
+This supersedes Pause and rising breath in the selected listening prototype.
+
+## 2026-10-12 — Retain the website's ElevenLabs voice
+
+The user rejected the OmniVoice listening voices and selected the existing
+website ElevenLabs British Breathing Instructor profile for further cues.
+Rebuild the counted/fading listening elements with that profile, reusing website
+inhale/exhale/count recordings and cached Pause; synthesize only standalone
+Halten with the same model/settings. Keep four-second phases, all three separate
+component types and 16-second cycles with adjacent JSONs. Archive the rejected
+local sets; make ElevenLabs the default listening package. Runtime voice remains
+the existing ElevenLabs profile; this change does not revise playback scheduling.
 
 ## 2026-10-12 — Audio and metadata kept together for listening
 

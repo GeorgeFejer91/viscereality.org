@@ -1,5 +1,132 @@
 # Verification
 
+## Browser prototype completion — 2026-10-13
+
+The completion pass preserved the latest approved menu, baseline, playback-control,
+and audio-asset decisions. The UI-state checker, all eight audio tests, context
+checker, JavaScript syntax checks, Python syntax checks for both pending listening
+helpers, and Git whitespace check passed.
+
+The existing native-browser baseline check passed 41 rendered cases covering
+main choices, both final screens, playback, pause/resume, 320 CSS px, phone
+landscape, desktop, 200% text, text-spacing overrides, and long German text.
+The current phone screenshot was visually inspected. Native OfflineAudioContext
+checks passed both 600/900-second main sessions at 44.1/48 kHz: every baseline
+sample was silent and all scheduled audio samples matched with zero error.
+
+The existing runtime samples remain selected; local listening revisions are not
+promoted by this release. Real H10 acquisition, headset transport, and VR-event
+execution are explicitly outside this verified browser prototype. No hardware
+or acoustic-output verification is implied.
+
+## Observed connected count phrases — 2026-10-12
+
+Two complete ElevenLabs phrases were generated with the selected website voice,
+request settings and character alignment. Independent PCM comparison proved that
+every output word retains its native sample length and waveform, apart from gain
+and short boundary fades: interior reconstruction residual was below 0.6 PCM
+units and all speech tempo factors are one. Source takes are 4.24/4.48 seconds;
+pause adjustment yields exact four-second phase clips. Actual word starts are
+0/1.056/2/3 seconds for inhale and 0/1.164/2/3 for exhale. They are recorded exactly
+in JSON rather than claimed as uniformly spaced counts. All 13 WAV/JSON pairs,
+frame/hash/headroom checks and component/cycle reconstruction pass. The quiet
+Halten! clips are byte-identical to the preceding set; breath gain remains fixed.
+Each full cycle is exactly 16 seconds. Runtime assets remain unchanged.
+Unprompted Whisper-small review recognized all ten requested words in the cycle.
+
+## Observed quiet Halten! listening revision — 2026-10-12
+
+One new cached ElevenLabs take used literal Halten! and the selected website
+voice/settings. Both hold roles reuse the same 0.7527-second prompt PCM, followed
+by 3.2473 seconds of exact silence. All 13 WAV/JSON pairs passed independent
+frame/hash/headroom checks. Holds have one word slot and speech/quiet segments;
+the full voice cycle has ten requested words. Unprompted Whisper-small recognized
+those ten words with no hold counts. Ten component clips remain four seconds and
+three cycles remain 16 seconds, with sample-identical sums/concatenation. Inhale,
+exhale, voice/mix and breath samples are byte-identical to the preceding set.
+Runtime assets remain unchanged; the previous listening package is preserved.
+
+## Observed constant-breath/Halten listening revision — 2026-10-12
+
+Thirteen adjacent WAV/JSON pairs passed independent frame/hash/metadata checks:
+ten four-second clips and three 16-second cycles. Both hold files use exactly
+the same cached German Halten/count PCM, with separate role metadata. Transcripts
+contain no Pause. Voice counts still descend; voice + breath equals mix at every
+sample and cycles concatenate exactly. Against the retimed source recordings,
+the breath stems have a constant scalar throughout the interior: fitted gains
+vary by less than 0.01% across seconds and reconstruction residual is under one
+PCM unit. Only the 10 ms boundaries fade. Average component power remains matched
+within 0.0001 dB; all audio has at least 3 dB sample headroom. Runtime assets remain
+unchanged, and no new synthesis/API call was needed.
+
+## Observed minimal UI — 2026-10-12
+
+The final UI replaces three playback buttons with one Starten/Pause/Fortsetzen
+button and folds Beenden into the existing back action during playback. Round
+icons/descriptions, repeated final-plan text, ready/playback messages, and their
+unused wrappers/styles are removed. Search retry is shown only for recovery.
+
+All eight audio tests, the UI-state check, context/source check, JavaScript syntax
+checks, and Git whitespace check pass. The controller check proves the same
+button pauses/resumes the original schedule, leaves Pause usable during signal
+recovery, gates Fortsetzen on current ECG, aborts via Beenden, and preserves the
+receipt guard when cancellation interrupts startup.
+
+Chrome rendered round/practice choices without page or element overflow at
+320×568, 390×844, 768×1025, 1280×720, 1920×1080, 568×320, and 844×390 CSS px.
+The main choices also passed at 356×631, 434×938, 853×1138, 1422×800,
+2133×1200, 631×356, and 938×434 CSS px. Actual CSS sizes were read from the DOM
+because this Chrome profile uses 90% zoom. Pretext reported ready and full labels
+fitting. At 320×568 with 200% root text, the main choices use deliberate vertical
+document reflow with no horizontal overflow; the final Starten/Pause/Fortsetzen
+screen remains bounded without overflow. Button focus persists through the
+playback label changes. Physical phone/headset checks remain pending.
+
+The final screen also passed at 1280×720, 1920×1080, and 568×320 CSS px,
+including paused playback in landscape. Longer German choice labels and WCAG
+text-spacing overrides at 320×568 wrap/reflow without clipped text or horizontal
+overflow. Beenden was observed returning to Haupt-Runde with sessionActive=false.
+These are rendered DOM/text bounds checks; browser screenshot capture timed out,
+so this pass includes no saved pixel capture.
+
+## Observed main-round normal-breathing baseline — 2026-10-12
+
+All eight Node audio tests, the six-route UI-state checker, context/source
+checker, JavaScript syntax checks and Git whitespace check passed. Main choices
+are 10/15 minutes total, with five normal-breathing minutes followed by the
+existing five-/ten-minute guided sequence. Tests prove that no source starts
+before t0 + 300 seconds, the welcome begins at that boundary, the first cycle
+starts at t0 + 340 seconds, and pause/resume preserves this same clock/plan.
+Receipts distinguish total, baseline and guided duration.
+
+Isolated headless Chromium checked the main menu and both ready/playing leaves
+at 320×568, 390×844, 768×1024, 1280×720, 1920×1080, 568×320 and 844×390 CSS px.
+All ordinary page/text bounds fitted, without horizontal/vertical page overflow
+or an inner scrollbar. Both leaves displayed Normal atmen, had exact 600/900-second
+audio spans, paused/resumed the baseline countdown, and saved the correct receipt.
+At 320 CSS px, 200% root text, text-spacing overrides and a long German hint
+passed full-text/no-horizontal-overflow checks using deliberate document reflow.
+Restricting the two-choice width rule to bounded layout fixed the enlarged-text
+overflow. Real phone/headset tests and physical acoustic timing remain pending.
+
+Native OfflineAudioContext renders through `tests/offline-audio.html?round=haupt`
+passed for both totals at 44.1 and 48 kHz: exact 600/900-second lengths, every
+baseline sample zero, and all later samples matching the shifted reusable
+assets with zero maximum sample error. These checks use the production scheduler.
+
+## Observed selected ElevenLabs listening set — 2026-10-12
+
+The user rejected the OmniVoice set and selected the existing website's British
+Breathing Instructor. Saved profile name/ID and Eleven v4 German TTS support
+were confirmed through the API. Only Halten was newly synthesized; website
+inhale/exhale/counts and cached Pause were reused. Thirteen adjacent WAV/JSON
+pairs passed independent format/frame/hash/transcript-slot checks: ten exact
+four-second clips and three exact 16-second component cycles. Voice fades and
+breath rises; powers agree within 0.0001 dB during inhale/exhale; all samples
+have at least 3 dB headroom; component sums and concatenation match exactly.
+Unprompted Whisper-small recognized all sixteen words. Runtime assets remain
+unchanged. The rejected 26-pair listening set is preserved in the local archive.
+
 ## Observed Start/Pause controls — 2026-10-12
 
 All seven audio tests, the UI-state checker, context/source checker with the
@@ -21,7 +148,8 @@ pause synchronization remains unimplemented.
 
 ## Observed listening asset packaging — 2026-10-12
 
-`audio-assets/ready-to-listen/` contains 26 same-folder WAV/JSON pairs across
+The earlier package, now in `audio-assets/archived-omnivoice/`, contains 26
+same-folder WAV/JSON pairs across
 female/male sets: 20 four-second phase/component clips and six 16-second voice,
 breath and mix cycles. Independent reading checked formats, exact frames,
 transcripts/slot counts, authored timing, matching hashes, voice + breath = mix
@@ -115,8 +243,8 @@ From `atmungsraum/`, run:
 ./for-ai/scripts/check-context.ps1 -ProjectRoot .
 ```
 
-The current checker verifies the guidance, AI document set, four choices per
-round, black background, local artwork/runtime assets, and locked Pretext
+The current checker verifies the guidance, AI document set, four practice/two
+main choices, black background, local artwork/runtime assets, and locked Pretext
 version. It does not verify an H10 connection, ECG, or stretch-layout behavior.
 After pushing the validated change to `main`, add `-RequireRemote` to verify that
 the local repository HEAD matches the remote publishing branch.

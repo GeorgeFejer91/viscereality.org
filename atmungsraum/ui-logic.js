@@ -1,5 +1,5 @@
 // This prototype only emulates headset verification and ECG reception.
-export const choices = { probe: ['anleitung', '5', '10', '15'], haupt: ['5', '10', '15', '20'] };
+export const choices = { probe: ['anleitung', '5', '10', '15'], haupt: ['10', '15'] };
 export const state = { sensor: 'disconnected', selection: null, started: false, entered: false, lostSince: null, reconnectAttempts: 0, lastReconnect: null };
 export function hasSignal() { return state.sensor === 'ecg'; }
 export function canNavigate() { return hasSignal() || state.entered; }
@@ -40,7 +40,10 @@ export function route(requested) {
   const [, branch, value] = /^start-(probe|haupt)-(anleitung|\d+)$/.exec(requested) ?? [];
   if (!choices[branch]?.includes(value)) return 'h10';
   if (state.selection?.branch !== branch || state.selection?.value !== value) state.started = false;
-  state.selection = { branch, value, minutes: value === 'anleitung' ? null : Number(value) };
+  const minutes = value === 'anleitung' ? null : Number(value);
+  const baselineMinutes = branch === 'haupt' ? 5 : 0;
+  state.selection = { branch, value, minutes, baselineMinutes,
+    boxMinutes: minutes === null ? null : minutes - baselineMinutes };
   return 'session-start';
 }
 export function start() {

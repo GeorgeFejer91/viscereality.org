@@ -9,10 +9,15 @@ connection and shows the connected sensor's live ECG in a centered box. All menu
 UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See
 [PROJECT.md](PROJECT.md) for the contract, implementation status, and open decisions.
 
-The working tree is a browser-local UI demo: simulated headset/ECG check →
-round choice → four options → final Session starten play button. Once started,
-smaller Start/Pause buttons appear underneath; Pause freezes audio and the timer,
-and Start resumes the same session. Anleitung is
+The browser prototype is a local UI demo: simulated headset/ECG check →
+round choice → four practice options or two main options → final Starten
+play button. Haupt-Runde offers 10 or 15 minutes total: five minutes of normal
+breathing, followed by the existing five- or ten-minute guided box-breathing
+sequence. The normal-breathing period is silent and displays Normal atmen.
+The same button becomes Pause during playback and Fortsetzen while paused. The
+back action reads Beenden during playback. Pause freezes audio and the timer;
+Fortsetzen resumes the same session. Ponytail applies to UI elements/copy: keep
+only necessary controls, choice information, state, and recovery feedback. Anleitung is
 unlimited guided exploration. Real H10/headset connection and execution remain
 pending. See PROJECT.md for the precise demo and product boundaries.
 The UI has no global context header or ECG return button after Continue. Signal

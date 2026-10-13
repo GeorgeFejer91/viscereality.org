@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { BoxBreathingEngine, createProtocol, PHASES, scheduleProtocol } from '../audio/box-breathing.js';
 import { mountSessionAudio } from '../audio/session-ui.js';
-import { state as uiState } from '../ui-logic.js';
+import { state as uiState, route } from '../ui-logic.js?v=20261012-baseline';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const assetDir = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
@@ -57,6 +57,31 @@ test('All durations contain complete cycles, contiguous slots, and the approved 
   assert.equal(instruction.minutes, null);
   assert.equal(instruction.mode, 'instruction-example');
   assert.throws(() => createProtocol(5, { ...manifest, block_frames: 176401 }));
+});
+
+test('Main sessions prepend exactly five silent minutes and retain the guided sequence at one clock anchor', () => {
+  for (const minutes of [5, 10]) {
+    const guided = createProtocol(minutes, manifest);
+    const plan = createProtocol(minutes, manifest, { baselineMinutes: 5 });
+    assert.equal(plan.minutes, minutes + 5);
+    assert.equal(plan.box_minutes, minutes);
+    assert.equal(plan.mode, 'main-session');
+    assert.equal(plan.baseline_frames, 300 * 44100);
+    assert.equal(plan.total_frames / plan.sample_rate, (minutes + 5) * 60);
+    assert.deepEqual(plan.events[0], { id: 'baseline', asset: null, offset_frames: 0,
+      duration_frames: 300 * 44100, cycle: null, breathing_block: null });
+    assert.deepEqual(plan.events.slice(1), guided.events.map(event =>
+      ({ ...event, offset_frames: event.offset_frames + 300 * 44100 })));
+    const nodes = scheduleProtocol(new Context(), buffers, plan, 10.25);
+    assert.ok(nodes.every(({ source }) => source.startArgs[0] >= 310.25), 'no sound during normal breathing');
+    assert.equal(nodes[0].event.id, 'instruction');
+    assert.equal(nodes[0].source.startArgs[0], 310.25);
+    assert.equal(nodes[1].source.startArgs[0], 350.25);
+    assert.equal(nodes.at(-1).source.stopArgs[0], 10.25 + (minutes + 5) * 60);
+  }
+  for (const [minutes, baselineMinutes] of [[5, 4], [5, -5], [5, NaN], [15, 5], [20, 5], ['anleitung', 5]]) {
+    assert.throws(() => createProtocol(minutes, manifest, { baselineMinutes }));
+  }
 });
 
 test('Actual PCM blocks match their manifest, contain speech, and have quiet joins', async () => {
@@ -139,13 +164,14 @@ test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume s
   const engine = new BoxBreathingEngine({ audioContext: context, manifestUrl: new URL('manifest.json', assetDir) });
   try {
     await engine.prepare();
-    const session = await engine.start(5);
+    const session = await engine.start(5, { baselineMinutes: 5 });
     const nodes = context.nodes.length;
     context.currentTime = session.startAt + 12;
     assert.equal(await engine.pause(), true);
     assert.equal(context.state, 'suspended');
     assert.equal(engine.position().status, 'paused');
     assert.equal(engine.position().elapsed_seconds, 12);
+    assert.equal(engine.position().event.id, 'baseline');
     assert.equal(engine.receipt().records.at(-1).type, 'pause');
     await assert.rejects(engine.start(10), /already active/);
     assert.equal(await engine.resume(), true);
@@ -155,6 +181,13 @@ test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume s
     assert.equal(engine.run.end_at_audio_seconds, session.endAt);
     assert.equal(context.nodes.length, nodes);
     assert.equal(engine.receipt().records.at(-1).type, 'resume');
+    context.currentTime = session.startAt + 299;
+    assert.equal(engine.position().event.id, 'baseline');
+    context.currentTime = session.startAt + 300;
+    assert.equal(engine.position().event.id, 'instruction');
+    context.currentTime = session.startAt + 340;
+    assert.equal(engine.position().event.id, 'inhale');
+    assert.equal(engine.receipt().protocol.baseline_frames, 300 * 44100);
     assert.equal(await engine.pause(), true);
     let unlock;
     context.resume = () => new Promise(resolve => { unlock = resolve; });
@@ -183,10 +216,10 @@ test('Corrupted audio fails preparation before scheduling', async () => {
 test('Stopping during browser audio unlock never saves a previous protocol under the new selection', async () => {
   class Element extends EventTarget {
     constructor() { super(); this.dataset = {}; this.textContent = ''; }
-    querySelector() { return this.label ??= new Element(); }
+    querySelector(selector) { return selector === 'path' ? this.icon ??= new Element() : this.label ??= new Element(); }
     setAttribute(name, value) { this[name] = value; }
   }
-  const elements = Object.fromEntries(['session-start', 'play', 'stop', 'session-phase', 'session-time', 'start-status', 'session-controls', 'session-resume', 'session-pause'].map(id => [id, new Element()]));
+  const elements = Object.fromEntries(['session-start', 'play', 'session-back', 'session-phase', 'session-time', 'start-status'].map(id => [id, new Element()]));
   const storage = new Map();
   const keys = ['document', 'window', 'AudioContext', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch'];
   const originals = Object.fromEntries(keys.map(key => [key, globalThis[key]]));
@@ -206,41 +239,59 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.ok(predicate(), 'browser controller did not reach the expected state');
   };
   try {
-    Object.assign(uiState, { sensor: 'ecg', selection: { branch: 'haupt', value: '5', minutes: 5 }, started: false });
+    Object.assign(uiState, { sensor: 'ecg', started: false });
+    route('start-haupt-10');
     const controller = mountSessionAudio();
     controller.update('session-start', uiState.selection, true);
     await ready(() => elements['session-start'].dataset.audioState === 'ready');
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
-    assert.equal(elements['session-controls'].hidden, false);
-    assert.equal(elements['session-pause'].disabled, false);
-    assert.equal(elements['session-resume'].disabled, true);
+    const startAt = Number(elements['session-start'].dataset.audioStartTime);
+    assert.equal(Number(elements['session-start'].dataset.audioEndTime) - startAt, 600);
+    assert.equal(elements['session-time'].textContent, '10:00');
+    assert.ok(context.nodes.every(node => node.startArgs[0] >= startAt + 300));
+    context.currentTime = startAt + 12;
+    assert.equal(elements.play.disabled, false);
+    assert.equal(elements.play.label.textContent, 'Pause');
+    assert.equal(elements['session-back'].label.textContent, 'Beenden');
+    assert.equal(elements['start-status'].hidden, true);
+    uiState.sensor = 'disconnected';
+    controller.update('session-start', uiState.selection, true);
+    assert.equal(elements.play.disabled, false, 'Pause remains available during signal recovery');
     const nodesBeforePause = context.nodes.length;
-    elements['session-pause'].dispatchEvent(new Event('click'));
+    elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'paused');
     assert.equal(context.state, 'suspended');
-    assert.equal(elements['session-resume'].disabled, false);
-    assert.equal(elements['session-pause'].disabled, true);
+    assert.equal(elements.play.disabled, true, 'Resume still requires current ECG');
+    assert.equal(elements.play.label.textContent, 'Fortsetzen');
+    uiState.sensor = 'ecg';
+    controller.update('session-start', uiState.selection, true);
+    assert.equal(elements.play.disabled, false);
     assert.equal(uiState.started, true);
-    elements['session-resume'].dispatchEvent(new Event('click'));
+    assert.equal(elements['session-phase'].textContent, 'Normal atmen');
+    elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(context.state, 'running');
     assert.equal(context.nodes.length, nodesBeforePause, 'Start after Pause must not create a new session');
-    elements.stop.dispatchEvent(new Event('click'));
+    elements['session-back'].dispatchEvent(new Event('click'));
     const previous = JSON.parse(storage.get('atmungsraum.audio-receipts'));
     assert.equal(previous.length, 1);
-    assert.equal(previous[0].selection.minutes, 5);
+    assert.equal(previous[0].selection.minutes, 10);
+    assert.equal(previous[0].selection.boxMinutes, 5);
+    assert.equal(previous[0].protocol.baseline_frames, 300 * 44100);
     assert.equal(previous[0].status, 'aborted');
-    uiState.selection = { branch: 'haupt', value: '10', minutes: 10 };
+    route('start-haupt-15');
     controller.update('session-start', uiState.selection, true);
     let unlock;
     context.resume = () => new Promise(resolve => { unlock = resolve; });
     elements.play.dispatchEvent(new Event('click'));
     assert.equal(elements['session-start'].dataset.audioState, 'starting');
-    elements.stop.dispatchEvent(new Event('click'));
+    elements['session-back'].dispatchEvent(new Event('click'));
     unlock(); await delay(0);
     assert.equal(elements['session-start'].dataset.audioState, 'stopped');
     assert.equal(elements.play.disabled, false);
+    assert.equal(elements.play.label.textContent, 'Starten');
+    assert.equal(elements['session-back'].label.textContent, '← Zurück');
     assert.equal(uiState.started, false);
     assert.deepEqual(JSON.parse(storage.get('atmungsraum.audio-receipts')), previous);
   } finally {
