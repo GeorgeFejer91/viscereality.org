@@ -14,6 +14,16 @@ The current phone screenshot was visually inspected. Native OfflineAudioContext
 checks passed both 600/900-second main sessions at 44.1/48 kHz: every baseline
 sample was silent and all scheduled audio samples matched with zero error.
 
+Release `d6af2f2` was pushed to `main`; GitHub Pages run `38460690617`
+completed successfully for that exact commit. The live
+<https://viscereality.org/atmungsraum/> was checked on 2026-10-13 at 20:16 UTC:
+the six HTML/CSS/JavaScript entry files matched the checkout, the no-slash URL
+redirected correctly, and browser checks passed the demo gate, both round
+choices, four practice choices, instruction playback, and both main sessions'
+baseline, pause/resume, stop, and timing receipts. No page errors or failed
+site requests occurred. The remote context gate passed and the source tree was
+clean after the release. Local QA output is in ignored `output/playwright/`.
+
 The existing runtime samples remain selected; local listening revisions are not
 promoted by this release. Real H10 acquisition, headset transport, and VR-event
 execution are explicitly outside this verified browser prototype. No hardware
