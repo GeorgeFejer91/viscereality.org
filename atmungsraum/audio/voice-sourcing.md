@@ -7,6 +7,28 @@ cues use that profile. Ready-to-listen copies are in
 The corpus and OmniVoice work below is retained as provenance, not a selected
 voice or an active sourcing task.
 
+## Secret Tunnel profile from existing instructor audio — 27 October 2026
+
+The user requested a new local Secret Tunnel profile conditioned on the existing
+ElevenLabs instructor recordings. `Atmungsraum - Existing Instructor` uses the
+complete 12-second `assets/audio/box-breathing/de/soft-v2/ending.wav`, with its
+exact manifest transcript. This is an OmniVoice cloning profile in Secret
+Tunnel, not a newly created ElevenLabs account voice. Source and reference hashes,
+the local profile ID and generated receipts are retained under ignored
+`reference-audio/existing-instructor-profile/` and the app's own profile library.
+
+The first German preview says `Einatmen. Zwei. Drei. Vier. Und halten.` It used
+slow mode, speed 0.85 and guidance 2.0 on CUDA, completed in one take in 18.0
+seconds, and produced 3.7 seconds of audio. Whisper recognized all six words with
+zero edits (100% word match); full MP3 decoding passed. Subjective similarity and
+delivery remain for listening review. This preview is not fitted to the runtime's
+four-second phase slots and does not replace the browser's existing audio files.
+
+Secret Tunnel 6.0.1 (the latest published release, updated 20 October) is running
+locally with the portable workers verified in the 27 October hardware repair.
+Automatic CPU retry/controller changes remain source-only pending recovery of
+the later unpublished desktop source and a complete installer rebuild.
+
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
 to establish those properties. Keep local auditions separate from the browser's
