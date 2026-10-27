@@ -42,6 +42,23 @@ keeps the native takes in order with two seconds of quiet between them.
 The user's preferred take remains undecided; these auditions do not replace
 the browser cues or change the four-second runtime phase timing.
 
+The user found the opening Ei insufficiently distinct and requested
+`Ein-atmen` with a very slow, soft, calming delivery. A second ten-take batch
+uses `Ein-atmen.`, speed settings 0.50–0.60, guidance 1.5–2.0 and fresh seeds.
+These controls alone still produced short isolated words, so the listening
+copies use pitch-preserving Rubber Band stretching with nominal source-audio
+targets of 2.2–3.0 seconds, preserved formants, and a 3 dB gain reduction.
+A 250 ms silent lead-in is added before stretching; no extra fade-in is applied.
+The delivered files are about 2.5–3.4 seconds including their stretched lead-in.
+
+Raw generations, requested/resolved seeds (including a native word-check retry),
+and receipts remain under ignored
+`reference-audio/ein-atmen-soft-auditions-20261027/`. The final listening copies
+and ordered comparison are in its `soft-versions/` directory. Each has complete
+processing metadata. Raw takes pass the word check; that does not establish
+audibility of the Ei or a calming delivery. User listening selection remains
+pending, and existing runtime assets remain unchanged.
+
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
 to establish those properties. Keep local auditions separate from the browser's
