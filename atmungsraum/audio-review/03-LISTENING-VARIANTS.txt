@@ -1,0 +1,75 @@
+ALTERNATIVE LISTENING VERSIONS: WHAT WOULD SOUND DIFFERENT
+Snapshot: 2026-10-27. These are not the current browser sequence.
+
+CURRENT SELECTED-VOICE AUDITION (documented package absent in this checkout)
+
+The newer ElevenLabs package uses the same saved British Breathing Instructor
+profile as runtime, with this 16-second cycle:
+
+00:00-00:04  "Einatmen … zwei … drei … vier."
+00:04-00:08  "Halten!" [once, followed by quiet]
+00:08-00:12  "Ausatmen … zwei … drei … vier."
+00:12-00:16  "Halten!" [once, followed by quiet]
+
+Each inhale/exhale phrase comes from one connected synthesis take. The script
+preserves native word speed and fits the phrase by changing gaps. Counts target
+one-second beats but can be slightly delayed by a longer preceding word.
+Prior project verification records inhale word starts at 0/1.056/2/3 seconds
+and exhale starts at 0/1.164/2/3 seconds. These are historical observations,
+not remeasured here. Adjacent JSONs would provide the exact authored frames.
+Prior notes also record the single Halten! take as about 0.753 seconds of
+speech followed by about 3.247 seconds of silence in each hold slot.
+
+Within inhale/exhale, the voice/counts descend in level with targets
+0/-4/-8/-12 dB. The breathing recording retains its own dynamics at a constant
+gain, with 10 ms fades at its boundaries. Voice and breath have equal average
+power over the four-second phase; their perceived loudness requires listening.
+
+Three comparisons would be available in audio-assets/ready-to-listen/elevenlabs/:
+  00-cycle-16s-voice.wav  Spoken cycle only, quiet after each Halten!.
+  00-cycle-16s-breath.wav Recorded inhale, silent hold, exhale, silent hold.
+  00-cycle-16s-mix.wav   Speech plus breath on both inhale and exhale.
+There are also separate phase files. In a mixed 16-second audition, both moving
+phases have breath. The runtime's every-third-cycle rule does not describe this
+single-cycle audition file. The listening helpers do not create a full session
+with welcome, long rests and ending, or select a policy for future deployment.
+
+EARLIER LOCAL AUDITIONS (historical, not selected)
+
+Original counted voice: Einatmen / Und halten / Ausatmen / Und halten.
+Only inhale/exhale count two/three/four; holds have quiet tails.
+
+Voice-to-breath crossfade: counted inhale and exhale voice descend while breath
+rises through the phase; both holds say Halten once and continue quietly.
+This rising-breath envelope differs from the newer constant-gain breath.
+
+Counted hold variants:
+00:00  "Einatmen … zwei … drei … vier."
+00:04  "Halten … zwei … drei … vier."
+00:08  "Ausatmen … zwei … drei … vier."
+00:12  "Pause … zwei … drei … vier."
+They have voice-only and mixed versions and count during both holds.
+The user rejected OmniVoice versions; they must not be confused with the
+selected ElevenLabs voice or silently promoted into the browser.
+
+OLDER CHECKED-IN COMPARISON ASSETS
+
+Version 1 box samples each occupy four seconds:
+  "Je vier Sekunden: ein, halten, aus, halten." [short introduction]
+  "Durch die Nase einatmen."
+  "Atem halten."
+  "Durch den Mund ausatmen."
+  "Atem halten."
+  "Atme jetzt wieder ganz natürlich." [short ending]
+The current engine does not load this manifest; do not infer a current
+full-session timeline from these retained files alone.
+
+The older five MP3 cues are standalone variable-duration instructions:
+  Arrival (4.087 s): "Mach es dir bequem. Lass deine Schultern locker werden."
+  Inhale (1.393 s): "Atme sanft ein."
+  Exhale (1.579 s): "Atme langsam aus."
+  Natural breath (3.204 s): "Lass deinen Atem wieder ganz natürlich fließen."
+  Ending (3.622 s): "Nimm dir noch einen Moment, bevor du die Übung beendest."
+Those MP3s are not the phase-clocked four-second runtime.
+
+No missing audition files were regenerated or listened to for this inventory.

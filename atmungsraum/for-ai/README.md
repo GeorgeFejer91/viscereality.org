@@ -34,6 +34,10 @@ Read common rules first, then the documents needed for the task:
   phase cues, reference analysis, exact session timing, and verification.
 - [Listening asset folder](../audio-assets/README.md): ready-to-listen local WAVs
   with adjacent timing/transcript JSONs, separate layers and 16-second cycles.
+- [Audio review](../audio-review/00-START-HERE.txt): protocol/script inventory,
+  participant listening walkthrough, audition comparison and seven complete
+  timestamped text scores. This is a dated source-derived snapshot; refresh
+  it when the scheduler, selection mapping or runtime samples change.
 - [Playback completion audit](PLAYBACK-AUDIT.md): evidence for the local browser
   Play/Stop behaviour and exact 5/10/15/20-minute audio totals.
 

@@ -12,6 +12,37 @@
 - Hosting: the existing GitHub Pages branch deployment from `main`, root `/`,
   with the existing `viscereality.org` custom domain.
 
+## Current task: audio protocol review — 2026-10-27
+
+- [x] Inventory the checked-in generation, audition, packaging and sequencing
+  scripts, separating runtime and local listening revisions. Evidence:
+  `audio-review/01-PROTOCOL-INVENTORY.txt`.
+- [x] Provide participant-readable German speech and unspoken sound/silence
+  notes in a separate review folder. Evidence: `audio-review/02-PARTICIPANT-EXPERIENCE.txt`
+  and seven full text timelines, derived from production `createProtocol()`.
+- [x] Verify source hashes, all nine runtime WAV hashes/byte counts, timeline
+  continuity/totals/overlay counts, eight audio tests, UI state, context and
+  whitespace. See `VERIFICATION.md`.
+- [ ] Review wording and delivery by listening; decide whether to revise the
+  welcome's counting promise, silent main-round opening or hold wording.
+
+The current request is fulfilled as a local text review; the overall product
+goal remains open. No speech, scheduler or UI behavior changed. The documented
+`reference-audio/` cache and generated ElevenLabs listening package are absent
+from this checkout; restoring them is required for audition comparison, not
+for reading the current runtime timelines. No fresh listening or hardware
+verification is claimed. Next action: collect timestamped review notes using
+the template in `audio-review/00-START-HERE.txt` before changing audio assets.
+
+Git observation at task start: canonical repository `GeorgeFejer91/viscereality.org`,
+primary checkout on `main`, HEAD `b365411`, clean and aligned with the locally
+recorded `origin/main`. Task changes are limited to `audio-review/` and this
+subproject's guidance. No remote ref refresh or live deployment check was made;
+this review is not a publication request. Recheck Git state on next entry.
+Local review work is recorded under the commit subject
+`docs(atmungsraum): inventory audio protocols and participant review`.
+No push or deployment is part of this task; generated audio remains untouched.
+
 ## Intended product contract — 2026-10-12
 
 The user approved this prototype for publication on 2026-10-12 as the main

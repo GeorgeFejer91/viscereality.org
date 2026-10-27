@@ -1,5 +1,34 @@
 # Verification
 
+## Audio protocol text review — 2026-10-27
+
+`audio-review/` inventories all eight checked-in audio preparation/export tools
+plus runtime sequencing/controller/selection and retained manifests. It includes
+a participant walkthrough, an explicitly separate audition comparison, and full
+text timelines for all six menu choices plus the engine-only 20-minute option.
+The timelines were generated from production `createProtocol()` and the runtime
+manifest, recording SHA-256 for that manifest, engine, selection and controller.
+
+Fresh checks passed all nine runtime WAV byte counts/hashes; seven timelines
+had contiguous events, expected total duration/cycle/rest counts and exactly
+two breath variants per third complete cycle. Written source-sample entries
+matched the production event counts. Totals were 68/300/600/900 seconds for
+Anleitung/practice, 600/900 for main rounds and 1200 for the engine-only option.
+An independent reread checked every saved event range, exact German quote,
+cycle/block annotation and source hash against the current production plan;
+all passed. All eight audio tool scripts were present in the inventory.
+All eight Node audio tests, UI-state check, context check and Git whitespace
+check passed. Product code and audio assets were unchanged, so rendered UI and
+native offline audio checks were not repeated for this documentation task.
+
+The opening promises counting in each phase, while saved holds are uncounted;
+this is identified for review without changing speech. Main rounds begin with
+300 seconds of silence. Anleitung is one replayable 68-second example, not an
+endlessly looping sound sequence. The newer Halten! audition is separate from
+the runtime's Und halten. Its documented generated package and source cache
+are absent locally; no regeneration, API call, listening assessment, hardware
+measurement or fresh public-site verification was performed.
+
 ## Browser prototype completion — 2026-10-13
 
 The completion pass preserved the latest approved menu, baseline, playback-control,

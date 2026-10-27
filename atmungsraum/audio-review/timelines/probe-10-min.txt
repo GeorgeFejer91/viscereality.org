@@ -1,0 +1,627 @@
+Probe-Runde / 10 Minuten
+Snapshot: 2026-10-27
+
+German quotes are saved speech; bracketed notes are NOT spoken.
+Time starts at the scheduled audio anchor, after loading/scheduling lead.
+All ranges are complete sample slots; speech can end before the slot does.
+This is an authored playback plan, not an acoustic measurement or audition.
+Deliberate Pause freezes this clock; Fortsetzen resumes the same position.
+Total: 10:00; complete cycles: 33; rests: 1.
+Breathing blocks: 18 + 15 cycles; final silent recovery: 0 s.
+Sources: audio/box-breathing.js, ui-logic.js, audio/session-ui.js,
+         assets/audio/box-breathing/de/soft-v2/manifest.json
+Manifest SHA-256: 89beb227bdc41d2cc042393ac267712cde2769695d206188c8ca9b873779eca0
+Engine SHA-256: 95e445a923385e87a792b420c10368a34c49b131f525fb8c408002a0dc70df78
+Selection SHA-256: 6190ca919ec0ff377ce79f479636aecdbab6edb2575c5327fd11e5cd2968e991
+Controller SHA-256: 3c935bc0c5e8c0ae13f493021fed37e3c08cf9dace2ce233b63103f469d9a188
+
+COMPLETE PARTICIPANT AUDIO TIMELINE
+
+00:00-00:40 "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+  [Narration with quiet tail; metadata speech end about 00:38.776.]
+  Source sample: instruction.wav
+
+00:40-00:44 [cycle 1, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 00:40 Einatmen | 00:41 Zwei | 00:42 Drei | 00:43 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+00:44-00:48 [cycle 1, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+00:48-00:52 [cycle 1, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 00:48 Ausatmen | 00:49 Zwei | 00:50 Drei | 00:51 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+00:52-00:56 [cycle 1, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+00:56-01:00 [cycle 2, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 00:56 Einatmen | 00:57 Zwei | 00:58 Drei | 00:59 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+01:00-01:04 [cycle 2, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+01:04-01:08 [cycle 2, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:04 Ausatmen | 01:05 Zwei | 01:06 Drei | 01:07 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+01:08-01:12 [cycle 2, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+01:12-01:16 [cycle 3, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:12 Einatmen | 01:13 Zwei | 01:14 Drei | 01:15 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+01:16-01:20 [cycle 3, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+01:20-01:24 [cycle 3, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:20 Ausatmen | 01:21 Zwei | 01:22 Drei | 01:23 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+01:24-01:28 [cycle 3, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+01:28-01:32 [cycle 4, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:28 Einatmen | 01:29 Zwei | 01:30 Drei | 01:31 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+01:32-01:36 [cycle 4, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+01:36-01:40 [cycle 4, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:36 Ausatmen | 01:37 Zwei | 01:38 Drei | 01:39 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+01:40-01:44 [cycle 4, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+01:44-01:48 [cycle 5, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:44 Einatmen | 01:45 Zwei | 01:46 Drei | 01:47 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+01:48-01:52 [cycle 5, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+01:52-01:56 [cycle 5, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 01:52 Ausatmen | 01:53 Zwei | 01:54 Drei | 01:55 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+01:56-02:00 [cycle 5, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+02:00-02:04 [cycle 6, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:00 Einatmen | 02:01 Zwei | 02:02 Drei | 02:03 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+02:04-02:08 [cycle 6, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+02:08-02:12 [cycle 6, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:08 Ausatmen | 02:09 Zwei | 02:10 Drei | 02:11 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+02:12-02:16 [cycle 6, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+02:16-02:20 [cycle 7, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:16 Einatmen | 02:17 Zwei | 02:18 Drei | 02:19 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+02:20-02:24 [cycle 7, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+02:24-02:28 [cycle 7, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:24 Ausatmen | 02:25 Zwei | 02:26 Drei | 02:27 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+02:28-02:32 [cycle 7, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+02:32-02:36 [cycle 8, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:32 Einatmen | 02:33 Zwei | 02:34 Drei | 02:35 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+02:36-02:40 [cycle 8, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+02:40-02:44 [cycle 8, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:40 Ausatmen | 02:41 Zwei | 02:42 Drei | 02:43 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+02:44-02:48 [cycle 8, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+02:48-02:52 [cycle 9, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:48 Einatmen | 02:49 Zwei | 02:50 Drei | 02:51 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+02:52-02:56 [cycle 9, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+02:56-03:00 [cycle 9, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 02:56 Ausatmen | 02:57 Zwei | 02:58 Drei | 02:59 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+03:00-03:04 [cycle 9, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+03:04-03:08 [cycle 10, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:04 Einatmen | 03:05 Zwei | 03:06 Drei | 03:07 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+03:08-03:12 [cycle 10, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+03:12-03:16 [cycle 10, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:12 Ausatmen | 03:13 Zwei | 03:14 Drei | 03:15 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+03:16-03:20 [cycle 10, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+03:20-03:24 [cycle 11, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:20 Einatmen | 03:21 Zwei | 03:22 Drei | 03:23 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+03:24-03:28 [cycle 11, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+03:28-03:32 [cycle 11, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:28 Ausatmen | 03:29 Zwei | 03:30 Drei | 03:31 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+03:32-03:36 [cycle 11, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+03:36-03:40 [cycle 12, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:36 Einatmen | 03:37 Zwei | 03:38 Drei | 03:39 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+03:40-03:44 [cycle 12, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+03:44-03:48 [cycle 12, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:44 Ausatmen | 03:45 Zwei | 03:46 Drei | 03:47 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+03:48-03:52 [cycle 12, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+03:52-03:56 [cycle 13, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 03:52 Einatmen | 03:53 Zwei | 03:54 Drei | 03:55 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+03:56-04:00 [cycle 13, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+04:00-04:04 [cycle 13, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:00 Ausatmen | 04:01 Zwei | 04:02 Drei | 04:03 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+04:04-04:08 [cycle 13, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+04:08-04:12 [cycle 14, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:08 Einatmen | 04:09 Zwei | 04:10 Drei | 04:11 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+04:12-04:16 [cycle 14, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+04:16-04:20 [cycle 14, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:16 Ausatmen | 04:17 Zwei | 04:18 Drei | 04:19 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+04:20-04:24 [cycle 14, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+04:24-04:28 [cycle 15, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:24 Einatmen | 04:25 Zwei | 04:26 Drei | 04:27 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+04:28-04:32 [cycle 15, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+04:32-04:36 [cycle 15, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:32 Ausatmen | 04:33 Zwei | 04:34 Drei | 04:35 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+04:36-04:40 [cycle 15, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+04:40-04:44 [cycle 16, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:40 Einatmen | 04:41 Zwei | 04:42 Drei | 04:43 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+04:44-04:48 [cycle 16, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+04:48-04:52 [cycle 16, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:48 Ausatmen | 04:49 Zwei | 04:50 Drei | 04:51 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+04:52-04:56 [cycle 16, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+04:56-05:00 [cycle 17, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 04:56 Einatmen | 04:57 Zwei | 04:58 Drei | 04:59 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+05:00-05:04 [cycle 17, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+05:04-05:08 [cycle 17, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 05:04 Ausatmen | 05:05 Zwei | 05:06 Drei | 05:07 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+05:08-05:12 [cycle 17, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+05:12-05:16 [cycle 18, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 05:12 Einatmen | 05:13 Zwei | 05:14 Drei | 05:15 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+05:16-05:20 [cycle 18, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+05:20-05:24 [cycle 18, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 05:20 Ausatmen | 05:21 Zwei | 05:22 Drei | 05:23 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+05:24-05:28 [cycle 18, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+05:28-05:48 "Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam."
+  [Opening rest sentence, then a quiet gap; natural breathing, not a hold.]
+  05:44 "Wir beginnen wieder gemeinsam." [Next inhale at 05:48.]
+  Source sample: rest.wav
+
+05:48-05:52 [cycle 19, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 05:48 Einatmen | 05:49 Zwei | 05:50 Drei | 05:51 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+05:52-05:56 [cycle 19, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+05:56-06:00 [cycle 19, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 05:56 Ausatmen | 05:57 Zwei | 05:58 Drei | 05:59 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+06:00-06:04 [cycle 19, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+06:04-06:08 [cycle 20, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:04 Einatmen | 06:05 Zwei | 06:06 Drei | 06:07 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+06:08-06:12 [cycle 20, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+06:12-06:16 [cycle 20, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:12 Ausatmen | 06:13 Zwei | 06:14 Drei | 06:15 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+06:16-06:20 [cycle 20, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+06:20-06:24 [cycle 21, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:20 Einatmen | 06:21 Zwei | 06:22 Drei | 06:23 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+06:24-06:28 [cycle 21, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+06:28-06:32 [cycle 21, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:28 Ausatmen | 06:29 Zwei | 06:30 Drei | 06:31 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+06:32-06:36 [cycle 21, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+06:36-06:40 [cycle 22, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:36 Einatmen | 06:37 Zwei | 06:38 Drei | 06:39 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+06:40-06:44 [cycle 22, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+06:44-06:48 [cycle 22, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:44 Ausatmen | 06:45 Zwei | 06:46 Drei | 06:47 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+06:48-06:52 [cycle 22, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+06:52-06:56 [cycle 23, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 06:52 Einatmen | 06:53 Zwei | 06:54 Drei | 06:55 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+06:56-07:00 [cycle 23, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+07:00-07:04 [cycle 23, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:00 Ausatmen | 07:01 Zwei | 07:02 Drei | 07:03 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+07:04-07:08 [cycle 23, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+07:08-07:12 [cycle 24, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:08 Einatmen | 07:09 Zwei | 07:10 Drei | 07:11 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+07:12-07:16 [cycle 24, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+07:16-07:20 [cycle 24, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:16 Ausatmen | 07:17 Zwei | 07:18 Drei | 07:19 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+07:20-07:24 [cycle 24, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+07:24-07:28 [cycle 25, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:24 Einatmen | 07:25 Zwei | 07:26 Drei | 07:27 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+07:28-07:32 [cycle 25, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+07:32-07:36 [cycle 25, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:32 Ausatmen | 07:33 Zwei | 07:34 Drei | 07:35 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+07:36-07:40 [cycle 25, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+07:40-07:44 [cycle 26, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:40 Einatmen | 07:41 Zwei | 07:42 Drei | 07:43 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+07:44-07:48 [cycle 26, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+07:48-07:52 [cycle 26, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:48 Ausatmen | 07:49 Zwei | 07:50 Drei | 07:51 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+07:52-07:56 [cycle 26, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+07:56-08:00 [cycle 27, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 07:56 Einatmen | 07:57 Zwei | 07:58 Drei | 07:59 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+08:00-08:04 [cycle 27, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+08:04-08:08 [cycle 27, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:04 Ausatmen | 08:05 Zwei | 08:06 Drei | 08:07 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+08:08-08:12 [cycle 27, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+08:12-08:16 [cycle 28, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:12 Einatmen | 08:13 Zwei | 08:14 Drei | 08:15 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+08:16-08:20 [cycle 28, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+08:20-08:24 [cycle 28, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:20 Ausatmen | 08:21 Zwei | 08:22 Drei | 08:23 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+08:24-08:28 [cycle 28, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+08:28-08:32 [cycle 29, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:28 Einatmen | 08:29 Zwei | 08:30 Drei | 08:31 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+08:32-08:36 [cycle 29, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+08:36-08:40 [cycle 29, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:36 Ausatmen | 08:37 Zwei | 08:38 Drei | 08:39 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+08:40-08:44 [cycle 29, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+08:44-08:48 [cycle 30, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:44 Einatmen | 08:45 Zwei | 08:46 Drei | 08:47 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+08:48-08:52 [cycle 30, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+08:52-08:56 [cycle 30, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 08:52 Ausatmen | 08:53 Zwei | 08:54 Drei | 08:55 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+08:56-09:00 [cycle 30, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+09:00-09:04 [cycle 31, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:00 Einatmen | 09:01 Zwei | 09:02 Drei | 09:03 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+09:04-09:08 [cycle 31, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+09:08-09:12 [cycle 31, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:08 Ausatmen | 09:09 Zwei | 09:10 Drei | 09:11 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+09:12-09:16 [cycle 31, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+09:16-09:20 [cycle 32, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:16 Einatmen | 09:17 Zwei | 09:18 Drei | 09:19 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+09:20-09:24 [cycle 32, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+09:24-09:28 [cycle 32, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:24 Ausatmen | 09:25 Zwei | 09:26 Drei | 09:27 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+09:28-09:32 [cycle 32, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+09:32-09:36 [cycle 33, block 2] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:32 Einatmen | 09:33 Zwei | 09:34 Drei | 09:35 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: inhale_breath.wav
+
+09:36-09:40 [cycle 33, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+09:40-09:44 [cycle 33, block 2] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 09:40 Ausatmen | 09:41 Zwei | 09:42 Drei | 09:43 Vier
+  [Voice WITH recorded breath under this phase.]
+  Source sample: exhale_breath.wav
+
+09:44-09:48 [cycle 33, block 2] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+09:48-10:00 "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."
+  [Narration with quiet tail; metadata speech end about 09:58.928.]
+  Source sample: ending.wav
+
+10:00 [Playback ends. No extra chime or spoken completion message.]

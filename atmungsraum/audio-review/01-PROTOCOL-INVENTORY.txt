@@ -1,0 +1,213 @@
+CURRENT AUDIO PROTOCOL AND SCRIPT INVENTORY
+Snapshot: 2026-10-27; paths are relative to atmungsraum/.
+Scope: checked-in scripts, manifests, runtime wiring and documented auditions.
+
+1. WHAT THE BROWSER ACTUALLY PLAYS
+
+Entry: audio/session-ui.js -> BoxBreathingEngine in audio/box-breathing.js.
+Selected manifest: assets/audio/box-breathing/de/soft-v2/manifest.json.
+Protocol ID: box-breathing-4-4-4-4-de-v2, version 2.
+Nine reusable mono PCM WAVs, 16-bit, 44,100 Hz:
+  instruction       40 seconds  Welcome and explanation
+  inhale             4 seconds  Einatmen. Zwei. Drei. Vier.
+  hold_in            4 seconds  Und halten. [then quiet]
+  exhale             4 seconds  Ausatmen. Zwei. Drei. Vier.
+  hold_out           4 seconds  Und halten. [then quiet]
+  ending            12 seconds  Return to natural breathing
+  rest              20 seconds  Natural-breathing pause and restart prompt
+  inhale_breath      4 seconds  Same inhale words plus recorded inhale
+  exhale_breath      4 seconds  Same exhale words plus recorded exhale
+The two hold roles have separate filenames but identical saved audio hashes.
+
+There is no TTS request during playback. Files are fetched, checked against
+manifest byte counts/SHA-256, decoded and queued before the session starts.
+One Web Audio clock owns all phase starts. JavaScript UI timers and ended
+notifications never trigger the next phase. A missing/corrupt asset prevents
+preparation; missed start deadlines and unexpected clock interruptions abort.
+
+2. HOW THE RUNTIME SAMPLES ARE CREATED
+
+tools/build-soft-box-cues.py
+  Inputs: --key-file outside the repository; --sounds-dir containing supplied
+  inhale.wav and Exhale.wav. Requires NumPy and FFmpeg.
+  TTS voice: British Breathing Instructor / rt9KyyQmwqa1uhHGJkMa.
+  Saved model identifier: eleven_v4. This is the stored project setting,
+  not a fresh verification of provider model availability.
+  Settings: stability 0.5, similarity_boost 0.65, language_code de, seed 42.
+  Delivery text prefix: [softly] [calm] [slowly]. Tags are synthesis directions,
+  not words included in the participant transcript.
+  API output: mp3_44100_128; decoded to mono PCM at 44.1 kHz.
+  Cache: reference-audio/soft-box-v2/*.mp3 and matching request JSONs.
+  Existing cached requests must match; otherwise the script stops.
+  No automatic retry after an ambiguous API failure; inspect history first.
+
+  Each phase label/count is synthesized separately, trimmed and faded. Long
+  narration is slowed to 80% with pitch-preserving atempo processing. Its
+  padded slots currently last 40 seconds (welcome) and 12 seconds (ending).
+  Inhale/exhale words are fitted to at most 0.94 seconds if needed; Und halten
+  can occupy up to 1.6 seconds. Excessive acceleration is rejected.
+  Inhale/exhale words start at 0, 1, 2 and 3 seconds; holds speak once at zero.
+  Voice sample peaks target -8 dBFS. Boundary fades are 220 source frames.
+  The 20-second rest places its restart sentence at second 16.
+  Supplied inhale/exhale recordings are retimed to four seconds and faded,
+  then mixed at -20 dBFS sample peak beneath their respective spoken cues.
+  These are premixed variants, not separate live breath nodes.
+  Output: the nine WAVs plus manifest in assets/audio/box-breathing/de/soft-v2/.
+  Important operational limit: this builder writes that runtime folder directly;
+  it is not an audition-only command and does not preserve differing WAV outputs.
+
+3. HOW COMPLETE SESSIONS ARE SEQUENCED
+
+audio/box-breathing.js: createProtocol(), scheduleProtocol(), BoxBreathingEngine.
+  Four phases in order: inhale, hold_in, exhale, hold_out.
+  One phase = 176,400 frames = 4 seconds. One cycle = 16 seconds.
+  Blocks contain at most 18 whole cycles = 288 seconds, not five minutes.
+  A 20-second narrated natural-breathing rest separates blocks only when
+  at least one more complete cycle fits. No final cycle is shortened.
+  Every global cycle divisible by three uses inhale_breath and exhale_breath.
+  Numbering continues across rests; both holds always remain voice-only.
+  Ending plays once, then any leftover budget becomes silent recovery.
+
+  Guided totals include welcome, cycles, rests, ending and recovery:
+  05:00: 15 cycles; blocks 15;             0 rests; 8 seconds recovery.
+  10:00: 33 cycles; blocks 18+15;          1 rest;  0 seconds recovery.
+  15:00: 50 cycles; blocks 18+18+14;       2 rests; 8 seconds recovery.
+  20:00: 68 cycles; blocks 18+18+18+14;    3 rests; 0 seconds recovery.
+
+ui-logic.js and audio/session-ui.js map the current menu:
+  Probe: Anleitung, 5, 10 or 15 guided minutes.
+  Haupt 10: five silent baseline minutes + five guided minutes.
+  Haupt 15: five silent baseline minutes + ten guided minutes.
+  Haupt baseline has NO welcome, recorded instruction, music or breath cue.
+  Its screen displays Normal atmen, but that label is not spoken.
+  Both main welcomes start at 05:00; first paced inhale at 05:40.
+  Anleitung: welcome + ONE cycle + ending = 68 seconds; no automatic loop.
+  The Anleitung screen has no time limit, hides its countdown and allows replay.
+
+audio/session-ui.js also owns Starten/Pause/Fortsetzen and Beenden/Escape.
+  Pause suspends the audio clock; resume continues the same queued schedule.
+  Hidden pages/navigation and an expired connection-recovery window abort.
+  Last ten receipts are stored in browser localStorage. These record scheduling,
+  selection and interruption state, not measured acoustic onsets.
+  Visible phase counts during holds do not mean those counts are spoken.
+
+4. NEWER SELECTED-VOICE LISTENING PIPELINE (NOT THE RUNTIME)
+
+tools/build-elevenlabs-listening-cues.py
+  Uses cached complete inhale/exhale phrases with character alignment, plus
+  standalone Halten!; no API calls. Requires NumPy and FFmpeg through helpers.
+  Cache: reference-audio/elevenlabs-counted-fade/.
+  Checks request text/model/settings and runtime voice ID. The current helper
+  does not separately assert a voice ID in every cached phrase request.
+  Whole phrases must have cached .mp3, .request.json and .response.json files;
+  initial synthesis is a separate preparation step, not performed by this helper.
+  Complete word samples retain native speed; only gaps and gains are adjusted.
+  Counts target 1/2/3 seconds, but a preceding word may delay a count. Fails
+  rather than accelerating inhale/exhale speech to fit the four-second phase.
+  Voice beat targets descend 0/-4/-8/-12 dB. Breath has constant gain over the
+  phase, with 10 ms edge fades and natural dynamics, normalized to equal average
+  component power. Equal power is not a claim of equal perceived loudness.
+  Both holds say Halten! once, then quiet; no hold counts or breath recordings.
+  Hold extraction uses the shared fragment helper, which can retime an overlong
+  standalone take. The native-speed guarantee above concerns counted phrases.
+  Outputs voice-only and voice-and-breath phase WAVs plus receipts under the
+  cache. Unlike the packager, this builder does not reject differing outputs.
+
+tools/package-listening-assets.py
+  Default source: reference-audio/elevenlabs-counted-fade/.
+  Default target: audio-assets/ready-to-listen/, current voice subfolder elevenlabs/.
+  Verifies source hashes/formats/durations; derives breath = finished mix - voice;
+  checks exact reconstruction, silent breath holds and component power matching.
+  Produces 13 WAV/JSON pairs for one selected voice: four voice phases, two breath
+  phases, four mixes, and three complete 16-second cycles (voice/breath/mix).
+  JSON includes exact frames, transcript, authored word slots and source metadata.
+  Writes manifest.json and START-HERE.txt. Refuses differing existing files;
+  use --output-dir for a new package. No synthesis or API calls.
+  This does not select or update the browser's soft-v2 manifest.
+
+5. REFERENCE AND HISTORICAL AUDITION HELPERS
+
+tools/prepare-calm-voice-references.py
+  Reads an external EmoDB/LANG database (--database-dir), with NumPy, soundfile
+  and xlrd. Screens norms and assembles per-speaker reference WAV/FLAC with
+  150 ms sentence gaps and one gain, retaining source speed/pitch. Emotion modes:
+  neutral, happiness, restrained. Outputs references, norms CSV and selection
+  receipts to an ignored folder. Does not synthesize new German instructions.
+
+tools/assemble-counted-voice-auditions.py
+  Reads local *-cycle-source.mp3 plus Whisper word-alignment JSON (--directory).
+  Checks the requested words, extracts fragments, fits beats with bounded tempo
+  adjustment, creates four four-second voice phases and a 16-second preview.
+  Original hold wording: Und halten once. Outputs local WAVs and receipts.
+
+tools/build-power-crossfade-audition.py
+  Inputs --voices-dir, --sounds-dir, --output-dir with saved Halten receipts.
+  Descending voice beats 0/-4/-8/-12 dB; rising breath -12/-8/-4/0 dB with
+  smoothed transitions. Equal full-phase component power, shared gain/headroom.
+  Holds say Halten once, followed by quiet. Outputs phase/layer WAVs, a 16-second
+  montage and receipts; not the selected constant-breath listening revision.
+  Its gain/PCM helpers are still imported by the newer ElevenLabs builder.
+
+tools/build-counted-phase-variants.py
+  Inputs --voices-dir, --mixes-dir, --output-dir with saved Pause receipts.
+  Reuses phase words/mix stems; makes counted Halten and counted Pause holds.
+  Outputs voice-only/mixed four-second phases, 16-second montages, receipts,
+  and counted-phase-variants.zip. Historical audition, not current runtime.
+
+All three audition assemblers operate on cached/generated takes; they do not
+perform speech synthesis themselves. Reference/profile creation and Secret
+Tunnel synthesis were separate local operations. Historical OmniVoice auditions
+were rejected; source/model/speaker permission constraints remain documented in
+audio/voice-sourcing.md. No audition builder above promotes a runtime set.
+
+6. OFFLINE EXPORT AND CHECKS
+
+tools/render-box-breathing.mjs
+  Reads the runtime manifest and calls production createProtocol(). Validates
+  hashes/RIFF PCM, concatenates reused samples and silence, writes one WAV and
+  adjacent .protocol.json. Refuses existing output files. No synthesis.
+  node tools/render-box-breathing.mjs --preview
+  node tools/render-box-breathing.mjs 5       (also 10, 15 or 20)
+  Defaults to ignored reference-audio/sessions/. This CLI has no main-round
+  baseline option; a 10-minute export is the GUIDED 10-minute sequence.
+  tests/offline-audio.html?round=haupt covers main-round production scheduling.
+
+tests/box-breathing.test.mjs: protocol, asset integrity and lifecycle tests.
+tests/offline-audio.html: native OfflineAudioContext comparison with real assets.
+for-ai/scripts/check-ui.mjs: browser-controller/state checks; no acoustic test.
+Run: node --test tests/box-breathing.test.mjs
+Run: node for-ai/scripts/check-ui.mjs
+
+7. OLDER RETAINED ASSET SETS
+
+assets/audio/breathwork/de/cues.json
+  Five variable-duration MP3s: arrival, inhale, exhale, natural breathing, ending.
+  Saved multilingual_v2 settings: stability/similarity 0.75, style 0, speaker
+  boost true, speed 0.85, seed 42; mp3_44100_128. Same saved voice profile.
+  No dedicated checked-in generator for these five files was found. Regeneration
+  instructions live in for-ai/WORKFLOW.md. Not selected by the current engine.
+
+assets/audio/box-breathing/de/manifest.json
+  Version 1: six four-second WAVs; short introduction and ending, nose/mouth
+  inhale/exhale wording, Atem halten. No current v2 rest/overlay structure.
+  Same older multilingual_v2 settings. Retained for comparison; the current
+  engine validator accepts v2 only. No dedicated v1 builder is checked in.
+
+8. CURRENT REVIEW GAPS / DIFFERENCES TO DISCUSS
+
+The runtime welcome says "Wir zählen jede Phase bis vier", but both holds only
+say "Und halten" and remain quiet. That is an existing wording mismatch.
+The welcome says "Auf Ein" / "Auf Aus"; phase labels actually say
+"Einatmen" / "Ausatmen". Review clarity without silently rewriting speech.
+The main round begins silently; a participant relying only on audio receives
+no spoken instruction for those first five minutes.
+The newer selected-voice audition says Halten!, while runtime still says
+Und halten. It also changes phrase assembly and voice/breath level shaping.
+
+This checkout contains the runtime WAVs and older retained assets. It does NOT
+contain reference-audio/ or the generated ready-to-listen/elevenlabs/ package.
+Audition behavior above is established from scripts/documentation, not a fresh
+examination of missing PCM. Generation cache inputs must be restored before
+rebuilding; regenerating speech would require separate API requests/credits.
+No subjective listening, live deployment check or hardware timing was done
+for this text inventory. Keep those separate from source/PCM evidence.

@@ -43,6 +43,15 @@ The vendor script copies only the main API's runtime module graph and license.
 
 ## Audio cue generation
 
+For reviewing the current participant experience, use `audio-review/` rather
+than mixing review text into runtime assets or ignored audition output. Its
+plain-text inventory distinguishes runtime, selected-voice auditions and older
+sets; `timelines/` contains all six menu choices plus the engine-only 20-minute
+sequence. These are fixed snapshots, generated directly from `createProtocol()`
+and the saved manifest, with source hashes in each timeline. Refresh the text
+when its source hashes change, keeping exact German speech separate from
+unspoken review notes. A text score does not establish listening acceptance.
+
 Generate speech through the ElevenLabs API from a local process. Read the API
 key from an external credential file or environment variable; never put it in
 page source, saved request metadata, repository files, or command output.

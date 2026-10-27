@@ -1,0 +1,45 @@
+ATMUNGSRAUM AUDIO REVIEW
+Snapshot: 2026-10-27
+
+Start with 02-PARTICIPANT-EXPERIENCE.txt for the listener's experience.
+Read 01-PROTOCOL-INVENTORY.txt for the scripts, assets and generation rules.
+Open timelines/ for a complete timestamped German transcript of each sequence.
+Read 03-LISTENING-VARIANTS.txt to compare the newer audition wording.
+
+The six current menu choices each have a timeline:
+  probe-anleitung.txt       01:08 example, replayable; screen has no time limit
+  probe-05-min.txt          05:00 guided practice
+  probe-10-min.txt          10:00 guided practice
+  probe-15-min.txt          15:00 guided practice
+  haupt-10-min.txt          05:00 silence + 05:00 guided sequence
+  haupt-15-min.txt          05:00 silence + 10:00 guided sequence
+An additional engine-only-20-min.txt covers the supported 20-minute API option,
+which is not a current menu choice.
+
+All times count from the session's audio-clock start, after loading and the
+default 250 ms scheduling lead. Deliberate pauses extend real elapsed time.
+Quoted German is the saved speech script. Bracketed descriptions are review
+notes and are NOT spoken. Ranges describe complete sample slots, including
+their quiet tails, rather than the duration of continuous speech.
+
+These files describe the checked-in sequencer and PCM assets. They are not a
+recording, a new listening assessment, or verification of physical sound output.
+The individual timelines were derived from createProtocol() and the runtime
+manifest, with source hashes recorded in their headers. They are a fixed
+snapshot: refresh them if the engine, selection mapping or sample set changes.
+No new speech was synthesized and no existing audio was replaced for this review.
+
+The newer local ElevenLabs listening package is documented but absent from
+this checkout. Its description is based on its source scripts and folder guide;
+the package itself was not inspected or auditioned in this pass.
+
+REVIEW NOTES (copy this block when reviewing a particular version)
+File/variant:
+Reviewer/date:
+Headphones or speakers / volume:
+Timestamp or cycle:
+What I hear:
+What a participant might misunderstand:
+Wording / timing / voice / breath balance / quiet periods:
+Requested change:
+Decision: keep / revise / compare by listening

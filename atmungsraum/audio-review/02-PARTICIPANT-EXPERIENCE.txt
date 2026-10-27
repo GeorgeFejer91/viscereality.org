@@ -1,0 +1,160 @@
+WHAT A PARTICIPANT HEARS IN THE CURRENT BROWSER VERSION
+Snapshot: 2026-10-27
+
+This is a reading version of the current sound sequence. German quotes are
+the actual saved scripts. Descriptions of delivery reflect settings and
+processing, not a new subjective listening assessment. Read timelines/ for
+every individual scheduled cue, its exact start/end and its breath variant.
+
+THE OPENING
+
+A German voice, configured for soft/calm/slow delivery, says:
+
+"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst.
+Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch
+einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du
+die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment.
+Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm
+anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden.
+Wir beginnen gemeinsam."
+
+The whole opening occupies 40 seconds, including its final quiet tail.
+Its frame metadata places the speech end at about 38.776 seconds. This is
+processing metadata, not a measured phoneme boundary.
+
+ONE COMPLETE BREATHING CYCLE, AS A TEXT SCORE
+
+Seconds below are relative to the beginning of a cycle:
+
+00:00  "Einatmen."
+00:01  "Zwei."
+00:02  "Drei."
+00:03  "Vier."
+00:04  "Und halten."
+       [The voice then falls quiet for the rest of this four-second hold.
+        There is no spoken zwei/drei/vier during the hold.]
+00:08  "Ausatmen."
+00:09  "Zwei."
+00:10  "Drei."
+00:11  "Vier."
+00:12  "Und halten."
+       [Again, one prompt followed by quiet.]
+00:16  [The next cycle begins, or a scheduled rest/ending starts.]
+
+The four-second phases repeat in the same order with the same recordings.
+On cycles 3, 6, 9, 12, ... the counted inhale and counted exhale include
+recorded breathing underneath the voice. Both holds still contain just the
+spoken prompt and its quiet tail. The overlay cadence continues across rests.
+There is no continuous music or background track in this runtime sequence.
+
+For example, the beginning of a timed practice sounds like this:
+00:00-00:40  [Welcome above.]
+00:40-00:56  [Cycle 1: counted inhale, quiet hold, counted exhale, quiet hold.]
+00:56-01:12  [Cycle 2: the same four spoken phases.]
+01:12-01:28  [Cycle 3: the same words, now with recorded inhale/exhale sounds.]
+01:28-01:44  [Cycle 4: voice phases again.]
+
+THE LONGER-SESSION REST
+
+At a scheduled rest, the voice says:
+"Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen
+Rhythmus fließen."
+
+[A quiet gap follows within the same 20-second rest slot.]
+
+At rest second 16 the voice says:
+"Wir beginnen wieder gemeinsam."
+
+At rest second 20 the next full inhale phase begins. There is no spoken
+countdown during this rest. This is natural breathing, not a held breath.
+
+THE ENDING
+
+The voice says:
+"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen.
+Nimm dir noch einen Moment, bevor du weitergehst."
+
+The ending occupies 12 seconds; metadata places its speech end at about
+10.928 seconds into that slot, followed by quiet. Some durations add another
+eight seconds of fully silent recovery after the ending slot.
+No completion chime or spoken button/status announcement is scheduled.
+
+THE CURRENT MENU CHOICES
+
+Probe-Runde / Anleitung (68 seconds each time Starten is pressed)
+  00:00-00:40  Welcome.
+  00:40-00:56  One voice-only cycle. It never reaches overlay cycle 3.
+  00:56-01:08  Ending; then playback finishes.
+  The screen remains available without a time limit, allowing manual replay.
+
+Probe-Runde / 5 Minuten
+  00:00-00:40  Welcome.
+  00:40-04:40  15 complete cycles; five have recorded breath overlays.
+  04:40-04:52  Ending.
+  04:52-05:00  Silent natural-breathing recovery.
+
+Probe-Runde / 10 Minuten
+  00:00-00:40  Welcome.
+  00:40-05:28  Cycles 1-18.
+  05:28-05:48  Narrated natural-breathing rest; restart phrase at 05:44.
+  05:48-09:48  Cycles 19-33.
+  09:48-10:00  Ending; then playback finishes.
+  Eleven cycles have recorded breath overlays.
+
+Probe-Runde / 15 Minuten
+  00:00-00:40  Welcome.
+  00:40-05:28  Cycles 1-18.
+  05:28-05:48  Rest; restart phrase at 05:44.
+  05:48-10:36  Cycles 19-36.
+  10:36-10:56  Rest; restart phrase at 10:52.
+  10:56-14:40  Cycles 37-50.
+  14:40-14:52  Ending.
+  14:52-15:00  Silent natural-breathing recovery.
+  Sixteen cycles have recorded breath overlays.
+
+Haupt-Runde / 10 Minuten
+  00:00-05:00  Silence. Normal atmen appears on screen but is not spoken.
+  05:00-05:40  Welcome.
+  05:40-09:40  15 complete cycles; five have recorded breath overlays.
+  09:40-09:52  Ending.
+  09:52-10:00  Silent natural-breathing recovery.
+
+Haupt-Runde / 15 Minuten
+  00:00-05:00  Silence. Normal atmen appears on screen but is not spoken.
+  05:00-05:40  Welcome.
+  05:40-10:28  Cycles 1-18.
+  10:28-10:48  Rest; restart phrase at 10:44.
+  10:48-14:48  Cycles 19-33.
+  14:48-15:00  Ending; then playback finishes.
+  Eleven cycles have recorded breath overlays.
+
+Engine-only / 20 Minuten (supported in code, absent from the menu)
+  00:00-00:40  Welcome.
+  00:40-05:28  Cycles 1-18.
+  05:28-05:48  Rest; restart phrase at 05:44.
+  05:48-10:36  Cycles 19-36.
+  10:36-10:56  Rest; restart phrase at 10:52.
+  10:56-15:44  Cycles 37-54.
+  15:44-16:04  Rest; restart phrase at 16:00.
+  16:04-19:48  Cycles 55-68.
+  19:48-20:00  Ending; then playback finishes.
+  Twenty-two cycles have recorded breath overlays.
+
+IF THE PARTICIPANT PAUSES OR LEAVES
+
+Pause stops the current audio and freezes the countdown. Fortsetzen continues
+at that same position; it adds no new welcome or spoken restart cue. Real
+elapsed time becomes longer than the selected active duration. Beenden/Escape,
+navigation away, a hidden page or an unexpected audio-clock interruption stops
+the attempt without playing a special spoken farewell. A new Starten begins
+a new sequence. On-screen loading/error/completion messages are not voice audio.
+
+POINTS FOR LISTENING REVIEW
+
+The welcome promises counting in every phase, but the holds are uncounted.
+Is that clear enough to someone listening with eyes closed?
+Does the silent main-round opening make sense without looking at the screen?
+Do the repeated identical cues, intermittent breath overlays and rest return
+phrases feel natural at their authored boundaries?
+Compare the current "Und halten" with the separate "Halten!" audition before
+deciding whether to replace the runtime samples.

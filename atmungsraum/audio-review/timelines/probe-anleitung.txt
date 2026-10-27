@@ -1,0 +1,46 @@
+Probe-Runde / Anleitung
+Snapshot: 2026-10-27
+
+German quotes are saved speech; bracketed notes are NOT spoken.
+Time starts at the scheduled audio anchor, after loading/scheduling lead.
+All ranges are complete sample slots; speech can end before the slot does.
+This is an authored playback plan, not an acoustic measurement or audition.
+Deliberate Pause freezes this clock; Fortsetzen resumes the same position.
+Total: 01:08; complete cycles: 1; rests: 0.
+Breathing blocks: 1 cycles; final silent recovery: 0 s.
+Sources: audio/box-breathing.js, ui-logic.js, audio/session-ui.js,
+         assets/audio/box-breathing/de/soft-v2/manifest.json
+Manifest SHA-256: 89beb227bdc41d2cc042393ac267712cde2769695d206188c8ca9b873779eca0
+Engine SHA-256: 95e445a923385e87a792b420c10368a34c49b131f525fb8c408002a0dc70df78
+Selection SHA-256: 6190ca919ec0ff377ce79f479636aecdbab6edb2575c5327fd11e5cd2968e991
+Controller SHA-256: 3c935bc0c5e8c0ae13f493021fed37e3c08cf9dace2ce233b63103f469d9a188
+
+COMPLETE PARTICIPANT AUDIO TIMELINE
+
+00:00-00:40 "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+  [Narration with quiet tail; metadata speech end about 00:38.776.]
+  Source sample: instruction.wav
+
+00:40-00:44 [cycle 1, block 1] "Einatmen. Zwei. Drei. Vier."
+  Spoken word placements: 00:40 Einatmen | 00:41 Zwei | 00:42 Drei | 00:43 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: inhale.wav
+
+00:44-00:48 [cycle 1, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_in.wav
+
+00:48-00:52 [cycle 1, block 1] "Ausatmen. Zwei. Drei. Vier."
+  Spoken word placements: 00:48 Ausatmen | 00:49 Zwei | 00:50 Drei | 00:51 Vier
+  [Voice only; no recorded breath in this phase.]
+  Source sample: exhale.wav
+
+00:52-00:56 [cycle 1, block 1] "Und halten."
+  [One spoken Und halten, then quiet to the end of this slot; no spoken counts or recorded breath.]
+  Source sample: hold_out.wav
+
+00:56-01:08 "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."
+  [Narration with quiet tail; metadata speech end about 01:06.928.]
+  Source sample: ending.wav
+
+01:08 [Playback ends. No extra chime or spoken completion message.]
