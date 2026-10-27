@@ -47,17 +47,22 @@ The user found the opening Ei insufficiently distinct and requested
 uses `Ein-atmen.`, speed settings 0.50–0.60, guidance 1.5–2.0 and fresh seeds.
 These controls alone still produced short isolated words, so the listening
 copies use pitch-preserving Rubber Band stretching with nominal source-audio
-targets of 2.2–3.0 seconds, preserved formants, and a 3 dB gain reduction.
+targets of 2.2–3.0 seconds and preserved formants. Float processing avoids
+clipping before constant-gain matching toward -24 dBFS active-speech RMS with
+a -6 dBFS PCM peak ceiling. The encoded listening files have verified peaks
+around -5.8 to -7.8 dBFS and decode completely.
 A 250 ms silent lead-in is added before stretching; no extra fade-in is applied.
 The delivered files are about 2.5–3.4 seconds including their stretched lead-in.
 
 Raw generations, requested/resolved seeds (including a native word-check retry),
 and receipts remain under ignored
 `reference-audio/ein-atmen-soft-auditions-20261027/`. The final listening copies
-and ordered comparison are in its `soft-versions/` directory. Each has complete
+and ordered comparison are in its `listening/` directory; `soft-versions/` is
+an intermediate render and must not be used for selection. Each final file has complete
 processing metadata. Raw takes pass the word check; that does not establish
 audibility of the Ei or a calming delivery. User listening selection remains
-pending, and existing runtime assets remain unchanged.
+pending, and existing runtime assets remain unchanged. Secret Tunnel retains
+the raw takes; the extra slow processing is applied to these listening copies.
 
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
