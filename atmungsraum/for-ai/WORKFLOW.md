@@ -86,6 +86,16 @@ speaker, and model permissions separately; see `audio/voice-sourcing.md`. Native
 Secret Tunnel CLI operations are a local fallback when MCP voice tools fail;
 use its existing authentication and do not alter access settings.
 
+For new Secret Tunnel slow-voice auditions (27 October 2026 user correction),
+set pace during native synthesis. Do not apply post-generation time stretching.
+The earlier stretched `Ein-atmen` listening copies were rejected for audible
+artifacts. Use native target-duration controls and supported style instructions,
+record active speech span separately from total duration, and retain original
+generator WAVs plus settings/hashes. Comparison tracks may add silent gaps while
+preserving the source samples exactly. Peak/decode/ASR checks do not establish
+acceptable pronunciation, softness or calmness; user listening selection remains
+required. See [voice sourcing](../audio/voice-sourcing.md) for current evidence.
+
 For the local voice-to-breath prototype, use `tools/build-power-crossfade-audition.py`
 with `--voices-dir`, `--sounds-dir`, and an ignored `--output-dir`. It consumes
 the restrained phase files and cached standalone Halten takes. Inspect finished

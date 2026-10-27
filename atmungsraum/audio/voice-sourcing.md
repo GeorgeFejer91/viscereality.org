@@ -45,24 +45,47 @@ the browser cues or change the four-second runtime phase timing.
 The user found the opening Ei insufficiently distinct and requested
 `Ein-atmen` with a very slow, soft, calming delivery. A second ten-take batch
 uses `Ein-atmen.`, speed settings 0.50–0.60, guidance 1.5–2.0 and fresh seeds.
-These controls alone still produced short isolated words, so the listening
-copies use pitch-preserving Rubber Band stretching with nominal source-audio
-targets of 2.2–3.0 seconds and preserved formants. Float processing avoids
-clipping before constant-gain matching toward -24 dBFS active-speech RMS with
-a -6 dBFS PCM peak ceiling. The encoded listening files have verified peaks
-around -5.8 to -7.8 dBFS and decode completely.
-A 250 ms silent lead-in is added before stretching; no extra fade-in is applied.
-The delivered files are about 2.5–3.4 seconds including their stretched lead-in.
+These controls alone still produced short isolated words. The subsequent
+listening copies used Rubber Band stretching, constant gain and a silent
+lead-in. **The user rejected those processed copies**, reporting stretched
+sound and clipping artifacts. Sample-peak and decode checks did not establish
+acceptable sound. Preserve them as rejected provenance, not selection candidates.
 
 Raw generations, requested/resolved seeds (including a native word-check retry),
 and receipts remain under ignored
-`reference-audio/ein-atmen-soft-auditions-20261027/`. The final listening copies
-and ordered comparison are in its `listening/` directory; `soft-versions/` is
-an intermediate render and must not be used for selection. Each final file has complete
-processing metadata. Raw takes pass the word check; that does not establish
-audibility of the Ei or a calming delivery. User listening selection remains
-pending, and existing runtime assets remain unchanged. Secret Tunnel retains
-the raw takes; the extra slow processing is applied to these listening copies.
+`reference-audio/ein-atmen-soft-auditions-20261027/`. Its `listening/` and
+`soft-versions/` outputs are excluded from selection. The saved manifests mark
+the user's rejection. Raw takes passed the word check; that does not establish
+audibility of the Ei or a calming delivery.
+
+### Generation-only pacing correction — 27 October 2026
+
+For new auditions, the user requires slower delivery **during synthesis**, with
+no post-generation time stretching. Use the native OmniVoice worker's explicit
+`--duration` control, which sets the target audio-token length before generation.
+It can also add silence, so record active speech span separately from file duration.
+Supported `--instruct whisper` conditioning supplies a second style option; it
+does not establish that the result sounds calm or matches the reference voice.
+Keep the hyphenated German text `Ein-atmen.` and the existing instructor profile.
+
+New original float32 WAVs and full generation commands, benchmarks, seeds and
+hashes are under ignored `reference-audio/ein-atmen-generation-only-20261027/`.
+The worker uses 32 steps, CUDA, and `--postprocess-output false`. These candidates
+receive no retiming, gain adjustment, fades, or other waveform processing.
+The ordered comparison concatenates the exact original samples with two-second
+silent gaps only. Ten takes completed with target-duration settings 1.8–2.8
+seconds, guidance 1.8–2.2, and preserved seeds. Takes 3/6/8/9 use whisper
+conditioning; the others use the reference style. Native file durations are
+2.0–3.0 seconds, while threshold-based active spans vary from 0.76 to 2.10
+seconds. This control does not enforce a uniform speaking rate: some longer
+targets mainly add silence. All ten files decode completely, their hashes
+match the original receipts, and sample peaks stay below full scale (maximum
+about -4.7 dBFS). The 43.2-second comparison passed exact source-sample identity.
+These checks do not establish the absence of audible artifacts or pronunciation
+errors. Listening acceptance, including the initial Ei and softness, remains
+the user's next selection step. Existing browser assets and timing remain
+unchanged; nothing from these audition folders is published. This correction is
+a local documentation commit on `main`; it does not require site publication.
 
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
