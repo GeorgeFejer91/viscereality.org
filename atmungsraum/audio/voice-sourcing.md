@@ -29,6 +29,19 @@ locally with the portable workers verified in the 27 October hardware repair.
 Automatic CPU retry/controller changes remain source-only pending recovery of
 the later unpublished desktop source and a complete installer rebuild.
 
+### Ten slow Einatmen auditions — 27 October 2026
+
+The user requested ten separate, slightly varied takes of `Einatmen.` from the
+new existing-instructor profile, for a later listening selection. The local
+batch uses slow mode, seeds 271001–271010, speed settings 0.70–0.80 and guidance
+1.6–2.4. Seeds and parameters are checked against each native generation receipt.
+Numbered MP3s and adjacent JSON receipts live under ignored
+`reference-audio/einatmen-auditions-20261027/`. Its manifest preserves exact
+settings, source clip IDs, durations and SHA-256 hashes. The comparison track
+keeps the native takes in order with two seconds of quiet between them.
+The user's preferred take remains undecided; these auditions do not replace
+the browser cues or change the four-second runtime phase timing.
+
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
 to establish those properties. Keep local auditions separate from the browser's
