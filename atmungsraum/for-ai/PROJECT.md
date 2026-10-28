@@ -18,7 +18,13 @@ private. The user's request explicitly authorizes publishing these new auditions
 
 - [x] Generate and fully decode twenty German MP3s; verify their exact words.
 - [x] Check the static players, downloads, text measurement and responsive reflow.
-- [ ] Publish to `main` and verify the public sample page and all MP3 URLs.
+- [x] Publish to `main` and verify the public sample page and all MP3 URLs.
+
+Publication verified on 2026-10-28: feature commit `1f3f5db` completed GitHub
+Pages build/deployment run `40730446610`. The public page and all twenty MP3s
+returned HTTP 200; every downloaded MP3 matched its recorded SHA-256 hash.
+Live Chromium verified the twenty players, text measurements, keyboard
+play/pause and MP3 download. URL: <https://viscereality.org/atmungsraum/samples/>.
 
 - Purpose: provide a smartphone-compatible browser interface that controls actions
   on a VR headset screen through a corresponding Atmungsraum app.

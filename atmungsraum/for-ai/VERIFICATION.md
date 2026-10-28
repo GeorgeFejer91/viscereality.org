@@ -25,6 +25,14 @@ No ordinary JavaScript errors occurred. Physical-phone and perceptual listening
 checks were not performed. The existing UI-state and context checks also passed;
 the session scheduler and its audio assets were unchanged.
 
+Public deployment of feature commit `1f3f5db` was verified on 2026-10-28.
+GitHub Pages run `40730446610` succeeded and the Pages API reported `built`.
+`/atmungsraum/samples/`, its catalog, and all twenty MP3 URLs returned HTTP 200;
+all public audio hashes matched the generated originals. Live 390×844 Chromium
+reported twenty players/downloads, ready Pretext measurement and no horizontal
+overflow. Real keyboard Space play/pause and the MP3 download filename passed
+with browser audio muted. The context checker with `-RequireRemote` passed.
+
 ## Browser prototype completion — 2026-10-13
 
 The completion pass preserved the latest approved menu, baseline, playback-control,
