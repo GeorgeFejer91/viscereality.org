@@ -77,6 +77,16 @@ speaker, and model permissions separately; see `audio/voice-sourcing.md`. Native
 Secret Tunnel CLI operations are a local fallback when MCP voice tools fail;
 use its existing authentication and do not alter access settings.
 
+The 2026-10-28 user request separately authorizes the twenty exact-phrase MP3s
+under `samples/audio/` and their listening subpage. Keep source references,
+profile UUIDs, and full native receipts private. `samples/samples.json` contains
+only public source-rating summaries, generated durations, MP3 hashes, and
+truthful transcript evidence. Preserve native raw word scores; digit/word
+equivalence (`2=zwei`, `3=drei`, `4=vier`) is recorded as a separate check.
+Run `node for-ai/scripts/check-samples.mjs` from `atmungsraum/` after changing
+the listening page or its selected samples. Existing runtime voice selection
+and session timing are unaffected by this audition page.
+
 For the local voice-to-breath prototype, use `tools/build-power-crossfade-audition.py`
 with `--voices-dir`, `--sounds-dir`, and an ignored `--output-dir`. It consumes
 the restrained phase files and cached standalone Halten takes. Inspect finished

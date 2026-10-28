@@ -1,0 +1,2 @@
+# Reuse ../vendor/pretext; do not ship a second measurement runtime here.
+vendor/

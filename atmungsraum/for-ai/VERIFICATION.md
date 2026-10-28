@@ -1,5 +1,30 @@
 # Verification
 
+## Voice sample subpage — 2026-10-28
+
+`samples/` contains twenty fully decoded MP3s (397,476 bytes total), each bound
+to its saved profile and the exact requested German phrase. The original MP3
+hashes and timing are preserved. `node for-ai/scripts/check-samples.mjs` checks
+the twenty unique names, both 0–9 series, LANG valence ordering, all source
+links/downloads, byte hashes, and truthful transcript checks without private
+profile identifiers or machine paths. Native raw Whisper scores are preserved;
+digits 2/3/4 and German zwei/drei/vier have a separately documented equivalence
+check. Later single-take samples use independent German ASR on the final decoded
+MP3, without fabricating a native checked-take score.
+
+Headless, audio-muted Chromium passed seven ordinary viewport checks:
+320×568, 390×844, 568×320, 760×800, 761×800, 1280×800, and 1920×1080.
+At 320 px, 200% text, WCAG text-spacing overrides, and a long German profile
+label passed without horizontal page overflow or clipped measured text.
+Pretext measured all 76 text regions with Arial parity. Enlarged text can
+enter explicit readable reflow; no font shrinking masks a failure.
+All twenty MP3s loaded real positive duration metadata. Silent actual playback
+confirmed starting a second sample pauses the first. Missing Pretext and
+JavaScript-disabled pages retain all twenty native players and downloads.
+No ordinary JavaScript errors occurred. Physical-phone and perceptual listening
+checks were not performed. The existing UI-state and context checks also passed;
+the session scheduler and its audio assets were unchanged.
+
 ## Browser prototype completion — 2026-10-13
 
 The completion pass preserved the latest approved menu, baseline, playback-control,

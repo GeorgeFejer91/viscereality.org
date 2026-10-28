@@ -34,6 +34,9 @@ Read common rules first, then the documents needed for the task:
   phase cues, reference analysis, exact session timing, and verification.
 - [Listening asset folder](../audio-assets/README.md): ready-to-listen local WAVs
   with adjacent timing/transcript JSONs, separate layers and 16-second cycles.
+- [Voice samples](../samples/index.html): twenty published exact-phrase
+  auditions from the LANG and EmoDB profile series, with source ratings and
+  separate transcript evidence. This does not change the session voice.
 - [Playback completion audit](PLAYBACK-AUDIT.md): evidence for the local browser
   Play/Stop behaviour and exact 5/10/15/20-minute audio totals.
 

@@ -14,6 +14,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 - Path: `atmungsraum/index.html`
 - Public URL: <https://viscereality.org/atmungsraum/> (the directory index also serves `/atmungsraum`).
+- Voice samples: <https://viscereality.org/atmungsraum/samples/>. The separately
+  requested 2026-10-28 listening page publishes one exact-phrase MP3 for each
+  of twenty source-prefixed LANG/EmoDB profiles; it preserves the main demo's
+  selected session voice and timing. Original references and full receipts
+  remain private. See the Atmungsraum workflow for sample verification.
 - Purpose (2026-10-12): a smartphone-compatible browser interface that initiates actions on a VR headset screen through a corresponding app that mirrors the website's UI.
 - Intended interaction: phone browser controls trigger actions in the headset app; keep corresponding screens, controls, and action meanings aligned across both surfaces. The headset platform, action set, and connection architecture are Undecided.
 - First step (2026-10-12): verify that a Polar H10 is connected, then show its live ECG in a centered box before the session menu. The intended browser receives ECG from the headset; acquisition and transport remain Undecided. A verified feed enables Weiter to the round menu.
