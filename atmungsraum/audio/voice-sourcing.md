@@ -66,7 +66,8 @@ no post-generation time stretching. Use the native OmniVoice worker's explicit
 It can also add silence, so record active speech span separately from file duration.
 Supported `--instruct whisper` conditioning supplies a second style option; it
 does not establish that the result sounds calm or matches the reference voice.
-Keep the hyphenated German text `Ein-atmen.` and the existing instructor profile.
+Use the existing instructor profile; preserve the exact spelling of each tested
+prompt rather than assuming hyphenation fixes the initial syllable.
 
 New original float32 WAVs and full generation commands, benchmarks, seeds and
 hashes are under ignored `reference-audio/ein-atmen-generation-only-20261027/`.
@@ -86,6 +87,30 @@ errors. Listening acceptance, including the initial Ei and softness, remains
 the user's next selection step. Existing browser assets and timing remain
 unchanged; nothing from these audition folders is published. This correction is
 a local documentation commit on `main`; it does not require site publication.
+
+### Opening syllable still missing — 28 October 2026
+
+The user reports that the generation-only batch still lacks an audible **Ein**.
+Do not label it pronunciation-approved on the strength of decoding, peak checks
+or Whisper recognition. A controlled five-take diagnostic is saved locally in
+`reference-audio/ein-onset-diagnostic-20261028/`: `Einatmen.`, `Ein-atmen.`,
+`Ein atmen.`, standalone `Ein.`, and `Ganz ruhig einatmen.`. The first three
+share seed 281001, target duration 2.2 seconds, guidance 2.0, 32 steps, German,
+the same reference and no whisper instruction. The isolated syllable and
+context phrase use 1.2/3.5-second targets, respectively. All are original worker
+WAVs with output postprocessing disabled; no trimming, stretching or gain changes.
+
+The spelling variants have generated lead-in silence before detected speech,
+so a file-boundary trim is not evident; this does not rule out playback issues
+or prove how the initial syllable sounds. Unprompted German Whisper recognizes
+`Ein Atmen.` for the separated spelling, `Ein.` for the isolated syllable, and
+the full contextual phrase; it also recognizes the earlier disputed take as
+`Einatmen.`. Treat ASR as supporting evidence only. All five files decoded,
+retained their generation hashes and remained below full scale. Next action:
+user listening comparison of the separated spelling and contextual phrase,
+with the isolated Ein available as a diagnostic control. Pronunciation remains
+open. Only notes are committed locally on `main`; no runtime audio or published
+site changes are part of this correction.
 
 The target is low arousal and positive valence: calm, warm delivery, clear German,
 direct **du** address, and natural pauses. Emotional category labels are not enough
