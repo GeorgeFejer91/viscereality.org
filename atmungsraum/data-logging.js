@@ -175,6 +175,7 @@ export function mountSessionData(signal) {
   const list = document.getElementById('data-files');
   const status = document.getElementById('data-status');
   const links = new Map();
+  const exports = new Map();
   let db, preparation;
   function show(record, download = false) {
     let link = links.get(record.session_id);
@@ -189,12 +190,19 @@ export function mountSessionData(signal) {
       const item = document.createElement('li');
       item.append(link); list.prepend(item);
       links.set(record.session_id, link);
+      exports.set(record.session_id, record);
     }
     if (download) link.click();
     status.textContent = 'CSV-Datei zum Herunterladen auswählen.';
     document.getElementById('data-recovery').hidden = false;
   }
   return {
+    async exports() {
+      await this.prepare();
+      const records = await readStore(db, 'exports');
+      records.sort((a, b) => a.created_at.localeCompare(b.created_at)).forEach(record => show(record));
+      return [...exports.values()].reverse();
+    },
     prepare() {
       if (!navigator.locks) return Promise.reject(new Error('Safe session recovery requires Web Locks'));
       preparation ??= openDatabase().then(database => {
@@ -243,6 +251,7 @@ export function mountSessionData(signal) {
       attempt.recording.onChange = null;
       const record = attempt.recording.finish(receipt.status, receipt.records?.findLast(event => event.type === 'abort')?.reason ?? '');
       show(record, true);
+      document.dispatchEvent(new Event('atmungsraum:exports-changed'));
       storeExport(db, record).catch(error => {
         status.textContent = 'CSV konnte nicht im Browser gesichert werden. Bitte jetzt herunterladen.';
         console.warn('Session CSV storage failed.', error);

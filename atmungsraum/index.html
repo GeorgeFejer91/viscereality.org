@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261105-stretch">
-  <script type="module" src="./app.js?v=20261105-stretch"></script>
+  <link rel="stylesheet" href="./style.css?v=20261105-files">
+  <script type="module" src="./app.js?v=20261105-files"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -16,6 +16,23 @@
   <aside id="belt-signal" data-state="waiting" role="status" aria-label="Polar-Demosignal" title="Noch kein ECG-Demosignal">
     <span class="signal-dot" aria-hidden="true"></span><span id="belt-status" class="sr-only">Noch kein ECG-Demosignal</span>
   </aside>
+  <button id="open-files" type="button" aria-label="Gespeicherte Dateien öffnen" aria-haspopup="dialog" aria-controls="files-dialog" aria-expanded="false" title="Gespeicherte Dateien">
+    <img src="./assets/icons/folder.svg" width="32" height="32" alt="" aria-hidden="true">
+  </button>
+  <dialog id="files-dialog" aria-labelledby="files-title" aria-describedby="files-scope">
+    <header class="files-header">
+      <h2 id="files-title" data-measure>Gespeicherte Dateien</h2>
+      <button id="close-files" type="button" autofocus><span data-measure>Schließen</span></button>
+    </header>
+    <p id="files-scope" data-measure>Session-Daten aus diesem Browser. Eine laufende Aufnahme erscheint nach dem Beenden.</p>
+    <p id="files-status" role="status" data-measure>Noch keine gespeicherten Session-Daten.</p>
+    <div class="files-scroll" role="region" aria-label="Gespeicherte Session-Dateien" tabindex="0"><ul id="saved-files"></ul></div>
+    <div class="files-actions">
+      <button id="download-zip" type="button" disabled><span data-measure>ZIP herunterladen</span></button>
+      <button id="share-files" type="button" disabled><span data-measure>Teilen …</span></button>
+    </div>
+    <p id="files-share-hint" data-measure>Alle gespeicherten Dateien als ZIP herunterladen oder teilen.</p>
+  </dialog>
   <main>
     <section class="screen" id="h10" aria-labelledby="sensor-status" hidden>
       <div class="sensor-header">

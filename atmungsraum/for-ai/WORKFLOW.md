@@ -10,14 +10,22 @@
    `for-ai/subprojects.md` when the page contract changes.
 5. Run `for-ai/scripts/check-context.ps1 -ProjectRoot .` from `atmungsraum/` and
    the rendered checks in [VERIFICATION.md](VERIFICATION.md).
-6. Review and stage only intended paths. Publishing requires user authorization;
-   the 2026-10-12 request authorizes publishing the current navigation prototype
-   and its browser audio on the existing site. Local source recordings, voice
+6. Follow the user's standing 2026-11-05 Superpowers/GitHub instruction in the
+   [root constraints](../../for-ai/constraints.md). Complete relevant design,
+   implementation, review and verification practices; update For-AI evidence;
+   review/stage intended paths, commit and push completed verified work through
+   existing `origin/main` without another permission prompt. Fetch/reconcile first
+   and preserve unrelated unfinished work. Local source recordings, voice
    auditions, listening copies, and full-session exports stay ignored.
    Never force-push or bypass branch protections.
 7. After publication, run the checker with `-RequireRemote`, check the GitHub Pages
    build for the pushed commit, and verify the public URL. A successful push alone
    is not evidence that the page is live.
+
+This standing authorization applies to future tasks in this repository unless
+the user asks for local-only work. Before handoff, verify Git synchronization,
+record exact publication evidence and remaining changes in PROJECT.md, and
+report any concrete blocker instead of leaving completed work silently local.
 
 Local setup shortcuts and `LOCAL-PROJECT.md` are excluded by `.git/info/exclude`.
 Do not publish them or machine-specific paths.

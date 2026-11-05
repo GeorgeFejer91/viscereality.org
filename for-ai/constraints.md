@@ -1,10 +1,38 @@
 # Active Constraints
 
-Last updated: 2026-07-03
+Last updated: 2026-11-05
 
 These are the current durable constraints for `viscereality.org`. Update this file when the site's expected behavior changes.
 
 ## AI Workflow
+
+### Standing Superpowers and GitHub synchronization instruction — 2026-11-05
+
+The user explicitly instructs future agents to always follow the applicable
+Superpowers workflow and keep this repository up to date on GitHub. This is
+continuing authorization to commit and push completed, verified task changes to
+the existing `origin/main` publication workflow without asking again. A later
+user instruction to keep a particular task local takes precedence.
+
+- Start with `superpowers-using-superpowers` and select the practices appropriate
+  to the task: clarify/design when needed, plan substantial work, implement,
+  review, and run `superpowers-verification-before-completion` before claiming
+  success or publishing. Reuse the existing For-AI/GSD state owner.
+- Keep affected For-AI constraints, task state and verification evidence current
+  in the same change. Do not leave completed work only in the local checkout.
+- Fetch and reconcile the remote, review the full intended diff, run relevant
+  checks, make coherent commits, and push completed authorized work. Preserve
+  concurrent or unrelated unfinished work; this standing instruction does not
+  authorize sweeping another agent's incomplete files into a release.
+- Keep private recordings, participant exports, credentials and ignored local
+  diagnostics out of Git. Never force-push, discard work or bypass protections.
+- Verify local/remote commit equality after pushing. For public runtime changes,
+  check the exact GitHub Pages build/deployment and deployed assets/behavior.
+  A successful push alone does not establish a live release.
+- Before handoff, record the observed branch/commit, synchronization/deployment
+  evidence, remaining changes and next action. If a check, conflict, permission
+  or network problem prevents synchronization, report the concrete blocker and
+  retain the work; do not claim GitHub or the live site is current.
 
 - Read [README.md](README.md), this file, [subprojects.md](subprojects.md), and any relevant subproject status file in `for-ai/` before making architectural or workflow changes.
 - Preserve existing user changes. Check `git status --short` before editing and do not revert unrelated modified or untracked files.

@@ -137,6 +137,19 @@ delete exports or reset counters. Browser storage and downloaded participant
 files are local data, not repository assets; never commit them or upload them
 as part of publishing the static application.
 
+The permanent bottom-right folder button opens a native dialog over any screen.
+It lists the same saved exports, refreshes from IndexedDB on opening, and keeps
+in-memory exports available if final browser storage failed. It does not inspect
+the OS Downloads directory or include an unfinished live recording. Every entry
+remains individually downloadable. `Atmungsraum-Daten.zip` bundles all retained
+CSV files with their original bytes/names; a colliding name is placed inside its
+session UUID directory. This is a packaging name, not a new participant writer.
+The ZIP uses uncompressed ZIP32 entries, rejecting unsupported counts/sizes.
+The explicit Teilen action passes that ZIP to the native file share sheet when
+supported; recipients/apps are chosen by the user. Unsupported/rejected sharing
+retains a ZIP download for manual attachment. No mailto attachment workaround,
+automatic transmission or server upload is involved. Cancel leaves files intact.
+
 The browser controls the download destination and can block downloads; a click
 does not prove a file reached disk. Keep repeat-download links and surface
 storage errors. Current [download behavior](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/download)

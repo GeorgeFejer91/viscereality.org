@@ -1,7 +1,8 @@
 import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261105-data';
 import { mountSessionAudio } from './audio/session-ui.js?v=20261105-data';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
-import { participantIdentity, mountSessionData } from './data-logging.js?v=20261105-data';
+import { participantIdentity, mountSessionData } from './data-logging.js?v=20261105-files';
+import { mountDataFiles } from './data-files.js?v=20261105-files';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -13,6 +14,7 @@ const text = (id, value) => { if (byId(id).textContent !== value) byId(id).textC
 const signal = new MockECG();
 const sessionData = mountSessionData(signal);
 const sessionAudio = mountSessionAudio({ data: sessionData });
+mountDataFiles(sessionData);
 
 function render() {
   const next = route(location.hash.slice(1) || 'h10');
@@ -131,6 +133,9 @@ function drawECG() {
 // Text measurement is an enhancement; the UI state machine remains usable if it fails.
 async function measureLabels() {
   try {
+    if (typeof Intl.Segmenter !== 'function' || !document.createElement('canvas').getContext('2d')) {
+      throw new Error('Pretext requires text segmentation and Canvas 2D');
+    }
     const { prepareWithSegments, measureLineStats, measureNaturalWidth, setLocale } = await import('./vendor/pretext/layout.js');
     await document.fonts.load('16px Arial');
     await document.fonts.ready;
@@ -156,7 +161,7 @@ async function measureLabels() {
           const lineHeight = parseFloat(style.lineHeight);
           const stats = measureLineStats(prepared, Math.max(1, width - 2));
           const naturalWidth = measureNaturalWidth(prepared);
-          const singleLine = root.dataset.layout !== 'reflow' && element.closest('button, .actions a');
+          const singleLine = root.dataset.layout !== 'reflow' && !element.closest('dialog') && element.closest('button, .actions a');
           // User word spacing is outside Pretext's model; the painted DOM owns that check.
           const domOnly = (parseFloat(style.wordSpacing) || 0) !== 0 || style.hyphens === 'auto';
           const range = document.createRange();
@@ -193,8 +198,11 @@ async function measureLabels() {
         }) || [...visible.querySelector('.screen-body').children].some((group) => group.getBoundingClientRect().bottom > bodyLimit)
           || root.scrollWidth > innerWidth + 2 || root.scrollHeight > innerHeight + 2;
         if (root.dataset.layout !== 'reflow') {
-          root.dataset.layoutReason = hasOverflow ? 'geometry' : results.some(({ fits }) => !fits) ? 'text' : 'fit';
-          if (root.dataset.layoutReason !== 'fit') root.dataset.layout = 'reflow';
+          root.dataset.layoutReason = hasOverflow ? 'geometry' : results.some(({ fits, element }) => !fits && !element.closest('dialog')) ? 'text' : 'fit';
+          if (root.dataset.layoutReason !== 'fit') {
+            root.dataset.layout = 'reflow';
+            measure(); // Recheck wrapped labels even when reflow leaves their box unchanged.
+          }
         }
         root.dataset.measurement = 'ready';
       });
@@ -203,6 +211,9 @@ async function measureLabels() {
     document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-feedback').forEach((element) => observer.observe(element));
     const retry = () => { root.dataset.layout = 'bounded'; measure(); };
     new MutationObserver(retry).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
+    const dialog = byId('files-dialog');
+    new MutationObserver(measure).observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+    observer.observe(dialog);
     new MutationObserver(() => { setLocale(root.lang); cache.clear(); retry(); }).observe(root, { attributes: true, attributeFilter: ['lang', 'style'] });
     window.addEventListener('resize', retry);
     document.fonts.addEventListener('loadingdone', retry);

@@ -4,6 +4,7 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
+    'data-files.js', 'assets/icons/folder.svg',
     'data-logging.js', 'mock-ecg.js', 'assets/ecg/mock-ecg.json', 'assets/ecg/mock-ecg.f32',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
     'assets/rounds/probe-runde.svg', 'assets/rounds/haupt-runde.svg',

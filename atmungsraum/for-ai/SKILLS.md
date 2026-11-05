@@ -5,6 +5,12 @@ is nested into the subproject entry route; load the selected installed skill
 bodies instead of copying complete skill packages into this public repository.
 This is a static subproject of the parent repository, not a new repository.
 
+The user's standing 2026-11-05 instruction in
+[root constraints](../../for-ai/constraints.md) and [WORKFLOW.md](WORKFLOW.md)
+requires the applicable Superpowers workflow and authorizes committing/pushing
+verified completed work without another publication prompt. Preserve unfinished
+concurrent work and the public/private data boundary.
+
 <!-- for-ai:shared-skills:start -->
 ## Shared project skill baseline
 

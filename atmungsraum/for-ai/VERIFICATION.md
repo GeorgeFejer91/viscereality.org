@@ -1,5 +1,110 @@
 # Verification
 
+## Folder and standing-workflow release acceptance — 2026-11-05
+
+For the user's explicit all-changes push, refreshed origin/main and local HEAD
+both start at `7233468`. Reviewed the complete intended source/assets/tests/notes
+and new root/subproject standing Superpowers/publication guidance. Fresh checks
+pass all 19 Node tests, seven scenario pairs, UI state, context, JavaScript syntax,
+SVG XML and Git whitespace. Cold opening 60 retained files uses exactly two
+full-store reads. Ten native Chrome popup layout cases and its download/share
+boundary/cancel/error/reload/playback checks pass; the full 161-case stretch
+matrix also passes. Both browser suites report zero page errors. Private/local
+participant, voice and diagnostic artifacts remain ignored. The following release
+record will identify the exact pushed commit, Pages result and live verification.
+
+## Saved-files popup and ZIP/share — 2026-11-05
+
+`npm test` passes all 19 tests. The ZIP check reads the actual Blob with Python's
+independent standard-library zipfile reader, verifies CRCs and exact CSV bytes,
+and extracts Unicode filenames and a same-name collision without data loss.
+ZIP32 uses stored entries, with no new runtime dependency; the interoperability
+test uses the existing Python interpreter. UI state, seven scenario pairs,
+context and Git whitespace checks pass.
+
+`node output/playwright/check-files.mjs` passes ten native headless Chrome layout
+cases with zero page errors: empty popup; 320×568, 390×844, 568×320, 844×390,
+768×1024, 1280×720 and 1920×1080; 200% root text with WCAG-style spacing; long
+German headings and unbroken filenames. Actual Pretext measurement is present,
+labels fit horizontally, and controls retain 48px targets. The list scrolls by
+design; short/enlarged cases allow whole-dialog vertical scrolling. Phone and
+desktop screenshots were visually inspected. The fixed folder has safe-area
+offsets and centered footers leave room beside it.
+
+Functional checks use 60 synthetic saved CSV fixtures in an isolated browser:
+empty state, individual/ZIP downloads, ordering, unsupported-share fallback,
+supported sharing payload and active user gesture, cancellation/rejection,
+native-dialog keyboard containment/focus restoration, all menus and unchanged
+hash. Opening/dismissing the popup during actual browser audio leaves playback
+running with advancing time. Ending that run adds a 61st CSV; all 61 reappear
+after reload before patient/sensor entry. Only the platform share API was
+simulated; no destination app opened and no message was sent. Physical phones,
+email, WhatsApp, Safari/WebViews and screen readers remain unqualified.
+
+The existing `check-stretch.mjs` passes all 161 rendered/playback/reflow cases
+with zero page errors after the footer reservation change. Receipts, executable,
+synthetic ZIP and screenshots remain ignored under `output/playwright/`:
+`check-files.mjs`, `files-results.json`, `files-fixture.zip`, `files-*.png`.
+No participant data or generated diagnostic enters public source. No folder
+publication/live qualification is claimed.
+
+Focused code review caught a cold-open hydration notification loop. Notifications
+now originate only when a run finishes, rather than once per hydrated record.
+The ignored `check-files-cold.mjs` regression reproduced 62 full export-store
+reads for 60 files before the fix, then exactly two reads with all 60 files and
+ZIP readiness after it. The reviewer revalidated the fix with no remaining
+actionable findings; all 19 Node tests and the popup functional suite were rerun.
+
+## Stretch-accordion acceptance — 2026-11-05
+
+The main UI now follows the explicit settings in SKILLS.md: equal outer anchors,
+dimension-responsive gaps/type, stretched patient/CSV groups, narrow stacked
+footer actions and short-landscape arrangements. Practice choices become four
+columns; round/main cards use wider rectangles where squares would force wrapping.
+The existing Pretext 0.0.9 runtime checks inner text boxes and painted DOM bounds.
+Fixed actions check natural width, line count and line height; multiline text
+checks widest line and height. User word spacing is marked DOM-verified because
+it is outside Pretext's model. No user enlargement is reduced to satisfy a box.
+
+`node output/playwright/check-stretch.mjs` passed 161 local native headless Chrome
+cases with zero page errors: 320×568, 320×1080, 390×844, 768×568, 768×1024,
+1280×720, 1920×568, 1920×1080, 568×320, 844×390, 480×640, 481×640, 844×480
+and 844×481 CSS px across patient, Polar, rounds, both option menus, empty/filled
+CSV recovery and ready players. All six real browser audio routes passed
+Start/Pause/Resume/End in phone portrait and short landscape. Bounded panels had
+no page/group scrolling, clipped labels or targets below 48px; central controls
+stayed within 2px of the viewport midpoint and footers retained their anchor.
+
+At fixed 768px width, patient group separation grew from 25.08px at 568px height
+to 145.44px at 1024px height. Column separation grew from 12.8px to 30.72px with
+width, reaching the 40px ceiling on desktop. Preferred body type grew from 16px
+to 20px when both dimensions allowed it; wide/short type stayed 16px. Portrait
+forms at 320×568 fit bounded geometry. Short landscape forms and filled CSV lists
+that exceed the middle budget use deliberate vertical document reflow, with no
+inner scrollbar or horizontal overflow. They are explicit supported-size
+exceptions, not strict no-scroll passes.
+
+Additional cases passed 200% root text with WCAG-style spacing, long German round,
+status/action labels, an unbroken identifier, locale invalidation and recovery
+after text/viewport changes. Word-spacing cases use rendered bounds, not a
+Pretext accuracy claim. Two separate fallbacks verified blocked Pretext modules
+and missing Intl.Segmenter: both marked measurement unavailable and retained a
+usable form in readable document flow. Reflow explicitly schedules a second
+measurement even when a wrapped label's box dimensions do not change; hidden
+status nodes are excluded from geometry checks. Patient Tab/radio-arrow flow
+and derived-ID updates passed. Phone, desktop and short-landscape screenshots
+were inspected; executable, JSON receipt and PNGs stay ignored under
+`output/playwright/check-stretch.mjs`, `stretch-results.json` and `stretch-*.png`.
+
+Fresh checks also passed all 19 current Node tests, seven JSON/CSV pairs,
+UI-state/context, app syntax and Git whitespace. Concurrent CSV-folder/dialog
+work is preserved and owns its separate overlay acceptance. No package upgrade,
+audio protocol or participant logging change was introduced by this layout task.
+These are desktop Chrome results; physical phones, browser zoom, Safari/WebViews,
+screen readers, real H10/headset behavior and live final-refinement deployment
+were not qualified by this check. RTK was unavailable; native bounded commands
+were used. See PROJECT.md and the publication task for observed Git/release state.
+
 ## Patient/ECG and recenter release checks — 2026-11-05
 
 For the user's all-changes publication request, refreshed remote main matched
@@ -59,6 +164,61 @@ and the detailed receipt remain ignored under `stretch-*`. The final source
 also uses rectangular round cards in short landscape and four practice columns
 where necessary to retain bounded panels. Publication of this follow-up still
 requires exact-commit deployment evidence.
+
+Follow-up source/evidence commit `72334681b5e447f7298aacf58b255fc5543b99b6`
+pushed with local/remote SHA equal. A fresh check of that committed layout passed
+all 156 Chrome cases. Pages run `42060990832` completed build and artifact upload,
+but deployment attempt 1 returned GitHub HTTP 500 while creating the deployment.
+The GitHub connector successfully requested rerun of failed jobs only; successful
+build/report jobs and the artifact are reused. A Pages API `built` response alone
+does not establish that the deploy job succeeded. Later CSV/ZIP and Pretext guard
+edits remain local under their separate active tasks, outside this release snapshot.
+
+Deployment attempt 2 also returned HTTP 500; attempt 3 retries only the failed
+job after a delay. The artifact-size warning is a separate standing concern:
+this upload is 2,142,307,246 bytes versus 2,142,305,761 bytes for the successful
+preceding release, so the warning alone does not establish this failure's cause.
+[GitHub's limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)
+state a 1 GB published-site limit. The official
+[GitHub status page](https://www.githubstatus.com/) reported Pages operational
+and no incident on 5 November at the diagnostic check. Do not describe these
+repository-specific failures as a confirmed platform-wide outage or remove
+existing site media without a separate reviewed plan.
+
+Attempt 3 succeeded: run `42060990832` reports success for exact commit
+`72334681b5e447f7298aacf58b255fc5543b99b6`, and the Pages API reports it built.
+All 25 public files changed since `ac39ec4` match their committed SHA-256 bytes;
+both entry URL forms return 200. A final sequential live Chrome pass verifies
+all 50 recenter/layout/no-op cases with real Pretext and no page errors. Two
+recordings start at source positions 7395 and 7689 (first ends at 7523); every
+ECG value matches the published binary. The 103 paused ECG samples retain one
+audio position while ECG values change. The final desktop screenshot was reviewed.
+Receipts/screenshots/synthetic CSVs stay ignored as
+`live-release-assets-7233468.json` and `recenter-live-final-*` in `output/playwright/`.
+
+Initial concurrent final browser runs hit the 30-second gate timeout while
+the ECG binary and a Pretext module were still downloading. No JS or validation
+error occurred; an independent uncached binary fetch took 13.93 seconds versus
+1.32 seconds for a query-qualified fetch, with identical bytes. The sequential
+rerun allowed a 90-second network timeout and passed without changing released
+code. This establishes functionality, not a loading-speed budget or physical
+phone qualification. The local final-source stretch matrix passed 156 cases;
+the wider live matrix stopped at that same initial download timeout, while the
+final 50-case live matrix completed successfully.
+
+At final Git observation local and remote main equal `7233468`. Newer CSV/ZIP
+work, an extra Pretext capability guard and these closing notes remain local
+in the shared checkout and are outside the verified release snapshot. They
+must not be reported as deployed by this task.
+
+A separate fresh live navigation also reached Polar found, connected and the
+round menu. `live-rounds-fresh.png` was reviewed with the heading, both footer
+actions and both corner controls visibly rendered; their DOM names, colors,
+bounds and hit targets were confirmed. An earlier automated capture omitted
+the header/footer paint despite visible measured bounds, so use this stable
+fresh capture for the final visual evidence rather than inferring pixels from
+geometry alone. The only console warning in that diagnostic was the site's
+unrelated favicon 404; the functional final 50-case run had no page errors.
 
 ## Patient entry, NeuroKit mock and participant CSVs — 2026-11-05
 

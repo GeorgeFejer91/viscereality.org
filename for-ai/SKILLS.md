@@ -1,5 +1,10 @@
 # Skill routing
 
+The user's standing 2026-11-05 instruction in [constraints.md](constraints.md)
+requires the relevant Superpowers workflow and supplies continuing authorization
+to commit/push verified completed work. Apply it together with this baseline;
+do not ask for the same publication permission again.
+
 <!-- for-ai:shared-skills:start -->
 ## Shared project skill baseline
 

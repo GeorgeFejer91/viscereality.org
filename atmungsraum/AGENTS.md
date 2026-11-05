@@ -15,3 +15,8 @@ Before ending, update that same state with verification evidence, blockers,
 the next action and observed Git/publication state. Keep the overall product
 goal open until its own acceptance criteria pass. Use Git for rollback and
 preserve unrelated work; do not create duplicate progress or source trees.
+
+Follow the user's standing Superpowers/GitHub synchronization instruction in
+the root `for-ai/constraints.md` and local `for-ai/WORKFLOW.md`. Complete the
+applicable Superpowers checks, update For-AI evidence, then commit and push
+verified completed work without requesting the same permission again.

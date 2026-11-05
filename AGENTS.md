@@ -17,6 +17,11 @@ for-ai/pptx-html-family-status.md
 
 Keep the `for-ai/` notes current. When a task changes durable project constraints, build workflow, QA status, asset policy, or known blockers, update the relevant `for-ai` file in the same change.
 
+Follow the standing Superpowers and GitHub synchronization instruction in
+`for-ai/constraints.md`: finish the applicable workflow, update project evidence,
+then commit and push completed, verified work without requesting publication
+permission again. The user's 2026-11-05 instruction supplies continuing authority.
+
 <!-- for-ai:shared-skills:start -->
 ## Shared project workflow
 

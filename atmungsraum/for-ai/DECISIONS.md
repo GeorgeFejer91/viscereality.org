@@ -1,5 +1,41 @@
 # Decisions
 
+## 2026-11-05 — Standing Superpowers workflow and GitHub synchronization
+
+The user requests pushing all current work and instructs future agents to always
+follow Superpowers and keep completed work current on GitHub. The root
+`for-ai/constraints.md` owns this standing authorization, surfaced by both
+AGENTS.md entrypoints and skill indexes. After applicable checks and review,
+update For-AI evidence, commit/push through existing origin/main, and verify
+synchronization and any affected Pages release without asking again. Preserve
+private/ignored data and concurrent unfinished work; explicit later local-only
+instructions override the default. Record concrete blockers and actual state.
+
+## 2026-11-05 — Permanent saved-files folder and native sharing
+
+Use a bottom-right safe-area-aware SVG folder button on every screen. Its native
+dialog has a scrollable list of retained CSVs, including reload recovery. Keep
+the underlying route and playback; Escape dismisses the dialog without reaching
+the player's stop shortcut. Reuse the existing shared writer's filenames/bytes.
+Offer individual download, one ZIP of all saved files and the platform file-share
+sheet for installed email/messaging apps. Prepare the ZIP before the share click
+to preserve user activation. Unsupported/rejected sharing falls back to manual
+ZIP attachment; cancellation changes no files. No new runtime dependency or
+server/mail integration is needed. The original CSV recovery route stays valid.
+
+## 2026-11-05 — Apply the stretch-accordion settings throughout the main UI
+
+The user requests updating the For-AI settings and applying them immediately.
+`SKILLS.md#main-ui-stretch-settings` is the shared layout contract for patient,
+Polar, menu, player and CSV screens. Preserve paired labels/inputs, equal outer
+anchors and centered primary controls; expand the gaps between form/CSV groups
+and matrix columns. On short landscape screens, put the four practice choices
+in one row and widen round/main cards; do not shrink text to keep square cards.
+Narrow footer actions stack. Enlarged text, short forms and unbounded recovery
+lists use full document reflow when required, without internal panel scrolling.
+Keep actual locked Pretext checks plus painted-DOM checks, explicit no-fit and
+unavailable states, and recovery to bounded geometry on content/viewport changes.
+
 ## 2026-11-05 — Patient entry, ambient signal and shared data names
 
 The user's final order is patient details → Polar connection → exercise menu.

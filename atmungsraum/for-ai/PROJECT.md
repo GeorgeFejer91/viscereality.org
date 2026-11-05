@@ -1,5 +1,62 @@
 # Project
 
+## Publish folder/sharing and standing workflow instruction — 2026-11-05
+
+The user explicitly requests pushing everything currently completed and making
+Superpowers plus GitHub synchronization a standing instruction for future agents.
+Root constraints own that continuing authorization; root/local AGENTS.md, skill
+routes and WORKFLOW.md make it discoverable. This release includes the folder,
+ZIP/sharing feature, final Pretext refinements and all current project evidence.
+Keep participant data, voice caches and ignored QA output local.
+
+- [x] Fetch remote main and review all current source/assets/tests/notes;
+  starting local and remote HEAD both `7233468`.
+- [x] Record the standing workflow/publication instruction in the existing
+  root and subproject control planes.
+- [x] Run fresh complete tests, context/scenario checks and rendered acceptance:
+  19 Node tests, seven scenario pairs, UI/context/syntax/whitespace, cold-open
+  regression, ten popup cases and all 161 stretch cases pass with no page errors.
+- [ ] Commit/push all reviewed intended changes and verify remote SHA.
+- [ ] Verify the exact Pages deployment, public assets and folder behavior;
+  publish the closing evidence and record final Git state.
+
+No local validation blocker remains. The overall real H10/headset, physical-phone
+share sheet and listening-acceptance goals remain open. Next action is committing
+and publishing through the already-configured main/root site.
+
+## Saved-files folder and sharing — 2026-11-05
+
+The user requests a permanent bottom-right folder button with an authored SVG,
+a scrollable popup listing downloaded session data, and all-file ZIP/email/app
+sharing. The native dialog lists locally retained CSV exports, including records
+recovered after reload, without navigating or stopping audio. It cannot enumerate
+the operating system's Downloads folder. ZIP download and the device share sheet
+use one archive of every saved CSV from this browser. Email/WhatsApp destinations
+depend on installed apps and browser file-share support; unsupported browsers
+retain ZIP and individual CSV downloads.
+
+- [x] Add the fixed safe-area-aware folder SVG/button and accessible modal list.
+- [x] Reuse the shared writer's retained exports; preserve CSV bytes and names,
+  with session UUID directories only for colliding filenames.
+- [x] Verify ZIP interoperability, sharing/cancel/error fallback, keyboard focus,
+  reload recovery, active playback, responsive/enlarged layouts and regressions.
+
+Evidence: 19 Node tests including independent ZIP extraction/CRC/Unicode checks;
+10 new Chrome overlay layout cases plus functional sharing/download and 61-record
+recovery checks; the existing 161-case stretch matrix; UI/context and seven
+scenario-pair checks all pass. See VERIFICATION.md. The platform share API alone
+was simulated; no email/WhatsApp message was sent.
+Focused review is complete: a hydration-triggered read loop was fixed, and the
+cold-open regression now lists 60 files with two full export-store reads.
+
+Git observation: shared canonical checkout on `main`, HEAD `7233468` during
+verification. Folder changes are uncommitted alongside another task's final
+Pretext refinements and release/evidence notes. The concurrent publication task
+below owns deployment; this folder revision has not been published/live-verified.
+No local implementation blocker remains. Next: integrate the reviewed revision
+through that release workflow and check native sharing on supported phones.
+The overall real H10/headset and listening acceptance goals remain open.
+
 ## Publish patient/ECG and recenter changes — 2026-11-05
 
 The user explicitly requests pushing all current changes to the live site.
@@ -25,8 +82,11 @@ DATA-LOGGING.md owns this contract; real H10 acquisition is still pending.
 - [x] Run the final stretch acceptance matrix: all 156 native Chrome cases pass
   with no page errors, including growth in both dimensions, short landscape,
   all six playback routes, reflow/spacing and missing-Pretext fallback.
-- [ ] Commit all reviewed changes, push main and verify the exact Pages build.
-- [ ] Verify deployed assets and browser behavior; record final Git state.
+- [x] Commit all reviewed changes, push main and verify the exact Pages build:
+  `72334681b5e447f7298aacf58b255fc5543b99b6`, run `42060990832` attempt 3 succeeded.
+- [x] Verify deployed assets and browser behavior: all 25 public changed files
+  match committed bytes, both entry URLs return 200, and 50 final live Chrome
+  cases pass with exact continuous-source CSV values and no page errors.
 
 The Pages connector returned an internal error; use the existing authenticated
 GitHub CLI/API for exact-commit build evidence. No hosting settings change is
@@ -39,7 +99,26 @@ The later three layout files are the only additional uncommitted product changes
 next observation and are included in this same all-changes publication task.
 The overall headset/H10 and listening acceptance goals remain open.
 
-## Active task: apply stretch-accordion settings — 2026-11-05
+Release boundary: follow-up `7233468` contains the reviewed stretch source and
+initial live evidence; it is pushed with remote SHA verified. The next shared
+working-tree edits (CSV/ZIP export work and an additional Pretext capability
+guard) arrived after this verified release snapshot and belong to their active
+tasks. Preserve them; do not sweep them into publication while incomplete.
+Pages run `42060990832` built successfully but attempt 1 failed creating the
+deployment with GitHub HTTP 500. Retry only failed jobs, retaining the successful
+build artifact; verify the deployment job and live bytes before declaring it live.
+
+Final observation: main and origin/main both point to `7233468`; the exact
+Pages build/deployment succeeded on attempt 3. This publication task is complete.
+The final live recordings start at samples 7395 and 7689, with the first ending
+at 7523; 103 paused ECG samples retain one audio time while values change.
+Newer CSV/ZIP source/assets/tests/notes and the Pretext guard remain uncommitted
+in the shared checkout, along with this closing evidence. Preserve that active
+work and validate/publish it under its own task. Do not claim the working tree
+is clean or that the newer feature is live. See VERIFICATION.md for receipts
+and network/deployment recovery. Overall hardware/listening goals stay open.
+
+## Stretch-accordion settings applied — 2026-11-05
 
 Apply the installed `uncodixfy-pretext` accordion-stretch settings to the entire
 main menu, including patient entry and CSV recovery. `SKILLS.md` owns the
@@ -48,10 +127,26 @@ Keep the existing dark static UI, centered controls, patient/audio state owners,
 and fixed recenter/signal controls. Stretch means distributing space between
 ordered groups, not adding collapsible sections.
 
-- [ ] Make the durable layout settings and supported-size policy explicit.
-- [ ] Apply dimension-responsive group spacing and complete Pretext/no-fit checks.
-- [ ] Verify independent width/height resizing, anchors, full text, keyboard flow,
+- [x] Make the durable layout settings and supported-size policy explicit.
+- [x] Apply dimension-responsive group spacing and complete Pretext/no-fit checks.
+- [x] Verify independent width/height resizing, anchors, full text, keyboard flow,
   enlarged text and unavailable measurement; record fresh evidence and Git state.
+
+Evidence: 161 native Chrome rendered cases and two measurement-unavailable
+fallbacks passed, including all six Start/Pause/Resume/End routes, independent
+dimension growth, both responsive breakpoints, 200% text/spacing, long text/IDs,
+locale changes and bounded-layout recovery. All 19 current Node tests, seven
+scenario pairs, UI/context/syntax and whitespace checks pass. See VERIFICATION.md.
+No blocker remains for this layout task. Physical phones/Safari/WebViews, real
+H10/headset integration and listening acceptance remain open product checks.
+
+During this task the concurrent publication owner committed the initial guidance
+in `e2b6e32` and the core layout in `7233468` on `main`. Final capability/reflow
+polish and these evidence notes are local at this observation, alongside separate
+CSV-folder/dialog work in shared runtime files. Preserve that work; the publication
+task above owns deployment. Next action: integrate the final reviewed refinements
+through that release and verify its exact deployed bytes. No push was performed
+by this layout task; no live qualification of these final refinements is claimed.
 
 Starting state: shared canonical checkout on `main`, HEAD `ac39ec4`, with existing
 uncommitted patient/ECG/logging and recenter work. Preserve those changes in place.

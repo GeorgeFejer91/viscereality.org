@@ -24,6 +24,23 @@ main {
 #recenter-vr { position: fixed; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); width: 48px; height: 48px; padding: 5px; cursor: default; }
 #recenter-vr:hover { background: #131712; border-color: #4a5148; }
 #recenter-vr img { display: block; }
+#open-files { position: fixed; z-index: 2; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); width: 48px; height: 48px; padding: 7px; }
+#open-files img { display: block; }
+#files-dialog { width: min(680px, calc(100% - 24px)); max-width: none; max-height: calc(100svh - 24px); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; border: 1px solid #4a5148; border-radius: 12px; color: #e9ebe3; background: #0b0e0a; font: inherit; overflow: auto; }
+#files-dialog[open] { display: flex; flex-direction: column; gap: 16px; }
+#files-dialog::backdrop { background: #000b; }
+.files-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.files-header h2 { min-width: 0; margin: 0; font-size: 1.25em; line-height: 1.3; font-weight: 400; }
+#close-files { flex: none; }
+#files-dialog p { font-size: 1em; }
+#files-scope, #files-share-hint { color: #b2b8ab; }
+.files-scroll { flex: 0 1 auto; min-height: 80px; max-height: 40svh; max-height: 40dvh; overflow-y: auto; overflow-wrap: anywhere; }
+#saved-files { display: grid; gap: 8px; list-style: none; margin: 0; padding: 4px; }
+#saved-files a { display: block; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 8px; color: #c9d3bf; text-decoration: none; }
+.files-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.files-actions button { flex: 1 1 180px; }
+.files-scroll:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 2px; }
+body:has(#files-dialog[open]) { overflow: hidden; }
 #belt-signal { position: fixed; z-index: 1; top: max(10px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); display: flex; align-items: center; padding: 8px; border: 1px solid #4a5148; border-radius: 8px; background: #131712; }
 .signal-dot { width: 12px; height: 12px; flex: none; border-radius: 50%; background: #73796e; }
 #belt-signal[data-state="connected"] .signal-dot { background: #88cb97; animation: belt-breathe 4s ease-in-out infinite; }
@@ -45,7 +62,7 @@ p, figure { margin: 0; }
 .sensor-body { grid-template-rows: minmax(0, 1fr); place-items: center; }
 .ecg-box { width: min(100%, 720px); min-height: 0; margin: 0; border: 1px solid #4a5148; border-radius: 12px; display: grid; height: min(100%, 280px); }
 canvas { display: block; width: 100%; height: 100%; min-height: 0; }
-.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; align-self: end; justify-self: center; width: min(100%, 600px); }
+.actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); align-items: stretch; align-self: end; justify-self: center; width: min(100%, 600px, calc(100vw - 144px - env(safe-area-inset-left) - env(safe-area-inset-right))); }
 .actions > :only-child, .actions:has(> [hidden]) > :not([hidden]) { grid-column: 1 / -1; justify-self: center; width: min(100%, 180px); }
 button, .actions a { display: grid; place-items: center; min-width: 0; min-height: 48px; padding: 10px 12px; font: inherit; line-height: 1.3; border: 1px solid #4a5148; border-radius: 10px; color: #e9ebe3; background: #131712; text-align: center; text-decoration: none; cursor: pointer; }
 button > [data-measure], .actions a > [data-measure] { width: 100%; }
@@ -110,6 +127,7 @@ html:not([data-layout="reflow"]) #haupt-runde .options { width: min(100cqw, calc
 output { min-height: 1.5em; color: #bbb; text-align: center; }
 @media (max-width: 480px) {
   .actions { grid-template-columns: minmax(0, 1fr); }
+  .files-header { align-items: stretch; flex-direction: column; gap: 12px; }
 }
 @media (max-height: 480px) and (min-width: 481px) {
   main { --gap: 8px; --inset: 10px; }
