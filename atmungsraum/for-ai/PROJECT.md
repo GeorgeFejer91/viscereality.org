@@ -16,13 +16,20 @@ Keep participant data, voice caches and ignored QA output local.
 - [x] Run fresh complete tests, context/scenario checks and rendered acceptance:
   19 Node tests, seven scenario pairs, UI/context/syntax/whitespace, cold-open
   regression, ten popup cases and all 161 stretch cases pass with no page errors.
-- [ ] Commit/push all reviewed intended changes and verify remote SHA.
-- [ ] Verify the exact Pages deployment, public assets and folder behavior;
-  publish the closing evidence and record final Git state.
+- [x] Commit/push all 20 reviewed intended files: `a52d56a875cc6c30f149f1c4831e098ac12c8711`;
+  local main and remote main match, with a clean tree before this evidence update.
+- [x] Verify Pages run `42079217920` succeeded for that exact commit; all 20
+  published files match Git bytes and both entry URLs return 200. All ten live
+  popup cases plus download/share-boundary/reload/playback checks pass, no errors.
+  This closing evidence accompanies a final documentation-only commit/push.
 
-No local validation blocker remains. The overall real H10/headset, physical-phone
-share sheet and listening-acceptance goals remain open. Next action is committing
-and publishing through the already-configured main/root site.
+The folder release and standing instruction are complete. No release blocker
+remains. The overall real H10/headset, physical-phone share sheet and listening
+acceptance goals remain open; those are the next product acceptance actions.
+Git observation immediately before this evidence update: main and origin/main
+both `a52d56a`, no modified/untracked source. This evidence-only follow-up must
+also be pushed, with final SHA/synchronization reported at handoff. The standing
+authorization is durable and requires no repeat publication permission.
 
 ## Saved-files folder and sharing — 2026-11-05
 
@@ -49,12 +56,11 @@ was simulated; no email/WhatsApp message was sent.
 Focused review is complete: a hydration-triggered read loop was fixed, and the
 cold-open regression now lists 60 files with two full export-store reads.
 
-Git observation: shared canonical checkout on `main`, HEAD `7233468` during
-verification. Folder changes are uncommitted alongside another task's final
-Pretext refinements and release/evidence notes. The concurrent publication task
-below owns deployment; this folder revision has not been published/live-verified.
-No local implementation blocker remains. Next: integrate the reviewed revision
-through that release workflow and check native sharing on supported phones.
+Publication is now verified by the folder release above: `a52d56a` is pushed and
+live, including the final Pretext refinements and preceding release notes.
+Native Chrome passed the ten overlay cases and functional file/download/reload/
+playback sequence against the public URL, with zero page errors. The next feature
+acceptance action is real native sharing on supported phones.
 The overall real H10/headset and listening acceptance goals remain open.
 
 ## Publish patient/ECG and recenter changes — 2026-11-05

@@ -13,6 +13,22 @@ matrix also passes. Both browser suites report zero page errors. Private/local
 participant, voice and diagnostic artifacts remain ignored. The following release
 record will identify the exact pushed commit, Pages result and live verification.
 
+Release `a52d56a875cc6c30f149f1c4831e098ac12c8711` is pushed to main, with
+local/remote SHA equality and a clean tree before the closing evidence commit.
+GitHub Pages run `42079217920` completed build and deployment successfully.
+`check-live-release.mjs a52d56a875cc6c30f149f1c4831e098ac12c8711` verified all
+20 public changed files byte-for-byte against Git and HTTP 200 at both entry
+URLs. `check-files.mjs https://viscereality.org/atmungsraum/ files-live-results`
+passed all ten layout cases and the full synthetic download/share-boundary/
+recovery/playback sequence against the live site, with zero page errors.
+The native app share boundary remains simulated; no email or message was sent.
+The exact-commit Pages run is
+<https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42079217920>.
+Receipts are ignored in `output/playwright/files-live-results.json` and
+`live-release-assets-a52d56a.json`. Standing instructions were reviewed with no
+material contradictions; the subsequent evidence commit changes documentation
+only and preserves the verified runtime bytes.
+
 ## Saved-files popup and ZIP/share — 2026-11-05
 
 `npm test` passes all 19 tests. The ZIP check reads the actual Blob with Python's
@@ -45,8 +61,9 @@ The existing `check-stretch.mjs` passes all 161 rendered/playback/reflow cases
 with zero page errors after the footer reservation change. Receipts, executable,
 synthetic ZIP and screenshots remain ignored under `output/playwright/`:
 `check-files.mjs`, `files-results.json`, `files-fixture.zip`, `files-*.png`.
-No participant data or generated diagnostic enters public source. No folder
-publication/live qualification is claimed.
+No participant data or generated diagnostic enters public source. The original
+implementation-only check did not claim publication; the release acceptance
+entry above now records the verified live release.
 
 Focused code review caught a cold-open hydration notification loop. Notifications
 now originate only when a run finishes, rather than once per hydrated record.
