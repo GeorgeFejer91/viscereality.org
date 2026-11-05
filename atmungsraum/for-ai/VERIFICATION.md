@@ -1,5 +1,31 @@
 # Verification
 
+## Round-button SVG infographics — 2026-11-05
+
+Built-in image generation produced two transparent PNG originals; VTracer
+converted them into eight and four SVG paths, respectively. Runtime SVGs are
+23,814 and 17,208 bytes, with the same 240×160 view box and two-color palette.
+The page loads the SVGs, preserving visible German labels and link names.
+Source PNGs and exact prompts/conversion settings live in `assets/rounds/`.
+
+Native headless Chrome passed 13 rendered cases: 320×568, 390×844, 768×1024,
+900×553, 1280×720, 1920×1080, 568×320, 844×390, 480×480 and 481×480 CSS px,
+plus 320px cases with 200% text, user text-spacing overrides and long German
+labels. Images decoded, actual Pretext reported ready/fit, labels and images
+did not overlap, cards had no internal overflow, and ordinary viewports had
+no page scrolling. Enlarged text used readable document reflow. Phone and
+desktop screenshots were visually inspected.
+
+Both links retained exactly their visible accessible names, visible keyboard
+focus and Enter activation into the expected four/two choices. Blocking Pretext
+retained readable choices in document flow. No page errors or failed runtime
+requests occurred. Local receipts, screenshots and the runnable check are in
+ignored `output/playwright/round-infographics-*` and
+`output/playwright/check-round-infographics.mjs`. Physical phones and Safari
+were not tested. All eight audio tests, UI-state, context and Git whitespace
+checks also passed. RTK was unavailable at the documented Windows path, so
+bounded native commands supplied the verification output.
+
 ## Centered main UI — 2026-11-05
 
 Before correction, native Chromium measurements showed left-aligned single

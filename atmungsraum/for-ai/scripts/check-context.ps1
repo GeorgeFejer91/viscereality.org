@@ -5,6 +5,7 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
+    'assets/rounds/probe-runde.svg', 'assets/rounds/haupt-runde.svg',
     'AGENTS.md', 'for-ai/README.md', 'for-ai/PROJECT.md',
     'for-ai/SKILLS.md', 'for-ai/VERIFICATION.md', 'for-ai/WORKFLOW.md',
     'for-ai/DECISIONS.md', 'for-ai/scripts/check-context.ps1')

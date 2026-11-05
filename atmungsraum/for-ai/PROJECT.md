@@ -1,5 +1,28 @@
 # Project
 
+## Round-button infographic task — 2026-11-05
+
+- [x] Generate two matching transparent infographics and convert them into
+  actual SVG paths. Originals, SVGs and exact prompts/settings are retained
+  under `assets/rounds/`.
+- [x] Embed the SVGs above the existing German round labels, preserving the
+  routes, accessible link names and real Pretext measurement.
+- [x] Verify 13 rendered cases, both branch routes, keyboard activation and
+  readable unavailable-measurement fallback. See `VERIFICATION.md`.
+
+The practice graphic shows a breathing loop; the main graphic shows natural
+breathing followed by box breathing. This user request supersedes the earlier
+text-only round-choice artwork rule. The overall headset/H10 product goal and
+pending audio listening review remain open.
+
+Git observation: the shared checkout is on `main`. Concurrent UI alignment work
+committed the two image references and their CSS in `e4f76d9` while this task
+was tracing/verifying the assets; player/audio edits remain owned by the other
+task. This task records the assets and their evidence in the commit titled
+`Add generated SVG infographics for Atmungsraum round buttons`. Publication
+verification is recorded separately when observed; next product action remains
+the pending headset/H10 integration and listening acceptance.
+
 ## Current UI alignment task — 2026-11-05
 
 The user requires symmetric, centered controls on the main Atmungsraum UI.
@@ -159,8 +182,9 @@ this browser-local decision tree:
    recording. Weiter is red/disabled until recording, then green/enabled.
    Erneut suchen appears only when disconnected or waiting for ECG, where retry
    aids recovery. The status and canvas identify the demo.
-2. Show "Übung wählen" with Probe-Runde and Haupt-Runde together. Use text-only
-   choices, soft dark surfaces, muted sage and cream, gentle corners, and
+2. Show "Übung wählen" with Probe-Runde and Haupt-Runde together. Use the two
+   generated SVG infographics above HTML labels, soft dark surfaces, muted sage
+   and cream, gentle corners, and
    restrained borders. Choices are square where the measured labels fit.
 3. Show the clickable boxes for the chosen round:
    - Probe-Runde: Anleitung (guided free exploration, no time limit), 5, 10,

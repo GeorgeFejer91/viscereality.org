@@ -1,0 +1,42 @@
+{
+  "generated": "2026-11-05",
+  "generator": "Built-in image_gen tool",
+  "assets": [
+    {
+      "name": "probe-runde",
+      "source": "probe-runde.png",
+      "svg": "probe-runde.svg",
+      "prompt": "Use case: infographic-diagram.\nAsset type: one small illustration for the German \"Probe-Runde\" breathing-practice button, displayed above a separate HTML label in a dark sage interface.\nPrimary request: a beautiful, exceptionally clear text-free flat infographic of learning box breathing: a simple cream pair of lungs in the center, surrounded by a spacious clockwise rounded-square breathing loop. Four understated arrowheads, one per edge, express four phases; a few short sage breath strokes near the lungs.\nStyle: restrained editorial vector art, geometric, soft rounded ends, bold clean silhouettes and smooth broad lines, two flat opaque colors only: muted sage #a9b99a and warm cream #e9ebe3. No gradients, shading, glows, texture or thin tiny details. Strong separation between lungs and surrounding loop.\nComposition: square 1024x1024 canvas, centered, balanced, artwork inside the middle 80 percent with generous transparent padding; simple enough to stay recognizable at 90px. No frame or background.\nText: none. No letters, words, numbers, labels, branding, watermark, hearts or medical symbols. This is a neutral breathing-practice diagram, no health claims.\nBackground: genuinely transparent, not white and not a checkerboard. Designed to sit on #131712.\nThis is the first of two matching illustrations; use confident clean shapes suitable for subsequent real SVG path tracing."
+    },
+    {
+      "name": "haupt-runde",
+      "source": "haupt-runde.png",
+      "svg": "haupt-runde.svg",
+      "prompt": "Use case: infographic-diagram.\nAsset type: one small illustration for the German \"Haupt-Runde\" breathing-session button, displayed above a separate HTML label in an existing dark sage interface.\nPrimary request: a clear text-free infographic showing the session's TWO successive stages: a gentle natural-breathing sine wave on the left, then a short simple right-facing arrow in the middle, then a four-phase rounded-square breathing loop on the right. Inside the square is a tiny simple cream pair of lungs. The whole arrangement is one harmonious centered horizontal infographic. Exactly one full smooth sine-wave period, a separate arrow, and one clockwise square loop with four arrowheads.\nStyle: restrained editorial vector art, geometric, soft rounded ends, bold clean silhouettes and smooth broad lines. Two flat opaque colors only: muted sage #a9b99a for the wave and loop, warm cream #e9ebe3 for the transition arrow and lungs. Strictly solid flat fills. No gradients, shading, glows, texture, speckles, tiny details or thin strokes.\nComposition: square 1024x1024 canvas with an optically centered horizontal composition occupying approximately 80% width and 55% height; generous transparent margins. Large, simple symbols readable at a total width of 120 pixels. Keep wave, arrow, and loop separated without overlap.\nText: none. No letters, words, numbers, labels, title, branding, watermark, clocks, hearts or medical symbols. No health claims.\nBackground: genuinely transparent, clean empty transparent negative space, not white and not a checkerboard. Intended to sit on #131712.\nThis is part of a matched pair of breathing infographics using sage and cream, suitable for subsequent real SVG path tracing."
+    }
+  ],
+  "conversion": {
+    "tool": "VTracer 0.6.12 (installed Python 3.12 runtime)",
+    "palette": [
+      "#a9b99a",
+      "#e9ebe3"
+    ],
+    "alphaThreshold": 180,
+    "colormode": "color",
+    "hierarchical": "cutout",
+    "mode": "spline",
+    "filter_speckle": 48,
+    "color_precision": 8,
+    "layer_difference": 16,
+    "corner_threshold": 60,
+    "length_threshold": 4,
+    "max_iterations": 10,
+    "splice_threshold": 45,
+    "path_precision": 2,
+    "canvas": [
+      240,
+      160
+    ],
+    "normalization": "Fit the source alpha>=180 bounds within 224x144, preserving aspect ratio, centered at (120,80). Classify opaque pixels by nearest RGB palette color before tracing; leave source PNGs intact."
+  }
+}

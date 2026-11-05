@@ -1,5 +1,15 @@
 # Decisions
 
+## 2026-11-05 — Generated SVG illustrations in round buttons
+
+The user requests two infographic images, conversion to SVG and embedding in
+the Probe-Runde/Haupt-Runde buttons. Use the generated breathing-loop practice
+graphic and natural-breathing-to-box-breathing main graphic in `assets/rounds/`.
+Keep the visible HTML labels and accessible link names; treat the images as
+decorative supplements. Retain generated PNG originals and exact prompts, but
+load only the traced path-based SVGs at runtime. This supersedes the text-only
+round-choice restriction below while preserving the minimal navigation flow.
+
 ## 2026-10-12 — Ponytail applies to UI elements and copy
 
 Keep only controls, descriptors, and feedback needed to make a choice, understand
