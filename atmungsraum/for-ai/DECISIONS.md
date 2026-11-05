@@ -16,8 +16,11 @@ the previous hidden-until-playing countdown display.
 ## 2026-11-05 — Generated SVG illustrations in round buttons
 
 The user requests two infographic images, conversion to SVG and embedding in
-the Probe-Runde/Haupt-Runde buttons. Use the generated breathing-loop practice
-graphic and natural-breathing-to-box-breathing main graphic in `assets/rounds/`.
+the Probe-Runde/Haupt-Runde buttons. The later correction distinguishes
+practice from research/data collection: use simple lungs with one repeat arrow
+for practice, and a clipboard containing a simple data chart for the main
+research round. Keep both SVG backgrounds and the clipboard interior
+transparent. Final generated assets and exact prompts live in `assets/rounds/`.
 Keep the visible HTML labels and accessible link names; treat the images as
 decorative supplements. Retain generated PNG originals and exact prompts, but
 load only the traced path-based SVGs at runtime. This supersedes the text-only

@@ -39,18 +39,26 @@ separate open checks. Recheck shared-checkout Git state before continuing.
 - [x] Verify 13 rendered cases, both branch routes, keyboard activation and
   readable unavailable-measurement fallback. See `VERIFICATION.md`.
 
-The practice graphic shows a breathing loop; the main graphic shows natural
-breathing followed by box breathing. This user request supersedes the earlier
-text-only round-choice artwork rule. The overall headset/H10 product goal and
-pending audio listening review remain open.
+The final simplified practice graphic shows lungs with a repeat arrow. The main
+graphic shows a clipboard with a simple three-point data chart, identifying the
+research/data-collection role requested by the user. Both SVG backgrounds and
+the clipboard interior are transparent. This replaces the first breathing-loop
+artwork and supersedes the earlier text-only round-choice rule. The symbols do
+not establish implemented research data collection; the overall headset/H10
+product goal and pending audio listening review remain open.
 
 Git observation: the shared checkout is on `main`. Concurrent UI alignment work
 committed the two image references and their CSS in `e4f76d9` while this task
 was tracing/verifying the assets; player/audio edits remain owned by the other
-task. This task records the assets and their evidence in the commit titled
-`Add generated SVG infographics for Atmungsraum round buttons`. Publication
-verification is recorded separately when observed; next product action remains
-the pending headset/H10 integration and listening acceptance.
+task. The initial assets were published in `a79275f` (Pages run `42044006553`
+succeeded). The simplified revision is saved locally under
+`Simplify round SVGs for practice and research`; its new PNGs, real path-only
+SVGs, prompts and transparent-alpha checks are retained with the existing
+13-case rendered QA. It is not pushed by this revision, because the shared
+`main` also contains the separate unpushed player commit `2e58f6f` and ongoing
+scenario-audio edits. Next artwork action: publish the simplified assets with
+the intended navigation release and repeat the live asset/browser checks.
+Preserve the concurrent work; the overall product goal remains open.
 
 ## Current UI alignment task — 2026-11-05
 

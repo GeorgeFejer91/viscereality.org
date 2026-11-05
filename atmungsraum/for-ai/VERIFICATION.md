@@ -30,11 +30,19 @@ Safari, H10/headset execution and live deployment were not checked by this task.
 
 ## Round-button SVG infographics — 2026-11-05
 
-Built-in image generation produced two transparent PNG originals; VTracer
-converted them into eight and four SVG paths, respectively. Runtime SVGs are
-23,814 and 17,208 bytes, with the same 240×160 view box and two-color palette.
-The page loads the SVGs, preserving visible German labels and link names.
-Source PNGs and exact prompts/conversion settings live in `assets/rounds/`.
+The user simplified the initial diagrams to practice lungs with one repeat
+arrow and a research/data-collection clipboard with a three-point data chart.
+Two new built-in image generations were converted with VTracer to two and three
+SVG paths, respectively. Runtime SVGs are 8,907 and 12,982 bytes, with the same
+240×160 view box and two-color palette. They contain no bitmap, background
+rectangle, script or external reference; transparent outer corners and internal
+gaps were checked in rasterized alpha. The page loads the SVGs with revised
+image cache tokens, preserving visible German labels and link names. Source
+PNGs and exact prompts/conversion settings live in `assets/rounds/`.
+
+The 13-case rendered/keyboard/fallback check below was repeated successfully
+for the simplified revision. Its publication remains pending; `a79275f` and
+Pages run `42044006553` refer to the earlier artwork, not this revision.
 
 Native headless Chrome passed 13 rendered cases: 320×568, 390×844, 768×1024,
 900×553, 1280×720, 1920×1080, 568×320, 844×390, 480×480 and 481×480 CSS px,

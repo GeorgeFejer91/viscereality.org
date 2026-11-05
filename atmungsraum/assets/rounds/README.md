@@ -4,10 +4,12 @@ Generated with the built-in image generation tool on 2026-11-05, then traced
 into genuine SVG paths. The original transparent PNGs are retained alongside
 the runtime SVGs. Exact prompts and conversion settings are in `generation.json`.
 
-- `probe-runde`: lungs inside a four-phase breathing loop for practice.
-- `haupt-runde`: natural breathing followed by the guided box-breathing loop.
+- `probe-runde`: lungs with one repeat arrow for breathing practice.
+- `haupt-runde`: a clipboard with three connected data points for research and
+  data collection. It does not claim that the browser prototype collects data.
 
-Both SVGs use the page's sage/cream palette and a shared 240×160 view box.
+Both SVGs have fully transparent backgrounds, use the page's sage/cream palette
+and share a 240×160 view box. The clipboard interior is transparent too.
 Only the SVGs load on the page; there are no embedded bitmap images, external
 references, scripts, fonts or animation. German button labels remain HTML text.
 The illustrations are decorative supplements with empty alt text; the links'
