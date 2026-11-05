@@ -11,8 +11,8 @@ contracts; the parent repository remains the Git/publication owner.
 - [x] Nest the full shared baseline in `for-ai/SKILLS.md` and route to it from
   local `AGENTS.md` and `for-ai/README.md`; keep project-specific UI rules.
 - [x] Run current context, scenario, audio and rendered-browser checks.
-- [ ] Commit all intended changes, push `main`, and verify remote SHA and Pages.
-- [ ] Verify deployed SVGs, scenario files and browser playback/layout.
+- [x] Commit all intended changes, push `main`, and verify remote SHA and Pages.
+- [x] Verify deployed SVGs, scenario files and browser playback/layout.
 
 Starting Git observation: canonical checkout on `main` at `0f5d05a`, three
 commits ahead of refreshed `origin/main`; only the existing alignment-publication
@@ -21,8 +21,20 @@ overall H10/headset/video-integration and listening acceptance goals open.
 Fresh checks passed 13 Node audio tests, seven JSON/CSV pairs, UI/context gates,
 13 round-layout cases, SVG transparency, 24 player-layout cases and all six
 scenario playback/retry routes. No browser errors occurred. See
-`VERIFICATION.md`. Next action: push this reviewed release and verify the
-deployed files and browser behavior before completing publication items.
+`VERIFICATION.md`. Release `5a0e3a9` was pushed to `main`; Pages run
+`42048199569` succeeded and the Pages API reported that exact commit built.
+All 26 checked public files matched the release, including both SVGs, runtime
+modules, shared manifest, fourteen JSON/CSV files and the baseline entry chain.
+Live Chrome passed phone/desktop round layout and both branches, all six
+scenario Start/Pause/Resume/End routes, exact receipt hashes and missing-file
+retry recovery, with no page errors. The live desktop screenshot was reviewed.
+
+The push request and nested-baseline task are complete. This final evidence is
+saved in the following documentation-only commit; product files remain those
+verified at `5a0e3a9`. At live verification, local/remote `main` matched and the
+tree was clean. Next product actions: listening acceptance and real headset/H10
+transport/video synchronization, with target-device evidence. Those overall
+product goals remain open; recheck fresh Git state at the next session.
 
 ## Playback controls task — 2026-11-05
 
@@ -47,11 +59,10 @@ The overall headset/H10 product goal and listening review remain open.
 Existing round artwork and viewport-centering work are preserved. This task
 is committed on `main` under `Add playback buttons and audio-clock progress`;
 its predecessor was `a79275f`, matching the locally recorded `origin/main`.
-No push or deployment was performed by this playback task. Screenshots and the
-24-case executable check remain ignored in `output/playwright/`. Next action:
-publish this UI revision through the existing workflow and verify its exact
-live assets; real phone/Safari, headset/H10 and listening acceptance remain
-separate open checks. Recheck shared-checkout Git state before continuing.
+The original playback task left publication to the combined release above,
+which now owns its current Git/deployment state. Screenshots and the 24-case
+executable check remain ignored in `output/playwright/`. Real phone/Safari,
+headset/H10 and listening acceptance remain separate open checks.
 
 ## Scenario audio protocol — 2026-11-05
 
@@ -115,11 +126,10 @@ task. The initial assets were published in `a79275f` (Pages run `42044006553`
 succeeded). The simplified revision is saved locally under
 `Simplify round SVGs for practice and research`; its new PNGs, real path-only
 SVGs, prompts and transparent-alpha checks are retained with the existing
-13-case rendered QA. It is not pushed by this revision, because the shared
-`main` also contains the separate unpushed player commit `2e58f6f` and ongoing
-scenario-audio edits. Next artwork action: publish the simplified assets with
-the intended navigation release and repeat the live asset/browser checks.
-Preserve the concurrent work; the overall product goal remains open.
+13-case rendered QA. It was initially kept local alongside the separate player
+and scenario changes. The combined release above now publishes and verifies
+this simplified artwork, the player and scenario audio together. Preserve the
+remaining product boundaries; the overall headset/H10 goal remains open.
 
 ## Current UI alignment task — 2026-11-05
 

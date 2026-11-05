@@ -17,9 +17,21 @@ and all six scenario Start/Pause/Resume/End routes with exact JSON receipt
 hashes, nine shared WAV fetches, missing-JSON failure and successful retry.
 No browser errors occurred. The existing ignored executables and receipts in
 `output/playwright/` own detailed evidence; prior native offline-render evidence
-is recorded in the scenario section below. Live release evidence follows once
-the pushed commit's Pages deployment is observed. Hardware and listening
-acceptance remain separate open checks.
+is recorded in the scenario section below.
+
+Release `5a0e3a93e6bccf70c1d30091aaa66e72b1d7869e` was pushed to `main`,
+with local and remote HEAD equal. Pages run `42048199569` succeeded; the Pages
+API reported that exact commit `built`. On the public site all 26 checked text
+assets matched the committed content: HTML/CSS/app and audio modules, the shared
+manifest, two SVGs, the AGENTS/README/SKILLS entry chain and seven JSON/CSV pairs.
+Both slash/no-slash URLs resolved successfully. Live Chrome verified both round
+branches at 900×553 and 320×568 CSS px with real Pretext, no page overflow and
+no page errors; the desktop screenshot was inspected. A separate live browser
+pass exercised every one of the six scenario Start/Pause/Resume/End paths,
+exact JSON receipt hashes, nine shared WAV fetches and missing-JSON failure/retry.
+All passed with no page errors. Receipts/screenshots remain ignored under
+`round-infographics-live*` and `scenario-player-live*` in `output/playwright/`.
+Hardware and listening acceptance remain separate open checks.
 
 ## Scenario audio protocol — 2026-11-05
 
@@ -97,8 +109,9 @@ image cache tokens, preserving visible German labels and link names. Source
 PNGs and exact prompts/conversion settings live in `assets/rounds/`.
 
 The 13-case rendered/keyboard/fallback check below was repeated successfully
-for the simplified revision. Its publication remains pending; `a79275f` and
-Pages run `42044006553` refer to the earlier artwork, not this revision.
+for the simplified revision. It is now published and live-verified by the
+combined release above; `a79275f` and Pages run `42044006553` refer to the
+earlier artwork.
 
 Native headless Chrome passed 13 rendered cases: 320×568, 390×844, 768×1024,
 900×553, 1280×720, 1920×1080, 568×320, 844×390, 480×480 and 481×480 CSS px,
