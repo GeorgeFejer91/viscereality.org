@@ -29,6 +29,7 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Listening assets: the user selected the website's ElevenLabs British Breathing Instructor and rejected OmniVoice. Local/ignored `atmungsraum/audio-assets/ready-to-listen/elevenlabs/` keeps each WAV beside its timing/transcript JSON, with separate voice/breath/mix components, four-second phases and full 16-second cycles. Rejected sets are archived locally. See [folder guide](../atmungsraum/audio-assets/README.md). Runtime assets remain separately selected.
 - Workflow: share the existing GitHub Pages deployment from `main`, root `/`; keep the local checkout sparse and avoid downloading unrelated large assets.
 - UI alignment (2026-11-05): keep main controls symmetric about the dynamic viewport midpoint, headings and single footer actions horizontally centered, and playback centered as its timer/status changes. Preserve enlarged-text document reflow; see the Atmungsraum verification notes for the rendered matrix.
+- Playback controls (2026-11-05): compact Starten/Pause/Fortsetzen and bordered Beenden buttons accompany a native read-only progress bar and elapsed/total times in every player state. Progress follows the audio clock, freezes on pause, and resets on replay; Anleitung shows its actual 68-second example. Seeking and video media are outside this UI change.
 
 ## Media Assets
 

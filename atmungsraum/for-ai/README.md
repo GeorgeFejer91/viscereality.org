@@ -15,7 +15,9 @@ play button. Haupt-Runde offers 10 or 15 minutes total: five minutes of normal
 breathing, followed by the existing five- or ten-minute guided box-breathing
 sequence. The normal-breathing period is silent and displays Normal atmen.
 The same button becomes Pause during playback and Fortsetzen while paused. The
-back action reads Beenden during playback. Pause freezes audio and the timer;
+back action reads Beenden during playback and has a bordered button surface.
+A read-only progress bar with elapsed/total time stays visible before, during
+and after playback, including the 68-second Anleitung example. Pause freezes audio and the timer;
 Fortsetzen resumes the same session. Ponytail applies to UI elements/copy: keep
 only necessary controls, choice information, state, and recovery feedback. Anleitung is
 unlimited guided exploration. Real H10/headset connection and execution remain

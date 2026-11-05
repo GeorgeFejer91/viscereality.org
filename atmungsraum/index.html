@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261105-round-art">
-  <script type="module" src="./app.js?v=20261105-round-art"></script>
+  <link rel="stylesheet" href="./style.css?v=20261105-player">
+  <script type="module" src="./app.js?v=20261105-player"></script>
 </head>
 <body>
   <main>
@@ -66,20 +66,24 @@
     <section class="screen" id="session-start" aria-labelledby="session-title" data-session-active="false" hidden>
       <h1 id="session-title" tabindex="-1" data-measure>Session starten</h1>
       <div class="screen-body play-body">
+        <output id="start-status" aria-live="polite" data-measure hidden></output>
         <button id="play" data-action="start" class="play-button" aria-label="Starten">
-          <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
+          <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
           <span data-measure>Starten</span>
         </button>
         <div class="play-feedback">
           <div class="session-progress">
             <p id="session-phase" data-measure>Bereit</p>
-            <output id="session-time" aria-label="Verbleibende Zeit" data-measure></output>
+            <progress id="session-progress" max="1" value="0" aria-label="Wiedergabefortschritt" aria-live="off"></progress>
+            <div class="session-times">
+              <span id="session-time" role="timer" aria-label="Vergangene Zeit" aria-live="off" data-measure>00:00</span>
+              <span id="session-duration" aria-label="Gesamtdauer" data-measure>00:00</span>
+            </div>
           </div>
-          <output id="start-status" aria-live="polite" data-measure hidden></output>
         </div>
       </div>
       <footer class="actions">
-        <a id="session-back" class="back" href="#probe-runde"><span data-measure>← Zurück</span></a>
+        <a id="session-back" class="back" href="#probe-runde"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z" fill="currentColor"/></svg><span data-measure>← Zurück</span></a>
       </footer>
     </section>
   </main>

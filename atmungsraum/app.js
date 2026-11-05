@@ -1,5 +1,5 @@
 import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js?v=20261012-baseline';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261012-minimal';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261105-player';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -132,8 +132,6 @@ async function measureLabels() {
         const headerHeight = visible.firstElementChild.getBoundingClientRect().height;
         const footerHeight = visible.querySelector('.actions')?.getBoundingClientRect().height ?? 0;
         visible.style.setProperty('--edge-size', `${Math.max(headerHeight, footerHeight)}px`);
-        const feedback = visible.querySelector('.play-feedback');
-        if (feedback) feedback.parentElement.style.setProperty('--detail-size', `${feedback.getBoundingClientRect().height}px`);
         const groups = [...visible.querySelectorAll('.screen-body, .actions, [data-measure]')];
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');

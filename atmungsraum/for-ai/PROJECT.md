@@ -1,5 +1,34 @@
 # Project
 
+## Playback controls task — 2026-11-05
+
+The user requests clearer buttons and a video-player-style progress display.
+Keep the centered primary Starten/Pause/Fortsetzen control, style Beenden as
+a bordered button, and group the phase, progress bar and elapsed/total clocks
+below playback. The timeline is visible before starting and remains visible
+after stopping or finishing. It follows active Web Audio time and freezes on
+pause; replay resets it. The Anleitung example shows its real 68-second audio
+duration even though the menu choice has no imposed exploration time limit.
+Use a semantic read-only progress element; seeking would alter the authored
+breathing protocol and is outside this change.
+
+- [x] Implement audio-clock progress, elapsed/total time and clearer buttons.
+- [x] Extend the controller regression to cover reset, pause, exact totals,
+  completion and replay; all eight audio tests pass.
+- [x] Verify 24 Chrome cases: seven viewports in ready/playing/paused states,
+  plus 200% text, long German labels/text spacing, and missing Pretext.
+  See `VERIFICATION.md` for evidence and device limits.
+
+The overall headset/H10 product goal and listening review remain open.
+Existing round artwork and viewport-centering work are preserved. This task
+is committed on `main` under `Add playback buttons and audio-clock progress`;
+its predecessor was `a79275f`, matching the locally recorded `origin/main`.
+No push or deployment was performed by this playback task. Screenshots and the
+24-case executable check remain ignored in `output/playwright/`. Next action:
+publish this UI revision through the existing workflow and verify its exact
+live assets; real phone/Safari, headset/H10 and listening acceptance remain
+separate open checks. Recheck shared-checkout Git state before continuing.
+
 ## Round-button infographic task — 2026-11-05
 
 - [x] Generate two matching transparent infographics and convert them into
@@ -199,7 +228,8 @@ this browser-local decision tree:
 There are no intermediate radio confirmations or separate instruction pages.
 The initial final screen shows the play action. During playback that same button
 becomes Pause, or Fortsetzen while paused, and the back link becomes Beenden.
-Phase/time appear only during playback. Remove redundant descriptors, decoration,
+The phase and elapsed/total progress remain visible in every player state.
+Remove redundant descriptors, decoration,
 duplicate buttons, and routine ready/playback messages; keep the choice timing
 breakdown and actionable loading/completion/error feedback. Real headset session
 execution remains pending.

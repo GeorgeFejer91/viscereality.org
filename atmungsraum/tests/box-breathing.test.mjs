@@ -219,7 +219,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     querySelector(selector) { return selector === 'path' ? this.icon ??= new Element() : this.label ??= new Element(); }
     setAttribute(name, value) { this[name] = value; }
   }
-  const elements = Object.fromEntries(['session-start', 'play', 'session-back', 'session-phase', 'session-time', 'start-status'].map(id => [id, new Element()]));
+  const elements = Object.fromEntries(['session-start', 'play', 'session-back', 'session-phase', 'session-time', 'session-duration', 'session-progress', 'start-status'].map(id => [id, new Element()]));
   const storage = new Map();
   const keys = ['document', 'window', 'AudioContext', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch'];
   const originals = Object.fromEntries(keys.map(key => [key, globalThis[key]]));
@@ -248,7 +248,10 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     const startAt = Number(elements['session-start'].dataset.audioStartTime);
     assert.equal(Number(elements['session-start'].dataset.audioEndTime) - startAt, 600);
-    assert.equal(elements['session-time'].textContent, '10:00');
+    assert.equal(elements['session-time'].textContent, '00:00');
+    assert.equal(elements['session-duration'].textContent, '10:00');
+    assert.equal(elements['session-progress'].max, 600);
+    assert.equal(elements['session-progress'].value, 0);
     assert.ok(context.nodes.every(node => node.startArgs[0] >= startAt + 300));
     context.currentTime = startAt + 12;
     assert.equal(elements.play.disabled, false);
@@ -261,6 +264,8 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     const nodesBeforePause = context.nodes.length;
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'paused');
+    assert.equal(elements['session-time'].textContent, '00:12');
+    assert.equal(elements['session-progress'].value, 12);
     assert.equal(context.state, 'suspended');
     assert.equal(elements.play.disabled, true, 'Resume still requires current ECG');
     assert.equal(elements.play.label.textContent, 'Fortsetzen');
@@ -282,6 +287,8 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.equal(previous[0].status, 'aborted');
     route('start-haupt-15');
     controller.update('session-start', uiState.selection, true);
+    assert.equal(elements['session-duration'].textContent, '15:00');
+    assert.equal(elements['session-progress'].max, 900);
     let unlock;
     context.resume = () => new Promise(resolve => { unlock = resolve; });
     elements.play.dispatchEvent(new Event('click'));
@@ -294,6 +301,25 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.equal(elements['session-back'].label.textContent, '← Zurück');
     assert.equal(uiState.started, false);
     assert.deepEqual(JSON.parse(storage.get('atmungsraum.audio-receipts')), previous);
+    route('start-probe-anleitung');
+    controller.update('session-start', uiState.selection, true);
+    assert.equal(elements['session-duration'].textContent, '01:08');
+    assert.equal(elements['session-time'].textContent, '00:00');
+    assert.equal(elements['session-progress'].value, 0);
+    assert.equal(elements['session-progress'].max, 68);
+    context.resume = Context.prototype.resume;
+    elements.play.dispatchEvent(new Event('click'));
+    await ready(() => elements['session-start'].dataset.audioState === 'playing');
+    context.currentTime = Number(elements['session-start'].dataset.audioEndTime);
+    context.nodes.at(-1).onended();
+    await ready(() => elements['session-start'].dataset.audioState === 'completed');
+    assert.equal(elements['session-time'].textContent, '01:08');
+    assert.equal(elements['session-progress'].value, 68);
+    elements.play.dispatchEvent(new Event('click'));
+    await ready(() => elements['session-start'].dataset.audioState === 'playing');
+    assert.equal(elements['session-time'].textContent, '00:00');
+    assert.equal(elements['session-progress'].value, 0);
+    elements['session-back'].dispatchEvent(new Event('click'));
   } finally {
     for (const key of keys) {
       if (originals[key] === undefined) delete globalThis[key]; else globalThis[key] = originals[key];

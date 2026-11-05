@@ -51,20 +51,37 @@ html:not([data-layout="reflow"]) #haupt-runde .options { width: min(100cqw, calc
 .option { display: grid; place-items: center; aspect-ratio: 1; min-width: 0; min-height: 48px; padding: 12px; border: 1px solid #3d463a; border-radius: 12px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; }
 .option > span { display: grid; gap: 6px; min-width: 0; width: 100%; }
 .option-hint { color: #bbb; font-size: .875rem; }
-.play-body { --detail-size: 0px; grid-template-rows: var(--detail-size) minmax(0, 1fr) var(--detail-size); align-content: stretch; justify-items: stretch; }
-.play-button { grid-row: 2; gap: var(--gap); width: min(100%, 260px); min-height: 140px; place-self: center; }
-.play-feedback { grid-row: 3; display: grid; gap: var(--gap); align-self: end; min-width: 0; }
-.play-button svg { display: block; color: #c9d3bf; }
-.session-progress { display: grid; gap: 4px; min-width: 0; text-align: center; }
-#session-time { min-width: 5ch; font-variant-numeric: tabular-nums; }
-#session-start[data-session-active="false"] .session-progress { display: none; }
+.play-body { grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); align-content: stretch; justify-items: center; }
+.play-button { grid-row: 2; display: flex; justify-content: center; gap: 12px; width: min(100%, 260px); min-height: 64px; padding: 16px 24px; place-self: center; background: #c9d3bf; border-color: #c9d3bf; color: #131712; }
+.play-button > [data-measure] { flex: 1; }
+.play-button:hover:enabled { background: #dce4d4; border-color: #dce4d4; }
+.play-feedback { grid-row: 3; display: grid; gap: var(--gap); align-self: start; width: min(100%, 560px); min-width: 0; }
+#start-status { grid-row: 1; align-self: end; width: min(100%, 560px); }
+.play-button svg { display: block; flex: none; }
+.session-progress { display: grid; gap: 14px; min-width: 0; text-align: center; }
+#session-phase { color: #c9d3bf; }
+#session-progress { appearance: none; display: block; width: 100%; height: 8px; border: 0; border-radius: 4px; background: #343c30; color: #c9d3bf; }
+#session-progress::-webkit-progress-bar { background: #343c30; border-radius: 4px; }
+#session-progress::-webkit-progress-value { background: #c9d3bf; border-radius: 4px; }
+#session-progress::-moz-progress-bar { background: #c9d3bf; border-radius: 4px; }
+.session-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; color: #b2b8ab; font-variant-numeric: tabular-nums; }
+.session-times > span { min-width: 5ch; }
+#session-time { text-align: start; }
+#session-duration { text-align: end; }
+.actions #session-back { display: flex; justify-content: center; gap: 10px; border-color: #4a5148; background: #131712; }
+.actions #session-back > [data-measure] { flex: 1; }
+.actions #session-back svg { display: none; flex: none; }
+#session-start[data-session-active="true"] #session-back svg { display: block; }
+.actions #session-back:hover { background: #1b2219; border-color: #7a8771; }
 output { min-height: 1.5em; color: #bbb; text-align: center; }
 @media (max-height: 480px) and (min-width: 481px) {
   main { --gap: 8px; --inset: 10px; }
   h1 { font-size: 1.25rem; }
-  .play-button { min-height: 88px; gap: 8px; }
-  .play-button svg { width: 32px; height: 32px; }
+  .play-button { min-height: 48px; padding-block: 10px; }
   .session-progress { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  #session-phase { text-align: start; }
+  #session-progress { grid-column: 1 / -1; grid-row: 2; }
+  .session-times { grid-column: 2; grid-row: 1; grid-template-columns: auto auto; }
 }
 /* Expose full document flow when enlarged text cannot fit the bounded panel. */
 html[data-layout="reflow"] main { height: auto; min-height: 100svh; min-height: 100dvh; }
@@ -75,3 +92,4 @@ html[data-layout="reflow"] .rounds, html[data-layout="reflow"] .options { width:
 html[data-layout="reflow"] .options { grid-template-columns: minmax(0, 1fr); }
 html[data-layout="reflow"] .ecg-box { height: 160px; }
 html[data-layout="reflow"] .option { aspect-ratio: auto; min-height: 88px; }
+html[data-layout="reflow"] .play-body { grid-template-rows: auto auto auto; padding-block: var(--gap); }

@@ -1,5 +1,33 @@
 # Verification
 
+## Playback buttons and progress — 2026-11-05
+
+The controller displays elapsed/total time and native progress from the same
+Web Audio clock as playback. Its extended regression first failed against the
+old countdown, then all eight audio tests passed with exact 600/900-second main
+totals, a paused 12-second position, the 68-second Anleitung total, completion,
+replay reset, signal-recovery gating and cancelled-unlock receipt protection.
+The UI-state check, context checker, JS syntax and Git whitespace checks passed.
+
+Native headless Chrome passed 24 rendered cases. Ready, playing and paused
+states at 320×568, 390×844, 768×1024, 1280×720, 1920×1080, 568×320 and
+844×390 CSS px stayed bounded without document/internal scrolling, clipped
+labels, overlap or page errors. Both actions retained at least 48px targets;
+the primary button stayed within 2px of the viewport midpoint. Real Pretext
+reported ready/fit. Short landscape groups phase and time above the bar; loading
+or failure status occupies the upper spare track rather than shifting playback.
+
+The remaining cases verified 320px with 200% root text, combined long German
+labels/text-spacing/200% text, and unavailable Pretext. They retained readable
+document reflow without horizontal overflow or clipping. Keyboard Space starts,
+pauses and resumes; Escape stops. Native progress advanced during playback,
+remained exactly frozen while paused and advanced again on resume. Progress is
+read-only and is not a seek control. Screenshot review covered phone, desktop
+and enlarged-text layouts. The local runnable check, JSON receipts and PNGs
+are ignored under `output/playwright/check-player.cjs`, `player-results.json`
+and `player-*.png`. This is Chrome/local verification; physical phone browsers,
+Safari, H10/headset execution and live deployment were not checked by this task.
+
 ## Round-button SVG infographics — 2026-11-05
 
 Built-in image generation produced two transparent PNG originals; VTracer

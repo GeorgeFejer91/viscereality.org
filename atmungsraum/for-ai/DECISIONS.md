@@ -1,5 +1,18 @@
 # Decisions
 
+## 2026-11-05 — Player buttons and audio-clock progress
+
+The user requests buttons and a video-player-style time tracker. Use the
+existing single Starten/Pause/Fortsetzen action with a compact icon/label
+layout, a bordered Beenden action, and a native progress bar with elapsed
+time and total duration. Keep the primary action at the viewport midpoint
+and the progress details grouped below it. Show progress in ready, active,
+paused, stopped and completed states. Derive durations from the production
+protocol, including the 68-second Anleitung example; freeze with the audio
+clock and reset on replay. Keep progress read-only to preserve the authored
+study timing; this request does not add video media or seeking. This replaces
+the previous hidden-until-playing countdown display.
+
 ## 2026-11-05 — Generated SVG illustrations in round buttons
 
 The user requests two infographic images, conversion to SVG and embedding in

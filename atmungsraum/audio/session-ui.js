@@ -1,4 +1,4 @@
-import { BoxBreathingEngine } from './box-breathing.js?v=20261012-baseline';
+import { BoxBreathingEngine, createProtocol } from './box-breathing.js?v=20261012-baseline';
 import { state, start } from '../ui-logic.js?v=20261012-baseline';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
@@ -8,6 +8,8 @@ export function mountSessionAudio() {
   const back = document.getElementById('session-back');
   const phase = document.getElementById('session-phase');
   const clock = document.getElementById('session-time');
+  const duration = document.getElementById('session-duration');
+  const progress = document.getElementById('session-progress');
   const status = document.getElementById('start-status');
   const labels = { baseline: 'Normal atmen', instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
     exhale: 'Ausatmen', hold_out: 'Atempause', rest: 'Pause · natürlich atmen',
@@ -16,8 +18,20 @@ export function mountSessionAudio() {
   const format = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   let engine, preparation, key = null, gate = false, mode = 'idle', message = '', token = 0, frame = 0;
   let active = null;
+  let totalSeconds = 0;
   let tick = () => {};
   let drawPosition = () => {};
+
+  function showProgress(seconds = 0) {
+    const elapsed = Math.max(0, Math.min(totalSeconds, seconds));
+    const elapsedLabel = format(Math.floor(elapsed));
+    const totalLabel = format(totalSeconds);
+    text(clock, elapsedLabel);
+    text(duration, totalLabel);
+    progress.max = totalSeconds || 1;
+    progress.value = elapsed;
+    progress.setAttribute('aria-valuetext', `${elapsedLabel} von ${totalLabel}`);
+  }
 
   function paint() {
     const busy = ['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode);
@@ -40,7 +54,6 @@ export function mountSessionAudio() {
     back.setAttribute('aria-label', busy ? 'Session beenden und zurück' : 'Zurück');
     text(status, message);
     status.hidden = !message;
-    clock.hidden = state.selection?.minutes === null;
   }
 
   // Receipts contain timing and selected scenario, never participant data or credentials.
@@ -83,6 +96,7 @@ export function mountSessionAudio() {
     mode = 'loading'; message = 'Audio wird geladen …'; paint();
     preparation = engine.prepare().then(() => {
       mode = 'ready'; message = '';
+      resetProgress(state.selection);
       if (key) paint();
     }).catch((error) => {
       preparation = null;
@@ -110,6 +124,7 @@ export function mountSessionAudio() {
       attempt.startAt = session.startAt;
       if (ownToken !== token) return;
       mode = 'playing'; message = '';
+      totalSeconds = session.protocol.total_frames / session.protocol.sample_rate;
       stage.dataset.audioStartTime = String(session.startAt);
       stage.dataset.audioEndTime = String(session.endAt);
       stage.dataset.audioSampleRate = String(engine.context.sampleRate);
@@ -119,9 +134,7 @@ export function mountSessionAudio() {
         const beat = event?.cycle ? Math.min(4, 1 + Math.floor((position.elapsed_seconds
           - event.offset_frames / session.protocol.sample_rate))) : null;
         text(phase, `${labels[event?.id] ?? 'Bereit'}${beat ? ` · ${beat}` : ''}`);
-        const remaining = Math.max(0, Math.min(session.protocol.total_frames / session.protocol.sample_rate,
-          Math.ceil(session.endAt - engine.context.currentTime)));
-        text(clock, format(remaining));
+        showProgress(position?.elapsed_seconds ?? 0);
         stage.dataset.audioPhase = event?.id ?? 'waiting';
         stage.dataset.audioVariant = event?.asset ?? '';
         stage.dataset.audioCycle = String(event?.cycle ?? '');
@@ -138,7 +151,7 @@ export function mountSessionAudio() {
       cancelAnimationFrame(frame);
       state.started = false;
       if (receipt.status === 'completed') {
-        mode = 'completed'; text(phase, 'Fertig'); text(clock, '00:00');
+        mode = 'completed'; text(phase, 'Fertig'); showProgress(totalSeconds);
         message = attempt.selection.minutes === null
           ? 'Anleitung beendet. Du kannst sie erneut anhören.' : 'Session abgeschlossen.';
       } else {
@@ -195,6 +208,16 @@ export function mountSessionAudio() {
   });
   window.addEventListener('pagehide', () => end('page-hidden'));
 
+  function resetProgress(selection) {
+    totalSeconds = selection?.minutes ? selection.minutes * 60 : 0;
+    if (selection && engine?.manifest) {
+      const protocol = createProtocol(selection.boxMinutes ?? 'anleitung', engine.manifest,
+        { baselineMinutes: selection.baselineMinutes });
+      totalSeconds = protocol.total_frames / protocol.sample_rate;
+    }
+    showProgress();
+  }
+
   return {
     update(screen, selection, hasSignal) {
       gate = hasSignal;
@@ -207,7 +230,7 @@ export function mountSessionAudio() {
         mode = engine?.buffers ? 'ready' : preparation ? 'loading' : 'idle';
         message = '';
         text(phase, 'Bereit');
-        text(clock, selection?.minutes ? format(selection.minutes * 60) : '');
+        resetProgress(selection);
         delete stage.dataset.audioPhase;
       }
       if (key && !engine?.buffers && !preparation) prepare();
