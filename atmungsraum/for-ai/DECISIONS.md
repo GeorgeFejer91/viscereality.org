@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-11-05 — Nested shared baseline and combined publication
+
+The user requests all current changes be pushed and the subproject's `for-ai/`
+be updated with the For-AI baseline. `AGENTS.md` and `README.md` route to the
+shared baseline in `SKILLS.md`: For-AI, RTK, GSD Core, Superpowers and Ponytail,
+with task-conditional UI, accessibility, performance, state and native routes.
+Use installed bodies progressively, preserving one goal/checklist and evidence
+owner. The available `browser-remote-sync-protocol` replaces the older missing
+`tauri-browser-remote-control` template route. This does not select the undecided
+headset stack/transport or add product dependencies.
+
 ## 2026-11-05 — Player buttons and audio-clock progress
 
 The user requests buttons and a video-player-style time tracker. Use the

@@ -1,5 +1,29 @@
 # Project
 
+## Combined publication and skill baseline — 2026-11-05
+
+The user explicitly authorizes pushing all current repository changes,
+including the playback controls, simplified transparent round SVGs, scenario
+audio protocol and remaining verification notes. Update this subproject's
+`for-ai/` with the installed For-AI baseline and preserve its existing product
+contracts; the parent repository remains the Git/publication owner.
+
+- [x] Nest the full shared baseline in `for-ai/SKILLS.md` and route to it from
+  local `AGENTS.md` and `for-ai/README.md`; keep project-specific UI rules.
+- [x] Run current context, scenario, audio and rendered-browser checks.
+- [ ] Commit all intended changes, push `main`, and verify remote SHA and Pages.
+- [ ] Verify deployed SVGs, scenario files and browser playback/layout.
+
+Starting Git observation: canonical checkout on `main` at `0f5d05a`, three
+commits ahead of refreshed `origin/main`; only the existing alignment-publication
+notes remained uncommitted. Publication is authorized by this request. Keep the
+overall H10/headset/video-integration and listening acceptance goals open.
+Fresh checks passed 13 Node audio tests, seven JSON/CSV pairs, UI/context gates,
+13 round-layout cases, SVG transparency, 24 player-layout cases and all six
+scenario playback/retry routes. No browser errors occurred. See
+`VERIFICATION.md`. Next action: push this reviewed release and verify the
+deployed files and browser behavior before completing publication items.
+
 ## Playback controls task — 2026-11-05
 
 The user requests clearer buttons and a video-player-style progress display.
@@ -110,7 +134,7 @@ Enlarged text retains the deliberate document-reflow escape hatch.
 - [x] Correct the shared shell, sensor action, footer and playback geometry.
 - [x] Verify 79 rendered cases at seven ordinary viewport sizes, plus 18
   enlarged-text/spacing/fallback cases and the keyboard interaction sequence.
-- [ ] Publish and verify the exact UI files and centering on the live site.
+- [x] Publish and verify the exact UI files and centering on the live site.
 
 Local Chromium checks, UI state, all eight audio tests, context and whitespace
 checks passed; screenshots and geometry receipts are ignored in
@@ -119,6 +143,14 @@ remote sample-page changes were merged while retaining the earlier local audio
 review notes. Publishing the navigation UI is covered by the existing approved
 prototype deployment workflow. The overall headset/H10 product goal and
 listening acceptance remain open.
+
+Alignment feature `e4f76d9` is published as an ancestor of `a79275f`; Pages run
+`42044006553` completed successfully. All three live entry files matched the
+feature's committed bytes, and all 79 live Chromium layout cases passed.
+Concurrent scenario/progress/image UI work is present in the shared checkout;
+preserve it. The alignment request is complete. Any subsequent UI revision must
+retain this geometry and rerun the centered-layout checks. The live verification
+notes are updated locally alongside that concurrent work.
 
 ## Voice sample subpage — 2026-10-28
 

@@ -1,5 +1,26 @@
 # Verification
 
+## Combined release and nested skill baseline — 2026-11-05
+
+The subproject entry chain now routes `AGENTS.md` → `for-ai/README.md` →
+`for-ai/SKILLS.md`, using the installed For-AI scaffold's full shared baseline
+and existing menu-specific rules. Review confirmed RTK, GSD Core, Superpowers,
+Ponytail, Pretext, accessibility, performance, MobX and conditional native/remote
+routes, one state owner and Git/publication safeguards. The unavailable older
+remote skill identifier is explicitly mapped to the installed BRSP skill.
+No product dependency or native stack selection was added.
+
+Fresh prepublication checks passed all 13 Node audio tests, seven scenario
+JSON/CSV pairs, UI state, context and whitespace. Native Chrome passed the
+13-case round-layout check, path-only SVG alpha checks, 24 player-layout cases,
+and all six scenario Start/Pause/Resume/End routes with exact JSON receipt
+hashes, nine shared WAV fetches, missing-JSON failure and successful retry.
+No browser errors occurred. The existing ignored executables and receipts in
+`output/playwright/` own detailed evidence; prior native offline-render evidence
+is recorded in the scenario section below. Live release evidence follows once
+the pushed commit's Pages deployment is observed. Hardware and listening
+acceptance remain separate open checks.
+
 ## Scenario audio protocol — 2026-11-05
 
 The six menu choices and engine-only 20-minute diagnostic each have JSON/CSV
@@ -120,6 +141,16 @@ Start/Space, pause/resume and Escape. All eight audio tests, UI-state/context
 checks, JavaScript syntax and Git whitespace checks passed. Local evidence is
 under ignored `output/playwright/`; physical phones, Safari and headset behavior
 are not established by these Chromium viewport checks.
+
+Public verification: alignment commit `e4f76d9` was carried into `a79275f` after
+the first Pages run was superseded by the concurrent asset update. Pages run
+`42044006553` succeeded for `a79275f`. Live `index.html`, `style.css` and `app.js`
+returned HTTP 200 and matched the alignment commit byte-for-byte. The same
+79-case Chromium matrix then passed at <https://viscereality.org/atmungsraum/>,
+with no page errors, overflow or text-fit failures. Local geometry error was
+zero horizontally and at most 0.0078125 CSS px vertically for bounded primary
+controls. Keep concurrent scenario/progress work separate from this evidence;
+later changes require fresh checks against their own committed deployment.
 
 ## Audio protocol text review — 2026-10-27
 

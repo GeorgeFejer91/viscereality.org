@@ -3,6 +3,13 @@
 This is the AI control plane for the `/atmungsraum` subpage. Product code lives
 outside this folder, currently in `../index.html` and `../app.js`.
 
+At entry, read [SKILLS.md](SKILLS.md) for the nested shared baseline and select
+only the task-matching installed skill bodies. It includes `for-ai`, RTK, GSD
+Core, Superpowers, Ponytail and the conditional UI, accessibility, performance,
+state-management and native/remote routes. Resume the goal/checklist in
+[PROJECT.md](PROJECT.md); before handoff, record evidence, blockers, the next
+action and observed Git/publication state in that same owner.
+
 The product goal is a smartphone browser control interface for a VR headset app
 that mirrors the website's UI. Its required first step verifies a Polar H10
 connection and shows the connected sensor's live ECG in a centered box. All menu
