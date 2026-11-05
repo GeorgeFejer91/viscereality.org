@@ -18,12 +18,25 @@ DATA-LOGGING.md owns this contract; real H10 acquisition is still pending.
 - [x] Verify the explicit background-stream regression with the complete suite:
   all 18 Node tests pass; separate recordings start at advancing source indices
   and exclude intervening idle time without changing the shared source epoch.
+- [x] Review the three additional app/HTML/CSS stretch-layout edits that arrived
+  during deployment. Their 50-case Chrome check passes with no page errors;
+  two real browser recordings retain exact source values and advance across idle
+  time, including 102 ECG samples recorded while audio time is paused.
+- [x] Run the final stretch acceptance matrix: all 156 native Chrome cases pass
+  with no page errors, including growth in both dimensions, short landscape,
+  all six playback routes, reflow/spacing and missing-Pretext fallback.
 - [ ] Commit all reviewed changes, push main and verify the exact Pages build.
 - [ ] Verify deployed assets and browser behavior; record final Git state.
 
 The Pages connector returned an internal error; use the existing authenticated
 GitHub CLI/API for exact-commit build evidence. No hosting settings change is
 needed: Pages is already configured from main, root `/`, on viscereality.org.
+Initial release `e2b6e32` was pushed with local and remote SHA equal and a clean
+tree at that instant; Pages run `42059584563` succeeded for that exact commit.
+All 25 public changed files matched committed bytes, and 50 live Chrome cases
+passed, including successive ECG recording segments and audio-pause capture.
+The later three layout files are the only additional uncommitted product changes at the
+next observation and are included in this same all-changes publication task.
 The overall headset/H10 and listening acceptance goals remain open.
 
 ## Active task: apply stretch-accordion settings — 2026-11-05

@@ -25,6 +25,41 @@ the Pages build. The Pages connector returned an internal error; the existing
 authenticated GitHub CLI/API confirmed the main/root Pages source and prior
 `ac39ec4` build, and is the deployment-verification fallback.
 
+Initial release `e2b6e32` pushed successfully with remote/local SHA equal.
+While its Pages build ran, additional `app.js`, `index.html` and `style.css`
+stretch edits arrived. They improve DOM/text fit checks, locale/font/content
+remeasurement, dynamic-viewport sizing, patient/CSV vertical distribution,
+column gaps and the readable reflow path. Reviewed their complete diff and
+reran all 50 Chrome cases against this updated working tree: all passed, no
+page errors, clipping or horizontal overflow. Extended browser evidence records
+two successive runs at source positions 2313–2436 and 2607 onward, proving the
+background source advanced through the intervening menu/idle time. Every CSV
+ECG value matched the shared binary; 102 paused ECG rows retained one audio
+time while ECG values changed. This late layout work is included in the same
+authorized publication, preserving the existing central controls and recenter
+placeholder contract.
+
+Pages run `42059584563` succeeded for `e2b6e3230df84870109ac9dc3932c53b891736b4`;
+the Pages API reported that exact commit built. All 25 public changed files,
+including the ECG binary and documentation, matched committed SHA-256 bytes.
+Both slash/no-slash entry URLs returned HTTP 200. Live Chrome passed 50 cases
+with no page errors. The first recording started at source sample 5300 and
+ended at 5424; the next started at 5605. Every exported ECG value matched the
+published binary, and 102 paused ECG rows retained frozen audio time while
+ECG values changed. The desktop screenshot was reviewed. Live scripts/receipts
+and synthetic downloads stay ignored as `live-release-assets.json` and
+`recenter-live-*` under `output/playwright/`.
+
+The final native Chrome stretch matrix passed all 156 cases with no page
+errors. It checks independent width/height budgets and breakpoint sides,
+patient spacing growth, column/type growth, preserved center/footer anchors,
+every screen and all six playback/pause/resume routes, short landscape,
+enlarged text, long content/recovery and unavailable measurement. Screenshots
+and the detailed receipt remain ignored under `stretch-*`. The final source
+also uses rectangular round cards in short landscape and four practice columns
+where necessary to retain bounded panels. Publication of this follow-up still
+requires exact-commit deployment evidence.
+
 ## Patient entry, NeuroKit mock and participant CSVs — 2026-11-05
 
 All 17 Node tests pass, including existing audio/scenario regressions and new

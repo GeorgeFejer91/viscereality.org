@@ -145,7 +145,7 @@ async function measureLabels() {
           const value = element.textContent.trim();
           const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
           const letterSpacing = parseFloat(style.letterSpacing) || 0;
-          const key = JSON.stringify([value, font, letterSpacing, style.whiteSpace, style.wordBreak]);
+          const key = JSON.stringify([root.lang, value, font, letterSpacing, style.whiteSpace, style.wordBreak]);
           if (!cache.has(key)) {
             if (cache.size >= 128) cache.clear();
             cache.set(key, prepareWithSegments(value, font, { letterSpacing, whiteSpace: style.whiteSpace, wordBreak: style.wordBreak }));
@@ -155,11 +155,25 @@ async function measureLabels() {
           const height = element.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
           const lineHeight = parseFloat(style.lineHeight);
           const stats = measureLineStats(prepared, Math.max(1, width - 2));
-          const fits = stats.maxLineWidth <= width + 1 && stats.lineCount * lineHeight <= height + 2;
-          return { element, fits, square: element.closest('.round'), wrap: measureNaturalWidth(prepared) > width - 2 || !fits };
+          const naturalWidth = measureNaturalWidth(prepared);
+          const singleLine = root.dataset.layout !== 'reflow' && element.closest('button, .actions a');
+          // User word spacing is outside Pretext's model; the painted DOM owns that check.
+          const domOnly = (parseFloat(style.wordSpacing) || 0) !== 0 || style.hyphens === 'auto';
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          const box = element.getBoundingClientRect();
+          const painted = [...range.getClientRects()];
+          const domFits = painted.every(rect => rect.left >= box.left + parseFloat(style.paddingLeft) - 2
+            && rect.right <= box.right - parseFloat(style.paddingRight) + 2
+            && rect.top >= box.top + parseFloat(style.paddingTop) - 2
+            && rect.bottom <= box.bottom - parseFloat(style.paddingBottom) + 2);
+          const fits = domFits && (domOnly || (stats.maxLineWidth <= width + 1 && stats.lineCount * lineHeight <= height + 2
+            && (!singleLine || (stats.lineCount === 1 && naturalWidth <= width - 2 && lineHeight <= height + 2))));
+          return { element, fits, domOnly, square: element.closest('.round'), wrap: naturalWidth > width - 2 || !fits };
         });
-        results.forEach(({ element, fits, square, wrap }) => {
+        results.forEach(({ element, fits, domOnly, square, wrap }) => {
           element.dataset.textFit = fits ? 'fit' : 'reflow';
+          element.dataset.textMeasurement = domOnly ? 'dom' : 'pretext';
           if (square) square.dataset.textFit = wrap ? 'reflow' : 'fit';
         });
         const visible = byId(current);
@@ -167,27 +181,37 @@ async function measureLabels() {
         const headerHeight = visible.firstElementChild.getBoundingClientRect().height;
         const footerHeight = visible.querySelector('.actions')?.getBoundingClientRect().height ?? 0;
         visible.style.setProperty('--edge-size', `${Math.max(headerHeight, footerHeight)}px`);
-        const groups = [...visible.querySelectorAll('.screen-body, .actions, [data-measure]')];
+        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, .round, .option, #data-files, [data-measure]')].filter(element => element.getClientRects().length);
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
         const hasOverflow = groups.some((group) => {
           const box = group.getBoundingClientRect();
-          return group.scrollWidth > group.clientWidth + 2 || group.scrollHeight > group.clientHeight + 2 || box.bottom > bounds.bottom + 2;
-        }) || [...visible.querySelector('.screen-body').children].some((group) => group.getBoundingClientRect().bottom > bodyLimit);
-        if (root.dataset.layout !== 'reflow' && (hasOverflow || results.some(({ fits }) => !fits))) root.dataset.layout = 'reflow';
+          return group.scrollWidth > group.clientWidth + 2 || group.scrollHeight > group.clientHeight + 2
+            || (group !== document.querySelector('main') && (box.top < bounds.top - 2 || box.bottom > bounds.bottom + 2))
+            || box.left < -2 || box.right > innerWidth + 2;
+        }) || [...visible.querySelector('.screen-body').children].some((group) => group.getBoundingClientRect().bottom > bodyLimit)
+          || root.scrollWidth > innerWidth + 2 || root.scrollHeight > innerHeight + 2;
+        if (root.dataset.layout !== 'reflow') {
+          root.dataset.layoutReason = hasOverflow ? 'geometry' : results.some(({ fits }) => !fits) ? 'text' : 'fit';
+          if (root.dataset.layoutReason !== 'fit') root.dataset.layout = 'reflow';
+        }
         root.dataset.measurement = 'ready';
       });
     };
     const observer = new ResizeObserver(measure);
     document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-feedback').forEach((element) => observer.observe(element));
-    new MutationObserver(measure).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
-    window.addEventListener('resize', () => { root.dataset.layout = 'bounded'; measure(); });
+    const retry = () => { root.dataset.layout = 'bounded'; measure(); };
+    new MutationObserver(retry).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
+    new MutationObserver(() => { setLocale(root.lang); cache.clear(); retry(); }).observe(root, { attributes: true, attributeFilter: ['lang', 'style'] });
+    window.addEventListener('resize', retry);
+    document.fonts.addEventListener('loadingdone', retry);
     window.addEventListener('hashchange', measure);
     measure();
   } catch (error) {
     root.dataset.measurement = 'unavailable';
     root.dataset.layout = 'reflow';
+    root.dataset.layoutReason = 'measurement-unavailable';
     console.warn('Text measurement unavailable; using readable document flow.', error);
   }
 }
