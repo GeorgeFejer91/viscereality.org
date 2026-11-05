@@ -1,5 +1,28 @@
 # Project
 
+## Current UI alignment task — 2026-11-05
+
+The user requires symmetric, centered controls on the main Atmungsraum UI.
+Keep headings and single footer actions on the horizontal midpoint. Center
+the sensor-selection button, ECG, choice grids and primary playback button
+against the viewport itself, with equal top/bottom space budgets. Starting,
+pausing or showing the countdown must not displace the playback button.
+Use the dynamic viewport height with the existing small-viewport fallback.
+Enlarged text retains the deliberate document-reflow escape hatch.
+
+- [x] Correct the shared shell, sensor action, footer and playback geometry.
+- [x] Verify 79 rendered cases at seven ordinary viewport sizes, plus 18
+  enlarged-text/spacing/fallback cases and the keyboard interaction sequence.
+- [ ] Publish and verify the exact UI files and centering on the live site.
+
+Local Chromium checks, UI state, all eight audio tests, context and whitespace
+checks passed; screenshots and geometry receipts are ignored in
+`output/playwright/`. See `VERIFICATION.md`. Branch is `main`; the refreshed
+remote sample-page changes were merged while retaining the earlier local audio
+review notes. Publishing the navigation UI is covered by the existing approved
+prototype deployment workflow. The overall headset/H10 product goal and
+listening acceptance remain open.
+
 ## Voice sample subpage — 2026-10-28
 
 The user requested publishing the exact phrase “Einatmen … zwei … drei … vier.”

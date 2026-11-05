@@ -5,17 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261012-minimal">
-  <script type="module" src="./app.js?v=20261012-minimal"></script>
+  <link rel="stylesheet" href="./style.css?v=20261105-round-art">
+  <script type="module" src="./app.js?v=20261105-round-art"></script>
 </head>
 <body>
   <main>
     <section class="screen" id="h10" aria-labelledby="sensor-status">
       <div class="sensor-header">
         <h1 id="sensor-status" tabindex="-1" role="status" data-measure>Suche Polar … (Demo)</h1>
-        <button id="select-polar" hidden><span data-measure>Polar auswählen</span></button>
       </div>
       <div class="screen-body sensor-body">
+        <button id="select-polar" hidden><span data-measure>Polar auswählen</span></button>
         <figure class="ecg-box" hidden aria-label="ECG · Demo">
           <canvas id="ecg" aria-label="Simuliertes ECG für die UI-Demo"></canvas>
         </figure>
@@ -31,9 +31,11 @@
       <div class="screen-body round-body">
         <nav class="rounds" aria-label="Übungsart auswählen">
           <a class="round" href="#probe-runde" aria-labelledby="round-probe-label">
+            <img class="round-art" src="./assets/rounds/probe-runde.svg" width="240" height="160" alt="" aria-hidden="true">
             <span id="round-probe-label" data-measure>Probe-Runde</span>
           </a>
           <a class="round" href="#haupt-runde" aria-labelledby="round-main-label">
+            <img class="round-art" src="./assets/rounds/haupt-runde.svg" width="240" height="160" alt="" aria-hidden="true">
             <span id="round-main-label" data-measure>Haupt-Runde</span>
           </a>
         </nav>
@@ -68,11 +70,13 @@
           <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
           <span data-measure>Starten</span>
         </button>
-        <div class="session-progress">
-          <p id="session-phase" data-measure>Bereit</p>
-          <output id="session-time" aria-label="Verbleibende Zeit" data-measure></output>
+        <div class="play-feedback">
+          <div class="session-progress">
+            <p id="session-phase" data-measure>Bereit</p>
+            <output id="session-time" aria-label="Verbleibende Zeit" data-measure></output>
+          </div>
+          <output id="start-status" aria-live="polite" data-measure hidden></output>
         </div>
-        <output id="start-status" aria-live="polite" data-measure hidden></output>
       </div>
       <footer class="actions">
         <a id="session-back" class="back" href="#probe-runde"><span data-measure>← Zurück</span></a>

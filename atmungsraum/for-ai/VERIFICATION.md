@@ -1,5 +1,29 @@
 # Verification
 
+## Centered main UI — 2026-11-05
+
+Before correction, native Chromium measurements showed left-aligned single
+footer actions, an off-center sensor-selection button and primary controls
+shifted vertically by the unequal header/footer and playback-feedback rows.
+The shared shell now reserves equal measured edge tracks, and the play body
+reserves equal feedback tracks around its primary control. Headings, single
+footer actions, the sensor selection, ECG and choice groups share the centerline.
+The shell follows the dynamic viewport, with its existing small-viewport fallback.
+
+Headless Chrome passed 79 rendered cases at 320×568, 390×844, 768×1024,
+1280×720, 1920×1080, 568×320 and 844×390 CSS px. Sensor selection, ECG,
+both choice grids and idle/playing/paused buttons matched the viewport midpoint
+within two CSS px in bounded layouts; single footer actions matched its
+horizontal midpoint. All visible labels had real Pretext fit results, with no
+clipped text, page overflow or page errors. Phone/desktop screenshots were
+visually reviewed. The later 18-case pass covered six routes at 320 CSS px
+with 200% text, text-spacing overrides and readable measurement fallback.
+Keyboard checks passed sensor selection, Continue, both menu levels,
+Start/Space, pause/resume and Escape. All eight audio tests, UI-state/context
+checks, JavaScript syntax and Git whitespace checks passed. Local evidence is
+under ignored `output/playwright/`; physical phones, Safari and headset behavior
+are not established by these Chromium viewport checks.
+
 ## Audio protocol text review — 2026-10-27
 
 `audio-review/` inventories all eight checked-in audio preparation/export tools

@@ -128,6 +128,12 @@ async function measureLabels() {
           if (square) square.dataset.textFit = wrap ? 'reflow' : 'fit';
         });
         const visible = byId(current);
+        // Equal outer tracks keep the main controls at the viewport midpoint.
+        const headerHeight = visible.firstElementChild.getBoundingClientRect().height;
+        const footerHeight = visible.querySelector('.actions')?.getBoundingClientRect().height ?? 0;
+        visible.style.setProperty('--edge-size', `${Math.max(headerHeight, footerHeight)}px`);
+        const feedback = visible.querySelector('.play-feedback');
+        if (feedback) feedback.parentElement.style.setProperty('--detail-size', `${feedback.getBoundingClientRect().height}px`);
         const groups = [...visible.querySelectorAll('.screen-body, .actions, [data-measure]')];
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
@@ -141,7 +147,7 @@ async function measureLabels() {
       });
     };
     const observer = new ResizeObserver(measure);
-    document.querySelectorAll('[data-measure], .screen-body, .actions, .round').forEach((element) => observer.observe(element));
+    document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-feedback').forEach((element) => observer.observe(element));
     new MutationObserver(measure).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
     window.addEventListener('resize', () => { root.dataset.layout = 'bounded'; measure(); });
     window.addEventListener('hashchange', measure);
