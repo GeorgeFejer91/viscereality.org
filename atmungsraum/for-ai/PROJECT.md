@@ -1,5 +1,120 @@
 # Project
 
+## Publish patient/ECG and recenter changes — 2026-11-05
+
+The user explicitly requests pushing all current changes to the live site.
+Include patient entry, continuous background mock ECG, session CSV recording,
+the persistent recenter placeholder, tests and their For-AI notes. Keep local
+participant exports, diagnostic output and voice/source caches ignored.
+Clarification: Start records a segment of an independently running ECG stream;
+it must never restart the source. Audio pauses leave ECG recording running.
+DATA-LOGGING.md owns this contract; real H10 acquisition is still pending.
+
+- [x] Refresh remote main and review all changed/new paths; starting HEAD and
+  origin/main both `ac39ec4`.
+- [x] Fresh local UI/context/scenario checks, 50 recenter layout/no-op cases,
+  25 patient/integration cases and four fallback cases pass. Full integration
+  includes actual >30-second signal loss and natural 68-second completion.
+- [x] Verify the explicit background-stream regression with the complete suite:
+  all 18 Node tests pass; separate recordings start at advancing source indices
+  and exclude intervening idle time without changing the shared source epoch.
+- [ ] Commit all reviewed changes, push main and verify the exact Pages build.
+- [ ] Verify deployed assets and browser behavior; record final Git state.
+
+The Pages connector returned an internal error; use the existing authenticated
+GitHub CLI/API for exact-commit build evidence. No hosting settings change is
+needed: Pages is already configured from main, root `/`, on viscereality.org.
+The overall headset/H10 and listening acceptance goals remain open.
+
+## Active task: apply stretch-accordion settings — 2026-11-05
+
+Apply the installed `uncodixfy-pretext` accordion-stretch settings to the entire
+main menu, including patient entry and CSV recovery. `SKILLS.md` owns the
+geometry/typography rules; `VERIFICATION.md` owns the rendered acceptance matrix.
+Keep the existing dark static UI, centered controls, patient/audio state owners,
+and fixed recenter/signal controls. Stretch means distributing space between
+ordered groups, not adding collapsible sections.
+
+- [ ] Make the durable layout settings and supported-size policy explicit.
+- [ ] Apply dimension-responsive group spacing and complete Pretext/no-fit checks.
+- [ ] Verify independent width/height resizing, anchors, full text, keyboard flow,
+  enlarged text and unavailable measurement; record fresh evidence and Git state.
+
+Starting state: shared canonical checkout on `main`, HEAD `ac39ec4`, with existing
+uncommitted patient/ECG/logging and recenter work. Preserve those changes in place.
+RTK is absent on PATH and at its documented path; use bounded native commands.
+The overall real headset/H10 product goal remains open.
+
+## Persistent VR recenter placeholder — 2026-11-05
+
+Keep the icon-only `VR zentrieren` button fixed at the top left across every
+screen, playback state and document scroll, including patient entry and CSV
+recovery. Respect the device safe area and reserve heading space below it.
+The local vector asset `assets/icons/recenter-vr.svg` shows a VR headset with
+four arrows pointing inward from above, below, left and right toward the
+central view target. It is editable SVG with no raster dependency.
+
+The button is a UI placeholder: `type="button"`, `aria-disabled="true"`,
+keyboard-focusable, with a German accessible name and unavailable description.
+Do not attach a click handler, navigation, transport event or simulated success.
+The later intended action is to recenter the headset's view to its central
+field of view. Headset authority, reference frame, command/acknowledgment and
+transport remain undecided; implement them only as separately requested work.
+
+- [x] Add the persistent inert button and four-direction headset SVG.
+- [x] Verify visibility, keyboard focus, no-op activation and responsive layout:
+  50 native Chrome cases passed with real Pretext and no page errors; UI state,
+  context, SVG XML/vector-only and whitespace checks passed. See VERIFICATION.md.
+
+Git observation: canonical shared checkout on `main` at `ac39ec4`; patient,
+mock-ECG and participant-logging changes were already uncommitted at entry.
+This placeholder remains local alongside that work; no commit, push or deployment
+was performed for the original UI task. The publication task above now owns its
+release state. Its own UI scope is complete. The overall headset/H10
+product goal remains open; the next recenter work needs an explicitly chosen
+headset reference frame and command/acknowledgment contract before integration.
+
+## Patient entry, mock ECG and data logging — 2026-11-05
+
+Add a German patient-details screen **before** the Polar/ECG gate. Collect
+exactly three surname letters (confirmed by the user), age in whole years, and one
+explicit gender choice (male, female, other, prefer not to say). Reuse the
+existing state owner, bounded Pretext layout and native accessible controls.
+Show the derived participant ID. The corner ambient indicator breathes green
+with signal, flashes red on loss (steady under reduced motion), and loss beyond
+30 seconds returns to Polar while retaining patient details. Use a seeded
+NeuroKit2-generated mock ECG continuously throughout the demo. Export a CSV for
+every started run; keep identity consistent in all participant data logs.
+[DATA-LOGGING.md](DATA-LOGGING.md) owns the enforced naming/schema contract:
+`Fej_35_M_probe1.csv` / `Fej_35_M_main1.csv`, with condition-specific run indices.
+Patient form state is in memory; saved CSVs, counters and linked audio receipts
+persist in this browser. No participant values enter navigation URLs.
+
+- [x] Gate all exercise routes/start until valid patient details are submitted.
+- [x] Add the form before connection and an edit route; preserve reconnects.
+- [x] Add the ambient signal state and the actual NeuroKit source.
+- [x] Enforce CSV names/schema, persistent run indices and download recovery.
+- [x] Verify validation, keyboard flow, rendered phone/desktop/reflow layouts,
+  existing audio checks and context; record evidence and Git state here.
+
+Evidence: 17 Node tests, UI-state/context gates, seven scenario pairs and the
+25-case Chrome integration passed. Real >30-second loss and natural 68-second
+completion produced the expected CSVs. Targeted fallback/review checks passed
+keyboard gender/ID updates, no-JS form protection, missing-source retry,
+unavailable Pretext, delayed-counter abort/failure ownership, signed lead-time
+pause, offline checkpoint recovery and cross-tab live-session exclusion. See
+VERIFICATION.md; local scripts/screenshots/receipts are ignored in output/.
+
+This task is implemented locally. At last observation the canonical checkout
+is on `main`, HEAD `ac39ec4`, with uncommitted source/docs and concurrent VR
+recenter-placeholder changes in shared files. Preserve that independent work;
+no push or live deployment check is part of this request. The recorded origin
+ref matched the starting HEAD; no fresh remote verification is claimed. Next
+product action remains listening acceptance and real H10/headset integration,
+including actual acquisition timestamps and a shared study storage owner.
+Those overall goals remain open. Recheck fresh Git state before integration.
+The subsequent publication task above now owns release of this implementation.
+
 ## Combined publication and skill baseline — 2026-11-05
 
 The user explicitly authorizes pushing all current repository changes,
@@ -253,11 +368,11 @@ UI mirroring refers to corresponding interface elements. Whether live screen or
 video streaming is needed is Undecided. Do not infer a breathing exercise or a
 specific action set from the page name.
 
-## First step: Polar H10 verification — 2026-10-12
+## Patient entry and Polar H10 verification
 
-The first page state is a verification gate that checks whether a Polar H10 is
-connected. This precedes the round/session menu; session actions must not appear
-ready before the H10 connection is verified.
+The first page state collects patient details and shows the generated participant
+ID. Weiter then opens the Polar connection gate. The gate precedes the round/session
+menu; session actions must not appear ready before details and ECG are verified.
 
 When the H10 is connected, display its live ECG waveform in a box in the middle
 of the interface. Use actual ECG samples from that sensor. A selected device,
@@ -298,6 +413,9 @@ this browser-local decision tree:
    recording. Weiter is red/disabled until recording, then green/enabled.
    Erneut suchen appears only when disconnected or waiting for ECG, where retry
    aids recovery. The status and canvas identify the demo.
+   Patient entry precedes this step. Every started run follows DATA-LOGGING.md;
+   CSV-Dateien provides local download recovery. The corner ambient signal is
+   visible across screens without replacing the connection gate.
 2. Show "Übung wählen" with Probe-Runde and Haupt-Runde together. Use the two
    generated SVG infographics above HTML labels, soft dark surfaces, muted sage
    and cream, gentle corners, and
@@ -327,7 +445,8 @@ while requesting reconnection every five seconds. Return to ECG only after more
 than 30 seconds without recovery and at least one retry; clear the old waveform
 and lock Weiter. Recovery before expiry cancels the deadline and retry count.
 New sessions cannot start without current ECG. JavaScript is required for the demo; without it the
-initial gate stays visible with an explanatory message.
+patient form stays disabled with an explanatory message and cannot submit
+participant values into a URL.
 
 Runtime assets remain local; Pretext 0.0.9 measures bounded text with the painted
 Arial font. The header and footer anchor a bounded panel, and the middle controls
@@ -391,8 +510,10 @@ guided-segment and total durations separately.
 Hidden pages, interrupted audio clocks, failed preparation, or missed start
 deadlines invalidate/abort an attempt. Host-side saving of receipts and physical
 audio/sensor synchronization remain integration work. The browser controller
-saves the last ten scheduling receipts locally; these are not acoustic onset
-measurements or an integrated study data store.
+saves the last ten participant-linked scheduling receipts locally; the CSV
+writer retains each exported run in IndexedDB. These are not acoustic onset
+measurements or an integrated study data store. See DATA-LOGGING.md for identity,
+clock, mock-source and persistence limits.
 
 The original German/English reference audio and native-caption transcripts are
 downloaded under ignored `reference-audio/`. Newly synthesized German samples

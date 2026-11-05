@@ -1,5 +1,111 @@
 # Verification
 
+## Patient/ECG and recenter release checks — 2026-11-05
+
+For the user's all-changes publication request, refreshed remote main matched
+starting HEAD `ac39ec4`. Reviewed all 26 changed/new files: runtime/source,
+tests, instructions, native recenter SVG, synthetic NeuroKit JSON/binary and
+the parent subproject contract. Local participant exports and diagnostic/voice
+artifacts remain ignored. No hosting settings or authored audio were changed.
+
+Fresh release checks pass all 18 Node tests, seven scenario pairs, UI state,
+context and whitespace. The added background-stream regression records at
+source indices 4 and 20 around an idle interval, retaining the same epoch and
+sample array; each export contains only its own recorded interval. Existing
+pause checks verify ongoing ECG sample changes with frozen audio time. This
+proves the current demo's acquisition/recording separation, not real H10 input.
+
+Native Chrome reran all 25 patient/integration cases, actual >30-second loss,
+natural 68-second completion, six CSV routes and four fallback cases without
+page errors. All 50 recenter cases passed on the final tree. An initial
+concurrent recenter run timed out waiting for Pretext readiness; a diagnostic
+rerun passed without a product-code change or page errors. Exact deployed
+commit, live asset integrity and browser evidence will be recorded here after
+the Pages build. The Pages connector returned an internal error; the existing
+authenticated GitHub CLI/API confirmed the main/root Pages source and prior
+`ac39ec4` build, and is the deployment-verification fallback.
+
+## Patient entry, NeuroKit mock and participant CSVs — 2026-11-05
+
+All 17 Node tests pass, including existing audio/scenario regressions and new
+identity/filename validation, pause-aware sample export, missing-signal gaps,
+delayed-stop boundary, signed pre-start waiting, checkpoint reconstruction and
+shipped mock-source integrity. UI-state, seven scenario JSON/CSV pairs, context,
+JS syntax and Git whitespace checks pass. The actual Python generator produced
+460,800 finite float32 samples at 256 Hz using NeuroKit2 0.2.13. Binary SHA-256:
+`ebe8407430f905f53118ce66c3858815d4de9383bad2a8ef984689ecf8dc6187`.
+No runtime speech, audio samples or authored scenario timing changed.
+
+Native Chrome passed 25 rendered/integration cases: patient entry at 320×568,
+390×844, 768×1024, 1280×720, 1920×1080, 568×320, 844×390, 480×640 and
+481×640 CSS px; 320px with 200% root text, long German labels and WCAG-style
+text spacing; round selection; playing/paused states for all six scenarios;
+and the CSV recovery view. Normal supported portrait/desktop panels stayed
+bounded; compressed/enlarged text used readable document reflow with no inner
+scrolling, clipped labels or horizontal overflow. Actual locked Pretext reported
+ready/fit. All checked controls retained at least 48px targets and playback
+remained at the viewport midpoint. Phone, desktop and enlarged screenshots were
+reviewed; local valid-input screenshots were also captured.
+
+All six session routes downloaded the expected `Fej_35_M_probe1..4.csv` and
+`Fej_35_M_main1..2.csv`, with common identity/schema, correct scenario, actual
+source values and status. Audio elapsed froze during pause while mock ECG
+continued. Reload retained completed exports and counters. A real uninterrupted
+loss stayed in the session through 29 seconds, then returned to Polar beyond
+30 seconds, retained patient details and exported `main3` as aborted with blank
+ECG values during the gap. A full real-time 68-second Anleitung naturally
+completed and exported `probe5` with `completed` status. Reduced-motion Chrome
+used no indicator animation. There were no page errors.
+
+Additional Chrome checks passed native form validation, keyboard Tab/radio-arrow
+order with correct M/F/O/N ID updates, unchanged typing focus on sensor updates,
+JavaScript-disabled submission protection, missing ECG asset blocking/retry,
+unavailable Pretext reflow and interrupted-run recovery with network ECG blocked.
+The independent read-only reviewer reproduced and verified fixes for delayed
+counter reservations losing signal marks/extending aborted tails, stale failed
+attempts aborting a newer run, and pre-start pauses losing signed audio lead.
+The reviewer verified IndexedDB checkpoint recovery without network source
+access and that another tab cannot recover a recording while its Web Lock is
+held; teardown released the lock. No P1/P2 findings remained in that review.
+
+Detailed receipts/scripts remain local under `output/playwright/`:
+`check-patient-data.mjs`, `patient-data-results.json`,
+`check-patient-fallbacks.mjs`, `patient-fallback-results.json` and the screenshots.
+RTK was unavailable at its documented location, so bounded native commands were
+used. These are local desktop Chrome checks, not physical-phone/Safari testing,
+H10 acquisition, acoustic synchronization, study-data qualification or live
+publication. Recovery ends at the last durable checkpoint and can omit an
+uncommitted tail. See DATA-LOGGING.md for the complete logging contract.
+
+## Persistent VR recenter placeholder — 2026-11-05
+
+Native headless Chrome passed 50 rendered cases using the local HTTP-served
+page. Patient entry covered 320×568, 390×844, 768×1024, 1280×720, 1920×1080,
+568×320 and 844×390 CSS px. Round selection, both option menus, CSV recovery,
+Anleitung and 15-minute main ready screens covered six phone/desktop/landscape
+sizes; additional checks covered Polar discovery/ECG, playing, paused, 320px
+with 200% text plus text-spacing overrides, and scrolling the enlarged page.
+The button stayed fixed, visible and topmost with a 48×48px target. Heading text
+cleared the control. No horizontal overflow, clipped measured labels or page
+errors occurred; actual Pretext was ready and the labels fitted. Bounded
+playback retained its viewport midpoint. Reflow remains available where needed.
+
+Pointer clicks and Enter/Space activation left route, UI state and audio state
+unchanged on patient entry, Polar, every menu/recovery/ready screen, playing,
+paused and scrolled reflow. Keyboard focus remained visible. The control exposes
+its German name and unavailable description; it has no handler, transport event
+or command. Native SVG parsed as XML with no embedded raster. The phone patient,
+paused-player and desktop screenshots were reviewed. The executable, 50-case
+receipt and screenshots stay ignored under `output/playwright/check-recenter.mjs`,
+`recenter-results.json` and `recenter-*.png`.
+
+UI-state, context and Git whitespace checks passed. This task adds no JavaScript
+behavior, dependency or participant logger. RTK was absent at its configured
+path and on PATH, so bounded native shell reads were used. Physical phone safe
+areas, Safari/WebViews, screen-reader output and actual headset recentering were
+not qualified by this desktop Chrome check. No commit/push/deployment was
+performed; existing patient/logging work was preserved in the shared checkout.
+
 ## Combined release and nested skill baseline — 2026-11-05
 
 The subproject entry chain now routes `AGENTS.md` → `for-ai/README.md` →

@@ -1,5 +1,22 @@
 # Decisions
 
+## 2026-11-05 — Patient entry, ambient signal and shared data names
+
+The user's final order is patient details → Polar connection → exercise menu.
+Collect three surname letters (explicitly confirmed), age and gender M/F/O/N;
+show the generated participant ID. The corner signal breathes green when ECG is
+available and flashes red after loss; reduced motion makes it steady. After more
+than 30 seconds without recovery, return to Polar and retain the patient details.
+
+Use one seeded NeuroKit2-generated source continuously for the current mock;
+retain clear demo labeling. Every started run produces a participant-linked CSV,
+with download links, local recovery checkpoints and cross-tab ownership. The
+filename order follows the user's examples: `Fej_35_M_probe1.csv` or
+`Fej_35_M_main1.csv`. [DATA-LOGGING.md](DATA-LOGGING.md) owns the mandatory rule
+for all participant data logging; `data-logging.js` is its runtime authority.
+This supersedes the former memory-only patient-data assumption. It does not
+establish H10 acquisition, physical timing or a shared study data registry.
+
 ## 2026-11-05 — Nested shared baseline and combined publication
 
 The user requests all current changes be pushed and the subproject's `for-ai/`

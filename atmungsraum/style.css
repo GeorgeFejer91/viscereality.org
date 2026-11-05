@@ -16,9 +16,21 @@ main {
   min-width: 0;
   min-height: 0;
 }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+#recenter-vr { position: fixed; z-index: 2; top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); width: 48px; height: 48px; padding: 5px; cursor: default; }
+#recenter-vr:hover { background: #131712; border-color: #4a5148; }
+#recenter-vr img { display: block; }
+#belt-signal { position: fixed; z-index: 1; top: max(10px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); display: flex; align-items: center; padding: 8px; border: 1px solid #4a5148; border-radius: 8px; background: #131712; }
+.signal-dot { width: 12px; height: 12px; flex: none; border-radius: 50%; background: #73796e; }
+#belt-signal[data-state="connected"] .signal-dot { background: #88cb97; animation: belt-breathe 4s ease-in-out infinite; }
+#belt-signal[data-state="lost"] { color: #ffb4b4; }
+#belt-signal[data-state="lost"] .signal-dot { background: #ff5555; animation: belt-alert 1s ease-in-out infinite; }
+@keyframes belt-breathe { 0%, 100% { box-shadow: 0 0 3px 1px #88cb9740; opacity: .55; } 50% { box-shadow: 0 0 14px 5px #88cb9770; opacity: 1; } }
+@keyframes belt-alert { 0%, 100% { box-shadow: 0 0 2px #ff5555; opacity: .35; } 50% { box-shadow: 0 0 18px 7px #ff555599; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #belt-signal[data-state] .signal-dot { animation: none; } }
 .screen { --edge-size: 48px; display: grid; grid-template-rows: var(--edge-size) minmax(0, 1fr) var(--edge-size); gap: var(--gap); min-width: 0; min-height: 0; }
 .screen > :first-child { align-self: start; }
-h1 { margin: 0; font-size: clamp(1.375rem, min(4vw, 4.5svh), 1.75rem); line-height: 1.3; font-weight: 400; text-align: center; }
+h1 { margin: 0; padding-top: max(calc(1.5rem + 8px), calc(62px + env(safe-area-inset-top) - var(--inset))); font-size: clamp(1.375rem, min(4vw, 4.5svh), 1.75rem); line-height: 1.3; font-weight: 400; text-align: center; }
 h1:focus { outline: none; }
 p, figure { margin: 0; }
 [data-measure] { display: block; min-width: 0; overflow-wrap: break-word; }
@@ -35,10 +47,27 @@ button, .actions a { display: grid; place-items: center; min-width: 0; min-heigh
 button > [data-measure], .actions a > [data-measure] { width: 100%; }
 button:hover:enabled, .actions a:hover, .round:hover, .option:hover { background: #1b2219; border-color: #7a8771; }
 button:disabled, .actions a[aria-disabled="true"] { color: #888; background: #111; border-color: #444; cursor: default; }
-a:focus-visible, button:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 3px; }
 #sensor-next[aria-disabled="true"] { background: #632f36; border-color: #9f5058; color: #f3dadd; }
 #sensor-next[aria-disabled="false"] { background: #315740; border-color: #528468; color: #e5f1e6; }
 .actions a.back { border-color: transparent; background: transparent; color: #b2b8ab; }
+.patient-body { align-content: center; justify-items: center; }
+.patient-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: var(--gap); width: min(100%, 560px); min-width: 0; margin: 0; padding: 0; border: 0; }
+.patient-field { display: grid; gap: 6px; min-width: 0; }
+.patient-field input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: #e9ebe3; font: inherit; line-height: 1.3; }
+.patient-identifier { grid-column: 1 / -1; }
+#patient-id { padding: 10px 12px; border: 1px solid #4a5148; border-radius: 10px; min-height: 48px; color: #c9d3bf; text-align: start; }
+.patient-gender { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
+.patient-gender legend { width: 100%; padding: 0; margin-bottom: 6px; }
+.gender-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(8px, min(2vw, 2svh), 16px); }
+.gender-options label { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 48px; padding: 10px; border: 1px solid #4a5148; border-radius: 10px; background: #131712; cursor: pointer; }
+.gender-options label:has(:checked) { border-color: #c9d3bf; }
+.gender-options input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: #c9d3bf; }
+.gender-options [data-measure] { flex: 1; line-height: 1.3; }
+.data-body { align-content: center; justify-items: center; }
+.data-body > p { justify-self: stretch; text-align: center; }
+#data-files { display: grid; gap: 12px; min-width: 0; width: min(100%, 640px); padding: 0; margin: 0; list-style: none; }
+#data-files a { display: block; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 10px; color: #c9d3bf; text-decoration: none; }
 .round-body, .choices-body { container-type: size; display: grid; grid-template-rows: minmax(0, 1fr); align-content: stretch; place-items: center; }
 .rounds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); width: min(100cqw, calc(200cqh + var(--gap)), 600px); }
 .round { display: grid; grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; aspect-ratio: 1; min-width: 0; min-height: 0; padding: clamp(10px, min(3vw, 3svh), 24px); border: 1px solid #3d463a; border-radius: 16px; background: #131712; color: #e9ebe3; text-decoration: none; text-align: center; font-size: clamp(1.125rem, min(3vw, 3svh), 1.375rem); line-height: 1.3; }
@@ -87,6 +116,7 @@ output { min-height: 1.5em; color: #bbb; text-align: center; }
 html[data-layout="reflow"] main { height: auto; min-height: 100svh; min-height: 100dvh; }
 html[data-layout="reflow"] .screen { grid-template-rows: auto auto auto; }
 html[data-layout="reflow"] .screen-body { min-height: auto; }
+html[data-layout="reflow"] .patient-fields, html[data-layout="reflow"] .gender-options { grid-template-columns: minmax(0, 1fr); }
 html[data-layout="reflow"] .round-body, html[data-layout="reflow"] .choices-body { container-type: normal; }
 html[data-layout="reflow"] .rounds, html[data-layout="reflow"] .options { width: min(100%, 640px); }
 html[data-layout="reflow"] .options { grid-template-columns: minmax(0, 1fr); }

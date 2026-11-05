@@ -1,22 +1,34 @@
-import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js?v=20261012-baseline';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261105-scenarios';
+import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261105-data';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261105-data';
+import { MockECG } from './mock-ecg.js?v=20261105-data';
+import { participantIdentity, mountSessionData } from './data-logging.js?v=20261105-data';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-let current = 'h10';
+let current = null;
 let attempt = 0;
+let connectedOnce = false;
+let connectionError = '';
 const text = (id, value) => { if (byId(id).textContent !== value) byId(id).textContent = value; };
-const sessionAudio = mountSessionAudio();
+const signal = new MockECG();
+const sessionData = mountSessionData(signal);
+const sessionAudio = mountSessionAudio({ data: sessionData });
 
 function render() {
   const next = route(location.hash.slice(1) || 'h10');
+  const changed = next !== current;
   if (next !== 'session-start' && location.hash !== `#${next}`) history.replaceState(null, '', `#${next}`);
   if (next === 'session-start' && current !== 'session-start') state.started = false;
   current = next;
   document.querySelectorAll('.screen').forEach((screen) => { screen.hidden = screen.id !== next; });
   root.dataset.layout = root.dataset.measurement === 'unavailable' ? 'reflow' : 'bounded';
-  const labels = { searching: 'Suche Polar … (Demo)', found: 'Polar H10 gefunden (Demo)', connecting: 'Verbinde Polar … (Demo)', ecg: 'ECG wird aufgezeichnet (Demo)', 'no-ecg': 'Warte auf ECG … (Demo)', disconnected: 'Polar getrennt (Demo)' };
-  text('sensor-status', labels[state.sensor]);
+  const labels = { searching: 'Suche Polar … (Demo)', found: 'Polar H10 gefunden (Demo)', connecting: 'Verbinde Polar … (Demo)', ecg: 'ECG-Demo aktiv (NeuroKit2)', 'no-ecg': 'Warte auf ECG … (Demo)', disconnected: 'Polar getrennt (Demo)' };
+  text('sensor-status', connectionError || labels[state.sensor]);
+  if (hasSignal()) connectedOnce = true;
+  byId('belt-signal').dataset.state = hasSignal() ? 'connected' : connectedOnce ? 'lost' : 'waiting';
+  const beltStatus = hasSignal() ? 'ECG-Demosignal aktiv' : connectedOnce ? 'ECG-Demosignal verloren' : 'Noch kein ECG-Demosignal';
+  text('belt-status', beltStatus);
+  byId('belt-signal').title = beltStatus;
   byId('select-polar').hidden = state.sensor !== 'found';
   byId('connect').hidden = !['no-ecg', 'disconnected'].includes(state.sensor);
   document.querySelector('.ecg-box').hidden = !hasSignal();
@@ -29,27 +41,50 @@ function render() {
   }
   sessionAudio.update(next, state.selection, canNavigate());
   drawECG();
-  byId(next).querySelector('h1').focus({ preventScroll: true });
-  window.scrollTo(0, 0);
+  if (changed) {
+    byId(next).querySelector('h1').focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
 }
 
 window.addEventListener('hashchange', render);
 byId('sensor-next').addEventListener('click', (event) => { if (!confirmECG()) event.preventDefault(); });
+byId('patient-form').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const details = Object.fromEntries(new FormData(event.currentTarget));
+  if (confirmPatient(details)) {
+    location.hash = 'h10';
+    searchPolar();
+  }
+});
+byId('patient-form').addEventListener('input', (event) => {
+  if (event.target.id === 'patient-surname') event.target.value = event.target.value.normalize('NFC');
+  try { text('patient-id', participantIdentity(Object.fromEntries(new FormData(byId('patient-form')))).id); }
+  catch { text('patient-id', '—'); }
+});
 
 // The future headset transport reports signal state here. No hardware feed is implemented yet.
 window.addEventListener('atmungsraum:sensor-state', (event) => {
   if (!['ecg', 'no-ecg', 'disconnected'].includes(event.detail?.state)) return;
-  setSensor(event.detail.state);
+  ++attempt;
+  connectionError = '';
+  setSensor(event.detail.state === 'ecg' && !signal.samples ? 'no-ecg' : event.detail.state);
   render();
 });
 
 function searchPolar() {
   const pending = ++attempt;
+  connectionError = '';
   setSensor('searching'); render();
-  setTimeout(() => {
+  Promise.all([sessionData.prepare(), signal.prepare(), new Promise(resolve => setTimeout(resolve, 700))]).then(() => {
     if (pending !== attempt) return;
     setSensor('found'); render();
-  }, 700);
+  }).catch(error => {
+    if (pending !== attempt) return;
+    connectionError = 'Demo-Daten konnten nicht geladen werden. Erneut suchen.';
+    setSensor('disconnected'); render();
+    console.warn('Demo preparation failed.', error);
+  });
 }
 
 byId('connect').addEventListener('click', searchPolar);
@@ -81,12 +116,12 @@ function drawECG() {
   for (let x = 0; x < width; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke(); }
   for (let y = 0; y < height; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke(); }
   if (!hasSignal() || document.hidden) return; // Missing data clears the old trace immediately.
-  const phase = reducedMotion.matches ? 0 : Date.now() / 1000;
+  if (!signal.samples) return;
+  const end = signal.indexAt(reducedMotion.matches ? signal.epoch + 4000 : performance.now());
+  const span = 4 * signal.rate;
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath();
-  const pulse = (t, center, spread, size) => size * Math.exp(-(((t - center) / spread) ** 2));
   for (let x = 0; x < width; x++) {
-    const t = (x / 120 + phase) % 1;
-    const value = pulse(t, .18, .045, .1) - pulse(t, .37, .014, .15) + pulse(t, .4, .014, .9) - pulse(t, .43, .018, .25) + pulse(t, .67, .07, .2);
+    const value = signal.sampleAt(end - span + Math.floor(x / width * span));
     const y = height * .6 - value * height * .45;
     if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
@@ -157,7 +192,11 @@ async function measureLabels() {
   }
 }
 
-searchPolar();
+byId('patient-fields').disabled = false;
+byId('patient-next').disabled = false;
+render();
+// Load saved CSVs even on a cold recovery link; sensor search waits for the form.
+sessionData.prepare().catch(() => {});
 measureLabels();
 setInterval(() => {
   const reconnect = updateReconnect();

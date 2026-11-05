@@ -41,6 +41,24 @@ When restoring/updating the measurement dependency, run
 lockfile, copied runtime modules, and license aligned, and rerun rendered checks.
 The vendor script copies only the main API's runtime module graph and license.
 
+## Participant data and mock ECG
+
+Every participant-data writer must follow [DATA-LOGGING.md](DATA-LOGGING.md)
+and reuse `participantIdentity()` / `sessionFilename()` from `data-logging.js`.
+Run `npm test`, `pnpm run check:ui`, the context checker and rendered checks
+after changes. `npm test` includes audio, source-integrity and data-logging
+regressions. Do not publish participant exports, browser databases or checkpoints.
+If exports are saved inside the checkout, use the ignored `session-data/` folder.
+
+`pnpm run generate:ecg` runs the local Python generator using the installed
+NeuroKit/NumPy/SciPy versions recorded in the manifest. Preserve/pin those
+versions for reproduction; review any changed source bytes/settings and manifest
+hash together. The browser loads only the generated local float32 trace and JSON.
+Exercise CSV download/reload recovery, signal gaps, signed pre-start pause timing
+and another live tab's checkpoint ownership. The current recorder requires
+secure-context IndexedDB/Web Locks/Web Crypto; physical browser qualification
+remains distinct from desktop viewport checks.
+
 ## Audio cue generation
 
 Every final sequence must use the shared `assets/audio/` library and a saved

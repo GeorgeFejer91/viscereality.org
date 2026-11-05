@@ -1,5 +1,7 @@
 node_modules/
 output/
+# Participant exports, if the operator chooses a folder inside the checkout.
+session-data/
 # Local source recordings, transcripts, and downloader dependencies.
 reference-audio/
 # Local listening assets and their adjacent timing/transcript sidecars.

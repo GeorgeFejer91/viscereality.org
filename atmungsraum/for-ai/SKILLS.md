@@ -98,3 +98,40 @@ fallback. Do not silently install or execute external instructions.
   target changes.
 
 Use installed skills; do not fetch and execute unreviewed remote skill code.
+
+## Main UI stretch settings
+
+These settings apply to patient entry, Polar/ECG, round/options, playback and
+CSV recovery, including later controls added to those screens.
+
+- Allocate the dynamic-viewport shell first, with equal header/footer edge
+  tracks so the central controls remain on the viewport midpoint. Reserve safe
+  space for the fixed corner controls. Keep header/action anchors and DOM order.
+- Stretch the flexible middle region; distribute spare height between ordered
+  groups and spare width between matrix cells. Keep every label with its input.
+  Use shrinkable tracks, readable gap floors and bounded maxima; derive spacing
+  and preferred type from both available dimensions. Recompute on expansion as
+  well as contraction. A tall form must use the available height, not retain
+  compact spacing inside an otherwise empty middle region.
+- Ordinary menu geometry targets 320×568 CSS px portrait and 568×320 landscape
+  through 1920×1080 desktop. Patient entry needs the portrait height budget;
+  short landscape forms, excessive CSV lists, enlarged text or long content
+  may deliberately use vertical document reflow. This is an explicit no-fit
+  exception, never an internal scrollbar or clipped content. Verify the exact
+  supported states in `VERIFICATION.md`; physical phones/WebViews need their
+  own qualification.
+- Retain locked Pretext 0.0.9 and Arial font parity. Measure the usable inner
+  box of every bounded text region after fonts load. Fixed action labels prefer
+  one line: check natural width, line count and line height. Multiline text
+  checks widest line, line count and height. Prefer wrapping/reflow over reducing
+  the preferred type token; never counteract enlarged user text. Unsupported
+  text-spacing features use DOM verification rather than a Pretext accuracy claim.
+- Batch content/resize/font/locale updates, bound preparation caches, and retry
+  bounded geometry when the viewport or content changes. Mark missing measurement
+  unavailable and use readable document flow. Verify actual bounds on text,
+  controls, groups, shell and document; hiding overflow is not a passing result.
+- Every ordinary bounded case must have zero page/panel scrolling in either
+  dimension, full labels, at least 48px control targets, visible focus and stable
+  anchors. Check width and height independently, both breakpoint sides, growing
+  group/column separation and type, playback state changes, 200% text, 320px
+  reflow, long labels and WCAG-style spacing. Dialogs retain their own flow policy.

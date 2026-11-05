@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "source": "mock-neurokit2",
+  "unit": "a.u.",
+  "generator": "neurokit2.ecg_simulate",
+  "neurokit2_version": "0.2.13",
+  "numpy_version": "2.5.2",
+  "scipy_version": "1.18.0",
+  "settings": {
+    "duration": 1800,
+    "sampling_rate": 256,
+    "heart_rate": 70,
+    "heart_rate_std": 1,
+    "noise": 0.01,
+    "method": "ecgsyn",
+    "random_state": 42
+  },
+  "samples": 460800,
+  "encoding": "float32-le",
+  "file": "mock-ecg.f32",
+  "sha256": "ebe8407430f905f53118ce66c3858815d4de9383bad2a8ef984689ecf8dc6187",
+  "playback": "Continuous page-clock replay; wraps after 1800 seconds."
+}

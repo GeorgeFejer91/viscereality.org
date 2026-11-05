@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { BoxBreathingEngine, createProtocol, PHASES, scheduleProtocol } from '../audio/box-breathing.js';
 import { mountSessionAudio } from '../audio/session-ui.js';
-import { state as uiState, route } from '../ui-logic.js?v=20261012-baseline';
+import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261105-data';
 import { setTimeout as delay } from 'node:timers/promises';
 
 const assetDir = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
@@ -240,6 +240,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   };
   try {
     Object.assign(uiState, { sensor: 'ecg', started: false });
+    assert.equal(confirmPatient({ surnamePrefix: 'Mül', age: '42', gender: 'female' }), true);
     route('start-haupt-10');
     const controller = mountSessionAudio();
     controller.update('session-start', uiState.selection, true);

@@ -1,8 +1,9 @@
 import { BoxBreathingEngine } from './box-breathing.js?v=20261105-scenarios';
-import { state, start } from '../ui-logic.js?v=20261012-baseline';
+import { state, start } from '../ui-logic.js?v=20261105-data';
+import { participantIdentity } from '../data-logging.js?v=20261105-data';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
-export function mountSessionAudio() {
+export function mountSessionAudio({ data } = {}) {
   const stage = document.getElementById('session-start');
   const play = document.getElementById('play');
   const back = document.getElementById('session-back');
@@ -56,13 +57,20 @@ export function mountSessionAudio() {
     status.hidden = !message;
   }
 
-  // Receipts contain timing and selected scenario, never participant data or credentials.
+  // Participant-linked receipts follow the same identity as the session CSV.
   function save(receipt, attempt) {
     if (!receipt || attempt.saved) return true;
+    attempt.recording?.stop();
+    if (attempt.recordingPending) { attempt.pendingReceipt = receipt; return true; }
+    data?.finish(receipt, attempt);
     try {
       const stored = JSON.parse(localStorage.getItem('atmungsraum.audio-receipts') ?? '[]');
       const records = Array.isArray(stored) ? stored.slice(-9) : [];
       records.push({ ...receipt, run_id: attempt.id, selection: attempt.selection,
+        schema_version: 1, session_id: attempt.id,
+        participant_id: attempt.participant.id, name_prefix: attempt.participant.name,
+        age_years: attempt.participant.age, gender_code: attempt.participant.genderCode,
+        condition: attempt.selection.branch === 'haupt' ? 'main' : 'probe', run_index: attempt.recording?.runIndex ?? null,
         finished_at: new Date().toISOString() });
       localStorage.setItem('atmungsraum.audio-receipts', JSON.stringify(records));
       attempt.saved = true;
@@ -94,7 +102,7 @@ export function mountSessionAudio() {
     if (preparation) return preparation;
     engine ??= new BoxBreathingEngine();
     mode = 'loading'; message = 'Audio wird geladen …'; paint();
-    preparation = engine.prepare().then(() => {
+    preparation = Promise.all([engine.prepare(), data?.prepare()]).then(() => {
       mode = 'ready'; message = '';
       resetProgress(state.selection);
       if (key) paint();
@@ -114,7 +122,8 @@ export function mountSessionAudio() {
     if (!engine?.buffers) { prepare(); return; }
     if (!start()) return;
     const ownToken = ++token;
-    const attempt = { id: crypto.randomUUID(), selection: { ...state.selection }, saved: false };
+    const attempt = { id: crypto.randomUUID(), patient: { ...state.patient }, participant: participantIdentity(state.patient),
+      selection: { ...state.selection }, saved: false, recordingPending: Boolean(data) };
     active = attempt;
     mode = 'starting'; message = 'Audio startet …'; paint();
     try {
@@ -122,7 +131,13 @@ export function mountSessionAudio() {
       const session = await engine.start(attempt.selection.boxMinutes ?? 'anleitung',
         { baselineMinutes: attempt.selection.baselineMinutes });
       attempt.startAt = session.startAt;
-      if (ownToken !== token) return;
+      attempt.recording = data?.begin({ patient: attempt.patient, selection: attempt.selection, sessionId: attempt.id,
+        protocol: { ...session.protocol, scenario_sha256: engine.receipt().scenario_sha256 },
+        audioStartDelayMs: Math.max(0, (session.startAt - engine.context.currentTime) * 1000) });
+      await attempt.recording?.ready;
+      attempt.recordingPending = false;
+      if (attempt.pendingReceipt) save(attempt.pendingReceipt, attempt);
+      if (ownToken !== token) { save(await session.done, attempt); return; }
       mode = 'playing'; message = '';
       totalSeconds = session.protocol.total_frames / session.protocol.sample_rate;
       stage.dataset.audioStartTime = String(session.startAt);
@@ -161,9 +176,15 @@ export function mountSessionAudio() {
       if (!saved) message += ' Das Audio-Protokoll konnte nicht gespeichert werden.';
       paint();
     } catch (error) {
+      attempt.recordingPending = false;
+      // A failed old reservation must never abort or relabel a newer run.
+      const ownsRun = attempt.startAt != null && engine.receipt()?.start_at_audio_seconds === attempt.startAt;
+      if (ownToken === token && active === attempt) engine?.abort('start-or-data-failed');
+      if (attempt.pendingReceipt) save(attempt.pendingReceipt, attempt);
+      else if (ownsRun) save(engine.receipt(), attempt);
       if (ownToken === token) {
         state.started = false; mode = 'error';
-        message = 'Audio konnte nicht starten. Versuche es erneut.';
+        message = 'Session konnte nicht gestartet oder gespeichert werden. Versuche es erneut.';
         console.warn('Audio start failed.', error);
       }
     } finally { paint(); }
@@ -178,6 +199,7 @@ export function mountSessionAudio() {
       const paused = await engine.pause();
       if (ownToken !== token || mode !== 'pausing' || !paused) return;
       mode = 'paused'; message = '';
+      active?.recording?.mark('paused', engine.context.currentTime - active.startAt);
       drawPosition(); paint();
     } catch (error) {
       if (ownToken === token) {
@@ -194,6 +216,7 @@ export function mountSessionAudio() {
       const resumed = await engine.resume();
       if (ownToken !== token || mode !== 'resuming' || !resumed) return;
       mode = 'playing'; message = '';
+      active?.recording?.mark('playing', engine.context.currentTime - active.startAt);
       paint(); tick();
     } catch (error) {
       if (ownToken === token) {
@@ -220,6 +243,7 @@ export function mountSessionAudio() {
 
   return {
     update(screen, selection, hasSignal) {
+      active?.recording?.markSensor(state.sensor);
       gate = hasSignal;
       const next = screen === 'session-start' && hasSignal && selection
         ? `${selection.branch}:${selection.value}` : null;
