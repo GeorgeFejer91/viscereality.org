@@ -38,6 +38,9 @@ Read common rules first, then the documents needed for the task:
   participant listening walkthrough, audition comparison and seven complete
   timestamped text scores. This is a dated source-derived snapshot; refresh
   it when the scheduler, selection mapping or runtime samples change.
+- [Voice samples](../samples/index.html): twenty published exact-phrase
+  auditions from the LANG and EmoDB profile series, with source ratings and
+  separate transcript evidence. This does not change the session voice.
 - [Playback completion audit](PLAYBACK-AUDIT.md): evidence for the local browser
   Play/Stop behaviour and exact 5/10/15/20-minute audio totals.
 

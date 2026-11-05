@@ -1,0 +1,544 @@
+{
+  "text": "Einatmen … zwei … drei … vier.",
+  "language": "de",
+  "engine": "Secret Tunnel / OmniVoice",
+  "samples": [
+    {
+      "name": "LANG Atmungsraum 0",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-0.mp3",
+      "details": "weibliche Stimme · V 4.988 · A 2.113 · 2.9 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 4.9875000125,
+        "arousal": 2.1125000125,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 6
+      },
+      "duration_seconds": 2.88,
+      "sha256": "28147dd435db5c6fc0668a33fab4b80872f3b0fb5eb69f997e19aaa0c21ad3ff",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen. Zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 1",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-1.mp3",
+      "details": "weibliche Stimme · V 5.008 · A 2.025 · 2.8 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.00833335,
+        "arousal": 2.0250000125,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 2
+      },
+      "duration_seconds": 2.81,
+      "sha256": "26a178c30c3f836b7385ebed01fcf5e2347bde2ee6c41e7fda9030f487e43512",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen. Zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 2",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-2.mp3",
+      "details": "weibliche Stimme · V 5.008 · A 2.175 · 2.9 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.00833335,
+        "arousal": 2.175,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 8
+      },
+      "duration_seconds": 2.91,
+      "sha256": "b5db1ebceb4ef483638ab7a07f81bd2bbbeee0a0d790e6bfe01e6cf451b8c342",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen. Zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 3",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-3.mp3",
+      "details": "weibliche Stimme · V 5.050 · A 2.239 · 2.7 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.05,
+        "arousal": 2.23908045,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 7
+      },
+      "duration_seconds": 2.72,
+      "sha256": "22eb28d8f9ed22fc85877538c6a1d5293691f3d3d5c89a90e7e8d7ca9c6b7b30",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 4",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-4.mp3",
+      "details": "weibliche Stimme · V 5.054 · A 2.196 · 3.0 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.054166674999999,
+        "arousal": 2.195833325,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 5
+      },
+      "duration_seconds": 2.96,
+      "sha256": "529e6489299093a26dd91d9c36813d985fa11d23a9fe0d5b3792daa514381297",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 5",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-5.mp3",
+      "details": "weibliche Stimme · V 5.058 · A 2.193 · 3.0 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.0583333375,
+        "arousal": 2.1932471125,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 4
+      },
+      "duration_seconds": 2.97,
+      "sha256": "cfb80e1b6e010f641215105176c64e4dddf301f62a902bec7e00838a71850fa0",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen. Zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 6",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-6.mp3",
+      "details": "weibliche Stimme · V 5.058 · A 2.075 · 2.8 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.05833335,
+        "arousal": 2.075,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 1
+      },
+      "duration_seconds": 2.8,
+      "sha256": "7492b622b0a66c04878109a7b3ce4f2c3426a00e314292c2b219aeaec6839465",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 7",
+      "database": "LANG-audition",
+      "speaker": "male",
+      "audio": "audio/lang-atmungsraum-7.mp3",
+      "details": "männliche Stimme · V 5.063 · A 2.297 · 3.1 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.0625000125,
+        "arousal": 2.2972701125,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 10
+      },
+      "duration_seconds": 3.08,
+      "sha256": "d684e66f8a04544a37f33d16186e983ecf17a876b2923f13a3acd42ad87442fe",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen. Zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 8",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-8.mp3",
+      "details": "weibliche Stimme · V 5.067 · A 2.192 · 3.0 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.0666667,
+        "arousal": 2.1916666625,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 3
+      },
+      "duration_seconds": 3.0,
+      "sha256": "ebf560c72473631f3f191784c41ccbbc7ef756e287f3ff3d75e4b10934629feb",
+      "words": {
+        "native_whisper_percent": 100,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "LANG Atmungsraum 9",
+      "database": "LANG-audition",
+      "speaker": "female",
+      "audio": "audio/lang-atmungsraum-9.mp3",
+      "details": "weibliche Stimme · V 5.072 · A 2.300 · 2.6 s",
+      "ratings": {
+        "basis": "mean_constituent_auditory_source_ratings",
+        "valence_positive_high": 5.071839075,
+        "arousal": 2.2997126375,
+        "scale": [
+          1,
+          9
+        ],
+        "calm_match_rank": 9
+      },
+      "duration_seconds": 2.64,
+      "sha256": "6d2e6299d911fcf4106efbd2d348d61dd1a062d5f05c43b6245a59dbf0a27ccd",
+      "words": {
+        "native_whisper_percent": 25,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 0",
+      "database": "EmoDB",
+      "speaker": "15",
+      "audio": "audio/emodb-atmungsraum-0.mp3",
+      "details": "männliche Stimme · Sprecher 15 · Natürlichkeit 100% · 1.8 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 1.0,
+        "naturalness": 1.0
+      },
+      "duration_seconds": 1.75,
+      "sha256": "bb4e9fec01de15da6303a7e96677907bfce73bcbb6e9574c08f8918158a2b4c8",
+      "words": {
+        "native_whisper_percent": 25,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 1",
+      "database": "EmoDB",
+      "speaker": "13",
+      "audio": "audio/emodb-atmungsraum-1.mp3",
+      "details": "weibliche Stimme · Sprecher 13 · Natürlichkeit 97% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9682666666666667,
+        "naturalness": 0.9682666666666667
+      },
+      "duration_seconds": 1.88,
+      "sha256": "38bafb6178cba5ec88bfddef69632b117bb9b9604155568cf4eba107b3db7718",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 2",
+      "database": "EmoDB",
+      "speaker": "3",
+      "audio": "audio/emodb-atmungsraum-2.mp3",
+      "details": "männliche Stimme · Sprecher 3 · Natürlichkeit 97% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 1.0,
+        "naturalness": 0.9666666666666667
+      },
+      "duration_seconds": 1.88,
+      "sha256": "81c03ddb0213f6671e34bb7b92e2c98a281ff80e85107485252254ed0a18868a",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 3",
+      "database": "EmoDB",
+      "speaker": "8",
+      "audio": "audio/emodb-atmungsraum-3.mp3",
+      "details": "weibliche Stimme · Sprecher 8 · Natürlichkeit 95% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9833333333333333,
+        "naturalness": 0.95
+      },
+      "duration_seconds": 1.92,
+      "sha256": "7dcc07b6f7c281f2f21a816dab05187fb5ea859f37f3b1498f674f0a23b21a0d",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 4",
+      "database": "EmoDB",
+      "speaker": "9",
+      "audio": "audio/emodb-atmungsraum-4.mp3",
+      "details": "weibliche Stimme · Sprecher 9 · Natürlichkeit 93% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9833333333333333,
+        "naturalness": 0.9333333333333333
+      },
+      "duration_seconds": 1.88,
+      "sha256": "631ae33bdd4f419423442aa81c152fc1d2e81dd7151be0efcecad5c11dc69eb1",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 5",
+      "database": "EmoDB",
+      "speaker": "11",
+      "audio": "audio/emodb-atmungsraum-5.mp3",
+      "details": "männliche Stimme · Sprecher 11 · Natürlichkeit 90% · 1.8 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9333333333333333,
+        "naturalness": 0.9
+      },
+      "duration_seconds": 1.8,
+      "sha256": "ebe739503795d1440d64fc4cf3cf04bd8a759c919d7884cb6bceb6dfcc2c7608",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 6",
+      "database": "EmoDB",
+      "speaker": "10",
+      "audio": "audio/emodb-atmungsraum-6.mp3",
+      "details": "männliche Stimme · Sprecher 10 · Natürlichkeit 85% · 1.7 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9,
+        "naturalness": 0.85
+      },
+      "duration_seconds": 1.72,
+      "sha256": "5e26b8fe32a56e71a436c3e821b1004cfff22cfa7b231cab0703744d3e3c0ee1",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 7",
+      "database": "EmoDB",
+      "speaker": "14",
+      "audio": "audio/emodb-atmungsraum-7.mp3",
+      "details": "weibliche Stimme · Sprecher 14 · Natürlichkeit 83% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9833333333333333,
+        "naturalness": 0.8333333333333334
+      },
+      "duration_seconds": 1.92,
+      "sha256": "9291a59f67b940fc232242586330b3d31626e849e3387f5c473f4a0c67c6520d",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, zwei, drei, vier.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 8",
+      "database": "EmoDB",
+      "speaker": "16",
+      "audio": "audio/emodb-atmungsraum-8.mp3",
+      "details": "weibliche Stimme · Sprecher 16 · Natürlichkeit 80% · 1.9 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9341333333333333,
+        "naturalness": 0.8031666666666667
+      },
+      "duration_seconds": 1.92,
+      "sha256": "67b428eb7fbe9131f7eda3793e9555d741abc32a4b3a0407c97c3b23d5fd21c6",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    },
+    {
+      "name": "EmoDB Atmungsraum 9",
+      "database": "EmoDB",
+      "speaker": "12",
+      "audio": "audio/emodb-atmungsraum-9.mp3",
+      "details": "männliche Stimme · Sprecher 12 · Natürlichkeit 75% · 1.8 s",
+      "ratings": {
+        "basis": "qualitative_neutral_emotion_estimate",
+        "valence": "neutral",
+        "arousal": "unmeasured",
+        "recognition_confidence": 0.9166666666666666,
+        "naturalness": 0.75
+      },
+      "duration_seconds": 1.81,
+      "sha256": "d3290790030890f30c42984761214ee03c414cf509a1b9897a685dae55ad2067",
+      "words": {
+        "native_whisper_percent": null,
+        "verified": {
+          "words_match": true,
+          "transcript": "Einatmen, 2, 3, 4.",
+          "normalization": "case/punctuation and exact German number equivalence: 2=zwei, 3=drei, 4=vier; no omitted or extra words accepted",
+          "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+          "language": "de",
+          "input": "decoded final MP3"
+        }
+      }
+    }
+  ]
+}

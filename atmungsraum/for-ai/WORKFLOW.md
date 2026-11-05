@@ -95,6 +95,15 @@ generator WAVs plus settings/hashes. Comparison tracks may add silent gaps while
 preserving the source samples exactly. Peak/decode/ASR checks do not establish
 acceptable pronunciation, softness or calmness; user listening selection remains
 required. See [voice sourcing](../audio/voice-sourcing.md) for current evidence.
+The 2026-10-28 user request separately authorizes the twenty exact-phrase MP3s
+under `samples/audio/` and their listening subpage. Keep source references,
+profile UUIDs, and full native receipts private. `samples/samples.json` contains
+only public source-rating summaries, generated durations, MP3 hashes, and
+truthful transcript evidence. Preserve native raw word scores; digit/word
+equivalence (`2=zwei`, `3=drei`, `4=vier`) is recorded as a separate check.
+Run `node for-ai/scripts/check-samples.mjs` from `atmungsraum/` after changing
+the listening page or its selected samples. Existing runtime voice selection
+and session timing are unaffected by this audition page.
 
 For the local voice-to-breath prototype, use `tools/build-power-crossfade-audition.py`
 with `--voices-dir`, `--sounds-dir`, and an ignored `--output-dir`. It consumes
