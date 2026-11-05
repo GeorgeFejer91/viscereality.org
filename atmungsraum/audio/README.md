@@ -1,5 +1,11 @@
 # Reusable German box-breathing audio
 
+Every final sequence loads its authored JSON timeline from
+[`scenarios/`](scenarios/README.md), with a matching CSV timing sheet. All clips
+come from the shared [`assets/audio/`](../assets/audio/) library; scenarios reuse
+asset IDs rather than storing their own audio. JSON determines timing/order.
+CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
+
 The browser loads reusable samples once. It repeats four separate phase cues:
 **inhale -> pause after inhale -> exhale -> pause after exhale**. Every phase is
 exactly four seconds. Inhale/exhale cue and counts occur at 0, 1, 2, and 3
@@ -91,8 +97,9 @@ be shorter; no cycle is cut. Any remainder follows the ending as quiet recovery.
 | 15 min / 900 s | 40 s | 18 + 18 + 14 | 800 s | 40 s | 12 s | 8 s |
 | 20 min / 1200 s | 40 s | 18 + 18 + 18 + 14 | 1088 s | 60 s | 12 s | 0 s |
 
-The manifest's frame counts are the timing authority. The engine derives every
-scheduled start/end from one AudioContext anchor. A phase always uses 176,400
+The manifest defines each asset's frame count; each saved scenario defines its
+ordered, frame-indexed playback slots. The engine derives every scheduled
+start/end from those slots and one AudioContext anchor. A phase always uses 176,400
 source frames; rests always use 882,000. The first rest begins at t0 + 328 s,
 after the 40-second welcome and 288 seconds of box breathing. Subsequent full
 blocks start after 20-second rests. Recovery and rest are natural breathing,
@@ -125,7 +132,7 @@ Headset/ECG verification is an explicitly labelled simulation in this preview.
 Audio is actually scheduled in the local browser. No sensor or headset connection
 is established by browser playback.
 
-The controller records selected scenario, asset-manifest hash, scheduling times,
+The controller records selected scenario ID and JSON hash, asset-manifest hash, scheduling times,
 audio sample rate, available latency/clock estimates, ended notifications, and
 abort reason. The last ten receipts are saved locally under
 `atmungsraum.audio-receipts`; no participant identity is collected. Receipts can
@@ -150,8 +157,9 @@ An existing audioContext may be supplied to the constructor. The caller may pass
 `startAt` to `start(minutes, { startAt })` to share an experimental audio anchor.
 For a main round, use `start(5, { baselineMinutes: 5 })` (10 minutes total)
 or `start(10, { baselineMinutes: 5 })` (15 minutes total). The optional baseline
-is accepted only for those guided durations; `createProtocol()` accepts the
-same third-argument options. Baseline is a protocol event with no audio source.
+is accepted only for those guided durations. `engine.protocol(5, { baselineMinutes: 5 })`
+returns the loaded main timeline. `createProtocol()` remains an authoring/regression
+reference and is not called by runtime playback. Baseline has no audio source.
 Default scheduling lead is 250 ms, outside the measured session; explicit starts
 require at least 50 ms lead. `pause()` suspends the context, freezes its clock and
 keeps all scheduled sources; `resume()` continues that same run. Both return
@@ -166,7 +174,9 @@ responses are cached with their nonsecret request parameters. Changed requests
 are rejected against existing cache entries; preserve/rename the cache before
 regeneration. The key is read into memory and never written or printed.
 
-Run `pnpm run test:audio` and `pnpm run check:ui`. Serve this tree over HTTP and
+Run `pnpm run test:audio`, `pnpm run check:scenarios` and `pnpm run check:ui`.
+After editing scenario JSON, run `pnpm run scenarios:csv` to refresh the paired
+CSVs. Serve this tree over HTTP and
 open `tests/offline-audio.html` for a silent native Web Audio render of the actual
 scheduler, comparing all output samples to the planned reused assets. Adding
 `?round=haupt` checks both main totals, including all baseline samples, at both

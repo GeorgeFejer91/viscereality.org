@@ -1,7 +1,10 @@
+import { SCENARIOS, scenarioId, validateScenario } from './scenario-protocol.js';
+
 export const PHASES = Object.freeze(['inhale', 'hold_in', 'exhale', 'hold_out']);
 export const MINUTES = Object.freeze([5, 10, 15, 20]);
 const BLOCKS = ['instruction', ...PHASES, 'ending', 'rest', 'inhale_breath', 'exhale_breath'];
 const DEFAULT_MANIFEST = new URL('../assets/audio/box-breathing/de/soft-v2/manifest.json', import.meta.url);
+const SCENARIO_DIRECTORY = new URL('./scenarios/', import.meta.url);
 
 export function validateManifest(manifest) {
   if (manifest?.id !== 'box-breathing-4-4-4-4-de-v2' || manifest.version !== 2
@@ -178,11 +181,30 @@ export class BoxBreathingEngine {
         }
         return [id, buffer];
       }));
+      const scenarios = await Promise.all(SCENARIOS.map(async (id) => {
+        const url = new URL(`${id}.json`, SCENARIO_DIRECTORY);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Scenario HTTP ${response.status}: ${id}.`);
+        const bytes = await response.arrayBuffer();
+        const protocol = validateScenario(JSON.parse(new TextDecoder().decode(bytes)), this.manifest,
+          { scenarioId: id, manifestHash: this.manifestHash });
+        if (new URL(protocol.audio_library, url).href !== this.manifestUrl.href) {
+          throw new Error(`Scenario library URL mismatch: ${id}.`);
+        }
+        return [id, { protocol, sha256: await sha256(bytes) }];
+      }));
+      this.scenarios = Object.fromEntries(scenarios);
       this.buffers = Object.fromEntries(entries);
       return this.manifest;
     })();
     try { return await this.preparation; }
-    catch (error) { this.preparation = null; this.buffers = null; throw error; }
+    catch (error) { this.preparation = null; this.buffers = null; this.scenarios = null; throw error; }
+  }
+
+  protocol(minutes, options = {}) {
+    const entry = this.scenarios?.[scenarioId(minutes, options)];
+    if (!entry) throw new Error('Prepare scenario audio before starting.');
+    return entry.protocol;
   }
 
   // Call after prepare(), directly from the host's Start action. An explicit
@@ -191,7 +213,7 @@ export class BoxBreathingEngine {
     if (this.disposed || !this.buffers) throw new Error('Prepare audio before starting.');
     if (this.starting || this.pausing || this.resuming || ['scheduled', 'paused'].includes(this.run?.status)) throw new Error('A session is already active.');
     if (typeof document !== 'undefined' && document.hidden) throw new Error('Keep the experiment page visible.');
-    const protocol = createProtocol(minutes, this.manifest, { baselineMinutes });
+    const protocol = this.protocol(minutes, { baselineMinutes });
     const token = ++this.token;
     this.starting = true;
     try {
@@ -206,7 +228,9 @@ export class BoxBreathingEngine {
       const done = new Promise((finish) => { resolve = finish; });
       const run = { status: 'scheduled', protocol, start_at_audio_seconds: t0,
         end_at_audio_seconds: t0 + protocol.total_frames / protocol.sample_rate,
-        manifest_sha256: this.manifestHash, user_agent: globalThis.navigator?.userAgent ?? null,
+        manifest_sha256: this.manifestHash, scenario_id: protocol.scenario_id,
+        scenario_sha256: this.scenarios[protocol.scenario_id].sha256,
+        user_agent: globalThis.navigator?.userAgent ?? null,
         audio_sample_rate: this.context.sampleRate, base_latency_seconds: this.context.baseLatency ?? null,
         output_latency_seconds: this.context.outputLatency ?? null,
         clock_mapping: this.context.getOutputTimestamp?.() ?? null,

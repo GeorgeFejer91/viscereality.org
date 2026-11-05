@@ -29,6 +29,43 @@ publish this UI revision through the existing workflow and verify its exact
 live assets; real phone/Safari, headset/H10 and listening acceptance remain
 separate open checks. Recheck shared-checkout Git state before continuing.
 
+## Scenario audio protocol — 2026-11-05
+
+Every final sequence must play predefined assets from the shared `assets/audio/`
+library. Each scenario owns a JSON timeline and a matching CSV under
+`audio/scenarios/`; JSON is the runtime authority and CSV is its checked,
+readable timing sheet. Preserve the chosen runtime samples and existing exact
+durations, silent main-round baseline, pause/resume and abort behavior. The
+current browser player is the integration target; real video/headset execution
+remains pending. No new voice generation or asset selection is authorized here.
+
+- [x] Add all six menu scenarios plus the existing engine-only 20-minute
+  diagnostic as JSON/CSV pairs; bind each to the shared library manifest.
+- [x] Load and validate those files before playback; retain the single Web Audio
+  clock and record scenario identity/hash in scheduling receipts.
+- [x] Verify file/CSV consistency, invalid-input rejection, all existing audio
+  behavior and native offline renders; update the audio workflow and evidence.
+
+Implementation uses the existing plain JavaScript engine and Node checks with
+no new dependencies. Work stays in the shared checkout to preserve the pending
+UI/player edits already present in `app.js`, `index.html`, `style.css`,
+`audio/session-ui.js` and `tests/box-breathing.test.mjs`. Initial Git observation:
+`main` at `a79275f`, matching the locally recorded `origin/main`; no publication
+of this change has been observed. Overall headset/H10 acceptance remains open.
+
+Evidence: 13 Node audio tests, seven JSON/CSV consistency checks, fourteen native
+offline renders (all seven scenarios at 44.1/48 kHz with zero sample error), all
+six real-browser playback routes and missing-JSON/retry behavior passed. All
+886 participant text-score ranges/scripts/clips match the new JSONs. Hash-bound
+JSON/CSV uses pinned LF bytes so Windows and GitHub Pages agree. See
+`VERIFICATION.md`. Concurrent tasks committed the existing player/artwork edits
+as `2e58f6f` and `7c8cadc` during this work. This change is prepared as the local
+commit `Load final-sequence audio from scenario JSON timelines` on `main`;
+no push/merge/deployment is part of this task. Unrelated alignment-publication
+notes remain separate working-tree changes. Next product action: listen/review
+the chosen samples and implement the actual headset/video transport with a
+shared timing anchor; acceptance requires target-device audiovisual evidence.
+
 ## Round-button infographic task — 2026-11-05
 
 - [x] Generate two matching transparent infographics and convert them into

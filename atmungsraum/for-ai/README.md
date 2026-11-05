@@ -34,6 +34,8 @@ Read common rules first, then the documents needed for the task:
 - [DECISIONS.md](DECISIONS.md): durable decisions and their reasons.
 - [Reusable audio engine](../audio/README.md): four separate repeating German
   phase cues, reference analysis, exact session timing, and verification.
+- [Scenario protocol](../audio/scenarios/README.md): the JSON runtime timelines
+  and matching CSVs for every final sequence, using the shared audio library.
 - [Listening asset folder](../audio-assets/README.md): ready-to-listen local WAVs
   with adjacent timing/transcript JSONs, separate layers and 16-second cycles.
 - [Audio review](../audio-review/00-START-HERE.txt): protocol/script inventory,

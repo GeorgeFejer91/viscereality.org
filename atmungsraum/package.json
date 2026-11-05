@@ -5,7 +5,9 @@
   "scripts": {
     "vendor": "node for-ai/scripts/vendor-pretext.mjs",
     "check:ui": "node for-ai/scripts/check-ui.mjs",
-    "test:audio": "node --test tests/box-breathing.test.mjs",
+    "test:audio": "node --test tests/box-breathing.test.mjs tests/scenario-protocol.test.mjs",
+    "check:scenarios": "node tools/scenario-csv.mjs --check",
+    "scenarios:csv": "node tools/scenario-csv.mjs",
     "render:audio": "node tools/render-box-breathing.mjs"
   },
   "dependencies": {

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scenario_id": "probe-anleitung",
+  "audio_library": "../../assets/audio/box-breathing/de/soft-v2/manifest.json",
+  "library_manifest_sha256": "1a4fe0f2546d5850865bb2aab8c737cff05244ff40286044189e7a3cd53fb275",
+  "id": "box-breathing-4-4-4-4-de-v2",
+  "minutes": null,
+  "box_minutes": null,
+  "baseline_frames": 0,
+  "mode": "instruction-example",
+  "sample_rate": 44100,
+  "total_frames": 2998800,
+  "cycles": 1,
+  "rests": 0,
+  "breathing_blocks": [
+    1
+  ],
+  "intro_frames": 1764000,
+  "ending_frames": 529200,
+  "recovery_frames": 0,
+  "events": [
+    {
+      "id": "instruction",
+      "asset": "instruction",
+      "offset_frames": 0,
+      "duration_frames": 1764000,
+      "cycle": null,
+      "breathing_block": null
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 1764000,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 1940400,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 2116800,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 2293200,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "ending",
+      "asset": "ending",
+      "offset_frames": 2469600,
+      "duration_frames": 529200,
+      "cycle": null,
+      "breathing_block": null
+    }
+  ]
+}

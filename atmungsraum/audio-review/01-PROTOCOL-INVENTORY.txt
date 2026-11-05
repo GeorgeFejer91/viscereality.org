@@ -1,10 +1,12 @@
 CURRENT AUDIO PROTOCOL AND SCRIPT INVENTORY
-Snapshot: 2026-10-27; paths are relative to atmungsraum/.
+Snapshot refreshed: 2026-11-05; paths are relative to atmungsraum/.
 Scope: checked-in scripts, manifests, runtime wiring and documented auditions.
 
 1. WHAT THE BROWSER ACTUALLY PLAYS
 
 Entry: audio/session-ui.js -> BoxBreathingEngine in audio/box-breathing.js.
+Timeline: audio/scenarios/<scenario-id>.json, with a matching generated CSV.
+Shared library folder: assets/audio/. JSON events own asset order and timing.
 Selected manifest: assets/audio/box-breathing/de/soft-v2/manifest.json.
 Protocol ID: box-breathing-4-4-4-4-de-v2, version 2.
 Nine reusable mono PCM WAVs, 16-bit, 44,100 Hz:
@@ -59,6 +61,11 @@ tools/build-soft-box-cues.py
 3. HOW COMPLETE SESSIONS ARE SEQUENCED
 
 audio/box-breathing.js: createProtocol(), scheduleProtocol(), BoxBreathingEngine.
+  Runtime loads saved JSON; createProtocol() is an authoring/regression reference.
+audio/scenario-protocol.js: selection mapping, validation and CSV serialization.
+  Each JSON binds the library manifest hash. Unknown clips, invalid/overlapping
+  slots, wrong totals or library revisions prevent preparation; no fallback.
+  All seven JSON/CSV pairs are in audio/scenarios/ (six menu + engine-only 20).
   Four phases in order: inhale, hold_in, exhale, hold_out.
   One phase = 176,400 frames = 4 seconds. One cycle = 16 seconds.
   Blocks contain at most 18 whole cycles = 288 seconds, not five minutes.
@@ -82,7 +89,7 @@ ui-logic.js and audio/session-ui.js map the current menu:
   Its screen displays Normal atmen, but that label is not spoken.
   Both main welcomes start at 05:00; first paced inhale at 05:40.
   Anleitung: welcome + ONE cycle + ending = 68 seconds; no automatic loop.
-  The Anleitung screen has no time limit, hides its countdown and allows replay.
+  The Anleitung screen has no time limit, shows elapsed/total time and allows replay.
 
 audio/session-ui.js also owns Starten/Pause/Fortsetzen and Beenden/Escape.
   Pause suspends the audio clock; resume continues the same queued schedule.
@@ -163,7 +170,7 @@ audio/voice-sourcing.md. No audition builder above promotes a runtime set.
 6. OFFLINE EXPORT AND CHECKS
 
 tools/render-box-breathing.mjs
-  Reads the runtime manifest and calls production createProtocol(). Validates
+  Reads the runtime manifest and saved scenario JSON. Validates
   hashes/RIFF PCM, concatenates reused samples and silence, writes one WAV and
   adjacent .protocol.json. Refuses existing output files. No synthesis.
   node tools/render-box-breathing.mjs --preview
@@ -172,10 +179,17 @@ tools/render-box-breathing.mjs
   baseline option; a 10-minute export is the GUIDED 10-minute sequence.
   tests/offline-audio.html?round=haupt covers main-round production scheduling.
 
+tools/scenario-csv.mjs
+  Reads/validates all seven JSONs and the library hash; updates their paired
+  CSVs, or rejects drift with --check. No synthesis or new audio copies.
+
 tests/box-breathing.test.mjs: protocol, asset integrity and lifecycle tests.
+tests/scenario-protocol.test.mjs: JSON/CSV pairs, legacy timing equivalence,
+  input rejection, data-driven playback, hashes and missing-file failure.
 tests/offline-audio.html: native OfflineAudioContext comparison with real assets.
 for-ai/scripts/check-ui.mjs: browser-controller/state checks; no acoustic test.
-Run: node --test tests/box-breathing.test.mjs
+Run: pnpm run test:audio
+Run: pnpm run check:scenarios
 Run: node for-ai/scripts/check-ui.mjs
 
 7. OLDER RETAINED ASSET SETS

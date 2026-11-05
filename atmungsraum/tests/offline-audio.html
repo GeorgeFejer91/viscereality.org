@@ -8,7 +8,7 @@
 <p>This diagnostic renders silently. It does not play sound.</p>
 <pre id="result" role="status">Running…</pre>
 <script type="module">
-import { BoxBreathingEngine, createProtocol, scheduleProtocol } from '../audio/box-breathing.js';
+import { BoxBreathingEngine, scheduleProtocol } from '../audio/box-breathing.js';
 const output = document.querySelector('#result');
 const reports = [];
 const main = new URLSearchParams(location.search).get('round') === 'haupt';
@@ -16,9 +16,9 @@ try {
   for (const rate of [44100, 48000]) {
     const decoder = new OfflineAudioContext(1, rate * 4, rate);
     const engine = new BoxBreathingEngine({ audioContext: decoder });
-    const manifest = await engine.prepare();
-    for (const minutes of main ? [5, 10] : rate === 44100 ? [5, 10, 15, 20] : [5]) {
-      const plan = createProtocol(minutes, manifest, { baselineMinutes: main ? 5 : 0 });
+    await engine.prepare();
+    for (const minutes of main ? [5, 10] : ['anleitung', 5, 10, 15, 20]) {
+      const plan = engine.protocol(minutes, { baselineMinutes: main ? 5 : 0 });
       const totalFrames = Math.round(plan.total_frames / plan.sample_rate * rate);
       const context = new OfflineAudioContext(1, totalFrames, rate);
       scheduleProtocol(context, engine.buffers, plan, 0);
@@ -34,7 +34,7 @@ try {
         }
       }
       if (rendered.length !== totalFrames || maxError > 0.00001) throw new Error('Rendered PCM deviates from the protocol.');
-      reports.push({ minutes: plan.minutes, baseline_seconds: plan.baseline_frames / plan.sample_rate,
+      reports.push({ scenario_id: plan.scenario_id, minutes: plan.minutes, baseline_seconds: plan.baseline_frames / plan.sample_rate,
         sample_rate: rate, frames: rendered.length,
         duration_seconds: rendered.duration, max_sample_error: maxError,
         cycles: plan.cycles, recovery_seconds: plan.recovery_frames / 44100 });

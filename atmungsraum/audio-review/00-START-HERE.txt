@@ -1,5 +1,5 @@
 ATMUNGSRAUM AUDIO REVIEW
-Snapshot: 2026-10-27
+Snapshot refreshed: 2026-11-05
 
 Start with 02-PARTICIPANT-EXPERIENCE.txt for the listener's experience.
 Read 01-PROTOCOL-INVENTORY.txt for the scripts, assets and generation rules.
@@ -24,9 +24,11 @@ their quiet tails, rather than the duration of continuous speech.
 
 These files describe the checked-in sequencer and PCM assets. They are not a
 recording, a new listening assessment, or verification of physical sound output.
-The individual timelines were derived from createProtocol() and the runtime
-manifest, with source hashes recorded in their headers. They are a fixed
-snapshot: refresh them if the engine, selection mapping or sample set changes.
+The individual timelines are checked against the runtime JSON files under
+audio/scenarios/ and the shared library manifest, with source hashes recorded
+in their headers. JSON now owns playback timing/order; matching CSV timing
+sheets accompany it. These text scores are a fixed snapshot: refresh them if
+scenario JSON, the engine, selection mapping or sample set changes.
 No new speech was synthesized and no existing audio was replaced for this review.
 
 The newer local ElevenLabs listening package is documented but absent from

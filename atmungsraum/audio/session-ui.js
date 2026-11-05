@@ -1,4 +1,4 @@
-import { BoxBreathingEngine, createProtocol } from './box-breathing.js?v=20261012-baseline';
+import { BoxBreathingEngine } from './box-breathing.js?v=20261105-scenarios';
 import { state, start } from '../ui-logic.js?v=20261012-baseline';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
@@ -210,8 +210,8 @@ export function mountSessionAudio() {
 
   function resetProgress(selection) {
     totalSeconds = selection?.minutes ? selection.minutes * 60 : 0;
-    if (selection && engine?.manifest) {
-      const protocol = createProtocol(selection.boxMinutes ?? 'anleitung', engine.manifest,
+    if (selection && engine?.buffers) {
+      const protocol = engine.protocol(selection.boxMinutes ?? 'anleitung',
         { baselineMinutes: selection.baselineMinutes });
       totalSeconds = protocol.total_frames / protocol.sample_rate;
     }

@@ -1,0 +1,1112 @@
+{
+  "schema_version": 1,
+  "scenario_id": "haupt-15",
+  "audio_library": "../../assets/audio/box-breathing/de/soft-v2/manifest.json",
+  "library_manifest_sha256": "1a4fe0f2546d5850865bb2aab8c737cff05244ff40286044189e7a3cd53fb275",
+  "id": "box-breathing-4-4-4-4-de-v2",
+  "minutes": 15,
+  "box_minutes": 10,
+  "baseline_frames": 13230000,
+  "mode": "main-session",
+  "sample_rate": 44100,
+  "total_frames": 39690000,
+  "cycles": 33,
+  "rests": 1,
+  "breathing_blocks": [
+    18,
+    15
+  ],
+  "intro_frames": 1764000,
+  "ending_frames": 529200,
+  "recovery_frames": 0,
+  "events": [
+    {
+      "id": "baseline",
+      "asset": null,
+      "offset_frames": 0,
+      "duration_frames": 13230000,
+      "cycle": null,
+      "breathing_block": null
+    },
+    {
+      "id": "instruction",
+      "asset": "instruction",
+      "offset_frames": 13230000,
+      "duration_frames": 1764000,
+      "cycle": null,
+      "breathing_block": null
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 14994000,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 15170400,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 15346800,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 15523200,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 15699600,
+      "duration_frames": 176400,
+      "cycle": 2,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 15876000,
+      "duration_frames": 176400,
+      "cycle": 2,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 16052400,
+      "duration_frames": 176400,
+      "cycle": 2,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 16228800,
+      "duration_frames": 176400,
+      "cycle": 2,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 16405200,
+      "duration_frames": 176400,
+      "cycle": 3,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 16581600,
+      "duration_frames": 176400,
+      "cycle": 3,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 16758000,
+      "duration_frames": 176400,
+      "cycle": 3,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 16934400,
+      "duration_frames": 176400,
+      "cycle": 3,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 17110800,
+      "duration_frames": 176400,
+      "cycle": 4,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 17287200,
+      "duration_frames": 176400,
+      "cycle": 4,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 17463600,
+      "duration_frames": 176400,
+      "cycle": 4,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 17640000,
+      "duration_frames": 176400,
+      "cycle": 4,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 17816400,
+      "duration_frames": 176400,
+      "cycle": 5,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 17992800,
+      "duration_frames": 176400,
+      "cycle": 5,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 18169200,
+      "duration_frames": 176400,
+      "cycle": 5,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 18345600,
+      "duration_frames": 176400,
+      "cycle": 5,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 18522000,
+      "duration_frames": 176400,
+      "cycle": 6,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 18698400,
+      "duration_frames": 176400,
+      "cycle": 6,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 18874800,
+      "duration_frames": 176400,
+      "cycle": 6,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 19051200,
+      "duration_frames": 176400,
+      "cycle": 6,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 19227600,
+      "duration_frames": 176400,
+      "cycle": 7,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 19404000,
+      "duration_frames": 176400,
+      "cycle": 7,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 19580400,
+      "duration_frames": 176400,
+      "cycle": 7,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 19756800,
+      "duration_frames": 176400,
+      "cycle": 7,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 19933200,
+      "duration_frames": 176400,
+      "cycle": 8,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 20109600,
+      "duration_frames": 176400,
+      "cycle": 8,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 20286000,
+      "duration_frames": 176400,
+      "cycle": 8,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 20462400,
+      "duration_frames": 176400,
+      "cycle": 8,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 20638800,
+      "duration_frames": 176400,
+      "cycle": 9,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 20815200,
+      "duration_frames": 176400,
+      "cycle": 9,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 20991600,
+      "duration_frames": 176400,
+      "cycle": 9,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 21168000,
+      "duration_frames": 176400,
+      "cycle": 9,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 21344400,
+      "duration_frames": 176400,
+      "cycle": 10,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 21520800,
+      "duration_frames": 176400,
+      "cycle": 10,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 21697200,
+      "duration_frames": 176400,
+      "cycle": 10,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 21873600,
+      "duration_frames": 176400,
+      "cycle": 10,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 22050000,
+      "duration_frames": 176400,
+      "cycle": 11,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 22226400,
+      "duration_frames": 176400,
+      "cycle": 11,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 22402800,
+      "duration_frames": 176400,
+      "cycle": 11,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 22579200,
+      "duration_frames": 176400,
+      "cycle": 11,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 22755600,
+      "duration_frames": 176400,
+      "cycle": 12,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 22932000,
+      "duration_frames": 176400,
+      "cycle": 12,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 23108400,
+      "duration_frames": 176400,
+      "cycle": 12,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 23284800,
+      "duration_frames": 176400,
+      "cycle": 12,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 23461200,
+      "duration_frames": 176400,
+      "cycle": 13,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 23637600,
+      "duration_frames": 176400,
+      "cycle": 13,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 23814000,
+      "duration_frames": 176400,
+      "cycle": 13,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 23990400,
+      "duration_frames": 176400,
+      "cycle": 13,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 24166800,
+      "duration_frames": 176400,
+      "cycle": 14,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 24343200,
+      "duration_frames": 176400,
+      "cycle": 14,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 24519600,
+      "duration_frames": 176400,
+      "cycle": 14,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 24696000,
+      "duration_frames": 176400,
+      "cycle": 14,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 24872400,
+      "duration_frames": 176400,
+      "cycle": 15,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 25048800,
+      "duration_frames": 176400,
+      "cycle": 15,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 25225200,
+      "duration_frames": 176400,
+      "cycle": 15,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 25401600,
+      "duration_frames": 176400,
+      "cycle": 15,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 25578000,
+      "duration_frames": 176400,
+      "cycle": 16,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 25754400,
+      "duration_frames": 176400,
+      "cycle": 16,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 25930800,
+      "duration_frames": 176400,
+      "cycle": 16,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 26107200,
+      "duration_frames": 176400,
+      "cycle": 16,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 26283600,
+      "duration_frames": 176400,
+      "cycle": 17,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 26460000,
+      "duration_frames": 176400,
+      "cycle": 17,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 26636400,
+      "duration_frames": 176400,
+      "cycle": 17,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 26812800,
+      "duration_frames": 176400,
+      "cycle": 17,
+      "breathing_block": 1
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 26989200,
+      "duration_frames": 176400,
+      "cycle": 18,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 27165600,
+      "duration_frames": 176400,
+      "cycle": 18,
+      "breathing_block": 1
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 27342000,
+      "duration_frames": 176400,
+      "cycle": 18,
+      "breathing_block": 1
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 27518400,
+      "duration_frames": 176400,
+      "cycle": 18,
+      "breathing_block": 1
+    },
+    {
+      "id": "rest",
+      "asset": "rest",
+      "offset_frames": 27694800,
+      "duration_frames": 882000,
+      "cycle": null,
+      "breathing_block": null
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 28576800,
+      "duration_frames": 176400,
+      "cycle": 19,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 28753200,
+      "duration_frames": 176400,
+      "cycle": 19,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 28929600,
+      "duration_frames": 176400,
+      "cycle": 19,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 29106000,
+      "duration_frames": 176400,
+      "cycle": 19,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 29282400,
+      "duration_frames": 176400,
+      "cycle": 20,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 29458800,
+      "duration_frames": 176400,
+      "cycle": 20,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 29635200,
+      "duration_frames": 176400,
+      "cycle": 20,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 29811600,
+      "duration_frames": 176400,
+      "cycle": 20,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 29988000,
+      "duration_frames": 176400,
+      "cycle": 21,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 30164400,
+      "duration_frames": 176400,
+      "cycle": 21,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 30340800,
+      "duration_frames": 176400,
+      "cycle": 21,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 30517200,
+      "duration_frames": 176400,
+      "cycle": 21,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 30693600,
+      "duration_frames": 176400,
+      "cycle": 22,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 30870000,
+      "duration_frames": 176400,
+      "cycle": 22,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 31046400,
+      "duration_frames": 176400,
+      "cycle": 22,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 31222800,
+      "duration_frames": 176400,
+      "cycle": 22,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 31399200,
+      "duration_frames": 176400,
+      "cycle": 23,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 31575600,
+      "duration_frames": 176400,
+      "cycle": 23,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 31752000,
+      "duration_frames": 176400,
+      "cycle": 23,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 31928400,
+      "duration_frames": 176400,
+      "cycle": 23,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 32104800,
+      "duration_frames": 176400,
+      "cycle": 24,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 32281200,
+      "duration_frames": 176400,
+      "cycle": 24,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 32457600,
+      "duration_frames": 176400,
+      "cycle": 24,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 32634000,
+      "duration_frames": 176400,
+      "cycle": 24,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 32810400,
+      "duration_frames": 176400,
+      "cycle": 25,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 32986800,
+      "duration_frames": 176400,
+      "cycle": 25,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 33163200,
+      "duration_frames": 176400,
+      "cycle": 25,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 33339600,
+      "duration_frames": 176400,
+      "cycle": 25,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 33516000,
+      "duration_frames": 176400,
+      "cycle": 26,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 33692400,
+      "duration_frames": 176400,
+      "cycle": 26,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 33868800,
+      "duration_frames": 176400,
+      "cycle": 26,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 34045200,
+      "duration_frames": 176400,
+      "cycle": 26,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 34221600,
+      "duration_frames": 176400,
+      "cycle": 27,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 34398000,
+      "duration_frames": 176400,
+      "cycle": 27,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 34574400,
+      "duration_frames": 176400,
+      "cycle": 27,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 34750800,
+      "duration_frames": 176400,
+      "cycle": 27,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 34927200,
+      "duration_frames": 176400,
+      "cycle": 28,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 35103600,
+      "duration_frames": 176400,
+      "cycle": 28,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 35280000,
+      "duration_frames": 176400,
+      "cycle": 28,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 35456400,
+      "duration_frames": 176400,
+      "cycle": 28,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 35632800,
+      "duration_frames": 176400,
+      "cycle": 29,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 35809200,
+      "duration_frames": 176400,
+      "cycle": 29,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 35985600,
+      "duration_frames": 176400,
+      "cycle": 29,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 36162000,
+      "duration_frames": 176400,
+      "cycle": 29,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 36338400,
+      "duration_frames": 176400,
+      "cycle": 30,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 36514800,
+      "duration_frames": 176400,
+      "cycle": 30,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 36691200,
+      "duration_frames": 176400,
+      "cycle": 30,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 36867600,
+      "duration_frames": 176400,
+      "cycle": 30,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 37044000,
+      "duration_frames": 176400,
+      "cycle": 31,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 37220400,
+      "duration_frames": 176400,
+      "cycle": 31,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 37396800,
+      "duration_frames": 176400,
+      "cycle": 31,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 37573200,
+      "duration_frames": 176400,
+      "cycle": 31,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 37749600,
+      "duration_frames": 176400,
+      "cycle": 32,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 37926000,
+      "duration_frames": 176400,
+      "cycle": 32,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 38102400,
+      "duration_frames": 176400,
+      "cycle": 32,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 38278800,
+      "duration_frames": 176400,
+      "cycle": 32,
+      "breathing_block": 2
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale_breath",
+      "offset_frames": 38455200,
+      "duration_frames": 176400,
+      "cycle": 33,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 38631600,
+      "duration_frames": 176400,
+      "cycle": 33,
+      "breathing_block": 2
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale_breath",
+      "offset_frames": 38808000,
+      "duration_frames": 176400,
+      "cycle": 33,
+      "breathing_block": 2
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 38984400,
+      "duration_frames": 176400,
+      "cycle": 33,
+      "breathing_block": 2
+    },
+    {
+      "id": "ending",
+      "asset": "ending",
+      "offset_frames": 39160800,
+      "duration_frames": 529200,
+      "cycle": null,
+      "breathing_block": null
+    }
+  ]
+}

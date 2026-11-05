@@ -1,5 +1,5 @@
 import { state, hasSignal, canNavigate, confirmECG, setSensor, updateReconnect, route } from './ui-logic.js?v=20261012-baseline';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261105-player';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261105-scenarios';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');

@@ -2,14 +2,18 @@ import { readFile, mkdir, open } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createProtocol, validateManifest } from '../audio/box-breathing.js';
+import { validateManifest } from '../audio/box-breathing.js';
+import { scenarioId, validateScenario } from '../audio/scenario-protocol.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const assetDir = join(root, 'assets/audio/box-breathing/de/soft-v2');
-const manifest = validateManifest(JSON.parse(await readFile(join(assetDir, 'manifest.json'), 'utf8')));
+const manifestBytes = await readFile(join(assetDir, 'manifest.json'));
+const manifest = validateManifest(JSON.parse(manifestBytes));
 const preview = process.argv[2] === '--preview';
 const minutes = Number(process.argv[2]);
-const protocol = createProtocol(preview ? 'anleitung' : minutes, manifest);
+const id = scenarioId(preview ? 'anleitung' : minutes);
+const protocol = validateScenario(JSON.parse(await readFile(join(root, `audio/scenarios/${id}.json`))), manifest,
+  { scenarioId: id, manifestHash: createHash('sha256').update(manifestBytes).digest('hex') });
 const target = resolve(process.argv[3] ?? join(root, 'reference-audio/sessions',
   preview ? `preview-v${manifest.version}.wav` : `box-breathing-${minutes}min-v${manifest.version}.wav`));
 
@@ -49,7 +53,7 @@ header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34); header.write('data', 
 const output = Buffer.alloc(44 + length);
 header.copy(output);
 for (const event of protocol.events) {
-  if (event.id !== 'recovery') blocks[event.asset].copy(output, 44 + event.offset_frames * 2);
+  if (event.asset !== null) blocks[event.asset].copy(output, 44 + event.offset_frames * 2);
 }
 await mkdir(dirname(target), { recursive: true });
 const file = await open(target, 'wx'); // Never overwrite another experimental render.

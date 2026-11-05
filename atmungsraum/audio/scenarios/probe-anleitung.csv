@@ -1,0 +1,7 @@
+order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block
+1,instruction,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,0,40,40,0,1764000,,
+2,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,40,4,44,1764000,176400,1,1
+3,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,44,4,48,1940400,176400,1,1
+4,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,48,4,52,2116800,176400,1,1
+5,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,52,4,56,2293200,176400,1,1
+6,ending,ending,assets/audio/box-breathing/de/soft-v2/ending.wav,56,12,68,2469600,529200,,

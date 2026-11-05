@@ -1,5 +1,40 @@
 # Verification
 
+## Scenario audio protocol — 2026-11-05
+
+The six menu choices and engine-only 20-minute diagnostic each have JSON/CSV
+timelines in `audio/scenarios/`. Playback, native offline diagnostics and WAV
+verification exports now consume saved JSON. The nine shared library WAVs and
+approved timing remain unchanged; a regression proves all seven saved plans
+equal their former calculated plans, with explicit null assets for silence.
+
+All 13 Node audio tests passed, including proof that an edited JSON asset is
+actually scheduled, receipt hashes match loaded JSON, invalid assets/timing/
+metadata/library revisions are rejected, and missing/invalid files prevent any
+fallback playback. Seven JSON/CSV consistency checks, the UI-state check,
+context checker and Git whitespace check passed. A failing LF-byte regression
+caught Windows CRLF changing the pinned manifest hash; scoped `.gitattributes`
+now fixes LF for the selected manifest and scenario JSON/CSV. Its LF hash is
+`1a4fe0f2546d5850865bb2aab8c737cff05244ff40286044189e7a3cd53fb275`,
+identical to the published Git blob. Audio sample bytes were not changed.
+
+Native Chrome silently rendered all seven scenarios at both 44.1 and 48 kHz
+(14 renders). Every output sample matched the selected clips/silence with zero
+maximum error; the exact 68/300/600/900/1200-second totals and silent 300-second
+main baselines held. The verification exporter also produced the exact 68-second
+Anleitung from saved JSON. All 886 participant text-score ranges, German scripts
+and clip references matched the scenario events; their source hashes were refreshed.
+
+Real browser checks passed Start/Pause/Resume/End for all six menu routes,
+correct scenario/JSON hashes in receipts and one preload of exactly nine WAVs
+and seven JSONs. A missing scenario blocked playback with retry feedback;
+restoring it allowed preparation to recover. No page errors occurred. The phone
+playback screenshot was inspected. Local executable checks, native render
+receipts and screenshots are ignored under `output/playwright/scenario-*` and
+`check-scenario-*.mjs`. These checks establish local browser scheduling, not
+physical acoustic/video synchronization, headset/H10 behavior, listening
+acceptance or deployment. No push/publication was performed for this change.
+
 ## Playback buttons and progress — 2026-11-05
 
 The controller displays elapsed/total time and native progress from the same

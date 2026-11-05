@@ -43,12 +43,21 @@ The vendor script copies only the main API's runtime module graph and license.
 
 ## Audio cue generation
 
+Every final sequence must use the shared `assets/audio/` library and a saved
+JSON/CSV pair in `audio/scenarios/`. JSON is the runtime authority; edit its
+frame-indexed events, then run `pnpm run scenarios:csv` and
+`pnpm run check:scenarios`. Do not add per-scenario full audio tracks or a
+calculated runtime fallback. Bind the timeline to the selected library manifest
+hash; changing that manifest requires reviewing/rebinding every scenario and
+rerunning audio checks. See `audio/scenarios/README.md` for fields and mappings.
+Native offline diagnostics and verification exports also read the saved JSON.
+
 For reviewing the current participant experience, use `audio-review/` rather
 than mixing review text into runtime assets or ignored audition output. Its
 plain-text inventory distinguishes runtime, selected-voice auditions and older
 sets; `timelines/` contains all six menu choices plus the engine-only 20-minute
-sequence. These are fixed snapshots, generated directly from `createProtocol()`
-and the saved manifest, with source hashes in each timeline. Refresh the text
+sequence. These are fixed snapshots, checked against the saved scenario JSON
+and library manifest, with source hashes in each timeline. Refresh the text
 when its source hashes change, keeping exact German speech separate from
 unspoken review notes. A text score does not establish listening acceptance.
 
