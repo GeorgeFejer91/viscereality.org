@@ -54,6 +54,17 @@ runtime, audio and scheduled events are unchanged. Publication checks follow.
 Independent review found no actionable issues and separately audited all 890
 events, confirming each is represented exactly once across the 53 cue CSVs.
 
+Publication: `a216168e92b22f09fef1fb6453fc5da3156d7ba9`, Pages deployment API
+status `succeed`. Actions `42243976605` attempt 2 was subsequently cancelled
+when the concurrent successor `e11a926` started; backend success and actual
+live bytes independently establish publication. All 67 checked public files
+match local bytes: 53 per-cue CSVs, six generated scenario README TXT files,
+six protocol JSONs, the scenario index and app HTML. Local hash evidence is
+in ignored `output/scenario-csv-live-a216168.json` in the active checkout.
+The active relocated checkout passes the Python regression and package check;
+its scenario library was opened in Explorer. This follow-up changes evidence
+only; preserve unrelated concurrent source and publication notes.
+
 ## Scenario-owned silent placeholders — 2026-11-06
 
 The current UI uses53 independent silent WAV/JSON/TXT cue groups across six

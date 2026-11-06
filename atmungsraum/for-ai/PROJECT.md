@@ -49,7 +49,7 @@ No wording, audio bytes, runtime paths or protocol timings need to change.
 - [x] New sidecar regression fails on all 53 missing per-cue CSV files.
 - [x] Extend the existing packager, generate matching CSVs, document the order,
   and verify each occurrence, transcript, status and frame time.
-- [ ] Review, commit/push, verify exact Pages deployment and live sidecars,
+- [x] Review, commit/push, verify exact Pages deployment and live sidecars,
   then open the current scenario library for the user.
 
 Entry: main synchronized to `eafec8a`; clean after integrating the newer remote.
@@ -59,8 +59,22 @@ Python regression, generator check, all 22 Node tests, six scenario JSON/CSV
 pairs, UI state/context and whitespace checks pass. WAVs, authoritative JSON,
 playlists and runtime source are unchanged. Independent review found no issues
 and separately confirmed that the 53 CSVs partition all 890 events exactly once.
-Next action: publish and verify exact live sidecars. Wording approval and the overall
-real sensor/headset/listening acceptance goals remain open.
+Release evidence: sidecars committed/pushed as
+`a216168e92b22f09fef1fb6453fc5da3156d7ba9`. Its exact Pages deployment API
+reports `succeed`; Actions run `42243976605` attempt 2 was cancelled after the
+backend published successfully when the concurrent `e11a926` release started.
+All 67 affected/public context files match local bytes: 53 cue CSVs, six
+scenario README files, six protocol JSONs, the scenario index and app HTML.
+The active D: checkout has the verified sidecars and its scenario library was
+opened in Explorer. Existing recordings and silent-placeholder status are
+unchanged. The older draft snapshot remains in the original checkout's Git
+stash. Concurrent unfinished publication notes and unrelated QR work are
+preserved; they are not part of this sidecar change.
+
+This asset-organization increment is complete. Next product action: user
+approves or edits the draft wording before final speech generation. Overall
+real sensor/headset/listening acceptance goals remain open. This evidence-only
+follow-up must also finish its exact Pages deployment/live checks.
 
 ## Scenario folders and working silent-placeholder UI — 2026-11-06
 
