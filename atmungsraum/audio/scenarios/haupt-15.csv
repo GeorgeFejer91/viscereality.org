@@ -1,205 +1,205 @@
-order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,transcript_de
-1,instruction_1,instruction_1,assets/audio/box-breathing/de/soft-v2/instruction_1.wav,0,26,26,0,1146600,,,"Bevor wir beginnen, machen wir eine kurze Atemkalibrierung. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt."
-2,calibration,calibration,assets/audio/box-breathing/de/soft-v2/calibration.wav,26,15,41,1146600,661500,,,
-3,instruction_2,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,41,40,81,1808100,1764000,,,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
-4,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,81,4,85,3572100,176400,1,1,Einatmen. Zwei. Drei. Vier.
-5,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,85,4,89,3748500,176400,1,1,Und halten.
-6,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,89,4,93,3924900,176400,1,1,Ausatmen. Zwei. Drei. Vier.
-7,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,93,4,97,4101300,176400,1,1,Und halten.
-8,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,97,4,101,4277700,176400,2,1,Einatmen. Zwei. Drei. Vier.
-9,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,101,4,105,4454100,176400,2,1,Und halten.
-10,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,105,4,109,4630500,176400,2,1,Ausatmen. Zwei. Drei. Vier.
-11,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,109,4,113,4806900,176400,2,1,Und halten.
-12,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,113,4,117,4983300,176400,3,1,Einatmen. Zwei. Drei. Vier.
-13,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,117,4,121,5159700,176400,3,1,Und halten.
-14,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,121,4,125,5336100,176400,3,1,Ausatmen. Zwei. Drei. Vier.
-15,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,125,4,129,5512500,176400,3,1,Und halten.
-16,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,129,4,133,5688900,176400,4,1,Einatmen. Zwei. Drei. Vier.
-17,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,133,4,137,5865300,176400,4,1,Und halten.
-18,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,137,4,141,6041700,176400,4,1,Ausatmen. Zwei. Drei. Vier.
-19,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,141,4,145,6218100,176400,4,1,Und halten.
-20,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,145,4,149,6394500,176400,5,1,Einatmen. Zwei. Drei. Vier.
-21,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,149,4,153,6570900,176400,5,1,Und halten.
-22,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,153,4,157,6747300,176400,5,1,Ausatmen. Zwei. Drei. Vier.
-23,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,157,4,161,6923700,176400,5,1,Und halten.
-24,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,161,4,165,7100100,176400,6,1,Einatmen. Zwei. Drei. Vier.
-25,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,165,4,169,7276500,176400,6,1,Und halten.
-26,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,169,4,173,7452900,176400,6,1,Ausatmen. Zwei. Drei. Vier.
-27,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,173,4,177,7629300,176400,6,1,Und halten.
-28,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,177,4,181,7805700,176400,7,1,Einatmen. Zwei. Drei. Vier.
-29,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,181,4,185,7982100,176400,7,1,Und halten.
-30,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,185,4,189,8158500,176400,7,1,Ausatmen. Zwei. Drei. Vier.
-31,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,189,4,193,8334900,176400,7,1,Und halten.
-32,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,193,4,197,8511300,176400,8,1,Einatmen. Zwei. Drei. Vier.
-33,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,197,4,201,8687700,176400,8,1,Und halten.
-34,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,201,4,205,8864100,176400,8,1,Ausatmen. Zwei. Drei. Vier.
-35,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,205,4,209,9040500,176400,8,1,Und halten.
-36,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,209,4,213,9216900,176400,9,1,Einatmen. Zwei. Drei. Vier.
-37,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,213,4,217,9393300,176400,9,1,Und halten.
-38,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,217,4,221,9569700,176400,9,1,Ausatmen. Zwei. Drei. Vier.
-39,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,221,4,225,9746100,176400,9,1,Und halten.
-40,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,225,4,229,9922500,176400,10,1,Einatmen. Zwei. Drei. Vier.
-41,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,229,4,233,10098900,176400,10,1,Und halten.
-42,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,233,4,237,10275300,176400,10,1,Ausatmen. Zwei. Drei. Vier.
-43,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,237,4,241,10451700,176400,10,1,Und halten.
-44,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,241,4,245,10628100,176400,11,1,Einatmen. Zwei. Drei. Vier.
-45,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,245,4,249,10804500,176400,11,1,Und halten.
-46,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,249,4,253,10980900,176400,11,1,Ausatmen. Zwei. Drei. Vier.
-47,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,253,4,257,11157300,176400,11,1,Und halten.
-48,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,257,4,261,11333700,176400,12,1,Einatmen. Zwei. Drei. Vier.
-49,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,261,4,265,11510100,176400,12,1,Und halten.
-50,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,265,4,269,11686500,176400,12,1,Ausatmen. Zwei. Drei. Vier.
-51,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,269,4,273,11862900,176400,12,1,Und halten.
-52,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,273,4,277,12039300,176400,13,1,Einatmen. Zwei. Drei. Vier.
-53,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,277,4,281,12215700,176400,13,1,Und halten.
-54,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,281,4,285,12392100,176400,13,1,Ausatmen. Zwei. Drei. Vier.
-55,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,285,4,289,12568500,176400,13,1,Und halten.
-56,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,289,4,293,12744900,176400,14,1,Einatmen. Zwei. Drei. Vier.
-57,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,293,4,297,12921300,176400,14,1,Und halten.
-58,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,297,4,301,13097700,176400,14,1,Ausatmen. Zwei. Drei. Vier.
-59,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,301,4,305,13274100,176400,14,1,Und halten.
-60,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,305,4,309,13450500,176400,15,1,Einatmen. Zwei. Drei. Vier.
-61,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,309,4,313,13626900,176400,15,1,Und halten.
-62,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,313,4,317,13803300,176400,15,1,Ausatmen. Zwei. Drei. Vier.
-63,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,317,4,321,13979700,176400,15,1,Und halten.
-64,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,321,4,325,14156100,176400,16,1,Einatmen. Zwei. Drei. Vier.
-65,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,325,4,329,14332500,176400,16,1,Und halten.
-66,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,329,4,333,14508900,176400,16,1,Ausatmen. Zwei. Drei. Vier.
-67,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,333,4,337,14685300,176400,16,1,Und halten.
-68,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,337,4,341,14861700,176400,17,1,Einatmen. Zwei. Drei. Vier.
-69,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,341,4,345,15038100,176400,17,1,Und halten.
-70,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,345,4,349,15214500,176400,17,1,Ausatmen. Zwei. Drei. Vier.
-71,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,349,4,353,15390900,176400,17,1,Und halten.
-72,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,353,4,357,15567300,176400,18,1,Einatmen. Zwei. Drei. Vier.
-73,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,357,4,361,15743700,176400,18,1,Und halten.
-74,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,361,4,365,15920100,176400,18,1,Ausatmen. Zwei. Drei. Vier.
-75,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,365,4,369,16096500,176400,18,1,Und halten.
-76,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,369,4,373,16272900,176400,19,1,Einatmen. Zwei. Drei. Vier.
-77,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,373,4,377,16449300,176400,19,1,Und halten.
-78,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,377,4,381,16625700,176400,19,1,Ausatmen. Zwei. Drei. Vier.
-79,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,381,4,385,16802100,176400,19,1,Und halten.
-80,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,385,4,389,16978500,176400,20,1,Einatmen. Zwei. Drei. Vier.
-81,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,389,4,393,17154900,176400,20,1,Und halten.
-82,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,393,4,397,17331300,176400,20,1,Ausatmen. Zwei. Drei. Vier.
-83,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,397,4,401,17507700,176400,20,1,Und halten.
-84,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,401,4,405,17684100,176400,21,1,Einatmen. Zwei. Drei. Vier.
-85,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,405,4,409,17860500,176400,21,1,Und halten.
-86,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,409,4,413,18036900,176400,21,1,Ausatmen. Zwei. Drei. Vier.
-87,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,413,4,417,18213300,176400,21,1,Und halten.
-88,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,417,4,421,18389700,176400,22,1,Einatmen. Zwei. Drei. Vier.
-89,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,421,4,425,18566100,176400,22,1,Und halten.
-90,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,425,4,429,18742500,176400,22,1,Ausatmen. Zwei. Drei. Vier.
-91,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,429,4,433,18918900,176400,22,1,Und halten.
-92,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,433,4,437,19095300,176400,23,1,Einatmen. Zwei. Drei. Vier.
-93,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,437,4,441,19271700,176400,23,1,Und halten.
-94,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,441,4,445,19448100,176400,23,1,Ausatmen. Zwei. Drei. Vier.
-95,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,445,4,449,19624500,176400,23,1,Und halten.
-96,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,449,4,453,19800900,176400,24,1,Einatmen. Zwei. Drei. Vier.
-97,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,453,4,457,19977300,176400,24,1,Und halten.
-98,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,457,4,461,20153700,176400,24,1,Ausatmen. Zwei. Drei. Vier.
-99,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,461,4,465,20330100,176400,24,1,Und halten.
-100,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,465,4,469,20506500,176400,25,1,Einatmen. Zwei. Drei. Vier.
-101,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,469,4,473,20682900,176400,25,1,Und halten.
-102,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,473,4,477,20859300,176400,25,1,Ausatmen. Zwei. Drei. Vier.
-103,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,477,4,481,21035700,176400,25,1,Und halten.
-104,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,481,4,485,21212100,176400,26,1,Einatmen. Zwei. Drei. Vier.
-105,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,485,4,489,21388500,176400,26,1,Und halten.
-106,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,489,4,493,21564900,176400,26,1,Ausatmen. Zwei. Drei. Vier.
-107,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,493,4,497,21741300,176400,26,1,Und halten.
-108,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,497,4,501,21917700,176400,27,1,Einatmen. Zwei. Drei. Vier.
-109,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,501,4,505,22094100,176400,27,1,Und halten.
-110,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,505,4,509,22270500,176400,27,1,Ausatmen. Zwei. Drei. Vier.
-111,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,509,4,513,22446900,176400,27,1,Und halten.
-112,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,513,4,517,22623300,176400,28,1,Einatmen. Zwei. Drei. Vier.
-113,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,517,4,521,22799700,176400,28,1,Und halten.
-114,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,521,4,525,22976100,176400,28,1,Ausatmen. Zwei. Drei. Vier.
-115,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,525,4,529,23152500,176400,28,1,Und halten.
-116,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,529,4,533,23328900,176400,29,1,Einatmen. Zwei. Drei. Vier.
-117,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,533,4,537,23505300,176400,29,1,Und halten.
-118,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,537,4,541,23681700,176400,29,1,Ausatmen. Zwei. Drei. Vier.
-119,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,541,4,545,23858100,176400,29,1,Und halten.
-120,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,545,4,549,24034500,176400,30,1,Einatmen. Zwei. Drei. Vier.
-121,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,549,4,553,24210900,176400,30,1,Und halten.
-122,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,553,4,557,24387300,176400,30,1,Ausatmen. Zwei. Drei. Vier.
-123,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,557,4,561,24563700,176400,30,1,Und halten.
-124,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,561,4,565,24740100,176400,31,1,Einatmen. Zwei. Drei. Vier.
-125,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,565,4,569,24916500,176400,31,1,Und halten.
-126,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,569,4,573,25092900,176400,31,1,Ausatmen. Zwei. Drei. Vier.
-127,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,573,4,577,25269300,176400,31,1,Und halten.
-128,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,577,4,581,25445700,176400,32,1,Einatmen. Zwei. Drei. Vier.
-129,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,581,4,585,25622100,176400,32,1,Und halten.
-130,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,585,4,589,25798500,176400,32,1,Ausatmen. Zwei. Drei. Vier.
-131,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,589,4,593,25974900,176400,32,1,Und halten.
-132,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,593,4,597,26151300,176400,33,1,Einatmen. Zwei. Drei. Vier.
-133,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,597,4,601,26327700,176400,33,1,Und halten.
-134,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,601,4,605,26504100,176400,33,1,Ausatmen. Zwei. Drei. Vier.
-135,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,605,4,609,26680500,176400,33,1,Und halten.
-136,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,609,4,613,26856900,176400,34,1,Einatmen. Zwei. Drei. Vier.
-137,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,613,4,617,27033300,176400,34,1,Und halten.
-138,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,617,4,621,27209700,176400,34,1,Ausatmen. Zwei. Drei. Vier.
-139,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,621,4,625,27386100,176400,34,1,Und halten.
-140,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,625,4,629,27562500,176400,35,1,Einatmen. Zwei. Drei. Vier.
-141,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,629,4,633,27738900,176400,35,1,Und halten.
-142,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,633,4,637,27915300,176400,35,1,Ausatmen. Zwei. Drei. Vier.
-143,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,637,4,641,28091700,176400,35,1,Und halten.
-144,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,641,4,645,28268100,176400,36,1,Einatmen. Zwei. Drei. Vier.
-145,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,645,4,649,28444500,176400,36,1,Und halten.
-146,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,649,4,653,28620900,176400,36,1,Ausatmen. Zwei. Drei. Vier.
-147,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,653,4,657,28797300,176400,36,1,Und halten.
-148,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,657,4,661,28973700,176400,37,1,Einatmen. Zwei. Drei. Vier.
-149,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,661,4,665,29150100,176400,37,1,Und halten.
-150,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,665,4,669,29326500,176400,37,1,Ausatmen. Zwei. Drei. Vier.
-151,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,669,4,673,29502900,176400,37,1,Und halten.
-152,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,673,4,677,29679300,176400,38,1,Einatmen. Zwei. Drei. Vier.
-153,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,677,4,681,29855700,176400,38,1,Und halten.
-154,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,681,4,685,30032100,176400,38,1,Ausatmen. Zwei. Drei. Vier.
-155,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,685,4,689,30208500,176400,38,1,Und halten.
-156,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,689,4,693,30384900,176400,39,1,Einatmen. Zwei. Drei. Vier.
-157,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,693,4,697,30561300,176400,39,1,Und halten.
-158,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,697,4,701,30737700,176400,39,1,Ausatmen. Zwei. Drei. Vier.
-159,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,701,4,705,30914100,176400,39,1,Und halten.
-160,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,705,4,709,31090500,176400,40,1,Einatmen. Zwei. Drei. Vier.
-161,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,709,4,713,31266900,176400,40,1,Und halten.
-162,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,713,4,717,31443300,176400,40,1,Ausatmen. Zwei. Drei. Vier.
-163,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,717,4,721,31619700,176400,40,1,Und halten.
-164,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,721,4,725,31796100,176400,41,1,Einatmen. Zwei. Drei. Vier.
-165,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,725,4,729,31972500,176400,41,1,Und halten.
-166,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,729,4,733,32148900,176400,41,1,Ausatmen. Zwei. Drei. Vier.
-167,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,733,4,737,32325300,176400,41,1,Und halten.
-168,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,737,4,741,32501700,176400,42,1,Einatmen. Zwei. Drei. Vier.
-169,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,741,4,745,32678100,176400,42,1,Und halten.
-170,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,745,4,749,32854500,176400,42,1,Ausatmen. Zwei. Drei. Vier.
-171,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,749,4,753,33030900,176400,42,1,Und halten.
-172,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,753,4,757,33207300,176400,43,1,Einatmen. Zwei. Drei. Vier.
-173,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,757,4,761,33383700,176400,43,1,Und halten.
-174,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,761,4,765,33560100,176400,43,1,Ausatmen. Zwei. Drei. Vier.
-175,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,765,4,769,33736500,176400,43,1,Und halten.
-176,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,769,4,773,33912900,176400,44,1,Einatmen. Zwei. Drei. Vier.
-177,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,773,4,777,34089300,176400,44,1,Und halten.
-178,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,777,4,781,34265700,176400,44,1,Ausatmen. Zwei. Drei. Vier.
-179,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,781,4,785,34442100,176400,44,1,Und halten.
-180,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,785,4,789,34618500,176400,45,1,Einatmen. Zwei. Drei. Vier.
-181,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,789,4,793,34794900,176400,45,1,Und halten.
-182,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,793,4,797,34971300,176400,45,1,Ausatmen. Zwei. Drei. Vier.
-183,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,797,4,801,35147700,176400,45,1,Und halten.
-184,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,801,4,805,35324100,176400,46,1,Einatmen. Zwei. Drei. Vier.
-185,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,805,4,809,35500500,176400,46,1,Und halten.
-186,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,809,4,813,35676900,176400,46,1,Ausatmen. Zwei. Drei. Vier.
-187,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,813,4,817,35853300,176400,46,1,Und halten.
-188,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,817,4,821,36029700,176400,47,1,Einatmen. Zwei. Drei. Vier.
-189,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,821,4,825,36206100,176400,47,1,Und halten.
-190,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,825,4,829,36382500,176400,47,1,Ausatmen. Zwei. Drei. Vier.
-191,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,829,4,833,36558900,176400,47,1,Und halten.
-192,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,833,4,837,36735300,176400,48,1,Einatmen. Zwei. Drei. Vier.
-193,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,837,4,841,36911700,176400,48,1,Und halten.
-194,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,841,4,845,37088100,176400,48,1,Ausatmen. Zwei. Drei. Vier.
-195,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,845,4,849,37264500,176400,48,1,Und halten.
-196,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,849,4,853,37440900,176400,49,1,Einatmen. Zwei. Drei. Vier.
-197,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,853,4,857,37617300,176400,49,1,Und halten.
-198,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,857,4,861,37793700,176400,49,1,Ausatmen. Zwei. Drei. Vier.
-199,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,861,4,865,37970100,176400,49,1,Und halten.
-200,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,865,4,869,38146500,176400,50,1,Einatmen. Zwei. Drei. Vier.
-201,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,869,4,873,38322900,176400,50,1,Und halten.
-202,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,873,4,877,38499300,176400,50,1,Ausatmen. Zwei. Drei. Vier.
-203,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,877,4,881,38675700,176400,50,1,Und halten.
-204,outro,outro,assets/audio/box-breathing/de/soft-v2/outro.wav,881,19,900,38852100,837900,,,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."
+order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,transcript_de,audio_status,script_status
+1,instruction_1,instruction_1,assets/audio/scenarios/haupt-15/0001_00m00s_instruction-1.wav,0,26,26,0,1146600,,,"Wir beginnen mit zwei ruhigen, tiefen Atemzügen. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",silent-placeholder,awaiting-wording-approval
+2,calibration,calibration,assets/audio/scenarios/haupt-15/0002_00m26s_calibration.wav,26,15,41,1146600,661500,,,,silent-placeholder,no-speech
+3,instruction_2,instruction,assets/audio/scenarios/haupt-15/0003_00m41s_instruction-2.wav,41,40,81,1808100,1764000,,,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.",silent-placeholder,awaiting-wording-approval
+4,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,81,4,85,3572100,176400,1,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+5,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,85,4,89,3748500,176400,1,1,Und halten.,silent-placeholder,awaiting-wording-approval
+6,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,89,4,93,3924900,176400,1,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+7,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,93,4,97,4101300,176400,1,1,Und halten.,silent-placeholder,awaiting-wording-approval
+8,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,97,4,101,4277700,176400,2,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+9,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,101,4,105,4454100,176400,2,1,Und halten.,silent-placeholder,awaiting-wording-approval
+10,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,105,4,109,4630500,176400,2,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+11,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,109,4,113,4806900,176400,2,1,Und halten.,silent-placeholder,awaiting-wording-approval
+12,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,113,4,117,4983300,176400,3,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+13,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,117,4,121,5159700,176400,3,1,Und halten.,silent-placeholder,awaiting-wording-approval
+14,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,121,4,125,5336100,176400,3,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+15,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,125,4,129,5512500,176400,3,1,Und halten.,silent-placeholder,awaiting-wording-approval
+16,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,129,4,133,5688900,176400,4,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+17,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,133,4,137,5865300,176400,4,1,Und halten.,silent-placeholder,awaiting-wording-approval
+18,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,137,4,141,6041700,176400,4,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+19,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,141,4,145,6218100,176400,4,1,Und halten.,silent-placeholder,awaiting-wording-approval
+20,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,145,4,149,6394500,176400,5,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+21,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,149,4,153,6570900,176400,5,1,Und halten.,silent-placeholder,awaiting-wording-approval
+22,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,153,4,157,6747300,176400,5,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+23,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,157,4,161,6923700,176400,5,1,Und halten.,silent-placeholder,awaiting-wording-approval
+24,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,161,4,165,7100100,176400,6,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+25,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,165,4,169,7276500,176400,6,1,Und halten.,silent-placeholder,awaiting-wording-approval
+26,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,169,4,173,7452900,176400,6,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+27,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,173,4,177,7629300,176400,6,1,Und halten.,silent-placeholder,awaiting-wording-approval
+28,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,177,4,181,7805700,176400,7,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+29,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,181,4,185,7982100,176400,7,1,Und halten.,silent-placeholder,awaiting-wording-approval
+30,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,185,4,189,8158500,176400,7,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+31,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,189,4,193,8334900,176400,7,1,Und halten.,silent-placeholder,awaiting-wording-approval
+32,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,193,4,197,8511300,176400,8,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+33,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,197,4,201,8687700,176400,8,1,Und halten.,silent-placeholder,awaiting-wording-approval
+34,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,201,4,205,8864100,176400,8,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+35,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,205,4,209,9040500,176400,8,1,Und halten.,silent-placeholder,awaiting-wording-approval
+36,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,209,4,213,9216900,176400,9,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+37,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,213,4,217,9393300,176400,9,1,Und halten.,silent-placeholder,awaiting-wording-approval
+38,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,217,4,221,9569700,176400,9,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+39,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,221,4,225,9746100,176400,9,1,Und halten.,silent-placeholder,awaiting-wording-approval
+40,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,225,4,229,9922500,176400,10,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+41,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,229,4,233,10098900,176400,10,1,Und halten.,silent-placeholder,awaiting-wording-approval
+42,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,233,4,237,10275300,176400,10,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+43,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,237,4,241,10451700,176400,10,1,Und halten.,silent-placeholder,awaiting-wording-approval
+44,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,241,4,245,10628100,176400,11,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+45,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,245,4,249,10804500,176400,11,1,Und halten.,silent-placeholder,awaiting-wording-approval
+46,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,249,4,253,10980900,176400,11,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+47,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,253,4,257,11157300,176400,11,1,Und halten.,silent-placeholder,awaiting-wording-approval
+48,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,257,4,261,11333700,176400,12,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+49,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,261,4,265,11510100,176400,12,1,Und halten.,silent-placeholder,awaiting-wording-approval
+50,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,265,4,269,11686500,176400,12,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+51,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,269,4,273,11862900,176400,12,1,Und halten.,silent-placeholder,awaiting-wording-approval
+52,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,273,4,277,12039300,176400,13,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+53,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,277,4,281,12215700,176400,13,1,Und halten.,silent-placeholder,awaiting-wording-approval
+54,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,281,4,285,12392100,176400,13,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+55,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,285,4,289,12568500,176400,13,1,Und halten.,silent-placeholder,awaiting-wording-approval
+56,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,289,4,293,12744900,176400,14,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+57,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,293,4,297,12921300,176400,14,1,Und halten.,silent-placeholder,awaiting-wording-approval
+58,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,297,4,301,13097700,176400,14,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+59,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,301,4,305,13274100,176400,14,1,Und halten.,silent-placeholder,awaiting-wording-approval
+60,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,305,4,309,13450500,176400,15,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+61,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,309,4,313,13626900,176400,15,1,Und halten.,silent-placeholder,awaiting-wording-approval
+62,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,313,4,317,13803300,176400,15,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+63,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,317,4,321,13979700,176400,15,1,Und halten.,silent-placeholder,awaiting-wording-approval
+64,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,321,4,325,14156100,176400,16,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+65,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,325,4,329,14332500,176400,16,1,Und halten.,silent-placeholder,awaiting-wording-approval
+66,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,329,4,333,14508900,176400,16,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+67,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,333,4,337,14685300,176400,16,1,Und halten.,silent-placeholder,awaiting-wording-approval
+68,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,337,4,341,14861700,176400,17,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+69,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,341,4,345,15038100,176400,17,1,Und halten.,silent-placeholder,awaiting-wording-approval
+70,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,345,4,349,15214500,176400,17,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+71,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,349,4,353,15390900,176400,17,1,Und halten.,silent-placeholder,awaiting-wording-approval
+72,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,353,4,357,15567300,176400,18,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+73,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,357,4,361,15743700,176400,18,1,Und halten.,silent-placeholder,awaiting-wording-approval
+74,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,361,4,365,15920100,176400,18,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+75,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,365,4,369,16096500,176400,18,1,Und halten.,silent-placeholder,awaiting-wording-approval
+76,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,369,4,373,16272900,176400,19,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+77,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,373,4,377,16449300,176400,19,1,Und halten.,silent-placeholder,awaiting-wording-approval
+78,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,377,4,381,16625700,176400,19,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+79,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,381,4,385,16802100,176400,19,1,Und halten.,silent-placeholder,awaiting-wording-approval
+80,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,385,4,389,16978500,176400,20,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+81,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,389,4,393,17154900,176400,20,1,Und halten.,silent-placeholder,awaiting-wording-approval
+82,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,393,4,397,17331300,176400,20,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+83,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,397,4,401,17507700,176400,20,1,Und halten.,silent-placeholder,awaiting-wording-approval
+84,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,401,4,405,17684100,176400,21,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+85,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,405,4,409,17860500,176400,21,1,Und halten.,silent-placeholder,awaiting-wording-approval
+86,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,409,4,413,18036900,176400,21,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+87,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,413,4,417,18213300,176400,21,1,Und halten.,silent-placeholder,awaiting-wording-approval
+88,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,417,4,421,18389700,176400,22,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+89,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,421,4,425,18566100,176400,22,1,Und halten.,silent-placeholder,awaiting-wording-approval
+90,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,425,4,429,18742500,176400,22,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+91,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,429,4,433,18918900,176400,22,1,Und halten.,silent-placeholder,awaiting-wording-approval
+92,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,433,4,437,19095300,176400,23,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+93,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,437,4,441,19271700,176400,23,1,Und halten.,silent-placeholder,awaiting-wording-approval
+94,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,441,4,445,19448100,176400,23,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+95,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,445,4,449,19624500,176400,23,1,Und halten.,silent-placeholder,awaiting-wording-approval
+96,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,449,4,453,19800900,176400,24,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+97,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,453,4,457,19977300,176400,24,1,Und halten.,silent-placeholder,awaiting-wording-approval
+98,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,457,4,461,20153700,176400,24,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+99,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,461,4,465,20330100,176400,24,1,Und halten.,silent-placeholder,awaiting-wording-approval
+100,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,465,4,469,20506500,176400,25,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+101,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,469,4,473,20682900,176400,25,1,Und halten.,silent-placeholder,awaiting-wording-approval
+102,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,473,4,477,20859300,176400,25,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+103,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,477,4,481,21035700,176400,25,1,Und halten.,silent-placeholder,awaiting-wording-approval
+104,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,481,4,485,21212100,176400,26,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+105,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,485,4,489,21388500,176400,26,1,Und halten.,silent-placeholder,awaiting-wording-approval
+106,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,489,4,493,21564900,176400,26,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+107,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,493,4,497,21741300,176400,26,1,Und halten.,silent-placeholder,awaiting-wording-approval
+108,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,497,4,501,21917700,176400,27,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+109,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,501,4,505,22094100,176400,27,1,Und halten.,silent-placeholder,awaiting-wording-approval
+110,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,505,4,509,22270500,176400,27,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+111,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,509,4,513,22446900,176400,27,1,Und halten.,silent-placeholder,awaiting-wording-approval
+112,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,513,4,517,22623300,176400,28,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+113,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,517,4,521,22799700,176400,28,1,Und halten.,silent-placeholder,awaiting-wording-approval
+114,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,521,4,525,22976100,176400,28,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+115,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,525,4,529,23152500,176400,28,1,Und halten.,silent-placeholder,awaiting-wording-approval
+116,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,529,4,533,23328900,176400,29,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+117,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,533,4,537,23505300,176400,29,1,Und halten.,silent-placeholder,awaiting-wording-approval
+118,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,537,4,541,23681700,176400,29,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+119,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,541,4,545,23858100,176400,29,1,Und halten.,silent-placeholder,awaiting-wording-approval
+120,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,545,4,549,24034500,176400,30,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+121,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,549,4,553,24210900,176400,30,1,Und halten.,silent-placeholder,awaiting-wording-approval
+122,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,553,4,557,24387300,176400,30,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+123,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,557,4,561,24563700,176400,30,1,Und halten.,silent-placeholder,awaiting-wording-approval
+124,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,561,4,565,24740100,176400,31,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+125,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,565,4,569,24916500,176400,31,1,Und halten.,silent-placeholder,awaiting-wording-approval
+126,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,569,4,573,25092900,176400,31,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+127,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,573,4,577,25269300,176400,31,1,Und halten.,silent-placeholder,awaiting-wording-approval
+128,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,577,4,581,25445700,176400,32,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+129,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,581,4,585,25622100,176400,32,1,Und halten.,silent-placeholder,awaiting-wording-approval
+130,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,585,4,589,25798500,176400,32,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+131,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,589,4,593,25974900,176400,32,1,Und halten.,silent-placeholder,awaiting-wording-approval
+132,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,593,4,597,26151300,176400,33,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+133,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,597,4,601,26327700,176400,33,1,Und halten.,silent-placeholder,awaiting-wording-approval
+134,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,601,4,605,26504100,176400,33,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+135,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,605,4,609,26680500,176400,33,1,Und halten.,silent-placeholder,awaiting-wording-approval
+136,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,609,4,613,26856900,176400,34,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+137,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,613,4,617,27033300,176400,34,1,Und halten.,silent-placeholder,awaiting-wording-approval
+138,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,617,4,621,27209700,176400,34,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+139,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,621,4,625,27386100,176400,34,1,Und halten.,silent-placeholder,awaiting-wording-approval
+140,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,625,4,629,27562500,176400,35,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+141,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,629,4,633,27738900,176400,35,1,Und halten.,silent-placeholder,awaiting-wording-approval
+142,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,633,4,637,27915300,176400,35,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+143,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,637,4,641,28091700,176400,35,1,Und halten.,silent-placeholder,awaiting-wording-approval
+144,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,641,4,645,28268100,176400,36,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+145,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,645,4,649,28444500,176400,36,1,Und halten.,silent-placeholder,awaiting-wording-approval
+146,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,649,4,653,28620900,176400,36,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+147,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,653,4,657,28797300,176400,36,1,Und halten.,silent-placeholder,awaiting-wording-approval
+148,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,657,4,661,28973700,176400,37,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+149,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,661,4,665,29150100,176400,37,1,Und halten.,silent-placeholder,awaiting-wording-approval
+150,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,665,4,669,29326500,176400,37,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+151,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,669,4,673,29502900,176400,37,1,Und halten.,silent-placeholder,awaiting-wording-approval
+152,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,673,4,677,29679300,176400,38,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+153,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,677,4,681,29855700,176400,38,1,Und halten.,silent-placeholder,awaiting-wording-approval
+154,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,681,4,685,30032100,176400,38,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+155,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,685,4,689,30208500,176400,38,1,Und halten.,silent-placeholder,awaiting-wording-approval
+156,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,689,4,693,30384900,176400,39,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+157,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,693,4,697,30561300,176400,39,1,Und halten.,silent-placeholder,awaiting-wording-approval
+158,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,697,4,701,30737700,176400,39,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+159,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,701,4,705,30914100,176400,39,1,Und halten.,silent-placeholder,awaiting-wording-approval
+160,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,705,4,709,31090500,176400,40,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+161,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,709,4,713,31266900,176400,40,1,Und halten.,silent-placeholder,awaiting-wording-approval
+162,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,713,4,717,31443300,176400,40,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+163,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,717,4,721,31619700,176400,40,1,Und halten.,silent-placeholder,awaiting-wording-approval
+164,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,721,4,725,31796100,176400,41,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+165,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,725,4,729,31972500,176400,41,1,Und halten.,silent-placeholder,awaiting-wording-approval
+166,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,729,4,733,32148900,176400,41,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+167,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,733,4,737,32325300,176400,41,1,Und halten.,silent-placeholder,awaiting-wording-approval
+168,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,737,4,741,32501700,176400,42,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+169,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,741,4,745,32678100,176400,42,1,Und halten.,silent-placeholder,awaiting-wording-approval
+170,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,745,4,749,32854500,176400,42,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+171,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,749,4,753,33030900,176400,42,1,Und halten.,silent-placeholder,awaiting-wording-approval
+172,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,753,4,757,33207300,176400,43,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+173,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,757,4,761,33383700,176400,43,1,Und halten.,silent-placeholder,awaiting-wording-approval
+174,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,761,4,765,33560100,176400,43,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+175,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,765,4,769,33736500,176400,43,1,Und halten.,silent-placeholder,awaiting-wording-approval
+176,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,769,4,773,33912900,176400,44,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+177,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,773,4,777,34089300,176400,44,1,Und halten.,silent-placeholder,awaiting-wording-approval
+178,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,777,4,781,34265700,176400,44,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+179,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,781,4,785,34442100,176400,44,1,Und halten.,silent-placeholder,awaiting-wording-approval
+180,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,785,4,789,34618500,176400,45,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+181,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,789,4,793,34794900,176400,45,1,Und halten.,silent-placeholder,awaiting-wording-approval
+182,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,793,4,797,34971300,176400,45,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+183,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,797,4,801,35147700,176400,45,1,Und halten.,silent-placeholder,awaiting-wording-approval
+184,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,801,4,805,35324100,176400,46,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+185,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,805,4,809,35500500,176400,46,1,Und halten.,silent-placeholder,awaiting-wording-approval
+186,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,809,4,813,35676900,176400,46,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+187,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,813,4,817,35853300,176400,46,1,Und halten.,silent-placeholder,awaiting-wording-approval
+188,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,817,4,821,36029700,176400,47,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+189,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,821,4,825,36206100,176400,47,1,Und halten.,silent-placeholder,awaiting-wording-approval
+190,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,825,4,829,36382500,176400,47,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+191,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,829,4,833,36558900,176400,47,1,Und halten.,silent-placeholder,awaiting-wording-approval
+192,inhale,inhale_breath,assets/audio/scenarios/haupt-15/0008_01m53s_inhale-with-breath.wav,833,4,837,36735300,176400,48,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+193,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,837,4,841,36911700,176400,48,1,Und halten.,silent-placeholder,awaiting-wording-approval
+194,exhale,exhale_breath,assets/audio/scenarios/haupt-15/0009_02m01s_exhale-with-breath.wav,841,4,845,37088100,176400,48,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+195,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,845,4,849,37264500,176400,48,1,Und halten.,silent-placeholder,awaiting-wording-approval
+196,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,849,4,853,37440900,176400,49,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+197,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,853,4,857,37617300,176400,49,1,Und halten.,silent-placeholder,awaiting-wording-approval
+198,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,857,4,861,37793700,176400,49,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+199,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,861,4,865,37970100,176400,49,1,Und halten.,silent-placeholder,awaiting-wording-approval
+200,inhale,inhale,assets/audio/scenarios/haupt-15/0004_01m21s_inhale.wav,865,4,869,38146500,176400,50,1,Einatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+201,hold_in,hold_in,assets/audio/scenarios/haupt-15/0005_01m25s_hold-in.wav,869,4,873,38322900,176400,50,1,Und halten.,silent-placeholder,awaiting-wording-approval
+202,exhale,exhale,assets/audio/scenarios/haupt-15/0006_01m29s_exhale.wav,873,4,877,38499300,176400,50,1,Ausatmen. Zwei. Drei. Vier.,silent-placeholder,awaiting-wording-approval
+203,hold_out,hold_out,assets/audio/scenarios/haupt-15/0007_01m33s_hold-out.wav,877,4,881,38675700,176400,50,1,Und halten.,silent-placeholder,awaiting-wording-approval
+204,outro,outro,assets/audio/scenarios/haupt-15/0010_14m41s_outro.wav,881,19,900,38852100,837900,,,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",silent-placeholder,awaiting-wording-approval

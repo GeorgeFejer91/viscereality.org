@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { BoxBreathingEngine, createProtocol, PHASES, scheduleProtocol } from '../audio/box-breathing.js';
 import { mountSessionAudio } from '../audio/session-ui.js';
-import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261106-calibration';
+import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261106-placeholders';
 import { setTimeout as delay } from 'node:timers/promises';
-import { choices } from '../ui-logic.js?v=20261106-calibration';
+import { choices } from '../ui-logic.js?v=20261106-placeholders';
 
 const assetDir = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
 const manifestBytes = await readFile(new URL('manifest.json', assetDir));
@@ -225,7 +225,7 @@ test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume s
 
 test('Corrupted audio fails preparation before scheduling', async () => {
   const originalFetch = globalThis.fetch;
-  globalThis.fetch = async (url) => new Response(String(url).endsWith('manifest.json') ? manifestBytes : Buffer.alloc(10));
+  globalThis.fetch = async (url) => new Response(String(url).endsWith('.wav') ? Buffer.alloc(10) : await readFile(url));
   const context = new Context();
   const engine = new BoxBreathingEngine({ audioContext: context, manifestUrl: new URL('manifest.json', assetDir) });
   try {
@@ -304,7 +304,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     controller.update('session-start', uiState.selection, true);
     assert.equal(elements.play.disabled, false);
     assert.equal(uiState.started, true);
-    assert.equal(elements['session-phase'].textContent, 'Anleitung zur Kalibrierung');
+    assert.equal(elements['session-phase'].textContent, 'Vorbereitung');
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(context.state, 'running');

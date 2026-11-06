@@ -1,5 +1,5 @@
-import { BoxBreathingEngine } from './box-breathing.js?v=20261106-calibration';
-import { state, start } from '../ui-logic.js?v=20261106-calibration';
+import { BoxBreathingEngine } from './box-breathing.js?v=20261106-placeholders';
+import { state, start } from '../ui-logic.js?v=20261106-placeholders';
 import { participantIdentity } from '../data-logging.js?v=20261105-data';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
@@ -12,7 +12,7 @@ export function mountSessionAudio({ data } = {}) {
   const duration = document.getElementById('session-duration');
   const progress = document.getElementById('session-progress');
   const status = document.getElementById('start-status');
-  const labels = { instruction_1: 'Anleitung zur Kalibrierung', calibration: 'Atemkalibrierung',
+  const labels = { instruction_1: 'Vorbereitung', calibration: 'Zwei tiefe Atemzüge',
     instruction_2: 'Anleitung zur Atmung', instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
     exhale: 'Ausatmen', hold_out: 'Atempause', rest: 'Pause · natürlich atmen',
     outro: 'Ausklang', ending: 'Ausklang', recovery: 'Natürlich atmen' };

@@ -2,8 +2,10 @@
 
 Every final sequence loads its authored JSON timeline from
 [`scenarios/`](scenarios/README.md), with a matching CSV timing sheet. All clips
-come from the shared [`assets/audio/`](../assets/audio/) library; scenarios reuse
-asset IDs rather than storing their own audio. JSON determines timing/order.
+come from each scenario’s own numbered folder under
+[`assets/audio/scenarios/`](../assets/audio/scenarios/). All current runtime WAVs
+are silent UI placeholders with matching draft TXT/JSON/CSV; final speech awaits
+wording approval. The shared library recordings below are retained references. JSON determines timing/order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
 **Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute

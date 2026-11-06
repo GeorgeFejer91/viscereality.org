@@ -1,0 +1,24 @@
+{
+  "id": "exhale",
+  "file": "0004_00m48s_exhale.wav",
+  "frames": 176400,
+  "bytes": 352844,
+  "sha256": "f863d98220a9f1aa76e43170f4948f0888b2028fcf6b0aae497fde768efca380",
+  "text": "Ausatmen. Zwei. Drei. Vier.",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "awaiting-wording-approval",
+  "sample_rate": 44100,
+  "scenario_id": "probe-anleitung",
+  "cue_order": 4,
+  "phase_id": "exhale",
+  "first_offset_frames": 2116800,
+  "first_start_seconds": 48.0,
+  "duration_seconds": 4.0,
+  "transcript_file": "0004_00m48s_exhale.txt",
+  "occurrence_offsets_frames": [
+    2116800
+  ],
+  "occurrence_count": 1
+}

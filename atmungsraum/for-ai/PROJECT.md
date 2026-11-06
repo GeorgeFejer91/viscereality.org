@@ -1,5 +1,56 @@
 # Project
 
+## Scenario folders and working silent-placeholder UI — 2026-11-06
+
+The latest user requests authorize silent WAV placeholders now so the UI works;
+final narration and wording remain pending approval. This supersedes the prior
+text-only hold on runtime/publication, without authorizing new synthesized speech.
+Each of six scenarios owns its independent numbered unique cues in
+`assets/audio/scenarios/<scenario>/`: 53 WAVs, matching JSON/TXT, asset CSV,
+timeline CSV, manifest and playlist. Numbers encode first-use order and the
+filename includes first onset; repeated cycles reuse the unique cue.
+TXT is the intended draft script, while `spoken_text` is empty and metadata
+explicitly says `silent-placeholder` / `awaiting-wording-approval` (or no-speech).
+All original shared recordings remain byte-for-byte unchanged.
+
+The UI loads these scenario assets, caching identical PCM by hash within one
+context. The saved scenario JSON remains runtime authority and pins the shared
+protocol manifest. Main goes directly to its sole 15-minute sequence; all slots
+still total 900 seconds, with preparation26s, measurement15s at26–41s,
+Instruction2 40s, fifty16-second cycles and Outro19s. Participant labels read
+“Vorbereitung” and “Zwei tiefe Atemzüge”. Timing events remain available; the
+future H10 accelerometer measurement remains not-integrated with null value.
+Receipts record the scenario hash and `audio_asset_mode: silent-placeholders`.
+
+- [x] Copy the complete sparse checkout, Git metadata, drafts and ignored assets
+  to the user-selected secondary drive; verify all 1,489 files (97,320,133 bytes)
+  by SHA-256 and recreate the internal dependency junction at its new target.
+  Serve and edit the relocated copy. The original was left for manual cleanup
+  after automatic review blocked recursive removal; Explorer selects it.
+- [x] Prepare 43 individual original-library/sample TXT drafts and a review index;
+  Instruction1 proposes “Wir beginnen mit zwei ruhigen, tiefen Atemzügen.”
+- [x] Generate independent scenario placeholders and connect runtime/CSV/export
+  to those assets; preserve original speech and all protocol timings.
+- [x] Observe missing-registry regression fail, and reproduce native decode input
+  detachment in a test before fixing it. Pass all22 Node tests, six scenario
+  CSV pairs,53 placeholder packages, UI/context checks and12 native offline
+  renders at44.1/48kHz with zero sample error. Verify silent preview export.
+- [x] Pass five actual browser playback routes,26/41-second transitions,
+  pause/resume, replay, CSV export and missing-audio retry;18 enlarged/localized
+  text cases pass, screenshot inspected, no page errors. Independent review
+  found no issues and audited all53 asset groups/manifests/playlists.
+- [ ] Commit/push and verify exact Pages deployment and affected live assets/UI.
+- [ ] User approves draft wording before final speech creation/replacement;
+  after approval, align exact TXT/JSON/CSV/recordings and reverify timing.
+
+Entry: main/origin at `990172adeaadf3bfcdf1a1a78c79badcef18363b`;
+previous exact Pages release `42226744863`. Current placeholder UI is not yet
+published at this evidence write. All local checks and independent review pass; publication is next. The local static server serves the relocated
+checkout. Machine-specific paths and migration SHA evidence stay outside the
+published source. Next action: publish the verified
+placeholder increment. Overall real sensor/headset, physical-phone and human
+listening acceptance remain open.
+
 ## Main-round calibration and one 15-minute scenario — 2026-11-06
 
 The latest user instructions supersede the earlier two-main-option/silent-baseline

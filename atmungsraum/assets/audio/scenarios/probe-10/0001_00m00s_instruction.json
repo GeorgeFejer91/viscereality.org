@@ -1,0 +1,24 @@
+{
+  "id": "instruction",
+  "file": "0001_00m00s_instruction.wav",
+  "frames": 1764000,
+  "bytes": 3528044,
+  "sha256": "32dfa44bfb9c81486446c4d59f448b8b8af83f3e063c7885875b0a3135809f12",
+  "text": "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "awaiting-wording-approval",
+  "sample_rate": 44100,
+  "scenario_id": "probe-10",
+  "cue_order": 1,
+  "phase_id": "instruction",
+  "first_offset_frames": 0,
+  "first_start_seconds": 0.0,
+  "duration_seconds": 40.0,
+  "transcript_file": "0001_00m00s_instruction.txt",
+  "occurrence_offsets_frames": [
+    0
+  ],
+  "occurrence_count": 1
+}

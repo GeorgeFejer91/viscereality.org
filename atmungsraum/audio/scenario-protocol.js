@@ -64,6 +64,24 @@ export function validateScenario(plan, library, { scenarioId: expectedId, manife
     next += event.duration_frames;
   }
   const totalFor = id => plan.events.filter(event => event.id === id).reduce((sum, event) => sum + event.duration_frames, 0);
+  const assetIds = new Set(plan.events.map(event => event.asset).filter(id => id !== null));
+  if (plan.audio_assets_base_directory !== `../../assets/audio/scenarios/${plan.scenario_id}/`
+      || !plan.audio_assets || typeof plan.audio_assets !== 'object' || Array.isArray(plan.audio_assets)
+      || Object.keys(plan.audio_assets).length !== assetIds.size) fail('scenario audio registry');
+  const filenames = new Set();
+  for (const id of assetIds) {
+    const asset = plan.audio_assets[id];
+    if (!asset || asset.id !== id || asset.scenario_id !== plan.scenario_id
+        || asset.frames !== library.blocks[id].frames || asset.sample_rate !== plan.sample_rate
+        || !/^\d{4}_\d{2}m\d{2}s_[a-z0-9-]+\.wav$/.test(asset.file)
+        || filenames.has(asset.file) || asset.transcript_file !== asset.file.replace(/\.wav$/, '.txt')
+        || !Number.isSafeInteger(asset.bytes) || asset.bytes < 44 || asset.bytes > 32 * 1024 * 1024
+        || !/^[a-f0-9]{64}$/.test(asset.sha256) || typeof asset.text !== 'string'
+        || typeof asset.placeholder !== 'boolean'
+        || (asset.placeholder && (asset.spoken_text !== '' || asset.audio_status !== 'silent-placeholder'))) fail('scenario audio asset');
+    filenames.add(asset.file);
+    Object.freeze(asset);
+  }
   if (next !== plan.total_frames || (counts.instruction ?? 0) !== (main ? 0 : 1)
       || (counts.ending ?? 0) !== (main ? 0 : 1) || (counts.outro ?? 0) !== (main ? 1 : 0)
       || (counts.instruction_1 ?? 0) !== (main ? 1 : 0)
@@ -83,21 +101,24 @@ export function validateScenario(plan, library, { scenarioId: expectedId, manife
   for (const event of plan.events) Object.freeze(event);
   Object.freeze(plan.events);
   Object.freeze(plan.breathing_blocks);
+  Object.freeze(plan.audio_assets);
   return Object.freeze(plan);
 }
 
 export function scenarioCsv(plan, library) {
   const columns = ['order', 'event_id', 'asset_id', 'asset_file', 'start_seconds', 'duration_seconds',
-    'end_seconds', 'offset_frames', 'duration_frames', 'cycle', 'breathing_block', 'transcript_de'];
+    'end_seconds', 'offset_frames', 'duration_frames', 'cycle', 'breathing_block', 'transcript_de', 'audio_status', 'script_status'];
   const cell = value => {
     const text = String(value ?? '');
     return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
   };
   const rows = plan.events.map((event, index) => [index + 1, event.id, event.asset,
-    event.asset === null ? '' : `assets/audio/box-breathing/de/soft-v2/${library.blocks[event.asset].file}`,
+    event.asset === null ? '' : `assets/audio/scenarios/${plan.scenario_id}/${plan.audio_assets[event.asset].file}`,
     event.offset_frames / plan.sample_rate, event.duration_frames / plan.sample_rate,
     (event.offset_frames + event.duration_frames) / plan.sample_rate,
     event.offset_frames, event.duration_frames, event.cycle, event.breathing_block,
-    event.asset === null ? '' : library.blocks[event.asset].text]);
+    event.asset === null ? '' : plan.audio_assets[event.asset].text,
+    event.asset === null ? 'silence' : plan.audio_assets[event.asset].audio_status,
+    event.asset === null ? 'no-speech' : plan.audio_assets[event.asset].script_status]);
   return [columns, ...rows].map(row => row.map(cell).join(',')).join('\n') + '\n';
 }

@@ -39,8 +39,8 @@ function pcm(wav, frames) {
 }
 
 const blocks = {};
-for (const [id, block] of Object.entries(manifest.blocks)) {
-  const file = await readFile(join(assetDir, block.file));
+for (const [id, block] of Object.entries(protocol.audio_assets)) {
+  const file = await readFile(join(root, 'assets/audio/scenarios', protocol.scenario_id, block.file));
   if (createHash('sha256').update(file).digest('hex') !== block.sha256) throw new Error(`Hash mismatch: ${id}.`);
   blocks[id] = pcm(file, block.frames);
 }

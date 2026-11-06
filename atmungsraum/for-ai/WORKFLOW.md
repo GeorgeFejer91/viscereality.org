@@ -76,6 +76,43 @@ remains distinct from desktop viewport checks.
 
 ## Audio cue generation
 
+### Exact TXT scripts and wording approval — 2026-11-06
+
+The user requires text first, then explicit approval before creating,
+regenerating or replacing audio. Prepare the concrete per-asset scripts for
+review and wait. Approval of an earlier script does not authorize a later
+wording change. This approval gate takes precedence over the standing automatic
+publication rule for unapproved narration revisions. The later explicit request
+for a working UI authorizes silent placeholders and labelled draft TXT/JSON/CSV
+in scenario folders, plus their normal verification/publication. This exception
+does not approve final wording or speech synthesis. Wording approval authorizes the normal
+generation, verification and standing publication workflow; do not ask again
+for the same approved step.
+
+Every WAV/MP3 in the asset library has its own adjacent, same-basename `.txt`,
+including reused cues, older retained sets, breath-overlay variants and published
+listening samples. New or revised assets must carry their TXT in the same change.
+Use UTF-8/LF, preserving the exact words, punctuation and German characters;
+end nonempty text with one newline. A fully silent or breath-only asset has an
+empty TXT. Exception: silent UI placeholders carry their intended draft script
+in TXT and `text`, with `spoken_text: ""`, `placeholder: true`,
+`audio_status: silent-placeholder` and a pending script status in JSON/CSV.
+Do not put filenames, timestamps, delivery tags, stage directions,
+review notes or silence explanations inside the spoken-word TXT.
+
+Keep the approved TXT, JSON transcript, generated CSV and actual recording
+consistent. Before approval, a proposed TXT may differ from the currently
+published audio/JSON; record that pending status in PROJECT.md and the existing
+audio-review folder. Do not regenerate audio or update its authoritative
+transcript/hash to make an unapproved proposal appear current.
+
+Participant-facing narration/UI must not call the preparation “Atemkalibrierung”
+or “Atmungskalibrierung”. Use plain wording such as “Vorbereitung” and “Zwei
+tiefe Atemzüge”. Technical calibration identifiers, timing events and research
+references remain valid internal names. The pending Instruction 1 proposal
+begins “Wir beginnen mit zwei ruhigen, tiefen Atemzügen.” Its audio is unchanged
+until approval. See `audio-review/04-AUDIO-TEXT-APPROVAL.txt`.
+
 2026-11-06 calibration exception: the user requests Secret Tunnel for the new
 two-breath Instruction 1 narration, using its saved `Atmungsraum - Existing Instructor`
 clone. `python tools/build-calibration-cue.py` uses the documented native voice
@@ -90,11 +127,15 @@ CSV and refresh audio-review snapshots. Other speech retains the existing
 ElevenLabs workflow below. Real respiratory calibration and listening acceptance
 remain open; do not equate the audio phase with a measured sensor result.
 
-Every final sequence must use the shared `assets/audio/` library and a saved
+Every final sequence must use its own `assets/audio/scenarios/<scenario>/` folder and a saved
 JSON/CSV pair in `audio/scenarios/`. JSON is the runtime authority; edit its
 frame-indexed events, then run `pnpm run scenarios:csv` and
 `pnpm run check:scenarios`. Do not add per-scenario full audio tracks or a
-calculated runtime fallback. Bind the timeline to the selected library manifest
+calculated runtime fallback. Package one independent WAV/JSON/TXT per unique cue,
+named with a four-digit first-use order and first-onset timestamp; repeat cues
+in the playlist/timeline instead of duplicating every occurrence. Use
+`python tools/build-scenario-placeholders.py --check` for the current placeholders.
+Bind the timeline to the selected library manifest
 hash; changing that manifest requires reviewing/rebinding every scenario and
 rerunning audio checks. See `audio/scenarios/README.md` for fields and mappings.
 Native offline diagnostics and verification exports also read the saved JSON.

@@ -1,4 +1,24 @@
-# Listening assets
+# Audio assets
+
+The UI's current asset folder is
+[`assets/audio/scenarios/`](../assets/audio/scenarios/). Each scenario owns
+numbered unique silent placeholder WAVs with adjacent JSON/TXT, asset and
+timeline CSVs, a manifest and a playlist. Sort by Name ascending for first-use
+order. All cue durations are final protocol slots; the main scenario totals
+exactly 15 minutes. These placeholders make the UI usable while final speech
+waits for wording approval. TXT files in these folders are draft scripts;
+metadata explicitly distinguishes them from the silent WAVs' empty spoken text.
+See [scenario documentation](../audio/scenarios/README.md).
+
+Every project-library WAV/MP3 now has a same-basename TXT containing only its
+exact spoken words (empty for silence/breath-only audio). The user requires
+approval of these scripts before audio is created or replaced. The current
+local wording proposals are indexed in
+[`04-AUDIO-TEXT-APPROVAL.txt`](../audio-review/04-AUDIO-TEXT-APPROVAL.txt).
+Instruction 1's TXT is pending approval and differs from the published recording;
+all other retained-recording TXT files preserve their existing authored scripts.
+The later user request authorizes publishing silent UI placeholders with draft
+text metadata; it does not approve speech synthesis or replacement narration.
 
 The current main sequence's shared class catalogue is
 `../assets/audio/box-breathing/de/soft-v2/main-asset-classes.csv`; the same classes

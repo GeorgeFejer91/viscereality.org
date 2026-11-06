@@ -1,0 +1,24 @@
+{
+  "id": "recovery",
+  "file": "0010_14m52s_recovery.wav",
+  "frames": 352800,
+  "bytes": 705644,
+  "sha256": "d1478b62f6cde68fe22fab1558867e81a0c64d148ad6d8850dd0da7eae45ece1",
+  "text": "",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "no-speech",
+  "sample_rate": 44100,
+  "scenario_id": "probe-15",
+  "cue_order": 10,
+  "phase_id": "recovery",
+  "first_offset_frames": 39337200,
+  "first_start_seconds": 892.0,
+  "duration_seconds": 8.0,
+  "transcript_file": "0010_14m52s_recovery.txt",
+  "occurrence_offsets_frames": [
+    39337200
+  ],
+  "occurrence_count": 1
+}

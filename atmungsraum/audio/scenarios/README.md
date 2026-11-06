@@ -1,10 +1,21 @@
 # Scenario audio timelines
 
-Every final sequence uses one of these JSON/CSV pairs. All sound comes from the
-shared [`assets/audio/`](../../assets/audio/) library. The selected runtime
-registry is [`manifest.json`](../../assets/audio/box-breathing/de/soft-v2/manifest.json):
-each asset ID resolves to one reusable WAV with its frame count, transcript,
-byte count and SHA-256. Scenarios reference IDs; they do not contain audio copies.
+Every final sequence uses one of these JSON/CSV pairs and its own folder under
+[`assets/audio/scenarios/`](../../assets/audio/scenarios/). Each unique cue has
+a numbered WAV, JSON and TXT. Numbers follow first occurrence, including quiet
+recovery; repeated cycles reuse the same cue. Each folder also has an asset CSV,
+complete timeline CSV, manifest and M3U8 playlist. The original shared
+[`manifest.json`](../../assets/audio/box-breathing/de/soft-v2/manifest.json) pins
+the protocol's frame lengths; its retained recordings are not loaded by the UI.
+
+All current scenario WAVs are **silent placeholders** requested for UI testing.
+TXT and metadata `text` contain draft intended words, pending approval;
+`spoken_text` is empty and `audio_status` is `silent-placeholder`. They do not
+claim speech is present in the silent files. CSV includes both audio/script
+status columns. Final speech must wait for explicit wording approval.
+Run `python tools/build-scenario-placeholders.py --check` to verify the package;
+omit `--check` to generate missing placeholders. Existing different WAVs are
+preserved with an error, so this helper cannot overwrite later real recordings.
 Hash-bound JSON and generated CSV use LF line endings, pinned in `.gitattributes`
 so Windows checkouts and GitHub Pages validate the same bytes.
 Existing v1/MP3 sets and the separate voice-audition page are retained references,
@@ -52,7 +63,7 @@ defines every slot, including silence:
 
 At `sample_rate: 44100`, this starts at 40 seconds and lasts 4 seconds. `id`
 describes the phase shown by the UI; `asset` selects the actual library clip.
-`inhale_breath`/`exhale_breath` select the existing premixed breath variants.
+`inhale_breath`/`exhale_breath` identify the intended breath variants.
 `recovery` uses `asset: null` for explicit practice silence; `calibration` is
 a reusable15-second zero-PCM WAV with its own class and measurement metadata. Each slot must
 start where the preceding one ends, and a sounding slot must equal its clip's
@@ -60,10 +71,15 @@ full duration. Keep cycle/block annotations and summary counts consistent.
 Frame counts are exact; CSV also shows start, duration and end in seconds, row
 order, asset ID and asset path relative to the Atmungsraum root.
 
-The browser preloads and validates the library and every scenario before Start.
+`audio_assets_base_directory` and `audio_assets` bind each event's ID to the
+scenario's own file, frame count and SHA-256. The browser preloads and validates
+the library metadata and every scenario before Start. Identical content hashes
+share a decoded buffer within one audio context, reducing the placeholder
+download to seven files; future different recordings retain separate buffers.
 All cues are queued on one Web Audio clock. Pause freezes that clock; resume
 continues the same nodes. Receipts retain the scenario ID, JSON hash and library
-manifest hash. `createProtocol()` remains an authoring/regression reference;
+manifest hash, plus `audio_asset_mode: silent-placeholders` for the current set.
+`createProtocol()` remains an authoring/regression reference;
 runtime playback and verification exports read the saved JSON.
 
 The current integration is browser audio. Actual video/headset execution and

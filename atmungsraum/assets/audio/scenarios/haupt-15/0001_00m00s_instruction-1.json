@@ -1,0 +1,24 @@
+{
+  "id": "instruction_1",
+  "file": "0001_00m00s_instruction-1.wav",
+  "frames": 1146600,
+  "bytes": 2293244,
+  "sha256": "84d7067916a4222e8d807d2be77a530223adf4d4f12e5b0595f991e635d388d7",
+  "text": "Wir beginnen mit zwei ruhigen, tiefen Atemzügen. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "awaiting-wording-approval",
+  "sample_rate": 44100,
+  "scenario_id": "haupt-15",
+  "cue_order": 1,
+  "phase_id": "instruction_1",
+  "first_offset_frames": 0,
+  "first_start_seconds": 0.0,
+  "duration_seconds": 26.0,
+  "transcript_file": "0001_00m00s_instruction-1.txt",
+  "occurrence_offsets_frames": [
+    0
+  ],
+  "occurrence_count": 1
+}

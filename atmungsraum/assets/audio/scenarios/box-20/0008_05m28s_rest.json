@@ -1,0 +1,26 @@
+{
+  "id": "rest",
+  "file": "0008_05m28s_rest.wav",
+  "frames": 882000,
+  "bytes": 1764044,
+  "sha256": "a69b653e1f690753513f7708e55534cdb92aa4e9edda91948d071204e985594d",
+  "text": "Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "awaiting-wording-approval",
+  "sample_rate": 44100,
+  "scenario_id": "box-20",
+  "cue_order": 8,
+  "phase_id": "rest",
+  "first_offset_frames": 14464800,
+  "first_start_seconds": 328.0,
+  "duration_seconds": 20.0,
+  "transcript_file": "0008_05m28s_rest.txt",
+  "occurrence_offsets_frames": [
+    14464800,
+    28047600,
+    41630400
+  ],
+  "occurrence_count": 3
+}

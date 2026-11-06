@@ -1,0 +1,10 @@
+cue_order,file,phase_id,first_start_seconds,duration_seconds,occurrence_count,audio_status,script_status,draft_script
+1,0001_00m00s_instruction.wav,instruction,0.0,40.0,1,silent-placeholder,awaiting-wording-approval,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+2,0002_00m40s_inhale.wav,inhale,40.0,4.0,46,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+3,0003_00m44s_hold-in.wav,hold_in,44.0,4.0,68,silent-placeholder,awaiting-wording-approval,Und halten.
+4,0004_00m48s_exhale.wav,exhale,48.0,4.0,46,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+5,0005_00m52s_hold-out.wav,hold_out,52.0,4.0,68,silent-placeholder,awaiting-wording-approval,Und halten.
+6,0006_01m12s_inhale-with-breath.wav,inhale,72.0,4.0,22,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+7,0007_01m20s_exhale-with-breath.wav,exhale,80.0,4.0,22,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+8,0008_05m28s_rest.wav,rest,328.0,20.0,3,silent-placeholder,awaiting-wording-approval,Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.
+9,0009_19m48s_ending.wav,ending,1188.0,12.0,1,silent-placeholder,awaiting-wording-approval,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."

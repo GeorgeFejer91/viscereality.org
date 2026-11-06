@@ -1,0 +1,24 @@
+{
+  "id": "ending",
+  "file": "0008_04m40s_ending.wav",
+  "frames": 529200,
+  "bytes": 1058444,
+  "sha256": "9998c35bd0d1a852cc89270ae16a5ca891c813d4ece5dd564918b3b12dc82b71",
+  "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
+  "spoken_text": "",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "awaiting-wording-approval",
+  "sample_rate": 44100,
+  "scenario_id": "probe-5",
+  "cue_order": 8,
+  "phase_id": "ending",
+  "first_offset_frames": 12348000,
+  "first_start_seconds": 280.0,
+  "duration_seconds": 12.0,
+  "transcript_file": "0008_04m40s_ending.txt",
+  "occurrence_offsets_frames": [
+    12348000
+  ],
+  "occurrence_count": 1
+}

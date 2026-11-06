@@ -1,4 +1,4 @@
-import { SCENARIOS, scenarioId, validateScenario } from './scenario-protocol.js?v=20261106-calibration';
+import { SCENARIOS, scenarioId, validateScenario } from './scenario-protocol.js?v=20261106-placeholders';
 
 export const PHASES = Object.freeze(['inhale', 'hold_in', 'exhale', 'hold_out']);
 export const MINUTES = Object.freeze([5, 10, 15, 20]);
@@ -171,20 +171,6 @@ export class BoxBreathingEngine {
       const bytes = await response.arrayBuffer();
       this.manifest = validateManifest(JSON.parse(new TextDecoder().decode(bytes)));
       this.manifestHash = await sha256(bytes);
-      const entries = await Promise.all(BLOCKS.map(async (id) => {
-        const block = this.manifest.blocks[id];
-        const audio = await fetch(new URL(block.file, this.manifestUrl));
-        if (!audio.ok) throw new Error(`Audio HTTP ${audio.status}: ${id}.`);
-        const data = await audio.arrayBuffer();
-        if (data.byteLength !== block.bytes || await sha256(data) !== block.sha256) {
-          throw new Error(`Audio integrity mismatch: ${id}.`);
-        }
-        const buffer = await this.context.decodeAudioData(data);
-        if (buffer.numberOfChannels !== 1 || Math.abs(buffer.duration - block.frames / this.manifest.sample_rate) > 1 / this.context.sampleRate) {
-          throw new Error(`Audio block has the wrong channel count or duration: ${id}.`);
-        }
-        return [id, buffer];
-      }));
       const scenarios = await Promise.all(SCENARIOS.map(async (id) => {
         const url = new URL(`${id}.json`, SCENARIO_DIRECTORY);
         const response = await fetch(url, { cache: 'no-cache' });
@@ -196,6 +182,31 @@ export class BoxBreathingEngine {
           throw new Error(`Scenario library URL mismatch: ${id}.`);
         }
         return [id, { protocol, sha256: await sha256(bytes) }];
+      }));
+      // Scenario files remain independent on disk. Identical PCM is fetched and
+      // decoded once per context; different future recordings keep their own buffers.
+      const decoded = new Map();
+      const entries = await Promise.all(scenarios.map(async ([id, { protocol }]) => {
+        const directory = new URL(protocol.audio_assets_base_directory, new URL(`${id}.json`, SCENARIO_DIRECTORY));
+        const assets = await Promise.all(Object.entries(protocol.audio_assets).map(async ([assetId, block]) => {
+          if (!decoded.has(block.sha256)) decoded.set(block.sha256, (async () => {
+            const audio = await fetch(new URL(block.file, directory));
+            if (!audio.ok) throw new Error(`Audio HTTP ${audio.status}: ${id}/${assetId}.`);
+            const data = await audio.arrayBuffer();
+            if (data.byteLength !== block.bytes || await sha256(data) !== block.sha256) {
+              throw new Error(`Audio integrity mismatch: ${id}/${assetId}.`);
+            }
+            const byteLength = data.byteLength; // decodeAudioData detaches the input.
+            return { buffer: await this.context.decodeAudioData(data), bytes: byteLength };
+          })());
+          const { buffer, bytes } = await decoded.get(block.sha256);
+          if (bytes !== block.bytes || buffer.numberOfChannels !== 1
+              || Math.abs(buffer.duration - block.frames / protocol.sample_rate) > 1 / this.context.sampleRate) {
+            throw new Error(`Audio block has the wrong size, channel count or duration: ${id}/${assetId}.`);
+          }
+          return [assetId, buffer];
+        }));
+        return [id, Object.fromEntries(assets)];
       }));
       this.scenarios = Object.fromEntries(scenarios);
       this.buffers = Object.fromEntries(entries);
@@ -234,6 +245,8 @@ export class BoxBreathingEngine {
         end_at_audio_seconds: t0 + protocol.total_frames / protocol.sample_rate,
         manifest_sha256: this.manifestHash, scenario_id: protocol.scenario_id,
         scenario_sha256: this.scenarios[protocol.scenario_id].sha256,
+        audio_asset_mode: Object.values(protocol.audio_assets).every(asset => asset.placeholder)
+          ? 'silent-placeholders' : 'recorded-audio',
         user_agent: globalThis.navigator?.userAgent ?? null,
         audio_sample_rate: this.context.sampleRate, base_latency_seconds: this.context.baseLatency ?? null,
         output_latency_seconds: this.context.outputLatency ?? null,
@@ -247,7 +260,7 @@ export class BoxBreathingEngine {
       } : null;
       this.run = run;
       try {
-        run.sources = scheduleProtocol(this.context, this.buffers, protocol, t0);
+        run.sources = scheduleProtocol(this.context, this.buffers[protocol.scenario_id], protocol, t0);
         for (const { source, event } of run.sources) {
           const when = t0 + event.offset_frames / protocol.sample_rate;
           run.records.push({ type: 'scheduled', ...event, audio_time_seconds: when,

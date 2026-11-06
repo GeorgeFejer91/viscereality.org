@@ -1,5 +1,29 @@
 # Verification
 
+## Scenario-owned silent placeholders — 2026-11-06
+
+The current UI uses53 independent silent WAV/JSON/TXT cue groups across six
+scenario folders, numbered in first-occurrence order, with manifests, asset and
+timeline CSVs and playlists. Draft intended wording is labelled separately from
+empty actual spoken text. Original library recordings remain unchanged; the
+older speech evidence below describes those retained originals. Main is still
+exactly900seconds, calibration26–41seconds, with future accelerometer value null.
+
+Observed the missing-registry test fail before implementation; the native
+browser also exposed input-buffer detachment during Web Audio decode. Reproduced
+that detachment in the mock and observed the regression fail, then fixed it.
+All22 Node tests, six scenario pairs,53 generated placeholder groups, UI/context
+and whitespace checks pass. Twelve native Chrome offline renders at44.1/48kHz
+have exact lengths and zero sample error. The68-second export is entirely silent.
+Five real playback routes pass Start/Pause/Resume/End, actual26/41-second main
+transitions, calibration hook, scenario receipt hashes,900-second CSV metadata,
+replay and missing-WAV retry. Seven unique silent durations are fetched/decoded,
+with scenario-specific buffers verified by a different same-ID recording test.
+All18 root/main responsive, enlarged and long-text cases pass; phone screenshot
+inspected. No page errors. Read-only independent review found no issues and
+independently checked53 pairings, six manifest hashes, cue order and playlists.
+Final narration still requires wording approval; no new speech was synthesized.
+
 ## Single 15-minute main sequence — 2026-11-06
 
 Current acceptance supersedes the earlier two-option/48-second-composite local

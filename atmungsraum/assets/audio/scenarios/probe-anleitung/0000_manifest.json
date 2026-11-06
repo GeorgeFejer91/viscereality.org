@@ -1,0 +1,215 @@
+{
+  "scenario_id": "probe-anleitung",
+  "sample_rate": 44100,
+  "duration_seconds": 68.0,
+  "placeholder": true,
+  "source_scenario_sha256": "2e3753dd9208b844804f85ea19c5432c8986fa2894552e952a071d52051c8cd8",
+  "assets": [
+    {
+      "id": "instruction",
+      "file": "0001_00m00s_instruction.wav",
+      "frames": 1764000,
+      "bytes": 3528044,
+      "sha256": "32dfa44bfb9c81486446c4d59f448b8b8af83f3e063c7885875b0a3135809f12",
+      "text": "Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 1,
+      "phase_id": "instruction",
+      "first_offset_frames": 0,
+      "first_start_seconds": 0.0,
+      "duration_seconds": 40.0,
+      "transcript_file": "0001_00m00s_instruction.txt",
+      "occurrence_offsets_frames": [
+        0
+      ],
+      "occurrence_count": 1
+    },
+    {
+      "id": "inhale",
+      "file": "0002_00m40s_inhale.wav",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "f863d98220a9f1aa76e43170f4948f0888b2028fcf6b0aae497fde768efca380",
+      "text": "Einatmen. Zwei. Drei. Vier.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 2,
+      "phase_id": "inhale",
+      "first_offset_frames": 1764000,
+      "first_start_seconds": 40.0,
+      "duration_seconds": 4.0,
+      "transcript_file": "0002_00m40s_inhale.txt",
+      "occurrence_offsets_frames": [
+        1764000
+      ],
+      "occurrence_count": 1
+    },
+    {
+      "id": "hold_in",
+      "file": "0003_00m44s_hold-in.wav",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "f863d98220a9f1aa76e43170f4948f0888b2028fcf6b0aae497fde768efca380",
+      "text": "Und halten.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 3,
+      "phase_id": "hold_in",
+      "first_offset_frames": 1940400,
+      "first_start_seconds": 44.0,
+      "duration_seconds": 4.0,
+      "transcript_file": "0003_00m44s_hold-in.txt",
+      "occurrence_offsets_frames": [
+        1940400
+      ],
+      "occurrence_count": 1
+    },
+    {
+      "id": "exhale",
+      "file": "0004_00m48s_exhale.wav",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "f863d98220a9f1aa76e43170f4948f0888b2028fcf6b0aae497fde768efca380",
+      "text": "Ausatmen. Zwei. Drei. Vier.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 4,
+      "phase_id": "exhale",
+      "first_offset_frames": 2116800,
+      "first_start_seconds": 48.0,
+      "duration_seconds": 4.0,
+      "transcript_file": "0004_00m48s_exhale.txt",
+      "occurrence_offsets_frames": [
+        2116800
+      ],
+      "occurrence_count": 1
+    },
+    {
+      "id": "hold_out",
+      "file": "0005_00m52s_hold-out.wav",
+      "frames": 176400,
+      "bytes": 352844,
+      "sha256": "f863d98220a9f1aa76e43170f4948f0888b2028fcf6b0aae497fde768efca380",
+      "text": "Und halten.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 5,
+      "phase_id": "hold_out",
+      "first_offset_frames": 2293200,
+      "first_start_seconds": 52.0,
+      "duration_seconds": 4.0,
+      "transcript_file": "0005_00m52s_hold-out.txt",
+      "occurrence_offsets_frames": [
+        2293200
+      ],
+      "occurrence_count": 1
+    },
+    {
+      "id": "ending",
+      "file": "0006_00m56s_ending.wav",
+      "frames": 529200,
+      "bytes": 1058444,
+      "sha256": "9998c35bd0d1a852cc89270ae16a5ca891c813d4ece5dd564918b3b12dc82b71",
+      "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
+      "spoken_text": "",
+      "placeholder": true,
+      "audio_status": "silent-placeholder",
+      "script_status": "awaiting-wording-approval",
+      "sample_rate": 44100,
+      "scenario_id": "probe-anleitung",
+      "cue_order": 6,
+      "phase_id": "ending",
+      "first_offset_frames": 2469600,
+      "first_start_seconds": 56.0,
+      "duration_seconds": 12.0,
+      "transcript_file": "0006_00m56s_ending.txt",
+      "occurrence_offsets_frames": [
+        2469600
+      ],
+      "occurrence_count": 1
+    }
+  ],
+  "events": [
+    {
+      "id": "instruction",
+      "asset": "instruction",
+      "offset_frames": 0,
+      "duration_frames": 1764000,
+      "cycle": null,
+      "breathing_block": null,
+      "order": 1,
+      "file": "0001_00m00s_instruction.wav"
+    },
+    {
+      "id": "inhale",
+      "asset": "inhale",
+      "offset_frames": 1764000,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1,
+      "order": 2,
+      "file": "0002_00m40s_inhale.wav"
+    },
+    {
+      "id": "hold_in",
+      "asset": "hold_in",
+      "offset_frames": 1940400,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1,
+      "order": 3,
+      "file": "0003_00m44s_hold-in.wav"
+    },
+    {
+      "id": "exhale",
+      "asset": "exhale",
+      "offset_frames": 2116800,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1,
+      "order": 4,
+      "file": "0004_00m48s_exhale.wav"
+    },
+    {
+      "id": "hold_out",
+      "asset": "hold_out",
+      "offset_frames": 2293200,
+      "duration_frames": 176400,
+      "cycle": 1,
+      "breathing_block": 1,
+      "order": 5,
+      "file": "0005_00m52s_hold-out.wav"
+    },
+    {
+      "id": "ending",
+      "asset": "ending",
+      "offset_frames": 2469600,
+      "duration_frames": 529200,
+      "cycle": null,
+      "breathing_block": null,
+      "order": 6,
+      "file": "0006_00m56s_ending.wav"
+    }
+  ]
+}

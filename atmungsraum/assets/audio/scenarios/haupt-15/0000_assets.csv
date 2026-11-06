@@ -1,0 +1,11 @@
+cue_order,file,phase_id,first_start_seconds,duration_seconds,occurrence_count,audio_status,script_status,draft_script
+1,0001_00m00s_instruction-1.wav,instruction_1,0.0,26.0,1,silent-placeholder,awaiting-wording-approval,"Wir beginnen mit zwei ruhigen, tiefen Atemzügen. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt."
+2,0002_00m26s_calibration.wav,calibration,26.0,15.0,1,silent-placeholder,no-speech,
+3,0003_00m41s_instruction-2.wav,instruction_2,41.0,40.0,1,silent-placeholder,awaiting-wording-approval,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+4,0004_01m21s_inhale.wav,inhale,81.0,4.0,34,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+5,0005_01m25s_hold-in.wav,hold_in,85.0,4.0,50,silent-placeholder,awaiting-wording-approval,Und halten.
+6,0006_01m29s_exhale.wav,exhale,89.0,4.0,34,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+7,0007_01m33s_hold-out.wav,hold_out,93.0,4.0,50,silent-placeholder,awaiting-wording-approval,Und halten.
+8,0008_01m53s_inhale-with-breath.wav,inhale,113.0,4.0,16,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+9,0009_02m01s_exhale-with-breath.wav,exhale,121.0,4.0,16,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+10,0010_14m41s_outro.wav,outro,881.0,19.0,1,silent-placeholder,awaiting-wording-approval,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."

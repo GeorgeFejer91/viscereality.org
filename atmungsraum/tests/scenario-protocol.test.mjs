@@ -15,6 +15,24 @@ const plans = [
 ];
 const scenarioUrl = id => new URL(`../audio/scenarios/${id}.json`, import.meta.url);
 
+test('Every scenario owns numbered placeholder WAVs and draft TXT scripts', async () => {
+  for (const [id] of plans) {
+    const plan = JSON.parse(await readFile(scenarioUrl(id)));
+    assert.ok(plan.audio_assets, `${id} has no independent audio assets`);
+    assert.equal(plan.audio_assets_base_directory, `../../assets/audio/scenarios/${id}/`);
+    for (const asset of Object.values(plan.audio_assets)) {
+      assert.match(asset.file, /^\d{4}_\d{2}m\d{2}s_[a-z0-9-]+\.wav$/);
+      assert.equal(asset.placeholder, true);
+      assert.equal(asset.spoken_text, '');
+      const url = new URL(asset.file, new URL(plan.audio_assets_base_directory, scenarioUrl(id)));
+      const wav = await readFile(url);
+      assert.equal(hash(wav), asset.sha256);
+      assert.ok(wav.subarray(44).every(byte => byte === 0));
+      assert.equal(await readFile(new URL(asset.transcript_file, url), 'utf8'), asset.text + (asset.text ? '\n' : ''));
+    }
+  }
+});
+
 test('Hash-bound library and scenario files retain LF bytes across checkouts', async () => {
   assert.equal(libraryBytes.includes(13), false, 'CRLF changes the pinned library hash on GitHub Pages');
   for (const [id] of plans) {
@@ -25,12 +43,13 @@ test('Hash-bound library and scenario files retain LF bytes across checkouts', a
   }
 });
 
-test('Every scenario file preserves the approved sequence and its CSV names the exact shared assets', async () => {
+test('Every scenario preserves the approved sequence and its CSV names its own assets', async () => {
   assert.deepEqual(scenarios.SCENARIOS, plans.map(([id]) => id));
   for (const [id, minutes, mainRound] of plans) {
     const plan = scenarios.validateScenario(JSON.parse(await readFile(scenarioUrl(id))), library,
       { scenarioId: id, manifestHash: hash(libraryBytes) });
-    const { schema_version, scenario_id, audio_library, library_manifest_sha256, ...protocol } = plan;
+    const { schema_version, scenario_id, audio_library, library_manifest_sha256,
+      audio_assets_base_directory, audio_assets, ...protocol } = plan;
     const original = createProtocol(minutes, library, { mainRound });
     assert.deepEqual(protocol, { ...original, events: original.events.map(event =>
       event.id === 'recovery' ? { ...event, asset: null } : event) });
@@ -41,7 +60,7 @@ test('Every scenario file preserves the approved sequence and its CSV names the 
     assert.equal(csv.trim().split('\n').length, plan.events.length + 1);
     const firstInhale = csv.trim().split('\n').map(row => row.split(',')).find(row => row[1] === 'inhale');
     assert.equal(firstInhale[2], 'inhale');
-    assert.equal(firstInhale[3], 'assets/audio/box-breathing/de/soft-v2/inhale.wav');
+    assert.equal(firstInhale[3], `assets/audio/scenarios/${id}/${audio_assets.inhale.file}`);
     const start = mainRound ? 81 : 40;
     assert.deepEqual(firstInhale.slice(4, 7), [String(start), '4', String(start + 4)]);
     assert.equal(plan.events.filter(event => event.id === 'calibration').length, mainRound ? 1 : 0);
@@ -86,6 +105,12 @@ test('Invalid scenario timing, assets, identities and library revisions fail bef
     plan => { plan.audio_library = 'https://example.invalid/library.json'; },
     plan => { plan.cycles++; },
     plan => { plan.events = []; },
+    plan => { delete plan.audio_assets; },
+    plan => { delete plan.audio_assets.inhale; },
+    plan => { plan.audio_assets_base_directory = '../elsewhere/'; },
+    plan => { plan.audio_assets.inhale.file = '../inhale.wav'; },
+    plan => { plan.audio_assets.inhale.frames++; },
+    plan => { plan.audio_assets.inhale.spoken_text = 'claimed narration'; },
   ];
   for (const mutate of invalid) {
     const plan = structuredClone(valid); mutate(plan);
@@ -101,19 +126,34 @@ class Context extends EventTarget {
     const node = { connect() {}, disconnect() {}, start(...args) { this.startArgs = args; }, stop() {} };
     this.nodes.push(node); return node;
   }
-  async decodeAudioData(bytes) { return { numberOfChannels: 1, duration: new DataView(bytes).getUint32(40, true) / 88200 }; }
+  async decodeAudioData(bytes) {
+    const duration = new DataView(bytes).getUint32(40, true) / 88200;
+    structuredClone(bytes, { transfer: [bytes] }); // Native Web Audio detaches its input.
+    return { numberOfChannels: 1, duration };
+  }
 }
 
 test('Playback uses the loaded timeline, records its hash, and maps all final choices', async () => {
   const originalFetch = globalThis.fetch;
   let changedBytes;
+  let changedAudio;
+  const requestedAudio = [];
   globalThis.fetch = async url => {
     const bytes = await readFile(url);
     if (String(url).endsWith('probe-5.json')) {
       const plan = JSON.parse(bytes);
       plan.events[1].asset = 'exhale'; // Same length: proves runtime follows authored data.
+      const asset = plan.audio_assets.exhale;
+      changedAudio = Buffer.from(await readFile(new URL(asset.file, new URL(plan.audio_assets_base_directory, url))));
+      changedAudio[44] = 1;
+      asset.sha256 = hash(changedAudio); // Different scenario recording, same asset ID.
       changedBytes = JSON.stringify(plan);
       return new Response(changedBytes);
+    }
+    if (String(url).endsWith('.wav')) {
+      requestedAudio.push(String(url));
+      assert.ok(!String(url).includes('/soft-v2/'), 'shared recording must not be loaded');
+      if (String(url).includes('/probe-5/') && String(url).includes('_exhale.wav')) return new Response(changedAudio);
     }
     return new Response(bytes);
   };
@@ -126,9 +166,12 @@ test('Playback uses the loaded timeline, records its hash, and maps all final ch
     }
     const session = await engine.start(5);
     assert.equal(session.protocol.events[1].asset, 'exhale');
-    assert.equal(context.nodes[1].buffer, engine.buffers.exhale);
+    assert.equal(context.nodes[1].buffer, engine.buffers['probe-5'].exhale);
+    assert.notEqual(engine.buffers['probe-5'].exhale, engine.buffers['probe-10'].exhale);
+    assert.equal(requestedAudio.length, 8, 'seven silent durations plus the scenario-specific recording');
     assert.equal(engine.receipt().scenario_id, 'probe-5');
     assert.equal(engine.receipt().scenario_sha256, hash(changedBytes));
+    assert.equal(engine.receipt().audio_asset_mode, 'silent-placeholders');
     assert.ok(Object.isFrozen(session.protocol.events[1]));
     engine.abort();
     await session.done;

@@ -12,6 +12,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Scenario assets (2026-11-06): every scenario owns numbered unique WAV/JSON/TXT cues under `atmungsraum/assets/audio/scenarios/`, with asset/timeline CSVs, manifest and playlist. All current runtime cues are silent placeholders, explicitly authorized for a working UI; TXT is intended draft wording and spoken text remains empty. Final narration still requires wording approval. Main goes directly to one exact 15-minute sequence; its breathing window remains 26–41 seconds. See the scenario README.
+
+- Audio scripts (2026-11-06): each library WAV/MP3 requires an adjacent exact-
+  wording TXT, including empty TXT for silent/breath-only assets. Prepare text
+  and wait for explicit wording approval before audio generation/replacement.
+  Final speech waits for approval; the later request allows silent UI placeholders with labelled draft scripts. Participant narration/UI
+  uses plain wording rather than the technical German calibration term. See
+  [the owning audio workflow](../atmungsraum/for-ai/WORKFLOW.md#exact-txt-scripts-and-wording-approval--2026-11-06).
+
 - Main round (2026-11-06 latest correction): Haupt-Runde goes directly to one
   exactly 15-minute Start screen. There is no main duration menu, 10-minute main
   scenario or five-minute baseline. Shared classes are Instruction 1(26 s),

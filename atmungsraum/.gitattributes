@@ -1,4 +1,9 @@
 # Hash-bound text and generated CSVs must have identical bytes on every host.
+assets/audio/**/*.txt text eol=lf
+assets/audio/scenarios/**/*.json text eol=lf
+assets/audio/scenarios/**/*.csv text eol=lf
+assets/audio/scenarios/**/*.m3u8 text eol=lf
+samples/audio/*.txt text eol=lf
 audio/box-breathing.js text eol=lf
 audio/scenario-protocol.js text eol=lf
 audio/session-ui.js text eol=lf

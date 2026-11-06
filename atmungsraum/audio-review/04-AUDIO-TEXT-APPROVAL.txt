@@ -1,0 +1,119 @@
+AUDIO TEXT REVIEW — APPROVAL REQUIRED
+Prepared: 2026-11-06
+
+Text-only drafts. Published audio and authoritative JSON/CSV remain unchanged.
+Please approve or revise these words before any audio creation/replacement.
+Only Instruction 1 wording is changed; all other scripts copy the existing text.
+Technical calibration terms will be omitted from participant-facing speech/UI.
+Each audio file has its own adjacent TXT. Those TXT files contain spoken words
+only. Empty TXT means no speech. The annotations in this review are NOT spoken.
+The exact 900-second main timeline and 26–41 second measurement window are
+retained; final synthesis must fit those authored slots without stretching.
+
+CURRENT LIBRARY — 12 ASSETS
+
+Instruction 1 — proposed replacement opening
+Audio: assets/audio/box-breathing/de/soft-v2/instruction_1.wav
+TXT: assets/audio/box-breathing/de/soft-v2/instruction_1.txt
+Duration: 26.0 seconds
+
+Wir beginnen mit zwei ruhigen, tiefen Atemzügen. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.
+
+
+Calibration — silent measurement window; participant label proposed: Zwei tiefe Atemzüge
+Audio: assets/audio/box-breathing/de/soft-v2/calibration.wav
+TXT: assets/audio/box-breathing/de/soft-v2/calibration.txt
+Duration: 15.0 seconds
+
+[No spoken words; individual TXT is empty.]
+
+
+Instruction 2
+Audio: assets/audio/box-breathing/de/soft-v2/instruction.wav
+TXT: assets/audio/box-breathing/de/soft-v2/instruction.txt
+Duration: 40.0 seconds
+
+Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam.
+
+
+Inhale
+Audio: assets/audio/box-breathing/de/soft-v2/inhale.wav
+TXT: assets/audio/box-breathing/de/soft-v2/inhale.txt
+Duration: 4.0 seconds
+
+Einatmen. Zwei. Drei. Vier.
+
+
+Pause after inhale
+Audio: assets/audio/box-breathing/de/soft-v2/hold_in.wav
+TXT: assets/audio/box-breathing/de/soft-v2/hold_in.txt
+Duration: 4.0 seconds
+
+Und halten.
+
+
+Exhale
+Audio: assets/audio/box-breathing/de/soft-v2/exhale.wav
+TXT: assets/audio/box-breathing/de/soft-v2/exhale.txt
+Duration: 4.0 seconds
+
+Ausatmen. Zwei. Drei. Vier.
+
+
+Pause after exhale
+Audio: assets/audio/box-breathing/de/soft-v2/hold_out.wav
+TXT: assets/audio/box-breathing/de/soft-v2/hold_out.txt
+Duration: 4.0 seconds
+
+Und halten.
+
+
+Outro
+Audio: assets/audio/box-breathing/de/soft-v2/outro.wav
+TXT: assets/audio/box-breathing/de/soft-v2/outro.txt
+Duration: 19.0 seconds
+
+Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.
+
+
+Inhale with breath overlay
+Audio: assets/audio/box-breathing/de/soft-v2/inhale_breath.wav
+TXT: assets/audio/box-breathing/de/soft-v2/inhale_breath.txt
+Duration: 4.0 seconds
+
+Einatmen. Zwei. Drei. Vier.
+
+
+Exhale with breath overlay
+Audio: assets/audio/box-breathing/de/soft-v2/exhale_breath.wav
+TXT: assets/audio/box-breathing/de/soft-v2/exhale_breath.txt
+Duration: 4.0 seconds
+
+Ausatmen. Zwei. Drei. Vier.
+
+
+Original ending reused by Outro
+Audio: assets/audio/box-breathing/de/soft-v2/ending.wav
+TXT: assets/audio/box-breathing/de/soft-v2/ending.txt
+Duration: 12.0 seconds
+
+Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.
+
+
+Practice-only rest cue
+Audio: assets/audio/box-breathing/de/soft-v2/rest.wav
+TXT: assets/audio/box-breathing/de/soft-v2/rest.txt
+Duration: 20.0 seconds
+
+Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.
+
+
+RETAINED SETS / LISTENING SAMPLES
+
+The six earlier v1 WAVs and five earlier MP3 cues each have an adjacent TXT
+copied from their existing manifests. Twenty samples/audio MP3s also each have
+their own TXT, preserving the existing exact-phrase script. These 31 copies
+introduce no wording changes and do not request new audio generation.
+
+Approval status: awaiting user review. No audio generation/publication follows
+until the user explicitly approves the wording.

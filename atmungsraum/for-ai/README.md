@@ -24,7 +24,7 @@ round choice → four practice options or direct entry to the sole 15-minute mai
 sequence → final Starten button. Haupt-Runde has no duration-choice screen or
 five-minute baseline. Instruction 1 (26 s), a separate Calibration window (15 s),
 Instruction 2 (40 s), fifty complete breathing cycles (800 s), and Outro (19 s)
-total exactly 900 seconds. The player labels these phases. Calibration runs at
+total exactly 900 seconds. The player labels preparation “Vorbereitung” and the measurement window “Zwei tiefe Atemzüge”. Each scenario now loads its own numbered silent placeholder WAVs with JSON/CSV and draft TXT scripts from `assets/audio/scenarios/`; final narration waits for wording approval. Calibration runs at
 26–41 seconds on the audio clock; receipts and an advance event expose its
 start/end for the future ECG-sensor accelerometer. Its measured value remains
 unset until integration. See [the transcript/protocol](../audio/calibration.md).
@@ -70,7 +70,7 @@ Read common rules first, then the documents needed for the task:
 - [Reusable audio engine](../audio/README.md): four separate repeating German
   phase cues, reference analysis, exact session timing, and verification.
 - [Scenario protocol](../audio/scenarios/README.md): the JSON runtime timelines
-  and matching CSVs for every final sequence, using the shared audio library.
+  and matching CSVs for every final sequence, using independent numbered scenario assets.
 - [Listening asset folder](../audio-assets/README.md): ready-to-listen local WAVs
   with adjacent timing/transcript JSONs, separate layers and 16-second cycles.
 - [Audio review](../audio-review/00-START-HERE.txt): protocol/script inventory,
@@ -86,3 +86,10 @@ Read common rules first, then the documents needed for the task:
 The parent repository's [constraints](../../for-ai/constraints.md) also apply.
 Update the affected notes with behavior changes; do not store chat transcripts,
 credentials, build output, or speculative feature plans here.
+
+Audio wording now follows the [text-first approval rule](WORKFLOW.md#exact-txt-scripts-and-wording-approval--2026-11-06):
+every library audio asset has an adjacent exact-wording TXT. Prepare scripts and
+wait for explicit user approval before generating/replacing audio. Avoid the
+technical German calibration term in participant-facing narration/UI. Current
+local proposals and approval status are in PROJECT.md and
+`audio-review/04-AUDIO-TEXT-APPROVAL.txt`; published audio remains unchanged.

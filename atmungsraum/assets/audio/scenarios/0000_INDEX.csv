@@ -1,0 +1,7 @@
+scenario,duration_seconds,unique_cues,events
+box-20,1200.0,9,277
+haupt-15,900.0,10,204
+probe-10,600.0,9,135
+probe-15,900.0,10,205
+probe-5,300.0,9,63
+probe-anleitung,68.0,6,6
