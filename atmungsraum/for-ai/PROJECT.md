@@ -19,7 +19,7 @@ stop all scheduled audio and save the existing aborted receipt/CSV.
   and Polar reselection pass. All 137 responsive/Pretext cases pass.
 - [x] Independent review found a valid-ECG deep-link start did not arm recovery;
   reproduce that failure, then arm the grace period in validated `start()`.
-- [ ] Commit/push and verify exact Pages deployment,
+- [x] Commit/push and verify exact Pages deployment,
   live source bytes and the affected browser flow.
 
 Entry: canonical `main` was clean at `9a91534`. Concurrent documentation commit
@@ -29,8 +29,22 @@ is used. Detailed browser evidence remains ignored under `output/playwright/`.
 No sensor/headset hardware is connected by this change. Overall real-sensor,
 headset, physical-phone and wording acceptance goals remain open.
 
-Next action: publish this reviewed increment, then verify its exact
-deployment and live behavior under the standing publication authority.
+Release: implementation `6da9539555015087ad3e884b63ebbf85942f4858` is on
+GitHub. Concurrent documentation commit `c2356bee24acfd71c607538ea3087c418c565a99`
+superseded its first Pages run (42252774069, cancelled). The containing release
+completed [Pages run 42254269547](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42254269547)
+successfully and its exact Pages deployment reports `succeed`. All 12 affected
+public files match Git SHA-256 bytes and both page URLs return 200. The public
+origin passes all eight signal-loss browser cases with zero page errors,
+including a 30,676 ms real loss while paused, aborted CSV/receipt, focus return,
+patient retention, all five routes and a valid-ECG direct start.
+
+Observed `main`/`origin/main` synchronized at `c2356be`, clean before this
+evidence-only update. Runtime is verified live; this closing note requires its
+own prompt publication/deployment and published-byte check under the standing
+rule. Next product action remains real H10/headset integration and pending
+wording acceptance; those overall goals are open. This signal-loss increment
+is complete. Keep participant exports and detailed QA receipts ignored.
 
 ## Collected-data ZIP and Wormhole QR sharing — 2026-11-06
 

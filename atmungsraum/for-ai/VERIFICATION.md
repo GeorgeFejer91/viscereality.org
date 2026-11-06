@@ -29,6 +29,18 @@ Ignored evidence: `output/playwright/check-polar-timeout.mjs`,
 These are browser-demo checks; physical Polar H10, headset and phone/browser
 qualification remain open. Publication evidence belongs to PROJECT.md.
 
+Live verification: containing release `c2356be` completed Pages run 42254269547
+successfully; the exact deployment API reports `succeed`. All 12 changed public
+files match Git bytes and both entry URLs return 200. Native Chrome passes all
+eight signal-loss cases on the public origin, including a real paused loss of
+30,676 ms, with zero page errors. Initial live harness attempts timed out at
+30 seconds during full-page/audio loading; using DOM readiness and a 90-second
+audio-preparation allowance completes the checks without changing runtime.
+The 30-second signal-loss deadline is unchanged. Evidence remains ignored in
+`polar-timeout-live-results.json`, `polar-timeout-live-polar.png` and
+`polar-release-c2356be.json`. The generic Node asset fetch hit a connection
+timeout; the exact-byte check completed with Python's standard HTTPS client.
+
 ## Wormhole ZIP handoff and local QR — 2026-11-06
 
 The new folder-dialog action packages the existing saved CSVs and guides manual
