@@ -35,6 +35,8 @@ main {
 #install-dialog { width: min(480px, calc(100% - 24px)); max-width: none; max-height: calc(100svh - 24px); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; border: 1px solid #4a5148; border-radius: 12px; color: #e9ebe3; background: #0b0e0a; font: inherit; overflow: auto; }
 #install-dialog[open] { display: grid; gap: 16px; }
 #install-dialog h2 { margin: 0; font-size: 1.25em; line-height: 1.3; font-weight: 400; }
+#install-dialog .files-header { flex-direction: column; align-items: stretch; }
+#close-install { align-self: end; width: min(100%, 8em); }
 #install-dialog::backdrop { background: #000b; }
 #files-dialog { width: min(680px, calc(100% - 24px)); max-width: none; max-height: calc(100svh - 24px); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; border: 1px solid #4a5148; border-radius: 12px; color: #e9ebe3; background: #0b0e0a; font: inherit; overflow: auto; }
 #files-dialog[open] { display: flex; flex-direction: column; gap: 16px; }

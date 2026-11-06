@@ -38,6 +38,15 @@ Zero page errors occur. Phone screenshot inspected. Ignored evidence:
 `output/playwright/check-pwa-controls.mjs`, `pwa-controls-results.json` and
 `pwa-controls-phone.png`. Exact deployment/live evidence follows in PROJECT.md.
 
+An additional opening-position regression first fails: at320×568 with200%
+text/spacing, native autofocus on the bottom close button scrolls help to1832px
+and hides its beginning. Close now sits in a measured header above instructions;
+the same case opens at scrollTop0. All113 cases re-pass with new initial-scroll
+assertions. Three desktop smoke sizes retain the original corner sizing and
+usable help. The regression lives at `output/playwright/check-install-scroll.mjs`.
+The containing sharing release passes all45 Node tests. No new installer logic
+or participant-data behavior is changed by this header correction.
+
 The current [BeforeInstallPromptEvent API](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent)
 and [official installation-prompt guide](https://web.dev/learn/pwa/installation-prompt/)
 were read. This API is not universal and each supplied prompt is single-use;

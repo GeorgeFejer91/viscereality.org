@@ -26,7 +26,21 @@ The screenshot shows a browser tab; it does not prove installed-app relaunch.
 Entry: `main` at `ad3d432`, equal to fetched remote. The prior physical-phone
 installation/relaunch acceptance remains open; this is concrete UI feedback,
 not that acceptance. Ignored evidence: `output/playwright/pwa-controls-*`.
-Next: publish, then verify the live controls and exact deployment.
+Initial publication: `b16a49a` was pushed, then concurrent sharing release
+`0d0e170` superseded its cancelled Pages run. Containing run 42309917241 succeeds,
+deployment API status is `succeed`, and all 12 PWA-control paths match that
+published commit. The integrated suite passes all 45 tests. Concurrent
+documentation release `41c3a76` preserves this increment.
+
+Final enlarged-text review reproduces an install-help autofocus bug: the old
+bottom close button scrolls the 320×568 dialog to 1832px, hiding its start.
+Moving close into a measured header makes initial scrollTop zero; a failing
+browser assertion now passes and all 113 phone cases re-pass, including the
+new opening-position check. Desktop smoke checks pass at 768×1024,1280×720 and
+1920×1080. Independent review repeats the zero-scroll check and finds no
+actionable issues. This follow-up changes the dialog/header and cache tokens only.
+Next: publish this correction, verify live controls and record exact final
+deployment. Physical-phone installation/relaunch acceptance remains open.
 
 The UI's primary delivery target is a progressive web app (PWA) for smartphones.
 Installing it adds a Viscereality-logo home-screen icon that opens the live
