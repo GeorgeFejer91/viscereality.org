@@ -57,6 +57,10 @@ every screen and is the sole visible entry to collected data; no separate
 CSV-Dateien footer button is shown. It offers individual downloads, one all-file
 ZIP, and native file sharing to available email/messaging apps, with a download fallback.
 It lists this browser's saved exports rather than the OS Downloads directory.
+Its **Per QR-Code teilen** flow prepares the same ZIP, guides manual upload on
+Wormhole, then renders a pasted complete Wormhole link as a locally generated
+QR code. Direct automatic upload needs a backend/provider decision; see
+[the sharing boundary](DATA-LOGGING.md).
 
 Read common rules first, then the documents needed for the task:
 

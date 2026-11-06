@@ -156,6 +156,32 @@ supported; recipients/apps are chosen by the user. Unsupported/rejected sharing
 retains a ZIP download for manual attachment. No mailto attachment workaround,
 automatic transmission or server upload is involved. Cancel leaves files intact.
 
+The explicit **Per QR-Code teilen** action adds a Wormhole handoff in this same
+dialog: download the prepared ZIP, open `https://wormhole.app/`, upload it there,
+then paste the complete returned URL (including its `#` decryption key) and
+choose **QR-Code anzeigen**. Upload and link copying are manual; this is not a
+one-click upload integration. Wormhole currently rejects `/api/room` CORS
+preflight from the site (405, no allow-origin header), and GitHub Pages has no
+upload backend. Fully automatic sharing remains pending a hosted backend or
+an approved alternative provider. Do not use a public CORS proxy or claim an
+upload succeeded without a service acknowledgement.
+
+QR generation uses the local MIT `qrcode-generator@2.0.4` encoder under
+`vendor/qrcode/`, loaded only when needed. No remote QR service, automatic
+clipboard read, analytics or URL persistence is used. Accept only complete
+HTTPS links on the exact `wormhole.app` origin with a room and 128-bit base64url
+fragment; reject credentials, extra paths, queries and missing keys. This is
+format validation, not proof that the room exists, remains downloadable or
+contains this ZIP. QR copy/open actions use the whole URL. Closing/collapsing
+the flow, changing the input or refreshing the archive clears the old QR;
+closing/collapsing or archive refresh also clears the input. A failed QR-module
+load leaves the input and downloads available; clipboard denial selects the
+input for manual copying. No saved export is deleted. Anyone with the QR/link
+can access that Wormhole share while it is valid. Wormhole controls expiration
+and limits; no local countdown or availability promise is fabricated. See its
+[security design](https://wormhole.app/security), [FAQ](https://wormhole.app/faq)
+and [supported QR/share-target features](https://wormhole.app/roadmap).
+
 The browser controls the download destination and can block downloads; a click
 does not prove a file reached disk. Keep repeat-download links and surface
 storage errors. Current [download behavior](https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/download)

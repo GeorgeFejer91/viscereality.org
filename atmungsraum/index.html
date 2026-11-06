@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261106-placeholders">
-  <script type="module" src="./app.js?v=20261106-placeholders"></script>
+  <link rel="stylesheet" href="./style.css?v=20261106-wormhole-qr">
+  <script type="module" src="./app.js?v=20261106-wormhole-qr"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -30,8 +30,30 @@
     <div class="files-actions">
       <button id="download-zip" type="button" disabled><span data-measure>ZIP herunterladen</span></button>
       <button id="share-files" type="button" disabled><span data-measure>Teilen …</span></button>
+      <button id="share-qr" type="button" aria-expanded="false" aria-controls="wormhole-flow" disabled><span data-measure>Per QR-Code teilen …</span></button>
     </div>
     <p id="files-share-hint" data-measure>Alle gespeicherten Dateien als ZIP herunterladen oder teilen.</p>
+    <section id="wormhole-flow" aria-labelledby="wormhole-title" hidden>
+      <h3 id="wormhole-title" data-measure>ZIP über Wormhole teilen</h3>
+      <p data-measure>1. ZIP herunterladen und auf Wormhole hochladen. Dort entsteht ein zeitlich begrenzter Download-Link.</p>
+      <div class="files-actions">
+        <button id="wormhole-download" type="button"><span data-measure>ZIP herunterladen</span></button>
+        <a href="https://wormhole.app/" target="_blank" rel="noopener noreferrer" class="files-link"><span data-measure>Wormhole öffnen ↗</span></a>
+      </div>
+      <form id="wormhole-form" novalidate>
+        <label for="wormhole-link" data-measure>2. Vollständigen Wormhole-Link einfügen</label>
+        <input id="wormhole-link" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="256" placeholder="https://wormhole.app/…#…" aria-describedby="wormhole-help wormhole-status" required>
+        <p id="wormhole-help" data-measure>Den Link von Wormhole kopieren, einschließlich # und dem Schlüssel dahinter.</p>
+        <button id="show-qr" type="submit"><span data-measure>QR-Code anzeigen</span></button>
+      </form>
+      <p id="wormhole-status" role="status" data-measure></p>
+      <figure id="wormhole-result" hidden>
+        <img id="wormhole-qr" width="294" height="294" alt="QR-Code für den vollständigen Wormhole-Download-Link">
+        <figcaption data-measure>QR-Code scannen, um den Download auf Wormhole zu öffnen. Wer den Code oder Link hat, kann die dort geteilten Dateien herunterladen, solange der Link gültig ist.</figcaption>
+        <a id="wormhole-open-link" class="files-link" target="_blank" rel="noopener noreferrer"><span data-measure>Download-Link öffnen ↗</span></a>
+        <button id="wormhole-copy" type="button"><span data-measure>Link kopieren</span></button>
+      </figure>
+    </section>
   </dialog>
   <main>
     <section class="screen" id="h10" aria-labelledby="sensor-status" hidden>

@@ -4,7 +4,7 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
-    'data-files.js', 'assets/icons/folder.svg',
+    'data-files.js', 'assets/icons/folder.svg', 'vendor/qrcode/qrcode.js', 'vendor/qrcode/LICENSE',
     'data-logging.js', 'mock-ecg.js', 'assets/ecg/mock-ecg.json', 'assets/ecg/mock-ecg.f32',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
     'assets/rounds/probe-runde.svg', 'assets/rounds/haupt-runde.svg',
@@ -42,7 +42,7 @@ foreach ($round in @('probe', 'haupt')) {
     $actual = @([regex]::Matches($html, "href=`"#start-$round-([^`"]+)`"") | ForEach-Object { $_.Groups[1].Value })
     if (@(Compare-Object $expected $actual).Count -ne 0) { throw "Incorrect $round options" }
 }
-if ($html -match '(?i)(src|href)="https?://') {
+if ($html -match '(?i)<(?:script|img|audio|video|source|iframe|link)\b[^>]*\b(?:src|href)\s*=\s*["''](?:https?:)?//') {
     throw 'Runtime assets must be local, with no external page dependency'
 }
 $package = Get-Content -Raw -LiteralPath (Join-Path $root 'package.json') | ConvertFrom-Json

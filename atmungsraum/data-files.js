@@ -45,19 +45,59 @@ export function createExportsZip(records) {
   return new Blob([...parts, ...directory, end], { type: 'application/zip' });
 }
 
+export function validateWormholeUrl(value) {
+  const text = value.trim();
+  let url;
+  try { url = new URL(text); } catch { /* Report the same actionable error below. */ }
+  if (!url || /\s/.test(text) || url.origin !== 'https://wormhole.app'
+    || url.username || url.password || url.search
+    || !/^\/[A-Za-z0-9_-]{1,128}$/.test(url.pathname)
+    || !/^#[A-Za-z0-9_-]{22}$/.test(url.hash)) {
+    throw new Error('Vollständigen Wormhole-Link einschließlich #Schlüssel einfügen.');
+  }
+  return url.href;
+}
+
+export async function createWormholeQr(value) {
+  const url = validateWormholeUrl(value);
+  const { default: qrcode } = await import('./vendor/qrcode/qrcode.js');
+  const qr = qrcode(0, 'M');
+  qr.addData(url, 'Byte');
+  qr.make();
+  return { url, image: `data:image/svg+xml,${encodeURIComponent(qr.createSvgTag(6, 24))}` };
+}
+
 export function mountDataFiles(data) {
   const byId = id => document.getElementById(id);
   const dialog = byId('files-dialog'), button = byId('open-files'), list = byId('saved-files');
   const status = byId('files-status'), zipButton = byId('download-zip'), shareButton = byId('share-files');
+  const qrButton = byId('share-qr'), flow = byId('wormhole-flow'), input = byId('wormhole-link');
+  const qrStatus = byId('wormhole-status'), result = byId('wormhole-result');
   let zip, zipUrl, generation = 0, returnFocus, sharing = false;
+  let qrGeneration = 0, qrLink = '';
+  const clearQr = () => {
+    ++qrGeneration;
+    qrLink = '';
+    if (result.contains(document.activeElement) && dialog.open && !flow.hidden) input.focus({ preventScroll: true });
+    result.hidden = true;
+    byId('wormhole-qr').removeAttribute('src');
+    byId('wormhole-open-link').removeAttribute('href');
+  };
+  const resetWormhole = () => {
+    clearQr();
+    input.value = '';
+    input.setAttribute('aria-invalid', 'false');
+    qrStatus.textContent = '';
+  };
   const clearZip = () => {
     if (zipUrl) URL.revokeObjectURL(zipUrl);
     zip = zipUrl = null;
-    zipButton.disabled = shareButton.disabled = true;
+    zipButton.disabled = shareButton.disabled = qrButton.disabled = byId('wormhole-download').disabled = true;
   };
   async function refresh() {
     const version = ++generation;
     clearZip();
+    resetWormhole();
     status.textContent = 'Dateien werden geladen …';
     try {
       const records = await data.exports();
@@ -70,7 +110,7 @@ export function mountDataFiles(data) {
       if (version !== generation || !dialog.open) return;
       zip = new File([createExportsZip(records)], 'Atmungsraum-Daten.zip', { type: 'application/zip' });
       zipUrl = URL.createObjectURL(zip);
-      zipButton.disabled = false;
+      zipButton.disabled = qrButton.disabled = byId('wormhole-download').disabled = false;
       let canShare = false;
       try { canShare = Boolean(navigator.share && navigator.canShare?.({ files: [zip] })); } catch { /* Download remains available. */ }
       shareButton.disabled = !canShare;
@@ -98,15 +138,70 @@ export function mountDataFiles(data) {
   dialog.addEventListener('close', () => {
     ++generation;
     clearZip();
+    resetWormhole();
+    flow.hidden = true;
+    qrButton.setAttribute('aria-expanded', 'false');
     button.setAttribute('aria-expanded', 'false');
     if (returnFocus?.isConnected && returnFocus.getClientRects().length) returnFocus.focus({ preventScroll: true });
     else button.focus({ preventScroll: true });
   });
-  zipButton.addEventListener('click', () => {
+  const downloadZip = () => {
     if (!zipUrl) return;
     const link = document.createElement('a');
     link.href = zipUrl; link.download = zip.name;
     document.body.append(link); link.click(); link.remove();
+  };
+  zipButton.addEventListener('click', downloadZip);
+  byId('wormhole-download').addEventListener('click', downloadZip);
+  qrButton.addEventListener('click', () => {
+    flow.hidden = !flow.hidden;
+    qrButton.setAttribute('aria-expanded', String(!flow.hidden));
+    if (flow.hidden) resetWormhole();
+    else byId('wormhole-download').focus({ preventScroll: true });
+  });
+  input.addEventListener('input', () => {
+    clearQr();
+    input.setAttribute('aria-invalid', 'false');
+    qrStatus.textContent = '';
+  });
+  byId('wormhole-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    clearQr();
+    const version = qrGeneration;
+    let url;
+    try { url = validateWormholeUrl(input.value); }
+    catch (error) {
+      input.setAttribute('aria-invalid', 'true');
+      qrStatus.textContent = error.message;
+      input.focus();
+      return;
+    }
+    input.setAttribute('aria-invalid', 'false');
+    qrStatus.textContent = 'QR-Code wird auf diesem Gerät erstellt …';
+    try {
+      const qr = await createWormholeQr(url);
+      if (version !== qrGeneration || !dialog.open || flow.hidden) return;
+      qrLink = qr.url;
+      byId('wormhole-qr').src = qr.image;
+      byId('wormhole-open-link').href = qr.url;
+      result.hidden = false;
+      qrStatus.textContent = 'QR-Code für den eingefügten Wormhole-Link bereit.';
+    } catch {
+      if (version !== qrGeneration || !dialog.open) return;
+      qrStatus.textContent = 'QR-Code konnte nicht erstellt werden. Link aus dem Eingabefeld kopieren oder die Seite neu laden.';
+    }
+  });
+  byId('wormhole-copy').addEventListener('click', async () => {
+    if (!qrLink) return;
+    const version = qrGeneration;
+    try {
+      await navigator.clipboard.writeText(qrLink);
+      if (version === qrGeneration) qrStatus.textContent = 'Wormhole-Link kopiert.';
+    } catch {
+      if (version !== qrGeneration) return;
+      input.focus(); input.select();
+      qrStatus.textContent = 'Link im Eingabefeld markiert. Bitte selbst kopieren.';
+    }
   });
   shareButton.addEventListener('click', async () => {
     if (!zip || sharing) return;

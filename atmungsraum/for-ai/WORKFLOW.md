@@ -56,6 +56,15 @@ When restoring/updating the measurement dependency, run
 lockfile, copied runtime modules, and license aligned, and rerun rendered checks.
 The vendor script copies only the main API's runtime module graph and license.
 
+Wormhole QR sharing remains a static-site handoff: ZIP download → upload on
+Wormhole → paste complete link → local QR. Do not mistake it for automatic
+upload or add a third-party QR/CORS proxy. `vendor/qrcode/README.md` pins the
+reviewed MIT encoder and package integrity; its `.js` filename preserves the
+module MIME type on local static servers. Navigation to Wormhole is explicit
+and opens a separate tab with no opener/referrer. Leaving the app during a live
+recording still follows the existing hidden-page abort policy. The context
+checker allows navigation links while retaining local-only runtime assets.
+
 ## Participant data and mock ECG
 
 Every participant-data writer must follow [DATA-LOGGING.md](DATA-LOGGING.md)

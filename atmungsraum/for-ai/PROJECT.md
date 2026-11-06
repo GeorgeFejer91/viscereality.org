@@ -1,5 +1,37 @@
 # Project
 
+## Collected-data ZIP and Wormhole QR sharing — 2026-11-06
+
+Requested outcome: package all saved browser exports, upload to Wormhole and
+share its full download URL as a QR code. Reuse `data-files.js` and its ZIP
+writer; do not change participant data, recording, identity or retention.
+Wormhole `/api/room` currently answers cross-origin upload preflight with405
+and no CORS permission. This static Pages app has no upload backend. A preference
+question is pending for a Wormhole handoff versus hosted automatic upload or
+another provider. The bounded static-site increment implements the explicit
+handoff; do not present it as fulfilling automatic upload.
+
+- [x] Inspect existing ZIP/storage flow and verify Wormhole's official security,
+  FAQ/roadmap and the actual API preflight. No participant files uploaded.
+- [x] Add a local-only QR generator with strict complete Wormhole-link validation;
+  test key preservation and reject unrelated/unsafe/incomplete URLs.
+- [x] Integrate a clearly labelled ZIP → Wormhole → QR flow in the existing
+  accessible file dialog, preserving downloads and native sharing.
+- [x] Verify rendered layouts, focus, failure/recovery and QR decoding. All24
+  Node tests, UI/context, seven QR layouts and ten existing files-dialog cases
+  pass; see VERIFICATION.md. Independent review found no actionable issues
+  and separately passed the data-file regressions and whitespace check.
+- [ ] Review, commit/push and check exact Pages deployment/live assets.
+- [ ] Fully automatic upload: resolve backend hosting/provider choice before
+  claiming the original one-click outcome is complete.
+
+Entry: canonical checkout on `main`, synchronized at `a216168`; audio sidecar
+publication is separate work. RTK is unavailable at the configured path; use
+bounded native output. Keep the overall sensor/headset and wording goals open.
+Next action: publish this verified handoff increment after review, check the
+exact release/live QR behavior, then resolve hosting/provider choice for
+fully automatic upload. Participant exports remain local and untracked.
+
 ## Matching numbered audio / CSV / TXT groups — 2026-11-06
 
 The current request requires scenario-owned audio folders and matching numerical

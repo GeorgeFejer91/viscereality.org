@@ -49,6 +49,10 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   downloads, an all-file ZIP and native file sharing support email/messaging apps
   where available; download/manual attachment is the fallback. Opening/dismissing
   the dialog preserves playback. This cannot enumerate the OS Downloads folder.
+  The QR action (2026-11-06) guides ZIP upload on Wormhole and generates a QR
+  locally from the pasted complete link/key. Upload is manual: Wormhole rejects
+  site-origin CORS preflight and Pages has no backend. One-click upload remains
+  pending a hosting/provider decision. Link/key never goes to a QR service.
   See Atmungsraum DATA-LOGGING.md and VERIFICATION.md for persistence and QA limits.
 
 - Path: `atmungsraum/index.html`

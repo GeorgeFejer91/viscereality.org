@@ -1,5 +1,39 @@
 # Verification
 
+## Wormhole ZIP handoff and local QR — 2026-11-06
+
+The new folder-dialog action packages the existing saved CSVs and guides manual
+upload on Wormhole, followed by full-link paste and local QR generation. It does
+not implement automatic upload. Actual `/api/room` preflight with site Origin,
+POST and content-type returned405 without CORS permission; the current Pages
+site has no backend. Official [security](https://wormhole.app/security),
+[FAQ](https://wormhole.app/faq) and [roadmap](https://wormhole.app/roadmap)
+were read. No participant files or test ZIPs were uploaded to Wormhole.
+
+Both new Node regressions were observed failing before implementation, then
+passing. All24 Node tests, UI-state/context checks and whitespace checks pass.
+The ZIP from the new handoff download independently extracts all three synthetic
+fixture CSVs byte-for-byte. A separate QA-only jsQR1.4.0 decoder reads the actual
+rendered SVG back to the complete expected URL, including its22-character key.
+The pinned MIT QR encoder is local and lazy; native Chrome's initial check
+caught Python's `.mjs` text/plain MIME mapping, fixed by serving the unchanged
+module as `.js`. No remote QR renderer or proxy is used.
+
+Native headless Chrome passes seven QR layouts (320×568,390×844,568×320,
+844×390,768×1024,1280×720,1920×1080): no horizontal dialog overflow, clipped
+labels, unmeasured visible text or controls below48px. Existing file-dialog
+regression passes10 cases including60 exports, native sharing/cancel/failure,
+200% text/spacing, long names, reload and playback continuing across dialog use.
+New QR checks cover enlarged text/spacing at320px, independent decoding, invalid
+links, edit/refresh clearing, clipboard success/denial, empty-state disabling,
+Escape/focus restoration, missing-encoder fallback and delayed import completing
+after dismissal. QR generation sends zero external requests and reports no
+page errors. Phone screenshot inspected. Evidence stays ignored under
+`output/playwright/check-wormhole.mjs`, `wormhole-results.json`,
+`wormhole-phone.png`, `files-wormhole-regression.json` and synthetic ZIPs.
+Physical phones/Safari, real Wormhole upload/download and full automatic sharing
+are not qualified by these desktop checks. Publication evidence follows in PROJECT.
+
 ## Numbered per-cue CSV sidecars — 2026-11-06
 
 Each of the 53 existing scenario WAV/TXT/JSON groups now has a same-basename CSV.

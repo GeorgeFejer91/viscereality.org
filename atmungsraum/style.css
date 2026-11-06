@@ -40,7 +40,17 @@ main {
 #saved-files { display: grid; gap: 8px; list-style: none; margin: 0; padding: 4px; }
 #saved-files a { display: block; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 8px; color: #c9d3bf; text-decoration: none; }
 .files-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.files-actions button { flex: 1 1 180px; }
+.files-actions > :is(button, a) { flex: 1 1 180px; }
+.files-link { display: grid; place-items: center; min-width: 0; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 10px; color: #e9ebe3; background: #131712; text-align: center; text-decoration: none; line-height: 1.3; }
+.files-link > [data-measure] { width: 100%; }
+#wormhole-flow, #wormhole-form, #wormhole-result { display: grid; gap: 12px; min-width: 0; }
+#wormhole-flow { border-top: 1px solid #4a5148; padding-top: 16px; }
+#wormhole-title { margin: 0; font-size: 1.125em; font-weight: 400; line-height: 1.3; }
+#wormhole-help { color: #b2b8ab; }
+#wormhole-link { display: block; min-width: 0; width: 100%; min-height: 48px; padding: 10px 12px; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: #e9ebe3; font: inherit; line-height: 1.5; }
+#wormhole-link[aria-invalid="true"] { border-color: #ff9696; }
+#wormhole-qr { display: block; width: min(100%, 294px); height: auto; justify-self: center; background: white; }
+#wormhole-result figcaption { color: #b2b8ab; }
 .files-scroll:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 2px; }
 body:has(#files-dialog[open]) { overflow: hidden; }
 #belt-signal { position: fixed; z-index: 1; top: var(--corner-top); right: max(12px, env(safe-area-inset-right)); display: grid; place-items: center; width: var(--corner-size); height: var(--corner-size); padding: calc(var(--corner-size) * .12); border: 1px solid #4a5148; border-radius: 10px; background: #131712; }
