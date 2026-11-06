@@ -20,3 +20,6 @@ Follow the user's standing Superpowers/GitHub synchronization instruction in
 the root `for-ai/constraints.md` and local `for-ai/WORKFLOW.md`. Complete the
 applicable Superpowers checks, update For-AI evidence, then commit and push
 verified completed work without requesting the same permission again.
+Publish each completed verified increment promptly to the live URL as well as
+GitHub. Do not wait for another request; verify the exact Pages deployment and
+affected live assets/behavior before handing off. See the 2026-11-06 root rule.

@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-11-06 — Publish verified increments promptly to the live URL
+
+The user explicitly requires all future agents to publish completed verified
+changes to the live site as soon as ready, in addition to keeping GitHub current.
+This extends the 2026-11-05 standing authorization. Root constraints own the rule;
+both AGENTS.md entrypoints, skill routes and local WORKFLOW.md surface it. Finish
+the applicable Superpowers checks, push each coherent ready increment without
+another prompt, follow its exact Pages deployment and verify affected live URLs.
+Docs-only work uses scoped verification but still reaches the live deployment.
+Do not present a successful push or queued build as completed publication.
+
 ## 2026-11-05 — Standing Superpowers workflow and GitHub synchronization
 
 The user requests pushing all current work and instructs future agents to always

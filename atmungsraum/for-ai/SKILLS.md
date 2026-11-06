@@ -10,6 +10,9 @@ The user's standing 2026-11-05 instruction in
 requires the applicable Superpowers workflow and authorizes committing/pushing
 verified completed work without another publication prompt. Preserve unfinished
 concurrent work and the public/private data boundary.
+The 2026-11-06 extension requires publishing each verified increment promptly to
+the live URL and checking its exact Pages deployment before handoff; do not stop
+at a push or leave a pending build unverified. This also applies to docs changes.
 
 <!-- for-ai:shared-skills:start -->
 ## Shared project skill baseline

@@ -1,6 +1,6 @@
 # Active Constraints
 
-Last updated: 2026-11-05
+Last updated: 2026-11-06
 
 These are the current durable constraints for `viscereality.org`. Update this file when the site's expected behavior changes.
 
@@ -13,6 +13,17 @@ Superpowers workflow and keep this repository up to date on GitHub. This is
 continuing authorization to commit and push completed, verified task changes to
 the existing `origin/main` publication workflow without asking again. A later
 user instruction to keep a particular task local takes precedence.
+
+On 2026-11-06 the user explicitly extends this requirement to the live website:
+publish every completed, verified increment as soon as it is ready, without
+waiting for the end of a larger task or another push/deploy request. Keep both
+GitHub and the live URL current through the existing main/root GitHub Pages
+deployment. A Git push is an intermediate step; continue in the current task
+until the exact deployment succeeds and the affected public URLs/assets and
+relevant behavior are verified. Pending builds are not completion evidence.
+Documentation-only changes still require prompt push and deployment checks;
+use scoped checks rather than rerunning unrelated runtime suites. Retain the
+Superpowers verification/review requirements and the existing data boundaries.
 
 - Start with `superpowers-using-superpowers` and select the practices appropriate
   to the task: clarify/design when needed, plan substantial work, implement,

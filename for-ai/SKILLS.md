@@ -3,7 +3,9 @@
 The user's standing 2026-11-05 instruction in [constraints.md](constraints.md)
 requires the relevant Superpowers workflow and supplies continuing authorization
 to commit/push verified completed work. Apply it together with this baseline;
-do not ask for the same publication permission again.
+do not ask for the same publication permission again. The 2026-11-06 extension
+requires prompt publication of each verified increment to the live site, with
+exact deployment/live-URL verification before handoff, including docs-only work.
 
 <!-- for-ai:shared-skills:start -->
 ## Shared project skill baseline

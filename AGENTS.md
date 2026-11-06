@@ -20,7 +20,10 @@ Keep the `for-ai/` notes current. When a task changes durable project constraint
 Follow the standing Superpowers and GitHub synchronization instruction in
 `for-ai/constraints.md`: finish the applicable workflow, update project evidence,
 then commit and push completed, verified work without requesting publication
-permission again. The user's 2026-11-05 instruction supplies continuing authority.
+permission again. The user's 2026-11-05/06 instructions supply continuing authority.
+Publish each verified completed increment to GitHub and the live site as soon as
+it is ready. Continue through exact Pages deployment and affected live-URL checks;
+a push or pending build alone does not complete publication.
 
 <!-- for-ai:shared-skills:start -->
 ## Shared project workflow

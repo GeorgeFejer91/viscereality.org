@@ -14,18 +14,25 @@
    [root constraints](../../for-ai/constraints.md). Complete relevant design,
    implementation, review and verification practices; update For-AI evidence;
    review/stage intended paths, commit and push completed verified work through
-   existing `origin/main` without another permission prompt. Fetch/reconcile first
+   existing `origin/main` without another permission prompt. The 2026-11-06
+   extension requires publishing each completed verified increment as soon as
+   it is ready, rather than waiting for the end of a larger task. Fetch/reconcile first
    and preserve unrelated unfinished work. Local source recordings, voice
    auditions, listening copies, and full-session exports stay ignored.
    Never force-push or bypass branch protections.
 7. After publication, run the checker with `-RequireRemote`, check the GitHub Pages
    build for the pushed commit, and verify the public URL. A successful push alone
-   is not evidence that the page is live.
+   is not evidence that the page is live. Keep following the exact run in this
+   task until deployment succeeds and affected live assets/behavior are checked;
+   do not hand off with only a pending build. Report concrete blockers accurately.
 
 This standing authorization applies to future tasks in this repository unless
 the user asks for local-only work. Before handoff, verify Git synchronization,
 record exact publication evidence and remaining changes in PROJECT.md, and
 report any concrete blocker instead of leaving completed work silently local.
+The live target is <https://viscereality.org/atmungsraum/>. Documentation-only
+updates follow the same prompt push/deployment rule, with scoped context/diff
+and published-file checks rather than unrelated runtime test reruns.
 
 Local setup shortcuts and `LOCAL-PROJECT.md` are excluded by `.git/info/exclude`.
 Do not publish them or machine-specific paths.

@@ -1,5 +1,25 @@
 # Project
 
+## Prompt live publication is standard — 2026-11-06
+
+The user requires future agents to push completed verified changes to the live
+site as soon as ready. The root standing rule now explicitly covers prompt
+incremental publication, no repeat permission request, exact Pages tracking,
+affected live-URL verification and docs-only updates. Root/local entrypoints,
+skill indexes and WORKFLOW.md route to that single authority.
+
+- [x] Refresh origin/main: clean local/remote main both `3f62dec` at entry.
+  Its Pages run `42080146068` is confirmed successful.
+- [x] Update the existing root/subproject instructions and decision owner.
+- [x] Run scoped context and Git whitespace checks; review the eight-file
+  instruction-only diff. No runtime regression suite is needed for prose changes.
+- [ ] Push and confirm the exact live deployment; record release evidence and
+  final synchronization.
+
+This is an instruction-only change. No product runtime or participant data
+changes are needed. No blocker is known. Next action is scoped verification and
+publication; the overall H10/headset/physical-phone/listening goals remain open.
+
 ## Publish folder/sharing and standing workflow instruction — 2026-11-05
 
 The user explicitly requests pushing everything currently completed and making
