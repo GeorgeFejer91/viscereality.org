@@ -20,8 +20,11 @@ headset/H10 qualification remain acceptance work for the overall product goal.
   maskable and Apple icons from the existing Viscereality `Images/logo.png`.
 - [x] Verify browser manifest parsing/installability, icon decoding and launch
   URL, smartphone rendering and existing runtime checks; review the exact diff.
-- [ ] Publish only this increment, follow its exact Pages deployment and verify
+- [x] Publish only this increment, follow its exact Pages deployment and verify
   live manifest/icons and app behavior. Preserve concurrent sharing work.
+- [ ] Obtain installation/relaunch acceptance on the user's target phone:
+  record phone/browser, Viscereality icon, canonical app and standalone window.
+  Keep any other untested phone platforms explicitly unqualified.
 
 Entry: canonical `main` at `5ae2d5f`, equal to fetched `origin/main`. Sharing
 changes are already unfinished in the worktree and must not be swept into this
@@ -38,7 +41,27 @@ CDP's default install initially opened a browser tab; this test does not prove
 physical-phone default installation behavior. Icons are opaque; maskable logo
 pixels fit the safe circle. Independent review finds no actionable issues.
 See VERIFICATION.md and ignored `output/playwright/pwa-local-results.json`.
-Next: publish this verified increment and check its exact Pages/live assets.
+Release `02217feda1df9d99de830e50867ca32ce94b271c` is pushed on `main` and
+was equal to `origin/main` after publication. Exact Pages run
+[42260860687](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42260860687)
+completed successfully; the deployment API reports `succeed`. All 13 changed
+public files match Git bytes; PNG/manifest MIME types are correct, and slash /
+no-slash entry URLs return 200 at the canonical slash URL. Native Chrome repeats
+the installability, icon decoding, four phone-size and standalone launch checks
+on the public origin with no page errors. Its explicit user display preference
+is recorded. Ignored receipts: `pwa-live-02217fe.json`, `pwa-live-results.json`
+and `pwa-live-phone.png` under `output/playwright/`.
+
+The user explicitly sets the finish-PWA goal active in this chat. Automated and
+publication checks are complete; the final target-phone installation/relaunch
+question is pending. Do not mark the PWA goal complete without that result.
+Overall H10/headset integration remains a separate open product goal. This
+evidence follow-up changes documentation only and follows the same Pages rule.
+Unrelated unfinished sharing edits remain in `.gitignore`, `app.js`,
+`data-files.js`, the sharing section of `index.html`/this state, `style.css` and
+new link/Worker/test files; they are preserved outside the PWA commits.
+Next: collect the target-phone result, address any observed PWA defect, and
+record the platform-specific acceptance. Other phone platforms remain untested.
 
 ## Polar signal-loss scenario abort — 2026-11-06
 

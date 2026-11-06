@@ -38,6 +38,17 @@ Ignored local evidence: `output/playwright/build-pwa-icons.mjs`, `check-pwa.mjs`
 `pwa-local-results.json`, `pwa-local-phone.png` and temporary browser profiles.
 Publication evidence belongs to PROJECT.md.
 
+Live verification: release `02217feda1df9d99de830e50867ca32ce94b271c` completes
+exact Pages run 42260860687; the deployment API reports `succeed`. All 13
+changed public files match Git bytes, with `application/manifest+json` for the
+manifest and `image/png` for icons. Slash/no-slash URLs resolve to the canonical
+app and return 200. Chrome repeats error-free parsing/installability, icon
+decoding, four phone viewport checks and actual standalone launch on the live
+origin, with its user window preference explicitly set. The final target-phone
+installation/relaunch question is pending; desktop results do not close it.
+Ignored live receipts: `pwa-live-02217fe.json`, `pwa-live-results.json` and
+`pwa-live-phone.png`. No runtime file changes accompany this evidence update.
+
 Primary platform references read: Chrome's [install-criteria update](https://developer.chrome.com/blog/update-install-criteria)
 permits menu installation without a service-worker fetch handler; the current
 [MDN installability guide](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
