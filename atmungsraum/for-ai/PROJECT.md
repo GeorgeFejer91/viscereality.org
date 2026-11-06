@@ -115,7 +115,11 @@ Receipts record the scenario hash and `audio_asset_mode: silent-placeholders`.
   pause/resume, replay, CSV export and missing-audio retry;18 enlarged/localized
   text cases pass, screenshot inspected, no page errors. Independent review
   found no issues and audited all53 asset groups/manifests/playlists.
-- [ ] Commit/push and verify exact Pages deployment and affected live assets/UI.
+- [x] Commit/push and verify exact Pages deployment and affected live assets/UI:
+  feature6f097cf is included in eafec8a, successful Pages run42243359695
+  attempt2. All265 changed public files match Git bytes; both entry URLs return
+  200. Five live playback routes,26/41-second transitions, pause/resume/export,
+  replay/retry and18 enlarged/localized text cases pass without page errors.
 - [ ] User approves draft wording before final speech creation/replacement;
   after approval, align exact TXT/JSON/CSV/recordings and reverify timing.
 
@@ -125,12 +129,17 @@ previous exact Pages release `42226744863`. The verified placeholder change is p
 run `42241115947` built successfully, but attempt1 timed out in updating_pages
 after10minutes; failed-job attempt2 was cancelled immediately. Its existing
 site artifact is2,146,337,782bytes with the standard1GB warning; that warning
-alone does not establish the cause. Live scenario manifest still returns404.
-All local checks and independent review pass. Publish this recovery evidence
-as a fresh build, then continue exact deployment/live checks before handoff. The local static server serves the relocated
-checkout. Machine-specific paths and migration SHA evidence stay outside the
-published source. Next action: verify the fresh recovery deployment and affected live assets/UI. Overall real sensor/headset, physical-phone and human
-listening acceptance remain open.
+alone does not establish the cause. Recovery run42243359695 initially failed
+because the timed-out6f097cf deployment still held the Pages lock. Explicitly
+cancelled only that stale deployment through the Pages API, verified
+deployment_cancelled, then reran the eafec8a failed job. Attempt2 succeeded;
+live file and browser checks above pass. The concurrent a216168 increment adds
+matching per-cue CSVs and preserves runtime/audio; its publication has its own
+top-level checklist. Preserve it and its active deployment. The local server
+serves the relocated checkout; machine-specific paths and migration hashes
+stay outside published source. This placeholder UI increment is complete.
+Final narration awaits wording approval. Overall real sensor/headset,
+physical-phone and human listening acceptance remain open.
 
 ## Main-round calibration and one 15-minute scenario — 2026-11-06
 

@@ -34,6 +34,15 @@ The live target is <https://viscereality.org/atmungsraum/>. Documentation-only
 updates follow the same prompt push/deployment rule, with scoped context/diff
 and published-file checks rather than unrelated runtime test reruns.
 
+If Pages times out and a fresh build is rejected because that same deployment
+is still in progress, clear only this task's timed-out deployment. Inspect
+`gh api repos/GeorgeFejer91/viscereality.org/pages/deployments/<old-sha>`;
+use POST on that path's `/cancel` endpoint, verify `deployment_cancelled`,
+then rerun the latest build's failed deployment job. A failed Actions run or
+an immediately cancelled retry does not guarantee the Pages backend released
+its deployment lock. Preserve unrelated active deployments. The existing
+large-artifact warning alone is not evidence of the timeout's cause.
+
 Local setup shortcuts and `LOCAL-PROJECT.md` are excluded by `.git/info/exclude`.
 Do not publish them or machine-specific paths.
 

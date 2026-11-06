@@ -95,6 +95,14 @@ was cancelled immediately. Build passed; artifact size2,146,337,782bytes
 produces the existing1GB warning. The affected live manifest still returns404.
 Trigger a fresh evidence commit/build, then verify its exact deployment and UI.
 
+Resolved: eafec8a836b3a92851ed6b8816806ada103a4d06 deployed in run42243359695
+attempt2 after explicitly cancelling the stale6f097cf Pages deployment lock.
+All265 changed public files match their committed bytes and both entry URLs
+return200. Five live browser routes pass actual26/41-second transitions,
+pause/resume, CSV metadata, receipt hashes, replay and missing-WAV retry;
+18 enlarged/localized text cases pass with no page errors. The concurrent
+a216168 CSV-sidecar increment preserves runtime and audio; retain its owner.
+
 ## Single 15-minute main sequence — 2026-11-06
 
 Current acceptance supersedes the earlier two-option/48-second-composite local
