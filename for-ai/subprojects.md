@@ -13,7 +13,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 ## Atmungsraum
 
 - Saved data (2026-11-05): a permanent bottom-right SVG folder opens a scrollable
-  native dialog of this browser's saved session CSVs on every screen. Individual
+  native dialog of this browser's saved session CSVs on every screen. As of
+  2026-11-06 it is the sole visible data entry point; CSV-Dateien footer links
+  are removed, while the legacy recovery URL remains supported. Individual
   downloads, an all-file ZIP and native file sharing support email/messaging apps
   where available; download/manual attachment is the fallback. Opening/dismissing
   the dialog preserves playback. This cannot enumerate the OS Downloads folder.

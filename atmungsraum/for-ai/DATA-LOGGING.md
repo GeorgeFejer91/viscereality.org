@@ -130,8 +130,10 @@ cannot finalize another tab's live run. This browser recorder requires IndexedDB
 Web Locks, Web Crypto and a secure context (HTTPS or localhost).
 
 Completion or abort triggers a CSV download and stores the export locally.
-The **CSV-Dateien** screen lists retained exports for repeat download, including
-after reload and without a live signal. The CSV database is loaded independently
+The bottom-right folder lists retained exports for repeat download, including
+after reload and without a live signal. It is the sole visible data entry point;
+the legacy `#daten` recovery URL still works, with no separate CSV-Dateien button.
+The CSV database is loaded independently
 of ECG/audio assets so a missing source cannot block recovery. Do not silently
 delete exports or reset counters. Browser storage and downloaded participant
 files are local data, not repository assets; never commit them or upload them

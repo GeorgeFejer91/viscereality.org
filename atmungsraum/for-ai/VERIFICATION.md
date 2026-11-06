@@ -1,5 +1,22 @@
 # Verification
 
+## Folder-only data entry — 2026-11-06
+
+Both CSV-Dateien footer links and their obsolete visibility update are removed.
+The existing folder dialog remains the visible entry; the legacy recovery URL
+and shared link nodes remain compatible. All 19 Node tests, seven scenario pairs,
+UI-state/context, syntax and whitespace checks pass. Focused review has no findings.
+
+`check-files.mjs` passes ten Chrome layout cases plus individual/ZIP downloads,
+keyboard/focus, share-boundary and 61-file reload/playback checks with no errors.
+The first full stretch check exposed the remaining patient link's 180px singleton
+budget at 768×1024. A scoped 240px budget fixes that full-label no-fit without
+changing other footers; all 161 cases then pass with no errors. The final desktop
+screenshot was visually checked: only the centered patient return and corner
+folder remain. Receipts are ignored under `output/playwright/` in
+`folder-only-local-results.json` and `stretch-results.json`. Native phone sharing
+and real hardware remain outside this desktop evidence. Publication is pending.
+
 ## Folder and standing-workflow release acceptance — 2026-11-05
 
 For the user's explicit all-changes push, refreshed origin/main and local HEAD

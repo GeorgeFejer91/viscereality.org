@@ -1,7 +1,7 @@
 import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261105-data';
 import { mountSessionAudio } from './audio/session-ui.js?v=20261105-data';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
-import { participantIdentity, mountSessionData } from './data-logging.js?v=20261105-files';
+import { participantIdentity, mountSessionData } from './data-logging.js?v=20261106-folder';
 import { mountDataFiles } from './data-files.js?v=20261105-files';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;

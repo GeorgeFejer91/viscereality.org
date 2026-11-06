@@ -43,8 +43,9 @@ The mock ECG is a continuously replayed seeded NeuroKit2 trace. Each started run
 exports a participant-linked CSV and retains it for download recovery. All data logging must follow
 [DATA-LOGGING.md](DATA-LOGGING.md); it owns the required naming convention.
 The permanent bottom-right folder SVG opens a scrollable saved-CSV dialog on
-every screen. It offers individual downloads, one all-file ZIP, and native
-file sharing to available email/messaging apps, with a download fallback.
+every screen and is the sole visible entry to collected data; no separate
+CSV-Dateien footer button is shown. It offers individual downloads, one all-file
+ZIP, and native file sharing to available email/messaging apps, with a download fallback.
 It lists this browser's saved exports rather than the OS Downloads directory.
 
 Read common rules first, then the documents needed for the task:

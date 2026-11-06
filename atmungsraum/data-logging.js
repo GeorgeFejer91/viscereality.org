@@ -194,7 +194,6 @@ export function mountSessionData(signal) {
     }
     if (download) link.click();
     status.textContent = 'CSV-Datei zum Herunterladen auswählen.';
-    document.getElementById('data-recovery').hidden = false;
   }
   return {
     async exports() {

@@ -1,5 +1,28 @@
 # Project
 
+## Folder-only data entry — 2026-11-06
+
+Remove both CSV-Dateien footer links. The permanent bottom-right folder is the
+sole visible entry to collected data, including retained exports after reload.
+Keep the legacy recovery URL and the shared download links used by the dialog.
+
+- [x] Remove the redundant links and their obsolete visibility update.
+- [x] Verify saved exports, folder/download/reload behavior, responsive layout
+  and existing checks; review the complete diff.
+- [ ] Commit/push and confirm exact Pages deployment and affected live URLs.
+
+Local evidence: all 19 Node tests, seven scenario pairs, UI/context/syntax and
+whitespace checks pass. Chrome passes ten folder cases plus downloads/reload/
+playback and 161 stretch cases, with no page errors. The remaining patient link
+has a 240px width budget after its old 180px singleton width caused no-fit at
+768×1024. Focused review has no findings; see VERIFICATION.md.
+
+Entry: clean canonical main at `ba7efdb`, matching refreshed origin/main.
+The concurrent instruction-evidence owner advanced main/origin to `7bbd231`
+without including these edits. No blocker is known. Next action: publish this
+verified increment under the standing authorization. Overall real H10/headset,
+physical-phone sharing and listening acceptance remain open.
+
 ## Prompt live publication is standard — 2026-11-06
 
 The user requires future agents to push completed verified changes to the live
