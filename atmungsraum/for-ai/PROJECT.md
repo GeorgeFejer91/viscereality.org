@@ -15,14 +15,21 @@ owners. No participant writer or audio behavior changes belong to this task.
 - [x] Verify 149 responsive/Pretext/text/focus cases, ten folder/download cases,
   two unavailable-measurement fallbacks, all 19 Node tests, seven scenario pairs
   and UI/context checks. Independent review has no actionable findings.
-- [ ] Commit/push and verify the exact Pages deployment and live assets.
+- [x] Commit/push and verify the exact Pages deployment and live assets:
+  layout commit `f2d683c74bf1c32d56f36f183d27b31dc1938829` is included in
+  `b164c805c1df1b43f565d3ee69aeffda53eb7307`, successful Pages run `42213877838`.
+  All seven changed public files match Git bytes and both entry URLs return 200.
+  All 149 live layout cases and ten live folder cases pass with no page errors.
 
 Entry: canonical main at `a792da7`, with existing belt-glow changes preserved;
 their owner committed them separately as `7e07b9c` during this task. RTK is absent;
-bounded native commands are used. The shared local server disappeared during
-initial folder playback QA; a dedicated server and fresh full suites pass.
-Publication remains active. Overall real H10/headset, physical phone
-sharing and listening acceptance remain open.
+bounded native commands are used. A concurrent documentation update superseded
+the first Pages run; its successful descendant above contains the exact layout.
+At live verification main/origin both match `b164c80`, with a clean working tree
+before this documentation-only closing evidence. This UI increment is complete
+with no blocker; publish/check the closing evidence under the standing rule.
+Next overall acceptance actions remain real H10/headset, physical-phone sharing
+and listening checks; those product goals stay open.
 
 ## Coherent Polar belt and frame glow — 2026-11-06
 

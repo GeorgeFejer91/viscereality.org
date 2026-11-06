@@ -20,8 +20,19 @@ were visually inspected. All QA artifacts remain ignored in `output/playwright/`
 (`check-proportions.mjs`, `proportions-results.json`, `proportions-files.json`).
 Physical phones, Safari/WebViews and assistive technology remain unqualified.
 Two missing-module/Intl cases retain readable full-label reflow and successful
-form navigation. Independent review finds no actionable issues. Exact-commit
-deployment and live checks remain the next release actions.
+form navigation. Independent review finds no actionable issues.
+
+Layout commit `f2d683c74bf1c32d56f36f183d27b31dc1938829` is published within
+`b164c805c1df1b43f565d3ee69aeffda53eb7307`. Its exact Pages run
+[42213877838](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42213877838)
+succeeded; the first layout run was automatically superseded by this concurrent
+documentation update. All seven changed public files match Git bytes and both
+entry URLs return 200. All 149 live layout cases and ten live folder cases pass
+with no page errors. Receipts are `proportions-live-results.json`,
+`proportions-files-live.json` and `live-release-assets-b164c80.json` in the same
+ignored directory. Main/origin match `b164c80` with a clean tree before this
+closing evidence update. Publish/check this documentation-only follow-up under
+the standing rule; report its exact final Git/deployment state at handoff.
 
 ## Polar artwork and frame glow — 2026-11-06
 
