@@ -35,7 +35,15 @@ All 12 shared WAVs and six JSONs preload once; missing-calibration failure/retry
 works. No page errors occurred. Screenshots were inspected. Independent final
 review found no actionable runtime issue and confirmed original nine WAV bytes.
 Current ignored evidence is output/playwright/calibration-final-* and the
-scenario-offline JSON reports. GitHub/Pages publication is the remaining gate.
+scenario-offline JSON reports. Feature publication passed: commit 23b5f2821eb5d0fd13bdc71af7075268fd3b2e30,
+Pages run 42225450192, successful/built for the exact commit. All 54 changed public
+files match committed bytes, both entry URLs return 200, and all three removed
+main10 asset/review URLs return 404. Live Chrome repeated all five flow checks and
+18 main/root text cases with no errors, including real 26/41-second calibration
+boundaries, clock freeze/resume, timing event/null measurement, CSV phases and
+900-second budget, replay and missing-asset retry. Local/remote main match the
+feature SHA at this evidence write. The closing documentation follows the same
+publication rule; runtime acceptance is complete.
 Physical audio timing, listening acceptance and hardware calibration remain open.
 
 ## Responsive proportions — 2026-11-06

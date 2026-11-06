@@ -30,7 +30,7 @@ fabricated from synthetic ECG. See audio/calibration.md.
   six scenario pairs, UI state and context checks. Preserve pause/resume/identity.
 - [x] Verify current native offline renders, responsive/Pretext layout, actual
   browser calibration transitions/CSV and timing hook, then final independent review.
-- [ ] Commit/push and verify exact Pages deployment and affected live assets/flow.
+- [x] Commit/push and verify exact Pages deployment and affected live assets/flow.
 
 Entry: clean canonical main at 64341d9; continuing publication authority applies.
 RTK is unavailable, so bounded native commands are used. No prior feature push
@@ -42,8 +42,18 @@ error; 137 responsive/Pretext cases and 18 main/root enlarged/localized text cas
 five actual playback routes, advance timing hook, CSV phases/duration, calibration
 entry/exit at 26/41 s, pause/resume/replay and missing-audio retry. Independent
 review found no runtime issues and confirmed original nine WAVs unchanged.
-Next action: commit/push and verify exact Pages/live deployment. The product
-H10/headset, physical-phone and listening acceptance goals remain open.
+Publication verified: feature commit 23b5f2821eb5d0fd13bdc71af7075268fd3b2e30,
+Pages run 42225450192 completed successfully; Pages API reports built for that
+exact commit. All 54 changed public files match Git bytes and both entry URLs
+return 200. Removed main10 JSON/CSV/review URLs return 404. Live Chrome passes all
+five playback routes and 18 enlarged/localized text cases, including direct main,
+actual 26/41-second calibration transitions, pause/resume, CSV phases/duration,
+replay and missing-asset recovery, with no page errors. Live screenshot inspected.
+At this evidence write main/origin both match 23b5f28 and source is clean; these
+closing notes are the only pending changes. Publish/check this documentation
+increment under the standing rule. No runtime blocker remains. Next product
+work is real H10 accelerometer/ECG and headset integration, physical-phone
+qualification and human listening acceptance; those overall goals remain open.
 
 ## Responsive proportions — 2026-11-06
 

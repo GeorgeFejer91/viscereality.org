@@ -8,7 +8,7 @@ CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`
 
 **Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute
 sequence. Instruction 1 (26 s), Calibration (15 s), Instruction 2 (40 s), fifty
-complete 16-second cycles (800 s) and Outro (19 s) total900 seconds. There is no
+complete 16-second cycles (800 s) and Outro (19 s) total 900 seconds. There is no
 baseline, main duration menu or between-cycle-block rest. See [the German
 transcript, asset classes and Respyra comparison](calibration.md). Calibration
 runs at 26–41 seconds and exposes an advance event/receipt for later H10
