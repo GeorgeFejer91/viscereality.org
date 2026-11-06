@@ -144,6 +144,66 @@ The 30-second signal-loss deadline is unchanged. Evidence remains ignored in
 `polar-release-c2356be.json`. The generic Node asset fetch hit a connection
 timeout; the exact-byte check completed with Python's standard HTTPS client.
 
+## Automatic Wormhole upload and Discord — 2026-11-06/07
+
+The user-selected route now supports browser ZIP encryption/upload, local QR
+and automatic notification to a privately configured fixed Discord webhook.
+Saved-record/CSV identity and the ZIP writer remain unchanged. See the active
+PROJECT checklist and sharing/README.md for installation/account acceptance.
+
+All45 Node tests in the current worktree pass (including four separate PWA
+installation tests); UI-state/context and whitespace checks pass.
+TDD observations: missing upload client/routes fail before implementation;
+the real Backblaze upload path's two opaque suffix segments produce a failing
+regression before the allowlist correction. Two-pass encryption tests upload a
+9 MiB synthetic ZIP in two pieces, independently decrypt all bytes, verify
+metadata/piece hashes, restrict contacted hosts and require final completion
+acknowledgement. Worker tests cover origin/auth, bounded bodies, fixed recipient,
+unsafe links/storage endpoints, token isolation, provider failures and redirects.
+A Cloudflare deployment initially failed before network I/O because workerd
+rejects `redirect:error`. Official [Workers Request documentation](https://developers.cloudflare.com/workers/runtime-apis/request/)
+confirms `manual` is required. Worker-only fetches now use manual and reject
+3xx; browser fetches keep error mode. Regression assertions fail before this
+change and pass after it. Independent review finds no remaining blocker.
+
+Native Chrome passes five automatic-sharing layouts (320×568,390×844,568×320,
+844×390,1920×1080), four forwarding layouts, seven manual QR layouts and ten
+existing file-dialog cases. Checks cover missing settings/no request, confirmed
+upload/QR, notification failure then send-only retry, retained share after
+close/reopen, unchanged-archive reuse, new-record invalidation, failed/cancelled
+upload, downloadable fallback, missing/delayed QR module, independent QR decode,
+clipboard denial, enlarged text/spacing, Pretext, focus and no horizontal dialog
+overflow. Review found Cancel hid the focused button; browser regression was
+observed red then green after focus returned to the upload button. One earlier
+forwarding layout run and two initial loading checks were rerun after concurrent
+PWA edits settled; all affected checks pass. No page errors or external QR
+requests occur. Screenshots/fixtures remain ignored under output/playwright/.
+
+Real network evidence uses synthetic data only:
+
+- Production client + Worker handler running locally uploads a160-byte test ZIP
+  to actual Wormhole/Backblaze; independent download/decryption and official
+  Wormhole UI download both match its ZIP bytes. The authorized Discord test
+  message is acknowledged and read back with the full keyed URL.
+- Native Chrome at the canonical site origin (local source routed for this
+  prepublication check) reaches the actually deployed Cloudflare Worker,
+  uploads two encrypted pieces and receives Wormhole completion200 and Discord
+  acceptance200. The exact message is read back and labelled as a synthetic
+  Cloudflare browser test. Independent download/decryption restores all9,437,363
+  ZIP bytes with SHA-256
+  `808a69e028c3d770bdda050982a035cdf04c0143df56f16908f3e8df11097a6f`.
+  No participant data, webhook/access keys or keyed links enter public evidence.
+
+Ignored receipts include `wormhole-network-verification.json`,
+`automatic-sharing-results.json`, `link-forwarding-results.json`,
+`wormhole-results.json`, `files-auto-regression.json` and
+`cloudflare-browser-local-source.json`. Private receipts/configuration/claim
+links stay local. The Worker is on a temporary Cloudflare account; successful
+runtime verification does not establish durable ownership. The user must
+complete the claim within its window, or log in and redeploy. Physical phones,
+Safari and large real study archives remain unqualified. Exact Pages/public
+asset and browser verification follow publication in PROJECT.
+
 ## Wormhole ZIP handoff and local QR — 2026-11-06
 
 The new folder-dialog action packages the existing saved CSVs and guides manual

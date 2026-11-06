@@ -99,6 +99,62 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
+## Automatic Wormhole upload → Discord — active goal, 2026-11-06
+
+The user supplies a Discord webhook and explicitly requests automatic forwarding
+of Wormhole URLs. The share button packages every saved browser export into the
+existing ZIP, encrypts/uploads it to Wormhole, retains its link/local QR and
+forwards the complete keyed URL to that fixed destination. Keep manual upload,
+native sharing and downloads. Recording/identity/filenames are unchanged.
+
+- [x] TDD bounded authenticated Worker notification and restricted upload routes;
+  fixed destination, private secrets, exact site Origin and no provider-error logs.
+- [x] Implement interoperable browser encryption/upload using official pinned MIT
+  crypto, two passes over an immutable ZIP and bounded 8 MiB ciphertext pieces.
+  Acknowledge final service completion before showing or forwarding a share.
+- [x] Integrate accessible progress/cancel/configuration/retry. Preserve confirmed
+  link/QR in page memory for unchanged data; Discord retry does not reupload.
+  Clear dialog credentials and stale results; retain all manual/download paths.
+- [x] Real synthetic Wormhole/Backblaze upload, independent decrypted ZIP equality,
+  official Wormhole browser download and authorized Discord message/readback.
+- [x] Deploy Cloudflare Worker with private destination/access-key secrets to a
+  temporary preview account; provide ignored private claim/connection setup page.
+- [x] Deployed-Worker browser E2E and independent review pass; public Pages
+  source/live behavior still require publication verification.
+- [ ] Publish verified source/docs; follow exact Pages deployment/live checks.
+- [ ] User must complete Cloudflare account claim/login for durable hosting and
+  connect their operator browser. Physical phone behavior remains unqualified.
+
+Entry baseline was `5ae2d5f`; concurrent PWA commits through `b16a49a` are
+preserved. Current worker preview was deployed at approximately 22:54 UTC;
+claim must complete within its 60-minute Cloudflare window. Claim URL and
+operator access key are in the ignored local `sharing/.dev.vars.setup.html`;
+webhook/access secrets are in ignored `.dev.vars`, not public source. The user
+has been given the private setup page and the claim-completion question is pending.
+No connected permanent Cloudflare credential was present. This preview is not
+proof of permanent hosting. Next: publish verified files, check exact Pages/live behavior, and collect
+the account claim result; do not mark the overall goal complete on
+mocked tests or a temporary deployment alone.
+
+The first real network test runs the production Worker handler locally with
+real outbound providers. It sends only a harmless 160-byte synthetic ZIP, restores
+it byte-for-byte (SHA-256 `b5410588aad3b0c2fb1026215de366b2d602d8aae8753de8f788ef9798f6df40`),
+then posts one clearly labelled synthetic test link to the supplied Discord
+webhook and verifies its message readback. A separate Chrome test downloads
+the exact same ZIP through the actual Wormhole page. All participant data stays
+untouched. Independent review finds one Cancel focus defect, reproduced red
+then fixed; no encryption/authentication/data-integrity findings. Test/deployment
+evidence and remaining limitations are recorded in VERIFICATION.md. A real
+native Chrome test through the deployed Cloudflare Worker now uploads a
+9 MiB ZIP in two ciphertext pieces, obtains Wormhole/Discord acknowledgements, reads back
+the Discord message and independently decrypts the byte-identical ZIP. The
+Worker-specific redirect-mode defect was reproduced and fixed before this pass.
+No permanent ownership is inferred from the preview deployment.
+
+The earlier manual-only choice below is historical and superseded for this goal.
+FormBee's hosted-service closure (July 2026, official repository) rules it out.
+Notification alternatives were researched, but Discord is now the chosen route.
+
 ## Polar signal-loss scenario abort — 2026-11-06
 
 Outcome: more than 30 seconds of continuous missing ECG aborts the scenario and

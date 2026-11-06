@@ -98,14 +98,28 @@ relaunch, storage and lifecycle qualification distinct from desktop automation.
 On Android Chrome, use the browser menu's install action; on iPhone Safari,
 use Share → Add to Home Screen and enable Open as Web App when offered.
 
-Wormhole QR sharing remains a static-site handoff: ZIP download → upload on
-Wormhole → paste complete link → local QR. Do not mistake it for automatic
-upload or add a third-party QR/CORS proxy. `vendor/qrcode/README.md` pins the
-reviewed MIT encoder and package integrity; its `.js` filename preserves the
-module MIME type on local static servers. Navigation to Wormhole is explicit
-and opens a separate tab with no opener/referrer. Leaving the app during a live
-recording still follows the existing hidden-page abort policy. The context
-checker allows navigation links while retaining local-only runtime assets.
+Automatic Wormhole sharing uses the separately deployed `sharing/worker.js`,
+not GitHub Pages server code. Read [sharing/README.md](../sharing/README.md).
+Use ignored `.dev.vars` for the Discord webhook/access key and Wrangler's
+`deploy --secrets-file .dev.vars` after account login. No paid binding is needed
+for Discord. A temporary preview must be claimed within 60 minutes; it is not
+permanent hosting evidence. Never publish claim links, keys, keyed share URLs,
+provider responses or participant files. Review intended paths and scan staged
+blobs against local secrets before publishing. Keep observability disabled.
+
+Preserve manual ZIP upload → paste link → local QR and native/download fallback.
+`vendor/qrcode/README.md` and `vendor/wormhole-crypto/README.md` pin MIT runtime
+sources/licenses. Regenerate crypto with `node for-ai/scripts/vendor-wormhole.mjs`;
+verify the package integrity, localized imports and licenses. Runtime module
+filenames use `.js` for local-server MIME compatibility. No public CORS proxy
+or third-party QR renderer is used. Navigation to Wormhole opens a separate tab
+with no opener/referrer; leaving a live recording follows the existing hidden-page
+abort policy. Synthetic network tests must be explicit, use no participant data,
+verify the downloaded ZIP bytes and destination message, and keep private receipts
+ignored. Provider-accepted upload and notification are distinct outcomes.
+Workers' fetch runtime rejects `redirect:error`; use `manual` and reject non-2xx
+responses before accepting a provider result. Browser requests can use error.
+Verify the deployed runtime, not only Node mocks.
 
 ## Participant data and mock ECG
 

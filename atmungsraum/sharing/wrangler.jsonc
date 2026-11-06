@@ -1,0 +1,11 @@
+{
+  "name": "atmungsraum-sharing",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-06",
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "vars": {
+    "ALLOWED_ORIGIN": "https://viscereality.org",
+    "DESTINATION": "discord"
+  }
+}

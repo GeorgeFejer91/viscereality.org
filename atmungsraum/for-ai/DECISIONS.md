@@ -14,6 +14,20 @@ standalone mode. Consent alone is not an installation receipt. Escape closes
 help without reaching the session's abort shortcut; focus returns coherently.
 No service worker, dependency or participant-data writer is added.
 
+## 2026-11-06 — Automatic Wormhole ZIP upload and private Discord destination
+
+The user supplies a Discord webhook and requests automatic URL delivery.
+Preserve plain JavaScript and the existing ZIP writer; add a narrow authenticated
+Cloudflare Worker for Wormhole's CORS restriction and fixed-destination delivery.
+Secrets never enter public source. Use pinned official MIT Wormhole encryption
+with a fresh key/salt per immutable ZIP, bounded ciphertext pieces and provider
+completion acknowledgement. Retain confirmed shares in page memory, without
+persisting private URLs or dialog credentials. Discord retry reuses the URL.
+Manual upload/QR, individual downloads and native ZIP sharing stay available.
+Temporary Cloudflare deployment is useful for real verification but must be
+claimed within its window for durable ownership. See sharing/README.md and the
+active PROJECT checklist. This supersedes the earlier manual-only sharing scope.
+
 ## 2026-11-06 — Smartphone PWA is the primary delivery target
 
 The user explicitly makes a progressive web app for smartphones the primary

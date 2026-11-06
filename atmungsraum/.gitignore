@@ -1,5 +1,8 @@
 node_modules/
 output/
+.wrangler/
+.dev.vars*
+.env*
 # Participant exports, if the operator chooses a folder inside the checkout.
 session-data/
 # Local source recordings, transcripts, and downloader dependencies.

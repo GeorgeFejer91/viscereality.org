@@ -156,32 +156,50 @@ supported; recipients/apps are chosen by the user. Unsupported/rejected sharing
 retains a ZIP download for manual attachment. No mailto attachment workaround,
 automatic transmission or server upload is involved. Cancel leaves files intact.
 
-The explicit **Per QR-Code teilen** action adds a Wormhole handoff in this same
-dialog: download the prepared ZIP, open `https://wormhole.app/`, upload it there,
-then paste the complete returned URL (including its `#` decryption key) and
-choose **QR-Code anzeigen**. Upload and link copying are manual; this is not a
-one-click upload integration. Wormhole currently rejects `/api/room` CORS
-preflight from the site (405, no allow-origin header), and GitHub Pages has no
-upload backend. On 2026-11-06 the user explicitly selected this handoff route;
-no hosted backend or alternative provider is required for the accepted scope.
-Do not use a public CORS proxy or claim an upload succeeded without a service
-acknowledgement.
+The explicit **Per QR-Code teilen** action offers automatic Wormhole upload
+through an authenticated Cloudflare Worker, followed by local QR generation and
+optional automatic forwarding to the fixed destination configured in that Worker.
+The user's 2026-11-06 choice is Discord. Its webhook is a private Worker secret;
+never put it in HTML/source. Setup is in [sharing/README.md](../sharing/README.md).
+A manual fallback remains: download the ZIP, upload it at `https://wormhole.app/`,
+paste the complete URL including its `#` key, then choose **QR-Code anzeigen**.
+Wormhole rejects site-origin upload CORS preflight; Pages alone cannot upload.
+
+Automatic upload reuses the exact same ZIP writer. A fresh per-upload key and
+salt encrypt its immutable Blob with official pinned `wormhole-crypto@0.3.1`.
+A first pass hashes encrypted 8 MiB pieces; a second pass uploads identical
+ciphertext through narrowly allowed Worker routes to Wormhole/Backblaze. The
+file key remains on the device during upload. No plaintext CSV is sent to the
+relay or storage provider. Only after upload completion acknowledgement does
+the app show the URL/QR and, when configured, send the full keyed URL to the
+Worker's fixed Discord destination. The relay and Discord then have access to
+that share. Provider acknowledgement is not proof of recipient access.
+
+Worker URL/access key are entered privately per dialog and cleared on close or
+collapse; neither is persisted in browser storage. A confirmed uploaded URL is
+retained only in page memory for the same exact saved records, restored after
+dialog reopening, and invalidated when those records change. Reload loses this
+receipt. Notification retry uses the existing URL without uploading again;
+successful sends are remembered in this page to suppress accidental repeats.
+No durable exactly-once delivery is promised. Check the destination after an
+uncertain timeout before retrying. Cancellation cannot undo a provider request
+already accepted. Existing uploads expire under the provider's rules; invalidating
+local UI does not delete or revoke the share.
 
 QR generation uses the local MIT `qrcode-generator@2.0.4` encoder under
 `vendor/qrcode/`, loaded only when needed. No remote QR service, automatic
-clipboard read, analytics or URL persistence is used. Accept only complete
-HTTPS links on the exact `wormhole.app` origin with a room and 128-bit base64url
-fragment; reject credentials, extra paths, queries and missing keys. This is
-format validation, not proof that the room exists, remains downloadable or
-contains this ZIP. QR copy/open actions use the whole URL. Closing/collapsing
-the flow, changing the input or refreshing the archive clears the old QR;
-closing/collapsing or archive refresh also clears the input. A failed QR-module
-load leaves the input and downloads available; clipboard denial selects the
-input for manual copying. No saved export is deleted. Anyone with the QR/link
-can access that Wormhole share while it is valid. Wormhole controls expiration
-and limits; no local countdown or availability promise is fabricated. See its
-[security design](https://wormhole.app/security), [FAQ](https://wormhole.app/faq)
-and [supported QR/share-target features](https://wormhole.app/roadmap).
+clipboard read or analytics is used. Accept only complete HTTPS links on the
+exact `wormhole.app` origin with a room and 128-bit base64url fragment; reject
+credentials, extra paths, queries and missing keys. Pasted-link validation is
+format validation, not proof of the room's existence, contents or availability.
+Copy/open actions use the whole URL. Editing, closing/collapsing or refreshing
+clears displayed links/QRs; an acknowledged automatic-upload receipt may restore
+the same share as described above. A failed QR module leaves the complete link,
+copy/open actions and downloads available. Clipboard denial selects the input
+for manual copying. No saved export is deleted. Anyone with the QR/link can
+access that Wormhole share while it is valid. Wormhole controls expiration,
+storage and download limits; no availability promise is fabricated. See its
+[security design](https://wormhole.app/security) and [FAQ](https://wormhole.app/faq).
 
 The browser controls the download destination and can block downloads; a click
 does not prove a file reached disk. Keep repeat-download links and surface

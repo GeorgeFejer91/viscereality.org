@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261106-pwa-controls">
+  <link rel="stylesheet" href="./style.css?v=20261107-auto-share">
   <script type="module" src="./pwa-install.js?v=20261106-pwa-controls"></script>
-  <script type="module" src="./app.js?v=20261106-pwa-controls"></script>
+  <script type="module" src="./app.js?v=20261107-auto-share"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -58,17 +58,37 @@
     <p id="files-share-hint" data-measure>Alle gespeicherten Dateien als ZIP herunterladen oder teilen.</p>
     <section id="wormhole-flow" aria-labelledby="wormhole-title" hidden>
       <h3 id="wormhole-title" data-measure>ZIP über Wormhole teilen</h3>
-      <p data-measure>1. ZIP herunterladen und auf Wormhole hochladen. Dort entsteht ein zeitlich begrenzter Download-Link.</p>
+      <div class="files-actions">
+        <button id="upload-wormhole" type="button" disabled><span data-measure>ZIP automatisch hochladen</span></button>
+        <button id="cancel-upload" type="button" hidden><span data-measure>Upload abbrechen</span></button>
+      </div>
+      <p id="upload-status" role="status" data-measure></p>
+      <p data-measure>Manuell teilen: ZIP herunterladen und auf Wormhole hochladen. Dort entsteht ein zeitlich begrenzter Download-Link.</p>
       <div class="files-actions">
         <button id="wormhole-download" type="button"><span data-measure>ZIP herunterladen</span></button>
         <a href="https://wormhole.app/" target="_blank" rel="noopener noreferrer" class="files-link"><span data-measure>Wormhole öffnen ↗</span></a>
       </div>
       <form id="wormhole-form" novalidate>
-        <label for="wormhole-link" data-measure>2. Vollständigen Wormhole-Link einfügen</label>
+        <label for="wormhole-link" data-measure>Vollständiger Wormhole-Link</label>
         <input id="wormhole-link" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="256" placeholder="https://wormhole.app/…#…" aria-describedby="wormhole-help wormhole-status" required>
         <p id="wormhole-help" data-measure>Den Link von Wormhole kopieren, einschließlich # und dem Schlüssel dahinter.</p>
         <button id="show-qr" type="submit"><span data-measure>QR-Code anzeigen</span></button>
       </form>
+      <details id="relay-settings">
+        <summary><span data-measure>Automatisches Teilen einrichten</span></summary>
+        <div class="relay-fields">
+          <p data-measure>Der eingerichtete Dienst lädt die verschlüsselte ZIP auf Wormhole und leitet den Link an dein festgelegtes Ziel weiter.</p>
+          <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Cloudflare einrichten ↗</span></a>
+          <label for="relay-endpoint" data-measure>Adresse des Cloudflare-Workers</label>
+          <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-sharing.…workers.dev" aria-describedby="relay-help">
+          <label for="relay-token" data-measure>Zugangsschlüssel</label>
+          <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
+          <p id="relay-help" data-measure>Der Schlüssel wird nur hier im geöffneten Dialog verwendet und beim Schließen gelöscht. Das Ziel wird im Worker festgelegt.</p>
+          <label class="relay-auto"><input id="relay-auto" type="checkbox" checked><span data-measure>Neue Links automatisch weiterleiten</span></label>
+          <button id="relay-send" type="button" disabled><span data-measure>Link weiterleiten</span></button>
+          <p id="relay-status" role="status" data-measure></p>
+        </div>
+      </details>
       <p id="wormhole-status" role="status" data-measure></p>
       <figure id="wormhole-result" hidden>
         <img id="wormhole-qr" width="294" height="294" alt="QR-Code für den vollständigen Wormhole-Download-Link">

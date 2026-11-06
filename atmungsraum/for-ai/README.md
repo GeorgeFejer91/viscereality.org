@@ -69,10 +69,14 @@ every screen and is the sole visible entry to collected data; no separate
 CSV-Dateien footer button is shown. It offers individual downloads, one all-file
 ZIP, and native file sharing to available email/messaging apps, with a download fallback.
 It lists this browser's saved exports rather than the OS Downloads directory.
-Its **Per QR-Code teilen** flow prepares the same ZIP, guides manual upload on
-Wormhole, then renders a pasted complete Wormhole link as a locally generated
-QR code. The user selected this handoff route; no backend is required. See
-[the sharing boundary](DATA-LOGGING.md).
+Its **Per QR-Code teilen** flow can encrypt/upload the ZIP to Wormhole through
+an authenticated Cloudflare Worker, display a local QR and automatically send
+the full link to the user's fixed Discord webhook. Secrets stay in private
+Worker configuration. Operator connection settings are per dialog; acknowledged
+shares remain only in page memory. Manual upload/pasted-link QR and ordinary
+downloads remain available. See [sharing setup](../sharing/README.md) and
+[the data boundary](DATA-LOGGING.md). Durable Cloudflare account ownership and
+physical-phone qualification are recorded separately in PROJECT/VERIFICATION.
 
 Read common rules first, then the documents needed for the task:
 
