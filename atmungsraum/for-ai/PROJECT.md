@@ -13,12 +13,17 @@ skill indexes and WORKFLOW.md route to that single authority.
 - [x] Update the existing root/subproject instructions and decision owner.
 - [x] Run scoped context and Git whitespace checks; review the eight-file
   instruction-only diff. No runtime regression suite is needed for prose changes.
-- [ ] Push and confirm the exact live deployment; record release evidence and
-  final synchronization.
+- [x] Push `ba7efdbfe225f1cd2d3d88cc5a5398069dd2269e`; Pages run `42202202945`
+  succeeded. All eight public changed files match Git bytes and both site entry
+  URLs return 200. Context/remote equality checks pass.
 
-This is an instruction-only change. No product runtime or participant data
-changes are needed. No blocker is known. Next action is scoped verification and
-publication; the overall H10/headset/physical-phone/listening goals remain open.
+This instruction-only release is verified live. No blocker remains for the rule.
+Observed main and origin/main both `ba7efdb` before this closing evidence update;
+the separate folder-only task has since added unfinished changes in shared files.
+Preserve those changes and stage only this task's evidence. Push this evidence
+follow-up and verify its deployment before handoff. The overall H10/headset/
+physical-phone/listening goals remain open; their acceptance is the next product
+action. Live receipts remain ignored in `output/playwright/live-release-assets-ba7efdb.json`.
 
 ## Publish folder/sharing and standing workflow instruction — 2026-11-05
 
