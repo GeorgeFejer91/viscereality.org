@@ -24,7 +24,17 @@ retains the centered content lane. The former 161-case suite's blanket bounded
 assertion is not applicable to these revised minimums. Physical devices and
 screen readers remain unqualified. Screenshots were visually inspected; local
 receipts/scripts remain ignored in `output/playwright/large-corners-results.json`
-and `corners-files-local-results.json`. Publication is pending.
+and `corners-files-local-results.json`.
+
+Release `0a3c99a83301c3650d79dca1f88a52389494b2c8` is pushed and live. Pages run
+[42208617785](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42208617785)
+succeeded. All eight published files match Git bytes, including the exact Polar
+image; both entry URLs return 200. The live 85-case corner matrix and ten-case
+folder suite both pass without page errors, including download/reload/playback
+behavior. Main/origin match with a clean tree before this closing evidence update.
+Live receipts are `large-corners-live-results.json`, `corners-files-live-results.json`
+and `live-release-assets-0a3c99a.json` in the same ignored directory. Publish/check
+the closing documentation-only evidence under the standing rule.
 
 ## Folder-only data entry — 2026-11-06
 

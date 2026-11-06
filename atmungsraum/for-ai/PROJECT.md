@@ -15,11 +15,17 @@ No standalone belt SVG was located in the searched publication/dissertation tree
   fixed positions, all menus, signal states and folder/playback behavior.
   All 19 Node tests, seven scenario pairs, UI/context/whitespace, 85 new rendered
   cases and ten folder cases pass. Review has no actionable findings.
-- [ ] Commit/push and confirm the exact Pages deployment and affected live assets.
+- [x] Commit/push and confirm the exact Pages deployment and affected live assets:
+  `0a3c99a83301c3650d79dca1f88a52389494b2c8`, successful Pages run `42208617785`.
+  All eight published files match Git bytes; both entry URLs return 200. The 85
+  live corner cases and ten live folder cases pass with no page errors.
 
-Entry: clean main/origin at `c962c20`. No blocker is known; next action is publication
-under the standing rule. See VERIFICATION.md for the revised reflow boundary.
-Real H10/headset, physical-phone sharing and listening acceptance remain open.
+Entry: clean main/origin at `c962c20`. At live verification, local/remote main
+match `0a3c99a` with a clean tree before this closing documentation-only update.
+The requested increment is complete with no blocker; publish/check the closing
+evidence under the standing rule. See VERIFICATION.md for the revised reflow
+boundary. Next product acceptance actions remain real H10/headset,
+physical-phone sharing and listening checks; those goals stay open.
 
 ## Folder-only data entry — 2026-11-06
 
