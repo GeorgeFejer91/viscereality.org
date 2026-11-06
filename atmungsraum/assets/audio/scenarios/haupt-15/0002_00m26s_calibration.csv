@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+2,0002_00m26s_calibration.wav,calibration,calibration,26.0,15.0,41.0,1146600,661500,,,silent-placeholder,no-speech,

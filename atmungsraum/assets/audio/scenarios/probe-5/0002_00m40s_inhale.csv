@@ -1,0 +1,11 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+2,0002_00m40s_inhale.wav,inhale,inhale,40.0,4.0,44.0,1764000,176400,1,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+6,0002_00m40s_inhale.wav,inhale,inhale,56.0,4.0,60.0,2469600,176400,2,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+14,0002_00m40s_inhale.wav,inhale,inhale,88.0,4.0,92.0,3880800,176400,4,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+18,0002_00m40s_inhale.wav,inhale,inhale,104.0,4.0,108.0,4586400,176400,5,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+26,0002_00m40s_inhale.wav,inhale,inhale,136.0,4.0,140.0,5997600,176400,7,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+30,0002_00m40s_inhale.wav,inhale,inhale,152.0,4.0,156.0,6703200,176400,8,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+38,0002_00m40s_inhale.wav,inhale,inhale,184.0,4.0,188.0,8114400,176400,10,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+42,0002_00m40s_inhale.wav,inhale,inhale,200.0,4.0,204.0,8820000,176400,11,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+50,0002_00m40s_inhale.wav,inhale,inhale,232.0,4.0,236.0,10231200,176400,13,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+54,0002_00m40s_inhale.wav,inhale,inhale,248.0,4.0,252.0,10936800,176400,14,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.

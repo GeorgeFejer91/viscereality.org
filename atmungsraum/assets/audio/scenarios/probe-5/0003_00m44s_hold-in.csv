@@ -1,0 +1,16 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+3,0003_00m44s_hold-in.wav,hold_in,hold_in,44.0,4.0,48.0,1940400,176400,1,1,silent-placeholder,awaiting-wording-approval,Und halten.
+7,0003_00m44s_hold-in.wav,hold_in,hold_in,60.0,4.0,64.0,2646000,176400,2,1,silent-placeholder,awaiting-wording-approval,Und halten.
+11,0003_00m44s_hold-in.wav,hold_in,hold_in,76.0,4.0,80.0,3351600,176400,3,1,silent-placeholder,awaiting-wording-approval,Und halten.
+15,0003_00m44s_hold-in.wav,hold_in,hold_in,92.0,4.0,96.0,4057200,176400,4,1,silent-placeholder,awaiting-wording-approval,Und halten.
+19,0003_00m44s_hold-in.wav,hold_in,hold_in,108.0,4.0,112.0,4762800,176400,5,1,silent-placeholder,awaiting-wording-approval,Und halten.
+23,0003_00m44s_hold-in.wav,hold_in,hold_in,124.0,4.0,128.0,5468400,176400,6,1,silent-placeholder,awaiting-wording-approval,Und halten.
+27,0003_00m44s_hold-in.wav,hold_in,hold_in,140.0,4.0,144.0,6174000,176400,7,1,silent-placeholder,awaiting-wording-approval,Und halten.
+31,0003_00m44s_hold-in.wav,hold_in,hold_in,156.0,4.0,160.0,6879600,176400,8,1,silent-placeholder,awaiting-wording-approval,Und halten.
+35,0003_00m44s_hold-in.wav,hold_in,hold_in,172.0,4.0,176.0,7585200,176400,9,1,silent-placeholder,awaiting-wording-approval,Und halten.
+39,0003_00m44s_hold-in.wav,hold_in,hold_in,188.0,4.0,192.0,8290800,176400,10,1,silent-placeholder,awaiting-wording-approval,Und halten.
+43,0003_00m44s_hold-in.wav,hold_in,hold_in,204.0,4.0,208.0,8996400,176400,11,1,silent-placeholder,awaiting-wording-approval,Und halten.
+47,0003_00m44s_hold-in.wav,hold_in,hold_in,220.0,4.0,224.0,9702000,176400,12,1,silent-placeholder,awaiting-wording-approval,Und halten.
+51,0003_00m44s_hold-in.wav,hold_in,hold_in,236.0,4.0,240.0,10407600,176400,13,1,silent-placeholder,awaiting-wording-approval,Und halten.
+55,0003_00m44s_hold-in.wav,hold_in,hold_in,252.0,4.0,256.0,11113200,176400,14,1,silent-placeholder,awaiting-wording-approval,Und halten.
+59,0003_00m44s_hold-in.wav,hold_in,hold_in,268.0,4.0,272.0,11818800,176400,15,1,silent-placeholder,awaiting-wording-approval,Und halten.

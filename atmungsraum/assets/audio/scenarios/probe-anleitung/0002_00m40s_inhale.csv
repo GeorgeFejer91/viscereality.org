@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+2,0002_00m40s_inhale.wav,inhale,inhale,40.0,4.0,44.0,1764000,176400,1,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.

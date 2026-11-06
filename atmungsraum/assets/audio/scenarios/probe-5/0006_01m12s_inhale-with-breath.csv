@@ -1,0 +1,6 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+10,0006_01m12s_inhale-with-breath.wav,inhale,inhale_breath,72.0,4.0,76.0,3175200,176400,3,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+22,0006_01m12s_inhale-with-breath.wav,inhale,inhale_breath,120.0,4.0,124.0,5292000,176400,6,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+34,0006_01m12s_inhale-with-breath.wav,inhale,inhale_breath,168.0,4.0,172.0,7408800,176400,9,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+46,0006_01m12s_inhale-with-breath.wav,inhale,inhale_breath,216.0,4.0,220.0,9525600,176400,12,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.
+58,0006_01m12s_inhale-with-breath.wav,inhale,inhale_breath,264.0,4.0,268.0,11642400,176400,15,1,silent-placeholder,awaiting-wording-approval,Einatmen. Zwei. Drei. Vier.

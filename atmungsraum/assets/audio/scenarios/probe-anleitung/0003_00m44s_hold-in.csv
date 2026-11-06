@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+3,0003_00m44s_hold-in.wav,hold_in,hold_in,44.0,4.0,48.0,1940400,176400,1,1,silent-placeholder,awaiting-wording-approval,Und halten.

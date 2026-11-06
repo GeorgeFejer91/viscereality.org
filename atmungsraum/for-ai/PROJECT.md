@@ -1,5 +1,35 @@
 # Project
 
+## Matching numbered audio / CSV / TXT groups — 2026-11-06
+
+The current request requires scenario-owned audio folders and matching numerical
+prefixes for each WAV, CSV and TXT. Reuse `assets/audio/scenarios/haupt-15/`
+and the four `probe-*` folders; `box-20/` remains an engine-only diagnostic.
+The latest remote already implements independent numbered WAV/JSON/TXT cues.
+Complete that structure with one same-basename CSV per cue, listing every
+occurrence in the authored timeline. Keep first-use numbering and first-onset
+timestamps, with the complete playlist/timeline specifying repeated cycles.
+No wording, audio bytes, runtime paths or protocol timings need to change.
+
+- [x] Reconcile with the newer scenario-placeholder release; preserve the older
+  local draft snapshot in Git stash `codex/pre-scenario-folder-sync-2026-11-06`.
+- [x] Baseline: 22 Node tests, six JSON/CSV pairs and 53 packages pass.
+- [x] New sidecar regression fails on all 53 missing per-cue CSV files.
+- [x] Extend the existing packager, generate matching CSVs, document the order,
+  and verify each occurrence, transcript, status and frame time.
+- [ ] Review, commit/push, verify exact Pages deployment and live sidecars,
+  then open the current scenario library for the user.
+
+Entry: main synchronized to `eafec8a`; clean after integrating the newer remote.
+Previous Pages run `42241115947` timed out; recovery run `42243359695` is queued.
+Current evidence: all 53 matching sidecars cover the 890 authored events; the
+Python regression, generator check, all 22 Node tests, six scenario JSON/CSV
+pairs, UI state/context and whitespace checks pass. WAVs, authoritative JSON,
+playlists and runtime source are unchanged. Independent review found no issues
+and separately confirmed that the 53 CSVs partition all 890 events exactly once.
+Next action: publish and verify exact live sidecars. Wording approval and the overall
+real sensor/headset/listening acceptance goals remain open.
+
 ## Scenario folders and working silent-placeholder UI — 2026-11-06
 
 The latest user requests authorize silent WAV placeholders now so the UI works;

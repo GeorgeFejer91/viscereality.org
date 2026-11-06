@@ -1,5 +1,25 @@
 # Verification
 
+## Numbered per-cue CSV sidecars — 2026-11-06
+
+Each of the 53 existing scenario WAV/TXT/JSON groups now has a same-basename CSV.
+The first-use numerical prefix and onset timestamp remain unchanged. Each CSV
+lists every occurrence of that cue, accounting for all 890 authored events
+across the five menu scenarios and the separate 20-minute diagnostic. No audio,
+runtime JavaScript, protocol JSON or playlist bytes changed in this increment.
+
+The new Python regression first failed on all 53 missing CSVs, then passed after
+generation. `python -m unittest discover -s tests -p test_scenario_assets.py`
+independently parses each CSV with the standard CSV reader and checks prefixes,
+onsets, every global event order, frame/second times, cycle/block annotations,
+matching TXT words and explicit audio/script status against the source plans.
+`python tools/build-scenario-placeholders.py --check`, all 22 Node tests,
+six scenario JSON/CSV pairs, UI state/context and whitespace checks pass.
+Rendered UI/audio reruns are unnecessary for these data/documentation sidecars;
+runtime, audio and scheduled events are unchanged. Publication checks follow.
+Independent review found no actionable issues and separately audited all 890
+events, confirming each is represented exactly once across the 53 cue CSVs.
+
 ## Scenario-owned silent placeholders — 2026-11-06
 
 The current UI uses53 independent silent WAV/JSON/TXT cue groups across six

@@ -2,12 +2,15 @@
 
 The UI's current asset folder is
 [`assets/audio/scenarios/`](../assets/audio/scenarios/). Each scenario owns
-numbered unique silent placeholder WAVs with adjacent JSON/TXT, asset and
+numbered unique silent placeholder WAVs with same-basename CSV/TXT/JSON, asset and
 timeline CSVs, a manifest and a playlist. Sort by Name ascending for first-use
 order. All cue durations are final protocol slots; the main scenario totals
 exactly 15 minutes. These placeholders make the UI usable while final speech
 waits for wording approval. TXT files in these folders are draft scripts;
 metadata explicitly distinguishes them from the silent WAVs' empty spoken text.
+Each cue's CSV lists every occurrence in the scenario, using its global playback
+order, exact frame/second times and matching draft words. Repeated cues appear
+in the complete timeline/playlist rather than as duplicate audio files.
 See [scenario documentation](../audio/scenarios/README.md).
 
 Every project-library WAV/MP3 now has a same-basename TXT containing only its

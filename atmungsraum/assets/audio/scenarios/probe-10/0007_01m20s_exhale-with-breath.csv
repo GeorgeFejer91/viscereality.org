@@ -1,0 +1,12 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+12,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,80.0,4.0,84.0,3528000,176400,3,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+24,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,128.0,4.0,132.0,5644800,176400,6,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+36,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,176.0,4.0,180.0,7761600,176400,9,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+48,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,224.0,4.0,228.0,9878400,176400,12,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+60,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,272.0,4.0,276.0,11995200,176400,15,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+72,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,320.0,4.0,324.0,14112000,176400,18,1,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+85,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,388.0,4.0,392.0,17110800,176400,21,2,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+97,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,436.0,4.0,440.0,19227600,176400,24,2,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+109,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,484.0,4.0,488.0,21344400,176400,27,2,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+121,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,532.0,4.0,536.0,23461200,176400,30,2,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.
+133,0007_01m20s_exhale-with-breath.wav,exhale,exhale_breath,580.0,4.0,584.0,25578000,176400,33,2,silent-placeholder,awaiting-wording-approval,Ausatmen. Zwei. Drei. Vier.

@@ -12,7 +12,7 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
-- Scenario assets (2026-11-06): every scenario owns numbered unique WAV/JSON/TXT cues under `atmungsraum/assets/audio/scenarios/`, with asset/timeline CSVs, manifest and playlist. All current runtime cues are silent placeholders, explicitly authorized for a working UI; TXT is intended draft wording and spoken text remains empty. Final narration still requires wording approval. Main goes directly to one exact 15-minute sequence; its breathing window remains 26–41 seconds. See the scenario README.
+- Scenario assets (2026-11-06): every scenario owns numbered unique WAV/CSV/TXT/JSON groups under `atmungsraum/assets/audio/scenarios/`, with asset/timeline CSVs, manifest and playlist. Same-basename per-cue CSVs list all chronological occurrences with exact timing and matching draft words; names encode first-use order and onset, while the full playlist/timeline records repeated cycles. All current runtime cues are silent placeholders, explicitly authorized for a working UI; TXT is intended draft wording and spoken text remains empty. Final narration still requires wording approval. Main goes directly to one exact 15-minute sequence; its breathing window remains 26–41 seconds. See the scenario README.
 
 - Audio scripts (2026-11-06): each library WAV/MP3 requires an adjacent exact-
   wording TXT, including empty TXT for silent/breath-only assets. Prepare text

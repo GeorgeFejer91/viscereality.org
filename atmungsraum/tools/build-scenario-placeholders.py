@@ -117,6 +117,15 @@ def main():
         for meta in unique.values():
             meta['occurrence_count'] = len(meta['occurrence_offsets_frames'])
             put(folder / Path(meta['file']).with_suffix('.json'), encoded(meta))
+            put(folder / Path(meta['file']).with_suffix('.csv'), csv_bytes(
+                ['order', 'asset_file', 'event_id', 'asset_id', 'start_seconds', 'duration_seconds',
+                 'end_seconds', 'offset_frames', 'duration_frames', 'cycle', 'breathing_block',
+                 'audio_status', 'script_status', 'transcript_de'],
+                [[e['order'], e['file'], e['id'], e['asset'], e['offset_frames'] / rate,
+                  e['duration_frames'] / rate, (e['offset_frames'] + e['duration_frames']) / rate,
+                  e['offset_frames'], e['duration_frames'], e['cycle'], e['breathing_block'],
+                  meta['audio_status'], meta['script_status'], meta['text']]
+                 for e in timeline if e['file'] == meta['file']]))
         plan['audio_assets_base_directory'] = f'../../assets/audio/scenarios/{scenario}/'
         plan['audio_assets'] = registry
         put(path, encoded(plan))
@@ -142,7 +151,8 @@ def main():
             'Sort Name ascending: four-digit cue numbers follow first appearance.\n'
             'The filename timestamp is the first onset; repeated uses are in the timeline CSV.\n'
             'Open 0000_playlist.m3u8 for the complete ordered scenario.\n'
-            'Each WAV has a matching JSON and TXT; every scenario owns independent files.\n'
+            'Each WAV has a same-basename CSV, TXT and JSON; every scenario owns independent files.\n'
+            'The per-cue CSV lists every playback occurrence, exact frames, times and draft script.\n'
         ).encode('utf-8'))
         totals.append([scenario, frame / rate, len(unique), len(timeline)])
     put(output / '0000_INDEX.csv', csv_bytes(['scenario', 'duration_seconds', 'unique_cues', 'events'], totals))

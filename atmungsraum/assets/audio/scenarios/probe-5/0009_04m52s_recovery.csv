@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+63,0009_04m52s_recovery.wav,recovery,,292.0,8.0,300.0,12877200,352800,,,silent-placeholder,no-speech,

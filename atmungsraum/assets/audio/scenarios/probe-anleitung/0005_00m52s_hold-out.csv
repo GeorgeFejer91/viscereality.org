@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+5,0005_00m52s_hold-out.wav,hold_out,hold_out,52.0,4.0,56.0,2293200,176400,1,1,silent-placeholder,awaiting-wording-approval,Und halten.

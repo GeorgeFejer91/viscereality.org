@@ -131,10 +131,14 @@ Every final sequence must use its own `assets/audio/scenarios/<scenario>/` folde
 JSON/CSV pair in `audio/scenarios/`. JSON is the runtime authority; edit its
 frame-indexed events, then run `pnpm run scenarios:csv` and
 `pnpm run check:scenarios`. Do not add per-scenario full audio tracks or a
-calculated runtime fallback. Package one independent WAV/JSON/TXT per unique cue,
+calculated runtime fallback. Package one independent WAV/CSV/TXT/JSON group per unique cue,
 named with a four-digit first-use order and first-onset timestamp; repeat cues
 in the playlist/timeline instead of duplicating every occurrence. Use
-`python tools/build-scenario-placeholders.py --check` for the current placeholders.
+the same basename for all four files. Each per-cue CSV must list all of that
+cue's occurrences in chronological order, with exact frame/second timing,
+global event order, cycle/block, draft script and audio/script status. Run
+`python -m unittest discover -s tests -p test_scenario_assets.py` for this contract,
+and `python tools/build-scenario-placeholders.py --check` for the current placeholders.
 Bind the timeline to the selected library manifest
 hash; changing that manifest requires reviewing/rebinding every scenario and
 rerunning audio checks. See `audio/scenarios/README.md` for fields and mappings.

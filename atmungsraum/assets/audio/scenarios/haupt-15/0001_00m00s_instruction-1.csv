@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+1,0001_00m00s_instruction-1.wav,instruction_1,instruction_1,0.0,26.0,26.0,0,1146600,,,silent-placeholder,awaiting-wording-approval,"Wir beginnen mit zwei ruhigen, tiefen Atemzügen. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt."

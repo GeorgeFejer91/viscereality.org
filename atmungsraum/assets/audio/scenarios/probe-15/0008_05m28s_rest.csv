@@ -1,0 +1,3 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+74,0008_05m28s_rest.wav,rest,rest,328.0,20.0,348.0,14464800,882000,,,silent-placeholder,awaiting-wording-approval,Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.
+147,0008_05m28s_rest.wav,rest,rest,636.0,20.0,656.0,28047600,882000,,,silent-placeholder,awaiting-wording-approval,Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.

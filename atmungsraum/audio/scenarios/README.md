@@ -2,7 +2,7 @@
 
 Every final sequence uses one of these JSON/CSV pairs and its own folder under
 [`assets/audio/scenarios/`](../../assets/audio/scenarios/). Each unique cue has
-a numbered WAV, JSON and TXT. Numbers follow first occurrence, including quiet
+a numbered WAV, CSV, JSON and TXT with the same basename. Numbers follow first occurrence, including quiet
 recovery; repeated cycles reuse the same cue. Each folder also has an asset CSV,
 complete timeline CSV, manifest and M3U8 playlist. The original shared
 [`manifest.json`](../../assets/audio/box-breathing/de/soft-v2/manifest.json) pins
@@ -13,6 +13,15 @@ TXT and metadata `text` contain draft intended words, pending approval;
 `spoken_text` is empty and `audio_status` is `silent-placeholder`. They do not
 claim speech is present in the silent files. CSV includes both audio/script
 status columns. Final speech must wait for explicit wording approval.
+Each per-cue CSV lists all its occurrences in playback order, with global event
+numbers, exact frames/start/end times, cycle/block numbers, draft words and
+audio/script status. For example, `0004_01m21s_inhale.wav`, `.csv`, `.txt` and
+`.json` are one matched group in `haupt-15/`. Sort Name ascending for first-use
+order; use `0000_timeline.csv` or `0000_playlist.m3u8` for the complete sequence,
+including repeated cues. The menu folders are `haupt-15`, `probe-anleitung`,
+`probe-5`, `probe-10` and `probe-15`; `box-20` is a separate engine diagnostic.
+Run `python -m unittest discover -s tests -p test_scenario_assets.py` to check
+all numbered CSV/TXT pairs against the authored scenarios.
 Run `python tools/build-scenario-placeholders.py --check` to verify the package;
 omit `--check` to generate missing placeholders. Existing different WAVs are
 preserved with an error, so this helper cannot overwrite later real recordings.

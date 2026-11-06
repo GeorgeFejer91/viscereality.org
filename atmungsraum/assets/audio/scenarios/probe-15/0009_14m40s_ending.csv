@@ -1,0 +1,2 @@
+order,asset_file,event_id,asset_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,audio_status,script_status,transcript_de
+204,0009_14m40s_ending.wav,ending,ending,880.0,12.0,892.0,38808000,529200,,,silent-placeholder,awaiting-wording-approval,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."
