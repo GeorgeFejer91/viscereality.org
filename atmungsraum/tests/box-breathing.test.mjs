@@ -4,9 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { BoxBreathingEngine, createProtocol, PHASES, scheduleProtocol } from '../audio/box-breathing.js';
 import { mountSessionAudio } from '../audio/session-ui.js';
-import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261106-placeholders';
+import { state as uiState, route, confirmPatient, confirmECG, setSensor, updateReconnect, canNavigate } from '../ui-logic.js?v=20261106-polar-timeout';
 import { setTimeout as delay } from 'node:timers/promises';
-import { choices } from '../ui-logic.js?v=20261106-placeholders';
+import { choices } from '../ui-logic.js?v=20261106-polar-timeout';
 
 const assetDir = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
 const manifestBytes = await readFile(new URL('manifest.json', assetDir));
@@ -265,6 +265,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   try {
     Object.assign(uiState, { sensor: 'ecg', started: false });
     assert.equal(confirmPatient({ surnamePrefix: 'Mül', age: '42', gender: 'female' }), true);
+    confirmECG();
     route('start-haupt-15');
     const controller = mountSessionAudio();
     controller.update('session-start', uiState.selection, true);
@@ -309,13 +310,24 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(context.state, 'running');
     assert.equal(context.nodes.length, nodesBeforePause, 'Start after Pause must not create a new session');
-    elements['session-back'].dispatchEvent(new Event('click'));
+    setSensor('disconnected', 1000);
+    updateReconnect(1000);
+    controller.update(route('start-haupt-15'), uiState.selection, canNavigate());
+    assert.equal(elements['session-start'].dataset.audioState, 'playing');
+    assert.equal(updateReconnect(31001), 'expired');
+    const screen = route('start-haupt-15');
+    assert.equal(screen, 'h10');
+    controller.update(screen, uiState.selection, canNavigate());
+    assert.equal(uiState.started, false);
+    assert.equal(elements['session-start'].dataset.sessionActive, 'false');
+    assert.ok(context.nodes.every(node => node.disconnected), 'timeout disconnects every scheduled cue');
     const previous = JSON.parse(storage.get('atmungsraum.audio-receipts'));
     assert.equal(previous.length, 1);
     assert.equal(previous[0].selection.minutes, 15);
     assert.equal(previous[0].selection.boxMinutes, 15);
     assert.equal(previous[0].protocol.baseline_frames, 0);
     assert.equal(previous[0].status, 'aborted');
+    setSensor('ecg'); confirmECG();
     route('start-probe-10');
     controller.update('session-start', uiState.selection, true);
     assert.equal(elements['session-progress'].max, 600);

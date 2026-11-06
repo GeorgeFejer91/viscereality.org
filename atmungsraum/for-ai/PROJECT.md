@@ -1,5 +1,37 @@
 # Project
 
+## Polar signal-loss scenario abort — 2026-11-06
+
+Outcome: more than 30 seconds of continuous missing ECG aborts the scenario and
+returns to Polar selection (`#h10`), retaining patient details. Shorter loss,
+including exactly 30 seconds, preserves the run. Pause does not pause this
+elapsed-time deadline. Expiry does not depend on reconnect retries; recovery
+arriving after the deadline must not revive the scenario. Clear the selection,
+stop all scheduled audio and save the existing aborted receipt/CSV.
+
+- [x] Reproduce delayed-first-poll and late-recovery failures before fixing them.
+- [x] Enforce expiry in the shared state owner and route late recovery to Polar;
+  keep the existing audio/data cleanup and align module cache versions.
+- [x] Pass all 28 Node tests, UI/context and whitespace checks; verify every
+  scheduled cue is disconnected on timeout. Eight browser checks pass across
+  all five scenario routes, delayed polls, late/short recovery and a real paused
+  loss of 30,509 ms. Aborted CSV/receipt, focus return, retained patient details
+  and Polar reselection pass. All 137 responsive/Pretext cases pass.
+- [x] Independent review found a valid-ECG deep-link start did not arm recovery;
+  reproduce that failure, then arm the grace period in validated `start()`.
+- [ ] Commit/push and verify exact Pages deployment,
+  live source bytes and the affected browser flow.
+
+Entry: canonical `main` was clean at `9a91534`. Concurrent documentation commit
+`289896c` arrived during this task and is preserved; its Pages run 42251796609
+completed successfully. RTK is unavailable at its configured path; bounded native output
+is used. Detailed browser evidence remains ignored under `output/playwright/`.
+No sensor/headset hardware is connected by this change. Overall real-sensor,
+headset, physical-phone and wording acceptance goals remain open.
+
+Next action: publish this reviewed increment, then verify its exact
+deployment and live behavior under the standing publication authority.
+
 ## Collected-data ZIP and Wormhole QR sharing — 2026-11-06
 
 Requested outcome: package all saved browser exports, upload to Wormhole and
@@ -918,9 +950,12 @@ execution remains pending.
 Hash navigation supports Zurück and browser history; cold deep links still pass
 through the connection gate. After Weiter there is no ECG return button. Signal
 loss after this verified transition keeps the current screen and existing audio
-while requesting reconnection every five seconds. Return to ECG only after more
-than 30 seconds without recovery and at least one retry; clear the old waveform
-and lock Weiter. Recovery before expiry cancels the deadline and retry count.
+while requesting reconnection every five seconds. More than 30 seconds without
+recovery aborts the scenario, stops its audio, clears its selection and returns
+to Polar selection; clear the old waveform and lock Weiter. The elapsed-time
+deadline also applies while paused and never depends on a prior retry. ECG
+recovery after expiry cannot revive the old run. Recovery through exactly
+30 seconds cancels the deadline and retry count.
 New sessions cannot start without current ECG. JavaScript is required for the demo; without it the
 patient form stays disabled with an explanatory message and cannot submit
 participant values into a URL.

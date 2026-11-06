@@ -41,10 +41,13 @@ for (const [branch, values] of Object.entries(choices)) {
     assert.deepEqual(state.selection, { branch, value, minutes, boxMinutes: minutes });
     assert.equal(start(), true);
     assert.equal(start(), false, 'a double click must not start twice');
-    setSensor('no-ecg');
+    setSensor('no-ecg', 1000);
+    assert.equal(state.started, true);
+    assert.equal(route(`start-${branch}-${value}`), 'session-start');
+    assert.equal(start(), false);
+    assert.equal(updateReconnect(31001), 'expired');
     assert.equal(state.started, false);
     assert.equal(route(`start-${branch}-${value}`), 'h10');
-    assert.equal(start(), false);
     setSensor('ecg');
   }
 }

@@ -1,5 +1,5 @@
-import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261106-placeholders';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261106-placeholders';
+import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261106-polar-timeout';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261106-polar-timeout';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261106-folder';
 import { mountDataFiles } from './data-files.js?v=20261106-wormhole-qr';
@@ -70,7 +70,8 @@ window.addEventListener('atmungsraum:sensor-state', (event) => {
   if (!['ecg', 'no-ecg', 'disconnected'].includes(event.detail?.state)) return;
   ++attempt;
   connectionError = '';
-  setSensor(event.detail.state === 'ecg' && !signal.samples ? 'no-ecg' : event.detail.state);
+  const reconnect = setSensor(event.detail.state === 'ecg' && !signal.samples ? 'no-ecg' : event.detail.state);
+  if (reconnect === 'expired') history.replaceState(null, '', '#h10');
   render();
 });
 

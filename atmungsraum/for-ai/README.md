@@ -37,7 +37,10 @@ only necessary controls, choice information, state, and recovery feedback. Anlei
 unlimited guided exploration. Real H10/headset connection and execution remain
 pending. See PROJECT.md for the precise demo and product boundaries.
 The UI has no global context header or ECG return button after Continue. Signal
-loss uses a 30-second reconnect window before returning to the minimal ECG gate.
+loss uses a 30-second reconnect window. Beyond 30 seconds the scenario is
+aborted, all audio is stopped, its selection is cleared, and the Polar selection
+gate returns while patient details remain. The deadline uses elapsed time even
+while paused, without requiring a prior retry; late ECG recovery cannot revive it.
 The corner Polar belt artwork and its frame pulse together in green with ECG
 and red after loss; reduced motion keeps both glows steady. There is no separate dot.
 All three permanent corner surfaces scale equally from 56 to 112 CSS px with

@@ -1,5 +1,5 @@
 import { BoxBreathingEngine } from './box-breathing.js?v=20261106-placeholders';
-import { state, start } from '../ui-logic.js?v=20261106-placeholders';
+import { state, start } from '../ui-logic.js?v=20261106-polar-timeout';
 import { participantIdentity } from '../data-logging.js?v=20261105-data';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.

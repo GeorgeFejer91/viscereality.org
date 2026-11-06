@@ -19,6 +19,8 @@ export function confirmPatient({ surnamePrefix = '', age = '', gender = '' } = {
 }
 export function setSensor(sensor, now = performance.now()) {
   if (!['searching', 'found', 'connecting', 'ecg', 'no-ecg', 'disconnected'].includes(sensor)) return;
+  // A late recovery must expire the old scenario before clearing its loss clock.
+  const reconnect = sensor === 'ecg' ? updateReconnect(now) : null;
   state.sensor = sensor;
   if (hasSignal()) {
     state.lostSince = null;
@@ -28,12 +30,14 @@ export function setSensor(sensor, now = performance.now()) {
     state.lostSince = now;
     state.lastReconnect = now - 5000;
   } else if (!state.entered) state.started = false;
+  return reconnect;
 }
 export function updateReconnect(now = performance.now()) {
   if (!state.entered || hasSignal() || state.lostSince === null) return null;
-  if (now - state.lostSince > 30000 && state.reconnectAttempts > 0) {
+  if (now - state.lostSince > 30000) {
     state.entered = false;
     state.started = false;
+    state.selection = null;
     return 'expired';
   }
   if (now - state.lastReconnect >= 5000) {
@@ -60,6 +64,7 @@ export function route(requested) {
 }
 export function start() {
   if (!hasSignal() || !state.patient || !state.selection || state.started) return false;
+  state.entered = true;
   state.started = true;
   return true;
 }

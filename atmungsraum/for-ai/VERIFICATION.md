@@ -1,5 +1,34 @@
 # Verification
 
+## Polar signal-loss timeout — 2026-11-06
+
+Two new regressions first fail against the previous runtime: a delayed first
+poll retries rather than expiring, and ECG recovery after the deadline revives
+the run. They pass after the shared-state fix, along with an exactly-30-second
+recovery boundary case. Review identified a direct-ECG deep-link start that
+missed the grace period; its regression also fails before arming recovery in
+validated `start()`, then passes. All 28 Node tests, the UI-state checker, context checker
+and whitespace checks pass. The existing browser-controller regression now
+verifies timeout navigation, inactive state, aborted receipt and disconnection
+of every scheduled audio cue. Participant-data writers and audio assets are
+unchanged.
+
+Native Chrome passes eight signal-loss cases: all five scenario routes using
+a delayed first poll, a late recovery event before the next timer callback,
+short recovery preserving the same run, and real elapsed loss while paused.
+The paused case returns to `#h10` after 30,509 ms even though the audio clock is
+frozen. Every expired case saves an aborted CSV/receipt, clears the scenario,
+retains patient details and moves focus into the Polar gate. All five lost-signal
+scenario cases also verify searching/selecting again; one starts by valid-ECG
+deep link before Continue. No page errors occur. The existing 137-case responsive
+matrix also passes, including 320 CSS px, portrait/landscape, enlarged text,
+spacing and long labels, using real Pretext/DOM checks.
+
+Ignored evidence: `output/playwright/check-polar-timeout.mjs`,
+`polar-timeout-results.json`, `polar-timeout-polar.png`, and `polar-layout-*`.
+These are browser-demo checks; physical Polar H10, headset and phone/browser
+qualification remain open. Publication evidence belongs to PROJECT.md.
+
 ## Wormhole ZIP handoff and local QR — 2026-11-06
 
 The new folder-dialog action packages the existing saved CSVs and guides manual
