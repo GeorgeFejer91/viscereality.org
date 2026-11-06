@@ -110,10 +110,14 @@ Use installed skills; do not fetch and execute unreviewed remote skill code.
 
 ## Main UI stretch settings
 
-The 2026-11-06 threefold corner enlargement reserves 144px surfaces. At 320×568,
-patient/round/options/player screens may now need readable document reflow; short
-landscape uses the central column between corner surfaces. This supersedes the
-older bounded-fit expectation at those sizes; retain actual Pretext/DOM checks.
+The 2026-11-06 proportion refinement supersedes fixed 144px corners: reserve
+equal surfaces sized by `clamp(56px, min(10vw, 12dvh), 112px)` and proportional
+artwork. Patient entry is centered within a 560px-high composition, with a 640px
+form, equal columns/shared gutters and a 384px group-region ceiling. Ordinary
+body type ranges from 16 to 18px. Distribute spare space within these ceilings,
+keeping related content together on large displays. At 320×568 patient entry
+and other no-fit states may use readable document reflow; short landscape uses
+the central column between corners. Retain actual Pretext/DOM checks.
 
 These settings apply to patient entry, Polar/ECG, round/options, playback and
 CSV recovery, including later controls added to those screens.

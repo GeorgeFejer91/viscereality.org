@@ -1,5 +1,28 @@
 # Verification
 
+## Responsive proportions — 2026-11-06
+
+The patient composition is centered and capped at 560px high; its equal-column
+form is at most 640px wide, uses the same gutters as the gender grid, and caps
+the flexible group region at 384px. All corners share a responsive 56–112px
+size and proportional artwork. Default body type is 16–18px. Enlarged/no-fit
+states retain document reflow and full labels; existing Pretext owns measurement.
+
+All 19 Node tests, seven scenario pairs, UI-state and context checks pass.
+`check-proportions.mjs` passes 149 native Chrome cases with no page errors:
+320×568 through 1920×1080, portrait/short landscape, breakpoint sides, all menus
+and six ready players, exact corner bounds/fixed positions, centering, 200%
+text/spacing, keyboard/focus access, long ID/label, locale and resize recovery.
+The ten-case folder suite also passes individual/ZIP downloads, share boundary,
+modal focus, reload and active playback. The first folder run lost its shared
+HTTP server; fresh suites against a dedicated server pass. Phone/desktop PNGs
+were visually inspected. All QA artifacts remain ignored in `output/playwright/`
+(`check-proportions.mjs`, `proportions-results.json`, `proportions-files.json`).
+Physical phones, Safari/WebViews and assistive technology remain unqualified.
+Two missing-module/Intl cases retain readable full-label reflow and successful
+form navigation. Independent review finds no actionable issues. Exact-commit
+deployment and live checks remain the next release actions.
+
 ## Polar artwork and frame glow — 2026-11-06
 
 The separate dot is removed. CSS uses the unchanged PNG as a luminance mask;

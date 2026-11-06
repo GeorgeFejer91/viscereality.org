@@ -1,5 +1,29 @@
 # Project
 
+## Responsive proportions — 2026-11-06
+
+Rebalance the patient screen and permanent controls for smartphone and desktop.
+Use a centered patient composition capped at 560px high, a 640px-wide form,
+aligned equal columns and shared column gutters. Form groups still distribute
+space within a 384px ceiling. Body type tops out at 18px; user enlargement keeps
+readable document reflow. The three equal corner surfaces now scale from 56px
+to 112px with both viewport dimensions; this supersedes fixed 144px sizing.
+Preserve the concurrently completed belt-artwork glow and all interaction/data
+owners. No participant writer or audio behavior changes belong to this task.
+
+- [x] Apply scoped CSS geometry and refresh the entry cache tokens.
+- [x] Verify 149 responsive/Pretext/text/focus cases, ten folder/download cases,
+  two unavailable-measurement fallbacks, all 19 Node tests, seven scenario pairs
+  and UI/context checks. Independent review has no actionable findings.
+- [ ] Commit/push and verify the exact Pages deployment and live assets.
+
+Entry: canonical main at `a792da7`, with existing belt-glow changes preserved;
+their owner committed them separately as `7e07b9c` during this task. RTK is absent;
+bounded native commands are used. The shared local server disappeared during
+initial folder playback QA; a dedicated server and fresh full suites pass.
+Publication remains active. Overall real H10/headset, physical phone
+sharing and listening acceptance remain open.
+
 ## Coherent Polar belt and frame glow — 2026-11-06
 
 Remove the separate status dot. The original belt artwork and its 144px frame
