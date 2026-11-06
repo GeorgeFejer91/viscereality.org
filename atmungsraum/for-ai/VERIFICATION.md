@@ -58,6 +58,17 @@ ignored in `pwa-live-5ff34d3.json`, `pwa-controls-live-results.json`,
 `pwa-controls-live-phone.png` and `pwa-controls-installed-live-results.json`.
 Physical-phone installation/relaunch and assistive technology remain untested.
 
+A stricter viewport-centering regression then fails at390×844: the two-top-icon
+clearance moves the bounded round menu down27.99px. Equal vertical reserves,
+using the maximum of top size + top safe inset and dock height + bottom safe
+inset, restore its center to -0.008px. The47/34px unequal-inset probe first fails
+at +6.49px, then independently passes at -0.008px. All115 phone cases re-pass with centered ECG/round/option/player
+targets required whenever bounded. Enlarged/no-fit states retain readable
+document reflow. This correction changes CSS and cache tokens only; its checks
+exclude concurrent Discord-password work. Ignored regression:
+`output/playwright/check-pwa-centering.mjs`; matrix receipt:
+`output/playwright/pwa-controls-centered-results.json`. Live evidence follows.
+
 The current [BeforeInstallPromptEvent API](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent)
 and [official installation-prompt guide](https://web.dev/learn/pwa/installation-prompt/)
 were read. This API is not universal and each supplied prompt is single-use;

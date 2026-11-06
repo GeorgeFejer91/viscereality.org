@@ -54,6 +54,22 @@ preference explicitly set. No page errors occur. Ignored receipts:
 increment is complete; the overall PWA goal remains open for physical-phone
 installation/relaunch acceptance. Next: collect that phone/browser result.
 
+Centering follow-up: a direct geometry regression shows the enlarged top-only
+clearance shifts the bounded round menu down27.99px. The shared vertical reserve
+now uses the maximum of top size + top safe inset and dock height + bottom safe
+inset on both edges. A separate unequal-inset case first shows +6.49px and then
+also returns -0.008px after including the insets in that maximum.
+The same check returns -0.008px, preserving the standing viewport-midpoint
+contract. All115 cases pass with added strict center checks for bounded ECG,
+round/option and playback targets. No install/session/data logic changes.
+Independent review confirms the unequal-inset correction with no remaining
+actionable issue. Documentation deployment77e0e72 timed out in syncing_files;
+its backend is deployment_cancelled. The fresh correction includes those notes.
+- [ ] Publish this isolated CSS/cache correction and verify its exact deployment,
+  live bytes and centered phone layouts. Preserve concurrent Discord-password work.
+Next for this follow-up: complete review and live publication, then return to
+the existing physical-phone installation/relaunch acceptance gate.
+
 The UI's primary delivery target is a progressive web app (PWA) for smartphones.
 Installing it adds a Viscereality-logo home-screen icon that opens the live
 `https://viscereality.org/atmungsraum/` app in standalone mode. Keep its existing

@@ -119,6 +119,10 @@ install action beside the folder; short landscape uses an accessibly named
 install icon above the folder, outside the reserved central column. Its actual
 height is observed for bottom clearance when enlarged text wraps. These rules
 supersede the earlier equal-three-corner rule on smartphones.
+Use the maximum of (enlarged top size + top safe inset) and (observed dock
+height + bottom safe inset) as both vertical clearances, preserving the menu's
+viewport midpoint even with unequal safe areas. Short-landscape central
+columns retain their symmetric insets and keep fixed controls outside them.
 Patient entry is centered within a 560px-high composition, with a 640px
 form, equal columns/shared gutters and a 384px group-region ceiling. Ordinary
 body type ranges from 16 to 18px. Distribute spare space within these ceilings,
