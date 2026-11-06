@@ -1,5 +1,24 @@
 # Project
 
+## Coherent Polar belt and frame glow — 2026-11-06
+
+Remove the separate status dot. The original belt artwork and its 144px frame
+pulse together: green with ECG (four-second cycle), red after signal loss
+(two-second cycle), neutral while waiting, and steady with reduced motion.
+The PNG is used as a CSS luminance mask so the glow follows the belt artwork
+rather than its opaque rectangular background; source bytes remain unchanged.
+
+- [x] Replace the dot and implement synchronized symbol/frame glow using the
+  existing state owner, accessible status text and shared color/cycle tokens.
+- [x] Verify 24 Chrome state/size/reduced-motion cases, actual pulse variation,
+  source-mask loading and folder open/close; inspect green/red screenshots.
+  UI-state/context and whitespace checks pass; review has no actionable findings.
+- [ ] Commit/push and verify the exact Pages deployment and affected live behavior.
+
+Entry: clean main/origin at `a792da7`. No task blocker is known; next action is
+publication under the standing rule. Overall real H10/headset, physical-phone
+sharing and listening acceptance remain open.
+
 ## Larger corners and recovered Polar artwork — 2026-11-06
 
 The three permanent corner surfaces are 144×144 CSS px: three times the previous
@@ -34,6 +53,9 @@ is 2,143,894,180 bytes against a stated 1 GB allowance; this is the whole existi
 site, not a diagnosis of the timeout. The verified `0a3c99a` UI stays live.
 Publish this updated evidence as a fresh commit/run, then verify its exact status
 and public bytes. No runtime or unrelated media changes are part of recovery.
+Resolved: `a792da7` deployed successfully in run `42211204098`; all eight changed
+public files match Git bytes and both entry URLs return 200. Local/remote main
+matched with a clean tree at handoff.
 
 ## Folder-only data entry — 2026-11-06
 

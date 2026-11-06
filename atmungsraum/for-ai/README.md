@@ -34,8 +34,8 @@ unlimited guided exploration. Real H10/headset connection and execution remain
 pending. See PROJECT.md for the precise demo and product boundaries.
 The UI has no global context header or ECG return button after Continue. Signal
 loss uses a 30-second reconnect window before returning to the minimal ECG gate.
-A corner signal indicator breathes green with ECG and flashes red after loss;
-reduced motion uses a steady indicator.
+The corner Polar belt artwork and its frame pulse together in green with ECG
+and red after loss; reduced motion keeps both glows steady. There is no separate dot.
 All three permanent corner surfaces are 144×144 CSS px. The Polar indicator embeds
 the recovered dissertation belt illustration (the source was PNG, not SVG).
 The layout reserves their space; narrow/short no-fit states use readable page reflow.

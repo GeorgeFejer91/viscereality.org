@@ -44,14 +44,15 @@ main {
 .files-scroll:focus-visible { outline: 3px solid #c9d3bf; outline-offset: 2px; }
 body:has(#files-dialog[open]) { overflow: hidden; }
 #belt-signal { position: fixed; z-index: 1; top: var(--corner-top); right: max(12px, env(safe-area-inset-right)); display: grid; place-items: center; width: var(--corner-size); height: var(--corner-size); padding: 16px; border: 1px solid #4a5148; border-radius: 10px; background: #131712; }
-.polar-belt { display: block; width: 112px; height: 96px; object-fit: contain; }
-.signal-dot { position: absolute; right: 12px; bottom: 12px; width: 36px; height: 36px; border: 3px solid #131712; border-radius: 50%; background: #73796e; }
-#belt-signal[data-state="connected"] .signal-dot { background: #88cb97; animation: belt-breathe 4s ease-in-out infinite; }
-#belt-signal[data-state="lost"] { color: #ffb4b4; }
-#belt-signal[data-state="lost"] .signal-dot { background: #ff5555; animation: belt-alert 1s ease-in-out infinite; }
-@keyframes belt-breathe { 0%, 100% { box-shadow: 0 0 3px 1px #88cb9740; opacity: .55; } 50% { box-shadow: 0 0 14px 5px #88cb9770; opacity: 1; } }
-@keyframes belt-alert { 0%, 100% { box-shadow: 0 0 2px #ff5555; opacity: .35; } 50% { box-shadow: 0 0 18px 7px #ff555599; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { #belt-signal[data-state] .signal-dot { animation: none; } }
+.polar-belt { display: block; width: 112px; height: 96px; color: #c9d3bf; }
+.polar-belt::before { content: ""; display: block; width: 100%; height: 100%; background: currentColor; mask: url('./assets/icons/polar-h10.png') center / contain no-repeat; mask-mode: luminance; }
+#belt-signal[data-state="connected"] { --signal-color: #88cb97; --signal-cycle: 4s; }
+#belt-signal[data-state="lost"] { --signal-color: #ff5555; --signal-cycle: 2s; }
+#belt-signal:is([data-state="connected"], [data-state="lost"]) { border-color: var(--signal-color); box-shadow: 0 0 8px var(--signal-color); animation: belt-frame-glow var(--signal-cycle) ease-in-out infinite; }
+#belt-signal:is([data-state="connected"], [data-state="lost"]) .polar-belt { color: var(--signal-color); filter: drop-shadow(0 0 5px currentColor); animation: belt-glow var(--signal-cycle) ease-in-out infinite; }
+@keyframes belt-glow { 0%, 100% { filter: drop-shadow(0 0 2px currentColor); opacity: .6; } 50% { filter: drop-shadow(0 0 9px currentColor); opacity: 1; } }
+@keyframes belt-frame-glow { 0%, 100% { box-shadow: 0 0 2px var(--signal-color); } 50% { box-shadow: 0 0 16px var(--signal-color); } }
+@media (prefers-reduced-motion: reduce) { #belt-signal[data-state], #belt-signal[data-state] .polar-belt { animation: none; opacity: 1; } }
 .screen { --edge-size: 48px; display: grid; grid-template-rows: var(--edge-size) minmax(0, 1fr) var(--edge-size); gap: var(--gap); min-width: 0; min-height: 0; }
 .screen > :first-child { align-self: start; }
 h1 { margin: 0; font-size: clamp(1.375rem, min(4vw, 4.5svh), 1.75rem); line-height: 1.3; font-weight: 400; text-align: center; }

@@ -1,5 +1,24 @@
 # Verification
 
+## Polar artwork and frame glow — 2026-11-06
+
+The separate dot is removed. CSS uses the unchanged PNG as a luminance mask;
+the original strap artwork and outer frame share state color and cycle duration.
+Connected pulses green over four seconds, lost pulses red over two seconds,
+waiting is neutral, and reduced motion retains steady state-colored glows.
+Accessible status text and the connection/reconnect state owner are preserved.
+
+`check-belt-glow.mjs` passes 24 native Chrome cases: waiting/connected/lost at
+320×568, 390×844, 568×320, 844×390, 768×1024, 1280×720 and 1920×1080, plus
+reduced-motion loss/recovery and restoring motion. It checks no dot, luminance
+mask/source decode, exact symbol/corner sizes, both animations and matching
+durations/colors, changing symbol opacity/filter and frame shadow, folder access,
+and status text. No page errors occur. Peak green/red screenshots were inspected.
+UI-state/context and whitespace checks pass; focused review has no actionable
+findings. Receipts and crops remain ignored in `output/playwright/belt-glow-*`.
+No bitmap regeneration, logging, playback or layout changes are involved.
+Publication is pending; native phones/WebViews remain outside this Chrome evidence.
+
 ## Threefold corner enlargement — 2026-11-06
 
 All three fixed surfaces measure exactly 144×144 CSS px. Recenter/folder artwork
