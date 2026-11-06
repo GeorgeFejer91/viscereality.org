@@ -201,8 +201,16 @@ Ignored receipts include `wormhole-network-verification.json`,
 links stay local. The Worker is on a temporary Cloudflare account; successful
 runtime verification does not establish durable ownership. The user must
 complete the claim within its window, or log in and redeploy. Physical phones,
-Safari and large real study archives remain unqualified. Exact Pages/public
-asset and browser verification follow publication in PROJECT.
+Safari and large real study archives remain unqualified. Runtime release `0d0e170` completes exact Pages run42309917241 and reports
+`succeed` from the deployment API. All32 changed public files match Git bytes;
+JavaScript MIME types and both entry URLs pass. Native Chrome repeats the full
+real upload/Discord/readback/independent-decryption check from published Pages
+source with the same9,437,363-byte synthetic ZIP/SHA-256 above. The live origin
+also passes five upload, four forwarding, seven manual-QR and ten files-dialog
+cases, with no page errors. Ignored receipts: sharing-release-0d0e170.json,
+cloudflare-browser-live.json and files-auto-live.json. This qualifies the current
+hosted workflow, while the account claim/operator and physical-phone acceptance
+remain open. Publication/checkpoint state is owned by PROJECT.
 
 ## Wormhole ZIP handoff and local QR — 2026-11-06
 

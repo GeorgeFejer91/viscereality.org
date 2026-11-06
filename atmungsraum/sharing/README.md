@@ -110,8 +110,10 @@ The production upload client and Worker handler completed a real synthetic
 Wormhole/Backblaze upload, independent download/decryption with byte-identical
 ZIP comparison, then an authorized message to the supplied Discord webhook
 with successful message readback. That first network check ran the Worker
-handler locally. Cloudflare deployment and browser/public-site evidence are
-recorded separately in [VERIFICATION.md](../for-ai/VERIFICATION.md).
+handler locally. A subsequent real browser check from published Pages through
+the deployed Cloudflare Worker uploads a9 MiB synthetic ZIP in two encrypted
+pieces, verifies Discord message readback and independently restores identical
+ZIP bytes. See [VERIFICATION.md](../for-ai/VERIFICATION.md).
 No participant data was used. Physical phone/Safari behavior and durable
 account ownership require their own acceptance.
 

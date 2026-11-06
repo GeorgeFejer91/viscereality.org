@@ -119,9 +119,8 @@ native sharing and downloads. Recording/identity/filenames are unchanged.
   official Wormhole browser download and authorized Discord message/readback.
 - [x] Deploy Cloudflare Worker with private destination/access-key secrets to a
   temporary preview account; provide ignored private claim/connection setup page.
-- [x] Deployed-Worker browser E2E and independent review pass; public Pages
-  source/live behavior still require publication verification.
-- [ ] Publish verified source/docs; follow exact Pages deployment/live checks.
+- [x] Deployed-Worker and public-Pages browser E2E plus independent review pass.
+- [x] Publish verified source/docs; exact Pages deployment and live checks pass.
 - [ ] User must complete Cloudflare account claim/login for durable hosting and
   connect their operator browser. Physical phone behavior remains unqualified.
 
@@ -131,10 +130,30 @@ claim must complete within its 60-minute Cloudflare window. Claim URL and
 operator access key are in the ignored local `sharing/.dev.vars.setup.html`;
 webhook/access secrets are in ignored `.dev.vars`, not public source. The user
 has been given the private setup page and the claim-completion question is pending.
-No connected permanent Cloudflare credential was present. This preview is not
-proof of permanent hosting. Next: publish verified files, check exact Pages/live behavior, and collect
-the account claim result; do not mark the overall goal complete on
-mocked tests or a temporary deployment alone.
+No connected permanent Cloudflare credential was present. Successful preview
+execution is not proof of permanent hosting. The user claim-completion question
+is still pending. Next: complete account claim/login, then connect the operator's
+browser using the private setup page. If the preview expires, follow the two
+login/deploy commands in sharing/README.md and use the returned Worker URL.
+Keep this goal open until durable ownership and operator setup are confirmed.
+
+Runtime release `0d0e1706c40460f7d512a3dde9acc2cac33a3eb3` is pushed on main.
+Exact [Pages run42309917241](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42309917241)
+and deployment API both succeed. All32 changed public files match Git bytes,
+JavaScript MIME types are correct and both entry URLs return200. Native Chrome
+from the actual published page uploads a9,437,363-byte synthetic ZIP through the
+deployed Worker, receives Wormhole/Discord acknowledgements, reads back the
+message and independently downloads/decrypts the exact ZIP bytes. All five
+upload, four forwarding, seven manual-QR and ten files-dialog live cases pass
+with no page errors. No participant data is used. All45 Node tests, UI/context,
+whitespace and staged-secret checks pass. Independent review's Cancel focus and
+the deployed runtime's redirect-mode findings are fixed and verified.
+
+Observed main/origin synchronization was `0d0e170`; a separate staged PWA help
+copy update is preserved outside this documentation increment. This evidence
+follow-up is documentation only; verify its exact Pages deployment and public
+notes before handoff. Ignored receipts: sharing-release-0d0e170.json,
+cloudflare-browser-live.json and the live browser result files in output/playwright/.
 
 The first real network test runs the production Worker handler locally with
 real outbound providers. It sends only a harmless 160-byte synthetic ZIP, restores
