@@ -125,7 +125,7 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
-## Automatic Wormhole upload → Discord — active goal, 2026-11-06
+## Automatic Wormhole upload → Discord — awaiting Cloudflare ownership
 
 The user supplies a Discord webhook and explicitly requests automatic forwarding
 of Wormhole URLs. The share button packages every saved browser export into the
@@ -175,11 +175,34 @@ with no page errors. No participant data is used. All45 Node tests, UI/context,
 whitespace and staged-secret checks pass. Independent review's Cancel focus and
 the deployed runtime's redirect-mode findings are fixed and verified.
 
-Observed main/origin synchronization was `0d0e170`; a separate staged PWA help
-copy update is preserved outside this documentation increment. This evidence
-follow-up is documentation only; verify its exact Pages deployment and public
-notes before handoff. Ignored receipts: sharing-release-0d0e170.json,
-cloudflare-browser-live.json and the live browser result files in output/playwright/.
+The containing release `5ff34d3f5ceaed7e15ab306d6df32b5d6db84e16` completes
+exact Pages run42310953670 with deployment API status `succeed`. All32 affected
+public files match Git bytes, both entry URLs return200, and the public sharing
+UI repeats all five automatic-upload cases with no page errors. This also
+publishes the final setup/evidence notes from `41c3a76`; the later PWA help
+changes are preserved. Ignored receipts: sharing-release-0d0e170.json,
+sharing-release-5ff34d3.json, cloudflare-browser-live.json and the live browser
+result files in output/playwright/.
+
+Ownership blocker revalidated on2026-11-07: Wrangler still reports unauthenticated
+and the user's claim-completion question has no answer. The preview answers
+allowed-origin preflight204; that establishes current reachability only, not
+permanent account ownership. Browser automation ended because it could not
+verify the current browser URL, so it cannot supply account-claim evidence.
+The same required user sign-in/claim remains after three consecutive goal
+turns. All implementation, publication, real-provider verification and setup
+instructions are complete; no further autonomous code changes resolve this
+account requirement. Mark the thread goal blocked, not complete, until the
+user claims the account or supplies an authenticated deployment environment.
+If the preview expired, run the documented login/deploy commands with the
+existing ignored private secrets, update the operator Worker URL, then verify
+the configured hosted flow. Never regenerate previews repeatedly in place of
+durable ownership. Overall headset/H10/phone acceptance goals remain separate.
+
+Observed main/origin synchronization before this checkpoint is `eb26983`;
+tracked files are clean and unrelated local attachments remain untracked.
+This checkpoint changes only sharing state; follow its exact Pages deployment
+and public-note check before handoff.
 
 The first real network test runs the production Worker handler locally with
 real outbound providers. It sends only a harmless 160-byte synthetic ZIP, restores
