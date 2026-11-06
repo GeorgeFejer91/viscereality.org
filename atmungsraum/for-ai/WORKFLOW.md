@@ -67,6 +67,15 @@ The vendor script copies only the main API's runtime module graph and license.
 
 ## Smartphone PWA
 
+`pwa-install.js` owns the permanent install action and browser prompt lifecycle.
+It always provides manual Android/iPhone instructions when no browser prompt is
+available, including the embedded-browser case. Browser prompt consent does not
+prove installation; only `appinstalled` or standalone mode hides the control.
+Its modal must preserve playback on Escape/close and restore focus. All visible
+install labels/dialog text use the existing Pretext measurement owner. The dock
+observes its actual height for zoom/reflow clearance; short landscape keeps the
+install icon and folder outside the central content column.
+
 The primary delivery target is an installed smartphone PWA. Keep
 `manifest.webmanifest` linked from the entry page, with stable `/atmungsraum/`
 ID, start URL and scope, standalone display and local PNG icons. Native browser

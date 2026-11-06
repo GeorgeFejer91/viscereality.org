@@ -4,7 +4,7 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
-    'manifest.webmanifest', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
+    'manifest.webmanifest', 'pwa-install.js', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
     'assets/icons/app-maskable-512.png', 'assets/icons/apple-touch-icon.png',
     'data-files.js', 'assets/icons/folder.svg', 'vendor/qrcode/qrcode.js', 'vendor/qrcode/LICENSE',
     'data-logging.js', 'mock-ecg.js', 'assets/ecg/mock-ecg.json', 'assets/ecg/mock-ecg.f32',

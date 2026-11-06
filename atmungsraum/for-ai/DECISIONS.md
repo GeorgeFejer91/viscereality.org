@@ -1,5 +1,19 @@
 # Decisions
 
+## 2026-11-07 — Larger top phone controls and an install action
+
+The user requests at least twice the phone screenshot's top two control sizes,
+plus a PWA install button near the bottom-right folder. Double the top surfaces
+and contained artwork on phone layouts; keep the folder's existing size.
+Reserve the enlarged corners and observed footer height in the content layout.
+Use `App installieren` beside the folder in portrait and a named install icon
+above it in short landscape. Reuse the native browser prompt once per supplied
+event, only on a click; dismissal is retryable and unsupported/failed prompts
+fall back to a native help dialog. Hide the action after `appinstalled` or in
+standalone mode. Consent alone is not an installation receipt. Escape closes
+help without reaching the session's abort shortcut; focus returns coherently.
+No service worker, dependency or participant-data writer is added.
+
 ## 2026-11-06 — Smartphone PWA is the primary delivery target
 
 The user explicitly makes a progressive web app for smartphones the primary

@@ -50,8 +50,14 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Responsive proportions (2026-11-06): patient entry uses a centered composition
   capped at 560px high, a 640px form, equal columns/shared gutters and bounded
   inter-group spacing. Body type ranges from 16 to 18px; enlarged/no-fit content
-  uses readable reflow. All three corner surfaces scale equally from 56 to 112px
-  with viewport width and height, superseding the earlier fixed 144px size. Polar embeds
+  uses readable reflow. Base corner surfaces scale from 56 to 112px with viewport
+  dimensions. The 2026-11-07 phone correction doubles the two top controls and
+  artwork, normally to 112px, while preserving the folder size. A PWA install
+  action sits beside the bottom-right folder, using an icon above it in short
+  landscape. It uses the native browser prompt when supplied, otherwise a native
+  help dialog, and hides after installation/in standalone mode. Reserve enlarged
+  top clearance and the dock's measured height. These phone rules supersede the
+  earlier equal-three-corner rule. Polar embeds
   the recovered dissertation H10 belt illustration (PNG source). The belt and
   frame pulse green with ECG and red after loss, with steady reduced-motion
   glows and no separate dot. A luminance mask keeps the glow on the artwork. Reserve their

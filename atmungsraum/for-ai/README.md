@@ -47,8 +47,13 @@ gate returns while patient details remain. The deadline uses elapsed time even
 while paused, without requiring a prior retry; late ECG recovery cannot revive it.
 The corner Polar belt artwork and its frame pulse together in green with ECG
 and red after loss; reduced motion keeps both glows steady. There is no separate dot.
-All three permanent corner surfaces scale equally from 56 to 112 CSS px with
-viewport width and height. Patient entry uses a compact centered composition,
+The base corner surfaces scale from 56 to 112 CSS px with viewport dimensions.
+The 2026-11-07 smartphone correction doubles the two top controls and their
+artwork (normally 112px), while keeping the folder at its existing size. An
+`App installieren` action sits beside the folder, or as a named icon above it
+in short landscape. It opens the native install prompt when available, otherwise
+a keyboard-accessible dialog with Android/iPhone and embedded-browser steps.
+Installed standalone apps hide the install action. Patient entry uses a compact centered composition,
 aligned form columns and bounded group spacing rather than filling desktop height.
 The Polar indicator embeds
 the recovered dissertation belt illustration (the source was PNG, not SVG).

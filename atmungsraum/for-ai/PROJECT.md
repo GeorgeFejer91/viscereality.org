@@ -2,6 +2,32 @@
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
+### Smartphone controls and install action — 2026-11-07
+
+The user's phone screenshot requests at least twice-sized top controls; their
+follow-up requests an install button beside the bottom-right folder. Double
+both top surfaces and their artwork on narrow/coarse-pointer phone layouts,
+preserving their equal size, safe-area anchors and existing meanings. Keep the
+folder at its current size. The install action uses a browser-provided prompt
+on a user click, with a native help dialog for browsers without that API.
+Short landscape uses an accessibly named install icon above the folder, keeping
+the central controls clear. Reuse existing Pretext and native dialog semantics.
+The screenshot shows a browser tab; it does not prove installed-app relaunch.
+
+- [x] Add prompt lifecycle/failure tests, then implement the install action and
+  double-sized top phone controls, preserving unrelated sharing work.
+- [x] Pass 113 rendered phone/screen cases, native help/keyboard/focus checks,
+  200% text/spacing, long install labels and playback-preserving dismissal.
+- [x] Pass all 32 tracked tests, UI/context and whitespace checks; independent
+  review finds no actionable issues in the staged product diff.
+- [ ] Publish this scoped increment and verify exact Pages deployment/live code
+  and rendered controls.
+
+Entry: `main` at `ad3d432`, equal to fetched remote. The prior physical-phone
+installation/relaunch acceptance remains open; this is concrete UI feedback,
+not that acceptance. Ignored evidence: `output/playwright/pwa-controls-*`.
+Next: publish, then verify the live controls and exact deployment.
+
 The UI's primary delivery target is a progressive web app (PWA) for smartphones.
 Installing it adds a Viscereality-logo home-screen icon that opens the live
 `https://viscereality.org/atmungsraum/` app in standalone mode. Keep its existing

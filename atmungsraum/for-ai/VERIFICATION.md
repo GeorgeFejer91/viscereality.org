@@ -1,5 +1,49 @@
 # Verification
 
+## Larger phone controls and install action — 2026-11-07
+
+The two top surfaces/artwork double the base size at widths through 480px or
+coarse-pointer widths through 1024px (112px versus the 56px folder on ordinary
+phones). Their equal sizes, safe-area anchors and existing semantics remain.
+Content reserves their enlarged clearance. A text install action sits beside
+the folder in portrait; short landscape uses a named install icon above it,
+outside the central content column. An actual ResizeObserver reserves the dock
+height when text enlarges/wraps. Every visible new label uses the existing real
+Pretext/DOM measurement owner; the label's box has room for its safety margin.
+
+Four new Node checks first fail with the missing module, then pass. They cover
+user-triggered prompting, one-use events/double-click exclusion, dismissal,
+prompt rejection, retryable manual help, install consent versus actual
+installation, standalone hiding, Escape propagation and focus restoration.
+All 32 tracked Node tests, UI-state/context and staged whitespace checks pass.
+The release excludes concurrent unfinished automated-sharing code and the
+private phone attachment. No participant-data writer or audio asset changes.
+
+Chrome passes 113 rendered cases across 320×568, 360×740, 390×844, 432×814,
+480×640, 481×640, 568×320, 844×390, 844×480, 844×481 and 768×1024, using the
+staged entry/CSS and released app/data modules. Patient, ECG, choices, all five
+player routes and data recovery have no horizontal overflow/clipped labels or
+unmeasured visible text. Bounded cases have no page scrolling or content/corner
+overlap. Small/enlarged no-fit states use readable document reflow; keyboard
+scrolling exposes each patient field/action clear of fixed controls.
+
+The help dialog passes four phone sizes, native keyboard dismissal and focus
+return. 200% type/WCAG-style spacing pass portrait and short landscape; a long
+install label reflows at 320px. Closing help or saved files with Escape during
+real local playback keeps the session active. A simulated browser install
+event verifies click-only prompting, double-click exclusion, dismissal and
+later help; `appinstalled` hides only the install action, leaving the folder.
+These simulations test UI lifecycle, not an actual phone installation receipt.
+Zero page errors occur. Phone screenshot inspected. Ignored evidence:
+`output/playwright/check-pwa-controls.mjs`, `pwa-controls-results.json` and
+`pwa-controls-phone.png`. Exact deployment/live evidence follows in PROJECT.md.
+
+The current [BeforeInstallPromptEvent API](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent)
+and [official installation-prompt guide](https://web.dev/learn/pwa/installation-prompt/)
+were read. This API is not universal and each supplied prompt is single-use;
+unsupported browsers therefore retain explicit manual instructions. Physical
+Android/iPhone installation/relaunch acceptance remains open.
+
 ## Smartphone PWA installation — 2026-11-06
 
 The primary delivery target is an installable smartphone PWA. The entry page

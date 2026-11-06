@@ -110,9 +110,16 @@ Use installed skills; do not fetch and execute unreviewed remote skill code.
 
 ## Main UI stretch settings
 
-The 2026-11-06 proportion refinement supersedes fixed 144px corners: reserve
-equal surfaces sized by `clamp(56px, min(10vw, 12dvh), 112px)` and proportional
-artwork. Patient entry is centered within a 560px-high composition, with a 640px
+The base corner size is `clamp(56px, min(10vw, 12dvh), 112px)`. The user's
+2026-11-07 phone correction doubles the two top surfaces and proportional
+artwork at widths through 480px, or coarse-pointer widths through 1024px;
+ordinary phones therefore use 112px top controls and the existing 56px folder.
+Reserve the actual enlarged top clearance. The bottom-right dock contains the
+install action beside the folder; short landscape uses an accessibly named
+install icon above the folder, outside the reserved central column. Its actual
+height is observed for bottom clearance when enlarged text wraps. These rules
+supersede the earlier equal-three-corner rule on smartphones.
+Patient entry is centered within a 560px-high composition, with a 640px
 form, equal columns/shared gutters and a 384px group-region ceiling. Ordinary
 body type ranges from 16 to 18px. Distribute spare space within these ceilings,
 keeping related content together on large displays. At 320×568 patient entry
