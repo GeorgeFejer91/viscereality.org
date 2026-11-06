@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-11-06 — Smartphone PWA is the primary delivery target
+
+The user explicitly makes a progressive web app for smartphones the primary
+goal of this UI and selects the existing Viscereality logo as its app icon.
+Installation adds a home-screen launcher for the live `/atmungsraum/` URL in
+standalone mode. Keep the existing static stack, patient/session flow and
+intended headset-control purpose. Native browser installation is sufficient;
+offline caching, a native widget and app-store packaging are outside this task.
+Use a stable manifest ID/start URL/scope, 192/512 PNG icons, a padded maskable
+variant and a 180px Apple touch icon. Preserve the logo's aspect ratio on black.
+Physical phone installation remains a separate qualification from browser QA.
+
 ## 2026-11-06 — Publish verified increments promptly to the live URL
 
 The user explicitly requires all future agents to publish completed verified

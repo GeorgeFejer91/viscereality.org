@@ -10,8 +10,12 @@ state-management and native/remote routes. Resume the goal/checklist in
 [PROJECT.md](PROJECT.md); before handoff, record evidence, blockers, the next
 action and observed Git/publication state in that same owner.
 
-The product goal is a smartphone browser control interface for a VR headset app
-that mirrors the website's UI. Its required first step collects patient details
+The primary delivery goal is a progressive web app (PWA) for smartphones.
+Users install Atmungsraum from their browser to the home screen; its Viscereality
+logo icon opens the live `/atmungsraum/` URL in a standalone app window.
+Prioritize touch, portrait/landscape, safe areas and installed-app behavior.
+The PWA is the control interface for a VR headset app that mirrors its UI.
+Its required first step collects patient details
 and shows the generated participant ID, then verifies a Polar H10 connection
 and shows ECG in a centered box. All menu
 UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See

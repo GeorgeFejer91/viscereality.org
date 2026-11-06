@@ -12,6 +12,14 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Primary delivery target (2026-11-06): a progressive web app for smartphones.
+  Users install it from the browser to the home screen; the existing Viscereality
+  logo icon launches the live `/atmungsraum/` app in standalone mode. Prioritize
+  touch, portrait/landscape, safe areas and installed-app lifecycle while keeping
+  desktop access and the intended VR-headset control purpose. This install
+  increment remains online and does not add offline session caching. See the
+  subproject PROJECT.md for exact verification and physical-phone limits.
+
 - Polar loss (2026-11-06): more than 30 seconds of continuous missing ECG aborts
   the scenario and all scheduled audio, clears the scenario selection and
   returns to the Polar selection gate while retaining patient details. The

@@ -65,6 +65,30 @@ When restoring/updating the measurement dependency, run
 lockfile, copied runtime modules, and license aligned, and rerun rendered checks.
 The vendor script copies only the main API's runtime module graph and license.
 
+## Smartphone PWA
+
+The primary delivery target is an installed smartphone PWA. Keep
+`manifest.webmanifest` linked from the entry page, with stable `/atmungsraum/`
+ID, start URL and scope, standalone display and local PNG icons. Native browser
+installation supplies the home-screen launcher; the app currently requires a
+network connection and has no service-worker cache. Do not add offline session
+or background-recording behavior implicitly.
+
+The four app icons derive from the root site's `Images/logo.png` (Git blob
+`bcd94ca74f6305eb7cd2e8a9a8b4a66cf99f6caa`): composite the unchanged, contained
+logo on an opaque black square, preserving its aspect ratio. Ordinary 192/512px
+and Apple 180px icons use 86% maximum logo height; the separate 512px maskable
+icon uses 66%, keeping all artwork inside the central 80%-diameter safe circle.
+If the source logo changes, regenerate all four together and inspect them.
+
+Verify manifest parsing and browser installability over HTTPS or localhost,
+icon decoding/dimensions, canonical launch URL and standalone display. Serve the
+repository root for local PWA checks so `/atmungsraum/` resolves as published.
+Check portrait/landscape and 320px reflow; keep physical Android/iPhone install,
+relaunch, storage and lifecycle qualification distinct from desktop automation.
+On Android Chrome, use the browser menu's install action; on iPhone Safari,
+use Share → Add to Home Screen and enable Open as Web App when offered.
+
 Wormhole QR sharing remains a static-site handoff: ZIP download → upload on
 Wormhole → paste complete link → local QR. Do not mistake it for automatic
 upload or add a third-party QR/CORS proxy. `vendor/qrcode/README.md` pins the

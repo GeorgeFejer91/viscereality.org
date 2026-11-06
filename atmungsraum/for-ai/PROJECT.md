@@ -1,5 +1,45 @@
 # Project
 
+## Primary goal: smartphone progressive web app — 2026-11-06
+
+The UI's primary delivery target is a progressive web app (PWA) for smartphones.
+Installing it adds a Viscereality-logo home-screen icon that opens the live
+`https://viscereality.org/atmungsraum/` app in standalone mode. Keep its existing
+purpose as the phone control surface for the corresponding VR headset UI.
+Phone touch interaction, portrait/landscape, safe areas and installed-app
+lifecycle take priority; desktop browser access remains supported.
+
+This increment supplies install metadata and icons, using the existing static
+HTML/plain JavaScript stack. It remains online: no service-worker cache,
+offline session promise, native widget extension or app-store wrapper is needed
+for the requested home-screen launch. Keep participant storage and session
+visibility/abort rules intact. Physical Android/iPhone installation and real
+headset/H10 qualification remain acceptance work for the overall product goal.
+
+- [x] Add a scoped, stable manifest and iPhone metadata; derive ordinary,
+  maskable and Apple icons from the existing Viscereality `Images/logo.png`.
+- [x] Verify browser manifest parsing/installability, icon decoding and launch
+  URL, smartphone rendering and existing runtime checks; review the exact diff.
+- [ ] Publish only this increment, follow its exact Pages deployment and verify
+  live manifest/icons and app behavior. Preserve concurrent sharing work.
+
+Entry: canonical `main` at `5ae2d5f`, equal to fetched `origin/main`. Sharing
+changes are already unfinished in the worktree and must not be swept into this
+release. RTK is unavailable; use bounded native output.
+
+Local evidence: all 28 tracked Node tests, UI/context and staged whitespace
+checks pass. Chrome 156 parses the manifest with no errors and returns no
+installability errors; all icons decode at their declared sizes. Four phone
+viewports (320/390 portrait and 568/844 landscape widths) have no horizontal
+overflow or clipped patient labels. An isolated browser profile installs and
+launches `/atmungsraum/#patient` with actual standalone media mode after the
+browser's user display preference is set to standalone (Open as app/window).
+CDP's default install initially opened a browser tab; this test does not prove
+physical-phone default installation behavior. Icons are opaque; maskable logo
+pixels fit the safe circle. Independent review finds no actionable issues.
+See VERIFICATION.md and ignored `output/playwright/pwa-local-results.json`.
+Next: publish this verified increment and check its exact Pages/live assets.
+
 ## Polar signal-loss scenario abort — 2026-11-06
 
 Outcome: more than 30 seconds of continuous missing ECG aborts the scenario and
@@ -883,7 +923,9 @@ The bottom-level Start action is intended to play an audio sequence and initiate
 a corresponding sequence of VR events. Browser audio already works; the VR event
 set, command transport, timing, and synchronization still need to be defined.
 
-The website is the smartphone-accessible control surface for the VR headset app.
+The primary target is a smartphone progressive web app, installed from the
+browser to the home screen and launched at the live `/atmungsraum/` URL with
+the Viscereality logo. It is the control surface for the VR headset app.
 The planned app should mirror the website's UI, with corresponding screens,
 controls, labels, and actions. Adapt layout to the phone and headset while keeping
 the meaning of those controls consistent.

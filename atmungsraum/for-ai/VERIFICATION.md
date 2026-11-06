@@ -1,5 +1,53 @@
 # Verification
 
+## Smartphone PWA installation — 2026-11-06
+
+The primary delivery target is an installable smartphone PWA. The entry page
+links a local manifest with stable `/atmungsraum/` ID/start/scope, standalone
+display, black theme/background and the existing Viscereality logo. Native
+browser installation is the home-screen launch path. The app remains online;
+no service worker, offline audio cache or background session behavior is added.
+
+The four opaque PNGs derive from `Images/logo.png` at Git blob
+`bcd94ca74f6305eb7cd2e8a9a8b4a66cf99f6caa`. Ordinary 192/512px and Apple 180px
+variants contain the unchanged aspect ratio on black at 86% maximum height.
+The separate 512px maskable icon uses 66%; a pixel audit confirms every nonblack
+pixel is inside the central 80%-diameter safe circle. Source and rendered icon
+were visually inspected; no logo redesign or image-generation service is used.
+
+All 28 tracked Node tests, UI-state/context and staged whitespace checks pass.
+Chrome 156 (Windows, isolated persistent profile) parses the manifest without
+errors, reports `installabilityErrors: []`, decodes each declared icon, and
+keeps the entry screen readable at 390×844, 320×568, 844×390 and 568×320. No
+horizontal overflow, clipped patient labels or page errors occur. Browser QA
+serves the exact staged entry HTML and released JavaScript/CSS/data module,
+excluding concurrent unfinished sharing changes. Independent review finds no
+actionable issues.
+
+CDP installation/launch opens the canonical URL and initial `#patient` route.
+With the browser user display preference explicitly set to standalone (the
+equivalent of Open as app/window), actual `(display-mode: standalone)` is true.
+CDP's initial default preference opened a browser tab; the test records that
+distinction rather than claiming a physical-phone default was exercised. The
+test uninstalls its temporary app. Android Chrome/iPhone Safari installation,
+relaunch, separate installed-context storage, safe areas, lock/background and
+real H10/headset qualification remain open. Existing session-abort and browser
+storage rules are unchanged.
+
+Ignored local evidence: `output/playwright/build-pwa-icons.mjs`, `check-pwa.mjs`,
+`pwa-local-results.json`, `pwa-local-phone.png` and temporary browser profiles.
+Publication evidence belongs to PROJECT.md.
+
+Primary platform references read: Chrome's [install-criteria update](https://developer.chrome.com/blog/update-install-criteria)
+permits menu installation without a service-worker fetch handler; the current
+[MDN installability guide](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable)
+confirms required manifest fields and that service workers are optional for
+installation. [WebKit's Safari 26 release notes](https://webkit.org/blog/17333/webkit-features-in-safari-26-0/#every-site-can-be-a-web-app-on-ios-and-ipados)
+describe home-screen web apps and the user's Open as Web App choice.
+This checks the common contrary assumption that installation requires adding an
+empty worker; offline functionality is a separate feature. Browser support and
+device installation are distinct from manifest validity.
+
 ## Polar signal-loss timeout — 2026-11-06
 
 Two new regressions first fail against the previous runtime: a delayed first
