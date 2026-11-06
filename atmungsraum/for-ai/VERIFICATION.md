@@ -36,6 +36,13 @@ Live receipts are `large-corners-live-results.json`, `corners-files-live-results
 and `live-release-assets-0a3c99a.json` in the same ignored directory. Publish/check
 the closing documentation-only evidence under the standing rule.
 
+The closing-evidence run `42209351688` for `463c842` timed out while syncing files
+and its failed-job retry was immediately cancelled. Build remained successful;
+the site artifact is 2,143,894,180 bytes and Pages warned of a 1 GB allowance.
+The prior UI deployment remains live and verified. Recovery uses a fresh
+documentation commit/run rather than modifying runtime files or unrelated media;
+confirm its exact result before claiming that the evidence is live.
+
 ## Folder-only data entry — 2026-11-06
 
 Both CSV-Dateien footer links and their obsolete visibility update are removed.

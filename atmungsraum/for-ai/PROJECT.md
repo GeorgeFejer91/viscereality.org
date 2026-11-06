@@ -27,6 +27,14 @@ evidence under the standing rule. See VERIFICATION.md for the revised reflow
 boundary. Next product acceptance actions remain real H10/headset,
 physical-phone sharing and listening checks; those goals stay open.
 
+Closing-evidence publication recovery: `463c842`, Pages run `42209351688`, built
+successfully but attempt 1 timed out in `syncing_files` after ten minutes; the
+failed-job-only retry was immediately reported cancelled. The artifact warning
+is 2,143,894,180 bytes against a stated 1 GB allowance; this is the whole existing
+site, not a diagnosis of the timeout. The verified `0a3c99a` UI stays live.
+Publish this updated evidence as a fresh commit/run, then verify its exact status
+and public bytes. No runtime or unrelated media changes are part of recovery.
+
 ## Folder-only data entry — 2026-11-06
 
 Remove both CSV-Dateien footer links. The permanent bottom-right folder is the
