@@ -15,7 +15,16 @@ changing other footers; all 161 cases then pass with no errors. The final deskto
 screenshot was visually checked: only the centered patient return and corner
 folder remain. Receipts are ignored under `output/playwright/` in
 `folder-only-local-results.json` and `stretch-results.json`. Native phone sharing
-and real hardware remain outside this desktop evidence. Publication is pending.
+and real hardware remain outside this desktop evidence.
+
+Release `0895f63213792e8a5994712b137620f1dd91ef70` is pushed and live. Pages run
+[42203147921](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42203147921)
+completed successfully. All nine changed public files match committed bytes;
+both entry URLs return 200. The live folder suite passes all ten cases and its
+download/reload/playback sequence with no page errors. Local/remote main match
+with a clean tree before this closing documentation-only update. Receipts are
+`folder-only-live-results.json` and `live-release-assets-0895f63.json` in the same
+ignored output directory. Publish/check the closing evidence under the standing rule.
 
 ## Folder and standing-workflow release acceptance — 2026-11-05
 

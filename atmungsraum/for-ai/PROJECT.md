@@ -9,7 +9,10 @@ Keep the legacy recovery URL and the shared download links used by the dialog.
 - [x] Remove the redundant links and their obsolete visibility update.
 - [x] Verify saved exports, folder/download/reload behavior, responsive layout
   and existing checks; review the complete diff.
-- [ ] Commit/push and confirm exact Pages deployment and affected live URLs.
+- [x] Commit/push and confirm exact Pages deployment and affected live URLs:
+  `0895f63213792e8a5994712b137620f1dd91ef70`, Pages run `42203147921` succeeded.
+  All nine published files match Git bytes; both entry URLs return 200.
+  Ten live folder cases plus download/reload/playback checks pass, no page errors.
 
 Local evidence: all 19 Node tests, seven scenario pairs, UI/context/syntax and
 whitespace checks pass. Chrome passes ten folder cases plus downloads/reload/
@@ -19,9 +22,11 @@ has a 240px width budget after its old 180px singleton width caused no-fit at
 
 Entry: clean canonical main at `ba7efdb`, matching refreshed origin/main.
 The concurrent instruction-evidence owner advanced main/origin to `7bbd231`
-without including these edits. No blocker is known. Next action: publish this
-verified increment under the standing authorization. Overall real H10/headset,
-physical-phone sharing and listening acceptance remain open.
+without including these edits. At live verification, main/origin both point to
+`0895f63` and the tree is clean before this documentation-only evidence update.
+This task is complete with no blocker; publish/check this closing evidence
+under the standing rule. The next product acceptance actions remain real
+H10/headset, physical-phone sharing and listening checks; those goals stay open.
 
 ## Prompt live publication is standard — 2026-11-06
 
