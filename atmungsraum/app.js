@@ -1,5 +1,5 @@
-import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261105-data';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261105-data';
+import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261106-calibration';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261106-calibration';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261106-folder';
 import { mountDataFiles } from './data-files.js?v=20261105-files';
@@ -39,7 +39,7 @@ function render() {
   if (state.selection) {
     const { branch, value } = state.selection;
     text('session-title', `${branch === 'probe' ? 'Probe-Runde' : 'Haupt-Runde'} · ${value === 'anleitung' ? 'Anleitung ohne Zeitlimit' : `${value} Minuten`}`);
-    byId('session-back').href = `#${branch}-runde`;
+    byId('session-back').href = branch === 'haupt' ? '#runde' : '#probe-runde';
   }
   sessionAudio.update(next, state.selection, canNavigate());
   drawECG();

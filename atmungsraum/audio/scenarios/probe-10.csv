@@ -1,136 +1,136 @@
-order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block
-1,instruction,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,0,40,40,0,1764000,,
-2,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,40,4,44,1764000,176400,1,1
-3,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,44,4,48,1940400,176400,1,1
-4,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,48,4,52,2116800,176400,1,1
-5,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,52,4,56,2293200,176400,1,1
-6,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,56,4,60,2469600,176400,2,1
-7,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,60,4,64,2646000,176400,2,1
-8,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,64,4,68,2822400,176400,2,1
-9,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,68,4,72,2998800,176400,2,1
-10,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,72,4,76,3175200,176400,3,1
-11,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,76,4,80,3351600,176400,3,1
-12,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,80,4,84,3528000,176400,3,1
-13,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,84,4,88,3704400,176400,3,1
-14,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,88,4,92,3880800,176400,4,1
-15,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,92,4,96,4057200,176400,4,1
-16,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,96,4,100,4233600,176400,4,1
-17,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,100,4,104,4410000,176400,4,1
-18,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,104,4,108,4586400,176400,5,1
-19,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,108,4,112,4762800,176400,5,1
-20,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,112,4,116,4939200,176400,5,1
-21,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,116,4,120,5115600,176400,5,1
-22,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,120,4,124,5292000,176400,6,1
-23,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,124,4,128,5468400,176400,6,1
-24,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,128,4,132,5644800,176400,6,1
-25,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,132,4,136,5821200,176400,6,1
-26,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,136,4,140,5997600,176400,7,1
-27,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,140,4,144,6174000,176400,7,1
-28,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,144,4,148,6350400,176400,7,1
-29,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,148,4,152,6526800,176400,7,1
-30,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,152,4,156,6703200,176400,8,1
-31,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,156,4,160,6879600,176400,8,1
-32,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,160,4,164,7056000,176400,8,1
-33,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,164,4,168,7232400,176400,8,1
-34,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,168,4,172,7408800,176400,9,1
-35,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,172,4,176,7585200,176400,9,1
-36,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,176,4,180,7761600,176400,9,1
-37,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,180,4,184,7938000,176400,9,1
-38,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,184,4,188,8114400,176400,10,1
-39,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,188,4,192,8290800,176400,10,1
-40,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,192,4,196,8467200,176400,10,1
-41,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,196,4,200,8643600,176400,10,1
-42,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,200,4,204,8820000,176400,11,1
-43,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,204,4,208,8996400,176400,11,1
-44,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,208,4,212,9172800,176400,11,1
-45,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,212,4,216,9349200,176400,11,1
-46,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,216,4,220,9525600,176400,12,1
-47,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,220,4,224,9702000,176400,12,1
-48,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,224,4,228,9878400,176400,12,1
-49,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,228,4,232,10054800,176400,12,1
-50,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,232,4,236,10231200,176400,13,1
-51,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,236,4,240,10407600,176400,13,1
-52,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,240,4,244,10584000,176400,13,1
-53,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,244,4,248,10760400,176400,13,1
-54,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,248,4,252,10936800,176400,14,1
-55,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,252,4,256,11113200,176400,14,1
-56,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,256,4,260,11289600,176400,14,1
-57,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,260,4,264,11466000,176400,14,1
-58,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,264,4,268,11642400,176400,15,1
-59,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,268,4,272,11818800,176400,15,1
-60,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,272,4,276,11995200,176400,15,1
-61,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,276,4,280,12171600,176400,15,1
-62,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,280,4,284,12348000,176400,16,1
-63,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,284,4,288,12524400,176400,16,1
-64,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,288,4,292,12700800,176400,16,1
-65,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,292,4,296,12877200,176400,16,1
-66,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,296,4,300,13053600,176400,17,1
-67,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,300,4,304,13230000,176400,17,1
-68,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,304,4,308,13406400,176400,17,1
-69,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,308,4,312,13582800,176400,17,1
-70,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,312,4,316,13759200,176400,18,1
-71,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,316,4,320,13935600,176400,18,1
-72,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,320,4,324,14112000,176400,18,1
-73,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,324,4,328,14288400,176400,18,1
-74,rest,rest,assets/audio/box-breathing/de/soft-v2/rest.wav,328,20,348,14464800,882000,,
-75,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,348,4,352,15346800,176400,19,2
-76,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,352,4,356,15523200,176400,19,2
-77,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,356,4,360,15699600,176400,19,2
-78,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,360,4,364,15876000,176400,19,2
-79,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,364,4,368,16052400,176400,20,2
-80,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,368,4,372,16228800,176400,20,2
-81,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,372,4,376,16405200,176400,20,2
-82,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,376,4,380,16581600,176400,20,2
-83,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,380,4,384,16758000,176400,21,2
-84,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,384,4,388,16934400,176400,21,2
-85,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,388,4,392,17110800,176400,21,2
-86,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,392,4,396,17287200,176400,21,2
-87,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,396,4,400,17463600,176400,22,2
-88,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,400,4,404,17640000,176400,22,2
-89,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,404,4,408,17816400,176400,22,2
-90,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,408,4,412,17992800,176400,22,2
-91,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,412,4,416,18169200,176400,23,2
-92,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,416,4,420,18345600,176400,23,2
-93,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,420,4,424,18522000,176400,23,2
-94,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,424,4,428,18698400,176400,23,2
-95,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,428,4,432,18874800,176400,24,2
-96,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,432,4,436,19051200,176400,24,2
-97,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,436,4,440,19227600,176400,24,2
-98,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,440,4,444,19404000,176400,24,2
-99,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,444,4,448,19580400,176400,25,2
-100,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,448,4,452,19756800,176400,25,2
-101,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,452,4,456,19933200,176400,25,2
-102,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,456,4,460,20109600,176400,25,2
-103,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,460,4,464,20286000,176400,26,2
-104,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,464,4,468,20462400,176400,26,2
-105,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,468,4,472,20638800,176400,26,2
-106,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,472,4,476,20815200,176400,26,2
-107,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,476,4,480,20991600,176400,27,2
-108,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,480,4,484,21168000,176400,27,2
-109,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,484,4,488,21344400,176400,27,2
-110,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,488,4,492,21520800,176400,27,2
-111,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,492,4,496,21697200,176400,28,2
-112,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,496,4,500,21873600,176400,28,2
-113,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,500,4,504,22050000,176400,28,2
-114,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,504,4,508,22226400,176400,28,2
-115,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,508,4,512,22402800,176400,29,2
-116,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,512,4,516,22579200,176400,29,2
-117,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,516,4,520,22755600,176400,29,2
-118,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,520,4,524,22932000,176400,29,2
-119,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,524,4,528,23108400,176400,30,2
-120,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,528,4,532,23284800,176400,30,2
-121,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,532,4,536,23461200,176400,30,2
-122,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,536,4,540,23637600,176400,30,2
-123,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,540,4,544,23814000,176400,31,2
-124,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,544,4,548,23990400,176400,31,2
-125,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,548,4,552,24166800,176400,31,2
-126,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,552,4,556,24343200,176400,31,2
-127,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,556,4,560,24519600,176400,32,2
-128,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,560,4,564,24696000,176400,32,2
-129,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,564,4,568,24872400,176400,32,2
-130,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,568,4,572,25048800,176400,32,2
-131,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,572,4,576,25225200,176400,33,2
-132,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,576,4,580,25401600,176400,33,2
-133,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,580,4,584,25578000,176400,33,2
-134,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,584,4,588,25754400,176400,33,2
-135,ending,ending,assets/audio/box-breathing/de/soft-v2/ending.wav,588,12,600,25930800,529200,,
+order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,transcript_de
+1,instruction,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,0,40,40,0,1764000,,,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+2,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,40,4,44,1764000,176400,1,1,Einatmen. Zwei. Drei. Vier.
+3,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,44,4,48,1940400,176400,1,1,Und halten.
+4,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,48,4,52,2116800,176400,1,1,Ausatmen. Zwei. Drei. Vier.
+5,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,52,4,56,2293200,176400,1,1,Und halten.
+6,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,56,4,60,2469600,176400,2,1,Einatmen. Zwei. Drei. Vier.
+7,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,60,4,64,2646000,176400,2,1,Und halten.
+8,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,64,4,68,2822400,176400,2,1,Ausatmen. Zwei. Drei. Vier.
+9,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,68,4,72,2998800,176400,2,1,Und halten.
+10,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,72,4,76,3175200,176400,3,1,Einatmen. Zwei. Drei. Vier.
+11,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,76,4,80,3351600,176400,3,1,Und halten.
+12,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,80,4,84,3528000,176400,3,1,Ausatmen. Zwei. Drei. Vier.
+13,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,84,4,88,3704400,176400,3,1,Und halten.
+14,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,88,4,92,3880800,176400,4,1,Einatmen. Zwei. Drei. Vier.
+15,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,92,4,96,4057200,176400,4,1,Und halten.
+16,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,96,4,100,4233600,176400,4,1,Ausatmen. Zwei. Drei. Vier.
+17,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,100,4,104,4410000,176400,4,1,Und halten.
+18,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,104,4,108,4586400,176400,5,1,Einatmen. Zwei. Drei. Vier.
+19,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,108,4,112,4762800,176400,5,1,Und halten.
+20,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,112,4,116,4939200,176400,5,1,Ausatmen. Zwei. Drei. Vier.
+21,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,116,4,120,5115600,176400,5,1,Und halten.
+22,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,120,4,124,5292000,176400,6,1,Einatmen. Zwei. Drei. Vier.
+23,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,124,4,128,5468400,176400,6,1,Und halten.
+24,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,128,4,132,5644800,176400,6,1,Ausatmen. Zwei. Drei. Vier.
+25,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,132,4,136,5821200,176400,6,1,Und halten.
+26,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,136,4,140,5997600,176400,7,1,Einatmen. Zwei. Drei. Vier.
+27,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,140,4,144,6174000,176400,7,1,Und halten.
+28,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,144,4,148,6350400,176400,7,1,Ausatmen. Zwei. Drei. Vier.
+29,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,148,4,152,6526800,176400,7,1,Und halten.
+30,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,152,4,156,6703200,176400,8,1,Einatmen. Zwei. Drei. Vier.
+31,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,156,4,160,6879600,176400,8,1,Und halten.
+32,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,160,4,164,7056000,176400,8,1,Ausatmen. Zwei. Drei. Vier.
+33,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,164,4,168,7232400,176400,8,1,Und halten.
+34,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,168,4,172,7408800,176400,9,1,Einatmen. Zwei. Drei. Vier.
+35,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,172,4,176,7585200,176400,9,1,Und halten.
+36,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,176,4,180,7761600,176400,9,1,Ausatmen. Zwei. Drei. Vier.
+37,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,180,4,184,7938000,176400,9,1,Und halten.
+38,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,184,4,188,8114400,176400,10,1,Einatmen. Zwei. Drei. Vier.
+39,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,188,4,192,8290800,176400,10,1,Und halten.
+40,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,192,4,196,8467200,176400,10,1,Ausatmen. Zwei. Drei. Vier.
+41,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,196,4,200,8643600,176400,10,1,Und halten.
+42,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,200,4,204,8820000,176400,11,1,Einatmen. Zwei. Drei. Vier.
+43,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,204,4,208,8996400,176400,11,1,Und halten.
+44,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,208,4,212,9172800,176400,11,1,Ausatmen. Zwei. Drei. Vier.
+45,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,212,4,216,9349200,176400,11,1,Und halten.
+46,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,216,4,220,9525600,176400,12,1,Einatmen. Zwei. Drei. Vier.
+47,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,220,4,224,9702000,176400,12,1,Und halten.
+48,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,224,4,228,9878400,176400,12,1,Ausatmen. Zwei. Drei. Vier.
+49,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,228,4,232,10054800,176400,12,1,Und halten.
+50,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,232,4,236,10231200,176400,13,1,Einatmen. Zwei. Drei. Vier.
+51,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,236,4,240,10407600,176400,13,1,Und halten.
+52,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,240,4,244,10584000,176400,13,1,Ausatmen. Zwei. Drei. Vier.
+53,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,244,4,248,10760400,176400,13,1,Und halten.
+54,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,248,4,252,10936800,176400,14,1,Einatmen. Zwei. Drei. Vier.
+55,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,252,4,256,11113200,176400,14,1,Und halten.
+56,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,256,4,260,11289600,176400,14,1,Ausatmen. Zwei. Drei. Vier.
+57,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,260,4,264,11466000,176400,14,1,Und halten.
+58,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,264,4,268,11642400,176400,15,1,Einatmen. Zwei. Drei. Vier.
+59,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,268,4,272,11818800,176400,15,1,Und halten.
+60,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,272,4,276,11995200,176400,15,1,Ausatmen. Zwei. Drei. Vier.
+61,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,276,4,280,12171600,176400,15,1,Und halten.
+62,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,280,4,284,12348000,176400,16,1,Einatmen. Zwei. Drei. Vier.
+63,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,284,4,288,12524400,176400,16,1,Und halten.
+64,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,288,4,292,12700800,176400,16,1,Ausatmen. Zwei. Drei. Vier.
+65,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,292,4,296,12877200,176400,16,1,Und halten.
+66,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,296,4,300,13053600,176400,17,1,Einatmen. Zwei. Drei. Vier.
+67,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,300,4,304,13230000,176400,17,1,Und halten.
+68,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,304,4,308,13406400,176400,17,1,Ausatmen. Zwei. Drei. Vier.
+69,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,308,4,312,13582800,176400,17,1,Und halten.
+70,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,312,4,316,13759200,176400,18,1,Einatmen. Zwei. Drei. Vier.
+71,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,316,4,320,13935600,176400,18,1,Und halten.
+72,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,320,4,324,14112000,176400,18,1,Ausatmen. Zwei. Drei. Vier.
+73,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,324,4,328,14288400,176400,18,1,Und halten.
+74,rest,rest,assets/audio/box-breathing/de/soft-v2/rest.wav,328,20,348,14464800,882000,,,Nimm dir jetzt eine kleine Pause. Lass deinen Atem in deinem eigenen Rhythmus fließen. Wir beginnen wieder gemeinsam.
+75,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,348,4,352,15346800,176400,19,2,Einatmen. Zwei. Drei. Vier.
+76,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,352,4,356,15523200,176400,19,2,Und halten.
+77,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,356,4,360,15699600,176400,19,2,Ausatmen. Zwei. Drei. Vier.
+78,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,360,4,364,15876000,176400,19,2,Und halten.
+79,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,364,4,368,16052400,176400,20,2,Einatmen. Zwei. Drei. Vier.
+80,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,368,4,372,16228800,176400,20,2,Und halten.
+81,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,372,4,376,16405200,176400,20,2,Ausatmen. Zwei. Drei. Vier.
+82,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,376,4,380,16581600,176400,20,2,Und halten.
+83,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,380,4,384,16758000,176400,21,2,Einatmen. Zwei. Drei. Vier.
+84,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,384,4,388,16934400,176400,21,2,Und halten.
+85,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,388,4,392,17110800,176400,21,2,Ausatmen. Zwei. Drei. Vier.
+86,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,392,4,396,17287200,176400,21,2,Und halten.
+87,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,396,4,400,17463600,176400,22,2,Einatmen. Zwei. Drei. Vier.
+88,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,400,4,404,17640000,176400,22,2,Und halten.
+89,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,404,4,408,17816400,176400,22,2,Ausatmen. Zwei. Drei. Vier.
+90,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,408,4,412,17992800,176400,22,2,Und halten.
+91,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,412,4,416,18169200,176400,23,2,Einatmen. Zwei. Drei. Vier.
+92,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,416,4,420,18345600,176400,23,2,Und halten.
+93,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,420,4,424,18522000,176400,23,2,Ausatmen. Zwei. Drei. Vier.
+94,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,424,4,428,18698400,176400,23,2,Und halten.
+95,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,428,4,432,18874800,176400,24,2,Einatmen. Zwei. Drei. Vier.
+96,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,432,4,436,19051200,176400,24,2,Und halten.
+97,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,436,4,440,19227600,176400,24,2,Ausatmen. Zwei. Drei. Vier.
+98,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,440,4,444,19404000,176400,24,2,Und halten.
+99,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,444,4,448,19580400,176400,25,2,Einatmen. Zwei. Drei. Vier.
+100,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,448,4,452,19756800,176400,25,2,Und halten.
+101,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,452,4,456,19933200,176400,25,2,Ausatmen. Zwei. Drei. Vier.
+102,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,456,4,460,20109600,176400,25,2,Und halten.
+103,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,460,4,464,20286000,176400,26,2,Einatmen. Zwei. Drei. Vier.
+104,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,464,4,468,20462400,176400,26,2,Und halten.
+105,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,468,4,472,20638800,176400,26,2,Ausatmen. Zwei. Drei. Vier.
+106,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,472,4,476,20815200,176400,26,2,Und halten.
+107,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,476,4,480,20991600,176400,27,2,Einatmen. Zwei. Drei. Vier.
+108,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,480,4,484,21168000,176400,27,2,Und halten.
+109,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,484,4,488,21344400,176400,27,2,Ausatmen. Zwei. Drei. Vier.
+110,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,488,4,492,21520800,176400,27,2,Und halten.
+111,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,492,4,496,21697200,176400,28,2,Einatmen. Zwei. Drei. Vier.
+112,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,496,4,500,21873600,176400,28,2,Und halten.
+113,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,500,4,504,22050000,176400,28,2,Ausatmen. Zwei. Drei. Vier.
+114,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,504,4,508,22226400,176400,28,2,Und halten.
+115,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,508,4,512,22402800,176400,29,2,Einatmen. Zwei. Drei. Vier.
+116,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,512,4,516,22579200,176400,29,2,Und halten.
+117,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,516,4,520,22755600,176400,29,2,Ausatmen. Zwei. Drei. Vier.
+118,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,520,4,524,22932000,176400,29,2,Und halten.
+119,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,524,4,528,23108400,176400,30,2,Einatmen. Zwei. Drei. Vier.
+120,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,528,4,532,23284800,176400,30,2,Und halten.
+121,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,532,4,536,23461200,176400,30,2,Ausatmen. Zwei. Drei. Vier.
+122,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,536,4,540,23637600,176400,30,2,Und halten.
+123,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,540,4,544,23814000,176400,31,2,Einatmen. Zwei. Drei. Vier.
+124,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,544,4,548,23990400,176400,31,2,Und halten.
+125,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,548,4,552,24166800,176400,31,2,Ausatmen. Zwei. Drei. Vier.
+126,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,552,4,556,24343200,176400,31,2,Und halten.
+127,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,556,4,560,24519600,176400,32,2,Einatmen. Zwei. Drei. Vier.
+128,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,560,4,564,24696000,176400,32,2,Und halten.
+129,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,564,4,568,24872400,176400,32,2,Ausatmen. Zwei. Drei. Vier.
+130,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,568,4,572,25048800,176400,32,2,Und halten.
+131,inhale,inhale_breath,assets/audio/box-breathing/de/soft-v2/inhale_breath.wav,572,4,576,25225200,176400,33,2,Einatmen. Zwei. Drei. Vier.
+132,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,576,4,580,25401600,176400,33,2,Und halten.
+133,exhale,exhale_breath,assets/audio/box-breathing/de/soft-v2/exhale_breath.wav,580,4,584,25578000,176400,33,2,Ausatmen. Zwei. Drei. Vier.
+134,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,584,4,588,25754400,176400,33,2,Und halten.
+135,ending,ending,assets/audio/box-breathing/de/soft-v2/ending.wav,588,12,600,25930800,529200,,,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."

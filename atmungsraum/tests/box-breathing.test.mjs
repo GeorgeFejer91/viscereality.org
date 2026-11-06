@@ -4,14 +4,26 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { BoxBreathingEngine, createProtocol, PHASES, scheduleProtocol } from '../audio/box-breathing.js';
 import { mountSessionAudio } from '../audio/session-ui.js';
-import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261105-data';
+import { state as uiState, route, confirmPatient } from '../ui-logic.js?v=20261106-calibration';
 import { setTimeout as delay } from 'node:timers/promises';
+import { choices } from '../ui-logic.js?v=20261106-calibration';
 
 const assetDir = new URL('../assets/audio/box-breathing/de/soft-v2/', import.meta.url);
 const manifestBytes = await readFile(new URL('manifest.json', assetDir));
 const manifest = JSON.parse(manifestBytes);
 const buffers = Object.fromEntries(Object.entries(manifest.blocks).map(([id, block]) =>
   [id, { numberOfChannels: 1, duration: block.frames / manifest.sample_rate }]));
+
+test('The only main choice is an exact 15-minute timeline with separate instruction and calibration classes', () => {
+  assert.deepEqual(choices.haupt, ['15']);
+  const plan = createProtocol(15, manifest, { mainRound: true });
+  assert.equal(plan.total_frames, 900 * 44100);
+  assert.equal(plan.baseline_frames, 0);
+  assert.deepEqual(plan.events.slice(0, 3).map(e => e.id), ['instruction_1', 'calibration', 'instruction_2']);
+  assert.equal(plan.events[1].offset_frames, 26 * 44100);
+  assert.equal(plan.events[1].duration_frames, 15 * 44100);
+  assert.equal(plan.events.at(-1).id, 'outro');
+});
 
 class Context extends EventTarget {
   constructor() { super(); this.currentTime = 10; this.sampleRate = 48000; this.state = 'running'; this.nodes = []; this.destination = {}; }
@@ -59,29 +71,22 @@ test('All durations contain complete cycles, contiguous slots, and the approved 
   assert.throws(() => createProtocol(5, { ...manifest, block_frames: 176401 }));
 });
 
-test('Main sessions prepend exactly five silent minutes and retain the guided sequence at one clock anchor', () => {
-  for (const minutes of [5, 10]) {
-    const guided = createProtocol(minutes, manifest);
-    const plan = createProtocol(minutes, manifest, { baselineMinutes: 5 });
-    assert.equal(plan.minutes, minutes + 5);
-    assert.equal(plan.box_minutes, minutes);
-    assert.equal(plan.mode, 'main-session');
-    assert.equal(plan.baseline_frames, 300 * 44100);
-    assert.equal(plan.total_frames / plan.sample_rate, (minutes + 5) * 60);
-    assert.deepEqual(plan.events[0], { id: 'baseline', asset: null, offset_frames: 0,
-      duration_frames: 300 * 44100, cycle: null, breathing_block: null });
-    assert.deepEqual(plan.events.slice(1), guided.events.map(event =>
-      ({ ...event, offset_frames: event.offset_frames + 300 * 44100 })));
-    const nodes = scheduleProtocol(new Context(), buffers, plan, 10.25);
-    assert.ok(nodes.every(({ source }) => source.startArgs[0] >= 310.25), 'no sound during normal breathing');
-    assert.equal(nodes[0].event.id, 'instruction');
-    assert.equal(nodes[0].source.startArgs[0], 310.25);
-    assert.equal(nodes[1].source.startArgs[0], 350.25);
-    assert.equal(nodes.at(-1).source.stopArgs[0], 10.25 + (minutes + 5) * 60);
-  }
-  for (const [minutes, baselineMinutes] of [[5, 4], [5, -5], [5, NaN], [15, 5], [20, 5], ['anleitung', 5]]) {
-    assert.throws(() => createProtocol(minutes, manifest, { baselineMinutes }));
-  }
+test('Main asset classes share one clock, fifty complete cycles, and an exact 900-second total', () => {
+  const plan = createProtocol(15, manifest, { mainRound: true });
+  assert.equal(plan.calibration_start_frame, 26 * 44100);
+  assert.equal(plan.cycles, 50);
+  assert.equal(plan.rests, 0);
+  assert.equal(plan.recovery_frames, 0);
+  assert.equal(plan.events.some(e => e.id === 'baseline'), false);
+  assert.equal(createProtocol(15, manifest).calibration_frames, 0);
+  assert.deepEqual(plan.events.slice(0, 3).map(e => [e.id, e.offset_frames / 44100, e.duration_frames / 44100]),
+    [['instruction_1', 0, 26], ['calibration', 26, 15], ['instruction_2', 41, 40]]);
+  const nodes = scheduleProtocol(new Context(), buffers, plan, 10.25);
+  assert.deepEqual(nodes.slice(0, 4).map(({ source }) => source.startArgs[0]), [10.25, 36.25, 51.25, 91.25]);
+  assert.equal(nodes.at(-1).event.id, 'outro');
+  assert.equal(nodes.at(-1).source.startArgs[0], 891.25);
+  assert.equal(nodes.at(-1).source.stopArgs[0], 910.25);
+  for (const minutes of [5, 10, 20, 'anleitung']) assert.throws(() => createProtocol(minutes, manifest, { mainRound: true }));
 });
 
 test('Actual PCM blocks match their manifest, contain speech, and have quiet joins', async () => {
@@ -97,7 +102,7 @@ test('Actual PCM blocks match their manifest, contain speech, and have quiet joi
     assert.equal(bytes.readInt16LE(bytes.length - 2), 0);
     let peak = 0;
     for (let i = 44; i < bytes.length; i += 2) peak = Math.max(peak, Math.abs(bytes.readInt16LE(i)));
-    assert.ok(peak > 100 && peak < 32767, id);
+    assert.ok(id === 'calibration' ? peak === 0 : peak > 100 && peak < 32767, id);
     if (['hold_in', 'hold_out'].includes(id)) {
       assert.equal(block.text, 'Und halten.');
       assert.deepEqual(block.processing.word_onsets_frames, [0]);
@@ -107,6 +112,20 @@ test('Actual PCM blocks match their manifest, contain speech, and have quiet joi
   }
   assert.equal(manifest.blocks.inhale.text, 'Einatmen. Zwei. Drei. Vier.');
   assert.equal(manifest.blocks.exhale.text, 'Ausatmen. Zwei. Drei. Vier.');
+  const calibration = manifest.blocks.calibration;
+  const cue = await readFile(new URL(calibration.file, assetDir));
+  const { range_start_frame: start, range_duration_frames: duration } = calibration.processing;
+  assert.equal(duration, 15 * 44100);
+  assert.ok(cue.subarray(44 + start * 2, 44 + (start + duration) * 2).every(byte => byte === 0),
+    'the two-breath window must be completely silent');
+  const { sample_rate, ...sidecar } = JSON.parse(await readFile(new URL('calibration.json', assetDir)));
+  assert.equal(sample_rate, 44100);
+  assert.deepEqual(sidecar, calibration);
+  assert.ok(manifest.blocks.instruction_1.processing.source_segments.every(segment => segment.word_fidelity.word_edits === 0));
+  const outro = await readFile(new URL('outro.wav', assetDir));
+  const ending = await readFile(new URL('ending.wav', assetDir));
+  assert.ok(outro.subarray(44, 44 + 7 * 44100 * 2).every(byte => byte === 0));
+  assert.deepEqual(outro.subarray(44 + 7 * 44100 * 2), ending.subarray(44));
 });
 
 test('Scheduler anchors every slot to one clock, including final silent recovery', () => {
@@ -164,14 +183,14 @@ test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume s
   const engine = new BoxBreathingEngine({ audioContext: context, manifestUrl: new URL('manifest.json', assetDir) });
   try {
     await engine.prepare();
-    const session = await engine.start(5, { baselineMinutes: 5 });
+    const session = await engine.start(15, { mainRound: true });
     const nodes = context.nodes.length;
     context.currentTime = session.startAt + 12;
     assert.equal(await engine.pause(), true);
     assert.equal(context.state, 'suspended');
     assert.equal(engine.position().status, 'paused');
     assert.equal(engine.position().elapsed_seconds, 12);
-    assert.equal(engine.position().event.id, 'baseline');
+    assert.equal(engine.position().event.id, 'instruction_1');
     assert.equal(engine.receipt().records.at(-1).type, 'pause');
     await assert.rejects(engine.start(10), /already active/);
     assert.equal(await engine.resume(), true);
@@ -181,13 +200,16 @@ test('Pause/resume keeps the audio plan and clock anchor, and cancelled resume s
     assert.equal(engine.run.end_at_audio_seconds, session.endAt);
     assert.equal(context.nodes.length, nodes);
     assert.equal(engine.receipt().records.at(-1).type, 'resume');
-    context.currentTime = session.startAt + 299;
-    assert.equal(engine.position().event.id, 'baseline');
-    context.currentTime = session.startAt + 300;
-    assert.equal(engine.position().event.id, 'instruction');
-    context.currentTime = session.startAt + 340;
+    context.currentTime = session.startAt + 26;
+    assert.equal(engine.position().event.id, 'calibration');
+    context.currentTime = session.startAt + 41;
+    assert.equal(engine.position().event.id, 'instruction_2');
+    context.currentTime = session.startAt + 81;
     assert.equal(engine.position().event.id, 'inhale');
-    assert.equal(engine.receipt().protocol.baseline_frames, 300 * 44100);
+    assert.equal(engine.receipt().calibration.scheduled_start_audio_seconds, session.startAt + 26);
+    assert.equal(engine.receipt().calibration.scheduled_end_audio_seconds, session.startAt + 41);
+    assert.equal(engine.receipt().calibration.value, null);
+    assert.equal(engine.receipt().calibration.status, 'not-integrated');
     assert.equal(await engine.pause(), true);
     let unlock;
     context.resume = () => new Promise(resolve => { unlock = resolve; });
@@ -228,6 +250,8 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   const doc = new EventTarget(); doc.hidden = false; doc.getElementById = id => elements[id];
   globalThis.document = doc;
   globalThis.window = new EventTarget();
+  const calibrationWindows = [];
+  window.addEventListener('atmungsraum:calibration-scheduled', e => calibrationWindows.push(e.detail));
   globalThis.AudioContext = class extends Context { constructor() { super(); context = this; } };
   globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
   globalThis.requestAnimationFrame = () => 1;
@@ -241,19 +265,25 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   try {
     Object.assign(uiState, { sensor: 'ecg', started: false });
     assert.equal(confirmPatient({ surnamePrefix: 'Mül', age: '42', gender: 'female' }), true);
-    route('start-haupt-10');
+    route('start-haupt-15');
     const controller = mountSessionAudio();
     controller.update('session-start', uiState.selection, true);
     await ready(() => elements['session-start'].dataset.audioState === 'ready');
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     const startAt = Number(elements['session-start'].dataset.audioStartTime);
-    assert.equal(Number(elements['session-start'].dataset.audioEndTime) - startAt, 600);
+    assert.equal(calibrationWindows.length, 1);
+    assert.equal(calibrationWindows[0].scheduled_start_audio_seconds, startAt + 26);
+    assert.equal(calibrationWindows[0].scheduled_end_audio_seconds, startAt + 41);
+    assert.equal(calibrationWindows[0].offset_frames, 26 * 44100);
+    assert.equal(calibrationWindows[0].value, null);
+    assert.equal(Number(elements['session-start'].dataset.audioEndTime) - startAt, 900);
     assert.equal(elements['session-time'].textContent, '00:00');
-    assert.equal(elements['session-duration'].textContent, '10:00');
-    assert.equal(elements['session-progress'].max, 600);
+    assert.equal(elements['session-progress'].max, 900);
+    assert.equal(elements['session-duration'].textContent, '15:00');
     assert.equal(elements['session-progress'].value, 0);
-    assert.ok(context.nodes.every(node => node.startArgs[0] >= startAt + 300));
+    assert.equal(context.nodes[0].startArgs[0], startAt);
+    assert.equal(context.nodes[1].startArgs[0], startAt + 26);
     context.currentTime = startAt + 12;
     assert.equal(elements.play.disabled, false);
     assert.equal(elements.play.label.textContent, 'Pause');
@@ -274,7 +304,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     controller.update('session-start', uiState.selection, true);
     assert.equal(elements.play.disabled, false);
     assert.equal(uiState.started, true);
-    assert.equal(elements['session-phase'].textContent, 'Normal atmen');
+    assert.equal(elements['session-phase'].textContent, 'Anleitung zur Kalibrierung');
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(context.state, 'running');
@@ -282,14 +312,13 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     elements['session-back'].dispatchEvent(new Event('click'));
     const previous = JSON.parse(storage.get('atmungsraum.audio-receipts'));
     assert.equal(previous.length, 1);
-    assert.equal(previous[0].selection.minutes, 10);
-    assert.equal(previous[0].selection.boxMinutes, 5);
-    assert.equal(previous[0].protocol.baseline_frames, 300 * 44100);
+    assert.equal(previous[0].selection.minutes, 15);
+    assert.equal(previous[0].selection.boxMinutes, 15);
+    assert.equal(previous[0].protocol.baseline_frames, 0);
     assert.equal(previous[0].status, 'aborted');
-    route('start-haupt-15');
+    route('start-probe-10');
     controller.update('session-start', uiState.selection, true);
-    assert.equal(elements['session-duration'].textContent, '15:00');
-    assert.equal(elements['session-progress'].max, 900);
+    assert.equal(elements['session-progress'].max, 600);
     let unlock;
     context.resume = () => new Promise(resolve => { unlock = resolve; });
     elements.play.dispatchEvent(new Event('click'));

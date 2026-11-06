@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261106-proportions">
-  <script type="module" src="./app.js?v=20261106-proportions"></script>
+  <link rel="stylesheet" href="./style.css?v=20261106-calibration">
+  <script type="module" src="./app.js?v=20261106-calibration"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -88,9 +88,9 @@
             <img class="round-art" src="./assets/rounds/probe-runde.svg?v=20261105-simple" width="240" height="160" alt="" aria-hidden="true">
             <span id="round-probe-label" data-measure>Probe-Runde</span>
           </a>
-          <a class="round" href="#haupt-runde" aria-labelledby="round-main-label">
+          <a class="round" href="#start-haupt-15" aria-labelledby="round-main-label">
             <img class="round-art" src="./assets/rounds/haupt-runde.svg?v=20261105-simple" width="240" height="160" alt="" aria-hidden="true">
-            <span id="round-main-label" data-measure>Haupt-Runde</span>
+            <span id="round-main-label" data-measure>Haupt-Runde · 15 Minuten</span>
           </a>
         </nav>
       </div>
@@ -106,16 +106,6 @@
           <a class="option" href="#start-probe-5"><span data-measure>5 Minuten</span></a>
           <a class="option" href="#start-probe-10"><span data-measure>10 Minuten</span></a>
           <a class="option" href="#start-probe-15"><span data-measure>15 Minuten</span></a>
-        </nav>
-      </div>
-      <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
-    </section>
-    <section class="screen" id="haupt-runde" aria-labelledby="haupt-title" hidden>
-      <h1 id="haupt-title" tabindex="-1" data-measure>Haupt-Runde</h1>
-      <div class="screen-body choices-body">
-        <nav class="options" aria-label="Haupt-Runde wählen">
-          <a class="option" href="#start-haupt-10"><span><span data-measure>10 Minuten</span><span class="option-hint" data-measure>5 Min. normal atmen</span><span class="option-hint" data-measure>5 Min. Box-Atmung</span></span></a>
-          <a class="option" href="#start-haupt-15"><span><span data-measure>15 Minuten</span><span class="option-hint" data-measure>5 Min. normal atmen</span><span class="option-hint" data-measure>10 Min. Box-Atmung</span></span></a>
         </nav>
       </div>
       <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>

@@ -158,7 +158,165 @@
         "breath_tempo_factor": 1.1028231292517008,
         "target_duration_seconds": 4
       }
+    },
+    "calibration": {
+      "file": "calibration.wav",
+      "text": "",
+      "frames": 661500,
+      "bytes": 1323044,
+      "sha256": "52be802926b5ac395437d0863ed3d7b3f848f18ed4f4e3450d2c5ce577b22bce",
+      "role": "Silent breathing measurement window after Instruction 1",
+      "measurement": {
+        "signal_source": "h10-accelerometer-pending",
+        "value": null,
+        "unit": null,
+        "method": null,
+        "status": "not-integrated"
+      },
+      "processing": {
+        "range_start_frame": 0,
+        "range_duration_frames": 661500
+      }
+    },
+    "instruction_1": {
+      "file": "instruction_1.wav",
+      "text": "Bevor wir beginnen, machen wir eine kurze Atemkalibrierung. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",
+      "frames": 1146600,
+      "bytes": 2293244,
+      "sha256": "ce79be01ea8ed2cfcf64c9062d78e337dc76429acf2e58e5ed3aca50e9fd35b2",
+      "provider": "Secret Tunnel native OmniVoice",
+      "voice": "Atmungsraum - Existing Instructor",
+      "model_id": "k2-fsa/OmniVoice",
+      "processing": {
+        "sample_peak_dbfs": -8,
+        "speech_time_stretch": false,
+        "source_segments": [
+          {
+            "id": "prepare_intro",
+            "text": "Bevor wir beginnen, machen wir eine kurze Atemkalibrierung.",
+            "source_mp3_sha256": "3d8a23536b373695ee85be1bf42754b616e23c5f256f5fd0e89e349e88a5be49",
+            "speech_frames": 246038,
+            "generation_parameters": {
+              "guidanceScale": 2.0,
+              "mode": "slow",
+              "seed": 611060,
+              "speed": 0.85,
+              "whisperCheck": true
+            },
+            "word_fidelity": {
+              "asr_mode": "transcribe-auto-language-v1",
+              "hyphen_mode": "joined",
+              "method": "100 × max(0, 1 − word edit distance / reference words)",
+              "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+              "normalization": "word-v3-hyphen-best-match",
+              "percent": 100,
+              "recognized_words": 8,
+              "reference_words": 8,
+              "status": "scored",
+              "transcript": "Bevor wir beginnen, machen wir eine kurze Atemkalibrierung.",
+              "word_edits": 0
+            }
+          },
+          {
+            "id": "prepare_breaths",
+            "text": "Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen.",
+            "source_mp3_sha256": "f67095f8f8a73f67391ba35a727bae32c7b008ae79c219f3272508bc45842470",
+            "speech_frames": 487833,
+            "generation_parameters": {
+              "guidanceScale": 2.0,
+              "mode": "slow",
+              "seed": 611061,
+              "speed": 0.85,
+              "whisperCheck": true
+            },
+            "word_fidelity": {
+              "asr_mode": "transcribe-auto-language-v1",
+              "hyphen_mode": "joined",
+              "method": "100 × max(0, 1 − word edit distance / reference words)",
+              "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+              "normalization": "word-v3-hyphen-best-match",
+              "percent": 100,
+              "recognized_words": 18,
+              "reference_words": 18,
+              "status": "scored",
+              "transcript": "Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen.",
+              "word_edits": 0
+            }
+          },
+          {
+            "id": "prepare_comfort",
+            "text": "Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt.",
+            "source_mp3_sha256": "686ede378b96cb8a5ac5fb04fc9b4cc2bfec8f1c95a82072a876bd529fe02e4c",
+            "speech_frames": 305852,
+            "generation_parameters": {
+              "guidanceScale": 2.0,
+              "mode": "slow",
+              "seed": 611062,
+              "speed": 0.85,
+              "whisperCheck": true
+            },
+            "word_fidelity": {
+              "asr_mode": "transcribe-auto-language-v1",
+              "hyphen_mode": "joined",
+              "method": "100 × max(0, 1 − word edit distance / reference words)",
+              "model": "oxide-lab/whisper-large-v3-turbo-GGUF-q4_0",
+              "normalization": "word-v3-hyphen-best-match",
+              "percent": 100,
+              "recognized_words": 16,
+              "reference_words": 16,
+              "status": "scored",
+              "transcript": "Atme nur so tief, wie es angenehm ist und halte die Luft nicht an. Beginne jetzt.",
+              "word_edits": 0
+            }
+          }
+        ],
+        "source": "Respyra comfortable natural-range instructions; two-breath adaptation",
+        "source_url": "https://github.com/embodied-computation-group/respyra/blob/dev/respyra/core/runner.py#L267-L408",
+        "generated_on": "2026-11-06",
+        "listening_status": "Human delivery acceptance pending"
+      }
+    },
+    "outro": {
+      "file": "outro.wav",
+      "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
+      "frames": 837900,
+      "bytes": 1675844,
+      "sha256": "76145123e9a6605a47a426883404c350f86e8110f41bac226154a0417ad8c6e1",
+      "processing": {
+        "speech_start_frame": 308700,
+        "source_asset": "ending",
+        "source_sha256": "1922cee5cd6e8c7ac26e9768d05d590aa50bde29ae0fe34adba0a2759032e87d",
+        "source_samples_unchanged": true
+      }
     }
   },
-  "review_status": "Technical PCM integrity and exact session timing verified; human voice acceptance pending."
+  "review_status": "Technical PCM integrity and exact session timing verified; human voice acceptance pending.",
+  "main_asset_classes": {
+    "instruction_1": [
+      "instruction_1"
+    ],
+    "calibration": [
+      "calibration"
+    ],
+    "instruction_2": [
+      "instruction"
+    ],
+    "inhale": [
+      "inhale",
+      "inhale_breath"
+    ],
+    "hold_in": [
+      "hold_in"
+    ],
+    "exhale": [
+      "exhale",
+      "exhale_breath"
+    ],
+    "hold_out": [
+      "hold_out"
+    ],
+    "outro": [
+      "outro"
+    ]
+  }
 }

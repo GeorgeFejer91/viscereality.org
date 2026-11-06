@@ -1,5 +1,13 @@
 # Listening assets
 
+The current main sequence's shared class catalogue is
+`../assets/audio/box-breathing/de/soft-v2/main-asset-classes.csv`; the same classes
+are in `manifest.json`. New Instruction 1, silent Calibration and Outro WAVs have
+adjacent JSON sidecars. Instruction 2 and cyclic cues reuse the original assets.
+Haupt-Runde is one direct15-minute sequence, including its26–41 second calibration
+window. Secret Tunnel supplies Instruction 1; the earlier local ElevenLabs
+listening variants below are independent. See [the protocol](../audio/calibration.md).
+
 Open `ready-to-listen/elevenlabs/` for the current local German breathing cues.
 They use **British Breathing Instructor**, the same saved ElevenLabs profile
 as the website. The folder contains:

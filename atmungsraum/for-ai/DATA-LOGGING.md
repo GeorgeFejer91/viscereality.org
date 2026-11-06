@@ -35,7 +35,7 @@ plus demographics are not guaranteed to distinguish different people: the UUID
 `session_id` is the unique identity of an individual run.
 
 The exact exercise is in `scenario_id`: `probe-anleitung`, `probe-5`, `probe-10`,
-`probe-15`, `haupt-10`, or `haupt-15`. Preserve this field and planned duration;
+`probe-15`, or the single `haupt-15`. Preserve this field and planned duration;
 the filename's `probe`/`main` does not encode duration. Anleitung is a practice
 run; its current audio example is 68 seconds, with no menu exploration limit.
 
@@ -65,7 +65,11 @@ formula prefixes in nonnumeric text. Retain these current fields:
 Sample indices start at zero. UTC timestamps use ISO 8601 with `Z`; elapsed
 times derive from `performance.now()`. The ECG wall clock continues through
 deliberate audio pauses; `audio_elapsed_ms` stays fixed while paused. `phase`
-follows the selected authored audio protocol, including the silent main baseline.
+follows the selected authored audio protocol, including the distinct `instruction_1`, `calibration`, `instruction_2` and
+`outro` main classes. Main `planned_duration_seconds` is exactly 900, including
+all instructions and calibration. No main baseline is present. Calibration
+receipts expose planned audio-clock start/end; the future H10 accelerometer
+value remains null/not-integrated until a real measurement source is wired.
 Missing signal produces a blank ECG value with explicit `signal_state`, rather
 than a stale or fabricated available measurement. A signal timeout, navigation,
 Escape, hidden page, interrupted audio clock or manual End aborts the attempt;

@@ -1,6 +1,6 @@
 // This prototype only emulates headset verification and ECG reception.
 import { participantIdentity } from './data-logging.js?v=20261105-data';
-export const choices = { probe: ['anleitung', '5', '10', '15'], haupt: ['10', '15'] };
+export const choices = { probe: ['anleitung', '5', '10', '15'], haupt: ['15'] };
 export const state = { sensor: 'disconnected', patient: null, selection: null, started: false, entered: false, lostSince: null, reconnectAttempts: 0, lastReconnect: null };
 export function hasSignal() { return state.sensor === 'ecg'; }
 export function canNavigate() { return Boolean(state.patient && (hasSignal() || state.entered)); }
@@ -44,19 +44,18 @@ export function updateReconnect(now = performance.now()) {
   return null;
 }
 export function route(requested) {
+  if (requested === 'haupt-runde') requested = 'start-haupt-15';
   if (requested === 'daten') return 'daten';
   if (!state.patient || requested === 'patient') return 'patient';
   if (!canNavigate()) return 'h10';
   if (requested === 'h10') return 'h10';
   const [, branch, value] = /^start-(probe|haupt)-(anleitung|\d+)$/.exec(requested) ?? [];
-  const menu = ['runde', 'probe-runde', 'haupt-runde'].includes(requested);
+  const menu = ['runde', 'probe-runde'].includes(requested);
   if (!menu && !choices[branch]?.includes(value)) return 'h10';
   if (menu) return requested;
   if (state.selection?.branch !== branch || state.selection?.value !== value) state.started = false;
   const minutes = value === 'anleitung' ? null : Number(value);
-  const baselineMinutes = branch === 'haupt' ? 5 : 0;
-  state.selection = { branch, value, minutes, baselineMinutes,
-    boxMinutes: minutes === null ? null : minutes - baselineMinutes };
+  state.selection = { branch, value, minutes, boxMinutes: minutes };
   return 'session-start';
 }
 export function start() {

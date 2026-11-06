@@ -1,18 +1,17 @@
 ATMUNGSRAUM AUDIO REVIEW
-Snapshot refreshed: 2026-11-05
+Snapshot refreshed: 2026-11-06
 
 Start with 02-PARTICIPANT-EXPERIENCE.txt for the listener's experience.
 Read 01-PROTOCOL-INVENTORY.txt for the scripts, assets and generation rules.
 Open timelines/ for a complete timestamped German transcript of each sequence.
 Read 03-LISTENING-VARIANTS.txt to compare the newer audition wording.
 
-The six current menu choices each have a timeline:
+The five current menu choices each have a timeline:
   probe-anleitung.txt       01:08 example, replayable; screen has no time limit
   probe-05-min.txt          05:00 guided practice
   probe-10-min.txt          10:00 guided practice
   probe-15-min.txt          15:00 guided practice
-  haupt-10-min.txt          05:00 silence + 05:00 guided sequence
-  haupt-15-min.txt          05:00 silence + 10:00 guided sequence
+  haupt-15-min.txt          15:00 total: Instruction 1 / Calibration / Instruction 2 / cycles / Outro
 An additional engine-only-20-min.txt covers the supported 20-minute API option,
 which is not a current menu choice.
 
@@ -29,7 +28,8 @@ audio/scenarios/ and the shared library manifest, with source hashes recorded
 in their headers. JSON now owns playback timing/order; matching CSV timing
 sheets accompany it. These text scores are a fixed snapshot: refresh them if
 scenario JSON, the engine, selection mapping or sample set changes.
-No new speech was synthesized and no existing audio was replaced for this review.
+The 2026-11-06 refresh adds Secret Tunnel Instruction 1 and the separate calibration/Outro classes.
+All original speech assets retain their bytes; listening acceptance is pending.
 
 The newer local ElevenLabs listening package is documented but absent from
 this checkout. Its description is based on its source scripts and folder guide;

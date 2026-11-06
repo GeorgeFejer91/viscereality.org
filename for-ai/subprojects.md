@@ -1,6 +1,6 @@
 # Subprojects
 
-Last updated: 2026-10-12
+Last updated: 2026-11-06
 
 This is the working map of website-adjacent subprojects. Update it when a subproject is added, retired, or gains durable behavioral constraints.
 
@@ -11,6 +11,16 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Constraints: keep content readable without heavy media; preserve desktop and mobile navigation; keep research claims citation-backed or carefully framed.
 
 ## Atmungsraum
+
+- Main round (2026-11-06 latest correction): Haupt-Runde goes directly to one
+  exactly 15-minute Start screen. There is no main duration menu, 10-minute main
+  scenario or five-minute baseline. Shared classes are Instruction 1(26 s),
+  Calibration(15 s), Instruction 2(40 s), fifty 16-second cycles(800 s), and Outro(19 s).
+  Calibration is explicitly scheduled at 26–41 audio-clock seconds. JSON/CSV,
+  receipts and an advance event expose its window for the future ECG-sensor
+  accelerometer; measured value/unit/method remain unset, status not-integrated.
+  Instruction 1 uses the Secret Tunnel existing-instructor clone. Original
+  assets/practice remain unchanged. See [the transcript/protocol](../atmungsraum/audio/calibration.md).
 
 - Responsive proportions (2026-11-06): patient entry uses a centered composition
   capped at 560px high, a 640px form, equal columns/shared gutters and bounded

@@ -1,5 +1,5 @@
-import { BoxBreathingEngine } from './box-breathing.js?v=20261105-scenarios';
-import { state, start } from '../ui-logic.js?v=20261105-data';
+import { BoxBreathingEngine } from './box-breathing.js?v=20261106-calibration';
+import { state, start } from '../ui-logic.js?v=20261106-calibration';
 import { participantIdentity } from '../data-logging.js?v=20261105-data';
 
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
@@ -12,9 +12,10 @@ export function mountSessionAudio({ data } = {}) {
   const duration = document.getElementById('session-duration');
   const progress = document.getElementById('session-progress');
   const status = document.getElementById('start-status');
-  const labels = { baseline: 'Normal atmen', instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
+  const labels = { instruction_1: 'Anleitung zur Kalibrierung', calibration: 'Atemkalibrierung',
+    instruction_2: 'Anleitung zur Atmung', instruction: 'Willkommen', inhale: 'Einatmen', hold_in: 'Atempause',
     exhale: 'Ausatmen', hold_out: 'Atempause', rest: 'Pause · natürlich atmen',
-    ending: 'Ausklang', recovery: 'Natürlich atmen' };
+    outro: 'Ausklang', ending: 'Ausklang', recovery: 'Natürlich atmen' };
   const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
   const format = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   let engine, preparation, key = null, gate = false, mode = 'idle', message = '', token = 0, frame = 0;
@@ -128,9 +129,14 @@ export function mountSessionAudio({ data } = {}) {
     mode = 'starting'; message = 'Audio startet …'; paint();
     try {
       // resume() is called from this user action; assets were prepared beforehand.
-      const session = await engine.start(attempt.selection.boxMinutes ?? 'anleitung',
-        { baselineMinutes: attempt.selection.baselineMinutes });
+      const session = await engine.start(attempt.selection.minutes ?? 'anleitung',
+        { mainRound: attempt.selection.branch === 'haupt' });
       attempt.startAt = session.startAt;
+      const calibration = engine.receipt().calibration;
+      if (calibration) window.dispatchEvent(new CustomEvent('atmungsraum:calibration-scheduled', {
+        detail: { session_id: attempt.id, scenario_id: session.protocol.scenario_id,
+          sample_rate: session.protocol.sample_rate, clock: 'AudioContext.currentTime', ...calibration },
+      }));
       attempt.recording = data?.begin({ patient: attempt.patient, selection: attempt.selection, sessionId: attempt.id,
         protocol: { ...session.protocol, scenario_sha256: engine.receipt().scenario_sha256 },
         audioStartDelayMs: Math.max(0, (session.startAt - engine.context.currentTime) * 1000) });
@@ -234,8 +240,8 @@ export function mountSessionAudio({ data } = {}) {
   function resetProgress(selection) {
     totalSeconds = selection?.minutes ? selection.minutes * 60 : 0;
     if (selection && engine?.buffers) {
-      const protocol = engine.protocol(selection.boxMinutes ?? 'anleitung',
-        { baselineMinutes: selection.baselineMinutes });
+      const protocol = engine.protocol(selection.minutes ?? 'anleitung',
+        { mainRound: selection.branch === 'haupt' });
       totalSeconds = protocol.total_frames / protocol.sample_rate;
     }
     showProgress();

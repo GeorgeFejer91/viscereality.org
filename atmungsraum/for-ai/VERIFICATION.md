@@ -1,5 +1,43 @@
 # Verification
 
+## Single 15-minute main sequence — 2026-11-06
+
+Current acceptance supersedes the earlier two-option/48-second-composite local
+checks. The main path is direct and contains exactly 26 + 15 + 40 + (50 × 16) +
+19 = 900 seconds, with no baseline/rest/recovery event. Calibration is an explicit
+silent asset at 26–41 seconds; Instruction 1 contains the German two-breath
+instructions. Instruction 2 reuses instruction.wav. Outro contains seven quiet
+seconds plus the original 12-second ending PCM, unchanged. All original nine
+WAVs remain intact. Asset classes/transcripts are in the manifest and
+main-asset-classes.csv; adjacent JSON sidecars retain hashes/provenance.
+
+All three Instruction 1 phrases passed Secret Tunnel's native Whisper check
+with zero word edits; no speech was stretched. Original receipts and the unused
+earlier composite remain ignored/private. Repacking uses the verified MP3 cache
+and rejects corruption. Respyra source comparison and exact German narration
+are in audio/calibration.md. H10 accelerometer integration is future work;
+calibration value/unit/method remain null and status not-integrated.
+
+The new single-main-choice regression was observed failing before implementation.
+All 21 Node tests, six scenario JSON/CSV pairs, UI state and context checks pass.
+Tests cover exact class boundaries/totals, all fifty complete cycles, pause/resume,
+no retrigger, receipt and advance-event calibration timing, and unchanged outro
+source samples. Native Chrome silently rendered all six scenarios at 44.1/48 kHz (12 renders),
+with exact totals and zero maximum sample error. The revised main has 900 seconds,
+50 complete cycles, no baseline/rest/recovery, and the proper class order.
+All 137 responsive/Pretext cases and 18 main/root text cases (320×568,568×320 and
+1920×1080, ordinary/200% plus spacing/long labels) pass. Actual browser checks
+covered all five menu playback routes, direct main entry with no duration screen,
+calibration transition at 26 s and transition to Instruction 2 at 41 s, pause/resume
+inside calibration, one fresh window on replay, advance scheduling event with
+unset value, exact saved scenario hashes and participant CSV phases/duration.
+All 12 shared WAVs and six JSONs preload once; missing-calibration failure/retry
+works. No page errors occurred. Screenshots were inspected. Independent final
+review found no actionable runtime issue and confirmed original nine WAV bytes.
+Current ignored evidence is output/playwright/calibration-final-* and the
+scenario-offline JSON reports. GitHub/Pages publication is the remaining gate.
+Physical audio timing, listening acceptance and hardware calibration remain open.
+
 ## Responsive proportions — 2026-11-06
 
 The patient composition is centered and capped at 560px high; its equal-column

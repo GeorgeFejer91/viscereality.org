@@ -11,7 +11,7 @@ const library = JSON.parse(libraryBytes);
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const plans = [
   ['probe-anleitung', 'anleitung', 0], ['probe-5', 5, 0], ['probe-10', 10, 0],
-  ['probe-15', 15, 0], ['haupt-10', 5, 5], ['haupt-15', 10, 5], ['box-20', 20, 0],
+  ['probe-15', 15, false], ['haupt-15', 15, true], ['box-20', 20, false],
 ];
 const scenarioUrl = id => new URL(`../audio/scenarios/${id}.json`, import.meta.url);
 
@@ -27,14 +27,14 @@ test('Hash-bound library and scenario files retain LF bytes across checkouts', a
 
 test('Every scenario file preserves the approved sequence and its CSV names the exact shared assets', async () => {
   assert.deepEqual(scenarios.SCENARIOS, plans.map(([id]) => id));
-  for (const [id, minutes, baselineMinutes] of plans) {
+  for (const [id, minutes, mainRound] of plans) {
     const plan = scenarios.validateScenario(JSON.parse(await readFile(scenarioUrl(id))), library,
       { scenarioId: id, manifestHash: hash(libraryBytes) });
     const { schema_version, scenario_id, audio_library, library_manifest_sha256, ...protocol } = plan;
-    const original = createProtocol(minutes, library, { baselineMinutes });
+    const original = createProtocol(minutes, library, { mainRound });
     assert.deepEqual(protocol, { ...original, events: original.events.map(event =>
       event.id === 'recovery' ? { ...event, asset: null } : event) });
-    assert.equal(scenarios.scenarioId(minutes, { baselineMinutes }), id);
+    assert.equal(scenarios.scenarioId(minutes, { mainRound }), id);
     assert.equal(new URL(audio_library, scenarioUrl(id)).href, libraryUrl.href);
     const csv = await readFile(new URL(`../audio/scenarios/${id}.csv`, import.meta.url), 'utf8');
     assert.equal(csv, scenarios.scenarioCsv(plan, library));
@@ -42,10 +42,28 @@ test('Every scenario file preserves the approved sequence and its CSV names the 
     const firstInhale = csv.trim().split('\n').map(row => row.split(',')).find(row => row[1] === 'inhale');
     assert.equal(firstInhale[2], 'inhale');
     assert.equal(firstInhale[3], 'assets/audio/box-breathing/de/soft-v2/inhale.wav');
-    assert.deepEqual(firstInhale.slice(4, 7), baselineMinutes ? ['340', '4', '344'] : ['40', '4', '44']);
+    const start = mainRound ? 81 : 40;
+    assert.deepEqual(firstInhale.slice(4, 7), [String(start), '4', String(start + 4)]);
+    assert.equal(plan.events.filter(event => event.id === 'calibration').length, mainRound ? 1 : 0);
   }
-  for (const [minutes, baselineMinutes] of [[5, 4], [15, 5], ['anleitung', 5], ['5', 0]]) {
-    assert.throws(() => scenarios.scenarioId(minutes, { baselineMinutes }));
+  for (const [minutes, mainRound] of [[5, true], [10, true], ['anleitung', true], ['5', false]]) {
+    assert.throws(() => scenarios.scenarioId(minutes, { mainRound }));
+  }
+});
+
+test('Main timelines reject missing, repeated or misplaced calibration and wrong calibration summaries', async () => {
+  const valid = JSON.parse(await readFile(scenarioUrl('haupt-15')));
+  const check = plan => scenarios.validateScenario(plan, library, { scenarioId: 'haupt-15', manifestHash: hash(libraryBytes) });
+  check(structuredClone(valid));
+  for (const mutate of [
+    plan => { plan.calibration_frames = 0; },
+    plan => { plan.events[1].id = 'baseline'; plan.events[1].asset = null; },
+    plan => { plan.events[1].asset = 'instruction'; },
+    plan => { plan.events[0].id = 'calibration'; plan.events[0].asset = 'calibration'; },
+    plan => { plan.events[0].offset_frames = 1; },
+  ]) {
+    const plan = structuredClone(valid); mutate(plan);
+    assert.throws(() => check(plan));
   }
 });
 
@@ -63,7 +81,7 @@ test('Invalid scenario timing, assets, identities and library revisions fail bef
     plan => { plan.events.at(-1).asset = 'inhale'; },
     plan => { plan.total_frames++; },
     plan => { plan.sample_rate = 48000; },
-    plan => { plan.scenario_id = 'haupt-10'; },
+    plan => { plan.scenario_id = 'haupt-15'; },
     plan => { plan.library_manifest_sha256 = '0'.repeat(64); },
     plan => { plan.audio_library = 'https://example.invalid/library.json'; },
     plan => { plan.cycles++; },
@@ -103,8 +121,8 @@ test('Playback uses the loaded timeline, records its hash, and maps all final ch
   const engine = new BoxBreathingEngine({ audioContext: context });
   try {
     await engine.prepare();
-    for (const [id, minutes, baselineMinutes] of plans) {
-      assert.equal(engine.protocol(minutes, { baselineMinutes }).scenario_id, id);
+    for (const [id, minutes, mainRound] of plans) {
+      assert.equal(engine.protocol(minutes, { mainRound }).scenario_id, id);
     }
     const session = await engine.start(5);
     assert.equal(session.protocol.events[1].asset, 'exhale');

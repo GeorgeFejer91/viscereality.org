@@ -17,8 +17,8 @@ try {
     const decoder = new OfflineAudioContext(1, rate * 4, rate);
     const engine = new BoxBreathingEngine({ audioContext: decoder });
     await engine.prepare();
-    for (const minutes of main ? [5, 10] : ['anleitung', 5, 10, 15, 20]) {
-      const plan = engine.protocol(minutes, { baselineMinutes: main ? 5 : 0 });
+    for (const minutes of main ? [15] : ['anleitung', 5, 10, 15, 20]) {
+      const plan = engine.protocol(minutes, { mainRound: main });
       const totalFrames = Math.round(plan.total_frames / plan.sample_rate * rate);
       const context = new OfflineAudioContext(1, totalFrames, rate);
       scheduleProtocol(context, engine.buffers, plan, 0);

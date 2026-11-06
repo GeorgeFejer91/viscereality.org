@@ -1,5 +1,5 @@
 CURRENT AUDIO PROTOCOL AND SCRIPT INVENTORY
-Snapshot refreshed: 2026-11-05; paths are relative to atmungsraum/.
+Snapshot refreshed: 2026-11-06; paths are relative to atmungsraum/.
 Scope: checked-in scripts, manifests, runtime wiring and documented auditions.
 
 1. WHAT THE BROWSER ACTUALLY PLAYS
@@ -9,7 +9,13 @@ Timeline: audio/scenarios/<scenario-id>.json, with a matching generated CSV.
 Shared library folder: assets/audio/. JSON events own asset order and timing.
 Selected manifest: assets/audio/box-breathing/de/soft-v2/manifest.json.
 Protocol ID: box-breathing-4-4-4-4-de-v2, version 2.
-Nine reusable mono PCM WAVs, 16-bit, 44,100 Hz:
+Twelve reusable mono PCM WAVs, 16-bit, 44,100 Hz:
+  instruction_1     26 seconds  Preparation for two deep breaths
+  calibration       15 seconds  Separate silent measurement window
+  outro             19 seconds  Seven quiet seconds plus original ending PCM
+  instruction_1     26 seconds  Preparation for two deep breaths
+  calibration       15 seconds  Separate silent measurement window
+  outro             19 seconds  Seven quiet seconds plus original ending PCM
   instruction       40 seconds  Welcome and explanation
   inhale             4 seconds  Einatmen. Zwei. Drei. Vier.
   hold_in            4 seconds  Und halten. [then quiet]
@@ -28,6 +34,18 @@ notifications never trigger the next phase. A missing/corrupt asset prevents
 preparation; missed start deadlines and unexpected clock interruptions abort.
 
 2. HOW THE RUNTIME SAMPLES ARE CREATED
+
+  tools/build-calibration-cue.py (2026-11-06)
+  Secret Tunnel existing-instructor clone, three short Whisper-checked phrases.
+  Instruction 1, a separate silent Calibration, and Outro plus class JSON/CSV;
+  no speech stretching.
+  See audio/calibration.md for Respyra provenance and sensor limits.
+
+  tools/build-calibration-cue.py (2026-11-06)
+  Secret Tunnel existing-instructor clone, three short Whisper-checked phrases.
+  Instruction 1, a separate silent Calibration, and Outro plus class JSON/CSV;
+  no speech stretching.
+  See audio/calibration.md for Respyra provenance and sensor limits.
 
 tools/build-soft-box-cues.py
   Inputs: --key-file outside the repository; --sounds-dir containing supplied
@@ -83,9 +101,9 @@ audio/scenario-protocol.js: selection mapping, validation and CSV serialization.
 
 ui-logic.js and audio/session-ui.js map the current menu:
   Probe: Anleitung, 5, 10 or 15 guided minutes.
-  Haupt 10: five silent baseline minutes + five guided minutes.
-  Haupt 15: five silent baseline minutes + ten guided minutes.
-  Haupt baseline has NO welcome, recorded instruction, music or breath cue.
+  Haupt 15: direct 900-second sequence, no baseline or duration menu.
+  Instruction 1 0–26; Calibration 26–41; Instruction 2 41–81;
+  fifty complete cycles 81–881; Outro 881–900 seconds.
   Its screen displays Normal atmen, but that label is not spoken.
   Both main welcomes start at 05:00; first paced inhale at 05:40.
   Anleitung: welcome + ONE cycle + ending = 68 seconds; no automatic loop.
@@ -180,7 +198,7 @@ tools/render-box-breathing.mjs
   tests/offline-audio.html?round=haupt covers main-round production scheduling.
 
 tools/scenario-csv.mjs
-  Reads/validates all seven JSONs and the library hash; updates their paired
+  Reads/validates all six JSONs and the library hash; updates their paired
   CSVs, or rejects drift with --check. No synthesis or new audio copies.
 
 tests/box-breathing.test.mjs: protocol, asset integrity and lifecycle tests.
@@ -213,13 +231,13 @@ The runtime welcome says "Wir zählen jede Phase bis vier", but both holds only
 say "Und halten" and remain quiet. That is an existing wording mismatch.
 The welcome says "Auf Ein" / "Auf Aus"; phase labels actually say
 "Einatmen" / "Ausatmen". Review clarity without silently rewriting speech.
-The main round begins silently; a participant relying only on audio receives
-no spoken instruction for those first five minutes.
+The main round begins with Instruction 1, a separate 15-second Calibration,
+and Instruction 2, then fifty complete cycles and Outro. There is no baseline.
 The newer selected-voice audition says Halten!, while runtime still says
 Und halten. It also changes phrase assembly and voice/breath level shaping.
 
-This checkout contains the runtime WAVs and older retained assets. It does NOT
-contain reference-audio/ or the generated ready-to-listen/elevenlabs/ package.
+Runtime WAVs and retained assets are published; private calibration receipts
+are in ignored reference-audio/. Listening acceptance remains separate.
 Audition behavior above is established from scripts/documentation, not a fresh
 examination of missing PCM. Generation cache inputs must be restored before
 rebuilding; regenerating speech would require separate API requests/credits.

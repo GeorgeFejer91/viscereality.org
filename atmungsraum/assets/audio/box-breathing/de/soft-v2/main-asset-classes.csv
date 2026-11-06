@@ -1,0 +1,11 @@
+class_id,asset_id,asset_file,duration_seconds,transcript_de
+instruction_1,instruction_1,instruction_1.wav,26.0,"Bevor wir beginnen, machen wir eine kurze Atemkalibrierung. Atme dafür gleich zweimal ruhig und tief ein und wieder aus. Nutze deinen natürlichen Atemraum, ohne dich anzustrengen. Atme nur so tief, wie es angenehm ist, und halte die Luft nicht an. Beginne jetzt."
+calibration,calibration,calibration.wav,15.0,
+instruction_2,instruction,instruction.wav,40.0,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+inhale,inhale,inhale.wav,4.0,Einatmen. Zwei. Drei. Vier.
+inhale,inhale_breath,inhale_breath.wav,4.0,Einatmen. Zwei. Drei. Vier.
+hold_in,hold_in,hold_in.wav,4.0,Und halten.
+exhale,exhale,exhale.wav,4.0,Ausatmen. Zwei. Drei. Vier.
+exhale,exhale_breath,exhale_breath.wav,4.0,Ausatmen. Zwei. Drei. Vier.
+hold_out,hold_out,hold_out.wav,4.0,Und halten.
+outro,outro,outro.wav,19.0,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."

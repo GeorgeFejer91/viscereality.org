@@ -1,8 +1,8 @@
-import { SCENARIOS, scenarioId, validateScenario } from './scenario-protocol.js';
+import { SCENARIOS, scenarioId, validateScenario } from './scenario-protocol.js?v=20261106-calibration';
 
 export const PHASES = Object.freeze(['inhale', 'hold_in', 'exhale', 'hold_out']);
 export const MINUTES = Object.freeze([5, 10, 15, 20]);
-const BLOCKS = ['instruction', ...PHASES, 'ending', 'rest', 'inhale_breath', 'exhale_breath'];
+const BLOCKS = ['instruction_1', 'calibration', 'instruction', ...PHASES, 'outro', 'ending', 'rest', 'inhale_breath', 'exhale_breath'];
 const DEFAULT_MANIFEST = new URL('../assets/audio/box-breathing/de/soft-v2/manifest.json', import.meta.url);
 const SCENARIO_DIRECTORY = new URL('./scenarios/', import.meta.url);
 
@@ -22,6 +22,8 @@ export function validateManifest(manifest) {
     const phase = PHASES.includes(id) || id.endsWith('_breath');
     const framesValid = Number.isSafeInteger(block?.frames) && block.frames > 0
       && (phase ? block.frames === manifest.block_frames
+        : id === 'calibration' ? block.frames === 15 * manifest.sample_rate
+          : ['instruction_1', 'outro'].includes(id) ? block.frames <= 180 * manifest.sample_rate
         : id === 'rest' ? block.frames === manifest.rest_frames
           : block.frames % manifest.block_frames === 0 && block.frames <= 180 * manifest.sample_rate);
     if (block?.file !== `${id}.wav` || !framesValid
@@ -33,21 +35,20 @@ export function validateManifest(manifest) {
 }
 
 // Integer source frames are the timing contract; seconds are derived at playback.
-export function createProtocol(minutes, manifest, { baselineMinutes = 0 } = {}) {
+export function createProtocol(minutes, manifest, { mainRound = false } = {}) {
   validateManifest(manifest);
   const instruction = minutes === 'anleitung';
   if (!instruction && !MINUTES.includes(minutes)) throw new RangeError('Choose 5, 10, 15, or 20 minutes.');
-  if (baselineMinutes !== 0 && (baselineMinutes !== 5 || ![5, 10].includes(minutes))) {
-    throw new RangeError('Main sessions require 5 minutes of normal breathing followed by a 5- or 10-minute guided sequence.');
-  }
+  if (mainRound && minutes !== 15) throw new RangeError('The main round is exactly 15 minutes.');
   const sampleRate = manifest.sample_rate;
   const blockFrames = manifest.block_frames;
   const introFrames = manifest.blocks.instruction.frames;
-  const endingFrames = manifest.blocks.ending.frames;
+  const endingFrames = manifest.blocks[mainRound ? 'outro' : 'ending'].frames;
   const cycleFrames = 4 * blockFrames;
-  const baselineFrames = baselineMinutes * 60 * sampleRate;
-  const totalFrames = baselineFrames + (instruction ? introFrames + cycleFrames + endingFrames : minutes * 60 * sampleRate);
-  let remaining = totalFrames - baselineFrames - introFrames - endingFrames;
+  const instruction1Frames = mainRound ? manifest.blocks.instruction_1.frames : 0;
+  const calibrationFrames = mainRound ? manifest.blocks.calibration.frames : 0;
+  const totalFrames = instruction ? introFrames + cycleFrames + endingFrames : minutes * 60 * sampleRate;
+  let remaining = totalFrames - instruction1Frames - calibrationFrames - introFrames - endingFrames;
   if (remaining < cycleFrames) throw new RangeError('No complete breathing cycle fits this session.');
   let cycles = 0, rests = 0, block = 1;
   const breathingBlocks = [];
@@ -58,10 +59,14 @@ export function createProtocol(minutes, manifest, { baselineMinutes = 0 } = {}) 
       breathing_block: cycle === null ? null : block }));
     frame += frames;
   };
-  if (baselineFrames) add('baseline', baselineFrames, null, null);
-  add('instruction', introFrames);
+  if (mainRound) {
+    add('instruction_1', instruction1Frames);
+    add('calibration', calibrationFrames);
+  }
+  add(mainRound ? 'instruction_2' : 'instruction', introFrames, null, 'instruction');
   while (remaining >= cycleFrames) {
-    const count = Math.min(manifest.cycles_per_block, Math.floor(remaining / cycleFrames));
+    const count = mainRound ? Math.floor(remaining / cycleFrames)
+      : Math.min(manifest.cycles_per_block, Math.floor(remaining / cycleFrames));
     breathingBlocks.push(count);
     for (let i = 0; i < count; i++) {
       cycles++;
@@ -72,16 +77,17 @@ export function createProtocol(minutes, manifest, { baselineMinutes = 0 } = {}) 
     }
     remaining -= count * cycleFrames;
     // Rest only between breathing blocks; never turn the final remainder into a hold.
-    if (remaining >= manifest.rest_frames + cycleFrames) {
+    if (!mainRound && remaining >= manifest.rest_frames + cycleFrames) {
       add('rest', manifest.rest_frames); rests++; block++; remaining -= manifest.rest_frames;
     } else break;
   }
-  add('ending', endingFrames);
+  add(mainRound ? 'outro' : 'ending', endingFrames);
   const recoveryFrames = totalFrames - frame;
   if (recoveryFrames) add('recovery', recoveryFrames);
-  return Object.freeze({ id: manifest.id, minutes: instruction ? null : minutes + baselineMinutes,
-    box_minutes: instruction ? null : minutes, baseline_frames: baselineFrames,
-    mode: instruction ? 'instruction-example' : baselineFrames ? 'main-session' : 'session', sample_rate: sampleRate,
+  return Object.freeze({ id: manifest.id, minutes: instruction ? null : minutes,
+    box_minutes: instruction ? null : minutes, baseline_frames: 0, calibration_frames: calibrationFrames,
+    calibration_start_frame: mainRound ? instruction1Frames : null, instruction_1_frames: instruction1Frames,
+    mode: instruction ? 'instruction-example' : mainRound ? 'main-session' : 'session', sample_rate: sampleRate,
     total_frames: totalFrames, cycles, rests, breathing_blocks: Object.freeze(breathingBlocks),
     intro_frames: introFrames, ending_frames: endingFrames, recovery_frames: recoveryFrames,
     events: Object.freeze(events) });
@@ -96,8 +102,6 @@ export function scheduleProtocol(context, buffers, protocol, startAt, destinatio
   const sources = [];
   try {
     for (const event of protocol.events) {
-      // The control period is silent; no five-minute silent buffer is needed.
-      if (event.id === 'baseline') continue;
       const seconds = event.duration_frames / protocol.sample_rate;
       const buffer = event.id === 'recovery'
         ? context.createBuffer(1, Math.round(seconds * context.sampleRate), context.sampleRate)
@@ -162,7 +166,7 @@ export class BoxBreathingEngine {
     if (this.disposed) throw new Error('Engine is disposed.');
     if (this.preparation) return this.preparation;
     this.preparation = (async () => {
-      const response = await fetch(this.manifestUrl);
+      const response = await fetch(this.manifestUrl, { cache: 'no-cache' });
       if (!response.ok) throw new Error(`Manifest HTTP ${response.status}.`);
       const bytes = await response.arrayBuffer();
       this.manifest = validateManifest(JSON.parse(new TextDecoder().decode(bytes)));
@@ -183,7 +187,7 @@ export class BoxBreathingEngine {
       }));
       const scenarios = await Promise.all(SCENARIOS.map(async (id) => {
         const url = new URL(`${id}.json`, SCENARIO_DIRECTORY);
-        const response = await fetch(url);
+        const response = await fetch(url, { cache: 'no-cache' });
         if (!response.ok) throw new Error(`Scenario HTTP ${response.status}: ${id}.`);
         const bytes = await response.arrayBuffer();
         const protocol = validateScenario(JSON.parse(new TextDecoder().decode(bytes)), this.manifest,
@@ -209,11 +213,11 @@ export class BoxBreathingEngine {
 
   // Call after prepare(), directly from the host's Start action. An explicit
   // startAt lets the rest of an experiment share this audio-clock anchor.
-  async start(minutes, { startAt, baselineMinutes = 0 } = {}) {
+  async start(minutes, { startAt, mainRound = false } = {}) {
     if (this.disposed || !this.buffers) throw new Error('Prepare audio before starting.');
     if (this.starting || this.pausing || this.resuming || ['scheduled', 'paused'].includes(this.run?.status)) throw new Error('A session is already active.');
     if (typeof document !== 'undefined' && document.hidden) throw new Error('Keep the experiment page visible.');
-    const protocol = this.protocol(minutes, { baselineMinutes });
+    const protocol = this.protocol(minutes, { mainRound });
     const token = ++this.token;
     this.starting = true;
     try {
@@ -235,6 +239,12 @@ export class BoxBreathingEngine {
         output_latency_seconds: this.context.outputLatency ?? null,
         clock_mapping: this.context.getOutputTimestamp?.() ?? null,
         requested_at_performance_ms: performance.now(), records: [], sources: [], done, resolve };
+      run.calibration = protocol.calibration_frames ? {
+        offset_frames: protocol.calibration_start_frame, duration_frames: protocol.calibration_frames,
+        scheduled_start_audio_seconds: t0 + protocol.calibration_start_frame / protocol.sample_rate,
+        scheduled_end_audio_seconds: t0 + (protocol.calibration_start_frame + protocol.calibration_frames) / protocol.sample_rate,
+        signal_source: 'h10-accelerometer-pending', status: 'not-integrated', value: null, unit: null, method: null,
+      } : null;
       this.run = run;
       try {
         run.sources = scheduleProtocol(this.context, this.buffers, protocol, t0);

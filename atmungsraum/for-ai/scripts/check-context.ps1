@@ -24,10 +24,9 @@ $css = Get-Content -Raw -LiteralPath (Join-Path $root 'style.css')
 if ($html -notmatch '<html lang="de">' -or $css -notmatch 'background:\s*#000\s*;') {
     throw 'The page must use German and retain its black background'
 }
-foreach ($round in @('probe', 'haupt')) {
-    if ($html -notmatch "href=`"#$round-runde`"" -or $html -notmatch "id=`"$round-runde`"") {
-        throw "Missing $round decision branch"
-    }
+if ($html -notmatch 'href="#probe-runde"' -or $html -notmatch 'id="probe-runde"' -or
+    $html -notmatch 'href="#start-haupt-15"' -or $html -match 'id="haupt-runde"') {
+    throw 'Keep practice choices and the direct single 15-minute main round'
 }
 if ([regex]::Matches($html, 'class="round"').Count -ne 2) {
     throw 'The start must contain two round choices'
@@ -39,7 +38,7 @@ if ($html -match 'class="app-header"' -or $html -match 'href="#h10"') {
     throw 'The UI must not reintroduce a global context header or an ECG return link'
 }
 foreach ($round in @('probe', 'haupt')) {
-    $expected = if ($round -eq 'probe') { @('anleitung', '5', '10', '15') } else { @('10', '15') }
+    $expected = if ($round -eq 'probe') { @('anleitung', '5', '10', '15') } else { @('15') }
     $actual = @([regex]::Matches($html, "href=`"#start-$round-([^`"]+)`"") | ForEach-Object { $_.Groups[1].Value })
     if (@(Compare-Object $expected $actual).Count -ne 0) { throw "Incorrect $round options" }
 }
@@ -58,4 +57,4 @@ if ($RequireRemote) {
     $remote = ($remoteLine -split '\s+')[0]
     if (-not $remote -or $local.Trim() -ne $remote) { throw 'Local HEAD differs from remote main' }
 }
-Write-Output 'PASS: Atmungsraum context, four practice/two main choices, minimal playback UI, locked Pretext, and requested remote gate'
+Write-Output 'PASS: Atmungsraum context, four practice/direct 15-minute main choices, minimal playback UI, locked Pretext, and requested remote gate'

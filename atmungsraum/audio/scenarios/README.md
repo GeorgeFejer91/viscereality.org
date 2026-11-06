@@ -16,9 +16,20 @@ not sources for these final sequences.
 | Probe: 5 minutes | `probe-5.json` / `.csv` | 300 seconds |
 | Probe: 10 minutes | `probe-10.json` / `.csv` | 600 seconds |
 | Probe: 15 minutes | `probe-15.json` / `.csv` | 900 seconds |
-| Haupt: 10 minutes | `haupt-10.json` / `.csv` | 300 silent + 300 guided seconds |
-| Haupt: 15 minutes | `haupt-15.json` / `.csv` | 300 silent + 600 guided seconds |
+| Haupt: direct 15 minutes | `haupt-15.json` / `.csv` | 26 + 15 + 40 + (50 × 16) + 19 = 900 seconds |
 | Engine diagnostic, outside the menu | `box-20.json` / `.csv` | 1200 seconds |
+
+The only main scenario goes directly from the Haupt-Runde card to Start.
+Its sequence is Instruction 1 → Calibration → Instruction 2 → fifty complete
+inhale/pause/exhale/pause cycles → Outro. There is no baseline or main rest cue.
+The calibration window is a separate silent asset at 26–41 seconds; exact source
+frames and planned audio-clock times are available to future accelerometer
+integration. No calibration value is currently measured. See the
+[German transcript and Respyra distinction](../calibration.md).
+`instruction_1_frames`, `calibration_start_frame`, and `calibration_frames`
+identify the preparation/window. `baseline_frames` is explicitly 0. Main `minutes`
+and `total_frames` both represent the complete15-minute budget, including every
+asset. Practice remains unchanged. CSV includes `transcript_de` for each asset.
 
 JSON drives playback. CSV is the generated timing sheet for the same sequence;
 edit JSON, then run `pnpm run scenarios:csv`. Run `pnpm run check:scenarios`
@@ -42,7 +53,8 @@ defines every slot, including silence:
 At `sample_rate: 44100`, this starts at 40 seconds and lasts 4 seconds. `id`
 describes the phase shown by the UI; `asset` selects the actual library clip.
 `inhale_breath`/`exhale_breath` select the existing premixed breath variants.
-`baseline` and `recovery` use `asset: null` for explicit silence. Each slot must
+`recovery` uses `asset: null` for explicit practice silence; `calibration` is
+a reusable15-second zero-PCM WAV with its own class and measurement metadata. Each slot must
 start where the preceding one ends, and a sounding slot must equal its clip's
 full duration. Keep cycle/block annotations and summary counts consistent.
 Frame counts are exact; CSV also shows start, duration and end in seconds, row

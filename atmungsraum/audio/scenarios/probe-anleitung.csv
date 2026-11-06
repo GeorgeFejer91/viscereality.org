@@ -1,7 +1,7 @@
-order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block
-1,instruction,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,0,40,40,0,1764000,,
-2,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,40,4,44,1764000,176400,1,1
-3,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,44,4,48,1940400,176400,1,1
-4,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,48,4,52,2116800,176400,1,1
-5,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,52,4,56,2293200,176400,1,1
-6,ending,ending,assets/audio/box-breathing/de/soft-v2/ending.wav,56,12,68,2469600,529200,,
+order,event_id,asset_id,asset_file,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,breathing_block,transcript_de
+1,instruction,instruction,assets/audio/box-breathing/de/soft-v2/instruction.wav,0,40,40,0,1764000,,,"Willkommen im Atmungsraum. Schön, dass du dir diesen Moment nimmst. Mach es dir bequem und lass die Schultern locker. Wir begleiten dich durch einen ruhigen Atemrhythmus. Auf Ein atmest du sanft ein. Auf Aus lässt du die Luft wieder ausströmen. Dazwischen ruht der Atem für einen Moment. Wir zählen jede Phase bis vier. Atme nur so weit, wie es sich angenehm anfühlt. Du kannst jederzeit normal weiteratmen oder die Übung beenden. Wir beginnen gemeinsam."
+2,inhale,inhale,assets/audio/box-breathing/de/soft-v2/inhale.wav,40,4,44,1764000,176400,1,1,Einatmen. Zwei. Drei. Vier.
+3,hold_in,hold_in,assets/audio/box-breathing/de/soft-v2/hold_in.wav,44,4,48,1940400,176400,1,1,Und halten.
+4,exhale,exhale,assets/audio/box-breathing/de/soft-v2/exhale.wav,48,4,52,2116800,176400,1,1,Ausatmen. Zwei. Drei. Vier.
+5,hold_out,hold_out,assets/audio/box-breathing/de/soft-v2/hold_out.wav,52,4,56,2293200,176400,1,1,Und halten.
+6,ending,ending,assets/audio/box-breathing/de/soft-v2/ending.wav,56,12,68,2469600,529200,,,"Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst."

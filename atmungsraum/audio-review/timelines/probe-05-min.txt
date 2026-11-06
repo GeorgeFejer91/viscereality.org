@@ -1,5 +1,5 @@
 Probe-Runde / 5 Minuten
-Snapshot refreshed: 2026-11-05
+Snapshot refreshed: 2026-11-06
 
 German quotes are saved speech; bracketed notes are NOT spoken.
 Time starts at the scheduled audio anchor, after loading/scheduling lead.
@@ -11,12 +11,12 @@ Breathing blocks: 15 cycles; final silent recovery: 8 s.
 Sources: audio/box-breathing.js, ui-logic.js, audio/session-ui.js,
          audio/scenario-protocol.js, audio/scenarios/probe-5.json,
          assets/audio/box-breathing/de/soft-v2/manifest.json
-Manifest SHA-256: 1a4fe0f2546d5850865bb2aab8c737cff05244ff40286044189e7a3cd53fb275
-Engine SHA-256: c59dafbff146fc76d52866341b4182925e65e55995596bb08dd43a26681e8752
-Selection SHA-256: 6190ca919ec0ff377ce79f479636aecdbab6edb2575c5327fd11e5cd2968e991
-Controller SHA-256: b81e51e2345e522664abbac6b60b8e00777598049c87fede1551f64f967217cc
-Scenario validator SHA-256: 74997fe40871532beed79b6229321a499649e47a1e1966bd7bca729989a6d324
-Scenario SHA-256: 16ba8efabcc2c16296d7dbf37dceb6c47560c05a892726ec88550a65d7433ab9
+Manifest SHA-256: ff2895cfdf6d292ed94635882b4bde9585cf48b4ed1411fefea2deac5547169c
+Engine SHA-256: 583c4945acc248b90025620ecfd22111e7811fe1b716e01df51436ee5ace9541
+Selection SHA-256: 91d450f81abac7234049fc190e10c0a52d2d68065f86a556bda11906fa258351
+Controller SHA-256: 3e5e2f0ec5b88eed6f87353055500530e03a94c20d82605e3670032c64ff7e23
+Scenario validator SHA-256: 8b43805f23eac67b5e597f0d6a03592ddcf50367d7287e23c5d8d2251c97ca5a
+Scenario SHA-256: 90110f6362961e2bbb5f3a1c5f38bd29102fc34f270c604d6deaab220cdec8e7
 
 COMPLETE PARTICIPANT AUDIO TIMELINE
 

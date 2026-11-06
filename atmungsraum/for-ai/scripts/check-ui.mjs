@@ -16,7 +16,7 @@ for (const invalid of [
   { gender: '' }, { gender: 'invalid' },
 ]) {
   assert.equal(ui.confirmPatient({ ...patient, ...invalid }), false);
-  assert.equal(route('start-haupt-10'), 'patient', 'invalid input must leave the gate locked');
+  assert.equal(route('start-haupt-15'), 'patient', 'invalid input must leave the gate locked');
 }
 for (const gender of ['male', 'female', 'other', 'prefer-not-to-say']) {
   assert.equal(ui.confirmPatient({ ...patient, surnamePrefix: ' Mu\u0308l ', gender }), true);
@@ -34,13 +34,11 @@ setSensor('ecg');
 assert.equal(route('runde'), 'runde');
 assert.equal(route('patient'), 'patient', 'details remain editable');
 for (const [branch, values] of Object.entries(choices)) {
-  assert.deepEqual(values, branch === 'probe' ? ['anleitung', '5', '10', '15'] : ['10', '15']);
+  assert.deepEqual(values, branch === 'probe' ? ['anleitung', '5', '10', '15'] : ['15']);
   for (const value of values) {
     assert.equal(route(`start-${branch}-${value}`), 'session-start');
     const minutes = value === 'anleitung' ? null : Number(value);
-    const baselineMinutes = branch === 'haupt' ? 5 : 0;
-    assert.deepEqual(state.selection, { branch, value, minutes, baselineMinutes,
-      boxMinutes: minutes === null ? null : minutes - baselineMinutes });
+    assert.deepEqual(state.selection, { branch, value, minutes, boxMinutes: minutes });
     assert.equal(start(), true);
     assert.equal(start(), false, 'a double click must not start twice');
     setSensor('no-ecg');
@@ -50,7 +48,7 @@ for (const [branch, values] of Object.entries(choices)) {
     setSensor('ecg');
   }
 }
-for (const invalid of ['start-probe-20', 'start-haupt-5', 'start-haupt-20', 'start-haupt-anleitung', 'start-probe-frei', 'session-start', 'unknown']) assert.equal(route(invalid), 'h10');
+for (const invalid of ['start-haupt-10', 'start-probe-20', 'start-haupt-5', 'start-haupt-20', 'start-haupt-anleitung', 'start-probe-frei', 'session-start', 'unknown']) assert.equal(route(invalid), 'h10');
 reset();
 assert.equal(state.selection, null);
 assert.equal(state.patient, null, 'reset must clear the patient');
@@ -59,17 +57,17 @@ assert.equal(ui.confirmPatient(patient), true, 'details are submitted before con
 assert.equal(route('runde'), 'h10');
 setSensor('ecg');
 assert.equal(confirmECG(), true);
-route('start-haupt-10'); start();
+route('start-haupt-15'); start();
 setSensor('disconnected', 1000);
 assert.equal(state.started, true, 'a short loss must not abort the current session');
 for (let now = 1000; now <= 31000; now += 5000) {
   assert.equal(updateReconnect(now), 'attempt');
-  assert.equal(route('start-haupt-10'), 'session-start', 'stay in the current flow through exactly 30 seconds');
+  assert.equal(route('start-haupt-15'), 'session-start', 'stay in the current flow through exactly 30 seconds');
 }
 assert.equal(state.reconnectAttempts, 7);
 assert.equal(updateReconnect(31000), null);
 assert.equal(updateReconnect(31001), 'expired');
-assert.equal(route('start-haupt-10'), 'h10');
+assert.equal(route('start-haupt-15'), 'h10');
 assert.equal(state.started, false);
 assert.deepEqual(state.patient, { surnamePrefix: 'Mül', age: 42, gender: 'female' }, 'reconnects retain details within the page session');
 setSensor('ecg'); confirmECG();
@@ -81,4 +79,4 @@ assert.equal(route('runde'), 'runde');
 assert.equal(state.lostSince, null);
 assert.equal(state.reconnectAttempts, 0);
 reset();
-console.log('PASS: sensor and patient gates, surname/age/four-gender validation, editing/reset, six session routes, main-session totals, duplicate-start guard, 30-second reconnection grace and recovery.');
+console.log('PASS: sensor and patient gates, surname/age/four-gender validation, editing/reset, five session routes, direct 15-minute main round, duplicate-start guard, 30-second reconnection grace and recovery.');

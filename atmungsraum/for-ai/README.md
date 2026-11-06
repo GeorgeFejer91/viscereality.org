@@ -20,10 +20,14 @@ dimension-responsive spacing/type, minimum-size and no-fit settings, and
 [PROJECT.md](PROJECT.md) for implementation status and open decisions.
 
 The browser prototype is a local UI demo: patient details → simulated headset/ECG check →
-round choice → four practice options or two main options → final Starten
-play button. Haupt-Runde offers 10 or 15 minutes total: five minutes of normal
-breathing, followed by the existing five- or ten-minute guided box-breathing
-sequence. The normal-breathing period is silent and displays Normal atmen.
+round choice → four practice options or direct entry to the sole 15-minute main
+sequence → final Starten button. Haupt-Runde has no duration-choice screen or
+five-minute baseline. Instruction 1 (26 s), a separate Calibration window (15 s),
+Instruction 2 (40 s), fifty complete breathing cycles (800 s), and Outro (19 s)
+total exactly 900 seconds. The player labels these phases. Calibration runs at
+26–41 seconds on the audio clock; receipts and an advance event expose its
+start/end for the future ECG-sensor accelerometer. Its measured value remains
+unset until integration. See [the transcript/protocol](../audio/calibration.md).
 The same button becomes Pause during playback and Fortsetzen while paused. The
 back action reads Beenden during playback and has a bordered button surface.
 A read-only progress bar with elapsed/total time stays visible before, during

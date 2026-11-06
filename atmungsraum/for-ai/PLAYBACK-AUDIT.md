@@ -1,9 +1,10 @@
 # Browser playback completion audit — 2026-10-12
 
-This records the earlier four-duration implementation. Haupt-Runde now offers
-10/15-minute totals with a five-minute silent normal-breathing control period;
-see the current baseline checks in [VERIFICATION.md](VERIFICATION.md). The
-5/10/15/20-minute standalone audio protocols below remain engine capabilities.
+This records an earlier implementation. The current main path goes directly
+to a single 900-second sequence with Instruction 1, Calibration, Instruction 2,
+fifty complete cycles and Outro. It has no baseline; see audio/calibration.md
+and current acceptance in VERIFICATION.md. The standalone practice/engine
+protocols below remain available separately.
 
 Scope: actual local browser playback from the final Play screen for selected
 5/10/15/20-minute sessions. The final source uses four separate reusable German

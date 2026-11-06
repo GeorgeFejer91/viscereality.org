@@ -1,5 +1,5 @@
 WHAT A PARTICIPANT HEARS IN THE CURRENT BROWSER VERSION
-Snapshot: 2026-10-27
+Snapshot refreshed: 2026-11-06
 
 This is a reading version of the current sound sequence. German quotes are
 the actual saved scripts. Descriptions of delivery reflect settings and
@@ -7,6 +7,11 @@ processing, not a new subjective listening assessment. Read timelines/ for
 every individual scheduled cue, its exact start/end and its breath variant.
 
 THE OPENING
+
+The sole main round first plays Instruction 1 (the two-breath German script
+in audio/calibration.md), followed by a separate silent calibration at 26–41s.
+Instruction 2 is the welcome below. Practice starts directly with that welcome.
+There is no main baseline. Outro includes seven quiet seconds before the ending.
 
 A German voice, configured for soft/calm/slow delivery, says:
 
@@ -112,21 +117,13 @@ Probe-Runde / 15 Minuten
   14:52-15:00  Silent natural-breathing recovery.
   Sixteen cycles have recorded breath overlays.
 
-Haupt-Runde / 10 Minuten
-  00:00-05:00  Silence. Normal atmen appears on screen but is not spoken.
-  05:00-05:40  Welcome.
-  05:40-09:40  15 complete cycles; five have recorded breath overlays.
-  09:40-09:52  Ending.
-  09:52-10:00  Silent natural-breathing recovery.
-
-Haupt-Runde / 15 Minuten
-  00:00-05:00  Silence. Normal atmen appears on screen but is not spoken.
-  05:00-05:40  Welcome.
-  05:40-10:28  Cycles 1-18.
-  10:28-10:48  Rest; restart phrase at 10:44.
-  10:48-14:48  Cycles 19-33.
-  14:48-15:00  Ending; then playback finishes.
-  Eleven cycles have recorded breath overlays.
+Haupt-Runde / 15 Minuten (directly from the main-round card)
+  00:00-00:26  Instruction 1: preparation for two comfortable deep breaths.
+  00:26-00:41  Calibration: silence; explicit later accelerometer measurement window.
+  00:41-01:21  Instruction 2: existing welcome and breathing explanation.
+  01:21-14:41  Fifty complete 16-second cycles, without main rest cues.
+  14:41-15:00  Outro: seven quiet seconds, then unchanged ending speech at 14:48.
+  Measured calibration value/unit/method remain unset until real integration.
 
 Engine-only / 20 Minuten (supported in code, absent from the menu)
   00:00-00:40  Welcome.
@@ -153,7 +150,7 @@ POINTS FOR LISTENING REVIEW
 
 The welcome promises counting in every phase, but the holds are uncounted.
 Is that clear enough to someone listening with eyes closed?
-Does the silent main-round opening make sense without looking at the screen?
+Does the calibration instruction and return to normal breathing make sense by listening alone?
 Do the repeated identical cues, intermittent breath overlays and rest return
 phrases feel natural at their authored boundaries?
 Compare the current "Und halten" with the separate "Halten!" audition before

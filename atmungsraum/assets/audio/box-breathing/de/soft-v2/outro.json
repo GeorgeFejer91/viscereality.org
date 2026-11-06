@@ -1,0 +1,14 @@
+{
+  "sample_rate": 44100,
+  "file": "outro.wav",
+  "text": "Unsere Atemrunde ist jetzt zu Ende. Lass deinen Atem ganz frei fließen. Nimm dir noch einen Moment, bevor du weitergehst.",
+  "frames": 837900,
+  "bytes": 1675844,
+  "sha256": "76145123e9a6605a47a426883404c350f86e8110f41bac226154a0417ad8c6e1",
+  "processing": {
+    "speech_start_frame": 308700,
+    "source_asset": "ending",
+    "source_sha256": "1922cee5cd6e8c7ac26e9768d05d590aa50bde29ae0fe34adba0a2759032e87d",
+    "source_samples_unchanged": true
+  }
+}

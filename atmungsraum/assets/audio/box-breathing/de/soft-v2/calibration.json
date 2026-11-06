@@ -1,0 +1,20 @@
+{
+  "sample_rate": 44100,
+  "file": "calibration.wav",
+  "text": "",
+  "frames": 661500,
+  "bytes": 1323044,
+  "sha256": "52be802926b5ac395437d0863ed3d7b3f848f18ed4f4e3450d2c5ce577b22bce",
+  "role": "Silent breathing measurement window after Instruction 1",
+  "measurement": {
+    "signal_source": "h10-accelerometer-pending",
+    "value": null,
+    "unit": null,
+    "method": null,
+    "status": "not-integrated"
+  },
+  "processing": {
+    "range_start_frame": 0,
+    "range_duration_frames": 661500
+  }
+}

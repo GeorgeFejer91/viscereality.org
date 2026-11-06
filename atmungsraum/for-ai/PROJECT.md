@@ -1,5 +1,50 @@
 # Project
 
+## Main-round calibration and one 15-minute scenario — 2026-11-06
+
+The latest user instructions supersede the earlier two-main-option/silent-baseline
+contract: Haupt-Runde goes directly to one final 15-minute Start screen. There is
+no main duration menu or five-minute baseline. All assets together total exactly
+900 seconds: Instruction 1 (26 s), Calibration (15 s), Instruction 2 (40 s), fifty
+complete 16-second inhale/pause/exhale/pause cycles (800 s), and Outro (19 s,
+including seven seconds of quiet settling before the unchanged ending speech).
+No additional rest cue interrupts the main cycles. Practice remains unchanged.
+
+The shared manifest names eight main asset classes; scenario JSON drives playback
+and its CSV contains exact times, asset paths and transcript_de. Instruction 1
+uses the user-requested Secret Tunnel existing-instructor clone. The original
+nine WAVs remain unchanged. Calibration is a separate silent measurement window
+at source frames 1,146,600–1,808,100 (26–41 s). Receipts and the advance
+`atmungsraum:calibration-scheduled` event expose its audio-clock start/end.
+The later breathing input will be the ECG sensor's accelerometer. Value, unit
+and method remain unset with status not-integrated; no physiological result is
+fabricated from synthetic ECG. See audio/calibration.md.
+
+- [x] Verify Respyra source; distinguish its comfortable natural-range protocol
+  from our requested two-breath adaptation and original German narration.
+- [x] Package reusable Instruction 1 / silent Calibration / Outro assets and
+  transcript JSON/CSV, using cached checked Secret Tunnel speech without retiming.
+- [x] Replace main duration choice with direct 15-minute entry, remove haupt-10,
+  author six scenario JSON/CSV pairs, and add explicit calibration clock metadata.
+- [x] Observe the changed main-choice regression fail, then pass all 21 Node tests,
+  six scenario pairs, UI state and context checks. Preserve pause/resume/identity.
+- [x] Verify current native offline renders, responsive/Pretext layout, actual
+  browser calibration transitions/CSV and timing hook, then final independent review.
+- [ ] Commit/push and verify exact Pages deployment and affected live assets/flow.
+
+Entry: clean canonical main at 64341d9; continuing publication authority applies.
+RTK is unavailable, so bounded native commands are used. No prior feature push
+occurred before the user's later corrections. The earlier two-option/48-second
+composite implementation was locally verified but is superseded, not a release.
+Current verification: 21 Node tests; six scenario pairs; UI/context; full PCM
+decode/integrity; 12 native Chrome offline renders at 44.1/48 kHz with zero sample
+error; 137 responsive/Pretext cases and 18 main/root enlarged/localized text cases;
+five actual playback routes, advance timing hook, CSV phases/duration, calibration
+entry/exit at 26/41 s, pause/resume/replay and missing-audio retry. Independent
+review found no runtime issues and confirmed original nine WAVs unchanged.
+Next action: commit/push and verify exact Pages/live deployment. The product
+H10/headset, physical-phone and listening acceptance goals remain open.
+
 ## Responsive proportions — 2026-11-06
 
 Rebalance the patient screen and permanent controls for smartphone and desktop.
@@ -684,9 +729,9 @@ this browser-local decision tree:
 3. Show the clickable boxes for the chosen round:
    - Probe-Runde: Anleitung (guided free exploration, no time limit), 5, 10,
      or 15 Minuten. Anleitung and Frei ausprobieren are the same option.
-   - Haupt-Runde: only 10 or 15 Minuten total. Both begin with five minutes
-     of normal breathing as a control period, followed by the existing five-
-     or ten-minute guided box-breathing sequence. Each box shows this breakdown.
+   - Haupt-Runde: direct entry to one 15-minute sequence. Instruction 1,
+     Calibration, Instruction 2, fifty complete breathing cycles and Outro
+     together last exactly 900 seconds. There is no main duration menu/baseline.
 4. Every box goes directly to a final screen with a **Starten** play
    button. The selected round/option is shown for orientation. Starting is
    browser-local; the separately integrated audio controller owns playback.
@@ -742,7 +787,7 @@ remain pending.
 
 ## Reusable box-breathing engine — 2026-10-12
 
-`audio/box-breathing.js` loads nine reusable German PCM WAV samples from
+`audio/box-breathing.js` loads twelve reusable German PCM WAV samples from
 `assets/audio/box-breathing/de/soft-v2/manifest.json`. The phase samples are exactly
 four seconds at 44.1 kHz. Repeat the four separate files `inhale.wav`, `hold_in.wav`,
 `exhale.wav`, and `hold_out.wav` in that order. The instruction and ending samples
@@ -760,14 +805,13 @@ cycle counts are 15/33/50/68, with 0/1/2/3 rests and 8/0/8/0 seconds quiet recov
 Every third complete cycle overlays both inhale and exhale with the supplied
 breath sounds. Use the Web Audio clock and preload
 all samples; JavaScript timers and ended callbacks must not trigger phase audio.
-Haupt-Runde prepends exactly 300 silent audio-clock seconds to the five- or
-ten-minute sequence. During this control period the UI displays Normal atmen;
-no instruction, phase cue, or breath overlay sounds. The welcome begins at
-t0 + 300 seconds and the first paced cycle at t0 + 340 seconds. The guided
-segment keeps its welcome, ending, rests and recovery within its five- or
-ten-minute budget, yielding exact 600/900-second main totals. Pause freezes
-the baseline clock too. Selection and protocol receipts retain the baseline,
-guided-segment and total durations separately.
+Haupt-Runde is the single 900-second class-based scenario described above.
+Instruction 1 prepares two comfortable deep breaths; the separate silent
+Calibration window runs at t0 + 26 to t0 + 41 audio-clock seconds. Instruction 2
+then explains paced breathing, which begins at t0 + 81. Fifty complete cycles
+end at t0 + 881; Outro lasts 19 seconds and ends at t0 + 900. Main has no baseline
+or between-block rest. Pause freezes this clock and resumes the same nodes;
+receipts preserve planned calibration timing with its measurement still unset.
 Hidden pages, interrupted audio clocks, failed preparation, or missed start
 deadlines invalidate/abort an attempt. Host-side saving of receipts and physical
 audio/sensor synchronization remain integration work. The browser controller
@@ -804,7 +848,7 @@ publish runtime samples as unrestricted clinic voices on this evidence. See
 
 The initial 2026-10-09 page was a blank black placeholder. The working tree now
 contains the functional German UI prototype described above, including synthetic
-ECG gating, four practice/two main choices, and final play-button routes. Real H10 data,
+ECG gating, four practice/direct main choice, and final play-button routes. Real H10 data,
 headset connection, and headset session execution remain unimplemented. Browser
 audio is wired separately through audio/session-ui.js. Keep the black visual
 foundation and preserve work in progress.

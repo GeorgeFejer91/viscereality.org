@@ -6,6 +6,16 @@ come from the shared [`assets/audio/`](../assets/audio/) library; scenarios reus
 asset IDs rather than storing their own audio. JSON determines timing/order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
+**Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute
+sequence. Instruction 1 (26 s), Calibration (15 s), Instruction 2 (40 s), fifty
+complete 16-second cycles (800 s) and Outro (19 s) total900 seconds. There is no
+baseline, main duration menu or between-cycle-block rest. See [the German
+transcript, asset classes and Respyra comparison](calibration.md). Calibration
+runs at 26–41 seconds and exposes an advance event/receipt for later H10
+accelerometer integration; measured value/unit/method remain unset.
+The new Instruction 1 uses Secret Tunnel's existing-instructor clone. The
+original nine ElevenLabs samples and practice behavior retain their bytes.
+
 The browser loads reusable samples once. It repeats four separate phase cues:
 **inhale -> pause after inhale -> exhale -> pause after exhale**. Every phase is
 exactly four seconds. Inhale/exhale cue and counts occur at 0, 1, 2, and 3
@@ -21,6 +31,9 @@ available for comparison; the engine uses soft-v2.
 
 | File | Length | Speech/role |
 | --- | --- | --- |
+| `instruction_1.wav` | 26 s | German preparation for two comfortable deep breaths |
+| `calibration.wav` | 15 s | Separate silent measurement window |
+| `outro.wav` | 19 s | Seven quiet seconds plus the unchanged12-second ending speech |
 | `instruction.wav` | 40 s | Welcoming introduction, gentle rhythm explanation, permission to breathe naturally or stop |
 | `inhale.wav` | 4 s | Einatmen. Zwei. Drei. Vier. |
 | `hold_in.wav` | 4 s | Und halten. Then quiet |
@@ -109,14 +122,11 @@ not additional breath holds.
 
 The final Play button preloads and verifies the samples, then starts the selected
 scenario on a user action. Practice offers Anleitung and 5/10/15 minutes.
-Haupt-Runde offers only 10 or 15 minutes total: exactly five minutes of silent
-normal breathing followed by the existing five- or ten-minute guided sequence.
-The guided segment includes its welcome, ending, rests and recovery as tabulated
-above. Its welcome starts at t0 + 300 seconds, and its first paced cycle at
-t0 + 340 seconds. No paced cue or breath overlay plays during the control
-period; the UI displays Normal atmen. The cards explain both durations; the
-final title shows the selected total. Receipts contain `baseline_frames`,
-`box_minutes` and total `minutes`.
+Haupt-Runde opens the single 15-minute main scenario directly. Its complete
+900-second timeline and class boundaries are documented above. The calibration
+window begins at t0+26 seconds, Instruction 2 at t0+41, and paced cycles at t0+81.
+Receipts contain `calibration_start_frame`, `calibration_frames`, `instruction_1_frames`
+and the complete `total_frames`; `baseline_frames` is 0.
 
 The player shows the current phase/count and
 remaining total time. The same button becomes Pause/Fortsetzen, retaining the
@@ -155,11 +165,11 @@ const receipt = await session.done;
 
 An existing audioContext may be supplied to the constructor. The caller may pass
 `startAt` to `start(minutes, { startAt })` to share an experimental audio anchor.
-For a main round, use `start(5, { baselineMinutes: 5 })` (10 minutes total)
-or `start(10, { baselineMinutes: 5 })` (15 minutes total). The optional baseline
-is accepted only for those guided durations. `engine.protocol(5, { baselineMinutes: 5 })`
-returns the loaded main timeline. `createProtocol()` remains an authoring/regression
-reference and is not called by runtime playback. Baseline has no audio source.
+For the sole main round use `start(15, { mainRound: true })` (900 seconds total).
+`engine.protocol(15, { mainRound: true })` returns its saved timeline.
+`createProtocol()` remains an authoring/regression reference, not runtime timing.
+The advance `atmungsraum:calibration-scheduled` event and receipt expose the
+planned 26–41 second audio-clock measurement window; no sensor value is fabricated.
 Default scheduling lead is 250 ms, outside the measured session; explicit starts
 require at least 50 ms lead. `pause()` suspends the context, freezes its clock and
 keeps all scheduled sources; `resume()` continues that same run. Both return
@@ -179,7 +189,7 @@ After editing scenario JSON, run `pnpm run scenarios:csv` to refresh the paired
 CSVs. Serve this tree over HTTP and
 open `tests/offline-audio.html` for a silent native Web Audio render of the actual
 scheduler, comparing all output samples to the planned reused assets. Adding
-`?round=haupt` checks both main totals, including all baseline samples, at both
+`?round=haupt` checks the single main total and all class boundaries, at both
 44.1 and 48 kHz. Optional
 `pnpm run render:audio -- 20` exports a full verification WAV and adjacent
 sample-indexed protocol. `--preview` exports the instruction example. Runtime

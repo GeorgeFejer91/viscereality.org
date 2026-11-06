@@ -76,6 +76,20 @@ remains distinct from desktop viewport checks.
 
 ## Audio cue generation
 
+2026-11-06 calibration exception: the user requests Secret Tunnel for the new
+two-breath Instruction 1 narration, using its saved `Atmungsraum - Existing Instructor`
+clone. `python tools/build-calibration-cue.py` uses the documented native voice
+CLI when the MCP connector is unavailable, without altering access settings.
+It caches native receipts/MP3s under ignored `reference-audio/`, verifies three
+short phrases with Whisper, and packages Instruction 1, a separate15-second
+silent Calibration, and Outro with transcript/class JSON/CSV. No speech stretching is applied. The initial long take exceeded the
+native ASR checker's input geometry and remains unused; shorter checked phrases
+avoid that failure. Read `audio/calibration.md` for timing and Respyra limits.
+After regeneration, review/rebind all six scenario manifest hashes, regenerate
+CSV and refresh audio-review snapshots. Other speech retains the existing
+ElevenLabs workflow below. Real respiratory calibration and listening acceptance
+remain open; do not equate the audio phase with a measured sensor result.
+
 Every final sequence must use the shared `assets/audio/` library and a saved
 JSON/CSV pair in `audio/scenarios/`. JSON is the runtime authority; edit its
 frame-indexed events, then run `pnpm run scenarios:csv` and
@@ -88,7 +102,7 @@ Native offline diagnostics and verification exports also read the saved JSON.
 For reviewing the current participant experience, use `audio-review/` rather
 than mixing review text into runtime assets or ignored audition output. Its
 plain-text inventory distinguishes runtime, selected-voice auditions and older
-sets; `timelines/` contains all six menu choices plus the engine-only 20-minute
+sets; `timelines/` contains all five menu choices plus the engine-only 20-minute
 sequence. These are fixed snapshots, checked against the saved scenario JSON
 and library manifest, with source hashes in each timeline. Refresh the text
 when its source hashes change, keeping exact German speech separate from
@@ -114,9 +128,9 @@ MP3 cue set. Keep the four phase files separate and reuse them on every cycle.
 Run `pnpm run test:audio` and the silent `tests/offline-audio.html` diagnostic
 when changing the scheduler or sample set. `pnpm run render:audio -- 5` (or 10/15/20)
 provides an optional offline verification export; it is not the runtime strategy.
-For the main-round control period, open `tests/offline-audio.html?round=haupt`:
-it checks both 10/15-minute totals, the silent first 300 seconds, and the shifted
-guided samples at 44.1 and 48 kHz.
+For the sole main scenario, open `tests/offline-audio.html?round=haupt`: it checks
+the exact 900-second total, separate calibration window, fifty complete cycles
+and Outro at both 44.1 and 48 kHz. There is no main baseline.
 Original downloads, full caption transcripts, raw synthesis, and concatenated
 exports stay under ignored `reference-audio/`. See [audio/README.md](../audio/README.md)
 for the reference analysis and reproducible timing/export workflow.
