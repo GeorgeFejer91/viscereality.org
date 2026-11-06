@@ -55,6 +55,16 @@ and `pwa-live-phone.png` under `output/playwright/`.
 The user explicitly sets the finish-PWA goal active in this chat. Automated and
 publication checks are complete; the final target-phone installation/relaunch
 question is pending. Do not mark the PWA goal complete without that result.
+The same acceptance blocker remains on recheck: ADB lists no connected device,
+and no connected phone-testing tool is available. The existing phone-test
+question has no result. Further desktop checks cannot supply physical-phone
+acceptance; resume when the user supplies that result or a phone is available.
+
+Documentation release `e2953d960bc61277b08fff81329f1b0be214985a` completes
+exact Pages run 42306629457 with deployment API status `succeed`. Both changed
+public notes match Git bytes and both app entry URLs return 200. Read-only Git
+checks confirm `main` equals remote at that commit before this handoff update.
+Ignored receipt: `output/playwright/pwa-live-e2953d9.json`.
 Overall H10/headset integration remains a separate open product goal. This
 evidence follow-up changes documentation only and follows the same Pages rule.
 Unrelated unfinished sharing edits remain in `.gitignore`, `app.js`,
