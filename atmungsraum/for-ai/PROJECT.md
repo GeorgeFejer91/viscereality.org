@@ -26,7 +26,7 @@ sharing and listening acceptance remain open.
 
 ## Coherent Polar belt and frame glow — 2026-11-06
 
-Remove the separate status dot. The original belt artwork and its 144px frame
+Remove the separate status dot. The original belt artwork and its frame
 pulse together: green with ECG (four-second cycle), red after signal loss
 (two-second cycle), neutral while waiting, and steady with reduced motion.
 The PNG is used as a CSS luminance mask so the glow follows the belt artwork
@@ -37,11 +37,17 @@ rather than its opaque rectangular background; source bytes remain unchanged.
 - [x] Verify 24 Chrome state/size/reduced-motion cases, actual pulse variation,
   source-mask loading and folder open/close; inspect green/red screenshots.
   UI-state/context and whitespace checks pass; review has no actionable findings.
-- [ ] Commit/push and verify the exact Pages deployment and affected live behavior.
+- [x] Commit/push and verify the exact Pages deployment and affected live behavior:
+  `7e07b9c6b0abd9c8d3e22d54abd339bec130e297`, successful Pages run `42213036555`.
+  All six published files match Git bytes; both entry URLs return 200. All 24
+  live glow cases pass without page errors, including both cyclic border states.
 
-Entry: clean main/origin at `a792da7`. No task blocker is known; next action is
-publication under the standing rule. Overall real H10/headset, physical-phone
-sharing and listening acceptance remain open.
+Entry: clean main/origin at `a792da7`. The glow release is complete with no blocker.
+During live verification the independent proportions owner advanced main/origin
+to `f2d683c`, preserving the glow and updating corner dimensions under its own
+task. Preserve that task's publication state. This closing evidence changes
+documentation only; publish/check it under the standing rule. Overall real
+H10/headset, physical-phone sharing and listening acceptance remain open.
 
 ## Larger corners and recovered Polar artwork — 2026-11-06
 

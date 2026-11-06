@@ -40,7 +40,17 @@ and status text. No page errors occur. Peak green/red screenshots were inspected
 UI-state/context and whitespace checks pass; focused review has no actionable
 findings. Receipts and crops remain ignored in `output/playwright/belt-glow-*`.
 No bitmap regeneration, logging, playback or layout changes are involved.
-Publication is pending; native phones/WebViews remain outside this Chrome evidence.
+Native phones/WebViews remain outside this Chrome evidence.
+
+Release `7e07b9c6b0abd9c8d3e22d54abd339bec130e297` is pushed and live. Pages run
+[42213036555](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42213036555)
+succeeded; all six published files match Git bytes and both entry URLs return 200.
+All 24 live glow checks pass with no page errors. Receipts are
+`belt-glow-live-results.json` and `live-release-assets-7e07b9c.json` in the same
+ignored directory. The subsequent independent proportions commit `f2d683c`
+retains the glow while superseding the original dimensions; its owner tracks
+that layout release. Publish/check this closing documentation-only evidence
+under the standing rule, preserving the separate task's state.
 
 ## Threefold corner enlargement — 2026-11-06
 
