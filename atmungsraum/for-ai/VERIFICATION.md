@@ -47,6 +47,17 @@ usable help. The regression lives at `output/playwright/check-install-scroll.mjs
 The containing sharing release passes all45 Node tests. No new installer logic
 or participant-data behavior is changed by this header correction.
 
+Live release `5ff34d3f5ceaed7e15ab306d6df32b5d6db84e16` completes exact
+Pages run 42310953670 and deployment API status `succeed`. All12 affected paths
+match Git bytes. The public origin passes all113 phone cases, including help
+opening at scrollTop0 with enlarged text, plus three desktop smoke sizes and
+error-free manifest/icon/installability checks. An isolated Chrome desktop
+profile installs and launches the actual live app in standalone mode with that
+user display preference explicitly set. No page errors occur. Evidence stays
+ignored in `pwa-live-5ff34d3.json`, `pwa-controls-live-results.json`,
+`pwa-controls-live-phone.png` and `pwa-controls-installed-live-results.json`.
+Physical-phone installation/relaunch and assistive technology remain untested.
+
 The current [BeforeInstallPromptEvent API](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent)
 and [official installation-prompt guide](https://web.dev/learn/pwa/installation-prompt/)
 were read. This API is not universal and each supplied prompt is single-use;

@@ -20,7 +20,7 @@ The screenshot shows a browser tab; it does not prove installed-app relaunch.
   200% text/spacing, long install labels and playback-preserving dismissal.
 - [x] Pass all 32 tracked tests, UI/context and whitespace checks; independent
   review finds no actionable issues in the staged product diff.
-- [ ] Publish this scoped increment and verify exact Pages deployment/live code
+- [x] Publish this scoped increment and verify exact Pages deployment/live code
   and rendered controls.
 
 Entry: `main` at `ad3d432`, equal to fetched remote. The prior physical-phone
@@ -39,8 +39,20 @@ browser assertion now passes and all 113 phone cases re-pass, including the
 new opening-position check. Desktop smoke checks pass at 768×1024,1280×720 and
 1920×1080. Independent review repeats the zero-scroll check and finds no
 actionable issues. This follow-up changes the dialog/header and cache tokens only.
-Next: publish this correction, verify live controls and record exact final
-deployment. Physical-phone installation/relaunch acceptance remains open.
+Final runtime release `5ff34d3f5ceaed7e15ab306d6df32b5d6db84e16` completes
+[Pages run 42310953670](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42310953670)
+successfully, with deployment API status `succeed`. All 12 PWA-control paths
+match its Git bytes and both app entry URLs return 200. Native Chrome repeats
+all 113 phone cases on the public origin, including initial help scrollTop0,
+200% text/spacing, prompt lifecycle and playback-preserving dismissal; three
+desktop smoke checks pass. Manifest/icon checks and a real isolated desktop
+installation/standalone launch also pass, with the browser user display
+preference explicitly set. No page errors occur. Ignored receipts:
+`pwa-live-5ff34d3.json`, `pwa-controls-live-results.json`,
+`pwa-controls-live-phone.png` and `pwa-controls-installed-live-results.json`.
+`main` equals remote at this release before the evidence-only follow-up. The
+increment is complete; the overall PWA goal remains open for physical-phone
+installation/relaunch acceptance. Next: collect that phone/browser result.
 
 The UI's primary delivery target is a progressive web app (PWA) for smartphones.
 Installing it adds a Viscereality-logo home-screen icon that opens the live
