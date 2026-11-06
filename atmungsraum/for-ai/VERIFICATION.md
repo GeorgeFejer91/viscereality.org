@@ -34,6 +34,22 @@ page errors. Phone screenshot inspected. Evidence stays ignored under
 Physical phones/Safari, real Wormhole upload/download and full automatic sharing
 are not qualified by these desktop checks. Publication evidence follows in PROJECT.
 
+Live release: containing commit `e5f58b49de54502fe96564ecfce45008a35fe964`
+completed [Pages run42247056025](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42247056025)
+successfully. All six affected runtime/license files match Git SHA-256 bytes,
+with JavaScript MIME types; slash/no-slash URLs return200. Native Chrome repeats
+the seven QR cases (including independent decode, missing module and delayed
+completion) and ten files-dialog cases on the public origin with zero page
+errors/external QR requests. Only synthetic browser-local records are used;
+there is no actual Wormhole upload. Ignored receipts are
+`wormhole-live-assets.json`, `wormhole-live-results.json` and
+`files-wormhole-live.json` under `output/playwright/`.
+
+Blind-spot check: Wormhole's manifest/service worker support installed-app
+Web Share Target file receipt. The existing native share action can hand off
+to available user-selected targets, but this is not a portable automatic
+upload/link-return API for the static site. See the [official browser contract](https://developer.chrome.com/docs/capabilities/web-apis/web-share-target).
+
 ## Numbered per-cue CSV sidecars — 2026-11-06
 
 Each of the 53 existing scenario WAV/TXT/JSON groups now has a same-basename CSV.

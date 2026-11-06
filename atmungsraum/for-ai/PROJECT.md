@@ -21,16 +21,27 @@ handoff; do not present it as fulfilling automatic upload.
   Node tests, UI/context, seven QR layouts and ten existing files-dialog cases
   pass; see VERIFICATION.md. Independent review found no actionable issues
   and separately passed the data-file regressions and whitespace check.
-- [ ] Review, commit/push and check exact Pages deployment/live assets.
+- [x] Review, commit/push and check exact Pages deployment/live assets.
 - [ ] Fully automatic upload: resolve backend hosting/provider choice before
   claiming the original one-click outcome is complete.
 
 Entry: canonical checkout on `main`, synchronized at `a216168`; audio sidecar
 publication is separate work. RTK is unavailable at the configured path; use
 bounded native output. Keep the overall sensor/headset and wording goals open.
-Next action: publish this verified handoff increment after review, check the
-exact release/live QR behavior, then resolve hosting/provider choice for
-fully automatic upload. Participant exports remain local and untracked.
+Release: implementation `e11a926531e72f6ef6de804777c0463f4c1dd2b9` is on
+GitHub. Concurrent audio evidence commits superseded its initial Pages run;
+the containing `e5f58b49de54502fe96564ecfce45008a35fe964` release completed
+successfully in [Pages run42247056025](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42247056025).
+Six live runtime/license files match Git SHA-256 exactly, both URL variants
+return200, and the live seven QR/layout cases plus ten existing files-dialog
+cases pass. Independent QR decoding preserves the full link/key; zero external
+requests occur during QR creation. No participant data was uploaded.
+
+Observed `main`/`origin/main` synchronized at `e5f58b4`, clean before this
+evidence-only update. This note's publication keeps runtime bytes unchanged;
+verify its exact deployment and published note before handoff. Next product
+action: resolve hosting/provider choice for fully automatic upload; that
+original goal remains open. Participant exports remain local and untracked.
 
 ## Matching numbered audio / CSV / TXT groups — 2026-11-06
 
