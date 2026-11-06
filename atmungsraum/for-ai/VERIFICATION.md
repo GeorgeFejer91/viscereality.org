@@ -50,6 +50,12 @@ Web Share Target file receipt. The existing native share action can hand off
 to available user-selected targets, but this is not a portable automatic
 upload/link-return API for the static site. See the [official browser contract](https://developer.chrome.com/docs/capabilities/web-apis/web-share-target).
 
+The evidence-only `9a91534` deployment timed out in `updating_pages`; two
+failed-job retries immediately cancelled, even after explicit API cancellation
+confirmed the failed deployment was cancelled. Runtime release `e5f58b4` remains
+live and verified. Recovery uses a fresh documentation-only commit/build; no
+runtime assets, participant data or unrelated media are changed.
+
 ## Numbered per-cue CSV sidecars — 2026-11-06
 
 Each of the 53 existing scenario WAV/TXT/JSON groups now has a same-basename CSV.

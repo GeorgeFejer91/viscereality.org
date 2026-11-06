@@ -43,6 +43,15 @@ verify its exact deployment and published note before handoff. Next product
 action: resolve hosting/provider choice for fully automatic upload; that
 original goal remains open. Participant exports remain local and untracked.
 
+Closing-note publication recovery: `9a91534`, Pages run42248772267, built
+successfully, but deployment attempt1 timed out in `updating_pages` after ten
+minutes. Attempts2/3 immediately reported cancellation, including after explicit
+API cancellation of only that task's failed deployment and confirmation of
+`deployment_cancelled`. The artifact is2,146,393,046bytes and carries the
+existing1GB warning; this does not diagnose the timeout. The verified `e5f58b4`
+QR feature stays live. Publish this failure record as a fresh commit/build and
+verify its exact Pages deployment and unchanged runtime plus updated notes.
+
 ## Matching numbered audio / CSV / TXT groups — 2026-11-06
 
 The current request requires scenario-owned audio folders and matching numerical
