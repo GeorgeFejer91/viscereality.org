@@ -162,9 +162,10 @@ then paste the complete returned URL (including its `#` decryption key) and
 choose **QR-Code anzeigen**. Upload and link copying are manual; this is not a
 one-click upload integration. Wormhole currently rejects `/api/room` CORS
 preflight from the site (405, no allow-origin header), and GitHub Pages has no
-upload backend. Fully automatic sharing remains pending a hosted backend or
-an approved alternative provider. Do not use a public CORS proxy or claim an
-upload succeeded without a service acknowledgement.
+upload backend. On 2026-11-06 the user explicitly selected this handoff route;
+no hosted backend or alternative provider is required for the accepted scope.
+Do not use a public CORS proxy or claim an upload succeeded without a service
+acknowledgement.
 
 QR generation uses the local MIT `qrcode-generator@2.0.4` encoder under
 `vendor/qrcode/`, loaded only when needed. No remote QR service, automatic

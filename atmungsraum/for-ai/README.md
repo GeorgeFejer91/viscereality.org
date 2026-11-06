@@ -62,7 +62,7 @@ ZIP, and native file sharing to available email/messaging apps, with a download 
 It lists this browser's saved exports rather than the OS Downloads directory.
 Its **Per QR-Code teilen** flow prepares the same ZIP, guides manual upload on
 Wormhole, then renders a pasted complete Wormhole link as a locally generated
-QR code. Direct automatic upload needs a backend/provider decision; see
+QR code. The user selected this handoff route; no backend is required. See
 [the sharing boundary](DATA-LOGGING.md).
 
 Read common rules first, then the documents needed for the task:

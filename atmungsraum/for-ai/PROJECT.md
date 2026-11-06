@@ -38,10 +38,10 @@ Requested outcome: package all saved browser exports, upload to Wormhole and
 share its full download URL as a QR code. Reuse `data-files.js` and its ZIP
 writer; do not change participant data, recording, identity or retention.
 Wormhole `/api/room` currently answers cross-origin upload preflight with405
-and no CORS permission. This static Pages app has no upload backend. A preference
-question is pending for a Wormhole handoff versus hosted automatic upload or
-another provider. The bounded static-site increment implements the explicit
-handoff; do not present it as fulfilling automatic upload.
+and no CORS permission. This static Pages app has no upload backend. The user
+explicitly chose the Wormhole handoff on 2026-11-06: automate ZIP creation, upload
+on Wormhole, then show its pasted complete link as a locally generated QR.
+That accepted scope is implemented; automatic service upload is not required.
 
 - [x] Inspect existing ZIP/storage flow and verify Wormhole's official security,
   FAQ/roadmap and the actual API preflight. No participant files uploaded.
@@ -54,8 +54,8 @@ handoff; do not present it as fulfilling automatic upload.
   pass; see VERIFICATION.md. Independent review found no actionable issues
   and separately passed the data-file regressions and whitespace check.
 - [x] Review, commit/push and check exact Pages deployment/live assets.
-- [ ] Fully automatic upload: resolve backend hosting/provider choice before
-  claiming the original one-click outcome is complete.
+- [x] User selected the implemented Wormhole handoff; no backend or alternative
+  provider is needed for this completed sharing task.
 
 Entry: canonical checkout on `main`, synchronized at `a216168`; audio sidecar
 publication is separate work. RTK is unavailable at the configured path; use
@@ -71,9 +71,10 @@ requests occur during QR creation. No participant data was uploaded.
 
 Observed `main`/`origin/main` synchronized at `e5f58b4`, clean before this
 evidence-only update. This note's publication keeps runtime bytes unchanged;
-verify its exact deployment and published note before handoff. Next product
-action: resolve hosting/provider choice for fully automatic upload; that
-original goal remains open. Participant exports remain local and untracked.
+verify its exact deployment and published note before handoff. The user has
+now selected the implemented handoff, completing this sharing task. No upload
+backend/provider decision remains. Participant exports stay local until the
+user shares them. Overall hardware, physical-phone and wording goals stay open.
 
 Closing-note publication recovery: `9a91534`, Pages run42248772267, built
 successfully, but deployment attempt1 timed out in `updating_pages` after ten
@@ -81,8 +82,13 @@ minutes. Attempts2/3 immediately reported cancellation, including after explicit
 API cancellation of only that task's failed deployment and confirmation of
 `deployment_cancelled`. The artifact is2,146,393,046bytes and carries the
 existing1GB warning; this does not diagnose the timeout. The verified `e5f58b4`
-QR feature stays live. Publish this failure record as a fresh commit/build and
-verify its exact Pages deployment and unchanged runtime plus updated notes.
+QR feature stayed live. Recovery commit `289896c` subsequently deployed
+successfully in [Pages run42251796609](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42251796609);
+all eight runtime/license/context files matched Git bytes, both entry URLs
+returned200 and the remote context gate passed. This choice-only update starts
+from clean synchronized `main` at `6da9539` and preserves the separate Polar
+increment. Publish and verify the selected-route notes; no runtime change is
+needed for this user confirmation.
 
 ## Matching numbered audio / CSV / TXT groups — 2026-11-06
 
