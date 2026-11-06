@@ -24,6 +24,12 @@ inspected. No page errors. Read-only independent review found no issues and
 independently checked53 pairings, six manifest hashes, cue order and playlists.
 Final narration still requires wording approval; no new speech was synthesized.
 
+Publication recovery: feature6f097cf is pushed, but Pages run42241115947
+attempt1 timed out in updating_pages after10minutes and failed-job attempt2
+was cancelled immediately. Build passed; artifact size2,146,337,782bytes
+produces the existing1GB warning. The affected live manifest still returns404.
+Trigger a fresh evidence commit/build, then verify its exact deployment and UI.
+
 ## Single 15-minute main sequence — 2026-11-06
 
 Current acceptance supersedes the earlier two-option/48-second-composite local

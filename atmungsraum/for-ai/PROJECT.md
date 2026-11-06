@@ -44,11 +44,16 @@ Receipts record the scenario hash and `audio_asset_mode: silent-placeholders`.
   after approval, align exact TXT/JSON/CSV/recordings and reverify timing.
 
 Entry: main/origin at `990172adeaadf3bfcdf1a1a78c79badcef18363b`;
-previous exact Pages release `42226744863`. Current placeholder UI is not yet
-published at this evidence write. All local checks and independent review pass; publication is next. The local static server serves the relocated
+previous exact Pages release `42226744863`. The verified placeholder change is pushed as
+`6f097cf91d52036da2781c12578e2d0ecacfbb4f`, with a clean main/origin. Pages
+run `42241115947` built successfully, but attempt1 timed out in updating_pages
+after10minutes; failed-job attempt2 was cancelled immediately. Its existing
+site artifact is2,146,337,782bytes with the standard1GB warning; that warning
+alone does not establish the cause. Live scenario manifest still returns404.
+All local checks and independent review pass. Publish this recovery evidence
+as a fresh build, then continue exact deployment/live checks before handoff. The local static server serves the relocated
 checkout. Machine-specific paths and migration SHA evidence stay outside the
-published source. Next action: publish the verified
-placeholder increment. Overall real sensor/headset, physical-phone and human
+published source. Next action: verify the fresh recovery deployment and affected live assets/UI. Overall real sensor/headset, physical-phone and human
 listening acceptance remain open.
 
 ## Main-round calibration and one 15-minute scenario — 2026-11-06
