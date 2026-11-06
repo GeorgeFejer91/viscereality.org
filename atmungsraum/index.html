@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <title>Atmungsraum | Viscereality</title>
-  <link rel="stylesheet" href="./style.css?v=20261106-folder">
-  <script type="module" src="./app.js?v=20261106-folder"></script>
+  <link rel="stylesheet" href="./style.css?v=20261106-corners">
+  <script type="module" src="./app.js?v=20261106-corners"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
-    <img src="./assets/icons/recenter-vr.svg" width="36" height="36" alt="" aria-hidden="true">
+    <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
     <span id="recenter-vr-note" class="sr-only">Platzhalter. Das Zentrieren des VR-Sichtfelds ist noch nicht verfügbar.</span>
   </button>
   <aside id="belt-signal" data-state="waiting" role="status" aria-label="Polar-Demosignal" title="Noch kein ECG-Demosignal">
+    <img class="polar-belt" src="./assets/icons/polar-h10.png" width="112" height="96" alt="" aria-hidden="true">
     <span class="signal-dot" aria-hidden="true"></span><span id="belt-status" class="sr-only">Noch kein ECG-Demosignal</span>
   </aside>
   <button id="open-files" type="button" aria-label="Gespeicherte Dateien öffnen" aria-haspopup="dialog" aria-controls="files-dialog" aria-expanded="false" title="Gespeicherte Dateien">
-    <img src="./assets/icons/folder.svg" width="32" height="32" alt="" aria-hidden="true">
+    <img src="./assets/icons/folder.svg" width="96" height="96" alt="" aria-hidden="true">
   </button>
   <dialog id="files-dialog" aria-labelledby="files-title" aria-describedby="files-scope">
     <header class="files-header">

@@ -36,6 +36,9 @@ The UI has no global context header or ECG return button after Continue. Signal
 loss uses a 30-second reconnect window before returning to the minimal ECG gate.
 A corner signal indicator breathes green with ECG and flashes red after loss;
 reduced motion uses a steady indicator.
+All three permanent corner surfaces are 144×144 CSS px. The Polar indicator embeds
+the recovered dissertation belt illustration (the source was PNG, not SVG).
+The layout reserves their space; narrow/short no-fit states use readable page reflow.
 The top-left `VR zentrieren` headset/arrows button stays visible on every screen
 and while scrolling. It is an inert, accessibly marked placeholder; future work
 will recenter the headset's central field of view. See PROJECT.md for its contract.

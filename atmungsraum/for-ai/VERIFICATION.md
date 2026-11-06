@@ -1,5 +1,31 @@
 # Verification
 
+## Threefold corner enlargement — 2026-11-06
+
+All three fixed surfaces measure exactly 144×144 CSS px. Recenter/folder artwork
+is three times its previous dimensions. Polar embeds the unmodified dissertation
+`PolarH10.png`, Git blob `71fef4c5acd3cb20122be459675963d476d5bc89`;
+the recovered original is raster, not a newly claimed vector asset.
+
+All 19 Node tests, seven scenario pairs, UI/context and whitespace checks pass.
+`check-large-corners.mjs` passes 85 native Chrome cases across 320×568, 390×844,
+568×320, 844×390, 768×1024, 1280×720 and 1920×1080: patient, ECG, round/options,
+all six players and legacy recovery; exact fixed corner bounds, loaded images,
+full-label Pretext/DOM checks, bounded centering, inert recenter, keyboard folder
+open/close/focus, signal loss/recovery, reduced motion, 200% text/spacing and focus
+access. `check-files.mjs` passes ten cases plus downloads/reload/active playback.
+Neither suite reports page errors; review has no actionable findings.
+
+The larger fixed surfaces change the supported no-scroll boundary. Patient,
+round/options and player screens at 320×568 use document reflow; landscape patient
+forms and 568×320 practice choices also reflow. Other tested ordinary cases fit
+bounded geometry. Short landscape reserves a central column; >=1280px desktop
+retains the centered content lane. The former 161-case suite's blanket bounded
+assertion is not applicable to these revised minimums. Physical devices and
+screen readers remain unqualified. Screenshots were visually inspected; local
+receipts/scripts remain ignored in `output/playwright/large-corners-results.json`
+and `corners-files-local-results.json`. Publication is pending.
+
 ## Folder-only data entry — 2026-11-06
 
 Both CSV-Dateien footer links and their obsolete visibility update are removed.

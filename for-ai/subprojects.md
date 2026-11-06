@@ -12,6 +12,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Corner surfaces (2026-11-06): all three are fixed at 144×144 CSS px. Polar embeds
+  the recovered dissertation H10 belt illustration (PNG source). Reserve their
+  space with portrait top/bottom clearance and a short-landscape central column;
+  use readable document reflow at the revised small-screen no-fit boundary.
+
 - Saved data (2026-11-05): a permanent bottom-right SVG folder opens a scrollable
   native dialog of this browser's saved session CSVs on every screen. As of
   2026-11-06 it is the sole visible data entry point; CSV-Dateien footer links

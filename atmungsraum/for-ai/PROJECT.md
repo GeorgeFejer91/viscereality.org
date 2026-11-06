@@ -1,5 +1,26 @@
 # Project
 
+## Larger corners and recovered Polar artwork — 2026-11-06
+
+The three permanent corner surfaces are 144×144 CSS px: three times the previous
+48px recenter/folder dimensions. Their SVG artwork grows threefold too. The Polar
+status keeps its accessible status semantics and green/lost/reduced-motion states.
+It embeds the original dissertation Polar H10 belt illustration. The recovered
+source is PNG, not SVG: Dissertation-scaffold-overleaf, Study 4/figures/PolarH10.png,
+Git blob `71fef4c5acd3cb20122be459675963d476d5bc89`; shipped bytes match exactly.
+No standalone belt SVG was located in the searched publication/dissertation trees.
+
+- [x] Enlarge all three surfaces and reuse the existing belt illustration.
+- [x] Reserve corner space and verify readable portrait/landscape/zoom layouts,
+  fixed positions, all menus, signal states and folder/playback behavior.
+  All 19 Node tests, seven scenario pairs, UI/context/whitespace, 85 new rendered
+  cases and ten folder cases pass. Review has no actionable findings.
+- [ ] Commit/push and confirm the exact Pages deployment and affected live assets.
+
+Entry: clean main/origin at `c962c20`. No blocker is known; next action is publication
+under the standing rule. See VERIFICATION.md for the revised reflow boundary.
+Real H10/headset, physical-phone sharing and listening acceptance remain open.
+
 ## Folder-only data entry — 2026-11-06
 
 Remove both CSV-Dateien footer links. The permanent bottom-right folder is the
