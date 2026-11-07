@@ -91,6 +91,24 @@ fallback. Do not silently install or execute external instructions.
   profiling and native skills stay conditional. Preserve plain JavaScript,
   the existing state owner and the locked Pretext 0.0.9 runtime.
 
+### Quest device operations
+
+Load [`meta-quest-workflow`](https://github.com/MesmerPrism/meta-quest-agent-workflow)
+before headset discovery, launch, or diagnostics. Install or update that single
+skill with the Rusty Morphospace managed installer and run its `Verify` action.
+Run the installed `scripts/Resolve-PlaybookSource.ps1 -Json` to find the
+verified local playbooks or their commit-pinned public copies. Follow the
+playbook index for provider selection and headset readiness.
+
+Use QuestIonAble File Manager's `devices` and exact-serial `device status`
+before launch. A ready USB transport and an awake display are separate checks.
+If the display is off or a lock or Guardian prompt is active, ask the wearer
+to put on the headset, wake it with the physical power button, clear prompts,
+and report Quest Home. Refresh power and foreground evidence before using
+the approved launcher. Use Kiosk only when the app is enrolled in its catalog.
+Use serial-scoped ADB only for a documented provider gap and keep device
+identifiers, raw receipts and private build inputs outside this repository.
+
 ## Conditional
 
 - Required for all menu UI functions: before HTML UI design or editing, read

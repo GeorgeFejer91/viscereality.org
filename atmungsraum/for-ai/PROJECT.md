@@ -44,9 +44,15 @@ at 320 CSS px with 200% text. Runtime commit `4309c6f` deployed from `main` in
 Pages run `42408436234`. The live 121-case layout matrix and crash/quota checks
 passed. See the UI and CSV saving sweep in VERIFICATION.md.
 
-Next: attend the headset launch and Remote setup, then exercise the installed
-Android PWA against the signed package. The phone and wearer observations
-are required before closing the dry-run milestone.
+The [MesmerPrism device workflow](SKILLS.md#quest-device-operations) is
+installed in Codex and verified at public source revision `39a4641`. Its
+playbook resolver verified the local source. File Manager confirmed one
+authorized USB Quest 3, with wakefulness `Asleep` and the display `OFF`.
+
+Next: have the wearer wake the headset, clear prompts and confirm Quest Home.
+Refresh device status, attend the rehearsal launch and Remote setup, then
+exercise the installed Android PWA against the signed package. The phone and
+wearer observations are required before closing the dry-run milestone.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
