@@ -1,7 +1,7 @@
 import { sendDiscordLink, validateRelaySettings } from './link-relay.js?v=20261107-file-delivery';
 import { unlockDiscordWebhook } from './discord-share.js?v=20261107-file-delivery';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
-import { deliveryKey, readDeliveryHistory, deliveryEntries, recordDelivery } from './file-delivery.js';
+import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';
 // ZIP32 with stored entries: keep original CSV bytes, without a runtime dependency.
 const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
   for (let bit = 0; bit < 8; bit++) value = (value >>> 1) ^ ((value & 1) ? 0xedb88320 : 0);
@@ -72,9 +72,9 @@ export function mountDataFiles(data) {
     try {
       const entries = await deliveryEntries(await data.exports());
       if (version !== generation || !dialog.open) return;
-      const history = readDeliveryHistory(localStorage);
+      const sent = readSentFiles(localStorage);
       total = entries.length;
-      unsent = entries.filter(entry => !history.sent[entry.key]).length;
+      unsent = entries.filter(entry => !sent.has(entry.key)).length;
       counts.textContent = total ? total + ' gespeichert · ' + unsent + ' noch nicht gesendet' : 'Keine gespeicherten Dateien.';
     } catch {
       if (version !== generation || !dialog.open) return;
@@ -128,8 +128,8 @@ export function mountDataFiles(data) {
         signal.throwIfAborted();
         if (!lock) { status.textContent = 'In einem anderen Tab läuft bereits ein Versand.'; return; }
         const entries = await deliveryEntries(await data.exports(), signal);
-        const storage = localStorage, history = readDeliveryHistory(storage);
-        const selected = all ? entries : entries.filter(entry => !history.sent[entry.key]);
+        const storage = localStorage, sent = readSentFiles(storage);
+        const selected = all ? entries : entries.filter(entry => !sent.has(entry.key));
         if (!selected.length) {
           status.textContent = all ? 'Keine gespeicherten Dateien.' : 'Keine neuen Dateien zum Senden.';
           return;
@@ -142,7 +142,7 @@ export function mountDataFiles(data) {
           status.textContent = error.message;
           return;
         }
-        recordDelivery(storage, history, []);
+        const confirmReceipt = prepareDeliveryReceipt(storage, selected);
         status.textContent = 'Passwort eingeben …';
         const access = await requestPassword(signal);
         signal.throwIfAborted();
@@ -167,7 +167,7 @@ export function mountDataFiles(data) {
         notifying = true;
         await sendDiscordLink({ webhook, url: receipt.url, signal });
         notifying = false;
-        try { recordDelivery(storage, history, selected); }
+        try { confirmReceipt(); }
         catch {
           status.textContent = 'Discord hat den Link angenommen. Der Versandverlauf konnte nicht gespeichert werden.';
           return;
@@ -227,6 +227,8 @@ export function mountDataFiles(data) {
   document.addEventListener('atmungsraum:exports-changed', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
   window.addEventListener('focus', refresh);
-  window.addEventListener('storage', event => { if (event.key === deliveryKey || event.key === null) refresh(); });
+  window.addEventListener('storage', event => {
+    if (event.key === null || event.key === deliveryKey || event.key.startsWith(receiptPrefix)) refresh();
+  });
   return { open };
 }

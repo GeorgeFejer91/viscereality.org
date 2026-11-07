@@ -21,12 +21,13 @@ The ZIP stays on Wormhole; the Discord message contains its full keyed URL.
    **Atmungsraum Discord** entry. If your browser doesn't offer this, use its
    regular password manager or the private local `.dev.vars.setup.html` page.
 
-The JSON history stays in this browser and marks exact file versions only after
-Discord accepts the URL. Clearing site data resets it. On the first use, files
-from older versions of the app count as new. A failed upload or Discord post
-leaves the selected files pending. Closing the dialog cancels pending work; a
-provider request already accepted cannot be undone. Check Discord after a
-timeout before retrying. Individual CSV downloads remain at
+Each successful send saves a separate JSON checkout receipt in this browser
+after Discord accepts the URL. **Neue Dateien senden** checks every receipt
+and includes the earlier send history, so an update preserves which files were
+already sent. **Alle Dateien senden** includes all files and creates another
+receipt. A failed upload or Discord post leaves the selected files pending.
+Clearing site data clears the receipts. Closing the dialog cancels pending
+work. Check Discord after a timeout before retrying. Individual CSV downloads remain at
 [the recovery URL](https://viscereality.org/atmungsraum/#daten).
 
 The app clears the password field on dismissal and does not write the password

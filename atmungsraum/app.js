@@ -2,7 +2,7 @@ import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, u
 import { mountSessionAudio } from './audio/session-ui.js?v=20261106-polar-timeout';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
-import { mountDataFiles } from './data-files.js?v=20261107-file-delivery';
+import { mountDataFiles } from './data-files.js?v=20261107-checkout-receipts';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');

@@ -1,5 +1,14 @@
 # Verification
 
+## One checkout receipt per confirmed send — 2026-11-07
+
+Both targeted tests failed before the separate receipt reader and writer were
+added. All 52 Node tests and the UI and context checks pass. The local browser
+fixture observes six checkout receipts across eight fixture uploads and seven
+fixture posts. It verifies that failures leave no receipt, resends append a
+receipt, earlier receipts remain intact, legacy history still suppresses
+duplicates, and an open second tab updates after a confirmed send.
+
 ## Folder delivery and JSON receipts — 2026-11-07
 
 The receipt and URL-only payload tests failed first, then passed. All 52 Node

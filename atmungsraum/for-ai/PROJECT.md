@@ -167,7 +167,13 @@ receipt flows below. Individual CSV downloads remain at `#daten`.
 - [ ] Verify hosted Render with its actual URL after the operator deploys the
   Free service. Use the ignored private setup page and see sharing/README.md.
 
-Main and origin/main matched feature release
+The checkout receipt update gives each acknowledged send its own browser-local
+JSON record. **Neue Dateien senden** combines those receipts with the earlier
+history. The revised 52-test suite and synthetic browser fixture pass locally,
+including legacy receipt compatibility, retries, repeat sends and live counts
+across tabs. Exact Pages verification for this update is pending.
+
+Main and origin/main matched the initial folder feature release
 `d02cf262d9a530d286650bb11dfdecdaba63fb7e`.
 [Pages run 42400503595](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42400503595)
 and the commit-specific deployment API report success. Both live entry URLs

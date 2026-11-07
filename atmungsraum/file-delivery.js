@@ -1,14 +1,32 @@
 export const deliveryKey = 'atmungsraum-file-delivery-v1';
+export const receiptPrefix = deliveryKey + ':receipt:';
+const fingerprint = /^[a-f0-9]{64}$/;
+const isDate = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
 
-export function readDeliveryHistory(storage) {
+export function readSentFiles(storage) {
   try {
-    const raw = storage.getItem(deliveryKey);
-    if (raw === null) return { version: 1, sent: {} };
-    const history = JSON.parse(raw);
-    if (history?.version !== 1 || !history.sent || typeof history.sent !== 'object' || Array.isArray(history.sent)
-      || Object.entries(history.sent).some(([key, date]) => !/^[a-f0-9]{64}$/.test(key)
-        || typeof date !== 'string' || !Number.isFinite(Date.parse(date)))) throw new Error('Invalid history');
-    return history;
+    const sent = new Set();
+    const legacy = storage.getItem(deliveryKey);
+    if (legacy !== null) {
+      const history = JSON.parse(legacy);
+      if (history?.version !== 1 || !history.sent || typeof history.sent !== 'object'
+        || Array.isArray(history.sent)) throw new Error('Invalid history');
+      for (const [key, date] of Object.entries(history.sent)) {
+        if (!fingerprint.test(key) || !isDate(date)) throw new Error('Invalid history entry');
+        sent.add(key);
+      }
+    }
+    for (let index = 0; index < storage.length; index++) {
+      const key = storage.key(index);
+      if (!key?.startsWith(receiptPrefix)) continue;
+      const receipt = JSON.parse(storage.getItem(key));
+      if (receipt?.version !== 1 || !isDate(receipt.acceptedAt) || !Array.isArray(receipt.files)
+        || !receipt.files.length || receipt.files.some(file => typeof file !== 'string' || !fingerprint.test(file))) {
+        throw new Error('Invalid checkout receipt');
+      }
+      for (const file of receipt.files) sent.add(file);
+    }
+    return sent;
   } catch {
     throw new Error('Der Versandverlauf konnte nicht gelesen werden.');
   }
@@ -27,10 +45,17 @@ export async function deliveryEntries(records, signal) {
   return entries;
 }
 
-// Call while holding the browser's delivery lock. Only confirmed entries are added.
-export function recordDelivery(storage, history, entries) {
-  const sent = { ...history.sent }, date = new Date().toISOString();
-  for (const { key } of entries) sent[key] = date;
-  try { storage.setItem(deliveryKey, JSON.stringify({ version: 1, sent })); }
-  catch { throw new Error('Der Versandverlauf konnte nicht gespeichert werden.'); }
+// Hold the delivery lock from the capacity check through Discord confirmation.
+export function prepareDeliveryReceipt(storage, entries) {
+  const id = crypto.randomUUID();
+  const probeKey = deliveryKey + ':pending:' + id;
+  const files = entries.map(entry => entry.key);
+  const receiptJSON = () => JSON.stringify({ version: 1, acceptedAt: new Date().toISOString(), files });
+  try {
+    storage.setItem(probeKey, receiptJSON());
+    storage.removeItem(probeKey);
+  } catch {
+    throw new Error('Der Versandverlauf konnte nicht gespeichert werden.');
+  }
+  return () => storage.setItem(receiptPrefix + id, receiptJSON());
 }

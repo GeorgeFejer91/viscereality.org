@@ -152,15 +152,18 @@ or include an unfinished live recording.
 collisions use the session UUID as a directory. This remains ZIP32 packaging
 using the same writer. An updated CSV under the same UUID counts as new.
 
-The versioned JSON ledger `atmungsraum-file-delivery-v1` uses browser
-localStorage. It records SHA-256 fingerprints of session ID, filename and exact
-CSV bytes with acknowledgment timestamps. It contains no CSVs, filenames,
-participant IDs, passwords or URLs. A Web Lock prevents parallel sends in
-tabs of the same origin. Only Discord acknowledgment marks the exact ZIP
-snapshot sent; failure, a wrong password or cancellation before acceptance does
-not. Clearing browser data resets the ledger. There is no cross-device or
-durable exactly-once guarantee: after a timeout or an unsaved receipt, check
-Discord before resending. Export files are never deleted by this flow.
+After Discord acknowledges a send, the browser saves a separate checkout
+receipt under `atmungsraum-file-delivery-v1:receipt:<UUID>` in localStorage.
+Each JSON object has a `version`, an `acceptedAt` timestamp and a `files`
+array of SHA-256 fingerprints of session ID, filename and exact CSV bytes.
+The receipt contains no CSVs, filenames, participant IDs, passwords or URLs.
+**Neue Dateien senden** checks the combined fingerprints from all receipts and
+the earlier `atmungsraum-file-delivery-v1` history. **Alle Dateien senden**
+creates its own receipt after acknowledgment. A Web Lock prevents parallel
+sends in tabs of the same origin. Attempts that fail before acknowledgment
+leave no checkout receipt. Clearing browser data resets the history. After
+a timeout or an unsaved receipt, check Discord before resending. Export files
+remain available independently of the checkout receipts.
 
 The masked password decrypts the public webhook ciphertext locally before any
 file transfer. On opt-in and confirmed delivery, the browser's own credential
