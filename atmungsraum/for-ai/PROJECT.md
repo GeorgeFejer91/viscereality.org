@@ -56,12 +56,6 @@ Manager's power status does not report the foreground activity. A bounded,
 read-only serial-scoped ADB check then found Quest Home resumed alongside
 the Browser panel, with no lock or Guardian activity in the observed state.
 
-Next: select Remote in the Quest operator panel and verify Start and End from
-the PC browser with the synthetic rehearsal. For the separate live H10 check,
-approve Quest's Nearby devices prompt and verify fresh ECG from the native
-Polar owner. Exercise the installed Android PWA for the later physical
-controller acceptance gate.
-
 Current device smoke test: serial-scoped ADB launched the isolated Viscereality
 rehearsal on Quest 3. The original APK stalled at loading because the ARM64
 OpenXR loader was absent. The locked rebuild explicitly packages that loader.
@@ -71,12 +65,10 @@ Start and End from the actual PC browser controls. Keep Quest and browser
 screenshots, native command receipts and build inputs private. Use synthetic
 recording inputs for this rehearsal.
 
-The installed APK also exposes its own Android operator activity. A
-serial-scoped launch using that activity's declared 2D entry point opened
-an Android permission prompt attributed to the rehearsal app. The activity
-launch receipt remains pending while the prompt is active. The wearer must
-inspect the prompt and make the permission and Remote choices before the
-browser connection can be qualified.
+The installed APK also exposes its own Android operator activity. Quest now
+reports both Bluetooth runtime permissions granted for the rehearsal app.
+The gateway still requires the app's attended Remote choice before the
+browser can join. Prepare Remote on Quest before giving it to the wearer.
 
 ### Quest-owned H10 with browser control
 
@@ -90,14 +82,22 @@ consenting test wearer and a synthetic identifier.
   tests, 121 layouts, five demo session CSVs, crash/quota checks and five
   signed VR-Probe fixture cases passed. These exercised synthetic data.
 - [x] Verify the installed rehearsal APK includes Quest-owned Polar H10
-  acquisition and the experiment command gateway. The installed package
-  declares Bluetooth scan and connect permissions. Both grants were absent
-  on device, and the native setup status did not report an active Polar owner.
-  The rehearsal package omits the recording-export capability.
-- [ ] Complete attended Quest permission and sensor setup. Use Quest's
+  acquisition and the experiment command gateway. The installed rehearsal
+  package reports Bluetooth scan and connect grants. It omits the recording
+  export capability.
+- [x] Put Polar setup in the external controller's **VR-Probe** screen. After
+  joining Quest in Remote mode, **Polar H10 verbinden** asks Quest to scan,
+  select the only detected strap, connect and start ECG using the
   [native Polar setup](https://github.com/MesmerPrism/rusty-quest/blob/99352620fd79ec5cdcee71b47c2ba4056241af16/docs/REMOTE_POLAR_SETUP.md)
-  to scan, select, connect and start ECG on Quest. Require fresh actual
-  frames before reporting ECG ready. Keep the browser demo selectable.
+  contract. Several candidates require operator disambiguation by leaving
+  only the intended strap active. The button uses the existing authenticated
+  command and original receipt flow. A disconnect or background transition
+  never continues the setup sequence. The headset handles Android permission
+  approval, Bluetooth and acquisition. The browser shows only readiness.
+- [ ] Select Remote on the installed rehearsal APK and open its VR scene.
+  Join from PC Chrome and click **Polar H10 verbinden** with the test wearer
+  wearing the strap. Verify fresh native ECG and keep device receipts and
+  screenshots in the private evidence lane. This is the next unfinished action.
 - [ ] Connect desktop Chrome to the identified Quest gateway. Verify Starten,
   Pause, Fortsetzen and Beenden from original native receipts. Verify that
   native ECG continues during pause and continuous signal loss beyond 30
@@ -110,6 +110,9 @@ consenting test wearer and a synthetic identifier.
 
 The browser demo still uses NeuroKit replay. A native readiness flag can
 confirm fresh acquisition without carrying the waveform or recording.
+Host verification covers 65 Node tests, six scenario consistency checks, ten
+signed Chrome fixture cases across supported viewport/text sizes, and the
+synthetic demo save sweep. See [VERIFICATION.md](VERIFICATION.md).
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 

@@ -187,3 +187,87 @@ test('a new native owner cannot clear an uncertain Finish or receive a replay', 
   rehearsal.acknowledgeIdle();
   assert.equal(rehearsal.state.unknown, false);
 });
+
+function polarQuest({ candidates = ['0123456789ab'], lost, delayedScan = false, permission = true } = {}) {
+  const commands = [], receipts = new Map();
+  const polar = { s: 'f'.repeat(32), g: Number(owner.native_epoch), r: 1, p: permission, b: true,
+    c: false, x: '', a: false, e: false, d: [], sc: false };
+  const current = () => ({ ...snapshot(), y: { ...polar } });
+  return { owner, initial: current(), commands, polar, close() {}, status: async () => current(),
+    async command(command) {
+      assert.equal(command.v, 4);
+      assert.equal(command.g, polar.g);
+      assert.equal(command.s, polar.s);
+      assert.equal(command.r, polar.r);
+      assert.match(command.n, /^[a-f0-9]{16}$/);
+      commands.push(command);
+      polar.r++;
+      if (command.op === 'scan') polar.d = candidates;
+      if (command.op === 'select') polar.x = command.d;
+      if (command.op === 'connect') polar.c = true;
+      if (command.op === 'start-ecg') polar.e = true;
+      if (command.op !== 'select') assert.equal(command.d, '');
+      const receipt = { v: 1, id: command.id, state: 'confirmed' };
+      receipts.set(command.id, receipt);
+      if (command.op === lost) throw Error('Reply dropped after dispatch');
+      return delayedScan && command.op === 'scan' ? { ...receipt, state: 'pending' } : receipt;
+    },
+    async receipt(id) { return receipts.get(id); },
+  };
+}
+
+test('one explicit browser action asks Quest to scan, select, connect and start fresh ECG', async () => {
+  const quest = polarQuest({ delayedScan: true });
+  const rehearsal = new QuestRehearsal({ wait: async () => {} });
+  rehearsal.attach(quest);
+  await Promise.all([rehearsal.run('polar'), rehearsal.run('polar'), rehearsal.run('play')]);
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg']);
+  assert.equal(quest.commands[1].d, '0123456789ab');
+  assert.equal(rehearsal.state.status.y.e, true);
+  assert.equal(rehearsal.state.pending, false);
+});
+
+test('Polar setup refuses missing grants, stale owners and automatic choice among multiple straps', async () => {
+  const rehearsal = new QuestRehearsal();
+  const ungranted = polarQuest({ permission: false });
+  rehearsal.attach(ungranted);
+  await rehearsal.run('polar');
+  assert.deepEqual(ungranted.commands, []);
+  const stale = polarQuest();
+  stale.polar.g++;
+  rehearsal.attach(stale);
+  await rehearsal.run('polar');
+  assert.deepEqual(stale.commands, []);
+  const multiple = polarQuest({ candidates: ['0123456789ab', '0123456789ac'] });
+  rehearsal.attach(multiple);
+  await rehearsal.run('polar');
+  assert.deepEqual(multiple.commands.map(({ op }) => op), ['scan']);
+  assert.match(rehearsal.state.message, /Mehrere/);
+});
+
+test('recovery only checks the original Polar receipt and never chains the remaining setup steps', async () => {
+  const quest = polarQuest({ lost: 'connect' });
+  const rehearsal = new QuestRehearsal();
+  rehearsal.attach(quest);
+  await rehearsal.run('polar');
+  assert.equal(rehearsal.state.unknown, true);
+  await rehearsal.refresh();
+  assert.equal(rehearsal.state.status.y.c, true);
+  assert.equal(rehearsal.state.status.y.e, false);
+  assert.equal(rehearsal.state.unknown, false);
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect']);
+  await rehearsal.run('polar');
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg']);
+});
+
+test('leaving the foreground during a Polar scan requires a new browser action', async () => {
+  const foreground = new AbortController();
+  const quest = polarQuest({ delayedScan: true });
+  const rehearsal = new QuestRehearsal({ wait: async () => foreground.abort() });
+  rehearsal.attach(quest);
+  await rehearsal.run('polar', foreground.signal);
+  assert.equal(rehearsal.state.unknown, true);
+  await rehearsal.refresh();
+  assert.equal(rehearsal.state.unknown, false);
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan']);
+});

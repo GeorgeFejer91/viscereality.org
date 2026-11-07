@@ -1,5 +1,5 @@
 import { discoverQuest, joinQuest } from './quest-gateway.js?v=1';
-import { QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=1';
+import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=2';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -13,6 +13,9 @@ export function mountQuestRehearsal() {
   const form = byId('quest-join');
   const statusText = byId('quest-status');
   const clock = byId('quest-clock');
+  const polar = byId('quest-polar');
+  const polarStatus = byId('quest-polar-status');
+  const polarConnect = byId('quest-polar-connect');
   const play = byId('quest-play');
   const finish = byId('quest-finish');
   const acknowledge = byId('quest-acknowledge');
@@ -48,6 +51,19 @@ export function mountQuestRehearsal() {
       const seconds = Math.floor(status.ms / 1000);
       text(clock, [Math.floor(seconds / 60), seconds % 60].map((part) => String(part).padStart(2, '0')).join(':'));
     }
+    const setup = polarSetup(status);
+    const ready = setup?.p && setup.b && setup.c && setup.e;
+    const hadPolarFocus = document.activeElement === polarConnect;
+    polar.hidden = status?.p !== 'IDLE' || active;
+    text(polarStatus, !setup ? 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.'
+      : !setup.p ? 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.'
+      : !setup.b ? 'Schalte Bluetooth auf der Quest ein.'
+      : setup.sc ? 'Quest sucht nach dem Polar H10 …'
+      : ready ? 'Polar H10 verbunden. Quest empfängt EKG.'
+      : setup.c ? 'Polar H10 verbunden. Warte auf EKG von der Quest.'
+      : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
+    polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || setup.sc || ready;
+    if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status;
     play.disabled = waiting || unknown || !actions.play;
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
@@ -99,6 +115,7 @@ export function mountQuestRehearsal() {
 
   form.addEventListener('submit', (event) => { event.preventDefault(); connect(false); });
   byId('quest-find').addEventListener('click', () => connect(true));
+  polarConnect.addEventListener('click', () => act('polar'));
   play.addEventListener('click', () => act('play'));
   finish.addEventListener('click', () => act('finish'));
   acknowledge.addEventListener('click', () => rehearsal.acknowledgeIdle());

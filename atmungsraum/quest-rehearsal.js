@@ -3,9 +3,34 @@ import { operationId, sameQuest } from './quest-gateway.js?v=1';
 const condition = 'condition-a';
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const desiredPhase = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
+const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg']);
+const setupReference = /^[a-f0-9]{32}$/;
+const candidateId = /^[a-f0-9]{12}$/;
+
+export function polarSetup(status) {
+  const setup = status?.y;
+  if (status?.p !== 'IDLE' || status.rec || !setup || typeof setup.s !== 'string' || !setupReference.test(setup.s)
+    || !Number.isSafeInteger(setup.g) || setup.g <= 0 || String(setup.g) !== status.o?.e
+    || !Number.isSafeInteger(setup.r) || setup.r < 0
+    || !['p', 'b', 'c', 'a', 'e', 'sc'].every(flag => typeof setup[flag] === 'boolean')
+    || typeof setup.x !== 'string' || setup.x !== '' && !candidateId.test(setup.x)
+    || setup.c && !setup.x || setup.e && !setup.c
+    || !Array.isArray(setup.d) || setup.d.length > 4 || new Set(setup.d).size !== setup.d.length
+    || !setup.d.every(id => typeof id === 'string' && candidateId.test(id))) return null;
+  return setup;
+}
+
+function setupConfirmed(status, { op, setupRef, candidate }) {
+  const setup = polarSetup(status);
+  if (!setup || setup.s !== setupRef || !setup.p || !setup.b || setup.sc) return false;
+  if (op === 'scan') return true;
+  if (setup.x !== candidate) return false;
+  if (op === 'select') return true;
+  return setup.c && (op === 'connect' || setup.e);
+}
 
 export function rehearsalActions(status) {
-  if (!status || status.pending || status.pi?.r !== false) return {};
+  if (!status || status.pending || status.pi?.r !== false || polarSetup(status)?.sc) return {};
   if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec && status.a?.[0] === 'track-ready') return { play: 'arm' };
   if (!status.rec || status.c !== condition) return {};
   const next = { ARMED: 'start', RUNNING: 'pause', PAUSED: 'resume' }[status.p];
@@ -27,7 +52,10 @@ export class QuestRehearsal {
     this.wait = wait;
     try {
       const saved = JSON.parse(storage?.getItem('atmungsraum-quest-pending') ?? 'null');
-      if (saved && /^[a-f0-9]{16}$/.test(saved.id) && Object.hasOwn(desiredPhase, saved.op)
+      const validOperation = saved && (Object.hasOwn(desiredPhase, saved.op)
+        || setupOperations.has(saved.op) && setupReference.test(saved.setupRef)
+          && (saved.op === 'scan' ? saved.candidate === '' : candidateId.test(saved.candidate)));
+      if (validOperation && /^[a-f0-9]{16}$/.test(saved.id)
         && Number.isSafeInteger(saved.generation) && saved.generation >= 0 && saved.owner) {
         this.pending = saved;
         this.state.unknown = true;
@@ -56,7 +84,7 @@ export class QuestRehearsal {
 
   canAcknowledgeIdle() {
     const { busy, unknown, status } = this.state;
-    return !busy && unknown && status?.p === 'IDLE' && !status.pending && !status.rec
+    return !busy && unknown && status?.p === 'IDLE' && !status.pending && !status.rec && !polarSetup(status)?.sc
       && this.pending?.owner.device === this.gateway?.owner.device
       && this.pending?.owner.serial === this.gateway?.owner.serial;
   }
@@ -84,10 +112,15 @@ export class QuestRehearsal {
       return false;
     }
     if (receipt.state !== 'confirmed') return false;
-    const generationMatches = op === 'arm' ? status.g > generation
-      : op === 'save-next' ? !status.rec : status.g === generation;
-    if (status.pending || status.p !== desiredPhase[op] || !generationMatches
-      || op !== 'save-next' && status.c !== condition) return false;
+    if (status.pending) return false;
+    if (setupOperations.has(op)) {
+      if (status.g !== generation || !setupConfirmed(status, this.pending)) return false;
+    } else {
+      const generationMatches = op === 'arm' ? status.g > generation
+        : op === 'save-next' ? !status.rec : status.g === generation;
+      if (status.p !== desiredPhase[op] || !generationMatches
+        || op !== 'save-next' && status.c !== condition) return false;
+    }
     this.remember(null);
     this.update({ unknown: false, message: op === 'save-next' ? 'Probelauf beendet.' : '' });
     return true;
@@ -108,43 +141,93 @@ export class QuestRehearsal {
     return this.refreshing;
   }
 
-  async dispatch(gateway, op, status, signal) {
+  async dispatch(gateway, op, status, signal, candidate = '') {
     signal?.throwIfAborted();
     const id = operationId();
-    const command = op === 'arm' || op === 'save-next'
-      ? { v: 1, id, op, condition: op === 'arm' ? condition : '', bias: 0, nonce: operationId() }
-      : { v: 2, id, op, s: status.q.s, g: status.q.g, n: operationId() };
-    this.remember({ id, op, owner: gateway.owner, generation: status.g });
-    this.update({ pending: true, message: '' });
+    const pending = { id, op, owner: gateway.owner, generation: status.g };
+    let command;
+    if (setupOperations.has(op)) {
+      const { s, g, r } = polarSetup(status);
+      Object.assign(pending, { setupRef: s, candidate });
+      command = { v: 4, id, op, s, g, r, d: op === 'select' ? candidate : '', n: operationId() };
+    } else if (op === 'arm' || op === 'save-next') {
+      command = { v: 1, id, op, condition: op === 'arm' ? condition : '', bias: 0, nonce: operationId() };
+    } else {
+      command = { v: 2, id, op, s: status.q.s, g: status.q.g, n: operationId() };
+    }
+    this.remember(pending);
+    this.update({ message: '' });
     return this.observe(gateway, await gateway.command(command, signal));
+  }
+
+  async dispatchAndConfirm(gateway, op, signal, timeout, candidate) {
+    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, candidate);
+    const deadline = performance.now() + timeout;
+    while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
+      && !signal?.aborted && performance.now() < deadline) {
+      await this.wait();
+      if (this.gateway !== gateway || signal?.aborted || performance.now() >= deadline) break;
+      confirmed = await this.observe(gateway, await gateway.receipt(this.pending.id));
+    }
+    if (!confirmed && this.gateway === gateway && this.pending) this.update({ unknown: true });
+    return confirmed && this.gateway === gateway && !signal?.aborted;
+  }
+
+  async connectPolar(gateway, clicked, signal) {
+    const original = polarSetup(clicked);
+    const current = () => {
+      const { status } = this.state;
+      const setup = polarSetup(status);
+      return this.gateway === gateway && !signal?.aborted && !status?.pending && status?.g === clicked.g
+        && setup?.s === original.s && setup.p && setup.b && !setup.sc ? setup : null;
+    };
+    let setup = current();
+    if (!setup || setup.e) return;
+    if (!setup.c) {
+      if (!await this.dispatchAndConfirm(gateway, 'scan', signal, 62000)) return;
+      setup = current();
+      if (!setup) return;
+      if (setup.d.length !== 1) {
+        this.update({ message: setup.d.length === 0
+          ? 'Kein Polar H10 gefunden. Lege den Gurt an und suche erneut.'
+          : 'Mehrere Gurte gefunden. Lass nur den gewünschten Gurt aktiv und suche erneut.' });
+        return;
+      }
+      const candidate = setup.d[0];
+      if (!await this.dispatchAndConfirm(gateway, 'select', signal, 32000, candidate) || !current()) return;
+      if (!await this.dispatchAndConfirm(gateway, 'connect', signal, 32000, candidate)) return;
+      setup = current();
+    }
+    if (setup?.c && !setup.e) await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x);
   }
 
   async run(action, signal) {
     const gateway = this.gateway;
-    if (!gateway || this.state.busy || this.pending || !rehearsalActions(this.state.status)[action]) return;
+    const clicked = this.state.status;
+    const requested = rehearsalActions(clicked)[action];
+    const setup = action === 'polar' ? polarSetup(clicked) : null;
+    if (!gateway || clicked?.pending || this.state.busy || this.pending
+      || (!requested && (!setup?.p || !setup.b || setup.sc || setup.e))) return;
     this.update({ busy: true, message: '' });
     try {
-      const clicked = this.state.status;
-      const requested = rehearsalActions(clicked)[action];
       await this.refreshing;
       if (this.gateway !== gateway || signal?.aborted) return;
       if (!await this.observe(gateway) || signal?.aborted) return;
+      if (action === 'polar') {
+        await this.connectPolar(gateway, clicked, signal);
+        return;
+      }
       const status = this.state.status;
       const op = rehearsalActions(status)[action];
       if (op !== requested || status.g !== clicked.g
         || op !== 'arm' && op !== 'save-next' && status.q?.s !== clicked.q?.s) return;
-      let confirmed = await this.dispatch(gateway, op, status, signal);
-      if (op !== 'arm') return;
-      const deadline = performance.now() + 10000;
-      while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
-        && !signal?.aborted && performance.now() < deadline) {
-        await this.wait();
-        if (this.gateway !== gateway || signal?.aborted || performance.now() >= deadline) break;
-        confirmed = await this.observe(gateway, await gateway.receipt(this.pending.id));
+      if (op !== 'arm') {
+        await this.dispatch(gateway, op, status, signal);
+        return;
       }
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
-      if (confirmed && this.gateway === gateway && !signal?.aborted
+      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000)
         && rehearsalActions(this.state.status).play === 'start') {
         await this.dispatch(gateway, 'start', this.state.status, signal);
       }

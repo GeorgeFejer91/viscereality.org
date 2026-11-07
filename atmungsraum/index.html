@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261107-csv-reflow">
+  <link rel="stylesheet" href="./style.css?v=20261107-quest-polar">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261107-quest-rehearsal"></script>
+  <script type="module" src="./app.js?v=20261107-quest-polar"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -153,6 +153,12 @@
           </details>
         </form>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
+        <div id="quest-polar" hidden>
+          <p id="quest-polar-status" role="status" data-measure></p>
+          <button id="quest-polar-connect" type="button" aria-describedby="quest-polar-status">
+            <span data-measure>Polar H10 verbinden</span>
+          </button>
+        </div>
         <button id="quest-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
         <button id="quest-disconnect" type="button" hidden><span data-measure>Verbindung trennen</span></button>
       </div>

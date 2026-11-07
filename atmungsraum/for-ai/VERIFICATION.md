@@ -1,5 +1,24 @@
 # Verification
 
+## Browser controls for Quest-owned Polar setup — 2026-11-07
+
+The signed LAN gateway fixture verified missing Android permission, keyboard
+activation, exactly one scan/select/connect/start-ECG sequence and native
+readiness in Chrome. It then ran the synthetic Arm → Start → Pause → Resume
+→ Finish route. The same five Chrome viewport/text settings passed with a
+gateway that omitted Polar setup, including 320 CSS px, short landscape,
+desktop and 200% text with custom spacing. Both fixtures measured visible
+text and checked control heights, overflow, page errors and demo asset
+isolation. Unit tests cover invalid setup grants, ambiguous sensor discovery,
+duplicate actions, lost receipts and foreground exit. All 65 Node tests and
+six scenario consistency checks passed.
+
+The separate synthetic save sweep downloaded and reopened five exact session
+CSVs and verified automatic completion of the 68-second Anleitung. Quest 3
+reported both Bluetooth runtime permission grants for the installed rehearsal.
+Physical browser-to-Quest control and live H10 ECG require the attended Remote
+gate and a separate device run.
+
 ## UI and CSV saving sweep — 2026-11-07
 
 The sweep began on Pages run `42406261765` (`53a7633`). Chrome checked 121

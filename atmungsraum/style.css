@@ -105,10 +105,10 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 #patient { --patient-gap: clamp(12px, min(3vw, 3dvh), 24px); height: min(100%, 560px); align-self: center; gap: clamp(16px, min(2vw, 2dvh), 24px); }
 html[data-mode="quest"] :is(#belt-signal, #open-files) { display: none; }
 #quest { width: min(100%, 640px); justify-self: center; }
-.quest-body, .quest-join, .quest-join details[open] { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
+.quest-body, .quest-join, .quest-join details[open], #quest-polar { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
 .quest-body { align-content: center; }
-.quest-join { width: min(100%, 460px); justify-self: center; }
-.quest-join p, #quest-status, #quest-clock { margin: 0; text-align: center; }
+.quest-join, #quest-polar { width: min(100%, 460px); justify-self: center; }
+.quest-join p, #quest-status, #quest-clock, #quest-polar-status { margin: 0; text-align: center; }
 .quest-join label > span { display: block; }
 .quest-join input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: inherit; }
 .quest-join summary { min-height: 48px; align-content: center; cursor: pointer; }
