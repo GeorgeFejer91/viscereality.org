@@ -13,6 +13,10 @@ The local run observed seven fixture uploads, six fixture posts and no page
 errors. No participant data or real Discord message was sent. The actual
 Render deployment remains a separate operator step. See the ignored
 `output/playwright/check-file-delivery.mjs` fixture and PROJECT.md release state.
+The same browser suite passes on published Pages and verifies that the app
+asks the credential manager to save only after an opted-in successful send.
+The public ciphertext matches the configured destination after local
+decryption; the check does not send a Discord message.
 
 ## Render Free upload adapter — 2026-11-07
 

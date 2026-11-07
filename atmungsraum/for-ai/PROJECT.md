@@ -163,9 +163,20 @@ receipt flows below. Individual CSV downloads remain at `#daten`.
   preserve optional browser password-manager saving after delivery.
 - [x] Verify the browser with synthetic CSVs, rejected uploads/posts, exact
   archive bytes, exact URL payload, cancellation, reload and concurrent tabs.
-- [ ] Verify the exact Pages deployment and the public folder flow.
+- [x] Verify the exact Pages deployment and the public folder flow.
 - [ ] Verify hosted Render with its actual URL after the operator deploys the
   Free service. Use the ignored private setup page and see sharing/README.md.
+
+Main and origin/main matched feature release
+`d02cf262d9a530d286650bb11dfdecdaba63fb7e`.
+[Pages run 42400503595](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42400503595)
+and the commit-specific deployment API report success. Both live entry URLs
+work; all 21 changed public files match Git and all three removed QR assets
+return 404. The public-browser fixture passes five layouts and seven uploads
+with six fixture Discord posts, no page errors and no real data sent. The
+published encrypted envelope still decrypts to the configured destination.
+Next: obtain the signed-in Render deployment URL and verify its real upload
+with a synthetic archive. This evidence follow-up changes only documentation.
 
 ## Render Free automatic upload — 2026-11-07
 
