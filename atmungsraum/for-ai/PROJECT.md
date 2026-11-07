@@ -2,11 +2,12 @@
 
 ## Active milestone: phone-controlled Quest rehearsal
 
-The installed Atmungsraum PWA is the operator interface. The wearer sees
-only the Viscereality scenario in Quest. Quest owns session transitions,
-stimulus, cue timing and recording. The phone displays authenticated native
-observations and receipts. The first milestone is one synthetic rehearsal
-on an installed Android Chrome PWA over trusted Wi-Fi.
+Atmungsraum in Chrome is the operator interface. The wearer sees only the
+Viscereality scenario in Quest. The Polar H10 connects directly to Quest over
+Bluetooth. Quest owns sensor acquisition, session transitions, stimulus, cue
+timing and recording. The browser displays authenticated native observations
+and receipts. Test the browser UI on this PC first. The physical controller
+acceptance gate remains the installed Android Chrome PWA over trusted Wi-Fi.
 
 - [x] Record the approved handoff, product boundary and ordered acceptance
   checklist. Keep private pins, payloads, signing and device receipts with the
@@ -52,10 +53,37 @@ Manager's power status does not report the foreground activity. A bounded,
 read-only serial-scoped ADB check then found Quest Home resumed alongside
 the Browser panel, with no lock or Guardian activity in the observed state.
 
-Next: refresh power and foreground status, then attend the rehearsal launch
-and Remote setup. Exercise the installed Android PWA against the signed
-package. The phone and wearer observations are required before closing the
-dry-run milestone.
+Next: verify the selected Quest build exposes native Polar setup. Establish
+fresh H10 ECG on Quest, then verify the PC browser's authenticated connection
+to the selected gateway. Exercise the installed Android PWA for the later
+physical controller acceptance gate.
+
+### Quest-owned H10 with browser control
+
+The sensor link is **Polar H10 → Quest over BLE**. The control link is
+**Atmungsraum in Chrome → Quest experiment gateway**. Use desktop Chrome for
+the current round, then the smartphone browser as the operator surface.
+Keep raw ECG on Quest until the approved export route is qualified. Use a
+consenting test wearer and a synthetic identifier.
+
+- [x] Run the current browser UI and save checks on PC Chrome. The 61 Node
+  tests, 121 layouts, five demo session CSVs, crash/quota checks and five
+  signed VR-Probe fixture cases passed. These exercised synthetic data.
+- [ ] Verify the native build includes Polar acquisition. Use Quest's
+  [native Polar setup](https://github.com/MesmerPrism/rusty-quest/blob/99352620fd79ec5cdcee71b47c2ba4056241af16/docs/REMOTE_POLAR_SETUP.md)
+  to scan, select, connect and start ECG on Quest. Require fresh actual
+  frames before reporting ECG ready. Keep the browser demo selectable.
+- [ ] Connect desktop Chrome to the identified Quest gateway. Verify Starten,
+  Pause, Fortsetzen and Beenden from original native receipts. Verify that
+  native ECG continues during pause and continuous signal loss beyond 30
+  seconds aborts the run. For waveform display, require an approved encrypted
+  route for bounded native samples with timestamps, units, freshness and gaps.
+- [ ] Verify completed and partial Quest recordings. Use the shared filename
+  and identity writer when exporting from the native recording. Then repeat
+  controller acceptance on Android Chrome, including Local Network Access.
+
+The browser demo still uses NeuroKit replay. A native readiness flag can
+confirm fresh acquisition without carrying the waveform or recording.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 

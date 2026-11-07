@@ -87,7 +87,10 @@ recording, and a later Start opens another segment at the current stream positio
 Audio Pause freezes audio time only: ECG acquisition and its recording continue.
 The demo keeps one `MockECG` instance/epoch for the page and snapshots
 `signal.indexAt(recordingStart)` per run. A page reload starts a new demo clock.
-The future real H10 receiver must preserve this acquisition/recording separation.
+Quest owns the real H10 BLE connection, sample clock and recording. Preserve
+the same acquisition/recording separation in the native path. The browser
+renders authorized native status and imports recordings for local export after
+the encrypted transfer path is qualified.
 
 `tools/generate-mock-ecg.py` calls NeuroKit2 `ecg_simulate(method="ecgsyn")`
 with seed 42, 70 bpm, 1 bpm standard deviation, noise 0.01 and 256 Hz.
