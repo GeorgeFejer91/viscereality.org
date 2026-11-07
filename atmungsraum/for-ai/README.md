@@ -14,13 +14,14 @@ The primary delivery goal is a progressive web app (PWA) for smartphones.
 Users install Atmungsraum from their browser to the home screen; its Viscereality
 logo icon opens the live `/atmungsraum/` URL in a standalone app window.
 Prioritize touch, portrait/landscape, safe areas and installed-app behavior.
-The PWA is the operator interface. Quest shows only the Viscereality scenario
-to the wearer. The Polar H10 pairs directly with Quest, which owns acquisition
-and recording. Desktop Chrome is the current browser test controller. Android
-Chrome is the later physical controller target. The active rehearsal checklist
-is in PROJECT.md. The study flow collects patient details, shows the generated
-participant ID, then verifies Quest's H10 acquisition before showing ECG in a
-centered box. All menu
+PC and smartphone browsers serve exclusively as the external controller during
+Quest runs. They send operator requests and display native state and receipts.
+Quest shows only the Viscereality scenario to the wearer and owns the runtime,
+Polar H10 acquisition and recordings. Desktop Chrome is the current test
+controller. Android Chrome is the later physical controller target. The active
+rehearsal checklist is in PROJECT.md. The study UI collects patient details and
+shows the generated participant ID. It can display Quest-reported H10 readiness
+and authorized ECG telemetry once qualified. All menu
 UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See
 [SKILLS.md](SKILLS.md#main-ui-stretch-settings) for the concrete anchors,
 dimension-responsive spacing/type, minimum-size and no-fit settings, and

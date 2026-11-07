@@ -100,6 +100,11 @@ Run the installed `scripts/Resolve-PlaybookSource.ps1 -Json` to find the
 verified local playbooks or their commit-pinned public copies. Follow the
 playbook index for provider selection and headset readiness.
 
+Treat every PC or smartphone browser as the external operator controller in
+Quest mode. Apply the existing gateway contract for typed requests and native
+receipts. The Quest app owns the H10 connection, scenario, clock, recording and
+artifacts. The synthetic browser demo is a separate route.
+
 Use QuestIonAble File Manager's `devices` and exact-serial `device status`
 before launch. A ready USB transport and an awake display are separate checks.
 If the display is off or a lock or Guardian prompt is active, ask the wearer

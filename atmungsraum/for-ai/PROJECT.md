@@ -2,12 +2,14 @@
 
 ## Active milestone: phone-controlled Quest rehearsal
 
-Atmungsraum in Chrome is the operator interface. The wearer sees only the
-Viscereality scenario in Quest. The Polar H10 connects directly to Quest over
-Bluetooth. Quest owns sensor acquisition, session transitions, stimulus, cue
-timing and recording. The browser displays authenticated native observations
-and receipts. Test the browser UI on this PC first. The physical controller
-acceptance gate remains the installed Android Chrome PWA over trusted Wi-Fi.
+Atmungsraum is exclusively the external operator interface on PC and smartphone
+in every integrated run. It sends bounded operator requests and displays
+authenticated Quest state and receipts. The wearer sees only the Viscereality
+scenario in Quest. The Polar H10 connects directly to Quest over Bluetooth.
+Quest owns acquisition, transitions, stimulus, cue timing and recording. The
+standalone synthetic demo is a separate test path. Test the controller on this
+PC first. The physical acceptance gate remains the installed Android Chrome PWA
+over trusted Wi-Fi.
 
 - [x] Record the approved handoff, product boundary and ordered acceptance
   checklist. Keep private pins, payloads, signing and device receipts with the
@@ -26,7 +28,8 @@ acceptance gate remains the installed Android Chrome PWA over trusted Wi-Fi.
   data without demographics, browser audio or browser recording.
 - [ ] Qualify headset-owned H10, actual timestamped ECG with units and gaps,
   an encrypted route for study data, and completed/aborted native recordings.
-  Join data by opaque run identity and use the shared participant export writer.
+  Join data by opaque run identity and use the shared naming contract for native
+  exports.
   Abort on continuous ECG loss beyond 30 seconds, including during pause.
 - [ ] Qualify the native 900-second main round and 26–41 second calibration
   window, followed by the practice scenarios and unlimited Anleitung. Qualify
@@ -58,6 +61,12 @@ fresh H10 ECG on Quest, then verify the PC browser's authenticated connection
 to the selected gateway. Exercise the installed Android PWA for the later
 physical controller acceptance gate.
 
+Current device smoke test: launch the isolated Viscereality rehearsal on the
+identified Quest 3 using serial-scoped ADB. Enter native Remote mode with the
+operator present. Start and end the scenario using the actual PC browser
+controls. Retain separate browser and Quest screenshots plus native command
+receipts. Keep raw device evidence private and use synthetic recording inputs.
+
 ### Quest-owned H10 with browser control
 
 The sensor link is **Polar H10 → Quest over BLE**. The control link is
@@ -78,9 +87,10 @@ consenting test wearer and a synthetic identifier.
   native ECG continues during pause and continuous signal loss beyond 30
   seconds aborts the run. For waveform display, require an approved encrypted
   route for bounded native samples with timestamps, units, freshness and gaps.
-- [ ] Verify completed and partial Quest recordings. Use the shared filename
-  and identity writer when exporting from the native recording. Then repeat
-  controller acceptance on Android Chrome, including Local Network Access.
+- [ ] Verify that Quest produces completed and partial recordings using the
+  shared filename and identity contract. The controller can request export and
+  show the native result once transfer is qualified. Then repeat controller
+  acceptance on Android Chrome, including Local Network Access.
 
 The browser demo still uses NeuroKit replay. A native readiness flag can
 confirm fresh acquisition without carrying the waveform or recording.
