@@ -5,18 +5,27 @@ import { participantIdentity, mountSessionData } from './data-logging.js?v=20261
 import { mountDataFiles } from './data-files.js?v=20261107-checkout-receipts';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
+const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let current = null;
 let attempt = 0;
 let connectedOnce = false;
 let connectionError = '';
 const text = (id, value) => { if (byId(id).textContent !== value) byId(id).textContent = value; };
-const signal = new MockECG();
-const sessionData = mountSessionData(signal);
-const sessionAudio = mountSessionAudio({ data: sessionData });
-mountDataFiles(sessionData);
+const signal = rehearsalMode ? null : new MockECG();
+const sessionData = signal && mountSessionData(signal);
+const sessionAudio = sessionData && mountSessionAudio({ data: sessionData });
+if (sessionData) mountDataFiles(sessionData);
 
 function render() {
+  if (rehearsalMode) {
+    if (current === 'quest') return;
+    current = 'quest';
+    root.dataset.mode = 'quest';
+    document.querySelectorAll('.screen').forEach((screen) => { screen.hidden = screen.id !== current; });
+    byId('quest-title').focus({ preventScroll: true });
+    return;
+  }
   const next = route(location.hash.slice(1) || 'h10');
   const changed = next !== current;
   if (next !== 'session-start' && location.hash !== `#${next}`) history.replaceState(null, '', `#${next}`);
@@ -67,6 +76,7 @@ byId('patient-form').addEventListener('input', (event) => {
 
 // The future headset transport reports signal state here. No hardware feed is implemented yet.
 window.addEventListener('atmungsraum:sensor-state', (event) => {
+  if (rehearsalMode) return;
   if (!['ecg', 'no-ecg', 'disconnected'].includes(event.detail?.state)) return;
   ++attempt;
   connectionError = '';
@@ -228,16 +238,22 @@ async function measureLabels() {
   }
 }
 
-byId('patient-fields').disabled = false;
-byId('patient-next').disabled = false;
 render();
-// Load saved CSVs even on a cold recovery link; sensor search waits for the form.
-sessionData.prepare().catch(() => {});
 measureLabels();
-setInterval(() => {
-  const reconnect = updateReconnect();
-  if (reconnect === 'attempt') window.dispatchEvent(new CustomEvent('atmungsraum:reconnect-request', { detail: { attempt: state.reconnectAttempts } }));
-  else if (reconnect === 'expired') { history.replaceState(null, '', '#h10'); render(); }
-  drawECG();
-}, 100);
-window.addEventListener('resize', drawECG);
+if (rehearsalMode) {
+  import('./quest-ui.js?v=1').then(({ mountQuestRehearsal }) => mountQuestRehearsal()).catch(() => {
+    text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
+  });
+} else {
+  byId('patient-fields').disabled = false;
+  byId('patient-next').disabled = false;
+  // Load saved CSVs even on a cold recovery link; sensor search waits for the form.
+  sessionData.prepare().catch(() => {});
+  setInterval(() => {
+    const reconnect = updateReconnect();
+    if (reconnect === 'attempt') window.dispatchEvent(new CustomEvent('atmungsraum:reconnect-request', { detail: { attempt: state.reconnectAttempts } }));
+    else if (reconnect === 'expired') { history.replaceState(null, '', '#h10'); render(); }
+    drawECG();
+  }, 100);
+  window.addEventListener('resize', drawECG);
+}

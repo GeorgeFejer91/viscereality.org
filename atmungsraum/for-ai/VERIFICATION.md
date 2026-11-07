@@ -28,6 +28,29 @@ commit, and both entry URLs resolved to `/atmungsraum/`. The live Brave probe
 repeated the layout and reload checks with zero page errors or native installs.
 A final scan returned zero Atmungsraum taskbar shortcuts.
 
+## Quest rehearsal browser and native preflight
+
+The rehearsal is entered through **VR-Probe** on the patient screen or
+`/atmungsraum/?mode=quest#quest`. The browser requires a selected Quest
+serial and a packaging fingerprint from the isolated rehearsal build.
+Use its exact Remote mode and a trusted LAN. The phone uses the signed
+experiment gateway, and the rehearsal mode does not initialize browser
+ECG, audio playback or participant exports.
+
+Focused Node cases cover the BLE identity read and cleanup, private gateway
+and serial admission, the signed status and expected build, the complete
+Arm/Start/Pause/Resume/Finish sequence, duplicate input and unknown results.
+Chrome passed manual-address, measurement and signed-fixture lifecycle checks
+at 320×568, 390×844, 568×320 and 1280×720, plus 320 CSS px with 200% text and
+text-spacing overrides. These checks exercise the real browser UI with a
+fixture. Phone LAN permission, physical BLE and wearer presentation require
+the installed-Android acceptance run.
+
+Native preflight passed the exact feature lock, isolated origin, generated
+manifest, private synthetic provider and selected Java source checks.
+Record signed APK, installed identity, device/phone and observed transitions
+separately after the attended run.
+
 ## One checkout receipt per confirmed send — 2026-11-07
 
 Both targeted tests failed before the separate receipt reader and writer were

@@ -15,7 +15,7 @@ on an installed Android Chrome PWA over trusted Wi-Fi.
   session owner, Remote VR preparation, one fixed synthetic condition and
   the exact `https://viscereality.org` origin. Use a separate package, retain
   native Remote consent, and prepare it before handing the headset to the wearer.
-- [ ] Expose explicit phone rehearsal entry with Experimenter BLE discovery
+- [x] Expose explicit phone rehearsal entry with Experimenter BLE discovery
   and a manual LAN gateway fallback. Verify the intended device, build and live
   owner before enabling actions. Keep the browser demo available separately.
 - [ ] Verify Arm → Start → Pause → Resume → Finish from the installed phone.
@@ -31,10 +31,13 @@ on an installed Android Chrome PWA over trusted Wi-Fi.
   window, followed by the practice scenarios and unlimited Anleitung. Qualify
   ACC measurement, final narration, study protocol and iPhone separately.
 
-Next: resolve the isolated native experiment build and bind its observed build
-identity to the rehearsal phone adapter. Browser tests and Pages publication
-are separate from physical acceptance. A checkpoint closes only with the
-matching native build, physical phone/headset observations and sanitized receipts.
+The browser now exposes **VR-Probe** and requires the Quest serial and exact
+rehearsal build fingerprint. Signed fixture checks exercise discovery, all
+five native commands and receipt recovery. Native resolve-only passed with the
+isolated origin and synthetic asset provider. See VERIFICATION.md for scope.
+Next: verify the signed rehearsal APK and exercise the installed Android PWA
+against that exact package. Keep physical acceptance open until the phone and
+headset produce matching observations and sanitized receipts.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
