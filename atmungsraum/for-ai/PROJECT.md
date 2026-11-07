@@ -46,13 +46,16 @@ passed. See the UI and CSV saving sweep in VERIFICATION.md.
 
 The [MesmerPrism device workflow](SKILLS.md#quest-device-operations) is
 installed in Codex and verified at public source revision `39a4641`. Its
-playbook resolver verified the local source. File Manager confirmed one
-authorized USB Quest 3, with wakefulness `Asleep` and the display `OFF`.
+playbook resolver verified the local source. File Manager confirmed an
+authorized USB Quest 3 and observed its display go from off to on. File
+Manager's power status does not report the foreground activity. A bounded,
+read-only serial-scoped ADB check then found Quest Home resumed alongside
+the Browser panel, with no lock or Guardian activity in the observed state.
 
-Next: have the wearer wake the headset, clear prompts and confirm Quest Home.
-Refresh device status, attend the rehearsal launch and Remote setup, then
-exercise the installed Android PWA against the signed package. The phone and
-wearer observations are required before closing the dry-run milestone.
+Next: refresh power and foreground status, then attend the rehearsal launch
+and Remote setup. Exercise the installed Android PWA against the signed
+package. The phone and wearer observations are required before closing the
+dry-run milestone.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
