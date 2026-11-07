@@ -57,7 +57,10 @@ action. A follow-up scan found zero Atmungsraum taskbar shortcuts.
   a fixture matching Brave's observed native result. Gate native install QA
   behind a separate OS account or VM and check the host taskbar after testing.
   Independent review confirms focus returns to the folder on a late match.
-- [ ] Publish the desktop fix and verify the Pages release and live Brave UI.
+- [x] Publish the desktop fix and verify the Pages release and live Brave UI.
+  Runtime commit `6528b47` deployed in Pages run `42403873448`. Both entry
+  URLs resolved to `/atmungsraum/`, all changed files matched the commit, and
+  the safe Brave probe passed on the live site with zero native installs.
 
 Entry was `f3a4751` on `main`, synchronized with the remote. Evidence is under
 ignored `output/playwright/brave-pwa-*` and `brave-install-ui-*`. The branded

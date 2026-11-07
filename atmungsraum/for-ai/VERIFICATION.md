@@ -23,6 +23,11 @@ Escape. The probe invoked zero native install actions and produced zero page
 errors. A fresh taskbar pin in the regular Brave profile is a manual check.
 Receipts and the probe remain in ignored `output/playwright/`.
 
+Pages run `42403873448` deployed `6528b47`. The live file hashes matched the
+commit, and both entry URLs resolved to `/atmungsraum/`. The live Brave probe
+repeated the layout and reload checks with zero page errors or native installs.
+A final scan returned zero Atmungsraum taskbar shortcuts.
+
 ## One checkout receipt per confirmed send — 2026-11-07
 
 Both targeted tests failed before the separate receipt reader and writer were
