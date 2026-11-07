@@ -1,0 +1,11 @@
+import { randomBytes } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
+
+const keyFile = new URL('.dev.vars.render-token', import.meta.url);
+try { await writeFile(keyFile, randomBytes(32).toString('base64url') + '\n', { flag: 'wx' }); }
+catch (error) { if (error.code !== 'EEXIST') throw error; }
+const key = (await readFile(keyFile, 'utf8')).trim();
+if (!/^[A-Za-z0-9_-]{32,128}$/.test(key)) throw new Error('Invalid private Render access key.');
+const deploy = 'https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FGeorgeFejer91%2Fviscereality.org';
+await writeFile(new URL('.dev.vars.render-setup.html', import.meta.url), `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>Private Render upload setup</title><style>body{max-width:700px;margin:40px auto;padding:20px;font:18px/1.6 system-ui}input{font:inherit;width:100%;box-sizing:border-box;padding:10px}button{font:inherit;padding:10px;margin:8px 0}</style><h1>Set up automatic upload on Render</h1><ol><li><a href="${deploy}" rel="noreferrer">Deploy the free upload service on Render</a>. Sign in and keep the Free plan.</li><li>For <code>LINK_RELAY_TOKEN</code>, paste the private access key below. Render does not need the Discord webhook or password.</li><li>When the service is live, copy its <code>https://…onrender.com</code> URL. In <a href="https://viscereality.org/atmungsraum/" rel="noreferrer">Atmungsraum</a>, open the folder → <strong>Per QR-Code teilen</strong> → <strong>Automatischen Wormhole-Upload einrichten</strong>. Enter that URL and this key.</li><li>Choose <strong>ZIP automatisch hochladen</strong>. Render may need time to wake. The link and QR appear after upload; confirm Discord sending in the usual password prompt.</li></ol><label for="key">Private upload access key</label><input id="key" type="password" readonly autocomplete="off" value="${key}" onclick="this.select()"><button onclick="const field=document.getElementById('key');field.type=field.type==='password'?'text':'password'">Show/hide key</button><p>Keep this file private. The service URL alone can be shared for deployment verification.</p>`);
+console.log('Created private sharing/.dev.vars.render-setup.html. No credentials printed.');

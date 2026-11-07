@@ -86,29 +86,39 @@ link previews. Only provider acknowledgement is reported; it is not proof that
 someone read the message. The full Wormhole URL gives its recipient access to
 the shared ZIP while Wormhole permits it. QR generation remains local.
 
-## Optional automatic Wormhole upload
+## Automatic Wormhole upload on Render Free
 
-Wormhole's upload API currently blocks cross-origin requests from this static
-site. Its fully automatic upload therefore still needs the separately configured
-`worker.js` relay. **Discord notification does not use that relay.** Manual
-Wormhole upload/paste/QR and direct Discord sending need no Cloudflare setup.
+Wormhole blocks direct cross-origin uploads from the site. The [Render
+Blueprint](../../render.yaml) deploys an authenticated upload-only relay and
+keeps the existing browser encryption and upload protocol. Discord delivery
+still goes straight from the browser to Discord. The relay needs one separate
+access key; it never needs the Discord webhook or password.
 
-For the optional upload relay, retain private `LINK_RELAY_TOKEN` in `.dev.vars`
-and the checked-in `ALLOWED_ORIGIN=https://viscereality.org`. From `sharing/`:
+1. On this machine, open the ignored `sharing/.dev.vars.render-setup.html`.
+   For a fresh setup, run `node sharing/configure-render.mjs` from `atmungsraum/`
+   to generate the private page and access key. Neither belongs in Git.
+2. [Deploy the upload relay on Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FGeorgeFejer91%2Fviscereality.org).
+   Sign in, keep the **Free** plan, and enter the private key as
+   `LINK_RELAY_TOKEN`. The Blueprint sets the start command and health check.
+3. When Render reports **Live**, copy its actual `https://…onrender.com` URL.
+   In the app, open **Per QR-Code teilen …** → **Automatischen Wormhole-Upload
+   einrichten** and enter that URL and the same access key.
+4. Choose **ZIP automatisch hochladen**. The app uploads the encrypted ZIP,
+   shows the QR/link, and opens the usual Discord password prompt. Confirm
+   **Senden** when ready. Your browser can reuse the saved Discord password.
 
-```powershell
-pnpm dlx wrangler@4.158.0 login
-pnpm dlx wrangler@4.158.0 deploy --secrets-file .dev.vars
-```
+[Render Free](https://render.com/docs/free) sleeps after 15 minutes idle and
+can take about a minute to wake. The browser waits up to two minutes using a
+credential-free `/health` probe before it starts uploading. Cancellation stops
+subsequent browser calls; an already dispatched provider request can finish.
+Render's free outbound usage limits apply. Automatic deploys are off; manually
+redeploy after updating the relay.
 
-Enter the returned Worker URL/access key in **Automatischen Wormhole-Upload
-einrichten**. They clear when the files dialog closes. Cloudflare's temporary
-preview must be claimed within60 minutes or it is deleted; see its
-[claim instructions](https://developers.cloudflare.com/workers/platform/claim-deployments/).
-The prior preview/account requirement is optional upload setup, not a requirement
-for password-protected Discord delivery. No website migration or paid binding
-is needed. The old Worker `/notify` endpoint remains available for existing
-integrations, but this website's current Discord path calls Discord directly.
+The Node adapter and live Wormhole integration have been tested locally.
+Render hosting still requires a signed-in account and a deployed service URL;
+GitHub Pages publication does not provision or verify that service. The manual
+Wormhole upload and paste path remains available while setting it up. Existing
+compatible upload endpoints remain supported.
 
 Automatic upload encrypts the existing ZIP on-device using pinned official MIT
 `wormhole-crypto@0.3.1`. Two passes over the immutable Blob hash then upload

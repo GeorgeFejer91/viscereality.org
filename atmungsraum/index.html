@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261107-discord-password">
+  <link rel="stylesheet" href="./style.css?v=20261107-render-upload">
   <script type="module" src="./pwa-install.js?v=20261106-pwa-controls"></script>
-  <script type="module" src="./app.js?v=20261107-discord-password"></script>
+  <script type="module" src="./app.js?v=20261107-render-upload"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -83,12 +83,12 @@
         <summary><span data-measure>Automatischen Wormhole-Upload einrichten</span></summary>
         <div class="relay-fields">
           <p data-measure>Optional für den ZIP-Upload. Discord erhält den Link direkt von diesem Browser nach deiner Passwortabfrage.</p>
-          <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Cloudflare einrichten ↗</span></a>
-          <label for="relay-endpoint" data-measure>Adresse des Cloudflare-Workers</label>
-          <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-sharing.…workers.dev" aria-describedby="relay-help">
+          <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Render einrichten ↗</span></a>
+          <label for="relay-endpoint" data-measure>Adresse des Upload-Dienstes</label>
+          <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-upload.onrender.com" aria-describedby="relay-help">
           <label for="relay-token" data-measure>Zugangsschlüssel</label>
           <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
-          <p id="relay-help" data-measure>Der Zugangsschlüssel gilt für den Upload und wird beim Schließen gelöscht. Für Discord ist kein Worker nötig.</p>
+          <p id="relay-help" data-measure>Der Zugangsschlüssel gilt für den Upload und wird beim Schließen gelöscht. Discord erhält den Link direkt.</p>
         </div>
       </details>
       <p id="wormhole-status" role="status" data-measure></p>

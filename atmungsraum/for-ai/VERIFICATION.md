@@ -1,5 +1,23 @@
 # Verification
 
+## Render Free upload adapter — 2026-11-07
+
+The targeted tests failed first with the adapter/host support absent, then passed.
+Real Node HTTP checks cover health, preflight, incorrect origin/key, `/notify`
+blocked, unapproved storage host, over-limit body and exact 8 MiB forwarding.
+Browser client tests cover a startup page, successful readiness and cancellation.
+All 51 Node tests and UI/context checks pass. Five viewport browser fixture
+checks (including enlarged text) exercise Render wake-up, cancellation, upload
+failure, QR creation and the direct Discord prompt. Review found no blockers.
+
+The local Node adapter made real calls to Wormhole and Backblaze. A synthetic
+9,800,146-byte ZIP uploaded in two encrypted pieces and decrypted on download
+byte-for-byte (SHA-256 `2ee9b24329c496fb94e8291b099b2df966fe86211f4c6f00375ad9b81ebd8eb2`).
+No participant data or Discord test messages were sent. The actual Render
+platform and its idle wake-up still require a user-owned deployment. See
+`output/playwright/render-upload-local.json` and `render-sharing-results.json`
+(ignored); release and deployment state are in PROJECT.md.
+
 ## Larger phone controls and install action — 2026-11-07
 
 The two top surfaces/artwork double the base size at widths through 480px or

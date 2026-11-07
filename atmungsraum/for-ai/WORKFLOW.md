@@ -107,14 +107,15 @@ staged bytes against local secrets. Test wrong password, cancel/close/focus,
 stale requests, real browser CORS/provider acknowledgement and message readback.
 A password holder can recover the webhook; revocation needs webhook rotation.
 
-Optional automatic Wormhole upload uses the separately deployed `sharing/worker.js`,
-not GitHub Pages server code. Read [sharing/README.md](../sharing/README.md).
-Use ignored `.dev.vars` for the Discord webhook/access key and Wrangler's
-`deploy --secrets-file .dev.vars` after account login. No paid binding is needed
-for Discord. A temporary preview must be claimed within 60 minutes; it is not
-permanent hosting evidence. Never publish claim links, keys, keyed share URLs,
-provider responses or participant files. Review intended paths and scan staged
-blobs against local secrets before publishing. Keep observability disabled.
+Automatic Wormhole upload on Render uses the root `render.yaml` and
+`sharing/render.js`, wrapping the shared provider handler in `sharing/worker.js`.
+The adapter exposes upload routes and credential-free `/health` only. Generate
+the ignored setup page with `node sharing/configure-render.mjs`; Render gets only
+`LINK_RELAY_TOKEN`. See [sharing/README.md](../sharing/README.md). Pages publication
+and local live-provider tests do not deploy or verify the hosted Render service.
+Verify actual hosting separately using synthetic data. Existing Cloudflare
+deployments remain compatible. Never publish credentials, keyed share URLs,
+provider responses or participant files. Scan staged blobs before publication.
 
 Preserve manual ZIP upload → paste link → local QR and native/download fallback.
 `vendor/qrcode/README.md` and `vendor/wormhole-crypto/README.md` pin MIT runtime

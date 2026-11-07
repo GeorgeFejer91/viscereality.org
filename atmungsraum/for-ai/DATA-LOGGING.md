@@ -157,7 +157,7 @@ retains a ZIP download for manual attachment. No mailto attachment workaround,
 automatic transmission or server upload is involved. Cancel leaves files intact.
 
 The explicit **Per QR-Code teilen** action offers automatic Wormhole upload
-through an authenticated Cloudflare Worker, followed by local QR generation and
+through a restricted authenticated upload relay, followed by local QR generation and
 password-gated forwarding directly from the browser to Discord. The user's
 2026-11-07 choice hosts only an encrypted webhook envelope in public Git/Pages;
 a send-time password decrypts it locally. The raw webhook and password must never
@@ -174,7 +174,7 @@ Wormhole rejects site-origin upload CORS preflight; Pages alone cannot upload.
 Automatic upload reuses the exact same ZIP writer. A fresh per-upload key and
 salt encrypt its immutable Blob with official pinned `wormhole-crypto@0.3.1`.
 A first pass hashes encrypted 8 MiB pieces; a second pass uploads identical
-ciphertext through narrowly allowed Worker routes to Wormhole/Backblaze. The
+ciphertext through narrowly allowed relay routes to Wormhole/Backblaze. The
 file key remains on the device during upload. No plaintext CSV is sent to the
 relay or storage provider. Only after upload completion acknowledgement does
 the app show the URL/QR and request the Discord password. After successful
@@ -182,7 +182,7 @@ local decryption it sends the full keyed URL directly to Discord; no notificatio
 passes through Cloudflare. The Discord destination has access to that share.
 Provider acknowledgement is not proof of recipient access.
 
-Worker URL/access key are entered privately per dialog and cleared on close or
+Relay URL/access key are entered privately per dialog and cleared on close or
 collapse; neither is persisted in browser storage. A confirmed uploaded URL is
 retained only in page memory for the same exact saved records, restored after
 dialog reopening, and invalidated when those records change. Reload loses this

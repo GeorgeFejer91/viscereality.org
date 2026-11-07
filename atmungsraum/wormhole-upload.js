@@ -1,4 +1,4 @@
-import { validateRelaySettings } from './link-relay.js';
+import { validateRelaySettings } from './link-relay.js?v=20261107-render-upload';
 import { validateWormholeUrl } from './wormhole-link.js';
 
 const encoder = new TextEncoder(), PIECE = 8 * 1024 * 1024;
@@ -22,6 +22,24 @@ const base64 = bytes => {
 };
 const hex = bytes => [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
 const sha1 = async bytes => new Uint8Array(await crypto.subtle.digest('SHA-1', bytes));
+
+async function waitForRender(target, signal) {
+  const timeout = AbortSignal.timeout(120000);
+  const waiting = signal ? AbortSignal.any([signal, timeout]) : timeout;
+  while (!waiting.aborted) {
+    try {
+      const response = await fetch(new URL('/health', target).href, {
+        method: 'GET', credentials: 'omit', cache: 'no-store', redirect: 'error',
+        referrerPolicy: 'no-referrer', signal: waiting,
+      });
+      if (response.status === 204) return;
+      await response.body?.cancel();
+    } catch { /* Render's startup page may not yet allow the site origin. */ }
+    if (!waiting.aborted) await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  signal?.throwIfAborted();
+  throw new Error('Der Upload-Dienst ist noch nicht erreichbar. Bitte erneut versuchen.');
+}
 
 // The official RFC8188 implementation accepts an explicit per-file salt. Both
 // passes read this SAME immutable Blob with this salt/key; no plaintext changes
@@ -52,6 +70,11 @@ export async function uploadWormholeZip({ file, endpoint, token, signal, onProgr
   if (!(file instanceof Blob) || !file.size || file.size > 0xffffffff
     || typeof file.name !== 'string' || !/^[^\\/\0]{1,128}\.zip$/i.test(file.name)) throw new Error('Gültige ZIP-Datei für den Upload erforderlich.');
   signal?.throwIfAborted();
+  if (target.hostname.endsWith('.onrender.com')) {
+    onProgress({ phase: 'starting' });
+    await waitForRender(target, signal);
+    signal?.throwIfAborted();
+  }
   const [{ Keychain, encryptedSize }, { encryptStream }] = await Promise.all([
     import('./vendor/wormhole-crypto/index.js'), import('./vendor/wormhole-crypto/lib/ece.js'),
   ]);

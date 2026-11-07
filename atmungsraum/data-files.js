@@ -1,7 +1,7 @@
 import { validateWormholeUrl } from './wormhole-link.js';
-import { validateRelaySettings } from './link-relay.js';
+import { validateRelaySettings } from './link-relay.js?v=20261107-render-upload';
 import { forwardPasswordDiscordLink } from './discord-share.js';
-import { uploadWormholeZip } from './wormhole-upload.js';
+import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-render-upload';
 export { validateWormholeUrl } from './wormhole-link.js';
 // ZIP32 with stored entries: keep original CSV bytes, without a runtime dependency.
 const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
@@ -323,6 +323,10 @@ export function mountDataFiles(data) {
       const receipt = await uploadWormholeZip({ file: zip, endpoint, token, signal: controller.signal,
         onProgress: progress => {
           if (uploading !== controller || version !== generation) return;
+          if (progress.phase === 'starting') {
+            uploadStatus.textContent = 'Upload-Dienst startet …';
+            return;
+          }
           const percent = Math.floor(progress.completed / progress.total * 100);
           uploadStatus.textContent = progress.phase === 'encrypting'
             ? `ZIP wird auf diesem Gerät verschlüsselt (${percent} %).`

@@ -149,6 +149,37 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
+## Render Free automatic upload — 2026-11-07
+
+The user selects a different free host and wants to keep automatic ZIP upload,
+QR generation and the direct password-gated Discord send. Render Free removes
+the Cloudflare account requirement for the upload route. Preserve the manual
+fallback and existing host support.
+
+- [x] Add an upload-only Node adapter and Render Free Blueprint. Scope the relay
+  to the production site origin, one private key and existing bounded provider
+  routes. Render receives no Discord credential.
+- [x] Accept Render URLs and wake the service with a credential-free readiness
+  check. Wait up to two minutes, with cancellation and no retry of mutations.
+- [x] Verify 51 Node tests, five browser fixture layouts and live Wormhole
+  upload/download via the local Node adapter. The 9,800,146-byte synthetic ZIP
+  round-trips in two encrypted pieces, first piece exactly 8 MiB. No Discord
+  test message or participant data was sent for this host change.
+- [x] Prepare the ignored private Render setup page and access key; record the
+  signed-in Free deployment steps in sharing/README.md. Independent review
+  found no blocking issues.
+- [ ] Publish and verify the exact Pages release.
+- [ ] Deploy in the user's Render account and verify the actual `onrender.com`
+  service with a synthetic archive. The public Pages code and a local
+  live-provider test are not proof of hosted Render operation.
+
+Baseline: synchronized main at `7754003`. No Render credential or connected
+Render tool was available. Next: publish the prepared increment, then use the
+private setup page, confirm the Free service in Render and obtain its URL.
+Hosted verification: `node output/playwright/check-render-network.mjs` with the
+service URL as its argument. This does not send Discord messages. See
+VERIFICATION.md and the ignored `render-upload-local.json` receipt.
+
 ## Password prompt and encrypted direct Discord — verified, 2026-11-07
 
 The user explicitly replaces the Cloudflare notification hop: host the webhook

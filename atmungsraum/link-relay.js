@@ -35,10 +35,11 @@ export function validateRelaySettings(endpoint, token) {
   try { target = new URL(endpoint.trim()); } catch { /* Validate below. */ }
   if (!target || target.protocol !== 'https:' || target.port || target.username || target.password
     || target.search || target.hash || !['/', '/notify'].includes(target.pathname)
-    || !(target.hostname.endsWith('.workers.dev') || target.hostname === 'viscereality.org' || target.hostname.endsWith('.viscereality.org'))) {
-    throw new Error('HTTPS-Adresse des Cloudflare-Workers eintragen.');
+    || !(target.hostname.endsWith('.onrender.com') || target.hostname.endsWith('.workers.dev')
+      || target.hostname === 'viscereality.org' || target.hostname.endsWith('.viscereality.org'))) {
+    throw new Error('HTTPS-Adresse des Upload-Dienstes eintragen.');
   }
-  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token ?? '')) throw new Error('Zugangsschlüssel des Workers eintragen.');
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token ?? '')) throw new Error('Zugangsschlüssel des Upload-Dienstes eintragen.');
   target.pathname = '/';
   return target;
 }

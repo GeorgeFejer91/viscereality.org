@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: atmungsraum-upload
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: atmungsraum
+    buildCommand: node --check sharing/render.js
+    startCommand: node sharing/render.js
+    healthCheckPath: /health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: LINK_RELAY_TOKEN
+        sync: false

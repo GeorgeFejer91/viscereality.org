@@ -70,12 +70,13 @@ CSV-Dateien footer button is shown. It offers individual downloads, one all-file
 ZIP, and native file sharing to available email/messaging apps, with a download fallback.
 It lists this browser's saved exports rather than the OS Downloads directory.
 Its **Per QR-Code teilen** flow can encrypt/upload the ZIP to Wormhole through
-an authenticated Cloudflare Worker, display a local QR and send the full link directly to Discord after a masked
-password prompt. The webhook is published only as authenticated ciphertext;
-the password decrypts it on the device. Discord uses no relay/Cloudflare account. Operator connection settings are per dialog; acknowledged
+an authenticated upload relay (Render Free setup), display a local QR and send
+the full link directly to Discord after a masked password prompt. The webhook
+is published only as authenticated ciphertext; the password decrypts it on the
+device. Discord uses no relay. Operator connection settings are per dialog; acknowledged
 shares remain only in page memory. Manual upload/pasted-link QR and ordinary
 downloads remain available. See [sharing setup](../sharing/README.md) and
-[the data boundary](DATA-LOGGING.md). Durable Cloudflare account ownership and
+[the data boundary](DATA-LOGGING.md). Hosted relay activation and
 physical-phone qualification are recorded separately in PROJECT/VERIFICATION.
 
 Read common rules first, then the documents needed for the task:
