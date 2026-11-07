@@ -24,6 +24,16 @@ new/all selection, reload and cross-tab receipts. It intercepted eight
 synthetic uploads and seven notification attempts. Brave checked install
 help and installed-state UI in isolated profiles. The 61 Node tests,
 UI/context checks, six scenario pairs and 20 sample audio profiles passed.
+Chrome also verified exclusive voice-sample playback and exact MP3 and JSON
+downloads. Offline rendering matched the expected PCM for six scenarios at
+44.1 and 48 kHz.
+
+Pages run [42408436234](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42408436234)
+deployed `4309c6f` from `main`. Both entry URLs returned HTTP 200 and all four
+changed public files matched the commit. The live Chrome 156 matrix repeated
+all 121 layouts with zero failures or page errors, and the live renderer
+crash and quota fixtures passed.
+
 Physical Android/Quest acceptance and external delivery are separate checks.
 The browser probes and synthetic artifacts remain in ignored `output/playwright/`.
 

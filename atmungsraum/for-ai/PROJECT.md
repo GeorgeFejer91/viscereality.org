@@ -40,7 +40,9 @@ install receipts remain with the native product owner. See VERIFICATION.md.
 The current browser sweep covered all five demo session choices, real CSV
 downloads, saved-file reload, interrupted-run recovery, storage failure and
 fixture sharing. It also corrected filename wrapping on the saved CSV screen
-at 320 CSS px with 200% text. See the UI and CSV saving sweep in VERIFICATION.md.
+at 320 CSS px with 200% text. Runtime commit `4309c6f` deployed from `main` in
+Pages run `42408436234`. The live 121-case layout matrix and crash/quota checks
+passed. See the UI and CSV saving sweep in VERIFICATION.md.
 
 Next: attend the headset launch and Remote setup, then exercise the installed
 Android PWA against the signed package. The phone and wearer observations
