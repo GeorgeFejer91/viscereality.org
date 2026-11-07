@@ -37,19 +37,27 @@ Use its exact Remote mode and a trusted LAN. The phone uses the signed
 experiment gateway, and the rehearsal mode does not initialize browser
 ECG, audio playback or participant exports.
 
-Focused Node cases cover the BLE identity read and cleanup, private gateway
+The 61-test Node suite includes the BLE identity read and cleanup, private gateway
 and serial admission, the signed status and expected build, the complete
-Arm/Start/Pause/Resume/Finish sequence, duplicate input and unknown results.
+Arm/Start/Pause/Resume/Finish sequence, duplicate input, foreground cancellation
+during signing, and unknown results.
 Chrome passed manual-address, measurement and signed-fixture lifecycle checks
 at 320×568, 390×844, 568×320 and 1280×720, plus 320 CSS px with 200% text and
 text-spacing overrides. These checks exercise the real browser UI with a
 fixture. Phone LAN permission, physical BLE and wearer presentation require
-the installed-Android acceptance run.
+the installed-Android acceptance run. The exact
+[Pages run for 994c0b8](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42405189848)
+completed successfully. All nine changed files matched their live bytes and
+the five signed-fixture Chrome cases passed again from the live origin.
 
-Native preflight passed the exact feature lock, isolated origin, generated
-manifest, private synthetic provider and selected Java source checks.
-Record signed APK, installed identity, device/phone and observed transitions
-separately after the attended run.
+The native gateway host suite passed production Remote discovery, enrollment
+and receipt checks. The private build passed its exact feature lock, synthetic
+asset provider, selected Java isolation and v3 signature verification. The
+signed APK manifest contains the isolated package and exact site origin.
+Quest 3 installed package/version readback matched. Older broad native tests
+still flag their historical panel inventory and source assertions; the focused
+gateway tests and the actual selected APK closure passed. Wearer presentation,
+physical Android control and Showcase visual equivalence remain open.
 
 ## One checkout receipt per confirmed send — 2026-11-07
 

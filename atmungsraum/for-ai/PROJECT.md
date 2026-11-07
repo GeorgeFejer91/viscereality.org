@@ -11,7 +11,7 @@ on an installed Android Chrome PWA over trusted Wi-Fi.
 - [x] Record the approved handoff, product boundary and ordered acceptance
   checklist. Keep private pins, payloads, signing and device receipts with the
   native product owner. Preserve Showcase as the visual and rollback baseline.
-- [ ] Resolve and verify an isolated Quest experiment APK with the existing
+- [x] Resolve, sign and install an isolated Quest experiment APK with the existing
   session owner, Remote VR preparation, one fixed synthetic condition and
   the exact `https://viscereality.org` origin. Use a separate package, retain
   native Remote consent, and prepare it before handing the headset to the wearer.
@@ -31,13 +31,14 @@ on an installed Android Chrome PWA over trusted Wi-Fi.
   window, followed by the practice scenarios and unlimited Anleitung. Qualify
   ACC measurement, final narration, study protocol and iPhone separately.
 
-The browser now exposes **VR-Probe** and requires the Quest serial and exact
-rehearsal build fingerprint. Signed fixture checks exercise discovery, all
-five native commands and receipt recovery. Native resolve-only passed with the
-isolated origin and synthetic asset provider. See VERIFICATION.md for scope.
-Next: verify the signed rehearsal APK and exercise the installed Android PWA
-against that exact package. Keep physical acceptance open until the phone and
-headset produce matching observations and sanitized receipts.
+The browser exposes **VR-Probe** and requires the Quest serial and exact
+rehearsal build fingerprint. Website release `994c0b8` passed the exact Pages
+deployment and live Chrome fixture checks. The isolated APK passed signing,
+manifest, Java source and Quest 3 installation checks. The build and private
+install receipts remain with the native product owner. See VERIFICATION.md.
+Next: attend the headset launch and Remote setup, then exercise the installed
+Android PWA against the signed package. The phone and wearer observations
+are required before closing the dry-run milestone.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
