@@ -8,6 +8,9 @@ fixture observes six checkout receipts across eight fixture uploads and seven
 fixture posts. It verifies that failures leave no receipt, resends append a
 receipt, earlier receipts remain intact, legacy history still suppresses
 duplicates, and an open second tab updates after a confirmed send.
+The same fixture passed against the published Pages release with five
+layouts and no page errors. It used synthetic data and simulated provider
+responses.
 
 ## Folder delivery and JSON receipts — 2026-11-07
 

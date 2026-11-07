@@ -171,7 +171,13 @@ The checkout receipt update gives each acknowledged send its own browser-local
 JSON record. **Neue Dateien senden** combines those receipts with the earlier
 history. The revised 52-test suite and synthetic browser fixture pass locally,
 including legacy receipt compatibility, retries, repeat sends and live counts
-across tabs. Exact Pages verification for this update is pending.
+across tabs. Main and origin/main matched checkout release
+`e3eac238a89cc30a15c7fc497eb243b20d64cb74`, and the exact
+[Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42401759135)
+succeeded. All nine changed public files match Git and both entry URLs work.
+The live browser fixture confirms six separate receipts across eight simulated
+uploads and seven simulated Discord requests. Hosted Render verification
+remains the next step when the operator has its URL.
 
 Main and origin/main matched the initial folder feature release
 `d02cf262d9a530d286650bb11dfdecdaba63fb7e`.
