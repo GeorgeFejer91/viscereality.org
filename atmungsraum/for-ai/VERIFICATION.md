@@ -14,7 +14,11 @@ duplicate actions, lost receipts and foreground exit. All 65 Node tests and
 six scenario consistency checks passed.
 
 The separate synthetic save sweep downloaded and reopened five exact session
-CSVs and verified automatic completion of the 68-second Anleitung. Quest 3
+CSVs and verified automatic completion of the 68-second Anleitung. The live
+121-case Chrome layout sweep and the renderer-crash and quota recovery
+fixtures passed for `2aeb0f1`. Delaying the Quest controller import reproduced
+a visible join form before listeners were attached. The form now appears only
+after its controls are ready. Quest 3
 reported both Bluetooth runtime permission grants for the installed rehearsal.
 Physical browser-to-Quest control and live H10 ECG require the attended Remote
 gate and a separate device run.

@@ -113,6 +113,12 @@ confirm fresh acquisition without carrying the waveform or recording.
 Host verification covers 65 Node tests, six scenario consistency checks, ten
 signed Chrome fixture cases across supported viewport/text sizes, and the
 synthetic demo save sweep. See [VERIFICATION.md](VERIFICATION.md).
+Pages run [42420247829](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42420247829)
+deployed the Polar controls in `2aeb0f1` from `main`. A slow-load regression
+found during live verification is addressed by withholding the Quest
+connection form until its handlers are ready. The physical Quest gateway
+was still unreachable at the last PC check. Confirm Remote and scene
+readiness before sending a device command.
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
