@@ -1,5 +1,32 @@
 # Verification
 
+## UI and CSV saving sweep — 2026-11-07
+
+The sweep began on Pages run `42406261765` (`53a7633`). Chrome checked 121
+layouts spanning patient entry, ECG, round selection, all five playback-ready
+screens, playing and paused states, and saved CSVs. The populated CSV list
+overflowed at 320 CSS px with 200% text and custom spacing. The filename now
+wraps within the grid. The local matrix repeated with zero layout failures
+or page errors. A separate probe passed with Pretext unavailable.
+
+Using only synthetic inputs, Chrome downloaded and reopened matching CSV bytes
+for all five session choices. The sweep checked scenario hashes, sample order,
+pause-aware timing, separate run identities, the saved-files count and dialog
+focus return. A full 68-second Anleitung completed and saved automatically.
+A forced renderer crash recovered one aborted CSV from the browser checkpoint
+with ECG requests blocked. A simulated IndexedDB quota failure showed the
+warning and preserved both immediate and manual downloads.
+
+The live browser fixtures passed the 30-second Polar loss rule, 115 PWA
+control cases, five signed Quest UI cases, and encrypted sharing on five
+layouts. The sharing fixture checked archive bytes, failures and retries,
+new/all selection, reload and cross-tab receipts. It intercepted eight
+synthetic uploads and seven notification attempts. Brave checked install
+help and installed-state UI in isolated profiles. The 61 Node tests,
+UI/context checks, six scenario pairs and 20 sample audio profiles passed.
+Physical Android/Quest acceptance and external delivery are separate checks.
+The browser probes and synthetic artifacts remain in ignored `output/playwright/`.
+
 ## Brave desktop install and taskbar pins — 2026-11-07
 
 Brave 157 parsed the live manifest and installed the app into an isolated

@@ -36,6 +36,12 @@ rehearsal build fingerprint. Website release `994c0b8` passed the exact Pages
 deployment and live Chrome fixture checks. The isolated APK passed signing,
 manifest, Java source and Quest 3 installation checks. The build and private
 install receipts remain with the native product owner. See VERIFICATION.md.
+
+The current browser sweep covered all five demo session choices, real CSV
+downloads, saved-file reload, interrupted-run recovery, storage failure and
+fixture sharing. It also corrected filename wrapping on the saved CSV screen
+at 320 CSS px with 200% text. See the UI and CSV saving sweep in VERIFICATION.md.
+
 Next: attend the headset launch and Remote setup, then exercise the installed
 Android PWA against the signed package. The phone and wearer observations
 are required before closing the dry-run milestone.
