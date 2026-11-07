@@ -1,5 +1,41 @@
 # Project
 
+## Active milestone: phone-controlled Quest rehearsal
+
+The installed Atmungsraum PWA is the operator interface. The wearer sees
+only the Viscereality scenario in Quest. Quest owns session transitions,
+stimulus, cue timing and recording. The phone displays authenticated native
+observations and receipts. The first milestone is one synthetic rehearsal
+on an installed Android Chrome PWA over trusted Wi-Fi.
+
+- [x] Record the approved handoff, product boundary and ordered acceptance
+  checklist. Keep private pins, payloads, signing and device receipts with the
+  native product owner. Preserve Showcase as the visual and rollback baseline.
+- [ ] Resolve and verify an isolated Quest experiment APK with the existing
+  session owner, Remote VR preparation, one fixed synthetic condition and
+  the exact `https://viscereality.org` origin. Use a separate package, retain
+  native Remote consent, and prepare it before handing the headset to the wearer.
+- [ ] Expose explicit phone rehearsal entry with Experimenter BLE discovery
+  and a manual LAN gateway fallback. Verify the intended device, build and live
+  owner before enabling actions. Keep the browser demo available separately.
+- [ ] Verify Arm → Start → Pause → Resume → Finish from the installed phone.
+  Match original receipts and native state, keep an unknown result visible,
+  and prove reconnect never repeats a command. Verify the native clock pauses
+  and that the scene is the only app content shown to the wearer. Use synthetic
+  data without demographics, browser audio or browser recording.
+- [ ] Qualify headset-owned H10, actual timestamped ECG with units and gaps,
+  an encrypted route for study data, and completed/aborted native recordings.
+  Join data by opaque run identity and use the shared participant export writer.
+  Abort on continuous ECG loss beyond 30 seconds, including during pause.
+- [ ] Qualify the native 900-second main round and 26–41 second calibration
+  window, followed by the practice scenarios and unlimited Anleitung. Qualify
+  ACC measurement, final narration, study protocol and iPhone separately.
+
+Next: resolve the isolated native experiment build and bind its observed build
+identity to the rehearsal phone adapter. Browser tests and Pages publication
+are separate from physical acceptance. A checkpoint closes only with the
+matching native build, physical phone/headset observations and sanitized receipts.
+
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
 ### Smartphone controls and install action — 2026-11-07
@@ -1269,18 +1305,16 @@ set, command transport, timing, and synchronization still need to be defined.
 The primary target is a smartphone progressive web app, installed from the
 browser to the home screen and launched at the live `/atmungsraum/` URL with
 the Viscereality logo. It is the control surface for the VR headset app.
-The planned app should mirror the website's UI, with corresponding screens,
-controls, labels, and actions. Adapt layout to the phone and headset while keeping
-the meaning of those controls consistent.
+The current integration contract places all Atmungsraum controls on the phone.
+Quest presents only the Viscereality scenario to the wearer. See the active
+Quest rehearsal milestone at the top of this file.
 
 Actions initiated in the phone browser should trigger the corresponding actions
 on the VR headset screen. The intended interaction runs from phone browser to
 headset app; controls must ultimately affect the headset experience, not only
 the browser's local UI.
 
-UI mirroring refers to corresponding interface elements. Whether live screen or
-video streaming is needed is Undecided. Do not infer a breathing exercise or a
-specific action set from the page name.
+Live screen or video streaming is outside the rehearsal milestone.
 
 ## Patient entry and Polar H10 verification
 
@@ -1469,12 +1503,9 @@ subproject shares the parent Git repository and deployment, with no nested repo.
 
 ## Undecided
 
-- H10 connection owner, transport, ECG acquisition, and supported phone browsers.
+- Encrypted study transport, physical ECG acquisition, and additional phone browsers.
 - Hardware verification of the headset-delivered ECG gate.
 - Headset implementation of the selected session start and unlimited Anleitung.
-- Headset platform, app stack, and app source location.
-- Browser-to-headset transport, hosting requirements, and supported networks.
-- Device discovery, pairing, access control, and headset-state feedback.
-- Whether live screen or video streaming is part of the experience.
+- Physical qualification of the Android Chrome / Quest trusted-LAN rehearsal.
 - The VR event sequence initiated by Start, including audio/event timing and
   synchronization between the browser and headset.

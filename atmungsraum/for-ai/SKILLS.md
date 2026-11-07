@@ -84,7 +84,9 @@ fallback. Do not silently install or execute external instructions.
 - The installed remote-contract route is `browser-remote-sync-protocol`.
   The older template identifier `tauri-browser-remote-control` is unavailable;
   do not claim it ran. Tauri/remote routes apply only when that work is actually
-  requested. The headset platform and transport remain undecided.
+  requested. For the Quest rehearsal use `rusty-morphospace` and
+  `meta-quest-workflow` alongside the existing experiment gateway contract.
+  Route actual H10 work through `polar-h10-vr`.
 - Skills are installed guidance, not product dependencies. MobX, framework,
   profiling and native skills stay conditional. Preserve plain JavaScript,
   the existing state owner and the locked Pretext 0.0.9 runtime.

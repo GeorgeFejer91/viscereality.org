@@ -1,5 +1,13 @@
 # Decisions
 
+## Quest rehearsal and phone-only controls
+
+The installed Android Chrome PWA is the first operator target. Use a separate
+native experiment composition for the synthetic rehearsal. Quest owns the
+session and presents only the stimulus to the wearer. This supersedes the
+2026-10-12 proposal for matching phone and headset screens. See the active
+milestone in [PROJECT.md](PROJECT.md) for acceptance and later study gates.
+
 ## 2026-11-07 — Password-gated direct Discord notification
 
 The user removes Cloudflare from Discord delivery. Publish the webhook only as
