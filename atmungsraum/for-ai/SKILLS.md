@@ -107,6 +107,9 @@ artifacts. The synthetic browser demo is a separate route.
 
 Use QuestIonAble File Manager's `devices` and exact-serial `device status`
 before launch. A ready USB transport and an awake display are separate checks.
+Before installing a native rehearsal build, verify its signed APK contains
+the exact intended ARM64 OpenXR loader. Require a rendered frame and native
+runtime readiness before treating Android foreground state as a launch pass.
 If the display is off or a lock or Guardian prompt is active, ask the wearer
 to put on the headset, wake it with the physical power button, clear prompts,
 and report Quest Home. Refresh power and foreground evidence before using

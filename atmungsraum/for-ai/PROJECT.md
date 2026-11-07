@@ -61,11 +61,14 @@ fresh H10 ECG on Quest, then verify the PC browser's authenticated connection
 to the selected gateway. Exercise the installed Android PWA for the later
 physical controller acceptance gate.
 
-Current device smoke test: launch the isolated Viscereality rehearsal on the
-identified Quest 3 using serial-scoped ADB. Enter native Remote mode with the
-operator present. Start and end the scenario using the actual PC browser
-controls. Retain separate browser and Quest screenshots plus native command
-receipts. Keep raw device evidence private and use synthetic recording inputs.
+Current device smoke test: serial-scoped ADB launched the isolated Viscereality
+rehearsal on Quest 3. The original APK stalled at loading because the ARM64
+OpenXR loader was absent. The locked rebuild explicitly packages that loader.
+The same-signer update passed installed-version readback and a Quest screenshot
+shows the rendered scene. The next gate is native Remote selection followed by
+Start and End from the actual PC browser controls. Keep Quest and browser
+screenshots, native command receipts and build inputs private. Use synthetic
+recording inputs for this rehearsal.
 
 ### Quest-owned H10 with browser control
 
