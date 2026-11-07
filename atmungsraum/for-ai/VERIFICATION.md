@@ -218,8 +218,16 @@ and reads back the matching synthetic keyed link. Network origins are exactly
 the site and Discord, with Worker settings empty; no Cloudflare request occurs.
 No password is sent or left in the prompt, and no participant data is used.
 Ignored receipts: discord-password-results.json, discord-password-phone.png and
-discord-password-local-source-network.json. Exact public release evidence follows
-in PROJECT after publication.
+discord-password-local-source-network.json. Exact Pages run42362312447 for `3d861b1` succeeds, including byte equality
+for all18 changed files and both public entry URLs. The real published page
+repeats wrong-password/no-send, direct Discord POST, confirmed readback and
+password clearing with no Worker requests. The official Wormhole page downloads
+the9,437,363-byte synthetic archive and its SHA-256 matches the prior configured
+upload. Five live prompt layouts and200% reflow pass. Chrome's actual native
+credential-store call fulfills for the synthetic opted-in case; browser consent
+and saved-password selection remain user-controlled. Ignored live receipts:
+discord-password-live-network.json, discord-password-native-api-results.json,
+sharing-release-3d861b1.json. The operator password and webhook remain private.
 
 ## Automatic Wormhole upload and Discord — 2026-11-06/07
 

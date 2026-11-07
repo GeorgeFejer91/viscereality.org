@@ -149,7 +149,7 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
-## Password prompt and encrypted direct Discord — active, 2026-11-07
+## Password prompt and encrypted direct Discord — verified, 2026-11-07
 
 The user explicitly replaces the Cloudflare notification hop: host the webhook
 only as an encrypted file on GitHub Pages, request a password immediately before
@@ -172,7 +172,7 @@ required for Discord; its earlier blocker below applies only to optional upload.
   Discord requests; correct password posts directly and message readback matches
   the synthetic share. Network origins are only the site and Discord, with empty
   Worker settings. No relay or mocked Discord response is used.
-- [ ] Finish review/regressions, publish and verify exact Pages/live behavior.
+- [x] Finish review/regressions, publish and verify exact Pages/live behavior.
 
 49 Node tests, UI/context/whitespace, five prompt/reflow, five automatic upload
 and seven manual QR browser cases pass. Password-manager call tests use a
@@ -183,9 +183,30 @@ No new hosting account is needed for this delivery route. Never claim the
 webhook is unrecoverable after unlocking: public ciphertext permits offline
 password guessing, and a password holder can extract the decrypted webhook.
 Changing the password alone cannot revoke such access; rotate the webhook.
-Next: publish this increment, repeat the real direct-browser check from Pages,
-then hand over the private setup page/password location. Preserve concurrent
-staged PWA control/evidence work and unrelated untracked attachments.
+Release `3d861b18070d74f68a3f172d37429003b15d3224` is synchronized on main.
+Exact [Pages run42362312447](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42362312447)
+and deployment API both succeed. All18 changed files match public Git bytes and
+both entry URLs return200. Native Chrome from the actual published page makes
+zero Discord requests for a wrong password, then sends the correct share URL
+straight to Discord and verifies message readback. The actual Wormhole page
+restores the9,437,363-byte synthetic ZIP with SHA-256
+`808a69e028c3d770bdda050982a035cdf04c0143df56f16908f3e8df11097a6f`.
+Network origins are only the site and Discord for sending, with no Worker
+credentials. All five live prompt/reflow cases pass. An isolated real Chrome
+credential-store request fulfills after successful opt-in; cancel, wrong
+password and rejection do not request saving. Native Save/autofill is still
+controlled by the user's browser and physical phone acceptance remains separate.
+No participant data or plaintext credentials are published. Ignored receipts:
+sharing-release-3d861b1.json, discord-password-live-network.json and
+discord-password-native-api-results.json under output/playwright/.
+
+The requested implementation and exact user setup instructions are complete.
+Next: use the private setup page's password, select browser saving if desired,
+and confirm the browser's own Save prompt. The original automatic Wormhole
+upload integration was previously verified with a configured relay; its durable
+hosting setup remains optional/user-controlled as recorded below. The current
+Discord delivery does not depend on that ownership. Keep unrelated attachments
+untracked. This evidence follow-up changes notes only; verify its publication.
 
 ## Automatic Wormhole upload — optional relay ownership checkpoint
 
