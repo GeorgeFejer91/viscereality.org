@@ -10,8 +10,16 @@ stale and reordered ECG rejection, gap rendering and corrupt recording bytes.
 Chrome fixture runs at phone, short landscape and enlarged text sizes used
 the actual UI to select condition B, receive changing ECG, Start, Pause,
 Resume and Finish. Each run downloaded and checked the original ZIP data,
-then reloaded, rejoined and retrieved the same native run again. The fixture
-does not establish headset, Polar strap, hotspot or physical phone storage.
+then reloaded, rejoined and retrieved the same native run again. All three
+cases repeated on the deployed website.
+
+The signed 0.1.7 rehearsal includes the ARM64 OpenXR loader and original
+native host. Quest 3 installed the exact APK bytes and reported Remote from
+its mode owner without operator selection. Desktop Chrome used the live
+Atmungsraum page to join the identified Quest and received a valid encrypted
+ECG preview reply over Wi-Fi. Android's Nearby devices prompt was active,
+so the reply contained no live H10 samples. Actual sensor acquisition, native
+scenario completion, phone hotspot discovery and phone storage remain open.
 
 ## Browser controls for Quest-owned Polar setup — 2026-11-07
 

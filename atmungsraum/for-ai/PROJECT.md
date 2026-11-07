@@ -21,11 +21,24 @@
   bytes in a ZIP. Preserve the observed ID for a manual retry after rejoining
   the same Quest. Use the authenticated, encrypted enrolled route for both
   waveform and recording. No upload or browser data writer participates.
+- [x] Install the signed Remote-only rehearsal on Quest 3. Package Manager and
+  the installed APK digest matched version 0.1.7. The running owner reported
+  Remote at startup. Desktop Chrome joined the actual gateway using the
+  enrolled controller and authenticated both status and an encrypted preview
+  response. The Android permission prompt interrupted immersive presentation.
 - [ ] Verify the signed package on Quest 3 with a worn H10. Run a native
   rehearsal, confirm the changing browser waveform and reopen the resulting
   phone ZIP. Verify Bluetooth discovery, Android Local Network Access, hotspot
   reachability and actual storage on the phone. Retain physical evidence in
   the native release lane.
+
+Browser release `bc4b445` deployed in
+[Pages run 42425988651](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42425988651).
+All 13 changed public files matched the release. The 67 Node tests, UI and
+context checks, six scenario consistency checks and three live encrypted
+browser fixture layouts passed. Next, approve Nearby devices in Quest, return
+to the scene, and connect the worn H10 from the browser. The real preview
+response observed so far contained no live samples.
 
 The [Experimenter controller contract](https://github.com/MesmerPrism/MesmerPrism.github.io/blob/d64257af156dfddd4e1ede01a007c032a2816a2c/viscereality-control/README.md)
 is the source for discovery and remote-control parity. The standalone monitor
