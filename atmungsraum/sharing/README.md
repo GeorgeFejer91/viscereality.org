@@ -111,8 +111,10 @@ access key; it never needs the Discord webhook or password.
 can take about a minute to wake. The browser waits up to two minutes using a
 credential-free `/health` probe before it starts uploading. Cancellation stops
 subsequent browser calls; an already dispatched provider request can finish.
-Render's free outbound usage limits apply. Automatic deploys are off; manually
-redeploy after updating the relay.
+Render's [outbound usage limits](https://render.com/docs/outbound-bandwidth) apply.
+Use a workspace without a payment method to avoid bandwidth overage charges;
+Render then pauses service if the included allowance is exhausted. Automatic
+deploys are off; manually redeploy after updating the relay.
 
 The Node adapter and live Wormhole integration have been tested locally.
 Render hosting still requires a signed-in account and a deployed service URL;

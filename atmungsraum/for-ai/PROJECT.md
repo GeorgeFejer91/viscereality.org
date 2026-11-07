@@ -168,17 +168,22 @@ fallback and existing host support.
 - [x] Prepare the ignored private Render setup page and access key; record the
   signed-in Free deployment steps in sharing/README.md. Independent review
   found no blocking issues.
-- [ ] Publish and verify the exact Pages release.
+- [x] Publish and verify the exact Pages release.
 - [ ] Deploy in the user's Render account and verify the actual `onrender.com`
   service with a synthetic archive. The public Pages code and a local
   live-provider test are not proof of hosted Render operation.
 
-Baseline: synchronized main at `7754003`. No Render credential or connected
-Render tool was available. Next: publish the prepared increment, then use the
+Release `d5e80b649c90fdf8801bb7a3807c90e21d94c90f` synchronized on main and
+deployed by [Pages run 42373102567](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42373102567).
+The Pages API reports `succeed`; all 16 changed files match Git bytes, both
+Atmungsraum entry URLs respond, and all five live browser fixture cases pass.
+No Render credential or connected Render tool was available. Next: use the
 private setup page, confirm the Free service in Render and obtain its URL.
 Hosted verification: `node output/playwright/check-render-network.mjs` with the
 service URL as its argument. This does not send Discord messages. See
-VERIFICATION.md and the ignored `render-upload-local.json` receipt.
+VERIFICATION.md and ignored `render-upload-local.json`,
+`sharing-release-d5e80b6.json` and `render-sharing-results.json` receipts. This
+evidence follow-up changes only documentation; verify its Pages publication.
 
 ## Password prompt and encrypted direct Discord — verified, 2026-11-07
 
