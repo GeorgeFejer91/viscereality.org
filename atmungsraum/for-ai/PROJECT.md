@@ -56,10 +56,11 @@ Manager's power status does not report the foreground activity. A bounded,
 read-only serial-scoped ADB check then found Quest Home resumed alongside
 the Browser panel, with no lock or Guardian activity in the observed state.
 
-Next: verify the selected Quest build exposes native Polar setup. Establish
-fresh H10 ECG on Quest, then verify the PC browser's authenticated connection
-to the selected gateway. Exercise the installed Android PWA for the later
-physical controller acceptance gate.
+Next: select Remote in the Quest operator panel and verify Start and End from
+the PC browser with the synthetic rehearsal. For the separate live H10 check,
+approve Quest's Nearby devices prompt and verify fresh ECG from the native
+Polar owner. Exercise the installed Android PWA for the later physical
+controller acceptance gate.
 
 Current device smoke test: serial-scoped ADB launched the isolated Viscereality
 rehearsal on Quest 3. The original APK stalled at loading because the ARM64
@@ -81,7 +82,12 @@ consenting test wearer and a synthetic identifier.
 - [x] Run the current browser UI and save checks on PC Chrome. The 61 Node
   tests, 121 layouts, five demo session CSVs, crash/quota checks and five
   signed VR-Probe fixture cases passed. These exercised synthetic data.
-- [ ] Verify the native build includes Polar acquisition. Use Quest's
+- [x] Verify the installed rehearsal APK includes Quest-owned Polar H10
+  acquisition and the experiment command gateway. The installed package
+  declares Bluetooth scan and connect permissions. Both grants were absent
+  on device, and the native setup status did not report an active Polar owner.
+  The rehearsal package omits the recording-export capability.
+- [ ] Complete attended Quest permission and sensor setup. Use Quest's
   [native Polar setup](https://github.com/MesmerPrism/rusty-quest/blob/99352620fd79ec5cdcee71b47c2ba4056241af16/docs/REMOTE_POLAR_SETUP.md)
   to scan, select, connect and start ECG on Quest. Require fresh actual
   frames before reporting ECG ready. Keep the browser demo selectable.
