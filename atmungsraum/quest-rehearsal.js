@@ -1,6 +1,6 @@
 import { operationId, sameQuest } from './quest-gateway.js?v=1';
 
-const condition = 'condition-a';
+const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const desiredPhase = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
 const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg']);
@@ -29,10 +29,12 @@ function setupConfirmed(status, { op, setupRef, candidate }) {
   return setup.c && (op === 'connect' || setup.e);
 }
 
-export function rehearsalActions(status) {
+export function rehearsalActions(status, condition = conditions[0]) {
   if (!status || status.pending || status.pi?.r !== false || polarSetup(status)?.sc) return {};
-  if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec && status.a?.[0] === 'track-ready') return { play: 'arm' };
-  if (!status.rec || status.c !== condition) return {};
+  const selected = conditions.indexOf(condition);
+  if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec
+    && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
+  if (!status.rec || !conditions.includes(status.c)) return {};
   const next = { ARMED: 'start', RUNNING: 'pause', PAUSED: 'resume' }[status.p];
   const grant = status.q;
   const allowed = status.h === 'vr-session' && next && grant?.v === 2 && grant.g === status.g
@@ -119,7 +121,7 @@ export class QuestRehearsal {
       const generationMatches = op === 'arm' ? status.g > generation
         : op === 'save-next' ? !status.rec : status.g === generation;
       if (status.p !== desiredPhase[op] || !generationMatches
-        || op !== 'save-next' && status.c !== condition) return false;
+        || op !== 'save-next' && status.c !== (this.pending.condition ?? conditions[0])) return false;
     }
     this.remember(null);
     this.update({ unknown: false, message: op === 'save-next' ? 'Probelauf beendet.' : '' });
@@ -141,18 +143,20 @@ export class QuestRehearsal {
     return this.refreshing;
   }
 
-  async dispatch(gateway, op, status, signal, candidate = '') {
+  async dispatch(gateway, op, status, signal, target = '') {
     signal?.throwIfAborted();
     const id = operationId();
     const pending = { id, op, owner: gateway.owner, generation: status.g };
     let command;
     if (setupOperations.has(op)) {
       const { s, g, r } = polarSetup(status);
-      Object.assign(pending, { setupRef: s, candidate });
-      command = { v: 4, id, op, s, g, r, d: op === 'select' ? candidate : '', n: operationId() };
+      Object.assign(pending, { setupRef: s, candidate: target });
+      command = { v: 4, id, op, s, g, r, d: op === 'select' ? target : '', n: operationId() };
     } else if (op === 'arm' || op === 'save-next') {
-      command = { v: 1, id, op, condition: op === 'arm' ? condition : '', bias: 0, nonce: operationId() };
+      if (op === 'arm') pending.condition = target;
+      command = { v: 1, id, op, condition: op === 'arm' ? target : '', bias: 0, nonce: operationId() };
     } else {
+      pending.condition = status.c;
       command = { v: 2, id, op, s: status.q.s, g: status.q.g, n: operationId() };
     }
     this.remember(pending);
@@ -160,8 +164,8 @@ export class QuestRehearsal {
     return this.observe(gateway, await gateway.command(command, signal));
   }
 
-  async dispatchAndConfirm(gateway, op, signal, timeout, candidate) {
-    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, candidate);
+  async dispatchAndConfirm(gateway, op, signal, timeout, target) {
+    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target);
     const deadline = performance.now() + timeout;
     while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
       && !signal?.aborted && performance.now() < deadline) {
@@ -201,10 +205,10 @@ export class QuestRehearsal {
     if (setup?.c && !setup.e) await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x);
   }
 
-  async run(action, signal) {
+  async run(action, signal, condition = conditions[0]) {
     const gateway = this.gateway;
     const clicked = this.state.status;
-    const requested = rehearsalActions(clicked)[action];
+    const requested = rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
     if (!gateway || clicked?.pending || this.state.busy || this.pending
       || (!requested && (!setup?.p || !setup.b || setup.sc || setup.e))) return;
@@ -218,7 +222,7 @@ export class QuestRehearsal {
         return;
       }
       const status = this.state.status;
-      const op = rehearsalActions(status)[action];
+      const op = rehearsalActions(status, condition)[action];
       if (op !== requested || status.g !== clicked.g
         || op !== 'arm' && op !== 'save-next' && status.q?.s !== clicked.q?.s) return;
       if (op !== 'arm') {
@@ -227,7 +231,7 @@ export class QuestRehearsal {
       }
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
-      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000)
+      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition)
         && rehearsalActions(this.state.status).play === 'start') {
         await this.dispatch(gateway, 'start', this.state.status, signal);
       }

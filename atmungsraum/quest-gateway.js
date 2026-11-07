@@ -9,6 +9,7 @@ const serialPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const positive = /^[1-9][0-9]{0,18}$/;
 const phases = new Set(['IDLE', 'STARTING', 'ARMING', 'ARMED', 'RUNNING', 'PAUSED', 'RECORDING', 'FINALIZING', 'SAVING', 'RECOVERY', 'ERROR']);
 const toHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+const fromBase64 = (value) => Uint8Array.from(atob(value), (byte) => byte.charCodeAt(0));
 export const operationId = () => toHex(crypto.getRandomValues(new Uint8Array(8)));
 
 export function questEndpoint(input) {
@@ -92,9 +93,12 @@ async function readJson(response) {
   } finally { await reader.cancel().catch(() => {}); }
 }
 
-export async function joinQuest({ endpoint, serial, build, discovery, signal, fetcher = fetch }) {
+export async function joinQuest({ endpoint, serial, build, discovery, enrollment, signal, fetcher = fetch }) {
   const url = questEndpoint(endpoint);
   if (!serialPattern.test(serial) || !hex64.test(build)) throw Error('Prüfe die Seriennummer und den Build-Prüfcode.');
+  if (enrollment && (!hex32.test(enrollment.controller) || !hex64.test(enrollment.key))) {
+    throw Error('Prüfe Controller-ID und Quest-Schlüssel.');
+  }
   const lifetime = new AbortController();
   const fetchJson = async (body, requestSignal) => readJson(await fetcher(url, {
     method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
@@ -108,13 +112,14 @@ export async function joinQuest({ endpoint, serial, build, discovery, signal, fe
     const owner = identity(raw);
     if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial
       || discovery && !sameQuest(owner, discovery)) throw Error('Quest oder Fernmodus stimmt nicht mit der Auswahl überein.');
-    const ticket = await fetchJson({ v: 1, action: 'connect', device: owner.device, epoch: owner.epoch });
-    if (ticket.v !== 1 || ticket.device !== owner.device || ticket.epoch !== owner.epoch
-      || ticket.serial !== owner.serial || !hex32.test(ticket.controller) || !hex64.test(ticket.key)) {
+    const ticket = enrollment ?? await fetchJson({ v: 1, action: 'connect', device: owner.device, epoch: owner.epoch });
+    if (!enrollment && (ticket.v !== 1 || ticket.device !== owner.device || ticket.epoch !== owner.epoch
+      || ticket.serial !== owner.serial || !hex32.test(ticket.controller) || !hex64.test(ticket.key))) {
       throw Error('Die Quest-Anmeldung konnte nicht geprüft werden.');
     }
     const controller = ticket.controller;
     const signingKey = await crypto.subtle.importKey('raw', encode.encode(ticket.key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+    let ecgKey;
     const exchange = async (action, body, requestSignal) => {
       requestSignal?.throwIfAborted();
       const nonce = toHex(crypto.getRandomValues(new Uint8Array(16)));
@@ -128,14 +133,22 @@ export async function joinQuest({ endpoint, serial, build, discovery, signal, fe
           encode.encode(`RQG1-REPLY|${controller}|${owner.device}|${owner.epoch}|${nonce}|${action}|${reply.payload}`))) {
         throw Error('Die Quest-Antwort konnte nicht bestätigt werden.');
       }
-      return JSON.parse(reply.payload);
+      const result = JSON.parse(reply.payload);
+      if (action !== 'ecg-preview' && action !== 'recordings') return result;
+      if (!ecgKey || result?.v !== 1 || typeof result.iv !== 'string' || !/^[A-Za-z0-9+/]{16}$/.test(result.iv)
+        || typeof result.data !== 'string' || result.data.length < 24 || result.data.length > 62500) {
+        throw Error('Ungültige verschlüsselte Quest-Antwort.');
+      }
+      const clear = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromBase64(result.iv),
+        additionalData: encode.encode(`RQG1-PRIVATE|${action}|${owner.device}|${owner.epoch}|${nonce}`) }, ecgKey, fromBase64(result.data));
+      return JSON.parse(decode.decode(clear));
     };
     let witness = 0n;
     const status = async () => {
       const value = await exchange('status', {});
       const observation = value?.o;
       if (value?.v !== 1 || value.wifi_snapshot !== 1 || value.build?.v !== 1
-        || value.build.packaging_fingerprint !== build || value.recordings !== 0) {
+        || value.build.packaging_fingerprint !== build || ![0, 1].includes(value.recordings)) {
         throw Error('Der Build-Prüfcode passt nicht zum Probelauf.');
       }
       if (value.control_mode !== 'remote' || observation?.v !== 1 || observation.s !== 'observed'
@@ -151,7 +164,14 @@ export async function joinQuest({ endpoint, serial, build, discovery, signal, fe
       return value;
     };
     const initial = await status();
+    if (enrollment && initial.ecg_preview === 1) {
+      const bytes = await crypto.subtle.sign('HMAC', signingKey,
+        encode.encode(`RQG1-PRIVATE-KEY|${controller}|${owner.device}|${owner.epoch}`));
+      ecgKey = await crypto.subtle.importKey('raw', bytes, 'AES-GCM', false, ['decrypt']);
+    }
     return { owner, initial, status, command: (command, requestSignal) => exchange('command', command, requestSignal),
+      ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,
+      recordings: ecgKey && initial.recordings === 1 ? (query, requestSignal) => exchange('recordings', query, requestSignal) : null,
       receipt: (id) => exchange('receipt', { id }), close: () => lifetime.abort() };
   } catch (error) { lifetime.abort(); throw error; }
 }

@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261107-quest-polar">
+  <link rel="stylesheet" href="./style.css?v=20261108-quest-data">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261107-quest-polar"></script>
+  <script type="module" src="./app.js?v=20261108-quest-data"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -139,11 +139,18 @@
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
         <form id="quest-join" class="quest-join" autocomplete="off" hidden>
-          <p data-measure>Wähle auf der Quest den Fernmodus. Verbinde beide Geräte mit demselben vertrauenswürdigen WLAN.</p>
+          <p data-measure>Verbinde die Quest mit dem Hotspot des Smartphones oder mit demselben vertrauenswürdigen WLAN. Die Bluetooth-Suche findet die Quest-Adresse.</p>
           <label for="quest-serial"><span data-measure>Quest-Seriennummer</span></label>
           <input id="quest-serial" type="text" required maxlength="64" autocapitalize="none" spellcheck="false">
           <label for="quest-build"><span data-measure>Build-Prüfcode</span></label>
           <input id="quest-build" type="text" required minlength="64" maxlength="64" pattern="[0-9a-f]{64}" autocapitalize="none" spellcheck="false">
+          <details>
+            <summary><span data-measure>Live-EKG und Aufnahmen freigeben</span></summary>
+            <label for="quest-controller"><span data-measure>Controller-ID</span></label>
+            <input id="quest-controller" type="text" maxlength="32" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <label for="quest-key"><span data-measure>Quest-Schlüssel</span></label>
+            <input id="quest-key" type="password" maxlength="64" autocomplete="off" spellcheck="false">
+          </details>
           <button id="quest-find" type="button"><span data-measure>Quest suchen</span></button>
           <details>
             <summary><span data-measure>Adresse manuell eingeben</span></summary>
@@ -153,11 +160,29 @@
           </details>
         </form>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
+        <label id="quest-condition-label" hidden>
+          <span data-measure>Szenario</span>
+          <select id="quest-condition">
+            <option value="condition-a">Szenario A</option>
+            <option value="condition-b">Szenario B</option>
+          </select>
+        </label>
         <div id="quest-polar" hidden>
           <p id="quest-polar-status" role="status" data-measure></p>
           <button id="quest-polar-connect" type="button" aria-describedby="quest-polar-status">
             <span data-measure>Polar H10 verbinden</span>
           </button>
+        </div>
+        <div id="quest-data" hidden>
+          <p id="quest-ecg-status" role="status" data-measure></p>
+          <svg id="quest-ecg" viewBox="0 0 400 92" role="img" aria-label="Live-EKG des Polar H10" hidden>
+            <path d="M0 46H400" class="quest-ecg-axis" />
+            <path id="quest-ecg-trace" />
+          </svg>
+          <p id="quest-ecg-scale" data-measure hidden></p>
+          <p id="quest-export-status" role="status" data-measure hidden></p>
+          <button id="quest-export-retry" type="button" hidden><span data-measure>Aufnahme erneut abrufen</span></button>
+          <a id="quest-export-download" hidden><span data-measure>Aufnahme herunterladen</span></a>
         </div>
         <button id="quest-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
         <button id="quest-disconnect" type="button" hidden><span data-measure>Verbindung trennen</span></button>

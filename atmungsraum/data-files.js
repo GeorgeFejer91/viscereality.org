@@ -2,7 +2,7 @@ import { sendDiscordLink, validateRelaySettings } from './link-relay.js?v=202611
 import { unlockDiscordWebhook } from './discord-share.js?v=20261107-file-delivery';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
 import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';
-// ZIP32 with stored entries: keep original CSV bytes, without a runtime dependency.
+// ZIP32 with stored entries preserves the original recording bytes.
 const crcTable = Uint32Array.from({ length: 256 }, (_, value) => {
   for (let bit = 0; bit < 8; bit++) value = (value >>> 1) ^ ((value & 1) ? 0xedb88320 : 0);
   return value >>> 0;
@@ -15,7 +15,7 @@ export function createExportsZip(records) {
     const path = names.has(record.filename) ? `${record.session_id}/${record.filename}` : record.filename;
     if (names.has(path) || /[\\/\0]/.test(record.filename) || /[\\/\0]/.test(record.session_id)) throw new Error('Invalid ZIP filename');
     names.add(path);
-    const name = encoder.encode(path), bytes = encoder.encode(record.csv);
+    const name = encoder.encode(path), bytes = record.bytes ?? encoder.encode(record.csv);
     if (name.length > 65535 || offset + bytes.length + name.length + 30 > 0xffffffff) throw new Error('ZIP32 size exceeded');
     let crc = 0xffffffff;
     for (const byte of bytes) crc = (crc >>> 8) ^ crcTable[(crc ^ byte) & 255];

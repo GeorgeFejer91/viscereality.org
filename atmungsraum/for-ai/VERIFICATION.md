@@ -1,5 +1,18 @@
 # Verification
 
+## Remote-only Quest data path — 2026-11-08
+
+The new composition passed feature resolution for the original native host,
+Remote-only startup and recording export. The native host tests covered
+Remote-only control admission, guest denial for private data, and the maximum
+encrypted recording chunk. The browser tests verified the encrypted read,
+stale and reordered ECG rejection, gap rendering and corrupt recording bytes.
+Chrome fixture runs at phone, short landscape and enlarged text sizes used
+the actual UI to select condition B, receive changing ECG, Start, Pause,
+Resume and Finish. Each run downloaded and checked the original ZIP data,
+then reloaded, rejoined and retrieved the same native run again. The fixture
+does not establish headset, Polar strap, hotspot or physical phone storage.
+
 ## Browser controls for Quest-owned Polar setup — 2026-11-07
 
 The signed LAN gateway fixture verified missing Android permission, keyboard

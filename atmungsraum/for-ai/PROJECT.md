@@ -2,6 +2,38 @@
 
 ## Active milestone: phone-controlled Quest rehearsal
 
+### Remote-only controller and native data — 2026-11-08
+
+- [x] Keep the core Experimenter flow: service-filtered Bluetooth discovery,
+  verified Wi-Fi join, manual address fallback, native Polar setup, native
+  condition selection, session commands and original receipts. Bluetooth
+  supplies the Quest address. The phone hotspot and the Quest's Wi-Fi
+  connection are set in their operating systems.
+- [x] Select the original native host and Remote-only startup in the isolated
+  rehearsal build. Retain a build switch to restore local control. Keep the
+  native tuned payload, two rehearsal conditions and original recording
+  writer in their owning build lane.
+- [x] Render an enrolled Quest's bounded live Polar H10 waveform with sample
+  timestamps, microvolts, gaps and expiry. The browser does not store raw
+  preview samples. The NeuroKit demo remains a separate simulation.
+- [x] Bind completed-run retrieval to the observed Quest recording ID. After
+  Quest returns to idle, verify the eight native files and offer the original
+  bytes in a ZIP. Preserve the observed ID for a manual retry after rejoining
+  the same Quest. Use the authenticated, encrypted enrolled route for both
+  waveform and recording. No upload or browser data writer participates.
+- [ ] Verify the signed package on Quest 3 with a worn H10. Run a native
+  rehearsal, confirm the changing browser waveform and reopen the resulting
+  phone ZIP. Verify Bluetooth discovery, Android Local Network Access, hotspot
+  reachability and actual storage on the phone. Retain physical evidence in
+  the native release lane.
+
+The [Experimenter controller contract](https://github.com/MesmerPrism/MesmerPrism.github.io/blob/d64257af156dfddd4e1ede01a007c032a2816a2c/viscereality-control/README.md)
+is the source for discovery and remote-control parity. The standalone monitor
+for breathing, advanced relay/network setup, bias editing, and Showcase
+tuning are separate surfaces. Study scenarios still require their native
+composition and timing qualification. The current practice/verification
+conditions use the two packaged Quest rehearsal tracks.
+
 Atmungsraum is exclusively the external operator interface on PC and smartphone
 in every integrated run. It sends bounded operator requests and displays
 authenticated Quest state and receipts. The wearer sees only the Viscereality
@@ -65,17 +97,17 @@ Start and End from the actual PC browser controls. Keep Quest and browser
 screenshots, native command receipts and build inputs private. Use synthetic
 recording inputs for this rehearsal.
 
-The installed APK also exposes its own Android operator activity. Quest now
-reports both Bluetooth runtime permissions granted for the rehearsal app.
-The gateway still requires the app's attended Remote choice before the
-browser can join. Prepare Remote on Quest before giving it to the wearer.
+The previous installed rehearsal reports both Bluetooth runtime permissions
+granted. The Remote-only successor selects the required native host and starts
+in Remote. A fresh package may still require Android Bluetooth permission and
+one operator enrollment to unlock private data.
 
 ### Quest-owned H10 with browser control
 
 The sensor link is **Polar H10 → Quest over BLE**. The control link is
 **Atmungsraum in Chrome → Quest experiment gateway**. Use desktop Chrome for
 the current round, then the smartphone browser as the operator surface.
-Keep raw ECG on Quest until the approved export route is qualified. Use a
+Keep full ECG on Quest until the enrolled export is requested. Use a
 consenting test wearer and a synthetic identifier.
 
 - [x] Run the current browser UI and save checks on PC Chrome. The 61 Node
@@ -94,7 +126,7 @@ consenting test wearer and a synthetic identifier.
   command and original receipt flow. A disconnect or background transition
   never continues the setup sequence. The headset handles Android permission
   approval, Bluetooth and acquisition. The browser shows only readiness.
-- [ ] Select Remote on the installed rehearsal APK and open its VR scene.
+- [ ] Install the Remote-only rehearsal APK and open its VR scene.
   Join from PC Chrome and click **Polar H10 verbinden** with the test wearer
   wearing the strap. Verify fresh native ECG and keep device receipts and
   screenshots in the private evidence lane. This is the next unfinished action.
@@ -108,8 +140,9 @@ consenting test wearer and a synthetic identifier.
   show the native result once transfer is qualified. Then repeat controller
   acceptance on Android Chrome, including Local Network Access.
 
-The browser demo still uses NeuroKit replay. A native readiness flag can
-confirm fresh acquisition without carrying the waveform or recording.
+The browser demo still uses NeuroKit replay. The enrolled Quest route now
+accepts a bounded native preview and completed recording in addition to
+the readiness flag. Qualify both on hardware before study use.
 Host verification covers 65 Node tests, six scenario consistency checks, ten
 signed Chrome fixture cases across supported viewport/text sizes, and the
 synthetic demo save sweep. See [VERIFICATION.md](VERIFICATION.md).

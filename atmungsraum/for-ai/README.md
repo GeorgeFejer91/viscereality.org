@@ -16,8 +16,11 @@ logo icon opens the live `/atmungsraum/` URL in a standalone app window.
 Prioritize touch, portrait/landscape, safe areas and installed-app behavior.
 PC and smartphone browsers serve exclusively as the external controller during
 Quest runs. They send operator requests and display native state and receipts.
-The VR-Probe controller starts Polar discovery, connection and ECG setup on
-Quest. The native app handles Remote consent and Android Bluetooth permission.
+The VR-Probe controller discovers the Quest by Bluetooth, joins its gateway
+over Wi-Fi, and starts Polar setup on Quest. The isolated rehearsal APK
+defaults to Remote-only. Android handles Bluetooth permission. Enrolled
+operators can see the live H10 preview and download the verified native
+recording after each rehearsal.
 Quest shows only the Viscereality scenario to the wearer and owns the runtime,
 Polar H10 acquisition and recordings. Desktop Chrome is the current test
 controller. Android Chrome is the later physical controller target. The active

@@ -1,0 +1,80 @@
+import { createExportsZip } from './data-files.js?v=20261108-quest-data';
+
+const recordingId = /^utc-ns-[0-9]{20}$/;
+const digest = /^[a-f0-9]{64}$/;
+const files = ['manifest.json', 'final.json', 'events.jsonl', 'polar-acc.jsonl', 'polar-ecg.jsonl',
+  'polar-hr-rr.jsonl', 'breath.jsonl', 'radius.jsonl'];
+const maxBytes = 128 * 1024 * 1024;
+
+export function ecgTrace(frame, transportMs) {
+  if (frame?.v !== 1 || frame.unit !== 'uV' || frame.rate !== 130
+    || !Number.isSafeInteger(frame.age_ms) || frame.age_ms < 0 || frame.age_ms + transportMs > 1500
+    || !Array.isArray(frame.samples) || frame.samples.length < 2 || frame.samples.length > 260) return null;
+  let previous = 0n;
+  const samples = [];
+  for (const point of frame.samples) {
+    if (!Array.isArray(point) || point.length !== 2 || typeof point[0] !== 'string'
+      || !/^[1-9][0-9]{0,18}$/.test(point[0]) || !Number.isSafeInteger(point[1])
+      || point[1] < -8388608 || point[1] > 8388607) return null;
+    const timestamp = BigInt(point[0]);
+    if (timestamp <= previous) return null;
+    samples.push({ timestamp, value: point[1], gap: timestamp - previous > 12000000n });
+    previous = timestamp;
+  }
+  const end = samples.at(-1).timestamp;
+  const window = samples.filter(({ timestamp }) => end - timestamp <= 2000000000n);
+  if (window.length < 2) return null;
+  const range = Math.max(100, ...window.map(({ value }) => Math.abs(value)));
+  const path = window.map(({ timestamp, value, gap }, index) => {
+    const x = 400 - Number(end - timestamp) / 5000000;
+    const y = 46 - value / range * 43;
+    return `${index === 0 || gap ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(' ');
+  return { range, path, ttl: 2500 - frame.age_ms - transportMs };
+}
+
+export async function questRecording(gateway, id, signal) {
+  if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
+  const query = { query: 'describe', id };
+  const deadline = performance.now() + 90000;
+  let response = await gateway.recordings(query, signal);
+  while (response?.state === 'preparing' && performance.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 650));
+    signal.throwIfAborted();
+    response = await gateway.recordings(query, signal);
+  }
+  const manifest = response?.manifest;
+  if (response?.state !== 'ready' || manifest?.schema !== 'rusty.quest.recording_export.v1'
+    || manifest.id !== id || manifest.device !== gateway.owner.device || manifest.serial !== gateway.owner.serial
+    || manifest.saved !== true || manifest.file_set_policy !== 'core8-original-no-checkpoints-or-index'
+    || !digest.test(manifest.manifest_id) || !Array.isArray(manifest.files) || manifest.files.length !== files.length
+    || !files.every(name => manifest.files.some(file => file?.name === name))
+    || !manifest.files.every(file => Number.isSafeInteger(file.size) && file.size >= 0 && digest.test(file.sha256))) {
+    throw Error('Quest hat keine verifizierte, abgeschlossene Aufnahme geliefert.');
+  }
+  const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
+  if (total !== manifest.total_bytes || total > maxBytes) throw Error('Ungültige Größe der Quest-Aufnahme.');
+  const records = [];
+  for (const file of manifest.files) {
+    const bytes = new Uint8Array(file.size);
+    for (let offset = 0; offset < bytes.length; offset += 32768) {
+      signal.throwIfAborted();
+      const length = Math.min(32768, bytes.length - offset);
+      const chunk = await gateway.recordings({ query: 'read', manifest_id: manifest.manifest_id, file: file.name, offset, length }, signal);
+      if (chunk?.v !== 1 || chunk.state !== 'chunk' || chunk.manifest_id !== manifest.manifest_id
+        || chunk.file !== file.name || chunk.offset !== offset || chunk.length !== length
+        || chunk.sha256 !== file.sha256 || typeof chunk.data !== 'string'
+        || chunk.data.length !== 4 * Math.ceil(length / 3)) throw Error('Unvollständiger Quest-Dateiabschnitt.');
+      const raw = Uint8Array.from(atob(chunk.data), char => char.charCodeAt(0));
+      if (raw.length !== length) throw Error('Ungültige Abschnittsgröße.');
+      bytes.set(raw, offset);
+    }
+    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+      byte => byte.toString(16).padStart(2, '0')).join('');
+    if (hash !== file.sha256) throw Error('Quest-Datei stimmt nicht mit der Prüfsumme überein.');
+    records.push({ filename: file.name, session_id: id, bytes });
+  }
+  signal.throwIfAborted();
+  records.push({ filename: 'export-manifest.json', session_id: id, csv: JSON.stringify(manifest, null, 2) });
+  return createExportsZip(records);
+}
