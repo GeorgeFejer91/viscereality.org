@@ -98,7 +98,16 @@ relaunch, storage and lifecycle qualification distinct from desktop automation.
 On Android Chrome, use the browser menu's install action; on iPhone Safari,
 use Share → Add to Home Screen and enable Open as Web App when offered.
 
-Automatic Wormhole sharing uses the separately deployed `sharing/worker.js`,
+Direct Discord delivery uses the public encrypted `sharing/discord-config.json`
+and a send-time password prompt, with no relay. Generate/rekey locally using
+`node sharing/configure-discord.mjs`; it reads ignored `.dev.vars` and keeps the
+password in ignored `.dev.vars.discord-password`/`.dev.vars.setup.html`. Commit
+only the authenticated ciphertext, never plaintext credentials/passwords. Scan
+staged bytes against local secrets. Test wrong password, cancel/close/focus,
+stale requests, real browser CORS/provider acknowledgement and message readback.
+A password holder can recover the webhook; revocation needs webhook rotation.
+
+Optional automatic Wormhole upload uses the separately deployed `sharing/worker.js`,
 not GitHub Pages server code. Read [sharing/README.md](../sharing/README.md).
 Use ignored `.dev.vars` for the Discord webhook/access key and Wrangler's
 `deploy --secrets-file .dev.vars` after account login. No paid binding is needed

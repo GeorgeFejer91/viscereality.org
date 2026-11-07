@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-11-07 — Password-gated direct Discord notification
+
+The user removes Cloudflare from Discord delivery. Publish the webhook only as
+an authenticated AES-GCM envelope and decrypt it locally using a strong shared
+password entered in a masked send-time prompt. Post the complete Wormhole link
+directly to Discord and require acknowledgement. Native password-manager save
+is optional after confirmed delivery; the app stores no password/unlocked
+webhook. Cancellation or an incorrect password sends nothing. Public ciphertext
+permits offline guessing, and password holders can recover the webhook; rotate
+it to revoke access. Preserve manual QR/downloads and the separately configured
+optional upload relay. See sharing/README.md and PROJECT for acceptance evidence.
+
 ## 2026-11-07 — Larger top phone controls and an install action
 
 The user requests at least twice the phone screenshot's top two control sizes,

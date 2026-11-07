@@ -158,9 +158,15 @@ automatic transmission or server upload is involved. Cancel leaves files intact.
 
 The explicit **Per QR-Code teilen** action offers automatic Wormhole upload
 through an authenticated Cloudflare Worker, followed by local QR generation and
-optional automatic forwarding to the fixed destination configured in that Worker.
-The user's 2026-11-06 choice is Discord. Its webhook is a private Worker secret;
-never put it in HTML/source. Setup is in [sharing/README.md](../sharing/README.md).
+password-gated forwarding directly from the browser to Discord. The user's
+2026-11-07 choice hosts only an encrypted webhook envelope in public Git/Pages;
+a send-time password decrypts it locally. The raw webhook and password must never
+enter public source. Cancel or a wrong password sends nothing to Discord.
+The password field clears on close. The app writes neither password nor unlocked
+webhook to web storage/IndexedDB. On explicit opt-in and confirmed delivery,
+use only the browser's native password manager to save/autofill the password.
+The relay is used only for optional Wormhole upload. See
+[sharing/README.md](../sharing/README.md).
 A manual fallback remains: download the ZIP, upload it at `https://wormhole.app/`,
 paste the complete URL including its `#` key, then choose **QR-Code anzeigen**.
 Wormhole rejects site-origin upload CORS preflight; Pages alone cannot upload.
@@ -171,15 +177,17 @@ A first pass hashes encrypted 8 MiB pieces; a second pass uploads identical
 ciphertext through narrowly allowed Worker routes to Wormhole/Backblaze. The
 file key remains on the device during upload. No plaintext CSV is sent to the
 relay or storage provider. Only after upload completion acknowledgement does
-the app show the URL/QR and, when configured, send the full keyed URL to the
-Worker's fixed Discord destination. The relay and Discord then have access to
-that share. Provider acknowledgement is not proof of recipient access.
+the app show the URL/QR and request the Discord password. After successful
+local decryption it sends the full keyed URL directly to Discord; no notification
+passes through Cloudflare. The Discord destination has access to that share.
+Provider acknowledgement is not proof of recipient access.
 
 Worker URL/access key are entered privately per dialog and cleared on close or
 collapse; neither is persisted in browser storage. A confirmed uploaded URL is
 retained only in page memory for the same exact saved records, restored after
 dialog reopening, and invalidated when those records change. Reload loses this
-receipt. Notification retry uses the existing URL without uploading again;
+receipt. Notification retry prompts for the password and reuses the existing
+URL without uploading again;
 successful sends are remembered in this page to suppress accidental repeats.
 No durable exactly-once delivery is promised. Check the destination after an
 uncertain timeout before retrying. Cancellation cannot undo a provider request

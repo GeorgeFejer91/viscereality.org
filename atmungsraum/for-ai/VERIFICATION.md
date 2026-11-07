@@ -184,6 +184,43 @@ The 30-second signal-loss deadline is unchanged. Evidence remains ignored in
 `polar-release-c2356be.json`. The generic Node asset fetch hit a connection
 timeout; the exact-byte check completed with Python's standard HTTPS client.
 
+## Password-gated direct Discord delivery — 2026-11-07
+
+The user removes Cloudflare from the Discord notification path and requests an
+encrypted webhook on GitHub Pages, a masked send-time password prompt and
+browser password-manager saving/autofill. Optional automatic Wormhole upload
+retains its separately configured relay; the app posts links straight to Discord.
+
+Node regressions fail before the direct sender/envelope module exists, then pass.
+49 tests cover exact-host webhook URL validation, no redirects/cookies/referrer,
+provider acceptance, authenticated AES-256-GCM round trip, fresh salt/IV,
+PBKDF2-SHA256600k, wrong password, tampering, envelope bounds and abort-before-send.
+A private helper generates the144-bit password and verifies the actual encrypted
+file without printing credentials. Commit only ciphertext. Correct passwords
+can recover the webhook; old copies remain usable until webhook rotation.
+
+Native Chrome fixture checks cover masked auto/manual prompts, Escape/Cancel,
+wrong password, Discord failure/retry, QR/ZIP retention, stale abort, focus,
+keyboard and five viewport sizes plus200% text/spacing. Review's parent-focus
+issue and an Escape close-event clearing race are reproduced red then fixed.
+The browser credential API fixture observes no save on cancel, wrong password
+or failed delivery, and one save on successful explicit opt-in. Native browser
+settings/Save/autofill on a physical target device remain user-side behavior.
+No site storage receives the password or unlocked webhook. Existing five upload
+and seven manual QR cases pass; no manual QR external traffic when forwarding is
+off. UI/context/whitespace checks pass. Screenshot inspected without secrets.
+
+A real Chrome run at `https://viscereality.org/atmungsraum/` with local source
+routed there before publication loads the actual encrypted file, prompts for
+the password and makes zero Discord requests on incorrect entry. Correct entry
+makes one real browser POST to Discord (no proxy/fulfil or CORS bypass), gets200
+and reads back the matching synthetic keyed link. Network origins are exactly
+the site and Discord, with Worker settings empty; no Cloudflare request occurs.
+No password is sent or left in the prompt, and no participant data is used.
+Ignored receipts: discord-password-results.json, discord-password-phone.png and
+discord-password-local-source-network.json. Exact public release evidence follows
+in PROJECT after publication.
+
 ## Automatic Wormhole upload and Discord — 2026-11-06/07
 
 The user-selected route now supports browser ZIP encryption/upload, local QR

@@ -149,7 +149,45 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
-## Automatic Wormhole upload → Discord — awaiting Cloudflare ownership
+## Password prompt and encrypted direct Discord — active, 2026-11-07
+
+The user explicitly replaces the Cloudflare notification hop: host the webhook
+only as an encrypted file on GitHub Pages, request a password immediately before
+sending, decrypt on the device and send directly to Discord. The message contains
+the complete Wormhole URL/key. Preserve ZIP/download/native share/QR and the
+optional existing automatic Wormhole upload. Cloudflare ownership is no longer
+required for Discord; its earlier blocker below applies only to optional upload.
+
+- [x] TDD AES-256-GCM/PBKDF2-SHA256600k envelope encryption/decryption, fresh
+  salt/IV, bounds, wrong-password/tamper rejection and direct acknowledgement.
+- [x] Generate a strong144-bit password privately; publish only encrypted JSON.
+  The ignored setup page provides the password. No raw webhook/password in Git.
+- [x] Add masked send-time prompt; Cancel/Escape/wrong password sends nothing.
+  Clear input on close, keep focus inside the parent modal, cancel stale sends
+  and retain QR/downloads. No password/unlocked webhook app persistence.
+- [x] Enable optional native password-manager saving/autofill after accepted
+  Discord delivery. Cancel, wrong password and rejected delivery do not request
+  saving. The operator still confirms each send.
+- [x] Real Chrome at canonical origin/local source: wrong password yields zero
+  Discord requests; correct password posts directly and message readback matches
+  the synthetic share. Network origins are only the site and Discord, with empty
+  Worker settings. No relay or mocked Discord response is used.
+- [ ] Finish review/regressions, publish and verify exact Pages/live behavior.
+
+49 Node tests, UI/context/whitespace, five prompt/reflow, five automatic upload
+and seven manual QR browser cases pass. Password-manager call tests use a
+synthetic browser API fixture; native user Save/autofill depends on settings.
+Independent review finds one focus-return defect, reproduced red then fixed;
+no encryption/secret-handling blocker. See VERIFICATION.md for final evidence.
+No new hosting account is needed for this delivery route. Never claim the
+webhook is unrecoverable after unlocking: public ciphertext permits offline
+password guessing, and a password holder can extract the decrypted webhook.
+Changing the password alone cannot revoke such access; rotate the webhook.
+Next: publish this increment, repeat the real direct-browser check from Pages,
+then hand over the private setup page/password location. Preserve concurrent
+staged PWA control/evidence work and unrelated untracked attachments.
+
+## Automatic Wormhole upload — optional relay ownership checkpoint
 
 The user supplies a Discord webhook and explicitly requests automatic forwarding
 of Wormhole URLs. The share button packages every saved browser export into the
@@ -216,8 +254,8 @@ verify the current browser URL, so it cannot supply account-claim evidence.
 The same required user sign-in/claim remains after three consecutive goal
 turns. All implementation, publication, real-provider verification and setup
 instructions are complete; no further autonomous code changes resolve this
-account requirement. Mark the thread goal blocked, not complete, until the
-user claims the account or supplies an authenticated deployment environment.
+account requirement. After the user's direct-Discord decision above, this account requirement applies
+only to optional automatic Wormhole upload; it does not block Discord delivery.
 If the preview expired, run the documented login/deploy commands with the
 existing ignored private secrets, update the operator Worker URL, then verify
 the configured hosted flow. Never regenerate previews repeatedly in place of

@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261107-pwa-centering">
+  <link rel="stylesheet" href="./style.css?v=20261107-discord-password">
   <script type="module" src="./pwa-install.js?v=20261106-pwa-controls"></script>
-  <script type="module" src="./app.js?v=20261107-pwa-centering"></script>
+  <script type="module" src="./app.js?v=20261107-discord-password"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -76,19 +76,19 @@
         <p id="wormhole-help" data-measure>Den Link von Wormhole kopieren, einschließlich # und dem Schlüssel dahinter.</p>
         <button id="show-qr" type="submit"><span data-measure>QR-Code anzeigen</span></button>
       </form>
+      <label class="relay-auto"><input id="relay-auto" type="checkbox" checked><span data-measure>Neue Links mit Passwort an Discord senden</span></label>
+      <button id="relay-send" type="button" disabled><span data-measure>An Discord senden</span></button>
+      <p id="relay-status" role="status" data-measure></p>
       <details id="relay-settings">
-        <summary><span data-measure>Automatisches Teilen einrichten</span></summary>
+        <summary><span data-measure>Automatischen Wormhole-Upload einrichten</span></summary>
         <div class="relay-fields">
-          <p data-measure>Der eingerichtete Dienst lädt die verschlüsselte ZIP auf Wormhole und leitet den Link an dein festgelegtes Ziel weiter.</p>
+          <p data-measure>Optional für den ZIP-Upload. Discord erhält den Link direkt von diesem Browser nach deiner Passwortabfrage.</p>
           <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Cloudflare einrichten ↗</span></a>
           <label for="relay-endpoint" data-measure>Adresse des Cloudflare-Workers</label>
           <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-sharing.…workers.dev" aria-describedby="relay-help">
           <label for="relay-token" data-measure>Zugangsschlüssel</label>
           <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
-          <p id="relay-help" data-measure>Der Schlüssel wird nur hier im geöffneten Dialog verwendet und beim Schließen gelöscht. Das Ziel wird im Worker festgelegt.</p>
-          <label class="relay-auto"><input id="relay-auto" type="checkbox" checked><span data-measure>Neue Links automatisch weiterleiten</span></label>
-          <button id="relay-send" type="button" disabled><span data-measure>Link weiterleiten</span></button>
-          <p id="relay-status" role="status" data-measure></p>
+          <p id="relay-help" data-measure>Der Zugangsschlüssel gilt für den Upload und wird beim Schließen gelöscht. Für Discord ist kein Worker nötig.</p>
         </div>
       </details>
       <p id="wormhole-status" role="status" data-measure></p>
@@ -99,6 +99,20 @@
         <button id="wormhole-copy" type="button"><span data-measure>Link kopieren</span></button>
       </figure>
     </section>
+  </dialog>
+  <dialog id="discord-password-dialog" aria-labelledby="discord-password-title" aria-describedby="discord-password-help">
+    <h2 id="discord-password-title" data-measure>An Discord senden</h2>
+    <form id="discord-password-form" method="dialog">
+      <input id="discord-password-user" type="hidden" name="username" autocomplete="username" value="Atmungsraum Discord">
+      <label for="discord-password" data-measure>Passwort</label>
+      <input id="discord-password" type="password" name="password" autocomplete="current-password" maxlength="1024" required autofocus aria-describedby="discord-password-help">
+      <p id="discord-password-help" data-measure>Das Passwort entsperrt das Discord-Ziel. An Discord geht der vollständige Wormhole-Link.</p>
+      <label class="relay-auto"><input id="remember-discord-password" type="checkbox"><span data-measure>Passwort im Browser merken</span></label>
+      <div class="files-actions">
+        <button id="cancel-discord-password" type="button"><span data-measure>Abbrechen</span></button>
+        <button type="submit"><span data-measure>Senden</span></button>
+      </div>
+    </form>
   </dialog>
   <main>
     <section class="screen" id="h10" aria-labelledby="sensor-status" hidden>

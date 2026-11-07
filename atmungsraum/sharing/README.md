@@ -1,131 +1,129 @@
-# Automatic Wormhole upload and Discord sharing
+# Password-protected Discord sharing
 
-The folder dialog can package every saved CSV into `Atmungsraum-Daten.zip`,
-encrypt it on the device, upload it to Wormhole, show its complete link/QR and
-automatically send that link to a fixed Discord webhook. The ZIP preserves the
-existing CSV bytes and names. A running recording appears only after it ends.
+The website sends the complete Wormhole download link **directly to Discord**.
+No Cloudflare account, relay, bot or server is needed for this notification.
+The webhook is hosted as encrypted `discord-config.json` on GitHub Pages.
+A masked password dialog unlocks it locally immediately before sending.
+The ZIP stays on Wormhole; the Discord message contains its full keyed URL.
 
-GitHub Pages serves the app. A small Cloudflare Worker handles Wormhole's
-cross-origin upload restriction and holds the Discord webhook privately.
-You do not need to operate a server, bot, database or email service. The Worker
-uses ordinary outbound HTTPS requests and needs no paid binding. Current
-[Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/)
-apply; do not enable a paid plan for this setup.
+## Use it
 
-## Finish this installation
+1. Open the private local `.dev.vars.setup.html` to copy the generated password.
+   This file and `.dev.vars.discord-password` are ignored by Git.
+2. Open [Atmungsraum](https://viscereality.org/atmungsraum/) → folder →
+   **Per QR-Code teilen …**. Upload the prepared ZIP on Wormhole and paste its
+   complete link, including `#` and its download key. An already configured
+   automatic Wormhole upload can also supply the link.
+3. Choose **QR-Code anzeigen**. With automatic forwarding enabled, the password
+   dialog appears. Otherwise press **An Discord senden**. Enter the password
+   and press **Senden**. Check the receiving channel after Discord confirms it.
+4. To reuse the password, select **Passwort im Browser merken** in a supported
+   browser, then accept its own save prompt after a successful send. Later
+   prompts can autofill the saved **Atmungsraum Discord** entry. The prompt
+   still requires **Senden**. If the browser does not expose this save option,
+   use its regular password-manager autofill or paste from the private page.
 
-The supplied webhook and a generated access key are already in this machine's
-ignored `sharing/.dev.vars`. Neither belongs in Git, public HTML or a screenshot.
-The private `.dev.vars.setup.html` created during setup contains the connection
-details and, when applicable, the Cloudflare preview claim link.
+Cancel, Escape or an incorrect password sends nothing to Discord. The QR/link
+and saved files remain available. The password field clears on dismissal;
+the app does not write the password or unlocked webhook into localStorage,
+sessionStorage or IndexedDB. When opted in, it asks the browser's
+[credential manager](https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/store)
+to save the password only after Discord accepts the message. Saving/autofill
+availability and any sync are governed by browser settings. The password manager
+can remove or update the entry; the app never stores the unlocked webhook.
+Closing the files dialog cancels pending local work. A provider request already
+accepted cannot be undone. Check Discord after a timeout before retrying;
+there is no automatic retry or durable exactly-once guarantee.
 
-1. **Keep the Cloudflare deployment.** If setup supplied a preview claim link,
-   open it, sign in and finish the claim **within 60 minutes of creation**.
-   Opening the page alone does not keep it. Cloudflare deletes unclaimed
-   previews. See [Cloudflare's claim instructions](https://developers.cloudflare.com/workers/platform/claim-deployments/).
-2. **Connect the app.** Open [Atmungsraum](https://viscereality.org/atmungsraum/)
-   → folder → **Per QR-Code teilen …** → **Automatisches Teilen einrichten**.
-   Copy the Worker URL and private access key from the local setup page.
-   Keep **Neue Links automatisch weiterleiten** checked.
-3. **Share.** Press **ZIP automatisch hochladen**. Wait for both upload
-   confirmation and Discord acceptance; check the receiving channel. The link
-   and QR appear in the same dialog. Anyone with the complete link/key can
-   download the data while Wormhole permits it.
+## Configure or change the password locally
 
-The key and Worker URL are held only in the open dialog and cleared on close
-or collapse. Reenter them for a later sharing operation. A confirmed uploaded
-link is retained in page memory for the same exact saved files, so reopening
-or retrying Discord does not upload another ZIP. Reloading the page loses this
-receipt. New saved data requires a new upload. Existing shares are not revoked.
+The supplied webhook is already in this machine's ignored `.dev.vars`.
+For a fresh checkout, create that file privately with:
 
-If Discord is not confirmed, the link/QR and downloads remain available. Check
-the channel before pressing **Link weiterleiten** again: a timeout can occur
-after a provider accepted the message. There is no automatic retry or durable
-exactly-once guarantee. Keep the page open during upload. Cancel/close stops
-local work; it cannot undo a request already accepted by a provider.
+```dotenv
+DISCORD_WEBHOOK_URL=<your complete Discord webhook URL>
+```
 
-## Deploy or redeploy in your own account
+Run from `atmungsraum/`:
 
-From `atmungsraum/sharing/`, after installing Node.js and pnpm:
+```powershell
+node sharing/configure-discord.mjs
+```
+
+The helper generates a random144-bit password if no private password file
+exists, encrypts the webhook, verifies decryption and writes:
+
+- `sharing/discord-config.json`: **public ciphertext**, safe to commit.
+- `sharing/.dev.vars.discord-password`: **private password**, never commit.
+- `sharing/.dev.vars.setup.html`: **private setup/password page**, never commit.
+
+To choose a different password, edit `.dev.vars.discord-password` locally using
+a strong single-line password of at least16 characters, rerun the helper and
+publish the updated encrypted JSON. Never put the password/webhook in source,
+chat, screenshots, command arguments or an online encryption tool. The helper
+prints paths/status only. Review the staged diff and scan it for local secrets.
+
+Encryption uses native Web Crypto: AES-256-GCM, a fresh96-bit IV and128-bit salt,
+with PBKDF2-HMAC-SHA256 at600,000 iterations and fixed versioned associated data.
+The envelope is bounded and authenticated; an invalid/tampered file fails closed.
+The browser sends the password to neither GitHub nor Discord. See
+[Web Crypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/deriveKey)
+and [OWASP's PBKDF2 work factor](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2).
+This does not assert a FIPS-certified implementation.
+
+The ciphertext is public, so someone can try password guesses offline. Anyone
+who knows the correct password can recover and reuse the webhook, including
+through browser developer tools after unlocking it. Changing only the password
+does not revoke a previously recovered webhook; old encrypted copies also remain
+in Git history. To revoke access, rotate the webhook in Discord, update the
+private source value and regenerate/publish the encrypted file. This is a shared
+operator password, not individual accounts or server-enforced rate limiting.
+
+Direct delivery uses Discord's
+[execute-webhook API](https://docs.discord.com/developers/resources/webhook#execute-webhook)
+with `wait=true`, no cookies, no referrer, no redirects, no mentions and suppressed
+link previews. Only provider acknowledgement is reported; it is not proof that
+someone read the message. The full Wormhole URL gives its recipient access to
+the shared ZIP while Wormhole permits it. QR generation remains local.
+
+## Optional automatic Wormhole upload
+
+Wormhole's upload API currently blocks cross-origin requests from this static
+site. Its fully automatic upload therefore still needs the separately configured
+`worker.js` relay. **Discord notification does not use that relay.** Manual
+Wormhole upload/paste/QR and direct Discord sending need no Cloudflare setup.
+
+For the optional upload relay, retain private `LINK_RELAY_TOKEN` in `.dev.vars`
+and the checked-in `ALLOWED_ORIGIN=https://viscereality.org`. From `sharing/`:
 
 ```powershell
 pnpm dlx wrangler@4.158.0 login
 pnpm dlx wrangler@4.158.0 deploy --secrets-file .dev.vars
 ```
 
-Use the returned `https://atmungsraum-sharing.…workers.dev` URL in the app.
-This deploys only the small Worker; the website remains on GitHub Pages.
-If the preview expired, these commands create a permanent deployment in the
-account you select. A claimed preview requires normal login for later updates.
-If you have several accounts, choose the intended account in Wrangler.
+Enter the returned Worker URL/access key in **Automatischen Wormhole-Upload
+einrichten**. They clear when the files dialog closes. Cloudflare's temporary
+preview must be claimed within60 minutes or it is deleted; see its
+[claim instructions](https://developers.cloudflare.com/workers/platform/claim-deployments/).
+The prior preview/account requirement is optional upload setup, not a requirement
+for password-protected Discord delivery. No website migration or paid binding
+is needed. The old Worker `/notify` endpoint remains available for existing
+integrations, but this website's current Discord path calls Discord directly.
 
-For a fresh checkout, create the ignored `.dev.vars` locally:
+Automatic upload encrypts the existing ZIP on-device using pinned official MIT
+`wormhole-crypto@0.3.1`. Two passes over the immutable Blob hash then upload
+identical encrypted8 MiB pieces. Only after final upload acknowledgement does
+the app display a link/QR and request the Discord password. See
+[vendor provenance](../vendor/wormhole-crypto/README.md). A confirmed share remains
+in page memory for the same exact records; retrying notification does not upload
+again. Reload loses this receipt. New saved records require a new upload.
+No existing share is revoked by changing the local list. Wormhole controls
+expiry, storage and download limits. Interrupted uploads can leave unused rooms.
 
-```dotenv
-DISCORD_WEBHOOK_URL=<your complete Discord webhook URL>
-LINK_RELAY_TOKEN=<a random base64url access key of 32–128 characters>
-```
-
-Generate a key locally with
-`node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"`.
-Keep `.dev.vars` trusted; Wrangler expands dotenv variables. The checked-in
-`wrangler.jsonc` sets `DESTINATION=discord` and
-`ALLOWED_ORIGIN=https://viscereality.org`. An origin has no page path.
-The [secrets-file flag](https://developers.cloudflare.com/workers/wrangler/commands/workers/)
-uploads values as private Worker secrets. Redeploy after rotating either key.
-The browser receives only the operator access key, never the webhook.
-
-## Data and protocol boundary
-
-- The browser uses pinned official MIT `wormhole-crypto@0.3.1` and Web Crypto.
-  File encryption uses a fresh random key/salt per ZIP. Two passes over the
-  same immutable Blob hash then upload identical encrypted 8 MiB pieces,
-  without retaining a second whole encrypted archive. See
-  [vendor provenance](../vendor/wormhole-crypto/README.md).
-- The authenticated Worker permits only bounded Wormhole room/upload requests
-  and Backblaze upload endpoints. It receives encrypted file bytes. The full
-  download URL/key is sent to `/notify` only for the requested notification;
-  the Worker and Discord can therefore access that share.
-- The destination is fixed in private Worker configuration. Caller-supplied
-  recipients are ignored. Origin restrictions supplement the access key;
-  they do not replace authentication. No general CORS proxy is provided.
-- The sample disables Worker observability. This code does not log request
-  bodies, credentials, keyed URLs or provider exceptions. Preserve that policy.
-- The Wormhole upload API is an integration with the current service, without
-  a versioned public compatibility guarantee. Provider changes may require an
-  update. Wormhole controls expiry, download counts and storage limits; the
-  app does not invent availability guarantees. Large exports are also bounded
-  by device browser memory and ZIP32. Interrupted uploads can leave an
-  unused provider room until it expires.
-
-Individual CSV downloads, native ZIP sharing and manual Wormhole upload →
-paste link → local QR remain available without Cloudflare. QR generation uses
-the local encoder and sends no link to a QR service. Recording, participant
-identity, retention and file naming remain governed by
-[DATA-LOGGING.md](../for-ai/DATA-LOGGING.md).
-
-## Verification and remaining acceptance
-
-The production upload client and Worker handler completed a real synthetic
-Wormhole/Backblaze upload, independent download/decryption with byte-identical
-ZIP comparison, then an authorized message to the supplied Discord webhook
-with successful message readback. That first network check ran the Worker
-handler locally. A subsequent real browser check from published Pages through
-the deployed Cloudflare Worker uploads a9 MiB synthetic ZIP in two encrypted
-pieces, verifies Discord message readback and independently restores identical
-ZIP bytes. See [VERIFICATION.md](../for-ai/VERIFICATION.md).
-No participant data was used. Physical phone/Safari behavior and durable
-account ownership require their own acceptance.
-
-## Other destinations
-
-The Worker also supports Telegram and email if you later change destination.
-For Telegram set `DESTINATION=telegram`, private `TELEGRAM_BOT_TOKEN`, and
-`TELEGRAM_CHAT_ID`; start the bot in the receiving chat or grant it channel
-posting permission. For email set `DESTINATION=email`, add a Cloudflare Send
-Email binding named `EMAIL`, onboard the sender domain, set `EMAIL_FROM` and
-`EMAIL_TO`, and verify the receiving address. Free email is restricted to
-verified destinations; arbitrary recipients require a paid Workers plan.
-See [Cloudflare Email Service](https://developers.cloudflare.com/email-service/).
-These alternative real-provider routes have not been configured or tested by
-this Discord installation. No extra setup is needed for Discord.
+Individual downloads and native ZIP sharing remain available. Recording,
+participant identity and retention are governed by
+[DATA-LOGGING.md](../for-ai/DATA-LOGGING.md). No participant data is used in tests.
+Current local/public-browser and real-provider receipts are described in
+[VERIFICATION.md](../for-ai/VERIFICATION.md); physical phones/Safari require
+separate qualification. The Wormhole service integration may need changes if
+its non-versioned upload API changes.

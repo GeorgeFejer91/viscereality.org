@@ -1,5 +1,35 @@
 import { validateWormholeUrl } from './wormhole-link.js';
 
+export function validateDiscordWebhook(value) {
+  let target;
+  try { target = new URL(value.trim()); } catch { /* Validate below. */ }
+  if (!target || target.origin !== 'https://discord.com' || target.username || target.password || target.search || target.hash
+    || !/^\/api(?:\/v10)?\/webhooks\/\d{1,20}\/[A-Za-z0-9._-]{8,128}$/.test(target.pathname)) {
+    throw new Error('Gültigen Discord-Webhook eintragen.');
+  }
+  return target;
+}
+
+export async function sendDiscordLink({ webhook, url, signal }) {
+  const target = validateDiscordWebhook(webhook), link = validateWormholeUrl(url);
+  target.searchParams.set('wait', 'true');
+  try {
+    const response = await fetch(target.href, {
+      method: 'POST', redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: `Atmungsraum-Daten\n<${link}>`, allowed_mentions: { parse: [] } }),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
+    });
+    const result = await response.json();
+    if (!response.ok || typeof result?.id !== 'string' || !result.id) throw new Error('Missing acknowledgement');
+    return { accepted: true, destination: 'discord', message_id: result.id };
+  } catch (error) {
+    const failure = new Error('Discord-Zustellung nicht bestätigt. Ziel prüfen, bevor du erneut sendest.');
+    if (['AbortError', 'TimeoutError'].includes(error.name)) failure.name = error.name;
+    throw failure;
+  }
+}
+
 export function validateRelaySettings(endpoint, token) {
   let target;
   try { target = new URL(endpoint.trim()); } catch { /* Validate below. */ }

@@ -111,3 +111,40 @@ test('Browser forwarding validates its endpoint and credentials, sends no recipi
   t.mock.method(globalThis, 'fetch', async () => Response.json({ success: true }));
   await assert.rejects(() => forwardWormholeLink({ endpoint: 'https://relay.example.workers.dev', token, url }), /bestätigt/);
 });
+
+
+test('Direct browser Discord delivery uses its private webhook with a confirmed response and no relay', async t => {
+  const { sendDiscordLink } = await import('../link-relay.js');
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (target, init) => { calls.push({ target, init }); return Response.json({ id: 'direct-ack' }); });
+  const webhook = 'https://discord.com/api/webhooks/123456789/TEST_TOKEN';
+  const result = await sendDiscordLink({ webhook, url });
+  assert.deepEqual(result, { accepted: true, destination: 'discord', message_id: 'direct-ack' });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].target, webhook + '?wait=true');
+  assert.deepEqual(JSON.parse(calls[0].init.body), { content: `Atmungsraum-Daten\n<${url}>`, allowed_mentions: { parse: [] } });
+  assert.equal(calls[0].init.credentials, 'omit');
+  assert.equal(calls[0].init.redirect, 'error');
+  assert.equal(calls[0].init.referrerPolicy, 'no-referrer');
+  assert.equal(calls[0].init.headers.Authorization, undefined);
+});
+
+test('Direct Discord rejects unsafe destinations and never exposes a webhook or keyed link in failures', async t => {
+  const { sendDiscordLink } = await import('../link-relay.js');
+  const webhook = 'https://discord.com/api/webhooks/123456789/TEST_TOKEN';
+  let calls = 0;
+  t.mock.method(globalThis, 'fetch', async () => { calls++; throw new Error(webhook + url); });
+  for (const invalid of ['https://evil.test/api/webhooks/123456789/TEST_TOKEN', webhook + '?wait=true', webhook + '#key', webhook.replace('https:', 'http:'), webhook.replace('discord.com', 'discord.com.evil.test'), webhook.replace('discord.com', 'user@discord.com')]) {
+    await assert.rejects(() => sendDiscordLink({ webhook: invalid, url }));
+  }
+  await assert.rejects(() => sendDiscordLink({ webhook, url: 'https://wormhole.app/' }));
+  assert.equal(calls, 0);
+  await assert.rejects(() => sendDiscordLink({ webhook, url }), error => !error.message.includes(webhook) && !error.message.includes(url));
+  assert.equal(calls, 1);
+  t.mock.restoreAll();
+  for (const [status, body] of [[200, {}], [204, null], [429, { id: 'not-accepted' }]]) {
+    t.mock.method(globalThis, 'fetch', async () => new Response(body === null ? null : JSON.stringify(body), { status }));
+    await assert.rejects(() => sendDiscordLink({ webhook, url }), /bestätigt/);
+    t.mock.restoreAll();
+  }
+});

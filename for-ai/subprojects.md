@@ -73,7 +73,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   the dialog preserves playback. This cannot enumerate the OS Downloads folder.
   The QR action (2026-11-06) supports browser-encrypted automatic Wormhole
   upload through a restricted authenticated Cloudflare Worker, then local QR
-  and forwarding to a private fixed Discord webhook. Manual upload/pasted-link
+  and password-gated direct Discord forwarding. Only an encrypted webhook file
+  is public; the send-time prompt decrypts it locally, with no notification relay.
+  Manual upload/pasted-link
   QR remains available. The webhook never enters public code; operator settings
   clear on dialog close, while a confirmed share remains only in page memory.
   Worker deployment/account ownership is separate from Pages publication.

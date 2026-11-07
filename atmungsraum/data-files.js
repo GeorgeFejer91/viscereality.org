@@ -1,5 +1,6 @@
 import { validateWormholeUrl } from './wormhole-link.js';
-import { forwardWormholeLink, validateRelaySettings } from './link-relay.js';
+import { validateRelaySettings } from './link-relay.js';
+import { forwardPasswordDiscordLink } from './discord-share.js';
 import { uploadWormholeZip } from './wormhole-upload.js';
 export { validateWormholeUrl } from './wormhole-link.js';
 // ZIP32 with stored entries: keep original CSV bytes, without a runtime dependency.
@@ -72,8 +73,44 @@ export function mountDataFiles(data) {
   let uploading, archiveRecords = [], uploadedShare;
   const sameArchive = records => uploadedShare?.records.length === records.length
     && records.every((record, i) => ['session_id', 'filename', 'csv'].every(key => record[key] === uploadedShare.records[i][key]));
-  const forwardingKey = () => `${byId('relay-endpoint').value.trim()}\n${qrLink}`;
+  const forwardingKey = () => `discord\n${qrLink}`;
   const wasForwarded = key => lastForwarded === key || uploadedShare?.forwardedKey === key;
+  const passwordDialog = byId('discord-password-dialog'), passwordInput = byId('discord-password');
+  const rememberPassword = byId('remember-discord-password');
+  const canRemember = typeof globalThis.PasswordCredential === 'function' && typeof navigator.credentials?.store === 'function';
+  rememberPassword.closest('label').hidden = !canRemember;
+  passwordDialog.addEventListener('keydown', event => { if (event.key === 'Escape') event.stopPropagation(); });
+  function requestPassword(signal) {
+    return new Promise(resolve => {
+      if (signal.aborted) { resolve(null); return; }
+      const form = byId('discord-password-form'), cancelPrompt = byId('cancel-discord-password');
+      const finish = value => {
+        form.removeEventListener('submit', submit);
+        cancelPrompt.removeEventListener('click', cancel);
+        passwordDialog.removeEventListener('cancel', cancel);
+        passwordDialog.removeEventListener('close', cancel);
+        signal.removeEventListener('abort', cancel);
+        passwordInput.value = '';
+        if (passwordDialog.open) passwordDialog.close();
+        if (dialog.open && !flow.hidden) input.focus({ preventScroll: true });
+        resolve(value);
+      };
+      const submit = event => {
+        event.preventDefault();
+        if (passwordInput.reportValidity()) finish({ password: passwordInput.value, remember: canRemember && rememberPassword.checked });
+      };
+      const cancel = event => { event.preventDefault(); finish(null); };
+      form.addEventListener('submit', submit);
+      cancelPrompt.addEventListener('click', cancel);
+      passwordDialog.addEventListener('cancel', cancel);
+      passwordDialog.addEventListener('close', cancel);
+      signal.addEventListener('abort', cancel, { once: true });
+      passwordInput.value = '';
+      rememberPassword.checked = false;
+      passwordDialog.showModal();
+      passwordInput.focus({ preventScroll: true });
+    });
+  }
   function cancelUpload(announce = false) {
     if (!uploading) return;
     const restoreFocus = document.activeElement === cancelButton;
@@ -103,17 +140,22 @@ export function mountDataFiles(data) {
     const controller = new AbortController(), version = qrGeneration;
     forwarding = controller;
     relayButton.disabled = true;
-    relayStatus.textContent = 'Link wird an den eingerichteten Dienst gesendet …';
+    relayStatus.textContent = 'Passwort für Discord eingeben …';
     try {
-      const receipt = await forwardWormholeLink({
-        endpoint: byId('relay-endpoint').value, token: byId('relay-token').value,
-        url: qrLink, signal: controller.signal,
-      });
+      const access = await requestPassword(controller.signal);
+      if (version !== qrGeneration || forwarding !== controller || !dialog.open || controller.signal.aborted) return;
+      if (access === null) { relayStatus.textContent = 'Nicht gesendet.'; return; }
+      relayStatus.textContent = 'Link wird direkt an Discord gesendet …';
+      await forwardPasswordDiscordLink({ password: access.password, url: qrLink, signal: controller.signal });
       if (version !== qrGeneration || forwarding !== controller || !dialog.open) return;
       lastForwarded = key;
       if (uploadedShare?.url === qrLink) uploadedShare.forwardedKey = key;
-      const destination = { email: 'E-Mail', discord: 'Discord', telegram: 'Telegram' }[receipt.destination];
-      relayStatus.textContent = `Von ${destination} zur Zustellung angenommen. Bitte das Ziel prüfen.`;
+      relayStatus.textContent = 'Von Discord zur Zustellung angenommen. Bitte das Ziel prüfen.';
+      if (access.remember) {
+        try {
+          navigator.credentials.store(new PasswordCredential({ id: byId('discord-password-user').value, password: access.password })).catch(() => {});
+        } catch { /* Password manager availability does not change delivery. */ }
+      }
     } catch (error) {
       if (version !== qrGeneration || forwarding !== controller || !dialog.open) return;
       relayStatus.textContent = error.name === 'TimeoutError'
@@ -248,8 +290,7 @@ export function mountDataFiles(data) {
       if (version !== qrGeneration || !dialog.open) return;
       qrStatus.textContent = 'QR-Code konnte nicht erstellt werden. Link aus dem Eingabefeld kopieren oder die Seite neu laden.';
     }
-    if (version === qrGeneration && dialog.open && forward && byId('relay-auto').checked
-      && byId('relay-endpoint').value.trim() && byId('relay-token').value) forwardCurrentLink();
+    if (version === qrGeneration && dialog.open && forward && byId('relay-auto').checked) forwardCurrentLink();
   }
   byId('wormhole-form').addEventListener('submit', async event => {
     event.preventDefault();
