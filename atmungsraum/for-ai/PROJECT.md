@@ -149,6 +149,24 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
+## Folder delivery: new files or all files — 2026-11-07
+
+The folder now sends saved CSVs to Wormhole and posts the URL alone directly
+to Discord. This supersedes the earlier QR, manual sharing and page-memory
+receipt flows below. Individual CSV downloads remain at `#daten`.
+
+- [x] Show two send choices, pending count, progress and confirmed delivery.
+- [x] Track exact file revisions in browser-local JSON after Discord accepts
+  each post; support a deliberate resend of all files and prevent parallel
+  sends across tabs. Preserve data writers and recovery.
+- [x] Decrypt the public webhook ciphertext on-device before any upload;
+  preserve optional browser password-manager saving after delivery.
+- [x] Verify the browser with synthetic CSVs, rejected uploads/posts, exact
+  archive bytes, exact URL payload, cancellation, reload and concurrent tabs.
+- [ ] Verify the exact Pages deployment and the public folder flow.
+- [ ] Verify hosted Render with its actual URL after the operator deploys the
+  Free service. Use the ignored private setup page and see sharing/README.md.
+
 ## Render Free automatic upload — 2026-11-07
 
 The user selects a different free host and wants to keep automatic ZIP upload,

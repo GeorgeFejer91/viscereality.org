@@ -122,7 +122,7 @@ test('Direct browser Discord delivery uses its private webhook with a confirmed 
   assert.deepEqual(result, { accepted: true, destination: 'discord', message_id: 'direct-ack' });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].target, webhook + '?wait=true');
-  assert.deepEqual(JSON.parse(calls[0].init.body), { content: `Atmungsraum-Daten\n<${url}>`, allowed_mentions: { parse: [] } });
+  assert.deepEqual(JSON.parse(calls[0].init.body), { content: url, flags: 4, allowed_mentions: { parse: [] } });
   assert.equal(calls[0].init.credentials, 'omit');
   assert.equal(calls[0].init.redirect, 'error');
   assert.equal(calls[0].init.referrerPolicy, 'no-referrer');

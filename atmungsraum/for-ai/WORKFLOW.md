@@ -104,7 +104,8 @@ and a send-time password prompt, with no relay. Generate/rekey locally using
 password in ignored `.dev.vars.discord-password`/`.dev.vars.setup.html`. Commit
 only the authenticated ciphertext, never plaintext credentials/passwords. Scan
 staged bytes against local secrets. Test wrong password, cancel/close/focus,
-stale requests, real browser CORS/provider acknowledgement and message readback.
+stale requests, exact URL-only payload and provider acknowledgement. Use real
+browser CORS and message readback for live-provider qualification.
 A password holder can recover the webhook; revocation needs webhook rotation.
 
 Automatic Wormhole upload on Render uses the root `render.yaml` and
@@ -117,14 +118,13 @@ Verify actual hosting separately using synthetic data. Existing Cloudflare
 deployments remain compatible. Never publish credentials, keyed share URLs,
 provider responses or participant files. Scan staged blobs before publication.
 
-Preserve manual ZIP upload → paste link → local QR and native/download fallback.
-`vendor/qrcode/README.md` and `vendor/wormhole-crypto/README.md` pin MIT runtime
-sources/licenses. Regenerate crypto with `node for-ai/scripts/vendor-wormhole.mjs`;
-verify the package integrity, localized imports and licenses. Runtime module
-filenames use `.js` for local-server MIME compatibility. No public CORS proxy
-or third-party QR renderer is used. Navigation to Wormhole opens a separate tab
-with no opener/referrer; leaving a live recording follows the existing hidden-page
-abort policy. Synthetic network tests must be explicit, use no participant data,
+Keep the folder limited to sending new or all saved files, status and relay
+setup. Preserve individual downloads at `#daten`. Verify the JSON ledger
+across reloads, changed CSVs, rejected posts, cancellation and concurrent tabs.
+`vendor/wormhole-crypto/README.md` pins the MIT crypto runtime. Regenerate with
+`node for-ai/scripts/vendor-wormhole.mjs`; verify package integrity, localized
+imports and licenses. Runtime modules use `.js` for local-server MIME
+compatibility. Synthetic network tests must be explicit, use no participant data,
 verify the downloaded ZIP bytes and destination message, and keep private receipts
 ignored. Provider-accepted upload and notification are distinct outcomes.
 Workers' fetch runtime rejects `redirect:error`; use `manual` and reject non-2xx

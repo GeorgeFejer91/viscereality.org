@@ -1,4 +1,4 @@
-import { sendDiscordLink, validateDiscordWebhook } from './link-relay.js?v=20261107-discord-password';
+import { sendDiscordLink, validateDiscordWebhook } from './link-relay.js?v=20261107-file-delivery';
 import { validateWormholeUrl } from './wormhole-link.js';
 
 const encoder = new TextEncoder(), iterations = 600000;
@@ -36,8 +36,7 @@ export async function decryptDiscordWebhook(config, password) {
   }
 }
 
-export async function forwardPasswordDiscordLink({ password, url, signal }) {
-  const link = validateWormholeUrl(url);
+export async function unlockDiscordWebhook(password, signal) {
   signal?.throwIfAborted();
   let config;
   try {
@@ -52,5 +51,11 @@ export async function forwardPasswordDiscordLink({ password, url, signal }) {
   }
   const webhook = await decryptDiscordWebhook(config, password);
   signal?.throwIfAborted();
+  return webhook;
+}
+
+export async function forwardPasswordDiscordLink({ password, url, signal }) {
+  const link = validateWormholeUrl(url);
+  const webhook = await unlockDiscordWebhook(password, signal);
   return sendDiscordLink({ webhook, url: link, signal });
 }

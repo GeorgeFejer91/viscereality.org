@@ -64,20 +64,16 @@ will recenter the headset's central field of view. See PROJECT.md for its contra
 The mock ECG is a continuously replayed seeded NeuroKit2 trace. Each started run
 exports a participant-linked CSV and retains it for download recovery. All data logging must follow
 [DATA-LOGGING.md](DATA-LOGGING.md); it owns the required naming convention.
-The permanent bottom-right folder SVG opens a scrollable saved-CSV dialog on
-every screen and is the sole visible entry to collected data; no separate
-CSV-Dateien footer button is shown. It offers individual downloads, one all-file
-ZIP, and native file sharing to available email/messaging apps, with a download fallback.
-It lists this browser's saved exports rather than the OS Downloads directory.
-Its **Per QR-Code teilen** flow can encrypt/upload the ZIP to Wormhole through
-an authenticated upload relay (Render Free setup), display a local QR and send
-the full link directly to Discord after a masked password prompt. The webhook
-is published only as authenticated ciphertext; the password decrypts it on the
-device. Discord uses no relay. Operator connection settings are per dialog; acknowledged
-shares remain only in page memory. Manual upload/pasted-link QR and ordinary
-downloads remain available. See [sharing setup](../sharing/README.md) and
-[the data boundary](DATA-LOGGING.md). Hosted relay activation and
-physical-phone qualification are recorded separately in PROJECT/VERIFICATION.
+The bottom-right folder opens a dialog on every screen with **Neue Dateien
+senden** and **Alle Dateien senden**, file counts and progress. It selects this
+browser's saved session CSVs, prepares an encrypted ZIP for Wormhole through an
+authenticated upload relay (Render Free setup), and posts only the complete
+download URL directly to Discord. A masked password prompt decrypts the public
+webhook ciphertext before upload. Browser-local JSON receipts mark exact files
+as sent only after Discord acknowledges the post. Individual downloads remain
+available at the existing [recovery URL](../index.html#daten). See [sharing
+setup](../sharing/README.md) and [the data boundary](DATA-LOGGING.md). Hosted relay
+activation and physical-phone qualification are tracked separately.
 
 Read common rules first, then the documents needed for the task:
 

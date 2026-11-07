@@ -181,15 +181,19 @@ export function mountSessionData(signal) {
     let link = links.get(record.session_id);
     if (!link) {
       link = document.createElement('a');
-      link.href = URL.createObjectURL(new Blob([record.csv], { type: 'text/csv;charset=utf-8' }));
-      link.download = record.filename;
       const label = document.createElement('span');
       label.dataset.measure = '';
-      label.textContent = record.filename;
       link.append(label);
       const item = document.createElement('li');
       item.append(link); list.prepend(item);
       links.set(record.session_id, link);
+    }
+    const previous = exports.get(record.session_id);
+    if (previous?.csv !== record.csv || previous?.filename !== record.filename) {
+      if (previous) URL.revokeObjectURL(link.href);
+      link.href = URL.createObjectURL(new Blob([record.csv], { type: 'text/csv;charset=utf-8' }));
+      link.download = record.filename;
+      link.firstElementChild.textContent = record.filename;
       exports.set(record.session_id, record);
     }
     if (download) link.click();

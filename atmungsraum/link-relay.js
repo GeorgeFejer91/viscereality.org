@@ -17,7 +17,7 @@ export async function sendDiscordLink({ webhook, url, signal }) {
     const response = await fetch(target.href, {
       method: 'POST', redirect: 'error', credentials: 'omit', referrerPolicy: 'no-referrer',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: `Atmungsraum-Daten\n<${link}>`, allowed_mentions: { parse: [] } }),
+      body: JSON.stringify({ content: link, flags: 4, allowed_mentions: { parse: [] } }),
       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
     });
     const result = await response.json();

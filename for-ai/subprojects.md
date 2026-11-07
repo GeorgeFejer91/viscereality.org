@@ -65,21 +65,14 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   use readable document reflow at the revised small-screen no-fit boundary.
 
 - Saved data (2026-11-05): a permanent bottom-right SVG folder opens a scrollable
-  native dialog of this browser's saved session CSVs on every screen. As of
-  2026-11-06 it is the sole visible data entry point; CSV-Dateien footer links
-  are removed, while the legacy recovery URL remains supported. Individual
-  downloads, an all-file ZIP and native file sharing support email/messaging apps
-  where available; download/manual attachment is the fallback. Opening/dismissing
-  the dialog preserves playback. This cannot enumerate the OS Downloads folder.
-  The QR action (2026-11-06) supports browser-encrypted automatic Wormhole
-  upload through a restricted authenticated relay (Render Free setup), then local QR
-  and password-gated direct Discord forwarding. Only an encrypted webhook file
-  is public; the send-time prompt decrypts it locally, with no notification relay.
-  Manual upload/pasted-link
-  QR remains available. The webhook never enters public code; operator settings
-  clear on dialog close, while a confirmed share remains only in page memory.
+  native dialog for sending new or all saved session CSVs from this browser.
+  It displays pending counts and progress. A masked password decrypts the
+  published webhook ciphertext locally before the browser encrypts and uploads
+  a ZIP to Wormhole through the restricted Render-compatible relay. Discord
+  receives only the complete download URL directly from the browser. Local
+  JSON receipts are written after Discord acknowledgement. The legacy
+  `#daten` URL remains available for individual downloads.
   Relay deployment/account ownership is separate from Pages publication.
-  Link/key never goes to a QR service.
   See Atmungsraum DATA-LOGGING.md and VERIFICATION.md for persistence and QA limits.
 
 - Path: `atmungsraum/index.html`

@@ -6,7 +6,7 @@ $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
 $required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
     'manifest.webmanifest', 'pwa-install.js', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
     'assets/icons/app-maskable-512.png', 'assets/icons/apple-touch-icon.png',
-    'data-files.js', 'assets/icons/folder.svg', 'vendor/qrcode/qrcode.js', 'vendor/qrcode/LICENSE',
+    'data-files.js', 'file-delivery.js', 'assets/icons/folder.svg',
     'data-logging.js', 'mock-ecg.js', 'assets/ecg/mock-ecg.json', 'assets/ecg/mock-ecg.f32',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
     'assets/rounds/probe-runde.svg', 'assets/rounds/haupt-runde.svg',
@@ -23,6 +23,9 @@ if ((Get-Content -Raw -LiteralPath (Join-Path $root 'AGENTS.md')) -notmatch 'for
 }
 $html = Get-Content -Raw -LiteralPath (Join-Path $root 'index.html')
 $css = Get-Content -Raw -LiteralPath (Join-Path $root 'style.css')
+if ($html -notmatch 'id="send-new-files"' -or $html -notmatch 'id="send-all-files"' -or $html -match 'id="(?:share-qr|wormhole-qr)"') {
+    throw 'Keep the two folder delivery actions without QR controls'
+}
 if ($html -notmatch '<html lang="de">' -or $css -notmatch 'background:\s*#000\s*;') {
     throw 'The page must use German and retain its black background'
 }

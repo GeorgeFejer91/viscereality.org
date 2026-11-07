@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261107-render-upload">
+  <link rel="stylesheet" href="./style.css?v=20261107-file-delivery">
   <script type="module" src="./pwa-install.js?v=20261106-pwa-controls"></script>
-  <script type="module" src="./app.js?v=20261107-render-upload"></script>
+  <script type="module" src="./app.js?v=20261107-file-delivery"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -49,56 +49,25 @@
       <h2 id="files-title" data-measure>Gespeicherte Dateien</h2>
       <button id="close-files" type="button" autofocus><span data-measure>Schließen</span></button>
     </header>
-    <p id="files-scope" data-measure>Session-Daten aus diesem Browser. Eine laufende Aufnahme erscheint nach dem Beenden.</p>
-    <p id="files-status" role="status" data-measure>Noch keine gespeicherten Session-Daten.</p>
-    <div class="files-scroll" role="region" aria-label="Gespeicherte Session-Dateien" tabindex="0"><ul id="saved-files"></ul></div>
+    <p id="files-scope" data-measure>Gespeicherte Dateien aus diesem Browser an Discord senden.</p>
+    <p id="files-counts" data-measure>Dateien werden geladen …</p>
     <div class="files-actions">
-      <button id="download-zip" type="button" disabled><span data-measure>ZIP herunterladen</span></button>
-      <button id="share-files" type="button" disabled><span data-measure>Teilen …</span></button>
-      <button id="share-qr" type="button" aria-expanded="false" aria-controls="wormhole-flow" disabled><span data-measure>Per QR-Code teilen …</span></button>
+      <button id="send-new-files" type="button" disabled><span data-measure>Neue Dateien senden</span></button>
+      <button id="send-all-files" type="button" disabled><span data-measure>Alle Dateien senden</span></button>
     </div>
-    <p id="files-share-hint" data-measure>Alle gespeicherten Dateien als ZIP herunterladen oder teilen.</p>
-    <section id="wormhole-flow" aria-labelledby="wormhole-title" hidden>
-      <h3 id="wormhole-title" data-measure>ZIP über Wormhole teilen</h3>
-      <div class="files-actions">
-        <button id="upload-wormhole" type="button" disabled><span data-measure>ZIP automatisch hochladen</span></button>
-        <button id="cancel-upload" type="button" hidden><span data-measure>Upload abbrechen</span></button>
+    <progress id="files-progress" max="100" aria-label="Versandfortschritt" hidden></progress>
+    <p id="files-status" role="status" tabindex="-1" data-measure></p>
+    <details id="relay-settings">
+      <summary><span data-measure>Upload-Dienst einrichten</span></summary>
+      <div class="relay-fields">
+        <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Render einrichten ↗</span></a>
+        <label for="relay-endpoint" data-measure>Adresse des Upload-Dienstes</label>
+        <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-upload.onrender.com" aria-describedby="relay-help">
+        <label for="relay-token" data-measure>Zugangsschlüssel</label>
+        <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
+        <p id="relay-help" data-measure>Die Zugangsdaten werden beim Schließen gelöscht.</p>
       </div>
-      <p id="upload-status" role="status" data-measure></p>
-      <p data-measure>Manuell teilen: ZIP herunterladen und auf Wormhole hochladen. Dort entsteht ein zeitlich begrenzter Download-Link.</p>
-      <div class="files-actions">
-        <button id="wormhole-download" type="button"><span data-measure>ZIP herunterladen</span></button>
-        <a href="https://wormhole.app/" target="_blank" rel="noopener noreferrer" class="files-link"><span data-measure>Wormhole öffnen ↗</span></a>
-      </div>
-      <form id="wormhole-form" novalidate>
-        <label for="wormhole-link" data-measure>Vollständiger Wormhole-Link</label>
-        <input id="wormhole-link" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="256" placeholder="https://wormhole.app/…#…" aria-describedby="wormhole-help wormhole-status" required>
-        <p id="wormhole-help" data-measure>Den Link von Wormhole kopieren, einschließlich # und dem Schlüssel dahinter.</p>
-        <button id="show-qr" type="submit"><span data-measure>QR-Code anzeigen</span></button>
-      </form>
-      <label class="relay-auto"><input id="relay-auto" type="checkbox" checked><span data-measure>Neue Links mit Passwort an Discord senden</span></label>
-      <button id="relay-send" type="button" disabled><span data-measure>An Discord senden</span></button>
-      <p id="relay-status" role="status" data-measure></p>
-      <details id="relay-settings">
-        <summary><span data-measure>Automatischen Wormhole-Upload einrichten</span></summary>
-        <div class="relay-fields">
-          <p data-measure>Optional für den ZIP-Upload. Discord erhält den Link direkt von diesem Browser nach deiner Passwortabfrage.</p>
-          <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Render einrichten ↗</span></a>
-          <label for="relay-endpoint" data-measure>Adresse des Upload-Dienstes</label>
-          <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-upload.onrender.com" aria-describedby="relay-help">
-          <label for="relay-token" data-measure>Zugangsschlüssel</label>
-          <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
-          <p id="relay-help" data-measure>Der Zugangsschlüssel gilt für den Upload und wird beim Schließen gelöscht. Discord erhält den Link direkt.</p>
-        </div>
-      </details>
-      <p id="wormhole-status" role="status" data-measure></p>
-      <figure id="wormhole-result" hidden>
-        <img id="wormhole-qr" width="294" height="294" alt="QR-Code für den vollständigen Wormhole-Download-Link">
-        <figcaption data-measure>QR-Code scannen, um den Download auf Wormhole zu öffnen. Wer den Code oder Link hat, kann die dort geteilten Dateien herunterladen, solange der Link gültig ist.</figcaption>
-        <a id="wormhole-open-link" class="files-link" target="_blank" rel="noopener noreferrer"><span data-measure>Download-Link öffnen ↗</span></a>
-        <button id="wormhole-copy" type="button"><span data-measure>Link kopieren</span></button>
-      </figure>
-    </section>
+    </details>
   </dialog>
   <dialog id="discord-password-dialog" aria-labelledby="discord-password-title" aria-describedby="discord-password-help">
     <h2 id="discord-password-title" data-measure>An Discord senden</h2>
@@ -106,7 +75,7 @@
       <input id="discord-password-user" type="hidden" name="username" autocomplete="username" value="Atmungsraum Discord">
       <label for="discord-password" data-measure>Passwort</label>
       <input id="discord-password" type="password" name="password" autocomplete="current-password" maxlength="1024" required autofocus aria-describedby="discord-password-help">
-      <p id="discord-password-help" data-measure>Das Passwort entsperrt das Discord-Ziel. An Discord geht der vollständige Wormhole-Link.</p>
+      <p id="discord-password-help" data-measure>Das Passwort entsperrt das Discord-Ziel. Nach dem Upload erhält Discord nur den Wormhole-Link.</p>
       <label class="relay-auto"><input id="remember-discord-password" type="checkbox"><span data-measure>Passwort im Browser merken</span></label>
       <div class="files-actions">
         <button id="cancel-discord-password" type="button"><span data-measure>Abbrechen</span></button>

@@ -1,5 +1,19 @@
 # Verification
 
+## Folder delivery and JSON receipts — 2026-11-07
+
+The receipt and URL-only payload tests failed first, then passed. All 52 Node
+tests and UI/context checks pass. The Chromium fixture checks five layouts
+and 200% text reflow, verifies progress/focus, decrypts the uploaded ZIP to
+check exact CSV selection and bytes, and validates the complete URL-only Discord
+payload. It covers wrong passwords, aborted prompts, rejected upload/post,
+reload, forced resends, a concurrent-tab lock, a file added during upload, a
+revised CSV under the same session UUID and a file saved in another tab.
+The local run observed seven fixture uploads, six fixture posts and no page
+errors. No participant data or real Discord message was sent. The actual
+Render deployment remains a separate operator step. See the ignored
+`output/playwright/check-file-delivery.mjs` fixture and PROJECT.md release state.
+
 ## Render Free upload adapter — 2026-11-07
 
 The targeted tests failed first with the adapter/host support absent, then passed.

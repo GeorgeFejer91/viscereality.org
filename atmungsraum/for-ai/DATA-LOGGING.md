@@ -134,80 +134,48 @@ cannot finalize another tab's live run. This browser recorder requires IndexedDB
 Web Locks, Web Crypto and a secure context (HTTPS or localhost).
 
 Completion or abort triggers a CSV download and stores the export locally.
-The bottom-right folder lists retained exports for repeat download, including
-after reload and without a live signal. It is the sole visible data entry point;
-the legacy `#daten` recovery URL still works, with no separate CSV-Dateien button.
-The CSV database is loaded independently
-of ECG/audio assets so a missing source cannot block recovery. Do not silently
-delete exports or reset counters. Browser storage and downloaded participant
-files are local data, not repository assets; never commit them or upload them
-as part of publishing the static application.
+The legacy `#daten` recovery URL lists retained CSVs for repeat download,
+including after reload and without a live signal. The CSV database is loaded
+independently of ECG/audio assets. Do not silently delete exports or reset
+counters. Browser storage and downloaded participant files are local data;
+never commit them or upload them when publishing the static application.
 
-The permanent bottom-right folder button opens a native dialog over any screen.
-It lists the same saved exports, refreshes from IndexedDB on opening, and keeps
-in-memory exports available if final browser storage failed. It does not inspect
-the OS Downloads directory or include an unfinished live recording. Every entry
-remains individually downloadable. `Atmungsraum-Daten.zip` bundles all retained
-CSV files with their original bytes/names; a colliding name is placed inside its
-session UUID directory. This is a packaging name, not a new participant writer.
-The ZIP uses uncompressed ZIP32 entries, rejecting unsupported counts/sizes.
-The explicit Teilen action passes that ZIP to the native file share sheet when
-supported; recipients/apps are chosen by the user. Unsupported/rejected sharing
-retains a ZIP download for manual attachment. No mailto attachment workaround,
-automatic transmission or server upload is involved. Cancel leaves files intact.
+The permanent bottom-right folder opens a dialog on every screen. It counts
+this browser's completed/recovered session exports and those still pending. It
+reads IndexedDB on opening and after returning to the tab, and retains in-memory
+exports if final storage failed. It cannot inspect the OS Downloads directory
+or include an unfinished live recording.
 
-The explicit **Per QR-Code teilen** action offers automatic Wormhole upload
-through a restricted authenticated upload relay, followed by local QR generation and
-password-gated forwarding directly from the browser to Discord. The user's
-2026-11-07 choice hosts only an encrypted webhook envelope in public Git/Pages;
-a send-time password decrypts it locally. The raw webhook and password must never
-enter public source. Cancel or a wrong password sends nothing to Discord.
-The password field clears on close. The app writes neither password nor unlocked
-webhook to web storage/IndexedDB. On explicit opt-in and confirmed delivery,
-use only the browser's native password manager to save/autofill the password.
-The relay is used only for optional Wormhole upload. See
-[sharing/README.md](../sharing/README.md).
-A manual fallback remains: download the ZIP, upload it at `https://wormhole.app/`,
-paste the complete URL including its `#` key, then choose **QR-Code anzeigen**.
-Wormhole rejects site-origin upload CORS preflight; Pages alone cannot upload.
+**Neue Dateien senden** selects exports without a matching delivery receipt.
+**Alle Dateien senden** resends all saved exports. Each action creates
+`Atmungsraum-Daten.zip` with the selected CSV bytes and original names; name
+collisions use the session UUID as a directory. This remains ZIP32 packaging
+using the same writer. An updated CSV under the same UUID counts as new.
 
-Automatic upload reuses the exact same ZIP writer. A fresh per-upload key and
-salt encrypt its immutable Blob with official pinned `wormhole-crypto@0.3.1`.
-A first pass hashes encrypted 8 MiB pieces; a second pass uploads identical
-ciphertext through narrowly allowed relay routes to Wormhole/Backblaze. The
-file key remains on the device during upload. No plaintext CSV is sent to the
-relay or storage provider. Only after upload completion acknowledgement does
-the app show the URL/QR and request the Discord password. After successful
-local decryption it sends the full keyed URL directly to Discord; no notification
-passes through Cloudflare. The Discord destination has access to that share.
-Provider acknowledgement is not proof of recipient access.
+The versioned JSON ledger `atmungsraum-file-delivery-v1` uses browser
+localStorage. It records SHA-256 fingerprints of session ID, filename and exact
+CSV bytes with acknowledgment timestamps. It contains no CSVs, filenames,
+participant IDs, passwords or URLs. A Web Lock prevents parallel sends in
+tabs of the same origin. Only Discord acknowledgment marks the exact ZIP
+snapshot sent; failure, a wrong password or cancellation before acceptance does
+not. Clearing browser data resets the ledger. There is no cross-device or
+durable exactly-once guarantee: after a timeout or an unsaved receipt, check
+Discord before resending. Export files are never deleted by this flow.
 
-Relay URL/access key are entered privately per dialog and cleared on close or
-collapse; neither is persisted in browser storage. A confirmed uploaded URL is
-retained only in page memory for the same exact saved records, restored after
-dialog reopening, and invalidated when those records change. Reload loses this
-receipt. Notification retry prompts for the password and reuses the existing
-URL without uploading again;
-successful sends are remembered in this page to suppress accidental repeats.
-No durable exactly-once delivery is promised. Check the destination after an
-uncertain timeout before retrying. Cancellation cannot undo a provider request
-already accepted. Existing uploads expire under the provider's rules; invalidating
-local UI does not delete or revoke the share.
+The masked password decrypts the public webhook ciphertext locally before any
+file transfer. On opt-in and confirmed delivery, the browser's own credential
+manager can save it. The app does not save the password or unlocked webhook in
+web storage. The authenticated upload relay (Render Free setup) receives only
+encrypted chunks. A fresh per-upload key and salt encrypt the immutable ZIP
+with the pinned Wormhole crypto; two passes hash then upload identical 8 MiB
+ciphertext pieces to Wormhole/Backblaze. Only after the provider acknowledges
+the upload does the browser send the full keyed URL directly to Discord.
+Relay URL and access key clear when the folder closes. See [sharing setup](../sharing/README.md).
 
-QR generation uses the local MIT `qrcode-generator@2.0.4` encoder under
-`vendor/qrcode/`, loaded only when needed. No remote QR service, automatic
-clipboard read or analytics is used. Accept only complete HTTPS links on the
-exact `wormhole.app` origin with a room and 128-bit base64url fragment; reject
-credentials, extra paths, queries and missing keys. Pasted-link validation is
-format validation, not proof of the room's existence, contents or availability.
-Copy/open actions use the whole URL. Editing, closing/collapsing or refreshing
-clears displayed links/QRs; an acknowledged automatic-upload receipt may restore
-the same share as described above. A failed QR module leaves the complete link,
-copy/open actions and downloads available. Clipboard denial selects the input
-for manual copying. No saved export is deleted. Anyone with the QR/link can
-access that Wormhole share while it is valid. Wormhole controls expiration,
-storage and download limits; no availability promise is fabricated. See its
-[security design](https://wormhole.app/security) and [FAQ](https://wormhole.app/faq).
+Anyone with the full URL can access the share while valid. Wormhole controls
+expiry, storage and download limits. Cancellation cannot undo a provider
+request already accepted and can leave an unused room. Discord acknowledgement
+does not prove a recipient downloaded the archive.
 
 The browser controls the download destination and can block downloads; a click
 does not prove a file reached disk. Keep repeat-download links and surface

@@ -8,32 +8,30 @@ The ZIP stays on Wormhole; the Discord message contains its full keyed URL.
 
 ## Use it
 
-1. Open the private local `.dev.vars.setup.html` to copy the generated password.
-   This file and `.dev.vars.discord-password` are ignored by Git.
-2. Open [Atmungsraum](https://viscereality.org/atmungsraum/) → folder →
-   **Per QR-Code teilen …**. Upload the prepared ZIP on Wormhole and paste its
-   complete link, including `#` and its download key. An already configured
-   automatic Wormhole upload can also supply the link.
-3. Choose **QR-Code anzeigen**. With automatic forwarding enabled, the password
-   dialog appears. Otherwise press **An Discord senden**. Enter the password
-   and press **Senden**. Check the receiving channel after Discord confirms it.
-4. To reuse the password, select **Passwort im Browser merken** in a supported
-   browser, then accept its own save prompt after a successful send. Later
-   prompts can autofill the saved **Atmungsraum Discord** entry. The prompt
-   still requires **Senden**. If the browser does not expose this save option,
-   use its regular password-manager autofill or paste from the private page.
+1. In [Atmungsraum](https://viscereality.org/atmungsraum/), open the bottom-right
+   folder. If needed, enter the service URL and key under **Upload-Dienst
+   einrichten** using the Render steps below.
+2. Select **Neue Dateien senden** for files without a receipt, or **Alle
+   Dateien senden** to include every saved file again. Enter the private
+   sharing password and press **Senden**. The password is checked before any
+   file transfer. The popup shows upload progress and confirms when Discord
+   accepts the URL.
+3. To reuse the password, select **Passwort im Browser merken** and accept the
+   browser's save prompt after success. Later prompts can autofill the
+   **Atmungsraum Discord** entry. If your browser doesn't offer this, use its
+   regular password manager or the private local `.dev.vars.setup.html` page.
 
-Cancel, Escape or an incorrect password sends nothing to Discord. The QR/link
-and saved files remain available. The password field clears on dismissal;
-the app does not write the password or unlocked webhook into localStorage,
-sessionStorage or IndexedDB. When opted in, it asks the browser's
-[credential manager](https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/store)
-to save the password only after Discord accepts the message. Saving/autofill
-availability and any sync are governed by browser settings. The password manager
-can remove or update the entry; the app never stores the unlocked webhook.
-Closing the files dialog cancels pending local work. A provider request already
-accepted cannot be undone. Check Discord after a timeout before retrying;
-there is no automatic retry or durable exactly-once guarantee.
+The JSON history stays in this browser and marks exact file versions only after
+Discord accepts the URL. Clearing site data resets it. On the first use, files
+from older versions of the app count as new. A failed upload or Discord post
+leaves the selected files pending. Closing the dialog cancels pending work; a
+provider request already accepted cannot be undone. Check Discord after a
+timeout before retrying. Individual CSV downloads remain at
+[the recovery URL](https://viscereality.org/atmungsraum/#daten).
+
+The app clears the password field on dismissal and does not write the password
+or decrypted webhook into browser storage. Opt-in saving and autofill are
+handled by the browser's credential manager.
 
 ## Configure or change the password locally
 
@@ -84,7 +82,7 @@ Direct delivery uses Discord's
 with `wait=true`, no cookies, no referrer, no redirects, no mentions and suppressed
 link previews. Only provider acknowledgement is reported; it is not proof that
 someone read the message. The full Wormhole URL gives its recipient access to
-the shared ZIP while Wormhole permits it. QR generation remains local.
+the shared ZIP while Wormhole permits it.
 
 ## Automatic Wormhole upload on Render Free
 
@@ -101,11 +99,11 @@ access key; it never needs the Discord webhook or password.
    Sign in, keep the **Free** plan, and enter the private key as
    `LINK_RELAY_TOKEN`. The Blueprint sets the start command and health check.
 3. When Render reports **Live**, copy its actual `https://…onrender.com` URL.
-   In the app, open **Per QR-Code teilen …** → **Automatischen Wormhole-Upload
-   einrichten** and enter that URL and the same access key.
-4. Choose **ZIP automatisch hochladen**. The app uploads the encrypted ZIP,
-   shows the QR/link, and opens the usual Discord password prompt. Confirm
-   **Senden** when ready. Your browser can reuse the saved Discord password.
+   In the folder, open **Upload-Dienst einrichten** and enter that URL and the
+   same access key. The app clears both fields when you close the folder.
+4. Choose **Neue Dateien senden** or **Alle Dateien senden**, then confirm the
+   password prompt. The app uploads the encrypted ZIP and posts the URL to
+   Discord in the same operation.
 
 [Render Free](https://render.com/docs/free) sleeps after 15 minutes idle and
 can take about a minute to wake. The browser waits up to two minutes using a
@@ -118,24 +116,16 @@ deploys are off; manually redeploy after updating the relay.
 
 The Node adapter and live Wormhole integration have been tested locally.
 Render hosting still requires a signed-in account and a deployed service URL;
-GitHub Pages publication does not provision or verify that service. The manual
-Wormhole upload and paste path remains available while setting it up. Existing
+GitHub Pages publication does not provision or verify that service. Existing
 compatible upload endpoints remain supported.
 
-Automatic upload encrypts the existing ZIP on-device using pinned official MIT
-`wormhole-crypto@0.3.1`. Two passes over the immutable Blob hash then upload
-identical encrypted8 MiB pieces. Only after final upload acknowledgement does
-the app display a link/QR and request the Discord password. See
-[vendor provenance](../vendor/wormhole-crypto/README.md). A confirmed share remains
-in page memory for the same exact records; retrying notification does not upload
-again. Reload loses this receipt. New saved records require a new upload.
-No existing share is revoked by changing the local list. Wormhole controls
-expiry, storage and download limits. Interrupted uploads can leave unused rooms.
+Automatic upload encrypts the ZIP on-device with pinned MIT
+`wormhole-crypto@0.3.1`. Two passes over the immutable Blob hash and upload
+identical encrypted 8 MiB pieces. See [vendor provenance](../vendor/wormhole-crypto/README.md).
+Wormhole controls expiry, storage and download limits. Interrupted uploads can
+leave unused rooms.
 
-Individual downloads and native ZIP sharing remain available. Recording,
-participant identity and retention are governed by
-[DATA-LOGGING.md](../for-ai/DATA-LOGGING.md). No participant data is used in tests.
-Current local/public-browser and real-provider receipts are described in
-[VERIFICATION.md](../for-ai/VERIFICATION.md); physical phones/Safari require
-separate qualification. The Wormhole service integration may need changes if
-its non-versioned upload API changes.
+Recording, participant identity and retention are governed by
+[DATA-LOGGING.md](../for-ai/DATA-LOGGING.md). Test results are described in
+[VERIFICATION.md](../for-ai/VERIFICATION.md). The Wormhole integration may need
+changes if the provider changes its upload API.

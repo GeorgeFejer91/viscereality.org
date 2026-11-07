@@ -25,8 +25,8 @@ test('ZIP extracts every CSV byte-for-byte, including Unicode and colliding file
   });
 });
 
-test('Wormhole QR links preserve the decryption key and reject unsafe or incomplete URLs', async () => {
-  const { validateWormholeUrl } = await import('../data-files.js');
+test('Wormhole links preserve the decryption key and reject unsafe or incomplete URLs', async () => {
+  const { validateWormholeUrl } = await import('../wormhole-link.js');
   assert.equal(typeof validateWormholeUrl, 'function');
   const link = 'https://wormhole.app/nb7dMz#fnQhVRrakH6ZUgQyUeAFfA';
   assert.equal(validateWormholeUrl(`  ${link}\n`), link);
@@ -42,17 +42,4 @@ test('Wormhole QR links preserve the decryption key and reject unsafe or incompl
     'https://wormhole.app/nb7dMz#fnQhVRrakH6ZUgQyUeAF\nfA',
     'javascript:alert(1)',
   ]) assert.throws(() => validateWormholeUrl(invalid), /Wormhole/);
-});
-
-test('Wormhole QR is a local image and keeps the complete download link', async () => {
-  const { createWormholeQr } = await import('../data-files.js');
-  assert.equal(typeof createWormholeQr, 'function');
-  const url = 'https://wormhole.app/nb7dMz#fnQhVRrakH6ZUgQyUeAFfA';
-  const qr = await createWormholeQr(url);
-  assert.equal(qr.url, url);
-  assert.match(qr.image, /^data:image\/svg\+xml,/);
-  const svg = decodeURIComponent(qr.image.split(',')[1]);
-  assert.match(svg, /<svg/);
-  assert.match(svg, /<path/);
-  await assert.rejects(() => createWormholeQr('https://wormhole.app/nb7dMz'), /Wormhole/);
 });
