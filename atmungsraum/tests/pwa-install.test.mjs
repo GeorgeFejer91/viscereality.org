@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mountAppInstall } from '../pwa-install.js';
 
-function fixture(standalone = false) {
+function fixture(standalone = false, getInstalledRelatedApps) {
   const environment = new EventTarget();
   const media = Object.assign(new EventTarget(), { matches: standalone });
   environment.matchMedia = () => media;
-  environment.navigator = {};
+  environment.location = { href: 'https://viscereality.org/atmungsraum/#patient' };
+  environment.navigator = { getInstalledRelatedApps };
   const button = Object.assign(new EventTarget(), {
     hidden: false, disabled: false, attrs: {}, focused: false,
     setAttribute(name, value) { this.attrs[name] = value; },
@@ -22,6 +23,27 @@ function fixture(standalone = false) {
   return { environment, media, button, dialog, closeButton };
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('A fresh browser tab suppresses installation when the browser already has this app', async () => {
+  const f = fixture(false, async () => [{ platform: 'webapp', id: 'https://viscereality.org/atmungsraum/' }]);
+  let prompts = 0;
+  f.environment.dispatchEvent(Object.assign(new Event('beforeinstallprompt'), { prompt: async () => { prompts++; } }));
+  await tick();
+  assert.equal(f.button.hidden, true);
+  f.button.dispatchEvent(new Event('click'));
+  assert.equal(prompts, 0);
+  assert.equal(f.dialog.open, false);
+});
+
+test('An unavailable or unrelated installed-app result keeps installation help available', async () => {
+  for (const lookup of [async () => [{ platform: 'webapp', id: 'https://viscereality.org/' }], async () => { throw new Error('Unavailable'); }]) {
+    const f = fixture(false, lookup);
+    await tick();
+    assert.equal(f.button.hidden, false);
+    f.button.dispatchEvent(new Event('click'));
+    assert.equal(f.dialog.open, true);
+  }
+});
 
 test('Installation is prompted only by a user click, once per browser event, with a retryable manual fallback', async () => {
   const f = fixture();

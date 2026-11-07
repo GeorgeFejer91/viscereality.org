@@ -1,5 +1,28 @@
 # Verification
 
+## Brave desktop install and taskbar pins — 2026-11-07
+
+Brave 157 parsed the live manifest and installed the app into an isolated
+browser profile, creating the Atmungsraum ICO and manifest icon resources. The
+profile still shared the Windows taskbar. After uninstall, a taskbar pin retained
+the same app ID and referenced its removed ICO in the QA profile. The native
+Windows unpin action removed that exact link. A subsequent shortcut scan
+returned zero Atmungsraum links. Future native installation QA requires an
+isolated OS account or VM.
+
+The original manifest returned an empty related-app list in a regular tab
+after installation. A self relation in the manifest returned the exact installed
+app ID and manifest URL in Brave. The regression for suppression across a
+fresh tab initially failed and now passes. All 54 Node tests and the UI and
+context checks pass. The safe Brave probe uses the observed positive response
+as a fixture to verify hiding after reload. A fresh Brave profile verifies
+manifest parsing, installability, icon decoding and the manual help at
+1280×800, 390×844 and 320×568 with 200% text in the smallest case. All three
+dialogs open at the top, have no horizontal overflow and restore focus on
+Escape. The probe invoked zero native install actions and produced zero page
+errors. A fresh taskbar pin in the regular Brave profile is a manual check.
+Receipts and the probe remain in ignored `output/playwright/`.
+
 ## One checkout receipt per confirmed send — 2026-11-07
 
 Both targeted tests failed before the separate receipt reader and writer were

@@ -7,10 +7,28 @@ export function mountAppInstall({
   const display = environment.matchMedia('(display-mode: standalone)');
   let deferred, busy = false, installed = false;
   const sync = () => {
+    const hadFocus = button.ownerDocument?.activeElement === button;
     button.hidden = installed || display.matches || environment.navigator.standalone === true;
     if (button.hidden) {
       deferred = undefined;
       if (dialog.open) dialog.close();
+      else if (hadFocus) button.nextElementSibling?.focus({ preventScroll: true });
+    }
+  };
+  const checkInstalled = async () => {
+    if (button.hidden) return;
+    try {
+      const apps = await environment.navigator.getInstalledRelatedApps?.();
+      if (!apps?.length) return;
+      const id = new URL('/atmungsraum/', environment.location.href);
+      const manifest = new URL('manifest.webmanifest', id);
+      if (apps.some(app => app.platform === 'webapp' &&
+          (app.id === id.href || (!app.id && app.url === manifest.href)))) {
+        installed = true;
+        sync();
+      }
+    } catch {
+      // The installed-app lookup is optional.
     }
   };
   const showHelp = () => {
@@ -33,7 +51,8 @@ export function mountAppInstall({
     button.disabled = true;
     try {
       await prompt.prompt();
-      await prompt.userChoice;
+      const choice = await prompt.userChoice;
+      if (choice?.outcome === 'accepted') void checkInstalled();
     } catch {
       showHelp();
     } finally {
@@ -56,6 +75,7 @@ export function mountAppInstall({
     }).observe(dock);
   }
   sync();
+  void checkInstalled();
 }
 
 if (typeof document !== 'undefined') mountAppInstall();

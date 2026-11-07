@@ -68,13 +68,21 @@ The vendor script copies only the main API's runtime module graph and license.
 ## Smartphone PWA
 
 `pwa-install.js` owns the permanent install action and browser prompt lifecycle.
-It always provides manual Android/iPhone instructions when no browser prompt is
-available, including the embedded-browser case. Browser prompt consent does not
-prove installation; only `appinstalled` or standalone mode hides the control.
+Its manual help covers Android, iPhone and desktop Brave, including embedded
+browser recovery. Hide the action on `appinstalled`, in standalone mode, or
+when the browser returns the matching web app through `getInstalledRelatedApps`.
+Keep the manifest self relation aligned with the canonical app ID and URL.
 Its modal must preserve playback on Escape/close and restore focus. All visible
 install labels/dialog text use the existing Pretext measurement owner. The dock
 observes its actual height for zoom/reflow clearance; short landscape keeps the
 install icon and folder outside the central content column.
+
+Run native desktop installation tests in a separate OS account or VM. A
+temporary browser profile still shares the Windows taskbar. DevTools
+`PWA.install` can leave a pin whose icon file disappears on uninstall. The
+local `output/playwright/check-brave-install-ui.mjs` checks the manifest, icons,
+installed-state UI and help dialog without invoking a native install. The older
+native install probes now require `ATMUNGSRAUM_QA_ISOLATED_OS=1` for that step.
 
 The primary delivery target is an installed smartphone PWA. Keep
 `manifest.webmanifest` linked from the entry page, with stable `/atmungsraum/`

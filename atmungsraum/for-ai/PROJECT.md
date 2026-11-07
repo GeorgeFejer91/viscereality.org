@@ -38,6 +38,31 @@ matching native build, physical phone/headset observations and sanitized receipt
 
 ## Primary goal: smartphone progressive web app — 2026-11-06
 
+### Brave desktop install and taskbar pins — 2026-11-07
+
+The user reports repeated additions and blank taskbar icons in desktop Brave.
+Brave 157 registers the stable Atmungsraum app and creates its ICO resource.
+One orphaned Windows pin pointed to the ICO removed by uninstalling a temporary
+QA profile's app. Its app ID and QA path were verified before the native Unpin
+action. A follow-up scan found zero Atmungsraum taskbar shortcuts.
+
+- [x] Reproduce the missing installed state on a regular browser tab. The live
+  manifest returned an empty related-app list after an actual Brave install.
+  Adding the manifest self relation returned the same canonical app ID and URL.
+- [x] Check the browser's installed-app state on load and after accepted prompt
+  consent. Keep the Viscereality manifest icons and canonical identity. Add
+  Brave's native app list to the desktop install help.
+- [x] Verify 54 Node tests, UI/context checks and the Brave help layout at three
+  viewport sizes, including 200% text. Verify install hiding across reload with
+  a fixture matching Brave's observed native result. Gate native install QA
+  behind a separate OS account or VM and check the host taskbar after testing.
+  Independent review confirms focus returns to the folder on a late match.
+- [ ] Publish the desktop fix and verify the Pages release and live Brave UI.
+
+Entry was `f3a4751` on `main`, synchronized with the remote. Evidence is under
+ignored `output/playwright/brave-pwa-*` and `brave-install-ui-*`. The branded
+taskbar result in the user's regular Brave profile remains a manual check.
+
 ### Smartphone controls and install action — 2026-11-07
 
 The user's phone screenshot requests at least twice-sized top controls; their

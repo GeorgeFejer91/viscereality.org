@@ -19,6 +19,8 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   desktop access and the intended VR-headset control purpose. This install
   increment remains online and does not add offline session caching. See the
   subproject PROJECT.md for exact verification and physical-phone limits.
+  Desktop Brave uses the canonical manifest identity to detect an existing
+  install. The install help names `brave://apps` for reopening that app.
 
 - Polar loss (2026-11-06): more than 30 seconds of continuous missing ECG aborts
   the scenario and all scheduled audio, clears the scenario selection and
