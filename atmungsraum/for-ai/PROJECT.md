@@ -71,6 +71,13 @@ Start and End from the actual PC browser controls. Keep Quest and browser
 screenshots, native command receipts and build inputs private. Use synthetic
 recording inputs for this rehearsal.
 
+The installed APK also exposes its own Android operator activity. A
+serial-scoped launch using that activity's declared 2D entry point opened
+an Android permission prompt attributed to the rehearsal app. The activity
+launch receipt remains pending while the prompt is active. The wearer must
+inspect the prompt and make the permission and Remote choices before the
+browser connection can be qualified.
+
 ### Quest-owned H10 with browser control
 
 The sensor link is **Polar H10 → Quest over BLE**. The control link is
