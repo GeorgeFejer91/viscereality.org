@@ -67,7 +67,16 @@ targets required whenever bounded. Enlarged/no-fit states retain readable
 document reflow. This correction changes CSS and cache tokens only; its checks
 exclude concurrent Discord-password work. Ignored regression:
 `output/playwright/check-pwa-centering.mjs`; matrix receipt:
-`output/playwright/pwa-controls-centered-results.json`. Live evidence follows.
+`output/playwright/pwa-controls-centered-results.json`.
+
+The centered runtime `0320d1c1231396caf458a089ae7e60115b781aab` completes exact
+Pages run 42313937741 with backend `succeed`. All12 affected paths match the
+published Git bytes; the public origin passes all115 cases including simulated
+unequal insets and zero opening scroll with enlarged text. No page errors.
+Ignored live evidence: `pwa-live-0320d1c.json`,
+`pwa-controls-centered-live-results.json` and `pwa-controls-centered-live-phone.png`.
+No manifest, installation logic or participant-data changes accompany this
+centering correction. Physical phone acceptance remains distinct from this QA.
 
 The current [BeforeInstallPromptEvent API](https://developer.mozilla.org/en-US/docs/Web/API/BeforeInstallPromptEvent)
 and [official installation-prompt guide](https://web.dev/learn/pwa/installation-prompt/)

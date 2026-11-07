@@ -65,10 +65,18 @@ round/option and playback targets. No install/session/data logic changes.
 Independent review confirms the unequal-inset correction with no remaining
 actionable issue. Documentation deployment77e0e72 timed out in syncing_files;
 its backend is deployment_cancelled. The fresh correction includes those notes.
-- [ ] Publish this isolated CSS/cache correction and verify its exact deployment,
+- [x] Publish this isolated CSS/cache correction and verify its exact deployment,
   live bytes and centered phone layouts. Preserve concurrent Discord-password work.
-Next for this follow-up: complete review and live publication, then return to
-the existing physical-phone installation/relaunch acceptance gate.
+Centered release `0320d1c1231396caf458a089ae7e60115b781aab` completes
+[Pages run 42313937741](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42313937741)
+with deployment API status `succeed`. All12 control/evidence paths match Git
+bytes and both entry URLs return200. Live Chrome repeats all115 cases including
+bounded-target centering, simulated unequal insets and enlarged-text help, with
+zero page errors. Ignored receipts: `pwa-live-0320d1c.json` and
+`pwa-controls-centered-live-results.json`. `main` equals remote at this release
+before the evidence-only follow-up. Unrelated Discord-password edits and the
+private attachment are excluded. Next: the existing physical-phone
+installation/relaunch acceptance; no further phone-control changes are pending.
 
 The UI's primary delivery target is a progressive web app (PWA) for smartphones.
 Installing it adds a Viscereality-logo home-screen icon that opens the live
