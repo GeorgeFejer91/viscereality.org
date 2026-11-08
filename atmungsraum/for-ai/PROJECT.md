@@ -431,11 +431,16 @@ record the platform-specific acceptance. Other phone platforms remain untested.
   native audio ownership.
 - [x] Verify the full MP3 decode, unchanged scenario schedules, controller
   lifecycle and rendered browser playback. See [VERIFICATION.md](VERIFICATION.md#browser-session-background-music--2026-11-08).
-- [ ] Verify the exact Pages release, the deployed MP3 bytes and the live browser
-  playback path. Physical phone playback remains to be qualified.
+- [x] Verify the exact Pages release, the deployed MP3 bytes and the live browser
+  playback path.
 
-The browser release is based on main at `51eb3fe`. The original WAV and the
-untracked local attachments stay outside Git.
+Browser release `afe19f2` reached `origin/main` and deployed successfully.
+All ten changed files matched the deployed bytes, and Chrome confirmed the
+live loop and session controls. [Pages run 42516486897](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42516486897)
+
+Next for device qualification, repeat Starten, pause/resume, the loop boundary
+and session exit on an installed phone. The original WAV and the untracked local
+attachments stay outside Git.
 
 ## One startup unlock for folder sync — 2026-11-08
 

@@ -18,7 +18,7 @@ Music load failure leaves the timed cues and session controls available.
 
 The public 7.65 MB MP3 keeps the full source timing and playback level. It is a
 stereo 48 kHz export made with FFmpeg `-map 0:a:0 -map_metadata -1 -c:a libmp3lame -q:a 4`.
-The same-basename TXT is empty for the instrumental track. The scenario WAVs,
+The same-basename TXT is empty for this background track. The scenario WAVs,
 frame schedules, and receipts retain their existing role. In a Quest rehearsal
 the headset owns stimulus audio.
 
