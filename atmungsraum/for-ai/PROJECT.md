@@ -401,7 +401,33 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
+## One startup unlock for folder sync — 2026-11-08
+
+Use only **Ungesendete Daten senden** and **Alle Daten senden** to send the
+browser's saved session CSVs. The app unlocks delivery at startup and keeps
+access in tab memory. A supported browser can save and silently restore the
+sharing password. Skipping the initial prompt defers it to the first send.
+The individual download recovery URL opens without a startup prompt.
+
+- [x] Remove the service setup controls and reuse the unlocked session for both
+  sends. Preserve the exact file selection, encrypted ZIP and checkout receipts.
+- [x] Support the version 2 encrypted envelope with the existing Discord webhook
+  and central upload relay credentials. Discord still receives the keyed URL
+  directly from the browser.
+- [x] Check synthetic startup, saved credential restore, both send actions, file
+  bytes, acknowledgement, errors, focus, reflow and concurrent tabs. Restore a
+  two-chunk synthetic ZIP from live Wormhole via the local Render adapter.
+- [ ] Connect and qualify the hosted relay. The expected Render host returned
+  HTTP 404 and the previous Cloudflare preview no longer resolves. The public
+  version 1 envelope still unlocks delivery and the folder reports that the
+  upload service is unavailable. Next: obtain the project's actual deployed
+  service URL and verify it before publishing a version 2 envelope. See
+  [maintainer deployment](../sharing/README.md#maintainer-deployment).
+
 ## Folder delivery: new files or all files — 2026-11-07
+
+The workflow above supersedes the setup and password timing in this historical
+verification record.
 
 The folder now sends saved CSVs to Wormhole and posts the URL alone directly
 to Discord. This supersedes the earlier QR, manual sharing and page-memory

@@ -1,5 +1,5 @@
-import { sendDiscordLink, validateRelaySettings } from './link-relay.js?v=20261107-file-delivery';
-import { unlockDiscordWebhook } from './discord-share.js?v=20261107-file-delivery';
+import { sendDiscordLink } from './link-relay.js?v=20261107-file-delivery';
+import { unlockSharingConfig } from './discord-share.js?v=20261108-folder-sync';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
 import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';
 // ZIP32 with stored entries preserves the original recording bytes.
@@ -54,12 +54,14 @@ export function mountDataFiles(data) {
   const dialog = byId('files-dialog'), button = byId('open-files'), close = byId('close-files');
   const counts = byId('files-counts'), status = byId('files-status'), progress = byId('files-progress');
   const sendNew = byId('send-new-files'), sendAll = byId('send-all-files');
-  const settings = byId('relay-settings'), endpoint = byId('relay-endpoint'), token = byId('relay-token');
   const passwordDialog = byId('discord-password-dialog'), passwordInput = byId('discord-password');
+  const form = byId('discord-password-form'), passwordStatus = byId('discord-password-status');
+  const credentialId = byId('discord-password-user').value;
   const remember = byId('remember-discord-password');
   const canRemember = typeof globalThis.PasswordCredential === 'function' && typeof navigator.credentials?.store === 'function';
   remember.closest('label').hidden = !canRemember;
   let active, returnFocus, generation = 0, total = 0, unsent = 0;
+  let access, pendingUnlock;
 
   function syncButtons() {
     sendNew.disabled = Boolean(active) || unsent === 0;
@@ -87,34 +89,75 @@ export function mountDataFiles(data) {
   passwordDialog.addEventListener('keydown', event => { if (event.key === 'Escape') event.stopPropagation(); });
   function requestPassword(signal) {
     return new Promise(resolve => {
-      if (signal.aborted) { resolve(null); return; }
-      const form = byId('discord-password-form'), cancelButton = byId('cancel-discord-password');
+      if (signal?.aborted) { resolve(null); return; }
+      const flow = new AbortController(), listeners = { signal: flow.signal };
+      const submitButton = form.querySelector('button[type="submit"]');
+      const previousFocus = document.activeElement;
       const finish = value => {
-        form.removeEventListener('submit', submit);
-        cancelButton.removeEventListener('click', cancel);
-        passwordDialog.removeEventListener('cancel', cancel);
-        passwordDialog.removeEventListener('close', cancel);
-        signal.removeEventListener('abort', cancel);
+        flow.abort();
         passwordInput.value = '';
+        submitButton.disabled = false;
         if (passwordDialog.open) passwordDialog.close();
         if (dialog.open) status.focus({ preventScroll: true });
+        else if (document.activeElement === document.body) {
+          const fallback = document.querySelector('main .screen:not([hidden]) h1');
+          (previousFocus === document.body ? fallback : previousFocus)?.focus({ preventScroll: true });
+        }
         resolve(value);
       };
-      const submit = event => {
+      const submit = async event => {
         event.preventDefault();
-        if (passwordInput.reportValidity()) finish({ password: passwordInput.value, remember: canRemember && remember.checked });
+        if (submitButton.disabled || !passwordInput.reportValidity()) return;
+        const password = passwordInput.value, save = canRemember && remember.checked;
+        submitButton.disabled = true;
+        passwordStatus.textContent = 'Passwort wird geprüft …';
+        try {
+          const result = await unlockSharingConfig(password, flow.signal);
+          if (flow.signal.aborted) return;
+          if (save) {
+            try {
+              navigator.credentials.store(new PasswordCredential({ id: credentialId, password })).catch(() => {});
+            } catch { /* Unlocking also works without browser storage. */ }
+          }
+          finish(result);
+        } catch (error) {
+          if (flow.signal.aborted) return;
+          passwordStatus.textContent = error.message;
+          submitButton.disabled = false;
+          passwordInput.focus({ preventScroll: true });
+          passwordInput.select();
+        }
       };
       const cancel = event => { event.preventDefault(); finish(null); };
-      form.addEventListener('submit', submit);
-      cancelButton.addEventListener('click', cancel);
-      passwordDialog.addEventListener('cancel', cancel);
-      passwordDialog.addEventListener('close', cancel);
-      signal.addEventListener('abort', cancel, { once: true });
+      form.addEventListener('submit', submit, listeners);
+      byId('cancel-discord-password').addEventListener('click', cancel, listeners);
+      passwordDialog.addEventListener('cancel', cancel, listeners);
+      passwordDialog.addEventListener('close', cancel, listeners);
+      signal?.addEventListener('abort', cancel, listeners);
       passwordInput.value = '';
+      passwordStatus.textContent = '';
       remember.checked = false;
       passwordDialog.showModal();
       passwordInput.focus({ preventScroll: true });
     });
+  }
+
+  async function restoreAccess() {
+    if (!canRemember || typeof navigator.credentials.get !== 'function') return null;
+    try {
+      const saved = await navigator.credentials.get({ password: true, mediation: 'silent' });
+      if (saved?.id === credentialId) return await unlockSharingConfig(saved.password);
+    } catch { /* An unavailable or outdated credential falls back to the prompt. */ }
+    return null;
+  }
+
+  function unlock(signal, restore = false) {
+    if (access) return Promise.resolve(access);
+    pendingUnlock ??= (async () => {
+      access = (restore ? await restoreAccess() : null) ?? await requestPassword(signal);
+      return access;
+    })().finally(() => { pendingUnlock = null; });
+    return pendingUnlock;
   }
 
   async function deliver(all) {
@@ -131,24 +174,16 @@ export function mountDataFiles(data) {
         const storage = localStorage, sent = readSentFiles(storage);
         const selected = all ? entries : entries.filter(entry => !sent.has(entry.key));
         if (!selected.length) {
-          status.textContent = all ? 'Keine gespeicherten Dateien.' : 'Keine neuen Dateien zum Senden.';
-          return;
-        }
-        const relay = { endpoint: endpoint.value, token: token.value };
-        try { validateRelaySettings(relay.endpoint, relay.token); }
-        catch (error) {
-          settings.open = true;
-          (relay.endpoint.trim() ? token : endpoint).focus();
-          status.textContent = error.message;
+          status.textContent = all ? 'Keine gespeicherten Dateien.' : 'Keine ungesendeten Dateien.';
           return;
         }
         const confirmReceipt = prepareDeliveryReceipt(storage, selected);
-        status.textContent = 'Passwort eingeben …';
-        const access = await requestPassword(signal);
+        if (!access) status.textContent = 'Passwort eingeben …';
+        const credentials = await unlock(signal);
         signal.throwIfAborted();
-        if (!access) { status.textContent = 'Versand abgebrochen.'; return; }
-        status.textContent = 'Passwort wird geprüft …';
-        const webhook = await unlockDiscordWebhook(access.password, signal);
+        if (!credentials) { status.textContent = 'Versand abgebrochen.'; return; }
+        const { webhook, relay } = credentials;
+        if (!relay) throw new Error('Der Upload-Dienst ist derzeit nicht verfügbar.');
         status.textContent = 'ZIP wird vorbereitet …';
         const file = new File([createExportsZip(selected.map(entry => entry.record))], 'Atmungsraum-Daten.zip', { type: 'application/zip' });
         let lastPhase;
@@ -174,11 +209,6 @@ export function mountDataFiles(data) {
         }
         status.textContent = selected.length === 1 ? '1 Datei gesendet. Discord hat den Link angenommen.'
           : selected.length + ' Dateien gesendet. Discord hat den Link angenommen.';
-        if (access.remember && !signal.aborted) {
-          try {
-            navigator.credentials.store(new PasswordCredential({ id: byId('discord-password-user').value, password: access.password })).catch(() => {});
-          } catch { /* Browser storage preference does not change delivery. */ }
-        }
       });
     } catch (error) {
       status.textContent = signal.aborted
@@ -217,8 +247,6 @@ export function mountDataFiles(data) {
     if (dialog.open) return;
     ++generation;
     active?.abort();
-    endpoint.value = token.value = '';
-    settings.open = false;
     button.setAttribute('aria-expanded', 'false');
     (returnFocus?.isConnected && returnFocus.getClientRects().length ? returnFocus : button).focus({ preventScroll: true });
   });
@@ -230,5 +258,5 @@ export function mountDataFiles(data) {
   window.addEventListener('storage', event => {
     if (event.key === null || event.key === deliveryKey || event.key.startsWith(receiptPrefix)) refresh();
   });
-  return { open };
+  return { unlockOnLoad: () => unlock(undefined, true) };
 }

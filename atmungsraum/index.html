@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261108-quest-sync">
+  <link rel="stylesheet" href="./style.css?v=20261108-folder-sync">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261108-quest-csv"></script>
+  <script type="module" src="./app.js?v=20261108-folder-sync"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -50,38 +50,28 @@
       <h2 id="files-title" data-measure>Gespeicherte Dateien</h2>
       <button id="close-files" type="button" autofocus><span data-measure>Schließen</span></button>
     </header>
-    <p id="files-scope" data-measure>Gespeicherte Dateien aus diesem Browser an Discord senden.</p>
+    <p id="files-scope" data-measure>Dateien aus diesem Browser werden zu Wormhole hochgeladen. Discord erhält den Downloadlink.</p>
     <p id="files-counts" data-measure>Dateien werden geladen …</p>
     <div class="files-actions">
-      <button id="send-new-files" type="button" disabled><span data-measure>Neue Dateien senden</span></button>
-      <button id="send-all-files" type="button" disabled><span data-measure>Alle Dateien senden</span></button>
+      <button id="send-new-files" type="button" disabled><span data-measure>Ungesendete Daten senden</span></button>
+      <button id="send-all-files" type="button" disabled><span data-measure>Alle Daten senden</span></button>
     </div>
     <progress id="files-progress" max="100" aria-label="Versandfortschritt" hidden></progress>
     <p id="files-status" role="status" tabindex="-1" data-measure></p>
-    <details id="relay-settings">
-      <summary><span data-measure>Upload-Dienst einrichten</span></summary>
-      <div class="relay-fields">
-        <a class="files-link" href="./sharing/README.md" target="_blank" rel="noopener noreferrer"><span data-measure>Render einrichten ↗</span></a>
-        <label for="relay-endpoint" data-measure>Adresse des Upload-Dienstes</label>
-        <input id="relay-endpoint" type="url" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="https://atmungsraum-upload.onrender.com" aria-describedby="relay-help">
-        <label for="relay-token" data-measure>Zugangsschlüssel</label>
-        <input id="relay-token" type="password" autocomplete="off" maxlength="128" aria-describedby="relay-help">
-        <p id="relay-help" data-measure>Die Zugangsdaten werden beim Schließen gelöscht.</p>
-      </div>
-    </details>
   </dialog>
   <dialog id="discord-password-dialog" aria-labelledby="discord-password-title" aria-describedby="discord-password-help">
-    <h2 id="discord-password-title" data-measure>An Discord senden</h2>
+    <h2 id="discord-password-title" data-measure>Datenversand entsperren</h2>
     <form id="discord-password-form" method="dialog">
       <input id="discord-password-user" type="hidden" name="username" autocomplete="username" value="Atmungsraum Discord">
       <label for="discord-password" data-measure>Passwort</label>
       <input id="discord-password" type="password" name="password" autocomplete="current-password" maxlength="1024" required autofocus aria-describedby="discord-password-help">
-      <p id="discord-password-help" data-measure>Das Passwort entsperrt das Discord-Ziel. Nach dem Upload erhält Discord nur den Wormhole-Link.</p>
+      <p id="discord-password-help" data-measure>Einmal entsperren, um Daten in diesem Tab zu senden.</p>
       <label class="relay-auto"><input id="remember-discord-password" type="checkbox"><span data-measure>Passwort im Browser merken</span></label>
       <div class="files-actions">
         <button id="cancel-discord-password" type="button"><span data-measure>Abbrechen</span></button>
-        <button type="submit"><span data-measure>Senden</span></button>
+        <button type="submit"><span data-measure>Entsperren</span></button>
       </div>
+      <p id="discord-password-status" role="status" data-measure></p>
     </form>
   </dialog>
   <main>

@@ -175,8 +175,8 @@ reads IndexedDB on opening and after returning to the tab, and retains in-memory
 exports if final storage failed. It cannot inspect the OS Downloads directory
 or include an unfinished live recording.
 
-**Neue Dateien senden** selects exports without a matching delivery receipt.
-**Alle Dateien senden** resends all saved exports. Each action creates
+**Ungesendete Daten senden** selects exports without a matching delivery receipt.
+**Alle Daten senden** resends all saved exports. Each action creates
 `Atmungsraum-Daten.zip` with the selected CSV bytes and original names; name
 collisions use the session UUID as a directory. This remains ZIP32 packaging
 using the same writer. An updated CSV under the same UUID counts as new.
@@ -186,23 +186,22 @@ receipt under `atmungsraum-file-delivery-v1:receipt:<UUID>` in localStorage.
 Each JSON object has a `version`, an `acceptedAt` timestamp and a `files`
 array of SHA-256 fingerprints of session ID, filename and exact CSV bytes.
 The receipt contains no CSVs, filenames, participant IDs, passwords or URLs.
-**Neue Dateien senden** checks the combined fingerprints from all receipts and
-the earlier `atmungsraum-file-delivery-v1` history. **Alle Dateien senden**
+**Ungesendete Daten senden** checks the combined fingerprints from all receipts and
+the earlier `atmungsraum-file-delivery-v1` history. **Alle Daten senden**
 creates its own receipt after acknowledgment. A Web Lock prevents parallel
 sends in tabs of the same origin. Attempts that fail before acknowledgment
 leave no checkout receipt. Clearing browser data resets the history. After
 a timeout or an unsaved receipt, check Discord before resending. Export files
 remain available independently of the checkout receipts.
 
-The masked password decrypts the public webhook ciphertext locally before any
-file transfer. On opt-in and confirmed delivery, the browser's own credential
-manager can save it. The app does not save the password or unlocked webhook in
-web storage. The authenticated upload relay (Render Free setup) receives only
-encrypted chunks. A fresh per-upload key and salt encrypt the immutable ZIP
-with the pinned Wormhole crypto; two passes hash then upload identical 8 MiB
-ciphertext pieces to Wormhole/Backblaze. Only after the provider acknowledges
-the upload does the browser send the full keyed URL directly to Discord.
-Relay URL and access key clear when the folder closes. See [sharing setup](../sharing/README.md).
+The startup password decrypts the public delivery envelope locally. The
+browser can remember the password on opt-in. The app holds the decrypted
+webhook and relay credentials in tab memory and reuses them for both send
+actions. The upload relay receives only encrypted chunks. A fresh per-upload
+key and salt encrypt the immutable ZIP with the pinned Wormhole crypto.
+Two passes hash and upload identical ciphertext pieces of up to 8 MiB.
+After Wormhole acknowledges the upload, the browser sends the complete keyed
+URL directly to Discord. See [sharing](../sharing/README.md).
 
 Anyone with the full URL can access the share while valid. Wormhole controls
 expiry, storage and download limits. Cancellation cannot undo a provider

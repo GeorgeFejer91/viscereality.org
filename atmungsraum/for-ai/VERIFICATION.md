@@ -1,5 +1,18 @@
 # Verification
 
+## Startup unlock and two-action folder — 2026-11-08
+
+Chrome's synthetic browser fixture checks initial focus, incorrect password,
+opt-in browser storage, silent restoration after reload, cancellation and
+recovery, and repeated sends without another prompt. Both send actions
+decrypt to the expected ZIP contents. Rejected uploads and Discord posts
+leave the receipt ledger pending. The fixture exercises concurrent tabs,
+five desktop/portrait/landscape layouts and 200% text and spacing at 320px.
+The separate local Node adapter test sends two encrypted chunks to real
+Wormhole/Backblaze and restores the exact 9,800,146-byte synthetic ZIP. Discord
+posts in the browser fixture are intercepted. Hosted activation remains
+open in [PROJECT.md](PROJECT.md#one-startup-unlock-for-folder-sync--2026-11-08).
+
 ## Participant CSV writer and idle pull — 2026-11-08
 
 The Quest writer and export host checks passed 66 focused tests. Synthetic

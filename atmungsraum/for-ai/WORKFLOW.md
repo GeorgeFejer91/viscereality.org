@@ -106,29 +106,24 @@ relaunch, storage and lifecycle qualification distinct from desktop automation.
 On Android Chrome, use the browser menu's install action; on iPhone Safari,
 use Share → Add to Home Screen and enable Open as Web App when offered.
 
-Direct Discord delivery uses the public encrypted `sharing/discord-config.json`
-and a send-time password prompt, with no relay. Generate/rekey locally using
-`node sharing/configure-discord.mjs`; it reads ignored `.dev.vars` and keeps the
-password in ignored `.dev.vars.discord-password`/`.dev.vars.setup.html`. Commit
-only the authenticated ciphertext, never plaintext credentials/passwords. Scan
-staged bytes against local secrets. Test wrong password, cancel/close/focus,
-stale requests, exact URL-only payload and provider acknowledgement. Use real
-browser CORS and message readback for live-provider qualification.
-A password holder can recover the webhook; revocation needs webhook rotation.
+The startup dialog unlocks the authenticated public envelope in
+`sharing/discord-config.json`. The same password decrypts the Discord webhook
+and, in version 2, the centrally configured relay endpoint and key. The app
+keeps the result in tab memory and offers browser-managed saving. Verify
+startup, retry after a wrong password, cancel and focus, silent restore,
+two sends without another unlock, and exact Discord acknowledgement.
+Keep the folder to unsent and all saved files, counts and progress. Preserve
+downloads at `#daten` and the JSON receipt ledger across reloads, changes,
+rejected posts, cancellation and concurrent tabs.
 
-Automatic Wormhole upload on Render uses the root `render.yaml` and
-`sharing/render.js`, wrapping the shared provider handler in `sharing/worker.js`.
-The adapter exposes upload routes and credential-free `/health` only. Generate
-the ignored setup page with `node sharing/configure-render.mjs`; Render gets only
-`LINK_RELAY_TOKEN`. See [sharing/README.md](../sharing/README.md). Pages publication
-and local live-provider tests do not deploy or verify the hosted Render service.
-Verify actual hosting separately using synthetic data. Existing Cloudflare
-deployments remain compatible. Never publish credentials, keyed share URLs,
-provider responses or participant files. Scan staged blobs before publication.
+Deploy the existing upload-only [Render Blueprint](../../render.yaml) with the
+private `LINK_RELAY_TOKEN`. After verifying the project controls the HTTPS
+endpoint, run `node sharing/configure-discord.mjs <service-url>` and publish only
+the authenticated ciphertext. The version 1 production envelope permits
+password unlock and reports the missing service when an operator tries to
+send. Never publish plaintext credentials, keyed links or participant files.
+See [sharing/README.md](../sharing/README.md).
 
-Keep the folder limited to sending new or all saved files, status and relay
-setup. Preserve individual downloads at `#daten`. Verify the JSON ledger
-across reloads, changed CSVs, rejected posts, cancellation and concurrent tabs.
 `vendor/wormhole-crypto/README.md` pins the MIT crypto runtime. Regenerate with
 `node for-ai/scripts/vendor-wormhole.mjs`; verify package integrity, localized
 imports and licenses. Runtime modules use `.js` for local-server MIME

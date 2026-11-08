@@ -1,6 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+test('one password unlocks the Discord webhook and fixed upload relay without exposing either secret', async t => {
+  const { encryptDiscordWebhook, unlockSharingConfig } = await import('../discord-share.js');
+  const webhook = 'https://discord.com/api/webhooks/123456789/TEST_TOKEN';
+  const password = 'synthetic-long-password-42';
+  const relay = { endpoint: 'https://atmungsraum-test.onrender.com', token: 'A'.repeat(43) };
+  const config = await encryptDiscordWebhook(webhook, password, relay);
+  for (const value of [webhook, password, relay.token]) assert.ok(!JSON.stringify(config).includes(value));
+  const calls = [];
+  let envelope = config;
+  t.mock.method(globalThis, 'fetch', async target => {
+    calls.push(String(target));
+    return Response.json(envelope);
+  });
+  assert.deepEqual(await unlockSharingConfig(password), { webhook, relay });
+  await assert.rejects(() => unlockSharingConfig('wrong-password'), /Passwort/);
+  envelope = await encryptDiscordWebhook(webhook, password);
+  assert.deepEqual(await unlockSharingConfig(password), { webhook });
+  assert.equal(calls.length, 3);
+  assert.ok(calls.every(target => target.endsWith('/sharing/discord-config.json')));
+  await assert.rejects(() => encryptDiscordWebhook(webhook, password, { ...relay, endpoint: 'https://attacker.test' }));
+});
+
 test('A password encrypts the webhook into public ciphertext and only the correct password unlocks it', async () => {
   const { encryptDiscordWebhook, decryptDiscordWebhook } = await import('../discord-share.js');
   const webhook='https://discord.com/api/webhooks/123456789/TEST_TOKEN', password='synthetic-long-password-42';

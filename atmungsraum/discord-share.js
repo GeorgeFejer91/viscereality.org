@@ -1,8 +1,11 @@
-import { sendDiscordLink, validateDiscordWebhook } from './link-relay.js?v=20261107-file-delivery';
+import { sendDiscordLink, validateDiscordWebhook, validateRelaySettings } from './link-relay.js?v=20261107-file-delivery';
 import { validateWormholeUrl } from './wormhole-link.js';
 
 const encoder = new TextEncoder(), iterations = 600000;
-const additionalData = encoder.encode('Atmungsraum Discord webhook v1');
+const contexts = {
+  1: encoder.encode('Atmungsraum Discord webhook v1'),
+  2: encoder.encode('Atmungsraum file delivery v2'),
+};
 const encode = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 function decode(value, max) {
   if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value) || value.length > max) throw new Error('Invalid envelope');
@@ -16,27 +19,44 @@ async function keyFor(password, salt) {
 }
 
 // Build-time helper: only the resulting envelope belongs in public Git.
-export async function encryptDiscordWebhook(webhook, password) {
+export async function encryptDiscordWebhook(webhook, password, relay) {
   const target = validateDiscordWebhook(webhook);
   if (typeof password !== 'string' || password.length < 16) throw new Error('Mindestens 16 Zeichen für das Passwort verwenden.');
+  const version = relay ? 2 : 1;
+  const payload = relay ? JSON.stringify({ webhook: target.href, relay: validateRelay(relay) }) : target.href;
   const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData }, await keyFor(password, salt), encoder.encode(target.href));
-  return { version: 1, iterations, salt: encode(salt), iv: encode(iv), ciphertext: encode(new Uint8Array(ciphertext)) };
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: contexts[version] },
+    await keyFor(password, salt), encoder.encode(payload));
+  return { version, iterations, salt: encode(salt), iv: encode(iv), ciphertext: encode(new Uint8Array(ciphertext)) };
 }
 
-export async function decryptDiscordWebhook(config, password) {
+function validateRelay(relay) {
+  const { endpoint, token } = relay;
+  return { endpoint: validateRelaySettings(endpoint, token).origin, token };
+}
+
+async function decryptSharingConfig(config, password) {
   try {
-    if (config?.version !== 1 || config.iterations !== iterations) throw new Error('Invalid envelope');
+    const version = config?.version;
+    if ((version !== 1 && version !== 2) || config.iterations !== iterations) throw new Error('Invalid envelope');
     const salt = decode(config.salt, 24), iv = decode(config.iv, 16), ciphertext = decode(config.ciphertext, 1400);
     if (salt.length !== 16 || iv.length !== 12 || ciphertext.length < 17 || ciphertext.length > 1024) throw new Error('Invalid envelope');
-    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData }, await keyFor(password, salt), ciphertext);
-    return validateDiscordWebhook(new TextDecoder('utf-8', { fatal: true }).decode(plain)).href;
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv, additionalData: contexts[version] },
+      await keyFor(password, salt), ciphertext);
+    const payload = new TextDecoder('utf-8', { fatal: true }).decode(plain);
+    if (version === 1) return { webhook: validateDiscordWebhook(payload).href };
+    const { webhook, relay } = JSON.parse(payload);
+    return { webhook: validateDiscordWebhook(webhook).href, relay: validateRelay(relay) };
   } catch {
-    throw new Error('Passwort falsch oder verschlüsselte Discord-Konfiguration ungültig.');
+    throw new Error('Passwort falsch oder verschlüsselte Versandkonfiguration ungültig.');
   }
 }
 
-export async function unlockDiscordWebhook(password, signal) {
+export async function decryptDiscordWebhook(config, password) {
+  return (await decryptSharingConfig(config, password)).webhook;
+}
+
+export async function unlockSharingConfig(password, signal) {
   signal?.throwIfAborted();
   let config;
   try {
@@ -47,11 +67,15 @@ export async function unlockDiscordWebhook(password, signal) {
     if (!response.ok) throw new Error('Missing configuration');
     config = await response.json();
   } catch {
-    throw new Error('Verschlüsselte Discord-Konfiguration nicht verfügbar. Bitte erneut versuchen.');
+    throw new Error('Verschlüsselte Versandkonfiguration nicht verfügbar. Bitte erneut versuchen.');
   }
-  const webhook = await decryptDiscordWebhook(config, password);
+  const access = await decryptSharingConfig(config, password);
   signal?.throwIfAborted();
-  return webhook;
+  return access;
+}
+
+export async function unlockDiscordWebhook(password, signal) {
+  return (await unlockSharingConfig(password, signal)).webhook;
 }
 
 export async function forwardPasswordDiscordLink({ password, url, signal }) {

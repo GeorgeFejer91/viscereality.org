@@ -2,7 +2,7 @@ import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, u
 import { mountSessionAudio } from './audio/session-ui.js?v=20261106-polar-timeout';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
-import { mountDataFiles } from './data-files.js?v=20261107-checkout-receipts';
+import { mountDataFiles } from './data-files.js?v=20261108-folder-sync';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest';
@@ -15,7 +15,6 @@ const text = (id, value) => { if (byId(id).textContent !== value) byId(id).textC
 const signal = rehearsalMode ? null : new MockECG();
 const sessionData = signal && mountSessionData(signal);
 const sessionAudio = sessionData && mountSessionAudio({ data: sessionData });
-if (sessionData) mountDataFiles(sessionData);
 
 function render() {
   if (rehearsalMode) {
@@ -222,9 +221,12 @@ async function measureLabels() {
     document.querySelectorAll('[data-measure], .screen-body, .actions, .round, .play-feedback').forEach((element) => observer.observe(element));
     const retry = () => { root.dataset.layout = 'bounded'; measure(); };
     new MutationObserver(retry).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
-    const dialog = byId('files-dialog');
-    new MutationObserver(measure).observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
-    observer.observe(dialog);
+    const dialogChanges = new MutationObserver(measure);
+    for (const id of ['files-dialog', 'discord-password-dialog']) {
+      const dialog = byId(id);
+      dialogChanges.observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+      observer.observe(dialog);
+    }
     new MutationObserver(() => { setLocale(root.lang); cache.clear(); retry(); }).observe(root, { attributes: true, attributeFilter: ['lang', 'style'] });
     window.addEventListener('resize', retry);
     document.fonts.addEventListener('loadingdone', retry);
@@ -245,6 +247,8 @@ if (rehearsalMode) {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {
+  const files = mountDataFiles(sessionData);
+  if (location.hash !== '#daten') files.unlockOnLoad();
   byId('patient-fields').disabled = false;
   byId('patient-next').disabled = false;
   // Load saved CSVs even on a cold recovery link; sensor search waits for the form.

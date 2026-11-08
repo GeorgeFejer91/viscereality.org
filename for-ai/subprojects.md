@@ -66,16 +66,12 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   space with portrait top/bottom clearance and a short-landscape central column;
   use readable document reflow at the revised small-screen no-fit boundary.
 
-- Saved data (2026-11-05): a permanent bottom-right SVG folder opens a scrollable
-  native dialog for sending new or all saved session CSVs from this browser.
-  It displays pending counts and progress. A masked password decrypts the
-  published webhook ciphertext locally before the browser encrypts and uploads
-  a ZIP to Wormhole through the restricted Render-compatible relay. Discord
-  receives only the complete download URL directly from the browser. Local
-  JSON receipts are written after Discord acknowledgement. The legacy
-  `#daten` URL remains available for individual downloads.
-  Relay deployment/account ownership is separate from Pages publication.
-  See Atmungsraum DATA-LOGGING.md and VERIFICATION.md for persistence and QA limits.
+- Saved data (2026-11-08): the startup password unlocks delivery for the
+  open tab, with opt-in browser credential saving. The folder sends unsent or
+  all saved session CSVs through the centrally configured Wormhole upload
+  relay. Discord receives only the keyed link directly from the browser.
+  JSON receipts follow Discord acknowledgement. Individual downloads remain
+  at `#daten`. See Atmungsraum PROJECT.md for hosted relay activation.
 
 - Path: `atmungsraum/index.html`
 - Public URL: <https://viscereality.org/atmungsraum/> (the directory index also serves `/atmungsraum`).
