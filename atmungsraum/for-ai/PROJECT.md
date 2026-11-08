@@ -423,6 +423,20 @@ new link/Worker/test files; they are preserved outside the PWA commits.
 Next: collect the target-phone result, address any observed PWA defect, and
 record the platform-specific acceptance. Other phone platforms remain untested.
 
+## Browser session background music — 2026-11-08
+
+- [x] Package a browser-ready copy of the supplied `ji3ji3` track with an empty
+  spoken-word TXT. Load on Starten, loop during the browser demo, and follow
+  pause, resume, completion, navigation and sensor timeout. Quest retains its
+  native audio ownership.
+- [x] Verify the full MP3 decode, unchanged scenario schedules, controller
+  lifecycle and rendered browser playback. See [VERIFICATION.md](VERIFICATION.md#browser-session-background-music--2026-11-08).
+- [ ] Verify the exact Pages release, the deployed MP3 bytes and the live browser
+  playback path. Physical phone playback remains to be qualified.
+
+The browser release is based on main at `51eb3fe`. The original WAV and the
+untracked local attachments stay outside Git.
+
 ## One startup unlock for folder sync — 2026-11-08
 
 Use only **Ungesendete Daten senden** and **Alle Daten senden** for the

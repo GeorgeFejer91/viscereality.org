@@ -235,7 +235,7 @@ test('Corrupted audio fails preparation before scheduling', async () => {
   } finally { globalThis.fetch = originalFetch; await engine.dispose(); }
 });
 
-test('Stopping during browser audio unlock never saves a previous protocol under the new selection', async () => {
+test('Session controls manage background music and a cancelled unlock preserves the previous receipt', async (t) => {
   class Element extends EventTarget {
     constructor() { super(); this.dataset = {}; this.textContent = ''; }
     querySelector(selector) { return selector === 'path' ? this.icon ??= new Element() : this.label ??= new Element(); }
@@ -243,7 +243,9 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   }
   const elements = Object.fromEntries(['session-start', 'play', 'session-back', 'session-phase', 'session-time', 'session-duration', 'session-progress', 'start-status'].map(id => [id, new Element()]));
   const storage = new Map();
-  const keys = ['document', 'window', 'AudioContext', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch'];
+  const tracks = [];
+  let rejectMusic = false;
+  const keys = ['document', 'window', 'Audio', 'AudioContext', 'localStorage', 'requestAnimationFrame', 'cancelAnimationFrame', 'fetch'];
   const originals = Object.fromEntries(keys.map(key => [key, globalThis[key]]));
   const originalUi = { ...uiState };
   let context;
@@ -252,6 +254,21 @@ test('Stopping during browser audio unlock never saves a previous protocol under
   globalThis.window = new EventTarget();
   const calibrationWindows = [];
   window.addEventListener('atmungsraum:calibration-scheduled', e => calibrationWindows.push(e.detail));
+  globalThis.Audio = class {
+    constructor(src) {
+      this.src = src;
+      this.paused = true;
+      this.currentTime = 0;
+      tracks.push(this);
+    }
+    async play() {
+      if (rejectMusic) throw new DOMException('Track unavailable', 'NotSupportedError');
+      this.paused = false;
+    }
+    pause() { this.paused = true; }
+    removeAttribute(name) { delete this[name]; }
+    load() { this.currentTime = 0; }
+  };
   globalThis.AudioContext = class extends Context { constructor() { super(); context = this; } };
   globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
   globalThis.requestAnimationFrame = () => 1;
@@ -270,8 +287,15 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     const controller = mountSessionAudio();
     controller.update('session-start', uiState.selection, true);
     await ready(() => elements['session-start'].dataset.audioState === 'ready');
+    assert.equal(tracks.length, 0, 'background music loads only after Start');
     elements.play.dispatchEvent(new Event('click'));
+    assert.equal(tracks.length, 1, 'Start creates one background track during the click');
+    const [music] = tracks;
+    assert.match(music.src, /\/assets\/audio\/background\/ji3ji3\.mp3$/);
+    assert.equal(music.loop, true);
+    assert.equal(music.paused, false);
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
+    music.currentTime = 12;
     const startAt = Number(elements['session-start'].dataset.audioStartTime);
     assert.equal(calibrationWindows.length, 1);
     assert.equal(calibrationWindows[0].scheduled_start_audio_seconds, startAt + 26);
@@ -299,6 +323,7 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.equal(elements['session-time'].textContent, '00:12');
     assert.equal(elements['session-progress'].value, 12);
     assert.equal(context.state, 'suspended');
+    assert.equal(music.paused, true);
     assert.equal(elements.play.disabled, true, 'Resume still requires current ECG');
     assert.equal(elements.play.label.textContent, 'Fortsetzen');
     uiState.sensor = 'ecg';
@@ -310,6 +335,9 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(context.state, 'running');
     assert.equal(context.nodes.length, nodesBeforePause, 'Start after Pause must not create a new session');
+    assert.equal(tracks.length, 1, 'Resume keeps the same background track');
+    assert.equal(music.paused, false);
+    assert.equal(music.currentTime, 12);
     setSensor('disconnected', 1000);
     updateReconnect(1000);
     controller.update(route('start-haupt-15'), uiState.selection, canNavigate());
@@ -321,6 +349,8 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.equal(uiState.started, false);
     assert.equal(elements['session-start'].dataset.sessionActive, 'false');
     assert.ok(context.nodes.every(node => node.disconnected), 'timeout disconnects every scheduled cue');
+    assert.equal(music.paused, true, 'timeout also stops the background music');
+    assert.equal(music.src, undefined);
     const previous = JSON.parse(storage.get('atmungsraum.audio-receipts'));
     assert.equal(previous.length, 1);
     assert.equal(previous[0].selection.minutes, 15);
@@ -337,6 +367,8 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     assert.equal(elements['session-start'].dataset.audioState, 'starting');
     elements['session-back'].dispatchEvent(new Event('click'));
     unlock(); await delay(0);
+    assert.equal(tracks.at(-1).paused, true, 'cancelling during unlock stops the track');
+    assert.equal(tracks.at(-1).src, undefined);
     assert.equal(elements['session-start'].dataset.audioState, 'stopped');
     assert.equal(elements.play.disabled, false);
     assert.equal(elements.play.label.textContent, 'Starten');
@@ -355,12 +387,18 @@ test('Stopping during browser audio unlock never saves a previous protocol under
     context.currentTime = Number(elements['session-start'].dataset.audioEndTime);
     context.nodes.at(-1).onended();
     await ready(() => elements['session-start'].dataset.audioState === 'completed');
+    assert.equal(tracks.at(-1).paused, true, 'completion stops the music');
+    const warning = t.mock.method(console, 'warn', () => {});
+    rejectMusic = true;
     assert.equal(elements['session-time'].textContent, '01:08');
     assert.equal(elements['session-progress'].value, 68);
     elements.play.dispatchEvent(new Event('click'));
     await ready(() => elements['session-start'].dataset.audioState === 'playing');
     assert.equal(elements['session-time'].textContent, '00:00');
     assert.equal(elements['session-progress'].value, 0);
+    assert.equal(tracks.at(-1).currentTime, 0, 'replay creates a fresh music loop');
+    assert.equal(tracks.at(-1).paused, true, 'a music failure leaves the session playing');
+    assert.equal(warning.mock.calls.length, 1);
     elements['session-back'].dispatchEvent(new Event('click'));
   } finally {
     for (const key of keys) {

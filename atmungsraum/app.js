@@ -1,5 +1,5 @@
 import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261106-polar-timeout';
-import { mountSessionAudio } from './audio/session-ui.js?v=20261106-polar-timeout';
+import { mountSessionAudio } from './audio/session-ui.js?v=20261108-background-music';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
 import { mountDataFiles } from './data-files.js?v=20261108-startup-unlock';

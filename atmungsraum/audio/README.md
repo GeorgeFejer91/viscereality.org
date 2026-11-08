@@ -8,6 +8,22 @@ are silent UI placeholders with matching draft TXT/JSON/CSV; final speech awaits
 wording approval. The shared library recordings below are retained references. JSON determines timing/order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
+## Browser background music
+
+The browser demo starts [the supplied music](../assets/audio/background/ji3ji3.mp3)
+from Starten and repeats it using the browser's audio player. It pauses with the
+session, resumes at the same position, and releases the track on completion,
+abort, or when the page is hidden. The next session starts from the beginning.
+Music load failure leaves the timed cues and session controls available.
+
+The public 7.65 MB MP3 keeps the full source timing and playback level. It is a
+stereo 48 kHz export made with FFmpeg `-map 0:a:0 -map_metadata -1 -c:a libmp3lame -q:a 4`.
+The same-basename TXT is empty for the instrumental track. The scenario WAVs,
+frame schedules, and receipts retain their existing role. In a Quest rehearsal
+the headset owns stimulus audio.
+
+## Session timing
+
 **Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute
 sequence. Instruction 1 (26 s), Calibration (15 s), Instruction 2 (40 s), fifty
 complete 16-second cycles (800 s) and Outro (19 s) total 900 seconds. There is no

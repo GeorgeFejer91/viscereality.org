@@ -30,6 +30,12 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   exactly 30 seconds retains the existing recovery behavior. See Atmungsraum
   PROJECT.md and VERIFICATION.md for browser-demo evidence and hardware limits.
 
+- Background music (2026-11-08): the browser demo plays the supplied
+  `ji3ji3` track on a loop during practice and main playback. The existing
+  playback controls govern both the track and the cues. The track loads on
+  Start and stops on session completion or abort. Quest owns its own audio.
+  See [the browser audio contract](../atmungsraum/audio/README.md#browser-background-music).
+
 - Scenario assets (2026-11-06): every scenario owns numbered unique WAV/CSV/TXT/JSON groups under `atmungsraum/assets/audio/scenarios/`, with asset/timeline CSVs, manifest and playlist. Same-basename per-cue CSVs list all chronological occurrences with exact timing and matching draft words; names encode first-use order and onset, while the full playlist/timeline records repeated cycles. All current runtime cues are silent placeholders, explicitly authorized for a working UI; TXT is intended draft wording and spoken text remains empty. Final narration still requires wording approval. Main goes directly to one exact 15-minute sequence; its breathing window remains 26–41 seconds. See the scenario README.
 
 - Audio scripts (2026-11-06): each library WAV/MP3 requires an adjacent exact-

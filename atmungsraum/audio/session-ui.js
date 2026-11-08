@@ -2,6 +2,8 @@ import { BoxBreathingEngine } from './box-breathing.js?v=20261106-placeholders';
 import { state, start } from '../ui-logic.js?v=20261106-polar-timeout';
 import { participantIdentity } from '../data-logging.js?v=20261105-data';
 
+const BACKGROUND_MUSIC = new URL('../assets/audio/background/ji3ji3.mp3', import.meta.url);
+
 // This controller owns the final-stage audio; routing and the demo ECG stay in app.js.
 export function mountSessionAudio({ data } = {}) {
   const stage = document.getElementById('session-start');
@@ -19,6 +21,7 @@ export function mountSessionAudio({ data } = {}) {
   const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
   const format = (seconds) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
   let engine, preparation, key = null, gate = false, mode = 'idle', message = '', token = 0, frame = 0;
+  let music;
   let active = null;
   let totalSeconds = 0;
   let tick = () => {};
@@ -82,9 +85,31 @@ export function mountSessionAudio({ data } = {}) {
     }
   }
 
+  function playMusic() {
+    if (!music) {
+      music = new Audio(BACKGROUND_MUSIC.href);
+      music.loop = true;
+    } else if (music.error) {
+      music.load();
+    }
+    const track = music;
+    track.play().catch((error) => {
+      if (track === music && error.name !== 'AbortError') console.warn('Background music could not play.', error);
+    });
+  }
+
+  function stopMusic() {
+    if (!music) return;
+    music.pause();
+    music.removeAttribute('src');
+    music.load();
+    music = null;
+  }
+
   function end(reason = 'user-abort') {
     ++token;
     cancelAnimationFrame(frame);
+    stopMusic();
     engine?.abort(reason);
     // A cancelled resume() may leave the preceding run's receipt in the engine.
     // Never attach that old protocol to a new attempt that has not started.
@@ -128,9 +153,15 @@ export function mountSessionAudio({ data } = {}) {
     active = attempt;
     mode = 'starting'; message = 'Audio startet …'; paint();
     try {
-      // resume() is called from this user action; assets were prepared beforehand.
-      const session = await engine.start(attempt.selection.minutes ?? 'anleitung',
+      // Unlock the audio clock and the music from the same user action.
+      const starting = engine.start(attempt.selection.minutes ?? 'anleitung',
         { mainRound: attempt.selection.branch === 'haupt' });
+      playMusic();
+      const session = await starting;
+      const done = session.done.then((receipt) => {
+        if (ownToken === token) stopMusic();
+        return receipt;
+      });
       attempt.startAt = session.startAt;
       const calibration = engine.receipt().calibration;
       if (calibration) window.dispatchEvent(new CustomEvent('atmungsraum:calibration-scheduled', {
@@ -143,7 +174,7 @@ export function mountSessionAudio({ data } = {}) {
       await attempt.recording?.ready;
       attempt.recordingPending = false;
       if (attempt.pendingReceipt) save(attempt.pendingReceipt, attempt);
-      if (ownToken !== token) { save(await session.done, attempt); return; }
+      if (ownToken !== token) { save(await done, attempt); return; }
       mode = 'playing'; message = '';
       totalSeconds = session.protocol.total_frames / session.protocol.sample_rate;
       stage.dataset.audioStartTime = String(session.startAt);
@@ -166,7 +197,7 @@ export function mountSessionAudio({ data } = {}) {
         frame = requestAnimationFrame(tick); // Display only; it never starts audio.
       };
       paint(); tick();
-      const receipt = await session.done;
+      const receipt = await done;
       const saved = save(receipt, attempt);
       if (ownToken !== token) return;
       cancelAnimationFrame(frame);
@@ -185,7 +216,10 @@ export function mountSessionAudio({ data } = {}) {
       attempt.recordingPending = false;
       // A failed old reservation must never abort or relabel a newer run.
       const ownsRun = attempt.startAt != null && engine.receipt()?.start_at_audio_seconds === attempt.startAt;
-      if (ownToken === token && active === attempt) engine?.abort('start-or-data-failed');
+      if (ownToken === token && active === attempt) {
+        stopMusic();
+        engine.abort('start-or-data-failed');
+      }
       if (attempt.pendingReceipt) save(attempt.pendingReceipt, attempt);
       else if (ownsRun) save(engine.receipt(), attempt);
       if (ownToken === token) {
@@ -200,6 +234,7 @@ export function mountSessionAudio({ data } = {}) {
     const ownToken = token;
     mode = 'pausing';
     cancelAnimationFrame(frame);
+    music?.pause();
     paint();
     try {
       const paused = await engine.pause();
@@ -219,7 +254,9 @@ export function mountSessionAudio({ data } = {}) {
     const ownToken = token;
     mode = 'resuming'; paint();
     try {
-      const resumed = await engine.resume();
+      const resuming = engine.resume();
+      playMusic();
+      const resumed = await resuming;
       if (ownToken !== token || mode !== 'resuming' || !resumed) return;
       mode = 'playing'; message = '';
       active?.recording?.mark('playing', engine.context.currentTime - active.startAt);
@@ -236,6 +273,9 @@ export function mountSessionAudio({ data } = {}) {
     if (event.key === 'Escape' && ['playing', 'starting', 'pausing', 'paused', 'resuming'].includes(mode)) { event.preventDefault(); end('escape'); }
   });
   window.addEventListener('pagehide', () => end('page-hidden'));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopMusic();
+  });
 
   function resetProgress(selection) {
     totalSeconds = selection?.minutes ? selection.minutes * 60 : 0;

@@ -1,5 +1,23 @@
 # Verification
 
+## Browser session background music — 2026-11-08
+
+FFmpeg decoded the entire stereo MP3 without errors. Chrome reports 425.284
+seconds, and the measured mean level matches the WAV at −33.6 dBFS.
+The MP3 is 7,651,988 bytes with SHA-256
+`6c83316b326b105465cb8c4b434a926f789d9aaf3014543ec477d5e6e0e546fa`.
+
+Chrome on the 390 × 844 browser demo requested music only after Starten,
+resumed at the paused position, and played from the beginning after reaching
+EOF. End and Polar loss stopped and released the element. A fresh session
+started a fresh track. Quest entry made no browser music request. The fixture
+used a range-capable local server and synthetic startup credentials.
+
+All 71 Node tests passed, including natural completion, a cancelled start,
+and a rejected music play request. UI, context, all six scenario JSON/CSV
+pairs and Python scenario asset checks passed. Physical phone and headset
+listening remain separate checks.
+
 ## Required startup unlock and Pages-only delivery — 2026-11-08
 
 Chromium checks the startup password on the default, CSV recovery and Quest
