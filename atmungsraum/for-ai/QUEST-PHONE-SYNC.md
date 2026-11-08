@@ -12,8 +12,14 @@ closed.
    normalization in [data-logging.js](../data-logging.js) and the filename
    contract in [DATA-LOGGING.md](DATA-LOGGING.md).
 2. For participant recording mode, bind the normalized ID to the authorized
-   Arm request. Send it in an encrypted enrolled-only, generation-bound
-   payload. Quest validates the ID and reserves the attempt index durably
+   Arm request. Signed status advertises `participant_arm: 1` when Remote-only
+   and recording export are selected. The enrolled LAN `participant-arm`
+   action carries the existing v1 Arm fields, `participant_id`, and the
+   observed native generation `g` in AES-GCM. Derive the request key using
+   HMAC-SHA-256 over `RQG1-ARM-KEY|controller|device|epoch` with the enrolled
+   key. Additional data is `RQG1-ARM|device|epoch|nonce`. Quest admits it
+   against current idle VR preparation and live ECG, validates the ID and
+   reserves the attempt index durably
    per participant and condition. It allocates a unique session UUID before
    writing samples. A participant edit applies to a later Arm.
 3. Quest writes and finalizes `<participant_id>_<condition><run>.csv`, for
@@ -63,8 +69,9 @@ run advertises `participant_csv: true` in the list entry and includes a
 the name, size, SHA-256 and session UUID. For these runs the browser
 fetches only the CSV, replacing a stored legacy archive for the same native
 recording ID after verification. The original streams remain on Quest.
-The writer and export have host evidence. Encrypted Arm identity from
-the operator form and qualification of the matched APK remain open.
+The writer, export and encrypted Arm from the operator form have host
+evidence. Both current rehearsal tracks use `probe` for file indexing.
+Qualification of the matched APK and physical phone remains open.
 
 The Chrome fixtures passed restart and catch-up with synthetic native data.
 Physical acceptance requires an installed Android controller and a Quest with

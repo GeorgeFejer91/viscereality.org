@@ -61,6 +61,7 @@ window.addEventListener('hashchange', render);
 byId('sensor-next').addEventListener('click', (event) => { if (!confirmECG()) event.preventDefault(); });
 byId('patient-form').addEventListener('submit', (event) => {
   event.preventDefault();
+  if (rehearsalMode) return;
   const details = Object.fromEntries(new FormData(event.currentTarget));
   if (confirmPatient(details)) {
     location.hash = 'h10';
@@ -243,7 +244,7 @@ async function measureLabels() {
 render();
 measureLabels();
 if (rehearsalMode) {
-  import('./quest-ui.js?v=5').then(({ mountQuestRehearsal }) => mountQuestRehearsal()).catch(() => {
+  import('./quest-ui.js?v=6').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity)).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {

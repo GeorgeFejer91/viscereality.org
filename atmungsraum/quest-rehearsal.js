@@ -143,7 +143,7 @@ export class QuestRehearsal {
     return this.refreshing;
   }
 
-  async dispatch(gateway, op, status, signal, target = '') {
+  async dispatch(gateway, op, status, signal, target = '', participantId = '') {
     signal?.throwIfAborted();
     const id = operationId();
     const pending = { id, op, owner: gateway.owner, generation: status.g };
@@ -161,11 +161,14 @@ export class QuestRehearsal {
     }
     this.remember(pending);
     this.update({ message: '' });
-    return this.observe(gateway, await gateway.command(command, signal));
+    const receipt = op === 'arm' && status.participant_arm === 1
+      ? await gateway.participantArm({ ...command, g: status.g, participant_id: participantId }, signal)
+      : await gateway.command(command, signal);
+    return this.observe(gateway, receipt);
   }
 
-  async dispatchAndConfirm(gateway, op, signal, timeout, target) {
-    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target);
+  async dispatchAndConfirm(gateway, op, signal, timeout, target, participantId) {
+    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target, participantId);
     const deadline = performance.now() + timeout;
     while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
       && !signal?.aborted && performance.now() < deadline) {
@@ -205,7 +208,7 @@ export class QuestRehearsal {
     if (setup?.c && !setup.e) await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x);
   }
 
-  async run(action, signal, condition = conditions[0]) {
+  async run(action, signal, condition = conditions[0], participantId = '') {
     const gateway = this.gateway;
     const clicked = this.state.status;
     const requested = rehearsalActions(clicked, condition)[action];
@@ -229,9 +232,10 @@ export class QuestRehearsal {
         await this.dispatch(gateway, op, status, signal);
         return;
       }
+      if (status.participant_arm === 1 && (!participantId || !gateway.participantArm || !polarSetup(status)?.e)) return;
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
-      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition)
+      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId)
         && rehearsalActions(this.state.status).play === 'start') {
         await this.dispatch(gateway, 'start', this.state.status, signal);
       }

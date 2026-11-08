@@ -1,5 +1,17 @@
 # Verification
 
+## Encrypted participant Arm — 2026-11-08
+
+The Java gateway suite and enrolled LAN harness verified authenticated
+decryption, guest and relay denial, stale-generation and absent-ECG
+rejection, once-only dispatch, and a receipt without the participant ID.
+Chrome fixtures reused the participant form, checked the normalized ID and
+disabled Start before it was set, decrypted the bounded private Arm on the
+fixture server, verified the original participant CSV, and repeated after a
+browser and simulated Quest restart. Phone portrait, short landscape and
+200% text reflow passed. APK, live H10, and physical phone verification are
+separate gates.
+
 ## Startup unlock and two-action folder — 2026-11-08
 
 Chrome's synthetic browser fixture checks initial focus, incorrect password,

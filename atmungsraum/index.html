@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261108-folder-sync">
+  <link rel="stylesheet" href="./style.css?v=20261108-participant-arm">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261108-folder-sync"></script>
+  <script type="module" src="./app.js?v=20261108-participant-arm"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -151,6 +151,9 @@
           </details>
         </form>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
+        <details id="quest-participant" hidden>
+          <summary><span id="quest-participant-label" data-measure>Teilnehmer-ID eingeben</span></summary>
+        </details>
         <label id="quest-condition-label" hidden>
           <span data-measure>Szenario</span>
           <select id="quest-condition">

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHmac } from 'node:crypto';
+import { createDecipheriv, createHmac } from 'node:crypto';
 import { discoverQuest, joinQuest, questEndpoint } from '../quest-gateway.js';
 import { QuestRehearsal } from '../quest-rehearsal.js';
 
@@ -57,6 +57,34 @@ test('joins a private Quest, verifies signed observations, and never enrolls the
   for (const fixture of [server({ tamper: true }), server({ status: { ...snapshot(), o: { ...snapshot().o, a: 6000 } } }), server({ status: { ...snapshot(), build: { v: 1, packaging_fingerprint: key } } })]) {
     await assert.rejects(joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch }));
   }
+});
+
+test('participant Arm encrypts the identity and observed generation for the enrolled Quest', async () => {
+  const state = { ...snapshot(), participant_arm: 1, recordings: 1, ecg_preview: 1 };
+  const fixture = server({ status: state });
+  const body = { v: 1, id: 'a'.repeat(16), op: 'arm', condition: 'condition-a',
+    bias: 0, nonce: 'b'.repeat(16), g: 0, participant_id: 'Mül_35_N' };
+  let received;
+  const fetcher = async (url, init) => {
+    const envelope = init.body && JSON.parse(init.body);
+    if (envelope?.action === 'participant-arm') {
+      assert.ok(!init.body.includes(body.participant_id));
+      const { v, iv, data } = JSON.parse(envelope.payload);
+      assert.equal(v, 1);
+      const bytes = Buffer.from(data, 'base64');
+      const keyBytes = Buffer.from(mac(`RQG1-ARM-KEY|${controller}|${owner.device}|${owner.epoch}`), 'hex');
+      const cipher = createDecipheriv('aes-256-gcm', keyBytes, Buffer.from(iv, 'base64'));
+      cipher.setAAD(Buffer.from(`RQG1-ARM|${owner.device}|${owner.epoch}|${envelope.nonce}`));
+      cipher.setAuthTag(bytes.subarray(-16));
+      received = JSON.parse(Buffer.concat([cipher.update(bytes.subarray(0, -16)), cipher.final()]));
+    }
+    return fixture.fetch(url, init);
+  };
+  const guest = await joinQuest({ endpoint, serial: owner.serial, build, fetcher });
+  assert.equal(guest.participantArm, null);
+  const enrolled = await joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key }, fetcher });
+  await enrolled.participantArm(body);
+  assert.deepEqual(received, body);
 });
 
 test('Bluetooth reads both identity characteristics and releases GATT before LAN enrollment', async () => {

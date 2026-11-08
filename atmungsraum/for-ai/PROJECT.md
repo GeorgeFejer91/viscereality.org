@@ -7,9 +7,9 @@
 Protocol and acceptance contract: [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 
 The Quest remains the recording authority. The operator enters participant
-details on the phone and sees the ID from `data-logging.js`. A future
-enrolled-only encrypted Arm payload must bind that identity to the native
-attempt before samples are written. Quest must reserve the run index and UUID
+details on the phone and sees the ID from `data-logging.js`. The
+enrolled-only encrypted Arm payload binds that identity to the native
+attempt before samples are written. Quest reserves the run index and UUID
 durably and finalize the participant-named CSV on Quest using DATA-LOGGING.md.
 Keep the native original streams available for recovery and provenance. Legacy
 rehearsals have no participant ID and retain their original recording identity.
@@ -25,10 +25,10 @@ rehearsals have no participant ID and retain their original recording identity.
 - [x] Close and restart Chrome with the same profile, rejoin the same Quest
   identity with a new simulated native epoch, and finish a second rehearsal.
   Confirm all prior copies remain and only the new run's bytes transfer.
-- [ ] Route the existing participant form into VR-Probe and pass its
+- [x] Route the existing participant form into VR-Probe and pass its
   normalized identity in a versioned encrypted, generation-bound Arm.
   Reject missing identity for the participant recording mode. Confirm that
-  identity edits between runs cannot rename or relabel a previous run.
+  identity is frozen by Arm; completed files retain their original IDs.
 - [x] Extend the native writer and export allowlist for participant CSVs,
   including finalized partial runs. Host tests verify durable run allocation,
   a native CSV with sensor timestamps and gaps, and hash-bound export. The
@@ -52,13 +52,11 @@ controller page is visible and connected. A closed or suspended PWA
 catches up after reopening and rejoining. Keep Quest copies as the source of
 truth. No cloud service participates in this flow.
 
-The browser increment is on `main` at release `9398177`, published by
-[Pages run 42487461920](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42487461920).
-All six live runtime files matched its commit bytes. The restart fixture
-passed against the deployed app. The next implementation increment is
-the encrypted participant Arm route from the operator form through the
-Android gateway to the host-tested writer. Then build the matched APK and
-run the physical acceptance checklist.
+The CSV pull increment `fe8fcff` passed
+[Pages run 42489987230](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42489987230)
+and the live restart fixture. The participant form and encrypted Arm route
+have browser and gateway host evidence. Build and install the matched APK
+and run the physical acceptance checklist.
 
 ### Remote-only controller and native data — 2026-11-08
 

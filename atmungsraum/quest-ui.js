@@ -1,5 +1,5 @@
-import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=2';
-import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=3';
+import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=3';
+import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=4';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=3';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=1';
 
@@ -16,7 +16,7 @@ const labels = {
   SAVING: 'Quest speichert den Probelauf.', ERROR: 'Die Quest meldet einen Fehler.',
 };
 
-export function mountQuestRehearsal() {
+export function mountQuestRehearsal(participantIdentity) {
   const form = byId('quest-join');
   const statusText = byId('quest-status');
   const clock = byId('quest-clock');
@@ -29,6 +29,16 @@ export function mountQuestRehearsal() {
   const disconnect = byId('quest-disconnect');
   const demo = byId('quest-demo');
   const condition = byId('quest-condition');
+  const participant = byId('quest-participant');
+  const participantLabel = byId('quest-participant-label');
+  const participantForm = byId('patient-form');
+  const participantFields = byId('patient-fields');
+  const participantSubmit = byId('patient-next');
+  let participantId = '';
+  participant.append(participantForm);
+  participantForm.append(participantSubmit);
+  participantFields.setAttribute('aria-labelledby', participantLabel.id);
+  text(participantSubmit.firstElementChild, 'Teilnehmer-ID übernehmen');
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -50,6 +60,8 @@ export function mountQuestRehearsal() {
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
     const actions = rehearsalActions(status, condition.value);
     const active = Boolean(status?.rec);
+    const requiresParticipant = status?.participant_arm === 1;
+    const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
     const waiting = Boolean(connecting || busy || pending || status?.pending);
     const wasJoining = !form.hidden;
     const hadFinishFocus = document.activeElement === finish;
@@ -59,6 +71,7 @@ export function mountQuestRehearsal() {
     const hint = !status ? 'Quest ist nicht verbunden.'
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : status.pi?.r !== false ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
+      : requiresParticipant && !armedWithParticipant ? 'Verbinde dich mit dem Quest-Schlüssel, um einen Probelauf zu starten.'
       : status.p === 'IDLE' && !actions.play ? 'Warte auf die VR-Szene und den Probelauf.'
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || (unknown
@@ -72,6 +85,14 @@ export function mountQuestRehearsal() {
     }
     const setup = polarSetup(status);
     const ready = setup?.p && setup.b && setup.c && setup.e;
+    const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active;
+    if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
+      statusText.focus({ preventScroll: true });
+    }
+    participant.hidden = !showParticipant;
+    participantFields.disabled = !showParticipant || waiting || unknown;
+    participantSubmit.disabled = participantFields.disabled;
+    text(participantLabel, participantId ? `Teilnehmer-ID: ${participantId}` : 'Teilnehmer-ID eingeben');
     const hadPolarFocus = document.activeElement === polarConnect;
     polar.hidden = status?.p !== 'IDLE' || active;
     text(polarStatus, !setup ? 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.'
@@ -86,7 +107,8 @@ export function mountQuestRehearsal() {
     play.hidden = !status;
     condition.parentElement.hidden = status?.ecg_preview !== 1 || status.p !== 'IDLE';
     condition.disabled = waiting || unknown;
-    play.disabled = waiting || unknown || !actions.play;
+    play.disabled = waiting || unknown || !actions.play
+      || actions.play === 'arm' && requiresParticipant && (!armedWithParticipant || !participantId || !ready);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -284,11 +306,29 @@ export function mountQuestRehearsal() {
     nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
-    try { await rehearsal.run(action, attempt.signal, condition.value); }
+    try { await rehearsal.run(action, attempt.signal, condition.value, participantId); }
     finally { if (userAction === attempt) userAction = null; }
   }
 
   form.addEventListener('submit', (event) => { event.preventDefault(); connect(false); });
+  participantForm.addEventListener('input', () => {
+    if (!participantId) return;
+    participantId = '';
+    paint();
+  });
+  participantForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (participantFields.disabled) return;
+    try {
+      participantId = participantIdentity(Object.fromEntries(new FormData(participantForm))).id;
+      participant.open = false;
+      participant.querySelector('summary').focus({ preventScroll: true });
+      paint();
+    } catch {
+      participantId = '';
+      paint();
+    }
+  });
   byId('quest-find').addEventListener('click', () => connect(true));
   polarConnect.addEventListener('click', () => act('polar'));
   condition.addEventListener('change', () => paint());

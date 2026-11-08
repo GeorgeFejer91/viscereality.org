@@ -119,10 +119,17 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
     }
     const controller = ticket.controller;
     const signingKey = await crypto.subtle.importKey('raw', encode.encode(ticket.key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
-    let ecgKey;
+    let ecgKey, armKey;
     const exchange = async (action, body, requestSignal) => {
       requestSignal?.throwIfAborted();
       const nonce = toHex(crypto.getRandomValues(new Uint8Array(16)));
+      if (action === 'participant-arm') {
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const bytes = await crypto.subtle.encrypt({ name: 'AES-GCM', iv,
+          additionalData: encode.encode(`RQG1-ARM|${owner.device}|${owner.epoch}|${nonce}`) },
+        armKey, encode.encode(JSON.stringify(body)));
+        body = { v: 1, iv: btoa(String.fromCharCode(...iv)), data: btoa(String.fromCharCode(...new Uint8Array(bytes))) };
+      }
       const payload = JSON.stringify(body);
       const mac = toHex(new Uint8Array(await crypto.subtle.sign('HMAC', signingKey, encode.encode(`RQG1|${controller}|${owner.epoch}|${nonce}|${action}|${payload}`))));
       requestSignal?.throwIfAborted();
@@ -168,8 +175,14 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
       const bytes = await crypto.subtle.sign('HMAC', signingKey,
         encode.encode(`RQG1-PRIVATE-KEY|${controller}|${owner.device}|${owner.epoch}`));
       ecgKey = await crypto.subtle.importKey('raw', bytes, 'AES-GCM', false, ['decrypt']);
+      if (initial.participant_arm === 1 && initial.recordings === 1) {
+        const armBytes = await crypto.subtle.sign('HMAC', signingKey,
+          encode.encode(`RQG1-ARM-KEY|${controller}|${owner.device}|${owner.epoch}`));
+        armKey = await crypto.subtle.importKey('raw', armBytes, 'AES-GCM', false, ['encrypt']);
+      }
     }
     return { owner, initial, status, command: (command, requestSignal) => exchange('command', command, requestSignal),
+      participantArm: armKey ? (command, requestSignal) => exchange('participant-arm', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,
       recordings: ecgKey && initial.recordings === 1 ? (query, requestSignal) => exchange('recordings', query, requestSignal) : null,
       receipt: (id) => exchange('receipt', { id }), close: () => lifetime.abort() };
