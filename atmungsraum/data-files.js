@@ -1,5 +1,4 @@
 import { sendDiscordLink } from './link-relay.js?v=20261107-file-delivery';
-import { unlockSharingConfig } from './discord-share.js?v=20261108-folder-sync';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
 import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';
 // ZIP32 with stored entries preserves the original recording bytes.
@@ -49,19 +48,12 @@ export function createExportsZip(records) {
   return new Blob([...parts, ...directory, end], { type: 'application/zip' });
 }
 
-export function mountDataFiles(data) {
+export function mountDataFiles(data, { webhook, relay }) {
   const byId = id => document.getElementById(id);
   const dialog = byId('files-dialog'), button = byId('open-files'), close = byId('close-files');
   const counts = byId('files-counts'), status = byId('files-status'), progress = byId('files-progress');
   const sendNew = byId('send-new-files'), sendAll = byId('send-all-files');
-  const passwordDialog = byId('discord-password-dialog'), passwordInput = byId('discord-password');
-  const form = byId('discord-password-form'), passwordStatus = byId('discord-password-status');
-  const credentialId = byId('discord-password-user').value;
-  const remember = byId('remember-discord-password');
-  const canRemember = typeof globalThis.PasswordCredential === 'function' && typeof navigator.credentials?.store === 'function';
-  remember.closest('label').hidden = !canRemember;
   let active, returnFocus, generation = 0, total = 0, unsent = 0;
-  let access, pendingUnlock;
 
   function syncButtons() {
     sendNew.disabled = Boolean(active) || unsent === 0;
@@ -86,80 +78,6 @@ export function mountDataFiles(data) {
     syncButtons();
   }
 
-  passwordDialog.addEventListener('keydown', event => { if (event.key === 'Escape') event.stopPropagation(); });
-  function requestPassword(signal) {
-    return new Promise(resolve => {
-      if (signal?.aborted) { resolve(null); return; }
-      const flow = new AbortController(), listeners = { signal: flow.signal };
-      const submitButton = form.querySelector('button[type="submit"]');
-      const previousFocus = document.activeElement;
-      const finish = value => {
-        flow.abort();
-        passwordInput.value = '';
-        submitButton.disabled = false;
-        if (passwordDialog.open) passwordDialog.close();
-        if (dialog.open) status.focus({ preventScroll: true });
-        else if (document.activeElement === document.body) {
-          const fallback = document.querySelector('main .screen:not([hidden]) h1');
-          (previousFocus === document.body ? fallback : previousFocus)?.focus({ preventScroll: true });
-        }
-        resolve(value);
-      };
-      const submit = async event => {
-        event.preventDefault();
-        if (submitButton.disabled || !passwordInput.reportValidity()) return;
-        const password = passwordInput.value, save = canRemember && remember.checked;
-        submitButton.disabled = true;
-        passwordStatus.textContent = 'Passwort wird geprüft …';
-        try {
-          const result = await unlockSharingConfig(password, flow.signal);
-          if (flow.signal.aborted) return;
-          if (save) {
-            try {
-              navigator.credentials.store(new PasswordCredential({ id: credentialId, password })).catch(() => {});
-            } catch { /* Unlocking also works without browser storage. */ }
-          }
-          finish(result);
-        } catch (error) {
-          if (flow.signal.aborted) return;
-          passwordStatus.textContent = error.message;
-          submitButton.disabled = false;
-          passwordInput.focus({ preventScroll: true });
-          passwordInput.select();
-        }
-      };
-      const cancel = event => { event.preventDefault(); finish(null); };
-      form.addEventListener('submit', submit, listeners);
-      byId('cancel-discord-password').addEventListener('click', cancel, listeners);
-      passwordDialog.addEventListener('cancel', cancel, listeners);
-      passwordDialog.addEventListener('close', cancel, listeners);
-      signal?.addEventListener('abort', cancel, listeners);
-      passwordInput.value = '';
-      passwordStatus.textContent = '';
-      remember.checked = false;
-      passwordDialog.showModal();
-      passwordInput.focus({ preventScroll: true });
-    });
-  }
-
-  async function restoreAccess() {
-    if (!canRemember || typeof navigator.credentials.get !== 'function') return null;
-    try {
-      const saved = await navigator.credentials.get({ password: true, mediation: 'silent' });
-      if (saved?.id === credentialId) return await unlockSharingConfig(saved.password);
-    } catch { /* An unavailable or outdated credential falls back to the prompt. */ }
-    return null;
-  }
-
-  function unlock(signal, restore = false) {
-    if (access) return Promise.resolve(access);
-    pendingUnlock ??= (async () => {
-      access = (restore ? await restoreAccess() : null) ?? await requestPassword(signal);
-      return access;
-    })().finally(() => { pendingUnlock = null; });
-    return pendingUnlock;
-  }
-
   async function deliver(all) {
     if (active || !dialog.open) return;
     const controller = active = new AbortController(), { signal } = controller;
@@ -177,13 +95,8 @@ export function mountDataFiles(data) {
           status.textContent = all ? 'Keine gespeicherten Dateien.' : 'Keine ungesendeten Dateien.';
           return;
         }
+        if (!relay) throw new Error('Wormhole erlaubt keinen direkten Upload von dieser Website.');
         const confirmReceipt = prepareDeliveryReceipt(storage, selected);
-        if (!access) status.textContent = 'Passwort eingeben …';
-        const credentials = await unlock(signal);
-        signal.throwIfAborted();
-        if (!credentials) { status.textContent = 'Versand abgebrochen.'; return; }
-        const { webhook, relay } = credentials;
-        if (!relay) throw new Error('Der Upload-Dienst ist derzeit nicht verfügbar.');
         status.textContent = 'ZIP wird vorbereitet …';
         const file = new File([createExportsZip(selected.map(entry => entry.record))], 'Atmungsraum-Daten.zip', { type: 'application/zip' });
         let lastPhase;
@@ -258,5 +171,4 @@ export function mountDataFiles(data) {
   window.addEventListener('storage', event => {
     if (event.key === null || event.key === deliveryKey || event.key.startsWith(receiptPrefix)) refresh();
   });
-  return { unlockOnLoad: () => unlock(undefined, true) };
 }

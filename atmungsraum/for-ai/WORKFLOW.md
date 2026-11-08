@@ -116,13 +116,12 @@ Keep the folder to unsent and all saved files, counts and progress. Preserve
 downloads at `#daten` and the JSON receipt ledger across reloads, changes,
 rejected posts, cancellation and concurrent tabs.
 
-Deploy the existing upload-only [Render Blueprint](../../render.yaml) with the
-private `LINK_RELAY_TOKEN`. After verifying the project controls the HTTPS
-endpoint, run `node sharing/configure-discord.mjs <service-url>` and publish only
-the authenticated ciphertext. The version 1 production envelope permits
-password unlock and reports the missing service when an operator tries to
-send. Never publish plaintext credentials, keyed links or participant files.
-See [sharing/README.md](../sharing/README.md).
+GitHub Pages is the only production host. The version 1 envelope unlocks the
+whole app interface. Direct uploads from the phone browser carry the app
+origin and Wormhole rejects their preflight. Keep the existing relay code
+available for synthetic testing. Activating a relay requires a change to the
+hosting constraint. Never publish plaintext credentials, keyed links or
+participant files. See [sharing/README.md](../sharing/README.md).
 
 `vendor/wormhole-crypto/README.md` pins the MIT crypto runtime. Regenerate with
 `node for-ai/scripts/vendor-wormhole.mjs`; verify package integrity, localized

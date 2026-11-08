@@ -66,12 +66,12 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   space with portrait top/bottom clearance and a short-landscape central column;
   use readable document reflow at the revised small-screen no-fit boundary.
 
-- Saved data (2026-11-08): the startup password unlocks delivery for the
-  open tab, with opt-in browser credential saving. The folder sends unsent or
-  all saved session CSVs through the centrally configured Wormhole upload
-  relay. Discord receives only the keyed link directly from the browser.
-  JSON receipts follow Discord acknowledgement. Individual downloads remain
-  at `#daten`. See Atmungsraum PROJECT.md for hosted relay activation.
+- Saved data (2026-11-08): the startup password unlocks the Atmungsraum
+  interface, with opt-in browser credential saving. The folder offers unsent
+  and all saved session CSVs. Automatic delivery remains unavailable because
+  Wormhole blocks direct uploads from the app origin and GitHub Pages is the
+  only host. Individual downloads remain at `#daten` after unlock. See
+  Atmungsraum PROJECT.md for the browser boundary.
 
 - Path: `atmungsraum/index.html`
 - Public URL: <https://viscereality.org/atmungsraum/> (the directory index also serves `/atmungsraum`).

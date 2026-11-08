@@ -1,5 +1,21 @@
 # Verification
 
+## Required startup unlock and Pages-only delivery — 2026-11-08
+
+Chromium checks the startup password on the default, CSV recovery and Quest
+routes. Wrong passwords and Escape keep the interface locked. Correct unlock
+clears the field and restores focus to the active heading. Silent restoration
+uses a fixture for the browser credential API. Five layouts plus 320px
+reflow at 200% text and enlarged spacing passed. The two-action folder fixture
+still passes eight simulated uploads and seven intercepted Discord requests.
+The production envelope has no relay and the folder makes no provider request.
+
+The previous live folder release also ran a Chromium fixture through the
+local upload adapter against real Wormhole/Backblaze. Two ciphertext pieces
+restored the exact 9,800,146-byte synthetic ZIP. Discord was intercepted.
+Wormhole's live manifest and service worker confirm its system share-sheet
+handoff to a same-origin tab with no return of the generated URL.
+
 ## Encrypted participant Arm — 2026-11-08
 
 The Java gateway suite and enrolled LAN harness verified authenticated

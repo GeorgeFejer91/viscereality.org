@@ -13,11 +13,12 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261108-participant-arm">
+  <link rel="stylesheet" href="./style.css?v=20261108-startup-unlock">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261108-participant-arm"></script>
+  <script type="module" src="./app.js?v=20261108-startup-unlock"></script>
 </head>
-<body>
+<body data-delivery-locked>
+  <noscript>Atmungsraum benötigt JavaScript, um das Passwort zu prüfen.</noscript>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
     <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
     <span id="recenter-vr-note" class="sr-only">Platzhalter. Das Zentrieren des VR-Sichtfelds ist noch nicht verfügbar.</span>
@@ -60,15 +61,14 @@
     <p id="files-status" role="status" tabindex="-1" data-measure></p>
   </dialog>
   <dialog id="discord-password-dialog" aria-labelledby="discord-password-title" aria-describedby="discord-password-help">
-    <h2 id="discord-password-title" data-measure>Datenversand entsperren</h2>
+    <h2 id="discord-password-title" data-measure>Atmungsraum entsperren</h2>
     <form id="discord-password-form" method="dialog">
       <input id="discord-password-user" type="hidden" name="username" autocomplete="username" value="Atmungsraum Discord">
       <label for="discord-password" data-measure>Passwort</label>
       <input id="discord-password" type="password" name="password" autocomplete="current-password" maxlength="1024" required autofocus aria-describedby="discord-password-help">
-      <p id="discord-password-help" data-measure>Einmal entsperren, um Daten in diesem Tab zu senden.</p>
+      <p id="discord-password-help" data-measure>Gib das gemeinsame Passwort ein, um Atmungsraum zu öffnen.</p>
       <label class="relay-auto"><input id="remember-discord-password" type="checkbox"><span data-measure>Passwort im Browser merken</span></label>
       <div class="files-actions">
-        <button id="cancel-discord-password" type="button"><span data-measure>Abbrechen</span></button>
         <button type="submit"><span data-measure>Entsperren</span></button>
       </div>
       <p id="discord-password-status" role="status" data-measure></p>

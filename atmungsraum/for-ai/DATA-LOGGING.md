@@ -194,14 +194,16 @@ leave no checkout receipt. Clearing browser data resets the history. After
 a timeout or an unsaved receipt, check Discord before resending. Export files
 remain available independently of the checkout receipts.
 
-The startup password decrypts the public delivery envelope locally. The
-browser can remember the password on opt-in. The app holds the decrypted
-webhook and relay credentials in tab memory and reuses them for both send
-actions. The upload relay receives only encrypted chunks. A fresh per-upload
-key and salt encrypt the immutable ZIP with the pinned Wormhole crypto.
-Two passes hash and upload identical ciphertext pieces of up to 8 MiB.
-After Wormhole acknowledges the upload, the browser sends the complete keyed
-URL directly to Discord. See [sharing](../sharing/README.md).
+The startup password decrypts the public delivery envelope locally and opens
+the app interface. The browser can remember it on opt-in. The app holds the
+decrypted webhook in tab memory. The GitHub Pages-only release does not have
+an automatic upload route because Wormhole rejects the app origin.
+
+The tested relay flow encrypts the immutable ZIP on the phone with a fresh
+per-upload key and salt and the pinned Wormhole crypto. Two passes hash and
+upload identical ciphertext pieces of up to 8 MiB. After Wormhole acknowledges
+the upload, the browser sends the complete keyed URL directly to Discord.
+See [sharing](../sharing/README.md).
 
 Anyone with the full URL can access the share while valid. Wormhole controls
 expiry, storage and download limits. Cancellation cannot undo a provider

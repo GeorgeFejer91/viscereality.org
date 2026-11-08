@@ -73,14 +73,13 @@ will recenter the headset's central field of view. See PROJECT.md for its contra
 The mock ECG is a continuously replayed seeded NeuroKit2 trace. Each started run
 exports a participant-linked CSV and retains it for download recovery. All data logging must follow
 [DATA-LOGGING.md](DATA-LOGGING.md); it owns the required naming convention.
-The bottom-right folder offers **Ungesendete Daten senden** and **Alle Daten
-senden**, file counts and progress. The first menu unlocks delivery once per
-tab. Supported browsers can remember the password and silently restore access.
-Both actions encrypt the saved session CSVs, upload the ZIP through a centrally
-configured relay to Wormhole, and post only the complete link directly to
-Discord. Browser-local receipts track exact files after Discord accepts the
-link. Individual downloads remain at [the recovery URL](../index.html#daten).
-See [the sharing guide](../sharing/README.md) and [hosting status](PROJECT.md).
+The shared startup password unlocks the app, including Quest and the individual
+downloads at [the recovery URL](../index.html#daten). Supported browsers can
+remember the password and silently restore access. The folder offers
+**Ungesendete Daten senden** and **Alle Daten senden** with file counts.
+Automatic sends remain unavailable under the GitHub Pages-only constraint
+because Wormhole rejects uploads from the app origin. See [the sharing
+guide](../sharing/README.md) and [project status](PROJECT.md).
 
 Read common rules first, then the documents needed for the task:
 

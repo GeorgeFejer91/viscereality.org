@@ -67,6 +67,10 @@ record separate transport, display, foreground, and target frame evidence.
 The runbook links and PowerShell syntax passed local checks. The QFM and Fleet
 examples were checked against pinned provider sources. Physical qualification
 of the hold and restoration remains part of the attended rehearsal.
+Runbook commit `ed7b9bb` reached `origin/main` and deployed in
+[Pages run 42493012092](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42493012092).
+All four live Markdown files matched the commit bytes. The rendered runbook,
+its three entry links, and the Atmungsraum page returned HTTP 200.
 
 ### Remote-only controller and native data — 2026-11-08
 
@@ -411,11 +415,11 @@ record the platform-specific acceptance. Other phone platforms remain untested.
 
 ## One startup unlock for folder sync — 2026-11-08
 
-Use only **Ungesendete Daten senden** and **Alle Daten senden** to send the
-browser's saved session CSVs. The app unlocks delivery at startup and keeps
-access in tab memory. A supported browser can save and silently restore the
-sharing password. Skipping the initial prompt defers it to the first send.
-The individual download recovery URL opens without a startup prompt.
+Use only **Ungesendete Daten senden** and **Alle Daten senden** for the
+browser's saved session CSVs. The shared password now unlocks the entire app
+interface at startup, including the Quest and individual download routes.
+Access stays in tab memory. A supported browser can save and silently restore
+the password. GitHub Pages still serves static assets publicly.
 
 - [x] Remove the service setup controls and reuse the unlocked session for both
   sends. Preserve the exact file selection, encrypted ZIP and checkout receipts.
@@ -425,15 +429,22 @@ The individual download recovery URL opens without a startup prompt.
 - [x] Check synthetic startup, saved credential restore, both send actions, file
   bytes, acknowledgement, errors, focus, reflow and concurrent tabs. Restore a
   two-chunk synthetic ZIP from live Wormhole via the local Render adapter.
-- [ ] Connect and qualify the hosted relay. The expected Render host returned
-  HTTP 404 with `x-render-routing: no-server`. The previous Cloudflare preview
-  no longer resolves. Direct browser upload cannot create a Wormhole room from
-  this origin: the provider returned HTTP 405 to the JSON POST preflight and
-  omitted cross-origin permission. The Pages host serves static assets.
-  The existing authenticated Render Blueprint is the selected upload-only
-  service. Deploy it once from the project owner's signed-in account, then
-  verify the HTTPS endpoint and publish a version 2 envelope. Operators use
-  the same startup password. See [maintainer deployment](../sharing/README.md#maintainer-deployment).
+- [x] Require the startup password before opening any app route. Verify
+  wrong-password retry, Escape, saved credential restore, and focus.
+- [ ] Enable automatic upload under the GitHub Pages-only constraint. Direct
+  browser upload from the phone carries the Pages site's origin. Wormhole
+  returned HTTP 405 to the upload preflight and omitted cross-origin
+  permission. Wormhole's manifest registers an installed share target that
+  can receive a ZIP after a user selection. Its same-origin handoff provides
+  no result URL to Atmungsraum. Keep the public version 1 envelope and leave
+  automatic sends unavailable until a supported browser-only handoff exists
+  or the hosting constraint changes. Sites registration remained private
+  and unpublished. See [the delivery boundary](../sharing/README.md).
+
+The public send button also passed an end-to-end Chromium fixture against a
+local relay and real Wormhole/Backblaze. The uploaded 9,800,146-byte synthetic
+ZIP restored byte-for-byte across two encrypted pieces. The fixture checked
+the Discord payload and simulated acknowledgement. It made no Discord post.
 
 Browser release `6ff82b293ef6ff40ddbeb56e8d06caf430858f02` is on main.
 The commit-specific Pages deployment reported `succeed` and all 15 changed

@@ -74,6 +74,59 @@ export async function unlockSharingConfig(password, signal) {
   return access;
 }
 
+export async function unlockAtStartup() {
+  const dialog = document.getElementById('discord-password-dialog');
+  const form = document.getElementById('discord-password-form');
+  const input = document.getElementById('discord-password');
+  const status = document.getElementById('discord-password-status');
+  const credentialId = document.getElementById('discord-password-user').value;
+  const remember = document.getElementById('remember-discord-password');
+  const canRemember = typeof globalThis.PasswordCredential === 'function' && typeof navigator.credentials?.store === 'function';
+  remember.closest('label').hidden = !canRemember;
+
+  if (canRemember && typeof navigator.credentials.get === 'function') {
+    try {
+      const saved = await navigator.credentials.get({ password: true, mediation: 'silent' });
+      if (saved?.id === credentialId) return await unlockSharingConfig(saved.password);
+    } catch { /* An unavailable or outdated credential falls back to the prompt. */ }
+  }
+
+  return new Promise(resolve => {
+    const listeners = new AbortController();
+    const options = { signal: listeners.signal };
+    const submit = form.querySelector('button[type="submit"]');
+    dialog.addEventListener('cancel', event => event.preventDefault(), options);
+    dialog.addEventListener('keydown', event => {
+      if (event.key === 'Escape') event.stopPropagation();
+    }, options);
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      if (submit.disabled) return;
+      const password = input.value, save = canRemember && remember.checked;
+      submit.disabled = true;
+      status.textContent = 'Passwort wird geprüft …';
+      try {
+        const access = await unlockSharingConfig(password);
+        if (save) {
+          try {
+            navigator.credentials.store(new PasswordCredential({ id: credentialId, password })).catch(() => {});
+          } catch { /* Unlocking also works without browser storage. */ }
+        }
+        listeners.abort();
+        input.value = '';
+        dialog.close();
+        resolve(access);
+      } catch (error) {
+        status.textContent = error.message;
+        submit.disabled = false;
+        input.focus({ preventScroll: true });
+        input.select();
+      }
+    }, options);
+    dialog.showModal();
+  });
+}
+
 export async function unlockDiscordWebhook(password, signal) {
   return (await unlockSharingConfig(password, signal)).webhook;
 }
