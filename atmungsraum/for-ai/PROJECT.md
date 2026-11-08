@@ -450,6 +450,15 @@ local relay and real Wormhole/Backblaze. The uploaded 9,800,146-byte synthetic
 ZIP restored byte-for-byte across two encrypted pieces. The fixture checked
 the Discord payload and simulated acknowledgement. It made no Discord post.
 
+Required startup unlock is in `7974cff` and live through containing commit
+`e38dd8af9c5a92e1f192854fc4258be31079511c`.
+[Pages run 42493720473](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42493720473)
+and the deployment API succeeded. All 14 changed public files matched Git.
+Live Chromium passed the three entry routes, saved credential fixture,
+two-button send fixture and actual encrypted envelope check. Mobile Chromium
+emulation confirmed that a request from the phone layout still carries the
+Atmungsraum origin and the browser rejects the direct Wormhole request.
+
 Browser release `6ff82b293ef6ff40ddbeb56e8d06caf430858f02` is on main.
 The commit-specific Pages deployment reported `succeed` and all 15 changed
 public files matched Git. The [Actions run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42491168761)
