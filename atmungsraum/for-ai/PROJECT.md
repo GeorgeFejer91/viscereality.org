@@ -29,10 +29,12 @@ rehearsals have no participant ID and retain their original recording identity.
   normalized identity in a versioned encrypted, generation-bound Arm.
   Reject missing identity for the participant recording mode. Confirm that
   identity edits between runs cannot rename or relabel a previous run.
-- [ ] Extend the native recorder and export allowlist with the shared
-  participant CSV contract, including finalized partial runs. Keep data
-  and index durable before advertising an exportable recording. Transfer the
-  original CSV bytes and retain the rehearsal archive fallback.
+- [x] Extend the native writer and export allowlist for participant CSVs,
+  including finalized partial runs. Host tests verify durable run allocation,
+  a native CSV with sensor timestamps and gaps, and hash-bound export. The
+  browser fixture verifies CSV-only transfer with the legacy ZIP fallback.
+- [ ] Build and install the participant-capable rehearsal after wiring
+  encrypted Arm. Verify file publication and retrieval from that APK.
 - [ ] With a consenting wearer and synthetic ID, verify fresh real H10 ECG,
   run and abort receipts, participant metadata and CSV bytes on Quest, then
   repeat the complete control and sync path on the installed Android phone.
@@ -53,8 +55,10 @@ truth. No cloud service participates in this flow.
 The browser increment is on `main` at release `9398177`, published by
 [Pages run 42487461920](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42487461920).
 All six live runtime files matched its commit bytes. The restart fixture
-passed against the deployed app. The next implementation increment is the
-native Arm identity and recording contract, with separate hardware evidence.
+passed against the deployed app. The next implementation increment is
+the encrypted participant Arm route from the operator form through the
+Android gateway to the host-tested writer. Then build the matched APK and
+run the physical acceptance checklist.
 
 ### Remote-only controller and native data — 2026-11-08
 

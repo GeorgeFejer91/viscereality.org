@@ -57,14 +57,14 @@ the phone filesystem.
 
 ## Implementation and acceptance
 
-The deployed browser already implements this pull and storage loop for the
-original native rehearsal archive. That gateway profile exports eight
-JSON/JSONL files in a verified ZIP. Its native recording ID remains the sync
-key. The participant CSV profile must add encrypted Arm identity and an
-allowlisted Quest-authored CSV to the existing recording export path. The
-routine phone sync then fetches only the CSV for that profile. The manifest
-identifies the file and its hash. Diagnostic streams remain on Quest unless
-the operator explicitly retrieves the full archive.
+Legacy rehearsals sync as an eight-file JSON/JSONL archive. A participant
+run advertises `participant_csv: true` in the list entry and includes a
+`participant_csv` descriptor in the signed manifest. The descriptor binds
+the name, size, SHA-256 and session UUID. For these runs the browser
+fetches only the CSV, replacing a stored legacy archive for the same native
+recording ID after verification. The original streams remain on Quest.
+The writer and export have host evidence. Encrypted Arm identity from
+the operator form and qualification of the matched APK remain open.
 
 The Chrome fixtures passed restart and catch-up with synthetic native data.
 Physical acceptance requires an installed Android controller and a Quest with

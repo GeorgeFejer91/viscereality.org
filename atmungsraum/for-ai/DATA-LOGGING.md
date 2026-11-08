@@ -133,9 +133,14 @@ on Quest. The page must be visible and connected for automatic transfer.
 
 The operator can select a stored archive and explicitly download it. This
 store is separate from the synthetic CSV list and its upload/share workflow.
-The current native rehearsal format is the original eight-file archive.
-Participant-ID binding, Quest-authored CSV and physical phone qualification
-are tracked in PROJECT.md.
+Legacy runs use the original eight-file archive. The participant CSV
+path keeps the original bytes and Quest filename in browser storage.
+Its real sensor rows add `observed_monotonic_ns`, `source_clock`,
+`source_time_ns` and `source_frame_sequence`. UTC is the anchored Quest
+observation time. Sensor time stays in the Polar clock domain. Gap rows
+have blank voltage, and unavailable rehearsal scenario and audio timing
+fields stay blank. See PROJECT.md for the open encrypted Arm and physical
+phone checks.
 
 Each successfully started run snapshots the patient and selection. Its unique
 UUID is shared by its CSV and audio receipt. IndexedDB

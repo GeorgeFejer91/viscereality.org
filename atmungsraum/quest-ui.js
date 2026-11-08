@@ -1,6 +1,6 @@
 import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=2';
 import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=3';
-import { ecgTrace, questRecording, questRecordingIds } from './quest-data.js?v=2';
+import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=3';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=1';
 
 const byId = (id) => document.getElementById(id);
@@ -149,7 +149,7 @@ export function mountQuestRehearsal() {
       if (read !== archiveRead || rehearsal.gateway !== gateway) return;
       if (!(archive instanceof Blob)) throw Error('Aufnahme fehlt.');
       download.href = URL.createObjectURL(archive);
-      download.download = `quest-${id}.zip`;
+      download.download = archive instanceof File ? archive.name : `quest-${id}.zip`;
     } catch {
       if (read === archiveRead) exportMessage = 'Die gespeicherte Aufnahme konnte nicht geöffnet werden.';
     } finally {
@@ -190,14 +190,17 @@ export function mountQuestRehearsal() {
           const known = new Set(saved);
           exportMessage = 'Quest-Aufnahmen werden abgeglichen …';
           paint();
-          for await (const id of questRecordingIds(gateway, signal)) {
-            if (known.has(id)) continue;
+          for await (const { id, participantCsv } of questRecordings(gateway, signal)) {
+            const existing = known.has(id);
+            if (existing && (!participantCsv || await store.get(id) instanceof File)) continue;
             const archive = await questRecording(gateway, id, signal);
+            if (participantCsv && !(archive instanceof File)) throw Error('Quest-CSV fehlt.');
             signal.throwIfAborted();
             await store.put(id, archive);
             signal.throwIfAborted();
             known.add(id);
             showArchives([...known].sort().reverse());
+            if (existing && archivePicker.value === id) void selectArchive();
           }
           exportMessage = known.size ? 'Aufnahmen sind in diesem Browser gespeichert.' : 'Keine gespeicherten Aufnahmen auf der Quest.';
           nextSync = performance.now() + 60000;

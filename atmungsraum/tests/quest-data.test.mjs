@@ -54,16 +54,21 @@ test('Quest export matches the observed run and every byte before making the ZIP
   const samples = Buffer.from('{"microvolts":42}\r\n');
   const hash = data => createHash('sha256').update(data).digest('hex');
   let bad = false;
+  let participant = false;
+  const csvName = 'Mül_35_N_probe2.csv';
   const gateway = { owner, recordings: async query => {
     if (query.query === 'describe') {
       assert.equal(query.id, id);
       return { state: 'ready', manifest: { schema: 'rusty.quest.recording_export.v1', id, saved: true,
         file_set_policy: 'core8-original-no-checkpoints-or-index', device: owner.device, serial: owner.serial,
         total_bytes: samples.length, manifest_id: manifestId,
+        ...(participant ? { participant_csv: { name: csvName, size: samples.length,
+          sha256: hash(samples), session_id: '01234567-89ab-4def-8abc-0123456789ab' } } : {}),
         files: names.map(name => ({ name, size: name === 'polar-ecg.jsonl' ? samples.length : 0,
           sha256: hash(name === 'polar-ecg.jsonl' ? samples : Buffer.alloc(0)) })) } };
     }
-    assert.deepEqual(query, { query: 'read', manifest_id: manifestId, file: 'polar-ecg.jsonl', offset: 0, length: samples.length });
+    assert.deepEqual(query, { query: 'read', manifest_id: manifestId,
+      file: participant ? csvName : 'polar-ecg.jsonl', offset: 0, length: samples.length });
     return { v: 1, state: 'chunk', ...query, sha256: hash(samples),
       data: (bad ? Buffer.alloc(samples.length) : samples).toString('base64') };
   } };
@@ -73,4 +78,9 @@ test('Quest export matches the observed run and every byte before making the ZIP
   assert.ok(zip.includes('export-manifest.json'));
   bad = true;
   await assert.rejects(() => questRecording(gateway, id, signal), /Prüfsumme/);
+  bad = false;
+  participant = true;
+  const csv = await questRecording(gateway, id, signal);
+  assert.equal(csv.name, csvName);
+  assert.deepEqual(Buffer.from(await csv.arrayBuffer()), samples);
 });

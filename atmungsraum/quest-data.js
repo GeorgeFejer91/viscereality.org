@@ -46,7 +46,7 @@ async function preparedRecordingQuery(gateway, query, signal) {
   return response;
 }
 
-export async function* questRecordingIds(gateway, signal) {
+export async function* questRecordings(gateway, signal) {
   const limit = 16;
   let before = '';
   do {
@@ -55,6 +55,7 @@ export async function* questRecordingIds(gateway, signal) {
     if (response?.v !== 1 || response.state !== 'ready' || !Array.isArray(entries) || entries.length > limit
       || entries.some((entry, i) => typeof entry?.id !== 'string' || !recordingId.test(entry.id)
         || typeof entry.exportable !== 'boolean'
+        || entry.participant_csv !== undefined && typeof entry.participant_csv !== 'boolean'
         || (i > 0 ? entry.id >= entries[i - 1].id : before && entry.id >= before))
       || (response.next_before !== null && response.next_before !== entries.at(-1)?.id)
       || response.next_before === undefined) {
@@ -62,7 +63,7 @@ export async function* questRecordingIds(gateway, signal) {
     }
     for (const entry of entries) {
       signal.throwIfAborted();
-      if (entry.exportable) yield entry.id;
+      if (entry.exportable) yield { id: entry.id, participantCsv: entry.participant_csv === true };
     }
     before = response.next_before;
   } while (before);
@@ -82,8 +83,15 @@ export async function questRecording(gateway, id, signal) {
   }
   const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
   if (total !== manifest.total_bytes || total > maxBytes) throw Error('Ungültige Größe der Quest-Aufnahme.');
+  const csv = manifest.participant_csv;
+  if (csv !== undefined && (typeof csv?.name !== 'string' || csv.name !== csv.name.normalize('NFC')
+    || !/^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\.csv$/u.test(csv.name)
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(csv.session_id)
+    || !Number.isSafeInteger(csv.size) || csv.size < 1 || csv.size > maxBytes || !digest.test(csv.sha256))) {
+    throw Error('Ungültige Quest-CSV.');
+  }
   const records = [];
-  for (const file of manifest.files) {
+  for (const file of csv ? [csv] : manifest.files) {
     const bytes = new Uint8Array(file.size);
     for (let offset = 0; offset < bytes.length; offset += 32768) {
       signal.throwIfAborted();
@@ -103,6 +111,7 @@ export async function questRecording(gateway, id, signal) {
     records.push({ filename: file.name, session_id: id, bytes });
   }
   signal.throwIfAborted();
+  if (csv) return new File([records[0].bytes], csv.name, { type: 'text/csv' });
   records.push({ filename: 'export-manifest.json', session_id: id, csv: JSON.stringify(manifest, null, 2) });
   return createExportsZip(records);
 }

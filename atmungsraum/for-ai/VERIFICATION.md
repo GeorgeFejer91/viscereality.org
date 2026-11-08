@@ -1,5 +1,23 @@
 # Verification
 
+## Participant CSV writer and idle pull — 2026-11-08
+
+The Quest writer and export host checks passed 66 focused tests. Synthetic
+native records verified reservation across reopened and abandoned attempts,
+Unicode participant filenames, actual ECG values and sensor timestamps,
+blank-voltage gap rows, and a hash-bound descriptor over the finalized CSV.
+The Java LAN gateway harness passed 32 checks, including the participant
+filename and traversal denial. Neither check installs or runs the Android APK.
+
+The Chrome fixture ran the encrypted idle sync at 390×844, 568×320, and
+320×568 with 200% text and custom spacing. It rejected a corrupt participant
+CSV, then downloaded only the verified CSV bytes with the Quest filename.
+It reopened that exact file after a full Chrome restart and continued to
+reconcile legacy ZIPs and runs finished while the browser was absent. The 69
+Node tests and UI checks also passed. The Quest was still asleep at USB
+preflight. The operator form, encrypted Arm, and real H10 and phone acceptance
+remain open.
+
 ## Idle Quest sync — 2026-11-08
 
 The signed encrypted Chrome fixture joined a Quest with an existing finalized
