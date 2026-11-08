@@ -416,11 +416,24 @@ The individual download recovery URL opens without a startup prompt.
   bytes, acknowledgement, errors, focus, reflow and concurrent tabs. Restore a
   two-chunk synthetic ZIP from live Wormhole via the local Render adapter.
 - [ ] Connect and qualify the hosted relay. The expected Render host returned
-  HTTP 404 and the previous Cloudflare preview no longer resolves. The public
-  version 1 envelope still unlocks delivery and the folder reports that the
-  upload service is unavailable. Next: obtain the project's actual deployed
-  service URL and verify it before publishing a version 2 envelope. See
-  [maintainer deployment](../sharing/README.md#maintainer-deployment).
+  HTTP 404 with `x-render-routing: no-server`. The previous Cloudflare preview
+  no longer resolves. Direct browser upload cannot create a Wormhole room from
+  this origin: the provider returned HTTP 405 to the JSON POST preflight and
+  omitted cross-origin permission. The Pages host serves static assets.
+  The existing authenticated Render Blueprint is the selected upload-only
+  service. Deploy it once from the project owner's signed-in account, then
+  verify the HTTPS endpoint and publish a version 2 envelope. Operators use
+  the same startup password. See [maintainer deployment](../sharing/README.md#maintainer-deployment).
+
+Browser release `6ff82b293ef6ff40ddbeb56e8d06caf430858f02` is on main.
+The commit-specific Pages deployment reported `succeed` and all 15 changed
+public files matched Git. The [Actions run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42491168761)
+reports cancelled. Main advanced with a concurrent Quest change that includes
+this release. The deployed Chrome fixture passed with eight simulated uploads and
+seven intercepted Discord posts. The actual public version 1 envelope unlocks
+with the existing password. With that envelope the folder reports the missing
+relay and makes zero provider requests. The untracked local attachments stay
+outside Git.
 
 ## Folder delivery: new files or all files — 2026-11-07
 

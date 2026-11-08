@@ -18,14 +18,15 @@ downloads are available at the [recovery URL](https://viscereality.org/atmungsra
 
 ## Maintainer deployment
 
-The upload service is centrally configured. Operators only need the sharing
-password. Render Free is the configured host for the existing upload-only
+The site reads a central upload configuration. Once the service is active,
+operators only need the sharing password. Render Free is the selected host for the upload-only
 [Blueprint](../../render.yaml). GitHub Pages deploys the browser app separately.
 
 1. Run `node sharing/configure-render.mjs` from `atmungsraum/` to prepare or
-   reuse the ignored private key and setup page. Deploy the Blueprint in the
-   project's Render account and set `LINK_RELAY_TOKEN` to that key. Render
-   receives neither the sharing password nor the Discord webhook.
+   reuse the ignored private key and setup page. In the project's signed-in
+   Render account, [deploy the Blueprint](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2FGeorgeFejer91%2Fviscereality.org)
+   and set `LINK_RELAY_TOKEN` to that key. Render receives neither the sharing
+   password nor the Discord webhook.
 2. With `DISCORD_WEBHOOK_URL` set in ignored `sharing/.dev.vars`, run
    `node sharing/configure-discord.mjs https://ACTUAL-HOST.onrender.com`.
    This reuses `sharing/.dev.vars.discord-password` if present, otherwise
