@@ -241,7 +241,7 @@ async function measureLabels() {
 render();
 measureLabels();
 if (rehearsalMode) {
-  import('./quest-ui.js?v=3').then(({ mountQuestRehearsal }) => mountQuestRehearsal()).catch(() => {
+  import('./quest-ui.js?v=4').then(({ mountQuestRehearsal }) => mountQuestRehearsal()).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {

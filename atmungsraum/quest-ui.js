@@ -1,11 +1,15 @@
 import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=2';
 import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=3';
-import { ecgTrace, questRecording } from './quest-data.js?v=1';
+import { ecgTrace, questRecording, questRecordingIds } from './quest-data.js?v=2';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
-const recordingId = /^utc-ns-[0-9]{20}$/;
-const recordingStorageKey = 'atmungsraum-quest-recording';
+const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
+
+function idleForSync({ status, busy, pending, unknown }) {
+  return status?.p === 'IDLE' && !status.rec && !status.pending && !busy && !pending && !unknown;
+}
 const labels = {
   IDLE: 'Quest bereit.', ARMED: 'Probelauf vorbereitet.', RUNNING: 'Probelauf läuft.',
   PAUSED: 'Probelauf pausiert.', FINALIZING: 'Quest beendet den Probelauf.',
@@ -33,7 +37,9 @@ export function mountQuestRehearsal() {
   const exportStatus = byId('quest-export-status');
   const retry = byId('quest-export-retry');
   const download = byId('quest-export-download');
-  let ecgTimer, ecgAttempt, exportAttempt, recording, fetchedRecording, exportMessage = '';
+  const archivePicker = byId('quest-archives');
+  let ecgTimer, ecgAttempt, exportAttempt, nextSync = 0, exportMessage = '';
+  let archiveRead = 0;
   let connecting = null;
   let userAction = null;
   let joinMessage = '';
@@ -79,8 +85,8 @@ export function mountQuestRehearsal() {
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status;
     condition.parentElement.hidden = status?.ecg_preview !== 1 || status.p !== 'IDLE';
-    condition.disabled = waiting || unknown || Boolean(exportAttempt);
-    play.disabled = waiting || unknown || Boolean(exportAttempt) || !actions.play;
+    condition.disabled = waiting || unknown;
+    play.disabled = waiting || unknown || !actions.play;
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -89,21 +95,18 @@ export function mountQuestRehearsal() {
     acknowledge.disabled = busy;
     disconnect.hidden = !status || active || waiting || unknown;
     demo.hidden = Boolean(status || pending || connecting);
-    if (rehearsal.gateway?.recordings && status?.rec && recordingId.test(status.recording_id)
-      && recording !== status.recording_id) {
-      clearRun();
-      recording = status.recording_id;
-      const { device, serial } = rehearsal.gateway.owner;
-      try { storage?.setItem(recordingStorageKey, JSON.stringify({ device, serial, id: recording })); }
-      catch { /* Recovery remains available while this page is open. */ }
+    if (!idleForSync(rehearsal.state)) {
+      exportAttempt?.abort();
+      nextSync = 0;
     }
     data.hidden = status?.ecg_preview !== 1;
     if (data.hidden) showTrace(null);
-    exportStatus.hidden = !exportMessage;
+    exportStatus.hidden = !exportMessage || !status;
     text(exportStatus, exportMessage);
-    retry.hidden = !rehearsal.gateway?.recordings || !recording || fetchedRecording === recording
-      || Boolean(exportAttempt) || status?.p !== 'IDLE';
-    retry.disabled = waiting || unknown;
+    retry.hidden = !rehearsal.gateway?.recordings || status?.p !== 'IDLE';
+    retry.disabled = waiting || unknown || Boolean(exportAttempt);
+    archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
+    download.hidden = !status || !download.hasAttribute('href');
   }
 
   function showTrace(value) {
@@ -124,36 +127,90 @@ export function mountQuestRehearsal() {
     download.hidden = true;
   }
 
-  function clearRun() {
+  function clearArchives() {
     exportAttempt?.abort();
-    exportAttempt = null;
-    recording = fetchedRecording = null;
+    archiveRead++;
+    nextSync = 0;
     exportMessage = '';
+    archivePicker.replaceChildren();
     clearDownload();
   }
 
-  async function saveRecording() {
+  async function selectArchive() {
     const gateway = rehearsal.gateway;
-    if (!gateway?.recordings || !recording || exportAttempt || rehearsal.state.status?.p !== 'IDLE') return;
-    const id = recording;
-    const attempt = new AbortController();
-    exportAttempt = attempt;
+    const id = archivePicker.value;
+    const read = ++archiveRead;
     clearDownload();
-    exportMessage = 'Quest-Aufnahme wird geprüft und übertragen …';
-    paint();
+    if (!gateway?.recordings || !id) return;
+    let store;
     try {
-      const archive = await questRecording(gateway, id, attempt.signal);
-      if (exportAttempt !== attempt || rehearsal.gateway !== gateway) return;
+      store = await openQuestRecordingStore(gateway.owner);
+      const archive = await store.get(id);
+      if (read !== archiveRead || rehearsal.gateway !== gateway) return;
+      if (!(archive instanceof Blob)) throw Error('Aufnahme fehlt.');
       download.href = URL.createObjectURL(archive);
       download.download = `quest-${id}.zip`;
-      download.hidden = false;
-      fetchedRecording = id;
-      exportMessage = 'Quest-Aufnahme geprüft. Der Download ist bereit.';
-      download.click();
     } catch {
-      if (exportAttempt === attempt) exportMessage = 'Aufnahme konnte nicht übertragen werden. Versuche es erneut.';
+      if (read === archiveRead) exportMessage = 'Die gespeicherte Aufnahme konnte nicht geöffnet werden.';
     } finally {
-      if (exportAttempt === attempt) { exportAttempt = null; paint(); }
+      store?.close();
+      if (read === archiveRead) paint();
+    }
+  }
+
+  function showArchives(ids) {
+    if (ids.length === archivePicker.options.length && ids.every((id, index) => archivePicker.options[index].value === id)) {
+      if (ids.length && !download.hasAttribute('href')) void selectArchive();
+      return;
+    }
+    const selected = archivePicker.value;
+    archivePicker.replaceChildren(...ids.map(id => {
+      const date = new Date(Number(BigInt(id.slice(7)) / 1000000n));
+      return new Option(archiveDate.format(date), id);
+    }));
+    if (ids.includes(selected)) archivePicker.value = selected;
+    void selectArchive();
+  }
+
+  async function syncRecordings(gateway) {
+    const attempt = new AbortController();
+    const { signal } = attempt;
+    exportAttempt = attempt;
+    nextSync = performance.now() + 15000;
+    paint();
+    try {
+      await navigator.locks.request(`atmungsraum-quest-sync/${gateway.owner.device}`, { ifAvailable: true }, async lock => {
+        if (!lock) return;
+        signal.throwIfAborted();
+        const store = await openQuestRecordingStore(gateway.owner);
+        try {
+          const saved = await store.ids();
+          signal.throwIfAborted();
+          showArchives(saved);
+          const known = new Set(saved);
+          exportMessage = 'Quest-Aufnahmen werden abgeglichen …';
+          paint();
+          for await (const id of questRecordingIds(gateway, signal)) {
+            if (known.has(id)) continue;
+            const archive = await questRecording(gateway, id, signal);
+            signal.throwIfAborted();
+            await store.put(id, archive);
+            signal.throwIfAborted();
+            known.add(id);
+            showArchives([...known].sort().reverse());
+          }
+          exportMessage = known.size ? 'Aufnahmen sind in diesem Browser gespeichert.' : 'Keine gespeicherten Aufnahmen auf der Quest.';
+          nextSync = performance.now() + 60000;
+        } finally { store.close(); }
+      });
+    } catch {
+      if (!signal.aborted) exportMessage = 'Abgleich fehlgeschlagen. Die App versucht es erneut, wenn die Quest bereit ist.';
+    } finally {
+      if (exportAttempt === attempt) {
+        if (signal.aborted) exportMessage = '';
+        exportAttempt = null;
+        paint();
+      }
     }
   }
 
@@ -163,10 +220,10 @@ export function mountQuestRehearsal() {
     const gateway = rehearsal.gateway;
     const { status, busy, pending, unknown } = rehearsal.state;
     if (!gateway || !status || busy || pending || unknown || userAction || document.hidden) return;
-    if (status.p === 'IDLE' && recording && fetchedRecording !== recording && !exportMessage && !exportAttempt) {
-      void saveRecording();
+    if (gateway.recordings && idleForSync(rehearsal.state) && !exportAttempt && performance.now() >= nextSync) {
+      void syncRecordings(gateway);
     }
-    if (!gateway.ecg || ecgAttempt || exportAttempt) return;
+    if (!gateway.ecg || ecgAttempt) return;
     const attempt = new AbortController();
     ecgAttempt = attempt;
     const start = performance.now();
@@ -202,17 +259,7 @@ export function mountQuestRehearsal() {
       const gateway = await joinQuest({ endpoint: discovery?.endpoints[0] ?? endpoint, serial, build,
         discovery: discovery?.owner, enrollment, signal: attempt.signal });
       if (connecting !== attempt) { gateway.close(); return; }
-      if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) {
-        clearRun();
-        try {
-          const saved = JSON.parse(storage?.getItem(recordingStorageKey) ?? 'null');
-          if (gateway.recordings && saved?.device === gateway.owner.device && saved.serial === gateway.owner.serial
-            && recordingId.test(saved.id)) {
-            recording = saved.id;
-            exportMessage = 'Die letzte beobachtete Quest-Aufnahme kann erneut abgerufen werden.';
-          }
-        } catch { /* Treat malformed or unavailable storage as no observed run. */ }
-      }
+      if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
       rehearsal.attach(gateway);
       showTrace(null);
       statusText.focus({ preventScroll: true });
@@ -230,6 +277,8 @@ export function mountQuestRehearsal() {
   async function act(action) {
     if (userAction) return;
     ecgAttempt?.abort();
+    exportAttempt?.abort();
+    nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
     try { await rehearsal.run(action, attempt.signal, condition.value); }
@@ -243,9 +292,10 @@ export function mountQuestRehearsal() {
   play.addEventListener('click', () => act('play'));
   finish.addEventListener('click', () => act('finish'));
   acknowledge.addEventListener('click', () => rehearsal.acknowledgeIdle());
-  retry.addEventListener('click', saveRecording);
+  retry.addEventListener('click', () => { nextSync = 0; void tick(); });
+  archivePicker.addEventListener('change', selectArchive);
   function detach() {
-    clearRun();
+    clearArchives();
     rehearsal.attach(null);
   }
   disconnect.addEventListener('click', () => { detach(); byId('quest-serial').focus(); });
@@ -256,7 +306,7 @@ export function mountQuestRehearsal() {
       ecgAttempt?.abort();
       exportAttempt?.abort();
       showTrace(null);
-    } else tick();
+    } else { nextSync = 0; void tick(); }
   });
   window.addEventListener('pagehide', (event) => {
     userAction?.abort();

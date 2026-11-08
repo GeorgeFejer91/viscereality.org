@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261108-quest-data">
+  <link rel="stylesheet" href="./style.css?v=20261108-quest-sync">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261108-quest-data"></script>
+  <script type="module" src="./app.js?v=20261108-quest-sync"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren – Platzhalter, noch ohne Funktion">
@@ -146,6 +146,7 @@
           <input id="quest-build" type="text" required minlength="64" maxlength="64" pattern="[0-9a-f]{64}" autocapitalize="none" spellcheck="false">
           <details>
             <summary><span data-measure>Live-EKG und Aufnahmen freigeben</span></summary>
+            <p data-measure>Die App speichert fertige Quest-Aufnahmen in diesem Browser, solange die Steuerung geöffnet und die Quest im Leerlauf ist.</p>
             <label for="quest-controller"><span data-measure>Controller-ID</span></label>
             <input id="quest-controller" type="text" maxlength="32" autocomplete="off" autocapitalize="none" spellcheck="false">
             <label for="quest-key"><span data-measure>Quest-Schlüssel</span></label>
@@ -181,7 +182,11 @@
           </svg>
           <p id="quest-ecg-scale" data-measure hidden></p>
           <p id="quest-export-status" role="status" data-measure hidden></p>
-          <button id="quest-export-retry" type="button" hidden><span data-measure>Aufnahme erneut abrufen</span></button>
+          <button id="quest-export-retry" type="button" hidden><span data-measure>Jetzt abgleichen</span></button>
+          <label id="quest-archives-label" hidden>
+            <span data-measure>Gespeicherte Quest-Aufnahmen</span>
+            <select id="quest-archives"></select>
+          </label>
           <a id="quest-export-download" hidden><span data-measure>Aufnahme herunterladen</span></a>
         </div>
         <button id="quest-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>

@@ -33,16 +33,44 @@ export function ecgTrace(frame, transportMs) {
   return { range, path, ttl: 2500 - frame.age_ms - transportMs };
 }
 
-export async function questRecording(gateway, id, signal) {
-  if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
-  const query = { query: 'describe', id };
+async function preparedRecordingQuery(gateway, query, signal) {
   const deadline = performance.now() + 90000;
+  signal.throwIfAborted();
   let response = await gateway.recordings(query, signal);
   while (response?.state === 'preparing' && performance.now() < deadline) {
     await new Promise(resolve => setTimeout(resolve, 650));
     signal.throwIfAborted();
     response = await gateway.recordings(query, signal);
   }
+  signal.throwIfAborted();
+  return response;
+}
+
+export async function* questRecordingIds(gateway, signal) {
+  const limit = 16;
+  let before = '';
+  do {
+    const response = await preparedRecordingQuery(gateway, { query: 'list', before, limit }, signal);
+    const entries = response?.entries;
+    if (response?.v !== 1 || response.state !== 'ready' || !Array.isArray(entries) || entries.length > limit
+      || entries.some((entry, i) => typeof entry?.id !== 'string' || !recordingId.test(entry.id)
+        || typeof entry.exportable !== 'boolean'
+        || (i > 0 ? entry.id >= entries[i - 1].id : before && entry.id >= before))
+      || (response.next_before !== null && response.next_before !== entries.at(-1)?.id)
+      || response.next_before === undefined) {
+      throw Error('Ungültige Quest-Aufnahmeliste.');
+    }
+    for (const entry of entries) {
+      signal.throwIfAborted();
+      if (entry.exportable) yield entry.id;
+    }
+    before = response.next_before;
+  } while (before);
+}
+
+export async function questRecording(gateway, id, signal) {
+  if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
+  const response = await preparedRecordingQuery(gateway, { query: 'describe', id }, signal);
   const manifest = response?.manifest;
   if (response?.state !== 'ready' || manifest?.schema !== 'rusty.quest.recording_export.v1'
     || manifest.id !== id || manifest.device !== gateway.owner.device || manifest.serial !== gateway.owner.serial

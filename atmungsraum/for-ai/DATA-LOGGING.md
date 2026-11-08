@@ -119,6 +119,24 @@ events. It must not relabel this replay/reconstruction as hardware data.
 
 ## Saving and recovery
 
+### Native recording synchronization
+
+The enrolled controller uses the RQG1 LAN gateway's idle-only recording
+inventory, manifest and read operations. The manifest authenticates the Quest
+and recording identity. The browser checks each original file's length and
+SHA-256 before committing the complete ZIP to `atmungsraum-quest-recordings`
+in IndexedDB. The key binds the device, serial and immutable native recording
+ID. Rejoining reconciles old and new eligible runs, skips saved recordings
+and retries interrupted transfers. A Web Lock avoids parallel sync of the
+same Quest across tabs. Active, incomplete and unvalidated recordings stay
+on Quest. The page must be visible and connected for automatic transfer.
+
+The operator can select a stored archive and explicitly download it. This
+store is separate from the synthetic CSV list and its upload/share workflow.
+The current native rehearsal format is the original eight-file archive.
+Participant-ID binding, Quest-authored CSV and physical phone qualification
+are tracked in PROJECT.md.
+
 Each successfully started run snapshots the patient and selection. Its unique
 UUID is shared by its CSV and audio receipt. IndexedDB
 `atmungsraum-session-data` reserves counters with a read/write transaction, so

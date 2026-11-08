@@ -2,6 +2,45 @@
 
 ## Active milestone: phone-controlled Quest rehearsal
 
+### Participant CSV and idle synchronization — 2026-11-08
+
+The Quest remains the recording authority. The operator enters participant
+details on the phone and sees the ID from `data-logging.js`. A future
+enrolled-only encrypted Arm payload must bind that identity to the native
+attempt before samples are written. Quest must reserve the run index and UUID
+durably and finalize the participant-named CSV on Quest using DATA-LOGGING.md.
+Keep the native original streams available for recovery and provenance. Legacy
+rehearsals have no participant ID and retain their original recording identity.
+
+- [x] Use the existing encrypted RQG1 list/describe/read route to reconcile
+  all exportable finalized rehearsals with the enrolled browser's durable
+  local store. Transfer only in observed idle and let Start preempt transfer.
+  Retry on foreground idle and after rejoin. Check all hashes before committing.
+  Existing archives can be selected and downloaded individually.
+- [x] Verify synthetic Chrome join, ECG, run controls, idle-only sync of an
+  earlier and a newly finalized run, corrupt-transfer recovery, durable reload,
+  and exact ZIP download. See VERIFICATION.md.
+- [ ] Route the existing participant form into VR-Probe and pass its
+  normalized identity in a versioned encrypted, generation-bound Arm.
+  Reject missing identity for the participant recording mode. Confirm that
+  identity edits between runs cannot rename or relabel a previous run.
+- [ ] Extend the native recorder and export allowlist with the shared
+  participant CSV contract, including finalized partial runs. Keep data
+  and index durable before advertising an exportable recording. Transfer the
+  original CSV bytes and retain the rehearsal archive fallback.
+- [ ] With a consenting wearer and synthetic ID, verify fresh real H10 ECG,
+  run and abort receipts, participant metadata and CSV bytes on Quest, then
+  repeat the complete control and sync path on the installed Android phone.
+  Include an offline finish, rejoin, deduplication, and an actual Files
+  download. At entry the USB-connected Quest was asleep. Wake and clear
+  system prompts, then approve Nearby devices for the selected build.
+
+The chosen phone target is the browser's origin-scoped IndexedDB, with
+explicit download for the phone filesystem. Sync runs while an enrolled
+controller page is visible and connected. A closed or suspended PWA
+catches up after reopening and rejoining. Keep Quest copies as the source of
+truth. No cloud service participates in this flow.
+
 ### Remote-only controller and native data — 2026-11-08
 
 - [x] Keep the core Experimenter flow: service-filtered Bluetooth discovery,

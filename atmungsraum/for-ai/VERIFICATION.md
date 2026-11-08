@@ -1,5 +1,22 @@
 # Verification
 
+## Idle Quest sync — 2026-11-08
+
+The signed encrypted Chrome fixture joined a Quest with an existing finalized
+recording, automatically saved it in IndexedDB, and ran Arm → Start → Pause →
+Resume → Finish. Its gateway rejected recording traffic outside idle. It then
+served the two saved runs across separate pages, corrupted one transfer to
+exercise hash rejection, and verified the retried ZIP and its original bytes.
+After a browser reload and rejoin the archive selector offered both stored
+runs without reading their bytes again from Quest. The downloaded ZIP matched
+the native test bytes. All three layouts passed (390×844, 568×320, and
+320×568 at 200% text with text-spacing overrides). The full 69 Node tests, UI
+checks and six scenario consistency checks passed.
+
+This fixture used synthetic data. The USB-connected Quest was asleep at
+device preflight. Physical H10, participant CSV, and Android phone storage
+verification remain open.
+
 ## Remote-only Quest data path — 2026-11-08
 
 The new composition passed feature resolution for the original native host,
