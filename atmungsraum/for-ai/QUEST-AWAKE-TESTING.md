@@ -1,7 +1,8 @@
 # Keeping Quest awake during testing
 
 Use this runbook for development headset checks and the attended Atmungsraum
-rehearsal. Before touching the headset, follow the
+rehearsal. In Codex, invoke `$keep-quest-awake` for the operator workflow and use
+this runbook for command examples. Before touching the headset, follow the
 [Quest device operations route](SKILLS.md#quest-device-operations) and its
 resolved Meta Quest playbooks. The selected provider owns device changes.
 

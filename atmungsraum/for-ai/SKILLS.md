@@ -100,9 +100,11 @@ Run the installed `scripts/Resolve-PlaybookSource.ps1 -Json` to find the
 verified local playbooks or their commit-pinned public copies. Follow the
 playbook index for provider selection and headset readiness.
 
-For bench and rehearsal tests, use [Keeping Quest awake during testing](QUEST-AWAKE-TESTING.md)
-to choose the bounded hold, verify the display and XR runtime, and restore the
-agreed settings at handoff.
+Load the installed Codex skill `$keep-quest-awake` for bench and rehearsal
+awake holds, protected sleep recovery, and watchdog cleanup. Use the
+[Quest awake runbook](QUEST-AWAKE-TESTING.md) for the project-specific commands
+and evidence checks. The runbook and resolved Meta Quest playbooks also cover
+sessions where the user skill is unavailable.
 
 Treat every PC or smartphone browser as the external operator controller in
 Quest mode. Apply the existing gateway contract for typed requests and native

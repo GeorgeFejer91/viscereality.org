@@ -71,6 +71,10 @@ Runbook commit `ed7b9bb` reached `origin/main` and deployed in
 [Pages run 42493012092](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42493012092).
 All four live Markdown files matched the commit bytes. The rendered runbook,
 its three entry links, and the Atmungsraum page returned HTTP 200.
+The Codex profile now has the user-scoped `$keep-quest-awake` skill. Skill
+Creator validation and the installed Codex skill inventory passed. A dry run
+covered protected lock recovery, watchdog lifetime, and prior policy restoration.
+Use the skill for the next attended rehearsal preflight.
 
 ### Remote-only controller and native data — 2026-11-08
 
