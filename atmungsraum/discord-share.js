@@ -12,7 +12,7 @@ function decode(value, max) {
   return Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0));
 }
 async function keyFor(password, salt) {
-  if (typeof password !== 'string' || !password || password.length > 1024) throw new Error('Passwort erforderlich.');
+  if (typeof password !== 'string' || !password) throw new Error('Passwort erforderlich.');
   const material = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations }, material,
     { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
@@ -21,7 +21,6 @@ async function keyFor(password, salt) {
 // Build-time helper: only the resulting envelope belongs in public Git.
 export async function encryptDiscordWebhook(webhook, password, relay) {
   const target = validateDiscordWebhook(webhook);
-  if (typeof password !== 'string' || password.length < 16) throw new Error('Mindestens 16 Zeichen für das Passwort verwenden.');
   const version = relay ? 2 : 1;
   const payload = relay ? JSON.stringify({ webhook: target.href, relay: validateRelay(relay) }) : target.href;
   const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));

@@ -3,7 +3,7 @@ import { mountSessionAudio } from './audio/session-ui.js?v=20261106-polar-timeou
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
 import { mountDataFiles } from './data-files.js?v=20261108-startup-unlock';
-import { unlockAtStartup } from './discord-share.js?v=20261108-startup-unlock';
+import { unlockAtStartup } from './discord-share.js?v=20261108-password-policy';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest';

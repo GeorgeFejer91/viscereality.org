@@ -431,6 +431,13 @@ interface at startup, including the Quest and individual download routes.
 Access stays in tab memory. A supported browser can save and silently restore
 the password. GitHub Pages still serves static assets publicly.
 
+The startup password accepts a nonempty single line without a length limit.
+The version 1 envelope was re-encrypted with the operator's chosen password.
+Local checks verified the original Discord destination, rejection of the prior
+password, and browser unlock with the new password and a synthetic password
+longer than 1,024 characters. The startup fixture passed on the default,
+CSV recovery, and VR-Probe routes.
+
 - [x] Remove the service setup controls and reuse the unlocked session for both
   sends. Preserve the exact file selection, encrypted ZIP and checkout receipts.
 - [x] Support the version 2 encrypted envelope with the existing Discord webhook

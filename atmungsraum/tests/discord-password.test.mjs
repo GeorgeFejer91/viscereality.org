@@ -34,7 +34,11 @@ test('A password encrypts the webhook into public ciphertext and only the correc
   await assert.rejects(()=>decryptDiscordWebhook(config,'incorrect-password'),/Passwort/);
   await assert.rejects(()=>decryptDiscordWebhook({...config,ciphertext:(config.ciphertext[0]==='A'?'B':'A')+config.ciphertext.slice(1)},password),/Passwort/);
   for(const changed of [{iterations:1},{iterations:1e12},{salt:'bad'},{iv:'bad'},{ciphertext:'A'.repeat(10000)},{version:2}]) await assert.rejects(()=>decryptDiscordWebhook({...config,...changed},password));
-  await assert.rejects(()=>encryptDiscordWebhook(webhook,'short'));
+  await assert.rejects(() => encryptDiscordWebhook(webhook, ''), /Passwort/);
+  for (const unrestrictedPassword of ['short', 'long'.repeat(257)]) {
+    const envelope = await encryptDiscordWebhook(webhook, unrestrictedPassword);
+    assert.equal(await decryptDiscordWebhook(envelope, unrestrictedPassword), webhook);
+  }
 });
 
 test('Password forwarding loads only local ciphertext, unlocks on-device, and sends straight to Discord', async t => {
