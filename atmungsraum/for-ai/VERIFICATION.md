@@ -9,8 +9,17 @@ Chrome fixtures reused the participant form, checked the normalized ID and
 disabled Start before it was set, decrypted the bounded private Arm on the
 fixture server, verified the original participant CSV, and repeated after a
 browser and simulated Quest restart. Phone portrait, short landscape and
-200% text reflow passed. APK, live H10, and physical phone verification are
-separate gates.
+200% text reflow passed locally and against Pages run
+[42491480387](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42491480387).
+All nine changed live files matched the browser release. After integrating
+the concurrent folder-sync release, 71 Node tests and the UI and scenario
+checks passed.
+
+Signed Quest APK `0.1.9` passed the exact run-capsule check and same-signer
+upgrade. USB Package Manager and installed SHA-256 matched the built APK.
+The headset was still asleep and both Nearby devices permissions were
+ungranted at readback. Live H10, Quest CSV, and physical Android phone
+verification remain open.
 
 ## Startup unlock and two-action folder — 2026-11-08
 

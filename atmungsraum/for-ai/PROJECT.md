@@ -33,8 +33,11 @@ rehearsals have no participant ID and retain their original recording identity.
   including finalized partial runs. Host tests verify durable run allocation,
   a native CSV with sensor timestamps and gaps, and hash-bound export. The
   browser fixture verifies CSV-only transfer with the legacy ZIP fallback.
-- [ ] Build and install the participant-capable rehearsal after wiring
-  encrypted Arm. Verify file publication and retrieval from that APK.
+- [x] Resolve, build and install the participant-capable rehearsal. Version
+  `0.1.9` is the same-signer upgrade of the isolated rehearsal, with the
+  ARM64 OpenXR loader. Installed APK SHA-256 matches the signed build.
+- [ ] Launch the installed APK and verify file publication and retrieval
+  from the real Quest and phone.
 - [ ] With a consenting wearer and synthetic ID, verify fresh real H10 ECG,
   run and abort receipts, participant metadata and CSV bytes on Quest, then
   repeat the complete control and sync path on the installed Android phone.
@@ -42,9 +45,10 @@ rehearsals have no participant ID and retain their original recording identity.
   restarts. Check distinct UUIDs and filenames with increasing run indexes,
   finish once with the sync controller absent, rejoin, and verify one durable
   copy per run and an actual Files download. The USB-connected Quest was
-  asleep at preflight. Wake and clear system prompts, then approve Nearby
-  devices for the installed rehearsal. Run the prepared private desktop
-  H10/ZIP smoke before starting native CSV qualification.
+  asleep after the verified install. Wake to Quest Home and clear system
+  prompts, then approve Nearby devices for the installed rehearsal. Both
+  Bluetooth permissions are still ungranted. Run the prepared private
+  desktop H10/CSV smoke before physical Android phone qualification.
 
 The chosen phone target is the browser's origin-scoped IndexedDB, with
 explicit download for the phone filesystem. Sync runs while an enrolled
@@ -52,11 +56,12 @@ controller page is visible and connected. A closed or suspended PWA
 catches up after reopening and rejoining. Keep Quest copies as the source of
 truth. No cloud service participates in this flow.
 
-The CSV pull increment `fe8fcff` passed
-[Pages run 42489987230](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42489987230)
-and the live restart fixture. The participant form and encrypted Arm route
-have browser and gateway host evidence. Build and install the matched APK
-and run the physical acceptance checklist.
+The browser Arm increment `2eaf0b5` passed
+[Pages run 42491480387](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42491480387).
+Nine changed live files matched the commit bytes. All three participant
+Arm and restart fixture layouts passed on the deployed URL. Native source,
+signing receipts, installed package identity and the device test runner stay
+in their private owner lanes. The next action is the attended hardware test.
 
 ### Remote-only controller and native data — 2026-11-08
 
