@@ -438,6 +438,10 @@ password, and browser unlock with the new password and a synthetic password
 longer than 1,024 characters. The startup fixture passed on the default,
 CSV recovery, and VR-Probe routes.
 
+Release `aa5d4c8` passed [Pages run 42498919176](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42498919176).
+All seven published files matched the commit. Live Chrome accepted the chosen
+password on all three entry routes and rejected the prior password on VR-Probe.
+
 - [x] Remove the service setup controls and reuse the unlocked session for both
   sends. Preserve the exact file selection, encrypted ZIP and checkout receipts.
 - [x] Support the version 2 encrypted envelope with the existing Discord webhook
