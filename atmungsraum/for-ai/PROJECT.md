@@ -4,6 +4,8 @@
 
 ### Participant CSV and idle synchronization — 2026-11-08
 
+Protocol and acceptance contract: [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
+
 The Quest remains the recording authority. The operator enters participant
 details on the phone and sees the ID from `data-logging.js`. A future
 enrolled-only encrypted Arm payload must bind that identity to the native
