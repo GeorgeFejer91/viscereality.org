@@ -61,7 +61,12 @@ The browser Arm increment `2eaf0b5` passed
 Nine changed live files matched the commit bytes. All three participant
 Arm and restart fixture layouts passed on the deployed URL. Native source,
 signing receipts, installed package identity and the device test runner stay
-in their private owner lanes. The next action is the attended hardware test.
+in their private owner lanes. For the next attended hardware test, follow
+[Keeping Quest awake during testing](QUEST-AWAKE-TESTING.md) before launch and
+record separate transport, display, foreground, and target frame evidence.
+The runbook links and PowerShell syntax passed local checks. The QFM and Fleet
+examples were checked against pinned provider sources. Physical qualification
+of the hold and restoration remains part of the attended rehearsal.
 
 ### Remote-only controller and native data — 2026-11-08
 
