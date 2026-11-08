@@ -50,6 +50,12 @@ rehearsals have no participant ID and retain their original recording identity.
   Bluetooth permissions are still ungranted. Run the prepared private
   desktop H10/CSV smoke before physical Android phone qualification.
 
+Desktop launch preflight on 2026-11-08 confirmed the installed `0.1.9` launcher
+over USB. The physical display was off. Live VR-Probe opened in Brave and
+showed the startup unlock dialog. At preflight, `main`, `origin/main`, and the
+successful Pages build matched `a808a44`. Wake to Quest Home and unlock the
+controller before launching and verifying the native scene and gateway join.
+
 The chosen phone target is the browser's origin-scoped IndexedDB, with
 explicit download for the phone filesystem. Sync runs while an enrolled
 controller page is visible and connected. A closed or suspended PWA
