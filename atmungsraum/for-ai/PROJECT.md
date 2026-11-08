@@ -20,6 +20,9 @@ rehearsals have no participant ID and retain their original recording identity.
 - [x] Verify synthetic Chrome join, ECG, run controls, idle-only sync of an
   earlier and a newly finalized run, corrupt-transfer recovery, durable reload,
   and exact ZIP download. See VERIFICATION.md.
+- [x] Close and restart Chrome with the same profile, rejoin the same Quest
+  identity with a new simulated native epoch, and finish a second rehearsal.
+  Confirm all prior copies remain and only the new run's bytes transfer.
 - [ ] Route the existing participant form into VR-Probe and pass its
   normalized identity in a versioned encrypted, generation-bound Arm.
   Reject missing identity for the participant recording mode. Confirm that
@@ -31,15 +34,25 @@ rehearsals have no participant ID and retain their original recording identity.
 - [ ] With a consenting wearer and synthetic ID, verify fresh real H10 ECG,
   run and abort receipts, participant metadata and CSV bytes on Quest, then
   repeat the complete control and sync path on the installed Android phone.
-  Include an offline finish, rejoin, deduplication, and an actual Files
-  download. At entry the USB-connected Quest was asleep. Wake and clear
-  system prompts, then approve Nearby devices for the selected build.
+  Use the same ID for two same-condition runs across full Quest and PWA app
+  restarts. Check distinct UUIDs and filenames with increasing run indexes,
+  finish once with the sync controller absent, rejoin, and verify one durable
+  copy per run and an actual Files download. The USB-connected Quest was
+  asleep at preflight. Wake and clear system prompts, then approve Nearby
+  devices for the installed rehearsal. Run the prepared private desktop
+  H10/ZIP smoke before starting native CSV qualification.
 
 The chosen phone target is the browser's origin-scoped IndexedDB, with
 explicit download for the phone filesystem. Sync runs while an enrolled
 controller page is visible and connected. A closed or suspended PWA
 catches up after reopening and rejoining. Keep Quest copies as the source of
 truth. No cloud service participates in this flow.
+
+The browser increment is on `main` at release `9398177`, published by
+[Pages run 42487461920](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42487461920).
+All six live runtime files matched its commit bytes. The restart fixture
+passed against the deployed app. The next implementation increment is the
+native Arm identity and recording contract, with separate hardware evidence.
 
 ### Remote-only controller and native data — 2026-11-08
 

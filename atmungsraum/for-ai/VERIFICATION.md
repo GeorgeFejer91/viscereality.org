@@ -13,6 +13,15 @@ the native test bytes. All three layouts passed (390×844, 568×320, and
 320×568 at 200% text with text-spacing overrides). The full 69 Node tests, UI
 checks and six scenario consistency checks passed.
 
+The follow-up restart fixture used a persistent Chrome profile and fully
+closed the browser. It rejoined the same simulated Quest under new gateway
+and native epochs, reopened both saved ZIPs without reading their bytes
+from Quest, completed a second rehearsal and synced only that new archive.
+All three layouts passed against both the local and deployed app. Runtime
+commit `9398177` deployed successfully in
+[Pages run 42487461920](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42487461920).
+The live entry and five changed JS/CSS assets matched the exact commit bytes.
+
 This fixture used synthetic data. The USB-connected Quest was asleep at
 device preflight. Physical H10, participant CSV, and Android phone storage
 verification remain open.
