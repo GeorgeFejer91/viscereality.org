@@ -1,5 +1,22 @@
 # Verification
 
+## Quest sensor bundle for Drive delivery — 2026-11-12
+
+The new unit regression checks the participant CSV and exact original ECG and
+ACC bytes after multi-chunk retrieval, then corrupts a later ACC chunk and
+requires rejection. All 72 Node tests, UI checks and the context checker passed.
+
+The local Chromium fixture ran signed, encrypted Quest control and recording
+transfer at 390×844, 568×320 and 320×568 with 200% text. It exercised Arm, Start,
+Pause, Resume, Finish, rejection and retry of a corrupt ACC chunk, browser
+restart, a new native epoch, catch-up of a run completed with the phone absent,
+and a second run. Each case reopened the IndexedDB ZIP after browser restart,
+matched both original stream hashes and downloaded the original participant
+CSV. The sensor inputs and startup credentials were synthetic. The installed
+desktop Chrome channel exited on launch; the fixture used bundled Chromium.
+Actual Quest/Polar samples, Pixel standalone launch and real Drive delivery
+still require separate evidence.
+
 ## Browser session background music — 2026-11-08
 
 FFmpeg decoded the entire stereo MP3 without errors. Chrome reports 425.284

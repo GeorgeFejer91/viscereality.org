@@ -1,6 +1,6 @@
 import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=3';
 import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=4';
-import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=3';
+import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=4';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=1';
 
 const byId = (id) => document.getElementById(id);
@@ -167,7 +167,8 @@ export function mountQuestRehearsal(participantIdentity) {
     let store;
     try {
       store = await openQuestRecordingStore(gateway.owner);
-      const archive = await store.get(id);
+      const stored = await store.get(id);
+      const archive = stored instanceof Blob ? stored : stored?.download;
       if (read !== archiveRead || rehearsal.gateway !== gateway) return;
       if (!(archive instanceof Blob)) throw Error('Aufnahme fehlt.');
       download.href = URL.createObjectURL(archive);
@@ -214,9 +215,14 @@ export function mountQuestRehearsal(participantIdentity) {
           paint();
           for await (const { id, participantCsv } of questRecordings(gateway, signal)) {
             const existing = known.has(id);
-            if (existing && (!participantCsv || await store.get(id) instanceof File)) continue;
-            const archive = await questRecording(gateway, id, signal);
-            if (participantCsv && !(archive instanceof File)) throw Error('Quest-CSV fehlt.');
+            if (existing) {
+              const stored = await store.get(id);
+              if (participantCsv ? stored?.bundle instanceof Blob && stored.download instanceof File
+                && stored.download.name.endsWith('.csv')
+                : stored instanceof Blob || stored?.bundle instanceof Blob) continue;
+            }
+            const archive = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+            if (participantCsv && !archive.download.name.endsWith('.csv')) throw Error('Quest-CSV fehlt.');
             signal.throwIfAborted();
             await store.put(id, archive);
             signal.throwIfAborted();

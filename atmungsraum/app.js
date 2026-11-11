@@ -248,7 +248,7 @@ const deliveryAccess = await unlockAtStartup();
 delete document.body.dataset.deliveryLocked;
 byId(current).querySelector('h1').focus({ preventScroll: true });
 if (rehearsalMode) {
-  import('./quest-ui.js?v=6').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity)).catch(() => {
+  import('./quest-ui.js?v=7').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity)).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {

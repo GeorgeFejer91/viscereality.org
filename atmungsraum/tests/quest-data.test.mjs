@@ -84,3 +84,50 @@ test('Quest export matches the observed run and every byte before making the ZIP
   assert.equal(csv.name, csvName);
   assert.deepEqual(Buffer.from(await csv.arrayBuffer()), samples);
 });
+
+test('participant exports retain the CSV and both original sensor streams through chunked transfer', async () => {
+  const id = 'utc-ns-00000000000000000043';
+  const csvName = 'Tes_30_N_probe2.csv';
+  const ecg = Buffer.from('{"sensor_time_ns":100,"microvolts":42}\n'.repeat(1300));
+  const acc = Buffer.from('{"sensor_time_ns":100,"x_mg":1,"y_mg":2,"z_mg":3}\n'.repeat(900));
+  const csv = Buffer.from('sensor,voltage\r\n100,42\r\n');
+  const streams = new Map([
+    ['manifest.json', Buffer.alloc(0)], ['final.json', Buffer.alloc(0)], ['events.jsonl', Buffer.alloc(0)],
+    ['polar-acc.jsonl', acc], ['polar-ecg.jsonl', ecg], ['polar-hr-rr.jsonl', Buffer.alloc(0)],
+    ['breath.jsonl', Buffer.alloc(0)], ['radius.jsonl', Buffer.alloc(0)],
+  ]);
+  const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+  const manifest = { schema: 'rusty.quest.recording_export.v1', id, saved: true,
+    device: owner.device, serial: owner.serial, manifest_id: 'f'.repeat(64),
+    file_set_policy: 'core8-original-no-checkpoints-or-index', total_bytes: ecg.length + acc.length,
+    files: [...streams].map(([name, bytes]) => ({ name, size: bytes.length, sha256: hash(bytes) })),
+    participant_csv: { name: csvName, size: csv.length, sha256: hash(csv),
+      session_id: '01234567-89ab-4def-8abc-0123456789ab' } };
+  let corrupt = false;
+  const gateway = { owner, recordings: async query => {
+    if (query.query === 'describe') return { state: 'ready', manifest };
+    const bytes = query.file === csvName ? csv : streams.get(query.file);
+    const block = Buffer.from(bytes.subarray(query.offset, query.offset + query.length));
+    if (corrupt && query.file === 'polar-acc.jsonl' && query.offset > 0) block[0] ^= 0xff;
+    return { v: 1, state: 'chunk', ...query, sha256: hash(bytes), data: block.toString('base64') };
+  } };
+  const signal = new AbortController().signal;
+  const { download, bundle } = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+  assert.equal(download.name, csvName);
+  assert.deepEqual(Buffer.from(await download.arrayBuffer()), csv);
+  assert.equal(bundle.name, 'Tes_30_N_probe2.zip');
+  const zipped = Buffer.from(await bundle.arrayBuffer());
+  const contents = new Map();
+  for (let offset = 0; zipped.readUInt32LE(offset) === 0x04034b50;) {
+    const nameLength = zipped.readUInt16LE(offset + 26);
+    const length = zipped.readUInt32LE(offset + 18);
+    const start = offset + 30 + nameLength;
+    contents.set(zipped.toString('utf8', offset + 30, start), zipped.subarray(start, start + length));
+    offset = start + length;
+  }
+  assert.deepEqual(contents.get('polar-ecg.jsonl'), ecg);
+  assert.deepEqual(contents.get('polar-acc.jsonl'), acc);
+  assert.deepEqual(JSON.parse(contents.get('export-manifest.json')), manifest);
+  corrupt = true;
+  await assert.rejects(() => questRecording(gateway, id, signal, { includeSensorBundle: true }), /Prüfsumme/);
+});

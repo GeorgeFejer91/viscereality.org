@@ -2,6 +2,38 @@
 
 ## Active milestone: phone-controlled Quest rehearsal
 
+### Automatic Google Drive delivery of Quest recordings — 2026-11-12
+
+After the installed Android controller saves a finalized Quest recording, it
+must deliver the original Polar H10 ECG and accelerometer (ACC) streams to a
+private folder in the designated research Google Drive. The account reset
+depends on a verified backup outside that account. Keep account backup receipts,
+sign-in details and participant data outside this repository.
+
+- [x] Verify ADB access and check for the official Google Drive app. Android
+  Package Manager reports it installed on the Pixel 10.
+- [ ] Complete and verify the account backup before clearing account data.
+  Google Takeout still requires the operator to sign in.
+- [ ] Install the Atmungsraum PWA in Android Chrome and verify standalone
+  launcher relaunch on the Pixel.
+- [x] Preserve the exact native ECG and ACC bytes alongside the existing
+  participant CSV. Signed synthetic transfers and durable browser restart
+  readback matched both stream hashes in three browser layouts. Physical
+  sensor validation is still required.
+- [ ] Configure the production origin for Google authorization and bind one
+  private destination folder. Persist pending uploads before network access;
+  verify one Drive object per immutable run, with matching size and hash.
+- [ ] Run fault-injection tests, then complete the attended Quest + worn H10 +
+  Pixel + real Drive stress pass in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
+
+Preflight: all 71 existing Node tests passed. ADB confirmed the Pixel; no Quest
+USB transport was present. The prior browser path saved the participant CSV
+alone. The sensor bundle increment verifies both original streams and preserves
+the existing CSV download. All 72 Node tests and the UI/context checks passed.
+Confirm both streams contain real sample rows before accepting a hardware run.
+At entry, `main` and `origin/main` matched `bcd5da3`; its Pages workflow recorded
+a startup failure before any job ran.
+
 ### Participant CSV and idle synchronization — 2026-11-08
 
 Protocol and acceptance contract: [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).

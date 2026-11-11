@@ -4,6 +4,7 @@ const recordingId = /^utc-ns-[0-9]{20}$/;
 const digest = /^[a-f0-9]{64}$/;
 const files = ['manifest.json', 'final.json', 'events.jsonl', 'polar-acc.jsonl', 'polar-ecg.jsonl',
   'polar-hr-rr.jsonl', 'breath.jsonl', 'radius.jsonl'];
+const sensorFiles = new Set(['polar-acc.jsonl', 'polar-ecg.jsonl']);
 const maxBytes = 128 * 1024 * 1024;
 
 export function ecgTrace(frame, transportMs) {
@@ -69,7 +70,7 @@ export async function* questRecordings(gateway, signal) {
   } while (before);
 }
 
-export async function questRecording(gateway, id, signal) {
+export async function questRecording(gateway, id, signal, { includeSensorBundle = false } = {}) {
   if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
   const response = await preparedRecordingQuery(gateway, { query: 'describe', id }, signal);
   const manifest = response?.manifest;
@@ -91,7 +92,9 @@ export async function questRecording(gateway, id, signal) {
     throw Error('Ungültige Quest-CSV.');
   }
   const records = [];
-  for (const file of csv ? [csv] : manifest.files) {
+  const selected = csv ? [csv] : manifest.files;
+  if (csv && includeSensorBundle) selected.push(...manifest.files.filter(file => sensorFiles.has(file.name)));
+  for (const file of selected) {
     const bytes = new Uint8Array(file.size);
     for (let offset = 0; offset < bytes.length; offset += 32768) {
       signal.throwIfAborted();
@@ -111,7 +114,12 @@ export async function questRecording(gateway, id, signal) {
     records.push({ filename: file.name, session_id: id, bytes });
   }
   signal.throwIfAborted();
-  if (csv) return new File([records[0].bytes], csv.name, { type: 'text/csv' });
+  const participantFile = csv ? new File([records[0].bytes], csv.name, { type: 'text/csv' }) : null;
+  if (participantFile && !includeSensorBundle) return participantFile;
   records.push({ filename: 'export-manifest.json', session_id: id, csv: JSON.stringify(manifest, null, 2) });
-  return createExportsZip(records);
+  const archive = createExportsZip(records);
+  if (!includeSensorBundle) return archive;
+  const filename = csv ? `${csv.name.slice(0, -4)}.zip` : `quest-${id}.zip`;
+  const bundle = new File([archive], filename, { type: archive.type });
+  return { download: participantFile ?? bundle, bundle };
 }

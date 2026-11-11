@@ -66,9 +66,11 @@ the phone filesystem.
 Legacy rehearsals sync as an eight-file JSON/JSONL archive. A participant
 run advertises `participant_csv: true` in the list entry and includes a
 `participant_csv` descriptor in the signed manifest. The descriptor binds
-the name, size, SHA-256 and session UUID. For these runs the browser
-fetches only the CSV, replacing a stored legacy archive for the same native
-recording ID after verification. The original streams remain on Quest.
+the name, size, SHA-256 and session UUID. For these runs the browser stores the
+original CSV and a ZIP with the CSV, original ECG and ACC streams, and signed
+export manifest. The ordinary download still yields the participant CSV. The
+next eligible idle reconciliation upgrades an older CSV-only entry for the
+same recording ID. Keep the original streams on Quest.
 The writer, export and encrypted Arm from the operator form have host
 evidence. Both current rehearsal tracks use `probe` for file indexing.
 Qualification of the matched APK and physical phone remains open.
@@ -81,3 +83,41 @@ increasing run indexes, observe a run finalized while the browser is absent,
 then rejoin and confirm one copy per ID. Verify a partial run, the idle gate
 and a CSV reopened from phone Files. Track evidence and open work in
 [PROJECT.md](PROJECT.md) and [VERIFICATION.md](VERIFICATION.md).
+
+## Google Drive delivery acceptance
+
+The phone must automatically upload each newly saved Quest recording's
+original `polar-ecg.jsonl` and `polar-acc.jsonl` bytes to the designated private
+Drive folder. Retain the signed export manifest and the shared participant
+identity and filename contract. Use one immutable recording identity to bind
+the local copy, queued upload and Drive receipt. Keep Quest originals and the
+phone's durable copy for recovery. Accept uploads only after Drive readback
+matches the folder, file identity, size and content hash. Opening the Drive app
+or saving a download on Android supplies no upload receipt.
+
+Use per-file Google Drive authorization for the configured account and the
+production Pages origin. Keep access tokens in memory. Google requires a user
+gesture to renew an expired browser token. Persist pending work before network
+access and resume on the next authorized foreground session. Report pending and
+failed uploads separately from verified Drive copies. Keep the destination
+private and prevent a different signed-in Google account from receiving a run.
+
+Run the following with synthetic participant identities before study use:
+
+1. On the installed Pixel PWA, join the worn H10 and actual Quest. Start, pause,
+   resume and finish. Verify the native receipt, nonempty ECG and ACC samples
+   with native timestamps and units, then local save and matching Drive bytes.
+2. Restart both apps and repeat the same condition. Check independent run UUIDs,
+   increasing attempt indices and one Drive object per run. Finish an additional
+   run with the phone absent, then rejoin and verify automatic catch-up.
+3. Repeat with a finalized partial run and with larger recordings spanning
+   multiple transfer chunks. Corrupt an export chunk in the fixture and verify
+   rejection before local commit or upload.
+4. Interrupt the network before and after Drive accepts an upload. Test process
+   close, concurrent tabs, expired authorization, quota and permission failures,
+   wrong account, and a recording starting during catch-up. Verify pending data
+   survives, accepted uploads are reconciled without duplicates, and the Quest
+   control path stays responsive.
+5. Reopen the actual Drive folder on the Pixel and download a saved bundle for
+   independent hash and contents verification. Record the tested build, elapsed
+   durations, run counts and failures without participant data or credentials.

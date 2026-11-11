@@ -133,8 +133,11 @@ on Quest. The page must be visible and connected for automatic transfer.
 
 The operator can select a stored archive and explicitly download it. This
 store is separate from the synthetic CSV list and its upload/share workflow.
-Legacy runs use the original eight-file archive. The participant CSV
-path keeps the original bytes and Quest filename in browser storage.
+Legacy runs use the original eight-file archive. The participant CSV path keeps
+the original bytes and Quest filename in browser storage. One transaction also
+stores the same-session sensor ZIP with the original ECG and ACC JSONL bytes,
+the participant CSV and the authenticated export manifest. The ZIP name uses
+the participant session stem and the native stream names remain intact inside.
 Its real sensor rows add `observed_monotonic_ns`, `source_clock`,
 `source_time_ns` and `source_frame_sequence`. UTC is the anchored Quest
 observation time. Sensor time stays in the Polar clock domain. Gap rows
