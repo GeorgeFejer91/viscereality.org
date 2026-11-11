@@ -421,14 +421,15 @@ Unrelated unfinished sharing edits remain in `.gitignore`, `app.js`,
 `data-files.js`, the sharing section of `index.html`/this state, `style.css` and
 new link/Worker/test files; they are preserved outside the PWA commits.
 2026-11-11 phone preflight: Windows detected a physical Pixel 10 over USB and
-`adb devices` reported `unauthorized`. The phone's USB debugging approval is
-pending. At preflight, `main` and `origin/main` matched `1a80572`, and its exact
+`adb devices` initially reported `unauthorized`. At preflight, `main` and
+`origin/main` matched `1a80572`, and its exact
 [Pages run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42516879788)
 succeeded. The live entry linked the standalone manifest, the manifest matched
 the checkout, and all three manifest icons decoded at their declared sizes.
-Next: approve USB debugging on the Pixel, verify an ADB shell, install through
-Android Chrome, and relaunch Atmungsraum from the Android launcher in standalone
-mode. Physical installation and relaunch acceptance remain open.
+USB debugging was subsequently authorized. A serial-scoped ADB shell verified
+the Pixel 10 running Android 16. None of its three installed Chrome WebAPKs
+declared the canonical Atmungsraum URL. Next: open the live URL in Android
+Chrome, install, and verify standalone relaunch from the Android launcher.
 
 ## Browser session background music — 2026-11-08
 
