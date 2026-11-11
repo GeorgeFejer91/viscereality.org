@@ -120,6 +120,8 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   const archive = createExportsZip(records);
   if (!includeSensorBundle) return archive;
   const filename = csv ? `${csv.name.slice(0, -4)}.zip` : `quest-${id}.zip`;
-  const bundle = new File([archive], filename, { type: archive.type });
-  return { download: participantFile ?? bundle, bundle };
+  const sensors = csv ? archive : createExportsZip(records.filter(({ filename }) =>
+    sensorFiles.has(filename) || filename === 'export-manifest.json'));
+  const bundle = new File([sensors], filename, { type: sensors.type });
+  return { download: participantFile ?? archive, bundle, bundleVersion: 1 };
 }

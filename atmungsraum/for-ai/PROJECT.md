@@ -20,11 +20,15 @@ sign-in details and participant data outside this repository.
   participant CSV. Signed synthetic transfers and durable browser restart
   readback matched both stream hashes in three browser layouts. Physical
   sensor validation is still required.
-- [ ] Configure the production origin for Google authorization and bind one
-  private destination folder. Persist pending uploads before network access;
-  verify one Drive object per immutable run, with matching size and hash.
+- [x] Implement foreground delivery from the committed recording store. Keep
+  pending uploads and Drive IDs durable and verify folder, owner, size and
+  SHA-256 before saving a delivery receipt.
+- [ ] Configure a real Google Cloud web OAuth client for the Pages origin and
+  authorize the designated account on the Pixel. Verify real Drive readback.
 - [ ] Run fault-injection tests, then complete the attended Quest + worn H10 +
   Pixel + real Drive stress pass in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
+  Synthetic fault injection passed in Node and Chromium. The connected Pixel
+  was locked and no Quest appeared in the USB device list.
 
 Preflight: all 71 existing Node tests passed. ADB confirmed the Pixel; no Quest
 USB transport was present. The prior browser path saved the participant CSV
@@ -32,7 +36,9 @@ alone. The sensor bundle increment verifies both original streams and preserves
 the existing CSV download. All 72 Node tests and the UI/context checks passed.
 Confirm both streams contain real sample rows before accepting a hardware run.
 At entry, `main` and `origin/main` matched `bcd5da3`; its Pages workflow recorded
-a startup failure before any job ran.
+a startup failure before any job ran. The sensor bundle release `40f44c7`
+passed [Pages run 43121754755](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43121754755).
+All nine changed public paths matched the released Git blobs.
 
 ### Participant CSV and idle synchronization — 2026-11-08
 

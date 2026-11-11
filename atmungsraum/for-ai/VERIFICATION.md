@@ -1,5 +1,22 @@
 # Verification
 
+## Automatic Drive delivery fixture — 2026-11-12
+
+The 40-bundle Drive stress test simulates eight lost upload acknowledgements and
+receipt-store restarts, then verifies one object per bundle and exact SHA-256.
+Additional tests cover a 6 MiB upload, wrong hash, a foreign upload URL, a
+shared destination folder and quota recovery using the originally reserved ID.
+
+The local Chromium fixture drives signed Quest actions through native-file
+readback, durable save and a simulated Google Drive API. Four bundles per layout
+arrive across 390×844, 568×320 and 320×568 at 200% text. It exercises a wrong
+Google account, corrupt ACC, a second tab holding the upload lock, lost upload
+acknowledgement, restart and offline catch-up, reauthorization after HTTP 401,
+and a finalized partial recording. The existing local CSV download remains
+byte-exact. The fixture supplies the Google sign-in and Drive responses.
+Real provider behavior, the installed Pixel PWA and actual Quest/H10 streams
+require the attended acceptance pass in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
+
 ## Quest sensor bundle for Drive delivery — 2026-11-12
 
 The new unit regression checks the participant CSV and exact original ECG and

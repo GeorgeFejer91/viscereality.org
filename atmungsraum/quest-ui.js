@@ -1,7 +1,8 @@
 import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=3';
 import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=4';
-import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=4';
-import { openQuestRecordingStore } from './quest-recording-store.js?v=1';
+import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=5';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
+import { mountQuestDrive } from './quest-drive-ui.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -17,6 +18,7 @@ const labels = {
 };
 
 export function mountQuestRehearsal(participantIdentity) {
+  const drive = mountQuestDrive();
   const form = byId('quest-join');
   const statusText = byId('quest-status');
   const clock = byId('quest-clock');
@@ -119,6 +121,7 @@ export function mountQuestRehearsal(participantIdentity) {
     demo.hidden = Boolean(status || pending || connecting);
     if (!idleForSync(rehearsal.state)) {
       exportAttempt?.abort();
+      drive.cancel();
       nextSync = 0;
     }
     data.hidden = status?.ecg_preview !== 1;
@@ -217,15 +220,16 @@ export function mountQuestRehearsal(participantIdentity) {
             const existing = known.has(id);
             if (existing) {
               const stored = await store.get(id);
-              if (participantCsv ? stored?.bundle instanceof Blob && stored.download instanceof File
-                && stored.download.name.endsWith('.csv')
-                : stored instanceof Blob || stored?.bundle instanceof Blob) continue;
+              if (stored?.bundleVersion === 1 && stored.bundle instanceof File
+                && (!participantCsv || (stored.download instanceof File && stored.download.name.endsWith('.csv')))) continue;
             }
             const archive = await questRecording(gateway, id, signal, { includeSensorBundle: true });
             if (participantCsv && !archive.download.name.endsWith('.csv')) throw Error('Quest-CSV fehlt.');
             signal.throwIfAborted();
             await store.put(id, archive);
             signal.throwIfAborted();
+            drive.schedule();
+            void drive.sync();
             known.add(id);
             showArchives([...known].sort().reverse());
             if (existing && archivePicker.value === id) void selectArchive();
@@ -254,6 +258,7 @@ export function mountQuestRehearsal(participantIdentity) {
     if (gateway.recordings && idleForSync(rehearsal.state) && !exportAttempt && performance.now() >= nextSync) {
       void syncRecordings(gateway);
     }
+    if (idleForSync(rehearsal.state)) void drive.sync();
     if (!gateway.ecg || ecgAttempt) return;
     const attempt = new AbortController();
     ecgAttempt = attempt;
@@ -292,6 +297,7 @@ export function mountQuestRehearsal(participantIdentity) {
       if (connecting !== attempt) { gateway.close(); return; }
       if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
       rehearsal.attach(gateway);
+      void drive.setOwner(gateway.recordings ? gateway.owner : null);
       showTrace(null);
       statusText.focus({ preventScroll: true });
       if (rehearsal.state.pending) await rehearsal.refresh();
@@ -309,6 +315,7 @@ export function mountQuestRehearsal(participantIdentity) {
     if (userAction) return;
     ecgAttempt?.abort();
     exportAttempt?.abort();
+    drive.cancel();
     nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
@@ -345,6 +352,7 @@ export function mountQuestRehearsal(participantIdentity) {
   archivePicker.addEventListener('change', selectArchive);
   function detach() {
     clearArchives();
+    void drive.setOwner(null);
     rehearsal.attach(null);
   }
   disconnect.addEventListener('click', () => { detach(); byId('quest-serial').focus(); });
@@ -354,6 +362,7 @@ export function mountQuestRehearsal(participantIdentity) {
       userAction?.abort();
       ecgAttempt?.abort();
       exportAttempt?.abort();
+      drive.cancel();
       showTrace(null);
     } else { nextSync = 0; void tick(); }
   });

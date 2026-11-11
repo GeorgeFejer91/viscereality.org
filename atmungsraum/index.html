@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261112-quest-sensors">
+  <link rel="stylesheet" href="./style.css?v=20261112-quest-drive">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261112-quest-sensors"></script>
+  <script type="module" src="./app.js?v=20261112-quest-drive"></script>
 </head>
 <body data-delivery-locked>
   <noscript>Atmungsraum benötigt JavaScript, um das Passwort zu prüfen.</noscript>
@@ -181,6 +181,15 @@
             <select id="quest-archives"></select>
           </label>
           <a id="quest-export-download" hidden><span data-measure>Aufnahme herunterladen</span></a>
+          <details id="quest-drive" class="quest-join" hidden>
+            <summary><span data-measure>Google Drive</span></summary>
+            <form id="quest-drive-form" autocomplete="off">
+              <label><span data-measure>Google OAuth-Client-ID</span><input id="quest-drive-client" required spellcheck="false"></label>
+              <label><span data-measure>Google-Konto für die Ablage</span><input id="quest-drive-account" type="email" required spellcheck="false"></label>
+              <button id="quest-drive-connect" type="submit" disabled><span data-measure>Google Drive verbinden</span></button>
+            </form>
+          </details>
+          <p id="quest-drive-status" role="status" data-measure hidden></p>
         </div>
         <button id="quest-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
         <button id="quest-disconnect" type="button" hidden><span data-measure>Verbindung trennen</span></button>

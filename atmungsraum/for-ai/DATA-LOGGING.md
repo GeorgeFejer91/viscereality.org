@@ -138,6 +138,10 @@ the original bytes and Quest filename in browser storage. One transaction also
 stores the same-session sensor ZIP with the original ECG and ACC JSONL bytes,
 the participant CSV and the authenticated export manifest. The ZIP name uses
 the participant session stem and the native stream names remain intact inside.
+Google Drive delivery reads this committed bundle during authorized idle time.
+The browser records the reserved Drive ID and SHA-256 before upload, then
+confirms the destination and bytes before marking delivery complete. Keep
+delivery receipts separate from Quest and phone recording custody.
 Its real sensor rows add `observed_monotonic_ns`, `source_clock`,
 `source_time_ns` and `source_frame_sequence`. UTC is the anchored Quest
 observation time. Sensor time stays in the Polar clock domain. Gap rows

@@ -102,6 +102,29 @@ access and resume on the next authorized foreground session. Report pending and
 failed uploads separately from verified Drive copies. Keep the destination
 private and prevent a different signed-in Google account from receiving a run.
 
+Enable Drive API and register a Web application OAuth client in Google Cloud.
+Register `https://viscereality.org` as an authorized JavaScript origin and
+authorize the designated account for the `drive.file` scope. In VR-Probe,
+join the enrolled Quest, open **Google Drive**, enter the public OAuth client ID
+and intended account email, then choose **Google Drive verbinden** and confirm
+the intended Google account. The app verifies the account and creates its
+private **Atmungsraum – Quest-Aufnahmen** folder. It remembers the account,
+client ID and folder ID in IndexedDB. Keep client secrets out of the browser.
+See [Google's web client setup](https://developers.google.com/identity/oauth2/web/guides/get-google-api-clientid)
+and [Drive scope reference](https://developers.google.com/workspace/drive/api/guides/api-specific-auth).
+
+The Drive queue reads already-committed bundles while the controller is idle.
+An IndexedDB receipt reserves a Drive ID before upload and records the exact
+ZIP hash. On an uncertain response, retry that ID and verify the existing
+object instead of creating another one. The controller checks the destination
+is still private, verifies the Drive object's parent, owner, name, size and
+SHA-256, then stores the confirmed receipt. The upload ZIP holds the original
+ECG and ACC streams, the export manifest, and the original participant CSV when
+available. Legacy local downloads retain the eight-file archive. Start, close,
+and background transitions stop upload work. A later authorized idle pass
+reconciles pending files. Google Drive on Android can display the resulting
+folder independently of the browser.
+
 Run the following with synthetic participant identities before study use:
 
 1. On the installed Pixel PWA, join the worn H10 and actual Quest. Start, pause,
