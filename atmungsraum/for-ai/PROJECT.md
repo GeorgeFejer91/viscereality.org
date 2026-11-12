@@ -76,8 +76,11 @@ Quest 2 power preflight on 2026-11-12 confirmed that the built-in display
 stayed on past the 15-second off-head sleep timer with a virtual proximity
 hold. The device-side watchdog heartbeat advanced without repairs during
 the observation. Follow [the awake runbook](QUEST-AWAKE-TESTING.md) to
-stop the watchdog and restore the prior policy. Clear the Quest lock
-screen and authorize Pixel USB debugging before the physical rehearsal.
+stop the watchdog and restore the prior policy. After USB debugging was
+authorized, the plugged-in Pixel 10 reported its display still on after
+two minutes without input. Its screen timeout was extended and Android
+reported stay-on active. Clear the Quest lock screen before the physical
+rehearsal and repeat the existing app acceptance checks.
 
 ### Automatic Google Drive delivery of Quest recordings — 2026-11-12
 
