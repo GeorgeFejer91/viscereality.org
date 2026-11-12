@@ -1,5 +1,5 @@
-import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=4';
-import { polarSetup, QuestRehearsal, rehearsalActions, rehearsalScenarios } from './quest-rehearsal.js?v=5';
+import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=5';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalScenarios } from './quest-rehearsal.js?v=6';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=5';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
@@ -22,6 +22,8 @@ export function mountQuestRehearsal(participantIdentity) {
   const form = byId('quest-join');
   const statusText = byId('quest-status');
   const clock = byId('quest-clock');
+  const recenter = byId('recenter-vr');
+  const recenterNote = byId('recenter-vr-note');
   const polar = byId('quest-polar');
   const polarStatus = byId('quest-polar-status');
   const polarConnect = byId('quest-polar-connect');
@@ -68,6 +70,10 @@ export function mountQuestRehearsal(participantIdentity) {
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
     const waiting = Boolean(connecting || busy || pending || status?.pending);
+    const recenterAvailable = Boolean(rehearsal.gateway?.recenter && canRecenter(status) && !waiting && !unknown);
+    recenter.setAttribute('aria-disabled', String(!recenterAvailable));
+    text(recenterNote, recenterAvailable ? 'Richtet die VR-Szene an der aktuellen Blickrichtung aus.'
+      : 'Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.');
     const wasJoining = !form.hidden;
     const hadFinishFocus = document.activeElement === finish;
     if (status && !connecting) joinMessage = '';
@@ -363,6 +369,9 @@ export function mountQuestRehearsal(participantIdentity) {
   polarConnect.addEventListener('click', () => act('polar'));
   condition.addEventListener('change', () => paint());
   play.addEventListener('click', () => act('play'));
+  recenter.addEventListener('click', () => {
+    if (!document.hidden && recenter.getAttribute('aria-disabled') === 'false') void act('recenter');
+  });
   finish.addEventListener('click', () => act('finish'));
   acknowledge.addEventListener('click', () => rehearsal.acknowledgeIdle());
   retry.addEventListener('click', () => { nextSync = 0; void tick(); });

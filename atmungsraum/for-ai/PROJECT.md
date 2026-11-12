@@ -66,7 +66,7 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.12`
+Both physical devices are authorized over USB. The signed `0.1.13`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
@@ -76,8 +76,9 @@ The shared native Experimenter source has two condition playback tracks and
 a procedural VR scene. The current rehearsal inventory contains no video files. The
 Atmungsraum build adds encrypted ECG preview and recording replies for the
 enrolled LAN controller. Host checks passed. Participant Arm and CSV
-generation still need the native participant contract. Browser recentering
-remains a placeholder. Verify the
+generation still need the native participant contract. The enrolled phone can
+request recentering of the app scene. Quest confirms it after a focused,
+visible OpenXR submission. The physical recenter check is open. Verify the
 replacement on Quest 2 and the installed phone before retiring superseded
 Viscereality packages.
 
@@ -1476,12 +1477,11 @@ The local vector asset `assets/icons/recenter-vr.svg` shows a VR headset with
 four arrows pointing inward from above, below, left and right toward the
 central view target. It is editable SVG with no raster dependency.
 
-The button is a UI placeholder: `type="button"`, `aria-disabled="true"`,
-keyboard-focusable, with a German accessible name and unavailable description.
-Do not attach a click handler, navigation, transport event or simulated success.
-The later intended action is to recenter the headset's view to its central
-field of view. Headset authority, reference frame, command/acknowledgment and
-transport remain undecided; implement them only as separately requested work.
+The original release shipped the button as a keyboard-focusable, disabled
+placeholder. The current [Quest 2 milestone](#quest-2-control-media-and-ui-acceptance--2026-11-12)
+enables it for an enrolled phone and a ready immersive scene. Quest uses the
+midpoint of its current OpenXR eye poses to recenter the app scene and returns
+the original receipt after a visible submission.
 
 - [x] Add the persistent inert button and four-direction headset SVG.
 - [x] Verify visibility, keyboard focus, no-op activation and responsive layout:
@@ -1492,9 +1492,8 @@ Git observation: canonical shared checkout on `main` at `ac39ec4`; patient,
 mock-ECG and participant-logging changes were already uncommitted at entry.
 This placeholder remains local alongside that work; no commit, push or deployment
 was performed for the original UI task. The publication task above now owns its
-release state. Its own UI scope is complete. The overall headset/H10
-product goal remains open; the next recenter work needs an explicitly chosen
-headset reference frame and command/acknowledgment contract before integration.
+release state. The physical headset and H10 checks are tracked in the
+current Quest 2 milestone.
 
 ## Patient entry, mock ECG and data logging — 2026-11-05
 

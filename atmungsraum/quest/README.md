@@ -35,6 +35,10 @@ file in the signed APK by size and SHA-256. ECG previews and recording replies
 are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
+The enrolled phone can recenter the app scene while Quest is in immersive
+Remote mode. Quest uses its current eye poses and confirms the action after
+submitting the recentered scene in a visible OpenXR frame.
+
 The native audio worker verifies all six scenario timelines and their packaged
 cue files before rehearsal audio reports ready. In an enrolled VR-Probe
 session, choose the VR condition and the authored timeline under **Ablauf**.

@@ -111,7 +111,7 @@ $app.package_name = 'org.viscereality.atmungsraum.rehearsal'
 $app.application_label = 'Atmungsraum Quest 2'
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
-$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data')
+$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data', 'ui.experiment_scene_recenter')
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
@@ -152,6 +152,9 @@ try {
     }
     if ($metadata['rusty.quest.experiment.command_gateway.private_lan_data'] -cne 'true') {
         throw 'The native manifest must select encrypted LAN sensor and recording readback.'
+    }
+    if ($metadata['rusty.quest.experiment.command_gateway.scene_recenter'] -cne 'true') {
+        throw 'The native manifest must select enrolled scene recentering.'
     }
     if ($ResolveOnly) {
         Get-Item -LiteralPath $lockPath

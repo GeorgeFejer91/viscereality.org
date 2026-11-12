@@ -1,5 +1,443 @@
+diff --git a/apps/native-renderer-android/native/src/breath_composition_runtime.rs b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+index 5273a82f..24ef759a 100644
+--- a/apps/native-renderer-android/native/src/breath_composition_runtime.rs
++++ b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
+@@ -1742,19 +1742,17 @@ pub(crate) fn status_json() -> String {
+ 
+ pub(crate) fn apply_command_json(command_json: &str) -> String {
+     #[cfg(not(feature = "showcase"))]
+-    if serde_json::from_str::<Value>(command_json)
+-        .ok()
+-        .and_then(|value| {
+-            value
+-                .as_object()
+-                .and_then(|object| object.get("schema"))
+-                .and_then(Value::as_str)
+-                .map(str::to_owned)
+-        })
+-        .as_deref()
+-        == Some(crate::experiment_session_runtime::EXPERIMENT_SESSION_COMMAND_SCHEMA)
+-    {
+-        return crate::experiment_session_runtime::apply_command_json(command_json);
++    if let Ok(value) = serde_json::from_str::<Value>(command_json) {
++        match value.get("schema").and_then(Value::as_str) {
++            Some(crate::experiment_session_runtime::EXPERIMENT_SESSION_COMMAND_SCHEMA) => {
++                return crate::experiment_session_runtime::apply_command_json(command_json);
++            }
++            #[cfg(target_os = "android")]
++            Some("rusty.quest.scene_recenter.v1") => {
++                return crate::experiment_recenter::command(&value);
++            }
++            _ => {}
++        }
+     }
+     lock_runtime().apply_command(command_json)
+ }
+diff --git a/apps/native-renderer-android/native/src/experiment_recenter.rs b/apps/native-renderer-android/native/src/experiment_recenter.rs
+new file mode 100644
+index 00000000..b509cf18
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/experiment_recenter.rs
+@@ -0,0 +1,295 @@
++use std::time::{Duration, Instant};
++
++const REQUEST_LIFETIME: Duration = Duration::from_secs(3);
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) struct Scope {
++    pub(crate) owner: u64,
++    pub(crate) epoch: u64,
++    pub(crate) generation: u64,
++    pub(crate) mode: u64,
++}
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum State {
++    Pending,
++    Drawing,
++    Confirmed,
++    Rejected,
++    Unknown,
++}
++
++impl State {
++    fn wire(self) -> &'static str {
++        match self {
++            Self::Pending | Self::Drawing => "pending",
++            Self::Confirmed => "confirmed",
++            Self::Rejected => "rejected",
++            Self::Unknown => "outcome_unknown",
++        }
++    }
++
++    fn unfinished(self) -> bool {
++        matches!(self, Self::Pending | Self::Drawing)
++    }
++}
++
++#[derive(Clone, PartialEq, Eq)]
++pub(crate) struct RecenterFrame {
++    pub(crate) id: String,
++    scope: Scope,
++}
++
++struct Request {
++    frame: RecenterFrame,
++    expires: Instant,
++    state: State,
++}
++
++#[derive(Default)]
++struct Mailbox(Option<Request>);
++
++impl Mailbox {
++    fn expire(&mut self, now: Instant) {
++        if let Some(request) = &mut self.0 {
++            if now >= request.expires {
++                request.state = match request.state {
++                    State::Pending => State::Rejected,
++                    State::Drawing => State::Unknown,
++                    terminal => terminal,
++                };
++            }
++        }
++    }
++
++    fn request(&mut self, id: &str, scope: Scope, now: Instant) -> &'static str {
++        self.expire(now);
++        if let Some(current) = &self.0 {
++            if current.frame.id == id && current.frame.scope == scope {
++                return current.state.wire();
++            }
++            if current.state.unfinished() {
++                return "rejected";
++            }
++        }
++        self.0 = Some(Request {
++            frame: RecenterFrame {
++                id: id.to_owned(),
++                scope,
++            },
++            expires: now + REQUEST_LIFETIME,
++            state: State::Pending,
++        });
++        "pending"
++    }
++
++    fn status(&mut self, id: &str, scope: Scope, now: Instant) -> &'static str {
++        self.expire(now);
++        self.0
++            .as_ref()
++            .filter(|r| r.frame.id == id && r.frame.scope == scope)
++            .map_or("outcome_unknown", |r| r.state.wire())
++    }
++
++    fn cancel(&mut self, id: &str, scope: Scope, now: Instant) -> &'static str {
++        self.expire(now);
++        let Some(request) = self
++            .0
++            .as_mut()
++            .filter(|r| r.frame.id == id && r.frame.scope == scope)
++        else {
++            return "outcome_unknown";
++        };
++        request.state = match request.state {
++            State::Pending => State::Rejected,
++            State::Drawing => State::Unknown,
++            terminal => terminal,
++        };
++        request.state.wire()
++    }
++
++    fn take(&mut self, scope: Scope, now: Instant) -> Option<RecenterFrame> {
++        self.expire(now);
++        let request = self.0.as_mut().filter(|r| r.state == State::Pending)?;
++        if request.frame.scope != scope {
++            request.state = State::Rejected;
++            return None;
++        }
++        request.state = State::Drawing;
++        Some(request.frame.clone())
++    }
++
++    fn submitted(
++        &mut self,
++        frame: &RecenterFrame,
++        current: Option<Scope>,
++        visible: bool,
++        now: Instant,
++    ) -> bool {
++        self.expire(now);
++        let Some(request) = self
++            .0
++            .as_mut()
++            .filter(|r| r.frame == *frame && r.state == State::Drawing)
++        else {
++            return false;
++        };
++        request.state = if !visible {
++            State::Rejected
++        } else if current == Some(frame.scope) {
++            State::Confirmed
++        } else {
++            State::Unknown
++        };
++        request.state == State::Confirmed
++    }
++}
++
++#[cfg(target_os = "android")]
++pub(crate) use android::{command, submitted, take_for_frame};
++
++#[cfg(target_os = "android")]
++mod android {
++    use super::*;
++    use crate::experiment_session_runtime::recenter_scope;
++    use serde_json::{json, Value};
++    use std::sync::Mutex;
++
++    static REQUESTS: Mutex<Mailbox> = Mutex::new(Mailbox(None));
++
++    pub(crate) fn command(value: &Value) -> String {
++        let status = match fields(value) {
++            Some((operation, id, scope)) => {
++                let now = Instant::now();
++                let mut requests = REQUESTS.lock().unwrap_or_else(|e| e.into_inner());
++                match operation {
++                    "request" if recenter_scope() == Some(scope) => {
++                        requests.request(id, scope, now)
++                    }
++                    "status" => requests.status(id, scope, now),
++                    "cancel" => requests.cancel(id, scope, now),
++                    _ => "rejected",
++                }
++            }
++            None => "rejected",
++        };
++        json!({ "state": status }).to_string()
++    }
++
++    fn fields(value: &Value) -> Option<(&str, &str, Scope)> {
++        let fields = value.as_object().filter(|object| object.len() == 7)?;
++        let id = fields.get("id")?.as_str()?;
++        if id.len() != 16
++            || !id
++                .bytes()
++                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
++        {
++            return None;
++        }
++        Some((
++            fields.get("operation")?.as_str()?,
++            id,
++            Scope {
++                owner: fields.get("owner")?.as_u64()?,
++                epoch: fields.get("epoch")?.as_u64()?,
++                generation: fields.get("generation")?.as_u64()?,
++                mode: fields.get("mode")?.as_u64()?,
++            },
++        ))
++    }
++
++    pub(crate) fn take_for_frame() -> Option<RecenterFrame> {
++        let mut requests = REQUESTS.try_lock().ok()?;
++        if !requests
++            .0
++            .as_ref()
++            .is_some_and(|r| r.state == State::Pending)
++        {
++            return None;
++        }
++        requests.take(recenter_scope()?, Instant::now())
++    }
++
++    pub(crate) fn submitted(frame: &RecenterFrame, visible: bool) -> bool {
++        let mut requests = REQUESTS.lock().unwrap_or_else(|e| e.into_inner());
++        requests.submitted(frame, recenter_scope(), visible, Instant::now())
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn scope() -> Scope {
++        Scope {
++            owner: 1,
++            epoch: 7,
++            generation: 3,
++            mode: 30,
++        }
++    }
++
++    #[test]
++    fn confirmation_requires_a_submitted_visible_frame_and_replay_does_not_draw_again() {
++        let now = Instant::now();
++        let mut mailbox = Mailbox::default();
++        let id = "1111111111111111";
++        assert_eq!(mailbox.request(id, scope(), now), "pending");
++        let drawing = mailbox.take(scope(), now).unwrap();
++        assert_eq!(mailbox.status(id, scope(), now), "pending");
++        assert!(mailbox.submitted(&drawing, Some(scope()), true, now));
++        assert_eq!(mailbox.request(id, scope(), now), "confirmed");
++        assert!(mailbox.take(scope(), now).is_none());
++    }
++
++    #[test]
++    fn expired_cancelled_and_replaced_scopes_cannot_apply() {
++        let now = Instant::now();
++        let later = now + Duration::from_secs(4);
++        let mut mailbox = Mailbox::default();
++        let id = "1111111111111111";
++        mailbox.request(id, scope(), now);
++        assert_eq!(mailbox.status(id, scope(), later), "rejected");
++        assert!(mailbox.take(scope(), later).is_none());
++        let other = "2222222222222222";
++        mailbox.request(other, scope(), later);
++        assert!(mailbox
++            .take(
++                Scope {
++                    mode: 46,
++                    ..scope()
++                },
++                later
++            )
++            .is_none());
++        assert_eq!(mailbox.status(other, scope(), later), "rejected");
++        let third = "3333333333333333";
++        mailbox.request(third, scope(), later);
++        assert_eq!(mailbox.cancel(third, scope(), later), "rejected");
++        assert!(mailbox.take(scope(), later).is_none());
++    }
++
++    #[test]
++    fn unrendered_or_revoked_frames_do_not_confirm() {
++        let now = Instant::now();
++        let mut mailbox = Mailbox::default();
++        let id = "1111111111111111";
++        mailbox.request(id, scope(), now);
++        let drawing = mailbox.take(scope(), now).unwrap();
++        assert!(!mailbox.submitted(&drawing, Some(scope()), false, now));
++        assert_eq!(mailbox.status(id, scope(), now), "rejected");
++        let other = "2222222222222222";
++        mailbox.request(other, scope(), now);
++        let drawing = mailbox.take(scope(), now).unwrap();
++        assert!(!mailbox.submitted(
++            &drawing,
++            Some(Scope {
++                epoch: 8,
++                ..scope()
++            }),
++            true,
++            now
++        ));
++        assert_eq!(mailbox.status(other, scope(), now), "outcome_unknown");
++    }
++}
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index ee0417f3..0a4f6643 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -4210,6 +4210,36 @@ pub(crate) fn current_generation() -> u64 {
+     })
+ }
+ 
++#[cfg(target_os = "android")]
++pub(crate) fn recenter_scope() -> Option<crate::experiment_recenter::Scope> {
++    use crate::experiment_control_mode::{self, ControlMode};
++    use crate::experiment_session::ExperimentControlState;
++
++    let mode = experiment_control_mode::read();
++    if !mode.selected() || mode.mode() != ControlMode::Remote {
++        return None;
++    }
++    let runtime = runtime().ok()?;
++    let owner = runtime.immersive_owner_identity.load(Ordering::Acquire);
++    let projection = runtime.projection.try_read().ok()?;
++    if owner == 0
++        || projection.presentation != PresentationState::ImmersiveActive
++        || !matches!(projection.phase, SessionPhase::Idle | SessionPhase::Active)
++        || matches!(
++            projection.control_state,
++            ExperimentControlState::Arming | ExperimentControlState::Finalizing
++        )
++    {
++        return None;
++    }
++    Some(crate::experiment_recenter::Scope {
++        owner,
++        epoch: runtime.runtime_epoch,
++        generation: projection.generation,
++        mode: mode.packed(),
++    })
++}
++
+ pub(crate) fn current_presentation() -> PresentationState {
+     let Ok(runtime) = runtime() else {
+         return PresentationState::Experimenter;
+diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
+index 2a8bc3a1..b8e538d7 100644
+--- a/apps/native-renderer-android/native/src/lib.rs
++++ b/apps/native-renderer-android/native/src/lib.rs
+@@ -76,6 +76,8 @@ mod environment_depth_scene_map;
+ #[cfg(any(test, not(target_os = "android")))]
+ mod environment_depth_surface_support;
+ mod experiment_control_mode;
++#[cfg(all(not(feature = "showcase"), any(target_os = "android", test)))]
++mod experiment_recenter;
+ #[cfg(not(feature = "showcase"))]
+ mod experiment_session;
+ #[cfg(not(feature = "showcase"))]
+diff --git a/apps/native-renderer-android/native/src/xr_vulkan.rs b/apps/native-renderer-android/native/src/xr_vulkan.rs
+index c0c0c17e..4c8ef5b1 100644
+--- a/apps/native-renderer-android/native/src/xr_vulkan.rs
++++ b/apps/native-renderer-android/native/src/xr_vulkan.rs
+@@ -4313,6 +4313,25 @@ unsafe fn run_projection_frames(
+             } else {
+                 GpuEnvironmentDepthParticleFrameStats::unavailable(environment_depth_settings)
+             };
++        #[cfg(not(feature = "showcase"))]
++        let phone_recenter = if gpu_private_particle_renderer.is_some()
++            && renderer_focus_session_state == "FOCUSED"
++            && (!original_product_mesh_panel
++                || mesh_ui_frame_controls
++                    .is_some_and(|controls| controls.pose_initialized && !controls.panel_visible))
++        {
++            crate::experiment_recenter::take_for_frame().map(|request| {
++                let previous = private_particle_world_anchor;
++                let mut head = particle_sort_eye_projection;
++                let right_eye = hand_mesh_visual_eye_projection(&views[1]);
++                head.position =
++                    std::array::from_fn(|axis| (head.position[axis] + right_eye.position[axis]) * 0.5);
++                private_particle_world_anchor.recenter_at_headset(head, frame_count, "enrolled-phone");
++                (request, previous)
++            })
++        } else {
++            None
++        };
+         let mut private_particle_stats =
+             if let Some(renderer) = gpu_private_particle_renderer.as_deref_mut() {
+                 renderer.record_compute_frame(
+@@ -4773,6 +4792,17 @@ unsafe fn run_projection_frames(
+             )
+             .map_err(|error| format!("end OpenXR frame: {error}"))?;
+         trace_startup_frame(frame_count, "after-xr-end-frame");
++        #[cfg(not(feature = "showcase"))]
++        if let Some((request, previous)) = phone_recenter {
++            let visible = private_particle_stats.ready
++                && private_particle_stats.visible
++                && private_particle_stats.draw_count > 0;
++            if crate::experiment_recenter::submitted(&request, visible) {
++                crate::marker("experiment-scene-recenter", format!("status=submitted id={} frame={frame_count}", request.id));
++            } else {
++                private_particle_world_anchor = previous;
++            }
++        }
+         #[cfg(feature = "showcase")]
+         if let Some(frame) = showcase_frame.as_ref() {
+             crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..6108143e 100644
+index a694dfee..08b932ff 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -21,7 +459,7 @@ index a694dfee..6108143e 100644
                      }
                  }
                  RemotePending pending = remotePending;
-@@ -828,6 +827,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -828,6 +827,15 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
@@ -31,10 +469,13 @@ index a694dfee..6108143e 100644
 +            @Override public java.util.List<String> scenarioIds() {
 +                return ControlPanelActivity.conditionAudioScenarios();
 +            }
++            @Override public String recenter(JSONObject command) throws Exception {
++                return new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(command.toString())).getString("state");
++            }
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
-@@ -922,6 +927,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -922,6 +930,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
  
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
@@ -44,7 +485,7 @@ index a694dfee..6108143e 100644
                  ExperimentSessionBleServer server = remoteServer();
                  if (server == null) return;
                  if(remoteTerminal!=null) {
-@@ -997,8 +1005,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -997,8 +1008,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
                          return;
                      }
@@ -56,7 +497,7 @@ index a694dfee..6108143e 100644
                      server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
                      EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
                      return;
-@@ -4214,10 +4224,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4227,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -68,7 +509,7 @@ index a694dfee..6108143e 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4244,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4247,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -92,26 +533,29 @@ index a694dfee..6108143e 100644
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..51f7ce68 100644
+index 08732e53..8e1ef2a4 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-@@ -15,6 +15,7 @@ import org.json.JSONObject;
+@@ -15,6 +15,8 @@ import org.json.JSONObject;
  /** Optional own-APK command owner adapter. Lifetimes follow initialized native ownership. */
  public final class ExperimentSessionCommandGateway {
      public static final String METADATA="rusty.quest.experiment.command_gateway.enabled";
 +    private static final String PRIVATE_LAN_METADATA = "rusty.quest.experiment.command_gateway.private_lan_data";
++    private static final String RECENTER_METADATA = "rusty.quest.experiment.command_gateway.scene_recenter";
      private static ExperimentSessionCommandGateway process;
      private final Context context;
      private final SharedPreferences preferences;
-@@ -22,6 +23,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -22,6 +24,9 @@ public final class ExperimentSessionCommandGateway {
      private final ExperimentSessionBleServer carrier;
      private final ExperimentSessionHeadsetIdentity headsetIdentity;
      private final JSONObject buildIdentity;
 +    private final boolean privateLanData;
++    private final boolean sceneRecenter;
++    private JSONObject pendingRecenter;
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +45,11 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +48,14 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -120,10 +564,13 @@ index 08732e53..51f7ce68 100644
 +        default void dispatchScenario(ExperimentSessionBleServer.CommandRequest request, String scenario) {
 +            throw new IllegalStateException("scenario-arm-unavailable");
 +        }
++        default String recenter(JSONObject command) throws Exception {
++            return "rejected";
++        }
      }
  
  
-@@ -52,14 +59,18 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,14 +65,19 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -140,10 +587,11 @@ index 08732e53..51f7ce68 100644
          headsetIdentity=new ExperimentSessionHeadsetIdentity(context);
          buildIdentity=ExperimentSessionBuildIdentity.read(context);
 +        privateLanData = manifestEnabled(context, PRIVATE_LAN_METADATA);
++        sceneRecenter = manifestEnabled(context, RECENTER_METADATA);
          discovery=new ExperimentSessionDiscoveryServer(context,new ExperimentSessionDiscoveryServer.Source(){
              @Override public JSONObject snapshot()throws Exception{return discoveryMetadata();}
          });
-@@ -268,9 +279,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -268,9 +286,9 @@ public final class ExperimentSessionCommandGateway {
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
          if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
@@ -155,7 +603,15 @@ index 08732e53..51f7ce68 100644
                  }});
          controlModeChanged();
      }
-@@ -332,7 +343,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -292,6 +310,7 @@ public final class ExperimentSessionCommandGateway {
+     }
+     /** Controller revocation leaves the live native journal and its original receipts intact. */
+     private void retireControllers() {
++        resolveRecenter("cancel");
+         ExperimentSessionRecordingExport.retire();
+         clearLocalEnrollmentOffer();
+         guests.clear();
+@@ -332,7 +351,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -164,7 +620,7 @@ index 08732e53..51f7ce68 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +366,38 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,8 +374,49 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -188,6 +644,16 @@ index 08732e53..51f7ce68 100644
 +                            .put("v", 1).put("unit", "uV").put("rate", 130).put("age_ms", 1501)
 +                            .put("samples", new org.json.JSONArray());
 +                    }
++                    if ("recenter".equals(action)) {
++                        if (!enrolled || !sceneRecenter || !(delegate instanceof WifiDelegate)) {
++                            throw new SecurityException("scene-recenter-unavailable");
++                        }
++                        return requestRecenter(payload);
++                    }
++                    if (enrolled && "receipt".equals(action) && payload.length() == 1 && pendingRecenter != null
++                            && pendingRecenter.optString("id").equals(payload.optString("id"))) {
++                        resolveRecenter("status");
++                    }
 +                    JSONObject response = ownerExchange(action, payload);
 +                    if (privateLanData && "status".equals(action)) {
 +                        response.put("ecg_preview", enrolled ? 1 : 0);
@@ -195,6 +661,7 @@ index 08732e53..51f7ce68 100644
 +                        else if (delegate instanceof WifiDelegate) {
 +                            java.util.List<String> ids = ((WifiDelegate) delegate).scenarioIds();
 +                            if (!ids.isEmpty()) response.put("scenarios", new org.json.JSONArray(ids));
++                            if (sceneRecenter) response.put("recenter", 1);
 +                        }
 +                    }
 +                    return response;
@@ -205,7 +672,67 @@ index 08732e53..51f7ce68 100644
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
          final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
-@@ -398,10 +439,36 @@ public final class ExperimentSessionCommandGateway {
+@@ -385,6 +445,59 @@ public final class ExperimentSessionCommandGateway {
+         FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
+         try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
+     }
++    private JSONObject requestRecenter(JSONObject body) throws Exception {
++        String id = ExperimentSessionGatewayProtocol.string(body, "id");
++        Object generation = body.opt("g");
++        if (body.length() != 3 || !Integer.valueOf(1).equals(body.opt("v"))
++                || !(generation instanceof Integer || generation instanceof Long)) {
++            throw new IllegalArgumentException("closed-recenter-required");
++        }
++        resolveRecenter("status");
++        if (journal.known(body)) return journal.original(id);
++        ExperimentControlMode.Snapshot mode = controlMode.readSnapshot();
++        mode.requireRemoteCommands();
++        JSONObject current = snapshot();
++        String presentation = current.optString("h");
++        if (pendingRecenter != null || !remoteAvailable() || !Boolean.FALSE.equals(current.opt("pending"))
++                || !("vr-preparation".equals(presentation) || "vr-session".equals(presentation))
++                || ((Number) generation).longValue() != current.getLong("g")) {
++            throw new SecurityException("recenter-presentation-unavailable");
++        }
++        JSONObject nativeRequest = new JSONObject().put("schema", "rusty.quest.scene_recenter.v1")
++            .put("id", id).put("owner", identity).put("epoch", epoch)
++            .put("generation", generation).put("mode", mode.packed);
++        if (!journal.reserve(body)) return journal.original(id);
++        pendingRecenter = nativeRequest;
++        resolveRecenter("request");
++        return journal.original(id);
++    }
++
++    private void resolveRecenter(String operation) {
++        if (pendingRecenter == null) return;
++        String id = pendingRecenter.optString("id");
++        String state;
++        try {
++            state = ((WifiDelegate) delegate).recenter(pendingRecenter.put("operation", operation));
++        } catch (Exception unavailable) {
++            state = "outcome_unknown";
++        }
++        switch (state) {
++            case "pending":
++                carrier.updateReceipt(id, state, "Waiting for a focused Quest frame.");
++                return;
++            case "confirmed":
++                carrier.updateReceipt(id, state, "Quest submitted the recentered scene.");
++                break;
++            case "rejected":
++                carrier.updateReceipt(id, state, "Quest could not recenter the scene.");
++                break;
++            default:
++                carrier.updateReceipt(id, "outcome_unknown", "Quest could not confirm the recentered frame.");
++                break;
++        }
++        pendingRecenter = null;
++    }
++
+     private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
+         requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
+         if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
+@@ -398,10 +511,36 @@ public final class ExperimentSessionCommandGateway {
          if(journal.known(body))return journal.original(id);
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
@@ -245,7 +772,7 @@ index 08732e53..51f7ce68 100644
      }
      private JSONObject snapshot()throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..ca239ceb 100644
+index cf6c5de1..0c41ee4b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -293,19 +820,20 @@ index cf6c5de1..ca239ceb 100644
      }
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
-@@ -36,7 +56,10 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -36,7 +56,11 @@ public final class ExperimentSessionGatewayProtocol {
                      || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
                  throw new SecurityException("controller-or-epoch-unavailable");
              nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
 -            if(!hex(nonce,32) || !("status".equals(action)||"command".equals(action)||"receipt".equals(action)||"breath-monitor".equals(action)||lan&&"recordings".equals(action))
 +            boolean allowedAction = "status".equals(action) || "command".equals(action) || "receipt".equals(action)
 +                || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
-+                    || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)));
++                    || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)
++                        || "recenter".equals(action)));
 +            if(!hex(nonce,32) || !allowedAction
                      || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
                  throw new SecurityException("authentication-failed");
              // Exhaustion requires a new native owner epoch; never evict replay protection.
-@@ -45,7 +68,8 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -45,7 +69,8 @@ public final class ExperimentSessionGatewayProtocol {
          JSONObject result=owner.exchange(action,new JSONObject(payload));
          synchronized(this) {
              if(retired)throw new SecurityException("owner-retired");
@@ -315,7 +843,7 @@ index cf6c5de1..ca239ceb 100644
              JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
                  .put("action",action).put("payload",body).put("mac",hmac(key,
                      "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
-@@ -53,6 +77,18 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -53,6 +78,18 @@ public final class ExperimentSessionGatewayProtocol {
              return reply;
          }
      }
@@ -334,7 +862,7 @@ index cf6c5de1..ca239ceb 100644
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -69,8 +105,11 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -69,8 +106,11 @@ public final class ExperimentSessionGatewayProtocol {
          return value!=null && value.length()==length && value.matches("[0-9a-f]+");
      }
      public static String hmac(String key,String message)throws Exception {
@@ -1347,6 +1875,45 @@ index 00000000..170ae8ac
 +  "validation": { "quick": [], "standard": [], "device": [] },
 +  "public_private_boundary": "The selected APK admits sensor and recording readback only over the enrolled, authenticated LAN route."
 +}
+diff --git a/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json b/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json
+new file mode 100644
+index 00000000..087a1a00
+--- /dev/null
++++ b/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json
+@@ -0,0 +1,33 @@
++{
++  "schema": "rusty.quest.native_app_feature.v1",
++  "feature_id": "ui.experiment_scene_recenter",
++  "module_path": "ui/experiment-scene-recenter",
++  "module_kind": "enrolled-lan-scene-recenter",
++  "settings_surface": {
++    "authority": "rusty.quest.native_app_settings.v1",
++    "adapter": "packaged-feature-selection"
++  },
++  "owner_lane": "rusty-quest",
++  "status": "public-substrate",
++  "description": "Recenter the private particle scene from an enrolled LAN controller and confirm a submitted OpenXR frame.",
++  "provides": ["ui.experiment_scene_recenter"],
++  "depends_on": ["ui.experiment_private_lan_data", "particles.private.payload_slot"],
++  "incompatible_with": [],
++  "exclusive_groups": {},
++  "android_manifest": {
++    "permissions": [],
++    "uses_features": [],
++    "activities": [],
++    "services": [],
++    "queries": []
++  },
++  "runtime_profile": {
++    "set": {},
++    "clear_families": [],
++    "expected_render_modes": []
++  },
++  "build_inputs": { "env": [], "assets": [], "shaders": [] },
++  "markers": { "required": [], "forbidden": [] },
++  "validation": { "quick": [], "standard": [], "device": [] },
++  "public_private_boundary": "The native renderer uses its local pose to update the app-owned scene anchor."
++}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
 index 5bc5902d..ca15dab0 100644
 --- a/schemas/rusty.quest.native_app_build.v1.schema.json
@@ -1498,7 +2065,7 @@ index ccb3e308..11c86d32 100644
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881..7cda7d10 100644
+index 0bdd4881..8e118290 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -692,6 +692,8 @@ function New-GeneratedAndroidManifestText {
@@ -1521,7 +2088,7 @@ index 0bdd4881..7cda7d10 100644
      if ($Receivers -contains "NativeRendererBootReceiver") {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.boot_autostart" android:value="true" />')
      }
-@@ -751,11 +757,15 @@ function New-GeneratedAndroidManifestText {
+@@ -751,11 +757,18 @@ function New-GeneratedAndroidManifestText {
      # controller/relay enrollment remain private headset state.
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_command_gateway') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.enabled" android:value="true" />')
@@ -1535,10 +2102,13 @@ index 0bdd4881..7cda7d10 100644
 +    if ($SelectedFeatureIds -ccontains 'ui.experiment_private_lan_data') {
 +        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.private_lan_data" android:value="true" />')
 +    }
++    if ($SelectedFeatureIds -ccontains 'ui.experiment_scene_recenter') {
++        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.scene_recenter" android:value="true" />')
++    }
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.experiment_direct_network" android:value="true" />')
      }
-@@ -2029,7 +2039,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+@@ -2029,7 +2042,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
  if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
      throw "App build spec application_label must be 1..64 visible characters without control whitespace"
  }
@@ -1605,10 +2175,10 @@ index fbc332fd..6ba46295 100644
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d5..7c3bbb16 100644
+index c849c2d5..0bb74b4c 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
-@@ -5,9 +5,16 @@ from test_experiment_gateway_dedupe import method
+@@ -5,9 +5,35 @@ from test_experiment_gateway_dedupe import method
  original=owner.HARNESS
  prefix=original[:original.index(' public static void main')]
  setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
@@ -1619,14 +2189,33 @@ index c849c2d5..7c3bbb16 100644
 +   public void dispatchScenario(ExperimentSessionBleServer.CommandRequest r,String scenario){selectedScenario=scenario;dispatch(r);}
 +   public void dispatch(ExperimentSessionBleServer.CommandRequest r)'''
 +)
-+owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export,privateData;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export||k.equals("rusty.quest.experiment.command_gateway.private_lan_data")&&privateData;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
++setup=setup.replace(
++    '    return new ExperimentSessionWifiSnapshot().observe(response,android.os.SystemClock.elapsedRealtimeNanos(),android.os.SystemClock.elapsedRealtimeNanos(),epoch);',
++    '''    ExperimentSessionWifiSnapshot.Read read = new ExperimentSessionWifiSnapshot().observe(
++        response,android.os.SystemClock.elapsedRealtimeNanos(),android.os.SystemClock.elapsedRealtimeNanos(),epoch);
++    read.status.put("h",scenePresentation);
++    return read;'''
++).replace(
++    '   public void dispatch(ExperimentSessionBleServer.CommandRequest r)',
++    '''   public String recenter(JSONObject request)throws Exception {
++    check(request.length()==7 && request.getLong("epoch")==7 && request.getLong("generation")==0,
++        "wrong native recenter fence");
++    if("request".equals(request.getString("operation"))) sceneRequests++;
++    return sceneSubmitted?"confirmed":"pending";
++   }
++   public void dispatch(ExperimentSessionBleServer.CommandRequest r)'''
++)
++owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export,privateData;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export||(k.equals("rusty.quest.experiment.command_gateway.private_lan_data")||k.equals("rusty.quest.experiment.command_gateway.scene_recenter"))&&privateData;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
  owner.BOUNDARIES=owner.BOUNDARIES.replace('static String applyExperimentSessionCommand(String s){return "{}";}', '''static int reads;static String last;static Runnable during;static String applyExperimentSessionCommand(String s){reads++;last=s;if(android.os.Looper.myLooper()!=null)throw new AssertionError("filesystem query on main");if(during!=null)during.run();return "{\\"v\\":1,\\"state\\":\\"preparing\\"}";}''')
  owner.HARNESS=prefix+r'''
 + static String selectedScenario="";
++ static String scenePresentation="vr-preparation";
++ static boolean sceneSubmitted;
++ static int sceneRequests;
   static JSONObject network(ExperimentSessionCommandGateway g,JSONObject r)throws Exception {
    java.util.concurrent.FutureTask<JSONObject> f=new java.util.concurrent.FutureTask<>(()->g.exchangeLan(r));Thread t=new Thread(f,"network");t.start();
    long until=System.nanoTime()+3000000000L;while(!f.isDone()&&System.nanoTime()<until){Runnable task=android.os.Handler.queue.poll(20,java.util.concurrent.TimeUnit.MILLISECONDS);if(task!=null)task.run();}t.join(1000);check(!t.isAlive(),"export blocked main or IO lane");return f.get();
-@@ -26,6 +33,52 @@ owner.HARNESS=prefix+r'''
+@@ -26,6 +52,70 @@ owner.HARNESS=prefix+r'''
    ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
    credentials=join(g,g.identity());final JSONObject current=credentials;
    ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");
@@ -1676,6 +2265,24 @@ index c849c2d5..7c3bbb16 100644
 +  check(new JSONObject(armed.getString("payload")).getString("state").equals("confirmed"),"scenario receipt missing");
 +  privateGateway.exchangeLan(auth(enrolled,"scenario-arm",arm));
 +  check(dispatches==1&&selectedScenario.equals("haupt-15"),"scenario arm dispatched twice or with the wrong timeline");
++  check(enrolledStatus.optInt("recenter")==1&&!guestStatus.has("recenter"),"scene recenter capability scope");
++  JSONObject recenter=new JSONObject().put("v",1).put("id","3333333333333333").put("g",0);
++  JSONObject lookup=new JSONObject().put("id",recenter.getString("id"));
++  deny(()->privateGateway.exchangeLan(auth(guest,"recenter",recenter)));
++  deny(()->privateGateway.exchange(auth(enrolled,"recenter",recenter)));
++  deny(()->privateGateway.exchangeLan(auth(enrolled,"recenter",new JSONObject(recenter.toString()).put("g",1))));
++  scenePresentation="panel";
++  deny(()->privateGateway.exchangeLan(auth(enrolled,"recenter",recenter)));
++  scenePresentation="vr-preparation";
++  check(sceneRequests==0,"denied request reached the renderer");
++  JSONObject accepted=privateGateway.exchangeLan(auth(enrolled,"recenter",recenter));
++  check(new JSONObject(accepted.getString("payload")).getString("state").equals("pending"),"submission confirmed before render");
++  privateGateway.exchangeLan(auth(enrolled,"recenter",recenter));
++  check(sceneRequests==1,"replayed request reached the renderer");
++  sceneSubmitted=true;
++  JSONObject receipt=privateGateway.exchangeLan(auth(enrolled,"receipt",lookup));
++  check(new JSONObject(receipt.getString("payload")).getString("state").equals("confirmed")
++      &&sceneRequests==1&&dispatches==1,"rendered recenter receipt did not stay independent of session commands");
    System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
   }
  }

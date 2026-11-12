@@ -184,6 +184,7 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
     return { owner, initial, status, command: (command, requestSignal) => exchange('command', command, requestSignal),
       participantArm: armKey ? (command, requestSignal) => exchange('participant-arm', command, requestSignal) : null,
       scenarioArm: enrollment ? (command, requestSignal) => exchange('scenario-arm', command, requestSignal) : null,
+      recenter: enrollment ? (command, requestSignal) => exchange('recenter', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,
       recordings: ecgKey && initial.recordings === 1 ? (query, requestSignal) => exchange('recordings', query, requestSignal) : null,
       receipt: (id) => exchange('receipt', { id }), close: () => lifetime.abort() };

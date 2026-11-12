@@ -204,6 +204,36 @@ test('a lost Arm reply is reconciled without starting or replaying after reconne
   assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start']);
 });
 
+test('recenter uses a native frame receipt and never replays after a lost reply', async () => {
+  const requests = [];
+  let outcome = 'pending';
+  const ready = { ...snapshot(), recenter: 1 };
+  const quest = {
+    owner, initial: ready, status: async () => ready,
+    recenter: async command => {
+      requests.push(command);
+      throw Error('reply dropped after admission');
+    },
+    receipt: async id => ({ v: 1, id, state: outcome }),
+    close() {},
+  };
+  const rehearsal = new QuestRehearsal();
+  rehearsal.attach(quest);
+  await Promise.all([rehearsal.run('recenter'), rehearsal.run('recenter')]);
+  assert.equal(requests.length, 1);
+  assert.deepEqual(Object.keys(requests[0]).sort(), ['g', 'id', 'v']);
+  assert.equal(requests[0].g, ready.g);
+  await rehearsal.refresh();
+  assert.equal(rehearsal.state.unknown, true);
+  outcome = 'confirmed';
+  await rehearsal.refresh();
+  assert.equal(rehearsal.state.message, 'VR-Szene zentriert.');
+  assert.equal(requests.length, 1);
+  ready.h = 'panel';
+  await rehearsal.run('recenter');
+  assert.equal(requests.length, 1);
+});
+
 test('a pending Arm may lead to Start only within the same foreground action', async () => {
   const quest = fakeQuest({ delayedArm: true });
   const connected = new QuestRehearsal({ wait: async () => {} });

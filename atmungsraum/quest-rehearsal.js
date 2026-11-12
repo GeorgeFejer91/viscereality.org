@@ -1,4 +1,4 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=4';
+import { operationId, sameQuest } from './quest-gateway.js?v=5';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -7,6 +7,12 @@ const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg']);
 const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
 const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
+
+export function canRecenter(status) {
+  return status?.recenter === 1 && !status.pending
+    && (status.h === 'vr-preparation' && status.p === 'IDLE'
+      || status.h === 'vr-session' && ['ARMED', 'RUNNING', 'PAUSED', 'RECORDING'].includes(status.p));
+}
 
 export function rehearsalScenarios(status) {
   const offered = status?.scenarios;
@@ -61,7 +67,7 @@ export class QuestRehearsal {
     this.wait = wait;
     try {
       const saved = JSON.parse(storage?.getItem('atmungsraum-quest-pending') ?? 'null');
-      const validOperation = saved && (Object.hasOwn(desiredPhase, saved.op)
+      const validOperation = saved && (saved.op === 'recenter' || Object.hasOwn(desiredPhase, saved.op)
         || setupOperations.has(saved.op) && setupReference.test(saved.setupRef)
           && (saved.op === 'scan' ? saved.candidate === '' : candidateId.test(saved.candidate)));
       if (validOperation && /^[a-f0-9]{16}$/.test(saved.id)
@@ -111,6 +117,11 @@ export class QuestRehearsal {
     if (!this.pending) return true;
     const { id, op, generation, owner } = this.pending;
     if (!sameQuest(owner, gateway.owner)) return false;
+    if (op === 'recenter' && receipt?.v === 1 && receipt.id === id && receipt.state === 'outcome_unknown') {
+      this.remember(null);
+      this.update({ unknown: false, message: 'Die Quest konnte das Zentrieren nicht bestätigen.' });
+      return false;
+    }
     if (receipt?.v !== 1 || receipt.id !== id || !outcomes.has(receipt.state) || receipt.state === 'outcome_unknown') {
       this.update({ unknown: true });
       return false;
@@ -121,17 +132,18 @@ export class QuestRehearsal {
       return false;
     }
     if (receipt.state !== 'confirmed') return false;
-    if (status.pending) return false;
+    if (op !== 'recenter' && status.pending) return false;
     if (setupOperations.has(op)) {
       if (status.g !== generation || !setupConfirmed(status, this.pending)) return false;
-    } else {
+    } else if (op !== 'recenter') {
       const generationMatches = op === 'arm' ? status.g > generation
         : op === 'save-next' ? !status.rec : status.g === generation;
       if (status.p !== desiredPhase[op] || !generationMatches
         || op !== 'save-next' && status.c !== (this.pending.condition ?? conditions[0])) return false;
     }
     this.remember(null);
-    this.update({ unknown: false, message: op === 'save-next' ? 'Probelauf beendet.' : '' });
+    this.update({ unknown: false, message: op === 'recenter' ? 'VR-Szene zentriert.'
+      : op === 'save-next' ? 'Probelauf beendet.' : '' });
     return true;
   }
 
@@ -159,6 +171,8 @@ export class QuestRehearsal {
       const { s, g, r } = polarSetup(status);
       Object.assign(pending, { setupRef: s, candidate: target });
       command = { v: 4, id, op, s, g, r, d: op === 'select' ? target : '', n: operationId() };
+    } else if (op === 'recenter') {
+      command = { v: 1, id, g: status.g };
     } else if (op === 'arm' || op === 'save-next') {
       if (op === 'arm') pending.condition = target;
       command = { v: 1, id, op, condition: op === 'arm' ? target : '', bias: 0, nonce: operationId() };
@@ -169,7 +183,9 @@ export class QuestRehearsal {
     this.remember(pending);
     this.update({ message: '' });
     let receipt;
-    if (op === 'arm' && status.participant_arm === 1) {
+    if (op === 'recenter') {
+      receipt = await gateway.recenter(command, signal);
+    } else if (op === 'arm' && status.participant_arm === 1) {
       const selected = scenario ? { scenario } : {};
       receipt = await gateway.participantArm({ ...command, ...selected, g: status.g, participant_id: participantId }, signal);
     } else if (op === 'arm' && scenario) {
@@ -224,7 +240,8 @@ export class QuestRehearsal {
   async run(action, signal, condition = conditions[0], participantId = '', scenario = '') {
     const gateway = this.gateway;
     const clicked = this.state.status;
-    const requested = rehearsalActions(clicked, condition)[action];
+    const requested = action === 'recenter' && gateway?.recenter && canRecenter(clicked)
+      ? 'recenter' : rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
     if (!gateway || clicked?.pending || this.state.busy || this.pending
       || (!requested && (!setup?.p || !setup.b || setup.sc || setup.e))) return;
@@ -238,6 +255,12 @@ export class QuestRehearsal {
         return;
       }
       const status = this.state.status;
+      if (requested === 'recenter') {
+        if (status.g === clicked.g && canRecenter(status)) {
+          await this.dispatchAndConfirm(gateway, 'recenter', signal, 5000);
+        }
+        return;
+      }
       const op = rehearsalActions(status, condition)[action];
       if (op !== requested || status.g !== clicked.g
         || op !== 'arm' && op !== 'save-next' && status.q?.s !== clicked.q?.s) return;

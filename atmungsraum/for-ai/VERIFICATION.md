@@ -1,5 +1,21 @@
 # Verification
 
+## Enrolled phone scene recenter — 2026-11-12
+
+The native mailbox tests passed confirmation after a visible frame, stale
+owner and mode rejection, expiration, cancellation and duplicate suppression.
+The Java gateway host suite verified the enrolled LAN route, generation and
+presentation checks, pending and confirmed receipts, and denial for guests and
+relay. Six Chromium layouts passed with a synthetic signed Quest, including
+keyboard activation, rapid taps during a run and recovery from a lost reply.
+The full Node suite passed 81 tests. The UI and six scenario consistency checks
+passed.
+
+Signed APK `0.1.13` passed the exact run-capsule check, Quest 2 and scene
+recenter manifest checks, same-signer upgrade, and byte-exact installed APK
+readback. The physical Quest was still at its lock screen. The current
+screenshots use emulated phone viewports and a synthetic gateway.
+
 ## Native scenario selection and audio lifecycle — 2026-11-12
 
 An enrolled VR-Probe controller chooses a timeline independently of the
