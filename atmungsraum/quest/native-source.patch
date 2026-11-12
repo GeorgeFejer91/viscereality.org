@@ -1,3 +1,226 @@
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+index a694dfee..bd177ab0 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+@@ -828,6 +828,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+             @Override public JSONObject polarStopReadback() throws Exception {
+                 return ControlPanelActivity.polarStopProjection();
+             }
++            @Override public JSONObject ecgPreview() throws Exception {
++                return PolarSensorRuntime.existingEcgPreview();
++            }
+             @Override public JSONObject snapshot() throws Exception {
+                 refreshExperimenterPolarProjection();
+                 long now = SystemClock.elapsedRealtime();
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index 08732e53..5dfa2d21 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -15,6 +15,7 @@ import org.json.JSONObject;
+ /** Optional own-APK command owner adapter. Lifetimes follow initialized native ownership. */
+ public final class ExperimentSessionCommandGateway {
+     public static final String METADATA="rusty.quest.experiment.command_gateway.enabled";
++    private static final String PRIVATE_LAN_METADATA = "rusty.quest.experiment.command_gateway.private_lan_data";
+     private static ExperimentSessionCommandGateway process;
+     private final Context context;
+     private final SharedPreferences preferences;
+@@ -22,6 +23,7 @@ public final class ExperimentSessionCommandGateway {
+     private final ExperimentSessionBleServer carrier;
+     private final ExperimentSessionHeadsetIdentity headsetIdentity;
+     private final JSONObject buildIdentity;
++    private final boolean privateLanData;
+     private final ExperimentSessionDiscoveryServer discovery;
+     private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
+     private final ExperimentControlMode controlMode=ExperimentControlMode.process();
+@@ -43,6 +45,7 @@ public final class ExperimentSessionCommandGateway {
+     interface LocalEnrollmentGuard { void check() throws Exception; }
+     interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
+         ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
++        default JSONObject ecgPreview() throws Exception { return null; }
+     }
+ 
+ 
+@@ -52,14 +55,18 @@ public final class ExperimentSessionCommandGateway {
+     }
+     public static synchronized ExperimentSessionCommandGateway existing(){return process;}
+     public static boolean featurePackaged(Context context) {
++        return manifestEnabled(context, METADATA);
++    }
++    private static boolean manifestEnabled(Context context, String key) {
+         try {android.os.Bundle data=context.getPackageManager().getApplicationInfo(context.getPackageName(),PackageManager.GET_META_DATA).metaData;
+-            return data!=null&&data.getBoolean(METADATA,false);
++            return data!=null&&data.getBoolean(key,false);
+         }catch(Exception absent){return false;}
+     }
+     private ExperimentSessionCommandGateway(Context context,ExperimentSessionBleServer.Delegate delegate) {
+         this.context=context;this.delegate=delegate;carrier=ExperimentSessionBleServer.process(context,delegate);
+         headsetIdentity=new ExperimentSessionHeadsetIdentity(context);
+         buildIdentity=ExperimentSessionBuildIdentity.read(context);
++        privateLanData = manifestEnabled(context, PRIVATE_LAN_METADATA);
+         discovery=new ExperimentSessionDiscoveryServer(context,new ExperimentSessionDiscoveryServer.Source(){
+             @Override public JSONObject snapshot()throws Exception{return discoveryMetadata();}
+         });
+@@ -268,9 +275,9 @@ public final class ExperimentSessionCommandGateway {
+             @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
+         },deviceId(),Long.toString(gatewayEpoch));
+         if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
+-            preferences.getString("device",""),gatewayEpoch,new ExperimentSessionGatewayProtocol.Owner(){
++            preferences.getString("device",""),gatewayEpoch,privateLanData,new ExperimentSessionGatewayProtocol.Owner(){
+                 @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
+-                    return exchangeBound(action,payload,preferences.getString("controller",""),new LocalEnrollmentGuard(){public void check(){if(protocol==null||gatewayEpoch!=admittedGatewayEpoch)throw new SecurityException("gateway-epoch-retired");}});
++                    return exchangeBound(action,payload,preferences.getString("controller",""),true,new LocalEnrollmentGuard(){public void check(){if(protocol==null||gatewayEpoch!=admittedGatewayEpoch)throw new SecurityException("gateway-epoch-retired");}});
+                 }});
+         controlModeChanged();
+     }
+@@ -332,7 +339,7 @@ public final class ExperimentSessionCommandGateway {
+             final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
+             binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
+                 @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
+-                    return exchangeBound(action,payload,controller,new LocalEnrollmentGuard(){public void check()throws Exception {
++                    return exchangeBound(action,payload,controller,false,new LocalEnrollmentGuard(){public void check()throws Exception {
+                         if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
+                                 ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
+                         guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
+@@ -355,8 +362,34 @@ public final class ExperimentSessionCommandGateway {
+         ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
+     }
+     /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
+-    private JSONObject exchangeBound(final String action,final JSONObject payload,final String controllerScope,final LocalEnrollmentGuard guard)throws Exception {
+-        if(!"recordings".equals(action))return onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return ownerExchange(action,payload);}});
++    private JSONObject exchangeBound(final String action,final JSONObject payload,final String controllerScope,
++            final boolean enrolled,final LocalEnrollmentGuard guard)throws Exception {
++        if (!"recordings".equals(action)) {
++            return onMain(new java.util.concurrent.Callable<JSONObject>() {
++                @Override public JSONObject call() throws Exception {
++                    guard.check();
++                    if ("ecg-preview".equals(action)) {
++                        if (!privateLanData || !enrolled || !remoteAvailable() || payload.length() != 0
++                                || !(delegate instanceof WifiDelegate)) {
++                            throw new SecurityException("private-ecg-unavailable");
++                        }
++                        JSONObject preview = ((WifiDelegate) delegate).ecgPreview();
++                        guard.check();
++                        if (!remoteAvailable()) throw new SecurityException("private-ecg-owner-changed");
++                        return preview != null ? preview : new JSONObject()
++                            .put("v", 1).put("unit", "uV").put("rate", 130).put("age_ms", 1501)
++                            .put("samples", new org.json.JSONArray());
++                    }
++                    JSONObject response = ownerExchange(action, payload);
++                    if (privateLanData && "status".equals(action)) {
++                        response.put("ecg_preview", enrolled ? 1 : 0);
++                        if (!enrolled) response.put("recordings", 0);
++                    }
++                    return response;
++                }
++            });
++        }
++        if (privateLanData && !enrolled) throw new SecurityException("recording-export-requires-enrollment");
+         final JSONObject query=ExperimentSessionRecordingExport.query(payload);
+         final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
+         JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index cf6c5de1..e8aedc73 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
+ 
+ import java.nio.charset.StandardCharsets;
+ import java.security.MessageDigest;
++import java.security.SecureRandom;
++import java.util.Base64;
+ import java.util.HashSet;
+ import java.util.Set;
+ import javax.crypto.Mac;
++import javax.crypto.Cipher;
++import javax.crypto.spec.GCMParameterSpec;
+ import javax.crypto.spec.SecretKeySpec;
+ import org.json.JSONObject;
+ 
+@@ -16,14 +20,30 @@ public final class ExperimentSessionGatewayProtocol {
+     public interface Owner { JSONObject exchange(String action, JSONObject payload) throws Exception; }
+     private final String controller, key, device, epoch;
+     private final Owner owner;
++    private final boolean privateLan;
++    private final SecretKeySpec privateKey;
++    private static final SecureRandom RANDOM = new SecureRandom();
+     private final Set<String> nonces = new HashSet<>();
+     private boolean retired;
+ 
+     public ExperimentSessionGatewayProtocol(String controller, String key, String device,
+             long epoch, Owner owner) {
++        this(controller, key, device, epoch, false, owner);
++    }
++
++    ExperimentSessionGatewayProtocol(String controller, String key, String device,
++            long epoch, boolean privateLan, Owner owner) {
+         if (!hex(controller,32) || !hex(key,64) || !hex(device,32) || epoch<=0 || owner==null)
+             throw new IllegalArgumentException("invalid-controller-binding");
+         this.controller=controller;this.key=key;this.device=device;this.epoch=Long.toString(epoch);this.owner=owner;
++        this.privateLan = privateLan;
++        try {
++            privateKey = privateLan ? new SecretKeySpec(
++                hmacBytes(key, "RQG1-PRIVATE-KEY|" + controller + "|" + device + "|" + this.epoch), "AES"
++            ) : null;
++        } catch (Exception unavailable) {
++            throw new IllegalStateException("private-key-unavailable", unavailable);
++        }
+     }
+     public synchronized void retire() { retired=true; nonces.clear(); }
+     public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
+@@ -36,7 +56,10 @@ public final class ExperimentSessionGatewayProtocol {
+                     || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
+                 throw new SecurityException("controller-or-epoch-unavailable");
+             nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
+-            if(!hex(nonce,32) || !("status".equals(action)||"command".equals(action)||"receipt".equals(action)||"breath-monitor".equals(action)||lan&&"recordings".equals(action))
++            boolean allowedAction = "status".equals(action) || "command".equals(action) || "receipt".equals(action)
++                || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
++                    || privateLan && "ecg-preview".equals(action));
++            if(!hex(nonce,32) || !allowedAction
+                     || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
+                 throw new SecurityException("authentication-failed");
+             // Exhaustion requires a new native owner epoch; never evict replay protection.
+@@ -45,7 +68,8 @@ public final class ExperimentSessionGatewayProtocol {
+         JSONObject result=owner.exchange(action,new JSONObject(payload));
+         synchronized(this) {
+             if(retired)throw new SecurityException("owner-retired");
+-            String body=result.toString();
++            String body = privateLan && ("recordings".equals(action) || "ecg-preview".equals(action))
++                ? encryptedReply(action, nonce, result).toString() : result.toString();
+             JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
+                 .put("action",action).put("payload",body).put("mac",hmac(key,
+                     "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
+@@ -53,6 +77,18 @@ public final class ExperimentSessionGatewayProtocol {
+             return reply;
+         }
+     }
++
++    private JSONObject encryptedReply(String action, String nonce, JSONObject result) throws Exception {
++        byte[] iv = new byte[12];
++        RANDOM.nextBytes(iv);
++        Cipher aes = Cipher.getInstance("AES/GCM/NoPadding");
++        aes.init(Cipher.ENCRYPT_MODE, privateKey, new GCMParameterSpec(128, iv));
++        aes.updateAAD(("RQG1-PRIVATE|" + action + "|" + device + "|" + epoch + "|" + nonce)
++            .getBytes(StandardCharsets.UTF_8));
++        byte[] ciphertext = aes.doFinal(result.toString().getBytes(StandardCharsets.UTF_8));
++        return new JSONObject().put("v", 1).put("iv", Base64.getEncoder().encodeToString(iv))
++            .put("data", Base64.getEncoder().encodeToString(ciphertext));
++    }
+     static String string(JSONObject value,String field)throws Exception {
+         Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
+     }
+@@ -69,8 +105,11 @@ public final class ExperimentSessionGatewayProtocol {
+         return value!=null && value.length()==length && value.matches("[0-9a-f]+");
+     }
+     public static String hmac(String key,String message)throws Exception {
++        StringBuilder out=new StringBuilder();for(byte b:hmacBytes(key,message))out.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return out.toString();
++    }
++    private static byte[] hmacBytes(String key, String message) throws Exception {
+         Mac mac=Mac.getInstance("HmacSHA256");mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8),"HmacSHA256"));
+-        StringBuilder out=new StringBuilder();for(byte b:mac.doFinal(message.getBytes(StandardCharsets.UTF_8)))out.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return out.toString();
++        return mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
+     }
+     private static boolean constant(String a,String b) {
+         return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 index b042fc60..800db98d 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
@@ -371,6 +594,188 @@ index 00000000..45b866f6
 +        }
 +    }
 +}
+diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+index e68547bd..65c927ea 100644
+--- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
++++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
+@@ -140,6 +140,11 @@ final class PolarSensorPanel {
+     private final ArrayList<DeviceEntry> devices = new ArrayList<DeviceEntry>();
+     private final Object countersLock = new Object();
+     private final Object connectionIdentityLock = new Object();
++    private final long[] previewSensorTimesNs = new long[260];
++    private final int[] previewMicrovolts = new int[260];
++    private boolean previewRequested;
++    private int previewLength, previewNext;
++    private long previewReceiptNs;
+     private final Queue<DescriptorTask> descriptorTasks = new ArrayDeque<DescriptorTask>();
+     private final ExecutorService eventWriter = Executors.newSingleThreadExecutor();
+     private final ExecutorService statusWriter = Executors.newSingleThreadExecutor();
+@@ -1679,7 +1684,10 @@ final class PolarSensorPanel {
+ 
+     private void setStreamRunning(String mode, boolean running) {
+         if ("ecg".equals(mode)) {
+-            ecgPmdRunning = running;
++            synchronized (connectionIdentityLock) {
++                ecgPmdRunning = running;
++                if (!running) clearEcgPreview();
++            }
+         } else {
+             accPmdRunning = running;
+         }
+@@ -1689,6 +1697,44 @@ final class PolarSensorPanel {
+             : (accPmdRunning ? "acc" : (ecgPmdRunning ? "ecg" : "none"));
+     }
+ 
++    JSONObject ecgPreview() throws Exception {
++        synchronized (connectionIdentityLock) {
++            previewRequested = true;
++            JSONArray samples = new JSONArray();
++            long ageMs = previewReceiptNs > 0
++                ? Math.max(0L, System.nanoTime() - previewReceiptNs) / 1000000L : 1501L;
++            if (connected && ecgPmdRunning && activeEcgSampleRateHz == 130 && ageMs <= 1500L) {
++                int index = (previewNext + previewSensorTimesNs.length - previewLength)
++                    % previewSensorTimesNs.length;
++                for (int count = 0; count < previewLength; count++) {
++                    samples.put(new JSONArray().put(Long.toString(previewSensorTimesNs[index]))
++                        .put(previewMicrovolts[index]));
++                    index = (index + 1) % previewSensorTimesNs.length;
++                }
++            }
++            return new JSONObject().put("v", 1).put("unit", "uV").put("rate", 130)
++                .put("age_ms", ageMs).put("samples", samples);
++        }
++    }
++
++    // Called under the same GATT identity lock as the acquisition sinks.
++    private void addEcgPreviewSample(long sensorTimeNs, long receiptNs, int microvolts) {
++        if (!previewRequested || !ecgPmdRunning || activeEcgSampleRateHz != 130 || sensorTimeNs <= 0) return;
++        int previous = (previewNext + previewSensorTimesNs.length - 1) % previewSensorTimesNs.length;
++        if (previewLength > 0 && sensorTimeNs <= previewSensorTimesNs[previous]) return;
++        previewSensorTimesNs[previewNext] = sensorTimeNs;
++        previewMicrovolts[previewNext] = microvolts;
++        previewNext = (previewNext + 1) % previewSensorTimesNs.length;
++        previewLength = Math.min(previewLength + 1, previewSensorTimesNs.length);
++        previewReceiptNs = receiptNs;
++    }
++
++    private void clearEcgPreview() {
++        previewNext = 0;
++        previewLength = 0;
++        previewReceiptNs = 0L;
++    }
++
+     private void clearCounters() {
+         synchronized (countersLock) {
+             sequenceId = 0L;
+@@ -2571,6 +2617,8 @@ final class PolarSensorPanel {
+                                 activeEcgSampleRateHz,
+                                 sampleIndex,
+                                 frame.sampleCount);
++                            int microvolts = frame.ecgSamplesMicrovolts.get(sampleIndex).intValue();
++                            addEcgPreviewSample(sampleSensorTimeNs, frame.hostTimeNs, microvolts);
+                             nativeSubmitPolarEcgMeasurement(
+                                 sampleHostTimeNs,
+                                 sampleSensorTimeNs,
+@@ -2579,7 +2627,7 @@ final class PolarSensorPanel {
+                                 sampleIndex,
+                                 frame.sampleCount,
+                                 System.nanoTime(),
+-                                frame.ecgSamplesMicrovolts.get(sampleIndex).intValue());
++                                microvolts);
+                         }
+                         appendEcgEvent(frame);
+                         scheduleStreamingStatusWrite();
+@@ -3210,6 +3258,7 @@ final class PolarSensorPanel {
+             currentGatt = gatt;
+             gatt = null;
+             connected = false;
++            clearEcgPreview();
+         }
+         pmdFlowGeneration += 1L;
+         connectedLabel = "none";
+diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
+index a3dcca7f..b34b14c0 100644
+--- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
++++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
+@@ -220,6 +220,10 @@ final class PolarSensorRuntime {
+     static JSONObject existingRemoteSetupStatus(long epoch) throws Exception {
+         PolarSensorRuntime owner=instance;return owner==null?null:owner.remoteSetupStatus(epoch);
+     }
++    static JSONObject existingEcgPreview() throws Exception {
++        PolarSensorRuntime owner = instance;
++        return owner == null || owner.closed ? null : owner.panel.ecgPreview();
++    }
+     static JSONObject dispatchExistingRemoteSetup(JSONObject command,long epoch) throws Exception {
+         PolarSensorRuntime owner=instance;if(owner==null)throw new SecurityException("polar-owner-unavailable");
+         return owner.dispatchRemoteSetup(command,epoch);
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
+index 56040232..5e5da2eb 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
+@@ -1,4 +1,10 @@
+ package io.github.mesmerprism.rustyquest.native_renderer;
++import java.nio.charset.StandardCharsets;
++import java.util.Base64;
++import javax.crypto.Cipher;
++import javax.crypto.Mac;
++import javax.crypto.spec.GCMParameterSpec;
++import javax.crypto.spec.SecretKeySpec;
+ import org.json.JSONObject;
+ public final class ExperimentSessionRecordingProtocolTest {
+  static final String C="11111111111111111111111111111111",K="3333333333333333333333333333333333333333333333333333333333333333",D="22222222222222222222222222222222";
+@@ -10,6 +16,50 @@ public final class ExperimentSessionRecordingProtocolTest {
+   JSONObject r=p.exchangeLan(request("recordings",2));if(!r.getString("action").equals("recordings"))throw new AssertionError("LAN read unavailable");
+   denied(()->p.exchangeLan(request("recordings",2)));denied(()->p.exchangeLan(request("recordings",3).put("mac","0")));p.retire();denied(()->p.exchangeLan(request("recordings",4)));
+   ExperimentSessionGatewayProtocol huge=new ExperimentSessionGatewayProtocol(C,K,D,42,(x,b)->new JSONObject().put("bytes",new String(new char[65500]).replace('\0','x')));denied(()->huge.exchange(request("status",8)));
++  verifyEncryptedLan();
+   System.out.println("PASS LAN-only authenticated recording action, replay/HMAC/retirement and complete signed envelope bound");
+  }
+-}
+\ No newline at end of file
++
++ private static void verifyEncryptedLan() throws Exception {
++  int[] reads = {0};
++  ExperimentSessionGatewayProtocol privateLan = new ExperimentSessionGatewayProtocol(
++      C, K, D, 42, true, (action, payload) -> {
++       reads[0]++;
++       return new JSONObject().put("query", payload.optString("query")).put("sensor_bytes", "test-sample");
++      });
++  JSONObject request = request("recordings", 12);
++  denied(() -> privateLan.exchange(request));
++  denied(() -> privateLan.exchangeLan(request("recordings", 13).put("mac", "0")));
++  if (reads[0] != 0) throw new AssertionError("denied requests reached private owner");
++
++  JSONObject reply = privateLan.exchangeLan(request);
++  String nonce = reply.getString("nonce"), action = reply.getString("action");
++  String wire = reply.getString("payload");
++  if (wire.contains("test-sample") || !ExperimentSessionGatewayProtocol.hmac(K,
++      "RQG1-REPLY|" + C + "|" + D + "|42|" + nonce + "|" + action + "|" + wire)
++      .equals(reply.getString("mac"))) throw new AssertionError("private reply exposed bytes or changed HMAC");
++  JSONObject envelope = new JSONObject(wire);
++  Mac hmac = Mac.getInstance("HmacSHA256");
++  hmac.init(new SecretKeySpec(K.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
++  byte[] key = hmac.doFinal(("RQG1-PRIVATE-KEY|" + C + "|" + D + "|42").getBytes(StandardCharsets.UTF_8));
++  Cipher aes = Cipher.getInstance("AES/GCM/NoPadding");
++  aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"),
++      new GCMParameterSpec(128, Base64.getDecoder().decode(envelope.getString("iv"))));
++  aes.updateAAD(("RQG1-PRIVATE|recordings|" + D + "|42|" + nonce).getBytes(StandardCharsets.UTF_8));
++  JSONObject body = new JSONObject(new String(
++      aes.doFinal(Base64.getDecoder().decode(envelope.getString("data"))), StandardCharsets.UTF_8));
++  if (envelope.getInt("v") != 1 || !"test-sample".equals(body.optString("sensor_bytes")) || reads[0] != 1)
++      throw new AssertionError("private response did not round-trip");
++  denied(() -> privateLan.exchangeLan(request));
++  JSONObject ecg = privateLan.exchangeLan(request("ecg-preview", 14));
++  if (!new JSONObject(ecg.getString("payload")).has("iv")) throw new AssertionError("ECG reply is plaintext");
++  denied(() -> privateLan.exchange(request("ecg-preview", 15)));
++  String chunk = Base64.getEncoder().encodeToString(new byte[32768]);
++  ExperimentSessionGatewayProtocol transfer = new ExperimentSessionGatewayProtocol(
++      C, K, D, 42, true, (route, payload) -> new JSONObject().put("v", 1).put("data", chunk));
++  JSONObject fullChunk = transfer.exchangeLan(request("recordings", 16));
++  String ciphertext = new JSONObject(fullChunk.getString("payload")).getString("data");
++  if (ciphertext.length() > 62500 || fullChunk.toString().getBytes(StandardCharsets.UTF_8).length >= 65536)
++      throw new AssertionError("encrypted 32 KiB chunk exceeds browser limits");
++ }
++}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
 index 00000000..062b09dd
@@ -444,6 +849,53 @@ index 00000000..062b09dd
 +        }
 +        System.out.println("PASS: six native WAV renders, exact frames, silent placeholders, catalog and cue integrity.");
 +    }
++}
+diff --git a/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json b/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json
+new file mode 100644
+index 00000000..170ae8ac
+--- /dev/null
++++ b/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json
+@@ -0,0 +1,41 @@
++{
++  "schema": "rusty.quest.native_app_feature.v1",
++  "feature_id": "ui.experiment_private_lan_data",
++  "module_path": "ui/experiment-private-lan-data",
++  "module_kind": "encrypted-experiment-lan-readback",
++  "settings_surface": {
++    "authority": "rusty.quest.native_app_settings.v1",
++    "adapter": "packaged-feature-selection"
++  },
++  "owner_lane": "rusty-quest",
++  "status": "public-substrate",
++  "description": "Expose an encrypted ECG preview and finalized recording replies over an enrolled LAN gateway.",
++  "provides": ["ui.experiment_private_lan_data"],
++  "depends_on": [
++    "sensor.polar_h10_ble",
++    "ui.experiment_session_command_gateway",
++    "ui.recording_export"
++  ],
++  "incompatible_with": [],
++  "exclusive_groups": {},
++  "android_manifest": {
++    "permissions": [],
++    "uses_features": [],
++    "activities": [],
++    "services": [],
++    "queries": []
++  },
++  "runtime_profile": {
++    "set": {},
++    "clear_families": [],
++    "expected_render_modes": []
++  },
++  "build_inputs": {
++    "env": [],
++    "assets": [],
++    "shaders": []
++  },
++  "markers": { "required": [], "forbidden": [] },
++  "validation": { "quick": [], "standard": [], "device": [] },
++  "public_private_boundary": "The selected APK admits sensor and recording readback only over the enrolled, authenticated LAN route."
 +}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
 index 5bc5902d..ca15dab0 100644
@@ -521,7 +973,7 @@ index ccb3e308..f4d16833 100644
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881..c6ec3895 100644
+index 0bdd4881..7cda7d10 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -692,6 +692,8 @@ function New-GeneratedAndroidManifestText {
@@ -544,7 +996,7 @@ index 0bdd4881..c6ec3895 100644
      if ($Receivers -contains "NativeRendererBootReceiver") {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.boot_autostart" android:value="true" />')
      }
-@@ -751,7 +757,8 @@ function New-GeneratedAndroidManifestText {
+@@ -751,11 +757,15 @@ function New-GeneratedAndroidManifestText {
      # controller/relay enrollment remain private headset state.
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_command_gateway') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.enabled" android:value="true" />')
@@ -554,7 +1006,14 @@ index 0bdd4881..c6ec3895 100644
      }
      if ($SelectedFeatureIds -ccontains 'ui.recording_export') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.recording_export" android:value="true" />')
-@@ -2029,7 +2036,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+     }
++    if ($SelectedFeatureIds -ccontains 'ui.experiment_private_lan_data') {
++        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.private_lan_data" android:value="true" />')
++    }
+     if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network') {
+         [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.experiment_direct_network" android:value="true" />')
+     }
+@@ -2029,7 +2039,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
  if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
      throw "App build spec application_label must be 1..64 visible characters without control whitespace"
  }
@@ -590,3 +1049,52 @@ index 0bdd4881..c6ec3895 100644
  New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
+diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
+index c849c2d5..c0475396 100644
+--- a/tools/checks/test_experiment_recordings.py
++++ b/tools/checks/test_experiment_recordings.py
+@@ -5,7 +5,7 @@ from test_experiment_gateway_dedupe import method
+ original=owner.HARNESS
+ prefix=original[:original.index(' public static void main')]
+ setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
+-owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
++owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export,privateData;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export||k.equals("rusty.quest.experiment.command_gateway.private_lan_data")&&privateData;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
+ owner.BOUNDARIES=owner.BOUNDARIES.replace('static String applyExperimentSessionCommand(String s){return "{}";}', '''static int reads;static String last;static Runnable during;static String applyExperimentSessionCommand(String s){reads++;last=s;if(android.os.Looper.myLooper()!=null)throw new AssertionError("filesystem query on main");if(during!=null)during.run();return "{\\"v\\":1,\\"state\\":\\"preparing\\"}";}''')
+ owner.HARNESS=prefix+r'''
+  static JSONObject network(ExperimentSessionCommandGateway g,JSONObject r)throws Exception {
+@@ -26,6 +26,35 @@ owner.HARNESS=prefix+r'''
+   ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
+   credentials=join(g,g.identity());final JSONObject current=credentials;
+   ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");
++  ControlPanelActivity.during=null;
++  android.os.Bundle.privateData=true;
++  Field process=ExperimentSessionCommandGateway.class.getDeclaredField("process");
++  process.setAccessible(true);
++  process.set(null,null);
++  Field delegate=ExperimentSessionCommandGateway.class.getDeclaredField("delegate");
++  delegate.setAccessible(true);
++  String controller="11111111111111111111111111111111";
++  String key="3333333333333333333333333333333333333333333333333333333333333333";
++  context.prefs.putString("controller",controller).putString("key",key).putBoolean("trusted-lan",true);
++  ExperimentSessionCommandGateway privateGateway=ExperimentSessionCommandGateway.process(context,
++      (ExperimentSessionBleServer.Delegate)delegate.get(g));
++  privateGateway.nativeOwnerChanged(1,7,true);
++  JSONObject enrolled=privateGateway.identity().put("controller",controller).put("key",key);
++  JSONObject guest=join(privateGateway,privateGateway.identity());
++  JSONObject guestStatus=new JSONObject(privateGateway.exchangeLan(auth(guest,"status",new JSONObject())).getString("payload"));
++  check(guestStatus.getInt("recordings")==0&&guestStatus.getInt("ecg_preview")==0,"guest advertised private routes");
++  deny(()->network(privateGateway,auth(guest,"recordings",q)));
++  deny(()->privateGateway.exchangeLan(auth(guest,"ecg-preview",new JSONObject())));
++  check(ControlPanelActivity.reads==3,"private guest reached recording IO");
++  JSONObject enrolledStatus=new JSONObject(privateGateway.exchangeLan(auth(enrolled,"status",new JSONObject())).getString("payload"));
++  check(enrolledStatus.getInt("recordings")==1&&enrolledStatus.getInt("ecg_preview")==1,"enrolled status omitted private routes");
++  JSONObject recorded=network(privateGateway,auth(enrolled,"recordings",q));
++  check(new JSONObject(recorded.getString("payload")).has("data")&&ControlPanelActivity.reads==4,"enrolled recording remained plaintext or skipped IO");
++  JSONObject ecg=privateGateway.exchangeLan(auth(enrolled,"ecg-preview",new JSONObject()));
++  check(new JSONObject(ecg.getString("payload")).has("data"),"enrolled preview remained plaintext");
++  deny(()->privateGateway.exchangeLan(auth(enrolled,"ecg-preview",new JSONObject().put("extra",true))));
++  deny(()->privateGateway.exchange(auth(enrolled,"ecg-preview",new JSONObject())));
++  check(dispatches==0,"private data query dispatched a session command");
+   System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
+  }
+ }

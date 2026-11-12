@@ -108,7 +108,7 @@ $app.package_name = 'org.viscereality.atmungsraum.rehearsal'
 $app.application_label = 'Atmungsraum Quest 2'
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
-$app.requested_features = @($app.requested_features) + @($featureId)
+$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data')
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
@@ -146,6 +146,9 @@ try {
     if ($metadata['com.oculus.supportedDevices'] -cne 'quest2' -or
         $metadata['rusty.quest.experiment.command_gateway.origins'] -cne 'https://viscereality.org') {
         throw 'The native manifest must target Quest 2 and admit the exact Atmungsraum origin.'
+    }
+    if ($metadata['rusty.quest.experiment.command_gateway.private_lan_data'] -cne 'true') {
+        throw 'The native manifest must select encrypted LAN sensor and recording readback.'
     }
     if ($ResolveOnly) {
         Get-Item -LiteralPath $lockPath

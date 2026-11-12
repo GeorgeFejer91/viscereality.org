@@ -4,7 +4,7 @@
 
 The [Atmungsraum assembly](../quest/README.md) resolved the shared
 Experimenter composition against the pinned Rusty Quest source. The signed
-development APK `0.1.10` passed Android v3 signature verification, the
+development APK `0.1.11` passed Android signature and exact run-capsule verification, the
 Quest 2 manifest check and exact ARM64 OpenXR and liblsl library readback.
 All 67 packaged scenario entries matched their hashes, including the catalog,
 six timelines and 53 silent WAVs. A native Java host test rendered all six
@@ -14,14 +14,21 @@ passed 79 tests. The UI checks and six JSON/CSV consistency checks passed.
 
 The APK has two synthetic condition MP3s for the shared experiment player.
 Its asset inventory contains no video. The startup verification hook is
-packaged. Authored scenario playback and the private recording protocol
-still require integration and physical validation.
+packaged. Authored scenario playback, participant Arm and the participant CSV
+writer still require integration and physical validation.
+
+The host gateway suite passed signed request and receipt checks, the existing
+export owner fences, and enrolled AES-GCM for ECG and recording responses.
+The tests checked the browser key derivation and request binding, a full 32 KiB
+chunk, denial for guests and relay, and no export I/O after rejected admission.
+The Android owner uses live H10 sample timestamps in a bounded preview window.
+The real H10 path and physical browser transfer remain open.
 
 USB installed the APK on the physical Quest 2. Android reported the expected
 package and version, resolved its launcher and returned the signed build's
 exact installed APK digest. The Quest lock screen remained active at
 readback. The authorized Pixel 10 was still in Settings and had no installed
-Atmungsraum WebAPK. Device launch, paired screenshots, H10 and phone control
+Atmungsraum WebAPK. Chrome reported version 134. Device launch, paired screenshots, H10 and phone control
 remain open. The older Viscereality builds are available for rollback.
 
 ## Quest scenario asset staging — 2026-11-12

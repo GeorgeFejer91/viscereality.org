@@ -63,15 +63,19 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.10`
+Both physical devices are authorized over USB. The signed `0.1.11`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
-The Pixel 10 still needs the standalone PWA installed. The shared native
+The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
+and grant Atmungsraum Local Network Access for the Quest connection.
+[Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
+The shared native
 Experimenter source has two condition playback tracks and a procedural VR
-scene. The current rehearsal inventory contains no video files. Its signed
-gateway covers the core session actions. Encrypted participant Arm, ECG
-preview and recording responses require the Atmungsraum protocol in the
-native source. Browser recentering remains a placeholder. Verify the
+scene. The current rehearsal inventory contains no video files. The
+Atmungsraum build adds encrypted ECG preview and recording replies for the
+enrolled LAN controller. Host checks passed. Participant Arm and CSV
+generation still need the native participant contract. Browser recentering
+remains a placeholder. Verify the
 replacement on Quest 2 and the installed phone before retiring superseded
 Viscereality packages.
 

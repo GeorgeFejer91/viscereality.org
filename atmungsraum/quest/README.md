@@ -31,7 +31,8 @@ and Node.js.
 Use `-ResolveOnly` for a feature-lock check. The build uses
 `org.viscereality.atmungsraum.rehearsal`, targets Quest 2 and admits
 `https://viscereality.org` to the native gateway. It verifies each scenario
-file in the signed APK by size and SHA-256. Keep the private provider, signing
+file in the signed APK by size and SHA-256. ECG previews and recording replies
+are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
 The native audio worker verifies all six scenario timelines and their packaged
