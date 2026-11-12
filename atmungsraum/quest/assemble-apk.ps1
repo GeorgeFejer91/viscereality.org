@@ -91,15 +91,18 @@ $feature = [ordered]@{
     public_private_boundary = 'Packages the public Atmungsraum scenario library without signing or device data.'
 }
 $feature | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $featureDir "$featureId.feature.json") -Encoding utf8NoBOM
-$scenarioSource = 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java'
-if (!(Test-Path -LiteralPath (Join-Path $QuestRepo $scenarioSource) -PathType Leaf)) {
-    throw 'Apply the Atmungsraum native scenario source before assembly.'
+$scenarioSourceDir = 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
+$scenarioSources = @('ScenarioAudioPackage.java', 'ScenarioAudioAndroidTracks.java') | ForEach-Object { "$scenarioSourceDir/$_" }
+foreach ($source in $scenarioSources) {
+    if (!(Test-Path -LiteralPath (Join-Path $QuestRepo $source) -PathType Leaf)) {
+        throw 'Apply the Atmungsraum native scenario source before assembly.'
+    }
 }
 $panelDescriptor = Join-Path $featureDir 'ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json'
 $panel = Get-Content -Raw -LiteralPath $panelDescriptor | ConvertFrom-Json -AsHashtable
 $audioModule = @($panel.panel_composition.modules | Where-Object { $_.module_id -ceq 'condition-audio-runtime' })
 if ($audioModule.Count -ne 1) { throw 'The selected panel must contain the condition audio owner.' }
-$audioModule[0].source_files = @($audioModule[0].source_files) + @($scenarioSource)
+$audioModule[0].source_files = @($audioModule[0].source_files) + $scenarioSources
 $panel | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $panelDescriptor -Encoding utf8NoBOM
 
 $app.app_id = 'atmungsraum_quest2'
@@ -132,7 +135,7 @@ try {
     if ($assetInput -cnotin @($lock.build_inputs.assets)) {
         throw 'The resolved native feature lock does not include the scenario library.'
     }
-    if ($scenarioSource -cnotin @($lock.panel_source_closure.source_files.path) -or
+    if (@($scenarioSources | Where-Object { $_ -cnotin @($lock.panel_source_closure.source_files.path) }).Count -or
         $catalogHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256' | ForEach-Object value)) {
         throw 'The resolved native feature lock must bind the scenario parser and catalog digest.'
     }

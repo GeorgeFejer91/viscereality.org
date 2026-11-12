@@ -1,21 +1,44 @@
 # Verification
 
+## Native scenario selection and audio lifecycle — 2026-11-12
+
+An enrolled VR-Probe controller chooses a timeline independently of the
+existing VR condition. Host tests verified that the signed gateway rejects
+guest, relay, stale-generation and unknown-scenario Arm requests. A valid
+request dispatches once and preserves its original receipt. The native audio
+owner's host tests exercised preparation, Start, Pause, Resume, Finish and
+release of both the condition and timeline players.
+
+The native timeline renderer produced the exact frame count for all six
+scenarios and verified silent PCM. A replacement cue with two nonzero samples
+and refreshed metadata reproduced both samples and preserved all 39,690,000
+main-round frames. Android decoder output and the native 26–41 s measurement
+window still need physical verification.
+
+The 80 Node tests passed. Six Chromium cases used each offered timeline once
+across portrait, landscape, 200% text and expanded spacing. The signed
+synthetic gateway fixture checked 192 rendered controls, repeated Start
+taps, rotation mid-run, a frozen paused clock, Resume, lost Finish replies,
+byte-exact download and rejoin. Six separate cases passed with the legacy
+gateway and the scenario selector hidden. These results use emulated phone
+viewports and synthetic Quest state.
+
 ## Signed Quest 2 assembly and USB installation — 2026-11-12
 
 The [Atmungsraum assembly](../quest/README.md) resolved the shared
 Experimenter composition against the pinned Rusty Quest source. The signed
-development APK `0.1.11` passed Android signature and exact run-capsule verification, the
-Quest 2 manifest check and exact ARM64 OpenXR and liblsl library readback.
+development APK `0.1.12` passed Android signature and exact run-capsule
+verification, the Quest 2 manifest check and ARM64 native library readback.
 All 67 packaged scenario entries matched their hashes, including the catalog,
 six timelines and 53 silent WAVs. A native Java host test rendered all six
 timelines at the exact sample counts, confirmed zero PCM in the placeholders
-and rejected corrupt cue data and the wrong catalog digest. The Node suite
-passed 79 tests. The UI checks and six JSON/CSV consistency checks passed.
+and rejected corrupt cue data and the wrong catalog digest. The UI checks
+and six JSON/CSV consistency checks passed.
 
 The APK has two synthetic condition MP3s for the shared experiment player.
-Its asset inventory contains no video. The startup verification hook is
-packaged. Authored scenario playback, participant Arm and the participant CSV
-writer still require integration and physical validation.
+Its asset inventory contains no video. The scenario startup and playback
+owners are packaged. Participant Arm and the participant CSV writer still
+require integration and physical validation.
 
 The host gateway suite passed signed request and receipt checks, the existing
 export owner fences, and enrolled AES-GCM for ECG and recording responses.

@@ -36,9 +36,14 @@ are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
 The native audio worker verifies all six scenario timelines and their packaged
-cue files before rehearsal audio reports ready. For final recordings, follow
-the [scenario asset contract](../audio/scenarios/README.md) to replace each
-numbered WAV and refresh its metadata before building again. The current
-Experimenter playback owner still uses its two condition tracks. Selecting
-and playing authored scenario timelines through that owner remains tracked
-in [For-AI](../for-ai/PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12).
+cue files before rehearsal audio reports ready. In an enrolled VR-Probe
+session, choose the VR condition and the authored timeline under **Ablauf**.
+The signed Arm request binds the selection to the observed native generation.
+The Quest audio owner prepares the timeline from its packaged WAVs and plays
+it alongside the selected condition track. Both tracks follow the native
+Start, Pause, Resume and Finish transitions.
+
+For final recordings, follow the [scenario asset contract](../audio/scenarios/README.md)
+to replace each numbered WAV and refresh its metadata before building again.
+See [For-AI](../for-ai/PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12)
+for physical qualification and current release evidence.

@@ -1,5 +1,5 @@
-import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=3';
-import { polarSetup, QuestRehearsal, rehearsalActions } from './quest-rehearsal.js?v=4';
+import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=4';
+import { polarSetup, QuestRehearsal, rehearsalActions, rehearsalScenarios } from './quest-rehearsal.js?v=5';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=5';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
@@ -31,6 +31,9 @@ export function mountQuestRehearsal(participantIdentity) {
   const disconnect = byId('quest-disconnect');
   const demo = byId('quest-demo');
   const condition = byId('quest-condition');
+  const conditionName = byId('quest-condition-name');
+  const scenario = byId('quest-scenario');
+  const scenarioOptions = Array.from(scenario.options);
   const participant = byId('quest-participant');
   const participantLabel = byId('quest-participant-label');
   const participantForm = byId('patient-form');
@@ -107,8 +110,20 @@ export function mountQuestRehearsal(participantIdentity) {
     polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || setup.sc || ready;
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status;
+    const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
+    const showScenario = available.length > 0 && status?.p === 'IDLE';
+    if (!showScenario && document.activeElement === scenario) statusText.focus({ preventScroll: true });
+    scenario.parentElement.hidden = !showScenario;
+    scenario.disabled = !showScenario || waiting || unknown;
+    if (showScenario) {
+      for (const option of scenarioOptions) option.hidden = option.disabled = !available.includes(option.value);
+      if (!available.includes(scenario.value)) scenario.value = scenarioOptions.find(option => !option.disabled).value;
+    }
     condition.parentElement.hidden = status?.ecg_preview !== 1 || status.p !== 'IDLE';
     condition.disabled = waiting || unknown;
+    text(conditionName, showScenario ? 'VR-Bedingung' : 'Szenario');
+    text(condition.options[0], showScenario ? 'Bedingung A' : 'Szenario A');
+    text(condition.options[1], showScenario ? 'Bedingung B' : 'Szenario B');
     play.disabled = waiting || unknown || !actions.play
       || actions.play === 'arm' && requiresParticipant && (!armedWithParticipant || !participantId || !ready);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
@@ -320,7 +335,8 @@ export function mountQuestRehearsal(participantIdentity) {
     nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
-    try { await rehearsal.run(action, attempt.signal, condition.value, participantId); }
+    const selected = scenario.parentElement.hidden ? '' : scenario.value;
+    try { await rehearsal.run(action, attempt.signal, condition.value, participantId, selected); }
     finally { if (userAction === attempt) userAction = null; }
   }
 

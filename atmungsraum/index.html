@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261112-quest-ecg">
+  <link rel="stylesheet" href="./style.css?v=20261112-quest-scenarios">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261112-quest-ecg"></script>
+  <script type="module" src="./app.js?v=20261112-quest-scenarios"></script>
 </head>
 <body data-delivery-locked>
   <noscript>Atmungsraum benötigt JavaScript, um das Passwort zu prüfen.</noscript>
@@ -155,10 +155,21 @@
           <summary><span id="quest-participant-label" data-measure>Teilnehmer-ID eingeben</span></summary>
         </details>
         <label id="quest-condition-label" hidden>
-          <span data-measure>Szenario</span>
+          <span id="quest-condition-name" data-measure>Szenario</span>
           <select id="quest-condition">
             <option value="condition-a">Szenario A</option>
             <option value="condition-b">Szenario B</option>
+          </select>
+        </label>
+        <label id="quest-scenario-label" hidden>
+          <span data-measure>Ablauf</span>
+          <select id="quest-scenario">
+            <option value="probe-anleitung">Anleitung</option>
+            <option value="probe-5">Probe · 5 Min.</option>
+            <option value="probe-10">Probe · 10 Min.</option>
+            <option value="probe-15">Probe · 15 Min.</option>
+            <option value="haupt-15">Haupt-Runde · 15 Min.</option>
+            <option value="box-20">Box-Atmung · 20 Min.</option>
           </select>
         </label>
         <div id="quest-polar" hidden>

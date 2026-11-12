@@ -1,4 +1,4 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=1';
+import { operationId, sameQuest } from './quest-gateway.js?v=4';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -6,6 +6,13 @@ const desiredPhase = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 
 const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg']);
 const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
+const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
+
+export function rehearsalScenarios(status) {
+  const offered = status?.scenarios;
+  return Array.isArray(offered) && offered.length <= scenarios.size
+    && new Set(offered).size === offered.length && offered.every(id => scenarios.has(id)) ? offered : [];
+}
 
 export function polarSetup(status) {
   const setup = status?.y;
@@ -143,7 +150,7 @@ export class QuestRehearsal {
     return this.refreshing;
   }
 
-  async dispatch(gateway, op, status, signal, target = '', participantId = '') {
+  async dispatch(gateway, op, status, signal, target = '', participantId = '', scenario = '') {
     signal?.throwIfAborted();
     const id = operationId();
     const pending = { id, op, owner: gateway.owner, generation: status.g };
@@ -161,14 +168,20 @@ export class QuestRehearsal {
     }
     this.remember(pending);
     this.update({ message: '' });
-    const receipt = op === 'arm' && status.participant_arm === 1
-      ? await gateway.participantArm({ ...command, g: status.g, participant_id: participantId }, signal)
-      : await gateway.command(command, signal);
+    let receipt;
+    if (op === 'arm' && status.participant_arm === 1) {
+      const selected = scenario ? { scenario } : {};
+      receipt = await gateway.participantArm({ ...command, ...selected, g: status.g, participant_id: participantId }, signal);
+    } else if (op === 'arm' && scenario) {
+      receipt = await gateway.scenarioArm({ ...command, g: status.g, scenario }, signal);
+    } else {
+      receipt = await gateway.command(command, signal);
+    }
     return this.observe(gateway, receipt);
   }
 
-  async dispatchAndConfirm(gateway, op, signal, timeout, target, participantId) {
-    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target, participantId);
+  async dispatchAndConfirm(gateway, op, signal, timeout, target, participantId, scenario) {
+    let confirmed = await this.dispatch(gateway, op, this.state.status, signal, target, participantId, scenario);
     const deadline = performance.now() + timeout;
     while (!confirmed && this.pending && !this.state.unknown && this.gateway === gateway
       && !signal?.aborted && performance.now() < deadline) {
@@ -208,7 +221,7 @@ export class QuestRehearsal {
     if (setup?.c && !setup.e) await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x);
   }
 
-  async run(action, signal, condition = conditions[0], participantId = '') {
+  async run(action, signal, condition = conditions[0], participantId = '', scenario = '') {
     const gateway = this.gateway;
     const clicked = this.state.status;
     const requested = rehearsalActions(clicked, condition)[action];
@@ -233,9 +246,10 @@ export class QuestRehearsal {
         return;
       }
       if (status.participant_arm === 1 && (!participantId || !gateway.participantArm || !polarSetup(status)?.e)) return;
+      if (scenario && (!gateway.scenarioArm || !rehearsalScenarios(status).includes(scenario))) return;
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
-      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId)
+      if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId, scenario)
         && rehearsalActions(this.state.status).play === 'start') {
         await this.dispatch(gateway, 'start', this.state.status, signal);
       }

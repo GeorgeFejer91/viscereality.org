@@ -169,6 +169,28 @@ test('rehearsal sends one fenced Arm, Start, Pause, Resume and Finish using nati
   assert.equal(rehearsal.state.status.p, 'IDLE');
 });
 
+test('an enrolled scenario Arm binds the native generation and the selected timeline', async () => {
+  const quest = fakeQuest();
+  const supported = ['probe-anleitung', 'haupt-15'];
+  quest.initial = { ...quest.initial, scenarios: supported };
+  const read = quest.status;
+  quest.status = async () => ({ ...await read(), scenarios: supported });
+  const scenarioCommands = [];
+  quest.scenarioArm = (command, signal) => {
+    scenarioCommands.push(command);
+    return quest.command(command, signal);
+  };
+  const rehearsal = new QuestRehearsal();
+  rehearsal.attach(quest);
+  await rehearsal.run('play', undefined, 'condition-a', '', 'box-20');
+  assert.equal(quest.commands.length, 0);
+  await rehearsal.run('play', undefined, 'condition-a', '', 'haupt-15');
+  assert.equal(scenarioCommands.length, 1);
+  assert.equal(scenarioCommands[0].g, 0);
+  assert.equal(scenarioCommands[0].scenario, 'haupt-15');
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start']);
+});
+
 test('a lost Arm reply is reconciled without starting or replaying after reconnect', async () => {
   const quest = fakeQuest({ lost: 'arm' });
   const rehearsal = new QuestRehearsal();

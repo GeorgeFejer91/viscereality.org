@@ -1,19 +1,98 @@
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..bd177ab0 100644
+index a694dfee..6108143e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-@@ -828,6 +828,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         final ExperimentSessionControlCapability.Fence sessionFence;
+         final long armGeneration;
+         final String armCondition;
++        String scenarioId = "";
+         int requestedBias = -1;
+         boolean armCheckpointObserved;
+         boolean awaitsDurableNativeOutcome() {
+@@ -549,9 +550,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                     ExperimentSessionPanelState state = EXPERIMENT_SESSION_PANEL.snapshot();
+                     if (state.phase == ExperimentSessionPanelState.Phase.ARMING
+                             && state.recording) {
+-                        ControlPanelActivity.startConditionAudio(
+-                            state.generation, "session-arm-" + state.generation,
+-                            state.activeCondition);
++                        requestArmedAudio(state, readback);
+                     }
+                 }
+                 RemotePending pending = remotePending;
+@@ -828,6 +827,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
 +            @Override public JSONObject ecgPreview() throws Exception {
 +                return PolarSensorRuntime.existingEcgPreview();
 +            }
++            @Override public java.util.List<String> scenarioIds() {
++                return ControlPanelActivity.conditionAudioScenarios();
++            }
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
+@@ -922,6 +927,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+             }
+ 
+             @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
++                dispatchScenario(request, "");
++            }
++            @Override public void dispatchScenario(ExperimentSessionBleServer.CommandRequest request, String scenario) {
+                 ExperimentSessionBleServer server = remoteServer();
+                 if (server == null) return;
+                 if(remoteTerminal!=null) {
+@@ -997,8 +1005,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                         server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
+                         return;
+                     }
+-                    remotePending = new RemotePending(request.id, nativeCommand.operationId, "arm",
++                    RemotePending arm = new RemotePending(request.id, nativeCommand.operationId, "arm",
+                         nativeCommand.expectedGeneration + 1L, request.condition);
++                    arm.scenarioId = scenario;
++                    remotePending = arm;
+                     server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
+                     EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
+                     return;
+@@ -4214,10 +4224,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         // every authoritative arming readback so a reordered status callback or
+         // panel recreation cannot leave the native session permanently arming.
+         if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
+-            if (!ControlPanelActivity.startConditionAudio(
+-                    after.generation,
+-                    "session-arm-" + after.generation,
+-                    after.activeCondition)) {
++            if (!requestArmedAudio(after, readback)) {
+                 updateStatus("Session armed, but condition audio preparation was rejected.");
+             }
+         }
+@@ -4237,6 +4244,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         refreshExperimenterAfterReadback();
+     }
+ 
++    private static boolean requestArmedAudio(ExperimentSessionPanelState state,
++            ExperimentSessionAndroidShell.SessionReadback readback) {
++        String scenario = "";
++        RemotePending pending = remotePending;
++        if (pending != null && pending.armGeneration == state.generation
++                && pending.armCondition.equals(state.activeCondition) && !pending.scenarioId.isEmpty()) {
++            if (readback.runtimeEpoch != pending.nativeOwnerEpoch) return false;
++            if (!pending.armCheckpointObserved && (readback.armAcceptance == null
++                    || !readback.armAcceptance.matches(pending.nativeId, pending.armGeneration,
++                        pending.armCondition, readback))) return true;
++            scenario = pending.scenarioId;
++        }
++        return ControlPanelActivity.startConditionAudio(
++            state.generation, "session-arm-" + state.generation, state.activeCondition, scenario);
++    }
++
+     @Override
+     public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
+         RemoteTerminalPending terminal=remoteTerminal;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..5dfa2d21 100644
+index 08732e53..51f7ce68 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,7 @@ import org.json.JSONObject;
@@ -32,15 +111,19 @@ index 08732e53..5dfa2d21 100644
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +45,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +45,11 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
 +        default JSONObject ecgPreview() throws Exception { return null; }
++        default java.util.List<String> scenarioIds() { return java.util.Collections.emptyList(); }
++        default void dispatchScenario(ExperimentSessionBleServer.CommandRequest request, String scenario) {
++            throw new IllegalStateException("scenario-arm-unavailable");
++        }
      }
  
  
-@@ -52,14 +55,18 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,14 +59,18 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -60,7 +143,7 @@ index 08732e53..5dfa2d21 100644
          discovery=new ExperimentSessionDiscoveryServer(context,new ExperimentSessionDiscoveryServer.Source(){
              @Override public JSONObject snapshot()throws Exception{return discoveryMetadata();}
          });
-@@ -268,9 +275,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -268,9 +279,9 @@ public final class ExperimentSessionCommandGateway {
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
          if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
@@ -72,7 +155,7 @@ index 08732e53..5dfa2d21 100644
                  }});
          controlModeChanged();
      }
-@@ -332,7 +339,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +343,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -81,7 +164,7 @@ index 08732e53..5dfa2d21 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +362,34 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,8 +366,38 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -109,6 +192,10 @@ index 08732e53..5dfa2d21 100644
 +                    if (privateLanData && "status".equals(action)) {
 +                        response.put("ecg_preview", enrolled ? 1 : 0);
 +                        if (!enrolled) response.put("recordings", 0);
++                        else if (delegate instanceof WifiDelegate) {
++                            java.util.List<String> ids = ((WifiDelegate) delegate).scenarioIds();
++                            if (!ids.isEmpty()) response.put("scenarios", new org.json.JSONArray(ids));
++                        }
 +                    }
 +                    return response;
 +                }
@@ -118,8 +205,47 @@ index 08732e53..5dfa2d21 100644
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
          final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
+@@ -398,10 +439,36 @@ public final class ExperimentSessionCommandGateway {
+         if(journal.known(body))return journal.original(id);
+         // This runs on the actual serialized owner, after any queued headset mode change.
+         controlMode.readSnapshot().requireRemoteCommands();
+-        ExperimentSessionBleServer.CommandRequest request=parse(body);
++        String scenario = "";
++        JSONObject command = body;
++        if ("scenario-arm".equals(action)) {
++            scenario = ExperimentSessionGatewayProtocol.string(body, "scenario");
++            Object generation = body.opt("g");
++            if (body.length() != 8 || !"arm".equals(body.opt("op"))
++                    || !(generation instanceof Integer || generation instanceof Long)
++                    || !(delegate instanceof WifiDelegate)
++                    || !((WifiDelegate) delegate).scenarioIds().contains(scenario)) {
++                throw new IllegalArgumentException("closed-scenario-arm-required");
++            }
++            JSONObject current = snapshot();
++            if (!"IDLE".equals(current.opt("p")) || !Boolean.FALSE.equals(current.opt("pending"))
++                    || !Boolean.FALSE.equals(current.opt("rec"))
++                    || ((Number) generation).longValue() != current.getLong("g")) {
++                throw new SecurityException("scenario-arm-generation-unavailable");
++            }
++            command = new JSONObject(body.toString());
++            command.remove("scenario");
++            command.remove("g");
++        }
++        ExperimentSessionBleServer.CommandRequest request=parse(command);
+         if(!journal.reserve(body))return journal.original(id);
+         carrier.updateReceipt(id,"accepted","Command admitted by authenticated app gateway.");
+-        try{delegate.dispatch(request);}catch(RuntimeException rejected){carrier.updateReceipt(id,"rejected","App command dispatch failed.");}
++        try {
++            if (scenario.isEmpty()) delegate.dispatch(request);
++            else ((WifiDelegate) delegate).dispatchScenario(request, scenario);
++        } catch (RuntimeException rejected) {
++            carrier.updateReceipt(id,"rejected","App command dispatch failed.");
++        }
+         return journal.original(id);
+     }
+     private JSONObject snapshot()throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..e8aedc73 100644
+index cf6c5de1..ca239ceb 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -174,7 +300,7 @@ index cf6c5de1..e8aedc73 100644
 -            if(!hex(nonce,32) || !("status".equals(action)||"command".equals(action)||"receipt".equals(action)||"breath-monitor".equals(action)||lan&&"recordings".equals(action))
 +            boolean allowedAction = "status".equals(action) || "command".equals(action) || "receipt".equals(action)
 +                || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
-+                    || privateLan && "ecg-preview".equals(action));
++                    || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)));
 +            if(!hex(nonce,32) || !allowedAction
                      || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
                  throw new SecurityException("authentication-failed");
@@ -222,25 +348,27 @@ index cf6c5de1..e8aedc73 100644
      private static boolean constant(String a,String b) {
          return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..800db98d 100644
+index b042fc60..e2428f70 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-@@ -15,9 +15,14 @@ import java.util.Map;
+@@ -15,9 +15,16 @@ import java.util.Map;
   */
  final class ConditionAudioAndroidMediaBackendFactory
          implements ConditionAudioRuntime.StartupPreloader {
-+    interface PackagedAudioCheck {
++    interface ScenarioTracks {
 +        void verify() throws Exception;
++        java.util.List<String> ids();
++        MediaPlayer prepare(String scenarioId) throws Exception;
 +    }
 +
      private final Object lock = new Object();
      private final AssetManager assets;
      private final boolean loopBackground;
-+    private final PackagedAudioCheck packagedAudioCheck;
++    private final ScenarioTracks scenarios;
      private final Map<String, PreparedTrack> prepared = new HashMap<String, PreparedTrack>();
      private ConditionAudioRuntime.StartupPreloader.Listener preloadListener;
      private boolean closed;
-@@ -42,18 +47,25 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -42,18 +49,25 @@ final class ConditionAudioAndroidMediaBackendFactory
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets) { this(assets, false); }
  
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets, boolean loopBackground) {
@@ -248,11 +376,11 @@ index b042fc60..800db98d 100644
 +    }
 +
 +    ConditionAudioAndroidMediaBackendFactory(
-+            AssetManager assets, boolean loopBackground, PackagedAudioCheck packagedAudioCheck) {
++            AssetManager assets, boolean loopBackground, ScenarioTracks scenarios) {
          if (assets == null) throw new IllegalArgumentException("packaged asset manager is required");
          this.assets = assets;
          this.loopBackground = loopBackground;
-+        this.packagedAudioCheck = packagedAudioCheck;
++        this.scenarios = scenarios;
      }
  
      @Override public void preload(
@@ -263,16 +391,291 @@ index b042fc60..800db98d 100644
          if (providers == null || providers.length == 0 || listener == null) {
              throw new IllegalArgumentException("packaged condition tracks are required");
          }
-+        if (packagedAudioCheck != null) packagedAudioCheck.verify();
++        if (scenarios != null) scenarios.verify();
          synchronized (lock) {
              preloadListener = listener;
          }
+@@ -67,7 +81,15 @@ final class ConditionAudioAndroidMediaBackendFactory
+     @Override public ConditionAudioRuntime.MediaBackend create(
+         ConditionAudioContract.Provider provider,
+         ConditionAudioRuntime.MediaBackend.Listener listener
+-    ) {
++    ) throws Exception {
++        return create(provider, listener, "");
++    }
++
++    @Override public ConditionAudioRuntime.MediaBackend create(
++        ConditionAudioContract.Provider provider,
++        ConditionAudioRuntime.MediaBackend.Listener listener,
++        String scenarioId
++    ) throws Exception {
+         if (provider == null || listener == null) {
+             throw new IllegalArgumentException("prepared track and listener are required");
+         }
+@@ -79,7 +101,20 @@ final class ConditionAudioAndroidMediaBackendFactory
+         if (track == null || track.player == null) {
+             throw new IllegalStateException("audio-track-not-ready");
+         }
+-        return new SessionBackend(this, provider, track.player, listener);
++        try {
++            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener);
++            if (scenarios == null || !scenarios.ids().contains(scenarioId)) {
++                throw new IllegalArgumentException("scenario-track-unavailable");
++            }
++            MediaPlayer timeline = scenarios.prepare(scenarioId);
++            return new SessionBackend(this, provider, timeline, track.player, listener);
++        } catch (Exception error) {
++            synchronized (lock) {
++                if (closed) track.player.release();
++                else prepared.put(provider.conditionId, track);
++            }
++            throw error;
++        }
+     }
+ 
+     private void prepareTrack(final ConditionAudioContract.Provider provider) {
+@@ -189,6 +224,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+         private final ConditionAudioAndroidMediaBackendFactory factory;
+         private final ConditionAudioContract.Provider provider;
+         private final MediaPlayer player;
++        private final MediaPlayer background;
+         private final Listener listener;
+         private boolean released;
+ 
+@@ -196,17 +232,20 @@ final class ConditionAudioAndroidMediaBackendFactory
+             ConditionAudioAndroidMediaBackendFactory factory,
+             ConditionAudioContract.Provider provider,
+             MediaPlayer player,
++            MediaPlayer background,
+             Listener listener
+         ) {
+             this.factory = factory;
+             this.provider = provider;
+             this.player = player;
++            this.background = background;
+             this.listener = listener;
+         }
+ 
+         @Override public void prepare(boolean looping) {
+             if (looping) throw new IllegalArgumentException("condition audio must not loop");
+-            if (factory.loopBackground) player.setLooping(true);
++            if (background != null) background.setLooping(true);
++            if (background == null && factory.loopBackground) player.setLooping(true);
+             else player.setLooping(false);
+             listener.onPrepared();
+         }
+@@ -217,28 +256,40 @@ final class ConditionAudioAndroidMediaBackendFactory
+                     listener.onNaturalEnd(Math.max(0L, completedPlayer.getCurrentPosition()));
+                 }
+             });
+-            player.setOnErrorListener(new MediaPlayer.OnErrorListener() {
++            MediaPlayer.OnErrorListener error = new MediaPlayer.OnErrorListener() {
+                 @Override public boolean onError(MediaPlayer failedPlayer, int what, int extra) {
+                     listener.onError("media-player-error");
+                     return true;
+                 }
+-            });
++            };
++            player.setOnErrorListener(error);
++            if (background != null) {
++                background.setOnErrorListener(error);
++                background.start();
++            }
+             player.start();
+             listener.onActualStart(Math.max(0L, player.getCurrentPosition()));
+         }
+ 
+-        @Override public void stop() { player.stop(); }
++        @Override public void stop() {
++            try { player.stop(); }
++            finally { if (background != null) background.stop(); }
++        }
+ 
+         @Override public long pause() {
+-            player.pause();
++            try { player.pause(); }
++            finally { if (background != null) background.pause(); }
+             return Math.max(0L, player.getCurrentPosition());
+         }
+ 
+         @Override public void release() {
+             if (released) return;
+             released = true;
+-            player.release();
+-            factory.replaceAfterTerminal(provider);
++            try { player.release(); }
++            finally {
++                if (background != null) background.release();
++                factory.replaceAfterTerminal(provider);
++            }
+         }
+     }
+ }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
+index f920e7db..7b70e42c 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
+@@ -160,6 +160,7 @@ final class ConditionAudioContract {
+         final String operationId;
+         final String conditionId;
+         final StopReason stopReason;
++        final String scenarioId;
+ 
+         Command(
+             CommandKind kind,
+@@ -168,17 +169,30 @@ final class ConditionAudioContract {
+             String conditionId,
+             StopReason stopReason
+         ) {
++            this(kind, sessionGeneration, operationId, conditionId, stopReason, "");
++        }
++
++        private Command(CommandKind kind, long sessionGeneration, String operationId, String conditionId,
++                StopReason stopReason, String scenarioId) {
+             this.kind = kind;
+             this.sessionGeneration = sessionGeneration;
+             this.operationId = safe(operationId);
+             this.conditionId = safe(conditionId);
+             this.stopReason = stopReason;
++            this.scenarioId = safe(scenarioId);
+         }
+ 
+         static Command prepare(long generation, String operationId, String conditionId) {
+             return new Command(CommandKind.PREPARE, generation, operationId, conditionId, null);
+         }
+ 
++        static Command prepare(long generation, String operationId, String conditionId, String scenarioId) {
++            if (!safe(scenarioId).matches("([a-z0-9][a-z0-9-]{0,63})?")) {
++                throw new IllegalArgumentException("invalid-scenario-id");
++            }
++            return new Command(CommandKind.PREPARE, generation, operationId, conditionId, null, scenarioId);
++        }
++
+         static Command start(long generation, String operationId) {
+             return new Command(CommandKind.START, generation, operationId, "", null);
+         }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
+index feb3ddc2..a1d65181 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
+@@ -20,6 +20,12 @@ final class ConditionAudioRuntime implements AutoCloseable {
+     interface MediaBackendFactory {
+         MediaBackend create(ConditionAudioContract.Provider provider, MediaBackend.Listener listener)
+             throws Exception;
++
++        default MediaBackend create(ConditionAudioContract.Provider provider, MediaBackend.Listener listener,
++                String scenarioId) throws Exception {
++            if (!scenarioId.isEmpty()) throw new IllegalArgumentException("scenario-track-unavailable");
++            return create(provider, listener);
++        }
+     }
+ 
+     /**
+@@ -534,7 +540,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+         try {
+             final MediaBackend candidate = backendFactory.create(
+                 provider,
+-                listener(command.sessionGeneration, command.operationId, admittedEpoch)
++                listener(command.sessionGeneration, command.operationId, admittedEpoch),
++                command.scenarioId
+             );
+             boolean rejectedAsStale;
+             synchronized (authorityLock) {
+@@ -923,7 +930,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+     }
+ 
+     private static String fingerprint(ConditionAudioContract.Command command) {
+-        return command.kind + "|" + command.sessionGeneration + "|" + command.conditionId
++        return command.kind + "|" + command.sessionGeneration + "|" + command.conditionId + "|" + command.scenarioId
+             + "|" + (command.stopReason == null ? "" : command.stopReason.name());
+     }
+ 
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+new file mode 100644
+index 00000000..c8f319e3
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
+@@ -0,0 +1,74 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import android.content.res.AssetManager;
++import android.media.MediaPlayer;
++import android.util.Log;
++import java.io.File;
++import java.io.FileInputStream;
++import java.io.FileOutputStream;
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.Collections;
++import java.util.List;
++
++/** Prepares a verified packaged timeline on the condition-audio worker. */
++final class ScenarioAudioAndroidTracks
++        implements ConditionAudioAndroidMediaBackendFactory.ScenarioTracks {
++    private static final String TAG = "RustyQuestNativeRenderer";
++    private final AssetManager assets;
++    private final File cache;
++    private final String digest;
++    private volatile ScenarioAudioPackage catalog;
++
++    ScenarioAudioAndroidTracks(AssetManager assets, File cache, String digest) {
++        this.assets = assets;
++        this.cache = cache;
++        this.digest = digest;
++    }
++
++    @Override public void verify() throws Exception {
++        try {
++            ScenarioAudioPackage selected = ScenarioAudioPackage.open(new ScenarioAudioPackage.AssetSource() {
++                @Override public InputStream open(String path) throws IOException {
++                    return assets.open("atmungsraum-audio/" + path, AssetManager.ACCESS_STREAMING);
++                }
++            }, digest);
++            selected.verifyAll();
++            catalog = selected;
++            Log.i(TAG, "channel=scenario-audio event=verified");
++        } catch (Exception error) {
++            Log.e(TAG, "channel=scenario-audio event=rejected", error);
++            throw error;
++        }
++    }
++
++    @Override public List<String> ids() {
++        ScenarioAudioPackage selected = catalog;
++        return selected == null ? Collections.<String>emptyList() : selected.ids();
++    }
++
++    @Override public MediaPlayer prepare(String id) throws Exception {
++        ScenarioAudioPackage selected = catalog;
++        if (selected == null) throw new IllegalStateException("scenario-audio-not-verified");
++        File wave = File.createTempFile("scenario-", ".wav", cache);
++        try {
++            long frames;
++            try (FileOutputStream output = new FileOutputStream(wave)) {
++                frames = selected.writeWave(id, output);
++            }
++            MediaPlayer player = new MediaPlayer();
++            try (FileInputStream input = new FileInputStream(wave)) {
++                player.setDataSource(input.getFD(), 0, wave.length());
++                player.prepare();
++                Log.i(TAG, "channel=scenario-audio event=prepared scenario=" + id
++                    + " frames=" + frames + " catalog_sha256=" + digest);
++                return player;
++            } catch (Exception failure) {
++                player.release();
++                throw failure;
++            }
++        } finally {
++            if (!wave.delete()) Log.w(TAG, "channel=scenario-audio event=cache-cleanup-failed");
++        }
++    }
++}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 new file mode 100644
-index 00000000..45b866f6
+index 00000000..23371936
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
-@@ -0,0 +1,321 @@
+@@ -0,0 +1,327 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.IOException;
@@ -368,6 +771,12 @@ index 00000000..45b866f6
 +
 +    void verifyAll() throws IOException, JSONException {
 +        for (String scenarioId : scenarios.keySet()) verifyTimeline(scenarioId, null);
++    }
++
++    List<String> ids() {
++        List<String> ids = new ArrayList<>(scenarios.keySet());
++        java.util.Collections.sort(ids);
++        return java.util.Collections.unmodifiableList(ids);
 +    }
 +
 +    long writeWave(String scenarioId, OutputStream output) throws IOException, JSONException {
@@ -708,6 +1117,47 @@ index a3dcca7f..b34b14c0 100644
      static JSONObject dispatchExistingRemoteSetup(JSONObject command,long epoch) throws Exception {
          PolarSensorRuntime owner=instance;if(owner==null)throw new SecurityException("polar-owner-unavailable");
          return owner.dispatchRemoteSetup(command,epoch);
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
+index 68b7cc01..daea3bee 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
+@@ -32,6 +32,36 @@ public final class BreathPhaseAudioAndroidOwnerTest {
+   check(MediaPlayer.players.get(0).playing,"real owner cue active before injected stop failure");MediaPlayer.players.get(0).failPause=true;
+   failing.close();check(!failing.awaitClosed(2000),"pause failure cannot claim successful cleanup");
+   check("failed".equals(failing.shutdownStatus()),"cleanup failure remains failed");for(MediaPlayer p:MediaPlayer.players)check(p.released,"all releases attempted despite cue stop failure");
++  verifyScenarioPlayback(assets,bg);
+   System.out.println("BreathPhaseAudioAndroidOwnerTest PASS actual production methods, fake platform transport only");
+  }
++
++ static void verifyScenarioPlayback(AssetManager assets,ConditionAudioContract.Provider provider)throws Exception {
++  MediaPlayer.players.clear();
++  ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks=
++      new ConditionAudioAndroidMediaBackendFactory.ScenarioTracks(){
++          public void verify(){}
++          public java.util.List<String> ids(){return java.util.Collections.singletonList("haupt-15");}
++          public MediaPlayer prepare(String scenario){
++              check(scenario.equals("haupt-15"),"wrong scenario media selected");
++              return new MediaPlayer();
++          }
++      };
++  ConditionAudioAndroidMediaBackendFactory factory=new ConditionAudioAndroidMediaBackendFactory(assets,false,tracks);
++  factory.preload(new ConditionAudioContract.Provider[]{provider},new Preloader());
++  ConditionAudioRuntime.MediaBackend session=factory.create(provider,new Listener(),"haupt-15");
++  MediaPlayer music=MediaPlayer.players.get(0),timeline=MediaPlayer.players.get(1);
++  session.prepare(false);
++  check(music.looping&&!timeline.looping,"timeline owns duration while the background loops");
++  session.start();
++  timeline.position=99;music.position=31;
++  check(music.playing&&timeline.playing,"both tracks started");
++  check(session.pause()==99&&!music.playing&&!timeline.playing,"pause follows timeline position");
++  session.start();
++  check(music.starts==2&&timeline.starts==2&&timeline.position==99,"both tracks resume without seeking");
++  session.stop();
++  session.release();
++  factory.closePreloads();
++  check(music.released&&timeline.released,"terminal cleanup releases both tracks");
++ }
+ }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
 index 56040232..5e5da2eb 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
@@ -927,51 +1377,126 @@ index 5bc5902d..ca15dab0 100644
        "type": "array",
        "items": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..f4d16833 100644
+index ccb3e308..11c86d32 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
-@@ -882,6 +882,32 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
+@@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
      # generated Java closure: those closures deliberately omit that source
      # family and its JNI declarations.
      $isExperimentSessionPanel = $selectedPanelModuleId -ceq "breath-composition-controls" -or $standaloneExperimentOwner
 +    $scenarioCheck = 'null'
 +    if ($appBuildEnvByName.ContainsKey('RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256')) {
 +        $scenarioDigest = [string]$appBuildEnvByName['RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256']
-+        $scenarioSource = @($panelSourceFiles | Where-Object { [IO.Path]::GetFileName($_) -ceq 'ScenarioAudioPackage.java' })
-+        if (!$isExperimentSessionPanel -or $scenarioDigest -cnotmatch '^[a-f0-9]{64}$' -or $scenarioSource.Count -ne 1) {
-+            throw 'Scenario audio requires a catalog digest and the exact selected Java source.'
++        $scenarioFiles = @('ScenarioAudioPackage.java', 'ScenarioAudioAndroidTracks.java')
++        $scenarioSources = @($panelSourceFiles | ForEach-Object { [IO.Path]::GetFileName($_) } |
++            Where-Object { $_ -cin $scenarioFiles } | Select-Object -Unique)
++        if (!$isExperimentSessionPanel -or $scenarioDigest -cnotmatch '^[a-f0-9]{64}$' -or $scenarioSources.Count -ne 2) {
++            throw 'Scenario audio requires a catalog digest and the exact selected Java sources.'
 +        }
-+        $scenarioCheck = @"
-+                new ConditionAudioAndroidMediaBackendFactory.PackagedAudioCheck() {
-+                    @Override public void verify() throws Exception {
-+                        try {
-+                            ScenarioAudioPackage.open(new ScenarioAudioPackage.AssetSource() {
-+                                @Override public java.io.InputStream open(String path) throws java.io.IOException {
-+                                    return assets.open("atmungsraum-audio/" + path,
-+                                        android.content.res.AssetManager.ACCESS_STREAMING);
-+                                }
-+                            }, "$scenarioDigest").verifyAll();
-+                            android.util.Log.i("RustyQuestNativeRenderer", "channel=scenario-audio event=verified");
-+                        } catch (Exception error) {
-+                            android.util.Log.e("RustyQuestNativeRenderer", "channel=scenario-audio event=rejected", error);
-+                            throw error;
-+                        }
-+                    }
-+                }
-+"@
++        $scenarioCheck = 'new ScenarioAudioAndroidTracks(assets, context.getCacheDir(), "{0}")' -f $scenarioDigest
 +    }
      $usesPolarSessionRuntime = ($isExperimentSessionPanel -and -not $standaloneExperimentOwner) -or
          $selectedPanelModuleId -ceq "polar-controls"
      $standaloneExperimentOwnerJava = if ($standaloneExperimentOwner) { 'true' } else { 'false' }
-@@ -1181,7 +1207,7 @@ $sharedPanelFacade
+@@ -1064,9 +1075,11 @@ $sharedPanelFacade
+     private static android.content.Context preparedClosureApplicationContext;
+     private static String preparedClosureFilesRoot;
+     private static volatile ConditionAudioRuntime conditionAudioRuntime;
++    private static volatile ConditionAudioAndroidMediaBackendFactory.ScenarioTracks scenarioAudioTracks;
+     private static volatile BreathPhaseAudioAndroidOwner breathPhaseAudioOwner;
+     private static volatile ExperimentSessionPackagedClosure.Result experimentSessionClosure;
+     private static long pendingAudioGeneration;
++    private static String pendingAudioScenario = "";
+     private static String pendingAudioPrepareOperation = "";
+     private static String pendingAudioCondition = "";
+     private static boolean audioImmersiveAdmitted;
+@@ -1178,10 +1191,11 @@ $sharedPanelFacade
+                 phaseProviders[0],phaseProviders[1],phaseProviders[2]);
+         }
+         try {
++        scenarioAudioTracks = $scenarioCheck;
          conditionAudioRuntime = ConditionAudioRuntime.installAppLifetime(
              inventory,
              assets == null ? null : new ConditionAudioAndroidMediaBackendFactory(assets,
 -                verifiedClosure.phaseAudioEntries.length == 3),
-+                verifiedClosure.phaseAudioEntries.length == 3, $scenarioCheck),
++                verifiedClosure.phaseAudioEntries.length == 3, scenarioAudioTracks),
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
+@@ -1334,12 +1348,22 @@ $polarBleStopHooks
+ 
+     static boolean startConditionAudio(
+             long sessionGeneration, String operationId, String conditionId) {
++        return startConditionAudio(sessionGeneration, operationId, conditionId, "");
++    }
++
++    static java.util.List<String> conditionAudioScenarios() {
++        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
++        return tracks == null ? java.util.Collections.<String>emptyList() : tracks.ids();
++    }
++
++    static boolean startConditionAudio(
++            long sessionGeneration, String operationId, String conditionId, String scenarioId) {
+         synchronized(PRESENTATION_LOCK){if(terminalIntentAdmitted)return false;}
+         ConditionAudioRuntime runtime = conditionAudioRuntime;
+         BreathPhaseAudioAndroidOwner phaseOwner=breathPhaseAudioOwner;
+         if(phaseOwner!=null && !"ready".equals(phaseOwner.readiness())) return false;
+         if (runtime == null || sessionGeneration <= 0L || operationId == null
+-                || operationId.isEmpty()) return false;
++                || operationId.isEmpty() || (!scenarioId.isEmpty() && !conditionAudioScenarios().contains(scenarioId))) return false;
+         ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
+         if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
+         String prepareOperation = operationId + "-audio-prepare";
+@@ -1347,12 +1371,13 @@ $polarBleStopHooks
+             if(terminalIntentAdmitted)return false;
+             if (sessionGeneration == pendingAudioGeneration
+                     && conditionId.equals(pendingAudioCondition)) {
+-                return true;
++                return scenarioId.equals(pendingAudioScenario);
+             }
+             if (pendingAudioGeneration > 0L && sessionGeneration != pendingAudioGeneration) {
+                 return false;
+             }
+             pendingAudioGeneration = sessionGeneration;
++            pendingAudioScenario = scenarioId;
+             pendingAudioPrepareOperation = prepareOperation;
+             pendingAudioCondition = conditionId;
+             audioImmersiveAdmitted = false;
+@@ -1361,12 +1386,13 @@ $polarBleStopHooks
+             appliedAudioControlRevision = 0L;
+         }
+         boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
+-            sessionGeneration, prepareOperation, conditionId)).accepted;
++            sessionGeneration, prepareOperation, conditionId, scenarioId)).accepted;
+         if (!accepted) synchronized (PRESENTATION_LOCK) {
+             if (sessionGeneration == pendingAudioGeneration
+                     && conditionId.equals(pendingAudioCondition)
+                     && prepareOperation.equals(pendingAudioPrepareOperation)) {
+                 pendingAudioGeneration = 0L;
++                pendingAudioScenario = "";
+                 pendingAudioPrepareOperation = "";
+                 pendingAudioCondition = "";
+                 audioImmersiveAdmitted = false;
+@@ -1488,7 +1514,10 @@ $experimentSessionPolarCleanup
+             audio.close();
+             try { clean = audio.awaitClosed(5000L) && clean; }
+             catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
+-            if (ConditionAudioRuntime.appLifetimeReleasedForTest()) conditionAudioRuntime = null;
++            if (ConditionAudioRuntime.appLifetimeReleasedForTest()) {
++                conditionAudioRuntime = null;
++                scenarioAudioTracks = null;
++            }
+         }
+         return clean;
+     }
+@@ -1525,6 +1554,7 @@ $experimentSessionPolarCleanup
+         synchronized (PRESENTATION_LOCK) {
+             if (sessionGeneration == pendingAudioGeneration) {
+                 pendingAudioGeneration = 0L;
++                pendingAudioScenario = "";
+                 pendingAudioPrepareOperation = "";
+                 pendingAudioCondition = "";
+                 audioImmersiveAdmitted = false;
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
 index 0bdd4881..7cda7d10 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
@@ -1050,19 +1575,28 @@ index 0bdd4881..7cda7d10 100644
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d5..c0475396 100644
+index c849c2d5..7c3bbb16 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
-@@ -5,7 +5,7 @@ from test_experiment_gateway_dedupe import method
+@@ -5,9 +5,16 @@ from test_experiment_gateway_dedupe import method
  original=owner.HARNESS
  prefix=original[:original.index(' public static void main')]
  setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
 -owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
++setup=setup.replace(
++    '   public void dispatch(ExperimentSessionBleServer.CommandRequest r)',
++    '''   public java.util.List<String> scenarioIds(){return java.util.Collections.singletonList("haupt-15");}
++   public void dispatchScenario(ExperimentSessionBleServer.CommandRequest r,String scenario){selectedScenario=scenario;dispatch(r);}
++   public void dispatch(ExperimentSessionBleServer.CommandRequest r)'''
++)
 +owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export,privateData;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export||k.equals("rusty.quest.experiment.command_gateway.private_lan_data")&&privateData;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
  owner.BOUNDARIES=owner.BOUNDARIES.replace('static String applyExperimentSessionCommand(String s){return "{}";}', '''static int reads;static String last;static Runnable during;static String applyExperimentSessionCommand(String s){reads++;last=s;if(android.os.Looper.myLooper()!=null)throw new AssertionError("filesystem query on main");if(during!=null)during.run();return "{\\"v\\":1,\\"state\\":\\"preparing\\"}";}''')
  owner.HARNESS=prefix+r'''
++ static String selectedScenario="";
   static JSONObject network(ExperimentSessionCommandGateway g,JSONObject r)throws Exception {
-@@ -26,6 +26,35 @@ owner.HARNESS=prefix+r'''
+   java.util.concurrent.FutureTask<JSONObject> f=new java.util.concurrent.FutureTask<>(()->g.exchangeLan(r));Thread t=new Thread(f,"network");t.start();
+   long until=System.nanoTime()+3000000000L;while(!f.isDone()&&System.nanoTime()<until){Runnable task=android.os.Handler.queue.poll(20,java.util.concurrent.TimeUnit.MILLISECONDS);if(task!=null)task.run();}t.join(1000);check(!t.isAlive(),"export blocked main or IO lane");return f.get();
+@@ -26,6 +33,52 @@ owner.HARNESS=prefix+r'''
    ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
    credentials=join(g,g.identity());final JSONObject current=credentials;
    ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");
@@ -1095,6 +1629,23 @@ index c849c2d5..c0475396 100644
 +  deny(()->privateGateway.exchangeLan(auth(enrolled,"ecg-preview",new JSONObject().put("extra",true))));
 +  deny(()->privateGateway.exchange(auth(enrolled,"ecg-preview",new JSONObject())));
 +  check(dispatches==0,"private data query dispatched a session command");
++  check(enrolledStatus.getJSONArray("scenarios").getString(0).equals("haupt-15")
++      && !guestStatus.has("scenarios"),"scenario capability scope");
++  JSONObject arm=new JSONObject().put("v",1).put("id","1111111111111111").put("op","arm")
++      .put("condition","condition-a").put("bias",0).put("nonce","2222222222222222")
++      .put("scenario","haupt-15").put("g",0);
++  deny(()->privateGateway.exchangeLan(auth(guest,"scenario-arm",arm)));
++  deny(()->privateGateway.exchange(auth(enrolled,"scenario-arm",arm)));
++  deny(()->privateGateway.exchangeLan(auth(enrolled,"scenario-arm",new JSONObject(arm.toString()).put("g",1))));
++  try {
++   privateGateway.exchangeLan(auth(enrolled,"scenario-arm",new JSONObject(arm.toString()).put("scenario","unknown")));
++   throw new AssertionError("unknown scenario admitted");
++  } catch (IllegalArgumentException expected) {}
++  check(dispatches==0,"invalid scenario reached native dispatch");
++  JSONObject armed=privateGateway.exchangeLan(auth(enrolled,"scenario-arm",arm));
++  check(new JSONObject(armed.getString("payload")).getString("state").equals("confirmed"),"scenario receipt missing");
++  privateGateway.exchangeLan(auth(enrolled,"scenario-arm",arm));
++  check(dispatches==1&&selectedScenario.equals("haupt-15"),"scenario arm dispatched twice or with the wrong timeline");
    System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
   }
  }

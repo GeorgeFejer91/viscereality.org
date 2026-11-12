@@ -31,11 +31,14 @@ shows the corresponding Quest state and receipts.
   [numbered audio assets](../assets/audio/scenarios/). The APK readback matched
   all 67 files, including the catalog. The native audio worker verifies cue
   identities, hashes, frame counts and schedule continuity before readiness.
-- [ ] Connect scenario selection to native playback and verify an offline cold
-  launch. Retain the matching JSON/CSV/TXT sidecars with the library. Keep the
-  15-minute main round and its 26–41 s measurement window. Final audio replaces
-  the numbered WAVs and refreshes their asset metadata and hashes. Preserve the
-  wording approval gate.
+- [x] Connect enrolled VR-Probe scenario selection to the native playback
+  owner. Validate the generation-bound Arm request, both players' lifecycle,
+  all six timeline frame counts and the rendered phone selector.
+- [ ] Verify an offline cold launch and scenario playback on Quest 2. Retain
+  the matching JSON/CSV/TXT sidecars with the library. Keep the 15-minute main
+  round and verify the 26–41 s measurement window against native telemetry.
+  Final audio replaces the numbered WAVs and refreshes their asset metadata
+  and hashes. Preserve the wording approval gate.
 - [ ] Inventory the APK's videos and audio by scenario and interaction. On Quest 2,
   verify the expected video and cue begin, advance, pause, resume and stop with
   native active time. Check first/last frames, loops and transitions where
@@ -63,15 +66,14 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.11`
+Both physical devices are authorized over USB. The signed `0.1.12`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
 and grant Atmungsraum Local Network Access for the Quest connection.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
-The shared native
-Experimenter source has two condition playback tracks and a procedural VR
-scene. The current rehearsal inventory contains no video files. The
+The shared native Experimenter source has two condition playback tracks and
+a procedural VR scene. The current rehearsal inventory contains no video files. The
 Atmungsraum build adds encrypted ECG preview and recording replies for the
 enrolled LAN controller. Host checks passed. Participant Arm and CSV
 generation still need the native participant contract. Browser recentering
