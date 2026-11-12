@@ -2,8 +2,9 @@
 
 ## Quest rehearsal and phone-only controls
 
-The installed Android Chrome PWA is the first operator target. Use a separate
-native experiment composition for the synthetic rehearsal. Quest owns the
+As of 2026-11-12, Meta Quest 2 is the required headset for Atmungsraum.
+The installed Android Chrome PWA is the operator target. Use a separate
+native experiment composition for the synthetic rehearsal. Quest 2 owns the
 session and presents only the stimulus to the wearer. This supersedes the
 2026-10-12 proposal for matching phone and headset screens. See the active
 milestone in [PROJECT.md](PROJECT.md) for acceptance and later study gates.

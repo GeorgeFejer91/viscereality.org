@@ -1,6 +1,63 @@
 # Project
 
-## Active milestone: phone-controlled Quest rehearsal
+## Active milestone: smartphone PWA and Quest 2 rehearsal
+
+### Quest 2 control, media and UI acceptance — 2026-11-12
+
+**Meta Quest 2 is the required headset for Atmungsraum development and release
+acceptance.** Use a physical Quest 2 and the installed Android PWA. Earlier Quest 3
+checks remain historical evidence. Keep Quest as the authority for scene, media
+clock, sensor acquisition and recordings. The phone sends operator requests and
+shows the corresponding Quest state and receipts.
+
+- [ ] Identify the signed rehearsal APK and its native composition. Verify Quest 2
+  targeting, ARM64/OpenXR loader, installation, Remote startup and scene readiness.
+  Keep APK fingerprints, enrollment, logs and device captures in private evidence.
+- [ ] Exercise every headset-facing PWA action from the installed phone. Cover BLE
+  discovery and manual LAN join, enrollment, Polar setup and live ECG, condition
+  selection, Arm, Start, Pause, Resume, Finish, recovery, disconnect/rejoin and
+  recording download. Match one original native receipt and state transition to
+  each command. Verify the visible VR recenter control on Quest 2 and track any
+  missing action or scenario mapping as an implementation gap.
+- [ ] Wire the authored [scenario JSON](../audio/scenarios/README.md) and
+  [numbered audio assets](../assets/audio/scenarios/) into the native rehearsal
+  composition. Bundle the current silent WAVs and their manifests, resolve each
+  event to its stable cue ID and validate file hashes, frame counts and schedule
+  continuity before Arm. Retain the matching JSON/CSV/TXT sidecars with the
+  library. Keep the 15-minute main round and its 26–41 s measurement window.
+  Final audio must replace the corresponding WAVs and update their asset metadata
+  and hashes without changing the scenario scheduler. Preserve the wording approval
+  gate and verify an offline cold launch with the packaged assets.
+- [ ] Inventory the APK's videos and audio by scenario and interaction. On Quest 2,
+  verify the expected video and cue begin, advance, pause, resume and stop with
+  native active time. Check first/last frames, loops and transitions where
+  applicable, and verify terminal cleanup, repeated runs and absent/corrupt assets.
+  Capture phone and Quest 2 screenshots at matched transitions. Use playback
+  receipts and a listening or audio capture check for sound and cue timing. Verify
+  the current silent placeholders as silence and use approved test media for
+  audible output checks where needed.
+- [ ] Run the existing controller, recording and audio suites and the rendered UI
+  matrix. Stress portrait/landscape and rotation mid-run, narrow and short viewports,
+  200% text, keyboard/focus, touch targets, slow media, rapid and duplicate taps,
+  background/foreground, network and H10 loss, stale replies, app restarts, quota
+  and concurrent sync. Check clipping, reachability, responsive controls, correct
+  receipts, and recovery without duplicate commands or recordings. Record physical
+  results and clearly identify synthetic fixture coverage in
+  [VERIFICATION.md](VERIFICATION.md).
+
+The browser and asset checks are recorded in
+[VERIFICATION.md](VERIFICATION.md#quest-2-preflight-and-controller-stress--2026-11-12).
+They exposed a hidden SVG waveform in VR-Probe. The browser now toggles the
+SVG's visibility attribute and clears stale samples.
+
+Physical acceptance remains open. ADB detected neither a phone nor a Quest 2.
+The available native reference supports two rehearsal condition tracks and an
+optional three-phase cue mode. The isolated rehearsal's exact build inputs and
+signed APK were unavailable for inspection here. The authored scenario library
+still needs to be wired and verified in that build. The browser recenter
+control is currently a placeholder. Next, recover the signed rehearsal
+composition, connect both devices, and start the Quest 2 install and pairing
+check above.
 
 ### Automatic Google Drive delivery of Quest recordings — 2026-11-12
 
@@ -160,7 +217,7 @@ Use the skill for the next attended rehearsal preflight.
   Remote at startup. Desktop Chrome joined the actual gateway using the
   enrolled controller and authenticated both status and an encrypted preview
   response. The Android permission prompt interrupted immersive presentation.
-- [ ] Verify the signed package on Quest 3 with a worn H10. Run a native
+- [ ] Verify the signed package on Quest 2 with a worn H10. Run a native
   rehearsal, confirm the changing browser waveform and reopen the resulting
   phone ZIP. Verify Bluetooth discovery, Android Local Network Access, hotspot
   reachability and actual storage on the phone. Retain physical evidence in

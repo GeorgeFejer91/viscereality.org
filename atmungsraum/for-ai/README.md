@@ -22,9 +22,11 @@ defaults to Remote-only. Android handles Bluetooth permission. Enrolled
 operators can see the live H10 preview and download the verified native
 recording after each rehearsal.
 Quest shows only the Viscereality scenario to the wearer and owns the runtime,
-Polar H10 acquisition and recordings. Desktop Chrome is the current test
-controller. Android Chrome is the later physical controller target. The active
-rehearsal checklist is in PROJECT.md. The study UI collects patient details and
+media, Polar H10 acquisition and recordings. **Meta Quest 2 and the installed
+Android PWA are the required physical acceptance targets.** Desktop browsers
+can run controller fixtures. The [active rehearsal checklist](PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12)
+covers control, native media packaging and playback, UI stress, and evidence from
+both devices. The study UI collects patient details and
 shows the generated participant ID. It can display Quest-reported H10 readiness
 and authorized ECG telemetry once qualified. All menu
 UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See

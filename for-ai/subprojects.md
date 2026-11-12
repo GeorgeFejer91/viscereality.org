@@ -1,6 +1,6 @@
 # Subprojects
 
-Last updated: 2026-11-06
+Last updated: 2026-11-12
 
 This is the working map of website-adjacent subprojects. Update it when a subproject is added, retired, or gains durable behavioral constraints.
 
@@ -87,7 +87,7 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   selected session voice and timing. Original references and full receipts
   remain private. See the Atmungsraum workflow for sample verification.
 - Purpose: the PC or smartphone browser acts as the external Viscereality operator controller. Quest owns the scenario, clock, Polar H10 connection and recording. The isolated rehearsal defaults to Remote-only. VR-Probe finds the Quest through Bluetooth, connects over Wi-Fi, selects a packaged rehearsal condition, and uses an enrolled connection to display live ECG and retrieve the verified original recording.
-- First integration milestone: an installed Android Chrome PWA runs one synthetic rehearsal over the native experiment gateway. Keep device acceptance and the later real H10 and study gates in the [Atmungsraum project checklist](../atmungsraum/for-ai/PROJECT.md#active-milestone-phone-controlled-quest-rehearsal).
+- Physical acceptance (2026-11-12): use the installed Android PWA and a Meta Quest 2. The headset owns media and timing. Verify the full control path, the packaged scenario JSON and replaceable cue library, and headset video and audio with paired device evidence. See the [Atmungsraum project checklist](../atmungsraum/for-ai/PROJECT.md#active-milestone-smartphone-pwa-and-quest-2-rehearsal).
 - First steps (2026-11-05): collect the first three surname letters, whole-year age and explicit gender, show the generated participant ID, then verify Polar H10 connection/ECG before the session menu. The current demo continuously replays a seeded NeuroKit2 ECG source. The intended product receives real ECG from the headset; acquisition and transport remain Undecided. A corner indicator breathes green, flashes red after loss (steady with reduced motion), and loss beyond 30 seconds returns to the Polar gate while retaining patient details.
 - Participant data logging: every writer follows [Atmungsraum DATA-LOGGING.md](../atmungsraum/for-ai/DATA-LOGGING.md) and the shared runtime filename/identity functions. Session exports use `Fej_35_M_probe1.csv` / `Fej_35_M_main1.csv`, explicit scenario/timing/source metadata, and per-participant/condition run indices. CSV downloads and IndexedDB recovery are browser-local; no real H10 acquisition or central study store is established.
 - Menu layout: use `uncodixfy-pretext` with outside-in stretch-accordion geometry for all UI functions, including patient entry and CSV recovery. Preserve equal anchors and ordered label/control groups; stretch form/list group spacing and matrix columns with both dimensions. Short landscape menus use four practice columns and wider round/main cards. Keep actual bounded-text and painted-DOM checks, readable no-fit/recovery, and no internal panel scrollbar. [Concrete settings and supported-size exceptions](../atmungsraum/for-ai/SKILLS.md#main-ui-stretch-settings) own the layout contract.

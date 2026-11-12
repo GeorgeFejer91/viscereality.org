@@ -76,8 +76,8 @@ evidence. Both current rehearsal tracks use `probe` for file indexing.
 Qualification of the matched APK and physical phone remains open.
 
 The Chrome fixtures passed restart and catch-up with synthetic native data.
-Physical acceptance requires an installed Android controller and a Quest with
-a worn H10. Run the same synthetic participant and condition twice across
+Physical acceptance requires the installed Android PWA, Meta Quest 2 and a
+worn H10. Run the same synthetic participant and condition twice across
 full app restarts. Check that the two CSVs have distinct session UUIDs and
 increasing run indexes, observe a run finalized while the browser is absent,
 then rejoin and confirm one copy per ID. Verify a partial run, the idle gate
@@ -127,7 +127,7 @@ folder independently of the browser.
 
 Run the following with synthetic participant identities before study use:
 
-1. On the installed Pixel PWA, join the worn H10 and actual Quest. Start, pause,
+1. On the installed Pixel PWA, join the Quest 2 and connect the worn H10. Start, pause,
    resume and finish. Verify the native receipt, nonempty ECG and ACC samples
    with native timestamps and units, then local save and matching Drive bytes.
 2. Restart both apps and repeat the same condition. Check independent run UUIDs,

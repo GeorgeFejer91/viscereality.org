@@ -136,7 +136,8 @@ export function mountQuestRehearsal(participantIdentity) {
 
   function showTrace(value) {
     clearTimeout(ecgTimer);
-    graph.hidden = scale.hidden = !value;
+    graph.toggleAttribute('hidden', !value);
+    scale.hidden = !value;
     trace.setAttribute('d', value?.path ?? '');
     text(ecgStatus, value ? 'Live-EKG vom Polar H10' : rehearsal.gateway?.ecg
       ? 'Warte auf aktuelle EKG-Daten von der Quest.' : 'Für Live-EKG mit dem Quest-Schlüssel verbinden.');

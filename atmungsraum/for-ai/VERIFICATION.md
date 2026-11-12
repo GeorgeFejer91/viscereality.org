@@ -1,5 +1,38 @@
 # Verification
 
+## Quest 2 preflight and controller stress — 2026-11-12
+
+Verified against the Atmungsraum source from `main` at `05faa1a`, with the ECG
+visibility fix applied. All 78 Node tests, the UI and context checks, the six
+scenario JSON/CSV pairs, and the Python scenario asset checks passed. The
+placeholder integrity check covered 53 WAVs and 890 scheduled events. FFmpeg
+decoded the browser background track and all 20 published voice samples. Chromium rendered
+all five menu timelines at 44.1 and 48 kHz with zero sample error.
+
+Chromium passed 210 rendered layout cases across 14 viewports and three text
+settings, plus the five browser demo play/pause/resume/stop paths. The layout
+checks covered 319–1440 CSS pixels, short landscape, doubled root text and
+text-spacing overrides. Install and saved-file dialogs restored focus. The
+rendered controls checked for size, horizontal clipping and label overflow
+passed. Six signed controller fixture cases passed manual or emulated BLE join,
+Polar setup, fresh ECG, encrypted participant Arm, both conditions, Start,
+rotation, Pause with a frozen clock, Resume, Finish, recording sync, exact CSV
+download and disconnect/rejoin. The fixture sent repeated Start taps and
+recovered two lost Finish replies without duplicate dispatch. The Node tests
+also cover storage, protocol and Drive fault injection.
+
+The signed fixture exposed an SVG that remained hidden with fresh samples.
+The controller now changes the SVG's `hidden` attribute. A rendered regression
+checks that fresh samples show a waveform and stale samples hide it. Synthetic
+screenshots and receipts are kept locally under
+`output/playwright/quest2-20261112/`.
+
+ADB listed only an offline emulator. Physical phone and Quest 2 screenshots,
+physical control and H10 validation, headset video/audio playback, and the
+actual APK asset inventory and scheduler are open. The available native
+three-phase mode covers a different cue set.
+See the [active checklist](PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12).
+
 ## Automatic Drive delivery fixture — 2026-11-12
 
 The 40-bundle Drive stress test simulates eight lost upload acknowledgements and
