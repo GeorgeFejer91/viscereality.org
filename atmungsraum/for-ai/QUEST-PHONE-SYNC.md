@@ -38,7 +38,12 @@ closed.
 Reuse the existing RQG1 LAN gateway. The enrolled controller verifies the
 Quest identity and signed observations. Requests and replies bind the action,
 nonce and gateway epoch with HMAC-SHA-256. Private recording responses use the
-existing AES-GCM envelope. Bluetooth discovers the address. Wi-Fi carries
+existing AES-GCM envelope. Bluetooth discovers the address and can provision
+a Pixel Wi-Fi hotspot to Quest 2 through the enrolled setup characteristic.
+The controller verifies the selected serial, then sends the hotspot credentials
+using AES-GCM with a one-use GATT challenge and both Quest owner epochs.
+Android owns the headset’s network request and reports its actual local address.
+Wi-Fi carries
 the data.
 
 | Operation | Purpose |

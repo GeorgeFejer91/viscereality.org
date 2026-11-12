@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261112-quest-recenter">
+  <link rel="stylesheet" href="./style.css?v=20261112-quest-wifi">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261112-quest-recenter"></script>
+  <script type="module" src="./app.js?v=20261112-quest-wifi"></script>
 </head>
 <body data-delivery-locked>
   <noscript>Atmungsraum benötigt JavaScript, um das Passwort zu prüfen.</noscript>
@@ -148,6 +148,15 @@
             <label for="quest-address"><span data-measure>Lokale Quest-Adresse</span></label>
             <input id="quest-address" type="text" inputmode="url" maxlength="64" placeholder="192.168.1.10" autocapitalize="none" spellcheck="false">
             <button id="quest-connect" type="submit"><span data-measure>Verbinden</span></button>
+          </details>
+          <details>
+            <summary><span data-measure>Hotspot per Bluetooth verbinden</span></summary>
+            <p data-measure>Aktiviere den WLAN-Hotspot am Smartphone. Die Quest muss im Fernmodus sein. Gib oben die Controller-ID und den Quest-Schlüssel ein.</p>
+            <label for="quest-hotspot-ssid"><span data-measure>Hotspot-Name</span></label>
+            <input id="quest-hotspot-ssid" type="text" maxlength="32" autocapitalize="none" spellcheck="false">
+            <label for="quest-hotspot-password"><span data-measure>Hotspot-Passwort</span></label>
+            <input id="quest-hotspot-password" type="password" maxlength="63" autocomplete="off" spellcheck="false">
+            <button id="quest-hotspot-connect" type="button"><span data-measure>Quest mit Hotspot verbinden</span></button>
           </details>
         </form>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>

@@ -101,6 +101,15 @@ a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid 
 .actions a.back { border-color: transparent; background: transparent; color: #b2b8ab; }
 #patient { --patient-gap: clamp(12px, min(3vw, 3dvh), 24px); height: min(100%, 560px); align-self: center; gap: clamp(16px, min(2vw, 2dvh), 24px); }
 html[data-mode="quest"] :is(#belt-signal, #open-files) { display: none; }
+html[data-mode="quest"] #corner-actions {
+  position: absolute;
+  top: var(--corner-top);
+  bottom: auto;
+  max-width: calc(100% - var(--top-corner-size) - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 8px);
+}
+html[data-mode="quest"]:has(#quest-join:not([hidden])) #recenter-vr { position: absolute; }
+#quest-hotspot-connect { justify-self: stretch; }
+
 #quest { width: min(100%, 640px); justify-self: center; }
 .quest-body, .quest-join, .quest-join details[open], #quest-polar, #quest-data { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
 .quest-body { align-content: center; }

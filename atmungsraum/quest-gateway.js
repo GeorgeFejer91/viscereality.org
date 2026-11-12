@@ -1,6 +1,7 @@
 const serviceId = '9a7b2001-7d6a-4b7f-9d4a-6f7c0a020101';
 const serialId = '9a7b2001-7d6a-4b7f-9d4a-6f7c0a020102';
 const metadataId = '9a7b2001-7d6a-4b7f-9d4a-6f7c0a020103';
+const wifiSetupId = '9a7b2001-7d6a-4b7f-9d4a-6f7c0a020104';
 const encode = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
 const hex32 = /^[a-f0-9]{32}$/;
@@ -37,10 +38,68 @@ export function sameQuest(left, right) {
   return Boolean(left && right && ['device', 'serial', 'epoch', 'native_epoch'].every((key) => left[key] === right[key]));
 }
 
-export async function discoverQuest(bluetooth, lifetime) {
+function hotspotCredentials(hotspot, enrollment) {
+  if (!hex32.test(enrollment?.controller ?? '') || !hex64.test(enrollment?.key ?? '')) {
+    throw Error('Gib Controller-ID und Quest-Schlüssel für die WLAN-Einrichtung ein.');
+  }
+  const ssid = encode.encode(hotspot.ssid);
+  if (!ssid.length || ssid.length > 32 || /[\x00-\x1f\x7f-\x9f]/.test(hotspot.ssid)
+    || !/^[\x20-\x7e]{8,63}$/.test(hotspot.passphrase)) {
+    throw Error('Prüfe den Hotspot-Namen und das WLAN-Passwort.');
+  }
+  const credentials = new Uint8Array(1 + ssid.length + hotspot.passphrase.length);
+  credentials[0] = ssid.length;
+  credentials.set(ssid, 1);
+  credentials.set(encode.encode(hotspot.passphrase), 1 + ssid.length);
+  return credentials;
+}
+
+async function setupQuestWifi(service, owner, enrollment, credentials, waitForGatt, signal, onApproval) {
+  const characteristic = await waitForGatt(service.getCharacteristic(wifiSetupId)).catch((error) => {
+    if (error?.name !== 'NotFoundError') throw error;
+    throw Error('Dieser Quest-Build unterstützt keine WLAN-Einrichtung per Bluetooth.');
+  });
+  const challenge = await waitForGatt(characteristic.readValue());
+  if (challenge.byteLength !== 16) throw Error('Die Quest ist noch nicht für die WLAN-Einrichtung bereit.');
+  const binding = [enrollment.controller, owner.device, owner.epoch, owner.native_epoch].join('|');
+  const mac = await crypto.subtle.importKey('raw', encode.encode(enrollment.key),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const secret = await crypto.subtle.sign('HMAC', mac, encode.encode('RQG1-WIFI-KEY|' + binding));
+  const key = await crypto.subtle.importKey('raw', secret, 'AES-GCM', false, ['encrypt']);
+  const prefix = encode.encode('RQG1-WIFI|' + binding + '|');
+  const aad = new Uint8Array(prefix.length + challenge.byteLength);
+  aad.set(prefix);
+  aad.set(new Uint8Array(challenge.buffer, challenge.byteOffset, challenge.byteLength), prefix.length);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad }, key, credentials));
+  const packet = new Uint8Array(iv.length + ciphertext.length);
+  packet.set(iv);
+  packet.set(ciphertext, iv.length);
+  for (let offset = 0; offset < packet.length; offset += 18) {
+    const end = Math.min(packet.length, offset + 18);
+    const fragment = new Uint8Array(2 + end - offset);
+    fragment[0] = offset / 18;
+    fragment[1] = Number(end === packet.length);
+    fragment.set(packet.subarray(offset, end), 2);
+    await waitForGatt(characteristic.writeValueWithResponse(fragment));
+  }
+  onApproval?.();
+  for (;;) {
+    const status = decode.decode(await waitForGatt(characteristic.readValue()));
+    if (status !== 'wait') {
+      if (status === 'failed') throw Error('Die Quest konnte dem Hotspot nicht beitreten. Prüfe den Hotspot und bestätige den Beitritt im Headset.');
+      return questEndpoint(status);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    signal.throwIfAborted();
+  }
+}
+
+export async function discoverQuest(bluetooth, lifetime, setup) {
   if (!bluetooth) throw Error('Bluetooth-Suche ist hier nicht verfügbar. Gib die Quest-Adresse ein.');
+  const credentials = setup ? hotspotCredentials(setup.hotspot, setup.enrollment) : null;
   const device = await bluetooth.requestDevice({ filters: [{ services: [serviceId] }] });
-  const signal = AbortSignal.any([lifetime, AbortSignal.timeout(12000)]);
+  const signal = AbortSignal.any([lifetime, AbortSignal.timeout(setup ? 52000 : 12000)]);
   signal.throwIfAborted();
   const waitForGatt = async (operation) => {
     let abort;
@@ -69,9 +128,15 @@ export async function discoverQuest(bluetooth, lifetime) {
     const metadata = JSON.parse(decode.decode(metadataBytes));
     const found = identity(metadata);
     if (metadata.mode !== 'remote' || found.serial !== serial || !Array.isArray(metadata.gateways)
-      || metadata.gateways.length < 1 || metadata.gateways.length > 4) {
-      throw Error('Diese Quest meldet keine erreichbare WLAN-Adresse im Fernmodus.');
+      || metadata.gateways.length > 4) {
+      throw Error('Die Quest hat ungültige Bluetooth-Suchdaten gemeldet.');
     }
+    if (setup) {
+      if (found.serial !== setup.serial) throw Error('Die gewählte Quest hat eine andere Seriennummer.');
+      const endpoint = await setupQuestWifi(service, found, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
+      return { owner: found, endpoints: [endpoint] };
+    }
+    if (!metadata.gateways.length) throw Error('Die Quest ist noch nicht im WLAN. Verwende die Hotspot-Einrichtung per Bluetooth.');
     return { owner: found, endpoints: metadata.gateways.map(questEndpoint) };
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
 }

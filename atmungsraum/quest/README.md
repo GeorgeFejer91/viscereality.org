@@ -35,6 +35,16 @@ file in the signed APK by size and SHA-256. ECG previews and recording replies
 are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
+To connect a Quest 2 to a Pixel hotspot, turn on the phone’s Wi-Fi hotspot,
+open **Hotspot per Bluetooth verbinden** in VR-Probe, and enter the hotspot
+name and password. Enter the enrolled controller ID and Quest key from the
+headset’s network panel before choosing the Quest in the Bluetooth picker.
+The browser verifies the selected serial and encrypts the credentials for
+that headset before sending them. Accept Android’s join prompt in the
+headset if shown. The controller continues over the authenticated Wi-Fi
+gateway after the headset reports a local address. The connection belongs
+to the active Quest app and is released when Remote mode or its owner ends.
+
 The enrolled phone can recenter the app scene while Quest is in immersive
 Remote mode. Quest uses its current eye poses and confirms the action after
 submitting the recentered scene in a visible OpenXR frame.

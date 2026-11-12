@@ -16,8 +16,9 @@ shows the corresponding Quest state and receipts.
 - [ ] Launch on Quest 2 and confirm a rendered frame, Remote startup and scene
   readiness. Keep build fingerprints, enrollment, logs and device captures in
   private evidence.
-- [ ] Exercise every headset-facing PWA action from the installed phone. Cover BLE
-  discovery and manual LAN join, enrollment, Polar setup and live ECG, condition
+- [ ] Exercise every headset-facing PWA action from the installed phone. Cover
+  Bluetooth hotspot setup from a disconnected Quest 2, Bluetooth discovery on
+  existing Wi-Fi, manual LAN join, enrollment, Polar setup and live ECG, condition
   selection, Arm, Start, Pause, Resume, Finish, recovery, disconnect/rejoin and
   recording download. Match one original native receipt and state transition to
   each command. Verify the visible VR recenter control on Quest 2 and track any
@@ -66,12 +67,17 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.13`
+Both physical devices are authorized over USB. The signed `0.1.14`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
 and grant Atmungsraum Local Network Access for the Quest connection.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
+The phone can provision the Pixel hotspot to the enrolled headset over
+Bluetooth. Enable the hotspot on the Pixel, enter its credentials in VR-Probe
+and confirm the Wi-Fi join in the Quest when Android prompts. Verify the first
+join, retry after denial, rejoin after connection loss and the signed LAN handoff
+on the physical Pixel and Quest 2.
 The shared native Experimenter source has two condition playback tracks and
 a procedural VR scene. The current rehearsal inventory contains no video files. The
 Atmungsraum build adds encrypted ECG preview and recording replies for the

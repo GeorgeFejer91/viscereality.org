@@ -1,5 +1,25 @@
 # Verification
 
+## Pixel hotspot provisioning over Bluetooth — 2026-11-12
+
+The enrolled PWA verifies the selected Quest serial and encrypts the hotspot
+credentials to its controller key, current owner epochs and a one-use Bluetooth
+challenge. The native app requests the Wi-Fi join through Android and returns
+the address assigned to that request. The browser verifies the same Quest on
+the signed LAN gateway before showing controls.
+
+The Node suite passed 85 tests. The Java gateway suite covered credential
+decryption, wrong-peer and stale-owner rejection, fragment order, bounded GATT
+readback and the existing discovery and LAN controls. Six rendered controller
+cases used a synthetic headset, including three that started without a Wi-Fi
+address and set up a hotspot. Tests covered portrait, landscape, enlarged and
+expanded text, phone controls and reconnect.
+
+Signed APK 0.1.14 passed run-capsule, signing-lineage and manifest checks, and
+all 67 scenario audio entries matched the staged file hashes. The USB upgrade
+and installed APK digest matched. The Pixel and Quest 2 still need to complete
+the first actual hotspot join, H10 and media checks, and matching device captures.
+
 ## Enrolled phone scene recenter — 2026-11-12
 
 The native mailbox tests passed confirmation after a visible frame, stale

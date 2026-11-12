@@ -1,4 +1,4 @@
-import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=5';
+import { discoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=6';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalScenarios } from './quest-rehearsal.js?v=6';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=5';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
@@ -297,7 +297,7 @@ export function mountQuestRehearsal(participantIdentity) {
     }
   }
 
-  async function connect(useBluetooth) {
+  async function connect(useBluetooth, setupHotspot = false) {
     if (connecting || !form.reportValidity()) return;
     const attempt = new AbortController();
     connecting = attempt;
@@ -309,9 +309,20 @@ export function mountQuestRehearsal(participantIdentity) {
     const key = byId('quest-key');
     const enrollment = controller.value || key.value ? { controller: controller.value.trim(), key: key.value.trim() } : undefined;
     controller.value = key.value = '';
+    const hotspotPassword = byId('quest-hotspot-password');
+    const setup = setupHotspot ? {
+      serial, enrollment,
+      hotspot: { ssid: byId('quest-hotspot-ssid').value, passphrase: hotspotPassword.value },
+      onApproval() {
+        if (connecting !== attempt) return;
+        joinMessage = 'Bestätige die WLAN-Verbindung im Headset.';
+        paint();
+      }
+    } : undefined;
+    hotspotPassword.value = '';
     paint();
     try {
-      const discovery = useBluetooth ? await discoverQuest(navigator.bluetooth, attempt.signal) : null;
+      const discovery = useBluetooth ? await discoverQuest(navigator.bluetooth, attempt.signal, setup) : null;
       attempt.signal.throwIfAborted();
       if (discovery && discovery.owner.serial !== serial) throw Error('Die gewählte Quest hat eine andere Seriennummer.');
       const gateway = await joinQuest({ endpoint: discovery?.endpoints[0] ?? endpoint, serial, build,
@@ -366,6 +377,7 @@ export function mountQuestRehearsal(participantIdentity) {
     }
   });
   byId('quest-find').addEventListener('click', () => connect(true));
+  byId('quest-hotspot-connect').addEventListener('click', () => connect(true, true));
   polarConnect.addEventListener('click', () => act('polar'));
   condition.addEventListener('change', () => paint());
   play.addEventListener('click', () => act('play'));

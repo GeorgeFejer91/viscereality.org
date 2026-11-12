@@ -111,7 +111,12 @@ $app.package_name = 'org.viscereality.atmungsraum.rehearsal'
 $app.application_label = 'Atmungsraum Quest 2'
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
-$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data', 'ui.experiment_scene_recenter')
+$app.declared_manifest.permissions = @($app.declared_manifest.permissions) + @(
+    'android.permission.CHANGE_NETWORK_STATE',
+    'android.permission.CHANGE_WIFI_STATE',
+    'android.permission.NEARBY_WIFI_DEVICES'
+) | Select-Object -Unique
+$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data', 'ui.experiment_scene_recenter', 'ui.experiment_wifi_setup')
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
@@ -155,6 +160,9 @@ try {
     }
     if ($metadata['rusty.quest.experiment.command_gateway.scene_recenter'] -cne 'true') {
         throw 'The native manifest must select enrolled scene recentering.'
+    }
+    if ($metadata['rusty.quest.experiment.command_gateway.wifi_setup'] -cne 'true') {
+        throw 'The native manifest must select enrolled Bluetooth Wi-Fi setup.'
     }
     if ($ResolveOnly) {
         Get-Item -LiteralPath $lockPath

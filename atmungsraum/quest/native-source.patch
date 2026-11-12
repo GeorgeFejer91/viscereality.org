@@ -533,7 +533,7 @@ index a694dfee..08b932ff 100644
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..8e1ef2a4 100644
+index 08732e53..fd552454 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,8 @@ import org.json.JSONObject;
@@ -545,17 +545,18 @@ index 08732e53..8e1ef2a4 100644
      private static ExperimentSessionCommandGateway process;
      private final Context context;
      private final SharedPreferences preferences;
-@@ -22,6 +24,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -22,6 +24,10 @@ public final class ExperimentSessionCommandGateway {
      private final ExperimentSessionBleServer carrier;
      private final ExperimentSessionHeadsetIdentity headsetIdentity;
      private final JSONObject buildIdentity;
 +    private final boolean privateLanData;
 +    private final boolean sceneRecenter;
 +    private JSONObject pendingRecenter;
++    private final ExperimentSessionWifiConnection wifiSetup;
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +48,14 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +49,14 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -570,7 +571,7 @@ index 08732e53..8e1ef2a4 100644
      }
  
  
-@@ -52,14 +65,19 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,17 +66,29 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -588,10 +589,30 @@ index 08732e53..8e1ef2a4 100644
          buildIdentity=ExperimentSessionBuildIdentity.read(context);
 +        privateLanData = manifestEnabled(context, PRIVATE_LAN_METADATA);
 +        sceneRecenter = manifestEnabled(context, RECENTER_METADATA);
++        wifiSetup = android.os.Build.VERSION.SDK_INT >= 29
++            && manifestEnabled(context, "rusty.quest.experiment.command_gateway.wifi_setup")
++            ? new ExperimentSessionWifiConnection(context, main) : null;
          discovery=new ExperimentSessionDiscoveryServer(context,new ExperimentSessionDiscoveryServer.Source(){
              @Override public JSONObject snapshot()throws Exception{return discoveryMetadata();}
-         });
-@@ -268,9 +286,9 @@ public final class ExperimentSessionCommandGateway {
+-        });
++            @Override public ExperimentSessionDiscoveryServer.SetupStatus setup(JSONObject snapshot, byte[] challenge,
++                    byte[] packet) throws Exception {
++                return joinHotspot(snapshot, challenge, packet);
++            }
++        }, wifiSetup != null);
+         controlMode.onChange(new Runnable(){@Override public void run(){controlModeChanged();}});
+         preferences=context.getSharedPreferences("experiment-session-command-gateway",Context.MODE_PRIVATE);
+         if(!preferences.contains("device"))preferences.edit().putString("device",ExperimentSessionBleProtocol.newHex(16)).commit();
+@@ -110,7 +136,7 @@ public final class ExperimentSessionCommandGateway {
+         if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
+     }
+     JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
+-    void stopRoutesFromHeadset(){requireMain();if(relay!=null)relay.close();relay=null;if(direct!=null)direct.close();direct=null;}
++    void stopRoutesFromHeadset(){requireMain();if(relay!=null)relay.close();relay=null;if(direct!=null)direct.close();direct=null;if(wifiSetup!=null)wifiSetup.close();}
+     String localAddresses() {
+         Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
+         try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
+@@ -268,9 +294,9 @@ public final class ExperimentSessionCommandGateway {
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
          if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
@@ -603,7 +624,18 @@ index 08732e53..8e1ef2a4 100644
                  }});
          controlModeChanged();
      }
-@@ -292,6 +310,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -278,7 +304,9 @@ public final class ExperimentSessionCommandGateway {
+     void controlModeChanged(){
+         requireMain();long packed=controlMode.readSnapshot().packed;
+         if(guestModePacked!=packed){ExperimentSessionRecordingExport.retire();guests.clear();guestModePacked=packed;}
+-        discovery.reconcile(packed,remoteAvailable());
++        boolean remote = remoteAvailable();
++        if (!remote && wifiSetup != null) wifiSetup.close();
++        discovery.reconcile(packed,remote);
+         if(journal==null)return;
+         if(!trustedLanAllowed()){
+             if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
+@@ -292,6 +320,7 @@ public final class ExperimentSessionCommandGateway {
      }
      /** Controller revocation leaves the live native journal and its original receipts intact. */
      private void retireControllers() {
@@ -611,7 +643,30 @@ index 08732e53..8e1ef2a4 100644
          ExperimentSessionRecordingExport.retire();
          clearLocalEnrollmentOffer();
          guests.clear();
-@@ -332,7 +351,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -312,6 +341,22 @@ public final class ExperimentSessionCommandGateway {
+                 .put("serial",headsetIdentity.serial()).put("remote_available",remoteAvailable());
+         }});
+     }
++    private ExperimentSessionDiscoveryServer.SetupStatus joinHotspot(JSONObject snapshot, byte[] challenge,
++            byte[] packet) throws Exception {
++        requireMain();
++        if (wifiSetup == null || !remoteAvailable() || !enabled() || protocol == null
++                || !preferences.getBoolean("trusted-lan", false)
++                || !localEnrollmentIdle(delegate.sessionControlReadback(), delegate.snapshot())
++                || !deviceId().equals(snapshot.opt("device"))
++                || !Long.toString(gatewayEpoch).equals(snapshot.opt("epoch"))
++                || !Long.toString(epoch).equals(snapshot.opt("native_epoch")))
++            throw new SecurityException("wifi-setup-owner-unavailable");
++        String binding = preferences.getString("controller", "") + "|" + deviceId() + "|"
++            + gatewayEpoch + "|" + epoch;
++        return wifiSetup.connect(ExperimentSessionWifiCredentials.decrypt(preferences.getString("key", ""),
++            binding, challenge, packet));
++    }
++
+     JSONObject discoveryMetadata()throws Exception {
+         requireMain();if(!remoteAvailable())throw new SecurityException("remote-owner-required");
+         org.json.JSONArray gateways=new org.json.JSONArray();
+@@ -332,7 +377,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -620,7 +675,7 @@ index 08732e53..8e1ef2a4 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +374,49 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,8 +400,49 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -672,7 +727,7 @@ index 08732e53..8e1ef2a4 100644
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
          final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
-@@ -385,6 +445,59 @@ public final class ExperimentSessionCommandGateway {
+@@ -385,6 +471,59 @@ public final class ExperimentSessionCommandGateway {
          FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
          try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
      }
@@ -732,7 +787,7 @@ index 08732e53..8e1ef2a4 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -398,10 +511,36 @@ public final class ExperimentSessionCommandGateway {
+@@ -398,10 +537,36 @@ public final class ExperimentSessionCommandGateway {
          if(journal.known(body))return journal.original(id);
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
@@ -771,8 +826,222 @@ index 08732e53..8e1ef2a4 100644
          return journal.original(id);
      }
      private JSONObject snapshot()throws Exception {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
+index f41c56ea..f2a929d3 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
+@@ -10,7 +10,9 @@ import android.os.Build;
+ import android.os.Handler;
+ import android.os.Looper;
+ import android.os.ParcelUuid;
++import java.nio.ByteBuffer;
+ import java.nio.charset.StandardCharsets;
++import java.security.SecureRandom;
+ import java.util.Arrays;
+ import java.util.LinkedHashMap;
+ import java.util.Map;
+@@ -18,15 +20,27 @@ import java.util.UUID;
+ import org.json.JSONArray;
+ import org.json.JSONObject;
+ 
+-/** Read-only identity discovery. It owns no experiment, enrollment or Polar command route. */
++/** Bluetooth identity discovery and optional attended Wi-Fi setup. */
+ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+     static final String SERVICE="9a7b2001-7d6a-4b7f-9d4a-6f7c0a020101";
+     static final String SERIAL="9a7b2001-7d6a-4b7f-9d4a-6f7c0a020102";
+     static final String METADATA="9a7b2001-7d6a-4b7f-9d4a-6f7c0a020103";
++    static final String WIFI_SETUP = "9a7b2001-7d6a-4b7f-9d4a-6f7c0a020104";
+     static final int PERMISSION_REQUEST=9403;
+-    interface Source { JSONObject snapshot() throws Exception; }
++    private static final SecureRandom RANDOM = new SecureRandom();
++    interface SetupStatus { String status(); }
++    private static final SetupStatus WIFI_FAILED = new SetupStatus() {
++        @Override public String status() { return "failed"; }
++    };
++    interface Source {
++        JSONObject snapshot() throws Exception;
++        default SetupStatus setup(JSONObject snapshot, byte[] challenge, byte[] packet) throws Exception {
++            throw new SecurityException("wifi-setup-unavailable");
++        }
++    }
+     private final Context context;
+     private final Source source;
++    private final boolean wifiSetup;
+     private final Handler main=new Handler(Looper.getMainLooper());
+     private final Map<BluetoothDevice,Peer> peers=new LinkedHashMap<>();
+     private BluetoothGattServer server;
+@@ -40,7 +54,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+     private Runnable refresh,recovery,timeout;
+     private static final class Snapshot {
+         final byte[] serial,metadata;
++        final JSONObject identity;
+         Snapshot(JSONObject value)throws Exception {
++            identity = value;
+             String serialText=value.getString("serial");serial=serialText.getBytes(StandardCharsets.UTF_8);
+             metadata=value.toString().getBytes(StandardCharsets.UTF_8);
+             if(value.length()!=7||value.getInt("v")!=1||!"remote".equals(value.getString("mode"))
+@@ -65,9 +81,19 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+         final Snapshot snapshot;
+         int mtu=23;
+         Runnable disconnect;
++        byte[] challenge;
++        ByteBuffer packet;
++        int nextFragment;
++        boolean setupStarted;
++        SetupStatus setupStatus;
+         Peer(Snapshot snapshot){this.snapshot=snapshot;}
+     }
+-    ExperimentSessionDiscoveryServer(Context context,Source source){this.context=context.getApplicationContext();this.source=source;}
++    ExperimentSessionDiscoveryServer(Context context,Source source){this(context,source,false);}
++    ExperimentSessionDiscoveryServer(Context context, Source source, boolean wifiSetup) {
++        this.context = context.getApplicationContext();
++        this.source = source;
++        this.wifiSetup = wifiSetup;
++    }
+     /** Invoked on the actual main owner; native retirement explicitly closes this owner. */
+     void reconcile(long token,boolean available){
+         long admitted;
+@@ -84,13 +110,26 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+         return Build.VERSION.SDK_INT<31||context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)==PackageManager.PERMISSION_GRANTED
+             &&context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE)==PackageManager.PERMISSION_GRANTED;
+     }
++    private String wifiPermission() {
++        return Build.VERSION.SDK_INT >= 33 ? "android.permission.NEARBY_WIFI_DEVICES"
++            : "android.permission.ACCESS_FINE_LOCATION";
++    }
++    private boolean wifiPermitted() {
++        return context.checkSelfPermission(wifiPermission()) == PackageManager.PERMISSION_GRANTED;
++    }
+     void requestPermissions(Activity host){
+         boolean retry=false;
+         synchronized(this){if(!remote||host==null)return;
+             try{
+-                if(permitted())retry=server==null&&recovery==null&&"unavailable".equals(state);
+-                else if(!permissionRequested){permissionRequested=true;
+-                    host.requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.BLUETOOTH_ADVERTISE},PERMISSION_REQUEST);
++                if(permitted() && (!wifiSetup || wifiPermitted())) {
++                    retry=server==null&&recovery==null&&"unavailable".equals(state);
++                } else if(!permissionRequested) {
++                    permissionRequested=true;
++                    String connect = Manifest.permission.BLUETOOTH_CONNECT;
++                    String advertise = Manifest.permission.BLUETOOTH_ADVERTISE;
++                    String[] permissions = wifiSetup ? new String[]{connect, advertise, wifiPermission()}
++                        : new String[]{connect, advertise};
++                    host.requestPermissions(permissions, PERMISSION_REQUEST);
+                 }
+             }catch(RuntimeException unavailable){state="unavailable";reason="permission-required";}
+         }
+@@ -141,6 +180,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+             BluetoothGattService service=new BluetoothGattService(UUID.fromString(SERVICE),BluetoothGattService.SERVICE_TYPE_PRIMARY);
+             service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(SERIAL),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
+             service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(METADATA),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
++            if (wifiSetup) service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(WIFI_SETUP),
++                BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE,
++                BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE));
+             if(!server.addService(service)){fail(admitted,"service-unavailable",true);return;}
+             timeout=new Runnable(){@Override public void run(){synchronized(ExperimentSessionDiscoveryServer.this){if(current(admitted)&&!"advertising".equals(state))fail(admitted,"callback-timeout",true);}}};
+             main.postDelayed(timeout,8000);
+@@ -175,24 +217,87 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+         @Override public void onCharacteristicReadRequest(final BluetoothDevice device,int id,int offset,BluetoothGattCharacteristic characteristic){synchronized(ExperimentSessionDiscoveryServer.this){
+             if(!current(admitted)||server==null)return;
+             String uuid=characteristic.getUuid().toString();
+-            if(!SERIAL.equals(uuid)&&!METADATA.equals(uuid)){respond(device,id,BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,offset,null);return;}
+-            final Peer p=peer(device);if(p==null){respond(device,id,BluetoothGatt.GATT_FAILURE,offset,null);return;}
+-            byte[] bytes=SERIAL.equals(uuid)?p.snapshot.serial:p.snapshot.metadata;
++            boolean setupRead = wifiSetup && WIFI_SETUP.equals(uuid);
++            if (!SERIAL.equals(uuid) && !METADATA.equals(uuid) && !setupRead) {
++                respond(device,id,BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,offset,null);return;
++            }
++            Peer p=peer(device);if(p==null){respond(device,id,BluetoothGatt.GATT_FAILURE,offset,null);return;}
++            byte[] bytes = setupRead ? setupReadback(admitted, device, p)
++                : SERIAL.equals(uuid) ? p.snapshot.serial : p.snapshot.metadata;
+             if(offset<0||offset>bytes.length){respond(device,id,BluetoothGatt.GATT_INVALID_OFFSET,offset,null);return;}
+             int end=Math.min(bytes.length,offset+p.mtu-1);
+             if(!respond(device,id,BluetoothGatt.GATT_SUCCESS,offset,Arrays.copyOfRange(bytes,offset,end)))return;
+-            if(METADATA.equals(uuid)&&end==bytes.length&&end-offset<p.mtu-1&&p.disconnect==null){
+-                p.disconnect=new Runnable(){@Override public void run(){synchronized(ExperimentSessionDiscoveryServer.this){
+-                    if(!current(admitted)||server==null||peers.get(device)!=p)return;
+-                    try{server.cancelConnection(device);}catch(RuntimeException ignored){}
+-                    // Keep the snapshot until Android acknowledges disconnect, preventing mixed reads.
+-                }}};main.postDelayed(p.disconnect,1500);
+-            }
++            if(METADATA.equals(uuid)&&end==bytes.length&&end-offset<p.mtu-1&&p.disconnect==null)
++                scheduleDisconnect(admitted, device, p, 1500);
+         }}
+         @Override public void onCharacteristicWriteRequest(BluetoothDevice device,int id,BluetoothGattCharacteristic characteristic,boolean prepared,boolean response,int offset,byte[] value){synchronized(ExperimentSessionDiscoveryServer.this){
+-            if(current(admitted)&&server!=null&&response)respond(device,id,BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,offset,null);
++            if (!current(admitted) || server == null || !response) return;
++            if (!wifiSetup || !WIFI_SETUP.equals(characteristic.getUuid().toString()) || prepared || offset != 0) {
++                respond(device,id,BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED,offset,null);return;
++            }
++            Peer p = peers.get(device);
++            if (p == null || p.packet == null || value == null || value.length < 3 || value.length > 20
++                    || value[0] != p.nextFragment || (value[1] != 0 && value[1] != 1)
++                    || (value[1] == 0 && value.length != 20) || value.length - 2 > p.packet.remaining()) {
++                respond(device,id,BluetoothGatt.GATT_FAILURE,0,null);return;
++            }
++            p.packet.put(value, 2, value.length - 2);
++            ++p.nextFragment;
++            if (value[1] == 0) {
++                respond(device,id,BluetoothGatt.GATT_SUCCESS,0,null);return;
++            }
++            byte[] packet = Arrays.copyOf(p.packet.array(), p.packet.position());
++            byte[] challenge = p.challenge;
++            p.packet = null;
++            p.challenge = null;
++            p.setupStarted = true;
++            main.post(new Runnable() {
++                @Override public void run() { finishSetup(admitted, device, id, p, challenge, packet); }
++            });
+         }}
+     };}
++    private byte[] setupReadback(long admitted, BluetoothDevice device, Peer p) {
++        if (!wifiPermitted()) return "failed".getBytes(StandardCharsets.US_ASCII);
++        if (p.setupStarted) {
++            String status = p.setupStatus == null ? "wait" : p.setupStatus.status();
++            return status.getBytes(StandardCharsets.US_ASCII);
++        }
++        if (p.challenge == null) {
++            p.challenge = new byte[16];
++            RANDOM.nextBytes(p.challenge);
++            p.packet = ByteBuffer.allocate(124);
++            scheduleDisconnect(admitted, device, p, 55000);
++        }
++        return p.challenge;
++    }
++    private void finishSetup(long admitted, BluetoothDevice device, int id, Peer p, byte[] challenge, byte[] packet) {
++        synchronized (this) {
++            if (!current(admitted) || server == null || peers.get(device) != p) return;
++        }
++        SetupStatus result;
++        try {
++            result = source.setup(p.snapshot.identity, challenge, packet);
++        } catch (Exception rejected) {
++            result = WIFI_FAILED;
++        }
++        synchronized (this) {
++            if (!current(admitted) || server == null || peers.get(device) != p) return;
++            p.setupStatus = result;
++            respond(device,id,BluetoothGatt.GATT_SUCCESS,0,null);
++        }
++    }
++    private void scheduleDisconnect(long admitted, BluetoothDevice device, Peer p, long delay) {
++        if (p.disconnect != null) main.removeCallbacks(p.disconnect);
++        p.disconnect = new Runnable() {
++            @Override public void run() {
++                synchronized (ExperimentSessionDiscoveryServer.this) {
++                    if (!current(admitted) || server == null || peers.get(device) != p) return;
++                    try { server.cancelConnection(device); } catch (RuntimeException ignored) {}
++                }
++            }
++        };
++        main.postDelayed(p.disconnect, delay);
++    }
+     private Peer peer(BluetoothDevice device){
+         Peer p=peers.get(device);if(p!=null)return p;
+         if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..0c41ee4b 100644
+index cf6c5de1..b8dd7fb3 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -868,13 +1137,157 @@ index cf6c5de1..0c41ee4b 100644
      public static String hmac(String key,String message)throws Exception {
 +        StringBuilder out=new StringBuilder();for(byte b:hmacBytes(key,message))out.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return out.toString();
 +    }
-+    private static byte[] hmacBytes(String key, String message) throws Exception {
++    static byte[] hmacBytes(String key, String message) throws Exception {
          Mac mac=Mac.getInstance("HmacSHA256");mac.init(new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8),"HmacSHA256"));
 -        StringBuilder out=new StringBuilder();for(byte b:mac.doFinal(message.getBytes(StandardCharsets.UTF_8)))out.append(String.format(java.util.Locale.ROOT,"%02x",b&255));return out.toString();
 +        return mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
      }
      private static boolean constant(String a,String b) {
          return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java
+new file mode 100644
+index 00000000..ba158dcb
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java
+@@ -0,0 +1,82 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import android.content.Context;
++import android.net.ConnectivityManager;
++import android.net.LinkAddress;
++import android.net.LinkProperties;
++import android.net.Network;
++import android.net.NetworkCapabilities;
++import android.net.NetworkRequest;
++import android.net.wifi.WifiNetworkSpecifier;
++import android.os.Handler;
++import java.net.Inet4Address;
++
++final class ExperimentSessionWifiConnection implements AutoCloseable {
++    private final ConnectivityManager manager;
++    private final Handler main;
++    private Request request;
++
++    ExperimentSessionWifiConnection(Context context, Handler main) {
++        manager = context.getSystemService(ConnectivityManager.class);
++        this.main = main;
++    }
++
++    private final class Request extends ConnectivityManager.NetworkCallback
++            implements ExperimentSessionDiscoveryServer.SetupStatus {
++        volatile String status = "wait";
++
++        @Override public String status() { return status; }
++
++        @Override public void onLinkPropertiesChanged(Network network, LinkProperties properties) {
++            if (request != this) return;
++            status = "wait";
++            for (LinkAddress link : properties.getLinkAddresses()) {
++                if (link.getAddress() instanceof Inet4Address && link.getAddress().isSiteLocalAddress()) {
++                    status = link.getAddress().getHostAddress();
++                    return;
++                }
++            }
++        }
++
++        @Override public void onUnavailable() {
++            if (request != this) return;
++            status = "failed";
++            request = null;
++        }
++
++        @Override public void onLost(Network network) {
++            if (request == this) close();
++        }
++    }
++
++    ExperimentSessionDiscoveryServer.SetupStatus connect(ExperimentSessionWifiCredentials credentials) {
++        if (manager == null || request != null) throw new IllegalStateException("wifi-setup-unavailable");
++        WifiNetworkSpecifier hotspot = new WifiNetworkSpecifier.Builder()
++            .setSsid(credentials.ssid).setWpa2Passphrase(credentials.passphrase).build();
++        NetworkRequest network = new NetworkRequest.Builder()
++            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
++            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
++            .setNetworkSpecifier(hotspot).build();
++        Request joining = new Request();
++        request = joining;
++        try {
++            manager.requestNetwork(network, joining, main, 40_000);
++        } catch (RuntimeException failed) {
++            request = null;
++            throw failed;
++        }
++        return joining;
++    }
++
++    @Override public void close() {
++        Request old = request;
++        if (old == null) return;
++        request = null;
++        old.status = "failed";
++        try {
++            manager.unregisterNetworkCallback(old);
++        } catch (IllegalArgumentException alreadyReleased) {
++            // Android may release a timed-out request before its callback runs.
++        }
++    }
++}
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java
+new file mode 100644
+index 00000000..b565c439
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java
+@@ -0,0 +1,50 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.nio.ByteBuffer;
++import java.nio.charset.StandardCharsets;
++import java.util.Arrays;
++import javax.crypto.Cipher;
++import javax.crypto.spec.GCMParameterSpec;
++import javax.crypto.spec.SecretKeySpec;
++
++final class ExperimentSessionWifiCredentials {
++    final String ssid;
++    final String passphrase;
++
++    private ExperimentSessionWifiCredentials(String ssid, String passphrase) {
++        this.ssid = ssid;
++        this.passphrase = passphrase;
++    }
++
++    static ExperimentSessionWifiCredentials decrypt(String key, String binding, byte[] challenge,
++            byte[] packet) throws Exception {
++        if (challenge.length != 16 || packet.length < 38 || packet.length > 124)
++            throw new SecurityException("wifi-setup-packet-length");
++        byte[] secret = ExperimentSessionGatewayProtocol.hmacBytes(key, "RQG1-WIFI-KEY|" + binding);
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"),
++            new GCMParameterSpec(128, packet, 0, 12));
++        cipher.updateAAD(("RQG1-WIFI|" + binding + "|").getBytes(StandardCharsets.UTF_8));
++        cipher.updateAAD(challenge);
++        byte[] plaintext = cipher.doFinal(packet, 12, packet.length - 12);
++        try {
++            int ssidLength = Byte.toUnsignedInt(plaintext[0]);
++            int passphraseLength = plaintext.length - 1 - ssidLength;
++            if (ssidLength < 1 || ssidLength > 32 || passphraseLength < 8 || passphraseLength > 63)
++                throw new SecurityException("wifi-setup-credential-length");
++            String ssid = StandardCharsets.UTF_8.newDecoder()
++                .decode(ByteBuffer.wrap(plaintext, 1, ssidLength)).toString();
++            for (int i = 0; i < ssid.length(); i++) {
++                if (Character.isISOControl(ssid.charAt(i))) throw new SecurityException("wifi-setup-ssid");
++            }
++            for (int i = 1 + ssidLength; i < plaintext.length; i++) {
++                if (plaintext[i] < 0x20 || plaintext[i] > 0x7e)
++                    throw new SecurityException("wifi-setup-passphrase");
++            }
++            return new ExperimentSessionWifiCredentials(ssid,
++                new String(plaintext, 1 + ssidLength, passphraseLength, StandardCharsets.US_ASCII));
++        } finally {
++            Arrays.fill(plaintext, (byte) 0);
++        }
++    }
++}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 index b042fc60..e2428f70 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
@@ -1754,6 +2167,82 @@ index 56040232..5e5da2eb 100644
 +      throw new AssertionError("encrypted 32 KiB chunk exceeds browser limits");
 + }
 +}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java
+new file mode 100644
+index 00000000..a6b1d21f
+--- /dev/null
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java
+@@ -0,0 +1,70 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.nio.charset.StandardCharsets;
++import java.util.Arrays;
++import javax.crypto.Cipher;
++import javax.crypto.spec.GCMParameterSpec;
++import javax.crypto.spec.SecretKeySpec;
++
++public final class ExperimentSessionWifiCredentialsTest {
++    private static final String KEY = repeat('c', 64);
++    private static final String BINDING = repeat('b', 32) + "|" + repeat('a', 32) + "|7|8";
++
++    public static void main(String[] args) throws Exception {
++        byte[] challenge = new byte[16];
++        byte[] packet = packet("Pixel-Prüfung", "temporary-password", challenge);
++        ExperimentSessionWifiCredentials credentials =
++            ExperimentSessionWifiCredentials.decrypt(KEY, BINDING, challenge, packet);
++        if (!"Pixel-Prüfung".equals(credentials.ssid) || !"temporary-password".equals(credentials.passphrase))
++            throw new AssertionError("credential readback");
++        byte[] otherPeer = challenge.clone();
++        otherPeer[0] = 1;
++        rejected(() -> ExperimentSessionWifiCredentials.decrypt(KEY, BINDING, otherPeer, packet));
++        rejected(() -> ExperimentSessionWifiCredentials.decrypt(KEY, BINDING + "9", challenge, packet));
++        rejected(() -> ExperimentSessionWifiCredentials.decrypt(repeat('d', 64), BINDING, challenge, packet));
++        byte[] changed = packet.clone();
++        changed[changed.length - 1] ^= 1;
++        rejected(() -> ExperimentSessionWifiCredentials.decrypt(KEY, BINDING, challenge, changed));
++        for (byte[] invalid : new byte[][]{
++                packet("Pixel", "1234567", challenge),
++                packet("Pixel", "bad-password-é", challenge),
++                packet("Pixel\n", "valid-password", challenge),
++                Arrays.copyOf(packet, 37),
++                Arrays.copyOf(packet, 125)}) {
++            rejected(() -> ExperimentSessionWifiCredentials.decrypt(KEY, BINDING, challenge, invalid));
++        }
++        System.out.println("PASS 10 production encrypted Wi-Fi credential checks");
++    }
++
++    private static byte[] packet(String ssid, String passphrase, byte[] challenge) throws Exception {
++        byte[] name = ssid.getBytes(StandardCharsets.UTF_8);
++        byte[] password = passphrase.getBytes(StandardCharsets.UTF_8);
++        byte[] message = new byte[1 + name.length + password.length];
++        message[0] = (byte) name.length;
++        System.arraycopy(name, 0, message, 1, name.length);
++        System.arraycopy(password, 0, message, 1 + name.length, password.length);
++        byte[] key = ExperimentSessionGatewayProtocol.hmacBytes(KEY, "RQG1-WIFI-KEY|" + BINDING);
++        byte[] iv = new byte[12];
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(128, iv));
++        cipher.updateAAD(("RQG1-WIFI|" + BINDING + "|").getBytes(StandardCharsets.UTF_8));
++        cipher.updateAAD(challenge);
++        byte[] encrypted = cipher.doFinal(message);
++        byte[] packet = new byte[iv.length + encrypted.length];
++        System.arraycopy(encrypted, 0, packet, iv.length, encrypted.length);
++        return packet;
++    }
++
++    private static String repeat(char ch, int length) {
++        char[] chars = new char[length];
++        Arrays.fill(chars, ch);
++        return new String(chars);
++    }
++
++    private interface Check { void run() throws Exception; }
++    private static void rejected(Check check) throws Exception {
++        try { check.run(); }
++        catch (SecurityException | javax.crypto.AEADBadTagException expected) { return; }
++        throw new AssertionError("invalid encrypted setup was accepted");
++    }
++}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
 index 00000000..062b09dd
@@ -1828,6 +2317,19 @@ index 00000000..062b09dd
 +        System.out.println("PASS: six native WAV renders, exact frames, silent placeholders, catalog and cue integrity.");
 +    }
 +}
+diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+index 0b6a0c00..184ad360 100644
+--- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
++++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+@@ -84,6 +84,8 @@
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java",
++          "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java",
++          "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGuestRegistry.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetIdentity.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBuildIdentity.java",
 diff --git a/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json b/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json
 new file mode 100644
 index 00000000..170ae8ac
@@ -1913,6 +2415,47 @@ index 00000000..087a1a00
 +  "markers": { "required": [], "forbidden": [] },
 +  "validation": { "quick": [], "standard": [], "device": [] },
 +  "public_private_boundary": "The native renderer uses its local pose to update the app-owned scene anchor."
++}
+diff --git a/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
+new file mode 100644
+index 00000000..a14d7c09
+--- /dev/null
++++ b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
+@@ -0,0 +1,35 @@
++{
++  "schema": "rusty.quest.native_app_feature.v1",
++  "feature_id": "ui.experiment_wifi_setup",
++  "module_path": "ui/experiment-wifi-setup",
++  "module_kind": "enrolled-bluetooth-wifi-setup",
++  "settings_surface": {
++    "authority": "rusty.quest.native_app_settings.v1",
++    "adapter": "packaged-feature-selection"
++  },
++  "owner_lane": "rusty-quest",
++  "status": "public-substrate",
++  "description": "Use enrolled, encrypted Bluetooth setup to request an attended Wi-Fi connection on the headset.",
++  "provides": ["ui.experiment_wifi_setup"],
++  "depends_on": ["ui.experiment_session_command_gateway"],
++  "incompatible_with": [],
++  "exclusive_groups": {},
++  "android_manifest": {
++    "permissions": [
++      "android.permission.ACCESS_FINE_LOCATION",
++      "android.permission.ACCESS_WIFI_STATE",
++      "android.permission.CHANGE_NETWORK_STATE",
++      "android.permission.CHANGE_WIFI_STATE",
++      "android.permission.NEARBY_WIFI_DEVICES"
++    ],
++    "uses_features": [],
++    "activities": [],
++    "services": [],
++    "queries": []
++  },
++  "runtime_profile": { "set": {}, "clear_families": [], "expected_render_modes": [] },
++  "build_inputs": { "env": [], "assets": [], "shaders": [] },
++  "markers": { "required": [], "forbidden": [] },
++  "validation": { "quick": [], "standard": [], "device": [] },
++  "public_private_boundary": "Hotspot credentials are authenticated, encrypted and supplied by the enrolled operator."
 +}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
 index 5bc5902d..ca15dab0 100644
@@ -2065,7 +2608,7 @@ index ccb3e308..11c86d32 100644
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881..8e118290 100644
+index 0bdd4881..a70f613d 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -692,6 +692,8 @@ function New-GeneratedAndroidManifestText {
@@ -2077,6 +2620,15 @@ index 0bdd4881..8e118290 100644
          [switch]$ExperimentSessionDebugOperator
      )
      $originalNativeHost = ($SelectedFeatureIds -ccontains 'ui.native_mesh_panel' -or $SelectedFeatureIds -ccontains 'ui.native_mesh_panel.original_product') -and $SelectedFeatureIds -ccontains 'ui.breath_composition_control_panel'
+@@ -722,7 +724,7 @@ function New-GeneratedAndroidManifestText {
+     }
+     foreach ($permission in $Permissions) {
+         $attributes = ''
+-        if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network') {
++        if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network' -or $SelectedFeatureIds -ccontains 'ui.experiment_wifi_setup') {
+             if ($permission -ceq 'android.permission.NEARBY_WIFI_DEVICES') { $attributes = ' android:usesPermissionFlags="neverForLocation"' }
+             # Polar's existing scan adapter requires location on modern Android.
+             # A new optional Wi-Fi route must preserve that selected permission.
 @@ -744,6 +746,10 @@ function New-GeneratedAndroidManifestText {
      [void]$lines.Add(('        android:label="{0}"' -f [System.Security.SecurityElement]::Escape($ApplicationLabel)))
      [void]$lines.Add('        android:theme="@android:style/Theme.Material.NoActionBar">')
@@ -2088,7 +2640,7 @@ index 0bdd4881..8e118290 100644
      if ($Receivers -contains "NativeRendererBootReceiver") {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.boot_autostart" android:value="true" />')
      }
-@@ -751,11 +757,18 @@ function New-GeneratedAndroidManifestText {
+@@ -751,11 +757,21 @@ function New-GeneratedAndroidManifestText {
      # controller/relay enrollment remain private headset state.
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_command_gateway') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.enabled" android:value="true" />')
@@ -2102,13 +2654,16 @@ index 0bdd4881..8e118290 100644
 +    if ($SelectedFeatureIds -ccontains 'ui.experiment_private_lan_data') {
 +        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.private_lan_data" android:value="true" />')
 +    }
++    if ($SelectedFeatureIds -ccontains 'ui.experiment_wifi_setup') {
++        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.wifi_setup" android:value="true" />')
++    }
 +    if ($SelectedFeatureIds -ccontains 'ui.experiment_scene_recenter') {
 +        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.scene_recenter" android:value="true" />')
 +    }
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.experiment_direct_network" android:value="true" />')
      }
-@@ -2029,7 +2042,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+@@ -2029,7 +2045,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
  if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
      throw "App build spec application_label must be 1..64 visible characters without control whitespace"
  }
@@ -2144,6 +2699,49 @@ index 0bdd4881..8e118290 100644
  New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
+diff --git a/tools/checks/Test-ExperimentSessionCommandGateway.ps1 b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+index bafddd3d..48fab4d6 100644
+--- a/tools/checks/Test-ExperimentSessionCommandGateway.ps1
++++ b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
+@@ -8,12 +8,16 @@ $pkg='io/github/mesmerprism/rustyquest/native_renderer'
+ $production=Join-Path $repo "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/$pkg/ExperimentSessionGatewayProtocol.java"
+ $recordingTest=Join-Path $repo "apps/native-renderer-android/tests/java/$pkg/ExperimentSessionRecordingProtocolTest.java"
+ $test=Join-Path $repo "apps/native-renderer-android/tests/java/$pkg/ExperimentSessionGatewayProtocolTest.java"
+-& javac --release 8 -encoding UTF-8 -cp $JsonJar -d $OutputRoot $production $test $recordingTest
++$wifi=Join-Path (Split-Path -Parent $production) 'ExperimentSessionWifiCredentials.java'
++$wifiTest=Join-Path (Split-Path -Parent $test) 'ExperimentSessionWifiCredentialsTest.java'
++& javac --release 8 -encoding UTF-8 -cp $JsonJar -d $OutputRoot $production $test $recordingTest $wifi $wifiTest
+ if($LASTEXITCODE-ne0){throw 'Gateway protocol compilation failed'}
+ & java -cp "$OutputRoot$([IO.Path]::PathSeparator)$JsonJar" io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionGatewayProtocolTest
+ if($LASTEXITCODE-ne0){throw 'Gateway protocol tests failed'}
+ & java -cp "$OutputRoot$([IO.Path]::PathSeparator)$JsonJar" io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionRecordingProtocolTest
+ if($LASTEXITCODE-ne0){throw 'Recording protocol route/envelope tests failed'}
++& java -cp "$OutputRoot$([IO.Path]::PathSeparator)$JsonJar" io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionWifiCredentialsTest
++if($LASTEXITCODE-ne0){throw 'Bluetooth Wi-Fi credential encryption tests failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_recordings.py') --repo $repo --json-jar $JsonJar
+ if($LASTEXITCODE-ne0){throw 'Recording export production owner controls failed'}
+ & python (Join-Path $PSScriptRoot 'test_experiment_gateway_bias.py') --json-jar $JsonJar
+@@ -28,6 +32,6 @@ if($LASTEXITCODE-ne0){throw 'Privileged local enrollment tests failed'}
+ if($LASTEXITCODE-ne0){throw 'Remote guest/provisioned identity production host tests failed'}
+ $jdkRoot=Split-Path -Parent (Split-Path -Parent (Get-Command javac -CommandType Application | Select-Object -First 1).Source)
+ & python (Join-Path $PSScriptRoot 'test_experiment_discovery.py') --jdk $jdkRoot --json-jar $JsonJar
+-if($LASTEXITCODE-ne0){throw 'Read-only Remote discovery production callback tests failed'}
++if($LASTEXITCODE-ne0){throw 'Remote discovery and Wi-Fi setup production callback tests failed'}
+ & (Join-Path $PSScriptRoot 'Test-ExperimentHeadsetIdentityCli.ps1')
+ @{passed=$true;scope='Production transport authentication host tests only; Android owner/native/LAN effects require separate evidence'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
+diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
+index 966e9942..3d4a3245 100644
+--- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
++++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
+@@ -272,6 +272,8 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+         (Join-Path $panelRoot 'ExperimentSessionCommandGateway.java'),
+         (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
+         (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
++        (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),
++        (Join-Path $panelRoot 'ExperimentSessionWifiCredentials.java'),
+         (Join-Path $panelRoot 'ExperimentSessionGuestRegistry.java'),
+         (Join-Path $panelRoot 'ExperimentSessionHeadsetIdentity.java'),
+         (Join-Path $panelRoot 'ExperimentSessionGatewayHttpServer.java'),
 diff --git a/tools/checks/test_experiment_control_mode.py b/tools/checks/test_experiment_control_mode.py
 index f406a33a..45ee4319 100644
 --- a/tools/checks/test_experiment_control_mode.py
@@ -2159,6 +2757,60 @@ index f406a33a..45ee4319 100644
   static void requireMain(){}
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
+diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
+index 25bc4104..f5db4285 100644
+--- a/tools/checks/test_experiment_discovery.py
++++ b/tools/checks/test_experiment_discovery.py
+@@ -39,7 +39,49 @@ public class DiscoveryHostTest {
+  static byte[] read(BluetoothGattServer s,BluetoothDevice peer,String uuid,int offset){s.callback.onCharacteristicReadRequest(peer,1,offset,characteristic(uuid));return s.lastBytes;}
+  static String all(BluetoothGattServer s,BluetoothDevice peer,String uuid){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();for(int i=0;i<1024;i+=22){byte[] part=read(s,peer,uuid,i);check(s.lastStatus==0,"valid offset");out.write(part,0,part.length);if(part.length<22)break;}return new String(out.toByteArray(),StandardCharsets.UTF_8);}
+  static BluetoothGattServer start(ExperimentSessionDiscoveryServer d,android.app.Activity c,long revision){d.reconcile(revision,true);BluetoothGattServer s=c.manager.servers.get(c.manager.servers.size()-1);s.callback.onServiceAdded(0,s.service);c.manager.adapter.advertiser.callbacks.get(c.manager.adapter.advertiser.callbacks.size()-1).onStartSuccess(new AdvertiseSettings());return s;}
++ static void checkWifiSetup() throws Exception {
++  android.app.Activity c = new android.app.Activity();
++  List<byte[]> accepted = new ArrayList<>();
++  ExperimentSessionDiscoveryServer d = new ExperimentSessionDiscoveryServer(c, new ExperimentSessionDiscoveryServer.Source() {
++   @Override public JSONObject snapshot() throws Exception { return metadata(); }
++   @Override public ExperimentSessionDiscoveryServer.SetupStatus setup(JSONObject owner, byte[] nonce, byte[] packet) throws Exception {
++    check(owner.getString("serial").equals(serial), "setup snapshots the same serial as discovery");
++    accepted.add(nonce);
++    accepted.add(packet);
++    return () -> "192.168.54.12";
++   }
++  }, true);
++  BluetoothGattServer server = start(d, c, 44);
++  BluetoothDevice peer = new BluetoothDevice();
++  String wifi = ExperimentSessionDiscoveryServer.WIFI_SETUP;
++  byte[] nonce = read(server, peer, wifi, 0);
++  check(nonce.length == 16 && Arrays.equals(nonce, read(server, peer, wifi, 0)), "one nonce per peer");
++  check(!Arrays.equals(nonce, read(server, new BluetoothDevice(), wifi, 0)), "different peer gets a fresh nonce");
++  byte[] first = new byte[20]; first[0] = 1;
++  server.callback.onCharacteristicWriteRequest(peer, 2, characteristic(wifi), false, true, 0, first);
++  check(server.lastStatus == BluetoothGatt.GATT_FAILURE, "out-of-order fragment rejected");
++  first[0] = 0;
++  server.callback.onCharacteristicWriteRequest(peer, 3, characteristic(wifi), false, true, 0, first);
++  check(server.lastStatus == BluetoothGatt.GATT_SUCCESS, "first fragment accepted");
++  byte[] second = new byte[]{1, 1, 7};
++  server.callback.onCharacteristicWriteRequest(peer, 4, characteristic(wifi), false, true, 0, second);
++  check(accepted.isEmpty(), "platform join is posted to the owner thread");
++  Handler.drain();
++  check(accepted.size() == 2 && Arrays.equals(nonce, accepted.get(0))
++    && accepted.get(1).length == 19 && accepted.get(1)[18] == 7, "bounded fragments reach owner as one request");
++  check("192.168.54.12".equals(new String(read(server, peer, wifi, 0), StandardCharsets.US_ASCII)), "Wi-Fi address readback");
++  server.callback.onCharacteristicWriteRequest(peer, 5, characteristic(wifi), false, true, 0, first);
++  Handler.drain();
++  check(accepted.size() == 2 && server.lastStatus == BluetoothGatt.GATT_FAILURE, "nonce consumed after one request");
++  BluetoothDevice stale = new BluetoothDevice();
++  read(server, stale, wifi, 0);
++  server.callback.onCharacteristicWriteRequest(stale, 6, characteristic(wifi), false, true, 0, new byte[]{0, 1, 7});
++  d.close();
++  Handler.drain();
++  check(accepted.size() == 2, "owner retirement discards queued setup");
++ }
+  public static void main(String[] args)throws Exception {
++  checkWifiSetup();
+   android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
+   BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
+   check("advertising".equals(d.readback().getString("state")),"Remote advertises");check(!a.data.name&&a.data.services==1&&a.scan==null,"service-only unnamed advertisement");
 diff --git a/tools/checks/test_experiment_gateway_dedupe.py b/tools/checks/test_experiment_gateway_dedupe.py
 index fbc332fd..6ba46295 100644
 --- a/tools/checks/test_experiment_gateway_dedupe.py
@@ -2286,3 +2938,43 @@ index c849c2d5..0bb74b4c 100644
    System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
   }
  }
+diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
+index d1d148eb..327773ee 100644
+--- a/tools/checks/test_experiment_remote_join.py
++++ b/tools/checks/test_experiment_remote_join.py
+@@ -58,12 +58,24 @@ final class ExperimentSessionBleServer {
+  void updateReceipt(String i,String s,String d){try{listener.receipt(new JSONObject().put("id",i).put("state",s).put("detail",d));}catch(Exception x){throw new RuntimeException(x);}}
+ }
+ final class ExperimentSessionDiscoveryServer {
+- interface Source{JSONObject snapshot()throws Exception;}static ExperimentSessionDiscoveryServer latest;boolean remote;long token;int closes;
+- ExperimentSessionDiscoveryServer(android.content.Context c,Source s){latest=this;}
++ interface SetupStatus {String status();}
++ interface Source {
++  JSONObject snapshot() throws Exception;
++  SetupStatus setup(JSONObject owner, byte[] challenge, byte[] packet) throws Exception;
++ }
++ static ExperimentSessionDiscoveryServer latest;boolean remote;long token;int closes;
++ ExperimentSessionDiscoveryServer(android.content.Context c,Source s,boolean wifiSetup){latest=this;}
+  void reconcile(long t,boolean r){token=t;remote=r;}void close(){closes++;remote=false;}
+  JSONObject readback()throws Exception{return new JSONObject().put("state",remote?"advertising":"inactive").put("reason","synthetic");}
+  void requestPermissions(android.app.Activity a){}void permissionResult(){}static final int PERMISSION_REQUEST=9403;
+ }
++final class ExperimentSessionWifiConnection {
++ ExperimentSessionWifiConnection(android.content.Context context, android.os.Handler main) {}
++ ExperimentSessionDiscoveryServer.SetupStatus connect(ExperimentSessionWifiCredentials credentials) {
++  throw new AssertionError("Unexpected Android network effect in LAN route tests");
++ }
++ void close() {}
++}
+ final class ExperimentSessionGatewayHttpServer {static int starts,closes;ExperimentSessionGatewayHttpServer(ExperimentSessionCommandGateway g,int p){}void start(){starts++;}void close(){closes++;}}
+ final class ExperimentSessionDirectNetwork {ExperimentSessionDirectNetwork(android.content.Context c){}static boolean featurePackaged(android.content.Context c){return false;}JSONObject snapshot(){return new JSONObject();}JSONObject localJoinDetails(){return new JSONObject();}void start(String m){}void close(){}}
+ final class ExperimentSessionRelayClient {interface Endpoint{JSONObject identity()throws Exception;JSONObject exchange(JSONObject r)throws Exception;}static class Config{Config(String a,String b,String c,String d,long e){}}ExperimentSessionRelayClient(Config c,Endpoint e){}JSONObject snapshot(){return new JSONObject();}void start(){}void close(){}}
+@@ -232,7 +244,7 @@ final class HttpRemoteJoinBoundary {
+         debug=(a.repo/'apps/native-renderer-android/src/debug/java'/PACKAGE/'ExperimentSessionDebugOperator.java').read_text()
+         (package/'ExperimentSessionDebugOperator.java').write_text(debug)
+         (package/'ExperimentSessionDebugOperatorTest.java').write_text((a.repo/'apps/native-renderer-android/tests/java'/PACKAGE/'ExperimentSessionDebugOperatorTest.java').read_text())
+-        names=['ExperimentSessionBuildIdentity','ExperimentSessionRecordingExport','ExperimentSessionCommandGateway','ExperimentSessionGatewayProtocol','ExperimentSessionCommandJournal','ExperimentSessionBleProtocol','ExperimentSessionControlCapability','ExperimentSessionWifiSnapshot','ExperimentSessionPanelState','ExperimentSessionPanelCoordinator','ExperimentSessionPanelViewPolicy','ExperimentSessionAndroidShell','ExperimentSessionJsonCodec']
++        names=['ExperimentSessionWifiCredentials','ExperimentSessionBuildIdentity','ExperimentSessionRecordingExport','ExperimentSessionCommandGateway','ExperimentSessionGatewayProtocol','ExperimentSessionCommandJournal','ExperimentSessionBleProtocol','ExperimentSessionControlCapability','ExperimentSessionWifiSnapshot','ExperimentSessionPanelState','ExperimentSessionPanelCoordinator','ExperimentSessionPanelViewPolicy','ExperimentSessionAndroidShell','ExperimentSessionJsonCodec']
+         if (root/'ExperimentSessionHeadsetIdentity.java').exists():names.append('ExperimentSessionHeadsetIdentity')
+         if (root/'ExperimentSessionGuestRegistry.java').exists():names.append('ExperimentSessionGuestRegistry')
+         sources = [root/(n+'.java') for n in names] + [a.repo/'apps/native-renderer-android/src/main/java'/PACKAGE/'NativeRendererWriterAcknowledgedExitPolicy.java']
