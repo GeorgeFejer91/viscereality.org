@@ -35,6 +35,11 @@ file in the signed APK by size and SHA-256. ECG previews and recording replies
 are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
+On startup, the Quest APK requests Android’s turn-on dialog if its Bluetooth
+radio is off. VR-Probe shows a Bluetooth reminder on the phone at startup.
+Chrome's device chooser checks the phone's power state after the operator
+taps a Bluetooth search control.
+
 To connect a Quest 2 to a Pixel hotspot, turn on the phone’s Wi-Fi hotspot,
 open **Hotspot per Bluetooth verbinden** in VR-Probe, and enter the hotspot
 name and password. Enter the enrolled controller ID and Quest key from the

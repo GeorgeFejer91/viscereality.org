@@ -67,12 +67,15 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.14`
+Both physical devices are authorized over USB. The signed `0.1.15`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
 and grant Atmungsraum Local Network Access for the Quest connection.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
+At startup the Quest APK asks Android to show its turn-on confirmation when
+Bluetooth is off. The phone shows a reminder when VR-Probe opens. Chrome’s
+Bluetooth picker checks the phone’s power state after a tap.
 The phone can provision the Pixel hotspot to the enrolled headset over
 Bluetooth. Enable the hotspot on the Pixel, enter its credentials in VR-Probe
 and confirm the Wi-Fi join in the Quest when Android prompts. Verify the first

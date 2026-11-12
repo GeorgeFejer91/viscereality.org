@@ -79,7 +79,10 @@ export function mountQuestRehearsal(participantIdentity) {
     if (status && !connecting) joinMessage = '';
     form.hidden = Boolean(status);
     form.querySelectorAll('input, button').forEach((element) => { element.disabled = Boolean(connecting); });
-    const hint = !status ? 'Quest ist nicht verbunden.'
+    const bluetoothHint = typeof navigator.bluetooth?.requestDevice === 'function'
+      ? 'Falls Bluetooth aus ist, schalte es am Smartphone in den Schnelleinstellungen ein.'
+      : 'Dieser Browser kann die Quest nicht über Bluetooth suchen. Gib die WLAN-Adresse manuell ein.';
+    const hint = !status ? bluetoothHint
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : status.pi?.r !== false ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
       : requiresParticipant && !armedWithParticipant ? 'Verbinde dich mit dem Quest-Schlüssel, um einen Probelauf zu starten.'
