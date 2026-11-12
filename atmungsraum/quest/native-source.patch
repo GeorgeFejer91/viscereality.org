@@ -573,7 +573,7 @@ index ee0417f3..c53d51dc 100644
                      profile_sha256,
                      audio,
 diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
-index 2a8bc3a1..d68127db 100644
+index 2a8bc3a1..60e43f5f 100644
 --- a/apps/native-renderer-android/native/src/lib.rs
 +++ b/apps/native-renderer-android/native/src/lib.rs
 @@ -76,6 +76,8 @@ mod environment_depth_scene_map;
@@ -585,11 +585,13 @@ index 2a8bc3a1..d68127db 100644
  #[cfg(not(feature = "showcase"))]
  mod experiment_session;
  #[cfg(not(feature = "showcase"))]
-@@ -239,6 +241,8 @@ mod session_recording_export;
+@@ -239,6 +241,10 @@ mod session_recording_export;
  #[cfg(not(feature = "showcase"))]
  mod session_recording_inventory;
  #[cfg(not(feature = "showcase"))]
 +mod session_recording_participant;
++#[cfg(not(feature = "showcase"))]
++mod session_recording_participant_recovery;
 +#[cfg(not(feature = "showcase"))]
  mod session_recording_recovery;
  #[cfg(not(feature = "showcase"))]
@@ -625,14 +627,17 @@ index 3cbbfb33..6858a875 100644
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
 diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
-index faac6912..17e17f88 100644
+index faac6912..fcdf4a5f 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export.rs
-@@ -3,12 +3,13 @@
+@@ -3,12 +3,16 @@
  //! the caller's export IO lane and hold no runtime/session/render lock.
  use crate::{
      session_recording_clock::SessionTimestampKey,
-+    session_recording_participant::{csv_descriptor, valid_csv_filename},
++    session_recording_contract::SESSION_STREAM_FILES,
++    session_recording_participant::{
++        RECOVERED_CSV_PREFIX, RECOVERY_POLICY, RECOVERY_RECEIPT, csv_descriptor, valid_csv_filename,
++    },
      session_recording_recovery::{
 -        recording_stream_name, validate_finalized_core, validate_recording_root_no_links,
 -        RecordingFiles,
@@ -645,7 +650,7 @@ index faac6912..17e17f88 100644
  use sha2::{Digest, Sha256};
  use std::{
      collections::BTreeSet,
-@@ -16,8 +17,9 @@ use std::{
+@@ -16,8 +20,9 @@ use std::{
      io::{Read, Seek, SeekFrom},
      path::{Path, PathBuf},
      sync::{
@@ -656,67 +661,162 @@ index faac6912..17e17f88 100644
      },
      thread,
  };
-@@ -374,9 +376,8 @@ impl Directory {
+@@ -202,6 +207,10 @@ fn open_checked(path: &Path, regular: bool) -> Result<(File, Stamp), String> {
+     let metadata = stamp(&file, regular)?;
+     Ok((file, metadata))
+ }
++pub(crate) fn open_regular_recording_file(path: &Path) -> Result<File, String> {
++    open_checked(path, true).map(|(file, _)| file)
++}
++
+ const MAX_DIRECTORY_ENTRIES: usize = 65536;
+ fn collect_stream_inventory(
+     mut entries: impl Iterator<Item = Result<(std::ffi::OsString, bool), String>>,
+@@ -374,9 +383,14 @@ impl Directory {
          if name.is_empty()
              || name == "."
              || name == ".."
 -            || !name
--                .bytes()
--                .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
-+            || !(name.bytes().all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
-+                || regular && valid_csv_filename(name))
++            || !(name
+                 .bytes()
+                 .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
++                || regular
++                    && (valid_csv_filename(name)
++                        || name
++                            .strip_prefix(RECOVERED_CSV_PREFIX)
++                            .is_some_and(valid_csv_filename)))
          {
              return Err(denied());
          }
-@@ -505,7 +506,7 @@ impl Custody {
+@@ -505,7 +519,9 @@ impl Custody {
      }
  }
  struct Pinned {
 -    name: &'static str,
 +    name: String,
++    path: String,
++    length: u64,
      file: File,
      stamp: Stamp,
      digest: String,
-@@ -520,7 +521,7 @@ impl Prepared {
+@@ -520,7 +536,7 @@ impl Prepared {
          self.custody.unchanged()?;
          for p in &self.files {
              if stamp(&p.file, true)? != p.stamp
 -                || self.custody.session.child(p.name, true)?.1 != p.stamp
-+                || self.custody.session.child(&p.name, true)?.1 != p.stamp
++                || self.custody.session.child(&p.path, true)?.1 != p.stamp
              {
                  return Err(denied());
              }
-@@ -681,7 +682,7 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
-             .filter(|n| *n <= MAX_EXPORT_BYTES)
+@@ -547,7 +563,7 @@ impl Prepared {
+             .iter()
+             .find(|p| p.name == name)
              .ok_or_else(denied)?;
+-        if offset > p.stamp.len || length > p.stamp.len.saturating_sub(offset) {
++        if offset > p.length || length > p.length.saturating_sub(offset) {
+             return Err("recording-chunk-range-invalid".into());
+         }
+         self.unchanged()?;
+@@ -633,7 +649,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+         if stamp(&p.file, true)? != p.stamp {
+             return Err(denied());
+         }
+-        Ok(p.stamp.len)
++        Ok(p.length)
+     }
+     fn reader(&mut self, name: &str) -> Result<Box<dyn Read + '_>, String> {
+         self.len(name)?;
+@@ -645,7 +661,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+         p.file.seek(SeekFrom::Start(0)).map_err(|_| denied())?;
+         Ok(Box::new(CheckedRead {
+             file: &mut p.file,
+-            remaining: p.stamp.len,
++            remaining: p.length,
+             check: self.check,
+         }))
+     }
+@@ -672,16 +688,23 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+     check_owner(check)?;
+     let key = SessionTimestampKey::parse(id).map_err(|_| denied())?;
+     let custody = Custody::open(root, id)?;
+-    let mut files = Vec::with_capacity(8);
+-    let mut total = 0u64;
++    let recovered = match fs::symlink_metadata(custody.session.listing_path().join("final.json")) {
++        Ok(_) => false,
++        Err(error) if error.kind() == std::io::ErrorKind::NotFound => true,
++        Err(_) => return Err(denied()),
++    };
++    let mut files = Vec::with_capacity(CORE.len() + 1);
+     for name in CORE {
+-        let (file, stamp) = custody.session.child(name, true)?;
+-        total = total
+-            .checked_add(stamp.len)
+-            .filter(|n| *n <= MAX_EXPORT_BYTES)
+-            .ok_or_else(denied)?;
++        let path = if recovered && name == "final.json" {
++            RECOVERY_RECEIPT
++        } else {
++            name
++        };
++        let (file, stamp) = custody.session.child(path, true)?;
          files.push(Pinned {
 -            name,
 +            name: name.to_owned(),
++            path: path.to_owned(),
++            length: stamp.len,
              file,
              stamp,
              digest: String::new(),
-@@ -694,6 +695,29 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -693,39 +716,106 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+         custody,
          files,
      };
-     let (original, entry) = validate_pinned_core(&mut prepared.files, &streams, key, check)?;
 +    let terminal: Value = {
 +        let mut core = PinnedFiles {
 +            files: &mut prepared.files,
 +            streams: &streams,
 +            check,
 +        };
-+        let reader = core.reader("final.json")?.take(1024 * 1024);
++        if core.len("final.json")? > 1024 * 1024 {
++            return Err(denied());
++        }
++        let reader = core.reader("final.json")?;
 +        serde_json::from_reader(reader).map_err(|_| denied())?
 +    };
++    let recovery = terminal.get("recovery");
++    if recovered {
++        let details = recovery.ok_or_else(denied)?;
++        apply_checkpoint_lengths(&mut prepared.files, &terminal, details)?;
++        verify_checkpoint_reference(&prepared.custody.session, &terminal, details, check)?;
++    } else if recovery.is_some() {
++        return Err(denied());
++    }
++    let total = prepared.files.iter().try_fold(0u64, |total, pin| {
++        total
++            .checked_add(pin.length)
++            .filter(|bytes| *bytes <= MAX_EXPORT_BYTES)
++            .ok_or_else(denied)
++    })?;
+     let (original, entry) = validate_pinned_core(&mut prepared.files, &streams, key, check)?;
 +    let csv = csv_descriptor(&original, &terminal).map_err(|_| denied())?;
++    if recovered && csv.is_none() {
++        return Err(denied());
++    }
 +    if let Some(csv) = csv {
 +        let name = csv["name"].as_str().ok_or_else(denied)?;
-+        let (file, stamp) = prepared.custody.session.child(name, true)?;
++        let path = if recovered {
++            format!("{RECOVERED_CSV_PREFIX}{name}")
++        } else {
++            name.to_owned()
++        };
++        let (file, stamp) = prepared.custody.session.child(&path, true)?;
 +        if stamp.len > MAX_EXPORT_BYTES || csv["size"].as_u64() != Some(stamp.len) {
 +            return Err(denied());
 +        }
 +        prepared.files.push(Pinned {
 +            name: name.to_owned(),
++            path,
++            length: stamp.len,
 +            file,
 +            stamp,
 +            digest: String::new(),
@@ -725,14 +825,61 @@ index faac6912..17e17f88 100644
      prepared.unchanged()?;
      for p in &mut prepared.files {
          check_owner(check)?;
-@@ -723,9 +747,17 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+         p.file.seek(SeekFrom::Start(0)).map_err(|_| denied())?;
+         let mut hash = Sha256::new();
+-        let mut buffer = [0u8; 32768];
+-        let mut consumed = 0u64;
+-        loop {
+-            check_owner(check)?;
+-            let n = p.file.read(&mut buffer).map_err(|_| denied())?;
+-            if n == 0 {
+-                break;
+-            }
+-            consumed += n as u64;
+-            if consumed > p.stamp.len {
+-                return Err(denied());
+-            }
+-            hash.update(&buffer[..n]);
+-        }
+-        if consumed != p.stamp.len {
++        let mut reader = CheckedRead {
++            file: &mut p.file,
++            remaining: p.length,
++            check,
++        };
++        let hashed = std::io::copy(&mut reader, &mut hash).map_err(|_| denied())?;
++        if hashed != p.length {
+             return Err(denied());
+         }
+         p.digest = format!("{:x}", hash.finalize());
++        if let Some(details) = recovery {
++            if SESSION_STREAM_FILES.contains(&p.name.as_str())
++                && details["stream_sha256"][&p.name].as_str() != Some(&p.digest)
++            {
++                return Err(denied());
++            }
++        }
+     }
+     prepared.unchanged()?;
+     check_owner(check)?;
      let file_values: Vec<_> = prepared
          .files
          .iter()
+-        .map(|p| json!({"name":p.name,"size":p.stamp.len,"sha256":p.digest}))
 +        .take(CORE.len())
-         .map(|p| json!({"name":p.name,"size":p.stamp.len,"sha256":p.digest}))
++        .map(|p| json!({"name":p.name,"size":p.length,"sha256":p.digest}))
          .collect();
      let mut manifest = json!({"v":1,"schema":"rusty.quest.recording_export.v1","id":id,"condition":original["condition"],"experiment_identity":original.get("experiment_identity").cloned().unwrap_or(Value::Null),"disposition":entry.session.disposition.as_str(),"saved":true,"file_set_policy":"core8-original-no-checkpoints-or-index","total_bytes":total,"files":file_values});
++    if let Some(details) = recovery {
++        let disposition = if terminal["completed"] == true {
++            "interrupted-completed"
++        } else {
++            "interrupted-early"
++        };
++        manifest["disposition"] = json!(disposition);
++        manifest["file_set_policy"] = json!(RECOVERY_POLICY);
++        manifest["recovery"] = details.clone();
++    }
 +    if let Some(csv) = csv {
 +        let pinned = prepared.files.last().ok_or_else(denied)?;
 +        if csv["sha256"].as_str() != Some(&pinned.digest) {
@@ -743,7 +890,105 @@ index faac6912..17e17f88 100644
      let digest = format!("{:x}", Sha256::digest(manifest.to_string().as_bytes()));
      manifest["manifest_id"] = json!(digest);
      if manifest.to_string().len() > 30000 {
-@@ -803,7 +835,7 @@ fn parse(v: &Value) -> Result<Query, String> {
+@@ -734,6 +824,97 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+     prepared.manifest = manifest;
+     Ok(prepared)
+ }
++fn valid_digest(value: &Value) -> bool {
++    value.as_str().is_some_and(|value| {
++        value.len() == 64
++            && value
++                .bytes()
++                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
++    })
++}
++
++fn apply_checkpoint_lengths(
++    pins: &mut [Pinned],
++    terminal: &Value,
++    details: &Value,
++) -> Result<(), String> {
++    if terminal["stop_reason"] != "interrupted-recovery"
++        || details["v"] != 1
++        || details.as_object().is_none_or(|details| details.len() != 4)
++        || details["checkpoint_ordinal"]
++            .as_u64()
++            .is_none_or(|ordinal| ordinal == 0)
++        || !valid_digest(&details["checkpoint_sha256"])
++        || details["stream_sha256"]
++            .as_object()
++            .is_none_or(|hashes| hashes.len() != SESSION_STREAM_FILES.len())
++    {
++        return Err(denied());
++    }
++    for pin in pins
++        .iter_mut()
++        .filter(|pin| SESSION_STREAM_FILES.contains(&pin.name.as_str()))
++    {
++        pin.length = terminal["durable_stream_lengths"][&pin.name]
++            .as_u64()
++            .filter(|bytes| *bytes <= pin.stamp.len)
++            .ok_or_else(denied)?;
++        if !valid_digest(&details["stream_sha256"][&pin.name]) {
++            return Err(denied());
++        }
++    }
++    Ok(())
++}
++
++fn verify_checkpoint_reference(
++    session: &Directory,
++    terminal: &Value,
++    details: &Value,
++    check: &dyn Fn() -> bool,
++) -> Result<(), String> {
++    check_owner(check)?;
++    let ordinal = details["checkpoint_ordinal"].as_u64().ok_or_else(denied)?;
++    let name = format!("checkpoint-{ordinal:020}.json");
++    let (file, original) = session.child(&name, true)?;
++    if original.len > 1024 * 1024 {
++        return Err(denied());
++    }
++    let mut file = file;
++    let mut bytes = Vec::with_capacity(original.len as usize);
++    CheckedRead {
++        file: &mut file,
++        remaining: original.len,
++        check,
++    }
++    .read_to_end(&mut bytes)
++    .map_err(|_| denied())?;
++    if bytes.len() as u64 != original.len {
++        return Err(denied());
++    }
++    let value: Value = serde_json::from_slice(&bytes).map_err(|_| denied())?;
++    let digest = format!("{:x}", Sha256::digest(&bytes));
++    let matching = [
++        "started_at_utc",
++        "condition",
++        "experiment_identity",
++        "completed",
++        "durable_stream_lengths",
++        "loss",
++        "checkpoint_ordinal",
++    ]
++    .iter()
++    .all(|name| value.get(name) == terminal.get(name));
++    if details["checkpoint_sha256"].as_str() != Some(&digest)
++        || value["schema"] != crate::session_recording_contract::SESSION_CHECKPOINT_SCHEMA
++        || !matching
++        || stamp(&file, true)? != original
++        || session.child(&name, true)?.1 != original
++    {
++        return Err(denied());
++    }
++    check_owner(check)
++}
++
+ fn base64(bytes: &[u8]) -> String {
+     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+@@ -803,7 +984,7 @@ fn parse(v: &Value) -> Result<Query, String> {
                  return Err("recording-query-invalid".into());
              }
              let file = s("file")?;
@@ -752,7 +997,7 @@ index faac6912..17e17f88 100644
                  return Err("recording-query-invalid".into());
              }
              let offset = v["offset"]
-@@ -863,7 +895,11 @@ fn list(
+@@ -863,13 +1044,21 @@ fn list(
          let eligible = prepare(root, &id, check);
          let entry = match eligible {
              Ok(p) => {
@@ -765,29 +1010,44 @@ index faac6912..17e17f88 100644
              }
              Err(_) => {
                  let reason = if anchors
+                     .as_ref()
+                     .and_then(|(_, r)| r.directory(&id).ok())
+-                    .and_then(|d| d.child("final.json", true).ok())
++                    .and_then(|d| {
++                        d.child("final.json", true)
++                            .or_else(|_| d.child(RECOVERY_RECEIPT, true))
++                            .ok()
++                    })
+                     .is_none()
+                 {
+                     "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cb..da540238 100644
+index f71f79cb..2c0e054c 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-@@ -290,7 +290,7 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
+@@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
              let path = root.join(ID).join(name);
              let (file, stamp) = open_checked(&path, true).unwrap();
              Pinned {
 -                name,
 +                name: name.to_owned(),
++                path: name.to_owned(),
++                length: stamp.len,
                  file,
                  stamp,
                  digest: String::new(),
-@@ -339,7 +339,7 @@ fn pins(root: &Path) -> Vec<Pinned> {
+@@ -339,7 +341,9 @@ fn pins(root: &Path) -> Vec<Pinned> {
              let path = root.join(ID).join(name);
              let (file, stamp) = open_checked(&path, true).unwrap();
              Pinned {
 -                name,
 +                name: name.to_owned(),
++                path: name.to_owned(),
++                length: stamp.len,
                  file,
                  stamp,
                  digest: String::new(),
-@@ -694,3 +694,52 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+@@ -694,3 +698,151 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
      drop(prepared);
      fs::remove_dir_all(root.parent().unwrap()).unwrap();
  }
@@ -840,18 +1100,117 @@ index f71f79cb..da540238 100644
 +    assert!(prepare(&root, ID, &|| true).is_err());
 +    fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +}
++
++#[test]
++fn writer_restart_exports_an_aborted_csv_and_only_the_verified_checkpoint_prefixes() {
++    use crate::session_recording_writer::{SessionRecordingWriter, tests::{config, interrupted_participant_fixture, temp_root}};
++    use std::{io::Write, time::Duration};
++
++    let root = temp_root("participant-checkpoint-export");
++    let (directory, ordinal) = interrupted_participant_fixture(root.clone(), true);
++    let id = directory.file_name().unwrap().to_str().unwrap();
++    let path = directory.join("polar-ecg.jsonl");
++    let prefix = fs::read(&path).unwrap();
++    fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"undurable-tail").unwrap();
++    let original = fs::read(&path).unwrap();
++    let csv_name = "Mül_35_F_main1.csv";
++    fs::write(directory.join(csv_name), b"uncommitted-original").unwrap();
++    assert!(prepare(&root, id, &|| true).is_err());
++
++    let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 100)).unwrap();
++    let report = writer.recover().unwrap().receive().unwrap();
++    assert!(report.sessions[0].error.is_none());
++    let second = writer.recover().unwrap().receive().unwrap();
++    assert!(second.sessions[0].error.is_none());
++    writer.shutdown(Duration::from_secs(1)).unwrap();
++
++    assert!(!directory.join("final.json").exists());
++    assert_eq!(fs::read(&path).unwrap(), original);
++    assert_eq!(fs::read(directory.join(csv_name)).unwrap(), b"uncommitted-original");
++    let recovered = prepare(&root, id, &|| true).unwrap();
++    let m = &recovered.manifest;
++    assert_eq!(m["file_set_policy"], RECOVERY_POLICY);
++    assert_eq!(m["disposition"], "interrupted-early");
++    assert_eq!(m["participant_csv"]["name"], csv_name);
++    assert_eq!(m["recovery"]["checkpoint_ordinal"], ordinal);
++    assert_eq!(m["files"].as_array().unwrap().len(), 8);
++    let manifest_id = m["manifest_id"].as_str().unwrap();
++    let ecg = recovered.read(manifest_id, "polar-ecg.jsonl", 0, prefix.len() as u64, &|| true).unwrap();
++    assert_eq!(ecg["data"], base64(&prefix));
++    assert!(recovered.read(manifest_id, "polar-ecg.jsonl", prefix.len() as u64, 1, &|| true).is_err());
++    let csv_bytes = fs::read(directory.join(format!("{RECOVERED_CSV_PREFIX}{csv_name}"))).unwrap();
++    let csv = String::from_utf8(csv_bytes.clone()).unwrap();
++    assert!(csv.contains(",26000.000,paused,calibration,37,uV,"));
++    assert!(csv.contains(",aborted,interrupted-recovery\r\n"));
++    let csv_chunk = recovered.read(manifest_id, csv_name, 0, csv_bytes.len() as u64, &|| true).unwrap();
++    assert_eq!(csv_chunk["data"], base64(&csv_bytes));
++    let listing = list(&root, "", 8, &|| true).unwrap();
++    assert_eq!(listing["entries"][0]["participant_csv"], true);
++    assert_eq!(listing["entries"][0]["disposition"], "interrupted-early");
++    drop(recovered);
++
++    let mut changed = original.clone();
++    let offset = changed.windows(b"microvolts\":37".len()).position(|bytes| bytes == b"microvolts\":37").unwrap();
++    changed[offset + b"microvolts\":3".len()] = b'8';
++    fs::write(&path, changed).unwrap();
++    assert!(prepare(&root, id, &|| true).is_err(), "modified valid prefix must fail recovery hash");
++    fs::write(&path, original).unwrap();
++    let checkpoint = directory.join(format!("checkpoint-{ordinal:020}.json"));
++    let mut value: Value = serde_json::from_slice(&fs::read(&checkpoint).unwrap()).unwrap();
++    value["last_accepted_sequence"] = json!(99);
++    fs::write(checkpoint, value.to_string()).unwrap();
++    assert!(prepare(&root, id, &|| true).is_err(), "changed checkpoint must fail the reference");
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
++
++#[test]
++fn recovery_of_an_arm_without_an_official_start_publishes_no_participant_csv() {
++    use crate::session_recording_writer::{SessionRecordingWriter, tests::{config, interrupted_participant_fixture, temp_root}};
++    use std::time::Duration;
++    let root = temp_root("participant-checkpoint-arm");
++    let (directory, _) = interrupted_participant_fixture(root.clone(), false);
++    let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 100)).unwrap();
++    let report = writer.recover().unwrap().receive().unwrap();
++    assert!(report.sessions[0].error.is_none());
++    writer.shutdown(Duration::from_secs(1)).unwrap();
++    assert!(!directory.join(RECOVERY_RECEIPT).exists());
++    assert!(prepare(&root, directory.file_name().unwrap().to_str().unwrap(), &|| true).is_err());
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
++
++#[test]
++fn old_participant_manifest_recovers_observations_without_guessing_authored_phases() {
++    use crate::session_recording_writer::{SessionRecordingWriter, tests::{config, interrupted_participant_fixture, temp_root}};
++    use std::time::Duration;
++    let root = temp_root("participant-checkpoint-old-manifest");
++    let (directory, _) = interrupted_participant_fixture(root.clone(), true);
++    let original = directory.join("manifest.json");
++    let mut manifest: Value = serde_json::from_slice(&fs::read(&original).unwrap()).unwrap();
++    manifest["participant"].as_object_mut().unwrap().remove("phase_offsets_ns");
++    fs::write(&original, manifest.to_string()).unwrap();
++    let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 100)).unwrap();
++    assert!(writer.recover().unwrap().receive().unwrap().sessions[0].error.is_none());
++    writer.shutdown(Duration::from_secs(1)).unwrap();
++    let id = directory.file_name().unwrap().to_str().unwrap();
++    let prepared = prepare(&root, id, &|| true).unwrap();
++    assert_eq!(prepared.manifest["participant_csv"]["name"], "Mül_35_F_main1.csv");
++    let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_main1.csv")).unwrap();
++    assert!(csv.contains(",26000.000,paused,unknown,37,uV,"));
++    drop(prepared);
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..6547d9e3
+index 00000000..53c47e44
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,783 @@
+@@ -0,0 +1,968 @@
 +use chrono::{DateTime, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
 +use std::{
 +    fs::{self, File, OpenOptions},
-+    io::{self, BufRead, BufReader, BufWriter, Write},
++    io::{self, BufRead, BufReader, BufWriter, Read, Write},
 +    path::Path,
 +};
 +use unicode_general_category::{GeneralCategory, get_general_category};
@@ -859,10 +1218,14 @@ index 00000000..6547d9e3
 +
 +use crate::{
 +    session_recording_clock::{ClockAnchor, MonotonicNanos},
++    session_recording_export::open_regular_recording_file,
 +    session_recording_writer::sync_directory,
 +};
 +
 +const HEADER: &str = "schema_version,participant_id,name_prefix,age_years,gender_code,condition,run_index,session_id,scenario_id,scenario_sha256,planned_duration_seconds,session_started_utc,sample_index,elapsed_ms,timestamp_utc,audio_elapsed_ms,playback_state,phase,ecg_value,ecg_unit,signal_source,signal_state,signal_sha256,sample_rate_hz,source_sample_index,source_loop,session_status,end_reason\r\n";
++pub(crate) const RECOVERY_RECEIPT: &str = "participant-recovered.json";
++pub(crate) const RECOVERED_CSV_PREFIX: &str = ".recovered-";
++pub(crate) const RECOVERY_POLICY: &str = "core8-recovered-checkpoint";
 +const SAMPLE_GAP_NS: u64 = 3 * (1_000_000_000 / 130);
 +
 +#[derive(Clone, Debug, PartialEq, Eq)]
@@ -938,13 +1301,7 @@ index 00000000..6547d9e3
 +            .ok_or(BAD)?;
 +        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
 +        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
-+        let seconds = match scenario {
-+            "probe-anleitung" => 68,
-+            "probe-5" => 300,
-+            "probe-10" => 600,
-+            "probe-15" | "haupt-15" => 900,
-+            _ => return Err(BAD),
-+        };
++        let seconds = scenario_seconds(scenario).ok_or(BAD)?;
 +        let sha256 = value["scenario_sha256"]
 +            .as_str()
 +            .filter(|value| valid_hash(value))
@@ -970,12 +1327,7 @@ index 00000000..6547d9e3
 +                .ok_or(BAD)?;
 +            let name = pair[1]
 +                .as_str()
-+                .filter(|name| {
-+                    (1..=32).contains(&name.len())
-+                        && name.bytes().all(|byte| {
-+                            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
-+                        })
-+                })
++                .filter(|name| valid_phase(name))
 +                .ok_or(BAD)?;
 +            let nanos = (offset * 1_000_000_000).div_ceil(rate);
 +            if phases
@@ -1018,8 +1370,27 @@ index 00000000..6547d9e3
 +        let phase = self
 +            .phases
 +            .partition_point(|(offset, _)| *offset <= elapsed_ns);
-+        &self.phases[phase - 1].1
++        phase
++            .checked_sub(1)
++            .map_or("unknown", |index| self.phases[index].1.as_str())
 +    }
++}
++
++fn scenario_seconds(scenario: &str) -> Option<u64> {
++    match scenario {
++        "probe-anleitung" => Some(68),
++        "probe-5" => Some(300),
++        "probe-10" => Some(600),
++        "probe-15" | "haupt-15" => Some(900),
++        _ => None,
++    }
++}
++
++fn valid_phase(name: &str) -> bool {
++    (1..=32).contains(&name.len())
++        && name
++            .bytes()
++            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
 +}
 +
 +#[derive(Debug)]
@@ -1066,8 +1437,67 @@ index 00000000..6547d9e3
 +        }
 +    }
 +
++    pub(crate) fn restore(value: &Value) -> Result<Self, &'static str> {
++        const BAD: &str = "participant-recovery-metadata-invalid";
++        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
++        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
++        let seconds = scenario_seconds(scenario).ok_or(BAD)?;
++        let sha256 = value["scenario_sha256"]
++            .as_str()
++            .filter(|hash| valid_hash(hash))
++            .ok_or(BAD)?;
++        let index = value["run_index"]
++            .as_u64()
++            .filter(|index| (1..10_000_000_000_000_000).contains(index))
++            .ok_or(BAD)?;
++        let uuid = value["session_id"]
++            .as_str()
++            .filter(|uuid| valid_uuid(uuid))
++            .ok_or(BAD)?;
++        let mut phases = Vec::new();
++        if let Some(offsets) = value.get("phase_offsets_ns") {
++            let offsets = offsets
++                .as_array()
++                .filter(|offsets| (1..=256).contains(&offsets.len()))
++                .ok_or(BAD)?;
++            for phase in offsets {
++                let pair = phase.as_array().filter(|pair| pair.len() == 2).ok_or(BAD)?;
++                let offset = pair[0]
++                    .as_u64()
++                    .filter(|offset| *offset < seconds * 1_000_000_000)
++                    .ok_or(BAD)?;
++                let name = pair[1]
++                    .as_str()
++                    .filter(|name| valid_phase(name))
++                    .ok_or(BAD)?;
++                if phases
++                    .last()
++                    .map_or(offset != 0, |(previous, _)| *previous >= offset)
++                {
++                    return Err(BAD);
++                }
++                phases.push((offset, name.to_owned()));
++            }
++        }
++        let run = Self {
++            plan: ParticipantPlan {
++                participant,
++                scenario: scenario.to_owned(),
++                sha256: sha256.to_owned(),
++                seconds,
++                phases,
++            },
++            index,
++            uuid: uuid.to_owned(),
++        };
++        if &run.metadata() != value {
++            return Err(BAD);
++        }
++        Ok(run)
++    }
++
 +    pub(crate) fn metadata(&self) -> Value {
-+        json!({
++        let mut metadata = json!({
 +            "participant_id": self.plan.participant.as_text(),
 +            "name_prefix": self.plan.participant.name,
 +            "age_years": self.plan.participant.age,
@@ -1078,7 +1508,20 @@ index 00000000..6547d9e3
 +            "scenario_id": self.plan.scenario,
 +            "scenario_sha256": self.plan.sha256,
 +            "planned_duration_seconds": self.plan.seconds,
-+        })
++        });
++        if !self.plan.phases.is_empty() {
++            metadata["phase_offsets_ns"] = json!(self.plan.phases);
++        }
++        metadata
++    }
++
++    pub(crate) fn filename(&self) -> String {
++        format!(
++            "{}_{}{}.csv",
++            self.plan.participant.as_text(),
++            self.plan.condition(),
++            self.index
++        )
 +    }
 +
 +    pub(crate) fn finalize_csv(
@@ -1089,17 +1532,69 @@ index 00000000..6547d9e3
 +        complete: bool,
 +        reason: &str,
 +    ) -> Result<Option<Value>, String> {
-+        let Some(clock) = PlaybackClock::read(directory, ended_at.get())? else {
++        let events = File::open(directory.join("events.jsonl")).map_err(io_error)?;
++        let Some(clock) = PlaybackClock::read(BufReader::new(events), Some(ended_at.get()))? else {
 +            return Ok(None);
 +        };
-+        let name = format!(
-+            "{}_{}{}.csv",
-+            self.plan.participant.as_text(),
-+            self.plan.condition(),
-+            self.index
-+        );
-+        let final_path = directory.join(&name);
-+        let partial = directory.join(format!(".{name}.partial"));
++        let source = directory.join("polar-ecg.jsonl");
++        let signal_sha = file_hash(&source)?;
++        let ecg = File::open(source).map_err(io_error)?;
++        let name = self.filename();
++        let (descriptor, _) = self.write_csv(CsvProjection {
++            destination: directory.join(name),
++            anchor,
++            cutoff: Some(ended_at.get()),
++            clock,
++            signal_sha: &signal_sha,
++            ecg: BufReader::new(ecg),
++            complete,
++            reason,
++        })?;
++        Ok(Some(descriptor))
++    }
++
++    pub(crate) fn recover_csv(
++        &self,
++        directory: &Path,
++        anchor: ClockAnchor,
++        events_bytes: u64,
++        ecg_bytes: u64,
++        signal_sha: &str,
++    ) -> Result<Option<(Value, u64)>, String> {
++        let events = open_regular_recording_file(&directory.join("events.jsonl"))?;
++        let Some(clock) = PlaybackClock::read(BufReader::new(events.take(events_bytes)), None)?
++        else {
++            return Ok(None);
++        };
++        let ecg = open_regular_recording_file(&directory.join("polar-ecg.jsonl"))?;
++        let destination = directory.join(format!("{RECOVERED_CSV_PREFIX}{}", self.filename()));
++        discard_recovery_csv(&destination)?;
++        discard_recovery_csv(&partial_file(&destination))?;
++        self.write_csv(CsvProjection {
++            destination,
++            anchor,
++            cutoff: None,
++            clock,
++            signal_sha,
++            ecg: BufReader::new(ecg.take(ecg_bytes)),
++            complete: false,
++            reason: "interrupted-recovery",
++        })
++        .map(Some)
++    }
++
++    fn write_csv(&self, projection: CsvProjection<impl BufRead>) -> Result<(Value, u64), String> {
++        let CsvProjection {
++            destination,
++            anchor,
++            cutoff,
++            clock,
++            signal_sha,
++            ecg,
++            complete,
++            reason,
++        } = projection;
++        let partial = partial_file(&destination);
 +        let mut output = BufWriter::new(
 +            OpenOptions::new()
 +                .write(true)
@@ -1110,8 +1605,6 @@ index 00000000..6547d9e3
 +        output.write_all(HEADER.as_bytes()).map_err(io_error)?;
 +        let start = clock.start();
 +        let start_utc = utc(anchor, start)?;
-+        let source = directory.join("polar-ecg.jsonl");
-+        let signal_sha = file_hash(&source)?;
 +        let metadata = [
 +            "1".to_owned(),
 +            self.plan.participant.as_text(),
@@ -1151,9 +1644,9 @@ index 00000000..6547d9e3
 +            index += 1;
 +            Ok(())
 +        };
-+        for line in BufReader::new(File::open(source).map_err(io_error)?).lines() {
++        for line in ecg.lines() {
 +            let sample = Sample::parse(&line.map_err(io_error)?)?;
-+            if sample.at < start || sample.at > ended_at.get() {
++            if sample.at < start || cutoff.is_some_and(|cutoff| sample.at > cutoff) {
 +                continue;
 +            }
 +            let prior = previous.unwrap_or(start);
@@ -1163,22 +1656,61 @@ index 00000000..6547d9e3
 +            row(sample.at, Some(sample))?;
 +            previous = Some(prior.max(sample.at));
 +        }
-+        if previous.is_none_or(|prior| ended_at.get() > prior.saturating_add(SAMPLE_GAP_NS)) {
-+            row(ended_at.get(), None)?;
++        let ended_at = cutoff.unwrap_or_else(|| clock.last_event.max(previous.unwrap_or(start)));
++        if previous.is_none_or(|prior| ended_at > prior.saturating_add(SAMPLE_GAP_NS)) {
++            row(ended_at, None)?;
 +        }
 +        output.flush().map_err(io_error)?;
 +        output.get_ref().sync_all().map_err(io_error)?;
 +        let size = output.get_ref().metadata().map_err(io_error)?.len();
 +        drop(output);
-+        if final_path.exists() {
++        if destination.exists() {
 +            return Err("participant-csv-already-exists".to_owned());
 +        }
 +        let sha256 = file_hash(&partial)?;
-+        fs::rename(&partial, &final_path).map_err(io_error)?;
-+        sync_directory(directory)?;
-+        Ok(Some(
-+            json!({ "name": name, "size": size, "sha256": sha256, "session_id": self.uuid }),
++        fs::rename(&partial, &destination).map_err(io_error)?;
++        sync_directory(
++            destination
++                .parent()
++                .expect("recording destination has parent"),
++        )?;
++        Ok((
++            json!({ "name": self.filename(), "size": size, "sha256": sha256, "session_id": self.uuid }),
++            ended_at,
 +        ))
++    }
++}
++
++struct CsvProjection<'a, R> {
++    destination: std::path::PathBuf,
++    anchor: ClockAnchor,
++    cutoff: Option<u64>,
++    clock: PlaybackClock,
++    signal_sha: &'a str,
++    ecg: R,
++    complete: bool,
++    reason: &'a str,
++}
++
++fn partial_file(destination: &Path) -> std::path::PathBuf {
++    let mut name = std::ffi::OsString::from(".");
++    name.push(
++        destination
++            .file_name()
++            .expect("recording destination has filename"),
++    );
++    name.push(".partial");
++    destination.with_file_name(name)
++}
++
++pub(crate) fn discard_recovery_csv(path: &Path) -> Result<(), String> {
++    match fs::symlink_metadata(path) {
++        Ok(metadata) if metadata.is_file() && !metadata.file_type().is_symlink() => {
++            fs::remove_file(path).map_err(io_error)
++        }
++        Ok(_) => Err("participant-recovery-path-invalid".into()),
++        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
++        Err(error) => Err(io_error(error)),
 +    }
 +}
 +
@@ -1224,26 +1756,30 @@ index 00000000..6547d9e3
 +        .filter(|name| valid_csv_filename(name))
 +        .ok_or(BAD)?;
 +    let uuid = csv["session_id"].as_str().ok_or(BAD)?;
-+    let uuid_bytes = uuid.as_bytes();
 +    if csv.as_object().is_none_or(|object| object.len() != 4)
 +        || name != format!("{id}_{condition}{index}.csv")
 +        || participant["session_id"].as_str() != Some(uuid)
-+        || uuid_bytes.len() != 36
-+        || uuid_bytes[14] != b'4'
-+        || !matches!(uuid_bytes[19], b'8' | b'9' | b'a' | b'b')
-+        || !uuid_bytes.iter().enumerate().all(|(index, byte)| {
-+            if matches!(index, 8 | 13 | 18 | 23) {
-+                *byte == b'-'
-+            } else {
-+                byte.is_ascii_digit() || (b'a'..=b'f').contains(byte)
-+            }
-+        })
++        || !valid_uuid(uuid)
 +        || csv["size"].as_u64().is_none_or(|size| size == 0)
 +        || csv["sha256"].as_str().is_none_or(|hash| !valid_hash(hash))
 +    {
 +        return Err(BAD);
 +    }
 +    Ok(Some(csv))
++}
++
++fn valid_uuid(uuid: &str) -> bool {
++    let bytes = uuid.as_bytes();
++    bytes.len() == 36
++        && bytes[14] == b'4'
++        && matches!(bytes[19], b'8' | b'9' | b'a' | b'b')
++        && bytes.iter().enumerate().all(|(index, byte)| {
++            if matches!(index, 8 | 13 | 18 | 23) {
++                *byte == b'-'
++            } else {
++                byte.is_ascii_digit() || (b'a'..=b'f').contains(byte)
++            }
++        })
 +}
 +
 +fn new_session_id() -> Result<String, String> {
@@ -1329,16 +1865,22 @@ index 00000000..6547d9e3
 +    state: &'static str,
 +}
 +
-+struct PlaybackClock(Vec<ClockMark>);
++struct PlaybackClock {
++    marks: Vec<ClockMark>,
++    last_event: u64,
++}
 +
 +impl PlaybackClock {
-+    fn read(directory: &Path, ended_at: u64) -> Result<Option<Self>, String> {
-+        let source = File::open(directory.join("events.jsonl")).map_err(io_error)?;
++    fn read(source: impl BufRead, ended_at: Option<u64>) -> Result<Option<Self>, String> {
 +        let mut marks = Vec::<ClockMark>::new();
 +        let mut media_started = false;
-+        for line in BufReader::new(source).lines() {
++        let mut last_event = 0;
++        for line in source.lines() {
 +            let row: Value = serde_json::from_str(&line.map_err(io_error)?)
 +                .map_err(|_| "participant-event-json-invalid")?;
++            if let Some(at) = row["observed_monotonic_ns"].as_u64() {
++                last_event = last_event.max(at);
++            }
 +            let state = match row["event"].as_str() {
 +                Some("official-start") if marks.is_empty() => "waiting",
 +                Some("audio-started") if !marks.is_empty() && !media_started => {
@@ -1363,7 +1905,9 @@ index 00000000..6547d9e3
 +            let at = row["observed_monotonic_ns"]
 +                .as_u64()
 +                .ok_or("participant-event-time-invalid")?;
-+            if at > ended_at || marks.last().is_some_and(|previous| previous.at > at) {
++            if ended_at.is_some_and(|end| at > end)
++                || marks.last().is_some_and(|previous| previous.at > at)
++            {
 +                return Err("participant-event-order-invalid".into());
 +            }
 +            let elapsed = marks.last().map_or(0, |previous| {
@@ -1382,16 +1926,16 @@ index 00000000..6547d9e3
 +            }
 +            marks.push(ClockMark { at, elapsed, state });
 +        }
-+        Ok((!marks.is_empty()).then_some(Self(marks)))
++        Ok((!marks.is_empty()).then_some(Self { marks, last_event }))
 +    }
 +
 +    fn start(&self) -> u64 {
-+        self.0[0].at
++        self.marks[0].at
 +    }
 +
 +    fn at(&self, at: u64, audio_end: u64) -> (u64, &'static str) {
-+        let offset = self.0.partition_point(|mark| mark.at <= at);
-+        let mark = &self.0[offset - 1];
++        let offset = self.marks.partition_point(|mark| mark.at <= at);
++        let mark = &self.marks[offset - 1];
 +        let elapsed = mark.elapsed
 +            + if mark.state == "playing" {
 +                at - mark.at
@@ -1629,11 +2173,268 @@ index 00000000..6547d9e3
 +        assert_eq!(ParticipantRun::reserve(&scratch.0, plan).unwrap().index, 2);
 +    }
 +}
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
+new file mode 100644
+index 00000000..b6193de2
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
+@@ -0,0 +1,160 @@
++use serde_json::{Value, json};
++use sha2::{Digest, Sha256};
++use std::{
++    fs,
++    io::{self, Read},
++    path::Path,
++};
++
++use crate::{
++    session_recording_clock::{ClockAnchor, MonotonicNanos, SessionTimestampKey, UtcEpochNanos},
++    session_recording_contract::{SESSION_FINAL_SCHEMA, SESSION_STREAM_FILES},
++    session_recording_export::{MAX_EXPORT_BYTES, open_regular_recording_file},
++    session_recording_participant::{ParticipantRun, RECOVERY_RECEIPT, discard_recovery_csv},
++    session_recording_recovery::{RecoveryDisposition, RecoveryReport, participant_checkpoint},
++    session_recording_writer::publish_json_exclusive,
++};
++
++pub(crate) fn publish_recovered(root: &Path, report: &mut RecoveryReport) {
++    for run in &mut report.sessions {
++        if run.error.is_some()
++            || !matches!(
++                run.disposition,
++                RecoveryDisposition::InterruptedEarly | RecoveryDisposition::InterruptedCompleted
++            )
++        {
++            continue;
++        }
++        if let Err(error) = publish_run(&root.join(run.started_at.as_str()), &run.started_at) {
++            run.error = Some(error);
++            report.counts.errors = report.counts.errors.saturating_add(1);
++            if let Some(identity) = &run.experiment_identity {
++                let counts = match identity.condition_id.as_str() {
++                    "condition-a" => Some(&mut report.condition_counts.condition_a),
++                    "condition-b" => Some(&mut report.condition_counts.condition_b),
++                    _ => None,
++                };
++                if let Some(counts) = counts {
++                    counts.errors = counts.errors.saturating_add(1);
++                }
++            }
++        }
++    }
++}
++
++fn absent(path: &Path) -> Result<bool, String> {
++    match fs::symlink_metadata(path) {
++        Ok(_) => Ok(false),
++        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(true),
++        Err(error) => Err(format!("participant-recovery-path:{:?}", error.kind())),
++    }
++}
++
++fn publish_run(directory: &Path, key: &SessionTimestampKey) -> Result<(), String> {
++    let metadata = fs::symlink_metadata(directory)
++        .map_err(|_| "participant-recovery-directory-unavailable")?;
++    if !metadata.is_dir() || metadata.file_type().is_symlink() {
++        return Err("participant-recovery-directory-invalid".into());
++    }
++    if !absent(&directory.join("final.json"))? || !absent(&directory.join(RECOVERY_RECEIPT))? {
++        return Ok(());
++    }
++    let Some((original, mut terminal)) = participant_checkpoint(directory, key)? else {
++        return Ok(());
++    };
++    let run = ParticipantRun::restore(&original["participant"]).map_err(str::to_owned)?;
++    let clock = &original["clock_anchor"];
++    let utc = UtcEpochNanos::new(
++        clock["utc_epoch_ns"]
++            .as_u64()
++            .ok_or("participant-recovery-utc")?,
++    );
++    if &SessionTimestampKey::from_utc(utc) != key
++        || clock["monotonic_clock"] != "android-elapsed-realtime"
++    {
++        return Err("participant-recovery-clock-binding".into());
++    }
++    let anchor = ClockAnchor::new(
++        MonotonicNanos::new(
++            clock["monotonic_ns"]
++                .as_u64()
++                .ok_or("participant-recovery-clock")?,
++        ),
++        utc,
++    );
++    let ordinal = terminal["checkpoint_ordinal"]
++        .as_u64()
++        .filter(|ordinal| *ordinal > 0)
++        .ok_or("participant-recovery-checkpoint-ordinal")?;
++    let checkpoint_path = directory.join(format!("checkpoint-{ordinal:020}.json"));
++    let checkpoint_file = open_regular_recording_file(&checkpoint_path)?;
++    let mut checkpoint_bytes = Vec::new();
++    checkpoint_file
++        .take(1024 * 1024 + 1)
++        .read_to_end(&mut checkpoint_bytes)
++        .map_err(|_| "participant-recovery-checkpoint-read")?;
++    if checkpoint_bytes.len() > 1024 * 1024
++        || serde_json::from_slice::<Value>(&checkpoint_bytes)
++            .ok()
++            .as_ref()
++            != Some(&terminal)
++    {
++        return Err("participant-recovery-checkpoint-changed".into());
++    }
++    let checkpoint_hash = format!("{:x}", Sha256::digest(&checkpoint_bytes));
++    let lengths = &terminal["durable_stream_lengths"];
++    let mut hashes = serde_json::Map::new();
++    let mut total = 0u64;
++    for name in SESSION_STREAM_FILES {
++        let length = lengths[name]
++            .as_u64()
++            .ok_or("participant-recovery-prefix-size")?;
++        total = total
++            .checked_add(length)
++            .filter(|bytes| *bytes <= MAX_EXPORT_BYTES)
++            .ok_or("participant-recovery-size-limit")?;
++        let file = open_regular_recording_file(&directory.join(name))?;
++        let mut hash = Sha256::new();
++        let copied = io::copy(&mut file.take(length), &mut hash)
++            .map_err(|_| "participant-recovery-prefix-read")?;
++        if copied != length {
++            return Err("participant-recovery-prefix-short".into());
++        }
++        hashes.insert(name.to_owned(), json!(format!("{:x}", hash.finalize())));
++    }
++    let Some((csv, ended_at)) = run.recover_csv(
++        directory,
++        anchor,
++        lengths["events.jsonl"].as_u64().expect("validated lengths"),
++        lengths["polar-ecg.jsonl"]
++            .as_u64()
++            .expect("validated lengths"),
++        hashes["polar-ecg.jsonl"]
++            .as_str()
++            .expect("hashed ECG prefix"),
++    )?
++    else {
++        return Ok(());
++    };
++    terminal["schema"] = json!(SESSION_FINAL_SCHEMA);
++    terminal["saved"] = json!(true);
++    terminal["dropped_records"] = json!(0);
++    terminal["stop_reason"] = json!("interrupted-recovery");
++    terminal["ended_monotonic_ns"] = json!(ended_at);
++    terminal["ended_utc_ns"] = json!(
++        anchor
++            .utc_at(MonotonicNanos::new(ended_at))
++            .map(|utc| utc.get())
++    );
++    terminal["accepted_sequence_cutoff"] = terminal["last_accepted_sequence"].clone();
++    terminal["participant"] = run.metadata();
++    terminal["participant_csv"] = csv;
++    terminal["recovery"] = json!({
++        "v": 1,
++        "checkpoint_ordinal": ordinal,
++        "checkpoint_sha256": checkpoint_hash,
++        "stream_sha256": Value::Object(hashes),
++    });
++    discard_recovery_csv(&directory.join(format!(".{RECOVERY_RECEIPT}.partial")))?;
++    publish_json_exclusive(directory, RECOVERY_RECEIPT, &terminal)
++}
+diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
+index e94da3ae..43ec79fc 100644
+--- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
++++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
+@@ -265,16 +265,16 @@ fn recover_from_checkpoint(
+     retained_error: Option<String>,
+ ) -> RecoveredSession {
+     match latest_valid_checkpoint(directory, &started_at, manifest) {
+-        Ok(Some((completed, lengths, checkpoint_error))) => RecoveredSession {
++        Ok(Some(checkpoint)) => RecoveredSession {
+             started_at,
+             experiment_identity: manifest.experiment_identity.clone(),
+-            disposition: if completed {
++            disposition: if checkpoint.completed {
+                 RecoveryDisposition::InterruptedCompleted
+             } else {
+                 RecoveryDisposition::InterruptedEarly
+             },
+-            durable_stream_lengths: lengths,
+-            error: combine_errors(retained_error, checkpoint_error),
++            durable_stream_lengths: checkpoint.lengths,
++            error: combine_errors(retained_error, checkpoint.error),
+         },
+         Ok(None) => RecoveredSession {
+             started_at,
+@@ -364,24 +364,50 @@ fn validate_manifest_value(
+     })
+ }
+ 
++struct ValidatedCheckpoint {
++    value: Value,
++    completed: bool,
++    lengths: BTreeMap<String, u64>,
++    error: Option<String>,
++}
++
++pub(crate) fn participant_checkpoint(
++    directory: &Path,
++    started_at: &SessionTimestampKey,
++) -> Result<Option<(Value, Value)>, String> {
++    let original = read_json(&directory.join("manifest.json"))?;
++    if original.get("participant").is_none() {
++        return Ok(None);
++    }
++    let manifest = validate_manifest_value(&original, started_at)?;
++    let Some(checkpoint) = latest_valid_checkpoint(directory, started_at, &manifest)? else {
++        return Ok(None);
++    };
++    if checkpoint.error.is_some() {
++        return Ok(None);
++    }
++    Ok(Some((original, checkpoint.value)))
++}
++
+ fn latest_valid_checkpoint(
+     directory: &Path,
+     started_at: &SessionTimestampKey,
+     manifest: &ValidatedManifest,
+-) -> Result<Option<(bool, BTreeMap<String, u64>, Option<String>)>, String> {
++) -> Result<Option<ValidatedCheckpoint>, String> {
+     let mut checkpoints = checkpoint_paths(directory)?;
+     checkpoints.sort();
+     checkpoints.reverse();
+     let mut last_error = None;
+     for path in checkpoints {
+         match read_json(&path).and_then(|value| {
+-            validate_terminal_value(
++            let (completed, lengths, error) = validate_terminal_value(
+                 &value,
+                 SESSION_CHECKPOINT_SCHEMA,
+                 started_at,
+                 manifest,
+                 directory,
+-            )
++            )?;
++            Ok(ValidatedCheckpoint { value, completed, lengths, error })
+         }) {
+             Ok(value) => return Ok(Some(value)),
+             Err(error) => last_error = Some(error),
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5..816eeb01 100644
+index 4aefeaf5..9a802bed 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
-@@ -1063,6 +1063,7 @@ struct ActiveRecording {
+@@ -920,7 +920,10 @@ fn handle_control(
+             let result = if active.is_some() {
+                 Err("recording-recovery-while-active".to_owned())
+             } else {
+-                inventory.recover(&config.root, None)
++                inventory.recover(&config.root, None).map(|mut report| {
++                    crate::session_recording_participant_recovery::publish_recovered(&config.root, &mut report);
++                    report
++                })
+             };
+             let _ = reply.send(result);
+         }
+@@ -1063,6 +1066,7 @@ struct ActiveRecording {
      last_bias_change: Option<crate::session_recording_contract::BiasChange>,
      generation: u64,
      spec: SessionStartSpec,
@@ -1641,7 +2442,7 @@ index 4aefeaf5..816eeb01 100644
      directory: PathBuf,
      streams: BTreeMap<&'static str, BufWriter<File>>,
      consumed_sequence: u64,
-@@ -1083,6 +1084,9 @@ impl ActiveRecording {
+@@ -1083,6 +1087,9 @@ impl ActiveRecording {
          spec.validate().map_err(str::to_owned)?;
          validate_recording_root_no_links(&config.root)?;
          ensure_recording_root(&config.root)?;
@@ -1651,7 +2452,7 @@ index 4aefeaf5..816eeb01 100644
          let directory = config.root.join(spec.started_at.as_str());
          fs::create_dir(&directory)
              .map_err(|error| format!("recording-session-directory-create:{error}"))?;
-@@ -1093,10 +1097,7 @@ impl ActiveRecording {
+@@ -1093,10 +1100,7 @@ impl ActiveRecording {
          sync_directory(&config.root)?;
  
          let prepare_result = (|| {
@@ -1663,7 +2464,7 @@ index 4aefeaf5..816eeb01 100644
                      "schema": SESSION_MANIFEST_SCHEMA,
                      "started_at_utc": spec.started_at.as_str(),
                      "condition": spec.condition.as_str(),
-@@ -1110,8 +1111,11 @@ impl ActiveRecording {
+@@ -1110,8 +1114,11 @@ impl ActiveRecording {
                      },
                      "session_identifier_policy": "utc-start-date-time-only",
                      "runtime_generation_persisted": true
@@ -1677,7 +2478,7 @@ index 4aefeaf5..816eeb01 100644
              let mut streams = BTreeMap::new();
              for name in SESSION_STREAM_FILES {
                  let file = OpenOptions::new()
-@@ -1125,6 +1129,7 @@ impl ActiveRecording {
+@@ -1125,6 +1132,7 @@ impl ActiveRecording {
                  last_bias_change: None,
                  generation,
                  spec,
@@ -1685,7 +2486,7 @@ index 4aefeaf5..816eeb01 100644
                  directory: directory.clone(),
                  streams,
                  consumed_sequence: 0,
-@@ -1317,10 +1322,7 @@ impl ActiveRecording {
+@@ -1317,10 +1325,7 @@ impl ActiveRecording {
          self.write_internal_event(event, at)?;
          let lengths = self.flush_sync_streams()?;
          let ended_utc_ns = self.spec.clock_anchor.utc_at(at).map(|value| value.get());
@@ -1697,7 +2498,7 @@ index 4aefeaf5..816eeb01 100644
                  "schema": SESSION_FINAL_SCHEMA,
                  "started_at_utc": self.spec.started_at.as_str(),
                  "condition": self.spec.condition.as_str(),
-@@ -1337,8 +1339,17 @@ impl ActiveRecording {
+@@ -1337,8 +1342,17 @@ impl ActiveRecording {
                  "loss": loss_json(&loss),
                  "durable_stream_lengths": lengths,
                  "saved": loss.dropped_records == 0
@@ -1717,7 +2518,16 @@ index 4aefeaf5..816eeb01 100644
          Ok(())
      }
  
-@@ -1472,14 +1483,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
+@@ -1440,7 +1454,7 @@ fn ensure_recording_root(root: &Path) -> Result<(), String> {
+     sync_directory(root)
+ }
+ 
+-fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result<(), String> {
++pub(crate) fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result<(), String> {
+     let final_path = directory.join(name);
+     if final_path.exists() {
+         return Err(format!("recording-artifact-collision:{name}"));
+@@ -1472,14 +1486,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
  }
  
  #[cfg(unix)]
@@ -1734,7 +2544,7 @@ index 4aefeaf5..816eeb01 100644
      // Android is Unix and receives the directory durability barrier. Windows
      // host tests still verify exclusive publication and synced file contents.
      Ok(())
-@@ -1597,6 +1608,7 @@ pub(crate) mod tests {
+@@ -1597,6 +1611,7 @@ pub(crate) mod tests {
      pub(crate) fn spec(utc: u64) -> SessionStartSpec {
          let utc = UtcEpochNanos::new(utc);
          SessionStartSpec {
@@ -1742,10 +2552,42 @@ index 4aefeaf5..816eeb01 100644
              breath_tracking_configuration: None,
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
-@@ -1632,6 +1644,36 @@ pub(crate) mod tests {
+@@ -1632,6 +1647,68 @@ pub(crate) mod tests {
          }
      }
  
++    pub(crate) fn interrupted_participant_fixture(
++        root: PathBuf, official_start: bool,
++    ) -> (PathBuf, u64) {
++        use crate::session_recording_clock::{SourceClock, SourceTimestamp};
++        use crate::session_recording_contract::{PolarEcgBatch, PolarEcgSample};
++        let config = config(root.clone(), 16, 100);
++        let mut spec = spec(1_700_000_000_000_000_000);
++        let participant = crate::session_recording_participant::ParticipantPlan::parse(&json!({
++            "participant_id":"Mül_35_F", "scenario_id":"haupt-15", "scenario_sha256":"a".repeat(64),
++            "sample_rate":44100, "total_frames":39_690_000,
++            "phases":[[0,"instruction_1"],[1146600,"calibration"],[1808100,"instruction_2"]],
++        })).unwrap();
++        spec.completion_threshold_ns = participant.completion_threshold_ns();
++        spec.participant = Some(participant);
++        let directory = root.join(spec.started_at.as_str());
++        let mut writer = ActiveRecording::prepare(&config, 1, spec).unwrap();
++        if official_start {
++            writer.write_internal_event(SessionEventKind::OfficialStart, MonotonicNanos::new(10_000)).unwrap();
++            writer.write_internal_event(SessionEventKind::AudioStarted, MonotonicNanos::new(20_000)).unwrap();
++            writer.write_internal_event(SessionEventKind::ExperimentPaused, MonotonicNanos::new(26_000_020_000)).unwrap();
++            let source = SourceTimestamp { clock: SourceClock::PolarSensor, value_ns: 4_000 };
++            writer.write_record(0, &SessionRecord::PolarEcg(PolarEcgBatch {
++                frame_sequence: 1,
++                samples: Box::new([PolarEcgSample { source_sequence: 1, sample_index: 0, source_time: source,
++                    received_source: source, observed_at: MonotonicNanos::new(27_000_020_000), microvolts: 37 }]),
++            })).unwrap();
++        }
++        let ordinal = writer.checkpoint(false, LossSnapshot::default()).unwrap();
++        drop(writer);
++        (directory, ordinal)
++    }
++
 +    #[test]
 +    fn native_writer_publishes_a_bound_partial_participant_csv_before_the_terminal_receipt() {
 +        let root = temp_root("participant-artifact");

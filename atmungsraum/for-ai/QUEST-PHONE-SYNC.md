@@ -77,8 +77,18 @@ export manifest. The ordinary download still yields the participant CSV. The
 next eligible idle reconciliation upgrades an older CSV-only entry for the
 same recording ID. Keep the original streams on Quest.
 The writer, export and encrypted Arm from the operator form have host
-evidence. Both current rehearsal tracks use `probe` for file indexing.
-Qualification of the matched APK and physical phone remains open.
+evidence. Probe-Runde uses `probe` and Haupt-Runde uses `main` for
+file indexing, independently of the VR condition. Qualification of the matched
+APK and physical phone remains open.
+
+On startup after an abrupt stop, Quest verifies the last durable checkpoint.
+If the run reached official Start, Quest can publish an aborted CSV and the
+durable prefixes of the original streams using the same recording ID and
+session UUID. The signed `core8-recovered-checkpoint` export records the
+checkpoint ordinal and digest, and the six stream digests. The original files,
+including bytes after the checkpoint, remain on Quest. Recordings armed before
+official Start produce no recovered CSV. Older participant manifests with no
+authored offsets retain their ECG and playback times with an unknown phase.
 
 The Chrome fixtures passed restart and catch-up with synthetic native data.
 Physical acceptance requires the installed Android PWA, Meta Quest 2 and a

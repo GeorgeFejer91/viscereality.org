@@ -120,7 +120,16 @@ html[data-mode="quest"]:has(#quest-join:not([hidden])) #recenter-vr { position: 
 .quest-join p, #quest-status, #quest-clock, #quest-polar-status, #quest-data p { margin: 0; text-align: center; }
 #quest-ecg { display: block; width: 100%; height: auto; max-height: 94px; fill: none; stroke: #c4e2a8; stroke-width: 1.5; }
 .quest-ecg-axis { stroke: #56634a; }
-#quest-export-download { justify-self: center; }
+#quest-export-download {
+  display: grid;
+  align-items: center;
+  justify-self: center;
+  min-height: 48px;
+  min-width: 48px;
+  max-width: 100%;
+  padding-inline: 8px;
+  text-align: center;
+}
 #quest-drive-form { display: grid; gap: var(--gap); min-width: 0; }
 .quest-join label > span { display: block; }
 .quest-join input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: inherit; }

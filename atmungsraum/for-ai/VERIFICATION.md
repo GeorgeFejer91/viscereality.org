@@ -1,5 +1,28 @@
 # Verification
 
+## Recovery after an interrupted participant run — 2026-11-12
+
+Quest 0.1.18 recovers an officially started run from its last verified
+checkpoint. The recovered CSV keeps the run index, filename and UUID, records
+the outcome as aborted, and uses only checkpointed observations. The export
+binds the checkpoint and the durable stream digests. Tests confirmed that a
+tail, an uncommitted CSV and the original files remain intact. Legacy
+participant manifests without phase offsets retain the clocks and samples and
+report an unknown phase.
+
+The 72 Rust recording tests verified recovery, idempotence, export range
+bounds, checkpoint and stream tampering, and the absence of a CSV for an Arm
+without official Start. The experiment-session suite passed 92 tests when run
+serially because its fixtures share a simulated Polar owner. One test was
+ignored. All 85 Node tests passed. Five Chromium layouts checked 380 controls
+and recovered-file sync on idle join against a synthetic signed gateway. The
+download link met the 48 px touch-target check across the matrix.
+
+The signed APK passed capsule, manifest, signing-lineage, recovery-code and
+asset readback checks. The Quest 2 USB upgrade and installed digest matched.
+Physical recovery after a Quest process stop, H10 and headset playback, and
+paired phone and headset captures remain open.
+
 ## Quest participant recording — 2026-11-12
 
 APK 0.1.17 integrates the enrolled AES-GCM Arm request, verified authored

@@ -128,6 +128,20 @@ test('participant exports retain the CSV and both original sensor streams throug
   assert.deepEqual(contents.get('polar-ecg.jsonl'), ecg);
   assert.deepEqual(contents.get('polar-acc.jsonl'), acc);
   assert.deepEqual(JSON.parse(contents.get('export-manifest.json')), manifest);
+  manifest.file_set_policy = 'core8-recovered-checkpoint';
+  manifest.disposition = 'interrupted-early';
+  manifest.recovery = {
+    v: 1, checkpoint_ordinal: 4, checkpoint_sha256: 'a'.repeat(64),
+    stream_sha256: Object.fromEntries(manifest.files.filter(file => file.name.endsWith('.jsonl'))
+      .map(file => [file.name, file.sha256]))
+  };
+  const recovered = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+  assert.deepEqual(Buffer.from(await recovered.download.arrayBuffer()), csv);
+  assert.ok(Buffer.from(await recovered.bundle.arrayBuffer()).includes('core8-recovered-checkpoint'));
+  const ecgHash = manifest.recovery.stream_sha256['polar-ecg.jsonl'];
+  manifest.recovery.stream_sha256['polar-ecg.jsonl'] = '0'.repeat(64);
+  await assert.rejects(() => questRecording(gateway, id, signal), /verifizierte Aufnahmedatei/);
+  manifest.recovery.stream_sha256['polar-ecg.jsonl'] = ecgHash;
   corrupt = true;
   await assert.rejects(() => questRecording(gateway, id, signal, { includeSensorBundle: true }), /Prüfsumme/);
 });

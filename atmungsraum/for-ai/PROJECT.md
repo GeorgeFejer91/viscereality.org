@@ -67,7 +67,7 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.17`
+Both physical devices are authorized over USB. The signed `0.1.18`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
@@ -87,8 +87,9 @@ Atmungsraum build adds encrypted ECG preview and recording replies for the
 enrolled LAN controller. Host checks passed. Enrolled Participant Arm binds the participant to the
 verified scenario and reserves a native attempt. Quest writes the CSV from
 the durable ECG and event streams and serves it over the authenticated export
-route. Physical validation and CSV recovery after an abrupt process stop remain
-open. The enrolled phone can
+route. After an abrupt process stop, the writer uses the last validated
+checkpoint to publish an aborted CSV and the durable sensor prefixes under
+the same recording ID. Physical validation remains open. The enrolled phone can
 request recentering of the app scene. Quest confirms it after a focused,
 visible OpenXR submission. The physical recenter check is open. Verify the
 replacement on Quest 2 and the installed phone before retiring superseded

@@ -70,18 +70,33 @@ export async function* questRecordings(gateway, signal) {
   } while (before);
 }
 
+function validRecovery(manifest) {
+  const { recovery, disposition, participant_csv } = manifest;
+  if (!participant_csv || !['interrupted-early', 'interrupted-completed'].includes(disposition)
+    || recovery?.v !== 1 || Object.keys(recovery).length !== 4
+    || !Number.isSafeInteger(recovery.checkpoint_ordinal) || recovery.checkpoint_ordinal < 1
+    || typeof recovery.checkpoint_sha256 !== 'string' || !digest.test(recovery.checkpoint_sha256)
+    || !recovery.stream_sha256 || Object.keys(recovery.stream_sha256).length !== 6) return false;
+  return manifest.files.filter(file => file.name.endsWith('.jsonl'))
+    .every(file => recovery.stream_sha256[file.name] === file.sha256);
+}
+
 export async function questRecording(gateway, id, signal, { includeSensorBundle = false } = {}) {
   if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
   const response = await preparedRecordingQuery(gateway, { query: 'describe', id }, signal);
   const manifest = response?.manifest;
   if (response?.state !== 'ready' || manifest?.schema !== 'rusty.quest.recording_export.v1'
     || manifest.id !== id || manifest.device !== gateway.owner.device || manifest.serial !== gateway.owner.serial
-    || manifest.saved !== true || manifest.file_set_policy !== 'core8-original-no-checkpoints-or-index'
+    || manifest.saved !== true
     || !digest.test(manifest.manifest_id) || !Array.isArray(manifest.files) || manifest.files.length !== files.length
     || !files.every(name => manifest.files.some(file => file?.name === name))
     || !manifest.files.every(file => Number.isSafeInteger(file.size) && file.size >= 0 && digest.test(file.sha256))) {
     throw Error('Quest hat keine verifizierte, abgeschlossene Aufnahme geliefert.');
   }
+  const validFiles = manifest.file_set_policy === 'core8-original-no-checkpoints-or-index'
+    ? manifest.recovery === undefined
+    : manifest.file_set_policy === 'core8-recovered-checkpoint' && validRecovery(manifest);
+  if (!validFiles) throw Error('Quest hat keine verifizierte Aufnahmedatei geliefert.');
   const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
   if (total !== manifest.total_bytes || total > maxBytes) throw Error('Ungültige Größe der Quest-Aufnahme.');
   const csv = manifest.participant_csv;

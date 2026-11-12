@@ -68,7 +68,9 @@ The app reads the selected plan from the verified audio package. Quest
 reserves the attempt before recording and writes the CSV from its ECG and
 playback events. A finished run and a run ended early through the app retain
 their original filenames and outcomes. The phone verifies each downloaded
-file against the signed export descriptor.
+file against the signed export descriptor. After an interrupted run, the app
+can recover the CSV and durable stream prefixes from the last verified checkpoint
+while retaining the original files on Quest.
 
 For final recordings, follow the [scenario asset contract](../audio/scenarios/README.md)
 to replace each numbered WAV and refresh its metadata before building again.
