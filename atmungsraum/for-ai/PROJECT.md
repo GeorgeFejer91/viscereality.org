@@ -72,6 +72,13 @@ to consume the package. The browser recenter control remains a placeholder.
 Build and verify the replacement on Quest 2 before retiring superseded
 Viscereality packages, then test from the installed phone PWA.
 
+Quest 2 power preflight on 2026-11-12 confirmed that the built-in display
+stayed on past the 15-second off-head sleep timer with a virtual proximity
+hold. The device-side watchdog heartbeat advanced without repairs during
+the observation. Follow [the awake runbook](QUEST-AWAKE-TESTING.md) to
+stop the watchdog and restore the prior policy. Clear the Quest lock
+screen and authorize Pixel USB debugging before the physical rehearsal.
+
 ### Automatic Google Drive delivery of Quest recordings — 2026-11-12
 
 After the installed Android controller saves a finalized Quest recording, it
