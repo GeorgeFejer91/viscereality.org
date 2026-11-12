@@ -62,6 +62,14 @@ The Quest audio owner prepares the timeline from its packaged WAVs and plays
 it alongside the selected condition track. Both tracks follow the native
 Start, Pause, Resume and Finish transitions.
 
+For participant recording, the enrolled phone sends an encrypted Arm request
+after the H10 reports fresh ECG and the headset is in idle VR preparation.
+The app reads the selected plan from the verified audio package. Quest
+reserves the attempt before recording and writes the CSV from its ECG and
+playback events. A finished run and a run ended early through the app retain
+their original filenames and outcomes. The phone verifies each downloaded
+file against the signed export descriptor.
+
 For final recordings, follow the [scenario asset contract](../audio/scenarios/README.md)
 to replace each numbered WAV and refresh its metadata before building again.
 See [For-AI](../for-ai/PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12)

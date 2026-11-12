@@ -1,5 +1,30 @@
 # Verification
 
+## Quest participant recording — 2026-11-12
+
+APK 0.1.17 integrates the enrolled AES-GCM Arm request, verified authored
+scenario and fresh H10 gate. The native writer reserves a participant attempt
+and UUID durably, then produces the original CSV when the run ends. It uses
+the native ECG observations, media-start and pause events, and authored phase
+offsets. The terminal receipt binds the CSV filename, size, SHA-256 and UUID.
+The exporter pins that file alongside the existing eight recording artifacts.
+
+The 69 Rust recording tests covered concurrent attempt reservation, native
+writer finalization, signal gaps, calibration phase boundaries, pause timing,
+filename validation and export integrity. The Java host gateway checks
+covered enrollment, encryption, tampering, fresh ECG and stale generation.
+Five Chromium layouts exercised the five participant scenarios against a
+synthetic signed gateway, with 270 controls checked, repeated taps,
+pause/resume, reconnect and verified CSV downloads.
+
+The signed build passed the capsule, same-signer, package and installed digest
+checks. Its 67 authored audio entries matched the staged files. The 20-minute
+diagnostic remains in the audio package. Participant recording offers the
+five study scenarios. The Pixel remained in Settings and Quest 2 remained
+locked. The physical H10 run, playback timing and paired screenshots remain
+open. Native checkpoint recovery retains abrupt interruption evidence. The
+participant CSV still needs recovery for abrupt process termination.
+
 ## Startup Bluetooth prompt — 2026-11-12
 
 The Quest APK invokes Android’s Bluetooth enable prompt when the radio is off

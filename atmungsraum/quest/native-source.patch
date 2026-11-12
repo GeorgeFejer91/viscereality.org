@@ -1,3 +1,126 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 43c5cba2..66f75248 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -36,6 +36,12 @@ dependencies = [
+  "libloading 0.8.9",
+ ]
+ 
++[[package]]
++name = "autocfg"
++version = "1.5.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
++
+ [[package]]
+ name = "base64ct"
+ version = "1.8.3"
+@@ -87,6 +93,15 @@ version = "1.0.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
+ 
++[[package]]
++name = "chrono"
++version = "0.4.45"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "1aa79e62e7697b8e29b513a68abacf485adcd1fe8284a4316c5ae868e6633327"
++dependencies = [
++ "num-traits",
++]
++
+ [[package]]
+ name = "combine"
+ version = "4.6.7"
+@@ -426,6 +441,15 @@ dependencies = [
+  "jni-sys 0.3.1",
+ ]
+ 
++[[package]]
++name = "num-traits"
++version = "0.2.19"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
++dependencies = [
++ "autocfg",
++]
++
+ [[package]]
+ name = "num_enum"
+ version = "0.7.6"
+@@ -899,6 +923,8 @@ dependencies = [
+  "android-activity",
+  "android-properties",
+  "ash",
++ "chrono",
++ "getrandom 0.4.3",
+  "jni 0.22.4",
+  "ndk-sys",
+  "openxr",
+@@ -910,6 +936,8 @@ dependencies = [
+  "rusty-quest-particle-adapter",
+  "serde_json",
+  "sha2",
++ "unicode-general-category",
++ "unicode-normalization",
+ ]
+ 
+ [[package]]
+@@ -1226,6 +1254,12 @@ dependencies = [
+  "syn 3.0.3",
+ ]
+ 
++[[package]]
++name = "tinyvec"
++version = "1.13.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
++
+ [[package]]
+ name = "toml_datetime"
+ version = "1.1.1+spec-1.1.0"
+@@ -1262,12 +1296,27 @@ version = "1.20.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
+ 
++[[package]]
++name = "unicode-general-category"
++version = "1.1.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "0b993bddc193ae5bd0d623b49ec06ac3e9312875fdae725a975c51db1cc1677f"
++
+ [[package]]
+ name = "unicode-ident"
+ version = "1.0.24"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+ 
++[[package]]
++name = "unicode-normalization"
++version = "0.1.25"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8"
++dependencies = [
++ "tinyvec",
++]
++
+ [[package]]
+ name = "version_check"
+ version = "0.9.5"
+diff --git a/apps/native-renderer-android/native/Cargo.toml b/apps/native-renderer-android/native/Cargo.toml
+index 8d8f92c0..cc32e88a 100644
+--- a/apps/native-renderer-android/native/Cargo.toml
++++ b/apps/native-renderer-android/native/Cargo.toml
+@@ -31,6 +31,10 @@ rusty-quest-broker-authority = { path = "../../../crates/rusty-quest-broker-auth
+ rusty-lsl = { git = "https://github.com/MesmerPrism/rusty-lsl.git", rev = "8b6b2a6cd0c0e5147b7e1cc076a116ef226cddbd", optional = true }
+ serde_json = "1"
+ sha2 = "=0.10.9"
++chrono = { version = "=0.4.45", default-features = false, features = ["std"] }
++getrandom = "=0.4.3"
++unicode-general-category = "=1.1.0"
++unicode-normalization = "=0.1.25"
+ 
+ [target.'cfg(target_os = "android")'.dependencies]
+ android-activity = { version = "0.6.1", features = ["native-activity"] }
 diff --git a/apps/native-renderer-android/native/src/breath_composition_runtime.rs b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
 index 5273a82f..24ef759a 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_runtime.rs
@@ -335,10 +458,59 @@ index 00000000..b509cf18
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..0a4f6643 100644
+index ee0417f3..c53d51dc 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-@@ -4210,6 +4210,36 @@ pub(crate) fn current_generation() -> u64 {
+@@ -686,6 +686,7 @@ enum ParsedOperation {
+         completion_threshold_ns: u64,
+         utc_ns: u64,
+         identity: StartIdentity,
++        participant: Option<crate::session_recording_participant::ParticipantPlan>,
+     },
+     Presentation(PresentationState),
+     Tick,
+@@ -1297,6 +1298,7 @@ impl SessionWorker {
+         // can be replaced. A validated guided identity always requires Polar.
+         let pending_requires_polar = matches!(parsed.operation, ParsedOperation::Start { .. })
+             && (polar_ready_at_receipt.required
++                || matches!(&parsed.operation, ParsedOperation::Start { participant: Some(_), .. })
+                 || resolved_identity
+                     .as_ref()
+                     .is_some_and(|identity| identity.breath_guidance.is_some())
+@@ -1348,12 +1350,16 @@ impl SessionWorker {
+                 completion_threshold_ns,
+                 utc_ns,
+                 identity,
++                participant,
+             } => {
++                let completion_threshold_ns = participant.as_ref().map_or(
++                    *completion_threshold_ns, |plan| plan.completion_threshold_ns());
+                 let spec = SessionStartSpec {
++                    participant: participant.clone(),
+                     breath_tracking_configuration: None,
+                     started_at: SessionTimestampKey::from_utc(UtcEpochNanos::new(*utc_ns)),
+                     condition: condition.clone(),
+-                    completion_threshold_ns: *completion_threshold_ns,
++                    completion_threshold_ns,
+                     clock_anchor: ClockAnchor::new(parsed.at, UtcEpochNanos::new(*utc_ns)),
+                     experiment_identity: resolved_identity
+                         .clone()
+@@ -1368,12 +1374,12 @@ impl SessionWorker {
+                 if *arm {
+                     SessionCommand::Arm {
+                         condition: condition.clone(),
+-                        completion_threshold_ns: *completion_threshold_ns,
++                        completion_threshold_ns,
+                     }
+                 } else {
+                     SessionCommand::Start {
+                         condition: condition.clone(),
+-                        completion_threshold_ns: *completion_threshold_ns,
++                        completion_threshold_ns,
+                     }
+                 }
+             }
+@@ -4210,6 +4216,36 @@ pub(crate) fn current_generation() -> u64 {
      })
  }
  
@@ -375,8 +547,33 @@ index ee0417f3..0a4f6643 100644
  pub(crate) fn current_presentation() -> PresentationState {
      let Ok(runtime) = runtime() else {
          return PresentationState::Experimenter;
+@@ -4578,6 +4614,16 @@ fn parse_mutating_command(
+             if object.contains_key("breath_guidance") {
+                 start_fields.push("breath_guidance");
+             }
++            let participant = if let Some(value) = object.get("participant") {
++                if operation_name != "arm" {
++                    return Err(failure("participant-requires-arm"));
++                }
++                start_fields.push("participant");
++                Some(crate::session_recording_participant::ParticipantPlan::parse(value)
++                    .map_err(|reason| failure(reason))?)
++            } else {
++                None
++            };
+             require_exact_fields(object, &start_fields).map_err(|reason| failure(reason))?;
+             let condition_value = object
+                 .get("condition")
+@@ -4632,6 +4678,7 @@ fn parse_mutating_command(
+                 condition,
+                 completion_threshold_ns: threshold_ms.saturating_mul(1_000_000),
+                 utc_ns,
++                participant,
+                 identity: StartIdentity {
+                     profile_sha256,
+                     audio,
 diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
-index 2a8bc3a1..b8e538d7 100644
+index 2a8bc3a1..d68127db 100644
 --- a/apps/native-renderer-android/native/src/lib.rs
 +++ b/apps/native-renderer-android/native/src/lib.rs
 @@ -76,6 +76,8 @@ mod environment_depth_scene_map;
@@ -388,6 +585,1200 @@ index 2a8bc3a1..b8e538d7 100644
  #[cfg(not(feature = "showcase"))]
  mod experiment_session;
  #[cfg(not(feature = "showcase"))]
+@@ -239,6 +241,8 @@ mod session_recording_export;
+ #[cfg(not(feature = "showcase"))]
+ mod session_recording_inventory;
+ #[cfg(not(feature = "showcase"))]
++mod session_recording_participant;
++#[cfg(not(feature = "showcase"))]
+ mod session_recording_recovery;
+ #[cfg(not(feature = "showcase"))]
+ mod session_recording_writer;
+diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
+index 3cbbfb33..6858a875 100644
+--- a/apps/native-renderer-android/native/src/session_recording_contract.rs
++++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
+@@ -106,6 +106,7 @@ impl ConditionKey {
+ #[derive(Clone, Debug, PartialEq)]
+ pub(crate) struct SessionStartSpec {
+     pub(crate) started_at: SessionTimestampKey,
++    pub(crate) participant: Option<crate::session_recording_participant::ParticipantPlan>,
+     pub(crate) condition: ConditionKey,
+     pub(crate) completion_threshold_ns: u64,
+     pub(crate) clock_anchor: ClockAnchor,
+@@ -121,6 +122,9 @@ impl SessionStartSpec {
+         if self.started_at != SessionTimestampKey::from_utc(self.clock_anchor.utc) {
+             return Err("session-key-clock-anchor-mismatch");
+         }
++        if self.participant.as_ref().is_some_and(|plan| plan.completion_threshold_ns() != self.completion_threshold_ns) {
++            return Err("participant-completion-threshold-mismatch");
++        }
+         self.experiment_identity.validate_for(&self.condition)?;
+         if let Some(configuration) = &self.breath_tracking_configuration {
+             crate::breath_composition_runtime::validate_tracking_configuration(configuration)?;
+@@ -972,6 +976,7 @@ mod tests {
+     fn spec() -> SessionStartSpec {
+         let utc = UtcEpochNanos::new(1_725_000_000_000_000_000);
+         SessionStartSpec {
++            participant: None,
+             breath_tracking_configuration: None,
+             started_at: SessionTimestampKey::from_utc(utc),
+             condition: ConditionKey::parse("condition-a").unwrap(),
+diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
+index faac6912..17e17f88 100644
+--- a/apps/native-renderer-android/native/src/session_recording_export.rs
++++ b/apps/native-renderer-android/native/src/session_recording_export.rs
+@@ -3,12 +3,13 @@
+ //! the caller's export IO lane and hold no runtime/session/render lock.
+ use crate::{
+     session_recording_clock::SessionTimestampKey,
++    session_recording_participant::{csv_descriptor, valid_csv_filename},
+     session_recording_recovery::{
+-        recording_stream_name, validate_finalized_core, validate_recording_root_no_links,
+-        RecordingFiles,
++        RecordingFiles, recording_stream_name, validate_finalized_core,
++        validate_recording_root_no_links,
+     },
+ };
+-use serde_json::{json, Value};
++use serde_json::{Value, json};
+ use sha2::{Digest, Sha256};
+ use std::{
+     collections::BTreeSet,
+@@ -16,8 +17,9 @@ use std::{
+     io::{Read, Seek, SeekFrom},
+     path::{Path, PathBuf},
+     sync::{
++        Arc, Mutex,
+         atomic::{AtomicU64, Ordering},
+-        mpsc, Arc, Mutex,
++        mpsc,
+     },
+     thread,
+ };
+@@ -374,9 +376,8 @@ impl Directory {
+         if name.is_empty()
+             || name == "."
+             || name == ".."
+-            || !name
+-                .bytes()
+-                .all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
++            || !(name.bytes().all(|b| b.is_ascii_alphanumeric() || b"._-".contains(&b))
++                || regular && valid_csv_filename(name))
+         {
+             return Err(denied());
+         }
+@@ -505,7 +506,7 @@ impl Custody {
+     }
+ }
+ struct Pinned {
+-    name: &'static str,
++    name: String,
+     file: File,
+     stamp: Stamp,
+     digest: String,
+@@ -520,7 +521,7 @@ impl Prepared {
+         self.custody.unchanged()?;
+         for p in &self.files {
+             if stamp(&p.file, true)? != p.stamp
+-                || self.custody.session.child(p.name, true)?.1 != p.stamp
++                || self.custody.session.child(&p.name, true)?.1 != p.stamp
+             {
+                 return Err(denied());
+             }
+@@ -681,7 +682,7 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+             .filter(|n| *n <= MAX_EXPORT_BYTES)
+             .ok_or_else(denied)?;
+         files.push(Pinned {
+-            name,
++            name: name.to_owned(),
+             file,
+             stamp,
+             digest: String::new(),
+@@ -694,6 +695,29 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+         files,
+     };
+     let (original, entry) = validate_pinned_core(&mut prepared.files, &streams, key, check)?;
++    let terminal: Value = {
++        let mut core = PinnedFiles {
++            files: &mut prepared.files,
++            streams: &streams,
++            check,
++        };
++        let reader = core.reader("final.json")?.take(1024 * 1024);
++        serde_json::from_reader(reader).map_err(|_| denied())?
++    };
++    let csv = csv_descriptor(&original, &terminal).map_err(|_| denied())?;
++    if let Some(csv) = csv {
++        let name = csv["name"].as_str().ok_or_else(denied)?;
++        let (file, stamp) = prepared.custody.session.child(name, true)?;
++        if stamp.len > MAX_EXPORT_BYTES || csv["size"].as_u64() != Some(stamp.len) {
++            return Err(denied());
++        }
++        prepared.files.push(Pinned {
++            name: name.to_owned(),
++            file,
++            stamp,
++            digest: String::new(),
++        });
++    }
+     prepared.unchanged()?;
+     for p in &mut prepared.files {
+         check_owner(check)?;
+@@ -723,9 +747,17 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+     let file_values: Vec<_> = prepared
+         .files
+         .iter()
++        .take(CORE.len())
+         .map(|p| json!({"name":p.name,"size":p.stamp.len,"sha256":p.digest}))
+         .collect();
+     let mut manifest = json!({"v":1,"schema":"rusty.quest.recording_export.v1","id":id,"condition":original["condition"],"experiment_identity":original.get("experiment_identity").cloned().unwrap_or(Value::Null),"disposition":entry.session.disposition.as_str(),"saved":true,"file_set_policy":"core8-original-no-checkpoints-or-index","total_bytes":total,"files":file_values});
++    if let Some(csv) = csv {
++        let pinned = prepared.files.last().ok_or_else(denied)?;
++        if csv["sha256"].as_str() != Some(&pinned.digest) {
++            return Err(denied());
++        }
++        manifest["participant_csv"] = csv.clone();
++    }
+     let digest = format!("{:x}", Sha256::digest(manifest.to_string().as_bytes()));
+     manifest["manifest_id"] = json!(digest);
+     if manifest.to_string().len() > 30000 {
+@@ -803,7 +835,7 @@ fn parse(v: &Value) -> Result<Query, String> {
+                 return Err("recording-query-invalid".into());
+             }
+             let file = s("file")?;
+-            if !CORE.contains(&file) {
++            if !CORE.contains(&file) && !valid_csv_filename(file) {
+                 return Err("recording-query-invalid".into());
+             }
+             let offset = v["offset"]
+@@ -863,7 +895,11 @@ fn list(
+         let eligible = prepare(root, &id, check);
+         let entry = match eligible {
+             Ok(p) => {
+-                json!({"id":id,"exportable":true,"disposition":p.manifest["disposition"],"condition":p.manifest["condition"],"total_bytes":p.manifest["total_bytes"]})
++                let mut entry = json!({"id":id,"exportable":true,"disposition":p.manifest["disposition"],"condition":p.manifest["condition"],"total_bytes":p.manifest["total_bytes"]});
++                if p.manifest.get("participant_csv").is_some() {
++                    entry["participant_csv"] = json!(true);
++                }
++                entry
+             }
+             Err(_) => {
+                 let reason = if anchors
+diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
+index f71f79cb..da540238 100644
+--- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
++++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
+@@ -290,7 +290,7 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
+             let path = root.join(ID).join(name);
+             let (file, stamp) = open_checked(&path, true).unwrap();
+             Pinned {
+-                name,
++                name: name.to_owned(),
+                 file,
+                 stamp,
+                 digest: String::new(),
+@@ -339,7 +339,7 @@ fn pins(root: &Path) -> Vec<Pinned> {
+             let path = root.join(ID).join(name);
+             let (file, stamp) = open_checked(&path, true).unwrap();
+             Pinned {
+-                name,
++                name: name.to_owned(),
+                 file,
+                 stamp,
+                 digest: String::new(),
+@@ -694,3 +694,52 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+     drop(prepared);
+     fs::remove_dir_all(root.parent().unwrap()).unwrap();
+ }
++
++#[test]
++fn participant_csv_is_bound_to_terminal_identity_and_pinned_for_chunk_reads() {
++    let root = fixture(false);
++    let run = root.join(ID);
++    let name = "Mül_35_F_probe1.csv";
++    let data = b"schema_version,ecg_value\r\n1,37\r\n";
++    let uuid = "01234567-89ab-4def-8abc-0123456789ab";
++    let digest = format!("{:x}", Sha256::digest(data));
++    let identity =
++        json!({"participant_id":"Mül_35_F","condition":"probe","run_index":1,"session_id":uuid});
++    let manifest_path = run.join("manifest.json");
++    let mut manifest: Value = serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
++    manifest["participant"] = identity.clone();
++    fs::write(&manifest_path, manifest.to_string()).unwrap();
++    let terminal_path = run.join("final.json");
++    let mut terminal: Value = serde_json::from_slice(&fs::read(&terminal_path).unwrap()).unwrap();
++    terminal["participant"] = identity;
++    terminal["participant_csv"] =
++        json!({"name":name,"size":data.len(),"sha256":digest,"session_id":uuid});
++    fs::write(&terminal_path, terminal.to_string()).unwrap();
++    fs::write(run.join(name), data).unwrap();
++
++    let prepared = prepare(&root, ID, &|| true).unwrap();
++    assert_eq!(prepared.manifest["files"].as_array().unwrap().len(), 8);
++    assert_eq!(
++        prepared.manifest["participant_csv"],
++        terminal["participant_csv"]
++    );
++    let id = prepared.manifest["manifest_id"].as_str().unwrap();
++    let chunk = prepared
++        .read(id, name, 0, data.len() as u64, &|| true)
++        .unwrap();
++    assert_eq!(chunk["data"], base64(data));
++    assert!(
++        prepared
++            .read(id, "Mül_35_F_probe2.csv", 0, 1, &|| true)
++            .is_err()
++    );
++    fs::write(run.join(name), [b'x'; 31]).unwrap();
++    assert!(prepared.read(id, name, 0, 1, &|| true).is_err());
++    drop(prepared);
++    assert!(prepare(&root, ID, &|| true).is_err());
++    fs::write(run.join(name), data).unwrap();
++    terminal["participant_csv"]["name"] = json!("Mül_35_F_probe2.csv");
++    fs::write(&terminal_path, terminal.to_string()).unwrap();
++    assert!(prepare(&root, ID, &|| true).is_err());
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
+new file mode 100644
+index 00000000..6547d9e3
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
+@@ -0,0 +1,783 @@
++use chrono::{DateTime, SecondsFormat, Utc};
++use serde_json::{Value, json};
++use sha2::{Digest, Sha256};
++use std::{
++    fs::{self, File, OpenOptions},
++    io::{self, BufRead, BufReader, BufWriter, Write},
++    path::Path,
++};
++use unicode_general_category::{GeneralCategory, get_general_category};
++use unicode_normalization::is_nfc;
++
++use crate::{
++    session_recording_clock::{ClockAnchor, MonotonicNanos},
++    session_recording_writer::sync_directory,
++};
++
++const HEADER: &str = "schema_version,participant_id,name_prefix,age_years,gender_code,condition,run_index,session_id,scenario_id,scenario_sha256,planned_duration_seconds,session_started_utc,sample_index,elapsed_ms,timestamp_utc,audio_elapsed_ms,playback_state,phase,ecg_value,ecg_unit,signal_source,signal_state,signal_sha256,sample_rate_hz,source_sample_index,source_loop,session_status,end_reason\r\n";
++const SAMPLE_GAP_NS: u64 = 3 * (1_000_000_000 / 130);
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++struct ParticipantId {
++    name: String,
++    age: u64,
++    gender: char,
++}
++
++impl ParticipantId {
++    fn parse(input: &str) -> Result<Self, &'static str> {
++        let mut fields = input.split('_');
++        let name = fields.next().ok_or("participant-id-invalid")?;
++        let age = fields.next().ok_or("participant-id-invalid")?;
++        let gender = match fields.next() {
++            Some("M") => 'M',
++            Some("F") => 'F',
++            Some("O") => 'O',
++            Some("N") => 'N',
++            _ => return Err("participant-id-invalid"),
++        };
++        if fields.next().is_some()
++            || name.chars().count() != 3
++            || !is_nfc(name)
++            || !name.chars().all(|ch| {
++                matches!(
++                    get_general_category(ch),
++                    GeneralCategory::UppercaseLetter
++                        | GeneralCategory::LowercaseLetter
++                        | GeneralCategory::TitlecaseLetter
++                        | GeneralCategory::ModifierLetter
++                        | GeneralCategory::OtherLetter
++                )
++            })
++            || age.is_empty()
++            || !age.bytes().all(|byte| byte.is_ascii_digit())
++            || age.len() > 1 && age.starts_with('0')
++        {
++            return Err("participant-id-invalid");
++        }
++        let age = age
++            .parse::<u64>()
++            .ok()
++            .filter(|value| *value <= 9_007_199_254_740_991)
++            .ok_or("participant-id-invalid")?;
++        Ok(Self {
++            name: name.to_owned(),
++            age,
++            gender,
++        })
++    }
++
++    fn as_text(&self) -> String {
++        format!("{}_{}_{}", self.name, self.age, self.gender)
++    }
++}
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) struct ParticipantPlan {
++    participant: ParticipantId,
++    scenario: String,
++    sha256: String,
++    seconds: u64,
++    phases: Vec<(u64, String)>,
++}
++
++impl ParticipantPlan {
++    pub(crate) fn parse(value: &Value) -> Result<Self, &'static str> {
++        const BAD: &str = "participant-plan-invalid";
++        value
++            .as_object()
++            .filter(|object| object.len() == 6)
++            .ok_or(BAD)?;
++        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
++        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
++        let seconds = match scenario {
++            "probe-anleitung" => 68,
++            "probe-5" => 300,
++            "probe-10" => 600,
++            "probe-15" | "haupt-15" => 900,
++            _ => return Err(BAD),
++        };
++        let sha256 = value["scenario_sha256"]
++            .as_str()
++            .filter(|value| valid_hash(value))
++            .ok_or(BAD)?;
++        let rate = value["sample_rate"]
++            .as_u64()
++            .filter(|rate| (8000..=48000).contains(rate))
++            .ok_or(BAD)?;
++        let frames = value["total_frames"]
++            .as_u64()
++            .filter(|frames| *frames == seconds * rate)
++            .ok_or(BAD)?;
++        let input = value["phases"]
++            .as_array()
++            .filter(|input| (1..=256).contains(&input.len()))
++            .ok_or(BAD)?;
++        let mut phases = Vec::with_capacity(input.len());
++        for raw in input {
++            let pair = raw.as_array().filter(|pair| pair.len() == 2).ok_or(BAD)?;
++            let offset = pair[0]
++                .as_u64()
++                .filter(|offset| *offset < frames)
++                .ok_or(BAD)?;
++            let name = pair[1]
++                .as_str()
++                .filter(|name| {
++                    (1..=32).contains(&name.len())
++                        && name.bytes().all(|byte| {
++                            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
++                        })
++                })
++                .ok_or(BAD)?;
++            let nanos = (offset * 1_000_000_000).div_ceil(rate);
++            if phases
++                .last()
++                .is_some_and(|(previous, _)| *previous >= nanos)
++            {
++                return Err(BAD);
++            }
++            phases.push((nanos, name.to_owned()));
++        }
++        if phases[0].0 != 0 {
++            return Err(BAD);
++        }
++        Ok(Self {
++            participant,
++            scenario: scenario.to_owned(),
++            sha256: sha256.to_owned(),
++            seconds,
++            phases,
++        })
++    }
++
++    fn condition(&self) -> &'static str {
++        if self.scenario == "haupt-15" {
++            "main"
++        } else {
++            "probe"
++        }
++    }
++
++    pub(crate) fn completion_threshold_ns(&self) -> u64 {
++        if self.scenario == "probe-anleitung" {
++            u64::MAX
++        } else {
++            self.seconds * 1_000_000_000
++        }
++    }
++
++    fn phase_at(&self, elapsed_ns: u64) -> &str {
++        let phase = self
++            .phases
++            .partition_point(|(offset, _)| *offset <= elapsed_ns);
++        &self.phases[phase - 1].1
++    }
++}
++
++#[derive(Debug)]
++pub(crate) struct ParticipantRun {
++    plan: ParticipantPlan,
++    index: u64,
++    uuid: String,
++}
++
++impl ParticipantRun {
++    pub(crate) fn reserve(root: &Path, plan: ParticipantPlan) -> Result<Self, String> {
++        let participant = plan.participant.as_text();
++        let group = Sha256::digest(format!("{participant}|{}", plan.condition()).as_bytes());
++        let prefix = format!("participant-{group:x}-");
++        let mut last = 0;
++        for entry in fs::read_dir(root).map_err(io_error)? {
++            let entry = entry.map_err(io_error)?;
++            let name = entry.file_name();
++            if let Some(index) = name
++                .to_str()
++                .and_then(|name| name.strip_prefix(&prefix))
++                .and_then(|value| value.strip_suffix(".reserve"))
++                .and_then(|value| value.parse::<u64>().ok())
++            {
++                last = last.max(index);
++            }
++        }
++        let uuid = new_session_id()?;
++        loop {
++            let index = last
++                .checked_add(1)
++                .ok_or("participant-run-index-exhausted")?;
++            let marker = root.join(format!("{prefix}{index}.reserve"));
++            match OpenOptions::new().write(true).create_new(true).open(marker) {
++                Ok(mut file) => {
++                    writeln!(file, "{uuid}").map_err(io_error)?;
++                    file.sync_all().map_err(io_error)?;
++                    sync_directory(root)?;
++                    return Ok(Self { plan, index, uuid });
++                }
++                Err(error) if error.kind() == io::ErrorKind::AlreadyExists => last = index,
++                Err(error) => return Err(io_error(error)),
++            }
++        }
++    }
++
++    pub(crate) fn metadata(&self) -> Value {
++        json!({
++            "participant_id": self.plan.participant.as_text(),
++            "name_prefix": self.plan.participant.name,
++            "age_years": self.plan.participant.age,
++            "gender_code": self.plan.participant.gender,
++            "condition": self.plan.condition(),
++            "run_index": self.index,
++            "session_id": self.uuid,
++            "scenario_id": self.plan.scenario,
++            "scenario_sha256": self.plan.sha256,
++            "planned_duration_seconds": self.plan.seconds,
++        })
++    }
++
++    pub(crate) fn finalize_csv(
++        &self,
++        directory: &Path,
++        anchor: ClockAnchor,
++        ended_at: MonotonicNanos,
++        complete: bool,
++        reason: &str,
++    ) -> Result<Option<Value>, String> {
++        let Some(clock) = PlaybackClock::read(directory, ended_at.get())? else {
++            return Ok(None);
++        };
++        let name = format!(
++            "{}_{}{}.csv",
++            self.plan.participant.as_text(),
++            self.plan.condition(),
++            self.index
++        );
++        let final_path = directory.join(&name);
++        let partial = directory.join(format!(".{name}.partial"));
++        let mut output = BufWriter::new(
++            OpenOptions::new()
++                .write(true)
++                .create_new(true)
++                .open(&partial)
++                .map_err(io_error)?,
++        );
++        output.write_all(HEADER.as_bytes()).map_err(io_error)?;
++        let start = clock.start();
++        let start_utc = utc(anchor, start)?;
++        let source = directory.join("polar-ecg.jsonl");
++        let signal_sha = file_hash(&source)?;
++        let metadata = [
++            "1".to_owned(),
++            self.plan.participant.as_text(),
++            self.plan.participant.name.clone(),
++            self.plan.participant.age.to_string(),
++            self.plan.participant.gender.to_string(),
++            self.plan.condition().to_owned(),
++            self.index.to_string(),
++            self.uuid.clone(),
++            self.plan.scenario.clone(),
++            self.plan.sha256.clone(),
++            self.plan.seconds.to_string(),
++            start_utc,
++        ]
++        .join(",");
++        let mut index = 0;
++        let mut previous = None::<u64>;
++        let mut row = |at: u64, sample: Option<Sample>| -> Result<(), String> {
++            let (audio, state) = clock.at(at, self.plan.seconds * 1_000_000_000);
++            let phase = match state {
++                "waiting" | "ended" => state,
++                _ => self.plan.phase_at(audio),
++            };
++            let (value, source_index, signal) = sample.map_or_else(
++                || (String::new(), String::new(), "missing"),
++                |sample| {
++                    (
++                        sample.value.to_string(),
++                        sample.source_index.to_string(),
++                        "ecg",
++                    )
++                },
++            );
++            writeln!(output, "{metadata},{index},{},{},{},{state},{phase},{value},uV,polar-h10,{signal},{signal_sha},130,{source_index},,{},{reason}\r",
++                millis(at - start), utc(anchor, at)?, millis(audio), if complete { "completed" } else { "aborted" }
++            ).map_err(io_error)?;
++            index += 1;
++            Ok(())
++        };
++        for line in BufReader::new(File::open(source).map_err(io_error)?).lines() {
++            let sample = Sample::parse(&line.map_err(io_error)?)?;
++            if sample.at < start || sample.at > ended_at.get() {
++                continue;
++            }
++            let prior = previous.unwrap_or(start);
++            if sample.at > prior.saturating_add(SAMPLE_GAP_NS) {
++                row(prior + 1_000_000_000 / 130, None)?;
++            }
++            row(sample.at, Some(sample))?;
++            previous = Some(prior.max(sample.at));
++        }
++        if previous.is_none_or(|prior| ended_at.get() > prior.saturating_add(SAMPLE_GAP_NS)) {
++            row(ended_at.get(), None)?;
++        }
++        output.flush().map_err(io_error)?;
++        output.get_ref().sync_all().map_err(io_error)?;
++        let size = output.get_ref().metadata().map_err(io_error)?.len();
++        drop(output);
++        if final_path.exists() {
++            return Err("participant-csv-already-exists".to_owned());
++        }
++        let sha256 = file_hash(&partial)?;
++        fs::rename(&partial, &final_path).map_err(io_error)?;
++        sync_directory(directory)?;
++        Ok(Some(
++            json!({ "name": name, "size": size, "sha256": sha256, "session_id": self.uuid }),
++        ))
++    }
++}
++
++pub(crate) fn valid_csv_filename(name: &str) -> bool {
++    let Some((id, tail)) = name
++        .strip_suffix(".csv")
++        .and_then(|stem| stem.rsplit_once('_'))
++    else {
++        return false;
++    };
++    let Some(index) = tail
++        .strip_prefix("main")
++        .or_else(|| tail.strip_prefix("probe"))
++    else {
++        return false;
++    };
++    ParticipantId::parse(id).is_ok()
++        && (1..=16).contains(&index.len())
++        && !index.starts_with('0')
++        && index.bytes().all(|byte| byte.is_ascii_digit())
++}
++
++pub(crate) fn csv_descriptor<'a>(
++    manifest: &Value,
++    terminal: &'a Value,
++) -> Result<Option<&'a Value>, &'static str> {
++    let Some(csv) = terminal.get("participant_csv") else {
++        return Ok(None);
++    };
++    const BAD: &str = "participant-csv-descriptor-invalid";
++    let participant = &terminal["participant"];
++    if participant != &manifest["participant"] {
++        return Err(BAD);
++    }
++    let id = participant["participant_id"].as_str().ok_or(BAD)?;
++    let condition = participant["condition"]
++        .as_str()
++        .filter(|condition| matches!(*condition, "main" | "probe"))
++        .ok_or(BAD)?;
++    let index = participant["run_index"].as_u64().ok_or(BAD)?;
++    let name = csv["name"]
++        .as_str()
++        .filter(|name| valid_csv_filename(name))
++        .ok_or(BAD)?;
++    let uuid = csv["session_id"].as_str().ok_or(BAD)?;
++    let uuid_bytes = uuid.as_bytes();
++    if csv.as_object().is_none_or(|object| object.len() != 4)
++        || name != format!("{id}_{condition}{index}.csv")
++        || participant["session_id"].as_str() != Some(uuid)
++        || uuid_bytes.len() != 36
++        || uuid_bytes[14] != b'4'
++        || !matches!(uuid_bytes[19], b'8' | b'9' | b'a' | b'b')
++        || !uuid_bytes.iter().enumerate().all(|(index, byte)| {
++            if matches!(index, 8 | 13 | 18 | 23) {
++                *byte == b'-'
++            } else {
++                byte.is_ascii_digit() || (b'a'..=b'f').contains(byte)
++            }
++        })
++        || csv["size"].as_u64().is_none_or(|size| size == 0)
++        || csv["sha256"].as_str().is_none_or(|hash| !valid_hash(hash))
++    {
++        return Err(BAD);
++    }
++    Ok(Some(csv))
++}
++
++fn new_session_id() -> Result<String, String> {
++    let mut bytes = [0u8; 16];
++    getrandom::fill(&mut bytes).map_err(|_| "participant-uuid-entropy".to_owned())?;
++    bytes[6] = (bytes[6] & 0x0f) | 0x40;
++    bytes[8] = (bytes[8] & 0x3f) | 0x80;
++    let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
++    Ok(format!(
++        "{}-{}-{}-{}-{}",
++        &hex[..8],
++        &hex[8..12],
++        &hex[12..16],
++        &hex[16..20],
++        &hex[20..]
++    ))
++}
++
++fn valid_hash(value: &str) -> bool {
++    value.len() == 64
++        && value
++            .bytes()
++            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
++}
++
++fn file_hash(path: &Path) -> Result<String, String> {
++    let mut file = File::open(path).map_err(io_error)?;
++    let mut hash = Sha256::new();
++    io::copy(&mut file, &mut hash).map_err(io_error)?;
++    Ok(format!("{:x}", hash.finalize()))
++}
++
++fn io_error(error: io::Error) -> String {
++    format!("participant-recording-io:{:?}", error.kind())
++}
++
++fn millis(ns: u64) -> String {
++    format!("{}.{:03}", ns / 1_000_000, (ns / 1000) % 1000)
++}
++
++fn utc(anchor: ClockAnchor, at: u64) -> Result<String, String> {
++    let utc = anchor
++        .utc_at(MonotonicNanos::new(at))
++        .ok_or("participant-recording-time-overflow")?
++        .get();
++    Ok(
++        DateTime::<Utc>::from_timestamp((utc / 1_000_000_000) as i64, (utc % 1_000_000_000) as u32)
++            .ok_or("participant-recording-time-invalid")?
++            .to_rfc3339_opts(SecondsFormat::Millis, true),
++    )
++}
++
++#[derive(Clone, Copy)]
++struct Sample {
++    at: u64,
++    source_index: u64,
++    value: i64,
++}
++
++impl Sample {
++    fn parse(line: &str) -> Result<Self, String> {
++        let row: Value = serde_json::from_str(line).map_err(|_| "participant-ecg-json-invalid")?;
++        if row["kind"] != "polar-ecg" {
++            return Err("participant-ecg-kind-invalid".into());
++        }
++        Ok(Self {
++            at: row["observed_monotonic_ns"]
++                .as_u64()
++                .ok_or("participant-ecg-clock-invalid")?,
++            source_index: row["source_sequence"]
++                .as_u64()
++                .ok_or("participant-ecg-index-invalid")?,
++            value: row["microvolts"]
++                .as_i64()
++                .ok_or("participant-ecg-value-invalid")?,
++        })
++    }
++}
++
++struct ClockMark {
++    at: u64,
++    elapsed: u64,
++    state: &'static str,
++}
++
++struct PlaybackClock(Vec<ClockMark>);
++
++impl PlaybackClock {
++    fn read(directory: &Path, ended_at: u64) -> Result<Option<Self>, String> {
++        let source = File::open(directory.join("events.jsonl")).map_err(io_error)?;
++        let mut marks = Vec::<ClockMark>::new();
++        let mut media_started = false;
++        for line in BufReader::new(source).lines() {
++            let row: Value = serde_json::from_str(&line.map_err(io_error)?)
++                .map_err(|_| "participant-event-json-invalid")?;
++            let state = match row["event"].as_str() {
++                Some("official-start") if marks.is_empty() => "waiting",
++                Some("audio-started") if !marks.is_empty() && !media_started => {
++                    media_started = true;
++                    if marks.last().is_some_and(|mark| mark.state == "paused") {
++                        "paused"
++                    } else {
++                        "playing"
++                    }
++                }
++                Some("experiment-paused") if !marks.is_empty() => "paused",
++                Some("experiment-resumed") if !marks.is_empty() => {
++                    if media_started {
++                        "playing"
++                    } else {
++                        "waiting"
++                    }
++                }
++                Some("audio-ended" | "audio-error") if !marks.is_empty() => "ended",
++                _ => continue,
++            };
++            let at = row["observed_monotonic_ns"]
++                .as_u64()
++                .ok_or("participant-event-time-invalid")?;
++            if at > ended_at || marks.last().is_some_and(|previous| previous.at > at) {
++                return Err("participant-event-order-invalid".into());
++            }
++            let elapsed = marks.last().map_or(0, |previous| {
++                previous.elapsed
++                    + if previous.state == "playing" {
++                        at - previous.at
++                    } else {
++                        0
++                    }
++            });
++            if marks
++                .last()
++                .is_some_and(|previous| previous.state == "ended")
++            {
++                continue;
++            }
++            marks.push(ClockMark { at, elapsed, state });
++        }
++        Ok((!marks.is_empty()).then_some(Self(marks)))
++    }
++
++    fn start(&self) -> u64 {
++        self.0[0].at
++    }
++
++    fn at(&self, at: u64, audio_end: u64) -> (u64, &'static str) {
++        let offset = self.0.partition_point(|mark| mark.at <= at);
++        let mark = &self.0[offset - 1];
++        let elapsed = mark.elapsed
++            + if mark.state == "playing" {
++                at - mark.at
++            } else {
++                0
++            };
++        (
++            elapsed.min(audio_end),
++            if elapsed >= audio_end {
++                "ended"
++            } else {
++                mark.state
++            },
++        )
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::session_recording_clock::UtcEpochNanos;
++    use std::{
++        path::PathBuf,
++        sync::atomic::{AtomicU64, Ordering},
++    };
++
++    struct Scratch(PathBuf);
++    impl Scratch {
++        fn new() -> Self {
++            static NEXT: AtomicU64 = AtomicU64::new(0);
++            let path = std::env::temp_dir().join(format!(
++                "quest-participant-{}-{}",
++                std::process::id(),
++                NEXT.fetch_add(1, Ordering::Relaxed),
++            ));
++            fs::create_dir(&path).unwrap();
++            Self(path)
++        }
++    }
++    impl Drop for Scratch {
++        fn drop(&mut self) {
++            fs::remove_dir_all(&self.0).unwrap();
++        }
++    }
++
++    fn request(id: &str, scenario: &str) -> Value {
++        let (seconds, phases) = if scenario == "haupt-15" {
++            (
++                900,
++                json!([
++                    [0, "instruction_1"],
++                    [1146600, "calibration"],
++                    [1808100, "instruction_2"]
++                ]),
++            )
++        } else {
++            (300, json!([[0, "instruction"]]))
++        };
++        json!({ "participant_id": id, "scenario_id": scenario, "scenario_sha256": "a".repeat(64),
++            "sample_rate": 44100, "total_frames": seconds * 44100, "phases": phases })
++    }
++
++    #[test]
++    fn validates_participant_identity_and_the_authored_phase_offsets() {
++        let main = ParticipantPlan::parse(&request("Mül_35_F", "haupt-15")).unwrap();
++        assert_eq!(main.completion_threshold_ns(), 900_000_000_000);
++        assert_eq!(main.phase_at(26_000_000_000 - 1), "instruction_1");
++        assert_eq!(main.phase_at(26_000_000_000), "calibration");
++        assert_eq!(main.phase_at(41_000_000_000), "instruction_2");
++        for bad in [
++            "A/ä_35_M",
++            "Mu\u{308}l_35_F",
++            "A\u{0345}l_35_F",
++            "Abc_035_F",
++            "Abc_-1_M",
++            "Abc_35_X",
++            "Abc_9007199254740992_N",
++            "Abc_35_F_x",
++        ] {
++            assert!(
++                ParticipantPlan::parse(&request(bad, "haupt-15")).is_err(),
++                "{bad}"
++            );
++        }
++        assert!(ParticipantPlan::parse(&request("𐐀𐐨𐐨_0_N", "haupt-15")).is_ok());
++        let mut missing = request("Mül_35_F", "haupt-15");
++        missing.as_object_mut().unwrap().remove("scenario_id");
++        missing["unexpected"] = json!(1);
++        assert!(ParticipantPlan::parse(&missing).is_err());
++    }
++
++    #[test]
++    fn reserves_parallel_attempts_durably_per_participant_and_condition() {
++        let scratch = Scratch::new();
++        let plan = ParticipantPlan::parse(&request("Tes_30_N", "haupt-15")).unwrap();
++        let root = &scratch.0;
++        let runs = std::thread::scope(|threads| {
++            let handles: Vec<_> = (0..8)
++                .map(|_| {
++                    let plan = plan.clone();
++                    threads.spawn(move || ParticipantRun::reserve(root, plan).unwrap())
++                })
++                .collect();
++            handles
++                .into_iter()
++                .map(|handle| handle.join().unwrap())
++                .collect::<Vec<_>>()
++        });
++        let mut indices: Vec<_> = runs.iter().map(|run| run.index).collect();
++        indices.sort_unstable();
++        assert_eq!(indices, (1..=8).collect::<Vec<_>>());
++        let unique: std::collections::HashSet<_> = runs.iter().map(|run| &run.uuid).collect();
++        assert_eq!(unique.len(), 8);
++        assert_eq!(runs[0].uuid.as_bytes()[14], b'4');
++        assert_eq!(ParticipantRun::reserve(root, plan).unwrap().index, 9);
++        let probe = ParticipantPlan::parse(&request("Tes_30_N", "probe-5")).unwrap();
++        assert_eq!(ParticipantRun::reserve(root, probe).unwrap().index, 1);
++        let other = ParticipantPlan::parse(&request("Mül_35_F", "haupt-15")).unwrap();
++        assert_eq!(ParticipantRun::reserve(root, other).unwrap().index, 1);
++        assert!(
++            !fs::read_dir(root).unwrap().any(|entry| entry
++                .unwrap()
++                .file_name()
++                .to_string_lossy()
++                .contains("Tes"))
++        );
++    }
++
++    #[test]
++    fn projects_native_ecg_pause_phase_and_signal_gaps_to_the_original_csv() {
++        let scratch = Scratch::new();
++        let directory = &scratch.0;
++        let plan = ParticipantPlan::parse(&request("Tes_30_N", "haupt-15")).unwrap();
++        let run = ParticipantRun::reserve(directory, plan).unwrap();
++        let start = 1_000_000_000;
++        let epoch = UtcEpochNanos::new(1_700_000_000_000_000_000);
++        let anchor = ClockAnchor::new(MonotonicNanos::new(start), epoch);
++        let event = |at, kind| json!({"event":kind,"observed_monotonic_ns":at}).to_string();
++        fs::write(
++            directory.join("events.jsonl"),
++            [
++                event(start, "official-start"),
++                event(start + 10_000_000, "audio-started"),
++                event(start + 26_010_000_000, "experiment-paused"),
++                event(start + 30_010_000_000, "experiment-resumed"),
++            ]
++            .join("\n"),
++        )
++        .unwrap();
++        let sample = |at, index, value| {
++            json!({"kind":"polar-ecg","observed_monotonic_ns":at,
++            "source_sequence":index,"microvolts":value})
++            .to_string()
++        };
++        fs::write(
++            directory.join("polar-ecg.jsonl"),
++            [
++                sample(start - 1, 499, 0),
++                sample(start, 500, -12),
++                sample(start + 27_000_000_000, 501, 230),
++                sample(start + 45_010_000_000, 502, -31),
++            ]
++            .join("\n"),
++        )
++        .unwrap();
++        let end = MonotonicNanos::new(start + 45_010_000_000);
++        let descriptor = run
++            .finalize_csv(directory, anchor, end, false, "save-and-exit")
++            .unwrap()
++            .unwrap();
++        assert_eq!(descriptor["name"], "Tes_30_N_main1.csv");
++        assert_eq!(descriptor["session_id"], run.uuid);
++        let csv = fs::read_to_string(directory.join("Tes_30_N_main1.csv")).unwrap();
++        assert_eq!(descriptor["size"], csv.len());
++        assert_eq!(
++            descriptor["sha256"],
++            format!("{:x}", Sha256::digest(csv.as_bytes()))
++        );
++        assert!(csv.starts_with(HEADER));
++        let rows: Vec<Vec<&str>> = csv
++            .split_terminator("\r\n")
++            .skip(1)
++            .map(|row| row.split(',').collect())
++            .collect();
++        assert_eq!(rows.len(), 5);
++        assert!(
++            rows.iter()
++                .all(|row| row.len() == 28 && row[26..] == ["aborted", "save-and-exit"])
++        );
++        assert_eq!(rows[0][11], "2023-11-14T22:13:20.000Z");
++        assert_eq!(
++            rows[0][13..19],
++            [
++                "0.000",
++                "2023-11-14T22:13:20.000Z",
++                "0.000",
++                "waiting",
++                "waiting",
++                "-12"
++            ]
++        );
++        assert_eq!(rows[0][24], "500");
++        assert_eq!(rows[1][18], "");
++        assert_eq!(rows[1][21], "missing");
++        assert_eq!(
++            rows[2][15..19],
++            ["26000.000", "paused", "calibration", "230"]
++        );
++        assert_eq!(
++            rows[4][15..19],
++            ["41000.000", "playing", "instruction_2", "-31"]
++        );
++        assert!(
++            run.finalize_csv(directory, anchor, end, false, "save-and-exit")
++                .is_err()
++        );
++    }
++
++    #[test]
++    fn an_arm_without_official_start_reserves_an_index_without_a_csv() {
++        let scratch = Scratch::new();
++        let plan = ParticipantPlan::parse(&request("Tes_30_N", "probe-5")).unwrap();
++        let run = ParticipantRun::reserve(&scratch.0, plan.clone()).unwrap();
++        fs::write(
++            scratch.0.join("events.jsonl"),
++            r#"{"event":"started","observed_monotonic_ns":1}"#,
++        )
++        .unwrap();
++        let anchor = ClockAnchor::new(MonotonicNanos::new(1), UtcEpochNanos::new(0));
++        assert!(
++            run.finalize_csv(&scratch.0, anchor, MonotonicNanos::new(2), false, "restart")
++                .unwrap()
++                .is_none()
++        );
++        assert_eq!(ParticipantRun::reserve(&scratch.0, plan).unwrap().index, 2);
++    }
++}
+diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
+index 4aefeaf5..816eeb01 100644
+--- a/apps/native-renderer-android/native/src/session_recording_writer.rs
++++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
+@@ -1063,6 +1063,7 @@ struct ActiveRecording {
+     last_bias_change: Option<crate::session_recording_contract::BiasChange>,
+     generation: u64,
+     spec: SessionStartSpec,
++    participant: Option<crate::session_recording_participant::ParticipantRun>,
+     directory: PathBuf,
+     streams: BTreeMap<&'static str, BufWriter<File>>,
+     consumed_sequence: u64,
+@@ -1083,6 +1084,9 @@ impl ActiveRecording {
+         spec.validate().map_err(str::to_owned)?;
+         validate_recording_root_no_links(&config.root)?;
+         ensure_recording_root(&config.root)?;
++        let participant = spec.participant.clone().map(|plan| {
++            crate::session_recording_participant::ParticipantRun::reserve(&config.root, plan)
++        }).transpose()?;
+         let directory = config.root.join(spec.started_at.as_str());
+         fs::create_dir(&directory)
+             .map_err(|error| format!("recording-session-directory-create:{error}"))?;
+@@ -1093,10 +1097,7 @@ impl ActiveRecording {
+         sync_directory(&config.root)?;
+ 
+         let prepare_result = (|| {
+-            publish_json_exclusive(
+-                &directory,
+-                "manifest.json",
+-                &json!({
++            let mut manifest = json!({
+                     "schema": SESSION_MANIFEST_SCHEMA,
+                     "started_at_utc": spec.started_at.as_str(),
+                     "condition": spec.condition.as_str(),
+@@ -1110,8 +1111,11 @@ impl ActiveRecording {
+                     },
+                     "session_identifier_policy": "utc-start-date-time-only",
+                     "runtime_generation_persisted": true
+-                }),
+-            )?;
++                });
++            if let Some(run) = &participant {
++                manifest["participant"] = run.metadata();
++            }
++            publish_json_exclusive(&directory, "manifest.json", &manifest)?;
+             let mut streams = BTreeMap::new();
+             for name in SESSION_STREAM_FILES {
+                 let file = OpenOptions::new()
+@@ -1125,6 +1129,7 @@ impl ActiveRecording {
+                 last_bias_change: None,
+                 generation,
+                 spec,
++                participant,
+                 directory: directory.clone(),
+                 streams,
+                 consumed_sequence: 0,
+@@ -1317,10 +1322,7 @@ impl ActiveRecording {
+         self.write_internal_event(event, at)?;
+         let lengths = self.flush_sync_streams()?;
+         let ended_utc_ns = self.spec.clock_anchor.utc_at(at).map(|value| value.get());
+-        publish_json_exclusive(
+-            &self.directory,
+-            "final.json",
+-            &json!({
++        let mut terminal = json!({
+                 "schema": SESSION_FINAL_SCHEMA,
+                 "started_at_utc": self.spec.started_at.as_str(),
+                 "condition": self.spec.condition.as_str(),
+@@ -1337,8 +1339,17 @@ impl ActiveRecording {
+                 "loss": loss_json(&loss),
+                 "durable_stream_lengths": lengths,
+                 "saved": loss.dropped_records == 0
+-            }),
+-        )?;
++            });
++        if let Some(run) = &self.participant {
++            let complete = self.completion_durable && loss.dropped_records == 0;
++            let end_reason = if loss.dropped_records != 0 { "recording-loss" }
++                else if complete { "completed" } else { reason.as_str() };
++            terminal["participant"] = run.metadata();
++            if let Some(csv) = run.finalize_csv(&self.directory, self.spec.clock_anchor, at, complete, end_reason)? {
++                terminal["participant_csv"] = csv;
++            }
++        }
++        publish_json_exclusive(&self.directory, "final.json", &terminal)?;
+         Ok(())
+     }
+ 
+@@ -1472,14 +1483,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
+ }
+ 
+ #[cfg(unix)]
+-fn sync_directory(directory: &Path) -> Result<(), String> {
++pub(crate) fn sync_directory(directory: &Path) -> Result<(), String> {
+     File::open(directory)
+         .and_then(|file| file.sync_all())
+         .map_err(|error| format!("recording-directory-sync:{error}"))
+ }
+ 
+ #[cfg(not(unix))]
+-fn sync_directory(_directory: &Path) -> Result<(), String> {
++pub(crate) fn sync_directory(_directory: &Path) -> Result<(), String> {
+     // Android is Unix and receives the directory durability barrier. Windows
+     // host tests still verify exclusive publication and synced file contents.
+     Ok(())
+@@ -1597,6 +1608,7 @@ pub(crate) mod tests {
+     pub(crate) fn spec(utc: u64) -> SessionStartSpec {
+         let utc = UtcEpochNanos::new(utc);
+         SessionStartSpec {
++            participant: None,
+             breath_tracking_configuration: None,
+             started_at: SessionTimestampKey::from_utc(utc),
+             condition: ConditionKey::parse("condition-a").unwrap(),
+@@ -1632,6 +1644,36 @@ pub(crate) mod tests {
+         }
+     }
+ 
++    #[test]
++    fn native_writer_publishes_a_bound_partial_participant_csv_before_the_terminal_receipt() {
++        let root = temp_root("participant-artifact");
++        let config = config(root.clone(), 16, 100);
++        let mut spec = spec(1_700_000_000_000_000_000);
++        let participant = crate::session_recording_participant::ParticipantPlan::parse(&json!({
++            "participant_id":"Tes_30_N", "scenario_id":"probe-5", "scenario_sha256":"a".repeat(64),
++            "sample_rate":44100, "total_frames":13_230_000, "phases":[[0,"instruction"]],
++        })).unwrap();
++        spec.completion_threshold_ns = participant.completion_threshold_ns();
++        spec.participant = Some(participant);
++        let directory = root.join(spec.started_at.as_str());
++        let mut writer = ActiveRecording::prepare(&config, 1, spec).unwrap();
++        writer.write_internal_event(SessionEventKind::OfficialStart, MonotonicNanos::new(2_000)).unwrap();
++        writer.write_internal_event(SessionEventKind::AudioStarted, MonotonicNanos::new(3_000)).unwrap();
++        writer.finalize(MonotonicNanos::new(10_000), FinalizationReason::RestartToExperimenter,
++            false, LossSnapshot::default()).unwrap();
++        let manifest: Value = serde_json::from_slice(&fs::read(directory.join("manifest.json")).unwrap()).unwrap();
++        let terminal: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
++        assert_eq!(manifest["participant"], terminal["participant"]);
++        let csv = crate::session_recording_participant::csv_descriptor(&manifest, &terminal).unwrap().unwrap();
++        assert_eq!(csv["name"], "Tes_30_N_probe1.csv");
++        let text = fs::read_to_string(directory.join(csv["name"].as_str().unwrap())).unwrap();
++        assert!(text.contains(",missing,"));
++        assert!(text.contains(",aborted,"));
++        assert_eq!(csv["size"], text.len());
++        drop(writer);
++        fs::remove_dir_all(root.parent().unwrap()).unwrap();
++    }
++
+     pub(crate) fn config(root: PathBuf, capacity: usize, checkpoint_ms: u64) -> WriterConfig {
+         WriterConfig {
+             root,
 diff --git a/apps/native-renderer-android/native/src/xr_vulkan.rs b/apps/native-renderer-android/native/src/xr_vulkan.rs
 index c0c0c17e..4c8ef5b1 100644
 --- a/apps/native-renderer-android/native/src/xr_vulkan.rs
@@ -437,7 +1828,7 @@ index c0c0c17e..4c8ef5b1 100644
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..f427eba8 100644
+index a694dfee..b6a9e3e7 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -459,7 +1850,7 @@ index a694dfee..f427eba8 100644
                      }
                  }
                  RemotePending pending = remotePending;
-@@ -828,6 +827,15 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -828,6 +827,18 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
@@ -469,23 +1860,31 @@ index a694dfee..f427eba8 100644
 +            @Override public java.util.List<String> scenarioIds() {
 +                return ControlPanelActivity.conditionAudioScenarios();
 +            }
++            @Override public String recordingPlan(String scenario) {
++                return ControlPanelActivity.conditionAudioRecordingPlan(scenario);
++            }
 +            @Override public String recenter(JSONObject command) throws Exception {
 +                return new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(command.toString())).getString("state");
 +            }
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
-@@ -922,6 +930,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -922,6 +933,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
  
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
 +                dispatchScenario(request, "");
 +            }
 +            @Override public void dispatchScenario(ExperimentSessionBleServer.CommandRequest request, String scenario) {
++                dispatchParticipant(request, scenario, null);
++            }
++
++            @Override public void dispatchParticipant(ExperimentSessionBleServer.CommandRequest request, String scenario,
++                    String participantPlan) {
                  ExperimentSessionBleServer server = remoteServer();
                  if (server == null) return;
                  if(remoteTerminal!=null) {
-@@ -997,8 +1008,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -997,8 +1016,11 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
                          return;
                      }
@@ -493,11 +1892,12 @@ index a694dfee..f427eba8 100644
 +                    RemotePending arm = new RemotePending(request.id, nativeCommand.operationId, "arm",
                          nativeCommand.expectedGeneration + 1L, request.condition);
 +                    arm.scenarioId = scenario;
++                    if (participantPlan != null) nativeCommand = nativeCommand.withParticipantPlan(participantPlan);
 +                    remotePending = arm;
                      server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
                      EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
                      return;
-@@ -1060,6 +1073,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1060,6 +1082,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
          };
  
@@ -514,7 +1914,7 @@ index a694dfee..f427eba8 100644
      public static void reconcileCurrentExperimentSessionBleOwner() {
          ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
      }
-@@ -1864,6 +1887,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1864,6 +1896,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
@@ -523,7 +1923,7 @@ index a694dfee..f427eba8 100644
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1912,7 +1937,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1912,7 +1946,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
@@ -532,7 +1932,7 @@ index a694dfee..f427eba8 100644
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -4214,10 +4239,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4248,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -544,7 +1944,7 @@ index a694dfee..f427eba8 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4259,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4268,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -568,7 +1968,7 @@ index a694dfee..f427eba8 100644
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..0c97193a 100644
+index 08732e53..5154ea36 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,9 @@ import org.json.JSONObject;
@@ -592,12 +1992,17 @@ index 08732e53..0c97193a 100644
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +50,14 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +50,19 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
 +        default JSONObject ecgPreview() throws Exception { return null; }
 +        default java.util.List<String> scenarioIds() { return java.util.Collections.emptyList(); }
++        default String recordingPlan(String scenario) { return null; }
++        default void dispatchParticipant(ExperimentSessionBleServer.CommandRequest request, String scenario,
++                String participantPlan) {
++            throw new IllegalStateException("participant-arm-unavailable");
++        }
 +        default void dispatchScenario(ExperimentSessionBleServer.CommandRequest request, String scenario) {
 +            throw new IllegalStateException("scenario-arm-unavailable");
 +        }
@@ -607,7 +2012,7 @@ index 08732e53..0c97193a 100644
      }
  
  
-@@ -52,17 +67,31 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,17 +72,31 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -641,7 +2046,7 @@ index 08732e53..0c97193a 100644
          controlMode.onChange(new Runnable(){@Override public void run(){controlModeChanged();}});
          preferences=context.getSharedPreferences("experiment-session-command-gateway",Context.MODE_PRIVATE);
          if(!preferences.contains("device"))preferences.edit().putString("device",ExperimentSessionBleProtocol.newHex(16)).commit();
-@@ -110,7 +139,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -110,7 +144,7 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -650,7 +2055,7 @@ index 08732e53..0c97193a 100644
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -268,9 +297,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -268,9 +302,9 @@ public final class ExperimentSessionCommandGateway {
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
          if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
@@ -662,7 +2067,7 @@ index 08732e53..0c97193a 100644
                  }});
          controlModeChanged();
      }
-@@ -278,7 +307,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -278,7 +312,9 @@ public final class ExperimentSessionCommandGateway {
      void controlModeChanged(){
          requireMain();long packed=controlMode.readSnapshot().packed;
          if(guestModePacked!=packed){ExperimentSessionRecordingExport.retire();guests.clear();guestModePacked=packed;}
@@ -673,7 +2078,7 @@ index 08732e53..0c97193a 100644
          if(journal==null)return;
          if(!trustedLanAllowed()){
              if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
-@@ -287,11 +318,25 @@ public final class ExperimentSessionCommandGateway {
+@@ -287,11 +323,25 @@ public final class ExperimentSessionCommandGateway {
          catch(Exception unavailable){routeState="listener-unavailable";if(http!=null)http.close();http=null;}
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
@@ -701,7 +2106,7 @@ index 08732e53..0c97193a 100644
          ExperimentSessionRecordingExport.retire();
          clearLocalEnrollmentOffer();
          guests.clear();
-@@ -312,6 +357,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -312,6 +362,22 @@ public final class ExperimentSessionCommandGateway {
                  .put("serial",headsetIdentity.serial()).put("remote_available",remoteAvailable());
          }});
      }
@@ -724,7 +2129,7 @@ index 08732e53..0c97193a 100644
      JSONObject discoveryMetadata()throws Exception {
          requireMain();if(!remoteAvailable())throw new SecurityException("remote-owner-required");
          org.json.JSONArray gateways=new org.json.JSONArray();
-@@ -332,7 +393,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +398,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -733,7 +2138,7 @@ index 08732e53..0c97193a 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +416,49 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,8 +421,60 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -757,6 +2162,10 @@ index 08732e53..0c97193a 100644
 +                            .put("v", 1).put("unit", "uV").put("rate", 130).put("age_ms", 1501)
 +                            .put("samples", new org.json.JSONArray());
 +                    }
++                    if ("participant-arm".equals(action)
++                            && (!enrolled || !participantArmAvailable())) {
++                        throw new SecurityException("participant-arm-unavailable");
++                    }
 +                    if ("recenter".equals(action)) {
 +                        if (!enrolled || !sceneRecenter || !(delegate instanceof WifiDelegate)) {
 +                            throw new SecurityException("scene-recenter-unavailable");
@@ -772,7 +2181,14 @@ index 08732e53..0c97193a 100644
 +                        response.put("ecg_preview", enrolled ? 1 : 0);
 +                        if (!enrolled) response.put("recordings", 0);
 +                        else if (delegate instanceof WifiDelegate) {
-+                            java.util.List<String> ids = ((WifiDelegate) delegate).scenarioIds();
++                            WifiDelegate wifi = (WifiDelegate) delegate;
++                            java.util.List<String> ids = wifi.scenarioIds();
++                            if (participantArmAvailable()) {
++                                response.put("participant_arm", 1);
++                                java.util.ArrayList<String> authored = new java.util.ArrayList<>();
++                                for (String id : ids) if (wifi.recordingPlan(id) != null) authored.add(id);
++                                ids = authored;
++                            }
 +                            if (!ids.isEmpty()) response.put("scenarios", new org.json.JSONArray(ids));
 +                            if (sceneRecenter) response.put("recenter", 1);
 +                        }
@@ -785,7 +2201,40 @@ index 08732e53..0c97193a 100644
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
          final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
-@@ -385,6 +487,59 @@ public final class ExperimentSessionCommandGateway {
+@@ -369,6 +487,32 @@ public final class ExperimentSessionCommandGateway {
+         if("ready".equals(result.opt("state"))&&result.optJSONObject("manifest")!=null)result.getJSONObject("manifest").put("device",ticket.getString("device")).put("serial",ticket.getString("serial"));
+         return result;
+     }
++    private boolean participantArmAvailable() {
++        return privateLanData && remoteAvailable() && ExperimentSessionRecordingExport.selected(context)
++            && delegate instanceof WifiDelegate
++            && ((WifiDelegate) delegate).recordingPlan("probe-anleitung") != null;
++    }
++
++    private String verifiedParticipantPlan(JSONObject body, String scenario, JSONObject current) throws Exception {
++        WifiDelegate wifi = (WifiDelegate) delegate;
++        String plan = wifi.recordingPlan(scenario);
++        String id = ExperimentSessionGatewayProtocol.string(body, "participant_id");
++        if (plan == null || !java.text.Normalizer.isNormalized(id, java.text.Normalizer.Form.NFC)
++                || !id.matches("\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]")
++                || Long.parseLong(id.split("_")[1]) > 9007199254740991L) {
++            throw new IllegalArgumentException("participant-arm-input-invalid");
++        }
++        JSONObject setup = current.optJSONObject("y");
++        JSONObject ecg = wifi.ecgPreview();
++        org.json.JSONArray samples = ecg == null ? null : ecg.optJSONArray("samples");
++        if (!"vr-preparation".equals(current.opt("h")) || setup == null || !Boolean.TRUE.equals(setup.opt("e"))
++                || ecg == null || ecg.optLong("age_ms", Long.MAX_VALUE) > 1000 || samples == null
++                || samples.length() == 0) {
++            throw new SecurityException("participant-arm-requires-vr-and-fresh-ecg");
++        }
++        return new JSONObject(plan).put("participant_id", id).toString();
++    }
++
+     private JSONObject exportTicket()throws Exception {
+         requireMain();
+         if(!ExperimentSessionRecordingExport.selected(context)||!remoteAvailable())throw new SecurityException("recording-export-not-selected-or-remote");
+@@ -385,6 +529,59 @@ public final class ExperimentSessionCommandGateway {
          FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
          try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
      }
@@ -845,17 +2294,21 @@ index 08732e53..0c97193a 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -398,10 +553,36 @@ public final class ExperimentSessionCommandGateway {
+@@ -398,10 +595,43 @@ public final class ExperimentSessionCommandGateway {
          if(journal.known(body))return journal.original(id);
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
 -        ExperimentSessionBleServer.CommandRequest request=parse(body);
 +        String scenario = "";
++        String participantPlan = null;
 +        JSONObject command = body;
-+        if ("scenario-arm".equals(action)) {
-+            scenario = ExperimentSessionGatewayProtocol.string(body, "scenario");
++        boolean participantArm = "participant-arm".equals(action);
++        if ("scenario-arm".equals(action) || participantArm) {
++            boolean defaultScenario = participantArm && !body.has("scenario");
++            scenario = defaultScenario ? "probe-anleitung" : ExperimentSessionGatewayProtocol.string(body, "scenario");
 +            Object generation = body.opt("g");
-+            if (body.length() != 8 || !"arm".equals(body.opt("op"))
++            int fields = participantArm && !defaultScenario ? 9 : 8;
++            if (body.length() != fields || !"arm".equals(body.opt("op"))
 +                    || !(generation instanceof Integer || generation instanceof Long)
 +                    || !(delegate instanceof WifiDelegate)
 +                    || !((WifiDelegate) delegate).scenarioIds().contains(scenario)) {
@@ -867,16 +2320,19 @@ index 08732e53..0c97193a 100644
 +                    || ((Number) generation).longValue() != current.getLong("g")) {
 +                throw new SecurityException("scenario-arm-generation-unavailable");
 +            }
++            if (participantArm) participantPlan = verifiedParticipantPlan(body, scenario, current);
 +            command = new JSONObject(body.toString());
 +            command.remove("scenario");
 +            command.remove("g");
++            if (participantArm) command.remove("participant_id");
 +        }
 +        ExperimentSessionBleServer.CommandRequest request=parse(command);
          if(!journal.reserve(body))return journal.original(id);
          carrier.updateReceipt(id,"accepted","Command admitted by authenticated app gateway.");
 -        try{delegate.dispatch(request);}catch(RuntimeException rejected){carrier.updateReceipt(id,"rejected","App command dispatch failed.");}
 +        try {
-+            if (scenario.isEmpty()) delegate.dispatch(request);
++            if (participantPlan != null) ((WifiDelegate) delegate).dispatchParticipant(request, scenario, participantPlan);
++            else if (scenario.isEmpty()) delegate.dispatch(request);
 +            else ((WifiDelegate) delegate).dispatchScenario(request, scenario);
 +        } catch (RuntimeException rejected) {
 +            carrier.updateReceipt(id,"rejected","App command dispatch failed.");
@@ -1160,7 +2616,7 @@ index f41c56ea..d569acd4 100644
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..b8dd7fb3 100644
+index cf6c5de1..ca5a2e76 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -1177,12 +2633,13 @@ index cf6c5de1..b8dd7fb3 100644
  import javax.crypto.spec.SecretKeySpec;
  import org.json.JSONObject;
  
-@@ -16,14 +20,30 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -16,14 +20,34 @@ public final class ExperimentSessionGatewayProtocol {
      public interface Owner { JSONObject exchange(String action, JSONObject payload) throws Exception; }
      private final String controller, key, device, epoch;
      private final Owner owner;
 +    private final boolean privateLan;
 +    private final SecretKeySpec privateKey;
++    private final SecretKeySpec participantArmKey;
 +    private static final SecureRandom RANDOM = new SecureRandom();
      private final Set<String> nonces = new HashSet<>();
      private boolean retired;
@@ -1202,13 +2659,16 @@ index cf6c5de1..b8dd7fb3 100644
 +            privateKey = privateLan ? new SecretKeySpec(
 +                hmacBytes(key, "RQG1-PRIVATE-KEY|" + controller + "|" + device + "|" + this.epoch), "AES"
 +            ) : null;
++            participantArmKey = privateLan ? new SecretKeySpec(
++                hmacBytes(key, "RQG1-ARM-KEY|" + controller + "|" + device + "|" + this.epoch), "AES"
++            ) : null;
 +        } catch (Exception unavailable) {
 +            throw new IllegalStateException("private-key-unavailable", unavailable);
 +        }
      }
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
-@@ -36,7 +56,11 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -36,16 +60,24 @@ public final class ExperimentSessionGatewayProtocol {
                      || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
                  throw new SecurityException("controller-or-epoch-unavailable");
              nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
@@ -1216,13 +2676,18 @@ index cf6c5de1..b8dd7fb3 100644
 +            boolean allowedAction = "status".equals(action) || "command".equals(action) || "receipt".equals(action)
 +                || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
 +                    || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)
-+                        || "recenter".equals(action)));
++                        || "participant-arm".equals(action) || "recenter".equals(action)));
 +            if(!hex(nonce,32) || !allowedAction
                      || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
                  throw new SecurityException("authentication-failed");
              // Exhaustion requires a new native owner epoch; never evict replay protection.
-@@ -45,7 +69,8 @@ public final class ExperimentSessionGatewayProtocol {
-         JSONObject result=owner.exchange(action,new JSONObject(payload));
+             if(nonces.size()>=65536 || !nonces.add(nonce))throw new SecurityException("replay-or-capacity");
+         }
+-        JSONObject result=owner.exchange(action,new JSONObject(payload));
++        JSONObject command = new JSONObject(payload);
++        if ("participant-arm".equals(action)) command = decryptParticipantArm(nonce, command);
++        JSONObject result=owner.exchange(action,command);
++        if (!lan && "status".equals(action)) result.remove("participant_arm");
          synchronized(this) {
              if(retired)throw new SecurityException("owner-retired");
 -            String body=result.toString();
@@ -1231,10 +2696,32 @@ index cf6c5de1..b8dd7fb3 100644
              JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
                  .put("action",action).put("payload",body).put("mac",hmac(key,
                      "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
-@@ -53,6 +78,18 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -53,6 +85,40 @@ public final class ExperimentSessionGatewayProtocol {
              return reply;
          }
      }
++
++    private JSONObject decryptParticipantArm(String nonce, JSONObject envelope) throws Exception {
++        if (envelope.length() != 3 || !Integer.valueOf(1).equals(envelope.opt("v")))
++            throw new SecurityException("participant-envelope-invalid");
++        String encodedIv = string(envelope, "iv");
++        String encodedData = string(envelope, "data");
++        if (!encodedIv.matches("[A-Za-z0-9+/]{16}") || encodedData.length() > 1024)
++            throw new SecurityException("participant-envelope-invalid");
++        byte[] iv = Base64.getDecoder().decode(encodedIv);
++        byte[] data = Base64.getDecoder().decode(encodedData);
++        if (data.length < 17 || !Base64.getEncoder().encodeToString(data).equals(encodedData))
++            throw new SecurityException("participant-envelope-invalid");
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(Cipher.DECRYPT_MODE, participantArmKey, new GCMParameterSpec(128, iv));
++        cipher.updateAAD(("RQG1-ARM|" + device + "|" + epoch + "|" + nonce).getBytes(StandardCharsets.UTF_8));
++        byte[] clear = cipher.doFinal(data);
++        try {
++            return new JSONObject(StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(clear)).toString());
++        } finally {
++            java.util.Arrays.fill(clear, (byte) 0);
++        }
++    }
 +
 +    private JSONObject encryptedReply(String action, String nonce, JSONObject result) throws Exception {
 +        byte[] iv = new byte[12];
@@ -1250,7 +2737,7 @@ index cf6c5de1..b8dd7fb3 100644
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -69,8 +106,11 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -69,8 +135,11 @@ public final class ExperimentSessionGatewayProtocol {
          return value!=null && value.length()==length && value.matches("[0-9a-f]+");
      }
      public static String hmac(String key,String message)throws Exception {
@@ -1263,6 +2750,75 @@ index cf6c5de1..b8dd7fb3 100644
      }
      private static boolean constant(String a,String b) {
          return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
+index 5ce15656..bbc89ddc 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
+@@ -44,6 +44,8 @@ final class ExperimentSessionJsonCodec
+                         .put("breath_guidance_bias_percent",
+                             command.breathGuidanceBiasPercent)
+                         .put("started_at_utc_ns", utcNanos);
++                    if (command.participantPlan != null)
++                        request.put("participant", new JSONObject(command.participantPlan));
+                 }
+                 return request.toString();
+             } catch (Exception error) {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
+index 62ec84d8..a88ecadf 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
+@@ -23,6 +23,7 @@ final class ExperimentSessionPanelCoordinator {
+         final long expectedGeneration;
+         final String condition;
+         final int breathGuidanceBiasPercent;
++        final String participantPlan;
+ 
+         NativeCommand(String operation, String operationId, long expectedGeneration, String condition) {
+             this(operation, operationId, expectedGeneration, condition, 0);
+@@ -30,6 +31,12 @@ final class ExperimentSessionPanelCoordinator {
+ 
+         NativeCommand(String operation, String operationId, long expectedGeneration,
+                 String condition, int breathGuidanceBiasPercent) {
++            this(operation, operationId, expectedGeneration, condition, breathGuidanceBiasPercent, null);
++        }
++
++        private NativeCommand(String operation, String operationId, long expectedGeneration,
++                String condition, int breathGuidanceBiasPercent, String participantPlan) {
++            this.participantPlan = participantPlan;
+             this.operation = operation;
+             this.operationId = operationId;
+             this.expectedGeneration = expectedGeneration;
+@@ -37,6 +44,11 @@ final class ExperimentSessionPanelCoordinator {
+             this.breathGuidanceBiasPercent = Math.max(0,
+                 Math.min(100, breathGuidanceBiasPercent));
+         }
++
++        NativeCommand withParticipantPlan(String plan) {
++            return new NativeCommand(operation, operationId, expectedGeneration, condition,
++                breathGuidanceBiasPercent, plan);
++        }
+     }
+ 
+     // Raw fields retain JSON type information: strings/floats are not generation evidence.
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
+index de472e29..29a1ba62 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
+@@ -10,9 +10,13 @@ final class ExperimentSessionRecordingExport {
+   JSONObject out=body;String q=ExperimentSessionGatewayProtocol.string(out,"query");
+   if("list".equals(q)&&out.length()==3){String before=ExperimentSessionGatewayProtocol.string(out,"before");if(!before.isEmpty()&&!id(before))throw new IllegalArgumentException("recording-id");number(out,"limit",1,16);}
+   else if("describe".equals(q)&&out.length()==2){if(!id(ExperimentSessionGatewayProtocol.string(out,"id")))throw new IllegalArgumentException("recording-id");}
+-  else if("read".equals(q)&&out.length()==5){if(!ExperimentSessionGatewayProtocol.hex(ExperimentSessionGatewayProtocol.string(out,"manifest_id"),64))throw new IllegalArgumentException("recording-manifest");String file=ExperimentSessionGatewayProtocol.string(out,"file");if(!java.util.Arrays.asList("manifest.json","final.json","events.jsonl","polar-acc.jsonl","polar-ecg.jsonl","polar-hr-rr.jsonl","breath.jsonl","radius.jsonl").contains(file))throw new IllegalArgumentException("recording-file");number(out,"offset",0,134217728);number(out,"length",1,32768);}
++  else if("read".equals(q)&&out.length()==5){if(!ExperimentSessionGatewayProtocol.hex(ExperimentSessionGatewayProtocol.string(out,"manifest_id"),64))throw new IllegalArgumentException("recording-manifest");String file=ExperimentSessionGatewayProtocol.string(out,"file");if(!java.util.Arrays.asList("manifest.json","final.json","events.jsonl","polar-acc.jsonl","polar-ecg.jsonl","polar-hr-rr.jsonl","breath.jsonl","radius.jsonl").contains(file)&&!participantCsv(file))throw new IllegalArgumentException("recording-file");number(out,"offset",0,134217728);number(out,"length",1,32768);}
+   else throw new IllegalArgumentException("closed-recording-query-required");return out;
+  }
++ static boolean participantCsv(String name) {
++  return java.text.Normalizer.isNormalized(name, java.text.Normalizer.Form.NFC)
++      && name.matches("\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\\.csv");
++ }
+  static boolean id(String s){return s.matches("utc-ns-[0-9]{20}");}
+  static long number(JSONObject o,String k,long min,long max){Object n=o.opt(k);if(!(n instanceof Integer||n instanceof Long)||((Number)n).longValue()<min||((Number)n).longValue()>max)throw new IllegalArgumentException("recording-integer");return ((Number)n).longValue();}
+  static JSONObject read(JSONObject query,String binding)throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java
 new file mode 100644
 index 00000000..ba158dcb
@@ -1408,16 +2964,17 @@ index 00000000..b565c439
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..e2428f70 100644
+index b042fc60..8d50bc8a 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-@@ -15,9 +15,16 @@ import java.util.Map;
+@@ -15,9 +15,17 @@ import java.util.Map;
   */
  final class ConditionAudioAndroidMediaBackendFactory
          implements ConditionAudioRuntime.StartupPreloader {
 +    interface ScenarioTracks {
 +        void verify() throws Exception;
 +        java.util.List<String> ids();
++        default String recordingPlan(String scenarioId) { return null; }
 +        MediaPlayer prepare(String scenarioId) throws Exception;
 +    }
 +
@@ -1428,7 +2985,7 @@ index b042fc60..e2428f70 100644
      private final Map<String, PreparedTrack> prepared = new HashMap<String, PreparedTrack>();
      private ConditionAudioRuntime.StartupPreloader.Listener preloadListener;
      private boolean closed;
-@@ -42,18 +49,25 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -42,18 +50,25 @@ final class ConditionAudioAndroidMediaBackendFactory
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets) { this(assets, false); }
  
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets, boolean loopBackground) {
@@ -1455,7 +3012,7 @@ index b042fc60..e2428f70 100644
          synchronized (lock) {
              preloadListener = listener;
          }
-@@ -67,7 +81,15 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -67,7 +82,15 @@ final class ConditionAudioAndroidMediaBackendFactory
      @Override public ConditionAudioRuntime.MediaBackend create(
          ConditionAudioContract.Provider provider,
          ConditionAudioRuntime.MediaBackend.Listener listener
@@ -1472,7 +3029,7 @@ index b042fc60..e2428f70 100644
          if (provider == null || listener == null) {
              throw new IllegalArgumentException("prepared track and listener are required");
          }
-@@ -79,7 +101,20 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -79,7 +102,20 @@ final class ConditionAudioAndroidMediaBackendFactory
          if (track == null || track.player == null) {
              throw new IllegalStateException("audio-track-not-ready");
          }
@@ -1494,7 +3051,7 @@ index b042fc60..e2428f70 100644
      }
  
      private void prepareTrack(final ConditionAudioContract.Provider provider) {
-@@ -189,6 +224,7 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -189,6 +225,7 @@ final class ConditionAudioAndroidMediaBackendFactory
          private final ConditionAudioAndroidMediaBackendFactory factory;
          private final ConditionAudioContract.Provider provider;
          private final MediaPlayer player;
@@ -1502,7 +3059,7 @@ index b042fc60..e2428f70 100644
          private final Listener listener;
          private boolean released;
  
-@@ -196,17 +232,20 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -196,17 +233,20 @@ final class ConditionAudioAndroidMediaBackendFactory
              ConditionAudioAndroidMediaBackendFactory factory,
              ConditionAudioContract.Provider provider,
              MediaPlayer player,
@@ -1524,7 +3081,7 @@ index b042fc60..e2428f70 100644
              else player.setLooping(false);
              listener.onPrepared();
          }
-@@ -217,28 +256,40 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -217,28 +257,40 @@ final class ConditionAudioAndroidMediaBackendFactory
                      listener.onNaturalEnd(Math.max(0L, completedPlayer.getCurrentPosition()));
                  }
              });
@@ -1652,10 +3209,10 @@ index feb3ddc2..a1d65181 100644
  
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
 new file mode 100644
-index 00000000..c8f319e3
+index 00000000..2f3930bc
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
-@@ -0,0 +1,74 @@
+@@ -0,0 +1,79 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.res.AssetManager;
@@ -1705,6 +3262,11 @@ index 00000000..c8f319e3
 +        return selected == null ? Collections.<String>emptyList() : selected.ids();
 +    }
 +
++    @Override public String recordingPlan(String id) {
++        ScenarioAudioPackage selected = catalog;
++        return selected == null ? null : selected.recordingPlan(id);
++    }
++
 +    @Override public MediaPlayer prepare(String id) throws Exception {
 +        ScenarioAudioPackage selected = catalog;
 +        if (selected == null) throw new IllegalStateException("scenario-audio-not-verified");
@@ -1732,10 +3294,10 @@ index 00000000..c8f319e3
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 new file mode 100644
-index 00000000..23371936
+index 00000000..e12c53e1
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
-@@ -0,0 +1,327 @@
+@@ -0,0 +1,345 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.IOException;
@@ -1766,6 +3328,7 @@ index 00000000..23371936
 +    private final AssetSource source;
 +    private final Map<String, FileIdentity> files = new HashMap<>();
 +    private final Map<String, JSONObject> scenarios = new HashMap<>();
++    private final Map<String, String> recordingPlans = new HashMap<>();
 +    private final int sampleRate;
 +    private final FileIdentity library;
 +
@@ -1839,6 +3402,10 @@ index 00000000..23371936
 +        return java.util.Collections.unmodifiableList(ids);
 +    }
 +
++    String recordingPlan(String scenarioId) {
++        return recordingPlans.get(scenarioId);
++    }
++
 +    long writeWave(String scenarioId, OutputStream output) throws IOException, JSONException {
 +        if (output == null) throw new IllegalArgumentException("WAV output is required");
 +        return verifyTimeline(scenarioId, output);
@@ -1847,7 +3414,8 @@ index 00000000..23371936
 +    private long verifyTimeline(String scenarioId, OutputStream output) throws IOException, JSONException {
 +        JSONObject selected = scenarios.get(scenarioId);
 +        if (selected == null) throw new IOException("Scenario is not packaged: " + scenarioId);
-+        JSONObject plan = json(verified(file(selected.getString("path"))));
++        FileIdentity planFile = file(selected.getString("path"));
++        JSONObject plan = json(verified(planFile));
 +        int frames = selected.getInt("total_frames");
 +        String cuePrefix = "assets/audio/scenarios/" + scenarioId + "/";
 +        if (plan.getInt("schema_version") != CATALOG_SCHEMA ||
@@ -1907,7 +3475,19 @@ index 00000000..23371936
 +            throw new IOException("Scenario cue inventory or total differs");
 +        }
 +
-+        if (output == null) return frames;
++        if (output == null) {
++            if (scenarioId.matches("probe-(anleitung|5|10|15)|haupt-15")) {
++                JSONArray phases = new JSONArray();
++                for (int i = 0; i < events.length(); i++) {
++                    JSONObject event = events.getJSONObject(i);
++                    phases.put(new JSONArray().put(event.getInt("offset_frames")).put(event.getString("id")));
++                }
++                recordingPlans.put(scenarioId, new JSONObject().put("scenario_id", scenarioId)
++                    .put("scenario_sha256", planFile.sha256).put("sample_rate", sampleRate)
++                    .put("total_frames", frames).put("phases", phases).toString());
++            }
++            return frames;
++        }
 +        writeHeader(output, sampleRate, frames);
 +        byte[] silence = new byte[16384];
 +        for (Segment segment : segments) {
@@ -2394,10 +3974,10 @@ index 00000000..a6b1d21f
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
-index 00000000..062b09dd
+index 00000000..729b6fa9
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
-@@ -0,0 +1,68 @@
+@@ -0,0 +1,73 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.ByteArrayInputStream;
@@ -2432,6 +4012,11 @@ index 00000000..062b09dd
 +            path -> Files.newInputStream(root.resolve(path)), catalogHash
 +        );
 +        catalog.verifyAll();
++        org.json.JSONObject mainPlan = new org.json.JSONObject(catalog.recordingPlan("haupt-15"));
++        check(mainPlan.getInt("total_frames") == 39_690_000, "participant plan duration");
++        org.json.JSONArray phase = mainPlan.getJSONArray("phases").getJSONArray(1);
++        check(phase.getInt(0) == 1_146_600 && "calibration".equals(phase.getString(1)), "native calibration plan");
++        check(catalog.recordingPlan("box-20") == null, "diagnostic timeline is not a participant run");
 +        String[] ids = { "probe-anleitung", "probe-5", "probe-10", "probe-15", "haupt-15", "box-20" };
 +        int[] seconds = { 68, 300, 600, 900, 900, 1200 };
 +        for (int i = 0; i < ids.length; i++) {
@@ -2636,7 +4221,7 @@ index 5bc5902d..ca15dab0 100644
        "type": "array",
        "items": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..11c86d32 100644
+index ccb3e308..9e741ed5 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
@@ -2682,11 +4267,30 @@ index ccb3e308..11c86d32 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1334,12 +1348,22 @@ $polarBleStopHooks
+@@ -1245,6 +1259,13 @@ $sharedPanelFacade
+                 if (closure == null || !closure.active) {
+                     throw new SecurityException("experiment-session-packaged-closure-unavailable");
+                 }
++                if (command.has("participant")) {
++                    org.json.JSONObject participant = new org.json.JSONObject(command.getJSONObject("participant").toString());
++                    participant.remove("participant_id");
++                    String verifiedPlan = conditionAudioRecordingPlan(participant.getString("scenario_id"));
++                    if (!"arm".equals(operation) || verifiedPlan == null || !verifiedPlan.equals(participant.toString()))
++                        throw new SecurityException("participant-scenario-plan-not-packaged");
++                }
+                 String condition = command.optString("condition", "");
+                 ExperimentSessionPackagedClosure.AudioEntry selected = null;
+                 for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
+@@ -1334,12 +1355,27 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
 +        return startConditionAudio(sessionGeneration, operationId, conditionId, "");
++    }
++
++    static String conditionAudioRecordingPlan(String scenarioId) {
++        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
++        return tracks == null ? null : tracks.recordingPlan(scenarioId);
 +    }
 +
 +    static java.util.List<String> conditionAudioScenarios() {
@@ -2706,7 +4310,7 @@ index ccb3e308..11c86d32 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1371,13 @@ $polarBleStopHooks
+@@ -1347,12 +1383,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -2721,7 +4325,7 @@ index ccb3e308..11c86d32 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1386,13 @@ $polarBleStopHooks
+@@ -1361,12 +1398,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -2736,7 +4340,7 @@ index ccb3e308..11c86d32 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1514,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1526,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -2748,7 +4352,7 @@ index ccb3e308..11c86d32 100644
          }
          return clean;
      }
-@@ -1525,6 +1554,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1566,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -3027,33 +4631,47 @@ index 25bc4104..1dcaa5bc 100644
    BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
    check("advertising".equals(d.readback().getString("state")),"Remote advertises");check(!a.data.name&&a.data.services==1&&a.scan==null,"service-only unnamed advertisement");
 diff --git a/tools/checks/test_experiment_gateway_dedupe.py b/tools/checks/test_experiment_gateway_dedupe.py
-index fbc332fd..6ba46295 100644
+index fbc332fd..e2110319 100644
 --- a/tools/checks/test_experiment_gateway_dedupe.py
 +++ b/tools/checks/test_experiment_gateway_dedupe.py
-@@ -40,6 +40,10 @@ final class GatewayDedupeHarness {
+@@ -40,6 +40,14 @@ final class GatewayDedupeHarness {
   Carrier carrier=new Carrier();
   class Delegate {void dispatch(ExperimentSessionBleServer.CommandRequest r){dispatches++;carrier.updateReceipt(r.id,"pending","real handler callback stand-in");}}
   Delegate delegate=new Delegate();
 + interface WifiDelegate {
 +  java.util.List<String> scenarioIds();
 +  void dispatchScenario(ExperimentSessionBleServer.CommandRequest request,String scenario);
++  void dispatchParticipant(ExperimentSessionBleServer.CommandRequest request,String scenario,String plan);
++ }
++ String verifiedParticipantPlan(JSONObject body,String scenario,JSONObject current) {
++  throw new AssertionError("Participant Arm belongs to the full gateway fixture");
 + }
   static void requireMain(){}
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d5..0bb74b4c 100644
+index c849c2d5..86a8dec3 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
-@@ -5,9 +5,35 @@ from test_experiment_gateway_dedupe import method
+@@ -5,9 +5,65 @@ from test_experiment_gateway_dedupe import method
  original=owner.HARNESS
  prefix=original[:original.index(' public static void main')]
  setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
 -owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
++setup=setup.replace('public JSONObject polarSetupReadback(){return null;}', 'public JSONObject polarSetupReadback() {return new JSONObject().put("e", true);}')
 +setup=setup.replace(
 +    '   public void dispatch(ExperimentSessionBleServer.CommandRequest r)',
 +    '''   public java.util.List<String> scenarioIds(){return java.util.Collections.singletonList("haupt-15");}
 +   public void dispatchScenario(ExperimentSessionBleServer.CommandRequest r,String scenario){selectedScenario=scenario;dispatch(r);}
++   public String recordingPlan(String id) {
++    return !id.equals("haupt-15") && !id.equals("probe-anleitung") ? null
++       : new JSONObject().put("scenario_id", id).put("scenario_sha256", new String(new char[64]).replace((char)0, 'a')).toString();
++   }
++   public JSONObject ecgPreview() {return new JSONObject().put("age_ms",ecgAge).put("samples",new org.json.JSONArray().put(3));}
++   public void dispatchParticipant(ExperimentSessionBleServer.CommandRequest r,String scenario,String plan) {
++    selectedParticipant = new JSONObject(plan);
++    dispatchScenario(r,scenario);
++   }
 +   public void dispatch(ExperimentSessionBleServer.CommandRequest r)'''
 +)
 +setup=setup.replace(
@@ -3076,16 +4694,37 @@ index c849c2d5..0bb74b4c 100644
  owner.BOUNDARIES=owner.BOUNDARIES.replace('static String applyExperimentSessionCommand(String s){return "{}";}', '''static int reads;static String last;static Runnable during;static String applyExperimentSessionCommand(String s){reads++;last=s;if(android.os.Looper.myLooper()!=null)throw new AssertionError("filesystem query on main");if(during!=null)during.run();return "{\\"v\\":1,\\"state\\":\\"preparing\\"}";}''')
  owner.HARNESS=prefix+r'''
 + static String selectedScenario="";
++ static JSONObject selectedParticipant;
++ static long ecgAge = 15;
++ static JSONObject privateArm(JSONObject credentials, JSONObject body, boolean validTag) throws Exception {
++  String action = "participant-arm";
++  String nonce = ExperimentSessionBleProtocol.newHex(16), controller=credentials.getString("controller");
++  String device=credentials.getString("device"), epoch=credentials.getString("epoch");
++  String key=credentials.getString("key");
++  byte[] secret=ExperimentSessionGatewayProtocol.hmacBytes(key,"RQG1-ARM-KEY|"+controller+"|"+device+"|"+epoch);
++  byte[] iv=new byte[12];new java.security.SecureRandom().nextBytes(iv);
++  javax.crypto.Cipher cipher=javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
++  cipher.init(javax.crypto.Cipher.ENCRYPT_MODE,new javax.crypto.spec.SecretKeySpec(secret,"AES"),new javax.crypto.spec.GCMParameterSpec(128,iv));
++  cipher.updateAAD(("RQG1-ARM|"+device+"|"+epoch+"|"+nonce).getBytes(java.nio.charset.StandardCharsets.UTF_8));
++  byte[] data=cipher.doFinal(body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
++  if(!validTag)data[data.length-1]^=1;
++  java.util.Base64.Encoder b64=java.util.Base64.getEncoder();
++  String payload=new JSONObject().put("v",1).put("iv",b64.encodeToString(iv)).put("data",b64.encodeToString(data)).toString();
++  return new JSONObject().put("v",1).put("controller",controller).put("epoch",epoch).put("nonce",nonce)
++      .put("action",action).put("payload",payload)
++      .put("mac",ExperimentSessionGatewayProtocol.hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload));
++ }
 + static String scenePresentation="vr-preparation";
 + static boolean sceneSubmitted;
 + static int sceneRequests;
   static JSONObject network(ExperimentSessionCommandGateway g,JSONObject r)throws Exception {
    java.util.concurrent.FutureTask<JSONObject> f=new java.util.concurrent.FutureTask<>(()->g.exchangeLan(r));Thread t=new Thread(f,"network");t.start();
    long until=System.nanoTime()+3000000000L;while(!f.isDone()&&System.nanoTime()<until){Runnable task=android.os.Handler.queue.poll(20,java.util.concurrent.TimeUnit.MILLISECONDS);if(task!=null)task.run();}t.join(1000);check(!t.isAlive(),"export blocked main or IO lane");return f.get();
-@@ -26,6 +52,70 @@ owner.HARNESS=prefix+r'''
+@@ -26,7 +82,93 @@ owner.HARNESS=prefix+r'''
    ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
    credentials=join(g,g.identity());final JSONObject current=credentials;
    ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");
+-  System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
 +  ControlPanelActivity.during=null;
 +  android.os.Bundle.privateData=true;
 +  Field process=ExperimentSessionCommandGateway.class.getDeclaredField("process");
@@ -3150,9 +4789,32 @@ index c849c2d5..0bb74b4c 100644
 +  JSONObject receipt=privateGateway.exchangeLan(auth(enrolled,"receipt",lookup));
 +  check(new JSONObject(receipt.getString("payload")).getString("state").equals("confirmed")
 +      &&sceneRequests==1&&dispatches==1,"rendered recenter receipt did not stay independent of session commands");
-   System.out.println("PASS "+checks+" actual gateway export selection, LAN-only route, closed queries, no experiment dispatch, IO outside main, post-IO mode/owner retirement");
++  JSONObject relayStatus=new JSONObject(privateGateway.exchange(auth(enrolled,"status",new JSONObject())).getString("payload"));
++  check(enrolledStatus.optInt("participant_arm")==1&&!guestStatus.has("participant_arm")&&!relayStatus.has("participant_arm"),
++      "participant capability escaped enrolled LAN");
++  JSONObject participant=new JSONObject(arm.toString()).put("id","4444444444444444").put("participant_id","Tes_30_N");
++  deny(()->privateGateway.exchangeLan(privateArm(guest,participant,true)));
++  deny(()->privateGateway.exchange(privateArm(enrolled,participant,true)));
++  try {privateGateway.exchangeLan(auth(enrolled,"participant-arm",participant));throw new AssertionError("accepted plaintext");}
++  catch(SecurityException expected) {}
++  try {privateGateway.exchangeLan(privateArm(enrolled,participant,false));throw new AssertionError("accepted tampering");}
++  catch(javax.crypto.AEADBadTagException expected) {}
++  ecgAge=1001;
++  deny(()->privateGateway.exchangeLan(privateArm(enrolled,participant,true)));
++  ecgAge=15;scenePresentation="panel";
++  deny(()->privateGateway.exchangeLan(privateArm(enrolled,participant,true)));
++  scenePresentation="vr-preparation";
++  deny(()->privateGateway.exchangeLan(privateArm(enrolled,new JSONObject(participant.toString()).put("g",1),true)));
++  check(dispatches==1&&selectedParticipant==null,"denied participant Arm reached native command");
++  JSONObject participantResult=privateGateway.exchangeLan(privateArm(enrolled,participant,true));
++  privateGateway.exchangeLan(privateArm(enrolled,participant,true));
++  check(dispatches==2&&"Tes_30_N".equals(selectedParticipant.optString("participant_id"))
++      &&"haupt-15".equals(selectedParticipant.optString("scenario_id")),"participant Arm did not bind once to verified scenario");
++  check(!participantResult.toString().contains("Tes_30_N"),"signed receipt disclosed participant identity");
++  System.out.println("PASS "+checks+" actual gateway export, enrolled encrypted participant Arm, scenario identity, IO and owner fences");
   }
  }
+ '''
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
 index d1d148eb..fe32887f 100644
 --- a/tools/checks/test_experiment_remote_join.py
