@@ -13,7 +13,11 @@ sign-in details and participant data outside this repository.
 - [x] Verify ADB access and check for the official Google Drive app. Android
   Package Manager reports it installed on the Pixel 10.
 - [ ] Complete and verify the account backup before clearing account data.
-  Google Takeout still requires the operator to sign in.
+  The operator signed in and Google accepted a one-time export of every
+  selectable product. The local Drive inventory has a verified copy of each
+  item, including portable snapshots of two shared Forms with response archives.
+  Google is preparing the full archive. Download and verify every part before
+  clearing account data.
 - [ ] Install the Atmungsraum PWA in Android Chrome and verify standalone
   launcher relaunch on the Pixel.
 - [x] Preserve the exact native ECG and ACC bytes alongside the existing
