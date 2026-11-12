@@ -3,12 +3,14 @@
 ## Startup Bluetooth prompt — 2026-11-12
 
 The Quest APK invokes Android’s Bluetooth enable prompt when the radio is off
-and the app has permission to check it. The host suite passed 71 discovery
+and the app has permission to check it. The host suite passed 72 discovery
 checks, including the off and on states, permission first, and no duplicate
 prompt after returning from the dialog. VR-Probe shows its reminder on
 startup. All six Chromium layouts passed with synthetic Bluetooth, including
-portrait, landscape, enlarged text and the hotspot handoff. Signed APK 0.1.15
-passed capsule, same-signer and byte-exact USB installation checks. The actual
+portrait, landscape, enlarged text and the hotspot handoff. Signed APK 0.1.16
+passed capsule, same-signer and byte-exact USB installation checks. Its
+manifest and DEX contain the stock Quest launcher lifecycle hook and Android
+Bluetooth enable request. The actual
 Pixel browser prompt and headset confirmation remain open.
 
 ## Pixel hotspot provisioning over Bluetooth — 2026-11-12

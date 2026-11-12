@@ -437,7 +437,7 @@ index c0c0c17e..4c8ef5b1 100644
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..58b531e3 100644
+index a694dfee..f427eba8 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -497,7 +497,33 @@ index a694dfee..58b531e3 100644
                      server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
                      EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
                      return;
-@@ -1912,7 +1925,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1060,6 +1073,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+             }
+         };
+ 
++    public static void onExperimentBluetoothLauncherResumed(Activity host) {
++        if (!ExperimentSessionCommandGateway.wifiSetupPackaged(host)) return;
++        ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.existing();
++        if (gateway == null) {
++            prepareExperimentSessionBleOwner(host);
++            gateway = ExperimentSessionCommandGateway.existing();
++        }
++        if (gateway != null) gateway.discoveryLauncherResumed(host);
++    }
++
+     public static void reconcileCurrentExperimentSessionBleOwner() {
+         ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
+     }
+@@ -1864,6 +1887,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     @Override
+     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+         super.onActivityResult(requestCode, resultCode, data);
++        ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.existing();
++        if (gateway != null) gateway.discoveryActivityResult(requestCode, hostActivity());
+         if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
+             return;
+         }
+@@ -1912,7 +1937,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
@@ -506,7 +532,7 @@ index a694dfee..58b531e3 100644
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -4214,10 +4227,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4239,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -518,7 +544,7 @@ index a694dfee..58b531e3 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4247,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4259,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -542,19 +568,20 @@ index a694dfee..58b531e3 100644
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..b64760e9 100644
+index 08732e53..0c97193a 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-@@ -15,6 +15,8 @@ import org.json.JSONObject;
+@@ -15,6 +15,9 @@ import org.json.JSONObject;
  /** Optional own-APK command owner adapter. Lifetimes follow initialized native ownership. */
  public final class ExperimentSessionCommandGateway {
      public static final String METADATA="rusty.quest.experiment.command_gateway.enabled";
 +    private static final String PRIVATE_LAN_METADATA = "rusty.quest.experiment.command_gateway.private_lan_data";
 +    private static final String RECENTER_METADATA = "rusty.quest.experiment.command_gateway.scene_recenter";
++    private static final String WIFI_SETUP_METADATA = "rusty.quest.experiment.command_gateway.wifi_setup";
      private static ExperimentSessionCommandGateway process;
      private final Context context;
      private final SharedPreferences preferences;
-@@ -22,6 +24,10 @@ public final class ExperimentSessionCommandGateway {
+@@ -22,6 +25,10 @@ public final class ExperimentSessionCommandGateway {
      private final ExperimentSessionBleServer carrier;
      private final ExperimentSessionHeadsetIdentity headsetIdentity;
      private final JSONObject buildIdentity;
@@ -565,7 +592,7 @@ index 08732e53..b64760e9 100644
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +49,14 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +50,14 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -580,12 +607,16 @@ index 08732e53..b64760e9 100644
      }
  
  
-@@ -52,17 +66,29 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,17 +67,31 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
 +        return manifestEnabled(context, METADATA);
 +    }
++    static boolean wifiSetupPackaged(Context context) {
++        return android.os.Build.VERSION.SDK_INT >= 29 && manifestEnabled(context, WIFI_SETUP_METADATA);
++    }
++
 +    private static boolean manifestEnabled(Context context, String key) {
          try {android.os.Bundle data=context.getPackageManager().getApplicationInfo(context.getPackageName(),PackageManager.GET_META_DATA).metaData;
 -            return data!=null&&data.getBoolean(METADATA,false);
@@ -598,9 +629,7 @@ index 08732e53..b64760e9 100644
          buildIdentity=ExperimentSessionBuildIdentity.read(context);
 +        privateLanData = manifestEnabled(context, PRIVATE_LAN_METADATA);
 +        sceneRecenter = manifestEnabled(context, RECENTER_METADATA);
-+        wifiSetup = android.os.Build.VERSION.SDK_INT >= 29
-+            && manifestEnabled(context, "rusty.quest.experiment.command_gateway.wifi_setup")
-+            ? new ExperimentSessionWifiConnection(context, main) : null;
++        wifiSetup = wifiSetupPackaged(context) ? new ExperimentSessionWifiConnection(context, main) : null;
          discovery=new ExperimentSessionDiscoveryServer(context,new ExperimentSessionDiscoveryServer.Source(){
              @Override public JSONObject snapshot()throws Exception{return discoveryMetadata();}
 -        });
@@ -612,7 +641,7 @@ index 08732e53..b64760e9 100644
          controlMode.onChange(new Runnable(){@Override public void run(){controlModeChanged();}});
          preferences=context.getSharedPreferences("experiment-session-command-gateway",Context.MODE_PRIVATE);
          if(!preferences.contains("device"))preferences.edit().putString("device",ExperimentSessionBleProtocol.newHex(16)).commit();
-@@ -110,7 +136,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -110,7 +139,7 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -621,7 +650,7 @@ index 08732e53..b64760e9 100644
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -268,9 +294,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -268,9 +297,9 @@ public final class ExperimentSessionCommandGateway {
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
          if(enabled())protocol=new ExperimentSessionGatewayProtocol(preferences.getString("controller",""),preferences.getString("key",""),
@@ -633,7 +662,7 @@ index 08732e53..b64760e9 100644
                  }});
          controlModeChanged();
      }
-@@ -278,7 +304,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -278,7 +307,9 @@ public final class ExperimentSessionCommandGateway {
      void controlModeChanged(){
          requireMain();long packed=controlMode.readSnapshot().packed;
          if(guestModePacked!=packed){ExperimentSessionRecordingExport.retire();guests.clear();guestModePacked=packed;}
@@ -644,15 +673,25 @@ index 08732e53..b64760e9 100644
          if(journal==null)return;
          if(!trustedLanAllowed()){
              if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
-@@ -287,11 +315,15 @@ public final class ExperimentSessionCommandGateway {
+@@ -287,11 +318,25 @@ public final class ExperimentSessionCommandGateway {
          catch(Exception unavailable){routeState="listener-unavailable";if(http!=null)http.close();http=null;}
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
 -    void discoveryPermissionResult(int request){
 -        requireMain();if(request==ExperimentSessionDiscoveryServer.PERMISSION_REQUEST)discovery.permissionResult();
++    void discoveryLauncherResumed(android.app.Activity host) {
++        requireMain();
++        if (wifiSetup != null) discovery.launcherResumed(host);
++    }
++    void discoveryActivityResult(int request, android.app.Activity host) {
++        requireMain();
++        if (request == ExperimentSessionDiscoveryServer.ENABLE_BLUETOOTH_REQUEST)
++            discovery.endSystemPrompt(host);
++    }
 +    void discoveryPermissionResult(int request, android.app.Activity host) {
 +        requireMain();
 +        if (request != ExperimentSessionDiscoveryServer.PERMISSION_REQUEST) return;
++        discovery.endSystemPrompt(host);
 +        discovery.permissionResult();
 +        if (wifiSetup != null) discovery.requestPermissions(host);
      }
@@ -662,7 +701,7 @@ index 08732e53..b64760e9 100644
          ExperimentSessionRecordingExport.retire();
          clearLocalEnrollmentOffer();
          guests.clear();
-@@ -312,6 +344,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -312,6 +357,22 @@ public final class ExperimentSessionCommandGateway {
                  .put("serial",headsetIdentity.serial()).put("remote_available",remoteAvailable());
          }});
      }
@@ -685,7 +724,7 @@ index 08732e53..b64760e9 100644
      JSONObject discoveryMetadata()throws Exception {
          requireMain();if(!remoteAvailable())throw new SecurityException("remote-owner-required");
          org.json.JSONArray gateways=new org.json.JSONArray();
-@@ -332,7 +380,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +393,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -694,7 +733,7 @@ index 08732e53..b64760e9 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +403,49 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,8 +416,49 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -746,7 +785,7 @@ index 08732e53..b64760e9 100644
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
          final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
-@@ -385,6 +474,59 @@ public final class ExperimentSessionCommandGateway {
+@@ -385,6 +487,59 @@ public final class ExperimentSessionCommandGateway {
          FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
          try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
      }
@@ -806,7 +845,7 @@ index 08732e53..b64760e9 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -398,10 +540,36 @@ public final class ExperimentSessionCommandGateway {
+@@ -398,10 +553,36 @@ public final class ExperimentSessionCommandGateway {
          if(journal.known(body))return journal.original(id);
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
@@ -846,10 +885,10 @@ index 08732e53..b64760e9 100644
      }
      private JSONObject snapshot()throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-index f41c56ea..18e81dae 100644
+index f41c56ea..d569acd4 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-@@ -5,12 +5,15 @@ import android.app.Activity;
+@@ -5,12 +5,16 @@ import android.app.Activity;
  import android.bluetooth.*;
  import android.bluetooth.le.*;
  import android.content.Context;
@@ -859,13 +898,14 @@ index f41c56ea..18e81dae 100644
  import android.os.Handler;
  import android.os.Looper;
  import android.os.ParcelUuid;
++import java.lang.ref.WeakReference;
 +import java.nio.ByteBuffer;
  import java.nio.charset.StandardCharsets;
 +import java.security.SecureRandom;
  import java.util.Arrays;
  import java.util.LinkedHashMap;
  import java.util.Map;
-@@ -18,15 +21,28 @@ import java.util.UUID;
+@@ -18,15 +22,28 @@ import java.util.UUID;
  import org.json.JSONArray;
  import org.json.JSONObject;
  
@@ -878,7 +918,7 @@ index f41c56ea..18e81dae 100644
 +    static final String WIFI_SETUP = "9a7b2001-7d6a-4b7f-9d4a-6f7c0a020104";
      static final int PERMISSION_REQUEST=9403;
 -    interface Source { JSONObject snapshot() throws Exception; }
-+    private static final int ENABLE_BLUETOOTH_REQUEST = 9404;
++    static final int ENABLE_BLUETOOTH_REQUEST = 9404;
 +    private static final SecureRandom RANDOM = new SecureRandom();
 +    interface SetupStatus { String status(); }
 +    private static final SetupStatus WIFI_FAILED = new SetupStatus() {
@@ -896,11 +936,12 @@ index f41c56ea..18e81dae 100644
      private final Handler main=new Handler(Looper.getMainLooper());
      private final Map<BluetoothDevice,Peer> peers=new LinkedHashMap<>();
      private BluetoothGattServer server;
-@@ -34,13 +50,16 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -34,13 +51,17 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
      private AdvertiseCallback advertisement;
      private long generation,revision;
      private boolean remote,permissionRequested;
 +    private boolean bluetoothEnableAsked;
++    private WeakReference<Activity> systemPromptHost = new WeakReference<>(null);
      private int attempts;
      private String state="inactive",reason="remote-required";
      private Snapshot snapshot;
@@ -913,7 +954,7 @@ index f41c56ea..18e81dae 100644
              String serialText=value.getString("serial");serial=serialText.getBytes(StandardCharsets.UTF_8);
              metadata=value.toString().getBytes(StandardCharsets.UTF_8);
              if(value.length()!=7||value.getInt("v")!=1||!"remote".equals(value.getString("mode"))
-@@ -65,9 +84,19 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -65,9 +86,19 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
          final Snapshot snapshot;
          int mtu=23;
          Runnable disconnect;
@@ -934,7 +975,7 @@ index f41c56ea..18e81dae 100644
      /** Invoked on the actual main owner; native retirement explicitly closes this owner. */
      void reconcile(long token,boolean available){
          long admitted;
-@@ -84,19 +113,49 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -84,19 +115,70 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
          return Build.VERSION.SDK_INT<31||context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)==PackageManager.PERMISSION_GRANTED
              &&context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE)==PackageManager.PERMISSION_GRANTED;
      }
@@ -948,7 +989,7 @@ index f41c56ea..18e81dae 100644
      void requestPermissions(Activity host){
          boolean retry=false;
 -        synchronized(this){if(!remote||host==null)return;
-+        synchronized(this){if((!remote && !wifiSetup)||host==null)return;
++        synchronized(this){if((!remote && !wifiSetup)||host==null||systemPromptHost.get()!=null)return;
              try{
 -                if(permitted())retry=server==null&&recovery==null&&"unavailable".equals(state);
 -                else if(!permissionRequested){permissionRequested=true;
@@ -963,7 +1004,13 @@ index f41c56ea..18e81dae 100644
 +                    String advertise = Manifest.permission.BLUETOOTH_ADVERTISE;
 +                    String[] permissions = requestWifi ? new String[]{connect, advertise, wifiPermission()}
 +                        : new String[]{connect, advertise};
-+                    host.requestPermissions(permissions, PERMISSION_REQUEST);
++                    if (wifiSetup) beginSystemPrompt(host);
++                    try {
++                        host.requestPermissions(permissions, PERMISSION_REQUEST);
++                    } catch (RuntimeException unavailable) {
++                        endSystemPrompt(host);
++                        throw unavailable;
++                    }
                  }
              }catch(RuntimeException unavailable){state="unavailable";reason="permission-required";}
          }
@@ -979,16 +1026,31 @@ index f41c56ea..18e81dae 100644
 +        if (power == BluetoothAdapter.STATE_ON) bluetoothEnableAsked = false;
 +        if (power != BluetoothAdapter.STATE_OFF || bluetoothEnableAsked) return;
 +        bluetoothEnableAsked = true;
++        beginSystemPrompt(host);
 +        try {
 +            host.startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), ENABLE_BLUETOOTH_REQUEST);
-+        } catch (android.content.ActivityNotFoundException unavailable) {
-+            // A platform without the system dialog can still use its Bluetooth settings.
++        } catch (RuntimeException unavailable) {
++            endSystemPrompt(host);
++            if (!(unavailable instanceof android.content.ActivityNotFoundException)) throw unavailable;
 +        }
++    }
++    void launcherResumed(Activity host) {
++        endSystemPrompt(host);
++        requestPermissions(host);
++    }
++    private void beginSystemPrompt(Activity host) {
++        NativeRendererSelfKioskApplication.beginSystemPrompt(host);
++        systemPromptHost = new WeakReference<>(host);
++    }
++    synchronized void endSystemPrompt(Activity host) {
++        if (host == null || systemPromptHost.get() != host) return;
++        systemPromptHost.clear();
++        NativeRendererSelfKioskApplication.endSystemPrompt(host);
 +    }
      void permissionResult(){
          long admitted;
          synchronized(this){if(!remote)return;stopPlatform();attempts=0;admitted=generation;}
-@@ -141,6 +200,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -141,6 +223,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
              BluetoothGattService service=new BluetoothGattService(UUID.fromString(SERVICE),BluetoothGattService.SERVICE_TYPE_PRIMARY);
              service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(SERIAL),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
              service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(METADATA),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
@@ -998,7 +1060,7 @@ index f41c56ea..18e81dae 100644
              if(!server.addService(service)){fail(admitted,"service-unavailable",true);return;}
              timeout=new Runnable(){@Override public void run(){synchronized(ExperimentSessionDiscoveryServer.this){if(current(admitted)&&!"advertising".equals(state))fail(admitted,"callback-timeout",true);}}};
              main.postDelayed(timeout,8000);
-@@ -175,24 +237,87 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -175,24 +260,87 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
          @Override public void onCharacteristicReadRequest(final BluetoothDevice device,int id,int offset,BluetoothGattCharacteristic characteristic){synchronized(ExperimentSessionDiscoveryServer.this){
              if(!current(admitted)||server==null)return;
              String uuid=characteristic.getUuid().toString();
@@ -2115,6 +2177,36 @@ index a3dcca7f..b34b14c0 100644
      static JSONObject dispatchExistingRemoteSetup(JSONObject command,long epoch) throws Exception {
          PolarSensorRuntime owner=instance;if(owner==null)throw new SecurityException("polar-owner-unavailable");
          return owner.dispatchRemoteSetup(command,epoch);
+diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
+index 4f0b7864..a1f0fc8d 100644
+--- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
++++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
+@@ -44,7 +44,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
+                 resumed.put(NativeRendererActivityComponents.policyClass(a.getClass().getName()), true);
+                 departures.remove(NativeRendererActivityComponents.policyClass(a.getClass().getName()));
+                 NativeRendererSelfKioskService.resumePendingTerminal(a);
+-                reconcileSelectedBleOwner();
++                reconcileSelectedBleOwner(a);
+             }
+             @Override public void onActivityPaused(Activity a) {
+                 if (!own(a)) return;
+@@ -89,10 +89,13 @@ public final class NativeRendererSelfKioskApplication extends Application {
+             && NativeRendererForegroundGuardPolicy.isAllowedComponent(NativeRendererActivityComponents.policyClass(activity.getClass().getName()));
+     }
+ 
+-    private static void reconcileSelectedBleOwner() {
++    private static void reconcileSelectedBleOwner(Activity host) {
+         try {
+-            Class.forName("io.github.mesmerprism.rustyquest.native_renderer.BreathCompositionPanelModule")
+-                .getMethod("reconcileCurrentExperimentSessionBleOwner").invoke(null);
++            Class<?> module = Class.forName("io.github.mesmerprism.rustyquest.native_renderer.BreathCompositionPanelModule");
++            module.getMethod("reconcileCurrentExperimentSessionBleOwner").invoke(null);
++            if (NativeRendererActivityComponents.isNative(host)) {
++                module.getMethod("onExperimentBluetoothLauncherResumed", Activity.class).invoke(null, host);
++            }
+         } catch (ClassNotFoundException disabledModule) {
+             // Other app compositions do not select the experiment transport.
+         } catch (ReflectiveOperationException unavailableOwner) {
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
 index 68b7cc01..daea3bee 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
@@ -2475,7 +2567,7 @@ index 00000000..087a1a00
 +}
 diff --git a/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
 new file mode 100644
-index 00000000..a14d7c09
+index 00000000..8db27129
 --- /dev/null
 +++ b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
 @@ -0,0 +1,35 @@
@@ -2492,7 +2584,7 @@ index 00000000..a14d7c09
 +  "status": "public-substrate",
 +  "description": "Use enrolled, encrypted Bluetooth setup to request an attended Wi-Fi connection on the headset.",
 +  "provides": ["ui.experiment_wifi_setup"],
-+  "depends_on": ["ui.experiment_session_command_gateway"],
++  "depends_on": ["ui.experiment_session_command_gateway", "ui.same_apk_soft_kiosk"],
 +  "incompatible_with": [],
 +  "exclusive_groups": {},
 +  "android_manifest": {
@@ -2815,13 +2907,21 @@ index f406a33a..45ee4319 100644
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
-index 25bc4104..b7030707 100644
+index 25bc4104..1dcaa5bc 100644
 --- a/tools/checks/test_experiment_discovery.py
 +++ b/tools/checks/test_experiment_discovery.py
-@@ -9,6 +9,19 @@ from test_experiment_gateway_dedupe import method
+@@ -9,6 +9,27 @@ from test_experiment_gateway_dedupe import method
  
  STUBS = dict(BLE_STUBS)
  STUBS.pop('org/json/JSONObject.java')
++STUBS['io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java'] = """
++package io.github.mesmerprism.rustyquest.native_renderer;
++final class NativeRendererSelfKioskApplication {
++ static int begins, ends;
++ static void beginSystemPrompt(android.app.Activity activity) { begins++; }
++ static void endSystemPrompt(android.app.Activity activity) { ends++; }
++}
++"""
 +STUBS['android/content/Intent.java'] = '''package android.content; public class Intent {
 + public final String action; public Intent(String action){this.action=action;}}
 +'''
@@ -2838,7 +2938,7 @@ index 25bc4104..b7030707 100644
  STUBS['android/os/Handler.java'] = '''package android.os; import java.util.*; public class Handler {
   public static final List<Runnable> queued=new ArrayList<>(),delayed=new ArrayList<>(); public Handler(Looper l){}
   public boolean post(Runnable r){queued.add(r);return true;}public boolean postDelayed(Runnable r,long t){delayed.add(r);return true;}
-@@ -17,7 +30,11 @@ STUBS['android/os/Handler.java'] = '''package android.os; import java.util.*; pu
+@@ -17,7 +38,11 @@ STUBS['android/os/Handler.java'] = '''package android.os; import java.util.*; pu
  '''
  STUBS['android/bluetooth/BluetoothManager.java']=STUBS['android/bluetooth/BluetoothManager.java'].replace('final BluetoothAdapter adapter','BluetoothAdapter adapter')
  STUBS['android/bluetooth/BluetoothAdapter.java'] = '''package android.bluetooth; public class BluetoothAdapter {
@@ -2851,27 +2951,29 @@ index 25bc4104..b7030707 100644
   public boolean isEnabled(){return enabled;}public android.bluetooth.le.BluetoothLeAdvertiser getBluetoothLeAdvertiser(){return advertiser;}}
  '''
  STUBS['android/bluetooth/BluetoothGattServerCallback.java'] = STUBS['android/bluetooth/BluetoothGattServerCallback.java'].replace('public void onServiceAdded', 'public void onMtuChanged(BluetoothDevice d,int mtu){} public void onServiceAdded')
-@@ -39,7 +56,72 @@ public class DiscoveryHostTest {
+@@ -39,7 +64,74 @@ public class DiscoveryHostTest {
   static byte[] read(BluetoothGattServer s,BluetoothDevice peer,String uuid,int offset){s.callback.onCharacteristicReadRequest(peer,1,offset,characteristic(uuid));return s.lastBytes;}
   static String all(BluetoothGattServer s,BluetoothDevice peer,String uuid){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();for(int i=0;i<1024;i+=22){byte[] part=read(s,peer,uuid,i);check(s.lastStatus==0,"valid offset");out.write(part,0,part.length);if(part.length<22)break;}return new String(out.toByteArray(),StandardCharsets.UTF_8);}
   static BluetoothGattServer start(ExperimentSessionDiscoveryServer d,android.app.Activity c,long revision){d.reconcile(revision,true);BluetoothGattServer s=c.manager.servers.get(c.manager.servers.size()-1);s.callback.onServiceAdded(0,s.service);c.manager.adapter.advertiser.callbacks.get(c.manager.adapter.advertiser.callbacks.size()-1).onStartSuccess(new AdvertiseSettings());return s;}
 + static void checkBluetoothStartup() throws Exception {
 +  android.app.Activity c = new android.app.Activity();
 +  ExperimentSessionDiscoveryServer selected = new ExperimentSessionDiscoveryServer(c, () -> metadata(), true);
-+  selected.requestPermissions(c);
++  selected.launcherResumed(c);
 +  check(c.bluetoothPrompts == 0, "no prompt while Bluetooth is enabled");
 +  c.manager.adapter.enabled = false;
 +  c.permission = -1;
-+  selected.requestPermissions(c);
++  selected.launcherResumed(c);
 +  check(c.requests == 1 && c.bluetoothPrompts == 0, "obtain Bluetooth permission before asking to power on");
 +  c.permission = 0;
-+  selected.requestPermissions(c);
-+  selected.requestPermissions(c);
++  selected.launcherResumed(c);
++  selected.launcherResumed(c);
 +  check(c.bluetoothPrompts == 1, "power-on prompt once across repeated resumes");
++  check(NativeRendererSelfKioskApplication.begins == 2 && NativeRendererSelfKioskApplication.ends == 2,
++    "launcher releases each attended system prompt");
 +  c.manager.adapter.enabled = true;
-+  selected.requestPermissions(c);
++  selected.launcherResumed(c);
 +  c.manager.adapter.enabled = false;
-+  selected.requestPermissions(c);
++  selected.launcherResumed(c);
 +  check(c.bluetoothPrompts == 2, "next power-off episode can ask again");
 +  ExperimentSessionDiscoveryServer unselected = new ExperimentSessionDiscoveryServer(c, () -> metadata());
 +  unselected.requestPermissions(c);
@@ -3052,10 +3154,10 @@ index c849c2d5..0bb74b4c 100644
   }
  }
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index d1d148eb..327773ee 100644
+index d1d148eb..fe32887f 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
-@@ -58,12 +58,24 @@ final class ExperimentSessionBleServer {
+@@ -58,11 +58,25 @@ final class ExperimentSessionBleServer {
   void updateReceipt(String i,String s,String d){try{listener.receipt(new JSONObject().put("id",i).put("state",s).put("detail",d));}catch(Exception x){throw new RuntimeException(x);}}
  }
  final class ExperimentSessionDiscoveryServer {
@@ -3070,19 +3172,21 @@ index d1d148eb..327773ee 100644
 + ExperimentSessionDiscoveryServer(android.content.Context c,Source s,boolean wifiSetup){latest=this;}
   void reconcile(long t,boolean r){token=t;remote=r;}void close(){closes++;remote=false;}
   JSONObject readback()throws Exception{return new JSONObject().put("state",remote?"advertising":"inactive").put("reason","synthetic");}
-  void requestPermissions(android.app.Activity a){}void permissionResult(){}static final int PERMISSION_REQUEST=9403;
- }
+- void requestPermissions(android.app.Activity a){}void permissionResult(){}static final int PERMISSION_REQUEST=9403;
++ void requestPermissions(android.app.Activity a){}void permissionResult(){}
++ void launcherResumed(android.app.Activity a){}void endSystemPrompt(android.app.Activity a){}
++ static final int PERMISSION_REQUEST=9403,ENABLE_BLUETOOTH_REQUEST=9404;
++}
 +final class ExperimentSessionWifiConnection {
 + ExperimentSessionWifiConnection(android.content.Context context, android.os.Handler main) {}
 + ExperimentSessionDiscoveryServer.SetupStatus connect(ExperimentSessionWifiCredentials credentials) {
 +  throw new AssertionError("Unexpected Android network effect in LAN route tests");
 + }
 + void close() {}
-+}
+ }
  final class ExperimentSessionGatewayHttpServer {static int starts,closes;ExperimentSessionGatewayHttpServer(ExperimentSessionCommandGateway g,int p){}void start(){starts++;}void close(){closes++;}}
  final class ExperimentSessionDirectNetwork {ExperimentSessionDirectNetwork(android.content.Context c){}static boolean featurePackaged(android.content.Context c){return false;}JSONObject snapshot(){return new JSONObject();}JSONObject localJoinDetails(){return new JSONObject();}void start(String m){}void close(){}}
- final class ExperimentSessionRelayClient {interface Endpoint{JSONObject identity()throws Exception;JSONObject exchange(JSONObject r)throws Exception;}static class Config{Config(String a,String b,String c,String d,long e){}}ExperimentSessionRelayClient(Config c,Endpoint e){}JSONObject snapshot(){return new JSONObject();}void start(){}void close(){}}
-@@ -232,7 +244,7 @@ final class HttpRemoteJoinBoundary {
+@@ -232,7 +246,7 @@ final class HttpRemoteJoinBoundary {
          debug=(a.repo/'apps/native-renderer-android/src/debug/java'/PACKAGE/'ExperimentSessionDebugOperator.java').read_text()
          (package/'ExperimentSessionDebugOperator.java').write_text(debug)
          (package/'ExperimentSessionDebugOperatorTest.java').write_text((a.repo/'apps/native-renderer-android/tests/java'/PACKAGE/'ExperimentSessionDebugOperatorTest.java').read_text())
