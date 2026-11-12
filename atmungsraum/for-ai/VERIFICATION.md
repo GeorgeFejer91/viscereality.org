@@ -1,5 +1,26 @@
 # Verification
 
+## Quest scenario player position — 2026-11-12
+
+Quest 0.1.19 samples the Android player's position once per second while an
+authored scenario advances. The audio owner fences the samples by generation
+and operation, and Android logs include the position and monotonic timestamp.
+Use these receipts to verify the 26–41 second calibration window and
+pause/resume on Quest 2.
+
+The Java audio owner test first failed for missing position readback, then
+passed with the change. It verified sampling on the audio owner, a stable
+paused position and progress under the resumed operation. The phase audio and
+cleanup barrier checks also passed. All 85 Node tests passed. Six Chromium
+layouts checked the VR-Probe Bluetooth reminder and signed controller flow
+with 300 control checks, zero undersized targets and zero page errors against
+the synthetic headset.
+
+The Quest 2 USB install of the signed APK passed capsule and signing-lineage
+checks. The installed digest and all 67 packaged audio files matched. The
+headset lock screen held the app launch. On-device prompt, playback and
+calibration evidence require an unlocked Quest 2 and the installed Pixel PWA.
+
 ## Recovery after an interrupted participant run — 2026-11-12
 
 Quest 0.1.18 recovers an officially started run from its last verified

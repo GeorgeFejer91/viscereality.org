@@ -67,9 +67,11 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Both physical devices are authorized over USB. The signed `0.1.18`
+Both physical devices are authorized over USB. The signed `0.1.19`
 development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
+The audio owner logs the actual Android player position for
+[scenario timing verification](VERIFICATION.md#quest-scenario-player-position--2026-11-12).
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
 and grant Atmungsraum Local Network Access for the Quest connection.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).

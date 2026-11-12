@@ -62,6 +62,14 @@ The Quest audio owner prepares the timeline from its packaged WAVs and plays
 it alongside the selected condition track. Both tracks follow the native
 Start, Pause, Resume and Finish transitions.
 
+For Quest 2 playback qualification, capture the native player receipts for
+the test run with `adb -s <quest-serial> logcat -d -s RustyQuestNativeRenderer:I`.
+The `channel=condition-audio` lines carry a run generation, receipt revision,
+Android monotonic time in nanoseconds and the player's position in milliseconds.
+Use one generation to check that position advances through 26,000–41,000 ms
+in the main round, holds during a pause and continues from the retained
+position after resume. Capture the phone and headset at matching transitions.
+
 For participant recording, the enrolled phone sends an encrypted Arm request
 after the H10 reports fresh ECG and the headset is in idle VR preparation.
 The app reads the selected plan from the verified audio package. Quest

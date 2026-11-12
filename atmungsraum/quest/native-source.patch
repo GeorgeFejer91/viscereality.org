@@ -3806,7 +3806,7 @@ index 00000000..b565c439
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..8d50bc8a 100644
+index b042fc60..e9871c86 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 @@ -15,9 +15,17 @@ import java.util.Map;
@@ -3923,7 +3923,7 @@ index b042fc60..8d50bc8a 100644
              else player.setLooping(false);
              listener.onPrepared();
          }
-@@ -217,28 +257,40 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -217,28 +257,44 @@ final class ConditionAudioAndroidMediaBackendFactory
                      listener.onNaturalEnd(Math.max(0L, completedPlayer.getCurrentPosition()));
                  }
              });
@@ -3948,6 +3948,10 @@ index b042fc60..8d50bc8a 100644
 +        @Override public void stop() {
 +            try { player.stop(); }
 +            finally { if (background != null) background.stop(); }
++        }
++
++        @Override public long currentPlaybackPositionMs() {
++            return background == null ? -1L : Math.max(0L, player.getCurrentPosition());
 +        }
  
          @Override public long pause() {
@@ -4014,10 +4018,29 @@ index f920e7db..7b70e42c 100644
              return new Command(CommandKind.START, generation, operationId, "", null);
          }
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
-index feb3ddc2..a1d65181 100644
+index feb3ddc2..8275e477 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
-@@ -20,6 +20,12 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -2,10 +2,11 @@ package io.github.mesmerprism.rustyquest.native_renderer;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+-import java.util.concurrent.ExecutorService;
+-import java.util.concurrent.Executors;
+ import java.util.concurrent.RejectedExecutionException;
++import java.util.concurrent.ScheduledFuture;
++import java.util.concurrent.ScheduledThreadPoolExecutor;
+ import java.util.concurrent.ThreadFactory;
++import java.util.concurrent.TimeUnit;
+ import java.util.concurrent.atomic.AtomicLong;
+ 
+ /**
+@@ -16,10 +17,17 @@ import java.util.concurrent.atomic.AtomicLong;
+ final class ConditionAudioRuntime implements AutoCloseable {
+     private static volatile ConditionAudioRuntime appLifetime;
+     private static final AtomicLong OWNER_SEQUENCE = new AtomicLong(0L);
++    private static final long POSITION_SAMPLE_MS = 1000L;
+ 
      interface MediaBackendFactory {
          MediaBackend create(ConditionAudioContract.Provider provider, MediaBackend.Listener listener)
              throws Exception;
@@ -4030,7 +4053,44 @@ index feb3ddc2..a1d65181 100644
      }
  
      /**
-@@ -534,7 +540,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -49,6 +57,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+ 
+         void prepare(boolean looping) throws Exception;
+         void start() throws Exception;
++        /** Returns the current platform timeline position, or -1 if sampling is unavailable. */
++        default long currentPlaybackPositionMs() { return -1L; }
+         /** Pause must retain the prepared player and return its actual media position. */
+         long pause() throws Exception;
+         void stop() throws Exception;
+@@ -56,7 +66,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+     }
+ 
+     private final Object authorityLock = new Object();
+-    private final ExecutorService owner;
++    private final ScheduledThreadPoolExecutor owner;
++    private ScheduledFuture<?> positionSample;
+     private final ConditionAudioContract.TrustedPackagedInventory inventory;
+     private final MediaBackendFactory backendFactory;
+     private final ConditionAudioContract.ReceiptSink receiptSink;
+@@ -93,7 +104,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+         this.startupPreloader = backendFactory instanceof StartupPreloader
+             ? (StartupPreloader) backendFactory : null;
+         this.receiptSink = receiptSink;
+-        this.owner = Executors.newSingleThreadExecutor(new ThreadFactory() {
++        this.owner = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
+             @Override public Thread newThread(Runnable runnable) {
+                 return new Thread(
+                     runnable,
+@@ -101,6 +112,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+                 );
+             }
+         });
++        this.owner.setRemoveOnCancelPolicy(true);
++        this.owner.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+         this.phase = this.inventory.available
+             ? ConditionAudioContract.Phase.IDLE : ConditionAudioContract.Phase.UNAVAILABLE;
+         this.reason = this.inventory.available ? "ready" : this.inventory.reason;
+@@ -534,7 +547,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
          try {
              final MediaBackend candidate = backendFactory.create(
                  provider,
@@ -4040,7 +4100,81 @@ index feb3ddc2..a1d65181 100644
              );
              boolean rejectedAsStale;
              synchronized (authorityLock) {
-@@ -923,7 +930,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -663,6 +677,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+                                 null
+                             );
+                         }
++                        schedulePositionSample(generation, epoch, receipt.operationId);
+                         emit(receipt);
+                     }
+                 });
+@@ -675,14 +690,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+                         synchronized (authorityLock) {
+                             if (!current(generation, epoch)
+                                     || phase != ConditionAudioContract.Phase.PLAYING) return;
+-                            positionMs = Math.max(positionMs, observedPositionMs);
+-                            receipt = receiptLocked(
+-                                ConditionAudioContract.Event.PROGRESS,
+-                                generation,
+-                                activeOperationId,
+-                                "progress",
+-                                null
+-                            );
++                            receipt = progressReceiptLocked(observedPositionMs);
+                         }
+                         emit(receipt);
+                     }
+@@ -799,6 +807,49 @@ final class ConditionAudioRuntime implements AutoCloseable {
+         emit(receipt);
+     }
+ 
++    private void schedulePositionSample(final long generation, final long epoch,
++            final String operationId) {
++        synchronized (authorityLock) {
++            if (!playingOperation(generation, epoch, operationId)) return;
++            if (positionSample != null) positionSample.cancel(false);
++            positionSample = owner.schedule(new Runnable() {
++                @Override public void run() {
++                    final MediaBackend active;
++                    synchronized (authorityLock) {
++                        if (!playingOperation(generation, epoch, operationId)) return;
++                        active = backend;
++                    }
++                    final long observed;
++                    try {
++                        observed = active.currentPlaybackPositionMs();
++                    } catch (IllegalStateException unavailable) {
++                        // MediaPlayer's terminal callbacks retain authority over playback state.
++                        return;
++                    }
++                    if (observed < 0L) return;
++                    final ReceiptContext progress;
++                    synchronized (authorityLock) {
++                        if (!playingOperation(generation, epoch, operationId)) return;
++                        progress = observed > positionMs ? progressReceiptLocked(observed) : null;
++                        positionSample = owner.schedule(this, POSITION_SAMPLE_MS, TimeUnit.MILLISECONDS);
++                    }
++                    if (progress != null) emit(progress);
++                }
++            }, POSITION_SAMPLE_MS, TimeUnit.MILLISECONDS);
++        }
++    }
++
++    private boolean playingOperation(long generation, long epoch, String operationId) {
++        return current(generation, epoch) && phase == ConditionAudioContract.Phase.PLAYING
++            && operationId.equals(activeOperationId) && backend != null;
++    }
++
++    private ReceiptContext progressReceiptLocked(long observedPositionMs) {
++        positionMs = Math.max(positionMs, observedPositionMs);
++        return receiptLocked(ConditionAudioContract.Event.PROGRESS, sessionGeneration,
++            activeOperationId, "progress", null);
++    }
++
+     private void enqueueCallback(Runnable callback) {
+         try {
+             owner.execute(callback);
+@@ -923,7 +974,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
      }
  
      private static String fingerprint(ConditionAudioContract.Command command) {
@@ -4670,6 +4804,62 @@ index 68b7cc01..daea3bee 100644
 +  check(music.released&&timeline.released,"terminal cleanup releases both tracks");
 + }
  }
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
+index 0230ecc8..71d27a45 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
+@@ -50,18 +50,31 @@ public final class ConditionAudioRuntimeTest {
+             check(!runtime.submit(ConditionAudioContract.Command.pause(1L, "pause-before-start")).accepted, "armed audio cannot pause");
+             check(runtime.submit(ConditionAudioContract.Command.start(1L, "official-start")).accepted, "explicit start accepted");
+             backend.awaitStart();
++            backend.playbackPositionMs = 500L;
+             backend.listener.onActualStart(0L);
+             receipts.await(ConditionAudioContract.Event.ACTUAL_START, 1L);
++            ConditionAudioContract.Receipt progress = receipts.awaitOperation(
++                ConditionAudioContract.Event.PROGRESS, "official-start");
++            check(progress != null && progress.positionMs == 500L
++                && backend.positionReadThread == backend.platformThread,
++                "live progress reads the platform position on the audio owner");
+             ConditionAudioContract.Command pause = ConditionAudioContract.Command.pause(1L, "pause");
+             check(runtime.submit(pause).accepted, "pause accepted");
+             ConditionAudioContract.Receipt paused = receipts.await(ConditionAudioContract.Event.PAUSED, 1L);
+             check(paused.positionMs == 1234L, "pause reports actual player position");
+             check(runtime.submit(pause).duplicate, "pause retry is idempotent");
++            backend.playbackPositionMs = 1500L;
++            Thread.sleep(1150L);
++            check(runtime.snapshot().positionMs == 1234L,
++                "a scheduled read cannot advance a paused timeline");
+             check(runtime.submit(ConditionAudioContract.Command.resume(1L, "resume")).accepted, "resume accepted");
+             backend.listener.onActualStart(1234L);
+             ConditionAudioContract.Receipt resumed = receipts.await(ConditionAudioContract.Event.RESUMED, 1L);
+             check(resumed.positionMs == 1234L && backend.prepareCount == 1 && backend.stopCount == 0
+                 && backend.releaseCount == 0, "resume retains exact prepared player and position");
++            progress = receipts.awaitOperation(ConditionAudioContract.Event.PROGRESS, "resume");
++            check(progress != null && progress.positionMs == 1500L,
++                "resume publishes actual progress with its own operation identity");
+             backend.listener.onNaturalEnd(2000L);
+             receipts.await(ConditionAudioContract.Event.NATURAL_END, 1L);
+             check(runtime.submit(ConditionAudioContract.Command.pause(1L, "silent-pause")).accepted, "natural-end silence can pause");
+@@ -740,6 +753,10 @@ public final class ConditionAudioRuntimeTest {
+ 
+     private static final class FakeBackend implements ConditionAudioRuntime.MediaBackend {
+         @Override public long pause() { return 1234L; }
++        @Override public long currentPlaybackPositionMs() {
++            positionReadThread = Thread.currentThread();
++            return playbackPositionMs;
++        }
+         final ConditionAudioContract.Provider provider;
+         final Listener listener;
+         volatile int prepareCount;
+@@ -748,6 +765,8 @@ public final class ConditionAudioRuntimeTest {
+         volatile int releaseCount;
+         volatile boolean looping = true;
+         volatile Thread platformThread;
++        volatile Thread positionReadThread;
++        volatile long playbackPositionMs = -1L;
+         final boolean throwStop;
+         final boolean throwRelease;
+         boolean releaseBlocked;
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
 index 56040232..5e5da2eb 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
@@ -5063,7 +5253,7 @@ index 5bc5902d..ca15dab0 100644
        "type": "array",
        "items": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..9e741ed5 100644
+index ccb3e308..15f8b557 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
@@ -5109,7 +5299,16 @@ index ccb3e308..9e741ed5 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1245,6 +1259,13 @@ $sharedPanelFacade
+@@ -1189,6 +1203,8 @@ $sharedPanelFacade
+                             + receipt.event.name().toLowerCase(java.util.Locale.ROOT)
+                             + " generation=" + receipt.sessionGeneration
+                             + " revision=" + receipt.receiptRevision
++                            + " position_ms=" + receipt.positionMs
++                            + " elapsed_realtime_ns=" + android.os.SystemClock.elapsedRealtimeNanos()
+                             + " reason=" + receipt.reason);
+                     String eventOperation = receipt.event == ConditionAudioContract.Event.PREPARED
+                         ? "audio-prepared" : receipt.event == ConditionAudioContract.Event.ACTUAL_START
+@@ -1245,6 +1261,13 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -5123,7 +5322,7 @@ index ccb3e308..9e741ed5 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1334,12 +1355,27 @@ $polarBleStopHooks
+@@ -1334,12 +1357,27 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -5152,7 +5351,7 @@ index ccb3e308..9e741ed5 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1383,13 @@ $polarBleStopHooks
+@@ -1347,12 +1385,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -5167,7 +5366,7 @@ index ccb3e308..9e741ed5 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1398,13 @@ $polarBleStopHooks
+@@ -1361,12 +1400,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -5182,7 +5381,7 @@ index ccb3e308..9e741ed5 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1526,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1528,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -5194,7 +5393,7 @@ index ccb3e308..9e741ed5 100644
          }
          return clean;
      }
-@@ -1525,6 +1566,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1568,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -5324,6 +5523,19 @@ index bafddd3d..48fab4d6 100644
 +if($LASTEXITCODE-ne0){throw 'Remote discovery and Wi-Fi setup production callback tests failed'}
  & (Join-Path $PSScriptRoot 'Test-ExperimentHeadsetIdentityCli.ps1')
  @{passed=$true;scope='Production transport authentication host tests only; Android owner/native/LAN effects require separate evidence'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
+diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
+index 04d338aa..680d540c 100644
+--- a/tools/checks/Test-NativeRendererConditionAudio.ps1
++++ b/tools/checks/Test-NativeRendererConditionAudio.ps1
+@@ -38,7 +38,7 @@ function Assert-NotContains([string]$Path, [string]$Literal) {
+ 
+ Assert-Contains $contract 'packaged-native-app-provider'
+ Assert-Contains $contract 'rusty.quest.condition_audio.receipt.v1'
+-Assert-Contains $runtime 'Executors.newSingleThreadExecutor(new ThreadFactory()'
++Assert-Contains $runtime 'new ScheduledThreadPoolExecutor(1, new ThreadFactory()'
+ Assert-Contains $runtime 'candidate.prepare(false)'
+ Assert-Contains $runtime 'threshold-does-not-stop-audio'
+ Assert-Contains $runtime 'natural-end-silence-session-continues'
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 index 966e9942..3d4a3245 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
