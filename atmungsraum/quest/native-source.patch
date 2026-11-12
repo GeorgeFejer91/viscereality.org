@@ -1,0 +1,592 @@
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+index b042fc60..800db98d 100644
+--- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
+@@ -15,9 +15,14 @@ import java.util.Map;
+  */
+ final class ConditionAudioAndroidMediaBackendFactory
+         implements ConditionAudioRuntime.StartupPreloader {
++    interface PackagedAudioCheck {
++        void verify() throws Exception;
++    }
++
+     private final Object lock = new Object();
+     private final AssetManager assets;
+     private final boolean loopBackground;
++    private final PackagedAudioCheck packagedAudioCheck;
+     private final Map<String, PreparedTrack> prepared = new HashMap<String, PreparedTrack>();
+     private ConditionAudioRuntime.StartupPreloader.Listener preloadListener;
+     private boolean closed;
+@@ -42,18 +47,25 @@ final class ConditionAudioAndroidMediaBackendFactory
+     ConditionAudioAndroidMediaBackendFactory(AssetManager assets) { this(assets, false); }
+ 
+     ConditionAudioAndroidMediaBackendFactory(AssetManager assets, boolean loopBackground) {
++        this(assets, loopBackground, null);
++    }
++
++    ConditionAudioAndroidMediaBackendFactory(
++            AssetManager assets, boolean loopBackground, PackagedAudioCheck packagedAudioCheck) {
+         if (assets == null) throw new IllegalArgumentException("packaged asset manager is required");
+         this.assets = assets;
+         this.loopBackground = loopBackground;
++        this.packagedAudioCheck = packagedAudioCheck;
+     }
+ 
+     @Override public void preload(
+         ConditionAudioContract.Provider[] providers,
+         ConditionAudioRuntime.StartupPreloader.Listener listener
+-    ) {
++    ) throws Exception {
+         if (providers == null || providers.length == 0 || listener == null) {
+             throw new IllegalArgumentException("packaged condition tracks are required");
+         }
++        if (packagedAudioCheck != null) packagedAudioCheck.verify();
+         synchronized (lock) {
+             preloadListener = listener;
+         }
+diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+new file mode 100644
+index 00000000..45b866f6
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
+@@ -0,0 +1,321 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.OutputStream;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
++import java.nio.charset.StandardCharsets;
++import java.security.MessageDigest;
++import java.security.NoSuchAlgorithmException;
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import org.json.JSONArray;
++import org.json.JSONException;
++import org.json.JSONObject;
++
++/** Verifies and materializes a packaged mono PCM timeline for the native audio owner. */
++final class ScenarioAudioPackage {
++    interface AssetSource {
++        InputStream open(String path) throws IOException;
++    }
++
++    private static final int MAX_FILE_BYTES = 32 * 1024 * 1024;
++    private static final int MAX_CATALOG_BYTES = 256 * 1024;
++    private static final int CATALOG_SCHEMA = 1;
++    private final AssetSource source;
++    private final Map<String, FileIdentity> files = new HashMap<>();
++    private final Map<String, JSONObject> scenarios = new HashMap<>();
++    private final int sampleRate;
++    private final FileIdentity library;
++
++    private ScenarioAudioPackage(AssetSource source, JSONObject catalog)
++            throws IOException, JSONException {
++        this.source = source;
++        sampleRate = catalog.getInt("sample_rate");
++        if (catalog.getInt("schema_version") != CATALOG_SCHEMA || sampleRate < 8000 || sampleRate > 48000) {
++            throw new IOException("Invalid scenario audio catalog");
++        }
++        JSONArray inventory = catalog.getJSONArray("files");
++        if (inventory.length() < 1 || inventory.length() > 1024) {
++            throw new IOException("Invalid scenario audio file inventory");
++        }
++        for (int i = 0; i < inventory.length(); i++) {
++            JSONObject row = inventory.getJSONObject(i);
++            FileIdentity identity = new FileIdentity(row);
++            if (files.put(identity.path, identity) != null) {
++                throw new IOException("Duplicate scenario audio file: " + identity.path);
++            }
++        }
++        library = file(catalog.getString("library"));
++        JSONObject profile = json(verified(library));
++        if (profile.getInt("sample_rate") != sampleRate) {
++            throw new IOException("Scenario audio library sample rate differs");
++        }
++        JSONArray available = catalog.getJSONArray("scenarios");
++        if (available.length() < 1 || available.length() > 64) {
++            throw new IOException("Invalid scenario selection inventory");
++        }
++        for (int i = 0; i < available.length(); i++) {
++            JSONObject row = available.getJSONObject(i);
++            String id = row.getString("id");
++            if (!id.matches("[a-z0-9][a-z0-9-]{0,63}") ||
++                    !row.getString("path").equals("audio/scenarios/" + id + ".json") ||
++                    scenarios.put(id, row) != null) {
++                throw new IOException("Invalid scenario selection");
++            }
++        }
++    }
++
++    static ScenarioAudioPackage open(AssetSource source, String expectedCatalogHash)
++            throws IOException, JSONException {
++        if (expectedCatalogHash == null || !expectedCatalogHash.matches("[0-9a-f]{64}")) {
++            throw new IOException("A bound scenario catalog digest is required");
++        }
++        byte[] buffer = new byte[MAX_CATALOG_BYTES];
++        int size = 0;
++        try (InputStream stream = source.open("scenario-catalog.json")) {
++            while (size < buffer.length) {
++                int count = stream.read(buffer, size, buffer.length - size);
++                if (count < 0) break;
++                size += count;
++            }
++            if (stream.read() != -1) throw new IOException("Scenario audio catalog exceeds its limit");
++        }
++        byte[] bytes = java.util.Arrays.copyOf(buffer, size);
++        if (!expectedCatalogHash.equals(sha256(bytes))) {
++            throw new IOException("Scenario audio catalog digest differs");
++        }
++        return new ScenarioAudioPackage(source, json(bytes));
++    }
++
++    void verifyAll() throws IOException, JSONException {
++        for (String scenarioId : scenarios.keySet()) verifyTimeline(scenarioId, null);
++    }
++
++    long writeWave(String scenarioId, OutputStream output) throws IOException, JSONException {
++        if (output == null) throw new IllegalArgumentException("WAV output is required");
++        return verifyTimeline(scenarioId, output);
++    }
++
++    private long verifyTimeline(String scenarioId, OutputStream output) throws IOException, JSONException {
++        JSONObject selected = scenarios.get(scenarioId);
++        if (selected == null) throw new IOException("Scenario is not packaged: " + scenarioId);
++        JSONObject plan = json(verified(file(selected.getString("path"))));
++        int frames = selected.getInt("total_frames");
++        String cuePrefix = "assets/audio/scenarios/" + scenarioId + "/";
++        if (plan.getInt("schema_version") != CATALOG_SCHEMA ||
++                !plan.getString("scenario_id").equals(scenarioId) ||
++                !plan.getString("library_manifest_sha256").equals(library.sha256) ||
++                !plan.getString("audio_assets_base_directory").equals("../../" + cuePrefix) ||
++                plan.getInt("sample_rate") != sampleRate ||
++                frames < 1 || frames > sampleRate * 1200 || plan.getInt("total_frames") != frames) {
++            throw new IOException("Scenario timing or library binding differs");
++        }
++
++        JSONArray events = plan.getJSONArray("events");
++        if (events.length() < 1 || events.length() > 1000) {
++            throw new IOException("Invalid scenario audio event count");
++        }
++        JSONObject registry = plan.getJSONObject("audio_assets");
++        Map<String, Cue> cues = new HashMap<>();
++        List<Segment> segments = new ArrayList<>();
++        int offset = 0;
++        long retainedBytes = 0;
++        for (int i = 0; i < events.length(); i++) {
++            JSONObject event = events.getJSONObject(i);
++            int duration = event.getInt("duration_frames");
++            if (event.getInt("offset_frames") != offset || duration < 1 || duration > frames - offset ||
++                    !event.has("asset")) {
++                throw new IOException("Scenario audio events must cover consecutive frames");
++            }
++            Cue cue = null;
++            if (!event.isNull("asset")) {
++                String id = event.getString("asset");
++                cue = cues.get(id);
++                if (cue == null) {
++                    JSONObject entry = registry.getJSONObject(id);
++                    String name = entry.getString("file");
++                    if (!name.matches("[0-9]{4}_[0-9]{2}m[0-9]{2}s_[a-z0-9-]+\\.wav") ||
++                            !entry.getString("id").equals(id) || entry.getInt("frames") != duration) {
++                        throw new IOException("Invalid scenario cue identity");
++                    }
++                    FileIdentity identity = file(cuePrefix + name);
++                    if (entry.getInt("bytes") != identity.bytes ||
++                            !entry.getString("sha256").equals(identity.sha256)) {
++                        throw new IOException("Scenario cue binding differs: " + identity.path);
++                    }
++                    retainedBytes += identity.bytes;
++                    if (retainedBytes > MAX_FILE_BYTES) {
++                        throw new IOException("Scenario cue set exceeds its memory bound");
++                    }
++                    cue = decodeCue(verified(identity), duration, entry.getBoolean("placeholder"));
++                    cues.put(id, cue);
++                }
++                if (cue.frames != duration) throw new IOException("Repeated cue length differs");
++            }
++            segments.add(new Segment(cue, duration));
++            offset += duration;
++        }
++        if (offset != frames || cues.size() != registry.length()) {
++            throw new IOException("Scenario cue inventory or total differs");
++        }
++
++        if (output == null) return frames;
++        writeHeader(output, sampleRate, frames);
++        byte[] silence = new byte[16384];
++        for (Segment segment : segments) {
++            if (segment.cue != null) {
++                output.write(segment.cue.bytes, segment.cue.dataOffset, segment.frames * 2);
++            } else {
++                int remaining = segment.frames * 2;
++                while (remaining > 0) {
++                    int count = Math.min(remaining, silence.length);
++                    output.write(silence, 0, count);
++                    remaining -= count;
++                }
++            }
++        }
++        return frames;
++    }
++
++    private FileIdentity file(String path) throws IOException {
++        FileIdentity identity = files.get(path);
++        if (identity == null) throw new IOException("Scenario file is not in the catalog: " + path);
++        return identity;
++    }
++
++    private byte[] verified(FileIdentity identity) throws IOException {
++        byte[] data = new byte[identity.bytes];
++        try (InputStream stream = source.open(identity.path)) {
++            int offset = 0;
++            while (offset < data.length) {
++                int count = stream.read(data, offset, data.length - offset);
++                if (count < 0) throw new IOException("Scenario file is truncated: " + identity.path);
++                offset += count;
++            }
++            if (stream.read() != -1 || !identity.sha256.equals(sha256(data))) {
++                throw new IOException("Scenario file integrity differs: " + identity.path);
++            }
++        }
++        return data;
++    }
++
++    private Cue decodeCue(byte[] bytes, int frames, boolean placeholder) throws IOException {
++        ByteBuffer wave = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
++        if (bytes.length < 44 || !tag(bytes, 0, "RIFF") || !tag(bytes, 8, "WAVE") ||
++                wave.getInt(4) != bytes.length - 8) {
++            throw new IOException("Scenario cue is not a complete RIFF/WAVE file");
++        }
++        boolean format = false;
++        int dataOffset = -1;
++        int dataSize = 0;
++        int next = 12;
++        while (next + 8 <= bytes.length) {
++            int offset = next + 8;
++            int size = wave.getInt(next + 4);
++            if (size < 0 || size > bytes.length - offset || size + (size & 1) > bytes.length - offset) {
++                throw new IOException("Scenario WAV chunk is truncated");
++            }
++            if (tag(bytes, next, "fmt ")) {
++                if (format || size < 16 || wave.getShort(offset) != 1 ||
++                        wave.getShort(offset + 2) != 1 || wave.getInt(offset + 4) != sampleRate ||
++                        wave.getInt(offset + 8) != sampleRate * 2 ||
++                        wave.getShort(offset + 12) != 2 || wave.getShort(offset + 14) != 16) {
++                    throw new IOException("Scenario WAV must be mono signed 16-bit PCM");
++                }
++                format = true;
++            } else if (tag(bytes, next, "data")) {
++                if (dataOffset >= 0) throw new IOException("Scenario WAV contains multiple data chunks");
++                dataOffset = offset;
++                dataSize = size;
++            }
++            next = offset + size + (size & 1);
++        }
++        if (!format || dataOffset < 0 || dataSize != frames * 2 || next != bytes.length) {
++            throw new IOException("Scenario WAV duration differs from its slot");
++        }
++        if (placeholder) {
++            for (int i = dataOffset; i < dataOffset + dataSize; i++) {
++                if (bytes[i] != 0) throw new IOException("Scenario WAV placeholder contains sound");
++            }
++        }
++        return new Cue(bytes, dataOffset, frames);
++    }
++
++    private static boolean tag(byte[] bytes, int offset, String expected) {
++        for (int i = 0; i < 4; i++) {
++            if (bytes[offset + i] != expected.charAt(i)) return false;
++        }
++        return true;
++    }
++
++    private static void writeHeader(OutputStream output, int sampleRate, int frames) throws IOException {
++        int bytes = frames * 2;
++        ByteBuffer header = ByteBuffer.allocate(44).order(ByteOrder.LITTLE_ENDIAN);
++        header.put("RIFF".getBytes(StandardCharsets.US_ASCII)).putInt(36 + bytes);
++        header.put("WAVEfmt ".getBytes(StandardCharsets.US_ASCII)).putInt(16);
++        header.putShort((short) 1).putShort((short) 1).putInt(sampleRate).putInt(2 * sampleRate);
++        header.putShort((short) 2).putShort((short) 16);
++        header.put("data".getBytes(StandardCharsets.US_ASCII)).putInt(bytes);
++        output.write(header.array());
++    }
++
++    private static JSONObject json(byte[] bytes) throws JSONException {
++        return new JSONObject(new String(bytes, StandardCharsets.UTF_8));
++    }
++
++    private static String sha256(byte[] bytes) {
++        try {
++            byte[] digest = MessageDigest.getInstance("SHA-256").digest(bytes);
++            StringBuilder result = new StringBuilder(64);
++            for (byte part : digest) {
++                result.append(Character.forDigit((part & 255) >>> 4, 16));
++                result.append(Character.forDigit(part & 15, 16));
++            }
++            return result.toString();
++        } catch (NoSuchAlgorithmException impossible) {
++            throw new IllegalStateException(impossible);
++        }
++    }
++
++    private static final class FileIdentity {
++        final String path;
++        final int bytes;
++        final String sha256;
++
++        FileIdentity(JSONObject row) throws IOException, JSONException {
++            path = row.getString("path");
++            bytes = row.getInt("bytes");
++            sha256 = row.getString("sha256");
++            if (!path.matches("[a-z0-9_-]+(?:/[a-z0-9_-][a-z0-9_.-]*)+") ||
++                    bytes < 1 || bytes > MAX_FILE_BYTES || !sha256.matches("[a-f0-9]{64}")) {
++                throw new IOException("Invalid scenario audio file identity");
++            }
++        }
++    }
++
++    private static final class Cue {
++        final byte[] bytes;
++        final int dataOffset;
++        final int frames;
++
++        Cue(byte[] bytes, int dataOffset, int frames) {
++            this.bytes = bytes;
++            this.dataOffset = dataOffset;
++            this.frames = frames;
++        }
++    }
++
++    private static final class Segment {
++        final Cue cue;
++        final int frames;
++
++        Segment(Cue cue, int frames) {
++            this.cue = cue;
++            this.frames = frames;
++        }
++    }
++}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
+new file mode 100644
+index 00000000..062b09dd
+--- /dev/null
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
+@@ -0,0 +1,68 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.io.ByteArrayInputStream;
++import java.io.IOException;
++import java.io.OutputStream;
++import java.nio.file.Files;
++import java.nio.file.Path;
++
++public final class ScenarioAudioPackageTest {
++    private static void check(boolean value, String message) {
++        if (!value) throw new AssertionError(message);
++    }
++
++    private static final class Receipt extends OutputStream {
++        long bytes;
++        boolean nonzeroPcm;
++
++        @Override public void write(int value) {
++            if (bytes >= 44 && (value & 255) != 0) nonzeroPcm = true;
++            bytes++;
++        }
++
++        @Override public void write(byte[] data, int offset, int size) {
++            for (int index = offset; index < offset + size; index++) write(data[index]);
++        }
++    }
++
++    public static void main(String[] args) throws Exception {
++        Path root = Path.of(args[0]).toAbsolutePath();
++        String catalogHash = args[1];
++        ScenarioAudioPackage catalog = ScenarioAudioPackage.open(
++            path -> Files.newInputStream(root.resolve(path)), catalogHash
++        );
++        catalog.verifyAll();
++        String[] ids = { "probe-anleitung", "probe-5", "probe-10", "probe-15", "haupt-15", "box-20" };
++        int[] seconds = { 68, 300, 600, 900, 900, 1200 };
++        for (int i = 0; i < ids.length; i++) {
++            Receipt output = new Receipt();
++            long frames = catalog.writeWave(ids[i], output);
++            check(frames == 44100L * seconds[i], "frame length for " + ids[i]);
++            check(output.bytes == 44 + 2 * frames, "WAV byte length for " + ids[i]);
++            check(!output.nonzeroPcm, "placeholder PCM for " + ids[i]);
++        }
++        try {
++            ScenarioAudioPackage.open(path -> Files.newInputStream(root.resolve(path)), "0".repeat(64));
++            throw new AssertionError("accepted wrong catalog digest");
++        } catch (IOException expected) { }
++
++        ScenarioAudioPackage damaged = ScenarioAudioPackage.open(path -> {
++            if (!path.endsWith("_instruction-1.wav")) return Files.newInputStream(root.resolve(path));
++            byte[] bytes = Files.readAllBytes(root.resolve(path));
++            bytes[44] ^= 1;
++            return new ByteArrayInputStream(bytes);
++        }, catalogHash);
++        Receipt output = new Receipt();
++        try {
++            damaged.verifyAll();
++            throw new AssertionError("accepted a damaged authored cue in preflight");
++        } catch (IOException expected) { }
++        try {
++            damaged.writeWave("haupt-15", output);
++            throw new AssertionError("accepted a damaged authored cue");
++        } catch (IOException expected) {
++            check(output.bytes == 0, "wrote playback bytes before verifying all inputs");
++        }
++        System.out.println("PASS: six native WAV renders, exact frames, silent placeholders, catalog and cue integrity.");
++    }
++}
+diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
+index 5bc5902d..ca15dab0 100644
+--- a/schemas/rusty.quest.native_app_build.v1.schema.json
++++ b/schemas/rusty.quest.native_app_build.v1.schema.json
+@@ -43,6 +43,24 @@
+       "type": "string",
+       "minLength": 1
+     },
++    "experiment_gateway_origins": {
++      "type": "array",
++      "minItems": 1,
++      "maxItems": 4,
++      "uniqueItems": true,
++      "items": {
++        "type": "string",
++        "pattern": "^https://[a-z0-9.-]+(:[0-9]{1,5})?$"
++      }
++    },
++    "quest_supported_devices": {
++      "type": "array",
++      "minItems": 1,
++      "uniqueItems": true,
++      "items": {
++        "enum": ["quest", "quest2", "questpro", "quest3", "quest3s"]
++      }
++    },
+     "requested_features": {
+       "type": "array",
+       "items": {
+diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
+index ccb3e308..f4d16833 100644
+--- a/tools/Build-NativeRendererAndroid.ps1
++++ b/tools/Build-NativeRendererAndroid.ps1
+@@ -882,6 +882,32 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
+     # generated Java closure: those closures deliberately omit that source
+     # family and its JNI declarations.
+     $isExperimentSessionPanel = $selectedPanelModuleId -ceq "breath-composition-controls" -or $standaloneExperimentOwner
++    $scenarioCheck = 'null'
++    if ($appBuildEnvByName.ContainsKey('RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256')) {
++        $scenarioDigest = [string]$appBuildEnvByName['RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256']
++        $scenarioSource = @($panelSourceFiles | Where-Object { [IO.Path]::GetFileName($_) -ceq 'ScenarioAudioPackage.java' })
++        if (!$isExperimentSessionPanel -or $scenarioDigest -cnotmatch '^[a-f0-9]{64}$' -or $scenarioSource.Count -ne 1) {
++            throw 'Scenario audio requires a catalog digest and the exact selected Java source.'
++        }
++        $scenarioCheck = @"
++                new ConditionAudioAndroidMediaBackendFactory.PackagedAudioCheck() {
++                    @Override public void verify() throws Exception {
++                        try {
++                            ScenarioAudioPackage.open(new ScenarioAudioPackage.AssetSource() {
++                                @Override public java.io.InputStream open(String path) throws java.io.IOException {
++                                    return assets.open("atmungsraum-audio/" + path,
++                                        android.content.res.AssetManager.ACCESS_STREAMING);
++                                }
++                            }, "$scenarioDigest").verifyAll();
++                            android.util.Log.i("RustyQuestNativeRenderer", "channel=scenario-audio event=verified");
++                        } catch (Exception error) {
++                            android.util.Log.e("RustyQuestNativeRenderer", "channel=scenario-audio event=rejected", error);
++                            throw error;
++                        }
++                    }
++                }
++"@
++    }
+     $usesPolarSessionRuntime = ($isExperimentSessionPanel -and -not $standaloneExperimentOwner) -or
+         $selectedPanelModuleId -ceq "polar-controls"
+     $standaloneExperimentOwnerJava = if ($standaloneExperimentOwner) { 'true' } else { 'false' }
+@@ -1181,7 +1207,7 @@ $sharedPanelFacade
+         conditionAudioRuntime = ConditionAudioRuntime.installAppLifetime(
+             inventory,
+             assets == null ? null : new ConditionAudioAndroidMediaBackendFactory(assets,
+-                verifiedClosure.phaseAudioEntries.length == 3),
++                verifiedClosure.phaseAudioEntries.length == 3, $scenarioCheck),
+             new ConditionAudioContract.ReceiptSink() {
+                 @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
+                     android.util.Log.i("RustyQuestNativeRenderer",
+diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
+index 0bdd4881..c6ec3895 100644
+--- a/tools/Resolve-NativeAppBuild.ps1
++++ b/tools/Resolve-NativeAppBuild.ps1
+@@ -692,6 +692,8 @@ function New-GeneratedAndroidManifestText {
+         [string[]]$Services,
+         [string[]]$Queries,
+         [string[]]$SelectedFeatureIds,
++        [string[]]$ExperimentGatewayOrigins = @('https://mesmerprism.com'),
++        [string[]]$QuestSupportedDevices = @(),
+         [switch]$ExperimentSessionDebugOperator
+     )
+     $originalNativeHost = ($SelectedFeatureIds -ccontains 'ui.native_mesh_panel' -or $SelectedFeatureIds -ccontains 'ui.native_mesh_panel.original_product') -and $SelectedFeatureIds -ccontains 'ui.breath_composition_control_panel'
+@@ -744,6 +746,10 @@ function New-GeneratedAndroidManifestText {
+     [void]$lines.Add(('        android:label="{0}"' -f [System.Security.SecurityElement]::Escape($ApplicationLabel)))
+     [void]$lines.Add('        android:theme="@android:style/Theme.Material.NoActionBar">')
+     [void]$lines.Add('        <meta-data android:name="com.samsung.android.vr.application.mode" android:value="vr_only" />')
++    if ($QuestSupportedDevices.Count -gt 0) {
++        [void]$lines.Add(('        <meta-data android:name="com.oculus.supportedDevices" android:value="{0}" />' -f
++            [System.Security.SecurityElement]::Escape(($QuestSupportedDevices -join '|'))))
++    }
+     if ($Receivers -contains "NativeRendererBootReceiver") {
+         [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.boot_autostart" android:value="true" />')
+     }
+@@ -751,7 +757,8 @@ function New-GeneratedAndroidManifestText {
+     # controller/relay enrollment remain private headset state.
+     if ($SelectedFeatureIds -ccontains 'ui.experiment_session_command_gateway') {
+         [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.enabled" android:value="true" />')
+-        [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.origins" android:value="https://mesmerprism.com" />')
++        [void]$lines.Add(('        <meta-data android:name="rusty.quest.experiment.command_gateway.origins" android:value="{0}" />' -f
++            [System.Security.SecurityElement]::Escape(($ExperimentGatewayOrigins -join ','))))
+     }
+     if ($SelectedFeatureIds -ccontains 'ui.recording_export') {
+         [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.recording_export" android:value="true" />')
+@@ -2029,7 +2036,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+ if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
+     throw "App build spec application_label must be 1..64 visible characters without control whitespace"
+ }
+-$manifestText = New-GeneratedAndroidManifestText -PackageName ([string]$app.package_name) -ApplicationLabel $applicationLabel -Permissions $permissions -UsesFeatures $usesFeatures -Activities $activities -Receivers $receivers -Services $services -Queries $queries -SelectedFeatureIds $selectedFeatureIds -ExperimentSessionDebugOperator:$EnableExperimentSessionDebugOperator
++$experimentOrigins = @('https://mesmerprism.com')
++if ($app.PSObject.Properties['experiment_gateway_origins']) {
++    if ($selectedFeatureIds -cnotcontains 'ui.experiment_session_command_gateway' -or
++        $app.experiment_gateway_origins -isnot [array] -or
++        $app.experiment_gateway_origins.Count -notin (1..4)) {
++        throw 'Experiment gateway origins require a selected gateway and one to four HTTPS origins.'
++    }
++    $experimentOrigins = @($app.experiment_gateway_origins)
++    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
++    foreach ($origin in $experimentOrigins) {
++        $uri = $null
++        if ($origin -isnot [string] -or $origin -cnotmatch '^https://[a-z0-9.-]+(:[0-9]{1,5})?$' -or
++            ![Uri]::TryCreate($origin, [UriKind]::Absolute, [ref]$uri) -or
++            $origin -cne $uri.GetLeftPart([UriPartial]::Authority) -or !$seen.Add($origin)) {
++            throw 'Experiment gateway origins must be distinct canonical HTTPS origins.'
++        }
++    }
++}
++$questDevices = @()
++if ($app.PSObject.Properties['quest_supported_devices']) {
++    $questDevices = @($app.quest_supported_devices)
++    if ($app.quest_supported_devices -isnot [array] -or !$questDevices.Count -or
++        @($questDevices | Select-Object -Unique).Count -ne $questDevices.Count -or
++        @($questDevices | Where-Object { $_ -cnotin @('quest', 'quest2', 'questpro', 'quest3', 'quest3s') }).Count) {
++        throw 'Quest supported devices must be a nonempty list of distinct headset identifiers.'
++    }
++}
++$manifestText = New-GeneratedAndroidManifestText -PackageName ([string]$app.package_name) -ApplicationLabel $applicationLabel -Permissions $permissions -UsesFeatures $usesFeatures -Activities $activities -Receivers $receivers -Services $services -Queries $queries -SelectedFeatureIds $selectedFeatureIds -ExperimentGatewayOrigins $experimentOrigins -QuestSupportedDevices $questDevices -ExperimentSessionDebugOperator:$EnableExperimentSessionDebugOperator
+ New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
+ Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
+ 

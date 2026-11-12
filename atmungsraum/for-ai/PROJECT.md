@@ -10,9 +10,12 @@ checks remain historical evidence. Keep Quest as the authority for scene, media
 clock, sensor acquisition and recordings. The phone sends operator requests and
 shows the corresponding Quest state and receipts.
 
-- [ ] Identify the signed rehearsal APK and its native composition. Verify Quest 2
-  targeting, ARM64/OpenXR loader, installation, Remote startup and scene readiness.
-  Keep APK fingerprints, enrollment, logs and device captures in private evidence.
+- [x] Build and install the signed Quest 2 rehearsal APK from the shared
+  Experimenter source. Verify Quest 2 targeting, ARM64/OpenXR loader and the
+  installed APK digest. See the [assembly recipe](../quest/README.md).
+- [ ] Launch on Quest 2 and confirm a rendered frame, Remote startup and scene
+  readiness. Keep build fingerprints, enrollment, logs and device captures in
+  private evidence.
 - [ ] Exercise every headset-facing PWA action from the installed phone. Cover BLE
   discovery and manual LAN join, enrollment, Polar setup and live ECG, condition
   selection, Arm, Start, Pause, Resume, Finish, recovery, disconnect/rejoin and
@@ -24,15 +27,15 @@ shows the corresponding Quest state and receipts.
   The catalog binds six timelines, six manifests, the shared protocol and all
   53 WAVs. The regression verifies byte identity, a rejected corrupt asset and
   a valid replacement cue using the existing timing.
-- [ ] Wire the authored [scenario JSON](../audio/scenarios/README.md) and
-  [numbered audio assets](../assets/audio/scenarios/) into the native rehearsal
-  composition. Bundle the current silent WAVs and their manifests, resolve each
-  event to its stable cue ID and validate file hashes, frame counts and schedule
-  continuity before Arm. Retain the matching JSON/CSV/TXT sidecars with the
-  library. Keep the 15-minute main round and its 26–41 s measurement window.
-  Final audio must replace the corresponding WAVs and update their asset metadata
-  and hashes without changing the scenario scheduler. Preserve the wording approval
-  gate and verify an offline cold launch with the packaged assets.
+- [x] Package the authored [scenario JSON](../audio/scenarios/README.md) and
+  [numbered audio assets](../assets/audio/scenarios/). The APK readback matched
+  all 67 files, including the catalog. The native audio worker verifies cue
+  identities, hashes, frame counts and schedule continuity before readiness.
+- [ ] Connect scenario selection to native playback and verify an offline cold
+  launch. Retain the matching JSON/CSV/TXT sidecars with the library. Keep the
+  15-minute main round and its 26–41 s measurement window. Final audio replaces
+  the numbered WAVs and refreshes their asset metadata and hashes. Preserve the
+  wording approval gate.
 - [ ] Inventory the APK's videos and audio by scenario and interaction. On Quest 2,
   verify the expected video and cue begin, advance, pause, resume and stop with
   native active time. Check first/last frames, loops and transitions where
@@ -60,17 +63,17 @@ The web release `f4d47aa` passed
 All nine changed public paths matched Git. A Chrome 157 smoke test on the live
 URL passed with a signed synthetic gateway and a scoped test permission.
 
-Physical acceptance remains open. ADB verified a physical Quest 2 on Android
-14. Package Manager showed the existing Viscereality builds and no matching
-Atmungsraum rehearsal APK `0.1.9`. The Pixel 10 appeared in Windows file
-transfer and had no authorized ADB transport. The available native reference
-supports two rehearsal condition tracks and an optional three-phase cue mode.
-The shared native product source and pinned platform dependencies have been
-located and checked out. The Atmungsraum staging step now verifies the exact
-scenario inputs for that build. The native assembly and scheduler still need
-to consume the package. The browser recenter control remains a placeholder.
-Build and verify the replacement on Quest 2 before retiring superseded
-Viscereality packages, then test from the installed phone PWA.
+Both physical devices are authorized over USB. The signed `0.1.10`
+development rehearsal is installed on Quest 2, and the installed APK hash
+matches the signed build. The headset lock screen is the launch blocker.
+The Pixel 10 still needs the standalone PWA installed. The shared native
+Experimenter source has two condition playback tracks and a procedural VR
+scene. The current rehearsal inventory contains no video files. Its signed
+gateway covers the core session actions. Encrypted participant Arm, ECG
+preview and recording responses require the Atmungsraum protocol in the
+native source. Browser recentering remains a placeholder. Verify the
+replacement on Quest 2 and the installed phone before retiring superseded
+Viscereality packages.
 
 Quest 2 power preflight on 2026-11-12 confirmed that the built-in display
 stayed on past the 15-second off-head sleep timer with a virtual proximity
