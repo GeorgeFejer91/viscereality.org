@@ -1,5 +1,14 @@
 # Verification
 
+## Quest scenario asset staging — 2026-11-12
+
+The Atmungsraum staging tool produced a hash-bound catalog of 66 source files,
+including all 53 numbered WAVs and all six authored timelines and manifests.
+The fixture verified exact byte readback, the main-round 26–41 s measurement
+window, rejection before output on corruption, and acceptance of a replacement
+cue with updated hashes and unchanged slot length. The full Node suite passed
+79 tests. Native packaging and playback are the next acceptance checks.
+
 ## Quest 2 preflight and controller stress — 2026-11-12
 
 Verified against the Atmungsraum source from `main` at `05faa1a`, with the ECG

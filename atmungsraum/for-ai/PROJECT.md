@@ -19,6 +19,11 @@ shows the corresponding Quest state and receipts.
   recording download. Match one original native receipt and state transition to
   each command. Verify the visible VR recenter control on Quest 2 and track any
   missing action or scenario mapping as an implementation gap.
+- [x] Stage the exact authored audio library for the native build. Run
+  `node quest/stage-audio.mjs output/quest-audio-package` with a new output path.
+  The catalog binds six timelines, six manifests, the shared protocol and all
+  53 WAVs. The regression verifies byte identity, a rejected corrupt asset and
+  a valid replacement cue using the existing timing.
 - [ ] Wire the authored [scenario JSON](../audio/scenarios/README.md) and
   [numbered audio assets](../assets/audio/scenarios/) into the native rehearsal
   composition. Bundle the current silent WAVs and their manifests, resolve each
@@ -60,10 +65,12 @@ Physical acceptance remains open. ADB verified a physical Quest 2 on Android
 Atmungsraum rehearsal APK `0.1.9`. The Pixel 10 appeared in Windows file
 transfer and had no authorized ADB transport. The available native reference
 supports two rehearsal condition tracks and an optional three-phase cue mode.
-The exact rehearsal build inputs and signed APK are needed to integrate the
-authored scenario library and qualify media on Quest 2. The browser recenter
-control remains a placeholder. Next, recover the native build folder and signed
-APK, install the matched build, and test from the installed phone PWA.
+The shared native product source and pinned platform dependencies have been
+located and checked out. The Atmungsraum staging step now verifies the exact
+scenario inputs for that build. The native assembly and scheduler still need
+to consume the package. The browser recenter control remains a placeholder.
+Build and verify the replacement on Quest 2 before retiring superseded
+Viscereality packages, then test from the installed phone PWA.
 
 ### Automatic Google Drive delivery of Quest recordings — 2026-11-12
 
