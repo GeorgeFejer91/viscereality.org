@@ -52,6 +52,10 @@ fixture repeated all three layouts, including upgrade from existing browser
 storage. The next actions remain the verified account export, Android PWA
 install, real OAuth setup, and attended Quest/H10/Drive run.
 
+The account export checkpoint `0a72dde` matched local `main` and GitHub's
+`main` on 2026-11-12. [Pages run 43175488204](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43175488204)
+deployed that commit, and the published project notes matched its Git blob.
+
 ### Participant CSV and idle synchronization — 2026-11-08
 
 Protocol and acceptance contract: [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
