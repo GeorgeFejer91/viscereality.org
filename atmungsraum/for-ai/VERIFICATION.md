@@ -23,6 +23,13 @@ byte-exact download and rejoin. Six separate cases passed with the legacy
 gateway and the scenario selector hidden. These results use emulated phone
 viewports and synthetic Quest state.
 
+The scenario controller release passed
+[Pages run 43294713370](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43294713370).
+All 12 changed public paths matched Git bytes. The deployed main-round
+selection also passed in Chrome with the synthetic signed gateway, Local
+Network Access granted to the isolated test profile and 32 rendered controls
+checked. The complete native gateway and control-mode host suites passed.
+
 ## Signed Quest 2 assembly and USB installation — 2026-11-12
 
 The [Atmungsraum assembly](../quest/README.md) resolved the shared

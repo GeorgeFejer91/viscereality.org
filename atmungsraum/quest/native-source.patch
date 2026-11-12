@@ -1574,6 +1574,36 @@ index 0bdd4881..7cda7d10 100644
  New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
+diff --git a/tools/checks/test_experiment_control_mode.py b/tools/checks/test_experiment_control_mode.py
+index f406a33a..45ee4319 100644
+--- a/tools/checks/test_experiment_control_mode.py
++++ b/tools/checks/test_experiment_control_mode.py
+@@ -34,6 +34,10 @@ final class ControlModeGatewayTest {
+  Carrier carrier=new Carrier();
+  class Delegate {void dispatch(ExperimentSessionBleServer.CommandRequest request){dispatches++;carrier.updateReceipt(request.id,"pending","owner dispatch");}}
+  Delegate delegate=new Delegate();
++ interface WifiDelegate {
++  java.util.List<String> scenarioIds();
++  void dispatchScenario(ExperimentSessionBleServer.CommandRequest request,String scenario);
++ }
+  static void requireMain(){}
+  JSONObject snapshot(){return new JSONObject();}
+  JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
+diff --git a/tools/checks/test_experiment_gateway_dedupe.py b/tools/checks/test_experiment_gateway_dedupe.py
+index fbc332fd..6ba46295 100644
+--- a/tools/checks/test_experiment_gateway_dedupe.py
++++ b/tools/checks/test_experiment_gateway_dedupe.py
+@@ -40,6 +40,10 @@ final class GatewayDedupeHarness {
+  Carrier carrier=new Carrier();
+  class Delegate {void dispatch(ExperimentSessionBleServer.CommandRequest r){dispatches++;carrier.updateReceipt(r.id,"pending","real handler callback stand-in");}}
+  Delegate delegate=new Delegate();
++ interface WifiDelegate {
++  java.util.List<String> scenarioIds();
++  void dispatchScenario(ExperimentSessionBleServer.CommandRequest request,String scenario);
++ }
+  static void requireMain(){}
+  JSONObject snapshot(){return new JSONObject();}
+  JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
 index c849c2d5..7c3bbb16 100644
 --- a/tools/checks/test_experiment_recordings.py
