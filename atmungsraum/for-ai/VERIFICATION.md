@@ -17,6 +17,13 @@ byte-exact. The fixture supplies the Google sign-in and Drive responses.
 Real provider behavior, the installed Pixel PWA and actual Quest/H10 streams
 require the attended acceptance pass in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 
+The exact release `d171e39` passed
+[Pages run 43123800186](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43123800186).
+All 13 changed public paths matched Git, and all three browser fixture cases
+passed against the public URL, including migration of existing local storage.
+The Drive API's real upload endpoint accepted the Pages origin in an OPTIONS
+preflight. No authenticated real Drive upload was part of this verification.
+
 ## Quest sensor bundle for Drive delivery — 2026-11-12
 
 The new unit regression checks the participant CSV and exact original ECG and

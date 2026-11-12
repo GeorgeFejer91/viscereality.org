@@ -40,6 +40,14 @@ a startup failure before any job ran. The sensor bundle release `40f44c7`
 passed [Pages run 43121754755](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43121754755).
 All nine changed public paths matched the released Git blobs.
 
+Drive runtime release `d171e39` passed
+[Pages run 43123800186](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43123800186).
+The exact deployment succeeded and all 13 changed live paths matched Git.
+All 78 Node tests and the UI/context checks passed. The deployed Chromium
+fixture repeated all three layouts, including upgrade from existing browser
+storage. The next actions remain the verified account export, Android PWA
+install, real OAuth setup, and attended Quest/H10/Drive run.
+
 ### Participant CSV and idle synchronization — 2026-11-08
 
 Protocol and acceptance contract: [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
