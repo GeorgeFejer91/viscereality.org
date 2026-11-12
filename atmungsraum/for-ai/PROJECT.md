@@ -50,14 +50,20 @@ The browser and asset checks are recorded in
 They exposed a hidden SVG waveform in VR-Probe. The browser now toggles the
 SVG's visibility attribute and clears stale samples.
 
-Physical acceptance remains open. ADB detected neither a phone nor a Quest 2.
-The available native reference supports two rehearsal condition tracks and an
-optional three-phase cue mode. The isolated rehearsal's exact build inputs and
-signed APK were unavailable for inspection here. The authored scenario library
-still needs to be wired and verified in that build. The browser recenter
-control is currently a placeholder. Next, recover the signed rehearsal
-composition, connect both devices, and start the Quest 2 install and pairing
-check above.
+The web release `f4d47aa` passed
+[Pages run 43275951484](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43275951484).
+All nine changed public paths matched Git. A Chrome 157 smoke test on the live
+URL passed with a signed synthetic gateway and a scoped test permission.
+
+Physical acceptance remains open. ADB verified a physical Quest 2 on Android
+14. Package Manager showed the existing Viscereality builds and no matching
+Atmungsraum rehearsal APK `0.1.9`. The Pixel 10 appeared in Windows file
+transfer and had no authorized ADB transport. The available native reference
+supports two rehearsal condition tracks and an optional three-phase cue mode.
+The exact rehearsal build inputs and signed APK are needed to integrate the
+authored scenario library and qualify media on Quest 2. The browser recenter
+control remains a placeholder. Next, recover the native build folder and signed
+APK, install the matched build, and test from the installed phone PWA.
 
 ### Automatic Google Drive delivery of Quest recordings — 2026-11-12
 

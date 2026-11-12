@@ -6,8 +6,10 @@ Verified against the Atmungsraum source from `main` at `05faa1a`, with the ECG
 visibility fix applied. All 78 Node tests, the UI and context checks, the six
 scenario JSON/CSV pairs, and the Python scenario asset checks passed. The
 placeholder integrity check covered 53 WAVs and 890 scheduled events. FFmpeg
-decoded the browser background track and all 20 published voice samples. Chromium rendered
-all five menu timelines at 44.1 and 48 kHz with zero sample error.
+decoded the browser background track and all 20 published voice samples.
+Chromium rendered all five menu timelines and the 20-minute engine diagnostic
+at 44.1 and 48 kHz with zero sample error. The long diagnostic passed when run
+on its own with a larger deadline.
 
 Chromium passed 210 rendered layout cases across 14 viewports and three text
 settings, plus the five browser demo play/pause/resume/stop paths. The layout
@@ -27,10 +29,18 @@ checks that fresh samples show a waveform and stale samples hide it. Synthetic
 screenshots and receipts are kept locally under
 `output/playwright/quest2-20261112/`.
 
-ADB listed only an offline emulator. Physical phone and Quest 2 screenshots,
-physical control and H10 validation, headset video/audio playback, and the
-actual APK asset inventory and scheduler are open. The available native
-three-phase mode covers a different cue set.
+Release `f4d47aa` passed
+[Pages run 43275951484](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43275951484).
+All nine changed live paths matched Git. Chrome 157 replayed the signed
+portrait controller fixture on the public URL with Local Network Access granted
+in the isolated test browser. The gateway, participant and samples were synthetic.
+
+After USB approval, ADB identified the physical Quest 2 on Android 14.
+Its package inventory had no matching Atmungsraum rehearsal APK `0.1.9`.
+The Pixel 10 appeared in file transfer with no authorized ADB transport.
+Paired device screenshots, physical controller and H10 validation, headset
+video/audio playback, and the APK asset inventory and scheduler are open.
+The available native three-phase mode covers a different cue set.
 See the [active checklist](PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12).
 
 ## Automatic Drive delivery fixture — 2026-11-12
