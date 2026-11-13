@@ -22,10 +22,19 @@
   Pixel PWA opened the new controller with no mock ECG request.
 - [x] Request and confirm both live H10 streams in the phone setup flow.
   Require fresh ECG and accelerometer samples before participant Arm.
-- [ ] Reauthorize Bluetooth pairing for the updated build on the Pixel.
-  Run a synthetic participant with a worn H10 through official Start, breathing,
-  pause and Finish. Check changing renderer radius and byte-identical CSV
-  delivery through Pixel and Drive. See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
+- [x] Reauthorize Bluetooth pairing for build 0.1.26 on the installed Pixel
+  and verify the enrolled signed LAN connection. The live H10 v2 test reached
+  official Start, paused, resumed and saved with zero writer drops. Quest,
+  Pixel and the private Drive folder agreed on the dated CSV name and exact
+  7,167,072-byte SHA-256. The CSV had 11,457 ECG rows, 17,673 three-axis
+  accelerometer rows, 6,355 applied-radius rows with 3,377 distinct radii,
+  6,334 breath rows and one terminal row. The participant, scenario and
+  attempt matched across all 41,820 data rows.
+- [x] Interrupt the v2 CSV media PUT before Drive receives it. The installed
+  PWA retained the verified local file and unconfirmed receipt. It
+  automatically retried the reserved ID after transport recovered. Independent
+  inventory showed one private CSV and the PWA confirmed the matching hash.
+  See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
 
 
 ### Windows Quest 2 keep-awake task — 2026-11-13
@@ -541,7 +550,11 @@ this repository.
   private object for the completed run. The Drive receipt and Pixel ZIP
   SHA-256 matched, as did the CSV, ECG and ACC entries against Quest.
   The resumed upload completed in about four minutes.
-- [ ] Complete the remaining physical stress and pairing cases in
+- [ ] Qualify the authored 15-minute main round against the current export
+  limits. The five-minute completion and the v2 partial run passed on the
+  physical devices. Lost successful Drive replies, quotas, shared-folder
+  permission and corrupt chunks have automated coverage. Physical hotspot,
+  changed-address and repeat pairing timings remain open in
   [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 
 Both devices were reachable over USB. The Pixel WebAPK reloaded the live

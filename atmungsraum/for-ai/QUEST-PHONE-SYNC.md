@@ -41,7 +41,7 @@ copy is the input to automatic delivery to the research Google Drive.
 
 ## Bench verification on Quest 2 and Pixel 10
 
-The signed 0.1.24 and 0.1.25 rehearsals start in Remote. The installed Pixel Chrome
+The signed Quest rehearsals start in Remote. The installed Pixel Chrome
 157.0.8103.50 WebAPK discovers it over Bluetooth, then opens its authenticated
 Wi-Fi gateway. Close any floating overlays if Chrome blocks Local Network
 Access. A Quest APK update that changes the trusted build fingerprint
@@ -75,6 +75,14 @@ to the Pixel. The installed Pixel committed a 131,158,666-byte ZIP and
 its three data-file hashes matched Quest. A PWA reload during delivery
 preserved the local ZIP and reserved Drive ID. After account renewal, the
 queue confirmed the exact ZIP hash and the private folder contained one copy.
+
+Build 0.1.26 saved a new dated v2 CSV with live H10 data and changing
+renderer radius after Start, Pause, Resume and Finish. The CSV contained
+41,820 data rows. The Pixel verified the Quest hash and persisted the single
+7,167,072-byte CSV. A one-shot transport interruption on the Pixel blocked
+the first media PUT before Drive received it. The PWA retained its pending
+receipt and retried the same Drive ID automatically. Drive confirmed the
+matching hash, and an independent inventory showed one private CSV.
 
 ## Run identity and files
 
