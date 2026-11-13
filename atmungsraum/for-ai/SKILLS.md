@@ -114,6 +114,21 @@ Use synthetic participant details and keep raw device screenshots, logs,
 credentials, and recordings in local evidence. Follow [WORKFLOW.md](WORKFLOW.md#smartphone-pwa)
 and [VERIFICATION.md](VERIFICATION.md) for the app acceptance checks.
 
+### RustDesk remote operation
+
+Load [`rustdesk-mcp-operator`](skills/rustdesk-mcp-operator/SKILL.md) for
+remote screen frames and input through the separate RustDeskMCP Windows client.
+The vendored skill and the [Windows release](https://github.com/YaoxinCS/RustdeskMCP/releases/tag/v1.4.6-mcp.1)
+come from [`abbd7d1`](https://github.com/YaoxinCS/RustdeskMCP/tree/abbd7d1a287980c91f979b5239c05ae0e08059e2/skills/rustdesk-mcp-operator).
+The upstream skill shows a source checkout path. For the packaged Windows
+client, open **RustDeskMCP** from the Start menu.
+
+The release binds to local port `59940`. When enabled, its MCP endpoint
+accepts requests without a token. Enable it from **Settings → Security →
+Enable MCP server** when using the RustDesk skill. Pixel frame capture and
+input through this fork still need validation. The Mobile MCP route above
+already reaches the Pixel over USB for Android app tests.
+
 ### Quest device operations
 
 Load [`meta-quest-workflow`](https://github.com/MesmerPrism/meta-quest-agent-workflow)

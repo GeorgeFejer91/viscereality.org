@@ -2,6 +2,21 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### RustDesk MCP client and skill — 2026-11-13
+
+Installed the portable Windows x64 RustDeskMCP `v1.4.6-mcp.1` release alongside
+standard RustDesk. Verified the archive SHA-256, the Start menu shortcut and
+the running client window. The executable and DLL are unsigned. The running
+client bound only to loopback and returned HTTP 503 with MCP disabled by
+default. No RustDesk MCP session with the Pixel was run.
+
+Codex discovered `rustdesk-mcp-operator`. The matching [project copy and launch
+route](SKILLS.md#rustdesk-remote-operation) retain upstream provenance, license
+and notice. This change uses the clean publication checkout based on `7c92bdf`.
+The primary checkout still has unrelated Git index changes. The active phone
+and Quest checklist remains open. For RustDesk qualification, verify remote
+frame capture and one non-destructive input action on the Pixel.
+
 ### Codex Android phone testing — 2026-11-13
 
 The [Android phone testing route](SKILLS.md#android-phone-testing) nests the
