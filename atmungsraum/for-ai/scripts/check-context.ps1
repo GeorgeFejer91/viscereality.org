@@ -3,13 +3,11 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
-$required = @('index.html', 'app.js', 'ui-logic.js', 'style.css', 'package.json',
+$required = @('index.html', 'app.js', 'quest-ui.js', 'quest-rehearsal.js', 'quest-data.js', 'quest-drive.js', 'style.css', 'package.json',
     'manifest.webmanifest', 'pwa-install.js', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
     'assets/icons/app-maskable-512.png', 'assets/icons/apple-touch-icon.png',
-    'data-files.js', 'file-delivery.js', 'assets/icons/folder.svg',
-    'data-logging.js', 'mock-ecg.js', 'assets/ecg/mock-ecg.json', 'assets/ecg/mock-ecg.f32',
+    'data-files.js', 'quest-recording-store.js', 'data-logging.js',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
-    'assets/rounds/probe-runde.svg', 'assets/rounds/haupt-runde.svg',
     'AGENTS.md', 'for-ai/README.md', 'for-ai/PROJECT.md',
     'for-ai/SKILLS.md', 'for-ai/VERIFICATION.md', 'for-ai/WORKFLOW.md', 'for-ai/DATA-LOGGING.md',
     'for-ai/DECISIONS.md', 'for-ai/scripts/check-context.ps1')
@@ -27,29 +25,20 @@ $app = Get-Content -Raw -LiteralPath (Join-Path $root 'app.js')
 if ($html -match 'data-delivery-locked' -or $css -match 'data-delivery-locked' -or $app -match 'unlockAtStartup|requestDeliveryAccess') {
     throw 'Keep page startup independent of the encrypted delivery configuration'
 }
-if ($html -notmatch 'id="send-new-files"' -or $html -notmatch 'id="send-all-files"' -or $html -match 'id="(?:share-qr|wormhole-qr)"') {
-    throw 'Keep the two folder delivery actions without QR controls'
-}
-if ($html -notmatch '<html lang="de">' -or $css -notmatch 'background:\s*#000\s*;') {
+if ($html -notmatch '<html lang="de"(?:\s|>)' -or $css -notmatch 'background:\s*#000\s*;') {
     throw 'The page must use German and retain its black background'
 }
-if ($html -notmatch 'href="#probe-runde"' -or $html -notmatch 'id="probe-runde"' -or
-    $html -notmatch 'href="#start-haupt-15"' -or $html -match 'id="haupt-runde"') {
-    throw 'Keep practice choices and the direct single 15-minute main round'
+if ($html -notmatch '<section class="screen" id="quest" aria-labelledby="quest-title">' -or
+    $html -notmatch 'id="quest-participant"' -or $html -notmatch 'id="quest-polar-connect"' -or
+    $html -notmatch 'id="quest-export-download"' -or $html -notmatch 'id="quest-drive"') {
+    throw 'The entry must expose Quest pairing, participant setup, Polar, download and Drive'
 }
-if ([regex]::Matches($html, 'class="round"').Count -ne 2) {
-    throw 'The start must contain two round choices'
+if ($html -match 'id="(?:h10|quest-demo|send-new-files|send-all-files|share-qr|wormhole-qr)"' -or
+    $app -match 'MockECG|mountSessionData|mountSessionAudio|mountDataFiles') {
+    throw 'The live controller must not mount browser recording or delivery'
 }
-if ($html -match 'round-symbol|round-description|session-controls|session-resume|session-pause|id="stop"|session-plan') {
-    throw 'Keep the UI minimal: no decorative round content or duplicate playback controls'
-}
-if ($html -match 'class="app-header"' -or $html -match 'href="#h10"') {
-    throw 'The UI must not reintroduce a global context header or an ECG return link'
-}
-foreach ($round in @('probe', 'haupt')) {
-    $expected = if ($round -eq 'probe') { @('anleitung', '5', '10', '15') } else { @('15') }
-    $actual = @([regex]::Matches($html, "href=`"#start-$round-([^`"]+)`"") | ForEach-Object { $_.Groups[1].Value })
-    if (@(Compare-Object $expected $actual).Count -ne 0) { throw "Incorrect $round options" }
+if ($html -notmatch 'id="daten"' -or $app -notmatch 'savedBrowserExports') {
+    throw 'Historical browser CSVs must remain downloadable'
 }
 if ($html -match '(?i)<(?:script|img|audio|video|source|iframe|link)\b[^>]*\b(?:src|href)\s*=\s*["''](?:https?:)?//') {
     throw 'Runtime assets must be local, with no external page dependency'
@@ -66,4 +55,4 @@ if ($RequireRemote) {
     $remote = ($remoteLine -split '\s+')[0]
     if (-not $remote -or $local.Trim() -ne $remote) { throw 'Local HEAD differs from remote main' }
 }
-Write-Output 'PASS: Atmungsraum context, four practice/direct 15-minute main choices, minimal playback UI, locked Pretext, and requested remote gate'
+Write-Output 'PASS: Atmungsraum context, Quest-only recording, Polar/Drive controls, historical CSV recovery, locked Pretext, and requested remote gate'
