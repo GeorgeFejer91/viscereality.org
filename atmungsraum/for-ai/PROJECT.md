@@ -175,6 +175,13 @@ one input and its visible result. Continue the physical phone and Quest 2
 acceptance below using the regular rehearsal build.
 The For-AI context check and the protocol's local links and anchors passed.
 
+GitHub main received protocol commit \`8f21107\`. Its exact Pages deployment
+reported success. All five changed live Markdown files matched the commit,
+and the rendered protocol, four entry links and Atmungsraum home passed.
+A newer main commit superseded the [Pages workflow run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43427274203)
+after the protocol was live. Publication used a clean sparse checkout because
+the primary checkout's cloud-backed Git metadata could not be mapped.
+
 **Meta Quest 2 is the required headset for Atmungsraum development and release
 acceptance.** Use a physical Quest 2 and the installed Android PWA. Earlier Quest 3
 checks remain historical evidence. Keep Quest as the authority for scene, media
