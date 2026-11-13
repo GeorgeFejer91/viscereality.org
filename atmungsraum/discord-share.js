@@ -109,6 +109,9 @@ export async function requestDeliveryAccess(signal) {
       event.preventDefault();
       cancel();
     }, options);
+    dialog.addEventListener('keydown', event => {
+      if (event.key === 'Escape') event.stopPropagation();
+    }, options);
     submit.disabled = false;
     status.textContent = '';
     form.addEventListener('submit', async event => {

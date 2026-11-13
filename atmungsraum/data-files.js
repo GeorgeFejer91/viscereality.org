@@ -1,4 +1,4 @@
-import { requestDeliveryAccess } from './discord-share.js?v=20261113-open-startup';
+import { requestDeliveryAccess } from './discord-share.js?v=20261113-open-startup-2';
 import { sendDiscordLink } from './link-relay.js?v=20261107-file-delivery';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
 import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';

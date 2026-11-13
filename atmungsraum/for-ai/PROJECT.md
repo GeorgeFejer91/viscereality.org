@@ -11,8 +11,10 @@ still governs access to the headset and its recordings.
 
 Local Chromium passed desktop, phone portrait and landscape, and 320px
 entry checks. It downloaded an exact synthetic CSV, checked send-time
-password retry and cancellation, and confirmed the Pages-only upload limit
-without a request to Discord or Wormhole. The Node and context checks passed.
+password retry, cancellation and saved credential lookup, and confirmed the
+Pages-only upload limit without a request to Discord or Wormhole. Escape
+stays within the delivery dialog instead of invoking the playback shortcut.
+The Node and context checks passed.
 The publication branch is based on current GitHub main in a clean sparse
 checkout. The primary checkout has unrelated index changes and unreadable
 cloud-backed files. The existing Quest 2 and Pixel hardware checklist below
