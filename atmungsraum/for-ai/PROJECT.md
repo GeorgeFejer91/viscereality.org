@@ -2,6 +2,17 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Pixel PWA release refresh — 2026-11-13
+
+After every Atmungsraum PWA deployment, refresh the installed app on the lab
+Pixel 10 and verify the release there. [WORKFLOW.md](WORKFLOW.md#smartphone-pwa)
+owns the standing procedure.
+
+Verified the current installation via USB and reloaded the live VR-Probe
+route in standalone mode. The four loaded stylesheet and module paths
+matched the runtime bytes on `main` at `64994f2`. The lab Pixel kept its
+existing Chrome profile. No reinstall or site data reset was needed.
+
 ### Pixel RustDesk remote input — 2026-11-13nn- [x] Verify live Pixel 10 frames and a Windows RustDesk click that switchesn  the phone from Settings to Connection. The session uses the existingn  Pixel USB ADB forward to a Windows loopback listener.n- [x] Resolve missing remote input. Android showed the RustDesk Input servicen  enabled but unbound while a Mobile CLI UiAutomation helper held the Pixel.n  Stopping the Pixel helper restored the binding and RustDesk reported inputn  enabled. Verify with Android service readback and a RustDesk click. Avoidn  running an accessibility UI inspector during the control check.n- [ ] Verify the attended handoff from a second laptop. The Pixel stayed awaken  on USB power with screen capture active and the Windows viewer open. An  direct connection by phone ID failed in the test. The second laptop cann  connect to the Windows host with local approval and use its Pixel viewer.nnThe separate RustDeskMCP fork and the Quest 2 input checks have their ownnacceptance items. No experiment code changed in this verification.nn### One saved Pixel–Quest 2 connection — 2026-11-13
 
 - [x] Learn the Quest serial and LAN address over Bluetooth and the build

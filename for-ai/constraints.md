@@ -25,6 +25,11 @@ Documentation-only changes still require prompt push and deployment checks;
 use scoped checks rather than rerunning unrelated runtime suites. Retain the
 Superpowers verification/review requirements and the existing data boundaries.
 
+On 2026-11-13 the user added a standing release step for Atmungsraum: after
+publishing a PWA update, refresh the installed app on the lab Pixel 10 and
+verify that it loaded the release. Follow the
+[Atmungsraum workflow](../atmungsraum/for-ai/WORKFLOW.md#smartphone-pwa).
+
 - Start with `superpowers-using-superpowers` and select the practices appropriate
   to the task: clarify/design when needed, plan substantial work, implement,
   review, and run `superpowers-verification-before-completion` before claiming

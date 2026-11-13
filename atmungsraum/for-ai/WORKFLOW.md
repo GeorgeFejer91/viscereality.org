@@ -25,6 +25,9 @@
    is not evidence that the page is live. Keep following the exact run in this
    task until deployment succeeds and affected live assets/behavior are checked;
    do not hand off with only a pending build. Report concrete blockers accurately.
+8. After every live Atmungsraum PWA release, refresh or relaunch the installed
+   app on the lab Pixel 10 and verify the deployed version on the phone.
+   This is part of release completion. Follow the device check below.
 
 This standing authorization applies to future tasks in this repository unless
 the user asks for local-only work. Before handoff, verify Git synchronization,
@@ -66,6 +69,17 @@ lockfile, copied runtime modules, and license aligned, and rerun rendered checks
 The vendor script copies only the main API's runtime module graph and license.
 
 ## Smartphone PWA
+
+George's standing instruction of 2026-11-13 includes updating the installed
+Atmungsraum app on the lab Pixel 10 after each deployment that changes the PWA.
+The installed app loads the live website. Once the release is live, target
+the authorized Pixel over USB and reload its standalone Atmungsraum page
+through Chrome DevTools, or reopen it from the home-screen icon. Reload when
+the app is idle and preserve its site data, saved Quest pairing and recordings.
+Confirm standalone mode, the expected screen, and that the loaded versioned
+runtime assets match the release. Record the deployed commit and phone
+readback in [PROJECT.md](PROJECT.md). If the Pixel is unavailable, locked, or
+in use, record the blocker and leave the device check pending.
 
 `pwa-install.js` owns the permanent install action and browser prompt lifecycle.
 Its manual help covers Android, iPhone and desktop Brave, including embedded
