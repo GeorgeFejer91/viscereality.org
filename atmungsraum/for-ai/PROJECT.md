@@ -326,7 +326,8 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   first pairing and authenticated status on the installed Pixel before
   tuning latency. The native product Activity is the launcher. Horizon Shell
   reported a reprojected system dialog and timed out placing that Activity.
-  Clear the headset prompt and choose Remote if the mode selector appears.
+  A USB restart cleared the stuck Shell state and reached the headset profile
+  chooser. Return to the enrolled profile before launching and selecting Remote.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,
@@ -339,9 +340,12 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   cancellation, radio loss, permission denial and reconnect never replay
   session commands or duplicate recordings.
 
-The research account signed in to Google Cloud and reached first-use terms.
-The operator must review and accept them before OAuth setup can continue.
-See the collection checklist below.
+The research account completed Google Cloud onboarding. The dedicated
+Atmungsraum Drive Sync project exists and its Google Drive API is enabled.
+The OAuth registration is prepared with the research account as support and
+contact and an external test audience. The operator's separate Google API
+Services User Data Policy acceptance is pending. See the collection checklist
+below for client registration and device verification.
 
 The assembly change and this performance checklist were published in
 `b53e856`. [Pages run 43428481356](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43428481356)
