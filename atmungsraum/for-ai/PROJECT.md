@@ -585,8 +585,12 @@ this repository.
   The native receipt recorded completion and zero writer drops. Quest
   retained all six streams and the 93,987,682-byte v2 CSV.
   See [full Haupt-Runde verification](VERIFICATION.md#full-haupt-runde-on-quest-2-and-pixel--2026-11-13).
-- [ ] Verify the full main-round CSV against the committed Pixel copy and
-  the private Drive object.
+- [x] Verify the full main-round CSV in the Pixel and private Drive. The
+  installed PWA pulled the 93,987,682-byte file in about nine minutes
+  after Quest finalized it and automatically delivered it as a single CSV.
+  The Quest, Pixel and verified Drive receipt agreed on the SHA-256.
+  Independent folder inventory found one private copy. Android Drive's
+  completed download matched the same SHA-256.
 - [ ] Reproduce and fix the phone's pending Resume state when a confirmed
   Resume is immediately followed by another native Polar hold. Keep the
   command journal and the no-replay rule for uncertain outcomes.

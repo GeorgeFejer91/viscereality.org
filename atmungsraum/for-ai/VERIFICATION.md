@@ -40,6 +40,14 @@ accelerometer readings, 80,973 breath classifications, 84,168 applied
 radius records and one completed terminal record. The opening instruction,
 calibration, second instruction, guided breathing and outro were present.
 
+The Pixel automatically pulled the single CSV while Quest was idle. The
+verified copy appeared locally about nine minutes after finalization and
+the Drive confirmation followed within a minute. The Quest source, the
+Pixel's committed CSV, and the private Drive receipt shared the same
+SHA-256. Independent Drive inventory showed one 93,987,682-byte private
+CSV. After downloading it through Android Drive, the finished file in
+Android Downloads independently matched the Quest hash.
+
 ## Saved Quest connection — 2026-11-13
 
 All 87 Node tests, six scenario JSON/CSV pairs, UI and context checks passed.
