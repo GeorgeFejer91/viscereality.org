@@ -19,6 +19,15 @@
   and changed-address recovery need separate physical checks.
   See [verification](VERIFICATION.md#saved-quest-connection--2026-11-13).
 
+Runtime commit `a313621` reached `origin/main` and deployed in
+[Pages run 43422623818](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43422623818).
+All 11 affected public files matched Git. Four Chromium layouts repeated
+the pairing fixture against the live site. The installed Pixel loaded the
+new entry in standalone mode. The Quest LAN gateway did not respond to
+the bench probe. Next, approve trusted controller enrollment on Quest,
+complete first setup on the Pixel, then power-cycle both and verify a new
+signed status observation without retyping settings.
+
 ### Password-free startup — 2026-11-13
 
 The start page, VR-Probe and local CSV recovery open without the shared

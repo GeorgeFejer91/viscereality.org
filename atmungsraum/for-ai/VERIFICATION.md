@@ -16,6 +16,12 @@ lacks `getDevices()`. The browser can automatically try the saved LAN
 address. Rediscovery after an address change can require the Bluetooth
 chooser. Trusted enrollment and a physical cold restart remain open.
 
+GitHub Pages run [43422623818](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43422623818)
+deployed `a313621`. Eleven public files matched the release bytes, and all
+four Chromium cases passed again on the published URL. The physical Pixel
+WebAPK loaded the new entry with only the connection button before setup.
+The native LAN gateway did not respond to the bench probe.
+
 ## Quest 2 audio owner cleanup — 2026-11-13
 
 On a physical Quest 2, an isolated instrumentation process used the production
