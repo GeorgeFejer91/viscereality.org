@@ -264,13 +264,21 @@ this repository.
   in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md). Confirm matching hashes and one
   Drive object per run across repeats, restart, partial recording and reconnect.
 
-Both devices were reachable over USB. The Pixel WebAPK was visible in
-standalone mode and showed the app unlock prompt. The active Quest profile
-had no enrolled controller and the LAN endpoint did not respond to the USB
-forward probe. Google Cloud redirected to sign-in and the Drive account had
-no matching destination folder. Next, unlock the Pixel PWA, enroll the
-controller from the headset and authorize Drive with a Pages-origin OAuth
-client. No real sample export or Drive object was verified in this preflight.
+Both devices were reachable over USB. The Pixel WebAPK reloaded the live
+password-free release in standalone mode and opened VR-Probe. The installed
+Quest APK matched the signed 0.1.20 build and submitted OpenXR frames at
+about 72 fps. The active Quest profile had no enrolled controller and the LAN
+endpoint did not respond to the USB forward probe. Google Cloud redirected
+to sign-in and the research Drive had no matching destination folder. Next,
+enroll the Pixel from the headset and authorize Drive with a Pages-origin
+OAuth client. Real H10 capture, Pixel transfer and Drive delivery remain open.
+
+All 85 Node tests, the UI state check and all six scenario pairs passed.
+Documentation release `e013fc6` passed
+[Pages run 43418701040](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43418701040).
+All five updated documentation pages showed the new content and the live
+Atmungsraum HTML matched the committed blob. The publication checkout was
+based on current GitHub main to preserve unrelated primary checkout changes.
 
 Preflight: all 71 existing Node tests passed. ADB confirmed the Pixel; no Quest
 USB transport was present. The prior browser path saved the participant CSV

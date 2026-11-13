@@ -9,11 +9,15 @@ copy is the input to automatic delivery to the research Google Drive.
 
 ## Operator procedure
 
-1. Open the installed Atmungsraum icon on the Pixel 10 and unlock the app.
-   In **VR-Probe**, join the Quest 2 in Remote mode over trusted Wi-Fi and use
-   the headset's enrolled controller credentials. Grant Android Nearby
-   devices and Chrome Local Network Access if prompted. The Quest records
-   the Polar H10 data.
+1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
+   On a fresh Quest profile, press **B** three times without holding the grip
+   in Remote mode to open the headset's maintenance panel. Under **Network
+   control**, select **Approve trusted LAN controller** on the trusted test
+   network. Enter the resulting Controller ID and Quest key under **Live-EKG
+   und Aufnahmen freigeben** on the Pixel and join using Bluetooth discovery
+   or the Quest's Wi-Fi address. Grant Android Nearby devices and Chrome Local
+   Network Access if prompted. Close the maintenance panel to return to the
+   immersive scene before starting.
 2. Before a session, let the idle controller reconcile any finalized runs.
    In **Google Drive**, authorize the designated research account as described
    below. The PWA creates and remembers **Atmungsraum – Quest-Aufnahmen** as
