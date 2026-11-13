@@ -2670,7 +2670,7 @@ index c0c0c17e..4c8ef5b1 100644
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..b6a9e3e7 100644
+index a694dfee..382cbcda 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -2713,7 +2713,7 @@ index a694dfee..b6a9e3e7 100644
                  long now = SystemClock.elapsedRealtime();
 @@ -922,6 +933,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
- 
+
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
 +                dispatchScenario(request, "");
 +            }
@@ -2742,7 +2742,7 @@ index a694dfee..b6a9e3e7 100644
 @@ -1060,6 +1082,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
          };
- 
+
 +    public static void onExperimentBluetoothLauncherResumed(Activity host) {
 +        if (!ExperimentSessionCommandGateway.wifiSetupPackaged(host)) return;
 +        ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.existing();
@@ -2789,7 +2789,7 @@ index a694dfee..b6a9e3e7 100644
 @@ -4237,6 +4268,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
- 
+
 +    private static boolean requestArmedAudio(ExperimentSessionPanelState state,
 +            ExperimentSessionAndroidShell.SessionReadback readback) {
 +        String scenario = "";
@@ -2809,6 +2809,15 @@ index a694dfee..b6a9e3e7 100644
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
+@@ -6281,6 +6328,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                         .put("breath_guidance_bias_percent",
+                             command.breathGuidanceBiasPercent)
+                         .put("started_at_utc_ns", utcNanos);
++                    if (command.participantPlan != null)
++                        request.put("participant", new JSONObject(command.participantPlan));
+                 }
+                 return request.toString();
+             } catch (Exception error) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 index 08732e53..5154ea36 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java

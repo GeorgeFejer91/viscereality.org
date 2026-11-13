@@ -365,18 +365,20 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   verified headset. The native panel accepted trusted controller enrollment
   and reported a listening LAN gateway. The earlier secondary profile was
   absent from Android's user list.
-- [ ] Verify sustained focused OpenXR frame submission, select Remote, and
-  measure first pairing through authenticated status on the installed Pixel.
-  The headset repeatedly slept off-head. The launcher reached focus briefly
-  without a sustained submission receipt. The discovery readback was
-  `inactive / remote-required`, and the Pixel's chooser found no compatible
-  device. Resume with a wearer and confirm Remote before measuring latency.
+- [x] Document the pre-fix 0.1.21 result. The headset repeatedly slept
+  off-head. The launcher briefly gained focus and reported
+  `inactive / remote-required`. The Pixel chooser found no compatible device.
 - [x] Make Remote the rehearsal default in signed 0.1.22. A focused Quest 2
   submitted frames and advertised Bluetooth after launch without a mode
   selection. Pixel Chrome listed the headset and the installed PWA completed
   its signed Wi-Fi join after Local Network Access was granted. RustDesk's
   floating overlay had blocked the Chrome prompt. The wearer-facing panel was
   closed using the app's typed operator action and confirmed by native frames.
+- [x] Measure the saved-address fast path on the installed Pixel against
+  Quest 2 build 0.1.23. Twelve authenticated joins succeeded with zero chooser
+  launches. From the saved Wi-Fi address to the first signed status, median
+  latency was 137 ms and p95 was 300 ms. These samples exclude app launch,
+  Bluetooth discovery, and human interaction.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,
@@ -440,6 +442,13 @@ this repository.
   though the signed status reported fresh input. The controller now gates
   Start and Resume on freshness and keeps Pause and Finish available during
   signal loss. The targeted regression and existing Quest tests passed.
+- [x] Reproduce the full phone control sequence against 0.1.23. Start, Pause,
+  Resume and Finish were confirmed and Quest saved both native sensor
+  streams. The attempt did not produce a participant CSV. The Pixel sent an
+  encrypted participant Arm, but the running panel used a separate JSON
+  encoder that omitted the participant plan. The unusually long armed wait
+  also put the legacy run above the 128 MiB native export cap. Repeat with
+  the fixed encoder and start immediately after Arm.
 - [ ] Start and finish a participant session. Check the original ECG, ACC and
   participant CSV on Quest.
 - [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
