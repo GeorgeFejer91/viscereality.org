@@ -322,12 +322,18 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
 - [x] Build and install 0.1.21 on the active Quest 2 profile. The APK matched
   the installed signing lineage, Android returned the same APK digest, and
   the assembly verified all 67 scenario files and the ARM64 OpenXR loader.
-- [ ] Launch 0.1.21 and verify focused OpenXR frames, active Remote discovery,
-  first pairing and authenticated status on the installed Pixel before
-  tuning latency. The native product Activity is the launcher. Horizon Shell
-  reported a reprojected system dialog and timed out placing that Activity.
-  A USB restart cleared the stuck Shell state and reached the headset profile
-  chooser. Return to the enrolled profile before launching and selecting Remote.
+- [x] Launch signed 0.1.21 on the Quest 2 owner profile. Package Manager
+  resolved the native product Activity. USB granted and read back the four
+  Nearby devices permissions. The app-private hardware serial matched the
+  verified headset. The native panel accepted trusted controller enrollment
+  and reported a listening LAN gateway. The earlier secondary profile was
+  absent from Android's user list.
+- [ ] Verify sustained focused OpenXR frame submission, select Remote, and
+  measure first pairing through authenticated status on the installed Pixel.
+  The headset repeatedly slept off-head. The launcher reached focus briefly
+  without a sustained submission receipt. The discovery readback was
+  `inactive / remote-required`, and the Pixel's chooser found no compatible
+  device. Resume with a wearer and confirm Remote before measuring latency.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,
@@ -340,12 +346,11 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   cancellation, radio loss, permission denial and reconnect never replay
   session commands or duplicate recordings.
 
-The research account completed Google Cloud onboarding. The dedicated
-Atmungsraum Drive Sync project exists and its Google Drive API is enabled.
-The OAuth registration is prepared with the research account as support and
-contact and an external test audience. The operator's separate Google API
-Services User Data Policy acceptance is pending. See the collection checklist
-below for client registration and device verification.
+The research account completed Google Cloud onboarding and the separate policy
+acceptance. Google Cloud verified the Atmungsraum PWA web client in the
+dedicated Drive Sync project, with the production origin, the research account
+as the sole test user and the `drive.file` scope. The phone still needs to
+authorize that scope after a signed Quest join.
 
 The assembly change and this performance checklist were published in
 `b53e856`. [Pages run 43428481356](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43428481356)
@@ -386,8 +391,11 @@ this repository.
 - [x] Implement foreground delivery from the committed recording store. Keep
   pending uploads and Drive IDs durable and verify folder, owner, size and
   SHA-256 before saving a delivery receipt.
-- [ ] Configure a real Google Cloud web OAuth client for the Pages origin and
-  authorize the designated account on the Pixel. Verify real Drive readback.
+- [x] Configure the Atmungsraum PWA web OAuth client for
+  `https://viscereality.org` in the Drive API project. Verify the designated
+  account in the testing audience and the per-file Drive scope.
+- [ ] After the signed Pixel join, authorize Drive on the installed PWA and
+  verify the private destination folder and actual upload readback.
 - [x] Run the targeted automated sync and fault-injection tests. Eight passed,
   including 40 simulated Drive bundles through lost responses and restarts.
 - [ ] Complete the attended Quest + worn H10 + Pixel + real Drive stress pass
