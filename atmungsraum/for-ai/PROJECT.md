@@ -287,6 +287,20 @@ to sign-in and the research Drive had no matching destination folder. Next,
 enroll the Pixel from the headset and authorize Drive with a Pages-origin
 OAuth client. Real H10 capture, Pixel transfer and Drive delivery remain open.
 
+The wearer reported unresponsive Touch controllers. ADB cleared the Meta
+report and Nearby devices overlays using their mapped virtual displays.
+The rehearsal regained OpenXR focus and submitted frames, but reported no
+active Touch interaction profile or physical input. The USB-launched
+experimenter panel also showed that the new Android profile lacked the
+hardware serial. The signed test APK has no debug identity provider.
+The verified ADB and Android serial was added to the active profile's
+app-private identity preferences with the test process stopped. Readback
+matched and the signed APK relaunched. This was lab provisioning of the
+test APK. After the restart, Horizon Shell blocked experimenter-panel
+placement while reporting a reprojected OS dialog. Enrollment remains open.
+First confirm Touch pointer and trigger in Quest Home, then reopen the
+experimenter panel and verify the signed LAN join before recording.
+
 All 85 Node tests, the UI state check and all six scenario pairs passed.
 Documentation release `e013fc6` passed
 [Pages run 43418701040](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43418701040).
