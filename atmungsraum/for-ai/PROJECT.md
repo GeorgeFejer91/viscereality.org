@@ -8,20 +8,24 @@
   USB ADB installed `com.carriez.flutter_hbb` (version code 2071) on the lab
   Quest 2 running Android 14 (API 34, build `UP1A.231005.007.A1`). The installed
   APK matched the release SHA-256 and Android resolved `.MainActivity`.
-- [ ] With the headset at Quest Home, open RustDesk as a 2D panel and verify
-  a Quest-to-PC session using a Touch controller on a test window.
+- [x] Open RustDesk as a 2D panel. The initial launch failed because the APK
+  was registered for the owner and the headset had switched to a secondary
+  profile. Register the installed APK for the current Android user with
+  `cmd package install-existing --user <user> com.carriez.flutter_hbb`.
+  The user-scoped cold launch returned `Status: ok` and RustDesk gained focus.
+- [ ] Verify a Quest-to-PC session using a Touch controller on a test window.
 - [ ] Test PC-to-Quest separately. Approve **Share Screen** in the headset and
   check whether Horizon OS lets the wearer enable **RustDesk Input**. From the
   Windows client, verify a changing remote frame, one harmless click with a
   visible result in a 2D panel, then disconnect and stop sharing.
 
-The headset's streaming activity had focus after installation, so the attended
-test remains pending. The Windows RustDeskMCP process was running with its
+The next attended step is to approve screen sharing in the active profile.
+The Windows RustDeskMCP process was running with its
 loopback MCP endpoint disabled. [RustDesk's Android guide](https://rustdesk.com/docs/en/client/android/#request-permissions-and-start-services)
 documents separate capture consent and input permission. [Meta's MediaProjection guide](https://developers.meta.com/vr/documentation/native/native-media-projection/)
 describes Horizon OS compositor capture. [The earlier Quest 2 sideload report](https://github.com/rustdesk/rustdesk/discussions/3047)
 leaves mouse input unresolved. Keep peer IDs, credentials and captured frames local.
-This note uses the clean publication checkout at base `b0038c3`.
+The installation note at `920adb0` passed [Pages run 43413359983](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43413359983) and the live project notes and app checks.
 
 ### RustDesk MCP client and skill — 2026-11-13
 
