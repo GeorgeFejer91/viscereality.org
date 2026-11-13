@@ -2,6 +2,22 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Password-free startup — 2026-11-13
+
+The start page, VR-Probe and local CSV recovery open without the shared
+password. The two folder send actions unlock the encrypted delivery
+configuration on demand and reuse it for the current tab. Quest enrollment
+still governs access to the headset and its recordings.
+
+Local Chromium passed desktop, phone portrait and landscape, and 320px
+entry checks. It downloaded an exact synthetic CSV, checked send-time
+password retry and cancellation, and confirmed the Pages-only upload limit
+without a request to Discord or Wormhole. The Node and context checks passed.
+The publication branch is based on current GitHub main in a clean sparse
+checkout. The primary checkout has unrelated index changes and unreadable
+cloud-backed files. The existing Quest 2 and Pixel hardware checklist below
+remains active.
+
 ### RustDesk on Quest 2 — 2026-11-13
 
 - [x] Sideload the official [RustDesk 1.5.3 ARM64 release](https://github.com/rustdesk/rustdesk/releases/tag/1.5.3).
@@ -708,6 +724,9 @@ and session exit on an installed phone. The original WAV and the untracked local
 attachments stay outside Git.
 
 ## One startup unlock for folder sync — 2026-11-08
+
+The startup behavior in this record was superseded on 2026-11-13. See
+[password-free startup](#password-free-startup--2026-11-13).
 
 Use only **Ungesendete Daten senden** and **Alle Daten senden** for the
 browser's saved session CSVs. The shared password now unlocks the entire app

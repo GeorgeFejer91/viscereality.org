@@ -1,10 +1,10 @@
 # Atmungsraum access and file delivery
 
-The shared startup password opens Atmungsraum, including Quest and
-[local CSV recovery](https://viscereality.org/atmungsraum/#daten).
-It decrypts the webhook envelope on the device. Supported browsers can save
-the password and silently restore access on another visit. Decrypted values
-stay in tab memory. GitHub Pages serves the app and its encrypted envelope.
+Atmungsraum, Quest and [local CSV recovery](https://viscereality.org/atmungsraum/#daten)
+open directly. The shared password decrypts the webhook envelope on the device
+when an operator chooses to send files. Supported browsers can save the password
+and silently restore it on a later send. Decrypted values stay in tab memory.
+GitHub Pages serves the app and its encrypted envelope.
 
 The folder offers **Ungesendete Daten senden** and **Alle Daten senden**.
 The GitHub Pages-only release reports the upload limitation when a send is

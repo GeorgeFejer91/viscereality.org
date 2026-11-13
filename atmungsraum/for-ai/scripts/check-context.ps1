@@ -23,6 +23,10 @@ if ((Get-Content -Raw -LiteralPath (Join-Path $root 'AGENTS.md')) -notmatch 'for
 }
 $html = Get-Content -Raw -LiteralPath (Join-Path $root 'index.html')
 $css = Get-Content -Raw -LiteralPath (Join-Path $root 'style.css')
+$app = Get-Content -Raw -LiteralPath (Join-Path $root 'app.js')
+if ($html -match 'data-delivery-locked' -or $css -match 'data-delivery-locked' -or $app -match 'unlockAtStartup|requestDeliveryAccess') {
+    throw 'Keep page startup independent of the encrypted delivery configuration'
+}
 if ($html -notmatch 'id="send-new-files"' -or $html -notmatch 'id="send-all-files"' -or $html -match 'id="(?:share-qr|wormhole-qr)"') {
     throw 'Keep the two folder delivery actions without QR controls'
 }

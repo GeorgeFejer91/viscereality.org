@@ -73,7 +73,8 @@ export async function unlockSharingConfig(password, signal) {
   return access;
 }
 
-export async function unlockAtStartup() {
+export async function requestDeliveryAccess(signal) {
+  signal.throwIfAborted();
   const dialog = document.getElementById('discord-password-dialog');
   const form = document.getElementById('discord-password-form');
   const input = document.getElementById('discord-password');
@@ -86,18 +87,30 @@ export async function unlockAtStartup() {
   if (canRemember && typeof navigator.credentials.get === 'function') {
     try {
       const saved = await navigator.credentials.get({ password: true, mediation: 'silent' });
-      if (saved?.id === credentialId) return await unlockSharingConfig(saved.password);
+      if (saved?.id === credentialId) return await unlockSharingConfig(saved.password, signal);
     } catch { /* An unavailable or outdated credential falls back to the prompt. */ }
   }
 
+  signal.throwIfAborted();
   return new Promise(resolve => {
-    const listeners = new AbortController();
-    const options = { signal: listeners.signal };
+    const prompt = new AbortController();
+    const options = { signal: prompt.signal };
     const submit = form.querySelector('button[type="submit"]');
-    dialog.addEventListener('cancel', event => event.preventDefault(), options);
-    dialog.addEventListener('keydown', event => {
-      if (event.key === 'Escape') event.stopPropagation();
+    const finish = access => {
+      prompt.abort();
+      input.value = '';
+      dialog.close();
+      resolve(access);
+    };
+    const cancel = () => finish(null);
+    signal.addEventListener('abort', cancel, options);
+    document.getElementById('cancel-discord-password').addEventListener('click', cancel, options);
+    dialog.addEventListener('cancel', event => {
+      event.preventDefault();
+      cancel();
     }, options);
+    submit.disabled = false;
+    status.textContent = '';
     form.addEventListener('submit', async event => {
       event.preventDefault();
       if (submit.disabled) return;
@@ -105,17 +118,15 @@ export async function unlockAtStartup() {
       submit.disabled = true;
       status.textContent = 'Passwort wird geprüft …';
       try {
-        const access = await unlockSharingConfig(password);
+        const access = await unlockSharingConfig(password, prompt.signal);
         if (save) {
           try {
             navigator.credentials.store(new PasswordCredential({ id: credentialId, password })).catch(() => {});
           } catch { /* Unlocking also works without browser storage. */ }
         }
-        listeners.abort();
-        input.value = '';
-        dialog.close();
-        resolve(access);
+        finish(access);
       } catch (error) {
+        if (prompt.signal.aborted) return;
         status.textContent = error.message;
         submit.disabled = false;
         input.focus({ preventScroll: true });

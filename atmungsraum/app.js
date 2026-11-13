@@ -2,8 +2,7 @@ import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, u
 import { mountSessionAudio } from './audio/session-ui.js?v=20261108-background-music';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
 import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
-import { mountDataFiles } from './data-files.js?v=20261108-startup-unlock';
-import { unlockAtStartup } from './discord-share.js?v=20261108-password-policy';
+import { mountDataFiles } from './data-files.js?v=20261113-open-startup';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
 const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest';
@@ -244,18 +243,15 @@ async function measureLabels() {
 
 render();
 measureLabels();
-const deliveryAccess = await unlockAtStartup();
-delete document.body.dataset.deliveryLocked;
-byId(current).querySelector('h1').focus({ preventScroll: true });
 if (rehearsalMode) {
   import('./quest-ui.js?v=14').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity)).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {
-  mountDataFiles(sessionData, deliveryAccess);
+  mountDataFiles(sessionData);
   byId('patient-fields').disabled = false;
   byId('patient-next').disabled = false;
-  // Load saved CSVs after unlock, including on a cold recovery link.
+  // Load saved CSVs even on a cold recovery link.
   sessionData.prepare().catch(() => {});
   setInterval(() => {
     const reconnect = updateReconnect();

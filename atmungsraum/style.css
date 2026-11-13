@@ -62,9 +62,7 @@ main {
 .relay-auto { display: flex; align-items: center; gap: 10px; min-height: 48px; }
 .relay-auto input { flex: none; width: 20px; height: 20px; accent-color: #c9d3bf; }
 .relay-auto span { flex: 1; }
-body:has(#files-dialog[open], #install-dialog[open]) { overflow: hidden; }
-body[data-delivery-locked] { overflow: hidden; }
-body[data-delivery-locked] :is(main, #recenter-vr, #belt-signal, #corner-actions) { visibility: hidden; }
+body:has(#files-dialog[open], #install-dialog[open], #discord-password-dialog[open]) { overflow: hidden; }
 #belt-signal { position: fixed; z-index: 1; top: var(--corner-top); right: max(12px, env(safe-area-inset-right)); display: grid; place-items: center; width: var(--top-corner-size); height: var(--top-corner-size); padding: calc(var(--top-corner-size) * .12); border: 1px solid #4a5148; border-radius: 10px; background: #131712; }
 .polar-belt { display: block; width: 100%; height: 100%; color: #c9d3bf; }
 .polar-belt::before { content: ""; display: block; width: 100%; height: 100%; background: currentColor; mask: url('./assets/icons/polar-h10.png') center / contain no-repeat; mask-mode: luminance; }

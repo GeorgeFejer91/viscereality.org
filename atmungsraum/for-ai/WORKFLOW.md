@@ -106,18 +106,19 @@ relaunch, storage and lifecycle qualification distinct from desktop automation.
 On Android Chrome, use the browser menu's install action; on iPhone Safari,
 use Share → Add to Home Screen and enable Open as Web App when offered.
 
-The startup dialog unlocks the authenticated public envelope in
+The send action unlocks the authenticated public envelope in
 `sharing/discord-config.json`. The same password decrypts the Discord webhook
 and, in version 2, the centrally configured relay endpoint and key. The app
 keeps the result in tab memory and offers browser-managed saving. Verify
-startup, retry after a wrong password, cancel and focus, silent restore,
-two sends without another unlock, and exact Discord acknowledgement.
+password-free startup and recovery, retry after a wrong password, cancel and
+focus, send-time credential restore, two sends without another unlock, and exact
+Discord acknowledgement.
 Keep the folder to unsent and all saved files, counts and progress. Preserve
 downloads at `#daten` and the JSON receipt ledger across reloads, changes,
 rejected posts, cancellation and concurrent tabs.
 
-GitHub Pages is the only production host. The version 1 envelope unlocks the
-whole app interface. Direct uploads from the phone browser carry the app
+GitHub Pages is the only production host. The version 1 envelope contains the
+Discord webhook. Direct uploads from the phone browser carry the app
 origin and Wormhole rejects their preflight. Keep the existing relay code
 available for synthetic testing. Activating a relay requires a change to the
 hosting constraint. Never publish plaintext credentials, keyed links or

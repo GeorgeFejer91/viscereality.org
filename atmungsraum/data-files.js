@@ -1,3 +1,4 @@
+import { requestDeliveryAccess } from './discord-share.js?v=20261113-open-startup';
 import { sendDiscordLink } from './link-relay.js?v=20261107-file-delivery';
 import { uploadWormholeZip } from './wormhole-upload.js?v=20261107-file-delivery';
 import { deliveryKey, receiptPrefix, readSentFiles, deliveryEntries, prepareDeliveryReceipt } from './file-delivery.js?v=20261107-checkout-receipts';
@@ -48,12 +49,12 @@ export function createExportsZip(records) {
   return new Blob([...parts, ...directory, end], { type: 'application/zip' });
 }
 
-export function mountDataFiles(data, { webhook, relay }) {
+export function mountDataFiles(data) {
   const byId = id => document.getElementById(id);
   const dialog = byId('files-dialog'), button = byId('open-files'), close = byId('close-files');
   const counts = byId('files-counts'), status = byId('files-status'), progress = byId('files-progress');
   const sendNew = byId('send-new-files'), sendAll = byId('send-all-files');
-  let active, returnFocus, generation = 0, total = 0, unsent = 0;
+  let active, access, returnFocus, generation = 0, total = 0, unsent = 0;
 
   function syncButtons() {
     sendNew.disabled = Boolean(active) || unsent === 0;
@@ -83,7 +84,7 @@ export function mountDataFiles(data, { webhook, relay }) {
     const controller = active = new AbortController(), { signal } = controller;
     syncButtons();
     status.textContent = 'Dateien werden geprüft …';
-    let notifying = false;
+    let notifying = false, requestedAccess = false;
     try {
       await navigator.locks.request(deliveryKey, { ifAvailable: true }, async lock => {
         signal.throwIfAborted();
@@ -95,6 +96,17 @@ export function mountDataFiles(data, { webhook, relay }) {
           status.textContent = all ? 'Keine gespeicherten Dateien.' : 'Keine ungesendeten Dateien.';
           return;
         }
+        if (!access) {
+          requestedAccess = true;
+          access = await requestDeliveryAccess(signal);
+          signal.throwIfAborted();
+          if (!access) {
+            status.textContent = 'Versand abgebrochen.';
+            return;
+          }
+          if (dialog.open && !dialog.contains(document.activeElement)) status.focus({ preventScroll: true });
+        }
+        const { webhook, relay } = access;
         if (!relay) throw new Error('Wormhole erlaubt keinen direkten Upload von dieser Website.');
         const confirmReceipt = prepareDeliveryReceipt(storage, selected);
         status.textContent = 'ZIP wird vorbereitet …';
@@ -133,6 +145,10 @@ export function mountDataFiles(data, { webhook, relay }) {
       progress.removeAttribute('value');
       syncButtons();
       await refresh();
+      if (requestedAccess && !signal.aborted && dialog.open && !dialog.contains(document.activeElement)) {
+        const trigger = all ? sendAll : sendNew;
+        (trigger.disabled ? close : trigger).focus({ preventScroll: true });
+      }
     }
   }
 
