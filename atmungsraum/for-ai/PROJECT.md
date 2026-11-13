@@ -2,6 +2,36 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Live recording sync to Google Drive
+
+Goal: transfer verified recording increments from Quest 2 to the installed
+Pixel and upload them to the existing private research Drive during a full
+15-minute Polar H10 run. Quest retains local acquisition, recording, audio,
+and rendering authority. The final Drive object must be the same dated
+participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
+
+- [x] Establish the current boundary. The live phone waveform is a rolling
+  two-second ECG preview. The complete CSV and Drive upload currently use the
+  idle-only finalized recording path. The 15-minute trial exported 93,987,682
+  bytes, and post-session transfer and delivery took about nine minutes.
+- [ ] Record detected ECG and ACC interruption and recovery as stream-specific
+  research events. Retain timestamps and reason when known. Distinguish these
+  events from a manual playback pause and recorder queue loss. Preserve the
+  original sample timestamps and support historical CSVs.
+- [ ] Expose durable recording increments under the enrolled private gateway.
+  Prove the transferred byte prefix remains valid through pause, delayed
+  samples and finalization. Use bounded sync work that yields to controls and
+  keeps transfer failures off the acquisition and rendering path.
+- [ ] Buffer verified increments on the Pixel and upload them with one resumable
+  Drive session for the final CSV. Confirm acknowledged offsets, handle expired
+  authorization or upload sessions, and use the existing final export to repair
+  missing ranges. Finalization must verify the file identity and hash.
+- [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
+  Measure Quest frame timing, Polar freshness, control acknowledgements,
+  writer loss, and time from a Quest checkpoint to Drive acknowledgement.
+  Exercise LAN loss, a Drive failure, and a Pixel reload. Confirm catch-up,
+  explicit interruption markers, and one private Drive object per run.
+
 ### Polar H10 recording and single participant CSV — 2026-11-13
 
 - [x] Open the Quest controller by default and retire browser-local recording.

@@ -7,6 +7,17 @@ after any rehearsal and catches up on files created while the controller was
 closed. The installed Pixel PWA is the study sync controller. Its verified local
 copy is the input to automatic delivery to the research Google Drive.
 
+## Live sync goal
+
+During a session the phone currently polls a short ECG waveform for the
+operator. Full-resolution samples, breath classifications and renderer
+values stay on Quest until the saved CSV is available. The planned live path
+will upload committed recording bytes in batches while Quest continues
+biofeedback locally. Upload acknowledgements can arrive during a session.
+The Drive file becomes available when the upload finalizes.
+See the [active checklist](PROJECT.md#live-recording-sync-to-google-drive)
+and [Drive resumable upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

@@ -88,6 +88,22 @@ renderer value is the radius parameter used for the frame, so it does not
 describe the outermost extent of an individual particle. The audio phase and
 the classified breathing phase are separate measurements of different things.
 
+### Signal interruptions in CSV v2
+
+The CSV preserves each retained sample's sensor timestamp and sample position.
+Discontinuities can be inferred within each sensor clock. Rows from other
+streams retain the playback state during a pause. CSV v2 has no explicit
+per-stream interruption or recovery records. The native session event log
+records playback pause and resume times without a cause field. Writer-drop
+counts describe loss in the recorder queue. A zero count alone cannot establish
+continuous reception from the H10.
+
+In the full 15-minute trial, Quest retained nine playback pause/resume pairs.
+Sorting the recorded samples by their sensor timestamps exposed two intervals
+over one second in each sensor stream. The longest interval was about 16.08 s
+for ECG and 14.87 s for ACC. Those intervals are inferred gaps between
+retained samples. They do not provide an exhaustive outage count.
+
 ## Historical CSV schema v1
 
 Earlier browser and Quest releases wrote 28-column ECG-only participant
