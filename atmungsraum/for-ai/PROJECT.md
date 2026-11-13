@@ -38,6 +38,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     samples, finalization and checkpoint recovery. The 78 native recording
     tests and 86 Android gateway checks passed, including guest/relay denial,
     committed-range bounds, and active-run replacement while reading.
+    Same-signer APK 0.1.29 was installed and read back byte-for-byte on Quest 2.
+    [Pages run 43485062024](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43485062024)
+    deployed `1843da3`. The installed Pixel loaded that PWA release, rejoined
+    Quest over the enrolled gateway, saw the new capability, and confirmed
+    that a live read is refused while idle.
   - [ ] Verify the live prefix feed and its sustained rate on Quest 2.
 - [ ] Buffer verified increments on the Pixel and upload them with one resumable
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
@@ -57,12 +62,18 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     feed. The 85 browser tests cover range hashes, resume offsets, and repair
     from the final manifest. The final signed SHA-256 is checked before the
     final Drive request. The Pixel keeps one Drive file ID for the run.
+    A synthetic IndexedDB check on the installed Pixel verified offset resume
+    after reopening the store, cross-chunk reads, overlap rejection and
+    atomic replacement of staged bytes with the final archive.
   - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.
   Exercise LAN loss, a Drive failure, and a Pixel reload. Confirm catch-up,
   explicit interruption markers, and one private Drive object per run.
+  Start with a short physical probe to measure the actual checkpoint-to-Drive
+  delay and validate stop/resume markers. Quest had zero H10 scan candidates
+  and reported neither stream fresh during the release check.
 
 ### Polar H10 recording and single participant CSV — 2026-11-13
 
