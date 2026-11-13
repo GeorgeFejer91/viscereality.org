@@ -44,6 +44,13 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     Quest over the enrolled gateway, saw the new capability, and confirmed
     that a live read is refused while idle.
   - [ ] Verify the live prefix feed and its sustained rate on Quest 2.
+    Idle physical transport check on APK 0.1.29 and the installed Pixel read
+    160 signed, encrypted 32 KiB ranges of the earlier finalized trial.
+    The 5 MiB transfer took 24.957 s (205.2 KiB/s). With parallel status
+    polling, 23 signed status requests had a 135 ms p95 response time.
+    The prior 93,987,682-byte trial averaged 102 KiB/s over its 900 active
+    seconds. The idle read benchmark does not include a running CSV writer
+    or Drive uploads.
 - [ ] Buffer verified increments on the Pixel and upload them with one resumable
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
   authorization or upload sessions, and use the existing final export to repair

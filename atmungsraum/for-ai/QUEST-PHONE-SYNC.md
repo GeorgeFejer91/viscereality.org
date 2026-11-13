@@ -271,7 +271,7 @@ An IndexedDB receipt reserves a Drive ID before upload and records the exact
 file hash. On an uncertain response, retry that ID and verify the existing
 object instead of creating another one. The controller checks the destination
 is still private, verifies the Drive object's parent, owner, name, size and
-SHA-256, then stores the confirmed receipt. CSV v2 and v3 upload the original
+SHA-256, then stores the confirmed receipt. CSV v2 through v4 upload the original
 CSV. Earlier participant uploads keep the ZIP
 with the CSV, ECG, ACC and export manifest. Legacy local downloads retain the
 eight-file archive. Start, close,
