@@ -285,6 +285,37 @@ two minutes without input. Its screen timeout was extended and Android
 reported stay-on active. Clear the Quest lock screen before the physical
 rehearsal and repeat the existing app acceptance checks.
 
+### Fast and reliable Bluetooth pairing on Pixel and Quest 2 — 2026-11-13
+
+Minimize the time from opening VR-Probe or choosing a headset to the first
+authenticated Quest status. Keep the enrolled device identity and native
+gateway checks intact. Use Bluetooth for discovery and hotspot setup, then
+hand off to the signed Wi-Fi gateway for control and recording sync.
+
+- [x] Establish the first-pairing blocker on the physical devices. Pixel Chrome
+  can scan. The signed Quest 2 rehearsal accepted trusted controller enrollment
+  and opened its LAN listener, but its discovery status stayed
+  `inactive / remote-required`. The 0.1.20 manifest omits the original native
+  panel host required to select Remote control. Time this as a failed attempt.
+- [ ] Build and verify the Remote-capable Quest configuration. Confirm
+  focused OpenXR frames, active discovery, one successful first pairing and
+  the first authenticated status on the installed Pixel before tuning latency.
+- [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
+  address and hotspot fallback on the same physical devices. Record discovery,
+  GATT, hotspot join and signed LAN verification separately. Report median,
+  p95, completion rate, chooser count and retries per route. Measure operator
+  response to permission or chooser prompts separately from software latency.
+- [ ] Reduce measured waits and repeat work. Preserve the saved-address fast
+  path, the single GATT handoff, and rejection of stale or different headset
+  identity. Keep scanning bounded and stop it after selection or cancellation.
+- [ ] Repeat the same physical workload after tuning. Confirm that
+  cancellation, radio loss, permission denial and reconnect never replay
+  session commands or duplicate recordings.
+
+Google Cloud sign-in reached first-use terms for the designated research
+account. The operator must review and accept them before OAuth setup can
+continue. See the collection checklist below.
+
 ### Quest 2, Pixel and Google Drive collection — 2026-11-13
 
 After the installed Android controller saves a finalized Quest recording, it
