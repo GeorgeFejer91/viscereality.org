@@ -315,9 +315,13 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   and opened its LAN listener, but its discovery status stayed
   `inactive / remote-required`. The 0.1.20 manifest omits the original native
   panel host required to select Remote control. Time this as a failed attempt.
-- [ ] Build and verify the Remote-capable Quest configuration. Confirm
-  focused OpenXR frames, active discovery, one successful first pairing and
-  the first authenticated status on the installed Pixel before tuning latency.
+- [x] Resolve the Quest assembly with the original native panel and command
+  gateway selected. The 0.1.20 manifest failed the Remote-host check. The
+  corrected manifest declares the native product Activity and both required
+  metadata flags. The assembly now rejects a build that omits either flag.
+- [ ] Install and verify the corrected signed build. Confirm focused OpenXR
+  frames, active Remote discovery, first pairing and authenticated status on
+  the installed Pixel before tuning latency.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,

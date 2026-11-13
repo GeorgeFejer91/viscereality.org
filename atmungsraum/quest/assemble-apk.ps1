@@ -116,7 +116,16 @@ $app.declared_manifest.permissions = @($app.declared_manifest.permissions) + @(
     'android.permission.CHANGE_WIFI_STATE',
     'android.permission.NEARBY_WIFI_DEVICES'
 ) | Select-Object -Unique
-$app.requested_features = @($app.requested_features) + @($featureId, 'ui.experiment_private_lan_data', 'ui.experiment_scene_recenter', 'ui.experiment_wifi_setup')
+$app.requested_features = @($app.requested_features) + @(
+    $featureId,
+    'ui.experiment_private_lan_data',
+    'ui.experiment_scene_recenter',
+    'ui.experiment_wifi_setup'
+)
+if ('ui.native_mesh_panel' -cnotin $app.requested_features -and
+    'ui.native_mesh_panel.original_product' -cnotin $app.requested_features) {
+    $app.requested_features += 'ui.native_mesh_panel.original_product'
+}
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
@@ -154,6 +163,10 @@ try {
     if ($metadata['com.oculus.supportedDevices'] -cne 'quest2' -or
         $metadata['rusty.quest.experiment.command_gateway.origins'] -cne 'https://viscereality.org') {
         throw 'The native manifest must target Quest 2 and admit the exact Atmungsraum origin.'
+    }
+    if ($metadata['rusty.quest.native_renderer.original_panel_native_host'] -cne 'true' -or
+        $metadata['rusty.quest.experiment.command_gateway.enabled'] -cne 'true') {
+        throw 'The native manifest must select the original panel host and the gateway for Remote control.'
     }
     if ($metadata['rusty.quest.experiment.command_gateway.private_lan_data'] -cne 'true') {
         throw 'The native manifest must select encrypted LAN sensor and recording readback.'

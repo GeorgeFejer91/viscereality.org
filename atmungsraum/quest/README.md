@@ -14,7 +14,10 @@ preparation, command gateway and recording export. Keep the derived app spec,
 its exact feature lock and its private provider manifest together. Stage the
 pinned ARM64 liblsl via the Experimenter repository's
 `tools/Stage-LibLslAndroid.ps1`. The assembly also needs JDK 17, Android SDK and
-NDK, the Rust `aarch64-linux-android` target and the ARM64 OpenXR loader.
+NDK, the Rust `aarch64-linux-android` target and the ARM64 OpenXR loader. Assembly selects the original native product panel so
+the app can enter Remote control and advertise its Bluetooth discovery
+service. The resolved manifest must select both the native panel host and
+command gateway.
 Use a native build checkout whose path ancestors are ordinary directories so
 the packager can verify its output root.
 
