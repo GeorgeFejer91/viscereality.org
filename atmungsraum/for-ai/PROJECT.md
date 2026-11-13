@@ -20,12 +20,23 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   original sample timestamps and support historical CSVs.
   - [x] Add CSV v3 signal events for both streams and preserve the v2 reader.
     The 76 focused native recording tests cover checkpoint recovery and
-    finalization. The 84 PWA tests include both CSV versions.
+    finalization. The 84 PWA tests include both CSV versions, and all 72
+    gateway checks passed. Signed Quest APK 0.1.28 from `84bcf7fd` was
+    installed and its SHA-256 matched the build. The installed Pixel rejoined
+    over its enrolled gateway and loaded the v3 reader from `d4e2dcc`,
+    deployed in [Pages run 43480098804](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43480098804).
   - [ ] Verify deliberate ECG and ACC interruptions on Quest 2 with a worn H10.
+    During the release check the headset's BLE scan found no H10 and neither
+    stream was fresh, so participant Start stayed gated.
 - [ ] Expose durable recording increments under the enrolled private gateway.
   Prove the transferred byte prefix remains valid through pause, delayed
   samples and finalization. Use bounded sync work that yields to controls and
   keeps transfer failures off the acquisition and rendering path.
+  Next, bind an append-only CSV projection to committed Quest checkpoints.
+  Preserve the authoritative playback events, including an automatic
+  Polar-stale pause whose timestamp can precede its arrival at the writer.
+  Prove prefix equality on late samples, control changes, recovery and Finish
+  before connecting the phone feed.
 - [ ] Buffer verified increments on the Pixel and upload them with one resumable
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
   authorization or upload sessions, and use the existing final export to repair

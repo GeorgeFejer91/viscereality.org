@@ -252,10 +252,11 @@ and [Drive scope reference](https://developers.google.com/workspace/drive/api/gu
 
 The Drive queue reads already-committed bundles while the controller is idle.
 An IndexedDB receipt reserves a Drive ID before upload and records the exact
-ZIP hash. On an uncertain response, retry that ID and verify the existing
+file hash. On an uncertain response, retry that ID and verify the existing
 object instead of creating another one. The controller checks the destination
 is still private, verifies the Drive object's parent, owner, name, size and
-SHA-256, then stores the confirmed receipt. The v2 upload is the original CSV. Earlier participant uploads keep the ZIP
+SHA-256, then stores the confirmed receipt. CSV v2 and v3 upload the original
+CSV. Earlier participant uploads keep the ZIP
 with the CSV, ECG, ACC and export manifest. Legacy local downloads retain the
 eight-file archive. Start, close,
 and background transitions stop upload work. A later authorized idle pass
