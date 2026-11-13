@@ -104,6 +104,26 @@ over one second in each sensor stream. The longest interval was about 16.08 s
 for ECG and 14.87 s for ACC. Those intervals are inferred gaps between
 retained samples. They do not provide an exhaustive outage count.
 
+### Signal interruptions in CSV v3
+
+Version 3 preserves the sample columns and adds `signal_reason`. It records
+`ecg-interrupted`, `ecg-resumed`, `acc-interrupted` and `acc-resumed` in
+`record_type`. The recording writer treats each stream independently from
+official Start. A break longer than one second between recorded Quest
+observations generates an interruption at the one-second deadline and a
+resumption at the next recorded observation. Saving during a break records
+the outstanding interruption without inventing a recovery. The reasons are
+`no-recorded-receipt-for-one-second` and `recorded-receipt-resumed`.
+
+These events measure gaps in recorded Quest observations. Shorter gaps and
+missing sensor samples inside a received frame require inspection of the
+original sample timestamps and positions. Consult the writer-loss receipt
+separately when identifying the cause. Playback pauses do not create signal
+events. Marker rows carry the usual time and playback fields with empty
+measurement cells. They may be written after a later-timestamped row, so
+order by the appropriate clock for analysis. Checkpoint recovery preserves
+markers already committed before interruption of the writer.
+
 ## Historical CSV schema v1
 
 Earlier browser and Quest releases wrote 28-column ECG-only participant

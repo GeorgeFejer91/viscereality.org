@@ -126,16 +126,18 @@ test('participant exports retain the CSV and both original sensor streams throug
     contents.set(zipped.toString('utf8', offset + 30, start), zipped.subarray(start, start + length));
     offset = start + length;
   }
-  manifest.participant_csv.schema_version = 2;
   const readRecording = gateway.recordings;
   gateway.recordings = async query => {
     if (query.query === 'read') assert.equal(query.file, csvName);
     return readRecording(query);
   };
-  const unified = await questRecording(gateway, id, signal, { includeSensorBundle: true });
-  assert.equal(unified.bundle.name, csvName);
-  assert.equal(unified.bundle.type, 'text/csv');
-  assert.deepEqual(Buffer.from(await unified.bundle.arrayBuffer()), csv);
+  for (const schemaVersion of [2, 3]) {
+    manifest.participant_csv.schema_version = schemaVersion;
+    const unified = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+    assert.equal(unified.bundle.name, csvName);
+    assert.equal(unified.bundle.type, 'text/csv');
+    assert.deepEqual(Buffer.from(await unified.bundle.arrayBuffer()), csv);
+  }
   gateway.recordings = readRecording;
   delete manifest.participant_csv.schema_version;
   assert.deepEqual(contents.get(`${stem}_polar-ecg.jsonl`), ecg);

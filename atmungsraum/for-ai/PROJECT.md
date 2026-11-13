@@ -18,6 +18,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   research events. Retain timestamps and reason when known. Distinguish these
   events from a manual playback pause and recorder queue loss. Preserve the
   original sample timestamps and support historical CSVs.
+  - [x] Add CSV v3 signal events for both streams and preserve the v2 reader.
+    The 76 focused native recording tests cover checkpoint recovery and
+    finalization. The 84 PWA tests include both CSV versions.
+  - [ ] Verify deliberate ECG and ACC interruptions on Quest 2 with a worn H10.
 - [ ] Expose durable recording increments under the enrolled private gateway.
   Prove the transferred byte prefix remains valid through pause, delayed
   samples and finalization. Use bounded sync work that yields to controls and
@@ -31,6 +35,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     the same file ID with the expected size and SHA-256. Implement bounded
     resumable requests and persisted offsets in the PWA transport, including
     for complete CSVs already staged on the phone.
+    [Pages run 43478317772](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43478317772)
+    deployed `640e5e7`. The refreshed installed Pixel loaded the deployed
+    module and recovered a deliberately lost Drive acknowledgement at byte
+    1,048,576. It finalized the 1,310,725-byte synthetic file under the same ID,
+    verified its SHA-256 and moved it to trash.
   - [ ] Connect the prefix uploader to durable Quest ranges and Pixel staging.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,

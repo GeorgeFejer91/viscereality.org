@@ -100,7 +100,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     : manifest.file_set_policy === 'core8-recovered-checkpoint' && validRecovery(manifest);
   if (!validFiles) throw Error('Quest hat keine verifizierte Aufnahmedatei geliefert.');
   const csv = manifest.participant_csv;
-  const unified = csv?.schema_version === 2;
+  const unified = csv?.schema_version === 2 || csv?.schema_version === 3;
   const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
   if (total !== manifest.total_bytes || total > (csv ? maxParticipantCoreBytes : maxBytes)) {
     throw Error('Ungültige Größe der Quest-Aufnahme.');

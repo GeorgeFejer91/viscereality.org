@@ -597,7 +597,7 @@ index 2a8bc3a1..60e43f5f 100644
  #[cfg(not(feature = "showcase"))]
  mod session_recording_writer;
 diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
-index 3cbbfb33..6858a875 100644
+index 3cbbfb33e6524113067c9bae6084ed3d70842422..773a44f9689ce25a2cb3faf6ad62e8fa615e76d5 100644
 --- a/apps/native-renderer-android/native/src/session_recording_contract.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
 @@ -106,6 +106,7 @@ impl ConditionKey {
@@ -618,7 +618,63 @@ index 3cbbfb33..6858a875 100644
          self.experiment_identity.validate_for(&self.condition)?;
          if let Some(configuration) = &self.breath_tracking_configuration {
              crate::breath_composition_runtime::validate_tracking_configuration(configuration)?;
-@@ -972,6 +976,7 @@ mod tests {
+@@ -465,10 +469,14 @@ pub(crate) enum SessionEventKind {
+     RestartRequested,
+     ExitRequested,
+     SourceGap,
++    EcgInterrupted,
++    EcgResumed,
++    AccInterrupted,
++    AccResumed,
+ }
+ 
+ impl SessionEventKind {
+-    pub(crate) const ALL: [Self; 17] = [
++    pub(crate) const ALL: [Self; 21] = [
+         Self::BiasChanged,
+         Self::Armed,
+         Self::OfficialStart,
+@@ -486,6 +494,10 @@ impl SessionEventKind {
+         Self::RestartRequested,
+         Self::ExitRequested,
+         Self::SourceGap,
++        Self::EcgInterrupted,
++        Self::EcgResumed,
++        Self::AccInterrupted,
++        Self::AccResumed,
+     ];
+ 
+     pub(crate) const fn as_str(self) -> &'static str {
+@@ -507,6 +519,18 @@ impl SessionEventKind {
+             Self::RestartRequested => "restart-requested",
+             Self::ExitRequested => "exit-requested",
+             Self::SourceGap => "source-gap",
++            Self::EcgInterrupted => "ecg-interrupted",
++            Self::EcgResumed => "ecg-resumed",
++            Self::AccInterrupted => "acc-interrupted",
++            Self::AccResumed => "acc-resumed",
++        }
++    }
++
++    pub(crate) const fn signal_reason(self) -> Option<&'static str> {
++        match self {
++            Self::EcgInterrupted | Self::AccInterrupted => Some("no-recorded-receipt-for-one-second"),
++            Self::EcgResumed | Self::AccResumed => Some("recorded-receipt-resumed"),
++            _ => None,
+         }
+     }
+ 
+@@ -828,6 +852,9 @@ impl SessionRecord {
+             Self::Event(value) => {
+                 let mut row = common("event", value.observed_at);
+                 row["event"] = json!(value.kind.as_str());
++                if let Some(reason) = value.kind.signal_reason() {
++                    row["signal_reason"] = json!(reason);
++                }
+                 if value.kind == SessionEventKind::Started {
+                     if let Some(configuration) = &spec.breath_tracking_configuration {
+                         row["breath_tracking_configuration"] = configuration.clone();
+@@ -972,6 +999,7 @@ mod tests {
      fn spec() -> SessionStartSpec {
          let utc = UtcEpochNanos::new(1_725_000_000_000_000_000);
          SessionStartSpec {
@@ -1059,7 +1115,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
                  {
                      "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..20ab90b5d8fe607ce58ebc48982b70977a966356 100644
+index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb107504fd 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
@@ -1100,7 +1156,7 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..20ab90b5d8fe607ce58ebc48982b7097
          &check,
      );
      assert!(result.is_err());
-@@ -694,3 +700,163 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+@@ -694,3 +700,167 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
      drop(prepared);
      fs::remove_dir_all(root.parent().unwrap()).unwrap();
  }
@@ -1206,7 +1262,11 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..20ab90b5d8fe607ce58ebc48982b7097
 +    let csv_bytes = fs::read(directory.join(format!("{RECOVERED_CSV_PREFIX}{csv_name}"))).unwrap();
 +    let csv = String::from_utf8(csv_bytes.clone()).unwrap();
 +    assert!(csv.contains(",26000000,paused,calibration,4000,1,0,37,"));
-+    assert!(csv.contains(",aborted,interrupted-recovery\r\n"));
++    assert!(csv.contains(",aborted,interrupted-recovery,\r\n"));
++    assert!(csv.contains(",ecg-interrupted,"));
++    assert!(csv.contains(",no-recorded-receipt-for-one-second\r\n"));
++    assert!(csv.contains(",ecg-resumed,"));
++    assert!(csv.contains(",recorded-receipt-resumed\r\n"));
 +    let csv_chunk = recovered.read(manifest_id, csv_name, 0, csv_bytes.len() as u64, &|| true).unwrap();
 +    assert_eq!(csv_chunk["data"], base64(&csv_bytes));
 +    let listing = list(&root, "", 8, &|| true).unwrap();
@@ -1266,10 +1326,10 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..20ab90b5d8fe607ce58ebc48982b7097
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5ac3beacd0
+index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742cae787636
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1065 @@
+@@ -0,0 +1,1079 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -1283,12 +1343,13 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +
 +use crate::{
 +    session_recording_clock::{ClockAnchor, MonotonicNanos},
++    session_recording_contract::SessionEventKind,
 +    session_recording_export::open_regular_recording_file,
 +    session_recording_writer::sync_directory,
 +};
 +
-+const CSV_SCHEMA_VERSION: u64 = 2;
-+const HEADER: &str = "schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason\r\n";
++const CSV_SCHEMA_VERSION: u64 = 3;
++const HEADER: &str = "schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason,signal_reason\r\n";
 +pub(crate) const RECOVERY_RECEIPT: &str = "participant-recovered.json";
 +pub(crate) const RECOVERED_CSV_PREFIX: &str = ".recovered-";
 +pub(crate) const RECOVERY_POLICY: &str = "core8-recovered-checkpoint";
@@ -1688,10 +1749,10 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +                write!(output, ",{value}").map_err(io_error)?;
 +            }
 +            if reason.contains([',', '"', '\r', '\n']) {
-+                return writeln!(output, ",{outcome},\"{}\"\r", reason.replace('"', "\"\""))
++                return writeln!(output, ",{outcome},\"{}\",{}\r", reason.replace('"', "\"\""), row.signal_reason)
 +                    .map_err(io_error);
 +            }
-+            writeln!(output, ",{outcome},{reason}\r").map_err(io_error)
++            writeln!(output, ",{outcome},{reason},{}\r", row.signal_reason).map_err(io_error)
 +        };
 +        let mut ended_at = clock.last_event.max(start);
 +        for source in &mut sources {
@@ -1708,7 +1769,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +        }
 +        let ended_at = cutoff.unwrap_or(ended_at);
 +        write_row(
-+            &Observation { at: ended_at, kind: "end", values: Default::default() },
++            &Observation { at: ended_at, kind: "end", values: Default::default(), signal_reason: "" },
 +            if complete { "completed" } else { "aborted" },
 +            reason,
 +        )?;
@@ -1843,7 +1904,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +    };
 +    let valid_schema = match csv.get("schema_version") {
 +        None => csv.as_object().is_some_and(|object| object.len() == 4),
-+        Some(version) => version.as_u64() == Some(CSV_SCHEMA_VERSION)
++        Some(version) => matches!(version.as_u64(), Some(2 | CSV_SCHEMA_VERSION))
 +            && csv.as_object().is_some_and(|object| object.len() == 5),
 +    };
 +    if !valid_schema
@@ -1922,6 +1983,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +    at: u64,
 +    kind: &'static str,
 +    values: [String; 10],
++    signal_reason: &'static str,
 +}
 +
 +struct ObservationStream {
@@ -1936,6 +1998,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +        ("polar-acc.jsonl", "accelerometer"),
 +        ("radius.jsonl", "radius"),
 +        ("breath.jsonl", "breath"),
++        ("events.jsonl", "event"),
 +    ].into_iter().map(|(name, kind)| {
 +        let length = match lengths {
 +            Some(lengths) => lengths[name].as_u64().ok_or("participant-stream-length-invalid")?,
@@ -1960,8 +2023,19 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +            if at < start || cutoff.is_some_and(|end| at > end) {
 +                continue;
 +            }
-+            let Some(values) = observation_values(self.kind, &row)? else { continue };
-+            self.next = Some(Observation { at, kind: self.kind, values });
++            self.next = if self.kind == "event" {
++                row["event"].as_str().and_then(SessionEventKind::parse).and_then(|event| {
++                    let signal_reason = event.signal_reason()?;
++                    Some(Observation { at, kind: event.as_str(), values: Default::default(), signal_reason })
++                })
++            } else {
++                observation_values(self.kind, &row)?.map(|values| Observation {
++                    at, kind: self.kind, values, signal_reason: "",
++                })
++            };
++            if self.next.is_none() {
++                continue;
++            }
 +            break;
 +        }
 +        Ok(())
@@ -2240,7 +2314,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +        assert_eq!(values("acc_y_mg"), ["-23", "", "", "", ""]);
 +        assert_eq!(values("radius_m"), ["", "", "0.75", "", ""]);
 +        assert_eq!(values("breathing_phase"), ["", "inhale", "", "", ""]);
-+        assert_eq!(csv["schema_version"], 2);
++        assert_eq!(csv["schema_version"], CSV_SCHEMA_VERSION);
 +    }
 +
 +    #[test]
@@ -2309,7 +2383,7 @@ index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5a
 +        assert_eq!(&rows[1][8..11], ["26000000", "paused", "calibration"]);
 +        assert_eq!(&rows[2][8..11], ["41000000", "playing", "instruction_2"]);
 +        assert_eq!(rows[3][5], "end");
-+        assert_eq!(&rows[3][21..], ["aborted", "save-and-exit"]);
++        assert_eq!(&rows[3][21..], ["aborted", "save-and-exit", ""]);
 +        assert!(
 +            run.finalize_csv(directory, anchor, end, false, "save-and-exit")
 +                .is_err()
@@ -2497,7 +2571,7 @@ index 0000000000000000000000000000000000000000..cb9e4cc27be213176f38b63ba8973d78
 +    publish_json_exclusive(directory, RECOVERY_RECEIPT, &terminal)
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
-index e94da3ae..43ec79fc 100644
+index e94da3aec237281c31fed85072fdb8a602fadca7..829184d6d78e5ec5085cb2deac8c515cdfb00900 100644
 --- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
 @@ -265,16 +265,16 @@ fn recover_from_checkpoint(
@@ -2575,8 +2649,31 @@ index e94da3ae..43ec79fc 100644
          }) {
              Ok(value) => return Ok(Some(value)),
              Err(error) => last_error = Some(error),
+@@ -968,6 +994,11 @@ fn validate_row(
+                 .and_then(Value::as_str)
+                 .and_then(SessionEventKind::parse)
+                 .ok_or_else(|| "recording-stream-row-field-invalid:event".to_owned())?;
++            if object.get("signal_reason").and_then(Value::as_str) != event.signal_reason()
++                || (event.signal_reason().is_none() && object.contains_key("signal_reason"))
++            {
++                return Err("recording-stream-row-field-invalid:signal_reason".to_owned());
++            }
+             match event {
+                 SessionEventKind::BiasChanged => {
+                     for field in [
+@@ -1402,6 +1433,10 @@ mod tests {
+                 row["operator_origin"] = serde_json::json!("ui-session-v2");
+                 row["decision_status"] = serde_json::json!("committed-before-application");
+             }
++            if let Some(reason) = event.signal_reason() {
++                assert!(validate_row(&row, "events.jsonl", &started_at, &condition, true).is_err());
++                row["signal_reason"] = json!(reason);
++            }
+             let expected = match event {
+                 SessionEventKind::Started => RowLifecycle::Started,
+                 SessionEventKind::CompletionReached => RowLifecycle::Completed,
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df319ba65a 100644
+index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e2414f15bc19 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
 @@ -920,7 +920,10 @@ fn handle_control(
@@ -2591,15 +2688,76 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
              };
              let _ = reply.send(result);
          }
-@@ -1063,6 +1066,7 @@ struct ActiveRecording {
+@@ -1061,8 +1064,10 @@ fn release_queued_bytes(queued_bytes: &AtomicUsize, payload_bytes: usize) {
+ 
+ struct ActiveRecording {
      last_bias_change: Option<crate::session_recording_contract::BiasChange>,
++    signal_receipts: Option<[SignalReceipts; 2]>,
      generation: u64,
      spec: SessionStartSpec,
 +    participant: Option<crate::session_recording_participant::ParticipantRun>,
      directory: PathBuf,
      streams: BTreeMap<&'static str, BufWriter<File>>,
      consumed_sequence: u64,
-@@ -1083,6 +1087,9 @@ impl ActiveRecording {
+@@ -1074,6 +1079,57 @@ struct ActiveRecording {
+     last_error: Option<String>,
+ }
+ 
++struct SignalReceipts {
++    latest: u64,
++}
++
++impl SignalReceipts {
++    fn new(start: u64) -> Self {
++        Self { latest: start }
++    }
++
++    fn deadline_before(&self, at: u64) -> Option<u64> {
++        let deadline = self.latest.saturating_add(crate::polar_input_health::TIMEOUT.as_nanos() as u64);
++        (at > deadline).then_some(deadline)
++    }
++
++    fn receive(&mut self, at: u64) -> Option<u64> {
++        let missed = self.deadline_before(at);
++        self.latest = self.latest.max(at);
++        missed
++    }
++}
++
++const SIGNAL_EVENTS: [(SessionEventKind, SessionEventKind); 2] = [
++    (SessionEventKind::EcgInterrupted, SessionEventKind::EcgResumed),
++    (SessionEventKind::AccInterrupted, SessionEventKind::AccResumed),
++];
++
++#[cfg(test)]
++mod signal_interruption_tests {
++    use super::*;
++
++    #[test]
++    fn reports_stream_deadline_and_first_receipt_after_the_gap() {
++        let mut watch = SignalReceipts::new(2_000_000_000);
++        assert_eq!(watch.receive(2_250_000_000), None);
++        assert_eq!(watch.receive(2_200_000_000), None);
++        assert_eq!(watch.receive(3_250_000_000), None);
++        assert_eq!(watch.receive(5_000_000_000), Some(4_250_000_000));
++        assert_eq!(watch.receive(5_100_000_000), None);
++        assert_eq!(watch.deadline_before(6_100_000_000), None);
++        assert_eq!(watch.deadline_before(7_000_000_000), Some(6_100_000_000));
++    }
++
++    #[test]
++    fn timestamps_older_than_official_start_cannot_move_the_deadline() {
++        let mut watch = SignalReceipts::new(20_000_000_000);
++        assert_eq!(watch.receive(18_000_000_000), None);
++        assert_eq!(watch.deadline_before(20_500_000_000), None);
++        assert_eq!(watch.receive(22_000_000_000), Some(21_000_000_000));
++    }
++}
++
+ impl ActiveRecording {
+     fn prepare(
+         config: &WriterConfig,
+@@ -1083,6 +1139,9 @@ impl ActiveRecording {
          spec.validate().map_err(str::to_owned)?;
          validate_recording_root_no_links(&config.root)?;
          ensure_recording_root(&config.root)?;
@@ -2609,7 +2767,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
          let directory = config.root.join(spec.started_at.as_str());
          fs::create_dir(&directory)
              .map_err(|error| format!("recording-session-directory-create:{error}"))?;
-@@ -1093,10 +1100,7 @@ impl ActiveRecording {
+@@ -1093,10 +1152,7 @@ impl ActiveRecording {
          sync_directory(&config.root)?;
  
          let prepare_result = (|| {
@@ -2621,7 +2779,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
                      "schema": SESSION_MANIFEST_SCHEMA,
                      "started_at_utc": spec.started_at.as_str(),
                      "condition": spec.condition.as_str(),
-@@ -1110,8 +1114,11 @@ impl ActiveRecording {
+@@ -1110,8 +1166,11 @@ impl ActiveRecording {
                      },
                      "session_identifier_policy": "utc-start-date-time-only",
                      "runtime_generation_persisted": true
@@ -2635,15 +2793,78 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
              let mut streams = BTreeMap::new();
              for name in SESSION_STREAM_FILES {
                  let file = OpenOptions::new()
-@@ -1125,6 +1132,7 @@ impl ActiveRecording {
+@@ -1123,8 +1182,10 @@ impl ActiveRecording {
+             }
+             let mut recording = Self {
                  last_bias_change: None,
++                signal_receipts: None,
                  generation,
                  spec,
 +                participant,
                  directory: directory.clone(),
                  streams,
                  consumed_sequence: 0,
-@@ -1317,10 +1325,7 @@ impl ActiveRecording {
+@@ -1180,6 +1241,30 @@ impl ActiveRecording {
+         if !record.floats_are_finite() {
+             return Err("recording-row-non-finite".to_owned());
+         }
++        self.append_record(sequence, record)?;
++        if self.participant.is_none() {
++            return Ok(());
++        }
++        let index = match record {
++            SessionRecord::Event(event) if event.kind == SessionEventKind::OfficialStart => {
++                let at = event.observed_at.get();
++                self.signal_receipts.get_or_insert_with(|| [SignalReceipts::new(at), SignalReceipts::new(at)]);
++                return Ok(());
++            }
++            SessionRecord::PolarEcg(batch) if !batch.samples.is_empty() => 0,
++            SessionRecord::PolarAcc(batch) if !batch.samples.is_empty() => 1,
++            _ => return Ok(()),
++        };
++        let at = record.observed_at();
++        if let Some(deadline) = self.signal_receipts.as_mut().and_then(|watches| watches[index].receive(at.get())) {
++            let (interrupted, resumed) = SIGNAL_EVENTS[index];
++            self.append_event(sequence, interrupted, MonotonicNanos::new(deadline))?;
++            self.append_event(sequence, resumed, at)?;
++        }
++        Ok(())
++    }
++
++    fn append_record(&mut self, sequence: u64, record: &SessionRecord) -> Result<(), String> {
+         let rows = record.encoded_rows(sequence, &self.spec);
+         let stream = self
+             .streams
+@@ -1209,6 +1294,20 @@ impl ActiveRecording {
+         )
+     }
+ 
++    fn append_event(&mut self, sequence: u64, kind: SessionEventKind, observed_at: MonotonicNanos) -> Result<(), String> {
++        self.append_record(sequence, &SessionRecord::Event(SessionEvent { observed_at, kind }))
++    }
++
++    fn record_open_signal_interruptions(&mut self, at: MonotonicNanos) -> Result<(), String> {
++        let Some(watches) = self.signal_receipts.take() else { return Ok(()); };
++        for (watch, (interrupted, _)) in watches.iter().zip(SIGNAL_EVENTS) {
++            if let Some(deadline) = watch.deadline_before(at.get()) {
++                self.append_event(self.written_sequence, interrupted, MonotonicNanos::new(deadline))?;
++            }
++        }
++        Ok(())
++    }
++
+     fn mark_completion(&mut self, at: MonotonicNanos, loss: LossSnapshot) -> Result<u64, String> {
+         if !self.completion_durable {
+             self.write_internal_event(SessionEventKind::CompletionReached, at)?;
+@@ -1309,6 +1408,7 @@ impl ActiveRecording {
+         if threshold_reached && !self.completion_durable {
+             self.mark_completion(at, loss.clone())?;
+         }
++        self.record_open_signal_interruptions(at)?;
+         let event = match reason {
+             FinalizationReason::RestartToExperimenter => SessionEventKind::RestartRequested,
+             FinalizationReason::SaveAndExit => SessionEventKind::ExitRequested,
+@@ -1317,10 +1417,7 @@ impl ActiveRecording {
          self.write_internal_event(event, at)?;
          let lengths = self.flush_sync_streams()?;
          let ended_utc_ns = self.spec.clock_anchor.utc_at(at).map(|value| value.get());
@@ -2655,7 +2876,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
                  "schema": SESSION_FINAL_SCHEMA,
                  "started_at_utc": self.spec.started_at.as_str(),
                  "condition": self.spec.condition.as_str(),
-@@ -1337,8 +1342,17 @@ impl ActiveRecording {
+@@ -1337,8 +1434,17 @@ impl ActiveRecording {
                  "loss": loss_json(&loss),
                  "durable_stream_lengths": lengths,
                  "saved": loss.dropped_records == 0
@@ -2675,7 +2896,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
          Ok(())
      }
  
-@@ -1440,7 +1454,7 @@ fn ensure_recording_root(root: &Path) -> Result<(), String> {
+@@ -1440,7 +1546,7 @@ fn ensure_recording_root(root: &Path) -> Result<(), String> {
      sync_directory(root)
  }
  
@@ -2684,7 +2905,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
      let final_path = directory.join(name);
      if final_path.exists() {
          return Err(format!("recording-artifact-collision:{name}"));
-@@ -1472,14 +1486,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
+@@ -1472,14 +1578,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
  }
  
  #[cfg(unix)]
@@ -2701,7 +2922,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
      // Android is Unix and receives the directory durability barrier. Windows
      // host tests still verify exclusive publication and synced file contents.
      Ok(())
-@@ -1597,6 +1611,7 @@ pub(crate) mod tests {
+@@ -1597,6 +1703,7 @@ pub(crate) mod tests {
      pub(crate) fn spec(utc: u64) -> SessionStartSpec {
          let utc = UtcEpochNanos::new(utc);
          SessionStartSpec {
@@ -2709,7 +2930,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
              breath_tracking_configuration: None,
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
-@@ -1632,6 +1647,68 @@ pub(crate) mod tests {
+@@ -1632,6 +1739,80 @@ pub(crate) mod tests {
          }
      }
  
@@ -2760,7 +2981,10 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
 +        let mut writer = ActiveRecording::prepare(&config, 1, spec).unwrap();
 +        writer.write_internal_event(SessionEventKind::OfficialStart, MonotonicNanos::new(2_000)).unwrap();
 +        writer.write_internal_event(SessionEventKind::AudioStarted, MonotonicNanos::new(3_000)).unwrap();
-+        writer.finalize(MonotonicNanos::new(10_000), FinalizationReason::RestartToExperimenter,
++        writer.write_record(0, &acc_batch(1, 900_000_000)).unwrap();
++        writer.write_internal_event(SessionEventKind::ExperimentPaused, MonotonicNanos::new(1_200_000_000)).unwrap();
++        writer.write_record(0, &acc_batch(1, 2_100_000_000)).unwrap();
++        writer.finalize(MonotonicNanos::new(2_900_000_000), FinalizationReason::RestartToExperimenter,
 +            false, LossSnapshot::default()).unwrap();
 +        let manifest: Value = serde_json::from_slice(&fs::read(directory.join("manifest.json")).unwrap()).unwrap();
 +        let terminal: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
@@ -2770,6 +2994,15 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df
 +        let text = fs::read_to_string(directory.join(csv["name"].as_str().unwrap())).unwrap();
 +        assert!(text.contains(",end,"));
 +        assert!(text.contains(",aborted,"));
++        let marks: Vec<_> = text.lines().skip(1).filter_map(|line| {
++            let row: Vec<_> = line.split(',').collect();
++            (!row[23].is_empty()).then_some((row[5], row[7], row[9], row[23]))
++        }).collect();
++        assert_eq!(marks, [
++            ("acc-interrupted", "1899998", "paused", "no-recorded-receipt-for-one-second"),
++            ("acc-resumed", "2099998", "paused", "recorded-receipt-resumed"),
++            ("ecg-interrupted", "1000000", "playing", "no-recorded-receipt-for-one-second"),
++        ]);
 +        assert_eq!(csv["size"], text.len());
 +        drop(writer);
 +        fs::remove_dir_all(root.parent().unwrap()).unwrap();
