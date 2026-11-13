@@ -7,6 +7,16 @@ participant normalization, condition codes, run reservation and the primary CSV
 filename for the browser demo. The Quest writer must follow the same contract
 for native exports.
 
+## Study collection on Quest and Pixel
+
+Quest 2 records the original Polar H10 streams and finalizes the participant
+CSV on the headset. The installed Pixel PWA pulls verified finalized files
+while Quest is idle before or after a session. While the PWA is open and Drive
+is authorized, it automatically delivers the retained bundle to the private
+research folder. Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
+for enrollment, recovery and verification. The filename and identity contract
+below applies throughout the transfer.
+
 ## Identity and filenames
 
 The primary session CSV has exactly this filename:

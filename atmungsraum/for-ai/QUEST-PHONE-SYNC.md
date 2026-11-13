@@ -1,10 +1,34 @@
-# Quest-to-phone recording sync
+# Quest, Pixel and Google Drive recording sync
 
 Quest owns acquisition, timing, participant-run identity, and the original
 recording. Atmungsraum on the phone pulls finished files from the enrolled
 Quest over trusted Wi-Fi. An idle pull can start before the first rehearsal or
 after any rehearsal and catches up on files created while the controller was
-closed.
+closed. The installed Pixel PWA is the study sync controller. Its verified local
+copy is the input to automatic delivery to the research Google Drive.
+
+## Operator procedure
+
+1. Open the installed Atmungsraum icon on the Pixel 10 and unlock the app.
+   In **VR-Probe**, join the Quest 2 in Remote mode over trusted Wi-Fi and use
+   the headset's enrolled controller credentials. Grant Android Nearby
+   devices and Chrome Local Network Access if prompted. The Quest records
+   the Polar H10 data.
+2. Before a session, let the idle controller reconcile any finalized runs.
+   In **Google Drive**, authorize the designated research account as described
+   below. The PWA creates and remembers **Atmungsraum – Quest-Aufnahmen** as
+   its private Drive destination. The PWA stages verified bundles in
+   IndexedDB. The automatic queue writes those bundles to the Drive folder.
+3. Confirm fresh Polar ECG, enter the participant ID using the shared form,
+   choose the scenario and start the session. Quest writes the original
+   streams and the participant CSV and finalizes the run locally.
+4. After the session, keep the Pixel PWA visible and the Quest idle until the
+   run appears in the recording selector. Wait for the Drive confirmation,
+   then verify that the new ZIP is in the designated folder. For qualification,
+   compare the SHA-256 and manifest with the copies on the Pixel and Quest.
+5. After an interrupted connection, reopen and rejoin while Quest is idle.
+   Use **Jetzt abgleichen** if needed. If Google authorization expired,
+   reconnect Drive. Confirm delivery before relying on the Drive copy.
 
 ## Run identity and files
 

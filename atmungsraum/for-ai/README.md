@@ -89,7 +89,7 @@ Read common rules first, then the documents needed for the task:
 - [PROJECT.md](PROJECT.md): purpose, current page contract, and deployment facts.
 - [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers bounded awake holds,
   headset readiness, recovery, and cleanup for bench and rehearsal tests.
-- [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md): participant CSV and idle recording sync protocol.
+- [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md): Quest 2 → installed Pixel PWA → private Google Drive collection procedure and stress test.
 - [WORKFLOW.md](WORKFLOW.md): scoped editing and publishing workflow.
 - [SKILLS.md](SKILLS.md): always and conditional skill routes.
 - [VERIFICATION.md](VERIFICATION.md): context, rendering, and deployment checks.

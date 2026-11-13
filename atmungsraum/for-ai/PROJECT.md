@@ -222,24 +222,28 @@ two minutes without input. Its screen timeout was extended and Android
 reported stay-on active. Clear the Quest lock screen before the physical
 rehearsal and repeat the existing app acceptance checks.
 
-### Automatic Google Drive delivery of Quest recordings — 2026-11-12
+### Quest 2, Pixel and Google Drive collection — 2026-11-13
 
 After the installed Android controller saves a finalized Quest recording, it
 must deliver the original Polar H10 ECG and accelerometer (ACC) streams to a
-private folder in the designated research Google Drive. The account reset
-depends on a verified backup outside that account. Keep account backup receipts,
-sign-in details and participant data outside this repository.
+private folder in the designated research Google Drive. Reconcile finalized
+recordings in idle before or after a breathing session. Qualify all three
+stages with the [operator procedure and stress test](QUEST-PHONE-SYNC.md).
+Keep account backup receipts, sign-in details and participant data outside
+this repository.
 
 - [x] Verify ADB access and check for the official Google Drive app. Android
   Package Manager reports it installed on the Pixel 10.
-- [ ] Complete and verify the account backup before clearing account data.
-  The operator signed in and Google accepted a one-time export of every
-  selectable product. The local Drive inventory has a verified copy of each
-  item, including portable snapshots of two shared Forms with response archives.
-  Google is preparing the full archive. Download and verify every part before
-  clearing account data.
-- [ ] Install the Atmungsraum PWA in Android Chrome and verify standalone
-  launcher relaunch on the Pixel.
+- [x] Install the Atmungsraum PWA in Android Chrome and verify standalone
+  launcher relaunch on the Pixel. Confirmed again during this preflight.
+- [x] Register the signed 0.1.20 rehearsal on the active Quest 2 profile,
+  grant Nearby devices access for the rehearsal and verify OpenXR frame
+  submission after launch.
+- [ ] Enroll the Pixel controller on that Quest profile and verify the signed
+  Wi-Fi join, fresh Polar H10 ECG, start and terminal receipt, then check the
+  original ECG, ACC and participant CSV on Quest.
+- [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
+  reopen a participant CSV from Android Files.
 - [x] Preserve the exact native ECG and ACC bytes alongside the existing
   participant CSV. Signed synthetic transfers and durable browser restart
   readback matched both stream hashes in three browser layouts. Physical
@@ -249,10 +253,19 @@ sign-in details and participant data outside this repository.
   SHA-256 before saving a delivery receipt.
 - [ ] Configure a real Google Cloud web OAuth client for the Pages origin and
   authorize the designated account on the Pixel. Verify real Drive readback.
-- [ ] Run fault-injection tests, then complete the attended Quest + worn H10 +
-  Pixel + real Drive stress pass in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
-  Synthetic fault injection passed in Node and Chromium. The connected Pixel
-  was locked and no Quest appeared in the USB device list.
+- [x] Run the targeted automated sync and fault-injection tests. Eight passed,
+  including 40 simulated Drive bundles through lost responses and restarts.
+- [ ] Complete the attended Quest + worn H10 + Pixel + real Drive stress pass
+  in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md). Confirm matching hashes and one
+  Drive object per run across repeats, restart, partial recording and reconnect.
+
+Both devices were reachable over USB. The Pixel WebAPK was visible in
+standalone mode and showed the app unlock prompt. The active Quest profile
+had no enrolled controller and the LAN endpoint did not respond to the USB
+forward probe. Google Cloud redirected to sign-in and the Drive account had
+no matching destination folder. Next, unlock the Pixel PWA, enroll the
+controller from the headset and authorize Drive with a Pages-origin OAuth
+client. No real sample export or Drive object was verified in this preflight.
 
 Preflight: all 71 existing Node tests passed. ADB confirmed the Pixel; no Quest
 USB transport was present. The prior browser path saved the participant CSV
@@ -269,12 +282,16 @@ Drive runtime release `d171e39` passed
 The exact deployment succeeded and all 13 changed live paths matched Git.
 All 78 Node tests and the UI/context checks passed. The deployed Chromium
 fixture repeated all three layouts, including upgrade from existing browser
-storage. The next actions remain the verified account export, Android PWA
-install, real OAuth setup, and attended Quest/H10/Drive run.
+storage. The remaining collection checks are the real OAuth setup and attended
+Quest/H10/Drive run.
 
 The account export checkpoint `0a72dde` matched local `main` and GitHub's
 `main` on 2026-11-12. [Pages run 43175488204](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43175488204)
 deployed that commit, and the published project notes matched its Git blob.
+Google accepted a one-time export of the selectable products. The local
+inventory verified its copies of Drive items, including portable snapshots
+of two shared Forms with response archives. Full archive verification
+remains necessary before a separate account reset.
 
 ### Participant CSV and idle synchronization — 2026-11-08
 
@@ -334,7 +351,8 @@ The chosen phone target is the browser's origin-scoped IndexedDB, with
 explicit download for the phone filesystem. Sync runs while an enrolled
 controller page is visible and connected. A closed or suspended PWA
 catches up after reopening and rejoining. Keep Quest copies as the source of
-truth. No cloud service participates in this flow.
+truth. The subsequent [Drive delivery step](QUEST-PHONE-SYNC.md#google-drive-delivery-acceptance)
+uses the verified copy after the Quest-to-Pixel transfer.
 
 The browser Arm increment `2eaf0b5` passed
 [Pages run 42491480387](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/42491480387).
