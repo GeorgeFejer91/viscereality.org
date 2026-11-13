@@ -627,7 +627,7 @@ index 3cbbfb33..6858a875 100644
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
 diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
-index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccbd0efc0e0 100644
+index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2fd7d9b73 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export.rs
 @@ -3,12 +3,16 @@
@@ -791,7 +791,7 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
              file,
              stamp,
              digest: String::new(),
-@@ -693,39 +719,113 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -693,39 +719,111 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
          custody,
          files,
      };
@@ -840,9 +840,7 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
 +            .filter(|pin| matches!(pin.name.as_str(), "polar-ecg.jsonl" | "polar-acc.jsonl"))
 +            .map(|pin| pin.length)
 +            .sum();
-+        if stamp.len > MAX_EXPORT_BYTES.saturating_sub(sensor_bytes)
-+            || csv["size"].as_u64() != Some(stamp.len)
-+        {
++        if !participant_payload_fits(csv, stamp.len, sensor_bytes) {
 +            return Err(denied());
 +        }
 +        prepared.files.push(Pinned {
@@ -922,10 +920,17 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
      let digest = format!("{:x}", Sha256::digest(manifest.to_string().as_bytes()));
      manifest["manifest_id"] = json!(digest);
      if manifest.to_string().len() > 30000 {
-@@ -734,6 +834,97 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -734,6 +832,104 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
      prepared.manifest = manifest;
      Ok(prepared)
  }
++fn participant_payload_fits(csv: &Value, length: u64, sensor_bytes: u64) -> bool {
++    // The unified CSV already carries the raw sensor samples.
++    let separate_sensors = if csv.get("schema_version").is_none() { sensor_bytes } else { 0 };
++    csv["size"].as_u64() == Some(length)
++        && length <= MAX_EXPORT_BYTES.saturating_sub(separate_sensors)
++}
++
 +fn valid_digest(value: &Value) -> bool {
 +    value.as_str().is_some_and(|value| {
 +        value.len() == 64
@@ -1020,7 +1025,7 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
  fn base64(bytes: &[u8]) -> String {
      const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
      let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-@@ -803,7 +994,7 @@ fn parse(v: &Value) -> Result<Query, String> {
+@@ -803,7 +999,7 @@ fn parse(v: &Value) -> Result<Query, String> {
                  return Err("recording-query-invalid".into());
              }
              let file = s("file")?;
@@ -1029,7 +1034,7 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
                  return Err("recording-query-invalid".into());
              }
              let offset = v["offset"]
-@@ -863,13 +1054,21 @@ fn list(
+@@ -863,13 +1059,21 @@ fn list(
          let eligible = prepare(root, &id, check);
          let entry = match eligible {
              Ok(p) => {
@@ -1054,7 +1059,7 @@ index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccb
                  {
                      "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..013287851965e8077753c2c709d42c6e67d247e1 100644
+index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..20ab90b5d8fe607ce58ebc48982b70977a966356 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
@@ -1095,10 +1100,22 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..013287851965e8077753c2c709d42c6e
          &check,
      );
      assert!(result.is_err());
-@@ -694,3 +700,151 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+@@ -694,3 +700,163 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
      drop(prepared);
      fs::remove_dir_all(root.parent().unwrap()).unwrap();
  }
++
++#[test]
++fn only_legacy_participant_payloads_count_the_separate_sensor_streams() {
++    let length = 80 * 1024 * 1024;
++    let sensor_bytes = 120 * 1024 * 1024;
++    let unified = json!({"size": length, "schema_version": 2});
++    assert!(participant_payload_fits(&unified, length, sensor_bytes));
++    assert!(!participant_payload_fits(&json!({"size": length}), length, sensor_bytes));
++    assert!(!participant_payload_fits(&unified, length - 1, sensor_bytes));
++    let oversized = MAX_EXPORT_BYTES + 1;
++    assert!(!participant_payload_fits(&json!({"size": oversized, "schema_version": 2}), oversized, 0));
++}
 +
 +#[test]
 +fn participant_csv_is_bound_to_terminal_identity_and_pinned_for_chunk_reads() {
@@ -1188,7 +1205,7 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..013287851965e8077753c2c709d42c6e
 +    assert!(recovered.read(manifest_id, "polar-ecg.jsonl", prefix.len() as u64, 1, &|| true).is_err());
 +    let csv_bytes = fs::read(directory.join(format!("{RECOVERED_CSV_PREFIX}{csv_name}"))).unwrap();
 +    let csv = String::from_utf8(csv_bytes.clone()).unwrap();
-+    assert!(csv.contains(",26000.000,paused,calibration,37,uV,"));
++    assert!(csv.contains(",26000000,paused,calibration,4000,1,0,37,"));
 +    assert!(csv.contains(",aborted,interrupted-recovery\r\n"));
 +    let csv_chunk = recovered.read(manifest_id, csv_name, 0, csv_bytes.len() as u64, &|| true).unwrap();
 +    assert_eq!(csv_chunk["data"], base64(&csv_bytes));
@@ -1243,16 +1260,16 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..013287851965e8077753c2c709d42c6e
 +    let prepared = prepare(&root, id, &|| true).unwrap();
 +    assert_eq!(prepared.manifest["participant_csv"]["name"], "Mül_35_F_2023-11-14_haupt-15_r1.csv");
 +    let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_2023-11-14_haupt-15_r1.csv")).unwrap();
-+    assert!(csv.contains(",26000.000,paused,unknown,37,uV,"));
++    assert!(csv.contains(",26000000,paused,unknown,4000,1,0,37,"));
 +    drop(prepared);
 +    fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb8f7567e1
+index 0000000000000000000000000000000000000000..fcd104b75845c4c0e8a0cb289e5a2b5ac3beacd0
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1010 @@
+@@ -0,0 +1,1065 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -1270,11 +1287,11 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +    session_recording_writer::sync_directory,
 +};
 +
-+const HEADER: &str = "schema_version,participant_id,name_prefix,age_years,gender_code,condition,run_index,session_id,scenario_id,scenario_sha256,planned_duration_seconds,session_started_utc,sample_index,elapsed_ms,timestamp_utc,audio_elapsed_ms,playback_state,phase,ecg_value,ecg_unit,signal_source,signal_state,signal_sha256,sample_rate_hz,source_sample_index,source_loop,session_status,end_reason\r\n";
++const CSV_SCHEMA_VERSION: u64 = 2;
++const HEADER: &str = "schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason\r\n";
 +pub(crate) const RECOVERY_RECEIPT: &str = "participant-recovered.json";
 +pub(crate) const RECOVERED_CSV_PREFIX: &str = ".recovered-";
 +pub(crate) const RECOVERY_POLICY: &str = "core8-recovered-checkpoint";
-+const SAMPLE_GAP_NS: u64 = 3 * (1_000_000_000 / 130);
 +
 +#[derive(Clone, Debug, PartialEq, Eq)]
 +struct ParticipantId {
@@ -1584,9 +1601,6 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +        let Some(clock) = PlaybackClock::read(BufReader::new(events), Some(ended_at.get()))? else {
 +            return Ok(None);
 +        };
-+        let source = directory.join("polar-ecg.jsonl");
-+        let signal_sha = file_hash(&source)?;
-+        let ecg = File::open(source).map_err(io_error)?;
 +        let start_utc = utc(anchor, clock.start())?;
 +        let name = self.filename(&start_utc);
 +        let (descriptor, _) = self.write_csv(CsvProjection {
@@ -1596,8 +1610,7 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +            anchor,
 +            cutoff: Some(ended_at.get()),
 +            clock,
-+            signal_sha: &signal_sha,
-+            ecg: BufReader::new(ecg),
++            sources: open_sample_streams(directory, None)?,
 +            complete,
 +            reason,
 +        })?;
@@ -1609,15 +1622,13 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +        directory: &Path,
 +        anchor: ClockAnchor,
 +        events_bytes: u64,
-+        ecg_bytes: u64,
-+        signal_sha: &str,
++        stream_lengths: &Value,
 +    ) -> Result<Option<(Value, u64)>, String> {
 +        let events = open_regular_recording_file(&directory.join("events.jsonl"))?;
 +        let Some(clock) = PlaybackClock::read(BufReader::new(events.take(events_bytes)), None)?
 +        else {
 +            return Ok(None);
 +        };
-+        let ecg = open_regular_recording_file(&directory.join("polar-ecg.jsonl"))?;
 +        let start_utc = utc(anchor, clock.start())?;
 +        let name = self.filename(&start_utc);
 +        let destination = directory.join(format!("{RECOVERED_CSV_PREFIX}{name}"));
@@ -1630,15 +1641,14 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +            anchor,
 +            cutoff: None,
 +            clock,
-+            signal_sha,
-+            ecg: BufReader::new(ecg.take(ecg_bytes)),
++            sources: open_sample_streams(directory, Some(stream_lengths))?,
 +            complete: false,
 +            reason: "interrupted-recovery",
 +        })
 +        .map(Some)
 +    }
 +
-+    fn write_csv(&self, projection: CsvProjection<impl BufRead>) -> Result<(Value, u64), String> {
++    fn write_csv(&self, projection: CsvProjection) -> Result<(Value, u64), String> {
 +        let CsvProjection {
 +            destination,
 +            name,
@@ -1646,8 +1656,7 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +            anchor,
 +            cutoff,
 +            clock,
-+            signal_sha,
-+            ecg,
++            mut sources,
 +            complete,
 +            reason,
 +        } = projection;
@@ -1661,61 +1670,48 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +        );
 +        output.write_all(HEADER.as_bytes()).map_err(io_error)?;
 +        let start = clock.start();
-+        let metadata = [
-+            "1".to_owned(),
-+            self.plan.participant.as_text(),
-+            self.plan.participant.name.clone(),
-+            self.plan.participant.age.to_string(),
-+            self.plan.participant.gender.to_string(),
-+            self.plan.condition().to_owned(),
-+            self.index.to_string(),
-+            self.uuid.clone(),
-+            self.plan.scenario.clone(),
-+            self.plan.sha256.clone(),
-+            self.plan.seconds.to_string(),
-+            start_utc,
-+        ]
-+        .join(",");
-+        let mut index = 0;
-+        let mut previous = None::<u64>;
-+        let mut row = |at: u64, sample: Option<Sample>| -> Result<(), String> {
-+            let (audio, state) = clock.at(at, self.plan.seconds * 1_000_000_000);
++        let metadata = format!(
++            "{CSV_SCHEMA_VERSION},{},{},{},{}",
++            self.plan.participant.as_text(), self.uuid, self.index, self.plan.scenario,
++        );
++        let mut write_row = |row: &Observation, outcome: &str, reason: &str| -> Result<(), String> {
++            let (audio, state) = clock.at(row.at, self.plan.seconds * 1_000_000_000);
 +            let phase = match state {
 +                "waiting" | "ended" => state,
 +                _ => self.plan.phase_at(audio),
 +            };
-+            let (value, source_index, signal) = sample.map_or_else(
-+                || (String::new(), String::new(), "missing"),
-+                |sample| {
-+                    (
-+                        sample.value.to_string(),
-+                        sample.source_index.to_string(),
-+                        "ecg",
-+                    )
-+                },
-+            );
-+            writeln!(output, "{metadata},{index},{},{},{},{state},{phase},{value},uV,polar-h10,{signal},{signal_sha},130,{source_index},,{},{reason}\r",
-+                millis(at - start), utc(anchor, at)?, millis(audio), if complete { "completed" } else { "aborted" }
++            write!(
++                output, "{metadata},{},{},{},{},{state},{phase}",
++                row.kind, utc(anchor, row.at)?, (row.at - start) / 1000, audio / 1000,
 +            ).map_err(io_error)?;
-+            index += 1;
-+            Ok(())
++            for value in &row.values {
++                write!(output, ",{value}").map_err(io_error)?;
++            }
++            if reason.contains([',', '"', '\r', '\n']) {
++                return writeln!(output, ",{outcome},\"{}\"\r", reason.replace('"', "\"\""))
++                    .map_err(io_error);
++            }
++            writeln!(output, ",{outcome},{reason}\r").map_err(io_error)
 +        };
-+        for line in ecg.lines() {
-+            let sample = Sample::parse(&line.map_err(io_error)?)?;
-+            if sample.at < start || cutoff.is_some_and(|cutoff| sample.at > cutoff) {
-+                continue;
-+            }
-+            let prior = previous.unwrap_or(start);
-+            if sample.at > prior.saturating_add(SAMPLE_GAP_NS) {
-+                row(prior + 1_000_000_000 / 130, None)?;
-+            }
-+            row(sample.at, Some(sample))?;
-+            previous = Some(prior.max(sample.at));
++        let mut ended_at = clock.last_event.max(start);
++        for source in &mut sources {
++            source.advance(start, cutoff)?;
 +        }
-+        let ended_at = cutoff.unwrap_or_else(|| clock.last_event.max(previous.unwrap_or(start)));
-+        if previous.is_none_or(|prior| ended_at > prior.saturating_add(SAMPLE_GAP_NS)) {
-+            row(ended_at, None)?;
++        while let Some(source) = sources.iter_mut()
++            .filter(|source| source.next.is_some())
++            .min_by_key(|source| source.next.as_ref().expect("selected row").at)
++        {
++            let row = source.next.take().expect("selected row");
++            write_row(&row, "", "")?;
++            ended_at = ended_at.max(row.at);
++            source.advance(start, cutoff)?;
 +        }
++        let ended_at = cutoff.unwrap_or(ended_at);
++        write_row(
++            &Observation { at: ended_at, kind: "end", values: Default::default() },
++            if complete { "completed" } else { "aborted" },
++            reason,
++        )?;
 +        output.flush().map_err(io_error)?;
 +        output.get_ref().sync_all().map_err(io_error)?;
 +        let size = output.get_ref().metadata().map_err(io_error)?.len();
@@ -1731,21 +1727,20 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +                .expect("recording destination has parent"),
 +        )?;
 +        Ok((
-+            json!({ "name": name, "size": size, "sha256": sha256, "session_id": self.uuid }),
++            json!({ "name": name, "size": size, "sha256": sha256, "session_id": self.uuid, "schema_version": CSV_SCHEMA_VERSION }),
 +            ended_at,
 +        ))
 +    }
 +}
 +
-+struct CsvProjection<'a, R> {
++struct CsvProjection<'a> {
 +    destination: std::path::PathBuf,
 +    name: String,
 +    start_utc: String,
 +    anchor: ClockAnchor,
 +    cutoff: Option<u64>,
 +    clock: PlaybackClock,
-+    signal_sha: &'a str,
-+    ecg: R,
++    sources: Vec<ObservationStream>,
 +    complete: bool,
 +    reason: &'a str,
 +}
@@ -1846,7 +1841,12 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +        }
 +        None => name == format!("{id}_{condition}{index}.csv"),
 +    };
-+    if csv.as_object().is_none_or(|object| object.len() != 4)
++    let valid_schema = match csv.get("schema_version") {
++        None => csv.as_object().is_some_and(|object| object.len() == 4),
++        Some(version) => version.as_u64() == Some(CSV_SCHEMA_VERSION)
++            && csv.as_object().is_some_and(|object| object.len() == 5),
++    };
++    if !valid_schema
 +        || !matches_identity
 +        || participant["session_id"].as_str() != Some(uuid)
 +        || !valid_uuid(uuid)
@@ -1906,10 +1906,6 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +    format!("participant-recording-io:{:?}", error.kind())
 +}
 +
-+fn millis(ns: u64) -> String {
-+    format!("{}.{:03}", ns / 1_000_000, (ns / 1000) % 1000)
-+}
-+
 +fn utc(anchor: ClockAnchor, at: u64) -> Result<String, String> {
 +    let utc = anchor
 +        .utc_at(MonotonicNanos::new(at))
@@ -1918,35 +1914,93 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +    Ok(
 +        DateTime::<Utc>::from_timestamp((utc / 1_000_000_000) as i64, (utc % 1_000_000_000) as u32)
 +            .ok_or("participant-recording-time-invalid")?
-+            .to_rfc3339_opts(SecondsFormat::Millis, true),
++            .to_rfc3339_opts(SecondsFormat::Micros, true),
 +    )
 +}
 +
-+#[derive(Clone, Copy)]
-+struct Sample {
++struct Observation {
 +    at: u64,
-+    source_index: u64,
-+    value: i64,
++    kind: &'static str,
++    values: [String; 10],
 +}
 +
-+impl Sample {
-+    fn parse(line: &str) -> Result<Self, String> {
-+        let row: Value = serde_json::from_str(line).map_err(|_| "participant-ecg-json-invalid")?;
-+        if row["kind"] != "polar-ecg" {
-+            return Err("participant-ecg-kind-invalid".into());
-+        }
-+        Ok(Self {
-+            at: row["observed_monotonic_ns"]
-+                .as_u64()
-+                .ok_or("participant-ecg-clock-invalid")?,
-+            source_index: row["source_sequence"]
-+                .as_u64()
-+                .ok_or("participant-ecg-index-invalid")?,
-+            value: row["microvolts"]
-+                .as_i64()
-+                .ok_or("participant-ecg-value-invalid")?,
++struct ObservationStream {
++    kind: &'static str,
++    lines: io::Lines<BufReader<io::Take<File>>>,
++    next: Option<Observation>,
++}
++
++fn open_sample_streams(directory: &Path, lengths: Option<&Value>) -> Result<Vec<ObservationStream>, String> {
++    [
++        ("polar-ecg.jsonl", "ecg"),
++        ("polar-acc.jsonl", "accelerometer"),
++        ("radius.jsonl", "radius"),
++        ("breath.jsonl", "breath"),
++    ].into_iter().map(|(name, kind)| {
++        let length = match lengths {
++            Some(lengths) => lengths[name].as_u64().ok_or("participant-stream-length-invalid")?,
++            None => u64::MAX,
++        };
++        let file = open_regular_recording_file(&directory.join(name))?;
++        Ok(ObservationStream {
++            kind,
++            lines: BufReader::new(file.take(length)).lines(),
++            next: None,
 +        })
++    }).collect()
++}
++
++impl ObservationStream {
++    fn advance(&mut self, start: u64, cutoff: Option<u64>) -> Result<(), String> {
++        for line in self.lines.by_ref() {
++            let row: Value = serde_json::from_str(&line.map_err(io_error)?)
++                .map_err(|_| "participant-stream-json-invalid")?;
++            let at = row["observed_monotonic_ns"].as_u64()
++                .ok_or("participant-stream-clock-invalid")?;
++            if at < start || cutoff.is_some_and(|end| at > end) {
++                continue;
++            }
++            let Some(values) = observation_values(self.kind, &row)? else { continue };
++            self.next = Some(Observation { at, kind: self.kind, values });
++            break;
++        }
++        Ok(())
 +    }
++}
++
++fn observation_values(kind: &str, row: &Value) -> Result<Option<[String; 10]>, &'static str> {
++    const BAD: &str = "participant-stream-value-invalid";
++    let mut values: [String; 10] = Default::default();
++    let integer = |key: &str| row[key].as_u64().map(|value| value.to_string()).ok_or(BAD);
++    match (kind, row["kind"].as_str()) {
++        ("ecg", Some("polar-ecg")) | ("accelerometer", Some("polar-acc")) => {
++            values[0] = integer("source_time_ns")?;
++            values[1] = integer("source_sequence")?;
++            values[2] = integer("sample_index")?;
++            if kind == "ecg" {
++                values[3] = row["microvolts"].as_i64().ok_or(BAD)?.to_string();
++            } else {
++                let axes = row["xyz_mg"].as_array().filter(|axes| axes.len() == 3).ok_or(BAD)?;
++                for (cell, axis) in values[4..7].iter_mut().zip(axes) {
++                    *cell = axis.as_number().ok_or(BAD)?.to_string();
++                }
++            }
++        }
++        ("radius", Some("effective-radius-snapshot")) => {
++            values[7] = integer("source_frame")?;
++            values[8] = row["resulting_radius_m"].as_number().ok_or(BAD)?.to_string();
++        }
++        ("breath", Some("breath")) => {
++            if row["assessment_source"].as_str() != Some("polar-acc") {
++                return Ok(None);
++            }
++            values[9] = row["unbiased_phase"].as_str()
++                .filter(|phase| matches!(*phase, "inhale" | "exhale" | "hold" | "unknown"))
++                .ok_or(BAD)?.to_owned();
++        }
++        _ => return Err(BAD),
++    }
++    Ok(Some(values))
 +}
 +
 +struct ClockMark {
@@ -2155,6 +2209,41 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +    }
 +
 +    #[test]
++    fn combines_raw_samples_renderer_frames_and_classified_breath_at_their_own_times() {
++        let scratch = Scratch::new();
++        let directory = &scratch.0;
++        let plan = ParticipantPlan::parse(&request("Tes_30_N", "haupt-15")).unwrap();
++        let run = ParticipantRun::reserve(directory, plan).unwrap();
++        let anchor = ClockAnchor::new(MonotonicNanos::new(1000), UtcEpochNanos::new(1_700_000_000_000_000_000));
++        fs::write(directory.join("events.jsonl"), "{\"event\":\"official-start\",\"observed_monotonic_ns\":1000}\n").unwrap();
++        let streams = [
++            ("polar-ecg.jsonl", json!({"kind":"polar-ecg","observed_monotonic_ns":5000,"source_sequence":42,"sample_index":0,"source_time_ns":128,"microvolts":-37})),
++            ("polar-acc.jsonl", json!({"kind":"polar-acc","observed_monotonic_ns":2000,"source_sequence":31,"sample_index":1,"source_time_ns":124,"xyz_mg":[11,-23,998]})),
++            ("radius.jsonl", json!({"kind":"effective-radius-snapshot","observed_monotonic_ns":4000,"source_frame":91,"resulting_radius_m":0.75})),
++            ("breath.jsonl", json!({"kind":"breath","observed_monotonic_ns":3000,"unbiased_phase":"inhale","assessment_source":"polar-acc"})),
++        ];
++        for (name, row) in streams {
++            fs::write(directory.join(name), format!("{row}\n")).unwrap();
++        }
++        let csv = run.finalize_csv(directory, anchor, MonotonicNanos::new(6000), true, "finished").unwrap().unwrap();
++        let contents = fs::read_to_string(directory.join(csv["name"].as_str().unwrap())).unwrap();
++        let mut lines = contents.lines();
++        let header: Vec<_> = lines.next().unwrap().split(',').collect();
++        let column = |name| header.iter().position(|field| *field == name).unwrap();
++        let rows: Vec<Vec<_>> = lines.map(|line| line.split(',').collect()).collect();
++        assert!(rows.iter().all(|row| row.len() == header.len()));
++        let values = |field| rows.iter().map(|row| row[column(field)]).collect::<Vec<_>>();
++        assert_eq!(values("record_type"), ["accelerometer", "breath", "radius", "ecg", "end"]);
++        assert_eq!(values("elapsed_us"), ["1", "2", "3", "4", "5"]);
++        assert_eq!(values("sensor_time_ns"), ["124", "", "", "128", ""]);
++        assert_eq!(values("ecg_uv"), ["", "", "", "-37", ""]);
++        assert_eq!(values("acc_y_mg"), ["-23", "", "", "", ""]);
++        assert_eq!(values("radius_m"), ["", "", "0.75", "", ""]);
++        assert_eq!(values("breathing_phase"), ["", "inhale", "", "", ""]);
++        assert_eq!(csv["schema_version"], 2);
++    }
++
++    #[test]
 +    fn projects_native_ecg_pause_phase_and_signal_gaps_to_the_original_csv() {
 +        let scratch = Scratch::new();
 +        let directory = &scratch.0;
@@ -2177,9 +2266,12 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +        .unwrap();
 +        let sample = |at, index, value| {
 +            json!({"kind":"polar-ecg","observed_monotonic_ns":at,
-+            "source_sequence":index,"microvolts":value})
++            "source_sequence":index,"source_time_ns":at,"sample_index":0,"microvolts":value})
 +            .to_string()
 +        };
++        for name in ["polar-acc.jsonl", "radius.jsonl", "breath.jsonl"] {
++            fs::write(directory.join(name), "").unwrap();
++        }
 +        fs::write(
 +            directory.join("polar-ecg.jsonl"),
 +            [
@@ -2210,34 +2302,14 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +            .skip(1)
 +            .map(|row| row.split(',').collect())
 +            .collect();
-+        assert_eq!(rows.len(), 5);
-+        assert!(
-+            rows.iter()
-+                .all(|row| row.len() == 28 && row[26..] == ["aborted", "save-and-exit"])
-+        );
-+        assert_eq!(rows[0][11], "2023-11-14T22:13:20.000Z");
-+        assert_eq!(
-+            rows[0][13..19],
-+            [
-+                "0.000",
-+                "2023-11-14T22:13:20.000Z",
-+                "0.000",
-+                "waiting",
-+                "waiting",
-+                "-12"
-+            ]
-+        );
-+        assert_eq!(rows[0][24], "500");
-+        assert_eq!(rows[1][18], "");
-+        assert_eq!(rows[1][21], "missing");
-+        assert_eq!(
-+            rows[2][15..19],
-+            ["26000.000", "paused", "calibration", "230"]
-+        );
-+        assert_eq!(
-+            rows[4][15..19],
-+            ["41000.000", "playing", "instruction_2", "-31"]
-+        );
++        assert_eq!(rows.len(), 4);
++        assert!(rows.iter().all(|row| row.len() == HEADER.trim_end().split(',').count()));
++        assert_eq!(&rows[0][5..15], ["ecg", "2023-11-14T22:13:20.000000Z", "0", "0",
++            "waiting", "waiting", "1000000000", "500", "0", "-12"]);
++        assert_eq!(&rows[1][8..11], ["26000000", "paused", "calibration"]);
++        assert_eq!(&rows[2][8..11], ["41000000", "playing", "instruction_2"]);
++        assert_eq!(rows[3][5], "end");
++        assert_eq!(&rows[3][21..], ["aborted", "save-and-exit"]);
 +        assert!(
 +            run.finalize_csv(directory, anchor, end, false, "save-and-exit")
 +                .is_err()
@@ -2265,10 +2337,10 @@ index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..865081e6308de8a8da71602ab3a1005c30d0b66c
+index 0000000000000000000000000000000000000000..cb9e4cc27be213176f38b63ba8973d7838aa249f
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,155 @@
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
 +use std::{
@@ -2397,12 +2469,7 @@ index 0000000000000000000000000000000000000000..865081e6308de8a8da71602ab3a1005c
 +        directory,
 +        anchor,
 +        lengths["events.jsonl"].as_u64().expect("validated lengths"),
-+        lengths["polar-ecg.jsonl"]
-+            .as_u64()
-+            .expect("validated lengths"),
-+        hashes["polar-ecg.jsonl"]
-+            .as_str()
-+            .expect("hashed ECG prefix"),
++        lengths,
 +    )?
 +    else {
 +        return Ok(());
@@ -2509,7 +2576,7 @@ index e94da3ae..43ec79fc 100644
              Ok(value) => return Ok(Some(value)),
              Err(error) => last_error = Some(error),
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5588a438a541140cdfdf04e93312bd165..f4e6d27ed887e6184748e595d76767f8ca733dfc 100644
+index 4aefeaf5588a438a541140cdfdf04e93312bd165..ac0462ba3404aadf1b24a0200fa6b0df319ba65a 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
 @@ -920,7 +920,10 @@ fn handle_control(
@@ -2701,7 +2768,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..f4e6d27ed887e6184748e595d76767f8
 +        let csv = crate::session_recording_participant::csv_descriptor(&manifest, &terminal).unwrap().unwrap();
 +        assert_eq!(csv["name"], "Tes_30_N_2023-11-14_probe-5_r1.csv");
 +        let text = fs::read_to_string(directory.join(csv["name"].as_str().unwrap())).unwrap();
-+        assert!(text.contains(",missing,"));
++        assert!(text.contains(",end,"));
 +        assert!(text.contains(",aborted,"));
 +        assert_eq!(csv["size"], text.len());
 +        drop(writer);
@@ -6157,3 +6224,37 @@ index 1967f8b9..61dfc501 100644
          for mode in [-1, 0, 3, i32::MAX] {
              assert_eq!(authority.select(choose.packed(), mode), choose);
          }
+diff --git a/apps/native-renderer-android/native/src/polar_composition_adapters.rs b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+index c88c6ee65e6eb0d17f6ba70686e6c42c254f4603..1d91634174f18ba40b2846bfca999aa1a3ba868e 100644
+--- a/apps/native-renderer-android/native/src/polar_composition_adapters.rs
++++ b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
+@@ -933,6 +933,14 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+ ) {
+     let entered_at = std::time::Instant::now();
+     let xyz_mg = [x_mg as f32, y_mg as f32, z_mg as f32];
++    #[cfg(not(feature = "showcase"))]
++    let _ = crate::experiment_session_runtime::record_polar_acc_sample(
++        frame_sequence_id.max(0) as u64,
++        sample_index.max(0) as u32,
++        sample_host_time_ns.max(0) as u64,
++        sample_sensor_time_ns.max(0) as u64,
++        xyz_mg,
++    );
+     if !submit_polar_acc_observed(
+         entered_at,
+         sample_host_time_ns.max(0) as u64,
+@@ -954,14 +962,6 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Po
+         jni_submit_time_ns.max(0) as u64,
+         xyz_mg,
+     );
+-    #[cfg(not(feature = "showcase"))]
+-    let _ = crate::experiment_session_runtime::record_polar_acc_sample(
+-        frame_sequence_id.max(0) as u64,
+-        sample_index.max(0) as u32,
+-        sample_host_time_ns.max(0) as u64,
+-        sample_sensor_time_ns.max(0) as u64,
+-        xyz_mg,
+-    );
+ }
+
+ #[cfg(target_os = "android")]

@@ -555,6 +555,9 @@ this repository.
   private object for the completed run. The Drive receipt and Pixel ZIP
   SHA-256 matched, as did the CSV, ECG and ACC entries against Quest.
   The resumed upload completed in about four minutes.
+- [x] Align the Quest export limit with the v2 single-CSV payload. Keep the
+  128 MiB combined limit for older CSV and separate sensor files. All 74
+  focused native recording tests passed, including the v2 size regression.
 - [ ] Qualify the authored 15-minute main round against the current export
   limits. The five-minute completion and the v2 partial run passed on the
   physical devices. Lost successful Drive replies, quotas, shared-folder

@@ -146,7 +146,7 @@ events. It must not relabel this replay/reconstruction as hardware data.
 The enrolled controller uses the RQG1 LAN gateway's idle-only recording
 inventory, manifest and read operations. The manifest authenticates the Quest
 and recording identity. The browser checks each original file's length and
-SHA-256 before committing the complete ZIP to `atmungsraum-quest-recordings`
+SHA-256 before committing the v2 CSV or historical ZIP to `atmungsraum-quest-recordings`
 in IndexedDB. The key binds the device, serial and immutable native recording
 ID. Rejoining reconciles old and new eligible runs, skips saved recordings
 and retries interrupted transfers. A Web Lock avoids parallel sync of the
@@ -155,18 +155,16 @@ on Quest. The page must be visible and connected for automatic transfer.
 
 The operator can select a stored archive and explicitly download it. This
 store is separate from the synthetic CSV list and its upload/share workflow.
-Legacy runs use the original eight-file archive. The participant CSV path keeps
-the original bytes and Quest filename in browser storage. One transaction also
-stores the same-session sensor ZIP with the original ECG and ACC JSONL bytes,
-the participant CSV and the authenticated export manifest. The ZIP, ECG,
-ACC and exported manifest filenames all use the participant session stem.
-The signed manifest retains the original Quest stream keys and digests.
-Those keys identify app-private writer and recovery files. Existing CSVs and
-archives keep their saved legacy names and remain readable.
-Google Drive delivery reads this committed bundle during authorized idle time.
-Participant export validates up to 1 GiB of Quest core files. The combined CSV,
-ECG and ACC export remains bounded to 128 MiB for the phone. Legacy full
-archives retain their 128 MiB limit.
+The v2 path stores the exact Quest CSV and filename as both the local download
+and Drive payload. Older participant exports retain the ZIP with the original
+ECG and ACC JSONL bytes, CSV and signed manifest. Dated ZIP entries use the
+same participant session stem. Legacy runs without a participant CSV retain
+the original eight-file archive. The signed manifest retains the Quest stream
+keys and digests for the app-private writer and recovery files.
+Google Drive delivery reads the committed payload during authorized idle time.
+Participant export validates up to 1 GiB of Quest core files. The v2 CSV may
+use up to 128 MiB. The older participant ZIP route applies that limit to the
+combined CSV, ECG and ACC. Legacy full archives also use the 128 MiB limit.
 The browser records the reserved Drive ID and SHA-256 before upload, then
 confirms the destination and bytes before marking delivery complete. Keep
 delivery receipts separate from Quest and phone recording custody.

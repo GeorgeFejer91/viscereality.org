@@ -159,12 +159,11 @@ the name, size, SHA-256 and session UUID. For these runs the browser stores the
 original CSV and a ZIP with the CSV, original ECG and ACC streams, and signed
 export manifest. New participant files use a stem such as
 `Tes_30_N_2026-11-13_probe-5_r4` for the CSV, ZIP and each exported sensor
-stream and manifest. The date comes from official Start in UTC. In the 0.1.25 physical check the
-CSV row and filenames agreed. All three archived data files matched the Quest
-source hashes and Drive confirmed the private dated ZIP. The ordinary
-download yields the participant CSV. The
-next eligible idle reconciliation upgrades an older CSV-only entry for the
-same recording ID. Keep the original streams on Quest.
+stream and manifest when exporting a historical sensor ZIP. The date comes
+from official Start in UTC. The signed v2 descriptor identifies the single
+CSV, which is both the ordinary download and the Drive payload. Keep the
+original native streams on Quest. The next eligible idle reconciliation
+upgrades an older incomplete browser entry for the same recording ID.
 Probe-Runde and Haupt-Runde have independent counters for each participant.
 The authored scenario ID in each filename names the selected session. The
 VR condition remains in the recording metadata. The app accepts previously
@@ -222,9 +221,9 @@ An IndexedDB receipt reserves a Drive ID before upload and records the exact
 ZIP hash. On an uncertain response, retry that ID and verify the existing
 object instead of creating another one. The controller checks the destination
 is still private, verifies the Drive object's parent, owner, name, size and
-SHA-256, then stores the confirmed receipt. The upload ZIP holds the original
-ECG and ACC streams, the export manifest, and the original participant CSV when
-available. Legacy local downloads retain the eight-file archive. Start, close,
+SHA-256, then stores the confirmed receipt. The v2 upload is the original CSV. Earlier participant uploads keep the ZIP
+with the CSV, ECG, ACC and export manifest. Legacy local downloads retain the
+eight-file archive. Start, close,
 and background transitions stop upload work. A later authorized idle pass
 reconciles pending files. Google Drive on Android can display the resulting
 folder independently of the browser.
