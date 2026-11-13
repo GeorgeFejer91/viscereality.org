@@ -24,7 +24,7 @@ copy is the input to automatic delivery to the research Google Drive.
    below. The PWA creates and remembers **Atmungsraum – Quest-Aufnahmen** as
    its private Drive destination. The PWA stages verified bundles in
    IndexedDB. The automatic queue writes those bundles to the Drive folder.
-3. Confirm fresh Polar ECG, enter the participant ID using the shared form,
+3. Confirm fresh Polar ECG and accelerometer data, enter the participant ID using the shared form,
    choose the scenario and start the session. Quest writes the original
    streams and the participant CSV and finalizes the run locally.
 4. After the session, keep the Pixel PWA visible and the Quest idle until the

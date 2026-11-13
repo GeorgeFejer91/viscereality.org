@@ -1,5 +1,5 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=7';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=19';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=18';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
@@ -108,7 +108,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       text(clock, [Math.floor(seconds / 60), seconds % 60].map((part) => String(part).padStart(2, '0')).join(':'));
     }
     const setup = polarSetup(status);
-    const ready = setup?.p && setup.b && setup.c && setup.e;
+    const ready = setup?.p && setup.b && setup.c && setup.e && setup.a;
     const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active;
     if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
       statusText.focus({ preventScroll: true });
@@ -123,8 +123,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : !setup.p ? 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.'
       : !setup.b ? 'Schalte Bluetooth auf der Quest ein.'
       : setup.sc ? 'Quest sucht nach dem Polar H10 …'
-      : ready ? 'Polar H10 verbunden. Quest empfängt EKG.'
-      : setup.c ? 'Polar H10 verbunden. Warte auf EKG von der Quest.'
+      : ready ? 'Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.'
+      : setup.c ? 'Polar H10 verbunden. Warte auf beide Messsignale.'
       : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
     polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || setup.sc || ready;
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });

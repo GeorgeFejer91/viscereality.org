@@ -3,7 +3,7 @@ import { operationId, sameQuest } from './quest-gateway.js?v=5';
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const desiredPhase = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
-const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg']);
+const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg', 'start-acc']);
 const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
 const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
@@ -27,7 +27,7 @@ export function polarSetup(status) {
     || !Number.isSafeInteger(setup.r) || setup.r < 0
     || !['p', 'b', 'c', 'a', 'e', 'sc'].every(flag => typeof setup[flag] === 'boolean')
     || typeof setup.x !== 'string' || setup.x !== '' && !candidateId.test(setup.x)
-    || setup.c && !setup.x || setup.e && !setup.c
+    || setup.c && !setup.x || (setup.a || setup.e) && !setup.c
     || !Array.isArray(setup.d) || setup.d.length > 4 || new Set(setup.d).size !== setup.d.length
     || !setup.d.every(id => typeof id === 'string' && candidateId.test(id))) return null;
   return setup;
@@ -39,7 +39,7 @@ function setupConfirmed(status, { op, setupRef, candidate }) {
   if (op === 'scan') return true;
   if (setup.x !== candidate) return false;
   if (op === 'select') return true;
-  return setup.c && (op === 'connect' || setup.e);
+  return setup.c && (op === 'connect' || (op === 'start-ecg' ? setup.e : setup.a));
 }
 
 export function rehearsalPolarAllowed(status) {
@@ -223,7 +223,7 @@ export class QuestRehearsal {
         && setup?.s === original.s && setup.p && setup.b && !setup.sc ? setup : null;
     };
     let setup = current();
-    if (!setup || setup.e) return;
+    if (!setup || (setup.e && setup.a)) return;
     if (!setup.c) {
       if (!await this.dispatchAndConfirm(gateway, 'scan', signal, 62000)) return;
       setup = current();
@@ -239,7 +239,10 @@ export class QuestRehearsal {
       if (!await this.dispatchAndConfirm(gateway, 'connect', signal, 32000, candidate)) return;
       setup = current();
     }
-    if (setup?.c && !setup.e) await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x);
+    if (!setup?.c) return;
+    if (!setup.e && !await this.dispatchAndConfirm(gateway, 'start-ecg', signal, 32000, setup.x)) return;
+    setup = current();
+    if (setup?.c && !setup.a) await this.dispatchAndConfirm(gateway, 'start-acc', signal, 32000, setup.x);
   }
 
   async run(action, signal, condition = conditions[0], participantId = '', scenario = '') {
@@ -249,7 +252,7 @@ export class QuestRehearsal {
       ? 'recenter' : rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
     if (!gateway || clicked?.pending || this.state.busy || this.pending
-      || (!requested && (!setup?.p || !setup.b || setup.sc || setup.e))) return;
+      || (!requested && (!setup?.p || !setup.b || setup.sc || (setup.e && setup.a)))) return;
     this.update({ busy: true, message: '' });
     try {
       await this.refreshing;
@@ -273,7 +276,8 @@ export class QuestRehearsal {
         await this.dispatch(gateway, op, status, signal);
         return;
       }
-      if (status.participant_arm === 1 && (!participantId || !gateway.participantArm || !polarSetup(status)?.e)) return;
+      const streams = polarSetup(status);
+      if (status.participant_arm === 1 && (!participantId || !gateway.participantArm || !streams?.e || !streams.a)) return;
       if (scenario && (!gateway.scenarioArm || !rehearsalScenarios(status).includes(scenario))) return;
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.

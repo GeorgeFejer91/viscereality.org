@@ -14,11 +14,18 @@
   participant download and Drive delivery. Older Quest bundles retain their
   existing reader. All 88 Node tests passed, along with four Chromium
   viewport/zoom and historical download checks.
-- [ ] Install and qualify the matching native build on Quest 2. Run a synthetic
-  participant with a worn H10 through official Start, breathing, pause and
-  Finish. Check that ECG and three-axis accelerometer rows are retained, the
-  applied renderer radius changes over breathing cycles, and Pixel/Drive
-  receive the same single CSV. See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
+- [x] Build, install and launch the same-signer Quest APK `0.1.26` from
+  native commit `535cea3b`. Installed SHA-256 matched the signed ARM64 APK,
+  and the renderer produced advancing OpenXR frames.
+- [x] Publish `0f22030` in [Pages run 43457129533](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43457129533).
+  Nine live files matched Git. Live Chromium and the refreshed standalone
+  Pixel PWA opened the new controller with no mock ECG request.
+- [x] Request and confirm both live H10 streams in the phone setup flow.
+  Require fresh ECG and accelerometer samples before participant Arm.
+- [ ] Reauthorize Bluetooth pairing for the updated build on the Pixel.
+  Run a synthetic participant with a worn H10 through official Start, breathing,
+  pause and Finish. Check changing renderer radius and byte-identical CSV
+  delivery through Pixel and Drive. See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
 
 
 ### Windows Quest 2 keep-awake task — 2026-11-13

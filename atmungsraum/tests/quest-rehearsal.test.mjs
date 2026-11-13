@@ -316,6 +316,7 @@ function polarQuest({ candidates = ['0123456789ab'], lost, delayedScan = false, 
       if (command.op === 'select') polar.x = command.d;
       if (command.op === 'connect') polar.c = true;
       if (command.op === 'start-ecg') polar.e = true;
+      if (command.op === 'start-acc') polar.a = true;
       if (command.op !== 'select') assert.equal(command.d, '');
       const receipt = { v: 1, id: command.id, state: 'confirmed' };
       receipts.set(command.id, receipt);
@@ -326,14 +327,15 @@ function polarQuest({ candidates = ['0123456789ab'], lost, delayedScan = false, 
   };
 }
 
-test('one explicit browser action asks Quest to scan, select, connect and start fresh ECG', async () => {
+test('one explicit browser action asks Quest to scan, select, connect and start fresh ECG and accelerometer streams', async () => {
   const quest = polarQuest({ delayedScan: true });
   const rehearsal = new QuestRehearsal({ wait: async () => {} });
   rehearsal.attach(quest);
   await Promise.all([rehearsal.run('polar'), rehearsal.run('polar'), rehearsal.run('play')]);
-  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg']);
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg', 'start-acc']);
   assert.equal(quest.commands[1].d, '0123456789ab');
   assert.equal(rehearsal.state.status.y.e, true);
+  assert.equal(rehearsal.state.status.y.a, true);
   assert.equal(rehearsal.state.pending, false);
 });
 
@@ -367,7 +369,7 @@ test('recovery only checks the original Polar receipt and never chains the remai
   assert.equal(rehearsal.state.unknown, false);
   assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect']);
   await rehearsal.run('polar');
-  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg']);
+  assert.deepEqual(quest.commands.map(({ op }) => op), ['scan', 'select', 'connect', 'start-ecg', 'start-acc']);
 });
 
 test('leaving the foreground during a Polar scan requires a new browser action', async () => {
