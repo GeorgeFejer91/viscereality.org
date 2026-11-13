@@ -65,6 +65,15 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     A synthetic IndexedDB check on the installed Pixel verified offset resume
     after reopening the store, cross-chunk reads, overlap rejection and
     atomic replacement of staged bytes with the final archive.
+    A separate installed-Pixel fixture interrupted both transports. Pixel
+    resumed from byte 131,072 after reopening IndexedDB. Drive reconciled
+    a lost acknowledgement and accepted 786,432 bytes before Finish, then
+    verified the 1,310,725-byte file under the same ID. The fixture used
+    synthetic Quest ranges and the real private Drive, then trashed its file.
+  - [x] Drain a backlog through the last published checkpoint in bounded
+    batches. Reuse that descriptor until caught up. Release to controls
+    between batches and stop the drain on cancellation. All 87 PWA tests
+    pass, including resumed offset and batch-bound checks.
   - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,

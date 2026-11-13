@@ -1,6 +1,6 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=20';
-import { ecgTrace, questRecording, questRecordings, stageQuestPrefix } from './quest-data.js?v=22';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=23';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=3';
 import { mountQuestDrive } from './quest-drive-ui.js?v=3';
 
@@ -304,12 +304,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           signal.throwIfAborted();
           const store = await openQuestRecordingStore(gateway.owner);
           try {
-            const prefix = await stageQuestPrefix(gateway, store, signal);
-            signal.throwIfAborted();
-            if (!prefix || rehearsal.state.status?.g !== generation) return;
-            exportMessage = 'Laufende Quest-Aufnahme wird auf diesem Gerät gespeichert.';
-            paint();
-            void drive.sync(prefix);
+            for await (const prefix of questPrefixBatches(gateway, store, signal)) {
+              signal.throwIfAborted();
+              if (rehearsal.state.status?.g !== generation) break;
+              if (!exportMessage.startsWith('Laufende Quest-Aufnahme')) {
+                exportMessage = 'Laufende Quest-Aufnahme wird auf diesem Gerät gespeichert.';
+                paint();
+              }
+              void drive.sync(prefix);
+            }
           } finally { store.close(); }
         });
     } catch {

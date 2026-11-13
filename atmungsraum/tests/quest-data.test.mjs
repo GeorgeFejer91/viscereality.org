@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCipheriv, createHash, createHmac } from 'node:crypto';
 import { joinQuest } from '../quest-gateway.js';
-import { ecgTrace, questRecording, stageQuestPrefix } from '../quest-data.js';
+import { ecgTrace, questRecording, questPrefixBatches } from '../quest-data.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const controller = 'b'.repeat(32);
@@ -213,14 +213,54 @@ test('the live feed resumes at the committed offset and rejects a corrupted rang
       sha256: corrupt ? '0'.repeat(64) : hash(data), data: data.toString('base64') };
   } };
   const signal = new AbortController().signal;
-  const first = await stageQuestPrefix(gateway, store, signal);
+  const stage = async () => {
+    for await (const prefix of questPrefixBatches(gateway, store, signal)) return prefix;
+  };
+  const first = await stage();
   assert.equal(first.offset, 128 * 1024);
   corrupt = true;
-  await assert.rejects(() => stageQuestPrefix(gateway, store, signal), /Prüfsumme/);
+  await assert.rejects(stage, /Prüfsumme/);
   assert.equal(staged.offset, first.offset);
   corrupt = false;
-  const restarted = await stageQuestPrefix(gateway, store, signal);
+  const restarted = await stage();
   assert.equal(restarted.offset, 256 * 1024);
   assert.equal(offsets[4], first.offset);
   assert.equal(offsets[5], first.offset);
+});
+
+test('catch-up drains bounded batches from one published checkpoint and stops on cancellation', async () => {
+  const hash = data => createHash('sha256').update(data).digest('hex');
+  const bytes = Buffer.alloc(650 * 1024, 9);
+  const id = 'utc-ns-01725000000000000000';
+  const session_id = 'd2d9ddfe-2717-40b9-9995-1bd3f48ff440';
+  const descriptor = { v: 1, state: 'live', schema_version: 4, id, session_id,
+    name: 'Tes_30_N_2023-11-14_haupt-15_r1.csv', size: bytes.length, checkpoint: 8, sha256: hash(bytes) };
+  const stages = [];
+  let saved, describes = 0;
+  const gateway = { async recordings({ query, offset, length }) {
+    if (query === 'live-describe') { describes++; return descriptor; }
+    const data = bytes.subarray(offset, offset + length);
+    return { v: 1, state: 'live-chunk', id, session_id, offset, length,
+      sha256: hash(data), data: data.toString('base64') };
+  } };
+  const store = {
+    readPrefix: async () => saved,
+    async appendPrefix(prefix, start, parts) {
+      assert.ok(parts.length <= 4);
+      saved = { ...prefix, offset: start + parts.reduce((sum, part) => sum + part.size, 0) };
+      stages.push(saved.offset);
+    },
+  };
+  const canceled = new AbortController();
+  await assert.rejects(async () => {
+    for await (const prefix of questPrefixBatches(gateway, store, canceled.signal)) {
+      assert.equal(prefix.offset, 128 * 1024);
+      canceled.abort();
+    }
+  }, { name: 'AbortError' });
+  for await (const prefix of questPrefixBatches(gateway, store, new AbortController().signal)) {
+    assert.equal(prefix.offset, saved.offset);
+  }
+  assert.deepEqual(stages, [128, 256, 384, 512, 640, 650].map(size => size * 1024));
+  assert.equal(describes, 2);
 });

@@ -25,9 +25,10 @@ function chunkData(chunk, length) {
   return raw;
 }
 
-export async function stageQuestPrefix(gateway, store, signal) {
+export async function* questPrefixBatches(gateway, store, signal) {
+  signal.throwIfAborted();
   const descriptor = await gateway.recordings({ query: 'live-describe' }, signal);
-  if (descriptor?.v === 1 && descriptor.state === 'preparing') return null;
+  if (descriptor?.v === 1 && descriptor.state === 'preparing') return;
   const { id, session_id, name, size, sha256, checkpoint } = descriptor ?? {};
   if (descriptor?.v !== 1 || descriptor.state !== 'live' || descriptor.schema_version !== 4
     || !recordingId.test(id) || !sessionId.test(session_id) || !isDatedSessionFilename(name)
@@ -41,9 +42,20 @@ export async function stageQuestPrefix(gateway, store, signal) {
     || prior.checkpoint > checkpoint || (prior.checkpoint === checkpoint && prior.sha256 !== sha256))) {
     throw Error('Die laufende Quest-Aufnahme stimmt nicht mit dem gespeicherten Stand überein.');
   }
-  const start = prior?.offset ?? 0;
+  let start = prior?.offset ?? 0;
+  if (start === size && prior) yield prior;
+  while (start < size) {
+    signal.throwIfAborted();
+    start = await stageQuestBatch(gateway, store, prefix, start, signal);
+    yield { ...prefix, offset: start };
+    if (start < size) await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  signal.throwIfAborted();
+}
+
+async function stageQuestBatch(gateway, store, prefix, start, signal) {
+  const { id, session_id, size } = prefix;
   const end = Math.min(start + 4 * chunkBytes, size);
-  if (start === end) return prior;
   const parts = [];
   for (let offset = start; offset < end; offset += chunkBytes) {
     signal.throwIfAborted();
@@ -57,7 +69,7 @@ export async function stageQuestPrefix(gateway, store, signal) {
   }
   signal.throwIfAborted();
   await store.appendPrefix(prefix, start, parts);
-  return { ...prefix, offset: end };
+  return end;
 }
 
 export function ecgTrace(frame, transportMs) {

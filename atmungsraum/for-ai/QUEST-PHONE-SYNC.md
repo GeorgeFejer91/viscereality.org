@@ -64,7 +64,7 @@ and [Drive resumable upload documentation](https://developers.google.com/workspa
    streams and the participant CSV and finalizes the run locally.
 4. After the session, keep the Pixel PWA visible and the Quest idle until the
    run appears in the recording selector. Wait for the Drive confirmation,
-   then verify that the new ZIP is in the designated folder. For qualification,
+   then verify that the new CSV is in the designated folder. For qualification,
    compare the SHA-256 and manifest with the copies on the Pixel and Quest.
 5. After an interrupted connection, reopen the app while Quest is in Remote
    mode. The saved pairing opens VR-Probe and tries the last known address.
@@ -186,8 +186,10 @@ after the run returns to idle, and on an idle retry. Stop requesting recording
 bytes as soon as the controller leaves idle or the operator starts a command.
 Quest independently enforces idle Remote admission around recording I/O.
 The live operations require the enrolled private LAN controller and the same
-active generation and session before and after each read. The PWA issues at
-most four sequential 32 KiB ranges per live pass. Controls can abort a pass.
+active generation and session before and after each read. The PWA commits up
+to four sequential 32 KiB ranges per transaction. When behind, it drains the
+current checkpoint in successive transactions, yielding between them so
+controls can cancel the pass. It then asks for a new checkpoint.
 Keep status and acquisition independent from sync.
 
 Key each committed browser copy by the stable Quest identity and recording ID.
