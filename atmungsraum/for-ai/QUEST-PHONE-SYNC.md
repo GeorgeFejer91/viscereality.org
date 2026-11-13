@@ -32,6 +32,9 @@ from its committed offset after rejoin. If the browser was reloaded, reconnect
 Drive from the existing account control to renew the in-memory authorization.
 The final reconciliation pulls any remaining bytes and verifies the complete
 signed SHA-256 before finalizing the same Drive file ID.
+If staged bytes are missing or their assembled checksum differs, the Pixel
+fetches the verified file again from byte zero. It opens a fresh resumable
+session under the existing Drive ID before sending any corrected bytes.
 
 For the paired performance trial, open the controller with
 `?live-sync=off` for the baseline, then use the ordinary URL for the live

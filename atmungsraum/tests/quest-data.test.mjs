@@ -151,6 +151,17 @@ test('participant exports retain the CSV and both original sensor streams throug
   const finalized = await questRecording(gateway, id, signal, { includeSensorBundle: true, store });
   assert.deepEqual(Buffer.from(await finalized.bundle.arrayBuffer()), csv);
   assert.equal(resumedOffsets[0], prefixBytes);
+  for (const damaged of [
+    async () => new Blob([Buffer.alloc(prefixBytes, 0)]),
+    async () => { throw Error('Missing staged range'); },
+  ]) {
+    resumedOffsets.length = 0;
+    const repaired = await questRecording(gateway, id, signal, { includeSensorBundle: true,
+      store: { ...store, readPrefixBytes: damaged } });
+    assert.deepEqual(Buffer.from(await repaired.bundle.arrayBuffer()), csv);
+    assert.equal(resumedOffsets.at(-1), 0);
+    assert.equal(repaired.resetDriveUpload, true);
+  }
   gateway.recordings = readRecording;
   delete manifest.participant_csv.schema_version;
   assert.deepEqual(contents.get(`${stem}_polar-ecg.jsonl`), ecg);

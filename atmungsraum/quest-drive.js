@@ -201,7 +201,7 @@ export async function deliverQuestPrefix({ drive, store, folderId, id, name, typ
   await drive.advance(receipt, available, read, persist, signal);
 }
 
-export async function deliverQuestBundle({ drive, store, folderId, id, file, signal }) {
+export async function deliverQuestBundle({ drive, store, folderId, id, file, signal, resetDriveUpload = false }) {
   const saved = await store.readDelivery(id);
   if (saved?.folderId === folderId && saved.verified) return;
   const checksum = await sha256(file);
@@ -213,6 +213,10 @@ export async function deliverQuestBundle({ drive, store, folderId, id, file, sig
     throw Error('Die gespeicherte Upload-Zuordnung stimmt nicht überein.');
   }
   const persist = value => store.saveDelivery(id, value);
+  // The first checksum binds finalization to the verified local file.
+  if (resetDriveUpload && !saved?.sha256) {
+    Object.assign(receipt, { uploadUrl: null, offset: 0, pendingEnd: null });
+  }
   if (!saved?.sha256) await persist(receipt);
   signal.throwIfAborted();
   if (receipt.name) await drive.advance(receipt, file.size, async (start, end) => file.slice(start, end), persist, signal, file);

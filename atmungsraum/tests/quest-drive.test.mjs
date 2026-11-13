@@ -191,9 +191,9 @@ function partialDrive(file) {
   const request = { drive, id: 'run-1', folderId, signal };
   return { ranges, files, loseResponseAfterOneChunk: () => { lose = true; },
     expireSessions: () => sessions.clear(), invalidRange: () => { invalidRange = true; },
-    prefix: (store, available) => deliverQuestPrefix({ ...request, store, name: file.name, type: file.type,
-      available, read: async (start, end) => file.slice(start, end) }),
-    finish: store => deliverQuestBundle({ ...request, store, file }) };
+    prefix: (store, available, read = async (start, end) => file.slice(start, end)) =>
+      deliverQuestPrefix({ ...request, store, name: file.name, type: file.type, available, read }),
+    finish: (store, resetDriveUpload) => deliverQuestBundle({ ...request, store, file, resetDriveUpload }) };
 }
 
 const chunk = 256 * 1024;
@@ -234,6 +234,20 @@ test('an expired Drive upload session restarts using the same reserved file ID',
   assert.deepEqual(remote.ranges, ['bytes 0-262143/*', 'bytes 262144-262144/262145', 'bytes 0-262144/262145']);
   assert.equal(store.rows.get('run-1').driveId, 'file-1');
   assert.equal(remote.files.size, 1);
+});
+
+test('a repaired Quest prefix replaces a suspect Drive session under the same file ID', async () => {
+  const remote = partialDrive(recording(chunk + 1));
+  const store = localReceipts();
+  await remote.prefix(store, chunk + 1, async (start, end) => new Blob([Buffer.alloc(end - start, 6)]));
+  const original = store.rows.get('run-1');
+  assert.equal(original.offset, chunk);
+  await remote.finish(store, true);
+  const final = store.rows.get('run-1');
+  assert.equal(final.driveId, original.driveId);
+  assert.equal(final.verified, true);
+  assert.equal(remote.files.size, 1);
+  assert.deepEqual(remote.ranges, ['bytes 0-262143/*', 'bytes 0-262144/262145']);
 });
 
 test('invalid Drive acknowledgements leave the receipt unverified', async () => {

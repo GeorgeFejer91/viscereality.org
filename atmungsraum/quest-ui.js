@@ -1,8 +1,8 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=20';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=23';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=24';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=3';
-import { mountQuestDrive } from './quest-drive-ui.js?v=3';
+import { mountQuestDrive } from './quest-drive-ui.js?v=4';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };

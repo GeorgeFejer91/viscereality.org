@@ -81,6 +81,9 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     batches. Reuse that descriptor until caught up. Release to controls
     between batches and stop the drain on cancellation. All 87 PWA tests
     pass, including resumed offset and batch-bound checks.
+  - [x] Recover when staged bytes are missing or fail the signed final hash.
+    Download a fresh copy from Quest and restart any suspect resumable session
+    under the existing Drive file ID before finalization. All 88 PWA tests pass.
   - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,

@@ -1,4 +1,4 @@
-import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveScope } from './quest-drive.js?v=2';
+import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveScope } from './quest-drive.js?v=3';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=3';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
@@ -172,7 +172,8 @@ export function mountQuestDrive() {
               if (entry?.bundleVersion !== 1 || !(entry.bundle instanceof File)) continue;
               report('Aufnahmen werden in Google Drive gespeichert …');
               await current.drive.ensureFolder(folderId, signal);
-              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file: entry.bundle, signal });
+              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file: entry.bundle, signal,
+                resetDriveUpload: entry.resetDriveUpload === true });
               saved++;
             }
             signal.throwIfAborted();

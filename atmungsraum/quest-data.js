@@ -146,6 +146,21 @@ function validRecovery(manifest) {
     .every(file => recovery.stream_sha256[file.name] === file.sha256);
 }
 
+async function readFinalFile(gateway, manifest, file, signal, saved) {
+  const parts = saved ? [saved] : [];
+  for (let offset = saved?.size ?? 0; offset < file.size; offset += chunkBytes) {
+    signal.throwIfAborted();
+    const length = Math.min(chunkBytes, file.size - offset);
+    const chunk = await gateway.recordings({ query: 'read', manifest_id: manifest.manifest_id, file: file.name, offset, length }, signal);
+    if (chunk?.v !== 1 || chunk.state !== 'chunk' || chunk.manifest_id !== manifest.manifest_id
+      || chunk.file !== file.name || chunk.offset !== offset || chunk.length !== length
+      || chunk.sha256 !== file.sha256) throw Error('Unvollständiger Quest-Dateiabschnitt.');
+    parts.push(chunkData(chunk, length));
+  }
+  const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
+  return await hashBytes(bytes) === file.sha256 ? bytes : null;
+}
+
 export async function questRecording(gateway, id, signal, { includeSensorBundle = false, store } = {}) {
   if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
   const response = await preparedRecordingQuery(gateway, { query: 'describe', id }, signal);
@@ -182,29 +197,27 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   if (selected.reduce((sum, file) => sum + file.size, 0) > maxBytes) {
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
+  let resetDriveUpload = false;
   for (const file of selected) {
     const prior = file.schema_version === 4 && await store?.readPrefix(id);
-    const saved = prior?.session_id === file.session_id && prior.name === file.name && prior.offset <= file.size
-      ? await store.readPrefixBytes(id, 0, prior.offset) : null;
-    const parts = saved ? [saved] : [];
-    for (let offset = saved?.size ?? 0; offset < file.size; offset += chunkBytes) {
-      signal.throwIfAborted();
-      const length = Math.min(chunkBytes, file.size - offset);
-      const chunk = await gateway.recordings({ query: 'read', manifest_id: manifest.manifest_id, file: file.name, offset, length }, signal);
-      if (chunk?.v !== 1 || chunk.state !== 'chunk' || chunk.manifest_id !== manifest.manifest_id
-        || chunk.file !== file.name || chunk.offset !== offset || chunk.length !== length
-        || chunk.sha256 !== file.sha256) throw Error('Unvollständiger Quest-Dateiabschnitt.');
-      parts.push(chunkData(chunk, length));
+    const saved = prior?.session_id === file.session_id && prior.name === file.name
+      && Number.isSafeInteger(prior.offset) && prior.offset > 0 && prior.offset <= file.size
+      ? await store.readPrefixBytes(id, 0, prior.offset).catch(() => null) : null;
+    const usable = saved instanceof Blob && saved.size === prior?.offset ? saved : null;
+    let bytes = await readFinalFile(gateway, manifest, file, signal, usable);
+    if (!bytes && usable) {
+      resetDriveUpload = true;
+      bytes = await readFinalFile(gateway, manifest, file, signal, null);
     }
-    const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
-    const hash = await hashBytes(bytes);
-    if (hash !== file.sha256) throw Error('Quest-Datei stimmt nicht mit der Prüfsumme überein.');
+    if (!bytes) throw Error('Quest-Datei stimmt nicht mit der Prüfsumme überein.');
+    resetDriveUpload ||= Boolean(prior && !usable);
     records.push({ filename: file.name, session_id: id, bytes });
   }
   signal.throwIfAborted();
   const participantFile = csv ? new File([records[0].bytes], csv.name, { type: 'text/csv' }) : null;
   if (participantFile && !includeSensorBundle) return participantFile;
-  if (unified) return { download: participantFile, bundle: participantFile, bundleVersion: 1 };
+  if (unified) return { download: participantFile, bundle: participantFile, bundleVersion: 1,
+    ...(resetDriveUpload ? { resetDriveUpload: true } : {}) };
   const manifestName = 'export-manifest.json';
   records.push({ filename: manifestName, session_id: id, csv: JSON.stringify(manifest, null, 2) });
   if (dated) {
