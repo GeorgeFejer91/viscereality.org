@@ -379,8 +379,12 @@ this repository.
 - [x] Register the signed 0.1.20 rehearsal on the active Quest 2 profile,
   grant Nearby devices access for the rehearsal and verify OpenXR frame
   submission after launch.
-- [ ] Enroll the Pixel controller on that Quest profile and verify the signed
-  Wi-Fi join, fresh Polar H10 ECG, start and terminal receipt, then check the
+- [x] Pair the worn H10 with the Quest 2 on 0.1.21. The Polar runtime requires
+  coarse and fine location permissions in addition to Nearby devices. After
+  granting those app permissions, the native status was fresh and connected,
+  and the ACC sample counter advanced across reads. ECG was still inactive.
+- [ ] Select Remote on the enrolled owner profile, verify the signed Pixel
+  join and fresh Polar H10 ECG, then start and finish a session. Check the
   original ECG, ACC and participant CSV on Quest.
 - [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
   reopen a participant CSV from Android Files.
