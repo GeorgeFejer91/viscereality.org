@@ -15,6 +15,22 @@ values stay on Quest until the saved CSV is available. The planned live path
 will upload committed recording bytes in batches while Quest continues
 biofeedback locally. Upload acknowledgements can arrive during a session.
 The Drive file becomes available when the upload finalizes.
+The installed Pixel verified this with a synthetic 256 KiB prefix and a
+two-byte final tail in the private research folder. Both the chunk response
+and a separate status query exposed the acknowledged range. Drive reported
+the expected owner, parent, size and SHA-256 after finalization. The synthetic
+object was then moved to trash.
+
+The CSV transport reserves one Drive file ID and sends batches of at most
+1 MiB. During a live upload it retains at least one byte until the final
+length is known. The PWA persists the acknowledged offset and the end of
+an in-flight request in IndexedDB. After an ambiguous response it queries
+Drive before sending more data. An expired upload session can restart at byte
+zero with the same file ID. The browser uses Google's upload-specific status
+override to read partial acknowledgements while rejecting HTTP redirects.
+Complete staged CSVs use this transport today. The active Quest feed and
+on-phone prefix staging are still pending.
+
 See the [active checklist](PROJECT.md#live-recording-sync-to-google-drive)
 and [Drive resumable upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 

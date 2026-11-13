@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createQuestDrive, deliverQuestBundle } from '../quest-drive.js';
+import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix } from '../quest-drive.js';
 
 const signal = new AbortController().signal;
 const folderId = 'private-folder';
@@ -141,4 +141,114 @@ test('forty finalized recording bundles stay unique through repeated lost respon
   }
   assert.equal(remote.files.size, 40);
   assert.equal(new Set([...store.rows.values()].map(receipt => receipt.driveId)).size, 40);
+});
+
+function partialDrive(file) {
+  const chunk = 256 * 1024;
+  const files = new Map(), sessions = new Map(), ranges = [];
+  let reservations = 0, starts = 0, lose = false, invalidRange = false;
+  const incomplete = length => new Response(null, { headers: {
+    'X-HTTP-Status-Code-Override': '308',
+    ...(length ? { Range: invalidRange ? 'bytes=12-14' : 'bytes=0-' + (length - 1) } : {}),
+  } });
+  const drive = createQuestDrive('fixture-token', async (input, options) => {
+    const url = new URL(input);
+    assert.equal(url.origin, 'https://www.googleapis.com');
+    assert.equal(options.redirect, 'error');
+    if (url.pathname.endsWith('/generateIds')) return Response.json({ ids: ['file-' + ++reservations] });
+    if (url.pathname === '/drive/v3/files/file-1') {
+      return files.has('file-1') ? Response.json(files.get('file-1')) : new Response(null, { status: 404 });
+    }
+    if (options.method === 'POST') {
+      const metadata = JSON.parse(options.body);
+      assert.deepEqual(metadata, { id: 'file-1', name: file.name, mimeType: file.type, parents: [folderId] });
+      const id = 'session-' + ++starts;
+      sessions.set(id, Buffer.alloc(0));
+      return new Response(null, { headers: { Location: url.origin + url.pathname + '?upload_id=' + id } });
+    }
+    assert.equal(options.method, 'PUT');
+    assert.equal(options.headers.get('X-GUploader-No-308'), 'yes');
+    const id = url.searchParams.get('upload_id'), range = options.headers.get('Content-Range');
+    ranges.push(range);
+    if (!sessions.has(id)) return new Response(null, { status: 404 });
+    const current = sessions.get(id);
+    if (range.startsWith('bytes */')) return incomplete(current.length);
+    const [, start, end, total] = /^bytes (\d+)-(\d+)\/(\*|\d+)$/.exec(range);
+    const payload = Buffer.from(await options.body.arrayBuffer());
+    assert.equal(Number(start), current.length);
+    assert.equal(Number(end) - Number(start) + 1, payload.length);
+    if (total === '*' || Number(end) + 1 < Number(total)) assert.equal(payload.length % chunk, 0);
+    const accepted = Buffer.concat([current, lose ? payload.subarray(0, chunk) : payload]);
+    sessions.set(id, accepted);
+    if (lose) { lose = false; throw new TypeError('lost chunk response'); }
+    if (total === '*' || accepted.length < Number(total)) return incomplete(accepted.length);
+    assert.equal(accepted.length, Number(total));
+    files.set('file-1', { id: 'file-1', name: file.name, mimeType: file.type, parents: [folderId],
+      ownedByMe: true, shared: false, trashed: false, size: String(accepted.length),
+      sha256Checksum: hash(accepted) });
+    return Response.json({ id: 'file-1' });
+  });
+  const request = { drive, id: 'run-1', folderId, signal };
+  return { ranges, files, loseResponseAfterOneChunk: () => { lose = true; },
+    expireSessions: () => sessions.clear(), invalidRange: () => { invalidRange = true; },
+    prefix: (store, available) => deliverQuestPrefix({ ...request, store, name: file.name, type: file.type,
+      available, read: async (start, end) => file.slice(start, end) }),
+    finish: store => deliverQuestBundle({ ...request, store, file }) };
+}
+
+const chunk = 256 * 1024;
+const recording = size => new File([Buffer.alloc(size, 19)], 'Tes_30_N_2026-11-13_haupt-15_r1.csv', { type: 'text/csv' });
+
+test('a growing recording keeps a tail and resumes at the acknowledged byte after reload', async () => {
+  const remote = partialDrive(recording(chunk * 4));
+  const first = localReceipts();
+  await remote.prefix(first, chunk);
+  assert.equal(first.rows.size, 0);
+  remote.loseResponseAfterOneChunk();
+  await assert.rejects(() => remote.prefix(first, chunk * 2 + 1), /lost chunk response/);
+  assert.equal(remote.files.size, 0);
+  const restarted = localReceipts(new Map(first.rows));
+  await remote.prefix(restarted, chunk * 3 + 1);
+  assert.equal(restarted.rows.get('run-1').offset, chunk * 3);
+  await remote.finish(restarted);
+  assert.deepEqual(remote.ranges, [
+    'bytes 0-524287/*', 'bytes */*', 'bytes 262144-786431/*',
+    'bytes 786432-1048575/1048576',
+  ]);
+  const receipt = restarted.rows.get('run-1');
+  assert.equal(receipt.verified, true);
+  assert.equal(receipt.uploadUrl, undefined);
+  assert.equal(remote.files.size, 1);
+  assert.equal(remote.files.get(receipt.driveId).sha256Checksum, hash(Buffer.alloc(chunk * 4, 19)));
+});
+
+test('an expired Drive upload session restarts using the same reserved file ID', async () => {
+  const remote = partialDrive(recording(chunk + 1));
+  const store = localReceipts();
+  await remote.prefix(store, chunk + 1);
+  remote.expireSessions();
+  await assert.rejects(() => remote.finish(store), /abgelaufen/);
+  assert.equal(store.rows.get('run-1').offset, 0);
+  assert.equal(store.rows.get('run-1').verified, false);
+  await remote.finish(store);
+  assert.deepEqual(remote.ranges, ['bytes 0-262143/*', 'bytes 262144-262144/262145', 'bytes 0-262144/262145']);
+  assert.equal(store.rows.get('run-1').driveId, 'file-1');
+  assert.equal(remote.files.size, 1);
+});
+
+test('invalid Drive acknowledgements leave the receipt unverified', async () => {
+  const remote = partialDrive(recording(chunk + 1));
+  const store = localReceipts();
+  remote.invalidRange();
+  await assert.rejects(() => remote.prefix(store, chunk + 1), /Bytebereich/);
+  assert.equal(store.rows.get('run-1').offset, 0);
+  assert.equal(store.rows.get('run-1').verified, false);
+});
+
+test('finalized CSV delivery sends a large local file in bounded requests', async () => {
+  const remote = partialDrive(recording(5 * chunk + 1));
+  const store = localReceipts();
+  await remote.finish(store);
+  assert.deepEqual(remote.ranges, ['bytes 0-1048575/1310721', 'bytes 1048576-1310720/1310721']);
+  assert.equal(store.rows.get('run-1').verified, true);
 });

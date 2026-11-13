@@ -1,4 +1,4 @@
-import { createQuestDrive, deliverQuestBundle, questDriveScope } from './quest-drive.js?v=1';
+import { createQuestDrive, deliverQuestBundle, questDriveScope } from './quest-drive.js?v=2';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;

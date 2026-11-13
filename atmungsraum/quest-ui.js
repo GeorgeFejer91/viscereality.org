@@ -2,7 +2,7 @@ import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=19';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=20';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
-import { mountQuestDrive } from './quest-drive-ui.js?v=1';
+import { mountQuestDrive } from './quest-drive-ui.js?v=2';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };

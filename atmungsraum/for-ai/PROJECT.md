@@ -26,6 +26,12 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
   authorization or upload sessions, and use the existing final export to repair
   missing ranges. Finalization must verify the file identity and hash.
+  - [x] Verify that the installed Pixel can upload an unknown-length prefix to
+    the private research Drive, read its acknowledged byte range, and finalize
+    the same file ID with the expected size and SHA-256. Implement bounded
+    resumable requests and persisted offsets in the PWA transport, including
+    for complete CSVs already staged on the phone.
+  - [ ] Connect the prefix uploader to durable Quest ranges and Pixel staging.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.
