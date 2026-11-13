@@ -1,5 +1,25 @@
 # Verification
 
+## Standalone Quest 2 media player check — 2026-11-13
+
+A temporary Android instrumentation package opened the installed signed
+0.1.19 APK on a physical Quest 2. It used the production catalog verifier
+and WAV writer to prepare all six authored timelines, then played them with
+Android MediaPlayer. The six durations matched the catalog at 68, 300, 600,
+900, 900 and 1,200 seconds. All six showed advancing position, a held position
+during pause, continued playback after resume, a completion callback and
+stop. This sweep sought near the end of each timeline to check completion.
+The two packaged condition MP3s passed start, pause, resume, loop and stop.
+The 68-second instruction timeline also played from start to its completion
+callback without a seek, including a pause and resume.
+
+The main 900-second timeline ran without seeking across calibration. The
+player first reported 26,029 and 41,016 ms at the two boundaries. The test
+muted player output and verified decoding and position using packaged
+placeholders. The headset was locked throughout. In-app controls, audio
+output, Wi-Fi handoff, H10, and paired Pixel and headset captures remain open.
+The temporary instrumentation package was removed after testing.
+
 ## Quest scenario player position — 2026-11-12
 
 Quest 0.1.19 samples the Android player's position once per second while an

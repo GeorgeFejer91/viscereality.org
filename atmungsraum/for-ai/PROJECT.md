@@ -72,6 +72,9 @@ development rehearsal is installed on Quest 2, and the installed APK hash
 matches the signed build. The headset lock screen is the launch blocker.
 The audio owner logs the actual Android player position for
 [scenario timing verification](VERIFICATION.md#quest-scenario-player-position--2026-11-12).
+All six authored timelines and both condition tracks passed a standalone
+[Android media test on Quest 2](VERIFICATION.md#standalone-quest-2-media-player-check--2026-11-13).
+The rehearsal app's launch and phone-driven playback still need device checks.
 The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
 and grant Atmungsraum Local Network Access for the Quest connection.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
