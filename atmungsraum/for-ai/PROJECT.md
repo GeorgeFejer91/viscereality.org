@@ -577,7 +577,8 @@ this repository.
   a 1,400,076-byte dated v2 CSV with zero writer drops. Its 8,187 data rows
   included ECG, all three ACC axes, breath and radius. The installed Pixel
   and Drive confirmed the Quest SHA-256, and independent inventory found
-  one private object for the run.
+  one private object for the run. An independent download through the
+  Android Drive app matched the Quest SHA-256 in Android Downloads.
 - [ ] Qualify the authored 15-minute main round against the current export
   limits. The five-minute completion and the v2 partial run passed on the
   physical devices. Lost successful Drive replies, quotas, shared-folder

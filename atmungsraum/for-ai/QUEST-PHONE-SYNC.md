@@ -86,6 +86,8 @@ matching hash, and an independent inventory showed one private CSV.
 The signed 0.1.27 release repeated the complete transfer with another
 dated CSV and matching Quest, Pixel and Drive hashes. Cold H10 setup
 required an operator ECG restart before the phone could start the test.
+An independent download of the latest dated CSV in Android Drive matched
+the Quest SHA-256 and is available in Android Downloads.
 
 ## Run identity and files
 
@@ -103,8 +105,10 @@ required an operator ECG restart before the phone could start the test.
    reserves the attempt index durably
    per participant and condition. It allocates a unique session UUID before
    writing samples. A participant edit applies to a later Arm.
-3. Quest writes and finalizes `<participant_id>_<condition><run>.csv`, for
-   example `Tes_30_N_probe2.csv`. Preserve actual H10 sample times, units,
+3. Quest writes and finalizes `<participant_id>_<YYYY-MM-DD>_<scenario_id>_r<run>.csv`.
+   For example, `Tes_30_N_2026-11-13_probe-5_r7.csv` contains the participant ID,
+   the UTC Start date, the authored session name and attempt seven.
+   Preserve actual H10 sample times, units,
    pauses and signal gaps. A finalized partial run retains its abort reason
    and reserved index. After an app restart, the next attempt gets a new UUID
    and an incremented index. A filename is for people. The native run ID is
