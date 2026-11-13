@@ -57,12 +57,12 @@ Play Protect blocked Android CLI's instrumentation server, so its UI hierarchy
 check stopped at helper installation. Maestro 2.12.1 ran on Windows, but its
 [offline-device discovery bug](https://github.com/mobile-dev-inc/Maestro/issues/3706)
 hid the Pixel while the shared ADB server listed an offline emulator. No
-Maestro flow ran. The physical PWA flow and headset/H10 acceptance remain open.
+Maestro flow ran. Physical Pixel installation and standalone launch passed
+on 2026-11-13. The headset/H10 and phone controller flow remain open.
 
-Next for phone acceptance, reopen the installed Atmungsraum PWA in standalone
-mode on the Pixel and verify its foreground state. Continue with the existing
-Quest 2 checklist and use an explicit device ID for each phone command. Retry
-Maestro when the offline emulator is absent or a release fixes device discovery.
+Continue with the existing Quest 2 checklist and use an explicit device ID
+for each phone command. Retry Maestro when the offline emulator is absent
+or a release fixes device discovery.
 
 GitHub main received `041f360` from an isolated sparse checkout because the
 primary checkout's cloud-backed Git metadata was unavailable. Exact
@@ -605,9 +605,10 @@ headset/H10 qualification remain acceptance work for the overall product goal.
   URL, smartphone rendering and existing runtime checks; review the exact diff.
 - [x] Publish only this increment, follow its exact Pages deployment and verify
   live manifest/icons and app behavior. Preserve concurrent sharing work.
-- [ ] Obtain installation/relaunch acceptance on the user's target phone:
-  record phone/browser, Viscereality icon, canonical app and standalone window.
-  Keep any other untested phone platforms explicitly unqualified.
+- [x] Install and launch from the Viscereality icon on the target Pixel 10
+  running Android 16. Chrome installed the canonical Atmungsraum web app.
+  Android resolved the installed WebAPK launcher and the foreground WebAPK
+  activity opened without the browser address bar. iPhone remains untested.
 
 Entry: canonical `main` at `5ae2d5f`, equal to fetched `origin/main`. Sharing
 changes are already unfinished in the worktree and must not be swept into this
@@ -635,13 +636,13 @@ on the public origin with no page errors. Its explicit user display preference
 is recorded. Ignored receipts: `pwa-live-02217fe.json`, `pwa-live-results.json`
 and `pwa-live-phone.png` under `output/playwright/`.
 
-The user explicitly sets the finish-PWA goal active in this chat. Automated and
-publication checks are complete; the final target-phone installation/relaunch
-question is pending. Do not mark the PWA goal complete without that result.
-The same acceptance blocker remains on recheck: ADB lists no connected device,
-and no connected phone-testing tool is available. The existing phone-test
-question has no result. Further desktop checks cannot supply physical-phone
-acceptance; resume when the user supplies that result or a phone is available.
+The earlier physical-device blocker cleared on 2026-11-13. Chrome's **Add to
+home screen → Install** flow created an Atmungsraum launcher icon on the
+Pixel 10. Opening the icon launched the installed web app in standalone mode
+and showed the shared-password prompt. Mobile MCP supplied the phone input.
+The standard RustDesk USB session showed live frames but reported keyboard
+permission off. The separate RustDeskMCP endpoint was disabled. Next, use the
+installed app for the existing attended Quest 2 and H10 checks.
 
 Documentation release `e2953d960bc61277b08fff81329f1b0be214985a` completes
 exact Pages run 42306629457 with deployment API status `succeed`. Both changed
