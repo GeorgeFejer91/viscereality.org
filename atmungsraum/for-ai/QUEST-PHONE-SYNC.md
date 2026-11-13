@@ -39,6 +39,33 @@ copy is the input to automatic delivery to the research Google Drive.
    Use **Jetzt abgleichen** if needed. If Google authorization expired,
    reconnect Drive. Confirm delivery before relying on the Drive copy.
 
+## Bench verification on Quest 2 and Pixel 10
+
+The signed 0.1.24 rehearsal starts in Remote. The installed Pixel Chrome
+157.0.8103.50 WebAPK discovers it over Bluetooth, then opens its authenticated
+Wi-Fi gateway. Close any floating overlays if Chrome blocks Local Network
+Access. A Quest APK update that changes the trusted build fingerprint
+requires the operator to set up the connection again. A restart on the same
+build can rejoin the saved address.
+
+The first two bench recordings used synthetic participant details and live
+H10 signals. The first exercised the 68-second instruction timeline, manual
+Pause and Resume, and recovery after ECG interruption. The second finished
+early after a Quest restart and Pixel PWA reload. Quest saved both attempts
+with distinct UUIDs, successive attempt indexes and zero dropped writer
+records. SHA-256 matched for the CSV, ECG and ACC across Quest and the
+Pixel's IndexedDB. The PWA verified the ZIP checksums in the private Drive
+folder, and independent Drive inventory reported one object for each run.
+The first ZIP was 22,301,743 bytes and the second was 2,865,249 bytes.
+A third 2,842,132-byte ZIP finalized with the Pixel controller in the
+background. Drive still contained only two objects while the phone was
+away. Reopening the installed PWA and renewing authorization caught up
+automatically. The Android Drive app showed all three objects in the private
+folder. Its independent download matched the Pixel ZIP SHA-256. Each
+downloaded CSV, ECG and ACC entry matched the original on Quest. Android
+Files opened the first downloaded CSV's file details, and the file hash
+matched the Quest original. The bench Pixel has no CSV viewer.
+
 ## Run identity and files
 
 1. The operator enters participant details in Atmungsraum. Use the existing

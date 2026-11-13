@@ -449,14 +449,23 @@ this repository.
   encoder that omitted the participant plan. The unusually long armed wait
   also put the legacy run above the 128 MiB native export cap. Repeat with
   the fixed encoder and start immediately after Arm.
-- [ ] Start and finish a participant session. Check the original ECG, ACC and
-  participant CSV on Quest.
-- [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
-  reopen a participant CSV from Android Files.
+- [x] Start, Pause, Resume and Finish the 68-second instruction scenario from
+  the installed Pixel on Quest 2 build 0.1.24. The signed Quest Arm bound the
+  participant to the native writer. A temporary ECG interruption paused
+  progress and the session resumed after the live stream returned. The
+  terminal receipt saved the participant CSV and both sensor streams with
+  zero dropped writer records. The instruction scenario records a
+  stopped-early disposition when finished manually.
+- [x] Match Quest CSV, ECG and ACC SHA-256 hashes to the Pixel PWA's retained
+  ZIP. The Pixel downloaded the CSV into Android Downloads. Its SHA-256
+  matched the Quest CSV and it contained 12,506 lines.
+- [x] Reopen the downloaded participant CSV in Android Files. The interface
+  displayed its filename, Downloads path and size. Shell readback verified
+  the original bytes. The Pixel has no CSV viewer to render its rows.
 - [x] Preserve the exact native ECG and ACC bytes alongside the existing
   participant CSV. Signed synthetic transfers and durable browser restart
   readback matched both stream hashes in three browser layouts. Physical
-  sensor validation is still required.
+  readback subsequently matched both streams across all three bench runs.
 - [x] Implement foreground delivery from the committed recording store. Keep
   pending uploads and Drive IDs durable and verify folder, owner, size and
   SHA-256 before saving a delivery receipt.
@@ -467,7 +476,17 @@ this repository.
   a usable token. A second account selection returned the scoped token. The
   PWA verified the account and folder, and a separate Drive metadata query
   confirmed the private destination **Atmungsraum – Quest-Aufnahmen**.
-- [ ] Verify real Drive upload and readback of a finalized participant bundle.
+- [x] Verify real automatic Drive upload and readback of a finalized participant
+  bundle. The Pixel committed the 22,301,743-byte ZIP in IndexedDB, uploaded
+  it while idle and stored a verified receipt for the same SHA-256. Separate
+  Drive metadata confirmed one ZIP of the same size in the private folder.
+  The archive and delivery receipt survived a Quest app restart and a Pixel
+  PWA reload. The Pixel rejoined via its saved address and did not reupload it.
+- [x] Repeat the same condition across a Quest process restart and Pixel PWA
+  reload, then verify catch-up after a third run finishes with the PWA
+  backgrounded. The private Drive folder held exactly three verified ZIPs,
+  one per finalized run. The third ZIP downloaded in Android Drive matched
+  the Pixel bundle and the three source files on Quest byte for byte.
 - [x] Run the targeted automated sync and fault-injection tests. Eight passed,
   including 40 simulated Drive bundles through lost responses and restarts.
 - [ ] Complete the attended Quest + worn H10 + Pixel + real Drive stress pass
