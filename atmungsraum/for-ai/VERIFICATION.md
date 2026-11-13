@@ -1,5 +1,45 @@
 # Verification
 
+## Full Haupt-Runde on Quest 2 and Pixel — 2026-11-13
+
+Quest 2 ran signed APK 0.1.27 in Remote. The installed Pixel 10 PWA used
+release `20261113-polar-only`. The operator entered a synthetic ID, selected
+Szenario A and `haupt-15`, and used the phone for Start, Pause, Resume and
+Finish. Native events confirmed official Start, audio start and audio end,
+the 900-second completion threshold, and finalization. The first manual
+Pause held the phone clock at 1:17 while ECG stayed live. The phone observed
+Pause and Resume in about 1.3 s and 1.7 s respectively, including status
+polling. Sampled Quest OpenXR status stayed focused with frames advancing
+at roughly 72 per second.
+
+The live run used `polar-acc` as the applied breath-tracking source. Quest
+telemetry showed valid inhale, hold and exhale classifications from the
+live sensor. The renderer applied radii across its configured 1.0–2.0 m
+range. In one aligned live window, 3,527 valid Polar assessment and
+renderer-radius observations within 14 ms had a Pearson correlation of
+0.74 between normalized breath volume and applied radius. This describes
+the observed software response during the bench test.
+
+The run included nine pause/resume pairs and about 4 min 26 s of pauses.
+One was the deliberate phone control test. Signal freshness interruptions
+accounted for the other holds. At 13:21 a confirmed Resume was followed
+by another native hold before the PWA observed Running. The phone remained
+waiting for confirmation. After checking the signed Resume receipt and
+the latest paused state for the same generation, the operator cleared
+that one resolved tab receipt and reloaded the PWA. The Quest recording
+stayed active. The phone rejoined it, and a new Resume reached Running.
+The full authored audio ended and the operator finished the same run after
+19 min 32 s of elapsed recording time.
+
+Quest finalized with `saved:true`, `completed:true` and zero writer drops.
+All six retained stream files matched the lengths in the native receipt
+and totaled 368,644,569 bytes. The single v2 CSV was 93,987,682 bytes. A
+streaming readback independently reproduced its SHA-256 and parsed 542,144
+data rows. The CSV included 148,026 ECG readings, 228,976 three-axis
+accelerometer readings, 80,973 breath classifications, 84,168 applied
+radius records and one completed terminal record. The opening instruction,
+calibration, second instruction, guided breathing and outro were present.
+
 ## Saved Quest connection — 2026-11-13
 
 All 87 Node tests, six scenario JSON/CSV pairs, UI and context checks passed.

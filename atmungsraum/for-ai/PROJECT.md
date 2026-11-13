@@ -579,12 +579,20 @@ this repository.
   and Drive confirmed the Quest SHA-256, and independent inventory found
   one private object for the run. An independent download through the
   Android Drive app matched the Quest SHA-256 in Android Downloads.
-- [ ] Qualify the authored 15-minute main round against the current export
-  limits. The five-minute completion and the v2 partial run passed on the
-  physical devices. Lost successful Drive replies, quotas, shared-folder
-  permission and corrupt chunks have automated coverage. Physical hotspot,
-  changed-address and repeat pairing timings remain open in
-  [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
+- [x] Complete the authored 15-minute main round on Quest 2 build 0.1.27
+  from the installed Pixel. Start, Pause, Resume and Finish reached Quest.
+  Live Polar accelerometer tracking drove the applied Viscereality radius.
+  The native receipt recorded completion and zero writer drops. Quest
+  retained all six streams and the 93,987,682-byte v2 CSV.
+  See [full Haupt-Runde verification](VERIFICATION.md#full-haupt-runde-on-quest-2-and-pixel--2026-11-13).
+- [ ] Verify the full main-round CSV against the committed Pixel copy and
+  the private Drive object.
+- [ ] Reproduce and fix the phone's pending Resume state when a confirmed
+  Resume is immediately followed by another native Polar hold. Keep the
+  command journal and the no-replay rule for uncertain outcomes.
+- [ ] Qualify physical hotspot, changed-address and repeat pairing timings
+  in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md). Lost successful Drive replies,
+  quotas, shared-folder permission and corrupt chunks have automated coverage.
 
 Both devices were reachable over USB. The Pixel WebAPK reloaded the live
 password-free release in standalone mode and opened VR-Probe. The installed
