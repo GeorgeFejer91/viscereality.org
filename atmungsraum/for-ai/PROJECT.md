@@ -15,10 +15,15 @@ password retry, cancellation and saved credential lookup, and confirmed the
 Pages-only upload limit without a request to Discord or Wormhole. Escape
 stays within the delivery dialog instead of invoking the playback shortcut.
 The Node and context checks passed.
-The publication branch is based on current GitHub main in a clean sparse
-checkout. The primary checkout has unrelated index changes and unreadable
-cloud-backed files. The existing Quest 2 and Pixel hardware checklist below
-remains active.
+
+Runtime commits `e48c3ef` and `ec7c736` reached GitHub main from the clean
+`codex/atmungsraum-open-startup` sparse checkout. The containing commit
+`e013fc6` passed [Pages run 43418701040](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43418701040).
+Both public home URLs and four versioned runtime assets matched the commit
+bytes. The live Chromium matrix repeated the startup, CSV download, and
+synthetic send-time credential checks. The primary checkout retains unrelated
+index changes and unreadable cloud-backed files. Continue the existing Quest 2
+and Pixel hardware checklist below.
 
 ### RustDesk on Quest 2 — 2026-11-13
 
