@@ -10,9 +10,13 @@ the running client window. The executable and DLL are unsigned. The running
 client bound only to loopback and returned HTTP 503 with MCP disabled by
 default. No RustDesk MCP session with the Pixel was run.
 
-Codex discovered `rustdesk-mcp-operator`. The matching [project copy and launch
+Codex discovered `rustdesk-mcp-operator`. The [project copy and launch
 route](SKILLS.md#rustdesk-remote-operation) retain upstream provenance, license
-and notice. This change uses the clean publication checkout based on `7c92bdf`.
+and notice. GitHub main received `4689849` from the clean publication checkout.
+[Pages run 43412221700](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43412221700)
+succeeded for that commit. The route, skill, workflow reference, license,
+notice, skill metadata and Atmungsraum home passed live checks.
+
 The primary checkout still has unrelated Git index changes. The active phone
 and Quest checklist remains open. For RustDesk qualification, verify remote
 frame capture and one non-destructive input action on the Pixel.
