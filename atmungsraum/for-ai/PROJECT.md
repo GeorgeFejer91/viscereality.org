@@ -74,6 +74,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   Start with a short physical probe to measure the actual checkpoint-to-Drive
   delay and validate stop/resume markers. Quest had zero H10 scan candidates
   and reported neither stream fresh during the release check.
+- [x] Reproduce the earlier phone lock after Resume immediately followed by a
+  new Polar hold. Clear the pending control on a confirmed signed receipt
+  and a fresh same-generation paused state with the Polar latch set. The
+  86-test PWA suite includes this case. Retest it during the physical probe.
 
 ### Polar H10 recording and single participant CSV — 2026-11-13
 

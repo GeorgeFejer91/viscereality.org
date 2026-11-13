@@ -234,6 +234,28 @@ test('a lost Arm reply is reconciled without starting or replaying after reconne
   assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start']);
 });
 
+test('a confirmed Resume followed by a new Polar hold releases the phone controls', async () => {
+  const paused = { ...snapshot('PAUSED', 3, 8), participant_arm: 1, pi: { r: true, f: true, h: true } };
+  const requests = [];
+  const quest = {
+    owner, initial: paused, status: async () => paused,
+    async command(request) {
+      requests.push(request);
+      paused.r += 2;
+      paused.pi.f = false;
+      return { v: 1, id: request.id, state: 'confirmed' };
+    },
+    close() {},
+  };
+  const rehearsal = new QuestRehearsal();
+  rehearsal.attach(quest);
+  await rehearsal.run('play');
+  assert.deepEqual(requests.map(request => request.op), ['resume']);
+  assert.equal(rehearsal.state.status.p, 'PAUSED');
+  assert.equal(rehearsal.state.pending, false);
+  assert.equal(rehearsal.state.unknown, false);
+});
+
 test('recenter uses a native frame receipt and never replays after a lost reply', async () => {
   const requests = [];
   let outcome = 'pending';

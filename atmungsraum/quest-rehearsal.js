@@ -138,12 +138,14 @@ export class QuestRehearsal {
     }
     if (receipt.state !== 'confirmed') return false;
     if (op !== 'recenter' && status.pending) return false;
+    const polarHold = (op === 'start' || op === 'resume') && status.p === 'PAUSED'
+      && status.rec && status.pi?.r === true && status.pi.h === true;
     if (setupOperations.has(op)) {
       if (status.g !== generation || !setupConfirmed(status, this.pending)) return false;
     } else if (op !== 'recenter') {
       const generationMatches = op === 'arm' ? status.g > generation
         : op === 'save-next' ? !status.rec : status.g === generation;
-      if (status.p !== desiredPhase[op] || !generationMatches
+      if ((status.p !== desiredPhase[op] && !polarHold) || !generationMatches
         || op !== 'save-next' && status.c !== (this.pending.condition ?? conditions[0])) return false;
     }
     this.remember(null);
