@@ -558,6 +558,18 @@ this repository.
 - [x] Align the Quest export limit with the v2 single-CSV payload. Keep the
   128 MiB combined limit for older CSV and separate sensor files. All 74
   focused native recording tests passed, including the v2 size regression.
+  The same-signer 0.1.27 APK matched the installed SHA-256 and submitted
+  OpenXR frames in Remote. The installed PWA loaded the exact live
+  `20261113-polar-streams` release after
+  [Pages run 43460541864](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43460541864)
+  deployed `19be1ac`. The fresh Bluetooth join reached the signed gateway.
+  Cold H10 setup initially returned an unknown ECG start outcome while ACC
+  was live. An operator started ECG using the headset's existing command
+  and confirmed both streams before Start. The same signed 0.1.27 run saved
+  a 1,400,076-byte dated v2 CSV with zero writer drops. Its 8,187 data rows
+  included ECG, all three ACC axes, breath and radius. The installed Pixel
+  and Drive confirmed the Quest SHA-256, and independent inventory found
+  one private object for the run.
 - [ ] Qualify the authored 15-minute main round against the current export
   limits. The five-minute completion and the v2 partial run passed on the
   physical devices. Lost successful Drive replies, quotas, shared-folder

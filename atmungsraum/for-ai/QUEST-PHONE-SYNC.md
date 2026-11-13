@@ -83,6 +83,9 @@ renderer radius after Start, Pause, Resume and Finish. The CSV contained
 the first media PUT before Drive received it. The PWA retained its pending
 receipt and retried the same Drive ID automatically. Drive confirmed the
 matching hash, and an independent inventory showed one private CSV.
+The signed 0.1.27 release repeated the complete transfer with another
+dated CSV and matching Quest, Pixel and Drive hashes. Cold H10 setup
+required an operator ECG restart before the phone could start the test.
 
 ## Run identity and files
 
