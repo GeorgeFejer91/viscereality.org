@@ -88,6 +88,12 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     deployed `0720992`. The refreshed Pixel opened a new upload session under
     the same ID after a bad synthetic prefix. Drive verified the corrected
     262,149-byte file and the fixture trashed it.
+  - [x] Verify durable recovery on the installed Pixel through a real Wi-Fi
+    interruption and WebAPK reload. After reauthorization, staging resumed
+    at byte 524,289 and Drive resumed at byte 524,288 within the original
+    upload session. Drive verified the 1,310,725-byte result under the same
+    file ID. The test used synthetic recording ranges while Quest was idle.
+    See [device recovery evidence](QUEST-PHONE-SYNC.md#pixel-wi-fi-and-reload-recovery).
   - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,

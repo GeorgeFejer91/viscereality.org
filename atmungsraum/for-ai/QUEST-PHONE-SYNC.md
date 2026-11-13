@@ -45,6 +45,27 @@ controller. The Quest CSV projection is active in both conditions.
 See the [active checklist](PROJECT.md#live-recording-sync-to-google-drive)
 and [Drive resumable upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 
+### Pixel Wi-Fi and reload recovery
+
+The installed Pixel PWA release `20261113-live-repair` staged 524,289
+synthetic bytes in IndexedDB. Drive accepted the first 524,288 bytes. The
+fixture deliberately dropped that acknowledgement after the real response
+arrived, leaving the pending range on disk.
+
+Pixel Wi-Fi was disabled at the device. A signed Quest gateway attempt
+failed. The phone rejoined its original network, reached Quest, and reloaded
+the installed PWA. After reconnecting the authorized Drive account, staging
+resumed at byte 524,289. A Drive status query recovered the accepted range
+and the existing upload session resumed at byte 524,288. Drive acknowledged
+1,048,576 bytes before finalization, then verified the 1,310,725-byte file
+with the expected SHA-256 under the same file ID. The fixture trashed the
+synthetic file and cleared its local entries.
+
+This test used real Wi-Fi, the real enrolled Quest connection and the
+designated private Drive. Quest stayed idle and the data ranges were
+synthetic. Repeat the recovery during a physical recording to measure
+the effect on live Polar acquisition, VR biofeedback and phone controls.
+
 ### Paired physical trial measurements
 
 Use a synthetic participant ID and the full `haupt-15` audio on the same APK,
