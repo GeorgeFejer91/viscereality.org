@@ -458,7 +458,7 @@ index 00000000..b509cf18
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..c53d51dc 100644
+index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..3fde4787be776459e9e8ca98181b64c1cf943624 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -686,6 +686,7 @@ enum ParsedOperation {
@@ -510,7 +510,55 @@ index ee0417f3..c53d51dc 100644
                      }
                  }
              }
-@@ -4210,6 +4216,36 @@ pub(crate) fn current_generation() -> u64 {
+@@ -2956,9 +2962,12 @@ impl ExperimentSessionRuntime {
+         };
+         let generation = p.generation;
+         let epoch = self.runtime_epoch;
++        let live = crate::session_recording_export::is_live_query(&request["query"]);
++        let session = p.session_key.clone().filter(|_| live);
+         drop(p);
+         let projection = Arc::clone(&self.projection);
+         let identity = Arc::clone(&self.immersive_owner_identity);
++        let guard_session = session.clone();
+         let guard = Arc::new(move || {
+             if crate::experiment_control_mode::read() != mode
+                 || identity.load(Ordering::Acquire) != owner
+@@ -2968,15 +2977,31 @@ impl ExperimentSessionRuntime {
+             projection.try_read().ok().is_some_and(|p| {
+                 p.runtime_epoch == epoch
+                     && p.generation == generation
+-                    && p.phase == SessionPhase::Idle
+-                    && p.control_state == crate::experiment_session::ExperimentControlState::Idle
+-                    && p.session_key.is_none()
++                    && if live {
++                        guard_session.is_some() && p.session_key == guard_session
++                            && p.phase == SessionPhase::Active && p.official_started_ns.is_some()
++                            && matches!(p.control_state,
++                                crate::experiment_session::ExperimentControlState::Running
++                                | crate::experiment_session::ExperimentControlState::Paused)
++                    } else {
++                        p.phase == SessionPhase::Idle
++                            && p.control_state == crate::experiment_session::ExperimentControlState::Idle
++                            && p.session_key.is_none()
++                    }
+                     && p.initialization_status == "ready"
+                     && p.recovery_status == "complete"
+                     && p.recording_root_status == "ready"
+                     && p.shutdown_status == "not-requested"
+             })
+         });
++        if live {
++            let Some(session) = session else { return unavailable() };
++            return match crate::session_recording_export::live_query(&self.recording_root, &session,
++                &request["query"], &*guard) {
++                Ok(value) => value.to_string(),
++                Err(reason) => json!({"v":1,"state":"unavailable","reason":reason}).to_string(),
++            };
++        }
+         service
+             .query(
+                 &self.recording_root,
+@@ -4210,6 +4235,36 @@ pub(crate) fn current_generation() -> u64 {
      })
  }
  
@@ -547,7 +595,7 @@ index ee0417f3..c53d51dc 100644
  pub(crate) fn current_presentation() -> PresentationState {
      let Ok(runtime) = runtime() else {
          return PresentationState::Experimenter;
-@@ -4578,6 +4614,16 @@ fn parse_mutating_command(
+@@ -4578,6 +4633,16 @@ fn parse_mutating_command(
              if object.contains_key("breath_guidance") {
                  start_fields.push("breath_guidance");
              }
@@ -564,7 +612,7 @@ index ee0417f3..c53d51dc 100644
              require_exact_fields(object, &start_fields).map_err(|reason| failure(reason))?;
              let condition_value = object
                  .get("condition")
-@@ -4632,6 +4678,7 @@ fn parse_mutating_command(
+@@ -4632,6 +4697,7 @@ fn parse_mutating_command(
                  condition,
                  completion_threshold_ns: threshold_ms.saturating_mul(1_000_000),
                  utc_ns,
@@ -683,16 +731,17 @@ index 3cbbfb33e6524113067c9bae6084ed3d70842422..773a44f9689ce25a2cb3faf6ad62e8fa
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
 diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
-index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2fd7d9b73 100644
+index faac691298ebdb58a93c773e1555128216415f14..856b5c6414d772e9c26e2929e50191990adf7f46 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export.rs
-@@ -3,12 +3,16 @@
+@@ -3,12 +3,17 @@
  //! the caller's export IO lane and hold no runtime/session/render lock.
  use crate::{
      session_recording_clock::SessionTimestampKey,
 +    session_recording_contract::SESSION_STREAM_FILES,
 +    session_recording_participant::{
-+        RECOVERED_CSV_PREFIX, RECOVERY_POLICY, RECOVERY_RECEIPT, csv_descriptor, valid_csv_filename,
++        RECOVERED_CSV_PREFIX, RECOVERY_POLICY, RECOVERY_RECEIPT, csv_descriptor, live_csv,
++        valid_csv_filename, valid_uuid,
 +    },
      session_recording_recovery::{
 -        recording_stream_name, validate_finalized_core, validate_recording_root_no_links,
@@ -706,7 +755,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
  use sha2::{Digest, Sha256};
  use std::{
      collections::BTreeSet,
-@@ -16,13 +20,16 @@ use std::{
+@@ -16,13 +21,17 @@ use std::{
      io::{Read, Seek, SeekFrom},
      path::{Path, PathBuf},
      sync::{
@@ -718,13 +767,14 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      thread,
  };
  pub(crate) const MAX_CHUNK: u64 = 32768;
++pub(crate) const MAX_LIVE_CHUNK: u64 = MAX_CHUNK;
  pub(crate) const MAX_EXPORT_BYTES: u64 = 128 * 1024 * 1024;
 +// Full participant custody also includes renderer and tracking streams.
 +pub(crate) const MAX_PARTICIPANT_CORE_BYTES: u64 = 1024 * 1024 * 1024;
  const CORE: [&str; 8] = [
      "manifest.json",
      "final.json",
-@@ -202,6 +209,10 @@ fn open_checked(path: &Path, regular: bool) -> Result<(File, Stamp), String> {
+@@ -202,6 +211,10 @@ fn open_checked(path: &Path, regular: bool) -> Result<(File, Stamp), String> {
      let metadata = stamp(&file, regular)?;
      Ok((file, metadata))
  }
@@ -735,7 +785,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
  const MAX_DIRECTORY_ENTRIES: usize = 65536;
  fn collect_stream_inventory(
      mut entries: impl Iterator<Item = Result<(std::ffi::OsString, bool), String>>,
-@@ -374,9 +385,14 @@ impl Directory {
+@@ -374,9 +387,14 @@ impl Directory {
          if name.is_empty()
              || name == "."
              || name == ".."
@@ -751,7 +801,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
          {
              return Err(denied());
          }
-@@ -505,7 +521,9 @@ impl Custody {
+@@ -505,7 +523,9 @@ impl Custody {
      }
  }
  struct Pinned {
@@ -762,7 +812,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      file: File,
      stamp: Stamp,
      digest: String,
-@@ -520,7 +538,7 @@ impl Prepared {
+@@ -520,7 +540,7 @@ impl Prepared {
          self.custody.unchanged()?;
          for p in &self.files {
              if stamp(&p.file, true)? != p.stamp
@@ -771,7 +821,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
              {
                  return Err(denied());
              }
-@@ -547,7 +565,7 @@ impl Prepared {
+@@ -547,7 +567,7 @@ impl Prepared {
              .iter()
              .find(|p| p.name == name)
              .ok_or_else(denied)?;
@@ -780,7 +830,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
              return Err("recording-chunk-range-invalid".into());
          }
          self.unchanged()?;
-@@ -633,7 +651,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+@@ -633,7 +653,7 @@ impl RecordingFiles for PinnedFiles<'_> {
          if stamp(&p.file, true)? != p.stamp {
              return Err(denied());
          }
@@ -789,7 +839,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      }
      fn reader(&mut self, name: &str) -> Result<Box<dyn Read + '_>, String> {
          self.len(name)?;
-@@ -645,7 +663,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+@@ -645,7 +665,7 @@ impl RecordingFiles for PinnedFiles<'_> {
          p.file.seek(SeekFrom::Start(0)).map_err(|_| denied())?;
          Ok(Box::new(CheckedRead {
              file: &mut p.file,
@@ -798,7 +848,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
              check: self.check,
          }))
      }
-@@ -654,6 +672,7 @@ fn validate_pinned_core(
+@@ -654,6 +674,7 @@ fn validate_pinned_core(
      files: &mut [Pinned],
      streams: &BTreeSet<String>,
      key: SessionTimestampKey,
@@ -806,7 +856,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      check: &dyn Fn() -> bool,
  ) -> Result<(Value, crate::session_recording_recovery::RecoveredEntry), String> {
      validate_finalized_core(
-@@ -664,7 +683,7 @@ fn validate_pinned_core(
+@@ -664,7 +685,7 @@ fn validate_pinned_core(
          },
          key,
          1024 * 1024,
@@ -815,7 +865,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      )
      .map_err(|_| denied())
  }
-@@ -672,16 +691,23 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -672,16 +693,23 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
      check_owner(check)?;
      let key = SessionTimestampKey::parse(id).map_err(|_| denied())?;
      let custody = Custody::open(root, id)?;
@@ -847,7 +897,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
              file,
              stamp,
              digest: String::new(),
-@@ -693,39 +719,111 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -693,39 +721,111 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
          custody,
          files,
      };
@@ -976,7 +1026,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
      let digest = format!("{:x}", Sha256::digest(manifest.to_string().as_bytes()));
      manifest["manifest_id"] = json!(digest);
      if manifest.to_string().len() > 30000 {
-@@ -734,6 +832,104 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -734,6 +834,104 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
      prepared.manifest = manifest;
      Ok(prepared)
  }
@@ -1081,7 +1131,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
  fn base64(bytes: &[u8]) -> String {
      const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
      let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-@@ -803,7 +999,7 @@ fn parse(v: &Value) -> Result<Query, String> {
+@@ -803,7 +1001,7 @@ fn parse(v: &Value) -> Result<Query, String> {
                  return Err("recording-query-invalid".into());
              }
              let file = s("file")?;
@@ -1090,7 +1140,81 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
                  return Err("recording-query-invalid".into());
              }
              let offset = v["offset"]
-@@ -863,13 +1059,21 @@ fn list(
+@@ -824,6 +1022,73 @@ fn parse(v: &Value) -> Result<Query, String> {
+         _ => Err("recording-query-invalid".into()),
+     }
+ }
++
++pub(crate) fn is_live_query(request: &Value) -> bool {
++    matches!(request["query"].as_str(), Some("live-describe" | "live-read"))
++}
++
++pub(crate) fn live_query(root: &Path, active_id: &str, request: &Value, check: &dyn Fn() -> bool)
++    -> Result<Value, String> {
++    check_owner(check)?;
++    SessionTimestampKey::parse(active_id).map_err(|_| denied())?;
++    let invalid = || "recording-live-query-invalid".to_owned();
++    let fields = request.as_object().ok_or_else(invalid)?;
++    let range = match request["query"].as_str() {
++        Some("live-describe") if fields.len() == 1 => None,
++        Some("live-read") if fields.len() == 5 && request["id"] == active_id => {
++            let uuid = request["session_id"].as_str().filter(|uuid| valid_uuid(uuid)).ok_or_else(invalid)?;
++            let offset = request["offset"].as_u64().filter(|offset| *offset < MAX_EXPORT_BYTES).ok_or_else(invalid)?;
++            let length = request["length"].as_u64().filter(|length| (1..=MAX_LIVE_CHUNK).contains(length)).ok_or_else(invalid)?;
++            Some((uuid, offset, length))
++        }
++        _ => return Err(invalid()),
++    };
++    let (parent, directory) = Custody::root(root)?;
++    let session = directory.directory(active_id)?;
++    let path = session.path.join(live_csv::LIVE_PREFIX);
++    match fs::symlink_metadata(&path) {
++        Err(error) if error.kind() == std::io::ErrorKind::NotFound && range.is_none() => {
++            check_owner(check)?;
++            return Ok(json!({"v":1,"state":"preparing"}));
++        }
++        _ => {}
++    }
++    let (receipt, _) = session.child(live_csv::LIVE_PREFIX, true)?;
++    let prefix: Value = serde_json::from_reader(receipt.take(1024)).map_err(|_| denied())?;
++    let size = prefix["size"].as_u64().filter(|size| (1..=MAX_EXPORT_BYTES).contains(size)).ok_or_else(denied)?;
++    let name = prefix["name"].as_str().filter(|name| valid_csv_filename(name)).ok_or_else(denied)?;
++    let session_id = prefix["session_id"].as_str().filter(|uuid| valid_uuid(uuid)).ok_or_else(denied)?;
++    let checkpoint = prefix["checkpoint"].as_u64().filter(|value| *value > 0).ok_or_else(denied)?;
++    let sha = prefix["sha256"].as_str().filter(|value| value.len() == 64
++        && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))).ok_or_else(denied)?;
++    if prefix["schema_version"] != live_csv::SCHEMA_VERSION {
++        return Err(denied());
++    }
++    let (mut file, original) = session.child(live_csv::LIVE_CSV, true)?;
++    if original.len < size {
++        return Err(denied());
++    }
++    let result = match range {
++        None => json!({"v":1,"state":"live","id":active_id,"schema_version":live_csv::SCHEMA_VERSION,
++            "session_id":session_id,"name":name,"size":size,"sha256":sha,"checkpoint":checkpoint}),
++        Some((uuid, offset, length)) => {
++            if uuid != session_id || offset >= size || length > size - offset {
++                return Err(invalid());
++            }
++            let mut bytes = vec![0; length as usize];
++            file.seek(SeekFrom::Start(offset)).and_then(|_| file.read_exact(&mut bytes)).map_err(|_| denied())?;
++            json!({"v":1,"state":"live-chunk","id":active_id,"session_id":session_id,"offset":offset,
++                "length":length,"data":base64(&bytes),"sha256":format!("{:x}",Sha256::digest(&bytes))})
++        }
++    };
++    Custody::root_current(&parent, &directory)?;
++    if directory.directory(active_id)?.stamp.identity != session.stamp.identity
++        || session.child(live_csv::LIVE_CSV, true)?.1.identity != original.identity {
++        return Err(denied());
++    }
++    check_owner(check)?;
++    Ok(result)
++}
+ fn list(
+     root: &Path,
+     before: &str,
+@@ -863,13 +1128,21 @@ fn list(
          let eligible = prepare(root, &id, check);
          let entry = match eligible {
              Ok(p) => {
@@ -1115,7 +1239,7 @@ index faac691298ebdb58a93c773e1555128216415f14..57f8aa11894b205d9d64c9e5210d79d2
                  {
                      "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb107504fd 100644
+index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..75df819211917d5b4dc40874644356eff5bd96b4 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
@@ -1156,7 +1280,7 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb
          &check,
      );
      assert!(result.is_err());
-@@ -694,3 +700,167 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+@@ -694,3 +700,208 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
      drop(prepared);
      fs::remove_dir_all(root.parent().unwrap()).unwrap();
  }
@@ -1223,12 +1347,50 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb
 +}
 +
 +#[test]
++fn live_export_reads_only_committed_ranges_from_the_current_run() {
++    use crate::session_recording_participant::live_csv::{LIVE_CSV, LIVE_PREFIX};
++    use crate::session_recording_writer::tests::temp_root;
++    use std::io::Write;
++    let root = temp_root("live-participant-range");
++    let run = root.join(ID);
++    fs::create_dir_all(&run).unwrap();
++    let name = "Tes_30_N_2023-11-14_haupt-15_r1.csv";
++    let uuid = "d2d9ddfe-2717-40b9-9995-1bd3f48ff440";
++    let prefix = b"row1\r\n";
++    fs::write(run.join(LIVE_CSV), prefix).unwrap();
++    fs::write(run.join(LIVE_PREFIX), json!({"schema_version":4,"checkpoint":2,
++        "size":prefix.len(),"sha256":format!("{:x}",Sha256::digest(prefix)),
++        "name":name,"session_id":uuid}).to_string()).unwrap();
++    let mut writer = fs::OpenOptions::new().append(true).open(run.join(LIVE_CSV)).unwrap();
++    writer.write_all(b"undurable bytes").unwrap();
++    drop(writer);
++    let query = |offset, length| json!({"query":"live-read","id":ID,"session_id":uuid,"offset":offset,"length":length});
++    let manifest = live_query(&root, ID, &json!({"query":"live-describe"}), &|| true).unwrap();
++    assert_eq!(manifest["size"], prefix.len());
++    assert_eq!(manifest["checkpoint"], 2);
++    let result = live_query(&root, ID, &query(1, 2), &|| true).unwrap();
++    assert_eq!(result["data"], base64(b"ow"));
++    assert_eq!(result["sha256"], format!("{:x}", Sha256::digest(b"ow")));
++    assert!(live_query(&root, ID, &query(3, 4), &|| true).is_err());
++    assert!(live_query(&root, ID, &query(0, 1), &|| false).is_err());
++    let mut stale = query(0, 1);
++    stale["id"] = json!("utc-ns-01700000000000000002");
++    assert!(live_query(&root, ID, &stale, &|| true).is_err());
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
++
++#[test]
 +fn writer_restart_exports_an_aborted_csv_and_only_the_verified_checkpoint_prefixes() {
 +    use crate::session_recording_writer::{SessionRecordingWriter, tests::{config, interrupted_participant_fixture, temp_root}};
 +    use std::{io::Write, time::Duration};
 +
 +    let root = temp_root("participant-checkpoint-export");
 +    let (directory, ordinal) = interrupted_participant_fixture(root.clone(), true);
++    use crate::session_recording_participant::live_csv::{LIVE_CSV, LIVE_PREFIX};
++    let live_descriptor: Value = serde_json::from_slice(&fs::read(directory.join(LIVE_PREFIX)).unwrap()).unwrap();
++    let live_prefix = fs::read(directory.join(LIVE_CSV)).unwrap();
++    assert_eq!(live_prefix.len() as u64, live_descriptor["size"]);
++    assert_eq!(format!("{:x}", Sha256::digest(&live_prefix)), live_descriptor["sha256"]);
 +    let id = directory.file_name().unwrap().to_str().unwrap();
 +    let path = directory.join("polar-ecg.jsonl");
 +    let prefix = fs::read(&path).unwrap();
@@ -1260,8 +1422,10 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb
 +    assert_eq!(ecg["data"], base64(&prefix));
 +    assert!(recovered.read(manifest_id, "polar-ecg.jsonl", prefix.len() as u64, 1, &|| true).is_err());
 +    let csv_bytes = fs::read(directory.join(format!("{RECOVERED_CSV_PREFIX}{csv_name}"))).unwrap();
++    assert!(csv_bytes.starts_with(&live_prefix));
 +    let csv = String::from_utf8(csv_bytes.clone()).unwrap();
-+    assert!(csv.contains(",26000000,paused,calibration,4000,1,0,37,"));
++    assert!(csv.contains(",26000000,paused,calibration,"));
++    assert!(csv.contains(",,,,4000,1,0,37,"));
 +    assert!(csv.contains(",aborted,interrupted-recovery,\r\n"));
 +    assert!(csv.contains(",ecg-interrupted,"));
 +    assert!(csv.contains(",no-recorded-receipt-for-one-second\r\n"));
@@ -1311,6 +1475,7 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb
 +    let (directory, _) = interrupted_participant_fixture(root.clone(), true);
 +    let original = directory.join("manifest.json");
 +    let mut manifest: Value = serde_json::from_slice(&fs::read(&original).unwrap()).unwrap();
++    manifest.as_object_mut().unwrap().remove("participant_csv_schema");
 +    manifest["participant"].as_object_mut().unwrap().remove("phase_offsets_ns");
 +    fs::write(&original, manifest.to_string()).unwrap();
 +    let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 100)).unwrap();
@@ -1326,10 +1491,10 @@ index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..2f7ceff5444bd6ed7958ff9804b6e4eb
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742cae787636
+index 0000000000000000000000000000000000000000..397764aca7b321825b89915f7d2fc5365b26cad0
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1079 @@
+@@ -0,0 +1,1124 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -1347,6 +1512,9 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +    session_recording_export::open_regular_recording_file,
 +    session_recording_writer::sync_directory,
 +};
++
++#[path = "session_recording_participant/live_csv.rs"]
++pub(crate) mod live_csv;
 +
 +const CSV_SCHEMA_VERSION: u64 = 3;
 +const HEADER: &str = "schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason,signal_reason\r\n";
@@ -1519,7 +1687,7 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
 +}
 +
-+#[derive(Debug)]
++#[derive(Clone, Debug)]
 +pub(crate) struct ParticipantRun {
 +    plan: ParticipantPlan,
 +    index: u64,
@@ -1904,7 +2072,7 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +    };
 +    let valid_schema = match csv.get("schema_version") {
 +        None => csv.as_object().is_some_and(|object| object.len() == 4),
-+        Some(version) => matches!(version.as_u64(), Some(2 | CSV_SCHEMA_VERSION))
++        Some(version) => matches!(version.as_u64(), Some(2 | CSV_SCHEMA_VERSION | live_csv::SCHEMA_VERSION))
 +            && csv.as_object().is_some_and(|object| object.len() == 5),
 +    };
 +    if !valid_schema
@@ -1919,7 +2087,7 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +    Ok(Some(csv))
 +}
 +
-+fn valid_uuid(uuid: &str) -> bool {
++pub(crate) fn valid_uuid(uuid: &str) -> bool {
 +    let bytes = uuid.as_bytes();
 +    bytes.len() == 36
 +        && bytes[14] == b'4'
@@ -2083,68 +2251,56 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +    state: &'static str,
 +}
 +
++#[derive(Default)]
 +struct PlaybackClock {
 +    marks: Vec<ClockMark>,
 +    last_event: u64,
++    media_started: bool,
 +}
 +
 +impl PlaybackClock {
 +    fn read(source: impl BufRead, ended_at: Option<u64>) -> Result<Option<Self>, String> {
-+        let mut marks = Vec::<ClockMark>::new();
-+        let mut media_started = false;
-+        let mut last_event = 0;
++        let mut clock = Self::default();
 +        for line in source.lines() {
 +            let row: Value = serde_json::from_str(&line.map_err(io_error)?)
 +                .map_err(|_| "participant-event-json-invalid")?;
-+            if let Some(at) = row["observed_monotonic_ns"].as_u64() {
-+                last_event = last_event.max(at);
-+            }
-+            let state = match row["event"].as_str() {
-+                Some("official-start") if marks.is_empty() => "waiting",
-+                Some("audio-started") if !marks.is_empty() && !media_started => {
-+                    media_started = true;
-+                    if marks.last().is_some_and(|mark| mark.state == "paused") {
-+                        "paused"
-+                    } else {
-+                        "playing"
-+                    }
-+                }
-+                Some("experiment-paused") if !marks.is_empty() => "paused",
-+                Some("experiment-resumed") if !marks.is_empty() => {
-+                    if media_started {
-+                        "playing"
-+                    } else {
-+                        "waiting"
-+                    }
-+                }
-+                Some("audio-ended" | "audio-error") if !marks.is_empty() => "ended",
-+                _ => continue,
-+            };
-+            let at = row["observed_monotonic_ns"]
-+                .as_u64()
-+                .ok_or("participant-event-time-invalid")?;
-+            if ended_at.is_some_and(|end| at > end)
-+                || marks.last().is_some_and(|previous| previous.at > at)
-+            {
-+                return Err("participant-event-order-invalid".into());
-+            }
-+            let elapsed = marks.last().map_or(0, |previous| {
-+                previous.elapsed
-+                    + if previous.state == "playing" {
-+                        at - previous.at
-+                    } else {
-+                        0
-+                    }
-+            });
-+            if marks
-+                .last()
-+                .is_some_and(|previous| previous.state == "ended")
-+            {
-+                continue;
-+            }
-+            marks.push(ClockMark { at, elapsed, state });
++            clock.observe(&row, ended_at)?;
 +        }
-+        Ok((!marks.is_empty()).then_some(Self { marks, last_event }))
++        Ok((!clock.marks.is_empty()).then_some(clock))
++    }
++
++    fn observe(&mut self, row: &Value, ended_at: Option<u64>) -> Result<Option<SessionEventKind>, String> {
++        if let Some(at) = row["observed_monotonic_ns"].as_u64() {
++            self.last_event = self.last_event.max(at);
++        }
++        let kind = row["event"].as_str().and_then(SessionEventKind::parse);
++        use SessionEventKind::*;
++        let previous = self.marks.last();
++        let state = match kind {
++            Some(OfficialStart) if previous.is_none() => "waiting",
++            Some(AudioStarted) if previous.is_some() && !self.media_started => {
++                self.media_started = true;
++                if previous.is_some_and(|mark| mark.state == "paused") { "paused" } else { "playing" }
++            }
++            Some(ExperimentPaused) if previous.is_some() => "paused",
++            Some(ExperimentResumed) if previous.is_some() => {
++                if self.media_started { "playing" } else { "waiting" }
++            }
++            Some(AudioEnded | AudioError) if previous.is_some() => "ended",
++            _ => return Ok(None),
++        };
++        let at = row["observed_monotonic_ns"].as_u64().ok_or("participant-event-time-invalid")?;
++        if ended_at.is_some_and(|end| at > end) || previous.is_some_and(|mark| mark.at > at) {
++            return Err("participant-event-order-invalid".into());
++        }
++        if previous.is_some_and(|mark| mark.state == "ended") {
++            return Ok(None);
++        }
++        let elapsed = previous.map_or(0, |mark| {
++            mark.elapsed + if mark.state == "playing" { at - mark.at } else { 0 }
++        });
++        self.marks.push(ClockMark { at, elapsed, state });
++        Ok(kind)
 +    }
 +
 +    fn start(&self) -> u64 {
@@ -2179,6 +2335,60 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +        path::PathBuf,
 +        sync::atomic::{AtomicU64, Ordering},
 +    };
++
++    #[test]
++    fn live_csv_keeps_its_published_prefix_through_late_rows_and_backdated_pause() {
++        use std::collections::BTreeMap;
++        let scratch = Scratch::new();
++        let dir = &scratch.0;
++        let start = 1_000_000_000;
++        let run = ParticipantRun::reserve(dir, ParticipantPlan::parse(&request("Tes_30_N", "haupt-15")).unwrap()).unwrap();
++        let anchor = ClockAnchor::new(MonotonicNanos::new(start), UtcEpochNanos::new(1_700_000_000_000_000_000));
++        let event = |at, kind| json!({"event":kind,"observed_monotonic_ns":at});
++        let ecg = |at, voltage| json!({"kind":"polar-ecg","observed_monotonic_ns":at,"source_time_ns":at,
++            "source_sequence":1,"sample_index":0,"microvolts":voltage});
++        let append = |file, row: Value| {
++            writeln!(OpenOptions::new().create(true).append(true).open(dir.join(file)).unwrap(), "{row}").unwrap();
++        };
++        append("events.jsonl", event(start, "official-start"));
++        append("events.jsonl", event(start + 10, "audio-started"));
++        append("polar-ecg.jsonl", ecg(start + 4_000_000, -19));
++        let lengths = || -> BTreeMap<String, u64> {
++            ["events.jsonl", "polar-ecg.jsonl", "polar-acc.jsonl", "radius.jsonl", "breath.jsonl"].into_iter()
++                .map(|name| (name.to_owned(), fs::metadata(dir.join(name)).map_or(0, |meta| meta.len())))
++                .collect()
++        };
++        let first = lengths();
++        let mut live = live_csv::Projection::new(run, dir.to_owned(), anchor);
++        let prefix = live.append(&first, None).unwrap().unwrap();
++        let initial = fs::read(dir.join(live_csv::LIVE_CSV)).unwrap();
++        assert_eq!(initial.len() as u64, prefix.size);
++        assert_eq!(prefix.name, "Tes_30_N_2023-11-14_haupt-15_r1.csv");
++        append("events.jsonl", event(start + 2_000_000, "experiment-paused"));
++        append("polar-ecg.jsonl", ecg(start + 3_000_000, 37));
++        let second = lengths();
++        append("polar-ecg.jsonl", ecg(start + 5_000_000, 99));
++        let next = live.append(&second, None).unwrap().unwrap();
++        let partial = fs::read(dir.join(live_csv::LIVE_CSV)).unwrap();
++        assert!(partial.starts_with(&initial));
++        assert_eq!(partial.len() as u64, next.size);
++        assert!(String::from_utf8_lossy(&partial).contains(",experiment-paused,"));
++        assert!(!String::from_utf8_lossy(&partial).contains(",99,"));
++        live.append(&lengths(), Some(start + 4_500_000)).unwrap();
++        let end = live.finish(Some(start + 4_500_000), false, "save-and-exit").unwrap().unwrap();
++        let bytes = fs::read(dir.join(live_csv::LIVE_CSV)).unwrap();
++        assert!(bytes.starts_with(&partial));
++        assert_eq!(end.0["size"], bytes.len());
++        assert_eq!(end.0["sha256"], format!("{:x}", Sha256::digest(&bytes)));
++        let csv = String::from_utf8(bytes).unwrap();
++        let lines: Vec<Vec<_>> = csv.lines().skip(1).map(|line| line.split(',').collect()).collect();
++        let pause = lines.iter().find(|row| row[5] == "experiment-paused").unwrap();
++        assert_eq!(&pause[7..11], ["2000", "1999", "paused", "instruction_1"]);
++        let first_ecg = lines.iter().find(|row| row[5] == "ecg").unwrap();
++        assert_eq!(&first_ecg[7..11], ["4000", "", "", ""]);
++        assert_eq!(lines.iter().filter(|row| row[5] == "ecg").count(), 2);
++        assert_eq!(lines.last().unwrap()[5], "end");
++    }
 +
 +    struct Scratch(PathBuf);
 +    impl Scratch {
@@ -2411,10 +2621,10 @@ index 0000000000000000000000000000000000000000..0570047a5d97d6d0ac22e5dfd506742c
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..cb9e4cc27be213176f38b63ba8973d7838aa249f
+index 0000000000000000000000000000000000000000..b1c43bdb17fde8012a8ec4e7736952a32a757168
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,166 @@
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
 +use std::{
@@ -2427,7 +2637,7 @@ index 0000000000000000000000000000000000000000..cb9e4cc27be213176f38b63ba8973d78
 +    session_recording_clock::{ClockAnchor, MonotonicNanos, SessionTimestampKey, UtcEpochNanos},
 +    session_recording_contract::{SESSION_FINAL_SCHEMA, SESSION_STREAM_FILES},
 +    session_recording_export::{MAX_PARTICIPANT_CORE_BYTES, open_regular_recording_file},
-+    session_recording_participant::{ParticipantRun, RECOVERY_RECEIPT, discard_recovery_csv},
++    session_recording_participant::{ParticipantRun, RECOVERY_RECEIPT, discard_recovery_csv, live_csv},
 +    session_recording_recovery::{RecoveryDisposition, RecoveryReport, participant_checkpoint},
 +    session_recording_writer::publish_json_exclusive,
 +};
@@ -2539,12 +2749,23 @@ index 0000000000000000000000000000000000000000..cb9e4cc27be213176f38b63ba8973d78
 +        }
 +        hashes.insert(name.to_owned(), json!(format!("{:x}", hash.finalize())));
 +    }
-+    let Some((csv, ended_at)) = run.recover_csv(
-+        directory,
-+        anchor,
-+        lengths["events.jsonl"].as_u64().expect("validated lengths"),
-+        lengths,
-+    )?
++    let csv = match original.get("participant_csv_schema") {
++        Some(version) if version == live_csv::SCHEMA_VERSION => {
++            let lengths = serde_json::from_value(lengths.clone())
++                .map_err(|_| "participant-stream-length-invalid".to_owned())?;
++            let result = live_csv::replay(&run, directory, anchor, ordinal, &lengths, None, false, "interrupted-recovery")?;
++            if let Some((csv, _)) = &result {
++                live_csv::publish_final(directory, csv, true)?;
++            }
++            result
++        }
++        None => run.recover_csv(
++            directory, anchor,
++            lengths["events.jsonl"].as_u64().expect("validated lengths"), lengths,
++        )?,
++        Some(_) => return Err("participant-recovery-csv-schema-invalid".into()),
++    };
++    let Some((csv, ended_at)) = csv
 +    else {
 +        return Ok(());
 +    };
@@ -2673,10 +2894,18 @@ index e94da3aec237281c31fed85072fdb8a602fadca7..829184d6d78e5ec5085cb2deac8c515c
                  SessionEventKind::Started => RowLifecycle::Started,
                  SessionEventKind::CompletionReached => RowLifecycle::Completed,
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e2414f15bc19 100644
+index 4aefeaf5588a438a541140cdfdf04e93312bd165..56c3f44473ac998165132a574dc2593399997b7d 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
-@@ -920,7 +920,10 @@ fn handle_control(
+@@ -28,6 +28,7 @@ use crate::{
+         SESSION_MANIFEST_SCHEMA, SESSION_STREAM_FILES,
+     },
+     session_recording_inventory::{elapsed_us, RecoveryInventory},
++    session_recording_participant::live_csv,
+     session_recording_recovery::{
+         validate_recording_root_no_links, RecoveryDisposition, RecoveryReport,
+     },
+@@ -920,7 +921,10 @@ fn handle_control(
              let result = if active.is_some() {
                  Err("recording-recovery-while-active".to_owned())
              } else {
@@ -2688,7 +2917,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
              };
              let _ = reply.send(result);
          }
-@@ -1061,8 +1064,10 @@ fn release_queued_bytes(queued_bytes: &AtomicUsize, payload_bytes: usize) {
+@@ -1061,8 +1065,11 @@ fn release_queued_bytes(queued_bytes: &AtomicUsize, payload_bytes: usize) {
  
  struct ActiveRecording {
      last_bias_change: Option<crate::session_recording_contract::BiasChange>,
@@ -2696,10 +2925,11 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
      generation: u64,
      spec: SessionStartSpec,
 +    participant: Option<crate::session_recording_participant::ParticipantRun>,
++    participant_csv: Option<live_csv::Worker>,
      directory: PathBuf,
      streams: BTreeMap<&'static str, BufWriter<File>>,
      consumed_sequence: u64,
-@@ -1074,6 +1079,57 @@ struct ActiveRecording {
+@@ -1074,6 +1081,57 @@ struct ActiveRecording {
      last_error: Option<String>,
  }
  
@@ -2757,7 +2987,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
  impl ActiveRecording {
      fn prepare(
          config: &WriterConfig,
-@@ -1083,6 +1139,9 @@ impl ActiveRecording {
+@@ -1083,6 +1141,9 @@ impl ActiveRecording {
          spec.validate().map_err(str::to_owned)?;
          validate_recording_root_no_links(&config.root)?;
          ensure_recording_root(&config.root)?;
@@ -2767,7 +2997,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
          let directory = config.root.join(spec.started_at.as_str());
          fs::create_dir(&directory)
              .map_err(|error| format!("recording-session-directory-create:{error}"))?;
-@@ -1093,10 +1152,7 @@ impl ActiveRecording {
+@@ -1093,10 +1154,7 @@ impl ActiveRecording {
          sync_directory(&config.root)?;
  
          let prepare_result = (|| {
@@ -2779,7 +3009,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
                      "schema": SESSION_MANIFEST_SCHEMA,
                      "started_at_utc": spec.started_at.as_str(),
                      "condition": spec.condition.as_str(),
-@@ -1110,8 +1166,11 @@ impl ActiveRecording {
+@@ -1110,8 +1168,12 @@ impl ActiveRecording {
                      },
                      "session_identifier_policy": "utc-start-date-time-only",
                      "runtime_generation_persisted": true
@@ -2788,23 +3018,30 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
 +                });
 +            if let Some(run) = &participant {
 +                manifest["participant"] = run.metadata();
++                manifest["participant_csv_schema"] = json!(live_csv::SCHEMA_VERSION);
 +            }
 +            publish_json_exclusive(&directory, "manifest.json", &manifest)?;
              let mut streams = BTreeMap::new();
              for name in SESSION_STREAM_FILES {
                  let file = OpenOptions::new()
-@@ -1123,8 +1182,10 @@ impl ActiveRecording {
+@@ -1121,10 +1183,16 @@ impl ActiveRecording {
+                     .map_err(|error| format!("recording-stream-create:{name}:{error}"))?;
+                 streams.insert(name, BufWriter::with_capacity(256 * 1024, file));
              }
++            let participant_csv = participant.as_ref().and_then(|run| {
++                live_csv::Worker::start(run.clone(), directory.clone(), spec.clock_anchor).ok()
++            });
              let mut recording = Self {
                  last_bias_change: None,
 +                signal_receipts: None,
                  generation,
                  spec,
 +                participant,
++                participant_csv,
                  directory: directory.clone(),
                  streams,
                  consumed_sequence: 0,
-@@ -1180,6 +1241,30 @@ impl ActiveRecording {
+@@ -1180,6 +1248,30 @@ impl ActiveRecording {
          if !record.floats_are_finite() {
              return Err("recording-row-non-finite".to_owned());
          }
@@ -2835,7 +3072,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
          let rows = record.encoded_rows(sequence, &self.spec);
          let stream = self
              .streams
-@@ -1209,6 +1294,20 @@ impl ActiveRecording {
+@@ -1209,6 +1301,20 @@ impl ActiveRecording {
          )
      }
  
@@ -2856,7 +3093,17 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
      fn mark_completion(&mut self, at: MonotonicNanos, loss: LossSnapshot) -> Result<u64, String> {
          if !self.completion_durable {
              self.write_internal_event(SessionEventKind::CompletionReached, at)?;
-@@ -1309,6 +1408,7 @@ impl ActiveRecording {
+@@ -1292,6 +1398,9 @@ impl ActiveRecording {
+                 "loss": loss_json(&loss)
+             }),
+         )?;
++        if let Some(worker) = &self.participant_csv {
++            worker.checkpoint(self.checkpoint_ordinal);
++        }
+         self.next_checkpoint = Instant::now() + self.checkpoint_interval;
+         Ok(self.checkpoint_ordinal)
+     }
+@@ -1309,6 +1418,7 @@ impl ActiveRecording {
          if threshold_reached && !self.completion_durable {
              self.mark_completion(at, loss.clone())?;
          }
@@ -2864,7 +3111,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
          let event = match reason {
              FinalizationReason::RestartToExperimenter => SessionEventKind::RestartRequested,
              FinalizationReason::SaveAndExit => SessionEventKind::ExitRequested,
-@@ -1317,10 +1417,7 @@ impl ActiveRecording {
+@@ -1317,10 +1427,7 @@ impl ActiveRecording {
          self.write_internal_event(event, at)?;
          let lengths = self.flush_sync_streams()?;
          let ended_utc_ns = self.spec.clock_anchor.utc_at(at).map(|value| value.get());
@@ -2876,7 +3123,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
                  "schema": SESSION_FINAL_SCHEMA,
                  "started_at_utc": self.spec.started_at.as_str(),
                  "condition": self.spec.condition.as_str(),
-@@ -1337,8 +1434,17 @@ impl ActiveRecording {
+@@ -1337,8 +1444,26 @@ impl ActiveRecording {
                  "loss": loss_json(&loss),
                  "durable_stream_lengths": lengths,
                  "saved": loss.dropped_records == 0
@@ -2888,7 +3135,16 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
 +            let end_reason = if loss.dropped_records != 0 { "recording-loss" }
 +                else if complete { "completed" } else { reason.as_str() };
 +            terminal["participant"] = run.metadata();
-+            if let Some(csv) = run.finalize_csv(&self.directory, self.spec.clock_anchor, at, complete, end_reason)? {
++            let result = self.participant_csv.take().and_then(|worker| {
++                worker.finish(lengths.clone(), at.get(), complete, end_reason).ok()
++            });
++            let csv = match result {
++                Some(csv) => csv,
++                None => live_csv::replay(run, &self.directory, self.spec.clock_anchor, self.checkpoint_ordinal,
++                    &lengths, Some(at.get()), complete, end_reason)?,
++            };
++            if let Some((csv, _)) = csv {
++                live_csv::publish_final(&self.directory, &csv, false)?;
 +                terminal["participant_csv"] = csv;
 +            }
 +        }
@@ -2896,7 +3152,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
          Ok(())
      }
  
-@@ -1440,7 +1546,7 @@ fn ensure_recording_root(root: &Path) -> Result<(), String> {
+@@ -1440,7 +1565,7 @@ fn ensure_recording_root(root: &Path) -> Result<(), String> {
      sync_directory(root)
  }
  
@@ -2905,7 +3161,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
      let final_path = directory.join(name);
      if final_path.exists() {
          return Err(format!("recording-artifact-collision:{name}"));
-@@ -1472,14 +1578,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
+@@ -1472,14 +1597,14 @@ fn publish_json_exclusive(directory: &Path, name: &str, value: &Value) -> Result
  }
  
  #[cfg(unix)]
@@ -2922,7 +3178,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
      // Android is Unix and receives the directory durability barrier. Windows
      // host tests still verify exclusive publication and synced file contents.
      Ok(())
-@@ -1597,6 +1703,7 @@ pub(crate) mod tests {
+@@ -1597,6 +1722,7 @@ pub(crate) mod tests {
      pub(crate) fn spec(utc: u64) -> SessionStartSpec {
          let utc = UtcEpochNanos::new(utc);
          SessionStartSpec {
@@ -2930,7 +3186,7 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
              breath_tracking_configuration: None,
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
-@@ -1632,6 +1739,80 @@ pub(crate) mod tests {
+@@ -1632,6 +1758,94 @@ pub(crate) mod tests {
          }
      }
  
@@ -2962,6 +3218,20 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
 +            })).unwrap();
 +        }
 +        let ordinal = writer.checkpoint(false, LossSnapshot::default()).unwrap();
++        if official_start {
++            let deadline = Instant::now() + Duration::from_secs(2);
++            let path = directory.join(live_csv::LIVE_PREFIX);
++            loop {
++                if let Ok(bytes) = fs::read(&path) {
++                    let receipt: Value = serde_json::from_slice(&bytes).unwrap();
++                    if receipt["checkpoint"] == ordinal {
++                        break;
++                    }
++                }
++                assert!(Instant::now() < deadline, "live CSV prefix was not published");
++                thread::yield_now();
++            }
++        }
 +        drop(writer);
 +        (directory, ordinal)
 +    }
@@ -2999,9 +3269,9 @@ index 4aefeaf5588a438a541140cdfdf04e93312bd165..4d97cf120f9400d65702c027aca6e241
 +            (!row[23].is_empty()).then_some((row[5], row[7], row[9], row[23]))
 +        }).collect();
 +        assert_eq!(marks, [
-+            ("acc-interrupted", "1899998", "paused", "no-recorded-receipt-for-one-second"),
-+            ("acc-resumed", "2099998", "paused", "recorded-receipt-resumed"),
-+            ("ecg-interrupted", "1000000", "playing", "no-recorded-receipt-for-one-second"),
++            ("acc-interrupted", "1899998", "", "no-recorded-receipt-for-one-second"),
++            ("acc-resumed", "2099998", "", "recorded-receipt-resumed"),
++            ("ecg-interrupted", "1000000", "", "no-recorded-receipt-for-one-second"),
 +        ]);
 +        assert_eq!(csv["size"], text.len());
 +        drop(writer);
@@ -3209,7 +3479,7 @@ index a694dfee..382cbcda 100644
                  return request.toString();
              } catch (Exception error) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..5154ea36 100644
+index 08732e5319252e68275d2fa5287ff2300af7163d..5e45dfc12eeec7acaed756245e111c9607b3e5ed 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,9 @@ import org.json.JSONObject;
@@ -3379,7 +3649,7 @@ index 08732e53..5154ea36 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -355,8 +421,60 @@ public final class ExperimentSessionCommandGateway {
+@@ -355,36 +421,180 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionGatewayProtocol current=protocol;if(current==null)throw new SecurityException("gateway-unavailable");return lan?current.exchangeLan(envelope):current.exchange(envelope);
      }
      /** Capture/revalidate on main; all filesystem work remains on the LAN IO caller. */
@@ -3426,6 +3696,7 @@ index 08732e53..5154ea36 100644
 +                            java.util.List<String> ids = wifi.scenarioIds();
 +                            if (participantArmAvailable()) {
 +                                response.put("participant_arm", 1);
++                                response.put("live_recording", 1);
 +                                java.util.ArrayList<String> authored = new java.util.ArrayList<>();
 +                                for (String id : ids) if (wifi.recordingPlan(id) != null) authored.add(id);
 +                                ids = authored;
@@ -3440,12 +3711,23 @@ index 08732e53..5154ea36 100644
 +        }
 +        if (privateLanData && !enrolled) throw new SecurityException("recording-export-requires-enrollment");
          final JSONObject query=ExperimentSessionRecordingExport.query(payload);
-         final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
+-        final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket().put("controller",controllerScope);}});
++        final boolean live=ExperimentSessionRecordingExport.live(query);
++        if(live&&(!privateLanData||!enrolled))throw new SecurityException("recording-live-requires-private-enrollment");
++        final JSONObject ticket=onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{guard.check();return exportTicket(live).put("controller",controllerScope);}});
          JSONObject result=ExperimentSessionRecordingExport.read(query,ticket.toString());
-@@ -369,6 +487,32 @@ public final class ExperimentSessionCommandGateway {
+         final JSONObject original=ticket;
+         onMain(new java.util.concurrent.Callable<JSONObject>(){public JSONObject call()throws Exception{
+-            guard.check();JSONObject current=exportTicket().put("controller",controllerScope);
+-            if(!current.toString().equals(original.toString())){ExperimentSessionRecordingExport.retire();throw new SecurityException("recording-owner-changed");}
++            guard.check();JSONObject current=exportTicket(live).put("controller",controllerScope);
++            if(!current.toString().equals(original.toString())){if(!live)ExperimentSessionRecordingExport.retire();throw new SecurityException("recording-owner-changed");}
+             return current;
+         }});
          if("ready".equals(result.opt("state"))&&result.optJSONObject("manifest")!=null)result.getJSONObject("manifest").put("device",ticket.getString("device")).put("serial",ticket.getString("serial"));
          return result;
      }
+-    private JSONObject exportTicket()throws Exception {
 +    private boolean participantArmAvailable() {
 +        return privateLanData && remoteAvailable() && ExperimentSessionRecordingExport.selected(context)
 +            && delegate instanceof WifiDelegate
@@ -3472,10 +3754,33 @@ index 08732e53..5154ea36 100644
 +        return new JSONObject(plan).put("participant_id", id).toString();
 +    }
 +
-     private JSONObject exportTicket()throws Exception {
++    private JSONObject exportTicket(boolean live)throws Exception {
          requireMain();
          if(!ExperimentSessionRecordingExport.selected(context)||!remoteAvailable())throw new SecurityException("recording-export-not-selected-or-remote");
-@@ -385,6 +529,59 @@ public final class ExperimentSessionCommandGateway {
+         long owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision,generation=carrier.currentGeneration(),packed=controlMode.readSnapshot().packed;
+         JSONObject status=snapshot(),nativeStatus=delegate.sessionControlReadback();
+-        if(!"remote".equals(status.opt("control_mode"))||!"IDLE".equals(status.opt("p"))||!Boolean.FALSE.equals(status.opt("rec"))
+-                ||!Boolean.FALSE.equals(status.opt("pending"))||!localEnrollmentIdle(nativeStatus,status))throw new SecurityException("recording-export-requires-fresh-idle");
++        if(!"remote".equals(status.opt("control_mode"))||!Boolean.FALSE.equals(status.opt("pending")))
++            throw new SecurityException("recording-export-requires-fresh-remote");
++        if(live){
++            if(!Boolean.TRUE.equals(status.opt("rec"))||nativeStatus==null||!"active".equals(nativeStatus.opt("phase"))
++                    ||!("running".equals(nativeStatus.opt("control_state"))||"paused".equals(nativeStatus.opt("control_state")))
++                    ||!ExperimentSessionRecordingExport.id(nativeStatus.optString("session_key"))
++                    ||!(nativeStatus.opt("generation") instanceof Number)
++                    ||nativeStatus.getLong("generation")!=status.getLong("g"))
++                throw new SecurityException("recording-live-requires-active-run");
++        }else if(!"IDLE".equals(status.opt("p"))||!Boolean.FALSE.equals(status.opt("rec"))||!localEnrollmentIdle(nativeStatus,status))
++            throw new SecurityException("recording-export-requires-fresh-idle");
+         if(owner!=identity||nativeEpoch!=epoch||lifecycle!=lifecycleRevision||generation!=carrier.currentGeneration()||packed!=controlMode.readSnapshot().packed||!carrier.acceptsNativeOwner(owner,nativeEpoch))throw new SecurityException("recording-owner-changed");
+-        return new JSONObject().put("owner",owner).put("epoch",nativeEpoch).put("lifecycle",lifecycle).put("gateway",gatewayEpoch).put("carrier",generation)
+-            .put("mode",packed).put("generation",status.getLong("g")).put("revision",status.getLong("r")).put("device",deviceId()).put("serial",headsetIdentity.serial());
++        JSONObject ticket=new JSONObject().put("owner",owner).put("epoch",nativeEpoch).put("lifecycle",lifecycle).put("gateway",gatewayEpoch).put("carrier",generation)
++            .put("mode",packed).put("generation",status.getLong("g")).put("device",deviceId()).put("serial",headsetIdentity.serial());
++        return live?ticket.put("session",nativeStatus.getString("session_key")):ticket.put("revision",status.getLong("r"));
+     }
+     private JSONObject onMain(java.util.concurrent.Callable<JSONObject> action)throws Exception {
+         if(Looper.myLooper()==Looper.getMainLooper())return action.call();
          FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
          try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
      }
@@ -3535,7 +3840,7 @@ index 08732e53..5154ea36 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -398,10 +595,43 @@ public final class ExperimentSessionCommandGateway {
+@@ -398,10 +608,43 @@ public final class ExperimentSessionCommandGateway {
          if(journal.known(body))return journal.original(id);
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
@@ -3857,7 +4162,7 @@ index f41c56ea..d569acd4 100644
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..ca5a2e76 100644
+index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..39fbc1fe95917e8cccdef904f0c0235b1f12c1a8 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -3909,7 +4214,7 @@ index cf6c5de1..ca5a2e76 100644
      }
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
-@@ -36,16 +60,24 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -36,16 +60,27 @@ public final class ExperimentSessionGatewayProtocol {
                      || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
                  throw new SecurityException("controller-or-epoch-unavailable");
              nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
@@ -3928,7 +4233,10 @@ index cf6c5de1..ca5a2e76 100644
 +        JSONObject command = new JSONObject(payload);
 +        if ("participant-arm".equals(action)) command = decryptParticipantArm(nonce, command);
 +        JSONObject result=owner.exchange(action,command);
-+        if (!lan && "status".equals(action)) result.remove("participant_arm");
++        if (!lan && "status".equals(action)) {
++            result.remove("participant_arm");
++            result.remove("live_recording");
++        }
          synchronized(this) {
              if(retired)throw new SecurityException("owner-retired");
 -            String body=result.toString();
@@ -3937,7 +4245,7 @@ index cf6c5de1..ca5a2e76 100644
              JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
                  .put("action",action).put("payload",body).put("mac",hmac(key,
                      "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
-@@ -53,6 +85,40 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -53,6 +88,40 @@ public final class ExperimentSessionGatewayProtocol {
              return reply;
          }
      }
@@ -3978,7 +4286,7 @@ index cf6c5de1..ca5a2e76 100644
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -69,8 +135,11 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -69,8 +138,11 @@ public final class ExperimentSessionGatewayProtocol {
          return value!=null && value.length()==length && value.matches("[0-9a-f]+");
      }
      public static String hmac(String key,String message)throws Exception {
@@ -4042,17 +4350,25 @@ index 62ec84d8..a88ecadf 100644
  
      // Raw fields retain JSON type information: strings/floats are not generation evidence.
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
-index de472e2978cfa87ae7f15886738215106a6f5ec8..b404ee53ba7e28b46ab3478c0333697bea01ed58 100644
+index de472e2978cfa87ae7f15886738215106a6f5ec8..463a5163c1417bfd7a2987de5e560f615ed6d677 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
-@@ -10,9 +10,19 @@ final class ExperimentSessionRecordingExport {
+@@ -10,9 +10,27 @@ final class ExperimentSessionRecordingExport {
    JSONObject out=body;String q=ExperimentSessionGatewayProtocol.string(out,"query");
    if("list".equals(q)&&out.length()==3){String before=ExperimentSessionGatewayProtocol.string(out,"before");if(!before.isEmpty()&&!id(before))throw new IllegalArgumentException("recording-id");number(out,"limit",1,16);}
    else if("describe".equals(q)&&out.length()==2){if(!id(ExperimentSessionGatewayProtocol.string(out,"id")))throw new IllegalArgumentException("recording-id");}
 -  else if("read".equals(q)&&out.length()==5){if(!ExperimentSessionGatewayProtocol.hex(ExperimentSessionGatewayProtocol.string(out,"manifest_id"),64))throw new IllegalArgumentException("recording-manifest");String file=ExperimentSessionGatewayProtocol.string(out,"file");if(!java.util.Arrays.asList("manifest.json","final.json","events.jsonl","polar-acc.jsonl","polar-ecg.jsonl","polar-hr-rr.jsonl","breath.jsonl","radius.jsonl").contains(file))throw new IllegalArgumentException("recording-file");number(out,"offset",0,134217728);number(out,"length",1,32768);}
 +  else if("read".equals(q)&&out.length()==5){if(!ExperimentSessionGatewayProtocol.hex(ExperimentSessionGatewayProtocol.string(out,"manifest_id"),64))throw new IllegalArgumentException("recording-manifest");String file=ExperimentSessionGatewayProtocol.string(out,"file");if(!java.util.Arrays.asList("manifest.json","final.json","events.jsonl","polar-acc.jsonl","polar-ecg.jsonl","polar-hr-rr.jsonl","breath.jsonl","radius.jsonl").contains(file)&&!participantCsv(file))throw new IllegalArgumentException("recording-file");number(out,"offset",0,134217728);number(out,"length",1,32768);}
++  else if("live-describe".equals(q)&&out.length()==1){return out;}
++  else if("live-read".equals(q)&&out.length()==5){
++   if(!id(ExperimentSessionGatewayProtocol.string(out,"id"))
++       ||!ExperimentSessionGatewayProtocol.string(out,"session_id").matches("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"))
++    throw new IllegalArgumentException("recording-live-identity");
++   number(out,"offset",0,134217727);number(out,"length",1,32768);
++  }
    else throw new IllegalArgumentException("closed-recording-query-required");return out;
   }
++ static boolean live(JSONObject query){return "live-describe".equals(query.opt("query"))||"live-read".equals(query.opt("query"));}
 + static boolean participantCsv(String name) {
 +  if(!java.text.Normalizer.isNormalized(name, java.text.Normalizer.Form.NFC))return false;
 +  String identity="\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_";
@@ -6127,15 +6443,19 @@ index fbc332fd..e2110319 100644
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d554a16171cd09bd908448dd6237538631..10171560b7ce1f5c86356bde915a91a0dfdd4933 100644
+index c849c2d554a16171cd09bd908448dd6237538631..8fb1d2e0f23516896e054d2f355334c8b2165b63 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
-@@ -5,15 +5,76 @@ from test_experiment_gateway_dedupe import method
+@@ -5,15 +5,81 @@ from test_experiment_gateway_dedupe import method
  original=owner.HARNESS
  prefix=original[:original.index(' public static void main')]
  setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
 -owner.STUBS['android/os/Bundle.java']='''package android.os;public class Bundle {public static boolean export;public boolean getBoolean(String k,boolean d){return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.feature.recording_export")&&export;}public String getString(String k,String d){return k.endsWith(".origins")?"https://controller.example":d;}}'''
 +setup=setup.replace('public JSONObject polarSetupReadback(){return null;}', 'public JSONObject polarSetupReadback() {return new JSONObject().put("e", true);}')
++setup=setup.replace('.put("phase","idle").put("control_state","idle")',
++    '.put("phase",liveSession==null?"idle":"active").put("control_state",liveSession==null?"idle":"running").put("recording",liveSession!=null).put("condition_id",liveSession==null?JSONObject.NULL:"condition-a")')
++setup=setup.replace('.put("phase",idle?"idle":"active").put("control_state","idle").put("session_key",JSONObject.NULL)',
++    '.put("phase",idle&&liveSession==null?"idle":"active").put("control_state",liveSession==null?"idle":"running").put("generation",0).put("session_key",liveSession==null?JSONObject.NULL:liveSession)')
 +setup=setup.replace(
 +    '   public void dispatch(ExperimentSessionBleServer.CommandRequest r)',
 +    '''   public java.util.List<String> scenarioIds(){return java.util.Collections.singletonList("haupt-15");}
@@ -6173,6 +6493,7 @@ index c849c2d554a16171cd09bd908448dd6237538631..10171560b7ce1f5c86356bde915a91a0
 + static String selectedScenario="";
 + static JSONObject selectedParticipant;
 + static long ecgAge = 15;
++ static String liveSession;
 + static JSONObject privateArm(JSONObject credentials, JSONObject body, boolean validTag) throws Exception {
 +  String action = "participant-arm";
 +  String nonce = ExperimentSessionBleProtocol.newHex(16), controller=credentials.getString("controller");
@@ -6208,7 +6529,7 @@ index c849c2d554a16171cd09bd908448dd6237538631..10171560b7ce1f5c86356bde915a91a0
    g.nativeOwnerChanged(1,7,true);JSONObject credentials=join(g,g.identity());JSONObject q=new JSONObject().put("query","list").put("before","").put("limit",16);
    deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==0,"gateway alone gained filesystem access");
    android.os.Bundle.export=true;
-@@ -26,7 +87,93 @@ owner.HARNESS=prefix+r'''
+@@ -26,7 +92,118 @@ owner.HARNESS=prefix+r'''
    ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
    credentials=join(g,g.identity());final JSONObject current=credentials;
    ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");
@@ -6299,6 +6620,31 @@ index c849c2d554a16171cd09bd908448dd6237538631..10171560b7ce1f5c86356bde915a91a0
 +  check(dispatches==2&&"Tes_30_N".equals(selectedParticipant.optString("participant_id"))
 +      &&"haupt-15".equals(selectedParticipant.optString("scenario_id")),"participant Arm did not bind once to verified scenario");
 +  check(!participantResult.toString().contains("Tes_30_N"),"signed receipt disclosed participant identity");
++  JSONObject live=new JSONObject().put("query","live-describe");
++  JSONObject liveRead=new JSONObject().put("query","live-read")
++      .put("id","utc-ns-01725000000000000000").put("session_id","d2d9ddfe-2717-40b9-9995-1bd3f48ff440")
++      .put("offset",0).put("length",32768);
++  check(enrolledStatus.optInt("live_recording")==1&&!guestStatus.has("live_recording")
++      &&!relayStatus.has("live_recording"),"live capability escaped enrolled LAN");
++  deny(()->network(privateGateway,auth(enrolled,"recordings",live)));
++  liveSession=liveRead.getString("id");
++  deny(()->network(privateGateway,auth(guest,"recordings",live)));
++  deny(()->privateGateway.exchange(auth(enrolled,"recordings",live)));
++  try {
++      network(privateGateway,auth(enrolled,"recordings",new JSONObject(liveRead.toString()).put("length",32769)));
++      throw new AssertionError("oversized live range reached IO");
++  } catch(java.util.concurrent.ExecutionException expected) {
++      check(expected.getCause() instanceof IllegalArgumentException,"oversized live range was not rejected");
++  }
++  deny(()->network(privateGateway,auth(enrolled,"recordings",q)));
++  int readsBefore=ControlPanelActivity.reads;
++  JSONObject liveResult=network(privateGateway,auth(enrolled,"recordings",liveRead));
++  check(ControlPanelActivity.reads==readsBefore+1&&new JSONObject(liveResult.getString("payload")).has("data"),
++      "live read did not reach encrypted LAN IO");
++  ControlPanelActivity.during=()->liveSession="utc-ns-01725000000000000001";
++  deny(()->network(privateGateway,auth(enrolled,"recordings",liveRead)));
++  ControlPanelActivity.during=null;
++  liveSession=null;
 +  System.out.println("PASS "+checks+" actual gateway export, enrolled encrypted participant Arm, scenario identity, IO and owner fences");
   }
  }
@@ -6491,3 +6837,468 @@ index c88c6ee65e6eb0d17f6ba70686e6c42c254f4603..1d91634174f18ba40b2846bfca999aa1
  }
 
  #[cfg(target_os = "android")]
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..8c4f7cc7e4d78c1d6d01f3bf677bf3d7745410b5
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
+@@ -0,0 +1,459 @@
++//! Append-only projection of committed participant recording streams.
++use super::*;
++use crate::session_recording_contract::SESSION_CHECKPOINT_SCHEMA;
++use std::{
++    collections::BTreeMap,
++    io::{Seek, SeekFrom},
++    path::PathBuf,
++    sync::{
++        atomic::{AtomicU64, Ordering},
++        mpsc, Arc,
++    },
++    thread::{self, JoinHandle},
++};
++
++pub(crate) const SCHEMA_VERSION: u64 = 4;
++pub(crate) const LIVE_CSV: &str = ".participant-live.csv";
++pub(crate) const LIVE_PREFIX: &str = ".participant-live-prefix.json";
++const STREAMS: [(&str, &str); 5] = [
++    ("events.jsonl", "event"),
++    ("polar-ecg.jsonl", "ecg"),
++    ("polar-acc.jsonl", "accelerometer"),
++    ("radius.jsonl", "radius"),
++    ("breath.jsonl", "breath"),
++];
++type Lengths = BTreeMap<String, u64>;
++type FinalCsv = Option<(Value, u64)>;
++
++pub(crate) struct Worker {
++    latest: Arc<AtomicU64>,
++    finish: Option<mpsc::SyncSender<Finish>>,
++    thread: Option<JoinHandle<Result<FinalCsv, String>>>,
++}
++
++struct Finish {
++    lengths: Lengths,
++    ended_at: u64,
++    complete: bool,
++    reason: String,
++}
++
++impl Worker {
++    pub(crate) fn start(
++        run: ParticipantRun,
++        directory: PathBuf,
++        anchor: ClockAnchor,
++    ) -> Result<Self, String> {
++        let latest = Arc::new(AtomicU64::new(0));
++        let pending = Arc::clone(&latest);
++        let (finish, commands) = mpsc::sync_channel::<Finish>(1);
++        let thread = thread::Builder::new()
++            .name("participant-csv".to_owned())
++            .spawn(move || {
++                let mut projection = Projection::new(run, directory, anchor);
++                let mut next = 1;
++                loop {
++                    let finish = match commands.try_recv() {
++                        Ok(finish) => Some(finish),
++                        Err(mpsc::TryRecvError::Disconnected) => return Ok(None),
++                        Err(mpsc::TryRecvError::Empty) => None,
++                    };
++                    while next <= pending.load(Ordering::Acquire) {
++                        let lengths = checkpoint_lengths(&projection.directory, next)?;
++                        if let Some(prefix) = projection.append(&lengths, None)? {
++                            if finish.is_none() {
++                                publish_prefix(&projection.directory, next, &prefix)?;
++                            }
++                        }
++                        next += 1;
++                    }
++                    if let Some(finish) = finish {
++                        projection.append(&finish.lengths, Some(finish.ended_at))?;
++                        return projection.finish(
++                            Some(finish.ended_at),
++                            finish.complete,
++                            &finish.reason,
++                        );
++                    }
++                    thread::park();
++                }
++            })
++            .map_err(io_error)?;
++        Ok(Self {
++            latest,
++            finish: Some(finish),
++            thread: Some(thread),
++        })
++    }
++
++    pub(crate) fn checkpoint(&self, ordinal: u64) {
++        self.latest.store(ordinal, Ordering::Release);
++        if let Some(thread) = &self.thread {
++            thread.thread().unpark();
++        }
++    }
++
++    pub(crate) fn finish(
++        mut self,
++        lengths: Lengths,
++        ended_at: u64,
++        complete: bool,
++        reason: &str,
++    ) -> Result<FinalCsv, String> {
++        if let Some(sender) = self.finish.take() {
++            let _ = sender.send(Finish {
++                lengths,
++                ended_at,
++                complete,
++                reason: reason.to_owned(),
++            });
++        }
++        let thread = self.thread.take().expect("live projection worker");
++        thread.thread().unpark();
++        thread
++            .join()
++            .map_err(|_| "participant-csv-worker-panicked".to_owned())?
++    }
++}
++
++impl Drop for Worker {
++    fn drop(&mut self) {
++        self.finish.take();
++        if let Some(thread) = self.thread.take() {
++            thread.thread().unpark();
++            let _ = thread.join();
++        }
++    }
++}
++
++fn checkpoint_lengths(directory: &Path, ordinal: u64) -> Result<Lengths, String> {
++    let file =
++        open_regular_recording_file(&directory.join(format!("checkpoint-{ordinal:020}.json")))?;
++    let mut bytes = Vec::new();
++    file.take(1024 * 1024 + 1)
++        .read_to_end(&mut bytes)
++        .map_err(io_error)?;
++    if bytes.len() > 1024 * 1024 {
++        return Err("participant-checkpoint-too-large".into());
++    }
++    let receipt: Value =
++        serde_json::from_slice(&bytes).map_err(|_| "participant-checkpoint-json-invalid")?;
++    if receipt["schema"] != SESSION_CHECKPOINT_SCHEMA || receipt["checkpoint_ordinal"] != ordinal {
++        return Err("participant-checkpoint-identity-invalid".into());
++    }
++    serde_json::from_value(receipt["durable_stream_lengths"].clone())
++        .map_err(|_| "participant-stream-length-invalid".to_owned())
++}
++
++fn publish_prefix(directory: &Path, ordinal: u64, prefix: &Prefix) -> Result<(), String> {
++    let partial = directory.join(".participant-live-prefix.partial");
++    let mut file = OpenOptions::new()
++        .write(true)
++        .create_new(true)
++        .open(&partial)
++        .map_err(io_error)?;
++    serde_json::to_writer(&mut file, &json!({"schema_version": SCHEMA_VERSION, "checkpoint":ordinal,
++        "name":prefix.name,"session_id":prefix.session_id,"size":prefix.size,"sha256":prefix.sha256}))
++        .map_err(|_| "participant-prefix-json-write".to_owned())?;
++    file.sync_all().map_err(io_error)?;
++    drop(file);
++    fs::rename(partial, directory.join(LIVE_PREFIX)).map_err(io_error)?;
++    sync_directory(directory)
++}
++
++pub(crate) fn replay(
++    run: &ParticipantRun,
++    directory: &Path,
++    anchor: ClockAnchor,
++    checkpoint: u64,
++    lengths: &Lengths,
++    cutoff: Option<u64>,
++    complete: bool,
++    reason: &str,
++) -> Result<FinalCsv, String> {
++    discard_recovery_csv(&directory.join(LIVE_CSV))?;
++    let mut projection = Projection::new(run.clone(), directory.to_owned(), anchor);
++    for ordinal in 1..=checkpoint {
++        let checkpoint = checkpoint_lengths(directory, ordinal)?;
++        if checkpoint
++            .iter()
++            .any(|(file, size)| lengths.get(file).is_none_or(|bound| size > bound))
++        {
++            return Err("participant-checkpoint-beyond-durable-stream".into());
++        }
++        projection.append(&checkpoint, None)?;
++    }
++    projection.append(lengths, cutoff)?;
++    projection.finish(cutoff, complete, reason)
++}
++
++pub(crate) fn publish_final(
++    directory: &Path,
++    descriptor: &Value,
++    recovered: bool,
++) -> Result<(), String> {
++    let name = descriptor["name"]
++        .as_str()
++        .filter(|name| valid_csv_filename(name))
++        .ok_or("participant-csv-name-invalid")?;
++    let destination = if recovered {
++        directory.join(format!("{RECOVERED_CSV_PREFIX}{name}"))
++    } else {
++        directory.join(name)
++    };
++    if recovered {
++        discard_recovery_csv(&destination)?;
++    } else if destination.exists() {
++        return Err("participant-csv-already-exists".into());
++    }
++    fs::rename(directory.join(LIVE_CSV), destination).map_err(io_error)?;
++    sync_directory(directory)
++}
++
++#[derive(Clone, Debug)]
++pub(crate) struct Prefix {
++    pub(crate) name: String,
++    pub(crate) session_id: String,
++    pub(crate) size: u64,
++    pub(crate) sha256: String,
++}
++
++struct Output {
++    writer: BufWriter<File>,
++    size: u64,
++    hash: Sha256,
++}
++
++impl Write for Output {
++    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
++        let written = self.writer.write(bytes)?;
++        self.hash.update(&bytes[..written]);
++        self.size += written as u64;
++        Ok(written)
++    }
++
++    fn flush(&mut self) -> io::Result<()> {
++        self.writer.flush()?;
++        self.writer.get_ref().sync_all()
++    }
++}
++
++pub(crate) struct Projection {
++    run: ParticipantRun,
++    directory: PathBuf,
++    anchor: ClockAnchor,
++    identity: String,
++    clock: PlaybackClock,
++    cursors: [u64; STREAMS.len()],
++    latest: u64,
++    output: Option<Output>,
++    name: Option<String>,
++}
++
++impl Projection {
++    pub(crate) fn new(run: ParticipantRun, directory: PathBuf, anchor: ClockAnchor) -> Self {
++        let identity = format!(
++            "{SCHEMA_VERSION},{},{},{},{}",
++            run.plan.participant.as_text(),
++            run.uuid,
++            run.index,
++            run.plan.scenario
++        );
++        Self {
++            run,
++            directory,
++            anchor,
++            identity,
++            clock: PlaybackClock::default(),
++            cursors: [0; STREAMS.len()],
++            latest: 0,
++            output: None,
++            name: None,
++        }
++    }
++
++    pub(crate) fn append(
++        &mut self,
++        lengths: &Lengths,
++        cutoff: Option<u64>,
++    ) -> Result<Option<Prefix>, String> {
++        for (index, (file, kind)) in STREAMS.into_iter().enumerate() {
++            let cursor = self.cursors[index];
++            let length = lengths
++                .get(file)
++                .ok_or("participant-stream-length-invalid")?;
++            let count = length
++                .checked_sub(cursor)
++                .ok_or("participant-stream-length-regressed")?;
++            if count != 0 {
++                let mut input = open_regular_recording_file(&self.directory.join(file))?;
++                input.seek(SeekFrom::Start(cursor)).map_err(io_error)?;
++                let mut input = BufReader::new(input.take(count));
++                let mut line = Vec::new();
++                let mut consumed = 0;
++                while consumed < count {
++                    line.clear();
++                    consumed += input.read_until(b'\n', &mut line).map_err(io_error)? as u64;
++                    if line.last() != Some(&b'\n') {
++                        return Err("participant-stream-incomplete-row".into());
++                    }
++                    let row = serde_json::from_slice(&line)
++                        .map_err(|_| "participant-stream-json-invalid")?;
++                    self.observe(kind, &row, cutoff)?;
++                }
++                self.cursors[index] = *length;
++            }
++            if index == 0 && self.output.is_none() {
++                return Ok(None);
++            }
++        }
++        self.checkpoint()
++    }
++
++    fn observe(&mut self, kind: &str, row: &Value, cutoff: Option<u64>) -> Result<(), String> {
++        let at = row["observed_monotonic_ns"]
++            .as_u64()
++            .ok_or("participant-stream-clock-invalid")?;
++        if cutoff.is_some_and(|end| at > end) {
++            return Ok(());
++        }
++        if kind == "event" {
++            let event = self.clock.observe(row, None)?;
++            if event == Some(SessionEventKind::OfficialStart) {
++                self.start(at)?;
++            }
++            if self.output.is_none() || at < self.clock.start() {
++                return Ok(());
++            }
++            if let Some(event) = event {
++                return self.write_row(at, event.as_str(), None, true, "", "", "");
++            }
++            if let Some(event) = row["event"].as_str().and_then(SessionEventKind::parse) {
++                if let Some(reason) = event.signal_reason() {
++                    return self.write_row(at, event.as_str(), None, false, "", "", reason);
++                }
++            }
++            return Ok(());
++        }
++        if at < self.clock.start() {
++            return Ok(());
++        }
++        if let Some(values) = observation_values(kind, row)? {
++            self.write_row(at, kind, Some(&values), false, "", "", "")?;
++        }
++        Ok(())
++    }
++
++    fn start(&mut self, at: u64) -> Result<(), String> {
++        self.name = Some(self.run.filename(&utc(self.anchor, at)?));
++        let file = OpenOptions::new()
++            .write(true)
++            .create_new(true)
++            .open(self.directory.join(LIVE_CSV))
++            .map_err(io_error)?;
++        let mut output = Output {
++            writer: BufWriter::with_capacity(256 * 1024, file),
++            size: 0,
++            hash: Sha256::new(),
++        };
++        output.write_all(HEADER.as_bytes()).map_err(io_error)?;
++        self.output = Some(output);
++        sync_directory(&self.directory)
++    }
++
++    fn write_row(
++        &mut self,
++        at: u64,
++        kind: &str,
++        values: Option<&[String; 10]>,
++        playback: bool,
++        outcome: &str,
++        end_reason: &str,
++        signal_reason: &str,
++    ) -> Result<(), String> {
++        let output = self
++            .output
++            .as_mut()
++            .ok_or("participant-live-csv-not-started")?;
++        self.latest = self.latest.max(at);
++        write!(
++            output,
++            "{},{kind},{},{}",
++            self.identity,
++            utc(self.anchor, at)?,
++            (at - self.clock.start()) / 1000
++        )
++        .map_err(io_error)?;
++        if playback {
++            let (audio, state) = self.clock.at(at, self.run.plan.seconds * 1_000_000_000);
++            let phase = match state {
++                "waiting" | "ended" => state,
++                _ => self.run.plan.phase_at(audio),
++            };
++            write!(output, ",{},{state},{phase}", audio / 1000).map_err(io_error)?;
++        } else {
++            output.write_all(b",,,").map_err(io_error)?;
++        }
++        if let Some(values) = values {
++            for value in values {
++                write!(output, ",{value}").map_err(io_error)?;
++            }
++        } else {
++            output.write_all(b",,,,,,,,,,").map_err(io_error)?;
++        }
++        if end_reason.contains([',', '"', '\r', '\n']) {
++            writeln!(
++                output,
++                ",{outcome},\"{}\",{signal_reason}\r",
++                end_reason.replace('"', "\"\"")
++            )
++            .map_err(io_error)
++        } else {
++            writeln!(output, ",{outcome},{end_reason},{signal_reason}\r").map_err(io_error)
++        }
++    }
++
++    fn checkpoint(&mut self) -> Result<Option<Prefix>, String> {
++        let Some(output) = self.output.as_mut() else {
++            return Ok(None);
++        };
++        output.flush().map_err(io_error)?;
++        Ok(Some(Prefix {
++            name: self.name.as_ref().expect("opened CSV has a name").clone(),
++            session_id: self.run.uuid.clone(),
++            size: output.size,
++            sha256: format!("{:x}", output.hash.clone().finalize()),
++        }))
++    }
++
++    pub(crate) fn finish(
++        &mut self,
++        cutoff: Option<u64>,
++        complete: bool,
++        reason: &str,
++    ) -> Result<Option<(Value, u64)>, String> {
++        if self.output.is_none() {
++            return Ok(None);
++        }
++        let ended_at = cutoff.unwrap_or(self.latest.max(self.clock.last_event));
++        if ended_at < self.clock.start() {
++            return Err("participant-event-order-invalid".into());
++        }
++        self.write_row(
++            ended_at,
++            "end",
++            None,
++            true,
++            if complete { "completed" } else { "aborted" },
++            reason,
++            "",
++        )?;
++        let prefix = self.checkpoint()?.expect("opened CSV has a checkpoint");
++        self.output.take();
++        Ok(Some((
++            json!({"name":prefix.name, "size":prefix.size, "sha256":prefix.sha256,
++            "session_id":prefix.session_id, "schema_version":SCHEMA_VERSION}),
++            ended_at,
++        )))
++    }
++}

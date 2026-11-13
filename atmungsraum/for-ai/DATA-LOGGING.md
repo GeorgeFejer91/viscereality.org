@@ -8,10 +8,11 @@ The browser validates participant input and Quest filenames in `data-logging.js`
 ## Study collection on Quest and Pixel
 
 Quest 2 records the original Polar H10 streams and finalizes the participant
-CSV on the headset. The installed Pixel PWA pulls verified finalized files
-while Quest is idle before or after a session. While the PWA is open and Drive
-is authorized, it automatically delivers the verified CSV to the private
-research folder. Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
+CSV on the headset. The installed Pixel PWA can pull verified committed CSV
+ranges from a live-capable headset during the session and reconcile complete
+files while Quest is idle. While the PWA is open and Drive is authorized, it
+automatically delivers the CSV to the private research folder.
+Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
 for enrollment, recovery and verification. The filename and identity contract
 below applies throughout the transfer.
 
@@ -123,6 +124,26 @@ events. Marker rows carry the usual time and playback fields with empty
 measurement cells. They may be written after a later-timestamped row, so
 order by the appropriate clock for analysis. Checkpoint recovery preserves
 markers already committed before interruption of the writer.
+
+### Append-only CSV v4
+
+Version 4 keeps the v3 columns and signal markers. It adds playback transition
+rows including `official-start`, `audio-started`, `experiment-paused`,
+`experiment-resumed`, and `audio-ended` or `audio-error` when emitted.
+Playback columns are populated on transition and terminal rows. Join a
+measurement to the latest playback transition at its observation time to
+derive playback state and audio elapsed time. Add the observation time since
+the transition only while playing, and apply the authored phase offsets to
+the resulting audio time. The control events remain ordered relative to each
+other. Measurements can precede the later arrival of an event with an
+earlier timestamp. Use timestamps when reconstructing the timeline.
+
+An independent Quest worker reads only committed native stream ranges. It
+appends events, ECG, ACC, renderer radius and breath rows in that order within
+each checkpoint and publishes the prefix length and SHA-256 after syncing it.
+The final checkpoint tail and one terminal row complete that same file.
+On recovery the worker can replay the same checkpoint boundaries. Historical
+v2 and v3 files keep their existing playback columns and bytes.
 
 ## Historical CSV schema v1
 

@@ -9,12 +9,10 @@ copy is the input to automatic delivery to the research Google Drive.
 
 ## Live sync goal
 
-During a session the phone currently polls a short ECG waveform for the
-operator. Full-resolution samples, breath classifications and renderer
-values stay on Quest until the saved CSV is available. The planned live path
-will upload committed recording bytes in batches while Quest continues
-biofeedback locally. Upload acknowledgements can arrive during a session.
-The Drive file becomes available when the upload finalizes.
+During a session the phone polls a short ECG waveform for the operator. With
+a live-capable Quest build, the phone also pulls committed ranges of the
+full-resolution CSV and uploads them in resumable batches while Quest runs
+biofeedback locally. The Drive file becomes available after finalization.
 The installed Pixel verified this with a synthetic 256 KiB prefix and a
 two-byte final tail in the private research folder. Both the chunk response
 and a separate status query exposed the acknowledged range. Drive reported
@@ -28,8 +26,18 @@ an in-flight request in IndexedDB. After an ambiguous response it queries
 Drive before sending more data. An expired upload session can restart at byte
 zero with the same file ID. The browser uses Google's upload-specific status
 override to read partial acknowledgements while rejecting HTTP redirects.
-Complete staged CSVs use this transport today. The active Quest feed and
-on-phone prefix staging are still pending.
+The installed app must be in the foreground and Drive must be authorized for
+live upload. Quest keeps recording if either connection drops. Pixel resumes
+from its committed offset after rejoin. If the browser was reloaded, reconnect
+Drive from the existing account control to renew the in-memory authorization.
+The final reconciliation pulls any remaining bytes and verifies the complete
+signed SHA-256 before finalizing the same Drive file ID.
+
+For the paired performance trial, open the controller with
+`?live-sync=off` for the baseline, then use the ordinary URL for the live
+run. Both URLs preserve local recording and the existing post-session sync.
+The baseline setting disables active phone transfer and Drive upload on that
+controller. The Quest CSV projection is active in both conditions.
 
 See the [active checklist](PROJECT.md#live-recording-sync-to-google-drive)
 and [Drive resumable upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
@@ -169,11 +177,17 @@ the data.
 | `recordings {query:"list", before:"", limit:16}` | Enumerate exportable finalized runs, newest first. Follow `next_before` until it is null. |
 | `recordings {query:"describe", id}` | Pin the run and its manifest. Retry preparation of the same query within the existing deadline. |
 | `recordings {query:"read", manifest_id, file, offset, length}` | Read up to 32 KiB. Verify the returned manifest, file, offset, length and final SHA-256 before saving. |
+| `recordings {query:"live-describe"}` | Discover the current started participant run and its fsynced CSV prefix. |
+| `recordings {query:"live-read", id, session_id, offset, length}` | Read up to 32 KiB within that committed prefix. The encrypted reply binds the run, offset, length and range SHA-256. |
 
-Run one transfer per Quest from the browser profile. Begin on enrolled join,
+Run one transfer per Quest from the browser profile. The finalized inventory
+and read operations begin on enrolled join,
 after the run returns to idle, and on an idle retry. Stop requesting recording
 bytes as soon as the controller leaves idle or the operator starts a command.
 Quest independently enforces idle Remote admission around recording I/O.
+The live operations require the enrolled private LAN controller and the same
+active generation and session before and after each read. The PWA issues at
+most four sequential 32 KiB ranges per live pass. Controls can abort a pass.
 Keep status and acquisition independent from sync.
 
 Key each committed browser copy by the stable Quest identity and recording ID.

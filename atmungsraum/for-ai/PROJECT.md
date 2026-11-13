@@ -32,11 +32,13 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   Prove the transferred byte prefix remains valid through pause, delayed
   samples and finalization. Use bounded sync work that yields to controls and
   keeps transfer failures off the acquisition and rendering path.
-  Next, bind an append-only CSV projection to committed Quest checkpoints.
-  Preserve the authoritative playback events, including an automatic
-  Polar-stale pause whose timestamp can precede its arrival at the writer.
-  Prove prefix equality on late samples, control changes, recovery and Finish
-  before connecting the phone feed.
+  - [x] Native source `bdfbf8d6` adds the append-only CSV v4 projection and
+    current-run LAN queries. The projection runs on a separate Quest worker.
+    Host tests proved prefix equality through backdated Pause, late
+    samples, finalization and checkpoint recovery. The 78 native recording
+    tests and 86 Android gateway checks passed, including guest/relay denial,
+    committed-range bounds, and active-run replacement while reading.
+  - [ ] Verify the live prefix feed and its sustained rate on Quest 2.
 - [ ] Buffer verified increments on the Pixel and upload them with one resumable
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
   authorization or upload sessions, and use the existing final export to repair
@@ -51,7 +53,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     module and recovered a deliberately lost Drive acknowledgement at byte
     1,048,576. It finalized the 1,310,725-byte synthetic file under the same ID,
     verified its SHA-256 and moved it to trash.
-  - [ ] Connect the prefix uploader to durable Quest ranges and Pixel staging.
+  - [x] Connect the uploader to durable Pixel staging and the signed Quest
+    feed. The 85 browser tests cover range hashes, resume offsets, and repair
+    from the final manifest. The final signed SHA-256 is checked before the
+    final Drive request. The Pixel keeps one Drive file ID for the run.
+  - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.

@@ -1,15 +1,20 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=19';
-import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=21';
-import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
-import { mountQuestDrive } from './quest-drive-ui.js?v=2';
+import { ecgTrace, questRecording, questRecordings, stageQuestPrefix } from './quest-data.js?v=22';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=3';
+import { mountQuestDrive } from './quest-drive-ui.js?v=3';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
 const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
+const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
 
 function idleForSync({ status, busy, pending, unknown }) {
   return status?.p === 'IDLE' && !status.rec && !status.pending && !busy && !pending && !unknown;
+}
+function activeForSync({ status, busy, pending, unknown }) {
+  return liveSync && status?.live_recording === 1 && status.rec && !status.pending && !busy && !pending && !unknown
+    && ['RUNNING', 'PAUSED'].includes(status.p);
 }
 const labels = {
   IDLE: 'Quest bereit.', ARMED: 'Probelauf vorbereitet.', RUNNING: 'Probelauf läuft.',
@@ -54,6 +59,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const download = byId('quest-export-download');
   const archivePicker = byId('quest-archives');
   let ecgTimer, ecgAttempt, exportAttempt, nextSync = 0, exportMessage = '';
+  let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
   let connecting = null;
   let pairingDevice = null;
@@ -154,9 +160,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     disconnect.hidden = !status || active || waiting || unknown;
     if (!idleForSync(rehearsal.state)) {
       exportAttempt?.abort();
-      drive.cancel();
       nextSync = 0;
     }
+    if (!activeForSync(rehearsal.state)) liveAttempt?.abort();
+    if (!idleForSync(rehearsal.state) && !activeForSync(rehearsal.state)) drive.cancel();
     data.hidden = status?.ecg_preview !== 1;
     if (data.hidden) showTrace(null);
     exportStatus.hidden = !exportMessage || !status;
@@ -188,6 +195,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function clearArchives() {
     exportAttempt?.abort();
+    liveAttempt?.abort();
+    liveGeneration = null;
+    nextLive = 0;
     archiveRead++;
     nextSync = 0;
     exportMessage = '';
@@ -257,10 +267,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
               if (stored?.bundleVersion === 1 && stored.bundle instanceof File
                 && (!participantCsv || (stored.download instanceof File && stored.download.name.endsWith('.csv')))) continue;
             }
-            const archive = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+            const archive = await questRecording(gateway, id, signal, { includeSensorBundle: true, store });
             if (participantCsv && !archive.download.name.endsWith('.csv')) throw Error('Quest-CSV fehlt.');
             signal.throwIfAborted();
-            await store.put(id, archive);
+            await store.finalizePrefix(id, archive);
             signal.throwIfAborted();
             drive.schedule();
             void drive.sync();
@@ -283,6 +293,36 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     }
   }
 
+  async function syncLive(gateway, generation) {
+    const attempt = new AbortController();
+    liveAttempt = attempt;
+    const { signal } = attempt;
+    try {
+      await navigator.locks.request('atmungsraum-quest-sync/' + gateway.owner.device,
+        { ifAvailable: true }, async lock => {
+          if (!lock) return;
+          signal.throwIfAborted();
+          const store = await openQuestRecordingStore(gateway.owner);
+          try {
+            const prefix = await stageQuestPrefix(gateway, store, signal);
+            signal.throwIfAborted();
+            if (!prefix || rehearsal.state.status?.g !== generation) return;
+            exportMessage = 'Laufende Quest-Aufnahme wird auf diesem Gerät gespeichert.';
+            paint();
+            void drive.sync(prefix);
+          } finally { store.close(); }
+        });
+    } catch {
+      if (!signal.aborted) {
+        nextLive = performance.now() + 3000;
+        exportMessage = 'Live-Abgleich unterbrochen. Die App versucht es erneut.';
+        paint();
+      }
+    } finally {
+      if (liveAttempt === attempt) liveAttempt = null;
+    }
+  }
+
   async function tick() {
     if (document.hidden || connecting || userAction) return;
     await rehearsal.refresh();
@@ -298,6 +338,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       void syncRecordings(gateway);
     }
     if (idleForSync(rehearsal.state)) void drive.sync();
+    if (activeForSync(rehearsal.state)) {
+      if (liveGeneration !== status.g) {
+        liveGeneration = status.g;
+        nextLive = 0;
+        drive.schedule();
+      }
+      if (!liveAttempt && performance.now() >= nextLive) void syncLive(gateway, status.g);
+    }
     if (!gateway.ecg || ecgAttempt) return;
     const attempt = new AbortController();
     ecgAttempt = attempt;
@@ -430,6 +478,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (userAction) return;
     ecgAttempt?.abort();
     exportAttempt?.abort();
+    liveAttempt?.abort();
     drive.cancel();
     nextSync = 0;
     const attempt = new AbortController();
@@ -496,6 +545,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       userAction?.abort();
       ecgAttempt?.abort();
       exportAttempt?.abort();
+      liveAttempt?.abort();
       drive.cancel();
       showTrace(null);
     } else { nextSync = 0; void tick(); }
@@ -508,7 +558,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (!event.persisted) clearInterval(timer);
   });
   window.addEventListener('pageshow', () => { nextConnect = 0; void tick(); });
-  window.addEventListener('online', () => { nextConnect = 0; void tick(); });
+  window.addEventListener('online', () => { nextConnect = nextLive = 0; drive.schedule(); void tick(); });
   paint();
   void tick();
 }

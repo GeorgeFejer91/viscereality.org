@@ -3,11 +3,62 @@ import { createExportsZip } from './data-files.js?v=20261113-polar-only';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;
 const digest = /^[a-f0-9]{64}$/;
+const sessionId = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const files = ['manifest.json', 'final.json', 'events.jsonl', 'polar-acc.jsonl', 'polar-ecg.jsonl',
   'polar-hr-rr.jsonl', 'breath.jsonl', 'radius.jsonl'];
 const sensorFiles = new Set(['polar-acc.jsonl', 'polar-ecg.jsonl']);
 const maxBytes = 128 * 1024 * 1024;
 const maxParticipantCoreBytes = 1024 * 1024 * 1024;
+const chunkBytes = 32768;
+
+async function hashBytes(bytes) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function chunkData(chunk, length) {
+  if (typeof chunk.data !== 'string' || chunk.data.length !== 4 * Math.ceil(length / 3)) {
+    throw Error('Unvollständiger Quest-Dateiabschnitt.');
+  }
+  const raw = Uint8Array.fromBase64?.(chunk.data) ?? Uint8Array.from(atob(chunk.data), char => char.charCodeAt(0));
+  if (raw.length !== length) throw Error('Ungültige Abschnittsgröße.');
+  return raw;
+}
+
+export async function stageQuestPrefix(gateway, store, signal) {
+  const descriptor = await gateway.recordings({ query: 'live-describe' }, signal);
+  if (descriptor?.v === 1 && descriptor.state === 'preparing') return null;
+  const { id, session_id, name, size, sha256, checkpoint } = descriptor ?? {};
+  if (descriptor?.v !== 1 || descriptor.state !== 'live' || descriptor.schema_version !== 4
+    || !recordingId.test(id) || !sessionId.test(session_id) || !isDatedSessionFilename(name)
+    || !Number.isSafeInteger(size) || size < 1 || size > maxBytes || !digest.test(sha256)
+    || !Number.isSafeInteger(checkpoint) || checkpoint < 1) {
+    throw Error('Ungültiger laufender Quest-Abgleich.');
+  }
+  const prefix = { id, session_id, name, size, sha256, checkpoint };
+  const prior = await store.readPrefix(id);
+  if (prior && (prior.session_id !== session_id || prior.name !== name || prior.offset > size
+    || prior.checkpoint > checkpoint || (prior.checkpoint === checkpoint && prior.sha256 !== sha256))) {
+    throw Error('Die laufende Quest-Aufnahme stimmt nicht mit dem gespeicherten Stand überein.');
+  }
+  const start = prior?.offset ?? 0;
+  const end = Math.min(start + 4 * chunkBytes, size);
+  if (start === end) return prior;
+  const parts = [];
+  for (let offset = start; offset < end; offset += chunkBytes) {
+    signal.throwIfAborted();
+    const length = Math.min(chunkBytes, end - offset);
+    const chunk = await gateway.recordings({ query: 'live-read', id, session_id, offset, length }, signal);
+    if (chunk?.v !== 1 || chunk.state !== 'live-chunk' || chunk.id !== id || chunk.session_id !== session_id
+      || chunk.offset !== offset || chunk.length !== length) throw Error('Unvollständiger Quest-Dateiabschnitt.');
+    const raw = chunkData(chunk, length);
+    if (await hashBytes(raw) !== chunk.sha256) throw Error('Quest-Abschnitt stimmt nicht mit der Prüfsumme überein.');
+    parts.push(new Blob([raw]));
+  }
+  signal.throwIfAborted();
+  await store.appendPrefix(prefix, start, parts);
+  return { ...prefix, offset: end };
+}
 
 export function ecgTrace(frame, transportMs) {
   if (frame?.v !== 1 || frame.unit !== 'uV' || frame.rate !== 130
@@ -83,7 +134,7 @@ function validRecovery(manifest) {
     .every(file => recovery.stream_sha256[file.name] === file.sha256);
 }
 
-export async function questRecording(gateway, id, signal, { includeSensorBundle = false } = {}) {
+export async function questRecording(gateway, id, signal, { includeSensorBundle = false, store } = {}) {
   if (!recordingId.test(id)) throw Error('Ungültige Quest-Aufnahme.');
   const response = await preparedRecordingQuery(gateway, { query: 'describe', id }, signal);
   const manifest = response?.manifest;
@@ -100,7 +151,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     : manifest.file_set_policy === 'core8-recovered-checkpoint' && validRecovery(manifest);
   if (!validFiles) throw Error('Quest hat keine verifizierte Aufnahmedatei geliefert.');
   const csv = manifest.participant_csv;
-  const unified = csv?.schema_version === 2 || csv?.schema_version === 3;
+  const unified = [2, 3, 4].includes(csv?.schema_version);
   const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
   if (total !== manifest.total_bytes || total > (csv ? maxParticipantCoreBytes : maxBytes)) {
     throw Error('Ungültige Größe der Quest-Aufnahme.');
@@ -109,7 +160,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   if (csv !== undefined && (typeof csv?.name !== 'string' || csv.name !== csv.name.normalize('NFC')
     || (csv.schema_version !== undefined && !unified)
     || (!dated && !/^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\.csv$/u.test(csv.name))
-    || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(csv.session_id)
+    || !sessionId.test(csv.session_id)
     || !Number.isSafeInteger(csv.size) || csv.size < 1 || csv.size > maxBytes || !digest.test(csv.sha256))) {
     throw Error('Ungültige Quest-CSV.');
   }
@@ -120,21 +171,21 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
   for (const file of selected) {
-    const bytes = new Uint8Array(file.size);
-    for (let offset = 0; offset < bytes.length; offset += 32768) {
+    const prior = file.schema_version === 4 && await store?.readPrefix(id);
+    const saved = prior?.session_id === file.session_id && prior.name === file.name && prior.offset <= file.size
+      ? await store.readPrefixBytes(id, 0, prior.offset) : null;
+    const parts = saved ? [saved] : [];
+    for (let offset = saved?.size ?? 0; offset < file.size; offset += chunkBytes) {
       signal.throwIfAborted();
-      const length = Math.min(32768, bytes.length - offset);
+      const length = Math.min(chunkBytes, file.size - offset);
       const chunk = await gateway.recordings({ query: 'read', manifest_id: manifest.manifest_id, file: file.name, offset, length }, signal);
       if (chunk?.v !== 1 || chunk.state !== 'chunk' || chunk.manifest_id !== manifest.manifest_id
         || chunk.file !== file.name || chunk.offset !== offset || chunk.length !== length
-        || chunk.sha256 !== file.sha256 || typeof chunk.data !== 'string'
-        || chunk.data.length !== 4 * Math.ceil(length / 3)) throw Error('Unvollständiger Quest-Dateiabschnitt.');
-      const raw = Uint8Array.from(atob(chunk.data), char => char.charCodeAt(0));
-      if (raw.length !== length) throw Error('Ungültige Abschnittsgröße.');
-      bytes.set(raw, offset);
+        || chunk.sha256 !== file.sha256) throw Error('Unvollständiger Quest-Dateiabschnitt.');
+      parts.push(chunkData(chunk, length));
     }
-    const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
-      byte => byte.toString(16).padStart(2, '0')).join('');
+    const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
+    const hash = await hashBytes(bytes);
     if (hash !== file.sha256) throw Error('Quest-Datei stimmt nicht mit der Prüfsumme überein.');
     records.push({ filename: file.name, session_id: id, bytes });
   }

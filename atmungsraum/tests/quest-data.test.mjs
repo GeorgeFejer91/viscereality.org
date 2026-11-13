@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCipheriv, createHash, createHmac } from 'node:crypto';
 import { joinQuest } from '../quest-gateway.js';
-import { ecgTrace, questRecording } from '../quest-data.js';
+import { ecgTrace, questRecording, stageQuestPrefix } from '../quest-data.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const controller = 'b'.repeat(32);
@@ -131,13 +131,26 @@ test('participant exports retain the CSV and both original sensor streams throug
     if (query.query === 'read') assert.equal(query.file, csvName);
     return readRecording(query);
   };
-  for (const schemaVersion of [2, 3]) {
+  for (const schemaVersion of [2, 3, 4]) {
     manifest.participant_csv.schema_version = schemaVersion;
     const unified = await questRecording(gateway, id, signal, { includeSensorBundle: true });
     assert.equal(unified.bundle.name, csvName);
     assert.equal(unified.bundle.type, 'text/csv');
     assert.deepEqual(Buffer.from(await unified.bundle.arrayBuffer()), csv);
   }
+  const resumedOffsets = [];
+  gateway.recordings = async query => {
+    if (query.query === 'read') resumedOffsets.push(query.offset);
+    return readRecording(query);
+  };
+  const prefixBytes = 19;
+  const store = {
+    readPrefix: async () => ({ session_id: manifest.participant_csv.session_id, name: csvName, offset: prefixBytes }),
+    readPrefixBytes: async () => new Blob([csv.subarray(0, prefixBytes)]),
+  };
+  const finalized = await questRecording(gateway, id, signal, { includeSensorBundle: true, store });
+  assert.deepEqual(Buffer.from(await finalized.bundle.arrayBuffer()), csv);
+  assert.equal(resumedOffsets[0], prefixBytes);
   gateway.recordings = readRecording;
   delete manifest.participant_csv.schema_version;
   assert.deepEqual(contents.get(`${stem}_polar-ecg.jsonl`), ecg);
@@ -174,4 +187,40 @@ test('participant exports retain the CSV and both original sensor streams throug
   manifest.recovery.stream_sha256['polar-ecg.jsonl'] = ecgHash;
   corrupt = true;
   await assert.rejects(() => questRecording(gateway, id, signal, { includeSensorBundle: true }), /Prüfsumme/);
+});
+test('the live feed resumes at the committed offset and rejects a corrupted range before storage', async () => {
+  const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+  const id = 'utc-ns-01725000000000000000';
+  const session_id = 'd2d9ddfe-2717-40b9-9995-1bd3f48ff440';
+  const name = 'Tes_30_N_2023-11-14_haupt-15_r1.csv';
+  const bytes = Buffer.alloc(320 * 1024, 37);
+  const descriptors = { v: 1, state: 'live', schema_version: 4, id, session_id, name, size: bytes.length,
+    sha256: hash(bytes), checkpoint: 3 };
+  const offsets = [];
+  let staged, corrupt = false;
+  const store = {
+    readPrefix: async () => staged,
+    appendPrefix: async (prefix, offset, parts) => {
+      assert.equal(offset, staged?.offset ?? 0);
+      staged = { ...prefix, offset: offset + parts.reduce((size, part) => size + part.size, 0) };
+    },
+  };
+  const gateway = { recordings: async ({ query, offset, length }) => {
+    if (query === 'live-describe') return descriptors;
+    offsets.push(offset);
+    const data = bytes.subarray(offset, offset + length);
+    return { v: 1, state: 'live-chunk', id, session_id, offset, length,
+      sha256: corrupt ? '0'.repeat(64) : hash(data), data: data.toString('base64') };
+  } };
+  const signal = new AbortController().signal;
+  const first = await stageQuestPrefix(gateway, store, signal);
+  assert.equal(first.offset, 128 * 1024);
+  corrupt = true;
+  await assert.rejects(() => stageQuestPrefix(gateway, store, signal), /Prüfsumme/);
+  assert.equal(staged.offset, first.offset);
+  corrupt = false;
+  const restarted = await stageQuestPrefix(gateway, store, signal);
+  assert.equal(restarted.offset, 256 * 1024);
+  assert.equal(offsets[4], first.offset);
+  assert.equal(offsets[5], first.offset);
 });

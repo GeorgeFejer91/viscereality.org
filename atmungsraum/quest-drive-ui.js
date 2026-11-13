@@ -1,5 +1,5 @@
-import { createQuestDrive, deliverQuestBundle, questDriveScope } from './quest-drive.js?v=2';
-import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
+import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveScope } from './quest-drive.js?v=2';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=3';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
 const lockName = 'atmungsraum-quest-drive';
@@ -84,7 +84,7 @@ export function mountQuestDrive() {
               } finally { store.close(); }
             });
             signal.throwIfAborted();
-            connection = { drive, destination, expiresAt: performance.now() + expiresIn * 1000 };
+            connection = { drive, destination, expiresAt: performance.now() + expiresIn * 1000, checkFolderAfter: 0 };
             due = 0;
             panel.open = false;
             panel.querySelector('summary').focus({ preventScroll: true });
@@ -122,7 +122,7 @@ export function mountQuestDrive() {
     },
     schedule() { due = 0; },
     cancel() { upload?.abort(); },
-    async sync() {
+    async sync(prefix) {
       if (!owner || !connection || binding || upload || performance.now() < due) return;
       const current = connection;
       if (performance.now() >= current.expiresAt) {
@@ -134,7 +134,7 @@ export function mountQuestDrive() {
       const attempt = new AbortController();
       const signal = attempt.signal;
       upload = attempt;
-      due = performance.now() + 15000;
+      due = performance.now() + 10000;
       try {
         await navigator.locks.request(lockName, { ifAvailable: true }, async lock => {
           if (!lock) return;
@@ -142,6 +142,27 @@ export function mountQuestDrive() {
           const store = await openQuestRecordingStore(selectedOwner);
           try {
             const folderId = current.destination.folderId;
+            if (prefix) {
+              const staged = await store.readPrefix(prefix.id);
+              if (staged?.session_id !== prefix.session_id || staged.offset < 256 * 1024 + 1) {
+                due = 0;
+                return;
+              }
+              const receipt = await store.readDelivery(prefix.id);
+              if (!receipt?.verified && (receipt?.pendingEnd || staged.offset - (receipt?.offset ?? 0) > 256 * 1024)) {
+                if (!receipt || performance.now() >= current.checkFolderAfter) {
+                  await current.drive.ensureFolder(folderId, signal);
+                  current.checkFolderAfter = performance.now() + 30000;
+                }
+                await deliverQuestPrefix({ drive: current.drive, store, folderId, id: prefix.id, name: staged.name,
+                  type: 'text/csv', available: staged.offset, signal,
+                  read: (start, end) => store.readPrefixBytes(prefix.id, start, end) });
+                const acknowledged = (await store.readDelivery(prefix.id))?.offset ?? 0;
+                if (acknowledged) report('Google Drive empfängt die laufende Aufnahme.');
+              }
+              due = 0;
+              return;
+            }
             let saved = 0;
             for (const id of (await store.ids()).reverse()) {
               signal.throwIfAborted();
