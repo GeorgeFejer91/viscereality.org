@@ -87,15 +87,17 @@ Streams retain their own cadence and measurement rows. Empty measurement cells
 mean that the column does not apply to that row. No values are filled or
 resampled to another stream's cadence. For within-sensor analyses use
 `sensor_time_ns` and frame/sample positions. Quest observation time groups
-measurements by host processing and can show BLE batching or jitter. The
+measurements by host processing and can show BLE batching or jitter. Rows can
+arrive slightly out of observation-time order. Sort by the relevant clock
+for analysis. The
 renderer value is the radius parameter used for the frame, so it does not
 describe the outermost extent of an individual particle. The audio phase and
 the classified breathing phase are separate measurements of different things.
 
 ## Historical CSV schema v1
 
-The field list below describes files saved by earlier browser and Quest
-releases. The live browser controller no longer starts local recordings.
+Earlier browser and Quest releases wrote 28-column ECG-only participant
+CSVs. The live browser controller no longer starts local recordings.
 
 ## Historical browser mock source
 

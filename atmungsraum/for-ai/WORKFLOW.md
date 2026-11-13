@@ -148,23 +148,20 @@ Workers' fetch runtime rejects `redirect:error`; use `manual` and reject non-2xx
 responses before accepting a provider result. Browser requests can use error.
 Verify the deployed runtime, not only Node mocks.
 
-## Participant data and mock ECG
+## Participant data and Polar H10
 
-Every participant-data writer must follow [DATA-LOGGING.md](DATA-LOGGING.md)
-and reuse `participantIdentity()` / `sessionFilename()` from `data-logging.js`.
-Run `npm test`, `pnpm run check:ui`, the context checker and rendered checks
-after changes. `npm test` includes audio, source-integrity and data-logging
-regressions. Do not publish participant exports, browser databases or checkpoints.
-If exports are saved inside the checkout, use the ignored `session-data/` folder.
+Use [DATA-LOGGING.md](DATA-LOGGING.md) for participant identity, filenames,
+and CSV fields. The controller confirms fresh ECG and accelerometer streams
+before participant Arm. Quest records and writes one CSV per run. The phone
+verifies its SHA-256, keeps it in IndexedDB, and delivers the same CSV to
+the private Drive folder. Quest's original streams support checkpoint recovery.
 
-`pnpm run generate:ecg` runs the local Python generator using the installed
-NeuroKit/NumPy/SciPy versions recorded in the manifest. Preserve/pin those
-versions for reproduction; review any changed source bytes/settings and manifest
-hash together. The browser loads only the generated local float32 trace and JSON.
-Exercise CSV download/reload recovery, signal gaps, signed pre-start pause timing
-and another live tab's checkpoint ownership. The current recorder requires
-secure-context IndexedDB/Web Locks/Web Crypto; physical browser qualification
-remains distinct from desktop viewport checks.
+Verify raw ECG and accelerometer row counts, sensor timestamps, applied
+radius values, pause timing, and the CSV hash on Quest, phone, and Drive.
+Run the focused native recording suite, Node tests, context checker and
+rendered checks for touched routes. Keep participant exports and checkpoints
+outside Git. The retired browser recorder's completed files are available
+for read-only download at `#daten`.
 
 ## Audio cue generation
 

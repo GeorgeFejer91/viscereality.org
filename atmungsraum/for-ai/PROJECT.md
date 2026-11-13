@@ -30,6 +30,11 @@
   accelerometer rows, 6,355 applied-radius rows with 3,377 distinct radii,
   6,334 breath rows and one terminal row. The participant, scenario and
   attempt matched across all 41,820 data rows.
+  A readback against the Quest originals matched every ECG and accelerometer
+  sample, all 6,355 renderer frames to native float precision, and all
+  classified phases. The 88.526-second run paused and ended manually, with
+  radii from 1.0 to 2.0 metres. Six observation timestamps stepped backward
+  by up to 351 microseconds. Use the clock fields when ordering rows.
 - [x] Interrupt the v2 CSV media PUT before Drive receives it. The installed
   PWA retained the verified local file and unconfirmed receipt. It
   automatically retried the reserved ID after transport recovered. Independent
