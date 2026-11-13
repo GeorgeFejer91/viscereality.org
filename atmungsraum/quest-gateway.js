@@ -95,11 +95,19 @@ async function setupQuestWifi(service, owner, enrollment, credentials, waitForGa
   }
 }
 
+export async function selectQuest(bluetooth) {
+  if (!bluetooth?.requestDevice) throw Error('Öffne VR-Probe in Chrome auf dem Android-Smartphone.');
+  return bluetooth.requestDevice({ filters: [{ services: [serviceId] }] });
+}
+
 export async function discoverQuest(bluetooth, lifetime, setup) {
-  if (!bluetooth) throw Error('Bluetooth-Suche ist hier nicht verfügbar. Gib die Quest-Adresse ein.');
-  const credentials = setup ? hotspotCredentials(setup.hotspot, setup.enrollment) : null;
-  const device = await bluetooth.requestDevice({ filters: [{ services: [serviceId] }] });
-  const signal = AbortSignal.any([lifetime, AbortSignal.timeout(setup ? 52000 : 12000)]);
+  const device = await selectQuest(bluetooth);
+  return readQuest(device, lifetime, setup && { ...setup, forceHotspot: true });
+}
+
+export async function readQuest(device, lifetime, setup) {
+  const credentials = setup?.forceHotspot ? hotspotCredentials(setup.hotspot, setup.enrollment) : null;
+  const signal = AbortSignal.any([lifetime, AbortSignal.timeout(credentials ? 52000 : 12000)]);
   signal.throwIfAborted();
   const waitForGatt = async (operation) => {
     let abort;
@@ -131,12 +139,16 @@ export async function discoverQuest(bluetooth, lifetime, setup) {
       || metadata.gateways.length > 4) {
       throw Error('Die Quest hat ungültige Bluetooth-Suchdaten gemeldet.');
     }
-    if (setup) {
-      if (found.serial !== setup.serial) throw Error('Die gewählte Quest hat eine andere Seriennummer.');
+    if (setup?.serial && found.serial !== setup.serial || setup?.device && found.device !== setup.device) {
+      throw Error('Die gewählte Quest passt nicht zur gespeicherten Verbindung.');
+    }
+    if (credentials) {
       const endpoint = await setupQuestWifi(service, found, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
       return { owner: found, endpoints: [endpoint] };
     }
-    if (!metadata.gateways.length) throw Error('Die Quest ist noch nicht im WLAN. Verwende die Hotspot-Einrichtung per Bluetooth.');
+    if (!metadata.gateways.length && !setup?.hotspot) {
+      throw Error('Verbinde die Quest mit demselben WLAN oder schalte den Smartphone-Hotspot ein.');
+    }
     return { owner: found, endpoints: metadata.gateways.map(questEndpoint) };
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
 }
@@ -158,9 +170,11 @@ async function readJson(response) {
   } finally { await reader.cancel().catch(() => {}); }
 }
 
-export async function joinQuest({ endpoint, serial, build, discovery, enrollment, signal, fetcher = fetch }) {
+export async function joinQuest({ endpoint, serial, device, build, discovery, enrollment, signal, fetcher = fetch }) {
   const url = questEndpoint(endpoint);
-  if (!serialPattern.test(serial) || !hex64.test(build)) throw Error('Prüfe die Seriennummer und den Build-Prüfcode.');
+  if (!serialPattern.test(serial) || (build === undefined ? !enrollment : !hex64.test(build))) {
+    throw Error('Die Einstellungen für die Quest sind ungültig.');
+  }
   if (enrollment && (!hex32.test(enrollment.controller) || !hex64.test(enrollment.key))) {
     throw Error('Prüfe Controller-ID und Quest-Schlüssel.');
   }
@@ -175,7 +189,7 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
   try {
     const raw = await fetchJson();
     const owner = identity(raw);
-    if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial
+    if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial || device && owner.device !== device
       || discovery && !sameQuest(owner, discovery)) throw Error('Quest oder Fernmodus stimmt nicht mit der Auswahl überein.');
     const ticket = enrollment ?? await fetchJson({ v: 1, action: 'connect', device: owner.device, epoch: owner.epoch });
     if (!enrollment && (ticket.v !== 1 || ticket.device !== owner.device || ticket.epoch !== owner.epoch
@@ -219,9 +233,10 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
     const status = async () => {
       const value = await exchange('status', {});
       const observation = value?.o;
+      const fingerprint = value?.build?.packaging_fingerprint;
       if (value?.v !== 1 || value.wifi_snapshot !== 1 || value.build?.v !== 1
-        || value.build.packaging_fingerprint !== build || ![0, 1].includes(value.recordings)) {
-        throw Error('Der Build-Prüfcode passt nicht zum Probelauf.');
+        || !hex64.test(fingerprint) || build !== undefined && fingerprint !== build || ![0, 1].includes(value.recordings)) {
+        throw Error('Der Quest-Build hat sich geändert. Richte die Verbindung erneut ein.');
       }
       if (value.control_mode !== 'remote' || observation?.v !== 1 || observation.s !== 'observed'
         || observation.e !== owner.native_epoch || typeof observation.i !== 'string' || !positive.test(observation.i)
@@ -236,6 +251,7 @@ export async function joinQuest({ endpoint, serial, build, discovery, enrollment
       return value;
     };
     const initial = await status();
+    build ??= initial.build.packaging_fingerprint;
     if (enrollment && initial.ecg_preview === 1) {
       const bytes = await crypto.subtle.sign('HMAC', signingKey,
         encode.encode(`RQG1-PRIVATE-KEY|${controller}|${owner.device}|${owner.epoch}`));

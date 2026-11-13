@@ -59,6 +59,21 @@ test('joins a private Quest, verifies signed observations, and never enrolls the
   }
 });
 
+test('learns the signed build during enrollment and pins the saved headset on reconnect', async () => {
+  const enrollment = { controller, key };
+  const first = server();
+  const paired = await joinQuest({ endpoint, serial: owner.serial, enrollment, fetcher: first.fetch });
+  assert.equal(paired.initial.build.packaging_fingerprint, build);
+  assert.deepEqual(first.requests, ['GET', 'status']);
+  paired.close();
+  const other = server({ identity: { ...owner, device: 'f'.repeat(32) } });
+  await assert.rejects(joinQuest({ endpoint, serial: owner.serial, device: owner.device, build, enrollment, fetcher: other.fetch }));
+  assert.deepEqual(other.requests, ['GET']);
+  const unverified = server({ tamper: true });
+  await assert.rejects(joinQuest({ endpoint, serial: owner.serial, enrollment, fetcher: unverified.fetch }));
+  await assert.rejects(joinQuest({ endpoint, serial: owner.serial, fetcher: first.fetch }));
+});
+
 test('participant Arm encrypts the identity and observed generation for the enrolled Quest', async () => {
   const state = { ...snapshot(), participant_arm: 1, recordings: 1, ecg_preview: 1 };
   const fixture = server({ status: state });

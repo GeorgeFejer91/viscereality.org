@@ -17,7 +17,8 @@ Prioritize touch, portrait/landscape, safe areas and installed-app behavior.
 PC and smartphone browsers serve exclusively as the external controller during
 Quest runs. They send operator requests and display native state and receipts.
 The VR-Probe controller discovers the Quest by Bluetooth, joins its gateway
-over Wi-Fi, and starts Polar setup on Quest. The isolated rehearsal APK
+over Wi-Fi, and starts Polar setup on Quest. The phone saves one verified Quest
+pairing and tries it again when the app opens. The isolated rehearsal APK
 defaults to Remote-only. Android handles Bluetooth permission. Enrolled
 operators can see the live H10 preview and download the verified native
 recording after each rehearsal.

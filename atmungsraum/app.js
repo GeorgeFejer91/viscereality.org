@@ -5,7 +5,11 @@ import { participantIdentity, mountSessionData } from './data-logging.js?v=20261
 import { mountDataFiles } from './data-files.js?v=20261113-open-startup-2';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
-const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest';
+let questPair;
+try { questPair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair')); }
+catch { /* A fresh setup can still run if browser storage is unavailable. */ }
+const rehearsalMode = new URLSearchParams(location.search).get('mode') === 'quest'
+  || Boolean(questPair && !location.hash && !location.search);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let current = null;
 let attempt = 0;
@@ -244,7 +248,7 @@ async function measureLabels() {
 render();
 measureLabels();
 if (rehearsalMode) {
-  import('./quest-ui.js?v=14').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity)).catch(() => {
+  import('./quest-ui.js?v=15').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {

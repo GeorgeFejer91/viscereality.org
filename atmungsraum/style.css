@@ -106,8 +106,6 @@ html[data-mode="quest"] #corner-actions {
   max-width: calc(100% - var(--top-corner-size) - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 8px);
 }
 html[data-mode="quest"]:has(#quest-join:not([hidden])) #recenter-vr { position: absolute; }
-#quest-hotspot-connect { justify-self: stretch; }
-
 #quest { width: min(100%, 640px); justify-self: center; }
 .quest-body, .quest-join, .quest-join details[open], #quest-polar, #quest-data { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
 .quest-body { align-content: center; }
@@ -134,7 +132,7 @@ html[data-mode="quest"]:has(#quest-join:not([hidden])) #recenter-vr { position: 
 #quest-condition-label, #quest-scenario-label, #quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
 #quest-condition, #quest-scenario, #quest-archives { min-height: 48px; min-width: 0; max-width: 100%; padding: 6px 12px; font: inherit; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: inherit; }
 .quest-join summary { min-height: 48px; align-content: center; cursor: pointer; }
-#quest-acknowledge, #quest-disconnect { justify-self: center; }
+#quest-acknowledge, #quest-disconnect, #quest-find, #quest-repair { justify-self: center; }
 .patient-body { grid-template-rows: minmax(0, 1fr); align-content: stretch; justify-items: center; }
 .patient-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); align-items: end; align-content: space-between; align-self: center; gap: var(--gap) var(--patient-gap); width: min(100%, 640px); height: 100%; max-height: 384px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; }
 .patient-field { display: grid; gap: 6px; min-width: 0; }

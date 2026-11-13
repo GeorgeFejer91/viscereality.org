@@ -2,6 +2,23 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### One saved Pixel–Quest 2 connection — 2026-11-13
+
+- [x] Learn the Quest serial and LAN address over Bluetooth and the build
+  fingerprint from signed status. Save one authenticated pairing and any
+  hotspot settings in the phone's browser profile.
+- [x] Open the paired phone directly into VR-Probe. Try the saved address
+  first, then use the previously granted Bluetooth device to rediscover the
+  address and provision the saved hotspot when needed.
+- [x] Verify setup, cold entry, a changed address and headset epoch, rejection
+  of a different headset, and explicit disconnect in Chromium. All 87 Node
+  tests, six scenario pairs, UI and context checks passed.
+- [ ] Complete trusted enrollment and power-cycle both physical devices.
+  The installed Pixel Chrome 134 exposes the Bluetooth chooser. Its
+  `getDevices()` API is unavailable, so automatic use of the saved address
+  and changed-address recovery need separate physical checks.
+  See [verification](VERIFICATION.md#saved-quest-connection--2026-11-13).
+
 ### Password-free startup — 2026-11-13
 
 The start page, VR-Probe and local CSV recovery open without the shared
@@ -154,7 +171,7 @@ shows the corresponding Quest state and receipts.
   private evidence.
 - [ ] Exercise every headset-facing PWA action from the installed phone. Cover
   Bluetooth hotspot setup from a disconnected Quest 2, Bluetooth discovery on
-  existing Wi-Fi, manual LAN join, enrollment, Polar setup and live ECG, condition
+  existing Wi-Fi, saved LAN reconnect, enrollment, Polar setup and live ECG, condition
   selection, Arm, Start, Pause, Resume, Finish, recovery, disconnect/rejoin and
   recording download. Match one original native receipt and state transition to
   each command. Verify the visible VR recenter control on Quest 2 and track any

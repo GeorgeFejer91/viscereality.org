@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createDecipheriv, createHmac } from 'node:crypto';
-import { discoverQuest } from '../quest-gateway.js';
+import { discoverQuest, readQuest } from '../quest-gateway.js';
 
 const serial = 'QUEST-2-TEST';
 const owner = { v: 1, mode: 'remote', device: 'a'.repeat(32), serial, epoch: '7', native_epoch: '8', gateways: [] };
@@ -81,4 +81,19 @@ test('Bluetooth discovery on an existing LAN still uses the advertised gateway',
   assert.deepEqual(result.endpoints, [endpoint]);
   assert.deepEqual(peer.chunks, []);
   assert.equal(peer.gatt.connected, false);
+});
+
+test('reconnect uses the saved hotspot only when needed and checks the stable headset ID before sending it', async () => {
+  const signal = new AbortController().signal;
+  const saved = { serial, device: owner.device, hotspot, enrollment };
+  const peer = fakeQuest();
+  const found = await readQuest(peer, signal, saved);
+  assert.deepEqual(found.endpoints, []);
+  assert.deepEqual(peer.chunks, []);
+  const rejoined = await readQuest(peer, signal, { ...saved, forceHotspot: true });
+  assert.deepEqual(rejoined.endpoints, [endpoint]);
+  assert.ok(peer.chunks.length > 0);
+  const other = fakeQuest({ ...owner, device: 'd'.repeat(32) });
+  await assert.rejects(readQuest(other, signal, { ...saved, forceHotspot: true }));
+  assert.deepEqual(other.chunks, []);
 });

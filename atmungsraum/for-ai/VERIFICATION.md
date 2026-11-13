@@ -1,5 +1,21 @@
 # Verification
 
+## Saved Quest connection — 2026-11-13
+
+All 87 Node tests, six scenario JSON/CSV pairs, UI and context checks passed.
+Chrome exercised one-time setup and cold entry at 390×844, 320×568 with
+enlarged text and spacing, 844×390, and 1280×900. It rejoined after a synthetic
+headset restart and changed address using its saved Bluetooth grant. It
+rejected a different device with the same serial before sending an
+authenticated request. Explicit disconnect stopped retries for the open
+visit. Reconnect sent status requests without replaying a scene command.
+
+USB readback found Quest 2 rehearsal 0.1.20 and the Pixel 10 WebAPK in
+standalone mode. The installed Chrome 134 exposes `requestDevice()` and
+lacks `getDevices()`. The browser can automatically try the saved LAN
+address. Rediscovery after an address change can require the Bluetooth
+chooser. Trusted enrollment and a physical cold restart remain open.
+
 ## Quest 2 audio owner cleanup — 2026-11-13
 
 On a physical Quest 2, an isolated instrumentation process used the production

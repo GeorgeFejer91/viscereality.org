@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261113-open-startup-2">
+  <link rel="stylesheet" href="./style.css?v=20261113-quest-pair">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261113-open-startup-2"></script>
+  <script type="module" src="./app.js?v=20261113-quest-pair"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -128,36 +128,22 @@
       <h1 id="quest-title" tabindex="-1" data-measure>VR-Probelauf</h1>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
+        <button id="quest-find" type="button" hidden><span data-measure>Quest verbinden</span></button>
+        <button id="quest-repair" type="button" hidden><span data-measure>Verbindung neu einrichten</span></button>
         <form id="quest-join" class="quest-join" autocomplete="off" hidden>
-          <p data-measure>Verbinde die Quest mit dem Hotspot des Smartphones oder mit demselben vertrauenswürdigen WLAN. Die Bluetooth-Suche findet die Quest-Adresse.</p>
-          <label for="quest-serial"><span data-measure>Quest-Seriennummer</span></label>
-          <input id="quest-serial" type="text" required maxlength="64" autocapitalize="none" spellcheck="false">
-          <label for="quest-build"><span data-measure>Build-Prüfcode</span></label>
-          <input id="quest-build" type="text" required minlength="64" maxlength="64" pattern="[0-9a-f]{64}" autocapitalize="none" spellcheck="false">
+          <p id="quest-enrollment" data-measure>Gib die Zugangsdaten aus dem Netzwerkmenü der Quest ein. Dieses Smartphone merkt sich die Verbindung.</p>
+          <label for="quest-controller"><span data-measure>Controller-ID</span></label>
+          <input id="quest-controller" type="text" required pattern="[0-9a-f]{32}" maxlength="32" autocapitalize="none" spellcheck="false" aria-describedby="quest-enrollment">
+          <label for="quest-key"><span data-measure>Quest-Schlüssel</span></label>
+          <input id="quest-key" type="password" required pattern="[0-9a-f]{64}" maxlength="64" spellcheck="false">
           <details>
-            <summary><span data-measure>Live-EKG und Aufnahmen freigeben</span></summary>
-            <p data-measure>Die App speichert fertige Quest-Aufnahmen in diesem Browser, solange die Steuerung geöffnet und die Quest im Leerlauf ist.</p>
-            <label for="quest-controller"><span data-measure>Controller-ID</span></label>
-            <input id="quest-controller" type="text" maxlength="32" autocomplete="off" autocapitalize="none" spellcheck="false">
-            <label for="quest-key"><span data-measure>Quest-Schlüssel</span></label>
-            <input id="quest-key" type="password" maxlength="64" autocomplete="off" spellcheck="false">
-          </details>
-          <button id="quest-find" type="button"><span data-measure>Quest suchen</span></button>
-          <details>
-            <summary><span data-measure>Adresse manuell eingeben</span></summary>
-            <label for="quest-address"><span data-measure>Lokale Quest-Adresse</span></label>
-            <input id="quest-address" type="text" inputmode="url" maxlength="64" placeholder="192.168.1.10" autocapitalize="none" spellcheck="false">
-            <button id="quest-connect" type="submit"><span data-measure>Verbinden</span></button>
-          </details>
-          <details>
-            <summary><span data-measure>Hotspot per Bluetooth verbinden</span></summary>
-            <p data-measure>Aktiviere den WLAN-Hotspot am Smartphone. Die Quest muss im Fernmodus sein. Gib oben die Controller-ID und den Quest-Schlüssel ein.</p>
+            <summary><span data-measure>Smartphone-Hotspot verwenden</span></summary>
             <label for="quest-hotspot-ssid"><span data-measure>Hotspot-Name</span></label>
             <input id="quest-hotspot-ssid" type="text" maxlength="32" autocapitalize="none" spellcheck="false">
             <label for="quest-hotspot-password"><span data-measure>Hotspot-Passwort</span></label>
-            <input id="quest-hotspot-password" type="password" maxlength="63" autocomplete="off" spellcheck="false">
-            <button id="quest-hotspot-connect" type="button"><span data-measure>Quest mit Hotspot verbinden</span></button>
+            <input id="quest-hotspot-password" type="password" minlength="8" maxlength="63" spellcheck="false">
           </details>
+          <button type="submit"><span data-measure>Verbindung speichern</span></button>
         </form>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
         <details id="quest-participant" hidden>

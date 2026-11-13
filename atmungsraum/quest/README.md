@@ -36,19 +36,19 @@ are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
 
 On startup, the Quest APK requests Android’s turn-on dialog if its Bluetooth
-radio is off. VR-Probe shows a Bluetooth reminder on the phone at startup.
-Chrome's device chooser checks the phone's power state after the operator
-taps a Bluetooth search control.
+radio is off. On first setup, **Quest verbinden** opens Chrome's Bluetooth
+chooser. Enter the enrolled controller credentials from the headset's network
+panel once. VR-Probe learns the serial and signed build and saves the pairing.
 
 To connect a Quest 2 to a Pixel hotspot, turn on the phone’s Wi-Fi hotspot,
-open **Hotspot per Bluetooth verbinden** in VR-Probe, and enter the hotspot
-name and password. Enter the enrolled controller ID and Quest key from the
-headset’s network panel before choosing the Quest in the Bluetooth picker.
+open **Smartphone-Hotspot verwenden** during setup, and enter the hotspot
+name and password once.
 The browser verifies the selected serial and encrypts the credentials for
 that headset before sending them. Accept Android’s join prompt in the
 headset if shown. The controller continues over the authenticated Wi-Fi
 gateway after the headset reports a local address. The connection belongs
 to the active Quest app and is released when Remote mode or its owner ends.
+The phone reuses the saved settings when reconnecting.
 
 The enrolled phone can recenter the app scene while Quest is in immersive
 Remote mode. Quest uses its current eye poses and confirms the action after

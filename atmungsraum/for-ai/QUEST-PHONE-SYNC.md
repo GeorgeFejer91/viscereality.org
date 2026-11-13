@@ -13,11 +13,12 @@ copy is the input to automatic delivery to the research Google Drive.
    On a fresh Quest profile, press **B** three times without holding the grip
    in Remote mode to open the headset's maintenance panel. Under **Network
    control**, select **Approve trusted LAN controller** on the trusted test
-   network. Enter the resulting Controller ID and Quest key under **Live-EKG
-   und Aufnahmen freigeben** on the Pixel and join using Bluetooth discovery
-   or the Quest's Wi-Fi address. Grant Android Nearby devices and Chrome Local
-   Network Access if prompted. Close the maintenance panel to return to the
-   immersive scene before starting.
+   network. Tap **Quest verbinden**, select the Quest in Chrome and enter the
+   Controller ID and Quest key from the headset once. If using the Pixel
+   hotspot, turn it on and enter its name and password under
+   **Smartphone-Hotspot verwenden**. Approve Android Nearby devices, hotspot
+   join on Quest, and Chrome Local Network Access when prompted. Close the
+   maintenance panel to return to the immersive scene before starting.
 2. Before a session, let the idle controller reconcile any finalized runs.
    In **Google Drive**, authorize the designated research account as described
    below. The PWA creates and remembers **Atmungsraum – Quest-Aufnahmen** as
@@ -30,7 +31,11 @@ copy is the input to automatic delivery to the research Google Drive.
    run appears in the recording selector. Wait for the Drive confirmation,
    then verify that the new ZIP is in the designated folder. For qualification,
    compare the SHA-256 and manifest with the copies on the Pixel and Quest.
-5. After an interrupted connection, reopen and rejoin while Quest is idle.
+5. After an interrupted connection, reopen the app while Quest is in Remote
+   mode. The saved pairing opens VR-Probe and tries the last known address.
+   If it changed, supported browsers can rediscover the Quest using its
+   saved Bluetooth grant. Use **Erneut verbinden** if Chrome needs the chooser
+   again or Local Network Access has to be granted.
    Use **Jetzt abgleichen** if needed. If Google authorization expired,
    reconnect Drive. Confirm delivery before relying on the Drive copy.
 
@@ -89,8 +94,8 @@ Keep status and acquisition independent from sync.
 Key each committed browser copy by the stable Quest identity and recording ID.
 Skip committed IDs on the next inventory. Commit only complete verified files
 in one IndexedDB transaction. Retry failed, interrupted or uncommitted files
-on the next idle check. A browser restart requires rejoining the enrolled
-gateway. The same browser profile retains its committed copies across browser
+on the next idle check. After browser restart, the controller tries to rejoin
+the enrolled gateway. The same browser profile retains its copies across browser
 and Quest app restarts. The operator can explicitly download a saved copy to
 the phone filesystem.
 
