@@ -534,8 +534,13 @@ this repository.
   stem. The CSV, ECG and ACC ZIP entries matched their Quest SHA-256 values,
   and Drive independently listed the private 2,694,638-byte ZIP. The
   export manifest used the same stem.
-- [ ] Reconcile the completed five-minute run with the larger native validation
-  bound and verify byte equality through Drive.
+- [x] Reconcile the completed five-minute run with the larger native validation
+  bound. The Pixel durably saved a 131,158,666-byte ZIP. A PWA reload interrupted
+  delivery after the queue reserved a Drive ID. Account renewal restarted
+  delivery using that same ID. Independent folder inventory found exactly one
+  private object for the completed run. The Drive receipt and Pixel ZIP
+  SHA-256 matched, as did the CSV, ECG and ACC entries against Quest.
+  The resumed upload completed in about four minutes.
 - [ ] Complete the remaining physical stress and pairing cases in
   [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 

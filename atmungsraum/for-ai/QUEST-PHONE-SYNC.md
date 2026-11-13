@@ -71,7 +71,10 @@ and saved with zero dropped writer records after signal pauses. Its internal
 core exceeded the original 128 MiB export limit. The CSV, ECG and ACC
 together totaled 131,155,067 bytes. The updated export gate validates a
 larger bounded native core and applies the phone limit to the files delivered
-to the Pixel.
+to the Pixel. The installed Pixel committed a 131,158,666-byte ZIP and
+its three data-file hashes matched Quest. A PWA reload during delivery
+preserved the local ZIP and reserved Drive ID. After account renewal, the
+queue confirmed the exact ZIP hash and the private folder contained one copy.
 
 ## Run identity and files
 
