@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-mode="quest">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -13,25 +13,19 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261113-quest-pair">
+  <link rel="stylesheet" href="./style.css?v=20261113-quest-recording">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261113-participant-files"></script>
+  <script type="module" src="./app.js?v=20261113-quest-recording"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
     <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
     <span id="recenter-vr-note" class="sr-only">Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.</span>
   </button>
-  <aside id="belt-signal" data-state="waiting" role="status" aria-label="Polar-Demosignal" title="Noch kein ECG-Demosignal">
-    <span class="polar-belt" aria-hidden="true"></span><span id="belt-status" class="sr-only">Noch kein ECG-Demosignal</span>
-  </aside>
   <div id="corner-actions">
     <button id="install-app" type="button" aria-label="App installieren" aria-haspopup="dialog" aria-controls="install-dialog" aria-expanded="false" title="App installieren">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg>
       <span data-measure>App installieren</span>
-    </button>
-    <button id="open-files" type="button" aria-label="Gespeicherte Dateien öffnen" aria-haspopup="dialog" aria-controls="files-dialog" aria-expanded="false" title="Gespeicherte Dateien">
-      <img src="./assets/icons/folder.svg" width="96" height="96" alt="" aria-hidden="true">
     </button>
   </div>
   <dialog id="install-dialog" aria-labelledby="install-title" aria-describedby="install-intro">
@@ -45,87 +39,9 @@
     <p data-measure>iPhone / Safari: Tippe auf „Teilen“ und „Zum Home-Bildschirm“. Aktiviere „Als Web-App öffnen“, falls angeboten.</p>
     <p data-measure>Fehlt die Option? Öffne viscereality.org/atmungsraum/ direkt in Chrome oder Safari statt im eingebetteten Browser einer anderen App.</p>
   </dialog>
-  <dialog id="files-dialog" aria-labelledby="files-title" aria-describedby="files-scope">
-    <header class="files-header">
-      <h2 id="files-title" data-measure>Gespeicherte Dateien</h2>
-      <button id="close-files" type="button" autofocus><span data-measure>Schließen</span></button>
-    </header>
-    <p id="files-scope" data-measure>Dateien aus diesem Browser werden zu Wormhole hochgeladen. Discord erhält den Downloadlink.</p>
-    <p id="files-counts" data-measure>Dateien werden geladen …</p>
-    <div class="files-actions">
-      <button id="send-new-files" type="button" disabled><span data-measure>Ungesendete Daten senden</span></button>
-      <button id="send-all-files" type="button" disabled><span data-measure>Alle Daten senden</span></button>
-    </div>
-    <progress id="files-progress" max="100" aria-label="Versandfortschritt" hidden></progress>
-    <p id="files-status" role="status" tabindex="-1" data-measure></p>
-  </dialog>
-  <dialog id="discord-password-dialog" aria-labelledby="discord-password-title" aria-describedby="discord-password-help">
-    <h2 id="discord-password-title" data-measure>Datenversand freigeben</h2>
-    <form id="discord-password-form" method="dialog">
-      <input id="discord-password-user" type="hidden" name="username" autocomplete="username" value="Atmungsraum Discord">
-      <label for="discord-password" data-measure>Passwort</label>
-      <input id="discord-password" type="password" name="password" autocomplete="current-password" required autofocus aria-describedby="discord-password-help">
-      <p id="discord-password-help" data-measure>Gib das gemeinsame Passwort für den Datenversand ein.</p>
-      <label class="relay-auto"><input id="remember-discord-password" type="checkbox"><span data-measure>Passwort im Browser merken</span></label>
-      <div class="files-actions">
-        <button id="cancel-discord-password" type="button"><span data-measure>Abbrechen</span></button>
-        <button type="submit"><span data-measure>Freigeben</span></button>
-      </div>
-      <p id="discord-password-status" role="status" data-measure></p>
-    </form>
-  </dialog>
   <main>
-    <section class="screen" id="h10" aria-labelledby="sensor-status" hidden>
-      <div class="sensor-header">
-        <h1 id="sensor-status" tabindex="-1" role="status" data-measure>Suche Polar … (Demo)</h1>
-      </div>
-      <div class="screen-body sensor-body">
-        <button id="select-polar" hidden><span data-measure>Polar auswählen</span></button>
-        <figure class="ecg-box" hidden aria-label="ECG · Demo">
-          <canvas id="ecg" aria-label="Simuliertes ECG für die UI-Demo"></canvas>
-        </figure>
-      </div>
-      <footer class="actions">
-        <button id="connect"><span data-measure>Erneut suchen</span></button>
-        <a id="sensor-next" href="#runde" aria-disabled="true" tabindex="-1"><span data-measure>Weiter</span></a>
-      </footer>
-      <noscript>Für diese UI-Demo brauchst du JavaScript. Es ist kein echtes Headset verbunden.</noscript>
-    </section>
-    <section class="screen" id="patient" aria-labelledby="patient-title">
-      <h1 id="patient-title" tabindex="-1" data-measure>Patientendaten</h1>
-      <form id="patient-form" class="screen-body patient-body" autocomplete="off">
-        <fieldset class="patient-fields" id="patient-fields" aria-labelledby="patient-title" disabled>
-          <label class="patient-field" for="patient-surname">
-            <span data-measure>Nachname (erste 3 Buchstaben)</span>
-            <input id="patient-surname" name="surnamePrefix" type="text" minlength="3" maxlength="3" pattern="\p{L}{3}" required spellcheck="false" autocapitalize="off">
-          </label>
-          <label class="patient-field" for="patient-age">
-            <span data-measure>Alter (Jahre)</span>
-            <input id="patient-age" name="age" type="number" min="0" max="9007199254740991" step="1" inputmode="numeric" required>
-          </label>
-          <fieldset class="patient-gender">
-            <legend data-measure>Geschlecht</legend>
-            <div class="gender-options">
-              <label><input type="radio" name="gender" value="male" required><span data-measure>Männlich</span></label>
-              <label><input type="radio" name="gender" value="female" required><span data-measure>Weiblich</span></label>
-              <label><input type="radio" name="gender" value="other" required><span data-measure>Divers</span></label>
-              <label><input type="radio" name="gender" value="prefer-not-to-say" required><span data-measure>Keine Angabe</span></label>
-            </div>
-          </fieldset>
-          <label class="patient-field patient-identifier" for="patient-id">
-            <span data-measure>Teilnehmer-ID</span>
-            <output id="patient-id" for="patient-surname patient-age" aria-live="off" data-measure>—</output>
-          </label>
-        </fieldset>
-        <noscript>Für diese Demo brauchst du JavaScript. Es werden keine Daten ohne JavaScript gesendet.</noscript>
-      </form>
-      <footer class="actions">
-        <button id="patient-next" type="submit" form="patient-form" disabled><span data-measure>Weiter</span></button>
-        <a href="?mode=quest#quest"><span data-measure>VR-Probe</span></a>
-      </footer>
-    </section>
-    <section class="screen" id="quest" aria-labelledby="quest-title" hidden>
-      <h1 id="quest-title" tabindex="-1" data-measure>VR-Probelauf</h1>
+    <section class="screen" id="quest" aria-labelledby="quest-title">
+      <h1 id="quest-title" tabindex="-1" data-measure>Quest-Steuerung</h1>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
         <button id="quest-find" type="button" hidden><span data-measure>Quest verbinden</span></button>
@@ -148,6 +64,32 @@
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
         <details id="quest-participant" hidden>
           <summary><span id="quest-participant-label" data-measure>Teilnehmer-ID eingeben</span></summary>
+          <form id="patient-form" class="screen-body patient-body" autocomplete="off">
+            <fieldset class="patient-fields" id="patient-fields" aria-labelledby="quest-participant-label" disabled>
+              <label class="patient-field" for="patient-surname">
+                <span data-measure>Nachname (erste 3 Buchstaben)</span>
+                <input id="patient-surname" name="surnamePrefix" type="text" minlength="3" maxlength="3" pattern="\p{L}{3}" required spellcheck="false" autocapitalize="off">
+              </label>
+              <label class="patient-field" for="patient-age">
+                <span data-measure>Alter (Jahre)</span>
+                <input id="patient-age" name="age" type="number" min="0" max="9007199254740991" step="1" inputmode="numeric" required>
+              </label>
+              <fieldset class="patient-gender">
+                <legend data-measure>Geschlecht</legend>
+                <div class="gender-options">
+                  <label><input type="radio" name="gender" value="male" required><span data-measure>Männlich</span></label>
+                  <label><input type="radio" name="gender" value="female" required><span data-measure>Weiblich</span></label>
+                  <label><input type="radio" name="gender" value="other" required><span data-measure>Divers</span></label>
+                  <label><input type="radio" name="gender" value="prefer-not-to-say" required><span data-measure>Keine Angabe</span></label>
+                </div>
+              </fieldset>
+              <label class="patient-field patient-identifier" for="patient-id">
+                <span data-measure>Teilnehmer-ID</span>
+                <output id="patient-id" for="patient-surname patient-age" aria-live="off" data-measure>—</output>
+              </label>
+            </fieldset>
+            <button id="patient-next" type="submit" disabled><span data-measure>Teilnehmer-ID übernehmen</span></button>
+          </form>
         </details>
         <label id="quest-condition-label" hidden>
           <span id="quest-condition-name" data-measure>Szenario</span>
@@ -201,71 +143,17 @@
         <button id="quest-disconnect" type="button" hidden><span data-measure>Verbindung trennen</span></button>
       </div>
       <footer class="actions">
-        <a id="quest-demo" href="./#patient"><span data-measure>Zur Demo</span></a>
         <button id="quest-play" type="button" hidden><span data-measure>Starten</span></button>
         <button id="quest-finish" type="button" hidden><span data-measure>Beenden</span></button>
       </footer>
     </section>
-    <section class="screen" id="runde" aria-labelledby="start-title" hidden>
-      <h1 id="start-title" tabindex="-1" data-measure>Übung wählen</h1>
-      <div class="screen-body round-body">
-        <nav class="rounds" aria-label="Übungsart auswählen">
-          <a class="round" href="#probe-runde" aria-labelledby="round-probe-label">
-            <img class="round-art" src="./assets/rounds/probe-runde.svg?v=20261105-simple" width="240" height="160" alt="" aria-hidden="true">
-            <span id="round-probe-label" data-measure>Probe-Runde</span>
-          </a>
-          <a class="round" href="#start-haupt-15" aria-labelledby="round-main-label">
-            <img class="round-art" src="./assets/rounds/haupt-runde.svg?v=20261105-simple" width="240" height="160" alt="" aria-hidden="true">
-            <span id="round-main-label" data-measure>Haupt-Runde · 15 Minuten</span>
-          </a>
-        </nav>
-      </div>
-      <footer class="actions">
-        <a class="back" href="#patient"><span data-measure>← Patientendaten</span></a>
-      </footer>
-    </section>
-    <section class="screen" id="probe-runde" aria-labelledby="probe-title" hidden>
-      <h1 id="probe-title" tabindex="-1" data-measure>Probe-Runde</h1>
-      <div class="screen-body choices-body">
-        <nav class="options" aria-label="Probe-Runde wählen">
-          <a class="option" href="#start-probe-anleitung"><span><span data-measure>Anleitung</span><span class="option-hint" data-measure>Ohne Zeitlimit</span></span></a>
-          <a class="option" href="#start-probe-5"><span data-measure>5 Minuten</span></a>
-          <a class="option" href="#start-probe-10"><span data-measure>10 Minuten</span></a>
-          <a class="option" href="#start-probe-15"><span data-measure>15 Minuten</span></a>
-        </nav>
-      </div>
-      <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
-    </section>
-    <section class="screen" id="session-start" aria-labelledby="session-title" data-session-active="false" hidden>
-      <h1 id="session-title" tabindex="-1" data-measure>Session starten</h1>
-      <div class="screen-body play-body">
-        <output id="start-status" aria-live="polite" data-measure hidden></output>
-        <button id="play" data-action="start" class="play-button" aria-label="Starten">
-          <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 10 54 32 18 54Z" fill="currentColor"/></svg>
-          <span data-measure>Starten</span>
-        </button>
-        <div class="play-feedback">
-          <div class="session-progress">
-            <p id="session-phase" data-measure>Bereit</p>
-            <progress id="session-progress" max="1" value="0" aria-label="Wiedergabefortschritt" aria-live="off"></progress>
-            <div class="session-times">
-              <span id="session-time" role="timer" aria-label="Vergangene Zeit" aria-live="off" data-measure>00:00</span>
-              <span id="session-duration" aria-label="Gesamtdauer" data-measure>00:00</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <footer class="actions">
-        <a id="session-back" class="back" href="#probe-runde"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z" fill="currentColor"/></svg><span data-measure>← Zurück</span></a>
-      </footer>
-    </section>
     <section class="screen" id="daten" aria-labelledby="data-title" hidden>
-      <h1 id="data-title" tabindex="-1" data-measure>CSV-Dateien</h1>
+      <h1 id="data-title" tabindex="-1" data-measure>Frühere Browser-Aufnahmen</h1>
       <div class="screen-body data-body">
-        <p id="data-status" role="status" data-measure>Noch keine Session-Daten.</p>
+        <p id="data-status" role="status" data-measure>Aufnahmen werden geladen …</p>
         <ul id="data-files"></ul>
       </div>
-      <footer class="actions"><a class="back" href="#runde"><span data-measure>← Zurück</span></a></footer>
+      <footer class="actions"><a class="back" href="./"><span data-measure>← Zurück</span></a></footer>
     </section>
   </main>
 </body>

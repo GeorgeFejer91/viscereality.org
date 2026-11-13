@@ -102,6 +102,12 @@ to the Pixel.
 
 ## Transfer
 
+Quest CSV v2 is the only participant file the controller pulls for new runs.
+The signed descriptor advertises `schema_version: 2`. After checking its
+length and SHA-256, the controller saves the CSV and sends those same bytes
+to Drive. Quest keeps its original checkpoint streams. The legacy ZIP
+procedure below applies to earlier recordings.
+
 Reuse the existing RQG1 LAN gateway. The enrolled controller verifies the
 Quest identity and signed observations. Requests and replies bind the action,
 nonce and gateway epoch with HMAC-SHA-256. Private recording responses use the

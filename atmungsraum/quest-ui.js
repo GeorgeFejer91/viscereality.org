@@ -1,6 +1,6 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=7';
-import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=7';
+import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=18';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
 
@@ -33,7 +33,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const finish = byId('quest-finish');
   const acknowledge = byId('quest-acknowledge');
   const disconnect = byId('quest-disconnect');
-  const demo = byId('quest-demo');
   const condition = byId('quest-condition');
   const conditionName = byId('quest-condition-name');
   const scenario = byId('quest-scenario');
@@ -43,11 +42,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const participantForm = byId('patient-form');
   const participantFields = byId('patient-fields');
   const participantSubmit = byId('patient-next');
+  const participantOutput = byId('patient-id');
   let participantId = '';
-  participant.append(participantForm);
-  participantForm.append(participantSubmit);
-  participantFields.setAttribute('aria-labelledby', participantLabel.id);
-  text(participantSubmit.firstElementChild, 'Teilnehmer-ID übernehmen');
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -156,7 +152,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     acknowledge.hidden = !rehearsal.canAcknowledgeIdle();
     acknowledge.disabled = busy;
     disconnect.hidden = !status || active || waiting || unknown;
-    demo.hidden = Boolean(status || pending || connecting);
     if (!idleForSync(rehearsal.state)) {
       exportAttempt?.abort();
       drive.cancel();
@@ -453,9 +448,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     void connect({ enrollment: { controller, key }, hotspot: ssid || passphrase ? { ssid, passphrase } : undefined });
   });
   participantForm.addEventListener('input', () => {
-    if (!participantId) return;
-    participantId = '';
-    paint();
+    try { text(participantOutput, participantIdentity(Object.fromEntries(new FormData(participantForm))).id); }
+    catch { text(participantOutput, '—'); }
+    if (participantId) {
+      participantId = '';
+      paint();
+    }
   });
   participantForm.addEventListener('submit', (event) => {
     event.preventDefault();

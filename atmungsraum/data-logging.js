@@ -137,30 +137,6 @@ function openDatabase() {
     request.onblocked = () => reject(new Error('Session database blocked'));
   });
 }
-function reserveRun(db, key) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction('counters', 'readwrite');
-    const store = tx.objectStore('counters');
-    const request = store.get(key);
-    let index;
-    request.onsuccess = () => {
-      index = (request.result ?? 0) + 1;
-      if (!Number.isSafeInteger(index) || index < 1) { tx.abort(); return; }
-      store.put(index, key);
-    };
-    tx.oncomplete = () => resolve(index);
-    tx.onabort = tx.onerror = () => reject(tx.error ?? new Error('Run counter unavailable'));
-  });
-}
-function storeExport(db, record) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(['exports', 'active'], 'readwrite');
-    tx.objectStore('exports').put(record);
-    tx.objectStore('active').delete(record.session_id);
-    tx.oncomplete = resolve;
-    tx.onabort = tx.onerror = () => reject(tx.error ?? new Error('CSV storage unavailable'));
-  });
-}
 function readStore(db, store, key) {
   return new Promise((resolve, reject) => {
     const records = db.transaction(store).objectStore(store);
@@ -169,110 +145,10 @@ function readStore(db, store, key) {
     request.onerror = () => reject(request.error);
   });
 }
-function checkpoint(db, log, includeSource = false) {
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(includeSource ? ['active', 'sources'] : ['active'], 'readwrite');
-    tx.objectStore('active').put(log.checkpoint());
-    if (includeSource) tx.objectStore('sources').put({ samples: log.signal.samples, manifest: log.signal.manifest, rate: log.signal.rate }, log.signal.manifest.sha256);
-    tx.oncomplete = resolve;
-    tx.onabort = tx.onerror = () => reject(tx.error ?? new Error('Checkpoint unavailable'));
-  });
-}
-const lockName = id => `atmungsraum-session:${id}`;
-function holdSession(id) {
-  return new Promise((resolve, reject) => {
-    navigator.locks.request(lockName(id), () => new Promise(release => { resolve(release); })).catch(reject);
-  });
-}
-
-export function mountSessionData(signal) {
-  const list = document.getElementById('data-files');
-  const status = document.getElementById('data-status');
-  const links = new Map();
-  const exports = new Map();
-  let db, preparation;
-  function show(record, download = false) {
-    let link = links.get(record.session_id);
-    if (!link) {
-      link = document.createElement('a');
-      const label = document.createElement('span');
-      label.dataset.measure = '';
-      link.append(label);
-      const item = document.createElement('li');
-      item.append(link); list.prepend(item);
-      links.set(record.session_id, link);
-    }
-    const previous = exports.get(record.session_id);
-    if (previous?.csv !== record.csv || previous?.filename !== record.filename) {
-      if (previous) URL.revokeObjectURL(link.href);
-      link.href = URL.createObjectURL(new Blob([record.csv], { type: 'text/csv;charset=utf-8' }));
-      link.download = record.filename;
-      link.firstElementChild.textContent = record.filename;
-      exports.set(record.session_id, record);
-    }
-    if (download) link.click();
-    status.textContent = 'CSV-Datei zum Herunterladen auswählen.';
-  }
-  return {
-    async exports() {
-      await this.prepare();
-      const records = await readStore(db, 'exports');
-      records.sort((a, b) => a.created_at.localeCompare(b.created_at)).forEach(record => show(record));
-      return [...exports.values()].reverse();
-    },
-    prepare() {
-      if (!navigator.locks) return Promise.reject(new Error('Safe session recovery requires Web Locks'));
-      preparation ??= openDatabase().then(database => {
-        db = database;
-        return readStore(db, 'exports').then(async records => {
-          records.sort((a,b) => a.created_at.localeCompare(b.created_at)).forEach(record => show(record));
-          for (const saved of await readStore(db, 'active')) {
-            await navigator.locks.request(lockName(saved.session_id), { ifAvailable: true }, async lock => {
-              if (!lock) return; // Another tab still owns this live recording.
-              const current = await readStore(db, 'active', saved.session_id);
-              if (!current) return;
-              const source = await readStore(db, 'sources', current.sourceHash);
-              if (!source) throw new Error('Interrupted session source unavailable');
-              const record = SessionLog.recover(current, { ...source, indexAt: () => 0 });
-              await storeExport(db, record);
-              show(record);
-            });
-          }
-        });
-      }).catch(error => { preparation = null; throw error; });
-      return preparation;
-    },
-    begin(options) {
-      if (!db || !signal.samples) throw new Error('Session data not ready');
-      const log = new SessionLog({ ...options, signal });
-      log.ready = reserveRun(db, `${log.identity.id}_${log.condition}`).then(async index => {
-        log.runIndex = index;
-        log.releaseLock = await holdSession(log.id);
-        try { await checkpoint(db, log, true); }
-        catch (error) { log.releaseLock(); throw error; }
-        const saveCheckpoint = () => checkpoint(db, log).catch(error => {
-          status.textContent = 'Zwischenstand konnte nicht gesichert werden. Session beenden und CSV herunterladen.';
-          console.warn('Session checkpoint failed.', error);
-        });
-        if (log.ended == null) {
-          log.onChange = saveCheckpoint;
-          log.checkpointTimer = setInterval(saveCheckpoint, 1000);
-        }
-      });
-      return log;
-    },
-    finish(receipt, attempt) {
-      if (!attempt.recording?.runIndex || attempt.dataFinished) return;
-      attempt.dataFinished = true;
-      clearInterval(attempt.recording.checkpointTimer);
-      attempt.recording.onChange = null;
-      const record = attempt.recording.finish(receipt.status, receipt.records?.findLast(event => event.type === 'abort')?.reason ?? '');
-      show(record, true);
-      document.dispatchEvent(new Event('atmungsraum:exports-changed'));
-      storeExport(db, record).catch(error => {
-        status.textContent = 'CSV konnte nicht im Browser gesichert werden. Bitte jetzt herunterladen.';
-        console.warn('Session CSV storage failed.', error);
-      }).finally(() => attempt.recording.releaseLock?.());
-    },
-  };
+export async function savedBrowserExports() {
+  const db = await openDatabase();
+  try {
+    const records = await readStore(db, 'exports');
+    return records.sort((first, second) => second.created_at.localeCompare(first.created_at));
+  } finally { db.close(); }
 }

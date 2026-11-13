@@ -100,12 +100,14 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     : manifest.file_set_policy === 'core8-recovered-checkpoint' && validRecovery(manifest);
   if (!validFiles) throw Error('Quest hat keine verifizierte Aufnahmedatei geliefert.');
   const csv = manifest.participant_csv;
+  const unified = csv?.schema_version === 2;
   const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
   if (total !== manifest.total_bytes || total > (csv ? maxParticipantCoreBytes : maxBytes)) {
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
   const dated = typeof csv?.name === 'string' && isDatedSessionFilename(csv.name);
   if (csv !== undefined && (typeof csv?.name !== 'string' || csv.name !== csv.name.normalize('NFC')
+    || (csv.schema_version !== undefined && !unified)
     || (!dated && !/^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\.csv$/u.test(csv.name))
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(csv.session_id)
     || !Number.isSafeInteger(csv.size) || csv.size < 1 || csv.size > maxBytes || !digest.test(csv.sha256))) {
@@ -113,7 +115,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   }
   const records = [];
   const selected = csv ? [csv] : manifest.files;
-  if (csv && includeSensorBundle) selected.push(...manifest.files.filter(file => sensorFiles.has(file.name)));
+  if (csv && includeSensorBundle && !unified) selected.push(...manifest.files.filter(file => sensorFiles.has(file.name)));
   if (selected.reduce((sum, file) => sum + file.size, 0) > maxBytes) {
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
@@ -139,6 +141,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   signal.throwIfAborted();
   const participantFile = csv ? new File([records[0].bytes], csv.name, { type: 'text/csv' }) : null;
   if (participantFile && !includeSensorBundle) return participantFile;
+  if (unified) return { download: participantFile, bundle: participantFile, bundleVersion: 1 };
   const manifestName = 'export-manifest.json';
   records.push({ filename: manifestName, session_id: id, csv: JSON.stringify(manifest, null, 2) });
   if (dated) {

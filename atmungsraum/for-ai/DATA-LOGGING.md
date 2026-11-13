@@ -61,35 +61,43 @@ JSON/audio receipts must retain the same identity too. Shared scenario CSVs,
 audio manifests and synthetic source fixtures contain no participant data and
 are not renamed by this protocol.
 
-## CSV schema v1
+## Participant CSV v2
 
-Use UTF-8, comma separators, one header row, CRLF records, decimal points and
-RFC-style quoting. Quote commas, quotes and newlines; neutralize spreadsheet
-formula prefixes in nonnumeric text. Retain these current fields:
+Quest produces one UTF-8, comma-separated CSV per started attempt. The Pixel
+downloads and sends this same file to the existing private Drive destination.
+The signed Quest export descriptor carries `schema_version: 2` and binds the
+filename, bytes, SHA-256 and session UUID. Quest keeps its checkpointed native
+streams for recovery. Older exports retain their original format and ZIP
+transfer. Earlier browser CSVs remain downloadable at `#daten`.
 
-| Group | Columns |
+| Columns | Meaning |
 | --- | --- |
-| Identity | `schema_version`, `participant_id`, `name_prefix`, `age_years`, `gender_code`, `condition`, `run_index`, `session_id` |
-| Authored session | `scenario_id`, `scenario_sha256`, `planned_duration_seconds`, `session_started_utc` |
-| Sample and clocks | `sample_index`, `elapsed_ms`, `timestamp_utc`, `audio_elapsed_ms`, `playback_state`, `phase` |
-| ECG provenance | `ecg_value`, `ecg_unit`, `signal_source`, `signal_state`, `signal_sha256`, `sample_rate_hz`, `source_sample_index`, `source_loop` |
-| Outcome | `session_status` (`completed` or `aborted`), `end_reason` |
+| `schema_version`, `participant_id`, `session_id`, `run_index`, `scenario_id` | Format 2, normalized participant ID, attempt UUID, one-based index, authored scenario |
+| `record_type` | `ecg`, `accelerometer`, `radius`, `breath` or `end` |
+| `timestamp_utc`, `elapsed_us` | Quest observation time projected onto UTC and whole microseconds since official Start |
+| `audio_elapsed_us`, `playback_state`, `audio_phase` | Authored audio position and phase at observation time, with position held through a pause |
+| `sensor_time_ns`, `sensor_frame_sequence`, `sensor_sample_index` | Polar sample time on the sensor clock, frame counter and index within that frame, on ECG and accelerometer rows |
+| `ecg_uv` | Every retained decoded Polar H10 ECG reading in microvolts |
+| `acc_x_mg`, `acc_y_mg`, `acc_z_mg` | Every retained decoded three-axis accelerometer sample in milligravity |
+| `render_frame`, `radius_m` | Renderer frame number and the applied world-anchor radius in metres from the particle renderer |
+| `breathing_phase` | Polar accelerometer classifier output before guidance bias, including `unknown` |
+| `session_status`, `end_reason` | Final outcome and reason on the `end` row |
 
-Sample indices start at zero. UTC timestamps use ISO 8601 with `Z`; elapsed
-times derive from `performance.now()`. The ECG wall clock continues through
-deliberate audio pauses; `audio_elapsed_ms` stays fixed while paused. `phase`
-follows the selected authored audio protocol, including the distinct `instruction_1`, `calibration`, `instruction_2` and
-`outro` main classes. Main `planned_duration_seconds` is exactly 900, including
-all instructions and calibration. No main baseline is present. Calibration
-receipts expose planned audio-clock start/end; the future H10 accelerometer
-value remains null/not-integrated until a real measurement source is wired.
-Missing signal produces a blank ECG value with explicit `signal_state`, rather
-than a stale or fabricated available measurement. A signal timeout, navigation,
-Escape, hidden page, interrupted audio clock or manual End aborts the attempt;
-retain its partial CSV and the reason. A start that never produces a run has no
-successful-session CSV. Reserve indices transactionally; gaps are acceptable.
+Streams retain their own cadence and measurement rows. Empty measurement cells
+mean that the column does not apply to that row. No values are filled or
+resampled to another stream's cadence. For within-sensor analyses use
+`sensor_time_ns` and frame/sample positions. Quest observation time groups
+measurements by host processing and can show BLE batching or jitter. The
+renderer value is the radius parameter used for the frame, so it does not
+describe the outermost extent of an individual particle. The audio phase and
+the classified breathing phase are separate measurements of different things.
 
-## Current mock source
+## Historical CSV schema v1
+
+The field list below describes files saved by earlier browser and Quest
+releases. The live browser controller no longer starts local recordings.
+
+## Historical browser mock source
 
 The ECG source runs continuously in the background, independently of the
 session recorder. Once connected/prepared, its clock continues through menus,
@@ -98,7 +106,7 @@ segment of that already-running stream; it must not generate a new source,
 restart its epoch or return to sample zero. End/completion closes only the
 recording, and a later Start opens another segment at the current stream position.
 Audio Pause freezes audio time only: ECG acquisition and its recording continue.
-The demo keeps one `MockECG` instance/epoch for the page and snapshots
+The former demo kept one `MockECG` instance/epoch for the page and snapshot
 `signal.indexAt(recordingStart)` per run. A page reload starts a new demo clock.
 Quest owns the real H10 BLE connection, sample clock, recording and artifact
 generation. Preserve the same acquisition/recording separation in the native
@@ -160,12 +168,10 @@ archives retain their 128 MiB limit.
 The browser records the reserved Drive ID and SHA-256 before upload, then
 confirms the destination and bytes before marking delivery complete. Keep
 delivery receipts separate from Quest and phone recording custody.
-Its real sensor rows add `observed_monotonic_ns`, `source_clock`,
-`source_time_ns` and `source_frame_sequence`. UTC is the anchored Quest
-observation time. Sensor time stays in the Polar clock domain. Gap rows
-have blank voltage, and unavailable rehearsal scenario and audio timing
-fields stay blank. See PROJECT.md for the open encrypted Arm and physical
-phone checks.
+The archived JSONL streams preserve separate sensor and Quest clocks. A
+Quest v1 participant CSV keeps the original 28-column header and leaves ECG
+voltage blank on signal-gap markers. Quest v2 carries Polar sample time
+explicitly and uses sample positions to expose gaps.
 
 Each successfully started run snapshots the patient and selection. Its unique
 UUID is shared by its CSV and audio receipt. IndexedDB

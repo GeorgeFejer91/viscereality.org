@@ -2,6 +2,25 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Polar H10 recording and single participant CSV — 2026-11-13
+
+- [x] Open the Quest controller by default and retire browser-local recording.
+  Preserve read-only download of historical browser files at `#daten`.
+- [x] Verify native CSV v2 against ECG, accelerometer, applied renderer radius,
+  and Polar breath-classifier fixtures with independent timestamps. Reuse the
+  checkpoint writer for interrupted attempts. The 73 focused Rust recording
+  tests passed on native commit `535cea3b`.
+- [x] Verify that the controller fetches only the hash-bound v2 CSV for
+  participant download and Drive delivery. Older Quest bundles retain their
+  existing reader. All 88 Node tests passed, along with four Chromium
+  viewport/zoom and historical download checks.
+- [ ] Install and qualify the matching native build on Quest 2. Run a synthetic
+  participant with a worn H10 through official Start, breathing, pause and
+  Finish. Check that ECG and three-axis accelerometer rows are retained, the
+  applied renderer radius changes over breathing cycles, and Pixel/Drive
+  receive the same single CSV. See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
+
+
 ### Windows Quest 2 keep-awake task — 2026-11-13
 
 The lab Windows account starts the **Quest 2 Keep Awake** Task Scheduler

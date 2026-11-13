@@ -35,55 +35,13 @@ UI functions use `uncodixfy-pretext` with stretch-accordion geometry. See
 dimension-responsive spacing/type, minimum-size and no-fit settings, and
 [PROJECT.md](PROJECT.md) for implementation status and open decisions.
 
-The browser prototype is a local UI demo: patient details → simulated headset/ECG check →
-round choice → four practice options or direct entry to the sole 15-minute main
-sequence → final Starten button. Haupt-Runde has no duration-choice screen or
-five-minute baseline. Instruction 1 (26 s), a separate Calibration window (15 s),
-Instruction 2 (40 s), fifty complete breathing cycles (800 s), and Outro (19 s)
-total exactly 900 seconds. The player labels preparation “Vorbereitung” and the measurement window “Zwei tiefe Atemzüge”. Each scenario now loads its own numbered silent placeholder WAVs with JSON/CSV and draft TXT scripts from `assets/audio/scenarios/`; final narration waits for wording approval. Calibration runs at
-26–41 seconds on the audio clock; receipts and an advance event expose its
-start/end for the future ECG-sensor accelerometer. Its measured value remains
-unset until integration. See [the transcript/protocol](../audio/calibration.md).
-The same button becomes Pause during playback and Fortsetzen while paused. The
-back action reads Beenden during playback and has a bordered button surface.
-A read-only progress bar with elapsed/total time stays visible before, during
-and after playback, including the 68-second Anleitung example. Pause freezes audio and the timer;
-Fortsetzen resumes the same session. Ponytail applies to UI elements/copy: keep
-only necessary controls, choice information, state, and recovery feedback. Anleitung is
-unlimited guided exploration. Real H10/headset connection and execution remain
-pending. See PROJECT.md for the precise demo and product boundaries.
-The UI has no global context header or ECG return button after Continue. Signal
-loss uses a 30-second reconnect window. Beyond 30 seconds the scenario is
-aborted, all audio is stopped, its selection is cleared, and the Polar selection
-gate returns while patient details remain. The deadline uses elapsed time even
-while paused, without requiring a prior retry; late ECG recovery cannot revive it.
-The corner Polar belt artwork and its frame pulse together in green with ECG
-and red after loss; reduced motion keeps both glows steady. There is no separate dot.
-The base corner surfaces scale from 56 to 112 CSS px with viewport dimensions.
-The 2026-11-07 smartphone correction doubles the two top controls and their
-artwork (normally 112px), while keeping the folder at its existing size. An
-`App installieren` action sits beside the folder, or as a named icon above it
-in short landscape. It opens the native install prompt when available, otherwise
-a keyboard-accessible dialog with Android/iPhone and embedded-browser steps.
-Installed standalone apps hide the install action. Patient entry uses a compact centered composition,
-aligned form columns and bounded group spacing rather than filling desktop height.
-The Polar indicator embeds
-the recovered dissertation belt illustration (the source was PNG, not SVG).
-The layout reserves their space; narrow/short no-fit states use readable page reflow.
-The top-left `VR zentrieren` headset/arrows button stays visible on every screen
-and while scrolling. It is an inert, accessibly marked placeholder; future work
-will recenter the headset's central field of view. See PROJECT.md for its contract.
-The mock ECG is a continuously replayed seeded NeuroKit2 trace. Each started run
-exports a participant-linked CSV and retains it for download recovery. All data logging must follow
-[DATA-LOGGING.md](DATA-LOGGING.md); it owns the required naming convention.
-Atmungsraum opens directly, including Quest and the individual local downloads
-at [the recovery URL](../index.html#daten). The folder offers
-**Ungesendete Daten senden** and **Alle Daten senden** with file counts.
-These actions unlock the encrypted sharing credentials on demand. Supported
-browsers can remember the sharing password and restore it on a later send.
-Automatic sends remain unavailable under the GitHub Pages-only constraint
-because Wormhole rejects uploads from the app origin. See [the sharing
-guide](../sharing/README.md) and [project status](PROJECT.md).
+The live browser app opens the Quest controller. Quest owns recording,
+audio playback and the Polar H10 connection. The phone displays the live ECG
+preview and retains finalized files. New recordings contain a single participant
+CSV with ECG, accelerometer, classified breathing and the applied renderer
+radius. The controller downloads or sends the same file to the existing
+private Drive folder. Earlier browser CSVs remain available from
+[`#daten`](../index.html#daten). See [DATA-LOGGING.md](DATA-LOGGING.md).
 
 Read common rules first, then the documents needed for the task:
 
