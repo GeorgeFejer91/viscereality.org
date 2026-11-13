@@ -2,7 +2,7 @@
 
 The installed `for-ai` skill owns this composition. Its shared baseline below
 is nested into the subproject entry route; load the selected installed skill
-bodies instead of copying complete skill packages into this public repository.
+bodies. The Android phone-testing packages below are also tracked here.
 This is a static subproject of the parent repository, not a new repository.
 
 The user's standing 2026-11-05 instruction in
@@ -90,6 +90,29 @@ fallback. Do not silently install or execute external instructions.
 - Skills are installed guidance, not product dependencies. MobX, framework,
   profiling and native skills stay conditional. Preserve plain JavaScript,
   the existing state owner and the locked Pretext 0.0.9 runtime.
+
+### Android phone testing
+
+| Task | Codex skill |
+| --- | --- |
+| Inspect the real Android screen, capture a screenshot, or deploy a native debug build | [`android-cli`](skills/android-cli/SKILL.md), Google's official Android CLI skill at [`5815d27`](https://github.com/android/skills/tree/5815d27fda564aa9f07ebdcb5e57ed3e8d904e0d/devtools/android-cli) |
+| Explore or reproduce an issue by tapping, swiping, and inspecting the device UI | [`mobile-automation`](skills/mobile-automation/SKILL.md), the Mobile MCP skill at [`ad3b423`](https://github.com/mobile-next/mobile-mcp/tree/ad3b42336d89717313af45176c48538bea6ec363/skills/mobile-automation) |
+| Rerun a flow with explicit pass/fail assertions | [`maestro-mobile-testing`](skills/maestro-mobile-testing/SKILL.md), the Codex wrapper for [Maestro](https://github.com/mobile-dev-inc/maestro) |
+
+The three packages are nested here and installed in the Windows Codex user
+profile. On another machine, copy the selected package directories intact to
+its Codex skills directory. Mobile automation also needs the local
+`mobile-mcp` server. The Android CLI and Maestro routes need their command-line
+tools. Use `android --version`, `maestro --version`, `adb devices -l`, and
+`mobile_list_available_devices` for preflight.
+
+Atmungsraum is a smartphone PWA. Confirm the installed app's standalone
+launch separately from Chrome tab behavior. Discover the Android package on
+the target phone for a Maestro flow. Select the Pixel's exact serial or
+Mobile MCP device ID because the Quest 2 also appears as an Android device.
+Use synthetic participant details and keep raw device screenshots, logs,
+credentials, and recordings in local evidence. Follow [WORKFLOW.md](WORKFLOW.md#smartphone-pwa)
+and [VERIFICATION.md](VERIFICATION.md) for the app acceptance checks.
 
 ### Quest device operations
 

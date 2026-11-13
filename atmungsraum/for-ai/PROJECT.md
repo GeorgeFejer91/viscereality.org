@@ -2,6 +2,22 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Codex Android phone testing — 2026-11-13
+
+The [Android phone testing route](SKILLS.md#android-phone-testing) nests the
+official Google and Mobile MCP skills and the local Maestro wrapper. Codex
+reported all three skills enabled. Mobile MCP 1.0.17 initialized over local
+stdio, exposed 34 tools, and found the USB-connected Pixel 10 on Android 16.
+The Windows launch commands returned Android CLI 1.1.16919734 and Maestro
+2.12.1. Android showed a Play Protect prompt during the CLI's layout-helper
+installation. The physical PWA flow and headset/H10 acceptance remain open.
+
+Next for phone acceptance, reopen the installed Atmungsraum PWA in standalone
+mode on the Pixel and verify its foreground state. Continue with the existing
+Quest 2 checklist and use an explicit device ID for each phone command.
+The skill change is prepared on the current remote main in an isolated sparse
+checkout because the primary checkout's cloud-backed Git index was unavailable.
+
 ### Quest 2 control, media and UI acceptance — 2026-11-12
 
 **Meta Quest 2 is the required headset for Atmungsraum development and release
