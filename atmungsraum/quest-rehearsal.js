@@ -42,8 +42,12 @@ function setupConfirmed(status, { op, setupRef, candidate }) {
   return setup.c && (op === 'connect' || setup.e);
 }
 
+export function rehearsalPolarAllowed(status) {
+  return status?.pi?.r === false || status?.pi?.r === true && status.participant_arm === 1;
+}
+
 export function rehearsalActions(status, condition = conditions[0]) {
-  if (!status || status.pending || status.pi?.r !== false || polarSetup(status)?.sc) return {};
+  if (!rehearsalPolarAllowed(status) || status.pending || polarSetup(status)?.sc) return {};
   const selected = conditions.indexOf(condition);
   if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec
     && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
@@ -52,7 +56,8 @@ export function rehearsalActions(status, condition = conditions[0]) {
   const grant = status.q;
   const allowed = status.h === 'vr-session' && next && grant?.v === 2 && grant.g === status.g
     && typeof grant.s === 'string' && /^[a-f0-9]{32}$/.test(grant.s) && Array.isArray(grant.o) && grant.o.includes(next);
-  return { play: allowed ? next : undefined, finish: next || status.p === 'RECORDING' ? 'save-next' : undefined };
+  const canPlay = allowed && (next === 'pause' || status.pi.r === false || status.pi.f === true);
+  return { play: canPlay ? next : undefined, finish: next || status.p === 'RECORDING' ? 'save-next' : undefined };
 }
 
 export class QuestRehearsal {

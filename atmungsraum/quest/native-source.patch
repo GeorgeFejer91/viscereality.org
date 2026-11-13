@@ -5262,7 +5262,7 @@ index 5bc5902d..ca15dab0 100644
        "type": "array",
        "items": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..15f8b557 100644
+index ccb3e308..c5804245 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
@@ -5295,7 +5295,16 @@ index ccb3e308..15f8b557 100644
      private static String pendingAudioPrepareOperation = "";
      private static String pendingAudioCondition = "";
      private static boolean audioImmersiveAdmitted;
-@@ -1178,10 +1191,11 @@ $sharedPanelFacade
+@@ -1104,6 +1117,8 @@ $sharedPanelFacade
+                 && (preparedClosureApplicationContext != context
+                     || !preparedClosureFilesRoot.equals(appPrivateFilesRoot)))
+             throw new SecurityException("prepared-owner-scope-mismatch");
++        // The app-lifetime audio worker owns the scenario tracks it verifies.
++        if (conditionAudioRuntime != null) return;
+         ConditionAudioContract.TrustedPackagedInventory inventory =
+             ConditionAudioContract.TrustedPackagedInventory.unavailable(
+                 "packaged-inventory-not-loaded");
+@@ -1178,10 +1193,11 @@ $sharedPanelFacade
                  phaseProviders[0],phaseProviders[1],phaseProviders[2]);
          }
          try {
@@ -5308,7 +5317,7 @@ index ccb3e308..15f8b557 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1189,6 +1203,8 @@ $sharedPanelFacade
+@@ -1189,6 +1205,8 @@ $sharedPanelFacade
                              + receipt.event.name().toLowerCase(java.util.Locale.ROOT)
                              + " generation=" + receipt.sessionGeneration
                              + " revision=" + receipt.receiptRevision
@@ -5317,7 +5326,7 @@ index ccb3e308..15f8b557 100644
                              + " reason=" + receipt.reason);
                      String eventOperation = receipt.event == ConditionAudioContract.Event.PREPARED
                          ? "audio-prepared" : receipt.event == ConditionAudioContract.Event.ACTUAL_START
-@@ -1245,6 +1261,13 @@ $sharedPanelFacade
+@@ -1245,6 +1263,13 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -5331,8 +5340,8 @@ index ccb3e308..15f8b557 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1334,12 +1357,27 @@ $polarBleStopHooks
- 
+@@ -1334,12 +1359,27 @@ $polarBleStopHooks
+
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
 +        return startConditionAudio(sessionGeneration, operationId, conditionId, "");
@@ -5360,7 +5369,7 @@ index ccb3e308..15f8b557 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1385,13 @@ $polarBleStopHooks
+@@ -1347,12 +1387,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -5375,7 +5384,7 @@ index ccb3e308..15f8b557 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1400,13 @@ $polarBleStopHooks
+@@ -1361,12 +1402,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -5390,7 +5399,7 @@ index ccb3e308..15f8b557 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1528,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1530,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -5402,7 +5411,7 @@ index ccb3e308..15f8b557 100644
          }
          return clean;
      }
-@@ -1525,6 +1568,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1570,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;

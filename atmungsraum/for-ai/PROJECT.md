@@ -429,6 +429,17 @@ this repository.
 - [x] Verify a signed join from the installed Pixel and fresh Polar H10 ECG
   and ACC on Quest 2. The phone rendered the live ECG and reported Quest
   ready. The native sensor counters advanced for both streams.
+- [x] Install signed 0.1.23. Its app-lifetime audio worker keeps the scenario
+  catalog it verified across repeated preparation. The Quest reported a
+  verified catalog, the Pixel showed the participant form and scenario
+  choices, and an enrolled Arm prepared the authored timeline. The saved
+  phone pairing correctly rejected the changed APK fingerprint until the
+  operator re-enrolled it.
+- [x] Enable participant session controls when the native status requires
+  fresh Polar input. On the physical Arm, the old PWA disabled Start even
+  though the signed status reported fresh input. The controller now gates
+  Start and Resume on freshness and keeps Pause and Finish available during
+  signal loss. The targeted regression and existing Quest tests passed.
 - [ ] Start and finish a participant session. Check the original ECG, ACC and
   participant CSV on Quest.
 - [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
@@ -443,8 +454,11 @@ this repository.
 - [x] Configure the Atmungsraum PWA web OAuth client for
   `https://viscereality.org` in the Drive API project. Verify the designated
   account in the testing audience and the per-file Drive scope.
-- [ ] After the signed Pixel join, authorize Drive on the installed PWA and
-  verify the private destination folder and actual upload readback.
+- [x] Authorize Drive in the installed PWA. The first consent returned without
+  a usable token. A second account selection returned the scoped token. The
+  PWA verified the account and folder, and a separate Drive metadata query
+  confirmed the private destination **Atmungsraum – Quest-Aufnahmen**.
+- [ ] Verify real Drive upload and readback of a finalized participant bundle.
 - [x] Run the targeted automated sync and fault-injection tests. Eight passed,
   including 40 simulated Drive bundles through lost responses and restarts.
 - [ ] Complete the attended Quest + worn H10 + Pixel + real Drive stress pass

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDecipheriv, createHmac } from 'node:crypto';
 import { discoverQuest, joinQuest, questEndpoint } from '../quest-gateway.js';
-import { QuestRehearsal } from '../quest-rehearsal.js';
+import { QuestRehearsal, rehearsalActions } from '../quest-rehearsal.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const build = 'b'.repeat(64);
@@ -182,6 +182,21 @@ test('rehearsal sends one fenced Arm, Start, Pause, Resume and Finish using nati
   await rehearsal.run('finish');
   assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start', 'pause', 'resume', 'save-next']);
   assert.equal(rehearsal.state.status.p, 'IDLE');
+});
+
+test('participant sessions accept the native Polar requirement and retain pause and finish when signal is stale', () => {
+  const armed = { ...snapshot('ARMED', 1, 1), participant_arm: 1, pi: { r: true, f: true, h: false } };
+  assert.deepEqual(rehearsalActions(armed), { play: 'start', finish: 'save-next' });
+  const stale = { ...armed, pi: { ...armed.pi, f: false } };
+  assert.deepEqual(rehearsalActions(stale), { play: undefined, finish: 'save-next' });
+  const running = { ...snapshot('RUNNING', 1, 2), participant_arm: 1, pi: stale.pi };
+  assert.deepEqual(rehearsalActions(running), { play: 'pause', finish: 'save-next' });
+  const paused = { ...snapshot('PAUSED', 1, 3), participant_arm: 1, pi: { ...stale.pi, h: true } };
+  assert.deepEqual(rehearsalActions(paused), { play: undefined, finish: 'save-next' });
+  assert.deepEqual(rehearsalActions({ ...paused, pi: { ...paused.pi, f: true } }),
+    { play: 'resume', finish: 'save-next' });
+  assert.deepEqual(rehearsalActions({ ...armed, participant_arm: undefined }), {});
+  assert.deepEqual(rehearsalActions({ ...armed, pi: undefined }), {});
 });
 
 test('an enrolled scenario Arm binds the native generation and the selected timeline', async () => {

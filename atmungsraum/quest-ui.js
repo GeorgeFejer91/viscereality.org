@@ -1,5 +1,5 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalScenarios } from './quest-rehearsal.js?v=6';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=7';
 import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=6';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
@@ -96,8 +96,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       ? 'Warte auf die gespeicherte Quest.'
       : 'Starte die Quest im Fernmodus und schalte Bluetooth am Smartphone ein.')
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
-      : status.pi?.r !== false ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
+      : !rehearsalPolarAllowed(status) ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
       : requiresParticipant && !armedWithParticipant ? 'Verbinde dich mit dem Quest-Schlüssel, um einen Probelauf zu starten.'
+      : status.pi?.r === true && status.pi.f !== true && ['ARMED', 'PAUSED'].includes(status.p)
+        ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
       : status.p === 'IDLE' && !actions.play ? 'Warte auf die VR-Szene und den Probelauf.'
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || pairWarning || (unknown
