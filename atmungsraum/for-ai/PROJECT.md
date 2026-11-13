@@ -166,6 +166,15 @@ files, project notes and Atmungsraum URL passed live checks.
 
 ### Quest 2 control, media and UI acceptance — 2026-11-12
 
+The [VR UI testing protocol](VR-UI-TESTING.md) documents Meta XR Operator
+against Meta's standalone, Unity, Simulator and Quest guides. The standalone
+layer is the candidate for the native rehearsal. Compatibility with the
+Atmungsraum build and Quest 2 firmware is pending. To qualify it, build the
+isolated test APK, read a focused session with advancing frames, and verify
+one input and its visible result. Continue the physical phone and Quest 2
+acceptance below using the regular rehearsal build.
+The For-AI context check and the protocol's local links and anchors passed.
+
 **Meta Quest 2 is the required headset for Atmungsraum development and release
 acceptance.** Use a physical Quest 2 and the installed Android PWA. Earlier Quest 3
 checks remain historical evidence. Keep Quest as the authority for scene, media

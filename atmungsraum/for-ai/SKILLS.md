@@ -144,6 +144,11 @@ awake holds, protected sleep recovery, and watchdog cleanup. Use the
 and evidence checks. The runbook and resolved Meta Quest playbooks also cover
 sessions where the user skill is unavailable.
 
+For immersive scene and input checks, use the [VR UI testing protocol](VR-UI-TESTING.md).
+It routes to the standalone Meta XR Operator layer for the native rehearsal and
+to Unity's AI Tools for Unity test scenes. Keep phone and device acceptance in
+the [Quest 2 checklist](PROJECT.md#quest-2-control-media-and-ui-acceptance--2026-11-12).
+
 Treat every PC or smartphone browser as the external operator controller in
 Quest mode. Apply the existing gateway contract for typed requests and native
 receipts. The Quest app owns the H10 connection, scenario, clock, recording and

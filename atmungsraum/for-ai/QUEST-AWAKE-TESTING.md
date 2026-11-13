@@ -5,6 +5,8 @@ rehearsal. In Codex, invoke `$keep-quest-awake` for the operator workflow and us
 this runbook for command examples. Before touching the headset, follow the
 [Quest device operations route](SKILLS.md#quest-device-operations) and its
 resolved Meta Quest playbooks. The selected provider owns device changes.
+Use the [VR UI testing protocol](VR-UI-TESTING.md) for XR Operator connection,
+immersive input, and frame assertions once the target app is ready.
 
 ## Set up the bench
 

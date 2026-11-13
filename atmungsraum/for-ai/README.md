@@ -88,6 +88,8 @@ guide](../sharing/README.md) and [project status](PROJECT.md).
 Read common rules first, then the documents needed for the task:
 
 - [PROJECT.md](PROJECT.md): purpose, current page contract, and deployment facts.
+- [VR-UI-TESTING.md](VR-UI-TESTING.md) covers Meta XR Operator setup, VR UI
+  interaction checks and headset evidence.
 - [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers bounded awake holds,
   headset readiness, recovery, and cleanup for bench and rehearsal tests.
 - [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md): Quest 2 → installed Pixel PWA → private Google Drive collection procedure and stress test.
