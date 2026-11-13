@@ -4,9 +4,7 @@
   "type": "module",
   "scripts": {
     "vendor": "node for-ai/scripts/vendor-pretext.mjs",
-    "check:ui": "node for-ai/scripts/check-ui.mjs",
     "test": "node --test tests/*.test.mjs",
-    "generate:ecg": "python tools/generate-mock-ecg.py",
     "test:audio": "node --test tests/box-breathing.test.mjs tests/scenario-protocol.test.mjs",
     "check:scenarios": "node tools/scenario-csv.mjs --check",
     "scenarios:csv": "node tools/scenario-csv.mjs",

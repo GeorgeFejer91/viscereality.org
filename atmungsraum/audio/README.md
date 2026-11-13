@@ -8,20 +8,6 @@ are silent UI placeholders with matching draft TXT/JSON/CSV; final speech awaits
 wording approval. The shared library recordings below are retained references. JSON determines timing/order.
 CSV is generated from JSON and checked for drift with `pnpm run check:scenarios`.
 
-## Browser background music
-
-The browser demo starts [the supplied music](../assets/audio/background/ji3ji3.mp3)
-from Starten and repeats it using the browser's audio player. It pauses with the
-session, resumes at the same position, and releases the track on completion,
-abort, or when the page is hidden. The next session starts from the beginning.
-Music load failure leaves the timed cues and session controls available.
-
-The public 7.65 MB MP3 keeps the full source timing and playback level. It is a
-stereo 48 kHz export made with FFmpeg `-map 0:a:0 -map_metadata -1 -c:a libmp3lame -q:a 4`.
-The same-basename TXT is empty for this background track. The scenario WAVs,
-frame schedules, and receipts retain their existing role. In a Quest rehearsal
-the headset owns stimulus audio.
-
 ## Session timing
 
 **Main round (2026-11-06):** Haupt-Runde goes directly to one exactly 15-minute
@@ -136,36 +122,12 @@ after the 40-second welcome and 288 seconds of box breathing. Subsequent full
 blocks start after 20-second rests. Recovery and rest are natural breathing,
 not additional breath holds.
 
-## Working browser UI
+## Playback ownership
 
-The final Play button preloads and verifies the samples, then starts the selected
-scenario on a user action. Practice offers Anleitung and 5/10/15 minutes.
-Haupt-Runde opens the single 15-minute main scenario directly. Its complete
-900-second timeline and class boundaries are documented above. The calibration
-window begins at t0+26 seconds, Instruction 2 at t0+41, and paced cycles at t0+81.
-Receipts contain `calibration_start_frame`, `calibration_frames`, `instruction_1_frames`
-and the complete `total_frames`; `baseline_frames` is 0.
-
-The player shows the current phase/count and
-remaining total time. The same button becomes Pause/Fortsetzen, retaining the
-audio schedule and countdown across deliberate pauses. The back link reads
-Beenden during playback and aborts before returning to the choice menu. Escape,
-navigation away, the expired demo ECG recovery deadline, and
-hidden/interrupted audio contexts cancel the attempt. Start is available again
-after completion/abort. The unlimited instruction screen plays a 68-second
-welcome/one-cycle/ending example; the screen itself has no time limit and the
-example can be replayed.
-
-Headset/ECG verification is an explicitly labelled simulation in this preview.
-Audio is actually scheduled in the local browser. No sensor or headset connection
-is established by browser playback.
-
-The controller records selected scenario ID and JSON hash, asset-manifest hash, scheduling times,
-audio sample rate, available latency/clock estimates, ended notifications, and
-abort reason. The last ten receipts are saved locally under
-`atmungsraum.audio-receipts`; no participant identity is collected. Receipts can
-be inspected/exported through the experiment's eventual data system. Main-thread
-ended notifications are not measured acoustic onsets.
+Quest runs participant audio using the packaged authored scenario. The browser
+audio engine supports offline timing and asset verification. See the
+[Quest and Pixel procedure](../for-ai/QUEST-PHONE-SYNC.md) for participant
+sessions.
 
 ## Engine API and reproduction
 
@@ -202,7 +164,7 @@ responses are cached with their nonsecret request parameters. Changed requests
 are rejected against existing cache entries; preserve/rename the cache before
 regeneration. The key is read into memory and never written or printed.
 
-Run `pnpm run test:audio`, `pnpm run check:scenarios` and `pnpm run check:ui`.
+Run `pnpm run test:audio` and `pnpm run check:scenarios`.
 After editing scenario JSON, run `pnpm run scenarios:csv` to refresh the paired
 CSVs. Serve this tree over HTTP and
 open `tests/offline-audio.html` for a silent native Web Audio render of the actual

@@ -19,6 +19,13 @@ foreach ($relative in $required) {
 if ((Get-Content -Raw -LiteralPath (Join-Path $root 'AGENTS.md')) -notmatch 'for-ai/README\.md') {
     throw 'AGENTS.md must route to for-ai/README.md'
 }
+$retired = @('mock-ecg.js', 'assets/ecg/mock-ecg.f32', 'assets/ecg/mock-ecg.json',
+    'tools/generate-mock-ecg.py', 'ui-logic.js', 'audio/session-ui.js')
+foreach ($relative in $retired) {
+    if (Test-Path -LiteralPath (Join-Path $root $relative)) {
+        throw "Retired browser recording file still present: $relative"
+    }
+}
 $html = Get-Content -Raw -LiteralPath (Join-Path $root 'index.html')
 $css = Get-Content -Raw -LiteralPath (Join-Path $root 'style.css')
 $app = Get-Content -Raw -LiteralPath (Join-Path $root 'app.js')

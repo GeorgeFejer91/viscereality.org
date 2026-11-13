@@ -1,6 +1,6 @@
 import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=19';
-import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=18';
+import { ecgTrace, questRecording, questRecordings } from './quest-data.js?v=20';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=2';
 import { mountQuestDrive } from './quest-drive-ui.js?v=1';
 

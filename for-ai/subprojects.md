@@ -22,20 +22,6 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   Desktop Brave uses the canonical manifest identity to detect an existing
   install. The install help names `brave://apps` for reopening that app.
 
-- Polar loss (2026-11-06): more than 30 seconds of continuous missing ECG aborts
-  the scenario and all scheduled audio, clears the scenario selection and
-  returns to the Polar selection gate while retaining patient details. The
-  deadline uses elapsed time while playing or paused and requires no prior
-  reconnect retry; late recovery cannot revive the expired run. Loss through
-  exactly 30 seconds retains the existing recovery behavior. See Atmungsraum
-  PROJECT.md and VERIFICATION.md for browser-demo evidence and hardware limits.
-
-- Background music (2026-11-08): the browser demo plays the supplied
-  `ji3ji3` track on a loop during practice and main playback. The existing
-  playback controls govern both the track and the cues. The track loads on
-  Start and stops on session completion or abort. Quest owns its own audio.
-  See [the browser audio contract](../atmungsraum/audio/README.md#browser-background-music).
-
 - Scenario assets (2026-11-06): every scenario owns numbered unique WAV/CSV/TXT/JSON groups under `atmungsraum/assets/audio/scenarios/`, with asset/timeline CSVs, manifest and playlist. Same-basename per-cue CSVs list all chronological occurrences with exact timing and matching draft words; names encode first-use order and onset, while the full playlist/timeline records repeated cycles. All current runtime cues are silent placeholders, explicitly authorized for a working UI; TXT is intended draft wording and spoken text remains empty. Final narration still requires wording approval. Main goes directly to one exact 15-minute sequence; its breathing window remains 26–41 seconds. See the scenario README.
 
 - Audio scripts (2026-11-06): each library WAV/MP3 requires an adjacent exact-
@@ -55,58 +41,36 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   Instruction 1 uses the Secret Tunnel existing-instructor clone. Original
   assets/practice remain unchanged. See [the transcript/protocol](../atmungsraum/audio/calibration.md).
 
-- Responsive proportions (2026-11-06): patient entry uses a centered composition
-  capped at 560px high, a 640px form, equal columns/shared gutters and bounded
-  inter-group spacing. Body type ranges from 16 to 18px; enlarged/no-fit content
-  uses readable reflow. Base corner surfaces scale from 56 to 112px with viewport
-  dimensions. The 2026-11-07 phone correction doubles the two top controls and
-  artwork, normally to 112px, while preserving the folder size. A PWA install
-  action sits beside the bottom-right folder, using an icon above it in short
-  landscape. It uses the native browser prompt when supplied, otherwise a native
-  help dialog, and hides after installation/in standalone mode. Reserve enlarged
-  top clearance and the dock's measured height. These phone rules supersede the
-  earlier equal-three-corner rule. Polar embeds
-  the recovered dissertation H10 belt illustration (PNG source). The belt and
-  frame pulse green with ECG and red after loss, with steady reduced-motion
-  glows and no separate dot. A luminance mask keeps the glow on the artwork. Reserve their
-  space with portrait top/bottom clearance and a short-landscape central column;
-  use readable document reflow at the revised small-screen no-fit boundary.
-
-- Saved data (2026-11-13): Atmungsraum and local CSV downloads at `#daten`
-  open directly. The folder offers unsent and all saved session CSVs. The
-  password for encrypted sharing credentials is requested on send, with opt-in
-  browser credential saving. Automatic delivery remains unavailable because
-  Wormhole blocks direct uploads from the app origin and GitHub Pages is the
-  only host. See Atmungsraum PROJECT.md for the browser boundary.
-
 - Path: `atmungsraum/index.html`
 - Public URL: <https://viscereality.org/atmungsraum/> (the directory index also serves `/atmungsraum`).
 - Voice samples: <https://viscereality.org/atmungsraum/samples/>. The separately
   requested 2026-10-28 listening page publishes one exact-phrase MP3 for each
-  of twenty source-prefixed LANG/EmoDB profiles; it preserves the main demo's
-  selected session voice and timing. Original references and full receipts
+  of twenty source-prefixed LANG/EmoDB profiles; it preserves the selected
+  listening assets. Original references and full receipts
   remain private. See the Atmungsraum workflow for sample verification.
 - Purpose: the PC or smartphone browser acts as the external Viscereality operator controller. Quest owns the scenario, clock, Polar H10 connection and recording. The isolated rehearsal defaults to Remote-only. VR-Probe finds the Quest through Bluetooth, connects over Wi-Fi, selects a packaged rehearsal condition, and uses an enrolled connection to display live ECG and retrieve the verified original recording.
 - Physical acceptance (2026-11-12): use the installed Android PWA and a Meta Quest 2. The headset owns media and timing. Verify the full control path, the packaged scenario JSON and replaceable cue library, and headset video and audio with paired device evidence. See the [Atmungsraum project checklist](../atmungsraum/for-ai/PROJECT.md#active-milestone-smartphone-pwa-and-quest-2-rehearsal).
 - The phone browser remembers one verified Quest pairing and automatically tries to reconnect when opened. Bluetooth permissions and trusted controller enrollment are granted during first setup.
-- First steps (2026-11-05): collect the first three surname letters, whole-year age and explicit gender, show the generated participant ID, then verify Polar H10 connection/ECG before the session menu. The current demo continuously replays a seeded NeuroKit2 ECG source. The intended product receives real ECG from the headset; acquisition and transport remain Undecided. A corner indicator breathes green, flashes red after loss (steady with reduced motion), and loss beyond 30 seconds returns to the Polar gate while retaining patient details.
-- Participant data collection (2026-11-13) uses Quest 2 for Polar H10 recordings
-  and the installed Pixel PWA to pull finalized runs during idle before or after
-  sessions. The PWA automatically delivers verified bundles to the private
-  research Google Drive while open and authorized. Follow the
-  [collection and qualification procedure](../atmungsraum/for-ai/QUEST-PHONE-SYNC.md)
-  and the [identity and filename contract](../atmungsraum/for-ai/DATA-LOGGING.md).
-  Physical H10 and real Drive delivery acceptance are open.
-- Menu layout: use `uncodixfy-pretext` with outside-in stretch-accordion geometry for all UI functions, including patient entry and CSV recovery. Preserve equal anchors and ordered label/control groups; stretch form/list group spacing and matrix columns with both dimensions. Short landscape menus use four practice columns and wider round/main cards. Keep actual bounded-text and painted-DOM checks, readable no-fit/recovery, and no internal panel scrollbar. [Concrete settings and supported-size exceptions](../atmungsraum/for-ai/SKILLS.md#main-ui-stretch-settings) own the layout contract.
-- Current implementation (2026-10-12): a browser-local UI demo emulates headset connection and ECG reception, enabling Weiter only with synthetic ECG. The minimal gate shows Polar search/selection/connection status, ECG only during recording, and Refresh/Continue; Continue turns red to green. Round choices with generated SVG infographics above their HTML labels (2026-11-05) lead to four practice boxes (Anleitung unlimited guided exploration/5/10/15 minutes) and two main boxes (10/15 minutes total). Main sessions begin with five silent minutes of normal breathing, followed by the existing five- or ten-minute guided box-breathing sequence; the choice cards show the breakdown. Every box goes directly to a final play button. Browser-local audio uses one Starten/Pause/Fortsetzen button. Pause freezes audio and the timer; Fortsetzen resumes the same session. The back action reads Beenden during playback and aborts before returning to the choice menu. UI elements and copy follow ponytail: keep only necessary choices, state, and recovery feedback; the search retry appears only where it aids recovery. There is no ECG return button after Continue. Signal loss requests reconnect every five seconds; loss beyond 30 seconds aborts the scenario and returns to Polar selection, independent of retry count or playback pause. Recovery before expiry cancels the deadline; late recovery cannot revive the old run. Local Pretext 0.0.9 measures bounded text; ordinary phone/desktop panels fit without scrolling, enlarged text uses readable page reflow. The user approved this prototype for publication as the main VR-control navigation. Real H10 acquisition and headset transport/execution remain pending; the bottom-level Start action is intended to combine audio with a VR event sequence whose timing and integration are still undecided.
+- Participant setup collects the first three surname letters, age in whole years,
+  and an explicit gender code. The controller checks live ECG and accelerometer
+  streams before starting a participant run on Quest.
+- Quest records raw Polar H10 ECG and three-axis acceleration, renderer radius,
+  classified breathing phase, and session timing in one dated CSV per run. The
+  installed Pixel PWA verifies the file and delivers those same bytes to the
+  private research Drive. Earlier browser CSVs remain downloadable at `#daten`.
+  See the [collection procedure](../atmungsraum/for-ai/QUEST-PHONE-SYNC.md) and
+  [CSV schema](../atmungsraum/for-ai/DATA-LOGGING.md#participant-csv-v2).
+- Keep the existing Pretext measurement, keyboard flow and readable reflow for
+  the controller, participant entry and recovery screens.
 - AI control plane: [atmungsraum/for-ai/README.md](../atmungsraum/for-ai/README.md), discovered through `atmungsraum/AGENTS.md`.
-- Audio component: [reusable German box-breathing engine](../atmungsraum/audio/README.md), wired to the final browser Play button, with four repeating four-second phase samples, a direct du welcome/ending, 20-second rests after complete 288-second breathing blocks, third-cycle breath overlays, and exact 5/10/15/20-minute standalone totals. Hauptrunde adds a five-minute silent normal-breathing baseline to the five- or ten-minute guided sequence, giving 10/15-minute totals. Native offline renders passed; physical output timing and H10/headset synchronization remain pending. Alternative calm German voice auditions are local; OmniVoice model licensing and speaker permission do not establish unrestricted clinical use. Original references, audition profiles, and full-session verification exports stay local and ignored.
-- Scenario protocol (2026-11-05): every final sequence reads an authored JSON timeline and matching CSV under `atmungsraum/audio/scenarios/`, referencing the single shared `atmungsraum/assets/audio/` library. JSON owns clip order and frame timing; CSV is generated/checked from it. Playback receipts bind scenario and library hashes. All six menu routes and the existing 20-minute diagnostic have pairs; existing sample paths, voice and timing are preserved. See the scenario README and Atmungsraum verification notes.
+- Audio component: [authored scenario timelines and audio verification](../atmungsraum/audio/README.md).
+  Quest owns playback. The main scenario lasts 15 minutes and includes the
+  26–41 second preparation window.
 - Listening assets: the user selected the website's ElevenLabs British Breathing Instructor and rejected OmniVoice. Local/ignored `atmungsraum/audio-assets/ready-to-listen/elevenlabs/` keeps each WAV beside its timing/transcript JSON, with separate voice/breath/mix components, four-second phases and full 16-second cycles. Rejected sets are archived locally. See [folder guide](../atmungsraum/audio-assets/README.md). Runtime assets remain separately selected.
 - Workflow: share the existing GitHub Pages deployment from `main`, root `/`; keep the local checkout sparse and avoid downloading unrelated large assets.
 - UI alignment (2026-11-05): keep main controls symmetric about the dynamic viewport midpoint, headings and single footer actions horizontally centered, and playback centered as its timer/status changes. Preserve enlarged-text document reflow; see the Atmungsraum verification notes for the rendered matrix.
-- Recenter placeholder (2026-11-05): keep the icon-only `VR zentrieren` button fixed at the top left on every screen and while scrolling. Its native SVG shows a headset with four inward arrows. It is accessibly marked unavailable and has no action; future headset integration will recenter the central field of view. See the Atmungsraum project contract.
-- Playback controls (2026-11-05): compact Starten/Pause/Fortsetzen and bordered Beenden buttons accompany a native read-only progress bar and elapsed/total times in every player state. Progress follows the audio clock, freezes on pause, and resets on replay; Anleitung shows its actual 68-second example. Seeking and video media are outside this UI change.
+- The top-left `VR zentrieren` control sends the enrolled Quest recenter request
+  when the headset reports that the action is available.
 
 ## Media Assets
 

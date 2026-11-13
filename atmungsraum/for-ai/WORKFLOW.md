@@ -53,8 +53,8 @@ Do not publish them or machine-specific paths.
 
 Serve `atmungsraum/` with a local static HTTP server (for example,
 `python -m http.server 8876 --bind 127.0.0.1`) and inspect the page over HTTP.
-Run `node for-ai/scripts/check-ui.mjs` for the sensor/route state check, then test
-real rendered sizes as documented in VERIFICATION.md. Local QA fixtures and
+Run `node --test tests/quest-rehearsal.test.mjs tests/quest-data.test.mjs` for
+controller and transfer checks, then verify the rendered entry and recovery routes. Local QA fixtures and
 screenshots go in ignored `output/playwright/`.
 There is no site build step. The committed `vendor/pretext/` files are the
 deployment runtime; `node_modules/` is ignored.
@@ -119,34 +119,6 @@ Check portrait/landscape and 320px reflow; keep physical Android/iPhone install,
 relaunch, storage and lifecycle qualification distinct from desktop automation.
 On Android Chrome, use the browser menu's install action; on iPhone Safari,
 use Share → Add to Home Screen and enable Open as Web App when offered.
-
-The send action unlocks the authenticated public envelope in
-`sharing/discord-config.json`. The same password decrypts the Discord webhook
-and, in version 2, the centrally configured relay endpoint and key. The app
-keeps the result in tab memory and offers browser-managed saving. Verify
-password-free startup and recovery, retry after a wrong password, cancel and
-focus, send-time credential restore, two sends without another unlock, and exact
-Discord acknowledgement.
-Keep the folder to unsent and all saved files, counts and progress. Preserve
-downloads at `#daten` and the JSON receipt ledger across reloads, changes,
-rejected posts, cancellation and concurrent tabs.
-
-GitHub Pages is the only production host. The version 1 envelope contains the
-Discord webhook. Direct uploads from the phone browser carry the app
-origin and Wormhole rejects their preflight. Keep the existing relay code
-available for synthetic testing. Activating a relay requires a change to the
-hosting constraint. Never publish plaintext credentials, keyed links or
-participant files. See [sharing/README.md](../sharing/README.md).
-
-`vendor/wormhole-crypto/README.md` pins the MIT crypto runtime. Regenerate with
-`node for-ai/scripts/vendor-wormhole.mjs`; verify package integrity, localized
-imports and licenses. Runtime modules use `.js` for local-server MIME
-compatibility. Synthetic network tests must be explicit, use no participant data,
-verify the downloaded ZIP bytes and destination message, and keep private receipts
-ignored. Provider-accepted upload and notification are distinct outcomes.
-Workers' fetch runtime rejects `redirect:error`; use `manual` and reject non-2xx
-responses before accepting a provider result. Browser requests can use error.
-Verify the deployed runtime, not only Node mocks.
 
 ## Participant data and Polar H10
 

@@ -1,5 +1,5 @@
-import { isDatedSessionFilename } from './data-logging.js?v=20261113-participant-files';
-import { createExportsZip } from './data-files.js?v=20261108-quest-data';
+import { isDatedSessionFilename } from './data-logging.js?v=20261113-polar-only';
+import { createExportsZip } from './data-files.js?v=20261113-polar-only';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;
 const digest = /^[a-f0-9]{64}$/;

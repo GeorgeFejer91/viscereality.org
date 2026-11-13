@@ -1,4 +1,4 @@
-import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261113-quest-recording';
+import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261113-polar-only';
 
 const byId = id => document.getElementById(id);
 const root = document.documentElement;
@@ -69,12 +69,11 @@ async function measureLabels() {
             && rect.bottom <= box.bottom - parseFloat(style.paddingBottom) + 2);
           const fits = domFits && (domOnly || (stats.maxLineWidth <= width + 1 && stats.lineCount * lineHeight <= height + 2
             && (!singleLine || (stats.lineCount === 1 && naturalWidth <= width - 2 && lineHeight <= height + 2))));
-          return { element, fits, domOnly, square: element.closest('.round'), wrap: naturalWidth > width - 2 || !fits };
+          return { element, fits, domOnly };
         });
-        results.forEach(({ element, fits, domOnly, square, wrap }) => {
+        results.forEach(({ element, fits, domOnly }) => {
           element.dataset.textFit = fits ? 'fit' : 'reflow';
           element.dataset.textMeasurement = domOnly ? 'dom' : 'pretext';
-          if (square) square.dataset.textFit = wrap ? 'reflow' : 'fit';
         });
         const visible = document.querySelector('.screen:not([hidden])');
         if (!visible) return;
@@ -82,7 +81,7 @@ async function measureLabels() {
         const headerHeight = visible.firstElementChild.getBoundingClientRect().height;
         const footerHeight = visible.querySelector('.actions')?.getBoundingClientRect().height ?? 0;
         visible.style.setProperty('--edge-size', `${Math.max(headerHeight, footerHeight)}px`);
-        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, .round, .option, #data-files, [data-measure]')].filter(element => element.getClientRects().length);
+        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, #data-files, [data-measure]')].filter(element => element.getClientRects().length);
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
@@ -133,7 +132,7 @@ measureLabels();
 if (recovery) {
   void showSavedBrowserExports();
 } else {
-  import('./quest-ui.js?v=19').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=20').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

@@ -41,6 +41,14 @@
   inventory showed one private CSV and the PWA confirmed the matching hash.
   See [CSV v2](DATA-LOGGING.md#participant-csv-v2).
 
+- [x] Remove the retired browser recorder, NeuroKit generator and 1.84 MB
+  mock trace, demo audio controller, and demo-only styling and checks. Preserve
+  read-only downloads of completed browser CSVs, Quest transfer, and offline
+  audio verification. All 80 Node tests, six scenario pairs and the context
+  check passed. Chromium verified Quest entry, install focus and byte-exact
+  legacy downloads at four viewport/zoom settings. A fresh recovery route
+  leaves the retired database absent.
+
 
 ### Windows Quest 2 keep-awake task — 2026-11-13
 
