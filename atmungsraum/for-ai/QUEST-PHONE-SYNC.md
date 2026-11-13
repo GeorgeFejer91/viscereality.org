@@ -45,6 +45,40 @@ controller. The Quest CSV projection is active in both conditions.
 See the [active checklist](PROJECT.md#live-recording-sync-to-google-drive)
 and [Drive resumable upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 
+### Paired physical trial measurements
+
+Use a synthetic participant ID and the full `haupt-15` audio on the same APK,
+Pixel release, Wi-Fi link, Polar presentation policy and renderer settings.
+Run the sync-disabled and sync-enabled conditions with the same planned phone
+Pause, Resume and Finish actions. Collect a comparable uninterrupted interval
+in both runs. In the enabled run, separately mark the fault windows for Wi-Fi
+loss, a failed Drive request and a Pixel reload. Verify the UI rejoined the
+same running generation, the local and Drive offsets resumed, and Finish
+produced one object with the original file ID.
+
+Record Quest's OpenXR frame timing from the renderer scorecard and radius
+timestamps. Report the median, p95 and p99 frame interval and the sample
+count for each comparison window. For Polar freshness, use the native
+`accepted_age_ms` and `ingress_to_commit_ms` diagnostics and the host
+timestamps in `breath.jsonl` provenance. For the low-latency policy, the
+same-clock age is the Java midpoint minus the selected sample's host receipt
+time. Report the presentation policy and the fraction of valid Polar
+assessments. Check that the applied radius varies with valid Polar breath
+volume during playback. Compare the phone tap to the signed control receipt
+and visible state change. Report recording drops from the terminal receipt
+and corroborate stream-specific interruptions and resumptions from the CSV.
+
+Measure live sync by byte offset. Pair a Quest prefix observation with the
+first Drive acknowledgement that covers it. Use the response `Range` and
+the end of the browser request as the acknowledgement witness. The first
+phone observation of the prefix gives an observed delay. For a bound on the
+earlier Quest publication, capture the checkpoint sidecar change on Quest.
+Measure the device wall-clock offset before and after each run if comparing
+timestamps across devices. A bench clock check found Quest about 0.95 seconds
+ahead of Pixel. Keep same-device elapsed times for frame timing and controls.
+Report live and fault windows with sample counts and any clock uncertainty.
+Retain only timing, status, byte counts and hashes in shared evidence.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

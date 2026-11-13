@@ -84,6 +84,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   - [x] Recover when staged bytes are missing or fail the signed final hash.
     Download a fresh copy from Quest and restart any suspect resumable session
     under the existing Drive file ID before finalization. All 88 PWA tests pass.
+    [Pages run 43489844527](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43489844527)
+    deployed `0720992`. The refreshed Pixel opened a new upload session under
+    the same ID after a bad synthetic prefix. Drive verified the corrected
+    262,149-byte file and the fixture trashed it.
   - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
@@ -93,6 +97,7 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   Start with a short physical probe to measure the actual checkpoint-to-Drive
   delay and validate stop/resume markers. Quest had zero H10 scan candidates
   and reported neither stream fresh during the release check.
+  Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt
   and a fresh same-generation paused state with the Polar latch set. The
