@@ -4018,7 +4018,7 @@ index f920e7db..7b70e42c 100644
              return new Command(CommandKind.START, generation, operationId, "", null);
          }
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
-index feb3ddc2..8275e477 100644
+index feb3ddc2..9a63e8e0 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
 @@ -2,10 +2,11 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -4081,16 +4081,25 @@ index feb3ddc2..8275e477 100644
              @Override public Thread newThread(Runnable runnable) {
                  return new Thread(
                      runnable,
-@@ -101,6 +112,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -101,6 +112,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
                  );
              }
          });
 +        this.owner.setRemoveOnCancelPolicy(true);
-+        this.owner.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
          this.phase = this.inventory.available
              ? ConditionAudioContract.Phase.IDLE : ConditionAudioContract.Phase.UNAVAILABLE;
          this.reason = this.inventory.available ? "ready" : this.inventory.reason;
-@@ -534,7 +547,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -281,6 +293,9 @@ final class ConditionAudioRuntime implements AutoCloseable {
+             if (closed) return;
+             closed = true;
+             lifecycleEpoch += 1L;
++            // Android can discard queued zero-delay tasks at shutdown. Cancel only
++            // sampling so the serial executor still runs the queued cleanup below.
++            if (positionSample != null) positionSample.cancel(false);
+         }
+         try {
+             owner.execute(new Runnable() {
+@@ -534,7 +549,8 @@ final class ConditionAudioRuntime implements AutoCloseable {
          try {
              final MediaBackend candidate = backendFactory.create(
                  provider,
@@ -4100,7 +4109,7 @@ index feb3ddc2..8275e477 100644
              );
              boolean rejectedAsStale;
              synchronized (authorityLock) {
-@@ -663,6 +677,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -663,6 +679,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
                                  null
                              );
                          }
@@ -4108,7 +4117,7 @@ index feb3ddc2..8275e477 100644
                          emit(receipt);
                      }
                  });
-@@ -675,14 +690,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -675,14 +692,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
                          synchronized (authorityLock) {
                              if (!current(generation, epoch)
                                      || phase != ConditionAudioContract.Phase.PLAYING) return;
@@ -4124,7 +4133,7 @@ index feb3ddc2..8275e477 100644
                          }
                          emit(receipt);
                      }
-@@ -799,6 +807,49 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -799,6 +809,49 @@ final class ConditionAudioRuntime implements AutoCloseable {
          emit(receipt);
      }
  
@@ -4174,7 +4183,7 @@ index feb3ddc2..8275e477 100644
      private void enqueueCallback(Runnable callback) {
          try {
              owner.execute(callback);
-@@ -923,7 +974,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
+@@ -923,7 +976,7 @@ final class ConditionAudioRuntime implements AutoCloseable {
      }
  
      private static String fingerprint(ConditionAudioContract.Command command) {

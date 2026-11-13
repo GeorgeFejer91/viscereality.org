@@ -1,5 +1,23 @@
 # Verification
 
+## Quest 2 audio owner cleanup — 2026-11-13
+
+On a physical Quest 2, an isolated instrumentation process used the production
+Java audio owner and the installed rehearsal assets. Each of the six scenarios
+prepared and emitted Start, progress, Pause, Resume and Stop receipts, using
+both condition tracks. The first run failed to close the owner. On Android,
+the scheduled executor can discard queued cleanup during shutdown when delayed
+tasks are disabled. The fix cancels the pending position sample explicitly and
+lets the executor finish queued cleanup.
+
+The corrected hardware run passed all six scenarios, closed the audio owner
+while a Stop receipt was still being delivered, and released its singleton.
+It passed again using the assets of signed release 0.1.20 after USB install.
+The installed APK digest matched and its DEX contained the cleanup fix.
+The Java audio, phase controls and cleanup barrier suites passed. This test
+called the native audio owner directly. VR rendering and the installed Pixel
+PWA remain unverified.
+
 ## Standalone Quest 2 media player check — 2026-11-13
 
 A temporary Android instrumentation package opened the installed signed
