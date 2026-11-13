@@ -5920,3 +5920,115 @@ index d1d148eb..fe32887f 100644
          if (root/'ExperimentSessionHeadsetIdentity.java').exists():names.append('ExperimentSessionHeadsetIdentity')
          if (root/'ExperimentSessionGuestRegistry.java').exists():names.append('ExperimentSessionGuestRegistry')
          sources = [root/(n+'.java') for n in names] + [a.repo/'apps/native-renderer-android/src/main/java'/PACKAGE/'NativeRendererWriterAcknowledgedExitPolicy.java']
+diff --git a/apps/native-renderer-android/native/src/experiment_control_mode.rs b/apps/native-renderer-android/native/src/experiment_control_mode.rs
+index 1967f8b9..61dfc501 100644
+--- a/apps/native-renderer-android/native/src/experiment_control_mode.rs
++++ b/apps/native-renderer-android/native/src/experiment_control_mode.rs
+@@ -49,12 +49,21 @@ impl ModeAuthority {
+     fn read(&self) -> ModeSnapshot {
+         ModeSnapshot(self.0.load(Ordering::SeqCst))
+     }
+-    fn initialize(&self, selected: bool) -> ModeSnapshot {
++    fn initialize_with_default(&self, selected: bool, default_remote: bool) -> ModeSnapshot {
+         if selected {
++            let mode = if default_remote {
++                ControlMode::Remote
++            } else {
++                ControlMode::Choose
++            };
++            let initial = (2 << 3) | 4 | mode as u64;
+             // Promotion is process-local and one-way; recreation cannot reset a choice.
+-            let _ =
+-                self.0
+-                    .compare_exchange(DEFAULT_SNAPSHOT, 20, Ordering::SeqCst, Ordering::SeqCst);
++            let _ = self.0.compare_exchange(
++                DEFAULT_SNAPSHOT,
++                initial,
++                Ordering::SeqCst,
++                Ordering::SeqCst,
++            );
+         }
+         self.read()
+     }
+@@ -92,7 +101,13 @@ pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_Ex
+     _class: jni::objects::JClass,
+     selected: jni::sys::jboolean,
+ ) -> jni::sys::jlong {
+-    AUTHORITY.initialize(selected).packed() as i64
++    let default_remote = matches!(
++        option_env!("RUSTY_QUEST_NATIVE_RENDERER_EXPERIMENT_DEFAULT_REMOTE"),
++        Some("true")
++    );
++    AUTHORITY
++        .initialize_with_default(selected, default_remote)
++        .packed() as i64
+ }
+
+ #[cfg(target_os = "android")]
+@@ -265,7 +280,7 @@ mod tests {
+     }
+     fn selected(mode: i32) -> (ModeAuthority, ModeSnapshot) {
+         let authority = ModeAuthority::new();
+-        let choose = authority.initialize(true);
++        let choose = authority.initialize_with_default(true, false);
+         let snapshot = if mode == 0 {
+             choose
+         } else {
+@@ -278,14 +293,33 @@ mod tests {
+     fn legacy_default_is_unselected_direct_and_initialization_is_idempotent() {
+         let authority = ModeAuthority::new();
+         assert_eq!(authority.read().packed(), 9);
+-        assert_eq!(authority.initialize(false).mode(), ControlMode::Direct);
++        assert_eq!(
++            authority.initialize_with_default(false, false).mode(),
++            ControlMode::Direct
++        );
+         assert!(!authority.read().selected());
+-        let choose = authority.initialize(true);
++        let choose = authority.initialize_with_default(true, false);
+         assert_eq!(choose.packed(), 20);
+         assert_eq!(choose.mode(), ControlMode::Choose);
+         assert_eq!(choose.revision(), 2);
+-        assert_eq!(authority.initialize(true), choose);
+-        assert_eq!(authority.initialize(false), choose);
++        assert_eq!(authority.initialize_with_default(true, false), choose);
++        assert_eq!(authority.initialize_with_default(false, false), choose);
++    }
++
++    #[test]
++    fn opted_in_remote_is_available_at_startup_and_respects_later_local_choice() {
++        let authority = ModeAuthority::new();
++        assert_eq!(authority.initialize_with_default(false, true).packed(), 9);
++
++        let remote = authority.initialize_with_default(true, true);
++        assert_eq!(remote.packed(), 22);
++        assert_eq!(remote.mode(), ControlMode::Remote);
++        assert!(!remote.startup_panel_required(true));
++
++        let direct = authority.select(remote.packed(), ControlMode::Direct as i32);
++        assert_eq!(direct.mode(), ControlMode::Direct);
++        assert_eq!(authority.initialize_with_default(true, true), direct);
++        assert_eq!(authority.initialize_with_default(true, false), direct);
+     }
+
+     #[test]
+@@ -294,8 +328,8 @@ mod tests {
+         let remote = authority.select(choose.packed(), 2);
+         assert_eq!(remote.packed(), 30);
+         assert_eq!(authority.select(choose.packed(), 1), remote);
+-        assert_eq!(authority.initialize(true), remote);
+-        assert_eq!(authority.initialize(false), remote);
++        assert_eq!(authority.initialize_with_default(true, false), remote);
++        assert_eq!(authority.initialize_with_default(false, false), remote);
+         assert_eq!(authority.select(remote.packed(), 2), remote);
+         assert_eq!(authority.select(remote.packed(), 1).packed(), 37);
+     }
+@@ -304,7 +338,7 @@ mod tests {
+     fn invalid_modes_unselected_calls_and_exhausted_revision_cannot_select() {
+         let authority = ModeAuthority::new();
+         assert_eq!(authority.select(9, 2).packed(), 9);
+-        let choose = authority.initialize(true);
++        let choose = authority.initialize_with_default(true, false);
+         for mode in [-1, 0, 3, i32::MAX] {
+             assert_eq!(authority.select(choose.packed(), mode), choose);
+         }

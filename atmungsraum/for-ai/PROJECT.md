@@ -371,6 +371,12 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   without a sustained submission receipt. The discovery readback was
   `inactive / remote-required`, and the Pixel's chooser found no compatible
   device. Resume with a wearer and confirm Remote before measuring latency.
+- [x] Make Remote the rehearsal default in signed 0.1.22. A focused Quest 2
+  submitted frames and advertised Bluetooth after launch without a mode
+  selection. Pixel Chrome listed the headset and the installed PWA completed
+  its signed Wi-Fi join after Local Network Access was granted. RustDesk's
+  floating overlay had blocked the Chrome prompt. The wearer-facing panel was
+  closed using the app's typed operator action and confirmed by native frames.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,
@@ -420,9 +426,11 @@ this repository.
   coarse and fine location permissions in addition to Nearby devices. After
   granting those app permissions, the native status was fresh and connected,
   and the ACC sample counter advanced across reads. ECG was still inactive.
-- [ ] Select Remote on the enrolled owner profile, verify the signed Pixel
-  join and fresh Polar H10 ECG, then start and finish a session. Check the
-  original ECG, ACC and participant CSV on Quest.
+- [x] Verify a signed join from the installed Pixel and fresh Polar H10 ECG
+  and ACC on Quest 2. The phone rendered the live ECG and reported Quest
+  ready. The native sensor counters advanced for both streams.
+- [ ] Start and finish a participant session. Check the original ECG, ACC and
+  participant CSV on Quest.
 - [ ] Match the Quest export hashes to the Pixel PWA's retained bundle and
   reopen a participant CSV from Android Files.
 - [x] Preserve the exact native ECG and ACC bytes alongside the existing

@@ -15,9 +15,11 @@ its exact feature lock and its private provider manifest together. Stage the
 pinned ARM64 liblsl via the Experimenter repository's
 `tools/Stage-LibLslAndroid.ps1`. The assembly also needs JDK 17, Android SDK and
 NDK, the Rust `aarch64-linux-android` target and the ARM64 OpenXR loader. Assembly selects the original native product panel so
-the app can enter Remote control and advertise its Bluetooth discovery
+the app starts in Remote control and advertises its Bluetooth discovery
 service. The resolved manifest must select both the native panel host and
-command gateway.
+command gateway, and the feature lock must select the Remote default. The
+Quest still requires trusted controller enrollment before private access.
+Use the headset maintenance panel to switch to Direct for the current app session.
 Use a native build checkout whose path ancestors are ordinary directories so
 the packager can verify its output root.
 

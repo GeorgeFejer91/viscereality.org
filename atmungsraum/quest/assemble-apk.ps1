@@ -82,7 +82,10 @@ $feature = [ordered]@{
     android_manifest = @{ permissions = @(); uses_features = @(); activities = @(); services = @(); queries = @() }
     runtime_profile = @{ set = @{}; clear_families = @(); expected_render_modes = @() }
     build_inputs = @{
-        env = @(@{ name = 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256'; value = $catalogHash })
+        env = @(
+            @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256'; value = $catalogHash }
+            @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_EXPERIMENT_DEFAULT_REMOTE'; value = 'true' }
+        )
         assets = @($assetInput)
         shaders = @()
     }
@@ -167,6 +170,10 @@ try {
     if ($metadata['rusty.quest.native_renderer.original_panel_native_host'] -cne 'true' -or
         $metadata['rusty.quest.experiment.command_gateway.enabled'] -cne 'true') {
         throw 'The native manifest must select the original panel host and the gateway for Remote control.'
+    }
+    $remoteDefault = @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_EXPERIMENT_DEFAULT_REMOTE')
+    if ($remoteDefault.Count -ne 1 -or $remoteDefault[0].value -cne 'true') {
+        throw 'The native feature lock must select Remote as the default control mode.'
     }
     if ($metadata['rusty.quest.experiment.command_gateway.private_lan_data'] -cne 'true') {
         throw 'The native manifest must select encrypted LAN sensor and recording readback.'
