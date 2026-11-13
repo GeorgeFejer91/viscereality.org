@@ -14,17 +14,27 @@
   `cmd package install-existing --user <user> com.carriez.flutter_hbb`.
   The user-scoped cold launch returned `Status: ok` and RustDesk gained focus.
 - [ ] Verify a Quest-to-PC session using a Touch controller on a test window.
-- [ ] Test PC-to-Quest separately. Approve **Share Screen** in the headset and
-  check whether Horizon OS lets the wearer enable **RustDesk Input**. From the
-  Windows client, verify a changing remote frame, one harmless click with a
-  visible result in a 2D panel, then disconnect and stop sharing.
+- [x] Approve **Share screen → Start service**, the first-run **I Agree**
+  confirmation and the Horizon OS capture prompt. The wearer approved capture.
+  Android reported an active RustDesk MediaProjection session.
+- [x] Enable **RustDesk Input** for the active Quest profile. The default
+  Accessibility Settings intent opened Horizon's General settings. ADB
+  opened the Android Accessibility panel by targeting the installed Settings
+  package with `am start --user <user> -a android.settings.ACCESSIBILITY_SETTINGS -p com.android.settings`.
+  Under **Downloaded apps → RustDesk Input → Use RustDesk Input**, approve
+  **Allow**. Android listed the service as bound with gesture capability, and
+  RustDesk logged `onServiceConnected` and `input:true`. UIAutomator inspection
+  temporarily disconnected the service before it rebound, so use Android
+  service and RustDesk log readback for the final state.
+- [ ] From the Windows client, verify a changing remote frame and one harmless
+  click with a visible result in a 2D panel. Disconnect and stop sharing.
 
-On the active Quest profile, **Share screen → Start service** displayed the
-RustDesk first-run **I Agree** confirmation. The wearer must accept it and
-then approve the headset's separate capture prompt. ADB reported no active
-MediaProjection session and **RustDesk Input** was off. Android lists the input
-service and routes Accessibility Settings to Horizon Shell. Whether that route
-lets the wearer enable the service, or delivers a remote click, is still open.
+The attended Windows RustDeskMCP public-ID connection was rejected by
+RustDesk's public server because the initiating client was signed out. Use a
+[signed-in public-server session](https://github.com/rustdesk/rustdesk/wiki/Login-required-for-public-server)
+or qualify the [direct IP route](https://rustdesk.com/docs/en/self-host/client-configuration/advanced-settings/#direct-server)
+for the next test. Capture permission and a bound input service do not verify
+remote video, click delivery, or headset-to-PC operation.
 
 The Windows RustDeskMCP release `v1.4.6-mcp.1` was running. Its loopback MCP
 endpoint returned HTTP 503 while disabled. For an attended session the same
