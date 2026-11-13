@@ -1,7 +1,7 @@
 import { state, hasSignal, canNavigate, confirmECG, confirmPatient, setSensor, updateReconnect, route } from './ui-logic.js?v=20261106-polar-timeout';
 import { mountSessionAudio } from './audio/session-ui.js?v=20261108-background-music';
 import { MockECG } from './mock-ecg.js?v=20261105-data';
-import { participantIdentity, mountSessionData } from './data-logging.js?v=20261107-file-delivery';
+import { participantIdentity, mountSessionData } from './data-logging.js?v=20261113-participant-files';
 import { mountDataFiles } from './data-files.js?v=20261113-open-startup-2';
 const byId = (id) => document.getElementById(id);
 const root = document.documentElement;
@@ -248,7 +248,7 @@ async function measureLabels() {
 render();
 measureLabels();
 if (rehearsalMode) {
-  import('./quest-ui.js?v=16').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=17').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     text('quest-status', 'Der VR-Probelauf konnte nicht geladen werden.');
   });
 } else {

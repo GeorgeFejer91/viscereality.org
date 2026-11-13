@@ -87,7 +87,8 @@ test('Quest export matches the observed run and every byte before making the ZIP
 
 test('participant exports retain the CSV and both original sensor streams through chunked transfer', async () => {
   const id = 'utc-ns-00000000000000000043';
-  const csvName = 'Tes_30_N_probe2.csv';
+  const stem = 'Tes_30_N_2026-11-13_probe-5_r2';
+  const csvName = `${stem}.csv`;
   const ecg = Buffer.from('{"sensor_time_ns":100,"microvolts":42}\n'.repeat(1300));
   const acc = Buffer.from('{"sensor_time_ns":100,"x_mg":1,"y_mg":2,"z_mg":3}\n'.repeat(900));
   const csv = Buffer.from('sensor,voltage\r\n100,42\r\n');
@@ -115,7 +116,7 @@ test('participant exports retain the CSV and both original sensor streams throug
   const { download, bundle } = await questRecording(gateway, id, signal, { includeSensorBundle: true });
   assert.equal(download.name, csvName);
   assert.deepEqual(Buffer.from(await download.arrayBuffer()), csv);
-  assert.equal(bundle.name, 'Tes_30_N_probe2.zip');
+  assert.equal(bundle.name, `${stem}.zip`);
   const zipped = Buffer.from(await bundle.arrayBuffer());
   const contents = new Map();
   for (let offset = 0; zipped.readUInt32LE(offset) === 0x04034b50;) {
@@ -125,9 +126,24 @@ test('participant exports retain the CSV and both original sensor streams throug
     contents.set(zipped.toString('utf8', offset + 30, start), zipped.subarray(start, start + length));
     offset = start + length;
   }
-  assert.deepEqual(contents.get('polar-ecg.jsonl'), ecg);
-  assert.deepEqual(contents.get('polar-acc.jsonl'), acc);
-  assert.deepEqual(JSON.parse(contents.get('export-manifest.json')), manifest);
+  assert.deepEqual(contents.get(`${stem}_polar-ecg.jsonl`), ecg);
+  assert.deepEqual(contents.get(`${stem}_polar-acc.jsonl`), acc);
+  assert.deepEqual(JSON.parse(contents.get(`${stem}_export-manifest.json`)), manifest);
+  const internal = manifest.files.find(file => file.name === 'radius.jsonl');
+  internal.size = 140 * 1024 * 1024;
+  manifest.total_bytes += internal.size;
+  const largeInternal = await questRecording(gateway, id, signal, { includeSensorBundle: true });
+  assert.equal(largeInternal.bundle.name, bundle.name);
+  const sensor = manifest.files.find(file => file.name === 'polar-acc.jsonl');
+  manifest.total_bytes += 128 * 1024 * 1024;
+  sensor.size += 128 * 1024 * 1024;
+  await assert.rejects(() => questRecording(gateway, id, signal, { includeSensorBundle: true }), /Ungültige Größe/);
+  sensor.size -= 128 * 1024 * 1024;
+  manifest.total_bytes -= 128 * 1024 * 1024 + internal.size;
+  internal.size = 0;
+  manifest.participant_csv.name = 'Tes_30_N_2026-02-30_probe-5_r2.csv';
+  await assert.rejects(() => questRecording(gateway, id, signal), /Ungültige Quest-CSV/);
+  manifest.participant_csv.name = csvName;
   manifest.file_set_policy = 'core8-recovered-checkpoint';
   manifest.disposition = 'interrupted-early';
   manifest.recovery = {

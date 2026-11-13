@@ -1,3 +1,5 @@
+import { SCENARIOS } from './audio/scenario-protocol.js?v=20261106-placeholders';
+
 // All participant-data writers must share this identity and filename protocol.
 export function participantIdentity({ surnamePrefix = '', age = '', gender = '' } = {}) {
   if (typeof surnamePrefix !== 'string' || !['string', 'number'].includes(typeof age)) throw new Error('Invalid participant');
@@ -17,9 +19,21 @@ const conditionFor = branch => {
   if (!condition) throw new Error('Unregistered condition');
   return condition;
 };
-export function sessionFilename(patient, branch, runIndex) {
+export function sessionFilename(patient, branch, runIndex, scenario, startedAt) {
   if (!Number.isSafeInteger(runIndex) || runIndex < 1) throw new Error('Invalid run index');
-  return `${participantIdentity(patient).id}_${conditionFor(branch)}${runIndex}.csv`;
+  if (!SCENARIOS.includes(scenario) || scenario.startsWith('haupt-') !== (conditionFor(branch) === 'main')) {
+    throw new Error('Unregistered session');
+  }
+  const date = new Date(startedAt).toISOString().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Invalid recording date');
+  return `${participantIdentity(patient).id}_${date}_${scenario}_r${runIndex}.csv`;
+}
+
+export function isDatedSessionFilename(name) {
+  const parts = /^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_r[1-9][0-9]{0,15}\.csv$/u.exec(name);
+  if (!parts || !SCENARIOS.includes(parts[3])) return false;
+  const date = new Date(parts[2]);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === parts[2];
 }
 const cell = value => {
   let text = String(value ?? '');
@@ -74,7 +88,7 @@ export class SessionLog {
     this.stop();
     const elapsed = Math.max(0, this.ended - this.started);
     const { identity: who, signal, selection, protocol } = this;
-    const filename = sessionFilename(this.patient, selection.branch, this.runIndex);
+    const filename = sessionFilename(this.patient, selection.branch, this.runIndex, protocol.scenario_id, this.utc);
     const headers = ['schema_version', 'participant_id', 'name_prefix', 'age_years', 'gender_code', 'condition', 'run_index',
       'session_id', 'scenario_id', 'scenario_sha256', 'planned_duration_seconds', 'session_started_utc',
       'sample_index', 'elapsed_ms', 'timestamp_utc', 'audio_elapsed_ms', 'playback_state', 'phase',

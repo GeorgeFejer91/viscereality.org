@@ -489,9 +489,18 @@ this repository.
   the Pixel bundle and the three source files on Quest byte for byte.
 - [x] Run the targeted automated sync and fault-injection tests. Eight passed,
   including 40 simulated Drive bundles through lost responses and restarts.
-- [ ] Complete the attended Quest + worn H10 + Pixel + real Drive stress pass
-  in [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md). Confirm matching hashes and one
-  Drive object per run across repeats, restart, partial recording and reconnect.
+- [x] Complete the five-minute `probe-5` scenario on Quest 2 with live H10.
+  Quest saved a completed receipt with zero writer drops. Signal pauses
+  required restoring ECG and ACC before continuing. The full internal
+  recording exceeded the old export limit. The CSV, ECG and ACC totaled
+  131,155,067 bytes.
+- [x] Update new participant exports to use the ID, UTC Start date, authored
+  scenario and run number. Apply the stem to the Quest and demo CSV, Pixel ZIP,
+  exported ECG, ACC and manifest and Drive ZIP. Continue reading legacy files.
+- [ ] Reconcile the completed five-minute run with the larger native validation
+  bound and verify the new dated filenames from Quest through Drive.
+- [ ] Complete the remaining physical stress and pairing cases in
+  [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 
 Both devices were reachable over USB. The Pixel WebAPK reloaded the live
 password-free release in standalone mode and opened VR-Probe. The installed

@@ -1,3 +1,4 @@
+import { isDatedSessionFilename } from './data-logging.js?v=20261113-participant-files';
 import { createExportsZip } from './data-files.js?v=20261108-quest-data';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;
@@ -6,6 +7,7 @@ const files = ['manifest.json', 'final.json', 'events.jsonl', 'polar-acc.jsonl',
   'polar-hr-rr.jsonl', 'breath.jsonl', 'radius.jsonl'];
 const sensorFiles = new Set(['polar-acc.jsonl', 'polar-ecg.jsonl']);
 const maxBytes = 128 * 1024 * 1024;
+const maxParticipantCoreBytes = 1024 * 1024 * 1024;
 
 export function ecgTrace(frame, transportMs) {
   if (frame?.v !== 1 || frame.unit !== 'uV' || frame.rate !== 130
@@ -97,11 +99,14 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     ? manifest.recovery === undefined
     : manifest.file_set_policy === 'core8-recovered-checkpoint' && validRecovery(manifest);
   if (!validFiles) throw Error('Quest hat keine verifizierte Aufnahmedatei geliefert.');
-  const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
-  if (total !== manifest.total_bytes || total > maxBytes) throw Error('Ungültige Größe der Quest-Aufnahme.');
   const csv = manifest.participant_csv;
+  const total = manifest.files.reduce((sum, file) => sum + file.size, 0);
+  if (total !== manifest.total_bytes || total > (csv ? maxParticipantCoreBytes : maxBytes)) {
+    throw Error('Ungültige Größe der Quest-Aufnahme.');
+  }
+  const dated = typeof csv?.name === 'string' && isDatedSessionFilename(csv.name);
   if (csv !== undefined && (typeof csv?.name !== 'string' || csv.name !== csv.name.normalize('NFC')
-    || !/^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\.csv$/u.test(csv.name)
+    || (!dated && !/^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\.csv$/u.test(csv.name))
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(csv.session_id)
     || !Number.isSafeInteger(csv.size) || csv.size < 1 || csv.size > maxBytes || !digest.test(csv.sha256))) {
     throw Error('Ungültige Quest-CSV.');
@@ -109,6 +114,9 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   const records = [];
   const selected = csv ? [csv] : manifest.files;
   if (csv && includeSensorBundle) selected.push(...manifest.files.filter(file => sensorFiles.has(file.name)));
+  if (selected.reduce((sum, file) => sum + file.size, 0) > maxBytes) {
+    throw Error('Ungültige Größe der Quest-Aufnahme.');
+  }
   for (const file of selected) {
     const bytes = new Uint8Array(file.size);
     for (let offset = 0; offset < bytes.length; offset += 32768) {
@@ -131,12 +139,18 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   signal.throwIfAborted();
   const participantFile = csv ? new File([records[0].bytes], csv.name, { type: 'text/csv' }) : null;
   if (participantFile && !includeSensorBundle) return participantFile;
-  records.push({ filename: 'export-manifest.json', session_id: id, csv: JSON.stringify(manifest, null, 2) });
+  const manifestName = 'export-manifest.json';
+  records.push({ filename: manifestName, session_id: id, csv: JSON.stringify(manifest, null, 2) });
+  if (dated) {
+    const stem = csv.name.slice(0, -4);
+    // Gateway reads and integrity checks use the signed source names above.
+    for (const record of records.slice(1)) record.filename = `${stem}_${record.filename}`;
+  }
   const archive = createExportsZip(records);
   if (!includeSensorBundle) return archive;
   const filename = csv ? `${csv.name.slice(0, -4)}.zip` : `quest-${id}.zip`;
   const sensors = csv ? archive : createExportsZip(records.filter(({ filename }) =>
-    sensorFiles.has(filename) || filename === 'export-manifest.json'));
+    sensorFiles.has(filename) || filename === manifestName));
   const bundle = new File([sensors], filename, { type: sensors.type });
   return { download: participantFile ?? archive, bundle, bundleVersion: 1 };
 }

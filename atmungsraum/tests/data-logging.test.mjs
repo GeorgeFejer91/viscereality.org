@@ -7,18 +7,24 @@ import { readFile } from 'node:fs/promises';
 test('All filenames bind the same normalized identity to registered conditions and positive run numbers', () => {
   const patient = { surnamePrefix: ' FeJ ', age: '35', gender: 'male' };
   assert.deepEqual(participantIdentity(patient), { name: 'Fej', age: 35, genderCode: 'M', id: 'Fej_35_M' });
-  assert.equal(sessionFilename(patient, 'probe', 1), 'Fej_35_M_probe1.csv');
-  assert.equal(sessionFilename(patient, 'haupt', 2), 'Fej_35_M_main2.csv');
-  assert.equal(sessionFilename({ ...patient, surnamePrefix: 'ßab' }, 'haupt', 1), 'ßab_35_M_main1.csv');
+  const start = Date.parse('2026-11-14T00:30:00+01:00');
+  assert.equal(sessionFilename(patient, 'probe', 1, 'probe-5', start), 'Fej_35_M_2026-11-13_probe-5_r1.csv');
+  assert.equal(sessionFilename(patient, 'haupt', 2, 'haupt-15', start), 'Fej_35_M_2026-11-13_haupt-15_r2.csv');
+  assert.equal(sessionFilename({ ...patient, surnamePrefix: 'ßab' }, 'haupt', 1, 'haupt-15', start),
+    'ßab_35_M_2026-11-13_haupt-15_r1.csv');
   for (const [gender, code] of [['male','M'], ['female','F'], ['other','O'], ['prefer-not-to-say','N']]) {
-    assert.equal(sessionFilename({ ...patient, gender }, 'probe', 1), `Fej_35_${code}_probe1.csv`);
+    assert.equal(sessionFilename({ ...patient, gender }, 'probe', 1, 'probe-anleitung', start),
+      `Fej_35_${code}_2026-11-13_probe-anleitung_r1.csv`);
   }
   for (const bad of [{ surnamePrefix: '../' }, { surnamePrefix: '=1+' }, { surnamePrefix: 'Fejer' }, { age: '' }, { age: '-1' }, { age: '3.5' }, { gender: '' }, { gender: '__proto__' }]) {
-    assert.throws(() => sessionFilename({ ...patient, ...bad }, 'probe', 1));
+    assert.throws(() => sessionFilename({ ...patient, ...bad }, 'probe', 1, 'probe-5', start));
   }
-  assert.throws(() => sessionFilename(patient, 'unknown', 1));
-  assert.throws(() => sessionFilename(patient, '__proto__', 1));
-  assert.throws(() => sessionFilename(patient, 'probe', 0));
+  assert.throws(() => sessionFilename(patient, 'unknown', 1, 'probe-5', start));
+  assert.throws(() => sessionFilename(patient, '__proto__', 1, 'probe-5', start));
+  assert.throws(() => sessionFilename(patient, 'probe', 0, 'probe-5', start));
+  assert.throws(() => sessionFilename(patient, 'probe', 1, '../probe-5', start));
+  assert.throws(() => sessionFilename(patient, 'probe', 1, 'haupt-15', start));
+  assert.throws(() => sessionFilename(patient, 'probe', 1, 'probe-5', NaN));
 });
 
 test('CSV samples share identity, monotonic wall time, exact source values and pause-aware protocol phases', () => {
@@ -28,7 +34,7 @@ test('CSV samples share identity, monotonic wall time, exact source values and p
   const log = new SessionLog({ patient: { surnamePrefix: 'Fej', age: 35, gender: 'male' },
     selection: { branch: 'haupt', value: '10', minutes: 10, baselineMinutes: 5, boxMinutes: 5 },
     runIndex: 1, sessionId: 'run-1', signal, now: () => now, utc: () => 0,
-    protocol: { sample_rate: 4, total_frames: 2400, scenario_id: 'haupt-10', scenario_sha256: 'scenario-hash',
+    protocol: { sample_rate: 4, total_frames: 2400, scenario_id: 'haupt-15', scenario_sha256: 'scenario-hash',
       events: [{ id: 'baseline', offset_frames: 0, duration_frames: 1200 }, { id: 'instruction', offset_frames: 1200, duration_frames: 160 }] } });
   now = 1500; log.mark('paused', .5);
   now = 2000; log.mark('playing', .5); log.markSensor('disconnected');
@@ -52,7 +58,7 @@ test('CSV samples share identity, monotonic wall time, exact source values and p
     assert.equal(row.participant_id, 'Fej_35_M');
     assert.equal(row.condition, 'main');
     assert.equal(row.run_index, '1');
-    assert.equal(row.scenario_id, 'haupt-10');
+    assert.equal(row.scenario_id, 'haupt-15');
     assert.equal(row.phase, 'baseline');
     assert.equal(row.session_status, 'aborted');
     assert.equal(row.signal_source, 'mock-neurokit2');
@@ -128,7 +134,8 @@ test('A pause during scheduling lead preserves waiting time on pause and resume,
   now = 2250; log.stop();
   const saved = log.checkpoint();
   const result = log.finish('aborted', 'page-reload-or-interrupted');
-  assert.equal(SessionLog.recover(saved, signal).csv, result.csv);
+  assert.equal(result.filename, 'Fej_35_M_1970-01-01_probe-anleitung_r1.csv');
+  assert.deepEqual(SessionLog.recover(saved, signal), result);
   const [header, ...raw] = result.csv.trim().split('\r\n').map(x => x.split(','));
   const rows = raw.map(row => Object.fromEntries(header.map((h,i) => [h,row[i]])));
   assert.deepEqual(rows.slice(0,8).map(r=>r.phase), Array(8).fill('waiting'));

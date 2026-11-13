@@ -66,6 +66,13 @@ downloaded CSV, ECG and ACC entry matched the original on Quest. Android
 Files opened the first downloaded CSV's file details, and the file hash
 matched the Quest original. The bench Pixel has no CSV viewer.
 
+The five-minute `probe-5` run reached its completion threshold on Quest 2
+and saved with zero dropped writer records after signal pauses. Its internal
+core exceeded the original 128 MiB export limit. The CSV, ECG and ACC
+together totaled 131,155,067 bytes. The updated export gate validates a
+larger bounded native core and applies the phone limit to the files delivered
+to the Pixel.
+
 ## Run identity and files
 
 1. The operator enters participant details in Atmungsraum. Use the existing
@@ -133,13 +140,16 @@ run advertises `participant_csv: true` in the list entry and includes a
 `participant_csv` descriptor in the signed manifest. The descriptor binds
 the name, size, SHA-256 and session UUID. For these runs the browser stores the
 original CSV and a ZIP with the CSV, original ECG and ACC streams, and signed
-export manifest. The ordinary download still yields the participant CSV. The
+export manifest. New participant files use a stem such as
+`Tes_30_N_2026-11-13_probe-5_r4` for the CSV, ZIP and each exported sensor
+stream and manifest. The date comes from official Start in UTC. The ordinary
+download yields the participant CSV. The
 next eligible idle reconciliation upgrades an older CSV-only entry for the
 same recording ID. Keep the original streams on Quest.
-The writer, export and encrypted Arm from the operator form have host
-evidence. Probe-Runde uses `probe` and Haupt-Runde uses `main` for
-file indexing, independently of the VR condition. Qualification of the matched
-APK and physical phone remains open.
+Probe-Runde and Haupt-Runde have independent counters for each participant.
+The authored scenario ID in each filename names the selected session. The
+VR condition remains in the recording metadata. The app accepts previously
+saved names and keeps their original hashes and delivery receipts.
 
 On startup after an abrupt stop, Quest verifies the last durable checkpoint.
 If the run reached official Start, Quest can publish an aborted CSV and the

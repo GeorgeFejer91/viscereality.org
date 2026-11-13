@@ -627,7 +627,7 @@ index 3cbbfb33..6858a875 100644
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
 diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
-index faac6912..fcdf4a5f 100644
+index faac691298ebdb58a93c773e1555128216415f14..48f49bfe244efd30fb66e4b03ba78ccbd0efc0e0 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export.rs
 @@ -3,12 +3,16 @@
@@ -650,7 +650,7 @@ index faac6912..fcdf4a5f 100644
  use sha2::{Digest, Sha256};
  use std::{
      collections::BTreeSet,
-@@ -16,8 +20,9 @@ use std::{
+@@ -16,13 +20,16 @@ use std::{
      io::{Read, Seek, SeekFrom},
      path::{Path, PathBuf},
      sync::{
@@ -661,7 +661,14 @@ index faac6912..fcdf4a5f 100644
      },
      thread,
  };
-@@ -202,6 +207,10 @@ fn open_checked(path: &Path, regular: bool) -> Result<(File, Stamp), String> {
+ pub(crate) const MAX_CHUNK: u64 = 32768;
+ pub(crate) const MAX_EXPORT_BYTES: u64 = 128 * 1024 * 1024;
++// Full participant custody also includes renderer and tracking streams.
++pub(crate) const MAX_PARTICIPANT_CORE_BYTES: u64 = 1024 * 1024 * 1024;
+ const CORE: [&str; 8] = [
+     "manifest.json",
+     "final.json",
+@@ -202,6 +209,10 @@ fn open_checked(path: &Path, regular: bool) -> Result<(File, Stamp), String> {
      let metadata = stamp(&file, regular)?;
      Ok((file, metadata))
  }
@@ -672,7 +679,7 @@ index faac6912..fcdf4a5f 100644
  const MAX_DIRECTORY_ENTRIES: usize = 65536;
  fn collect_stream_inventory(
      mut entries: impl Iterator<Item = Result<(std::ffi::OsString, bool), String>>,
-@@ -374,9 +383,14 @@ impl Directory {
+@@ -374,9 +385,14 @@ impl Directory {
          if name.is_empty()
              || name == "."
              || name == ".."
@@ -688,7 +695,7 @@ index faac6912..fcdf4a5f 100644
          {
              return Err(denied());
          }
-@@ -505,7 +519,9 @@ impl Custody {
+@@ -505,7 +521,9 @@ impl Custody {
      }
  }
  struct Pinned {
@@ -699,7 +706,7 @@ index faac6912..fcdf4a5f 100644
      file: File,
      stamp: Stamp,
      digest: String,
-@@ -520,7 +536,7 @@ impl Prepared {
+@@ -520,7 +538,7 @@ impl Prepared {
          self.custody.unchanged()?;
          for p in &self.files {
              if stamp(&p.file, true)? != p.stamp
@@ -708,7 +715,7 @@ index faac6912..fcdf4a5f 100644
              {
                  return Err(denied());
              }
-@@ -547,7 +563,7 @@ impl Prepared {
+@@ -547,7 +565,7 @@ impl Prepared {
              .iter()
              .find(|p| p.name == name)
              .ok_or_else(denied)?;
@@ -717,7 +724,7 @@ index faac6912..fcdf4a5f 100644
              return Err("recording-chunk-range-invalid".into());
          }
          self.unchanged()?;
-@@ -633,7 +649,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+@@ -633,7 +651,7 @@ impl RecordingFiles for PinnedFiles<'_> {
          if stamp(&p.file, true)? != p.stamp {
              return Err(denied());
          }
@@ -726,7 +733,7 @@ index faac6912..fcdf4a5f 100644
      }
      fn reader(&mut self, name: &str) -> Result<Box<dyn Read + '_>, String> {
          self.len(name)?;
-@@ -645,7 +661,7 @@ impl RecordingFiles for PinnedFiles<'_> {
+@@ -645,7 +663,7 @@ impl RecordingFiles for PinnedFiles<'_> {
          p.file.seek(SeekFrom::Start(0)).map_err(|_| denied())?;
          Ok(Box::new(CheckedRead {
              file: &mut p.file,
@@ -735,7 +742,24 @@ index faac6912..fcdf4a5f 100644
              check: self.check,
          }))
      }
-@@ -672,16 +688,23 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -654,6 +672,7 @@ fn validate_pinned_core(
+     files: &mut [Pinned],
+     streams: &BTreeSet<String>,
+     key: SessionTimestampKey,
++    max_core_bytes: u64,
+     check: &dyn Fn() -> bool,
+ ) -> Result<(Value, crate::session_recording_recovery::RecoveredEntry), String> {
+     validate_finalized_core(
+@@ -664,7 +683,7 @@ fn validate_pinned_core(
+         },
+         key,
+         1024 * 1024,
+-        MAX_EXPORT_BYTES,
++        max_core_bytes,
+     )
+     .map_err(|_| denied())
+ }
+@@ -672,16 +691,23 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
      check_owner(check)?;
      let key = SessionTimestampKey::parse(id).map_err(|_| denied())?;
      let custody = Custody::open(root, id)?;
@@ -767,10 +791,11 @@ index faac6912..fcdf4a5f 100644
              file,
              stamp,
              digest: String::new(),
-@@ -693,39 +716,106 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -693,39 +719,113 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
          custody,
          files,
      };
+-    let (original, entry) = validate_pinned_core(&mut prepared.files, &streams, key, check)?;
 +    let terminal: Value = {
 +        let mut core = PinnedFiles {
 +            files: &mut prepared.files,
@@ -791,13 +816,14 @@ index faac6912..fcdf4a5f 100644
 +    } else if recovery.is_some() {
 +        return Err(denied());
 +    }
-+    let total = prepared.files.iter().try_fold(0u64, |total, pin| {
-+        total
-+            .checked_add(pin.length)
-+            .filter(|bytes| *bytes <= MAX_EXPORT_BYTES)
-+            .ok_or_else(denied)
-+    })?;
-     let (original, entry) = validate_pinned_core(&mut prepared.files, &streams, key, check)?;
++    let max_core_bytes = if terminal.get("participant_csv").is_some() {
++        MAX_PARTICIPANT_CORE_BYTES
++    } else {
++        MAX_EXPORT_BYTES
++    };
++    let (original, entry) =
++        validate_pinned_core(&mut prepared.files, &streams, key, max_core_bytes, check)?;
++    let total = prepared.files.iter().map(|pin| pin.length).sum::<u64>();
 +    let csv = csv_descriptor(&original, &terminal).map_err(|_| denied())?;
 +    if recovered && csv.is_none() {
 +        return Err(denied());
@@ -810,7 +836,13 @@ index faac6912..fcdf4a5f 100644
 +            name.to_owned()
 +        };
 +        let (file, stamp) = prepared.custody.session.child(&path, true)?;
-+        if stamp.len > MAX_EXPORT_BYTES || csv["size"].as_u64() != Some(stamp.len) {
++        let sensor_bytes: u64 = prepared.files.iter()
++            .filter(|pin| matches!(pin.name.as_str(), "polar-ecg.jsonl" | "polar-acc.jsonl"))
++            .map(|pin| pin.length)
++            .sum();
++        if stamp.len > MAX_EXPORT_BYTES.saturating_sub(sensor_bytes)
++            || csv["size"].as_u64() != Some(stamp.len)
++        {
 +            return Err(denied());
 +        }
 +        prepared.files.push(Pinned {
@@ -890,7 +922,7 @@ index faac6912..fcdf4a5f 100644
      let digest = format!("{:x}", Sha256::digest(manifest.to_string().as_bytes()));
      manifest["manifest_id"] = json!(digest);
      if manifest.to_string().len() > 30000 {
-@@ -734,6 +824,97 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
+@@ -734,6 +834,97 @@ fn prepare(root: &Path, id: &str, check: &dyn Fn() -> bool) -> Result<Prepared,
      prepared.manifest = manifest;
      Ok(prepared)
  }
@@ -988,7 +1020,7 @@ index faac6912..fcdf4a5f 100644
  fn base64(bytes: &[u8]) -> String {
      const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
      let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
-@@ -803,7 +984,7 @@ fn parse(v: &Value) -> Result<Query, String> {
+@@ -803,7 +994,7 @@ fn parse(v: &Value) -> Result<Query, String> {
                  return Err("recording-query-invalid".into());
              }
              let file = s("file")?;
@@ -997,7 +1029,7 @@ index faac6912..fcdf4a5f 100644
                  return Err("recording-query-invalid".into());
              }
              let offset = v["offset"]
-@@ -863,13 +1044,21 @@ fn list(
+@@ -863,13 +1054,21 @@ fn list(
          let eligible = prepare(root, &id, check);
          let entry = match eligible {
              Ok(p) => {
@@ -1022,7 +1054,7 @@ index faac6912..fcdf4a5f 100644
                  {
                      "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cb..2c0e054c 100644
+index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..013287851965e8077753c2c709d42c6e67d247e1 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
@@ -1036,7 +1068,15 @@ index f71f79cb..2c0e054c 100644
                  file,
                  stamp,
                  digest: String::new(),
-@@ -339,7 +341,9 @@ fn pins(root: &Path) -> Vec<Pinned> {
+@@ -304,6 +306,7 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
+         &mut pins,
+         &fixture_streams(&root),
+         SessionTimestampKey::parse(ID).unwrap(),
++        MAX_EXPORT_BYTES,
+         &|| true,
+     );
+     drop(pins);
+@@ -339,7 +342,9 @@ fn pins(root: &Path) -> Vec<Pinned> {
              let path = root.join(ID).join(name);
              let (file, stamp) = open_checked(&path, true).unwrap();
              Pinned {
@@ -1047,7 +1087,15 @@ index f71f79cb..2c0e054c 100644
                  file,
                  stamp,
                  digest: String::new(),
-@@ -694,3 +698,151 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
+@@ -483,6 +488,7 @@ fn owner_retirement_during_pinned_stream_validation_stops_bounded_reads() {
+         &mut files,
+         &fixture_streams(&root),
+         SessionTimestampKey::parse(ID).unwrap(),
++        MAX_EXPORT_BYTES,
+         &check,
+     );
+     assert!(result.is_err());
+@@ -694,3 +700,151 @@ fn inventory_witness_is_sticky_even_when_directory_stat_evidence_aliases() {
      drop(prepared);
      fs::remove_dir_all(root.parent().unwrap()).unwrap();
  }
@@ -1113,7 +1161,7 @@ index f71f79cb..2c0e054c 100644
 +    let prefix = fs::read(&path).unwrap();
 +    fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"undurable-tail").unwrap();
 +    let original = fs::read(&path).unwrap();
-+    let csv_name = "Mül_35_F_main1.csv";
++    let csv_name = "Mül_35_F_2023-11-14_haupt-15_r1.csv";
 +    fs::write(directory.join(csv_name), b"uncommitted-original").unwrap();
 +    assert!(prepare(&root, id, &|| true).is_err());
 +
@@ -1193,19 +1241,19 @@ index f71f79cb..2c0e054c 100644
 +    writer.shutdown(Duration::from_secs(1)).unwrap();
 +    let id = directory.file_name().unwrap().to_str().unwrap();
 +    let prepared = prepare(&root, id, &|| true).unwrap();
-+    assert_eq!(prepared.manifest["participant_csv"]["name"], "Mül_35_F_main1.csv");
-+    let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_main1.csv")).unwrap();
++    assert_eq!(prepared.manifest["participant_csv"]["name"], "Mül_35_F_2023-11-14_haupt-15_r1.csv");
++    let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_2023-11-14_haupt-15_r1.csv")).unwrap();
 +    assert!(csv.contains(",26000.000,paused,unknown,37,uV,"));
 +    drop(prepared);
 +    fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..53c47e44
+index 0000000000000000000000000000000000000000..eefd87a6820083bbf5e732e61ab972eb8f7567e1
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,968 @@
-+use chrono::{DateTime, SecondsFormat, Utc};
+@@ -0,0 +1,1010 @@
++use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
 +use std::{
@@ -1515,12 +1563,12 @@ index 00000000..53c47e44
 +        metadata
 +    }
 +
-+    pub(crate) fn filename(&self) -> String {
-+        format!(
-+            "{}_{}{}.csv",
-+            self.plan.participant.as_text(),
-+            self.plan.condition(),
-+            self.index
++    fn filename(&self, started_utc: &str) -> String {
++        participant_csv_filename(
++            &self.plan.participant.as_text(),
++            &started_utc[..10],
++            &self.plan.scenario,
++            self.index,
 +        )
 +    }
 +
@@ -1539,9 +1587,12 @@ index 00000000..53c47e44
 +        let source = directory.join("polar-ecg.jsonl");
 +        let signal_sha = file_hash(&source)?;
 +        let ecg = File::open(source).map_err(io_error)?;
-+        let name = self.filename();
++        let start_utc = utc(anchor, clock.start())?;
++        let name = self.filename(&start_utc);
 +        let (descriptor, _) = self.write_csv(CsvProjection {
-+            destination: directory.join(name),
++            destination: directory.join(&name),
++            name,
++            start_utc,
 +            anchor,
 +            cutoff: Some(ended_at.get()),
 +            clock,
@@ -1567,11 +1618,15 @@ index 00000000..53c47e44
 +            return Ok(None);
 +        };
 +        let ecg = open_regular_recording_file(&directory.join("polar-ecg.jsonl"))?;
-+        let destination = directory.join(format!("{RECOVERED_CSV_PREFIX}{}", self.filename()));
++        let start_utc = utc(anchor, clock.start())?;
++        let name = self.filename(&start_utc);
++        let destination = directory.join(format!("{RECOVERED_CSV_PREFIX}{name}"));
 +        discard_recovery_csv(&destination)?;
 +        discard_recovery_csv(&partial_file(&destination))?;
 +        self.write_csv(CsvProjection {
 +            destination,
++            name,
++            start_utc,
 +            anchor,
 +            cutoff: None,
 +            clock,
@@ -1586,6 +1641,8 @@ index 00000000..53c47e44
 +    fn write_csv(&self, projection: CsvProjection<impl BufRead>) -> Result<(Value, u64), String> {
 +        let CsvProjection {
 +            destination,
++            name,
++            start_utc,
 +            anchor,
 +            cutoff,
 +            clock,
@@ -1604,7 +1661,6 @@ index 00000000..53c47e44
 +        );
 +        output.write_all(HEADER.as_bytes()).map_err(io_error)?;
 +        let start = clock.start();
-+        let start_utc = utc(anchor, start)?;
 +        let metadata = [
 +            "1".to_owned(),
 +            self.plan.participant.as_text(),
@@ -1675,7 +1731,7 @@ index 00000000..53c47e44
 +                .expect("recording destination has parent"),
 +        )?;
 +        Ok((
-+            json!({ "name": self.filename(), "size": size, "sha256": sha256, "session_id": self.uuid }),
++            json!({ "name": name, "size": size, "sha256": sha256, "session_id": self.uuid }),
 +            ended_at,
 +        ))
 +    }
@@ -1683,6 +1739,8 @@ index 00000000..53c47e44
 +
 +struct CsvProjection<'a, R> {
 +    destination: std::path::PathBuf,
++    name: String,
++    start_utc: String,
 +    anchor: ClockAnchor,
 +    cutoff: Option<u64>,
 +    clock: PlaybackClock,
@@ -1714,7 +1772,34 @@ index 00000000..53c47e44
 +    }
 +}
 +
++fn participant_csv_filename(id: &str, date: &str, scenario: &str, index: u64) -> String {
++    format!("{id}_{date}_{scenario}_r{index}.csv")
++}
++
++fn dated_csv_parts(stem: &str) -> Option<(&str, &str, &str, &str)> {
++    let (rest, run) = stem.rsplit_once("_r")?;
++    let (rest, scenario) = rest.rsplit_once('_')?;
++    let (id, date) = rest.rsplit_once('_')?;
++    if date.len() != 10
++        || !NaiveDate::parse_from_str(date, "%Y-%m-%d")
++            .is_ok_and(|value| value.format("%Y-%m-%d").to_string() == date)
++        || scenario_seconds(scenario).is_none()
++    {
++        return None;
++    }
++    Some((id, date, scenario, run))
++}
++
++fn valid_run_index(index: &str) -> bool {
++    (1..=16).contains(&index.len())
++        && !index.starts_with('0')
++        && index.bytes().all(|byte| byte.is_ascii_digit())
++}
++
 +pub(crate) fn valid_csv_filename(name: &str) -> bool {
++    if let Some((id, _, _, run)) = name.strip_suffix(".csv").and_then(dated_csv_parts) {
++        return ParticipantId::parse(id).is_ok() && valid_run_index(run);
++    }
 +    let Some((id, tail)) = name
 +        .strip_suffix(".csv")
 +        .and_then(|stem| stem.rsplit_once('_'))
@@ -1727,10 +1812,7 @@ index 00000000..53c47e44
 +    else {
 +        return false;
 +    };
-+    ParticipantId::parse(id).is_ok()
-+        && (1..=16).contains(&index.len())
-+        && !index.starts_with('0')
-+        && index.bytes().all(|byte| byte.is_ascii_digit())
++    ParticipantId::parse(id).is_ok() && valid_run_index(index)
 +}
 +
 +pub(crate) fn csv_descriptor<'a>(
@@ -1756,8 +1838,16 @@ index 00000000..53c47e44
 +        .filter(|name| valid_csv_filename(name))
 +        .ok_or(BAD)?;
 +    let uuid = csv["session_id"].as_str().ok_or(BAD)?;
++    let matches_identity = match name.strip_suffix(".csv").and_then(dated_csv_parts) {
++        Some((_, date, scenario, _)) => {
++            participant["scenario_id"].as_str() == Some(scenario)
++                && (scenario == "haupt-15") == (condition == "main")
++                && name == participant_csv_filename(id, date, scenario, index)
++        }
++        None => name == format!("{id}_{condition}{index}.csv"),
++    };
 +    if csv.as_object().is_none_or(|object| object.len() != 4)
-+        || name != format!("{id}_{condition}{index}.csv")
++        || !matches_identity
 +        || participant["session_id"].as_str() != Some(uuid)
 +        || !valid_uuid(uuid)
 +        || csv["size"].as_u64().is_none_or(|size| size == 0)
@@ -2106,9 +2196,9 @@ index 00000000..53c47e44
 +            .finalize_csv(directory, anchor, end, false, "save-and-exit")
 +            .unwrap()
 +            .unwrap();
-+        assert_eq!(descriptor["name"], "Tes_30_N_main1.csv");
++        assert_eq!(descriptor["name"], "Tes_30_N_2023-11-14_haupt-15_r1.csv");
 +        assert_eq!(descriptor["session_id"], run.uuid);
-+        let csv = fs::read_to_string(directory.join("Tes_30_N_main1.csv")).unwrap();
++        let csv = fs::read_to_string(directory.join("Tes_30_N_2023-11-14_haupt-15_r1.csv")).unwrap();
 +        assert_eq!(descriptor["size"], csv.len());
 +        assert_eq!(
 +            descriptor["sha256"],
@@ -2175,7 +2265,7 @@ index 00000000..53c47e44
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 new file mode 100644
-index 00000000..b6193de2
+index 0000000000000000000000000000000000000000..865081e6308de8a8da71602ab3a1005c30d0b66c
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 @@ -0,0 +1,160 @@
@@ -2190,7 +2280,7 @@ index 00000000..b6193de2
 +use crate::{
 +    session_recording_clock::{ClockAnchor, MonotonicNanos, SessionTimestampKey, UtcEpochNanos},
 +    session_recording_contract::{SESSION_FINAL_SCHEMA, SESSION_STREAM_FILES},
-+    session_recording_export::{MAX_EXPORT_BYTES, open_regular_recording_file},
++    session_recording_export::{MAX_PARTICIPANT_CORE_BYTES, open_regular_recording_file},
 +    session_recording_participant::{ParticipantRun, RECOVERY_RECEIPT, discard_recovery_csv},
 +    session_recording_recovery::{RecoveryDisposition, RecoveryReport, participant_checkpoint},
 +    session_recording_writer::publish_json_exclusive,
@@ -2292,7 +2382,7 @@ index 00000000..b6193de2
 +            .ok_or("participant-recovery-prefix-size")?;
 +        total = total
 +            .checked_add(length)
-+            .filter(|bytes| *bytes <= MAX_EXPORT_BYTES)
++            .filter(|bytes| *bytes <= MAX_PARTICIPANT_CORE_BYTES)
 +            .ok_or("participant-recovery-size-limit")?;
 +        let file = open_regular_recording_file(&directory.join(name))?;
 +        let mut hash = Sha256::new();
@@ -2419,7 +2509,7 @@ index e94da3ae..43ec79fc 100644
              Ok(value) => return Ok(Some(value)),
              Err(error) => last_error = Some(error),
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5..9a802bed 100644
+index 4aefeaf5588a438a541140cdfdf04e93312bd165..f4e6d27ed887e6184748e595d76767f8ca733dfc 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
 @@ -920,7 +920,10 @@ fn handle_control(
@@ -2609,7 +2699,7 @@ index 4aefeaf5..9a802bed 100644
 +        let terminal: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
 +        assert_eq!(manifest["participant"], terminal["participant"]);
 +        let csv = crate::session_recording_participant::csv_descriptor(&manifest, &terminal).unwrap().unwrap();
-+        assert_eq!(csv["name"], "Tes_30_N_probe1.csv");
++        assert_eq!(csv["name"], "Tes_30_N_2023-11-14_probe-5_r1.csv");
 +        let text = fs::read_to_string(directory.join(csv["name"].as_str().unwrap())).unwrap();
 +        assert!(text.contains(",missing,"));
 +        assert!(text.contains(",aborted,"));
@@ -3652,10 +3742,10 @@ index 62ec84d8..a88ecadf 100644
  
      // Raw fields retain JSON type information: strings/floats are not generation evidence.
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
-index de472e29..29a1ba62 100644
+index de472e2978cfa87ae7f15886738215106a6f5ec8..b404ee53ba7e28b46ab3478c0333697bea01ed58 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
-@@ -10,9 +10,13 @@ final class ExperimentSessionRecordingExport {
+@@ -10,9 +10,19 @@ final class ExperimentSessionRecordingExport {
    JSONObject out=body;String q=ExperimentSessionGatewayProtocol.string(out,"query");
    if("list".equals(q)&&out.length()==3){String before=ExperimentSessionGatewayProtocol.string(out,"before");if(!before.isEmpty()&&!id(before))throw new IllegalArgumentException("recording-id");number(out,"limit",1,16);}
    else if("describe".equals(q)&&out.length()==2){if(!id(ExperimentSessionGatewayProtocol.string(out,"id")))throw new IllegalArgumentException("recording-id");}
@@ -3664,8 +3754,14 @@ index de472e29..29a1ba62 100644
    else throw new IllegalArgumentException("closed-recording-query-required");return out;
   }
 + static boolean participantCsv(String name) {
-+  return java.text.Normalizer.isNormalized(name, java.text.Normalizer.Form.NFC)
-+      && name.matches("\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(probe|main)[1-9][0-9]{0,15}\\.csv");
++  if(!java.text.Normalizer.isNormalized(name, java.text.Normalizer.Form.NFC))return false;
++  String identity="\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_";
++  if(name.matches(identity+"(probe|main)[1-9][0-9]{0,15}\\.csv"))return true;
++  java.util.regex.Matcher dated=java.util.regex.Pattern.compile(identity
++      +"([0-9]{4}-[0-9]{2}-[0-9]{2})_(probe-(anleitung|5|10|15)|haupt-15)_r[1-9][0-9]{0,15}\\.csv").matcher(name);
++  if(!dated.matches())return false;
++  try { java.time.LocalDate.parse(dated.group(2)); return true; }
++  catch(java.time.format.DateTimeParseException invalid){return false;}
 + }
   static boolean id(String s){return s.matches("utc-ns-[0-9]{20}");}
   static long number(JSONObject o,String k,long min,long max){Object n=o.opt(k);if(!(n instanceof Integer||n instanceof Long)||((Number)n).longValue()<min||((Number)n).longValue()>max)throw new IllegalArgumentException("recording-integer");return ((Number)n).longValue();}
@@ -5731,10 +5827,10 @@ index fbc332fd..e2110319 100644
   JSONObject snapshot(){return new JSONObject();}
   JSONObject monitorSnapshot(JSONObject body)throws Exception{return ExperimentSessionGatewayProtocol.monitorQuery(body);}
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d5..86a8dec3 100644
+index c849c2d554a16171cd09bd908448dd6237538631..10171560b7ce1f5c86356bde915a91a0dfdd4933 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
-@@ -5,9 +5,65 @@ from test_experiment_gateway_dedupe import method
+@@ -5,15 +5,76 @@ from test_experiment_gateway_dedupe import method
  original=owner.HARNESS
  prefix=original[:original.index(' public static void main')]
  setup=original[original.index('  android.content.Context context='):original.index('  g.nativeOwnerChanged(1,7,true);')]
@@ -5801,7 +5897,18 @@ index c849c2d5..86a8dec3 100644
   static JSONObject network(ExperimentSessionCommandGateway g,JSONObject r)throws Exception {
    java.util.concurrent.FutureTask<JSONObject> f=new java.util.concurrent.FutureTask<>(()->g.exchangeLan(r));Thread t=new Thread(f,"network");t.start();
    long until=System.nanoTime()+3000000000L;while(!f.isDone()&&System.nanoTime()<until){Runnable task=android.os.Handler.queue.poll(20,java.util.concurrent.TimeUnit.MILLISECONDS);if(task!=null)task.run();}t.join(1000);check(!t.isAlive(),"export blocked main or IO lane");return f.get();
-@@ -26,7 +82,93 @@ owner.HARNESS=prefix+r'''
+  }
+  public static void main(String[] args)throws Exception {
+ '''+setup+r'''
++  check(ExperimentSessionRecordingExport.participantCsv("Mül_35_F_2026-11-13_probe-5_r2.csv")
++      && ExperimentSessionRecordingExport.participantCsv("Mül_35_F_probe2.csv")
++      && !ExperimentSessionRecordingExport.participantCsv("Mül_35_F_2026-02-30_probe-5_r2.csv")
++      && !ExperimentSessionRecordingExport.participantCsv("../Mül_35_F_2026-11-13_probe-5_r2.csv"),
++      "recording CSV read adapter must accept dated and legacy filenames and reject unsafe names");
+   g.nativeOwnerChanged(1,7,true);JSONObject credentials=join(g,g.identity());JSONObject q=new JSONObject().put("query","list").put("before","").put("limit",16);
+   deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==0,"gateway alone gained filesystem access");
+   android.os.Bundle.export=true;
+@@ -26,7 +87,93 @@ owner.HARNESS=prefix+r'''
    ControlPanelActivity.during=()->mode.packed=37;deny(()->network(g,auth(credentials,"recordings",q)));check(ControlPanelActivity.reads==2,"mode changed before IO was exercised");ControlPanelActivity.during=null;mode.packed=46;g.controlModeChanged();
    credentials=join(g,g.identity());final JSONObject current=credentials;
    ControlPanelActivity.during=()->g.nativeOwnerChanged(1,7,false);deny(()->network(g,auth(current,"recordings",q)));check(ControlPanelActivity.reads==3,"owner retirement IO not exercised");check(dispatches==0,"recording request mutated experiment");

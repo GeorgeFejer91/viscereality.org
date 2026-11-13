@@ -22,36 +22,38 @@ below applies throughout the transfer.
 The primary session CSV has exactly this filename:
 
 ```text
-<name3>_<age>_<gender>_<condition><run>.csv
-Fej_35_M_probe1.csv
-Fej_35_M_main1.csv
+<participant_id>_<YYYY-MM-DD>_<scenario_id>_r<run>.csv
+Fej_35_M_2026-11-13_probe-5_r1.csv
+Fej_35_M_2026-11-13_haupt-15_r1.csv
 ```
 
-The order is **name, age, gender, condition/run**, following the user's examples.
-The user confirmed three surname letters rather than the full surname.
+The filename contains the participant ID, the UTC calendar date of official
+Start, the authored session name and the attempt index. The form uses three
+surname letters. Quest anchors the date to the same Start event used for the
+CSV's `session_started_utc`, including after checkpoint recovery.
 
 | Field | Required meaning |
 | --- | --- |
 | `name3` | Exactly three Unicode letters from the surname; trim and normalize NFC. Use title case when doing so preserves three letters (e.g. `FEJ` → `Fej`, `MÜL` → `Mül`); preserve the original NFC letters when case conversion expands them. Reject digits, separators, path characters and punctuation. |
 | `age` | Nonnegative whole years, canonical decimal integer; no leading zeroes. The form and writer reject missing, fractional, nonfinite and unsafe integers. |
 | `gender` | Exactly `M` male, `F` female, `O` other/Divers, or `N` prefer not to say/Keine Angabe. No default choice. |
-| `condition` | `probe` for every Probe-Runde option, including Anleitung; `main` for Haupt-Runde. Internal route `haupt` maps to `main` only at this shared boundary. |
+| `scenario_id` | The exact authored session name. The condition remains `probe` or `main` in metadata and determines the attempt counter. |
 | `run` | Positive, one-based attempt index, independently allocated per participant ID and condition. Increment on replay; do not reuse an allocated index after abort or failure. |
 
 The participant ID is `<name3>_<age>_<gender>`, e.g. `Fej_35_M`.
-The session stem is `<participant_id>_<condition><run>`.
+The session stem is `<participant_id>_<YYYY-MM-DD>_<scenario_id>_r<run>`.
 Keep demographics unchanged for a participant across conditions. Editing them
 creates a different ID; it does not rename previous files. Three surname letters
 plus demographics are not guaranteed to distinguish different people: the UUID
 `session_id` is the unique identity of an individual run.
 
 The exact exercise is in `scenario_id`: `probe-anleitung`, `probe-5`, `probe-10`,
-`probe-15`, or the single `haupt-15`. Preserve this field and planned duration;
-the filename's `probe`/`main` does not encode duration. Anleitung is a practice
+`probe-15`, or `haupt-15`. The standalone browser also registers `box-20`.
+Preserve the exact scenario and planned duration in the CSV. Anleitung is a practice
 run; its current audio example is 68 seconds, with no menu exploration limit.
 
 Additional participant files must start with the same session stem and may add
-a registered stream suffix, e.g. `Fej_35_M_main1_events.csv`. Register new
+a registered stream suffix, e.g. `Fej_35_M_2026-11-13_haupt-15_r1_events.csv`. Register new
 conditions/streams here and in the shared writer before use. Every data file
 must retain participant ID, name prefix, age, gender code, condition, run index
 and session UUID as metadata; participant CSV rows repeat them. Participant-linked
@@ -146,9 +148,15 @@ store is separate from the synthetic CSV list and its upload/share workflow.
 Legacy runs use the original eight-file archive. The participant CSV path keeps
 the original bytes and Quest filename in browser storage. One transaction also
 stores the same-session sensor ZIP with the original ECG and ACC JSONL bytes,
-the participant CSV and the authenticated export manifest. The ZIP name uses
-the participant session stem and the native stream names remain intact inside.
+the participant CSV and the authenticated export manifest. The ZIP, ECG,
+ACC and exported manifest filenames all use the participant session stem.
+The signed manifest retains the original Quest stream keys and digests.
+Those keys identify app-private writer and recovery files. Existing CSVs and
+archives keep their saved legacy names and remain readable.
 Google Drive delivery reads this committed bundle during authorized idle time.
+Participant export validates up to 1 GiB of Quest core files. The combined CSV,
+ECG and ACC export remains bounded to 128 MiB for the phone. Legacy full
+archives retain their 128 MiB limit.
 The browser records the reserved Drive ID and SHA-256 before upload, then
 confirms the destination and bytes before marking delivery complete. Keep
 delivery receipts separate from Quest and phone recording custody.
