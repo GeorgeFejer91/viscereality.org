@@ -19,13 +19,26 @@
   Windows client, verify a changing remote frame, one harmless click with a
   visible result in a 2D panel, then disconnect and stop sharing.
 
-The next attended step is to approve screen sharing in the active profile.
-The Windows RustDeskMCP process was running with its
-loopback MCP endpoint disabled. [RustDesk's Android guide](https://rustdesk.com/docs/en/client/android/#request-permissions-and-start-services)
+On the active Quest profile, **Share screen → Start service** displayed the
+RustDesk first-run **I Agree** confirmation. The wearer must accept it and
+then approve the headset's separate capture prompt. ADB reported no active
+MediaProjection session and **RustDesk Input** was off. Android lists the input
+service and routes Accessibility Settings to Horizon Shell. Whether that route
+lets the wearer enable the service, or delivers a remote click, is still open.
+
+The Windows RustDeskMCP release `v1.4.6-mcp.1` was running. Its loopback MCP
+endpoint returned HTTP 503 while disabled. For an attended session the same
+client supports [the normal `--connect` route](https://github.com/YaoxinCS/RustdeskMCP/blob/v1.4.6-mcp.1/src/core_main.rs#L740),
+with the wearer accepting the connection on Quest. Use the installed standard
+Windows RustDesk `1.5.0+68` as the target for the reverse test. Its CLI returned
+a local peer ID without needing to display credentials.
+[RustDesk's Android guide](https://rustdesk.com/docs/en/client/android/#request-permissions-and-start-services)
 documents separate capture consent and input permission. [Meta's MediaProjection guide](https://developers.meta.com/vr/documentation/native/native-media-projection/)
 describes Horizon OS compositor capture. [The earlier Quest 2 sideload report](https://github.com/rustdesk/rustdesk/discussions/3047)
 leaves mouse input unresolved. Keep peer IDs, credentials and captured frames local.
 The installation note at `920adb0` passed [Pages run 43413359983](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43413359983) and the live project notes and app checks.
+The launch evidence at `b7b55c6` was verified live in descendant `2ea1ea7`
+after [Pages run 43414690094](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43414690094).
 
 ### RustDesk MCP client and skill — 2026-11-13
 
