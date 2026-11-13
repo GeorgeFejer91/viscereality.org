@@ -52,12 +52,24 @@ and Pixel hardware checklist below.
 - [ ] From the Windows client, verify a changing remote frame and one harmless
   click with a visible result in a 2D panel. Disconnect and stop sharing.
 
-The attended Windows RustDeskMCP public-ID connection was rejected by
-RustDesk's public server because the initiating client was signed out. Use a
-[signed-in public-server session](https://github.com/rustdesk/rustdesk/wiki/Login-required-for-public-server)
-or qualify the [direct IP route](https://rustdesk.com/docs/en/self-host/client-configuration/advanced-settings/#direct-server)
-for the next test. Capture permission and a bound input service do not verify
-remote video, click delivery, or headset-to-PC operation.
+The Windows RustDeskMCP public-ID connection initially required sign-in.
+After sign-in the retry failed to reach the relay/rendezvous server.
+Enable [Direct IP access](https://rustdesk.com/docs/en/self-host/client-configuration/advanced-settings/#direct-server)
+in RustDesk under **Settings → Share screen**. On this headset, ADB keyboard
+navigation reached the toggle where panel-coordinate taps lost focus. Android
+then accepted TCP connections on port 21118. A serial-scoped USB
+`adb forward tcp:0 tcp:21118` created a Windows loopback-only listener.
+RustDeskMCP established a TCP connection to it. The remote session window
+was minimized, so authentication, changing frames, and clicks remain open.
+
+An idle Mobile CLI UiAutomation helper on the Quest suppressed Android's
+RustDesk accessibility binding while the permission stayed enabled. Stopping
+the Quest-only helper when it had no client restored the binding. The helper
+reappeared during another check. Verify the bound service immediately before
+the RustDesk click test and avoid UI hierarchy automation during that test.
+For handoff, restore the Windows session window, complete its attended
+authentication, verify the click in a 2D panel, then stop sharing, disable the
+temporary Direct IP setting and remove this test's USB forward.
 
 The Windows RustDeskMCP release `v1.4.6-mcp.1` was running. Its loopback MCP
 endpoint returned HTTP 503 while disabled. For an attended session the same
@@ -72,6 +84,8 @@ leaves mouse input unresolved. Keep peer IDs, credentials and captured frames lo
 The installation note at `920adb0` passed [Pages run 43413359983](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43413359983) and the live project notes and app checks.
 The launch evidence at `b7b55c6` was verified live in descendant `2ea1ea7`
 after [Pages run 43414690094](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43414690094).
+The accessibility evidence at `f17e8ba` was verified live in descendant
+`e013fc6` after [Pages run 43418701040](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43418701040).
 
 ### RustDesk MCP client and skill — 2026-11-13
 
