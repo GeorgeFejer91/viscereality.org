@@ -41,7 +41,7 @@ copy is the input to automatic delivery to the research Google Drive.
 
 ## Bench verification on Quest 2 and Pixel 10
 
-The signed 0.1.24 rehearsal starts in Remote. The installed Pixel Chrome
+The signed 0.1.24 and 0.1.25 rehearsals start in Remote. The installed Pixel Chrome
 157.0.8103.50 WebAPK discovers it over Bluetooth, then opens its authenticated
 Wi-Fi gateway. Close any floating overlays if Chrome blocks Local Network
 Access. A Quest APK update that changes the trusted build fingerprint
@@ -142,7 +142,9 @@ the name, size, SHA-256 and session UUID. For these runs the browser stores the
 original CSV and a ZIP with the CSV, original ECG and ACC streams, and signed
 export manifest. New participant files use a stem such as
 `Tes_30_N_2026-11-13_probe-5_r4` for the CSV, ZIP and each exported sensor
-stream and manifest. The date comes from official Start in UTC. The ordinary
+stream and manifest. The date comes from official Start in UTC. In the 0.1.25 physical check the
+CSV row and filenames agreed. All three archived data files matched the Quest
+source hashes and Drive confirmed the private dated ZIP. The ordinary
 download yields the participant CSV. The
 next eligible idle reconciliation upgrades an older CSV-only entry for the
 same recording ID. Keep the original streams on Quest.

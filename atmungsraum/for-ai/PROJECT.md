@@ -497,8 +497,19 @@ this repository.
 - [x] Update new participant exports to use the ID, UTC Start date, authored
   scenario and run number. Apply the stem to the Quest and demo CSV, Pixel ZIP,
   exported ECG, ACC and manifest and Drive ZIP. Continue reading legacy files.
+- [x] Install and verify signed Quest 2 build 0.1.25. Verify the live installed
+  Pixel PWA release in standalone mode after Pages deployed commit `28dec06`.
+  The native and Pixel fixtures passed 72 Rust, 72 gateway, and 88 Node
+  checks, with UI, scenario pairs and project context passing separately.
+- [x] Verify the new dated filenames from Quest through Drive. Quest saved a
+  new partial `probe-5` test with zero drops. Its first CSV row matched the
+  participant ID, UTC Start date, scenario and attempt encoded in its name.
+  The Pixel retained the CSV and the identically named ZIP on the session
+  stem. The CSV, ECG and ACC ZIP entries matched their Quest SHA-256 values,
+  and Drive independently listed the private 2,694,638-byte ZIP. The
+  export manifest used the same stem.
 - [ ] Reconcile the completed five-minute run with the larger native validation
-  bound and verify the new dated filenames from Quest through Drive.
+  bound and verify byte equality through Drive.
 - [ ] Complete the remaining physical stress and pairing cases in
   [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md).
 
