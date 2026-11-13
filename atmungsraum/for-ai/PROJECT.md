@@ -240,8 +240,9 @@ The production Java audio owner passed all six scenarios and
 [shutdown on Quest 2](VERIFICATION.md#quest-2-audio-owner-cleanup--2026-11-13)
 in a separate instrumentation process.
 The rehearsal app's launch and phone-driven playback still need device checks.
-The Pixel 10 reported Chrome 134. Update Chrome before installing the PWA
-and grant Atmungsraum Local Network Access for the Quest connection.
+The Pixel 10 was updated from Chrome 134 to 157 through Google Play and
+the installed PWA relaunched in standalone mode. Grant Atmungsraum Local
+Network Access if prompted during the physical Quest join.
 [Chrome 142 introduced this permission](https://developer.chrome.com/release-notes/142#local-network-access-restrictions).
 At startup the Quest APK asks Android to show its turn-on confirmation when
 Bluetooth is off. The phone shows a reminder when VR-Probe opens. Chrome’s
@@ -288,7 +289,12 @@ this repository.
 - [x] Verify ADB access and check for the official Google Drive app. Android
   Package Manager reports it installed on the Pixel 10.
 - [x] Install the Atmungsraum PWA in Android Chrome and verify standalone
-  launcher relaunch on the Pixel. Confirmed again during this preflight.
+  launcher relaunch on the Pixel. After the Google Play update, Chrome
+  157.0.8103.50 opened the installed WebAPK and loaded the live VR-Probe
+  pairing route.
+- [x] Grant Chrome Nearby devices on the Pixel. The Web Bluetooth chooser
+  changed from a permission error to an active scan after Android reported
+  both Bluetooth scan and connect granted.
 - [x] Register the signed 0.1.20 rehearsal on the active Quest 2 profile,
   grant Nearby devices access for the rehearsal and verify OpenXR frame
   submission after launch.
@@ -334,6 +340,13 @@ test APK. After the restart, Horizon Shell blocked experimenter-panel
 placement while reporting a reprojected OS dialog. Enrollment remains open.
 First confirm Touch pointer and trigger in Quest Home, then reopen the
 experimenter panel and verify the signed LAN join before recording.
+
+The Pixel and Quest responded over the same Wi-Fi. Chrome could scan but
+did not list the Quest while the separate RustDesk screen-sharing prompt
+had headset focus. Leave that prompt to its operator. After focus returns,
+verify the Quest's Remote discovery, enrollment and signed Wi-Fi join.
+Google Cloud still needs interactive sign-in and the research Drive had no
+matching destination folder.
 
 All 85 Node tests, the UI state check and all six scenario pairs passed.
 Documentation release `e013fc6` passed
