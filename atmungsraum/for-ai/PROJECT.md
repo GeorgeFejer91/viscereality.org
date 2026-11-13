@@ -86,8 +86,12 @@ and Pixel hardware checklist below.
   RustDesk logged `onServiceConnected` and `input:true`. UIAutomator inspection
   temporarily disconnected the service before it rebound, so use Android
   service and RustDesk log readback for the final state.
-- [ ] From the Windows client, verify a changing remote frame and one harmless
-  click with a visible result in a 2D panel. Disconnect and stop sharing.
+- [x] Verify changing Quest video in Windows RustDeskMCP over USB. The fresh
+  Horizon OS prompt accepted ADB keyboard focus on **Share** and Enter. Android
+  then reported a RustDesk projection and virtual display. Windows showed
+  changing compositor frames and the Quest Browser panel.
+- [ ] Verify one harmless RustDesk click that visibly changes a 2D panel.
+  Verify deliberate disconnect and stop sharing.
 
 The Windows RustDeskMCP public-ID connection initially required sign-in.
 After sign-in the retry failed to reach the relay/rendezvous server.
@@ -101,17 +105,34 @@ an incoming control request whose peer ID matched the Windows client's
 `--get-id` readback. Accepting the request in RustDesk authenticated the
 session. Windows displayed **Connected, waiting for image**. At session start
 the earlier MediaProjection token stopped and Horizon OS presented a fresh
-capture prompt. ADB confirmed the prompt in the foreground and no active
-capture token. The wearer needs to approve this prompt before the first
-remote frame can be checked.
+capture prompt. ADB confirmed that Android rejected the previous token.
+Bringing the RustDesk task forward, focusing the visible **Share** button,
+and pressing Enter through ADB granted the fresh token. A coordinate tap
+did not establish capture.
 
 An idle Mobile CLI UiAutomation helper on the Quest suppressed Android's
 RustDesk accessibility binding while the permission stayed enabled. Stopping
 the Quest-only helper when it had no client restored the binding. The helper
 reappeared during another check. Verify the bound service immediately before
 the RustDesk click test and avoid UI hierarchy automation during that test.
-After capture approval, verify a changing RustDesk frame and a click in a
-2D panel, then disconnect, stop sharing, disable the temporary Direct IP
+On the 2D Browser test, clicks on **Create tab** and the banner dismiss
+button produced RustDesk `doDispatchGesture` log entries without the expected
+panel change. The Android display-0 Browser input region was
+`[0,640][427,907]`, while one click on the visible **Create tab** button
+was dispatched at `3902,34`. The RustDesk virtual display was 5496 × 960.
+The [Android capture code](https://github.com/rustdesk/rustdesk/blob/1.5.3/flutter/android/app/src/main/kotlin/com/carriez/flutter_hbb/MainService.kt)
+uses default-display metrics and the
+[input code](https://github.com/rustdesk/rustdesk/blob/1.5.3/flutter/android/app/src/main/kotlin/com/carriez/flutter_hbb/InputService.kt)
+rescales the pointer and dispatches a gesture. The measured mismatch supports
+testing coordinate translation into a focused panel's input region.
+The current test proves delivery to the RustDesk input service. A panel
+action still requires verification.
+
+A later check found no active capture, no prior USB forwarding entry and an
+Atmungsraum rehearsal in the foreground. The active owner profile did not
+have RustDesk Input enabled. Resume on a free headset, verify the active
+profile and input binding, then reconnect and approve capture. After the
+panel test, disconnect, stop sharing, disable the temporary Direct IP
 setting and remove this test's USB forward.
 
 The Windows RustDeskMCP release `v1.4.6-mcp.1` was running. Its loopback MCP
