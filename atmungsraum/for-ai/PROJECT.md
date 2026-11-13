@@ -2,6 +2,22 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Windows Quest 2 keep-awake task — 2026-11-13
+
+The lab Windows account starts the **Quest 2 Keep Awake** Task Scheduler
+task at sign-in. It checks the authorized Quest 2 over ADB about every eight
+seconds and renews a ten-minute proximity hold when missing or after eight
+minutes. The task retries after a lost connection. It needs a running
+Windows session and an authorized ADB connection.
+
+After a headset reboot, ADB showed the previous device watchdog had stopped
+and the display had returned to standby. The Windows task restored the
+display and proximity hold. Verification observed a scheduled repair of a
+short test hold, followed by an awake poll that left the fresh hold in place.
+To restore normal wear detection, disable and stop the Windows task first,
+then follow [the Quest awake runbook](QUEST-AWAKE-TESTING.md). The physical
+phone and Quest app rehearsal checks remain open.
+
 ### Pixel PWA release refresh — 2026-11-13
 
 After every Atmungsraum PWA deployment, refresh the installed app on the lab
