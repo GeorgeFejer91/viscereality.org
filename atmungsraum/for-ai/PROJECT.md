@@ -319,9 +319,14 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   gateway selected. The 0.1.20 manifest failed the Remote-host check. The
   corrected manifest declares the native product Activity and both required
   metadata flags. The assembly now rejects a build that omits either flag.
-- [ ] Install and verify the corrected signed build. Confirm focused OpenXR
-  frames, active Remote discovery, first pairing and authenticated status on
-  the installed Pixel before tuning latency.
+- [x] Build and install 0.1.21 on the active Quest 2 profile. The APK matched
+  the installed signing lineage, Android returned the same APK digest, and
+  the assembly verified all 67 scenario files and the ARM64 OpenXR loader.
+- [ ] Launch 0.1.21 and verify focused OpenXR frames, active Remote discovery,
+  first pairing and authenticated status on the installed Pixel before
+  tuning latency. The native product Activity is the launcher. Horizon Shell
+  reported a reprojected system dialog and timed out placing that Activity.
+  Clear the headset prompt and choose Remote if the mode selector appears.
 - [ ] Measure first pairing, warm reconnect, cold restart, a changed Wi-Fi
   address and hotspot fallback on the same physical devices. Record discovery,
   GATT, hotspot join and signed LAN verification separately. Report median,
@@ -334,9 +339,14 @@ hand off to the signed Wi-Fi gateway for control and recording sync.
   cancellation, radio loss, permission denial and reconnect never replay
   session commands or duplicate recordings.
 
-Google Cloud sign-in reached first-use terms for the designated research
-account. The operator must review and accept them before OAuth setup can
-continue. See the collection checklist below.
+The research account signed in to Google Cloud and reached first-use terms.
+The operator must review and accept them before OAuth setup can continue.
+See the collection checklist below.
+
+The assembly change and this performance checklist were published in
+`b53e856`. [Pages run 43428481356](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43428481356)
+succeeded. The live assembly script matched Git, and the build guide,
+project checklist and Atmungsraum page passed live checks.
 
 ### Quest 2, Pixel and Google Drive collection — 2026-11-13
 
