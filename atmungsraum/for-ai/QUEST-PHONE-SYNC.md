@@ -267,6 +267,21 @@ of motion rejection. Keep the native classifier's diagnostic state
 separate from live upload and raw signal availability when interpreting
 the result.
 
+### Fresh Polar response on the updated PWA
+
+A subsequent full `haupt-15` run on `20261114-recording-bytes`
+restored directional Polar biofeedback during live Drive uploads.
+The uninterrupted 165–235 second playback window contained 5,028
+valid Polar breath assessments and no rejected assessments. Quest
+recorded 222 rising radius steps with classified inhale and 368 falling
+steps with classified exhale. The applied radius ranged from 1.00 to
+1.65 m. All 70 signed phone status observations in this window reported
+fresh ECG and accelerometer streams. The selected Polar sample age
+at the Java midpoint was 92.1 ms at the median and 225.2 ms at p95.
+Median and p95 radius observation intervals were 13.924 and 14.378 ms
+over 5,027 intervals. Pixel continued to obtain live Drive acknowledgements
+during the same window.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

@@ -132,8 +132,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   The paired runs verified directional Polar biofeedback, and the updated
   run retained similar frame cadence, fresh raw streams and working phone
   controls. The updated run and a short sync-disabled probe each encountered
-  native motion rejection. Investigate that condition separately if it
-  persists when the wearer moves comfortably with the chest strap fitted.
+  native motion rejection. A subsequent full session started on the same
+  PWA and demonstrated valid directional changes during live upload.
+  See [fresh Polar response](QUEST-PHONE-SYNC.md#fresh-polar-response-on-the-updated-pwa).
+  Finish the run, check its final CSV across the three devices, and
+  compare against a sync-disabled run on the same PWA release.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt
