@@ -31,23 +31,27 @@ Wi-Fi connection can continue with Bluetooth off.
   Bluetooth device ID, last working gateway address, trusted enrollment and
   any provisioned hotspot settings in the phone's browser profile after a
   verified join. The installed lab Pixel reconnected using its saved address.
-- [ ] Verify cold launch and transport recovery with a changed Quest Wi-Fi
-  address. Recover the same Quest without opening the Bluetooth chooser.
-  Chrome on the lab Pixel did not expose `navigator.bluetooth.getDevices()`
-  during the 2026-11-14 verification, so reading a saved Bluetooth device
-  after a cold launch is still a blocker when the saved gateway is unreachable.
-- [ ] Verify Bluetooth off at launch or during recovery. With no usable Wi-Fi
-  route, the app waits and resumes by itself when Bluetooth is enabled. Confirm
-  it keeps the saved pairing when a different Quest is also nearby.
+- [x] Verify recovery on the installed Pixel after interrupting the live Quest
+  gateway requests. The app detected loss and automatically restored the
+  same authenticated connection and private recording controls when requests
+  were allowed again.
+- [x] Verify a reload with an unusable saved gateway and Bluetooth off. The
+  installed Pixel displayed the Bluetooth-off message, then recovered the
+  same Quest 2 and persisted its advertised gateway with no chooser or app
+  tap after Bluetooth was turned on. The test substituted an unreachable
+  address in the phone's saved pairing and temporarily granted Chrome
+  loopback permission through DevTools. Both test overrides were restored.
+- [ ] Repeat after changing the headset's actual Wi-Fi address. Confirm
+  recovery with a durable Chrome permission and with another Quest nearby.
 
-An Android discovery companion now supplies the saved Quest's advertised
-address when Chrome has no Bluetooth device object. It reports the actual phone
-radio state. A lab Pixel build received the correct Quest 2 metadata without a
-chooser, and its loopback service reported Bluetooth off during a radio toggle.
-The new browser contract tests reject mismatched identities and public addresses.
-All 91 Node tests passed. Chrome requested one-time loopback permission, but
-the active RustDesk floating overlay blocked the lab approval. End-to-end
-cold launch, Bluetooth resume and recovery after an address change remain open.
+The Android discovery companion supplies the saved Quest's advertised address
+when Chrome has no Bluetooth device object. It reports the phone radio state.
+The browser contract tests reject mismatched identities and public addresses.
+All 91 Node tests passed. The companion and PWA integration deployed in
+[Pages run 43634783135](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43634783135)
+at `5cf2605`. The versioned public runtime matched Git, and the installed Pixel
+loaded it in standalone mode. Chrome's normal one-time loopback permission
+approval is pending because the active RustDesk overlay blocked the tap.
 See [Android discovery setup](../phone-discovery/README.md).
 
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
