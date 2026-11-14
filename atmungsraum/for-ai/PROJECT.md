@@ -34,7 +34,10 @@ Wi-Fi connection can continue with Bluetooth off.
 - [x] Verify recovery on the installed Pixel after interrupting the live Quest
   gateway requests. The app detected loss and automatically restored the
   same authenticated connection and private recording controls when requests
-  were allowed again.
+  were allowed again. A later physical Quest Wi-Fi disable/enable test also
+  passed with the installed Pixel. The headset received its previous Wi-Fi
+  address, and the phone restored the same authenticated Quest without a tap.
+  The check left Quest Wi-Fi enabled and retained the phone's saved pairing.
 - [x] Verify a reload with an unusable saved gateway and Bluetooth off. The
   installed Pixel displayed the Bluetooth-off message, then recovered the
   same Quest 2 and persisted its advertised gateway with no chooser or app
