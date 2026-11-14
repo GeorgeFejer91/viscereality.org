@@ -82,6 +82,10 @@ or dependency pins, assets, and packaging-only changes.
 
 ## Local UI workflow
 
+For a numbered smartphone review pack, use the
+[phone screenshot protocol](PHONE-SCREENSHOTS.md). Its Chromium fixture
+keeps hardware and account requests local.
+
 Serve `atmungsraum/` with a local static HTTP server (for example,
 `python -m http.server 8876 --bind 127.0.0.1`) and inspect the page over HTTP.
 Run `node --test tests/quest-rehearsal.test.mjs tests/quest-data.test.mjs` for

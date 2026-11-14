@@ -2,6 +2,17 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Smartphone screenshot review — 2026-11-14
+
+The [phone screenshot protocol](PHONE-SCREENSHOTS.md) builds a numbered
+review pack from the app checkout. The first run rendered 44 PNGs against
+runtime revision `4b74033`, including all five participant scenario
+selections, both breath button glow peaks, and error and recovery states.
+The gallery and CSV use the same screen numbers. The Wormhole download
+matched the local archive by SHA-256. Keep review archives and transfer
+links out of Git. Use the screen numbers to track feedback on the
+operator flow. Physical headset and phone acceptance remain separate.
+
 ### Smartphone UI decision tree — 2026-11-14
 
 German labels match the [smartphone controller](https://viscereality.org/atmungsraum/).
