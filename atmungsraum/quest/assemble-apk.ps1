@@ -11,6 +11,7 @@ param(
     [string]$RetainedCargoTargetDirectory,
     [ValidateRange(1, 2100000000)][int]$VersionCode = 1,
     [string]$VersionName = '0.1.0',
+    [switch]$Developer,
     [switch]$ResolveOnly,
     [switch]$BundledAssets
 )
@@ -19,6 +20,19 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $QuestRepo = (Resolve-Path -LiteralPath $QuestRepo).Path
+if ($Developer) {
+    if (!$Keystore -or !(Test-Path -LiteralPath $Keystore -PathType Leaf)) {
+        throw 'Developer requires an explicit existing -Keystore; retain the same developer signing key for later uploads.'
+    }
+    if (!$PSBoundParameters.ContainsKey('VersionCode')) {
+        throw 'Developer requires an explicit -VersionCode greater than every previous developer upload.'
+    }
+    $Keystore = (Resolve-Path -LiteralPath $Keystore).Path
+    $keyRepository = @(& git -C (Split-Path -Parent $Keystore) rev-parse --show-toplevel 2>$null)
+    if ($LASTEXITCODE -eq 0) {
+        throw 'Developer keystore must be outside Git, separate from the rehearsal/default build key.'
+    }
+}
 if ($BundledAssets) {
     if ($ExperimentAppSpec -or $ExperimentFeatureLock -or $PrivateAssetProviderManifest) {
         throw 'Use the bundled Experimenter inputs or supply all three custom inputs.'
@@ -96,6 +110,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Atmungsraum scenario audio staging failed.' }
 $catalogPath = Join-Path $audio 'scenario-catalog.json'
 $catalog = Get-Content -Raw -LiteralPath $catalogPath | ConvertFrom-Json
 $catalogHash = (Get-FileHash -LiteralPath $catalogPath).Hash.ToLowerInvariant()
+$boxLoop = $catalog.box_loop
+$boxLoopPath = Join-Path $audio 'audio/box-loop.json'
+if ($boxLoop.path -cne 'audio/box-loop.json' -or $boxLoop.cycle_frames -ne 705600 -or
+    $boxLoop.main_seconds -ne 900 -or $boxLoop.sha256 -cnotmatch '^[0-9a-f]{64}$' -or
+    $boxLoop.sha256 -cne (Get-FileHash -LiteralPath $boxLoopPath).Hash.ToLowerInvariant()) {
+    throw 'The staged breathing setup loop must bind the exact 16-second cycle and 900-second main contract.'
+}
+$boxLoopHash = $boxLoop.sha256
 
 $featureId = 'audio.atmungsraum_scenarios'
 $featureDir = Join-Path $runRoot 'features'
@@ -106,9 +128,9 @@ $feature = [ordered]@{
     feature_id = $featureId
     module_path = 'audio/atmungsraum-scenarios'
     module_kind = 'app-owned-scenario-library'
-    settings_surface = @{ authority = 'rusty.quest.native_app_settings.v1'; adapter = 'packaged-feature-selection' }
+    settings_surface = @{ authority = 'rusty.quest.native_app_settings.v1'; adapter = 'build_input' }
     owner_lane = 'atmungsraum'
-    status = 'app-specific'
+    status = 'public-app-feature'
     description = 'Atmungsraum authored scenario JSON and replaceable cue files.'
     provides = @($featureId)
     depends_on = @('ui.experiment_session_command_gateway')
@@ -119,6 +141,7 @@ $feature = [ordered]@{
     build_inputs = @{
         env = @(
             @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256'; value = $catalogHash }
+            @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256'; value = $boxLoopHash }
             @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_EXPERIMENT_DEFAULT_REMOTE'; value = 'true' }
         )
         assets = @($assetInput)
@@ -130,7 +153,7 @@ $feature = [ordered]@{
 }
 $feature | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $featureDir "$featureId.feature.json") -Encoding utf8NoBOM
 $scenarioSourceDir = 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
-$scenarioSources = @('ScenarioAudioPackage.java', 'ScenarioAudioAndroidTracks.java') | ForEach-Object { "$scenarioSourceDir/$_" }
+$scenarioSources = @('ScenarioAudioPackage.java', 'ScenarioAudioAndroidTracks.java', 'BreathingSetupAudio.java', 'BreathingSetupAudioContract.java') | ForEach-Object { "$scenarioSourceDir/$_" }
 foreach ($source in $scenarioSources) {
     if (!(Test-Path -LiteralPath (Join-Path $QuestRepo $source) -PathType Leaf)) {
         throw 'Apply the Atmungsraum native scenario source before assembly.'
@@ -140,13 +163,15 @@ $panelDescriptor = Join-Path $featureDir 'ui/breath-composition-panel/ui.breath_
 $panel = Get-Content -Raw -LiteralPath $panelDescriptor | ConvertFrom-Json -AsHashtable
 $audioModule = @($panel.panel_composition.modules | Where-Object { $_.module_id -ceq 'condition-audio-runtime' })
 if ($audioModule.Count -ne 1) { throw 'The selected panel must contain the condition audio owner.' }
-$audioModule[0].source_files = @($audioModule[0].source_files) + $scenarioSources
+$audioModule[0].source_files = @(@($audioModule[0].source_files) + $scenarioSources | Select-Object -Unique)
 $panel | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $panelDescriptor -Encoding utf8NoBOM
 
-$app.app_id = 'atmungsraum_quest2'
+$app.app_id = if ($Developer) { 'atmungsraum_developer' } else { 'atmungsraum_quest2' }
 $app.package_policy = 'app-specific-package'
-$app.package_name = 'org.viscereality.atmungsraum.rehearsal'
-$app.application_label = 'Atmungsraum Quest 2'
+$app.package_name = if ($Developer) { 'org.viscereality.atmungsraum.developer' } else { 'org.viscereality.atmungsraum.rehearsal' }
+$app.application_label = if ($Developer) { 'Atmungsraum Developer' } else { 'Atmungsraum Quest 2' }
+$app.android_debuggable = !$Developer
+$app.experiment_breathing_setup_enabled = $true
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
 $app.declared_manifest.permissions = @($app.declared_manifest.permissions) + @(
@@ -188,8 +213,9 @@ try {
         throw 'The resolved native feature lock does not include the scenario library.'
     }
     if (@($scenarioSources | Where-Object { $_ -cnotin @($lock.panel_source_closure.source_files.path) }).Count -or
-        $catalogHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256' | ForEach-Object value)) {
-        throw 'The resolved native feature lock must bind the scenario parser and catalog digest.'
+        $catalogHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256' | ForEach-Object value) -or
+        $boxLoopHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256' | ForEach-Object value)) {
+        throw 'The resolved native feature lock must bind the audio owners, catalog and breathing loop digests.'
     }
     $manifestPath = Join-Path (Split-Path -Parent $lockPath) 'AndroidManifest.xml'
     [xml]$manifest = Get-Content -Raw -LiteralPath $manifestPath
@@ -197,6 +223,14 @@ try {
     $metadata = @{}
     foreach ($entry in $manifest.SelectNodes('/manifest/application/meta-data')) {
         $metadata[$entry.GetAttribute('name', $androidNamespace)] = $entry.GetAttribute('value', $androidNamespace)
+    }
+    if ($manifest.manifest.GetAttribute('package') -cne $app.package_name -or
+        $manifest.manifest.application.GetAttribute('label', $androidNamespace) -cne $app.application_label -or
+        $manifest.manifest.application.GetAttribute('debuggable', $androidNamespace) -cne (!$Developer).ToString().ToLowerInvariant()) {
+        throw 'The native manifest must bind the selected Atmungsraum package, label and debuggability.'
+    }
+    if ($metadata['rusty.quest.experiment.breathing_setup.enabled'] -cne 'true') {
+        throw 'The native manifest must explicitly select the shared breathing setup.'
     }
     if ($metadata['com.oculus.supportedDevices'] -cne 'quest2' -or
         $metadata['rusty.quest.experiment.command_gateway.origins'] -cne 'https://viscereality.org') {
