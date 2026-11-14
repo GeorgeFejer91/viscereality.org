@@ -16,7 +16,10 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
 - [x] Confirm behavior and 900-second main duration with the user.
 - [x] Reconstruct released native tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`
   from the published patch against upstream `99352620`.
-- [ ] Implement and test native scheduling, calibration and input selection.
+- [x] Implement the native schedule/model core: 36 standalone tests cover full
+  cycles, valid fit, failed evidence, source retirement, retry and fallback.
+- [ ] Finish native input/capture integration and exact 900-second finalization;
+  review mapped source clocks, rejected evidence and pause/resume recovery.
 - [ ] Integrate audio, enrolled commands and native-driven experimenter UI.
 - [ ] Verify build, rendered interface and physical headset/Polar behavior;
   publish only coherent verified increments through the existing workflow.
@@ -24,6 +27,15 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
 The independent Meta developer-distribution chat owns account/channel setup.
 Feature work remains in this owner. Current code is on a task branch; no new
 feature APK, device acceptance or live feature deployment is claimed yet.
+
+The merged browser controller passed 114 Node checks with two optional assembly
+checks skipped in that run; both real assembly ResolveOnly checks also passed
+with the task native checkout. Chromium rendered 59 synthetic states including
+native setup, reload recovery, Bluetooth rediscovery, 320px, enlarged text,
+spacing and keyboard focus. The fixtures advance only supplied native frames.
+Private screenshots and check receipts stay in ignored output. A fresh APK and
+worn-Polar/Quest 2 validation remain required. The concurrent 0.1.30 prompt and
+reconnect releases were merged; their source and public assets are preserved.
 ### Quest calibration menu voice cues — 2026-11-14
 
 The Quest **Direct → Developer settings → Breath → Calibration** menu plays

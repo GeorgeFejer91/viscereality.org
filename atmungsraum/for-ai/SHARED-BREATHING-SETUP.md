@@ -18,6 +18,9 @@ Elapsed time alone never proves success. A successful model is activated as
 Polar tilt atomically while the loop continues. Retry repeats this process.
 Controller State with fixed orientation cancels an outstanding calibration,
 keeps the same audio clock and uses the existing controller assessment owner.
+Fallback selection stays available after Polar tracking becomes unreliable.
+Starting the participant run still requires the study's fresh H10 streams;
+changing the breathing driver does not remove ECG/ACC capture requirements.
 
 Start experiment retains the chosen input/model and begins at the next full
 cycle boundary. The main experiment lasts exactly 900 seconds (user confirmed).
@@ -32,6 +35,9 @@ The Android owner loads that cycle into one looping PCM AudioTrack. Playback-hea
 frames drive the native scheduler; all consumers read the same phase. Pause and
 resume preserve the player. Sensor observations retain their own timestamps,
 aligned through Android monotonic time with bounded clock freshness.
+Polar's original Java nano-time timestamps remain on raw records. A measured,
+fresh nano-time/elapsed-realtime pair maps samples onto the audio clock for
+calibration; labeling the two clocks identically is invalid after device sleep.
 
 A participant tilt model learns a directed movement axis and robust range from
 normalized three-axis gravity direction. Scheduled labels describe instructions,
@@ -45,6 +51,15 @@ Preserve Origin, identity, epoch, authentication, replay and command-ID checks.
 Guest/relay routes cannot mutate calibration. The phone shows native progress,
 failure/retry and input testing through existing Pretext helpers. Older APKs
 report the required update rather than simulating setup success.
+The selected app offers `haupt-15` after unlimited preparation. The archived
+timed practice scenarios and local menu prompts remain available to unselected
+builds; they cannot start another guidance player over the selected loop.
+
+The calibrated tilt path currently supports zero guidance bias. A nonzero arm
+or live-bias request is rejected as `setup-guidance-bias-unsupported`, and no
+live-bias capability is advertised. Shared intended phases are available, but
+the older tuned XZ classifier's private bias policy is not applied to the new
+participant model. Existing unselected builds retain that policy.
 
 The separate Meta distribution chat is 01a1db90-5317-7191-acb5-db6700ef5fb4.
 It owns account/channel setup only, not these feature sources.
