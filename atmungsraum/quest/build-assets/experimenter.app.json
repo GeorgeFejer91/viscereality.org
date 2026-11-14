@@ -187,15 +187,15 @@
         },
         {
           "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_PROFILE_SHA256",
-          "value": "e5931ee2ea604ebfc53940a4dbb3d74b864d97449217939117148fd949e50c6a"
+          "value": "df818c6fdf9799f6bcba298e31a39f48fc7e50284a07f0a3463e469954f07742"
         },
         {
           "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_PROVIDER_MANIFEST_SHA256",
-          "value": "5103f94f17a6b6f825abcf3004601648c6b6ff705140150f257dc58223785a23"
+          "value": "a0aa229aff75ffe5d8aeb7c4bad8a52a826ad9c35163f107f53ca92b1690c6b3"
         },
         {
           "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_INVENTORY_SHA256",
-          "value": "283c20f95e3d1c76c10b2ccfda71f9baeadf9e6c9723956f599e0df43bde8847"
+          "value": "65469eb377dd126ef4bf8a80d6f8502f21fc362142f9085f995a0c39faece59d"
         }
       ]
     }
@@ -401,8 +401,8 @@
   "private_asset_provider_request": {
     "schema": "rusty.quest.native_app_private_asset_provider_request.v1",
     "provider_id": "viscereality.experiment-session.private-assets",
-    "provider_manifest_sha256": "5103f94f17a6b6f825abcf3004601648c6b6ff705140150f257dc58223785a23",
-    "inventory_sha256": "283c20f95e3d1c76c10b2ccfda71f9baeadf9e6c9723956f599e0df43bde8847",
+    "provider_manifest_sha256": "a0aa229aff75ffe5d8aeb7c4bad8a52a826ad9c35163f107f53ca92b1690c6b3",
+    "inventory_sha256": "65469eb377dd126ef4bf8a80d6f8502f21fc362142f9085f995a0c39faece59d",
     "asset_count": 5
   },
   "application_label": "Viscereality Experimenter v10"
