@@ -1,5 +1,10 @@
 # Build Atmungsraum for Quest 2
 
+See the [Quest APK log](apks/README.md) for the current signed build, its
+source and checksum, and release history. Follow the
+[APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
+for every change to a signed Quest APK.
+
 Use the Experimenter lane in MesmerPrism's shared Viscereality repository. Its
 handoff describes the private provider and exact sibling source pins. Use the
 consolidated [Rusty Quest source](https://github.com/MesmerPrism/rusty-quest/tree/99352620fd79ec5cdcee71b47c2ba4056241af16)

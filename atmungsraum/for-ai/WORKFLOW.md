@@ -49,6 +49,35 @@ large-artifact warning alone is not evidence of the timeout's cause.
 Local setup shortcuts and `LOCAL-PROJECT.md` are excluded by `.git/info/exclude`.
 Do not publish them or machine-specific paths.
 
+## Quest APK changes and releases
+
+Follow the standing Superpowers and GitHub workflow above for every change
+that affects a Quest APK, including native code, assembly, features, toolchain
+or dependency pins, assets, and packaging-only changes.
+
+1. Identify the last verified release in the [Quest APK log](../quest/apks/README.md).
+   Inspect the native and website Git state. Review the complete change
+   against that release, including selected build features and asset changes.
+   Commit each coherent native source change with a descriptive message.
+2. In Atmungsraum, commit the corresponding public native patch and any
+   affected assembly, public assets, or browser code. A native commit in a
+   separate checkout is only one part of the record. Add the version and
+   version code, native commit and tree, upstream base, concrete changes
+   from the previous release, build recipe or changed pins, APK byte count
+   and SHA-256, and verification evidence to the APK log. Update
+   [PROJECT.md](PROJECT.md) with the current status and next step.
+3. Run the focused checks for the affected behavior. Confirm the signed
+   package, ARM64 loader, signer, and installed APK checksum on Quest 2.
+   Record launch and the relevant physical acceptance checks. Mark any
+   checks still pending. If a change crosses into the Pixel PWA, record
+   the tested browser release with the APK.
+4. Review and stage only the intended files, run the context checker, then
+   commit, push, and follow the exact Pages deployment. Publish signed APKs
+   under `quest/apks/` when their bundled assets are authorized for public
+   distribution. Keep the full lab builds under ignored
+   `output/quest-apks/` and record their checksums in the log. Keep signing
+   material, private provider inputs, and raw participant data in the lab.
+
 ## Local UI workflow
 
 Serve `atmungsraum/` with a local static HTTP server (for example,

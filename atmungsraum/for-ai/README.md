@@ -52,6 +52,10 @@ Read common rules first, then the documents needed for the task:
   headset readiness, recovery, and cleanup for bench and rehearsal tests.
 - [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md): Quest 2 → installed Pixel PWA → private Google Drive collection procedure and stress test.
 - [WORKFLOW.md](WORKFLOW.md): scoped editing and publishing workflow.
+- [Quest APK changes and releases](WORKFLOW.md#quest-apk-changes-and-releases):
+  Superpowers commit, evidence and publication workflow for every APK change.
+  The [APK log](../quest/apks/README.md) records the current signed build,
+  source baseline and changes from the previous version.
 - [SKILLS.md](SKILLS.md): always and conditional skill routes.
 - [VERIFICATION.md](VERIFICATION.md): context, rendering, and deployment checks.
 - [DECISIONS.md](DECISIONS.md): durable decisions and their reasons.

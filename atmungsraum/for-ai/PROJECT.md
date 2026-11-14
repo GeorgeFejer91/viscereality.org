@@ -2,6 +2,17 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Quest APK release record — 2026-11-14
+
+The [Quest APK log](../quest/apks/README.md) records the signed 0.1.29
+artifact, the source tree verified against the public patch, the native
+changes since 0.1.28, and the Quest 2 and Pixel acceptance evidence.
+The [APK workflow](WORKFLOW.md#quest-apk-changes-and-releases) requires
+an Atmungsraum commit and release record for every changed APK.
+The full 0.1.29 lab build contains Experimenter provider audio and a
+linked private particle payload. The verified binary stays in the
+lab output folder while public distribution of these contents is unresolved.
+
 ### Live recording sync to Google Drive
 
 Goal: transfer verified recording increments from Quest 2 to the installed
