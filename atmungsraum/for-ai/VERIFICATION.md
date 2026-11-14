@@ -12,6 +12,11 @@ The journey also issues Arm, Start, Pause, Resume and Finish through the
 rendered controls and checks each operation appears exactly once.
 The full 43-screen run, 91 Node tests, six scenario pairs, Python asset test,
 and project context check passed.
+The participant form reflowed without horizontal overflow across five
+portrait, landscape and desktop sizes, including enlarged text. After reload,
+the fixture CSV download matched its expected filename and all 57 bytes.
+The silent offline diagnostic rendered all six audio timelines at 44.1 and
+48 kHz with zero sample error, including the exact 900-second Haupt-Runde.
 
 On physical hardware, the existing enrollment rejoined in 599, 273, 263,
 279 and 321 ms on five standalone Pixel reloads, from initiating navigation
@@ -22,6 +27,12 @@ frames/s, 1.18–1.73 ms of submitted-frame host CPU time, and zero stale
 frames. Fresh physical ECG, native command latency, and recording delivery
 were gated on an attended run; the Quest reported its panel open and ECG
 unavailable. See [the active checklist](PROJECT.md#start-to-finish-qa-and-reconnect-latency--2026-11-14).
+On the same Wi-Fi, 20 signed requests for idle Quest status had an 80 ms
+median and 128 ms p95 round trip. The installed Pixel also accepted a
+synthetic participant ID and retained the scenario gate without live Polar.
+After the exact Pages deployment in PROJECT.md, the new PWA runtime passed
+five standalone reloads on the Pixel. Physical playback response times
+remain separate from these status and navigation timings.
 
 ## Guided phone breathing preview — 2026-11-14
 

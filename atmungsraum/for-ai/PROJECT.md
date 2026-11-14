@@ -41,6 +41,14 @@ that address first during normal startup and authenticates the same Quest
 before saving any replacement address. The rendered regression verifies
 Bluetooth off → scanning → Wi-Fi recovery without a tap or chooser.
 
+Reconnect fix `c469b92` reached GitHub main and shipped in the superseding
+[`b360e99` Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43636115452).
+The live HTML, versioned modules, manifest and QA notes matched Git bytes.
+The Pixel loaded the new runtime in standalone mode and rejoined five times:
+892 ms on the first updated load, then 260–285 ms on four warm reloads.
+The installed headset still ran 0.1.29. The newly published 0.1.30 artifact
+passed local signature and package-content checks; its attended run is open.
+
 The physical headset still reported an open panel and no live H10 streams
 during this sweep. After a wearer returns to the scene with the strap active,
 run the short guided scenario through Start, Pause, Resume, Finish and CSV
