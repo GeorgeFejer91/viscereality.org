@@ -6,7 +6,7 @@
 | --- | --- |
 | Package / platform | `org.viscereality.atmungsraum.rehearsal`, Quest 2, `arm64-v8a` |
 | Release | 0.1.29, Android version code 29 |
-| Signed APK | `atmungsraum/output/quest-apks/Atmungsraum-Quest2-0.1.29.apk` on the lab PC |
+| Signed APK | [`Atmungsraum-Quest2-0.1.29.apk`](Atmungsraum-Quest2-0.1.29.apk) |
 | Size | 63,723,545 bytes |
 | SHA-256 | `755ca38022dc7c35d37d3c9e3739d58fe3145872721e37a70d8b59a26a49e734` |
 | Signing certificate SHA-256 | `6c9b7c04bfbe88cae2509ad1533e6014ebb6abc97d855c666d687eee56a57f7d` |
@@ -16,10 +16,10 @@
 | Atmungsraum source | [`1843da3`](https://github.com/GeorgeFejer91/viscereality.org/commit/1843da3), with the native source patch and assembly recipe |
 | Tested Pixel PWA | `20261114-recording-bytes` |
 
-The lab build uses linked Experimenter condition audio, breathing guidance
-and the session profile. It also includes the private particle payload.
-The public Git tree carries the [source patch](../native-source.patch),
-[assembly recipe](../README.md) and verification evidence.
+The signed build uses linked Experimenter condition audio, breathing
+guidance, the session profile and the Viscereality particle payload. The
+repository includes the [build assets](../build-assets/README.md),
+[source patch](../native-source.patch) and [assembly recipe](../README.md).
 The original signed APK and its capsule are under
 `target/aq2/live-recording-029/p-e2740b20fd5b713f/` in the native build
 checkout. The capsule records the exact feature lock and sibling dependency
@@ -59,6 +59,14 @@ installed Quest base APK matched the signed SHA-256. The qualified
 recording through upload disruptions and final delivery of one matching CSV
 across Quest, the installed Pixel PWA and private Drive. See the
 [collection procedure and trial results](../../for-ai/QUEST-PHONE-SYNC.md#fresh-polar-response-on-the-updated-pwa).
+
+### External build verification
+
+The public recipe compiled and signed a fresh APK from clean clones at the
+pinned revisions. Its 67 scenario files, five provider assets and two ARM64
+libraries matched the released APK byte-for-byte. Android SDK tools verified
+the rebuilt package, ABI and independent development signature. The
+headset trial above used the released lab-signed APK.
 
 Record subsequent releases here using the
 [APK commit workflow](../../for-ai/WORKFLOW.md#quest-apk-changes-and-releases).

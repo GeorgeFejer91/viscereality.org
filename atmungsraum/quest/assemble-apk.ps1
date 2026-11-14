@@ -2,37 +2,63 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$QuestRepo,
-    [Parameter(Mandatory)][string]$ExperimentAppSpec,
-    [Parameter(Mandatory)][string]$ExperimentFeatureLock,
-    [Parameter(Mandatory)][string]$PrivateAssetProviderManifest,
+    [string]$ExperimentAppSpec,
+    [string]$ExperimentFeatureLock,
+    [string]$PrivateAssetProviderManifest,
     [Parameter(Mandatory)][ValidatePattern('^[a-z0-9][a-z0-9-]{0,39}$')][string]$RunName,
     [string]$OpenXrLoader,
     [string]$Keystore,
     [string]$RetainedCargoTargetDirectory,
     [ValidateRange(1, 2100000000)][int]$VersionCode = 1,
     [string]$VersionName = '0.1.0',
-    [switch]$ResolveOnly
+    [switch]$ResolveOnly,
+    [switch]$BundledAssets
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $QuestRepo = (Resolve-Path -LiteralPath $QuestRepo).Path
+if ($BundledAssets) {
+    if ($ExperimentAppSpec -or $ExperimentFeatureLock -or $PrivateAssetProviderManifest) {
+        throw 'Use the bundled Experimenter inputs or supply all three custom inputs.'
+    }
+    $bundledRoot = Join-Path $PSScriptRoot 'build-assets'
+    $ExperimentAppSpec = Join-Path $bundledRoot 'experimenter.app.json'
+    $PrivateAssetProviderManifest = Join-Path $bundledRoot 'provider/provider.json'
+    if (!$OpenXrLoader) { $OpenXrLoader = Join-Path $bundledRoot 'arm64-v8a/libopenxr_loader.so' }
+    $inherited = @(Get-Content -Raw -LiteralPath (Join-Path $bundledRoot 'experimenter.env.json') | ConvertFrom-Json)
+} elseif (!$ExperimentAppSpec -or !$ExperimentFeatureLock -or !$PrivateAssetProviderManifest) {
+    throw 'Supply an Experimenter app spec, feature lock and provider manifest, or use -BundledAssets.'
+}
+
 $ExperimentAppSpec = (Resolve-Path -LiteralPath $ExperimentAppSpec).Path
-$ExperimentFeatureLock = (Resolve-Path -LiteralPath $ExperimentFeatureLock).Path
 $PrivateAssetProviderManifest = (Resolve-Path -LiteralPath $PrivateAssetProviderManifest).Path
 if (!$ResolveOnly) {
     if (!$OpenXrLoader) { throw 'A build needs the ARM64 OpenXR loader.' }
     $OpenXrLoader = (Resolve-Path -LiteralPath $OpenXrLoader).Path
     if ($Keystore) { $Keystore = (Resolve-Path -LiteralPath $Keystore).Path }
+    if ($BundledAssets) {
+        $lslSource = Join-Path $bundledRoot 'arm64-v8a/liblsl.so'
+        $lslTarget = Join-Path $QuestRepo 'local-artifacts/liblsl-android/arm64-v8a/liblsl.so'
+        if (!(Test-Path -LiteralPath $lslTarget)) {
+            New-Item -ItemType Directory -Force -Path (Split-Path -Parent $lslTarget) | Out-Null
+            [IO.File]::Copy($lslSource, $lslTarget, $false)
+        }
+        if ((Get-FileHash -LiteralPath $lslTarget).Hash -ne (Get-FileHash -LiteralPath $lslSource).Hash) {
+            throw 'The Rusty Quest checkout has a different staged liblsl.so. Use a clean build checkout.'
+        }
+    }
 }
 
-$baseLock = Get-Content -Raw -LiteralPath $ExperimentFeatureLock | ConvertFrom-Json
-if ($baseLock.schema -cne 'rusty.quest.native_app_feature_lock.v1' -or
-    (Get-FileHash -LiteralPath $ExperimentAppSpec).Hash -ne $baseLock.app_spec_sha256) {
-    throw 'The Experimenter feature lock must bind the exact app spec.'
+if (!$BundledAssets) {
+    $baseLock = Get-Content -Raw -LiteralPath $ExperimentFeatureLock | ConvertFrom-Json
+    if ($baseLock.schema -cne 'rusty.quest.native_app_feature_lock.v1' -or
+        (Get-FileHash -LiteralPath $ExperimentAppSpec).Hash -ne $baseLock.app_spec_sha256) {
+        throw 'The Experimenter feature lock must bind the exact app spec.'
+    }
+    $inherited = @($baseLock.build_inputs.env | Where-Object { $_.PSObject.Properties['source'] -and $_.source -like 'feature:*:inherited-environment' })
 }
-$inherited = @($baseLock.build_inputs.env | Where-Object { $_.PSObject.Properties['source'] -and $_.source -like 'feature:*:inherited-environment' })
 foreach ($entry in $inherited) {
     if ($entry.name -cnotmatch '^RUSTY_QUEST_NATIVE_RENDERER_[A-Z0-9_]+$') {
         throw 'An inherited native build input falls outside the renderer environment.'
@@ -44,6 +70,15 @@ if ($app.schema -cne 'rusty.quest.native_app_build.v1' -or
     'ui.experiment_session_command_gateway' -cnotin $app.requested_features -or
     !$app.Contains('private_asset_provider_request')) {
     throw 'Use the Experimenter app spec derived by the native product owner.'
+}
+if ($BundledAssets) {
+    $payload = $app.payloads[0]
+    $payload.data_dir = (Resolve-Path -LiteralPath (Join-Path $bundledRoot $payload.data_dir)).Path
+    $payload.shader = (Resolve-Path -LiteralPath (Join-Path $bundledRoot $payload.shader)).Path
+    $payload.mask_texture.path = (Resolve-Path -LiteralPath (Join-Path $bundledRoot $payload.mask_texture.path)).Path
+    foreach ($entry in $payload.build_env | Where-Object { $_.value -clike 'particles/*' }) {
+        $entry.value = (Resolve-Path -LiteralPath (Join-Path $bundledRoot $entry.value)).Path
+    }
 }
 
 $runRoot = Join-Path $QuestRepo "local-artifacts/atmungsraum/$RunName"

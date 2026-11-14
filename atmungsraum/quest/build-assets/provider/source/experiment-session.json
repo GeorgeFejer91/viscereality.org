@@ -1,0 +1,153 @@
+{
+  "schema_id": "rusty.viscereality.experiment_session_profile.v1",
+  "profile_id": "viscereality.experiment.atmungsraum-quest2-baseline.v1",
+  "visibility": "private",
+  "recording_default": true,
+  "kiosk_requested_default": true,
+  "open_control_default": true,
+  "non_audio_profile": {
+    "relative_path": "fixtures/native-gpu/viscereality-akd-parameter-envelope.profile.json",
+    "authority": "private-authoritative-akd-parameter-envelope"
+  },
+  "non_audio_profile_sha256": "b083bc781b378667f59a3cee05b35c8ae5e97c09703a12ec9138979995324241",
+  "radius_observation": {
+    "schema_id": "rusty.viscereality.radius_observation_profile.v1",
+    "radius_limits_m": [
+      1.0,
+      2.0
+    ],
+    "actual_radius": {
+      "metric_id": "effective_world_anchor_scale_m",
+      "runtime_field": "privateParticleWorldAnchorScaleM",
+      "settings_key": "native_renderer.private_particles.world_anchor.scale_m",
+      "unit": "m"
+    },
+    "progress": {
+      "runtime_field": "privateParticleDriver0Value01",
+      "settings_key": "native_renderer.private_particles.driver0.value01",
+      "range": [
+        0.0,
+        1.0
+      ]
+    },
+    "deformation_envelopes": [
+      {
+        "name": "oblateness",
+        "endpoints": [
+          0.25,
+          0.5
+        ],
+        "progress_source": "privateParticleDriver0Value01"
+      },
+      {
+        "name": "axis_profile",
+        "endpoints": [
+          2.0,
+          1.0
+        ],
+        "progress_source": "privateParticleDriver0Value01"
+      }
+    ],
+    "provenance": {
+      "frame": "current-submitted-frame-id",
+      "settings_revision": "app-effective-settings-revision",
+      "render_session": "current-render-session-generation"
+    }
+  },
+  "runtime_projection": {
+    "schema": "rusty.quest.experiment_session.runtime_projection.v1",
+    "provider_id": "viscereality.experiment-session.private-assets",
+    "effective_radius_profile": {
+      "configured_radius_min_m": 1.0,
+      "configured_radius_max_m": 2.0,
+      "oblateness": {
+        "at_radius_min": 0.25,
+        "at_radius_max": 0.5
+      },
+      "axis_profile": {
+        "at_radius_min": 2.0,
+        "at_radius_max": 1.0
+      }
+    },
+    "conditions": {
+      "condition-a": {
+        "completion_threshold_ms": 30000,
+        "audio": {
+          "logical_destination": "session-audio/condition-a.mp3",
+          "source_sha256": "f9118985afd88b0cbea7c89ba39e7fb3d0f2a2d6f34e62105a4c09a30c9b43d5",
+          "source_bytes": 280493,
+          "media_type": "audio/mpeg"
+        },
+        "breath_guidance": {
+          "asset": {
+            "logical_destination": "breath-guidance/condition-a.json",
+            "source_sha256": "d3fa5da306eb1631f89a07a4829fd504f117343df6fd2264f4679684e2b89661",
+            "source_bytes": 1190,
+            "media_type": "application/json"
+          },
+          "default_bias_percent": 0
+        }
+      },
+      "condition-b": {
+        "completion_threshold_ms": 30000,
+        "audio": {
+          "logical_destination": "session-audio/condition-b.mp3",
+          "source_sha256": "1c495bf9a30868fea484d8937068c9e4b86e79321d1e30b7f2e26bd3b90b21ae",
+          "source_bytes": 296585,
+          "media_type": "audio/mpeg"
+        },
+        "breath_guidance": {
+          "asset": {
+            "logical_destination": "breath-guidance/condition-b.json",
+            "source_sha256": "17d53627f8f517497b38356f3bd5145bfdf144dfb3b5c9b9a79a25a24009a9c3",
+            "source_bytes": 1368,
+            "media_type": "application/json"
+          },
+          "default_bias_percent": 0
+        }
+      }
+    }
+  },
+  "conditions": [
+    {
+      "condition_id": "condition-a",
+      "ui_label": "Condition 1",
+      "completion_threshold_ms": 30000,
+      "audio": {
+        "logical_destination": "session-audio/condition-a.mp3",
+        "source_sha256": "f9118985afd88b0cbea7c89ba39e7fb3d0f2a2d6f34e62105a4c09a30c9b43d5",
+        "source_bytes": 280493,
+        "media_type": "audio/mpeg"
+      },
+      "breath_guidance": {
+        "asset": {
+          "logical_destination": "breath-guidance/condition-a.json",
+          "source_sha256": "d3fa5da306eb1631f89a07a4829fd504f117343df6fd2264f4679684e2b89661",
+          "source_bytes": 1190,
+          "media_type": "application/json"
+        },
+        "default_bias_percent": 0
+      }
+    },
+    {
+      "condition_id": "condition-b",
+      "ui_label": "Condition 2",
+      "completion_threshold_ms": 30000,
+      "audio": {
+        "logical_destination": "session-audio/condition-b.mp3",
+        "source_sha256": "1c495bf9a30868fea484d8937068c9e4b86e79321d1e30b7f2e26bd3b90b21ae",
+        "source_bytes": 296585,
+        "media_type": "audio/mpeg"
+      },
+      "breath_guidance": {
+        "asset": {
+          "logical_destination": "breath-guidance/condition-b.json",
+          "source_sha256": "17d53627f8f517497b38356f3bd5145bfdf144dfb3b5c9b9a79a25a24009a9c3",
+          "source_bytes": 1368,
+          "media_type": "application/json"
+        },
+        "default_bias_percent": 0
+      }
+    }
+  ]
+}

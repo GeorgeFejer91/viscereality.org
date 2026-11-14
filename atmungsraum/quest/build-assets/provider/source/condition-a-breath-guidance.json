@@ -1,0 +1,62 @@
+{
+  "schema": "rusty.quest.breath_guidance_timeline.v1",
+  "timebase": "official-active-time-ms",
+  "audio_source_sha256": "f9118985afd88b0cbea7c89ba39e7fb3d0f2a2d6f34e62105a4c09a30c9b43d5",
+  "segments": [
+    {
+      "start_ms": 0,
+      "end_ms": 4000,
+      "phase": "inhale"
+    },
+    {
+      "start_ms": 4000,
+      "end_ms": 8000,
+      "phase": "hold"
+    },
+    {
+      "start_ms": 8000,
+      "end_ms": 12000,
+      "phase": "exhale"
+    },
+    {
+      "start_ms": 12000,
+      "end_ms": 16000,
+      "phase": "hold"
+    },
+    {
+      "start_ms": 16000,
+      "end_ms": 20000,
+      "phase": "inhale"
+    },
+    {
+      "start_ms": 20000,
+      "end_ms": 24000,
+      "phase": "hold"
+    },
+    {
+      "start_ms": 24000,
+      "end_ms": 28000,
+      "phase": "exhale"
+    },
+    {
+      "start_ms": 28000,
+      "end_ms": 32000,
+      "phase": "hold"
+    },
+    {
+      "start_ms": 32000,
+      "end_ms": 36000,
+      "phase": "inhale"
+    },
+    {
+      "start_ms": 36000,
+      "end_ms": 40000,
+      "phase": "hold"
+    },
+    {
+      "start_ms": 40000,
+      "end_ms": 40080,
+      "phase": "exhale"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "rusty.quest.native_app_private_asset_provider.v1",
+  "provider_id": "viscereality.experiment-session.private-assets",
+  "assets": [
+    {
+      "asset_id": "breath-guidance-a",
+      "source_relative_path": "source/condition-a-breath-guidance.json",
+      "logical_destination": "breath-guidance/condition-a.json",
+      "source_sha256": "d3fa5da306eb1631f89a07a4829fd504f117343df6fd2264f4679684e2b89661",
+      "source_bytes": 1190,
+      "media_type": "application/json"
+    },
+    {
+      "asset_id": "breath-guidance-b",
+      "source_relative_path": "source/condition-b-breath-guidance.json",
+      "logical_destination": "breath-guidance/condition-b.json",
+      "source_sha256": "17d53627f8f517497b38356f3bd5145bfdf144dfb3b5c9b9a79a25a24009a9c3",
+      "source_bytes": 1368,
+      "media_type": "application/json"
+    },
+    {
+      "asset_id": "condition-audio-a",
+      "source_relative_path": "source/condition-a.mp3",
+      "logical_destination": "session-audio/condition-a.mp3",
+      "source_sha256": "f9118985afd88b0cbea7c89ba39e7fb3d0f2a2d6f34e62105a4c09a30c9b43d5",
+      "source_bytes": 280493,
+      "media_type": "audio/mpeg"
+    },
+    {
+      "asset_id": "condition-audio-b",
+      "source_relative_path": "source/condition-b.mp3",
+      "logical_destination": "session-audio/condition-b.mp3",
+      "source_sha256": "1c495bf9a30868fea484d8937068c9e4b86e79321d1e30b7f2e26bd3b90b21ae",
+      "source_bytes": 296585,
+      "media_type": "audio/mpeg"
+    },
+    {
+      "asset_id": "experiment-session-profile",
+      "source_relative_path": "source/experiment-session.json",
+      "logical_destination": "session-config/experiment-session.json",
+      "source_sha256": "e5931ee2ea604ebfc53940a4dbb3d74b864d97449217939117148fd949e50c6a",
+      "source_bytes": 5196,
+      "media_type": "application/json"
+    }
+  ]
+}

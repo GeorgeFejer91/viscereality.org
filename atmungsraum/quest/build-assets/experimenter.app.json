@@ -1,0 +1,409 @@
+{
+  "schema": "rusty.quest.native_app_build.v1",
+  "app_id": "viscereality_private_particles_tracer_snapshot_breath_composition_driver_controller_volume_full_control_panel_right_secondary_triple_press_experiment_session_lane_0fc60672e43a63cd",
+  "owner_repo": "rusty-gpu-viscereality",
+  "package_policy": "private-content-addressed-lane",
+  "package_name": "io.github.mesmerprism.rustyquest.native_renderer.viscereality_breath_particles.viscereality_v0fc60672e43a63cd",
+  "requested_features": [
+    "breath.composition.closed_world",
+    "input.right_secondary_breath_calibration_hold",
+    "input.right_secondary_same_apk_panel_triple_press",
+    "input.simultaneous_hands_and_controllers",
+    "lsl.panel_controlled_io",
+    "operator.breath_composition_cli",
+    "particles.anchor_echo.rows",
+    "particles.private.breath_composition_driver",
+    "particles.tracers.snapshot_rows",
+    "renderer.gpu_diagnostics",
+    "ui.breath_composition_control_panel",
+    "ui.experiment_session_ble_control",
+    "ui.experiment_session_command_gateway",
+    "ui.recording_export",
+    "ui.same_apk_soft_kiosk"
+  ],
+  "denied_features": [
+    "camera.hwb",
+    "display_composite",
+    "environment_depth",
+    "environment_depth.projection_sampler",
+    "hand_anchor_particles",
+    "lsl.inlet",
+    "lsl.outlet",
+    "makepad_runtime",
+    "manifold.bridge",
+    "manifold.embedded_broker",
+    "particles.hand_anchor.ordering.gpu_index_remap",
+    "particles.private.breath_state_driver",
+    "particles.private.manifold_scalar_driver",
+    "particles.private.polar_acc_breath_source",
+    "particles.private.polar_rr_heartbeat_pulse",
+    "private_layer",
+    "projection_target.breathing_room",
+    "renderer.background.native_passthrough",
+    "renderer.stimulus_volume",
+    "sdf_visual",
+    "ui.same_apk_questionnaire_panel",
+    "video_projection"
+  ],
+  "payloads": [
+    {
+      "kind": "private_particle",
+      "payload_id": "private-particle-payload",
+      "data_dir": "particles",
+      "shader": "particles/viscereality_kuramoto_color_gradient.comp.glsl",
+      "particle_kind": "viscereality-akd-tiered-kuramoto-akd-visuals",
+      "marker_prefix": "RUSTY_VISCEREALITY_NATIVE",
+      "marker_fields": "viscerealityRuntimeMode=quest-native-vulkan-gpu viscerealityProfileId=viscereality.private.profile.akd-tiered-high-coherence-akd-visuals.v1 viscerealityParticleCount=2562 viscerealityParticleVisualScale=0.700 viscerealityParticleVisualScaleSource=particle-payload-build-env viscerealityParticleSizeDefaultMode=sphere-radius-percent viscerealityParticleSizeDefaultSphereRadiusPercent=3.000 viscerealityParticleSizeDefaultOscillationPercent=50.000 viscerealityVisualDriverActivationProfile=default viscerealityParticleSizeDriverSource=oscillator viscerealityHeartbeatEnvelopeAuthority=disabled viscerealityRunNamespace=viscereality-0fc60672e43a63cd viscerealityPrivateCommit=7b8f89b0dfd70a52e1538bffb94a14cf45182e01 viscerealityPrivateTree=78e43411109e4dac2b51b41a3b8c76a9d3b65d78 viscerealityQuestCommit=99352620fd79ec5cdcee71b47c2ba4056241af16 viscerealityQuestTree=e30a0cb8bb5dc29334fa76e9344800ecf8873aff viscerealityCpuUploadBytes=0 viscerealityGpuBuffersResident=true viscerealityTransparencyParameterSource=particle-payload-build-env viscerealityTransparencyDepthWrite=false viscerealityTransparencySortMode=back-to-front viscerealityTransparencySortImplementation=resident-gpu-full-index-remap viscerealityTransparencySortBasis=primary-eye-openxr-reference-space viscerealityOrderingCpuExpandedUploadPerFrame=false viscerealityOscillatorVisualDrivers=color0-size1-rotation2-orbit3-wave4-animation5 viscerealityGpuPhasePingPongBuffersResident=true privateParticleStaticPhaseDimensionMask=0x24 privateParticleStaticPhaseDimensions=rotation2,animation5 privateParticleStaticPhaseCanonicalRadians=0.000 viscerealitySpecialPointSystemScope=special-point-retention-anchor-and-visual-ring-reference viscerealityPacerSystemPorted=false viscerealitySphereRadiusChannelEnabled=true viscerealitySphereRadiusSharedLimits=1.000,2.000 viscerealitySphereRadiusDefaultM=1.000 viscerealitySphereRadiusDriveMode=Volume01 viscerealitySphereRadiusSmoothingSeconds=0.030 viscerealitySphereRadiusMetersSource=privateParticleWorldAnchorScaleM viscerealitySphereRadiusStartupTransport=rusty-quest-app-spec-runtime-profile viscerealitySphereRadiusProgressSignalName=sphere_radius_progress viscerealitySphereRadiusRawSignalName=sphere_radius_raw viscerealityPacerRadiusChannelEnabled=false viscerealityPacerRingOverlayEnabled=false viscerealityRingVisualizationMode=BaseOnly viscerealityDedicatedPacerParticleCount=0 viscerealitySphereDeformationMode=akd-axis-radial-sphere-stretch viscerealitySphereDeformationAxis=akd-forward-axis-captured-world-anchor viscerealitySphereDeformationAxisTransport=compute-fov-tangents-xyz viscerealitySphereDeformationCurveSampling=payload-normalized-16-sample-lut viscerealityVisualCurveSampling=payload-normalized-16-sample-lut viscerealityCouplingCurveSampling=payload-normalized-16-sample-lut viscerealitySphereDeformationRadiusProgress01=0.000 viscerealitySphereDeformationRadiusProgressSource=runtime-driver-slot viscerealitySphereDeformationDriverSlot=privateParticleDriver0Value01 viscerealityCouplingDriver01=1.000 viscerealityCouplingDriverSource=runtime-driver-slot viscerealityCouplingDriverSlot=privateParticleDriver1Value01 viscerealityTracerUpdateGpuMs=pending-gpu-timestamp viscerealityValidationMode=akd-tiered-kuramoto-high-coherence-akd-visuals-solid-black viscerealityTracerActiveCountPolicy=gpu-budgeted-fade-no-readback viscerealityTracerMaxCount=17934 viscerealityTracerStateCapacity=17934 viscerealityTracerPerOscillator=7 viscerealityTracerStateSlotsPerOscillator=7 viscerealityTracerDrawSlotsPerOscillator=0 viscerealityTracerDrawCount=0 viscerealityTracerLifetimeSeconds=0.500 viscerealityTracerCopiesPerSecond=14.000 viscerealityTracerRadiusPolicy=snapshot-source-radius viscerealityTracerMaxSpawnBatchesPerFrame=4 viscerealityTracerCapacitySource=akd-sussex-controller-study-integratedTracersPerOscillator viscerealityTracerSpawnMode=deterministic-per-oscillator-ring-cadence viscerealityTracerOutputMode=merged-billboard-output viscerealityTracerCpuUploadPerFrame=false viscerealityWorkloadMarkerVersion=v2 viscerealityWorkloadSource=configured-build-baseline viscerealityComputeLogicalParticleCount=2562 viscerealityComputeWorkgroupCount=41 viscerealityComputeLocalSizeX=64 viscerealityComputeLaunchedLaneCount=2624 viscerealityAuxiliaryComputeLogicalInvocations=2 viscerealityAuxiliaryComputeWorkgroupCount=1 viscerealityAuxiliaryComputeLocalSizeX=64 viscerealityAuxiliaryComputeLaunchedLaneCount=64 viscerealityMainOutputInstances=2562 viscerealityTracerStateSlotsVisited=17934 viscerealityTracerStateRowsVisited=71736 viscerealityTracerOutputSlotsCleared=0 viscerealityTracerOutputSlotsCapacity=0 viscerealityAnchorEchoStateSlotsVisited=2 viscerealityAnchorOutputInstancesWritten=1 viscerealityAnchorOutputRowsWritten=4 viscerealityEchoOutputSlotsCleared=1 viscerealityAnchorEchoOutputSlotsCapacity=2 viscerealityRetentionCapacityPolicy=derived-cps-lifetime-plus-one-safety-slot viscerealityRetentionCapacitySafetySlots=1 viscerealityOscillatorDimensionCount=6 viscerealityCrossCouplingSourceDimensionsPerTarget=5 viscerealityCrossCouplingEvaluationsPerFrame=76860 viscerealityWorkloadHighRatePayload=false viscerealityRetentionCapacityRequired=2 viscerealityRetentionCapacityConfigured=2 viscerealityRetentionCapacityFormulaSafetySlots=1 viscerealityRetentionCapacityActualExcess=0 viscerealityRetentionCapacityOverrideRelation=derived-exact viscerealityRetentionCapacitySafetySatisfied=true viscerealityRetentionIndicatorMode=engine-retention-anchor viscerealityRetentionIndicatorAnchorSource=akd-special-point-deformed-center viscerealityRetentionIndicatorAnchorRows=privateParticleAnchorEchoDrawCount viscerealityRetentionIndicatorMaxEchoCount=2 viscerealityRetentionIndicatorDrawEchoCount=1 viscerealityRetentionIndicatorDrawCount=2 viscerealityRetentionIndicatorLifetimeSeconds=0.050 viscerealityRetentionIndicatorCopiesPerSecond=20.000 viscerealityRetentionIndicatorManualAnchorRadiusM=0.080 viscerealityRetentionIndicatorAlpha=0.098 viscerealityRetentionIndicatorConfiguredRotationRadians=3.142 viscerealityRetentionIndicatorRotationRadians=0.000 viscerealityRetentionIndicatorAnimationMode=static-ring-frame-zero viscerealityRetentionIndicatorColor=1.000,1.000,1.000 viscerealityRetentionIndicatorEchoPlacement=current-anchor-pinned viscerealityRetentionIndicatorCpuUploadPerFrame=false viscerealityRetentionIndicatorReadbackStatus=unavailable-v2-validity-masked viscerealityDynamicsActivationProfile=sussex-disabled viscerealitySmallWorldNeighbors=implemented-disabled-by-akd-config viscerealitySmallWorldIndexCount=0 viscerealitySmallWorldCouplingRuntime=disabled-zero-topology viscerealityDiagnosticsProfile=akd-gpu-diagnostics-v2 viscerealityDiagnosticsLevel=detailed viscerealityDiagnosticsSchema=v2 viscerealityDiagnosticsReadbackStatus=detailed-frame-envelope-v2 viscerealityOrderReadbackStatus=unavailable-v2-validity-masked viscerealityTracerReadbackStatus=unavailable-v2-validity-masked viscerealityRetentionIndicatorReadbackStatus=unavailable-v2-validity-masked viscerealityDynamicsEdgeReadbackStatus=unavailable-v2-validity-masked viscerealityDiagnosticsNoCpuRuntimeDynamics=true privateParticleDiagnosticStorageBinding=9 privateParticleDiagnosticWords=24 privateParticleDiagnosticFrameIdWords=20,21 privateParticleDiagnosticLanesVisitedWord=22 privateParticleDiagnosticSchemaValidityWord=23 privateParticleDiagnosticLegacyReductionsAvailability=unavailable-v2-validity-masked privateParticleDiagnosticCpuFullBufferReadback=false viscerealityPhaseDimensionCount=6 viscerealityMaxNeighborTier=3 viscerealityCouplingKernel=akd-tiered-high-coherence-phase-ping-pong viscerealityNaturalFrequencySource=akd-unity-classic-noise-per-dimension-payload viscerealityCrossCouplingMatrix=signed-upper-positive-lower-negative-6x6 viscerealityAux0Layout=akd-v9-static-rotation-animation-neutral-coupling-visual-and-deformation-curves viscerealityVisualDriverPolicy=payload-akd-parameter-driver-policy viscerealityColorGradientMode=akd-gradient-phase0-coherence viscerealityParticleAnimationMode=gpu-texture-array-nearest-akd-morphed-ring viscerealityParticleAnimationFallback=gpu-procedural-morphed-ring-debug viscerealityParticleMaskTexture=akd-compatible-r8-unorm-128x128x64 viscerealityParticleMaskTextureMode=texture-array-nearest viscerealityParticleMaskViewType=2d-array viscerealityParticleMaskMipMode=base-only viscerealityParticleMaskDiscardMode=discard-near-zero-mask viscerealityParticleMaskAlphaCutoff=0.001 viscerealityTransparencyBlendMode=src-one-one-minus-src-alpha viscerealityTransparencyCompositionMode=color-preserving-alpha-over viscerealityTransparencyOpacity=0.360 viscerealityTransparencyOutputAlphaScale=0.450 viscerealityTransparencyDepthSuppressionStrength=1.500 viscerealityTransparencyRgbAlphaCoupling=0.000 viscerealityTransparencyColorFacingAttenuationStrength=0.200 viscerealityTransparencyColorFacingAttenuationMode=surface-normal-rgb-attenuation viscerealityTransparencyParameterSource=particle-payload-build-env viscerealityTransparencyParityProfile=none viscerealityMaterialDefaultPreset=reference-material-emulation viscerealityTransparencyDepthWrite=false viscerealityTransparencySortMode=back-to-front viscerealityTransparencySortImplementation=resident-gpu-full-index-remap viscerealityTransparencySortBasis=primary-eye-openxr-reference-space viscerealityOrderingCpuExpandedUploadPerFrame=false viscerealityOscillatorVisualDrivers=color0-size1-rotation2-orbit3-wave4-animation5 viscerealityGpuPhasePingPongBuffersResident=true viscerealityPhaseIntegrateGpuMs=pending-gpu-timestamp viscerealityParticleBuildGpuMs=pending-gpu-timestamp viscerealityTracerUpdateGpuMs=pending-gpu-timestamp viscerealityDrawGpuMs=pending-gpu-timestamp viscerealityVisualAcceptance=pending viscerealityOrbitControlDefaultEnabled=true viscerealityOrbitControlDefaultSource=static-minimum viscerealityOrbitControlDefaultScaleWithParticleSize=false viscerealityOrbitControlDefaultReferenceRadiusM=0.030 viscerealityOrbitControlAuxSlot=5 viscerealityOrbitControlSourceCodes=static0-oscillator1-polar2-synthetic3 viscerealityOrbitEnvelopeAuthority=private-gpu-payload-and-shader viscerealityOrbitEnvelopeDecaySeconds=0.250",
+      "mask_texture": {
+        "path": "particles/private_particle_mask_texture.r8.bin",
+        "width": 128,
+        "height": 128,
+        "layers": 64,
+        "mode": "texture-array-nearest",
+        "mip_mode": "base-only",
+        "discard_mode": "discard-near-zero-mask",
+        "alpha_cutoff": "0.001"
+      },
+      "build_env": [
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_COLOR_FACING_ATTENUATION_STRENGTH",
+          "value": "0.200"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER0_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER1_VALUE01",
+          "value": "1.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER2_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER3_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER4_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER5_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER6_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DRIVER7_VALUE01",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_ORDERING_MODE",
+          "value": "back-to-front"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRACER_MAX_COUNT",
+          "value": "17934"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRACER_DRAW_SLOTS_PER_OSCILLATOR",
+          "value": "0"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRACER_LIFETIME_SECONDS",
+          "value": "0.500"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRACER_COPIES_PER_SECOND",
+          "value": "14.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRANSPARENCY_BLEND_MODE",
+          "value": "src-one-one-minus-src-alpha"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRANSPARENCY_OPACITY",
+          "value": "0.360"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRANSPARENCY_OUTPUT_ALPHA_SCALE",
+          "value": "0.450"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRANSPARENCY_DEPTH_SUPPRESSION_STRENGTH",
+          "value": "1.500"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_TRANSPARENCY_RGB_ALPHA_COUPLING",
+          "value": "0.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_VISUAL_SCALE",
+          "value": "0.700"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_SIZE_MODE",
+          "value": "sphere-radius-percent"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_ORBIT_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_SIZE_WORLD_METERS",
+          "value": "0.050"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_SIZE_SPHERE_RADIUS_PERCENT",
+          "value": "3.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_SIZE_OSCILLATION_PERCENT",
+          "value": "50.000"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DEFAULT_MATERIAL_PRESET",
+          "value": "reference-material-emulation"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_AUXILIARY_COMPUTE_SHADER",
+          "value": "particles/viscereality_kuramoto_anchor_echo_auxiliary.comp.glsl"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_AUXILIARY_COMPUTE_LOGICAL_INVOCATIONS",
+          "value": "2"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_AUXILIARY_COMPUTE_LOCAL_SIZE_X",
+          "value": "64"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_DIAGNOSTIC_SHADER",
+          "value": "particles/viscereality_kuramoto_diagnostic_reduction.comp.glsl"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_PROFILE_SHA256",
+          "value": "e5931ee2ea604ebfc53940a4dbb3d74b864d97449217939117148fd949e50c6a"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_PROVIDER_MANIFEST_SHA256",
+          "value": "5103f94f17a6b6f825abcf3004601648c6b6ff705140150f257dc58223785a23"
+        },
+        {
+          "name": "RUSTY_QUEST_NATIVE_RENDERER_PRIVATE_PARTICLE_EXPERIMENT_SESSION_INVENTORY_SHA256",
+          "value": "283c20f95e3d1c76c10b2ccfda71f9baeadf9e6c9723956f599e0df43bde8847"
+        }
+      ]
+    }
+  ],
+  "runtime_profile": {
+    "set": {
+      "debug.rustyquest.native_renderer.breath_composition.controller_projection": "dynamic-axis",
+      "debug.rustyquest.native_renderer.breath_composition.polar_projection": "xz",
+      "debug.rustyquest.native_renderer.hand_anchor_particles.enabled": "false",
+      "debug.rustyquest.native_renderer.hand_mesh.graft_copies.enabled": "false",
+      "debug.rustyquest.native_renderer.particle_adapter.enabled": "true",
+      "debug.rustyquest.native_renderer.particle_adapter.feature_id": "particle-adapter-consumer",
+      "debug.rustyquest.native_renderer.particle_adapter.lock_revision": "1",
+      "debug.rustyquest.native_renderer.particle_adapter.lock_sha256": "D51D97F6B01663F360E867EB01C3F27A3DB7C3204210F1C1D7634CA52DD276BC",
+      "debug.rustyquest.native_renderer.particle_adapter.profile_id": "profile.quest.native_renderer.particle_adapter_conformance",
+      "debug.rustyquest.native_renderer.particle_adapter.project_id": "native-renderer",
+      "debug.rustyquest.native_renderer.private_particles.breath_composition_driver.exhale.rate_per_second": "0.25",
+      "debug.rustyquest.native_renderer.private_particles.breath_composition_driver.hold.policy": "hold",
+      "debug.rustyquest.native_renderer.private_particles.breath_composition_driver.inhale.rate_per_second": "0.25",
+      "debug.rustyquest.native_renderer.private_particles.breath_composition_driver.loss.value01": "0.0",
+      "debug.rustyquest.native_renderer.private_particles.breath_composition_driver.target_slot": "0",
+      "debug.rustyquest.native_renderer.private_particles.offscreen.half_res": "true",
+      "debug.rustyquest.native_renderer.private_particles.offscreen.half_res.tracers_only": "true",
+      "debug.rustyquest.native_renderer.private_particles.world_anchor.scale_m": "1.000",
+      "debug.rustyquest.native_renderer.render.mode": "solid-black-private-particles",
+      "debug.rustyquest.native_renderer.breath_composition.source": "controller",
+      "debug.rustyquest.native_renderer.breath_composition.mapping": "volume",
+      "debug.rustyquest.native_renderer.control_panel.mode": "breath-mapping",
+      "debug.rustyquest.native_renderer.control_panel.right_secondary_action.window_seconds": "5.000",
+      "debug.rustyquest.native_renderer.experiment.preparation_mode": "remote-vr",
+      "debug.rustyquest.native_renderer.control_panel.right_secondary_action.mode": "right-secondary-triple-press-experimenter-toggle",
+      "debug.rustyquest.native_renderer.projection.swapchain.resolution_scale": "1.400"
+    },
+    "allow_feature_overrides": "true"
+  },
+  "permission_allowlist": [
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.INTERNET"
+  ],
+  "declared_manifest": {
+    "permissions": [
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.ACCESS_WIFI_STATE",
+      "android.permission.BLUETOOTH",
+      "android.permission.BLUETOOTH_ADMIN",
+      "android.permission.BLUETOOTH_ADVERTISE",
+      "android.permission.BLUETOOTH_CONNECT",
+      "android.permission.BLUETOOTH_SCAN",
+      "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+      "android.permission.FOREGROUND_SERVICE",
+      "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
+      "android.permission.INTERNET",
+      "com.oculus.permission.HAND_TRACKING",
+      "org.khronos.openxr.permission.OPENXR",
+      "org.khronos.openxr.permission.OPENXR_SYSTEM"
+    ],
+    "uses_features": [
+      "android.hardware.bluetooth_le",
+      "android.hardware.vr.headtracking",
+      "android.opengl.gles.3.1",
+      "oculus.software.handtracking"
+    ],
+    "activities": [
+      "android.app.NativeActivity",
+      "ControlPanelActivity"
+    ],
+    "receivers": [
+      "BreathCompositionCommandReceiver",
+      "LslPanelCommandReceiver",
+      "PolarSensorCommandReceiver"
+    ],
+    "services": [
+      "NativeRendererSelfKioskService"
+    ]
+  },
+  "expected_render_mode": "solid-black-private-particles",
+  "settings_assertions": {
+    "required_values": {
+      "native_renderer.breath_composition.calibration.right_secondary_action.hold_seconds": "1.25",
+      "native_renderer.breath_composition.calibration.right_secondary_action.mode": "right-secondary-hold-start",
+      "native_renderer.breath_composition.enabled": "true",
+      "native_renderer.hand_adapter.enabled": "true",
+      "native_renderer.particle_adapter.enabled": "true",
+      "native_renderer.particle_adapter.feature_id": "particle-adapter-consumer",
+      "native_renderer.particle_adapter.lock_revision": "1",
+      "native_renderer.particle_adapter.lock_sha256": "D51D97F6B01663F360E867EB01C3F27A3DB7C3204210F1C1D7634CA52DD276BC",
+      "native_renderer.particle_adapter.profile_id": "profile.quest.native_renderer.particle_adapter_conformance",
+      "native_renderer.particle_adapter.project_id": "native-renderer",
+      "native_renderer.private_particles.breath_composition_driver.enabled": "true",
+      "native_renderer.private_particles.breath_composition_driver.exhale.rate_per_second": "0.25",
+      "native_renderer.private_particles.breath_composition_driver.hold.policy": "hold",
+      "native_renderer.private_particles.breath_composition_driver.inhale.rate_per_second": "0.25",
+      "native_renderer.private_particles.breath_composition_driver.loss.value01": "0.0",
+      "native_renderer.private_particles.breath_composition_driver.target_slot": "0",
+      "native_renderer.private_particles.offscreen.half_res": "true",
+      "native_renderer.private_particles.offscreen.half_res.tracers_only": "true",
+      "native_renderer.private_particles.world_anchor.scale_m": "1.000",
+      "native_renderer.render.mode": "solid-black-private-particles",
+      "native_renderer.breath_composition.source": "controller",
+      "native_renderer.breath_composition.mapping": "volume",
+      "native_renderer.control_panel.mode": "breath-mapping",
+      "native_renderer.control_panel.right_secondary_action.window_seconds": "5.000",
+      "native_renderer.experiment.preparation_mode": "remote-vr",
+      "native_renderer.control_panel.right_secondary_action.mode": "right-secondary-triple-press-experimenter-toggle"
+    },
+    "required_disabled_modules": [],
+    "required_modules": [
+      "background/solid-black",
+      "breath/composition",
+      "breath/controller-assessment",
+      "breath/mapping/state",
+      "breath/mapping/volume",
+      "breath/polar-acc-assessment",
+      "core/openxr-vulkan",
+      "hand/live-input",
+      "hand/mesh",
+      "input/breath-calibration/right-secondary-hold",
+      "input/controllers-and-hands",
+      "input/same-apk-panel/right-secondary-triple-press",
+      "input/simultaneous-hands-and-controllers",
+      "lsl/panel-controlled-io",
+      "particles/anchor-echo/rows",
+      "particles/private/breath-composition-driver",
+      "particles/private/mask/r8-texture",
+      "particles/private/ordering/gpu-index-remap",
+      "particles/private/payload-slot",
+      "particles/private/renderer",
+      "particles/tracers/snapshot-rows",
+      "sensor/polar-h10-ble",
+      "ui/breath-composition-panel",
+      "ui/breath-mapping-panel",
+      "ui/control-panel",
+      "ui/experiment-session-ble-control",
+      "ui/experiment-session-command-gateway",
+      "ui/recording-export",
+      "ui/same-apk-soft-kiosk"
+    ],
+    "forbidden_modules": [
+      "manifold/bridge",
+      "particles/private/breath_state_driver",
+      "particles/private/manifold_scalar_driver",
+      "particles/private/placeholder",
+      "particles/private/polar_acc_breath_source",
+      "particles/private/polar_rr_heartbeat_pulse"
+    ]
+  },
+  "expected_markers": {
+    "required": [
+      "breathCalibrationControllerActionMode=right-secondary-hold-start",
+      "breathCompositionDriverRequested=true",
+      "breathCompositionDriverRrConsumed=false",
+      "handAdapterApplied=true",
+      "handsCannotSubstituteController=true",
+      "panelActivity=ControlPanelActivity",
+      "privateParticleComputeBasisFollowCamera=false",
+      "privateParticleComputeBasisSource=captured-world-anchor",
+      "privateParticleDiagnosticCpuFullBufferReadback=false",
+      "privateParticleDiagnosticFrameIdWords=20,21",
+      "privateParticleDiagnosticLanesVisitedWord=22",
+      "privateParticleDiagnosticLegacyReductionsAvailability=unavailable-v2-validity-masked",
+      "privateParticleDiagnosticSchemaValidityWord=23",
+      "privateParticleDiagnosticStorageBinding=9",
+      "privateParticleDiagnosticWords=24",
+      "privateParticleDrawCount=20498",
+      "privateParticleTracerMaxCount=17934",
+      "RUSTY_QUEST_NATIVE_RENDERER channel=lsl-panel-runtime",
+      "RUSTY_VISCEREALITY_NATIVE",
+      "sameApkDeveloperActionMode=right-trigger-triple-press-open-developer",
+      "sameApkExperimentControlsEnabled=true",
+      "sameApkPanelActionMode=right-secondary-triple-press-experimenter-toggle",
+      "sameApkPanelActionWindowSeconds=5.000",
+      "simultaneousHandsControllersSelected=true",
+      "viscerealityAux0Layout=akd-v9-static-rotation-animation-neutral-coupling-visual-and-deformation-curves",
+      "viscerealityDiagnosticsLevel=detailed",
+      "viscerealityDiagnosticsNoCpuRuntimeDynamics=true",
+      "viscerealityDiagnosticsProfile=akd-gpu-diagnostics-v2",
+      "viscerealityDiagnosticsReadbackStatus=detailed-frame-envelope-v2",
+      "viscerealityDiagnosticsSchema=v2",
+      "viscerealityDynamicsEdgeReadbackStatus=unavailable-v2-validity-masked",
+      "viscerealityOrderReadbackStatus=unavailable-v2-validity-masked",
+      "viscerealityParticleCount=2562",
+      "viscerealityPrivateCommit=7b8f89b0dfd70a52e1538bffb94a14cf45182e01",
+      "viscerealityPrivateTree=78e43411109e4dac2b51b41a3b8c76a9d3b65d78",
+      "viscerealityQuestCommit=99352620fd79ec5cdcee71b47c2ba4056241af16",
+      "viscerealityQuestTree=e30a0cb8bb5dc29334fa76e9344800ecf8873aff",
+      "viscerealityRetentionIndicatorReadbackStatus=unavailable-v2-validity-masked",
+      "viscerealityRunNamespace=viscereality-0fc60672e43a63cd",
+      "viscerealitySphereDeformationDriverSlot=privateParticleDriver0Value01",
+      "viscerealityTracerReadbackStatus=unavailable-v2-validity-masked",
+      "viscerealityTracerStateCapacity=17934"
+    ],
+    "forbidden": [
+      "XR_META_detached_controllers",
+      "breathBridgeMode=manifold-state",
+      "breathBridgeMode=manifold-value",
+      "privateParticleDriverParameterSource=manifold-scalar-stream",
+      "privateParticleHeartbeatPulseMode=polar-rr-event"
+    ]
+  },
+  "validation_tier": "quick",
+  "private_asset_provider_request": {
+    "schema": "rusty.quest.native_app_private_asset_provider_request.v1",
+    "provider_id": "viscereality.experiment-session.private-assets",
+    "provider_manifest_sha256": "5103f94f17a6b6f825abcf3004601648c6b6ff705140150f257dc58223785a23",
+    "inventory_sha256": "283c20f95e3d1c76c10b2ccfda71f9baeadf9e6c9723956f599e0df43bde8847",
+    "asset_count": 5
+  },
+  "application_label": "Viscereality Experimenter v10"
+}

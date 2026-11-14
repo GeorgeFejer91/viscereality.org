@@ -76,9 +76,16 @@ artifact, the source tree verified against the public patch, the native
 changes since 0.1.28, and the Quest 2 and Pixel acceptance evidence.
 The [APK workflow](WORKFLOW.md#quest-apk-changes-and-releases) requires
 an Atmungsraum commit and release record for every changed APK.
-The full 0.1.29 lab build contains Experimenter provider audio and a
-linked private particle payload. The verified binary stays in the
-lab output folder while public distribution of these contents is unresolved.
+The release includes the full 0.1.29 APK and the matching Experimenter
+audio, particle payload, shaders, configuration and ARM64 libraries in
+the repository. The [public build recipe](../quest/README.md#build-from-the-public-repository)
+pins the native source and sibling dependencies and resolves the bundled
+inputs without a private checkout. External developers use their own
+locally generated development signature.
+The 2026-11-14 clean build used fresh public clones and reconstructed native
+tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`. Android SDK tools verified
+the independently signed APK. All 67 scenario files, five provider assets,
+and two ARM64 libraries matched the lab APK byte-for-byte.
 
 ### Live recording sync to Google Drive
 

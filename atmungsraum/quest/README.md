@@ -5,6 +5,65 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
+## Build from the public repository
+
+Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 35,
+Android Build Tools 36.0.0, Android NDK 27.2.12479018, and Rust with the
+`aarch64-linux-android` target. Keep the native checkouts together in a short
+ordinary directory such as `C:/src/atmungsraum-native`. The following commands
+run from the `atmungsraum/quest` directory in a complete Atmungsraum checkout.
+Set the SDK and JDK paths to your installations.
+
+```powershell
+$native = 'C:/src/atmungsraum-native'
+$env:JAVA_HOME = 'C:/tools/jdk-17'
+$env:ANDROID_HOME = 'C:/tools/android-sdk'
+$env:ANDROID_NDK_HOME = Join-Path $env:ANDROID_HOME 'ndk/27.2.12479018'
+$env:Path = "$env:JAVA_HOME/bin;$env:Path"
+rustup target add aarch64-linux-android
+
+$pins = [ordered]@{
+    'rusty-quest' = '99352620fd79ec5cdcee71b47c2ba4056241af16'
+    'rusty-lattice' = '2594b2bb0cd9e2e3593011f7dd09f68b59ea1989'
+    'rusty-manifold' = '58e32fa1f098b58819a25e7d1fb51e22671a79db'
+    'rusty-matter' = '54a18d85ee877f5cb6c8275013da8a76764b140e'
+    'rusty-optics' = '23ce99bbb24ca90d7dcd1bf85dbda3a8603543c7'
+}
+New-Item -ItemType Directory -Force -Path $native | Out-Null
+foreach ($name in $pins.Keys) {
+    $dir = Join-Path $native $name
+    git clone --filter=blob:none --no-checkout "https://github.com/MesmerPrism/$name.git" $dir
+    if ($LASTEXITCODE) { throw "Could not clone $name" }
+    git -C $dir checkout --detach $pins[$name]
+    if ($LASTEXITCODE) { throw "Could not select the pinned revision for $name" }
+}
+
+$quest = Join-Path $native 'rusty-quest'
+git -C $quest apply --index (Join-Path (Get-Location) 'native-source.patch')
+if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
+git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
+if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
+
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-029 `
+    -VersionCode 29 -VersionName 0.1.29
+```
+
+Use your Git author identity for the local patch commit. The current patch
+reconstructs source tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`.
+The script stages the six authored scenarios from `../assets/audio/` and
+resolves the [bundled Experimenter inputs](build-assets/README.md). It verifies
+the scenario asset inventory and ARM64 loader in the APK, then prints the APK
+location and SHA-256. The output and its build receipts are under
+`rusty-quest/target/aq2/atmungsraum-029/`. Use a fresh run name for a second build
+or add `-ResolveOnly` to check the feature lock without compiling.
+
+The native packager creates a local development keystore on first use. An
+external build has its own signature and build identity. Use a clean
+development Quest profile or an appropriately signed in-place update for the
+same Android package.
+
+## Build with a separate Experimenter configuration
+
 Use the Experimenter lane in MesmerPrism's shared Viscereality repository. Its
 handoff describes the private provider and exact sibling source pins. Use the
 consolidated [Rusty Quest source](https://github.com/MesmerPrism/rusty-quest/tree/99352620fd79ec5cdcee71b47c2ba4056241af16)

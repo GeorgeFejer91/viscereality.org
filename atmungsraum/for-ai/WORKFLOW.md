@@ -74,9 +74,11 @@ or dependency pins, assets, and packaging-only changes.
 4. Review and stage only the intended files, run the context checker, then
    commit, push, and follow the exact Pages deployment. Publish signed APKs
    under `quest/apks/` when their bundled assets are authorized for public
-   distribution. Keep the full lab builds under ignored
-   `output/quest-apks/` and record their checksums in the log. Keep signing
-   material, private provider inputs, and raw participant data in the lab.
+   distribution. For the public build, keep the selected source assets and
+   SDK library notices in `quest/build-assets/` and verify the bundled
+   build from clean pinned checkouts. Update the public asset inventory
+   whenever the release changes those files. Keep signing material,
+   unpublished provider inputs, and raw participant data in the lab.
 
 ## Local UI workflow
 
