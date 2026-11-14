@@ -59,6 +59,22 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output }) {
     }
   }
 
+  const promptDirectory = 'assets/audio/calibration-menu';
+  const promptManifest = JSON.parse(await readFile(join(sourceRoot, promptDirectory, 'manifest.json'), 'utf8'));
+  const expectedPrompts = new Set(['inhale.mp3', 'exhale.mp3']);
+  for (const cue of promptManifest.cues) {
+    if (!expectedPrompts.delete(cue.file)) throw new Error('Unexpected calibration prompt: ' + cue.file);
+    const path = posix.join(promptDirectory, cue.file);
+    const audio = await readFile(join(sourceRoot, path));
+    const transcript = await readFile(join(sourceRoot, path.replace(/\.mp3$/, '.txt')), 'utf8');
+    if (audio.length !== cue.bytes || sha256(audio) !== cue.sha256
+        || transcript !== cue.text + '\n' || cue.verified_transcript !== cue.text || !cue.text) {
+      throw new Error('Calibration prompt integrity mismatch: ' + path);
+    }
+    files.set(path, audio);
+  }
+  if (expectedPrompts.size) throw new Error('Missing calibration prompts: ' + [...expectedPrompts].join(', '));
+
   const catalog = {
     schema_version: 1,
     sample_rate: library.sample_rate,

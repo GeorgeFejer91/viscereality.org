@@ -2,6 +2,23 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Quest calibration menu voice cues — 2026-11-14
+
+The Quest **Direct → Developer settings → Breath → Calibration** menu plays
+“Atme bitte jetzt ganz ein.” after an accepted Start, then “Atme bitte ganz aus.”
+four seconds later if the same calibration is still active. Cancel, Reset,
+switching configuration, closing the menu or backgrounding it stops playback.
+The phone preview and the Haupt-Runde timeline retain their existing behavior.
+
+Both German scripts were explicitly approved. Secret Tunnel v6 generated the
+two MP3s from the EmoDB Atmungsraum 3 voice; its Whisper check reported zero word
+edits for both. See the [prompt inventory](../assets/audio/calibration-menu/manifest.json)
+and the [signed Quest release](../quest/apks/README.md#0130--quest-2-calibration-menu).
+APK 0.1.30 is signed by the same lab certificate as 0.1.29; both bundled
+MP3s and the unchanged scenario bytes passed archive readback.
+Next: listen through an attended Quest 2 calibration with active sensor data,
+including Cancel before the exhale cue. Keep the overall rehearsal goal open.
+
 ### Start-to-finish QA and reconnect latency — 2026-11-14
 
 From the clean sparse publication checkout, the Chromium review covered 43

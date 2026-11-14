@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SCENARIOS } from '../audio/scenario-protocol.js';
@@ -17,6 +17,12 @@ test('stages original scenario JSON and every numbered cue with reproducible ide
   assert.deepEqual(catalog.scenarios.map(entry => entry.id), SCENARIOS);
   assert.equal(catalog.files.filter(entry => entry.path.endsWith('.wav')).length, 53);
   assert.deepEqual(JSON.parse(await readFile(join(output, 'scenario-catalog.json'), 'utf8')), catalog);
+  const prompts = 'assets/audio/calibration-menu';
+  assert.deepEqual(catalog.files.filter(entry => entry.path.endsWith('.mp3')).map(entry => entry.path).sort(),
+    [prompts + '/exhale.mp3', prompts + '/inhale.mp3']);
+  for (const sidecar of ['manifest.json', 'inhale.txt', 'exhale.txt']) {
+    await copyFile(new URL('../' + prompts + '/' + sidecar, import.meta.url), join(output, prompts, sidecar));
+  }
 
   for (const { path, bytes, sha256 } of catalog.files) {
     const stored = await readFile(join(output, path));
@@ -52,4 +58,9 @@ test('stages original scenario JSON and every numbered cue with reproducible ide
   const replaced = join(scratch, 'replacement');
   await stageQuestAudio({ sourceRoot: output, output: replaced });
   assert.deepEqual(await readFile(join(replaced, 'assets/audio/scenarios/haupt-15', selected.file)), wav);
+
+  await writeFile(join(output, prompts, 'exhale.txt'), 'Changed instruction.\n');
+  const wrongPrompt = join(scratch, 'wrong-prompt');
+  await assert.rejects(() => stageQuestAudio({ sourceRoot: output, output: wrongPrompt }), /Calibration prompt integrity/);
+  await assert.rejects(() => access(wrongPrompt), { code: 'ENOENT' });
 });
