@@ -48,6 +48,8 @@ test('assembly binds the real looping audio and selected Java definitions before
       assert.equal(selected[0].sha256, sha256(await readFile(join(questRepo, path))));
     }
     assert.match(run.manifest, /android:debuggable="true"/);
+    assert.match(run.manifest, /android:targetSdkVersion="35"/);
+    assert.doesNotMatch(run.manifest, /android:installLocation=/);
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.rehearsal"/);
     assert.match(run.manifest, /android:name="rusty\.quest\.experiment\.breathing_setup\.enabled" android:value="true"/);
     const schemaCheck = spawnSync('pwsh', ['-NoProfile', '-Command',
@@ -72,7 +74,11 @@ test('developer resolution selects a distinct non-debuggable app and requires an
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.developer"/);
     assert.match(run.manifest, /android:label="Atmungsraum Developer"/);
     assert.match(run.manifest, /android:debuggable="false"/);
+    assert.match(run.manifest, /android:targetSdkVersion="34"/);
+    assert.match(run.manifest, /android:installLocation="auto"/);
     assert.equal(run.lock.android_manifest.debuggable, false);
+    assert.equal(run.lock.android_manifest.target_sdk_version, 34);
+    assert.equal(run.lock.android_manifest.install_location, 'auto');
     const noKey = invoke(runName + '-nokey', ['-Developer', '-VersionCode', '31']);
     assert.notEqual(noKey.status, 0);
     assert.match(noKey.stdout + noKey.stderr, /Developer requires an explicit existing -Keystore/);

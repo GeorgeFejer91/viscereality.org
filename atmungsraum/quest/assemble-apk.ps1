@@ -171,6 +171,13 @@ $app.package_policy = 'app-specific-package'
 $app.package_name = if ($Developer) { 'org.viscereality.atmungsraum.developer' } else { 'org.viscereality.atmungsraum.rehearsal' }
 $app.application_label = if ($Developer) { 'Atmungsraum Developer' } else { 'Atmungsraum Quest 2' }
 $app.android_debuggable = !$Developer
+if ($Developer) {
+    $app.android_target_sdk_version = 34
+    $app.android_install_location = 'auto'
+} else {
+    [void]$app.Remove('android_target_sdk_version')
+    [void]$app.Remove('android_install_location')
+}
 $app.experiment_breathing_setup_enabled = $true
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
@@ -228,6 +235,17 @@ try {
         $manifest.manifest.application.GetAttribute('label', $androidNamespace) -cne $app.application_label -or
         $manifest.manifest.application.GetAttribute('debuggable', $androidNamespace) -cne (!$Developer).ToString().ToLowerInvariant()) {
         throw 'The native manifest must bind the selected Atmungsraum package, label and debuggability.'
+    }
+    $expectedTargetSdk = if ($Developer) { '34' } else { '35' }
+    $installLocationMatches = if ($Developer) {
+        $manifest.manifest.GetAttribute('installLocation', $androidNamespace) -ceq 'auto'
+    } else {
+        !$manifest.manifest.HasAttribute('installLocation', $androidNamespace)
+    }
+    if ($manifest.manifest.'uses-sdk'.GetAttribute('minSdkVersion', $androidNamespace) -cne '29' -or
+        $manifest.manifest.'uses-sdk'.GetAttribute('targetSdkVersion', $androidNamespace) -cne $expectedTargetSdk -or
+        !$installLocationMatches) {
+        throw 'The native manifest must bind the selected Atmungsraum SDK and install location.'
     }
     if ($metadata['rusty.quest.experiment.breathing_setup.enabled'] -cne 'true') {
         throw 'The native manifest must explicitly select the shared breathing setup.'

@@ -87,7 +87,9 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 Use your Git author identity for the local patch commit. The cumulative patch
 reconstructs source tree `3df3966543186596cb3ab942eb9b29c87ee1cdc3`, matching
 the software-verified developer build. Its SHA-256 and native commit are in
-the APK log. The recorded build used compile SDK 36 and targets SDK 35.
+the APK log. The recorded pre-upload build used compile SDK 36 and targets
+SDK 35. Meta upload validation requires the developer rebuild described below;
+its updated source identity and artifact must be recorded after rebuilding.
 The script stages the [shared loop JSON](../audio/box-loop.json), its four phase
 cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
@@ -105,8 +107,13 @@ unselected defaults.
 ## Developer and rehearsal signing
 
 `-Developer` selects package `org.viscereality.atmungsraum.developer`, label
-**Atmungsraum Developer**, and `android:debuggable=false`. It requires an
-explicit existing `-Keystore` outside Git and an explicit `-VersionCode`,
+**Atmungsraum Developer**, `android:debuggable=false`, target SDK `34`, and
+`android:installLocation="auto"`. Minimum SDK stays `29`; compile SDK `36`
+remains supported. Meta requires apps created since 2026-03-01 to target
+exactly SDK 34 and requires automatic install location. See the
+[official release manifest requirements](https://developers.meta.com/vr/resources/publish-mobile-manifest/).
+The developer flavor requires an explicit existing `-Keystore` outside Git
+and an explicit `-VersionCode`,
 including with `-ResolveOnly`. The recipe does not generate a developer key.
 Keep one durable developer key for every later build. The initial empty
 developer application can use version code `1` and name `0.2.0-dev`; every
@@ -120,8 +127,9 @@ the separate developer identity.
 
 Without `-Developer`, the default remains
 `org.viscereality.atmungsraum.rehearsal`, label **Atmungsraum Quest 2**, with
-debugging enabled. Its existing signing identity must remain unchanged for
-in-place lab updates. The default native development key can be created on
+debugging enabled, target SDK `35` and no explicit install location. Its
+existing signing identity must remain unchanged for in-place lab updates.
+The default native development key can be created on
 first use only in that rehearsal/development route. A new external key does
 not become update-compatible by using the same package name. The two packages
 can coexist and have separate controller enrollment and app data.
