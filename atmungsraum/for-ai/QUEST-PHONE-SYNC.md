@@ -298,6 +298,49 @@ file ID. Drive accepted 69,730,304 bytes before Finish. The final single
 private CSV was 69,906,729 bytes and matched the Quest and Pixel copies
 by SHA-256 `7c3830f15a402aea54427c5a723d4a8d1576f1a14db8b5509234d74b94fd3aae`.
 
+After transport recovery, 63 Quest recording checkpoints during playback
+seconds 575–640 were matched to the first Drive acknowledgement covering
+their bytes. The median delay was 3.20 seconds, p95 was 4.94 seconds, and
+p99 was 5.35 seconds. Both observations used the bench computer clock.
+
+### Repeat comparison on the updated PWA
+
+Both full sessions used the installed Pixel release
+`20261114-recording-bytes` and Quest 2 APK `0.1.29`. The baseline used
+`?live-sync=off`. The Pixel network observer saw zero Drive writes during
+baseline playback. The scorecard and signed status measurements use
+playback seconds 165–235. Radius intervals and Java midpoint sample age
+use seconds 165–235 on the native observation clock, which advances
+through a playback pause. Timing values are median, p95 and p99
+in milliseconds.
+
+| Measurement | Sync disabled | Sync enabled |
+| --- | --- | --- |
+| Radius observation intervals (5,027 per run) | 13.928 / 14.297 / 14.597 | 13.924 / 14.378 / 14.808 |
+| Scorecard mean period between frame numbers (41 intervals per run) | 13.925 / 13.942 / 13.950 | 13.925 / 13.942 / 13.950 |
+| CPU time per submitted OpenXR frame (42 scorecards per run) | 1.326 / 1.610 / 2.265 | 1.375 / 1.708 / 1.787 |
+| Native accepted Polar sample age | 127 / 513 / 793 (72) | 98 / 222 / 424 (70) |
+| Selected Polar sample age at the Java midpoint | 112.9 / 377.8 / 466.8 (4,840) | 92.1 / 225.2 / 314.6 (5,028) |
+
+At the matched phone probe around 12:09, Pause and Resume each updated
+the visible controls in 0.74 and 0.54 seconds with sync disabled, and in
+1.26 and 0.71 seconds with sync enabled. Signed command receipts arrived in
+0.61 and 0.43 seconds with sync disabled, and in 1.20 and 0.51 seconds with
+sync enabled. A Polar hold coincided with the earlier baseline Pause and
+Quest rejected that phone command, so the 04:23 action is excluded from
+the comparison. Finish reached the completed screen after 18.46 seconds
+with sync disabled and 15.78 seconds with sync enabled.
+
+Both runs reached the end of the authored audio and Quest saved with
+zero writer drops. The baseline recorded 79 ECG and 22 accelerometer gap
+pairs and 19 playback pauses. Quest kept the radius at 1.00 m and
+exported all baseline breathing phases as unknown.
+The repeat compares frame timing, raw sample age, phone controls and
+recording reliability. The baseline classification state prevents a
+comparison of directional biofeedback in this pair. The
+[earlier pair](#paired-physical-trial-results-on-2026-11-14) observed
+directional biofeedback in both modes.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

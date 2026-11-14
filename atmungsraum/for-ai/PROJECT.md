@@ -139,7 +139,14 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   Drive. Its 70,280 radius observations ranged from 1.00 to 2.00 m.
   The live biofeedback evidence was published in
   [Pages run 43598957102](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43598957102).
-  Compare against a sync-disabled run on the same PWA release.
+  The [repeat comparison](QUEST-PHONE-SYNC.md#repeat-comparison-on-the-updated-pwa)
+  on the same PWA release measured identical submitted-frame cadence,
+  a 0.10 ms increase in p95 frame submission CPU time, fresh raw Polar
+  input and zero writer drops during live sync. The paired phone actions
+  took up to 1.26 seconds with live sync. The repeat baseline's Polar
+  classification remained unknown, so directional response in both modes
+  is verified by the earlier pair. After fault recovery, Drive acknowledged
+  live checkpoints at 3.20 seconds median and 4.94 seconds p95.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt
