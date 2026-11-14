@@ -100,6 +100,47 @@ ahead of Pixel. Keep same-device elapsed times for frame timing and controls.
 Report live and fault windows with sample counts and any clock uncertainty.
 Retain only timing, status, byte counts and hashes in shared evidence.
 
+### Sync-enabled physical trial on 2026-11-14
+
+Quest 2 APK `0.1.29` and the installed Pixel 10 PWA release
+`20261113-live-repair` ran all 900 seconds of `haupt-15` with a real H10
+and a synthetic participant ID. The operator used the Pixel for playback
+and Finish. The first Drive range acknowledgement arrived about 7.5 seconds
+after the first accepted Start request. In the uninterrupted window at
+165–235 seconds, the median, p95 and p99 delay from Quest prefix observation
+to Drive acknowledgement were 3.41, 5.35 and 6.13 seconds over 69 sidecar
+samples. Using the preceding Quest read to bound publication gave 4.45,
+6.37 and 7.11 seconds at the same percentiles. These delays use one host
+clock. Device clock checks put Quest about two seconds ahead of Pixel.
+
+- An injected Drive request reset at byte 17,301,504 stopped the upload.
+  About ten seconds later, a Drive status query confirmed the last accepted
+  range and the next request resumed at byte 17,301,504.
+- With Pixel Wi-Fi disabled for about 8.5 seconds, the Quest sidecar kept
+  advancing. The Pixel rejoined and continued upload from its saved offset.
+- After a deliberate WebAPK reload, the PWA rejoined the running session.
+  Google required another account selection. The first resumed Drive write
+  began at byte 24,379,392. The Pixel later displayed Chrome's crash screen.
+  After a second reload and Drive reauthorization, the PWA caught up and
+  kept using the same reserved Drive file ID. The renderer exit cause was
+  unconfirmed. This trial ran with DevTools diagnostics attached.
+- Separate ECG and accelerometer stop/restart commands produced one
+  interruption/resumption pair per stream in CSV v4. The other stream
+  continued during each deliberate stop. Manual playback pauses produced
+  playback events. The accelerometer loss triggered the expected Quest
+  playback hold, and the phone resumed it after both streams recovered.
+
+Quest saved the run with zero writer drops and one terminal row marking
+completion after 900 audio seconds. The final participant CSV was 74,967,884
+bytes. Drive had acknowledged 74,711,040 bytes before Finish. After Finish,
+the final request sent the remaining 256,844 bytes. An independent Drive
+metadata and folder query confirmed one private CSV with the same name, byte
+count and SHA-256 as Quest and the installed Pixel. The verified receipt
+retained the original Drive file ID. SHA-256
+`adfb17cf038c08ce43cdfb8e01d3fb109b9ac4c4a8aed23da522d5bfd03365c1`.
+The sync-disabled baseline and paired performance comparison are tracked
+in the [active checklist](PROJECT.md#live-recording-sync-to-google-drive).
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

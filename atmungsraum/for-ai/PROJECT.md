@@ -14,7 +14,7 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   two-second ECG preview. The complete CSV and Drive upload currently use the
   idle-only finalized recording path. The 15-minute trial exported 93,987,682
   bytes, and post-session transfer and delivery took about nine minutes.
-- [ ] Record detected ECG and ACC interruption and recovery as stream-specific
+- [x] Record detected ECG and ACC interruption and recovery as stream-specific
   research events. Retain timestamps and reason when known. Distinguish these
   events from a manual playback pause and recorder queue loss. Preserve the
   original sample timestamps and support historical CSVs.
@@ -25,10 +25,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     installed and its SHA-256 matched the build. The installed Pixel rejoined
     over its enrolled gateway and loaded the v3 reader from `d4e2dcc`,
     deployed in [Pages run 43480098804](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43480098804).
-  - [ ] Verify deliberate ECG and ACC interruptions on Quest 2 with a worn H10.
-    During the release check the headset's BLE scan found no H10 and neither
-    stream was fresh, so participant Start stayed gated.
-- [ ] Expose durable recording increments under the enrolled private gateway.
+  - [x] Verify deliberate ECG and ACC interruptions on Quest 2 with a live H10.
+    The 2026-11-14 CSV records a distinct interruption/resumption pair for
+    each deliberate stop and separate playback transitions.
+- [x] Expose durable recording increments under the enrolled private gateway.
   Prove the transferred byte prefix remains valid through pause, delayed
   samples and finalization. Use bounded sync work that yields to controls and
   keeps transfer failures off the acquisition and rendering path.
@@ -43,7 +43,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     deployed `1843da3`. The installed Pixel loaded that PWA release, rejoined
     Quest over the enrolled gateway, saw the new capability, and confirmed
     that a live read is refused while idle.
-  - [ ] Verify the live prefix feed and its sustained rate on Quest 2.
+  - [x] Verify the live prefix feed and its sustained rate on Quest 2.
+    The 2026-11-14 sync-enabled trial persisted checkpoint ranges on Pixel.
+    Drive acknowledged 74,711,040 of 74,967,884 bytes before Finish. In the
+    uninterrupted comparison window, the observed prefix-to-Drive delay had
+    a 5.35 s p95 across 69 checkpoints.
     Idle physical transport check on APK 0.1.29 and the installed Pixel read
     160 signed, encrypted 32 KiB ranges of the earlier finalized trial.
     The 5 MiB transfer took 24.957 s (205.2 KiB/s). With parallel status
@@ -51,7 +55,7 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     The prior 93,987,682-byte trial averaged 102 KiB/s over its 900 active
     seconds. The idle read benchmark does not include a running CSV writer
     or Drive uploads.
-- [ ] Buffer verified increments on the Pixel and upload them with one resumable
+- [x] Buffer verified increments on the Pixel and upload them with one resumable
   Drive session for the final CSV. Confirm acknowledged offsets, handle expired
   authorization or upload sessions, and use the existing final export to repair
   missing ranges. Finalization must verify the file identity and hash.
@@ -94,15 +98,21 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     upload session. Drive verified the 1,310,725-byte result under the same
     file ID. The test used synthetic recording ranges while Quest was idle.
     See [device recovery evidence](QUEST-PHONE-SYNC.md#pixel-wi-fi-and-reload-recovery).
-  - [ ] Verify installed Pixel staging and Drive receipt during a physical run.
+  - [x] Verify installed Pixel staging and Drive receipt during a physical run.
+    The 2026-11-14 sync-enabled trial finished after all 900 audio seconds
+    with zero writer drops. Quest, Pixel and one private Drive CSV matched
+    by byte count and SHA-256. Drive preserved its original file ID through
+    the faults and finalization. See the
+    [physical sync trial](QUEST-PHONE-SYNC.md#sync-enabled-physical-trial-on-2026-11-14).
 - [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.
   Exercise LAN loss, a Drive failure, and a Pixel reload. Confirm catch-up,
   explicit interruption markers, and one private Drive object per run.
-  Start with a short physical probe to measure the actual checkpoint-to-Drive
-  delay and validate stop/resume markers. Quest had zero H10 scan candidates
-  and reported neither stream fresh during the release check.
+  The sync-enabled run exercised all three planned transport faults and
+  recovered from one additional Chrome renderer exit on the Pixel. The
+  sync-disabled run is the remaining comparison. Record its matching
+  steady-state window and both terminal receipts before closing this item.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt
