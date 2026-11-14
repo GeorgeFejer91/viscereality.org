@@ -147,6 +147,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   classification remained unknown, so directional response in both modes
   is verified by the earlier pair. After fault recovery, Drive acknowledged
   live checkpoints at 3.20 seconds median and 4.94 seconds p95.
+  [Pages run 43602269910](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43602269910)
+  published the measured comparison. The same-release baseline also
+  delivered one private 77,448,407-byte CSV after Finish. Its name, size
+  and SHA-256 matched the Quest and Pixel copies.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

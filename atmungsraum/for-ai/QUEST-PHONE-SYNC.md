@@ -341,6 +341,14 @@ comparison of directional biofeedback in this pair. The
 [earlier pair](#paired-physical-trial-results-on-2026-11-14) observed
 directional biofeedback in both modes.
 
+The baseline produced a 77,448,407-byte CSV. Quest, Pixel and a single
+private Drive object matched by name, size and SHA-256
+`155801cc7f8e66d096ab30f72e9b56c627f2d3f7c33f39d2c687ea5257ffa182`.
+Drive acknowledged the final bytes 21 minutes 21 seconds after the
+Finish tap. That interval includes an aborted export, a rejected Quest
+read, Google reauthorization and interruptions to USB observation. The
+phone eventually finished the transfer over Wi-Fi and verified delivery.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
