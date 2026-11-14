@@ -2,6 +2,73 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Smartphone UI decision tree — 2026-11-14
+
+German labels match the [live smartphone controller](https://viscereality.org/atmungsraum/).
+The main flow changes state on one **Quest-Steuerung** screen. The Quest displays
+the VR scene and runs playback.
+
+```text
+Open Atmungsraum → Quest-Steuerung
+├─ First use → Quest verbinden → choose the Quest in Bluetooth
+│  └─ Enter Controller-ID + Quest-Schlüssel
+│     ├─ Optional → Smartphone-Hotspot verwenden
+│     └─ Verbindung speichern → confirm Wi-Fi in the headset if prompted
+│        → preparation once connected
+├─ Saved Quest → reconnect automatically
+│  ├─ Connected → preparation
+│  └─ Unavailable → Erneut verbinden / Verbindung neu einrichten
+└─ Quest connected → preparation
+   ├─ Headset panel open → close it to return to the VR scene
+   ├─ Teilnehmer-ID eingeben → surname prefix, age, gender
+   │  └─ Teilnehmer-ID übernehmen
+   ├─ Polar H10 verbinden → wait for ECG + accelerometer data
+   │  └─ Zero or multiple straps found → adjust straps and try again
+   └─ Choose VR-Bedingung → Bedingung A or Bedingung B
+      └─ Choose Ablauf for either condition
+         ├─ Anleitung                → guided example (1:08)
+         ├─ Probe · 5 Min.            → five-minute practice
+         ├─ Probe · 10 Min.           → ten-minute practice
+         ├─ Probe · 15 Min.           → fifteen-minute practice
+         ├─ Haupt-Runde · 15 Min.     → fifteen-minute main run
+         └─ Box-Atmung · 20 Min.      → diagnostic, see below
+```
+
+**Starten** prepares and starts the chosen run when the Quest is ready,
+the participant ID is confirmed and both sensor streams are available.
+The run view shows the Quest clock and the live ECG where available.
+**Pause** and **Fortsetzen** change playback. **Beenden** goes through
+finalizing and saving before returning to preparation. A Polar hold can
+pause the run and keep **Fortsetzen** disabled until data is fresh.
+
+The phone lists the timelines advertised by the enrolled Quest. Older Quest
+connections can show **Szenario A/B** by itself. The catalog also advertises
+**Box-Atmung · 20 Min.** as a diagnostic. The native participant Arm rejects
+it because the diagnostic has no participant recording plan.
+
+Other phone views and actions
+
+- **App installieren** opens the browser install prompt or install help when
+  available in the browser.
+- When the Quest supports them, **VR zentrieren** centers the view and
+  **Quest geprüft** clears an uncertain command after the operator checks
+  the idle headset. **Verbindung trennen** returns to connection setup.
+- **Gespeicherte Quest-Aufnahmen** offers a recording picker and
+  **Aufnahme herunterladen**. **Jetzt abgleichen** retries idle sync.
+  **Google Drive** expands the separate authorization form.
+- The direct `#daten` route opens **Frühere Browser-Aufnahmen** with links
+  to historical CSVs when present and **← Zurück** to the controller.
+
+Source checked against deployed `bdd9bfa`
+([Pages run 43606278756](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43606278756)).
+The live entry, controller, state machine and manifest matched Git bytes.
+Chromium at 390 × 844 verified launch, install help, the historical recordings
+view and return. The 24 focused Quest controller and scenario tests, all six
+scenario pairs and the context check passed. The primary checkout had
+unavailable cloud-backed source files and pre-existing index changes, so
+this documentation uses the clean publication checkout. Physical reruns of
+every branch remain on the [device acceptance checklist](#quest-2-control-media-and-ui-acceptance--2026-11-12).
+
 ### Quest APK release record — 2026-11-14
 
 The [Quest APK log](../quest/apks/README.md) records the signed 0.1.29
