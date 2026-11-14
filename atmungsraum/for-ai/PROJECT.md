@@ -15,7 +15,11 @@ two MP3s from the EmoDB Atmungsraum 3 voice; its Whisper check reported zero wor
 edits for both. See the [prompt inventory](../assets/audio/calibration-menu/manifest.json)
 and the [signed Quest release](../quest/apks/README.md#0130--quest-2-calibration-menu).
 APK 0.1.30 is signed by the same lab certificate as 0.1.29; both bundled
-MP3s and the unchanged scenario bytes passed archive readback.
+MP3s and the unchanged scenario bytes passed archive readback. Release
+`b360e99` reached `origin/main` and deployed in
+[Pages run 43636115452](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43636115452).
+The public APK, both MP3s, and both transcripts matched the release bytes by
+SHA-256.
 Next: listen through an attended Quest 2 calibration with active sensor data,
 including Cancel before the exhale cue. Keep the overall rehearsal goal open.
 
