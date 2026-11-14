@@ -19,8 +19,26 @@ The operator's connection flow should require only turning on phone Bluetooth
 if it is off. Once Atmungsraum opens, the phone discovers the Quest, retrieves
 the connection information over Bluetooth, establishes the Wi-Fi control link,
 and proceeds to preparation. Controller ID, Quest key, hotspot details and
-a save action are absent from the operator flow. An enrolled phone reconnects
-automatically when the Quest becomes available again.
+a save action are absent from the operator flow.
+
+After the first verified connection, remember the same headset. On later
+launches and after a connection loss, restore its Wi-Fi control link without a
+tap or chooser. If Bluetooth is needed and switched off, show a status asking
+the operator to turn it on, then resume automatically. An existing authenticated
+Wi-Fi connection can continue with Bluetooth off.
+
+- [x] Save the Quest serial, stable device identity, signed build fingerprint,
+  Bluetooth device ID, last working gateway address, trusted enrollment and
+  any provisioned hotspot settings in the phone's browser profile after a
+  verified join. The installed lab Pixel reconnected using its saved address.
+- [ ] Verify cold launch and transport recovery with a changed Quest Wi-Fi
+  address. Recover the same Quest without opening the Bluetooth chooser.
+  Chrome on the lab Pixel did not expose `navigator.bluetooth.getDevices()`
+  during the 2026-11-14 verification, so reading a saved Bluetooth device
+  after a cold launch is still a blocker when the saved gateway is unreachable.
+- [ ] Verify Bluetooth off at launch or during recovery. With no usable Wi-Fi
+  route, the app waits and resumes by itself when Bluetooth is enabled. Confirm
+  it keeps the saved pairing when a different Quest is also nearby.
 
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
 connection fields. It reads the selected Quest's identity and endpoints and
