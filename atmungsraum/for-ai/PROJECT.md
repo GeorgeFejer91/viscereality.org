@@ -114,9 +114,12 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   records frame cadence, Polar freshness and the signed phone controls.
   The sync-enabled run recovered from all three planned transport faults
   and one additional Chrome renderer exit on the Pixel. The baseline used
-  live sync off and is uploading via the post-session path. Repeat the
-  enabled run with bounded diagnostics to check whether the browser exit
-  recurs and to compare the operator control response again.
+  live sync off and delivered its verified CSV via the post-session path.
+  The local Quest, installed Pixel and private Drive copies matched for
+  both runs, with one Drive object per run. The comparison was published
+  in [Pages run 43593889030](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43593889030).
+  Repeat the enabled run with bounded diagnostics to check whether the
+  browser exit recurs and to compare the operator control response again.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

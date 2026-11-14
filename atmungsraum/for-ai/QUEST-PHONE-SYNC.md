@@ -195,7 +195,11 @@ Quest finalized both recordings with zero writer drops. The baseline
 recording was 67,609,282 bytes, with 13 naturally occurring ECG interruption
 and resumption pairs and no accelerometer interruption marker. Each reported
 ECG gap exceeded the one-second marker threshold. The enabled run retained
-the separate deliberate ECG and accelerometer gaps above.
+the separate deliberate ECG and accelerometer gaps above. The baseline CSV
+arrived in Drive about 7 minutes 24 seconds after the phone Finish tap.
+Independent metadata and folder queries confirmed one private CSV with the
+same name, size and SHA-256 as Quest and Pixel. Its SHA-256 was
+`9556af6101e599589c0fdfa4b11f87449f6e5259fb6e06804e50dfa53b1c0b79`.
 
 ## Operator procedure
 
