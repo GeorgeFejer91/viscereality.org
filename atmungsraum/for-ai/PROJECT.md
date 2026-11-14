@@ -104,7 +104,7 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
     by byte count and SHA-256. Drive preserved its original file ID through
     the faults and finalization. See the
     [physical sync trial](QUEST-PHONE-SYNC.md#sync-enabled-physical-trial-on-2026-11-14).
-- [ ] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
+- [x] Run comparable sync-disabled and sync-enabled 15-minute physical trials.
   Measure Quest frame timing, Polar freshness, control acknowledgements,
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.
   Exercise LAN loss, a Drive failure, and a Pixel reload. Confirm catch-up,
@@ -125,7 +125,15 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   IndexedDB fixture. The updated release from
   [Pages run 43595036518](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43595036518)
   resumed an ongoing run across formats and finalized it under the same
-  Drive file ID. A full run from Start on the updated release is in progress.
+  Drive file ID. The [full run on the updated PWA](QUEST-PHONE-SYNC.md#full-trial-on-the-updated-pwa)
+  repeated the transport and sensor faults without a Chrome renderer exit.
+  Quest saved with zero writer drops. Pixel and Drive verified the same
+  67,400,882-byte CSV and kept one private object under the original ID.
+  The paired runs verified directional Polar biofeedback, and the updated
+  run retained similar frame cadence, fresh raw streams and working phone
+  controls. The updated run and a short sync-disabled probe each encountered
+  native motion rejection. Investigate that condition separately if it
+  persists when the wearer moves comfortably with the chest strap fitted.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

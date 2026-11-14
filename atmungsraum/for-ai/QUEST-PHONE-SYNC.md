@@ -230,6 +230,43 @@ seconds with zero writer drops. This repeat had intermittent H10 gaps and
 the applied radius stayed at its minimum, so use the first paired runs
 for the biofeedback comparison.
 
+### Full trial on the updated PWA
+
+The installed Pixel ran `20261114-recording-bytes` from Start through
+Finish with Quest 2 APK `0.1.29`. Quest completed the authored 15-minute
+audio with zero writer drops. Android logged no Chrome renderer exit
+during this run. Drive reconciled a failed write at byte 20,709,376,
+and the PWA caught up after about 8.5 seconds of Pixel Wi-Fi loss.
+After a planned reload, Quest rejoined during the same run and Drive
+authorization was renewed. The acknowledged offset advanced from
+24,379,392 to 25,427,968 under the original file ID. Fresh ECG and
+accelerometer samples resumed after deliberate separate stops. CSV v4
+retained both stop/resume pairs and 11 additional ECG gap pairs.
+
+Drive had acknowledged at least 66,322,432 bytes before Finish.
+Quest, Pixel and the single private Drive CSV matched at 67,400,882 bytes
+with SHA-256
+`3d9112d6fb8a66c10d09765eece17c16af32bbaaec9db01b37d41da519e68167`.
+Both streams were fresh in all 70 signed status observations during the
+165–235 second comparison window. Native accepted sample age was
+116 ms median and 185 ms p95. Radius observation intervals were
+13.929 ms median and 14.338 ms p95 across 5,027 intervals. The two phone
+Pause/Resume pairs showed the expected new controls in 0.80/0.53 and
+1.36/1.49 seconds. Finish returned to the completed screen after 16.12
+seconds, including the native save.
+
+Quest received both streams but classified the breath motion as rejected
+in this run. The rendered radius stayed at its minimum. The earlier
+paired qualification demonstrates live directional scene response and
+provides the comparison with the baseline. The updated run verifies
+the data path, renderer cadence, input freshness and recovery.
+With live sync disabled on the same release, a 38-second physical probe
+also showed fresh ECG, `rejected-motion` in all 450 sampled breath
+observations, and a fixed radius. The probe did not establish the cause
+of motion rejection. Keep the native classifier's diagnostic state
+separate from live upload and raw signal availability when interpreting
+the result.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
