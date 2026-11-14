@@ -1,5 +1,28 @@
 # Verification
 
+## Reconnect retry and lab bench sweep — 2026-11-14
+
+The Chromium screenshot suite uses the real controller and a synthetic
+gateway. Its new regression puts an unreachable address in the saved pairing,
+then reports companion states Bluetooth off, searching and ready. Before the
+fix the searching status did not appear within the two-second retry budget.
+With the fix the UI observes each transition, joins the advertised endpoint,
+and reaches participant setup with only one attempt at the stale address.
+The journey also issues Arm, Start, Pause, Resume and Finish through the
+rendered controls and checks each operation appears exactly once.
+The full 43-screen run, 91 Node tests, six scenario pairs, Python asset test,
+and project context check passed.
+
+On physical hardware, the existing enrollment rejoined in 599, 273, 263,
+279 and 321 ms on five standalone Pixel reloads, from initiating navigation
+to the visible participant control. This timing includes the browser driver
+and is distinct from command latency. Quest 2 APK 0.1.29 passed signature and
+installed SHA-256 checks. Sampled idle OpenXR scorecards reported 71.7–72.2
+frames/s, 1.18–1.73 ms of submitted-frame host CPU time, and zero stale
+frames. Fresh physical ECG, native command latency, and recording delivery
+were gated on an attended run; the Quest reported its panel open and ECG
+unavailable. See [the active checklist](PROJECT.md#start-to-finish-qa-and-reconnect-latency--2026-11-14).
+
 ## Guided phone breathing preview — 2026-11-14
 
 The phone prompts inhale, waits four seconds, then prompts exhale and

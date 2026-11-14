@@ -82,6 +82,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let connecting = null;
   let rememberedDevice = null;
   let nextConnect = 0;
+  let nextSavedProbe = 0;
+  let discoveryInProgress = false;
   let autoConnect = true;
   let pairWarning = '';
   let userAction = null;
@@ -438,7 +440,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     const { signal } = attempt;
     connecting = attempt;
-    joinMessage = '';
+    if (chooseDevice || !discoveryInProgress) joinMessage = '';
+    discoveryInProgress = false;
     const setup = {
       ...settings,
       onApproval() {
@@ -456,7 +459,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       let peer = selection ? await selection : null;
       let gateway;
       let endpoint = settings.endpoint;
-      if (endpoint && !peer) gateway = await join(endpoint).catch(() => null);
+      if (endpoint && !peer && performance.now() >= nextSavedProbe) {
+        gateway = await join(endpoint).catch(() => null);
+        if (!gateway) nextSavedProbe = performance.now() + 8000;
+      }
       if (!gateway) {
         signal.throwIfAborted();
         peer ??= rememberedDevice;
@@ -467,6 +473,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         const discovery = peer ? await readQuest(peer, signal, setup)
           : await rediscoverQuest(settings, signal);
         if (discovery?.state && discovery.state !== 'ready') {
+          discoveryInProgress = true;
           joinMessage = {
             'bluetooth-off': 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.',
             'searching': 'Suche die gespeicherte Quest über Bluetooth …',
@@ -502,6 +509,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         bluetoothId: peer?.id ?? settings.bluetoothId, endpoint });
       if (peer) rememberedDevice = peer;
       autoConnect = true;
+      nextSavedProbe = 0;
       joinMessage = '';
       if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
       rehearsal.attach(gateway);
@@ -517,7 +525,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           : error?.name === 'Error' ? error.message : 'Die Quest konnte nicht verbunden werden.';
     } finally {
       if (connecting === attempt) {
-        nextConnect = performance.now() + 8000;
+        nextConnect = discoveryInProgress ? 0 : performance.now() + 8000;
         connecting = null;
         paint();
       }
@@ -625,8 +633,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     detach();
     if (!event.persisted) clearInterval(timer);
   });
-  window.addEventListener('pageshow', () => { nextConnect = 0; void tick(); });
-  window.addEventListener('online', () => { nextConnect = nextLive = 0; drive.schedule(); void tick(); });
+  window.addEventListener('pageshow', () => { nextConnect = nextSavedProbe = 0; void tick(); });
+  window.addEventListener('online', () => { nextConnect = nextSavedProbe = nextLive = 0; drive.schedule(); void tick(); });
   paint();
   void tick();
 }

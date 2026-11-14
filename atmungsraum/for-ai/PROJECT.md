@@ -2,6 +2,33 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Start-to-finish QA and reconnect latency — 2026-11-14
+
+From the clean sparse publication checkout, the Chromium review covered 43
+screens across startup, setup, all five scenario choices, playback, recording
+recovery and error states. The installed Pixel 10 PWA joined the already
+enrolled Quest on five consecutive reloads in 263–599 ms from navigation to
+the participant control. These are bench reload measurements. The Quest 2
+installed APK matched the signed 0.1.29 release, and the renderer's idle
+scorecards sampled 71.7–72.2 frames/s with no stale frames.
+
+The reconnect regression reproduced an eight-second wait after the companion
+reported that Bluetooth was off or scanning. The PWA now checks companion
+progress on its existing one-second tick and probes the failed saved address
+at most once every eight seconds while attempting recovery. It still tries
+that address first during normal startup and authenticates the same Quest
+before saving any replacement address. The rendered regression verifies
+Bluetooth off → scanning → Wi-Fi recovery without a tap or chooser.
+
+The physical headset still reported an open panel and no live H10 streams
+during this sweep. After a wearer returns to the scene with the strap active,
+run the short guided scenario through Start, Pause, Resume, Finish and CSV
+retrieval, measuring the command-to-visible-state timings. Repeat the address
+change with the normal Chrome loopback permission; Chrome blocked its prompt
+while the Pixel's RustDesk overlay was visible. Maestro still failed to find
+the USB Pixel while the shared ADB server listed an offline emulator. The
+physical PWA observations used Chrome DevTools.
+
 ### Smartphone screenshot review — 2026-11-14
 
 The [phone screenshot protocol](PHONE-SCREENSHOTS.md) builds a numbered
