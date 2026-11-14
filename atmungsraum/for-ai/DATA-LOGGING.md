@@ -145,6 +145,14 @@ The final checkpoint tail and one terminal row complete that same file.
 On recovery the worker can replay the same checkpoint boundaries. Historical
 v2 and v3 files keep their existing playback columns and bytes.
 
+The 2026-11-14 physical trial verified the completed v4 CSV on Quest,
+Pixel, and Drive. Each of its 70,280 `radius` rows contained a
+`render_frame` and the applied scene radius `radius_m` in metres.
+The saved data also included the raw Polar ECG and three-axis
+accelerometer measurements, the classified breathing phase, and
+the playback and signal transition rows. See the
+[physical trial results](QUEST-PHONE-SYNC.md#fresh-polar-response-on-the-updated-pwa).
+
 ## Historical CSV schema v1
 
 Earlier browser and Quest releases wrote 28-column ECG-only participant

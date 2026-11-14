@@ -135,8 +135,11 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   native motion rejection. A subsequent full session started on the same
   PWA and demonstrated valid directional changes during live upload.
   See [fresh Polar response](QUEST-PHONE-SYNC.md#fresh-polar-response-on-the-updated-pwa).
-  Finish the run, check its final CSV across the three devices, and
-  compare against a sync-disabled run on the same PWA release.
+  The completed 69,906,729-byte CSV matched across Quest, Pixel and
+  Drive. Its 70,280 radius observations ranged from 1.00 to 2.00 m.
+  The live biofeedback evidence was published in
+  [Pages run 43598957102](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43598957102).
+  Compare against a sync-disabled run on the same PWA release.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

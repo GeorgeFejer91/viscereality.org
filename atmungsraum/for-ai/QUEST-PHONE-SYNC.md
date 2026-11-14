@@ -282,6 +282,22 @@ Median and p95 radius observation intervals were 13.924 and 14.378 ms
 over 5,027 intervals. Pixel continued to obtain live Drive acknowledgements
 during the same window.
 
+The full run completed the authored 15-minute audio and saved with zero
+writer drops. The final CSV contained 70,280 renderer observations with a
+frame number and an applied radius between 1.00 and 2.00 m. It also contained
+126,491 ECG readings, 195,416 three-axis accelerometer readings, and 69,718
+breathing phase observations. The export recorded six ECG and four
+accelerometer interruption/resumption pairs, including the deliberate
+stop of each stream.
+
+During this run, Drive reconciled the failed request at byte 20,709,376.
+Quest continued recording through the 8.6-second Pixel Wi-Fi interruption
+and the subsequent WebAPK reload. The Pixel rejoined the same recording
+and, after Drive reauthorization, resumed at byte 22,020,096 under the same
+file ID. Drive accepted 69,730,304 bytes before Finish. The final single
+private CSV was 69,906,729 bytes and matched the Quest and Pixel copies
+by SHA-256 `7c3830f15a402aea54427c5a723d4a8d1576f1a14db8b5509234d74b94fd3aae`.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
