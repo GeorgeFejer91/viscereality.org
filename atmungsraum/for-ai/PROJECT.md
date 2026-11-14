@@ -70,6 +70,16 @@ A run already in progress remains controllable when the phone reconnects.
 Define the audio cues and calibration protocol before connecting the preview
 to either. See [preview verification](VERIFICATION.md#phone-breathing-preview--2026-11-14).
 
+Runtime commit `720d017` reached `origin/main` and deployed in
+[Pages run 43609888532](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43609888532).
+The four public runtime files matched their Git bytes. All six viewport
+and text-layout checks passed against the deployed app with synthetic
+Quest state. The installed lab Pixel 10 reloaded in standalone mode,
+loaded the three versioned release assets and kept the scenario picker
+hidden before setup. A physical tap-through remains pending a Quest that
+reports ready Polar streams. The Quest reported Polar setup unavailable
+during this readback.
+
 ### Quest APK release record — 2026-11-14
 
 The [Quest APK log](../quest/apks/README.md) records the signed 0.1.29
