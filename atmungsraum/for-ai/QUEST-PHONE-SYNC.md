@@ -215,8 +215,20 @@ the old Blob payload directly before combining it with neighboring bytes.
 The final CSV retains its signed hash and file naming checks. On the
 installed Pixel, a fixture read 65,534 exact bytes across one old Blob and
 two new ranges, rejected a missing suffix, and verified the saved offset.
-The fixture cleared its own staging entries. The live hardware recheck
-is tracked in the active checklist.
+The fixture cleared its own staging entries.
+
+After [Pages run 43595036518](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43595036518),
+the installed Pixel loaded the corrected release during the same Quest
+recording. Drive resumed from the pending range above 13 MB and accepted
+78,118,912 bytes before Finish. The Pixel kept the original Drive file ID.
+It remained responsive through the final seven minutes of playback and
+the Android log showed no further renderer exit during that interval.
+Quest, Pixel and Drive matched at 78,340,857 bytes with SHA-256
+`f6e73ff937a3d16202dbcd80ed08b3253d9f18e782b7b9c758841ee353349c92`.
+The Drive folder contained one private copy. Quest saved all 900 audio
+seconds with zero writer drops. This repeat had intermittent H10 gaps and
+the applied radius stayed at its minimum, so use the first paired runs
+for the biofeedback comparison.
 
 ## Operator procedure
 

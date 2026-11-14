@@ -122,8 +122,10 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   observation after recovery. Android Chrome reported a bad Blob reference
   in both repeat exits. The PWA now stages owned byte arrays and reads
   previously stored Blob ranges directly. The Pixel passed a mixed-format
-  IndexedDB fixture. Verify the deployed release against the ongoing run
-  and a complete sync-enabled session before closing this item.
+  IndexedDB fixture. The updated release from
+  [Pages run 43595036518](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43595036518)
+  resumed an ongoing run across formats and finalized it under the same
+  Drive file ID. A full run from Start on the updated release is in progress.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt
