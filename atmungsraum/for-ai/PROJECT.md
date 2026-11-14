@@ -13,9 +13,46 @@ matched the local archive by SHA-256. Keep review archives and transfer
 links out of Git. Use the screen numbers to track feedback on the
 operator flow. Physical headset and phone acceptance remain separate.
 
+### Automatic Quest connection — 2026-11-14
+
+The operator's connection flow should require only turning on phone Bluetooth
+if it is off. Once Atmungsraum opens, the phone discovers the Quest, retrieves
+the connection information over Bluetooth, establishes the Wi-Fi control link,
+and proceeds to preparation. Controller ID, Quest key, hotspot details and
+a save action are absent from the operator flow. An enrolled phone reconnects
+automatically when the Quest becomes available again.
+
+The released PWA and APK 0.1.29 still follow the decision tree below. The
+browser selects a Bluetooth device and then opens its enrollment form.
+The Quest discovery service returns identity and LAN endpoints. The Wi-Fi
+setup characteristic requires a pre-existing enrolled key and credentials
+for an already running phone hotspot. These code paths explain the reported
+screen. A trusted registration or platform permission during device
+provisioning is separate from the operator's recurring connection flow.
+
+- [ ] Implement automatic discovery and hotspot management in an Android
+  phone component. Chrome's first Web Bluetooth request requires a gesture
+  and the browser's device chooser. Android requires the Nearby devices
+  runtime grant. Validate grant and hotspot behavior on the lab Pixel.
+- [ ] Implement a trusted Bluetooth handoff on the Quest and phone. Reuse
+  the enrolled LAN gateway for control and recording access. Establish trust
+  before exchanging keys or hotspot credentials. Keep discovery advertisements
+  and unprivileged reads free of secrets. Verify the Quest can rejoin the
+  managed network after initial OS authorization.
+- [ ] Connect the controller UI directly to preparation after authenticated
+  Wi-Fi join. Verify a fresh provisioned Pixel and Quest 2, Bluetooth off/on,
+  no shared Wi-Fi, process restart, transient transport loss, and a second
+  nearby Quest. Confirm no manual setup screen appears, and verify control
+  and private recording access on the intended Quest.
+
+Platform references: [Chrome Web Bluetooth](https://developer.chrome.com/docs/capabilities/bluetooth),
+[Android Bluetooth permissions](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions),
+[Android local-only hotspot](https://developer.android.com/reference/android/net/wifi/WifiManager#startLocalOnlyHotspot(android.net.wifi.WifiManager.LocalOnlyHotspotCallback,android.os.Handler)),
+and [Quest-side Android Wi-Fi requests](https://developer.android.com/reference/android/net/wifi/WifiNetworkSpecifier.Builder).
+
 ### Smartphone UI decision tree — 2026-11-14
 
-German labels match the [smartphone controller](https://viscereality.org/atmungsraum/).
+This tree describes the current release. German labels match the [smartphone controller](https://viscereality.org/atmungsraum/).
 **Atemvorschau** is a dedicated phone screen between setup and scenario
 selection. The Quest displays the VR scene and runs playback.
 
