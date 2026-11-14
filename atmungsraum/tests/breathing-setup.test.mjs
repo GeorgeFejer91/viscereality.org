@@ -73,6 +73,20 @@ test('projects only native four-phase positions and progress through exactly two
   }
 });
 
+test('reported tracking phase is independent of the intended audio phase', () => {
+  const model = new BreathingSetup();
+  const { gateway } = fixture();
+  const measured = native({ input_phase: 'exhale', input_volume01: .32 });
+  const view = model.update(gateway, state(snapshot(measured)), true);
+  assert.equal(view.phaseLabel, 'Einatmen');
+  assert.equal(view.inputPhaseLabel, 'Ausatmen');
+  assert.equal(view.inputVolume, .32);
+  assert.equal(model.update(gateway, state(), true).inputPhaseLabel, '');
+  for (const patch of [{ input_phase: 'invented' }, { input_volume01: NaN }, { input_volume01: 1.01 }]) {
+    assert.equal(breathingSetup(snapshot(native(patch)), owner), null);
+  }
+});
+
 test('elapsed polling and calibration completion alone never unlock selection', () => {
   const model = new BreathingSetup();
   const { gateway } = fixture();
@@ -103,7 +117,6 @@ test('native failure retains Automatic, gives its reason and permits retry or co
 test('preserves participant freshness, owner, idle-run and pending action gates', () => {
   const ready = snapshot(native({ input: 'polar-tilt', ready: true, calibration: 'ready', attempt: 1 }));
   for (const [status, flags, participantReady, gatewayPatch] of [
-    [ready, {}, false, {}], [snapshot(ready.setup, { pi: { r: true, f: false } }), {}, true, {}],
     [ready, { busy: true }, true, {}], [ready, { pending: true }, true, {}],
     [ready, { unknown: true }, true, {}], [snapshot(ready.setup, { pending: true }), {}, true, {}],
     [snapshot(ready.setup, { p: 'RUNNING', rec: true, h: 'vr-session' }), {}, true, {}],
@@ -118,6 +131,7 @@ test('preserves participant freshness, owner, idle-run and pending action gates'
   const model = new BreathingSetup();
   const { gateway } = fixture(ready);
   assert.equal(model.update(gateway, state(ready), true).actions.continue, true);
+  assert.equal(model.update(gateway, state(ready), false).actions.continue, false);
   assert.match(model.update(gateway, state(snapshot(ready.setup, { pi: { r: true, f: false } })), true).blockedReason, /Polar/);
 });
 
@@ -241,6 +255,47 @@ test('audio generation replacement cannot confirm an earlier outstanding mutatio
   await model.refresh();
   assert.equal(model.update(peer.gateway, state(replacement), true).unknown, true);
   assert.ok(model.pending);
+});
+
+test('retired audio commands permit explicit acknowledgement without replaying the old mutation', async () => {
+  const model = new BreathingSetup({ storage: storage() });
+  const peer = fixture();
+  peer.fail(true);
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  assert.equal(model.update(peer.gateway, state(), true).actions.acknowledge, false);
+  const retired = snapshot(native({ g: 2, r: 0 }));
+  assert.equal(model.update(peer.gateway, state(retired), true).actions.acknowledge, true);
+  model.acknowledgeRetired();
+  const recovered = model.update(peer.gateway, state(retired), true);
+  assert.equal(recovered.unknown, false);
+  assert.equal(recovered.actions.calibrate, true);
+  assert.equal(peer.calls.length, 1);
+  assert.equal(model.pending, null);
+});
+
+test('controller fallback cancels preparation despite lost Polar data while continuation stays gated', () => {
+  const model = new BreathingSetup();
+  const peer = fixture();
+  const lost = snapshot(native({ stage: 'calibrating', calibration: 'collecting', attempt: 1 }),
+    { pi: { r: true, f: false } });
+  const view = model.update(peer.gateway, state(lost), false);
+  assert.equal(view.actions.controller, true);
+  assert.equal(view.actions.calibrate, false);
+  assert.equal(view.actions.continue, false);
+});
+
+test('controller re-enrollment permits acknowledging an old gateway journal without replay', async () => {
+  const model = new BreathingSetup({ storage: storage() });
+  const peer = fixture();
+  peer.fail(true);
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const renewed = { ...peer.gateway, owner: { ...owner, epoch: '9' } };
+  assert.equal(model.update(renewed, state(), true).actions.acknowledge, true);
+  model.acknowledgeRetired();
+  assert.equal(model.update(renewed, state(), true).actions.calibrate, true);
+  assert.equal(peer.calls.length, 1);
 });
 
 test('native idle permits start, paused playback blocks continuation and an aborted action never dispatches', async () => {

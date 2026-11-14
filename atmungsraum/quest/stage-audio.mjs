@@ -4,6 +4,7 @@ import { dirname, join, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateManifest } from '../audio/box-breathing.js';
 import { AUDIO_LIBRARY, SCENARIOS, validateScenario } from '../audio/scenario-protocol.js';
+import { loadBoxLoop } from './box-loop.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const scenarioDirectory = 'audio/scenarios';
@@ -59,11 +60,18 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output }) {
     }
   }
 
+  const loop = await loadBoxLoop({ sourceRoot });
+  for (const [path, bytes] of loop.files) {
+    if (files.has(path)) throw new Error('Duplicate loop asset: ' + path);
+    files.set(path, bytes);
+  }
   const catalog = {
     schema_version: 1,
     sample_rate: library.sample_rate,
     library: libraryPath,
     scenarios,
+    box_loop: { path: 'audio/box-loop.json', sha256: loop.sha256,
+      cycle_frames: loop.plan.cycle_frames, main_seconds: loop.plan.main_seconds },
     files: Array.from(files, ([path, data]) => describe(path, data)),
   };
   const target = resolve(output);

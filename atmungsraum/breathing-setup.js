@@ -1,9 +1,10 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=7';
+import { operationId, sameQuest } from './quest-gateway.js?v=8';
 
 const stages = new Set(['idle', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt', 'controller-state': 'Controller State · feste Ausrichtung' };
 const phases = ['inhale', 'hold_in', 'exhale', 'hold_out'];
 const phaseLabels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
+const inputPhases = { inhale: 'Einatmen', exhale: 'Ausatmen', hold: 'Atem halten', unknown: 'noch nicht erkannt', 'bad-tracking': 'Tracking unzuverlässig' };
 const calibrations = new Set(['idle', 'waiting', 'collecting', 'ready', 'failed']);
 const operations = new Set(['start', 'calibrate', 'controller']);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -32,7 +33,11 @@ export function breathingSetup(status, owner) {
     || !nonnegative(setup.attempt) || !calibrations.has(setup.calibration)
     || typeof setup.failure !== 'string' || setup.failure.length > 256 || /[\x00-\x1f\x7f]/.test(setup.failure)
     || typeof setup.ready !== 'boolean' || typeof setup.playing !== 'boolean'
-    || !nonnegative(setup.experiment_elapsed_ms) || setup.experiment_elapsed_ms > 900000) return null;
+    || !nonnegative(setup.experiment_elapsed_ms) || setup.experiment_elapsed_ms > 900000
+    || Object.hasOwn(setup, 'input_phase') && !Object.hasOwn(inputPhases, setup.input_phase)
+    || Object.hasOwn(setup, 'input_volume01') && setup.input_volume01 !== null
+      && (typeof setup.input_volume01 !== 'number' || !Number.isFinite(setup.input_volume01)
+        || setup.input_volume01 < 0 || setup.input_volume01 > 1)) return null;
   const phase = Math.floor((setup.position_frames % setup.cycle_frames) / (setup.cycle_frames / 4));
   if (setup.phase !== phases[phase]
     || ['waiting', 'collecting'].includes(setup.calibration) && (setup.input !== 'automatic' || setup.ready)
@@ -91,9 +96,16 @@ export class BreathingSetup {
     if (this.pending && (!sameQuest(this.pending.owner, gateway?.owner)
       || setup && setup.g !== this.pending.command.g)) this.unknown = true;
     const available = Boolean(setup && typeof gateway?.breathSetup === 'function');
-    const gated = available && participantReady && (status.pi?.r === false || status.pi?.r === true && status.pi.f === true)
+    const ownerIdle = available
       && status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec && !status.pending
-      && !busy && !pending && !unknown && !this.busy && !this.pending && !this.unknown;
+      && !busy && !pending && !unknown && !this.busy;
+    const idle = ownerIdle && !this.pending && !this.unknown;
+    const gated = idle && participantReady
+      && (status.pi?.r === false || status.pi?.r === true && status.pi.f === true);
+    const retired = this.pending && gateway?.owner
+      && this.pending.owner.device === gateway.owner.device && this.pending.owner.serial === gateway.owner.serial
+      && (this.pending.owner.epoch !== gateway.owner.epoch
+        || this.pending.owner.native_epoch !== gateway.owner.native_epoch || setup?.g > this.pending.command.g);
     const testing = setup?.stage === 'testing' && setup.playing;
     const preparing = setup && ['waiting', 'calibrating', 'testing'].includes(setup.stage) && setup.playing;
     const phaseIndex = setup ? phases.indexOf(setup.phase) : -1;
@@ -104,6 +116,8 @@ export class BreathingSetup {
       pending: Boolean(this.pending || this.busy), unknown: this.unknown,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
+      inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
+      inputVolume: typeof setup?.input_volume01 === 'number' ? setup.input_volume01 : null,
       failure: setup?.calibration === 'failed' ? setup.failure : '',
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
@@ -113,11 +127,20 @@ export class BreathingSetup {
       actions: {
         start: Boolean(gated && setup.stage === 'idle'),
         calibrate: Boolean(gated && preparing),
-        controller: Boolean(gated && preparing && setup.input !== 'controller-state'),
+        controller: Boolean(idle && preparing && setup.input !== 'controller-state'),
         continue: Boolean(gated && testing && setup.ready && ['polar-tilt', 'controller-state'].includes(setup.input)),
+        acknowledge: Boolean(ownerIdle && retired),
       },
     };
     return this.view;
+  }
+
+  acknowledgeRetired() {
+    if (!this.view?.actions.acknowledge) return false;
+    this.remember(null);
+    this.unknown = false;
+    this.message = 'Die frühere Bestätigung wurde verworfen. Der aktuelle Quest-Status gilt; kein Befehl wird wiederholt.';
+    return true;
   }
 
   observeReceipt(receipt) {

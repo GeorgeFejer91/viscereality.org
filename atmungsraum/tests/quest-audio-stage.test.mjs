@@ -15,7 +15,16 @@ test('stages original scenario JSON and every numbered cue with reproducible ide
   const output = join(scratch, 'package');
   const catalog = await stageQuestAudio({ output });
   assert.deepEqual(catalog.scenarios.map(entry => entry.id), SCENARIOS);
-  assert.equal(catalog.files.filter(entry => entry.path.endsWith('.wav')).length, 53);
+  assert.equal(catalog.files.filter(entry => entry.path.startsWith('assets/audio/scenarios/') && entry.path.endsWith('.wav')).length, 53);
+  assert.equal(catalog.box_loop.path, 'audio/box-loop.json');
+  assert.equal(catalog.box_loop.cycle_frames, 705600);
+  const loop = JSON.parse(await readFile(join(output, catalog.box_loop.path), 'utf8'));
+  assert.deepEqual(loop.phases.map(phase => phase.id), ['inhale', 'hold_in', 'exhale', 'hold_out']);
+  for (const phase of loop.phases) {
+    const cue = await readFile(join(output, phase.cue.path));
+    assert.equal(digest(cue), phase.cue.sha256);
+    assert.equal(cue.length, phase.cue.bytes);
+  }
   assert.deepEqual(JSON.parse(await readFile(join(output, 'scenario-catalog.json'), 'utf8')), catalog);
 
   for (const { path, bytes, sha256 } of catalog.files) {

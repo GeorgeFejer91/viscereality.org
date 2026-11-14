@@ -127,6 +127,23 @@ test('Bluetooth reads both identity characteristics and releases GATT before LAN
   assert.equal(gatt.connected, false);
 });
 
+test('native breathing setup is offered only by an enrolled capable Quest and keeps its closed command', async () => {
+  const fixture = server({ status: { ...snapshot(), breath_setup: 1 } });
+  const enrolled = await joinQuest({ endpoint, serial: owner.serial, build,
+    enrollment: { controller, key }, fetcher: fixture.fetch });
+  assert.equal(typeof enrolled.breathSetup, 'function');
+  const command = { v: 1, id: 'a'.repeat(16), g: 1, r: 2, op: 'calibrate' };
+  await enrolled.breathSetup(command);
+  assert.equal(fixture.requests.at(-1), 'breath-setup');
+  const guest = await joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch });
+  assert.equal(guest.breathSetup, null);
+  const legacy = server();
+  const old = await joinQuest({ endpoint, serial: owner.serial, build,
+    enrollment: { controller, key }, fetcher: legacy.fetch });
+  assert.equal(old.breathSetup, null);
+  enrolled.close(); guest.close(); old.close();
+});
+
 test('a command whose foreground lifetime ends while signing never reaches fetch', async () => {
   const fixture = server();
   const quest = await joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch });

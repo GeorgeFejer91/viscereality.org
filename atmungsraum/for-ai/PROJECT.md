@@ -2,6 +2,29 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Shared scheduler and guided tilt setup — 2026-11-14
+
+The user approved Automatic on app load, one shared native audio/phase clock,
+an unlimited 4–4–4–4 preparation loop, exactly two full cycles for measured
+Polar tilt calibration, native progress in the phone UI, automatic successful
+tilt activation, repeat calibration and Controller State fixed-orientation
+fallback. Start main seamlessly at the next cycle boundary, preserving input.
+The main run remains exactly 15 minutes. This supersedes the illustrative phone
+preview and old embedded 15-second calibration. See the approved design and
+implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.md).
+
+- [x] Confirm behavior and 900-second main duration with the user.
+- [x] Reconstruct released native tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`
+  from the published patch against upstream `99352620`.
+- [ ] Implement and test native scheduling, calibration and input selection.
+- [ ] Integrate audio, enrolled commands and native-driven experimenter UI.
+- [ ] Verify build, rendered interface and physical headset/Polar behavior;
+  publish only coherent verified increments through the existing workflow.
+
+The independent Meta developer-distribution chat owns account/channel setup.
+Feature work remains in this owner. Current code is on a task branch; no new
+feature APK, device acceptance or live feature deployment is claimed yet.
+
 ### Smartphone screenshot review — 2026-11-14
 
 The [phone screenshot protocol](PHONE-SCREENSHOTS.md) builds a numbered
