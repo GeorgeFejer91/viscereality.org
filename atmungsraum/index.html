@@ -136,15 +136,23 @@
       <div class="screen-body preview-body">
         <figure class="preview-figure">
           <div class="preview-radius" aria-hidden="true"><div id="preview-circle"></div></div>
-          <figcaption id="preview-status" role="status" data-measure>„Einatmen“ drücken · Simulation</figcaption>
+          <figcaption id="preview-status" role="status" data-measure>Warte auf den Atemtakt der Quest.</figcaption>
         </figure>
+        <p id="preview-input" data-measure>Eingabe auf der Quest nicht verfügbar.</p>
+        <div id="preview-progress-group" hidden>
+          <label for="preview-progress" data-measure>Einrichtung auf der Quest</label>
+          <progress id="preview-progress" max="2" value="0" aria-describedby="preview-progress-text"></progress>
+          <p id="preview-progress-text" aria-live="off" data-measure>0 von 2 Atemzyklen</p>
+        </div>
+        <p id="preview-detail" role="status" data-measure>Warte auf den aktuellen Atemstatus der Quest.</p>
         <div class="preview-controls">
-          <button id="preview-inhale" type="button"><span data-measure>Einatmen</span></button>
-          <button id="preview-exhale" type="button" disabled><span data-measure>Ausatmen</span></button>
+          <button id="preview-start" type="button" hidden disabled><span data-measure>Atemschleife starten</span></button>
+          <button id="preview-calibrate" type="button" disabled><span data-measure>Atmung einrichten</span></button>
+          <button id="preview-controller" type="button" disabled><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button>
         </div>
       </div>
       <footer class="actions">
-        <button id="preview-continue" type="button" hidden><span data-measure>Weiter zur Auswahl</span></button>
+        <button id="preview-continue" type="button" disabled><span data-measure>Weiter zur Auswahl</span></button>
       </footer>
     </section>
     <section class="screen" id="daten" aria-labelledby="data-title" hidden>
