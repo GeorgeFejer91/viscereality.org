@@ -18,24 +18,29 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
   from the published patch against upstream `99352620`.
 - [x] Implement the native schedule/model core: 36 standalone tests cover full
   cycles, valid fit, failed evidence, source retirement, retry and fallback.
-- [ ] Finish native input/capture integration and exact 900-second finalization;
-  review mapped source clocks, rejected evidence and pause/resume recovery.
-- [ ] Integrate audio, enrolled commands and native-driven experimenter UI.
-- [ ] Verify build, rendered interface and physical headset/Polar behavior;
-  publish only coherent verified increments through the existing workflow.
+- [x] Integrate native input/capture and exact 900-second finalization; mapped
+  source clocks, rejected evidence, retry lineage and pause/resume are reviewed.
+- [x] Integrate audio, enrolled commands and native-driven experimenter UI.
+- [x] Build and verify the separate non-debuggable developer APK, its source
+  tree, signer, 74 audio files, ARM64 libraries and five shared-loop JNI exports.
+- [ ] Publish the verified source/PWA increment and verify the exact Pages run.
+- [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance.
 
 The independent Meta developer-distribution chat owns account/channel setup.
-Feature work remains in this owner. Current code is on a task branch; no new
-feature APK, device acceptance or live feature deployment is claimed yet.
+Feature work remains in this owner. Developer build 0.2.0-dev (code 1) is
+software-verified and handed to the private Meta distribution chat. Its exact
+source/signature/hash are in the [APK log](../quest/apks/README.md). Device
+acceptance and live feature deployment are not claimed yet.
 
-The merged browser controller passed 114 Node checks with two optional assembly
-checks skipped in that run; both real assembly ResolveOnly checks also passed
-with the task native checkout. Chromium rendered 59 synthetic states including
+The merged browser controller passed all 116 Node checks, including both real
+assembly checks, and the native suite passed 798 with three ignored. Chromium
+rendered 59 synthetic states including
 native setup, reload recovery, Bluetooth rediscovery, 320px, enlarged text,
 spacing and keyboard focus. The fixtures advance only supplied native frames.
-Private screenshots and check receipts stay in ignored output. A fresh APK and
-worn-Polar/Quest 2 validation remain required. The concurrent 0.1.30 prompt and
+Private screenshots and check receipts stay in ignored output. Worn-Polar/Quest
+2 validation remains required. The concurrent 0.1.30 prompt and
 reconnect releases were merged; their source and public assets are preserved.
+
 ### Quest calibration menu voice cues — 2026-11-14
 
 The Quest **Direct → Developer settings → Breath → Calibration** menu plays

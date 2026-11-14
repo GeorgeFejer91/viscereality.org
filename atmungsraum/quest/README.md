@@ -5,9 +5,10 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The shared-scheduler increment is under validation; no new APK has been
-accepted yet. The 0.1.30 entry retains its original artifact, source identity
-and verification history.
+The shared-scheduler developer APK has passed software and packaging checks;
+device acceptance is pending. The APK log records its exact source, signer
+and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
+source identity and verification history.
 
 ## Shared breathing setup
 
@@ -84,8 +85,9 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-must match the source identity in the accepted APK record before release; a
-new source tree or signed artifact has not yet been accepted for this increment.
+reconstructs source tree `3df3966543186596cb3ab942eb9b29c87ee1cdc3`, matching
+the software-verified developer build. Its SHA-256 and native commit are in
+the APK log. The recorded build used compile SDK 36 and targets SDK 35.
 The script stages the [shared loop JSON](../audio/box-loop.json), its four phase
 cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
