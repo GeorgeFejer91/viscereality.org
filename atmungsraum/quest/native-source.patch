@@ -13588,10 +13588,10 @@ index 00000000..8db27129
 +  "public_private_boundary": "Hotspot credentials are authenticated, encrypted and supplied by the enrolled operator."
 +}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
-index 5bc5902d..b559f49b 100644
+index 5bc5902d..aeaed3c6 100644
 --- a/schemas/rusty.quest.native_app_build.v1.schema.json
 +++ b/schemas/rusty.quest.native_app_build.v1.schema.json
-@@ -43,6 +43,38 @@
+@@ -43,6 +43,47 @@
        "type": "string",
        "minLength": 1
      },
@@ -13604,6 +13604,15 @@ index 5bc5902d..b559f49b 100644
 +    "android_debuggable": {
 +      "type": "boolean",
 +      "default": true
++    },
++    "android_target_sdk_version": {
++      "type": "integer",
++      "enum": [29, 30, 31, 32, 33, 34, 35, 36],
++      "default": 35
++    },
++    "android_install_location": {
++      "type": "string",
++      "enum": ["auto", "internalOnly", "preferExternal"]
 +    },
 +    "experiment_breathing_setup_enabled": {
 +      "type": "boolean",
@@ -13630,7 +13639,7 @@ index 5bc5902d..b559f49b 100644
      "requested_features": {
        "type": "array",
        "items": {
-@@ -138,6 +170,11 @@
+@@ -138,6 +179,11 @@
            },
            "uniqueItems": true
          },
@@ -13642,7 +13651,7 @@ index 5bc5902d..b559f49b 100644
          "services": {
            "type": "array",
            "items": {
-@@ -158,6 +195,10 @@
+@@ -158,6 +204,10 @@
          "set"
        ],
        "properties": {
@@ -13812,7 +13821,7 @@ index ccb3e308..c5804245 100644
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881..22b4ae96 100644
+index 0bdd4881..da0f8e4f 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -10,7 +10,7 @@ param(
@@ -13820,11 +13829,11 @@ index 0bdd4881..22b4ae96 100644
  
  $ErrorActionPreference = "Stop"
 -$ResolverVersion = "native-app-build-resolver.ps1.v3"
-+$ResolverVersion = "native-app-build-resolver.ps1.v4"
++$ResolverVersion = "native-app-build-resolver.ps1.v5"
  $FeatureSchema = "rusty.quest.native_app_feature.v1"
  $AppBuildSchema = "rusty.quest.native_app_build.v1"
  $FeatureLockSchema = "rusty.quest.native_app_feature_lock.v1"
-@@ -383,6 +383,11 @@ function Assert-AppSpecShape {
+@@ -383,6 +383,22 @@ function Assert-AppSpecShape {
      if ($null -ne $Spec.PSObject.Properties["runtime_profile"]) {
          Assert-RequiredProperty -Object $Spec.runtime_profile -Name "set" -Label "$label runtime_profile"
      }
@@ -13833,21 +13842,48 @@ index 0bdd4881..22b4ae96 100644
 +            throw "$label $field must be a JSON boolean"
 +        }
 +    }
++    if ($null -ne $Spec.PSObject.Properties['android_target_sdk_version']) {
++        $target = $Spec.android_target_sdk_version
++        if (($target -isnot [int] -and $target -isnot [long]) -or $target -notin (29..36)) {
++            throw "$label android_target_sdk_version must be an integer SDK from 29 through 36"
++        }
++    }
++    if ($null -ne $Spec.PSObject.Properties['android_install_location'] -and
++        ($Spec.android_install_location -isnot [string] -or
++         $Spec.android_install_location -cnotin @('auto', 'internalOnly', 'preferExternal'))) {
++        throw "$label android_install_location must be auto, internalOnly or preferExternal"
++    }
  }
  
  function Resolve-PrivateParticlePayloadInventory {
-@@ -692,6 +697,10 @@ function New-GeneratedAndroidManifestText {
+@@ -692,6 +708,12 @@ function New-GeneratedAndroidManifestText {
          [string[]]$Services,
          [string[]]$Queries,
          [string[]]$SelectedFeatureIds,
 +        [string[]]$ExperimentGatewayOrigins = @('https://mesmerprism.com'),
 +        [string[]]$QuestSupportedDevices = @(),
 +        [bool]$AndroidDebuggable = $true,
++        [int]$AndroidTargetSdkVersion = 35,
++        [string]$AndroidInstallLocation = '',
 +        [bool]$ExperimentBreathingSetupEnabled = $false,
          [switch]$ExperimentSessionDebugOperator
      )
      $originalNativeHost = ($SelectedFeatureIds -ccontains 'ui.native_mesh_panel' -or $SelectedFeatureIds -ccontains 'ui.native_mesh_panel.original_product') -and $SelectedFeatureIds -ccontains 'ui.breath_composition_control_panel'
-@@ -722,7 +731,7 @@ function New-GeneratedAndroidManifestText {
+@@ -706,9 +728,12 @@ function New-GeneratedAndroidManifestText {
+     }
+     $lines = New-Object System.Collections.ArrayList
+     [void]$lines.Add('<manifest xmlns:android="http://schemas.android.com/apk/res/android"')
++    if ($AndroidInstallLocation) {
++        [void]$lines.Add(('    android:installLocation="{0}"' -f $AndroidInstallLocation))
++    }
+     [void]$lines.Add("    package=""$([System.Security.SecurityElement]::Escape($PackageName))"">")
+     [void]$lines.Add("")
+-    [void]$lines.Add('    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="35" />')
++    [void]$lines.Add(('    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="{0}" />' -f $AndroidTargetSdkVersion))
+     foreach ($feature in $UsesFeatures) {
+         if ($feature -eq "android.opengl.gles.3.1") {
+             [void]$lines.Add('    <uses-feature android:glEsVersion="0x00030001" android:required="true" />')
+@@ -722,7 +747,7 @@ function New-GeneratedAndroidManifestText {
      }
      foreach ($permission in $Permissions) {
          $attributes = ''
@@ -13856,7 +13892,7 @@ index 0bdd4881..22b4ae96 100644
              if ($permission -ceq 'android.permission.NEARBY_WIFI_DEVICES') { $attributes = ' android:usesPermissionFlags="neverForLocation"' }
              # Polar's existing scan adapter requires location on modern Android.
              # A new optional Wi-Fi route must preserve that selected permission.
-@@ -738,12 +747,19 @@ function New-GeneratedAndroidManifestText {
+@@ -738,12 +763,19 @@ function New-GeneratedAndroidManifestText {
          [void]$lines.Add('        android:name="io.github.mesmerprism.rustyquest.native_renderer.NativeRendererSelfKioskApplication"')
      }
      [void]$lines.Add('        android:allowBackup="false"')
@@ -13877,7 +13913,7 @@ index 0bdd4881..22b4ae96 100644
      if ($Receivers -contains "NativeRendererBootReceiver") {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.boot_autostart" android:value="true" />')
      }
-@@ -751,11 +767,21 @@ function New-GeneratedAndroidManifestText {
+@@ -751,11 +783,21 @@ function New-GeneratedAndroidManifestText {
      # controller/relay enrollment remain private headset state.
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_command_gateway') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.experiment.command_gateway.enabled" android:value="true" />')
@@ -13900,11 +13936,13 @@ index 0bdd4881..22b4ae96 100644
      if ($SelectedFeatureIds -ccontains 'ui.experiment_session_direct_network') {
          [void]$lines.Add('        <meta-data android:name="rusty.quest.feature.experiment_direct_network" android:value="true" />')
      }
-@@ -1142,6 +1168,11 @@ $nativeRendererPropertyByName = $propertyManifest.by_name
+@@ -1142,6 +1184,13 @@ $nativeRendererPropertyByName = $propertyManifest.by_name
  $nativeRendererPropertiesByFamily = $propertyManifest.by_family
  $app = Read-JsonFile -Path $appSpecPath
  Assert-AppSpecShape -Spec $app -Path (Get-RepoRelativePath -RepoRoot $repoRootText -Path $appSpecPath)
 +$androidDebuggable = if ($null -ne $app.PSObject.Properties['android_debuggable']) { $app.android_debuggable } else { $true }
++$androidTargetSdkVersion = if ($null -ne $app.PSObject.Properties['android_target_sdk_version']) { $app.android_target_sdk_version } else { 35 }
++$androidInstallLocation = if ($null -ne $app.PSObject.Properties['android_install_location']) { $app.android_install_location } else { '' }
 +$experimentBreathingSetupEnabled = if ($null -ne $app.PSObject.Properties['experiment_breathing_setup_enabled']) { $app.experiment_breathing_setup_enabled } else { $false }
 +if (-not $androidDebuggable -and $EnableExperimentSessionDebugOperator) {
 +    throw 'A non-debuggable app cannot select the experiment debug operator.'
@@ -13912,16 +13950,18 @@ index 0bdd4881..22b4ae96 100644
  $hasPrivateAssetRequest = $null -ne $app.PSObject.Properties['private_asset_provider_request']
  $hasPrivateAssetManifest = -not [string]::IsNullOrWhiteSpace($PrivateAssetProviderManifest)
  if ($hasPrivateAssetRequest -ne $hasPrivateAssetManifest) {
-@@ -1960,6 +1991,8 @@ $featureLock = [ordered]@{
+@@ -1960,6 +2009,10 @@ $featureLock = [ordered]@{
      } else { $null }
      exclusive_groups = $exclusiveGroups
      android_manifest = [ordered]@{
 +        debuggable = [bool]$androidDebuggable
++        target_sdk_version = [int]$androidTargetSdkVersion
++        install_location = [string]$androidInstallLocation
 +        experiment_breathing_setup_enabled = [bool]$experimentBreathingSetupEnabled
          permissions = $permissions
          uses_features = $usesFeatures
          activities = $activities
-@@ -2029,7 +2062,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+@@ -2029,7 +2082,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
  if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
      throw "App build spec application_label must be 1..64 visible characters without control whitespace"
  }
@@ -13953,15 +13993,17 @@ index 0bdd4881..22b4ae96 100644
 +        throw 'Quest supported devices must be a nonempty list of distinct headset identifiers.'
 +    }
 +}
-+$manifestText = New-GeneratedAndroidManifestText -PackageName ([string]$app.package_name) -ApplicationLabel $applicationLabel -Permissions $permissions -UsesFeatures $usesFeatures -Activities $activities -Receivers $receivers -Services $services -Queries $queries -SelectedFeatureIds $selectedFeatureIds -ExperimentGatewayOrigins $experimentOrigins -QuestSupportedDevices $questDevices -AndroidDebuggable $androidDebuggable -ExperimentBreathingSetupEnabled $experimentBreathingSetupEnabled -ExperimentSessionDebugOperator:$EnableExperimentSessionDebugOperator
++$manifestText = New-GeneratedAndroidManifestText -PackageName ([string]$app.package_name) -ApplicationLabel $applicationLabel -Permissions $permissions -UsesFeatures $usesFeatures -Activities $activities -Receivers $receivers -Services $services -Queries $queries -SelectedFeatureIds $selectedFeatureIds -ExperimentGatewayOrigins $experimentOrigins -QuestSupportedDevices $questDevices -AndroidDebuggable $androidDebuggable -AndroidTargetSdkVersion $androidTargetSdkVersion -AndroidInstallLocation $androidInstallLocation -ExperimentBreathingSetupEnabled $experimentBreathingSetupEnabled -ExperimentSessionDebugOperator:$EnableExperimentSessionDebugOperator
  New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
-@@ -2050,6 +2110,8 @@ $buildManifest = [ordered]@{
+@@ -2050,6 +2130,10 @@ $buildManifest = [ordered]@{
      resolution_fingerprint = $resolutionFingerprint
      package_name = [string]$app.package_name
      application_label = $applicationLabel
 +    android_debuggable = [bool]$androidDebuggable
++    android_target_sdk_version = [int]$androidTargetSdkVersion
++    android_install_location = [string]$androidInstallLocation
 +    experiment_breathing_setup_enabled = [bool]$experimentBreathingSetupEnabled
      package_policy = [string]$app.package_policy
      panel_source_closure = $panelSourceClosure
@@ -14034,10 +14076,10 @@ index bafddd3d..2f67201a 100644
  @{passed=$true;scope='Production transport authentication host tests only; Android owner/native/LAN effects require separate evidence'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
 diff --git a/tools/checks/Test-NativeAppManifestOptions.ps1 b/tools/checks/Test-NativeAppManifestOptions.ps1
 new file mode 100644
-index 00000000..7b8cf810
+index 00000000..ecd19864
 --- /dev/null
 +++ b/tools/checks/Test-NativeAppManifestOptions.ps1
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,105 @@
 +param([string]$RepoRoot = '')
 +
 +$ErrorActionPreference = 'Stop'
@@ -14066,9 +14108,16 @@ index 00000000..7b8cf810
 +$releaseSpec = $spec.Clone()
 +$releaseSpec.android_debuggable = $false
 +$releaseSpec.experiment_breathing_setup_enabled = $true
++$releaseSpec.android_target_sdk_version = 34
++$releaseSpec.android_install_location = 'auto'
 +$release = Resolve-Case 'selected' $releaseSpec
 +if ($release.manifest.manifest.application.GetAttribute('debuggable', $android) -cne 'false') {
 +    throw 'Explicit android_debuggable=false did not reach the resolved manifest.'
++}
++if ($release.manifest.manifest.'uses-sdk'.GetAttribute('targetSdkVersion', $android) -cne '34' -or
++    $release.manifest.manifest.'uses-sdk'.GetAttribute('minSdkVersion', $android) -cne '29' -or
++    $release.manifest.manifest.GetAttribute('installLocation', $android) -cne 'auto') {
++    throw 'Explicit target SDK 34 and auto install location did not reach the resolved manifest.'
 +}
 +$metadata = @($release.manifest.SelectNodes('/manifest/application/meta-data') | Where-Object {
 +    $_.GetAttribute('name', $android) -ceq 'rusty.quest.experiment.breathing_setup.enabled'
@@ -14077,7 +14126,8 @@ index 00000000..7b8cf810
 +    throw 'Explicit breathing setup selection did not reach the resolved manifest exactly once.'
 +}
 +if ($release.lock.android_manifest.debuggable -isnot [bool] -or $release.lock.android_manifest.debuggable -or
-+    $release.lock.android_manifest.experiment_breathing_setup_enabled -cne $true) {
++    $release.lock.android_manifest.experiment_breathing_setup_enabled -cne $true -or
++    $release.lock.android_manifest.target_sdk_version -cne 34 -or $release.lock.android_manifest.install_location -cne 'auto') {
 +    throw 'The selected manifest options are absent from the feature lock.'
 +}
 +if (!(Test-Json -Json (Get-Content -Raw -LiteralPath $release.spec_path) -SchemaFile $schema)) {
@@ -14091,6 +14141,8 @@ index 00000000..7b8cf810
 +# Break caught: changing defaults would activate setup or release behavior for existing apps.
 +$legacy = Resolve-Case 'legacy' $spec
 +if ($legacy.manifest.manifest.application.GetAttribute('debuggable', $android) -cne 'true' -or
++    $legacy.manifest.manifest.'uses-sdk'.GetAttribute('targetSdkVersion', $android) -cne '35' -or
++    $legacy.manifest.manifest.HasAttribute('installLocation', $android) -or
 +    @($legacy.manifest.SelectNodes('/manifest/application/meta-data') | Where-Object {
 +        $_.GetAttribute('name', $android) -ceq 'rusty.quest.experiment.breathing_setup.enabled'
 +    }).Count -ne 0) { throw 'Omitted manifest options changed legacy behavior.' }
@@ -14106,6 +14158,30 @@ index 00000000..7b8cf810
 +    $log = @(& pwsh -NoProfile -File $resolver -AppSpec $path -OutputRoot (Join-Path $scratch "invalid-$field") -DryRun 2>&1)
 +    if ($LASTEXITCODE -eq 0 -or ($log -join "`n") -notmatch "$field must be a JSON boolean") {
 +        throw "Non-boolean $field was not rejected by its typed boundary."
++    }
++}
++foreach ($case in @(
++    @{ field = 'android_target_sdk_version'; value = '34' },
++    @{ field = 'android_target_sdk_version'; value = 34.5 },
++    @{ field = 'android_target_sdk_version'; value = $true },
++    @{ field = 'android_target_sdk_version'; value = 28 },
++    @{ field = 'android_target_sdk_version'; value = 37 },
++    @{ field = 'android_target_sdk_version'; value = $null },
++    @{ field = 'android_install_location'; value = 'Auto' },
++    @{ field = 'android_install_location'; value = '' },
++    @{ field = 'android_install_location'; value = 1 },
++    @{ field = 'android_install_location'; value = $null }
++)) {
++    $invalid = $spec.Clone()
++    $invalid[$case.field] = $case.value
++    $path = Join-Path $scratch ('invalid-packaging-' + [guid]::NewGuid().ToString('N') + '.app.json')
++    $invalid | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $path -Encoding utf8NoBOM
++    if (Test-Json -Json (Get-Content -Raw -LiteralPath $path) -SchemaFile $schema -ErrorAction SilentlyContinue) {
++        throw "App schema admitted invalid $($case.field)."
++    }
++    $log = @(& pwsh -NoProfile -File $resolver -AppSpec $path -OutputRoot (Join-Path $scratch 'invalid-packaging') -DryRun 2>&1)
++    if ($LASTEXITCODE -eq 0 -or ($log -join "`n") -notmatch "$($case.field) must be") {
++        throw "Resolver admitted invalid $($case.field) or rejected it outside its typed boundary."
 +    }
 +}
 +Write-Output "PASS: typed manifest options, defaults, schema and lock identity ($scratch)"
