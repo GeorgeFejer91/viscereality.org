@@ -5,19 +5,54 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
+The shared-scheduler increment is under validation; no new APK has been
+accepted yet. The 0.1.30 entry retains its original artifact, source identity
+and verification history.
+
+## Shared breathing setup
+
+The selected Atmungsraum build uses one looping PCM AudioTrack. Its actual
+playback-head frames own the cues, intended phases, automatic visual input,
+calibration labels and main boundaries. Inhale, hold-in, exhale and hold-out
+each last four seconds. Preparation has no time limit. The phone displays
+Quest state and does not advance the schedule with a browser timer.
+
+Automatic is the startup input. Polar calibration begins at the next inhale
+boundary and collects two full cycles (32 seconds). Success requires accepted,
+fresh directional samples across both cycles; elapsed time alone is not
+success. A successful model becomes Polar tilt while the same loop continues.
+Retry repeats calibration. Controller State with fixed orientation cancels an
+outstanding calibration and uses the existing controller assessment without
+restarting the audio. Fresh H10 streams remain required for the participant run.
+
+The selected gateway offers only `haupt-15`. Start retains the chosen input
+and model, waits for the next complete cycle boundary, and starts a separate
+900-second main run: 39,690,000 audio frames at 44,100 Hz. Preparation is not
+main data. The old introductory restart and embedded 15-second calibration
+are absent from this path. The archived practice timelines, condition assets
+and local calibration menu voices remain available to unselected builds;
+they cannot start a second guidance player over the selected loop.
+
+The selected path currently supports zero guidance bias. Nonzero Arm or
+live-bias requests are explicitly rejected as
+`setup-guidance-bias-unsupported`; no live-bias capability is advertised.
+See the [approved setup contract](../for-ai/SHARED-BREATHING-SETUP.md) and
+[recording clock rules](../for-ai/DATA-LOGGING.md#shared-scheduler-recording-boundary).
+
 ## Build from the public repository
 
 Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 35,
 Android Build Tools 36.0.0, Android NDK 27.2.12479018, and Rust with the
 `aarch64-linux-android` target. Keep the native checkouts together in a short
-ordinary directory such as `C:/src/atmungsraum-native`. The following commands
-run from the `atmungsraum/quest` directory in a complete Atmungsraum checkout.
+ordinary directory. The following commands run from the `atmungsraum/quest`
+directory in a complete Atmungsraum checkout.
 Set the SDK and JDK paths to your installations.
 
 ```powershell
-$native = 'C:/src/atmungsraum-native'
-$env:JAVA_HOME = 'C:/tools/jdk-17'
-$env:ANDROID_HOME = 'C:/tools/android-sdk'
+$native = '<absolute short path for the native sibling repositories>'
+$env:JAVA_HOME = '<absolute path to JDK 17>'
+$env:ANDROID_HOME = '<absolute path to the Android SDK>'
+$developerKeystore = '<absolute path to the existing developer keystore outside Git>'
 $env:ANDROID_NDK_HOME = Join-Path $env:ANDROID_HOME 'ndk/27.2.12479018'
 $env:Path = "$env:JAVA_HOME/bin;$env:Path"
 rustup target add aarch64-linux-android
@@ -44,24 +79,50 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-030 `
-    -VersionCode 30 -VersionName 0.1.30
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-001 `
+    -Developer -Keystore $developerKeystore -VersionCode 1 -VersionName 0.2.0-dev
 ```
 
-Use your Git author identity for the local patch commit. The current patch
-reconstructs source tree `170d6c3def526684d2b27ef8f54c3c3a0e3e8d7a`.
-The script stages the six authored scenarios and two calibration menu prompts
-from `../assets/audio/` and
-resolves the [bundled Experimenter inputs](build-assets/README.md). It verifies
+Use your Git author identity for the local patch commit. The cumulative patch
+must match the source identity in the accepted APK record before release; a
+new source tree or signed artifact has not yet been accepted for this increment.
+The script stages the [shared loop JSON](../audio/box-loop.json), its four phase
+cues, and the retained scenario library and calibration menu prompts. It
+resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
 the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
-`rusty-quest/target/aq2/atmungsraum-030/`. Use a fresh run name for a second build
-or add `-ResolveOnly` to check the feature lock without compiling.
+`rusty-quest/target/aq2/atmungsraum-developer-001/`. Use a fresh run name for a
+second build or add `-ResolveOnly` to check the feature lock without compiling.
 
-The native packager creates a local development keystore on first use. An
-external build has its own signature and build identity. Use a clean
-development Quest profile or an appropriately signed in-place update for the
-same Android package.
+Assembly binds `RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256` to the exact
+packaged `audio/box-loop.json`, selects
+`rusty.quest.experiment.breathing_setup.enabled=true`, and includes the audio
+owners in the locked Java source closure. Other native products retain their
+unselected defaults.
+
+## Developer and rehearsal signing
+
+`-Developer` selects package `org.viscereality.atmungsraum.developer`, label
+**Atmungsraum Developer**, and `android:debuggable=false`. It requires an
+explicit existing `-Keystore` outside Git and an explicit `-VersionCode`,
+including with `-ResolveOnly`. The recipe does not generate a developer key.
+Keep one durable developer key for every later build. The initial empty
+developer application can use version code `1` and name `0.2.0-dev`; every
+later upload needs a higher code and the same signing key.
+
+The existing native builder expects alias `androiddebugkey`, store password
+`android` and key password `android` for an explicit keystore. This documents
+its existing input contract; provision and retain the developer key separately
+outside tracked source. Do not replace, regenerate or reuse the lab key for
+the separate developer identity.
+
+Without `-Developer`, the default remains
+`org.viscereality.atmungsraum.rehearsal`, label **Atmungsraum Quest 2**, with
+debugging enabled. Its existing signing identity must remain unchanged for
+in-place lab updates. The default native development key can be created on
+first use only in that rehearsal/development route. A new external key does
+not become update-compatible by using the same package name. The two packages
+can coexist and have separate controller enrollment and app data.
 
 ## Build with a separate Experimenter configuration
 
@@ -98,12 +159,15 @@ and Node.js.
   -VersionCode $versionCode -VersionName $versionName -Keystore $keystore
 ```
 
-Use `-ResolveOnly` for a feature-lock check. The build uses
+Use `-ResolveOnly` for a feature-lock check. Without `-Developer`, the build uses
 `org.viscereality.atmungsraum.rehearsal`, targets Quest 2 and admits
 `https://viscereality.org` to the native gateway. It verifies each scenario
 file in the signed APK by size and SHA-256. ECG previews and recording replies
 are encrypted on the enrolled LAN route. Keep the private provider, signing
 inputs, APK and device evidence with the native release work.
+
+Add `-Developer` with its durable key and explicit version code to use the
+separate developer identity with custom Experimenter inputs.
 
 On startup, the Quest APK requests Android’s turn-on dialog if its Bluetooth
 radio is off. The provisioned PWA reconnects using the saved connection. Tap
