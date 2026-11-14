@@ -37,7 +37,9 @@ This is software/build evidence. Worn-Polar calibration quality, actual
 audio/visual alignment, a full 900-second Quest 2 trial, installed Pixel
 refresh and remote version-to-version replacement remain pending at the
 user's request to finish the build without hardware testing now. The
-private Meta upload is being validated separately. The developer package
+private Meta Developer upload was accepted and passed malware and security
+scans. Owner enrollment awaits the account owner's invite consent; remote
+installation and version-to-version replacement are not claimed. The developer package
 and signing identity are separate from the rehearsal app and preserve its
 installation and data. Keep the developer signing key for future updates.
 

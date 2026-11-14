@@ -23,17 +23,26 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
 - [x] Integrate audio, enrolled commands and native-driven experimenter UI.
 - [x] Build and verify the separate non-debuggable developer APK, its source
   tree, signer, 74 audio files, ARM64 libraries and five shared-loop JNI exports.
-- [ ] Publish the verified source/PWA increment and verify the exact Pages run.
+- [x] Publish the verified source/PWA increment and verify the exact Pages run.
 - [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance
   (explicitly deferred by the user: finish the build without hardware testing).
 
 The independent Meta developer-distribution chat owns account/channel setup.
-Feature work remains in this owner. Developer build 0.2.0-dev (code 1) is
-software-verified and handed to the private Meta distribution chat. Its exact
+Feature work remains in this owner. Developer build 0.2.0-dev (code 1) was
+accepted in the private Meta Developer channel; malware and security scans
+passed. Owner enrollment still awaits the account owner's invite consent in
+that chat. The store remains unpublished. Its exact
 source/signature/hash are in the [APK log](../quest/apks/README.md). The developer
 manifest targets SDK 34 with install location auto; rehearsal defaults stay
-unchanged. Device
-acceptance and live feature deployment are not claimed yet.
+unchanged. Device acceptance remains pending at the user's explicit request.
+
+Source [PR 3](https://github.com/GeorgeFejer91/viscereality.org/pull/3) merged
+as `efaed6c13b17305ccd1e9c6ed7a5227330f9e179` and deployed successfully in
+[Pages run 43647565252](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43647565252).
+All eleven checked live runtime/source files matched their committed Git bytes,
+including the five versioned JavaScript/CSS requests, HTML, canonical loop,
+native patch and three packaging/provider inputs. The remote context gate
+passed. See [verification](VERIFICATION.md#shared-breathing-setup-release--2026-11-14).
 
 The merged browser controller passed all 116 Node checks, including both real
 assembly checks, and the native suite passed 798 with three ignored. Chromium
