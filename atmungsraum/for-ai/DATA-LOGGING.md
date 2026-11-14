@@ -16,6 +16,49 @@ Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
 for enrollment, recovery and verification. The filename and identity contract
 below applies throughout the transfer.
 
+## Shared scheduler recording boundary
+
+In the explicitly selected shared-scheduler build, preparation loops without
+a time limit. Calibration observes two complete guided cycles and can be
+retried; Controller State provides the fallback input. These operations do not
+start participant recording. The selected gateway offers only `haupt-15`.
+Historical practice exports and their filenames remain valid.
+
+Official Start is admitted at the next complete audio cycle boundary and
+starts a separate main interval of exactly 39,690,000 frames at 44,100 Hz
+(900 seconds). Cue playback, intended phase, automatic visual input and main
+duration share the actual AudioTrack playback-head clock. A pause holds that
+clock. Browser timers and callback arrival time do not extend the main interval.
+Preparation samples are excluded from main data. Measurement admission maps
+the original host receipt/source timestamp to audio frames and checks it
+against the main interval, including the late acquisition tail. Samples outside
+the interval do not enter it merely because finalization is pending. Release
+checks must cover that tail cutoff as well as the exact 900-second audio limit.
+
+Polar raw records and Polar-derived breath records retain their original
+`JavaNanoTime` source clock. A measured, fresh nano-time/elapsed-realtime pair
+maps those timestamps into the core's audio-clock alignment; the original
+values are not relabelled as elapsed realtime. Controller observations retain
+their own OpenXR clock. Sensor timestamps and frame/sample positions remain
+separate from these host clocks. Use their declared clock domains when joining
+streams, especially across device sleep.
+
+In this build, `breathing_phase` means the unbiased classification from the
+selected breathing input, including Controller State when fallback is selected.
+The native recording manifest retains `breath_tracking_configuration` and the
+calibrated model/source identity. CSV v4 does not add an input-mode column;
+retain that manifest when attributing classifications to a sensor or controller.
+
+The selected path supports zero guidance bias and rejects nonzero Arm or
+live-bias requests as `setup-guidance-bias-unsupported`. Intended phases are
+instructions, not proof that the participant followed them. The legacy timed
+scenarios and classifier bias policy remain with unselected builds. See the
+[shared setup contract](SHARED-BREATHING-SETUP.md) and
+[Quest build recipe](../quest/README.md#shared-breathing-setup).
+This is the new source contract, not evidence of an accepted APK or a completed
+900-second device run. The existing physical-trial results below describe
+their original release.
+
 ## Identity and filenames
 
 The primary session CSV has exactly this filename:
@@ -46,9 +89,11 @@ creates a different ID; it does not rename previous files. Three surname letters
 plus demographics are not guaranteed to distinguish different people: the UUID
 `session_id` is the unique identity of an individual run.
 
-The exact exercise is in `scenario_id`: `probe-anleitung`, `probe-5`, `probe-10`,
-`probe-15`, or `haupt-15`. The native recording metadata retains the planned duration
-and scenario hash. Anleitung is a practice run with a 68-second audio example.
+The exact exercise is in `scenario_id`: historical runs can use
+`probe-anleitung`, `probe-5`, `probe-10`, `probe-15`, or `haupt-15`; the selected
+shared scheduler uses only `haupt-15`. The native recording metadata retains
+the planned duration and scenario hash. Anleitung is a historical practice
+run with a 68-second audio example.
 
 Quest keeps its native streams in the session directory with the recording
 manifest. The CSV repeats the participant ID, run index, UUID and scenario

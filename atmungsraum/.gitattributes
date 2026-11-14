@@ -16,3 +16,6 @@ assets/audio/box-breathing/de/soft-v2/outro.json text eol=lf
 assets/audio/box-breathing/de/soft-v2/main-asset-classes.csv text eol=lf
 audio/scenarios/*.json text eol=lf
 audio/scenarios/*.csv text eol=lf
+audio/box-loop.json text eol=lf
+# A unified patch's blank context line is a required single space.
+quest/native-source.patch -whitespace

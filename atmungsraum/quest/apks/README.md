@@ -1,5 +1,46 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.0-dev — separate developer build, 2026-11-14
+
+| Build property | Verified value |
+| --- | --- |
+| Package / platform | `org.viscereality.atmungsraum.developer`, Quest 2, `arm64-v8a` |
+| Release | 0.2.0-dev, Android version code 1 |
+| Signed APK | Kept in private developer distribution; not bundled in this repository |
+| Size | 65,264,431 bytes |
+| SHA-256 | `1a5470f097a06578fc3b1d58e64787b5c586e0204cc0409ce26d5fe04ce3036b` |
+| Signing certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit | `e8e7715be2ca253d50515878ce3c973ba7636c93` |
+| Native source tree | `5962359ba086897f7bf1e9ef0c40568c95010cf5` |
+| Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
+| Atmungsraum source | [1dfa5f0](https://github.com/GeorgeFejer91/viscereality.org/commit/1dfa5f0e16249db2dffebbda8d508d45d4bf1144) |
+| Source patch SHA-256 | `fa5905c0a1f923989d2544d34bef01bb7b5b44acd2e1277610567284b458317d` |
+| Android packaging | Debugging disabled; min SDK 29, target SDK 34, compile SDK 36, install location auto; v2 and v3 signatures verified |
+
+This build adds one actual audio-frame clock, Automatic startup, unlimited
+4–4–4–4 preparation, two-cycle measured tilt calibration, retry and fixed
+Controller State fallback. The chosen input continues into a separate,
+exactly 900-second main at the next full cycle boundary. Required study H10
+freshness and submitted-frame checks remain active in Controller mode. A
+held incomplete run cannot claim completion by adopting a later audio head.
+Retry cannot reuse an earlier model's classified phase or source timestamp.
+Nonzero guidance bias is explicitly unsupported in this selected path.
+
+The locked build verified all 74 catalog/audio files and the ARM64 OpenXR
+loader. All five shared-loop JNI exports are present. The cumulative public
+patch applies to the pinned upstream and reconstructs the native source tree
+above exactly. Native host tests passed 798 with three ignored; all 116 Node
+checks, 59 rendered browser states, context checks and scoped code reviews
+passed. The Android compiler regression uses the real SDK boot class path.
+
+This is software/build evidence. Worn-Polar calibration quality, actual
+audio/visual alignment, a full 900-second Quest 2 trial, installed Pixel
+refresh and remote version-to-version replacement remain pending at the
+user's request to finish the build without hardware testing now. The
+private Meta upload is being validated separately. The developer package
+and signing identity are separate from the rehearsal app and preserve its
+installation and data. Keep the developer signing key for future updates.
+
 ## 0.1.30 — Quest 2 calibration menu
 
 | Build property | Verified value |
@@ -13,6 +54,7 @@
 | Native commit | `ac5be2669cace0e75146ae3bae90a3026ff3f8d5` |
 | Native source tree | `170d6c3def526684d2b27ef8f54c3c3a0e3e8d7a` |
 | Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
+| Atmungsraum source | [b360e99](https://github.com/GeorgeFejer91/viscereality.org/commit/b360e99) |
 
 **Direct → Developer settings → Breath → Calibration** now plays the approved
 German inhale cue after an accepted Start and the exhale cue four seconds later

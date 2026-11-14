@@ -38,8 +38,8 @@
       "asset_id": "experiment-session-profile",
       "source_relative_path": "source/experiment-session.json",
       "logical_destination": "session-config/experiment-session.json",
-      "source_sha256": "e5931ee2ea604ebfc53940a4dbb3d74b864d97449217939117148fd949e50c6a",
-      "source_bytes": 5196,
+      "source_sha256": "df818c6fdf9799f6bcba298e31a39f48fc7e50284a07f0a3463e469954f07742",
+      "source_bytes": 5198,
       "media_type": "application/json"
     }
   ]

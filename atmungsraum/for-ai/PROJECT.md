@@ -2,6 +2,48 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Shared scheduler and guided tilt setup — 2026-11-14
+
+The user approved Automatic on app load, one shared native audio/phase clock,
+an unlimited 4–4–4–4 preparation loop, exactly two full cycles for measured
+Polar tilt calibration, native progress in the phone UI, automatic successful
+tilt activation, repeat calibration and Controller State fixed-orientation
+fallback. Start main seamlessly at the next cycle boundary, preserving input.
+The main run remains exactly 15 minutes. This supersedes the illustrative phone
+preview and old embedded 15-second calibration. See the approved design and
+implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.md).
+
+- [x] Confirm behavior and 900-second main duration with the user.
+- [x] Reconstruct released native tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`
+  from the published patch against upstream `99352620`.
+- [x] Implement the native schedule/model core: 36 standalone tests cover full
+  cycles, valid fit, failed evidence, source retirement, retry and fallback.
+- [x] Integrate native input/capture and exact 900-second finalization; mapped
+  source clocks, rejected evidence, retry lineage and pause/resume are reviewed.
+- [x] Integrate audio, enrolled commands and native-driven experimenter UI.
+- [x] Build and verify the separate non-debuggable developer APK, its source
+  tree, signer, 74 audio files, ARM64 libraries and five shared-loop JNI exports.
+- [ ] Publish the verified source/PWA increment and verify the exact Pages run.
+- [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance
+  (explicitly deferred by the user: finish the build without hardware testing).
+
+The independent Meta developer-distribution chat owns account/channel setup.
+Feature work remains in this owner. Developer build 0.2.0-dev (code 1) is
+software-verified and handed to the private Meta distribution chat. Its exact
+source/signature/hash are in the [APK log](../quest/apks/README.md). The developer
+manifest targets SDK 34 with install location auto; rehearsal defaults stay
+unchanged. Device
+acceptance and live feature deployment are not claimed yet.
+
+The merged browser controller passed all 116 Node checks, including both real
+assembly checks, and the native suite passed 798 with three ignored. Chromium
+rendered 59 synthetic states including
+native setup, reload recovery, Bluetooth rediscovery, 320px, enlarged text,
+spacing and keyboard focus. The fixtures advance only supplied native frames.
+Private screenshots and check receipts stay in ignored output. Worn-Polar/Quest
+2 validation remains required. The concurrent 0.1.30 prompt and
+reconnect releases were merged; their source and public assets are preserved.
+
 ### Quest calibration menu voice cues — 2026-11-14
 
 The Quest **Direct → Developer settings → Breath → Calibration** menu plays

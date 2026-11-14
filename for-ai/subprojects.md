@@ -12,13 +12,13 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
-- Phone breathing preview (2026-11-14): after setup, **Atemvorschau** shows
-  an illustrative radius. The phone prompts **Einatmen** and **Ausatmen**
-  in order and resizes the circle over four seconds for each step. After
-  both steps, the green **Weiter zur Auswahl** button opens the existing
-  practice and main choices.
-  Audio cues and the calibration protocol remain to be defined. See the
-  [smartphone UI tree](../atmungsraum/for-ai/PROJECT.md#smartphone-ui-decision-tree--2026-11-14).
+- Native breathing setup (2026-11-14): one Quest PCM-frame clock supplies
+  the unlimited four-second box loop, intended phase, Automatic startup input,
+  two-cycle tilt calibration and next-cycle main admission. The phone displays
+  measured native progress, failures, retry and fixed-orientation Controller
+  State fallback. It displays actual input separately from the intended phase.
+  Main lasts exactly 900 seconds after preparation. Older APKs request an update.
+  See the [shared setup design and acceptance state](../atmungsraum/for-ai/SHARED-BREATHING-SETUP.md).
 
 - Primary delivery target (2026-11-06): a progressive web app for smartphones.
   Users install it from the browser to the home screen; the existing Viscereality
