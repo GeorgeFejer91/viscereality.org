@@ -42,7 +42,8 @@ export function decodeBoxLoopWav(bytes, cue, plan) {
   }
   let format = false;
   let pcm;
-  for (let offset = 12; offset + 8 <= bytes.length;) {
+  let offset = 12;
+  for (; offset + 8 <= bytes.length;) {
     const id = bytes.toString('ascii', offset, offset + 4);
     const length = bytes.readUInt32LE(offset + 4);
     const start = offset + 8;
@@ -63,6 +64,7 @@ export function decodeBoxLoopWav(bytes, cue, plan) {
     offset = start + length + (length & 1);
     if (offset > bytes.length) fail('truncated WAV padding');
   }
+  if (offset !== bytes.length) fail('trailing WAV chunk bytes');
   if (!format || !pcm || pcm.length !== cue.frames * 2) fail('PCM frames mismatch');
   return pcm;
 }

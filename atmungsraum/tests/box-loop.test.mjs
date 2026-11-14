@@ -60,3 +60,16 @@ test('PCM decoder enforces the declared hash, bytes, format and frame count', as
   assert.throws(() => decodeBoxLoopWav(format, { ...cue,
     sha256: createHash('sha256').update(format).digest('hex') }, plan), /PCM/);
 });
+
+test('WAV decoder rejects 1–7 trailing RIFF bytes even with matching identity', async () => {
+  const { plan, files } = await loadBoxLoop({ sourceRoot });
+  const cue = plan.phases[0].cue;
+  const { createHash } = await import('node:crypto');
+  for (let extra = 1; extra <= 7; extra++) {
+    const trailing = Buffer.concat([files.get(cue.path), Buffer.alloc(extra, 0x7f)]);
+    trailing.writeUInt32LE(trailing.length - 8, 4);
+    const identity = { ...cue, bytes: trailing.length,
+      sha256: createHash('sha256').update(trailing).digest('hex') };
+    assert.throws(() => decodeBoxLoopWav(trailing, identity, plan), /trailing|chunk/);
+  }
+});
