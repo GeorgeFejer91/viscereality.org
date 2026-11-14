@@ -83,6 +83,14 @@ hidden before setup. A physical tap-through remains pending a Quest that
 reports ready Polar streams. The Quest reported Polar setup unavailable
 during this readback.
 
+Guided preview commit `1ae9930` reached `origin/main` and deployed in
+[Pages run 43612442755](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43612442755).
+All four runtime files matched Git. Seven browser checks passed against the
+live release with synthetic Quest state, including the phase timers, glow,
+reduced motion, interrupted setup, and green continuation. The lab Pixel 10
+loaded the new assets in standalone mode. The physical tap-through remains
+pending ready Polar streams. Next, define the audio and calibration protocol.
+
 ### Quest APK release record — 2026-11-14
 
 The [Quest APK log](../quest/apks/README.md) records the signed 0.1.29
