@@ -85,11 +85,10 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `3df3966543186596cb3ab942eb9b29c87ee1cdc3`, matching
+reconstructs source tree `5962359ba086897f7bf1e9ef0c40568c95010cf5`, matching
 the software-verified developer build. Its SHA-256 and native commit are in
-the APK log. The recorded pre-upload build used compile SDK 36 and targets
-SDK 35. Meta upload validation requires the developer rebuild described below;
-its updated source identity and artifact must be recorded after rebuilding.
+the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
+automatic install location for Meta distribution.
 The script stages the [shared loop JSON](../audio/box-loop.json), its four phase
 cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies

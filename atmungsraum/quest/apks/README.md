@@ -7,15 +7,15 @@
 | Package / platform | `org.viscereality.atmungsraum.developer`, Quest 2, `arm64-v8a` |
 | Release | 0.2.0-dev, Android version code 1 |
 | Signed APK | Kept in private developer distribution; not bundled in this repository |
-| Size | 65,264,432 bytes |
-| SHA-256 | `3970aaa0c538c1dfe6b2f9e00fca06da31aa989d1e3a20645c3d6e786843709f` |
+| Size | 65,264,431 bytes |
+| SHA-256 | `1a5470f097a06578fc3b1d58e64787b5c586e0204cc0409ce26d5fe04ce3036b` |
 | Signing certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
-| Native commit | `858dcd31fe075664b287eda6ecf5eb9759ed12d6` |
-| Native source tree | `3df3966543186596cb3ab942eb9b29c87ee1cdc3` |
+| Native commit | `e8e7715be2ca253d50515878ce3c973ba7636c93` |
+| Native source tree | `5962359ba086897f7bf1e9ef0c40568c95010cf5` |
 | Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
-| Atmungsraum source | [678e61c](https://github.com/GeorgeFejer91/viscereality.org/commit/678e61c3501ea50d6293e0b387edc5e5d70fd12a) |
-| Source patch SHA-256 | `05f192c5bec6afa90e6505ca73f2c8c0e1dc7adc531b8935cad300f188d6fddb` |
-| Android packaging | Debugging disabled; min SDK 29, target SDK 35, compile SDK 36; v2 and v3 signatures verified |
+| Atmungsraum source | [1dfa5f0](https://github.com/GeorgeFejer91/viscereality.org/commit/1dfa5f0e16249db2dffebbda8d508d45d4bf1144) |
+| Source patch SHA-256 | `fa5905c0a1f923989d2544d34bef01bb7b5b44acd2e1277610567284b458317d` |
+| Android packaging | Debugging disabled; min SDK 29, target SDK 34, compile SDK 36, install location auto; v2 and v3 signatures verified |
 
 This build adds one actual audio-frame clock, Automatic startup, unlimited
 4–4–4–4 preparation, two-cycle measured tilt calibration, retry and fixed
@@ -35,7 +35,8 @@ passed. The Android compiler regression uses the real SDK boot class path.
 
 This is software/build evidence. Worn-Polar calibration quality, actual
 audio/visual alignment, a full 900-second Quest 2 trial, installed Pixel
-refresh and remote version-to-version replacement remain pending. The
+refresh and remote version-to-version replacement remain pending at the
+user's request to finish the build without hardware testing now. The
 private Meta upload is being validated separately. The developer package
 and signing identity are separate from the rehearsal app and preserve its
 installation and data. Keep the developer signing key for future updates.

@@ -24,12 +24,15 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
 - [x] Build and verify the separate non-debuggable developer APK, its source
   tree, signer, 74 audio files, ARM64 libraries and five shared-loop JNI exports.
 - [ ] Publish the verified source/PWA increment and verify the exact Pages run.
-- [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance.
+- [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance
+  (explicitly deferred by the user: finish the build without hardware testing).
 
 The independent Meta developer-distribution chat owns account/channel setup.
 Feature work remains in this owner. Developer build 0.2.0-dev (code 1) is
 software-verified and handed to the private Meta distribution chat. Its exact
-source/signature/hash are in the [APK log](../quest/apks/README.md). Device
+source/signature/hash are in the [APK log](../quest/apks/README.md). The developer
+manifest targets SDK 34 with install location auto; rehearsal defaults stay
+unchanged. Device
 acceptance and live feature deployment are not claimed yet.
 
 The merged browser controller passed all 116 Node checks, including both real
