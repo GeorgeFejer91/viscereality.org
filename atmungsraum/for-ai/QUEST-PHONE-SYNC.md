@@ -201,6 +201,23 @@ Independent metadata and folder queries confirmed one private CSV with the
 same name, size and SHA-256 as Quest and Pixel. Its SHA-256 was
 `9556af6101e599589c0fdfa4b11f87449f6e5259fb6e06804e50dfa53b1c0b79`.
 
+### Pixel live upload renderer recovery
+
+During a repeat with the original PWA, Chrome exited during live upload
+with a bad Blob reference in the Android system log. It did so again after
+reload without continuous DevTools observation. Quest retained its active
+recording and continued to publish committed prefixes.
+
+The `20261114-recording-bytes` PWA stores verified live ranges as byte
+arrays and assembles bounded Drive writes directly from bytes. IndexedDB
+can still read ranges stored as Blobs by the earlier release. It reads
+the old Blob payload directly before combining it with neighboring bytes.
+The final CSV retains its signed hash and file naming checks. On the
+installed Pixel, a fixture read 65,534 exact bytes across one old Blob and
+two new ranges, rejected a missing suffix, and verified the saved offset.
+The fixture cleared its own staging entries. The live hardware recheck
+is tracked in the active checklist.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.

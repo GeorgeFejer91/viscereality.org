@@ -146,13 +146,13 @@ test('participant exports retain the CSV and both original sensor streams throug
   const prefixBytes = 19;
   const store = {
     readPrefix: async () => ({ session_id: manifest.participant_csv.session_id, name: csvName, offset: prefixBytes }),
-    readPrefixBytes: async () => new Blob([csv.subarray(0, prefixBytes)]),
+    readPrefixBytes: async () => csv.subarray(0, prefixBytes),
   };
   const finalized = await questRecording(gateway, id, signal, { includeSensorBundle: true, store });
   assert.deepEqual(Buffer.from(await finalized.bundle.arrayBuffer()), csv);
   assert.equal(resumedOffsets[0], prefixBytes);
   for (const damaged of [
-    async () => new Blob([Buffer.alloc(prefixBytes, 0)]),
+    async () => Buffer.alloc(prefixBytes, 0),
     async () => { throw Error('Missing staged range'); },
   ]) {
     resumedOffsets.length = 0;
@@ -213,7 +213,10 @@ test('the live feed resumes at the committed offset and rejects a corrupted rang
     readPrefix: async () => staged,
     appendPrefix: async (prefix, offset, parts) => {
       assert.equal(offset, staged?.offset ?? 0);
-      staged = { ...prefix, offset: offset + parts.reduce((size, part) => size + part.size, 0) };
+      for (const part of parts) assert.ok(part instanceof Uint8Array, 'live ranges must use owned bytes');
+      const stagedBytes = Buffer.concat(parts);
+      assert.deepEqual(stagedBytes, bytes.subarray(offset, offset + stagedBytes.length));
+      staged = { ...prefix, offset: offset + parts.reduce((size, part) => size + part.byteLength, 0) };
     },
   };
   const gateway = { recordings: async ({ query, offset, length }) => {
@@ -258,7 +261,7 @@ test('catch-up drains bounded batches from one published checkpoint and stops on
     readPrefix: async () => saved,
     async appendPrefix(prefix, start, parts) {
       assert.ok(parts.length <= 4);
-      saved = { ...prefix, offset: start + parts.reduce((sum, part) => sum + part.size, 0) };
+      saved = { ...prefix, offset: start + parts.reduce((sum, part) => sum + part.byteLength, 0) };
       stages.push(saved.offset);
     },
   };

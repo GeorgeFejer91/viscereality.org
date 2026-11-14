@@ -44,7 +44,7 @@ export async function openQuestRecordingStore({ device, serial }) {
         let offset = start;
         for (const part of parts) {
           ranges.add(part, [key, offset]);
-          offset += part.size;
+          offset += part.byteLength;
         }
         descriptors.put({ ...prefix, offset }, key);
       };
@@ -53,14 +53,15 @@ export async function openQuestRecordingStore({ device, serial }) {
     });
   }
 
-  function readPrefixBytes(id, start, end) {
+  async function readPrefixBytes(id, start, end) {
     const key = scope + id;
-    if (end === start) return Promise.resolve(new Blob());
-    return new Promise((resolve, reject) => {
+    const bytes = new Uint8Array(end - start);
+    if (!bytes.length) return bytes;
+    const legacy = await new Promise((resolve, reject) => {
       const tx = db.transaction(rangeStore, 'readonly');
       const ranges = tx.objectStore(rangeStore);
       const previous = ranges.openCursor(IDBKeyRange.bound([key, 0], [key, start]), 'prev');
-      const parts = [];
+      const oldBlobs = [];
       let offset = start;
       previous.onsuccess = () => {
         const first = previous.result;
@@ -70,17 +71,27 @@ export async function openQuestRecordingStore({ device, serial }) {
           const current = cursor.result;
           if (!current || offset >= end) return;
           const at = current.key[1];
-          if (at > offset || at + current.value.size <= offset) return;
-          const part = current.value.slice(offset - at, end - at);
-          parts.push(part);
-          offset += part.size;
+          const value = current.value;
+          const size = value instanceof Uint8Array ? value.byteLength : value instanceof Blob ? value.size : 0;
+          if (at > offset || at + size <= offset) return;
+          const from = offset - at;
+          const to = Math.min(size, end - at);
+          const target = offset - start;
+          if (value instanceof Uint8Array) bytes.set(value.subarray(from, to), target);
+          else oldBlobs.push({ value, from, to, target });
+          offset += to - from;
           current.continue();
         };
       };
-      tx.oncomplete = () => offset === end ? resolve(new Blob(parts))
+      tx.oncomplete = () => offset === end ? resolve(oldBlobs)
         : reject(Error('Der gespeicherte Quest-Bytebereich ist unvollständig.'));
       tx.onabort = () => reject(tx.error);
     });
+    // Reading legacy Blobs directly avoids composing references to IndexedDB-backed Blobs in Chrome.
+    for (const { value, from, to, target } of legacy) {
+      bytes.set(new Uint8Array(await value.arrayBuffer(), from, to - from), target);
+    }
+    return bytes;
   }
 
   function finalizePrefix(id, archive) {

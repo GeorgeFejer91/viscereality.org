@@ -118,8 +118,12 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   The local Quest, installed Pixel and private Drive copies matched for
   both runs, with one Drive object per run. The comparison was published
   in [Pages run 43593889030](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43593889030).
-  Repeat the enabled run with bounded diagnostics to check whether the
-  browser exit recurs and to compare the operator control response again.
+  The browser exit recurred in a repeat and without continuous DevTools
+  observation after recovery. Android Chrome reported a bad Blob reference
+  in both repeat exits. The PWA now stages owned byte arrays and reads
+  previously stored Blob ranges directly. The Pixel passed a mixed-format
+  IndexedDB fixture. Verify the deployed release against the ongoing run
+  and a complete sync-enabled session before closing this item.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

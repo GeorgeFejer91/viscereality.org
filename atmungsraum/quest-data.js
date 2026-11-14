@@ -65,7 +65,7 @@ async function stageQuestBatch(gateway, store, prefix, start, signal) {
       || chunk.offset !== offset || chunk.length !== length) throw Error('Unvollständiger Quest-Dateiabschnitt.');
     const raw = chunkData(chunk, length);
     if (await hashBytes(raw) !== chunk.sha256) throw Error('Quest-Abschnitt stimmt nicht mit der Prüfsumme überein.');
-    parts.push(new Blob([raw]));
+    parts.push(raw);
   }
   signal.throwIfAborted();
   await store.appendPrefix(prefix, start, parts);
@@ -147,17 +147,17 @@ function validRecovery(manifest) {
 }
 
 async function readFinalFile(gateway, manifest, file, signal, saved) {
-  const parts = saved ? [saved] : [];
-  for (let offset = saved?.size ?? 0; offset < file.size; offset += chunkBytes) {
+  const bytes = new Uint8Array(file.size);
+  if (saved) bytes.set(saved);
+  for (let offset = saved?.byteLength ?? 0; offset < file.size; offset += chunkBytes) {
     signal.throwIfAborted();
     const length = Math.min(chunkBytes, file.size - offset);
     const chunk = await gateway.recordings({ query: 'read', manifest_id: manifest.manifest_id, file: file.name, offset, length }, signal);
     if (chunk?.v !== 1 || chunk.state !== 'chunk' || chunk.manifest_id !== manifest.manifest_id
       || chunk.file !== file.name || chunk.offset !== offset || chunk.length !== length
       || chunk.sha256 !== file.sha256) throw Error('Unvollständiger Quest-Dateiabschnitt.');
-    parts.push(chunkData(chunk, length));
+    bytes.set(chunkData(chunk, length), offset);
   }
-  const bytes = new Uint8Array(await new Blob(parts).arrayBuffer());
   return await hashBytes(bytes) === file.sha256 ? bytes : null;
 }
 
@@ -203,7 +203,7 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     const saved = prior?.session_id === file.session_id && prior.name === file.name
       && Number.isSafeInteger(prior.offset) && prior.offset > 0 && prior.offset <= file.size
       ? await store.readPrefixBytes(id, 0, prior.offset).catch(() => null) : null;
-    const usable = saved instanceof Blob && saved.size === prior?.offset ? saved : null;
+    const usable = saved instanceof Uint8Array && saved.byteLength === prior?.offset ? saved : null;
     let bytes = await readFinalFile(gateway, manifest, file, signal, usable);
     if (!bytes && usable) {
       resetDriveUpload = true;

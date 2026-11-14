@@ -165,7 +165,8 @@ export function createQuestDrive(token, fetcher = fetch) {
         signal.throwIfAborted();
         const end = offset + length;
         const body = await read(offset, end);
-        if (!(body instanceof Blob) || body.size !== length) throw Error('Der gespeicherte Bytebereich ist unvollständig.');
+        const size = body instanceof Uint8Array ? body.byteLength : body instanceof Blob ? body.size : 0;
+        if (size !== length) throw Error('Der gespeicherte Bytebereich ist unvollständig.');
         pendingEnd = end;
         await checkpoint();
         const status = await putRange(uploadUrl, type, `bytes ${offset}-${end - 1}/${total}`, signal, body);
