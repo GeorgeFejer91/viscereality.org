@@ -21,6 +21,14 @@ const labels = {
   PAUSED: 'Probelauf pausiert.', FINALIZING: 'Quest beendet den Probelauf.',
   SAVING: 'Quest speichert den Probelauf.', ERROR: 'Die Quest meldet einen Fehler.',
 };
+const previewBreathDuration = 4000;
+const previewPrompts = {
+  inhale: '„Einatmen“ drücken · Simulation',
+  inhaling: 'Einatmen läuft … · Simulation',
+  exhale: '„Ausatmen“ drücken · Simulation',
+  exhaling: 'Ausatmen läuft … · Simulation',
+  complete: 'Vorschau fertig · Simulation',
+};
 
 export function mountQuestRehearsal(participantIdentity, savedPair) {
   const drive = mountQuestDrive();
@@ -29,7 +37,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewTitle = byId('preview-title');
   const previewCircle = byId('preview-circle');
   const previewStatus = byId('preview-status');
+  const previewInhale = byId('preview-inhale');
+  const previewExhale = byId('preview-exhale');
   const previewContinue = byId('preview-continue');
+  preview.style.setProperty('--preview-breath-duration', `${previewBreathDuration}ms`);
   const form = byId('quest-join');
   const find = byId('quest-find');
   const repair = byId('quest-repair');
@@ -56,6 +67,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const participantOutput = byId('patient-id');
   let participantId = '';
   let previewAccepted = false;
+  let previewStep = 'inhale';
+  let previewTimer;
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -191,18 +204,49 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       preview.hidden = !showPreview;
       questScreen.hidden = showPreview;
       if (showPreview) previewTitle.focus();
-      else if (hadPreviewFocus) {
-        if (showCondition) condition.focus();
-        else if (showScenario) scenario.focus();
-        else statusText.focus();
+      else {
+        cancelPreviewBreath();
+        if (hadPreviewFocus || document.activeElement === document.body) {
+          if (showCondition) condition.focus();
+          else if (showScenario) scenario.focus();
+          else statusText.focus();
+        }
       }
     }
   }
 
+  function showPreviewStep(step) {
+    previewStep = step;
+    previewInhale.disabled = step !== 'inhale';
+    previewExhale.disabled = step !== 'exhale';
+    previewContinue.hidden = step !== 'complete';
+    text(previewStatus, previewPrompts[step]);
+  }
+
   function resetPreview() {
     previewAccepted = false;
+    clearTimeout(previewTimer);
+    previewTimer = undefined;
     delete previewCircle.dataset.breath;
-    text(previewStatus, 'Beispielradius · Simulation');
+    showPreviewStep('inhale');
+  }
+
+  function cancelPreviewBreath() {
+    if (previewTimer !== undefined || previewStep === 'exhale') resetPreview();
+  }
+
+  function startPreviewBreath(breath) {
+    if (preview.hidden || previewStep !== breath) return;
+    const inhale = breath === 'inhale';
+    const pressed = inhale ? previewInhale : previewExhale;
+    const next = inhale ? previewExhale : previewContinue;
+    previewCircle.dataset.breath = breath;
+    showPreviewStep(inhale ? 'inhaling' : 'exhaling');
+    previewTimer = setTimeout(() => {
+      previewTimer = undefined;
+      showPreviewStep(inhale ? 'exhale' : 'complete');
+      if (document.activeElement === pressed || document.activeElement === document.body) next.focus();
+    }, previewBreathDuration);
   }
 
   function showTrace(value) {
@@ -562,16 +606,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   });
   repair.addEventListener('click', beginPairing);
   polarConnect.addEventListener('click', () => act('polar'));
-  byId('preview-inhale').addEventListener('click', () => {
-    previewCircle.dataset.breath = 'inhale';
-    text(previewStatus, 'Beispielradius größer · Simulation');
-  });
-  byId('preview-exhale').addEventListener('click', () => {
-    previewCircle.dataset.breath = 'exhale';
-    text(previewStatus, 'Beispielradius kleiner · Simulation');
-  });
+  previewInhale.addEventListener('click', () => startPreviewBreath('inhale'));
+  previewExhale.addEventListener('click', () => startPreviewBreath('exhale'));
   previewContinue.addEventListener('click', () => {
-    if (preview.hidden || previewContinue.disabled) return;
+    if (preview.hidden || previewContinue.disabled || previewStep !== 'complete') return;
     previewAccepted = true;
     paint();
   });
@@ -600,6 +638,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const timer = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      cancelPreviewBreath();
       userAction?.abort();
       ecgAttempt?.abort();
       exportAttempt?.abort();

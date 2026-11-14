@@ -1,5 +1,19 @@
 # Verification
 
+## Guided phone breathing preview — 2026-11-14
+
+The phone prompts inhale, waits four seconds, then prompts exhale and
+waits four seconds before showing the green Continue action. Browser clock
+checks verified that neither phase can be skipped or completed early.
+The next enabled control receives keyboard focus when the operator stays
+in the preview. A Polar readiness interruption resets an unfinished
+preview. The synthetic Quest received zero commands from the breath
+controls. Scenario selection and playback controls still work afterward.
+Portrait, landscape, desktop, 200% text, expanded text spacing and both
+motion preferences passed. An independent real-time Chromium check
+observed the grow and shrink transitions. All 88 Node tests, six scenario
+pairs and the project context check passed.
+
 ## Phone breathing preview — 2026-11-14
 
 Mobile Chromium with synthetic Quest state verified the preview gate,

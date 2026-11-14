@@ -13,8 +13,10 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 ## Atmungsraum
 
 - Phone breathing preview (2026-11-14): after setup, **Atemvorschau** shows
-  an illustrative radius. **Einatmen** and **Ausatmen** resize the circle.
-  **Weiter zur Auswahl** opens the existing practice and main choices.
+  an illustrative radius. The phone prompts **Einatmen** and **Ausatmen**
+  in order and resizes the circle over four seconds for each step. After
+  both steps, the green **Weiter zur Auswahl** button opens the existing
+  practice and main choices.
   Audio cues and the calibration protocol remain to be defined. See the
   [smartphone UI tree](../atmungsraum/for-ai/PROJECT.md#smartphone-ui-decision-tree--2026-11-14).
 

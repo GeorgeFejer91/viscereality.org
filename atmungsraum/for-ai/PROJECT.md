@@ -25,9 +25,9 @@ Open Atmungsraum → Quest-Steuerung
    ├─ Polar H10 verbinden → wait for ECG + accelerometer data
    │  └─ Zero or multiple straps found → adjust straps and try again
    └─ Atemvorschau → once the setup is ready
-      ├─ Einatmen → example circle grows
-      ├─ Ausatmen → example circle shrinks
-      └─ Weiter zur Auswahl → Quest-Steuerung
+      ├─ Einatmen → example circle grows over four seconds
+      ├─ Ausatmen → example circle shrinks over four seconds
+      └─ Green Weiter zur Auswahl → Quest-Steuerung
          └─ Choose VR-Bedingung → Bedingung A or Bedingung B
             └─ Choose Ablauf for either condition
                ├─ Anleitung                → guided example (1:08)
@@ -63,14 +63,17 @@ Other phone views and actions
 - The direct `#daten` route opens **Frühere Browser-Aufnahmen** with links
   to historical CSVs when present and **← Zurück** to the controller.
 
-The circle uses a simulated radius. The two breath buttons only change the
-phone display. **Weiter zur Auswahl** works immediately, with the preview
-shown again after editing participant details or explicitly disconnecting.
+The circle uses a simulated radius. The next breath button pulses twice
+and stays highlighted. Reduced motion uses a static highlight and a
+discrete size change. The green **Weiter zur Auswahl** button appears after
+both four-second preview phases. An interrupted sequence starts again at
+**Einatmen**. The preview also resets after editing participant details or
+explicitly disconnecting.
 A run already in progress remains controllable when the phone reconnects.
 Define the audio cues and calibration protocol before connecting the preview
 to either. See [preview verification](VERIFICATION.md#phone-breathing-preview--2026-11-14).
 
-Runtime commit `720d017` reached `origin/main` and deployed in
+The initial preview commit `720d017` reached `origin/main` and deployed in
 [Pages run 43609888532](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43609888532).
 The four public runtime files matched their Git bytes. All six viewport
 and text-layout checks passed against the deployed app with synthetic
