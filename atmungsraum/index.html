@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261113-polar-only">
+  <link rel="stylesheet" href="./style.css?v=20261114-breathing-preview">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261114-recording-bytes"></script>
+  <script type="module" src="./app.js?v=20261114-breathing-preview"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -145,6 +145,22 @@
       <footer class="actions">
         <button id="quest-play" type="button" hidden><span data-measure>Starten</span></button>
         <button id="quest-finish" type="button" hidden><span data-measure>Beenden</span></button>
+      </footer>
+    </section>
+    <section class="screen" id="breathing-preview" aria-labelledby="preview-title" hidden>
+      <h1 id="preview-title" tabindex="-1" data-measure>Atemvorschau</h1>
+      <div class="screen-body preview-body">
+        <figure class="preview-figure">
+          <div class="preview-radius" aria-hidden="true"><div id="preview-circle"></div></div>
+          <figcaption id="preview-status" role="status" data-measure>Beispielradius · Simulation</figcaption>
+        </figure>
+        <div class="preview-controls">
+          <button id="preview-inhale" type="button"><span data-measure>Einatmen</span></button>
+          <button id="preview-exhale" type="button"><span data-measure>Ausatmen</span></button>
+        </div>
+      </div>
+      <footer class="actions">
+        <button id="preview-continue" type="button"><span data-measure>Weiter zur Auswahl</span></button>
       </footer>
     </section>
     <section class="screen" id="daten" aria-labelledby="data-title" hidden>

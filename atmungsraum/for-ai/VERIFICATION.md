@@ -1,5 +1,19 @@
 # Verification
 
+## Phone breathing preview — 2026-11-14
+
+Mobile Chromium with synthetic Quest state verified the preview gate,
+keyboard and focus order, reduced-motion circle changes and Continue. An
+unavailable default A track still allowed the operator to choose B. The
+fixture checked that breath buttons issued zero Quest commands and that
+scenario selection, Start, Finish and participant editing still worked.
+Recenter kept the preview visible and disabled Continue while awaiting its
+receipt. A separate paused-rejoin fixture kept Resume and Finish available.
+A 320 × 568 minimum, 390 × 844 portrait, 568 × 320 landscape and
+1440 × 900 desktop fit the measured controls without document overflow.
+The 200% text and expanded spacing checks retained full text and controls.
+All 88 Node tests, six scenario pairs and the context check passed.
+
 ## Full Haupt-Runde on Quest 2 and Pixel — 2026-11-13
 
 Quest 2 ran signed APK 0.1.27 in Remote. The installed Pixel 10 PWA used

@@ -4,9 +4,9 @@
 
 ### Smartphone UI decision tree — 2026-11-14
 
-German labels match the [live smartphone controller](https://viscereality.org/atmungsraum/).
-The main flow changes state on one **Quest-Steuerung** screen. The Quest displays
-the VR scene and runs playback.
+German labels match the [smartphone controller](https://viscereality.org/atmungsraum/).
+**Atemvorschau** is a dedicated phone screen between setup and scenario
+selection. The Quest displays the VR scene and runs playback.
 
 ```text
 Open Atmungsraum → Quest-Steuerung
@@ -24,14 +24,18 @@ Open Atmungsraum → Quest-Steuerung
    │  └─ Teilnehmer-ID übernehmen
    ├─ Polar H10 verbinden → wait for ECG + accelerometer data
    │  └─ Zero or multiple straps found → adjust straps and try again
-   └─ Choose VR-Bedingung → Bedingung A or Bedingung B
-      └─ Choose Ablauf for either condition
-         ├─ Anleitung                → guided example (1:08)
-         ├─ Probe · 5 Min.            → five-minute practice
-         ├─ Probe · 10 Min.           → ten-minute practice
-         ├─ Probe · 15 Min.           → fifteen-minute practice
-         ├─ Haupt-Runde · 15 Min.     → fifteen-minute main run
-         └─ Box-Atmung · 20 Min.      → diagnostic, see below
+   └─ Atemvorschau → once the setup is ready
+      ├─ Einatmen → example circle grows
+      ├─ Ausatmen → example circle shrinks
+      └─ Weiter zur Auswahl → Quest-Steuerung
+         └─ Choose VR-Bedingung → Bedingung A or Bedingung B
+            └─ Choose Ablauf for either condition
+               ├─ Anleitung                → guided example (1:08)
+               ├─ Probe · 5 Min.            → five-minute practice
+               ├─ Probe · 10 Min.           → ten-minute practice
+               ├─ Probe · 15 Min.           → fifteen-minute practice
+               ├─ Haupt-Runde · 15 Min.     → fifteen-minute main run
+               └─ Box-Atmung · 20 Min.      → diagnostic, when offered
 ```
 
 **Starten** prepares and starts the chosen run when the Quest is ready,
@@ -42,9 +46,9 @@ finalizing and saving before returning to preparation. A Polar hold can
 pause the run and keep **Fortsetzen** disabled until data is fresh.
 
 The phone lists the timelines advertised by the enrolled Quest. Older Quest
-connections can show **Szenario A/B** by itself. The catalog also advertises
-**Box-Atmung · 20 Min.** as a diagnostic. The native participant Arm rejects
-it because the diagnostic has no participant recording plan.
+connections can show **Szenario A/B** by itself. The participant-enabled
+Quest filters out **Box-Atmung · 20 Min.** because the diagnostic has no
+participant recording plan.
 
 Other phone views and actions
 
@@ -59,15 +63,12 @@ Other phone views and actions
 - The direct `#daten` route opens **Frühere Browser-Aufnahmen** with links
   to historical CSVs when present and **← Zurück** to the controller.
 
-Source checked against deployed `bdd9bfa`
-([Pages run 43606278756](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43606278756)).
-The live entry, controller, state machine and manifest matched Git bytes.
-Chromium at 390 × 844 verified launch, install help, the historical recordings
-view and return. The 24 focused Quest controller and scenario tests, all six
-scenario pairs and the context check passed. The primary checkout had
-unavailable cloud-backed source files and pre-existing index changes, so
-this documentation uses the clean publication checkout. Physical reruns of
-every branch remain on the [device acceptance checklist](#quest-2-control-media-and-ui-acceptance--2026-11-12).
+The circle uses a simulated radius. The two breath buttons only change the
+phone display. **Weiter zur Auswahl** works immediately, with the preview
+shown again after editing participant details or explicitly disconnecting.
+A run already in progress remains controllable when the phone reconnects.
+Define the audio cues and calibration protocol before connecting the preview
+to either. See [preview verification](VERIFICATION.md#phone-breathing-preview--2026-11-14).
 
 ### Quest APK release record — 2026-11-14
 

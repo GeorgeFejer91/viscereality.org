@@ -24,6 +24,12 @@ const labels = {
 
 export function mountQuestRehearsal(participantIdentity, savedPair) {
   const drive = mountQuestDrive();
+  const questScreen = byId('quest');
+  const preview = byId('breathing-preview');
+  const previewTitle = byId('preview-title');
+  const previewCircle = byId('preview-circle');
+  const previewStatus = byId('preview-status');
+  const previewContinue = byId('preview-continue');
   const form = byId('quest-join');
   const find = byId('quest-find');
   const repair = byId('quest-repair');
@@ -49,6 +55,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const participantSubmit = byId('patient-next');
   const participantOutput = byId('patient-id');
   let participantId = '';
+  let previewAccepted = false;
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -115,6 +122,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     }
     const setup = polarSetup(status);
     const ready = setup?.p && setup.b && setup.c && setup.e && setup.a;
+    const idle = status?.p === 'IDLE' && !active;
+    const setupComplete = !requiresParticipant || Boolean(armedWithParticipant && participantId && ready);
+    const selectionAllowed = idle && setupComplete && previewAccepted;
+    const showPreview = idle && setupComplete && !previewAccepted && status.h === 'vr-preparation'
+      && rehearsalPolarAllowed(status) && !unknown && (!waiting || !preview.hidden);
+    previewContinue.disabled = waiting;
     const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active;
     if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
       statusText.focus({ preventScroll: true });
@@ -134,9 +147,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
     polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || setup.sc || ready;
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
-    play.hidden = !status;
+    play.hidden = !status || idle && !selectionAllowed;
     const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
-    const showScenario = available.length > 0 && status?.p === 'IDLE';
+    const showScenario = selectionAllowed && available.length > 0;
     if (!showScenario && document.activeElement === scenario) statusText.focus({ preventScroll: true });
     scenario.parentElement.hidden = !showScenario;
     scenario.disabled = !showScenario || waiting || unknown;
@@ -144,13 +157,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       for (const option of scenarioOptions) option.hidden = option.disabled = !available.includes(option.value);
       if (!available.includes(scenario.value)) scenario.value = scenarioOptions.find(option => !option.disabled).value;
     }
-    condition.parentElement.hidden = status?.ecg_preview !== 1 || status.p !== 'IDLE';
+    const showCondition = selectionAllowed && status.ecg_preview === 1;
+    if (!showCondition && document.activeElement === condition) statusText.focus({ preventScroll: true });
+    condition.parentElement.hidden = !showCondition;
     condition.disabled = waiting || unknown;
     text(conditionName, showScenario ? 'VR-Bedingung' : 'Szenario');
     text(condition.options[0], showScenario ? 'Bedingung A' : 'Szenario A');
     text(condition.options[1], showScenario ? 'Bedingung B' : 'Szenario B');
-    play.disabled = waiting || unknown || !actions.play
-      || actions.play === 'arm' && requiresParticipant && (!armedWithParticipant || !participantId || !ready);
+    play.disabled = waiting || unknown || !actions.play || actions.play === 'arm' && !selectionAllowed;
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -172,6 +186,23 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
     archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
     download.hidden = !status || !download.hasAttribute('href');
+    if (showPreview !== !preview.hidden) {
+      const hadPreviewFocus = preview.contains(document.activeElement);
+      preview.hidden = !showPreview;
+      questScreen.hidden = showPreview;
+      if (showPreview) previewTitle.focus();
+      else if (hadPreviewFocus) {
+        if (showCondition) condition.focus();
+        else if (showScenario) scenario.focus();
+        else statusText.focus();
+      }
+    }
+  }
+
+  function resetPreview() {
+    previewAccepted = false;
+    delete previewCircle.dataset.breath;
+    text(previewStatus, 'Beispielradius · Simulation');
   }
 
   function showTrace(value) {
@@ -413,6 +444,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         if (!gateway) throw Error(joinMessage || 'Die Quest antwortet nicht im WLAN.');
       }
       if (signal.aborted || connecting !== attempt) { gateway.close(); return; }
+      if (savedPair && (savedPair.serial !== gateway.owner.serial || savedPair.device !== gateway.owner.device)) {
+        resetPreview();
+      }
       rememberPair({ serial: gateway.owner.serial, device: gateway.owner.device,
         build: gateway.initial.build.packaging_fingerprint, enrollment: settings.enrollment, hotspot: settings.hotspot,
         bluetoothId: peer?.id ?? settings.bluetoothId, endpoint });
@@ -504,6 +538,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     catch { text(participantOutput, '—'); }
     if (participantId) {
       participantId = '';
+      resetPreview();
       paint();
     }
   });
@@ -527,8 +562,23 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   });
   repair.addEventListener('click', beginPairing);
   polarConnect.addEventListener('click', () => act('polar'));
+  byId('preview-inhale').addEventListener('click', () => {
+    previewCircle.dataset.breath = 'inhale';
+    text(previewStatus, 'Beispielradius größer · Simulation');
+  });
+  byId('preview-exhale').addEventListener('click', () => {
+    previewCircle.dataset.breath = 'exhale';
+    text(previewStatus, 'Beispielradius kleiner · Simulation');
+  });
+  previewContinue.addEventListener('click', () => {
+    if (preview.hidden || previewContinue.disabled) return;
+    previewAccepted = true;
+    paint();
+  });
   condition.addEventListener('change', () => paint());
-  play.addEventListener('click', () => act('play'));
+  play.addEventListener('click', () => {
+    if (!play.hidden && !play.disabled) void act('play');
+  });
   recenter.addEventListener('click', () => {
     if (!document.hidden && recenter.getAttribute('aria-disabled') === 'false') void act('recenter');
   });
@@ -541,7 +591,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     void drive.setOwner(null);
     rehearsal.attach(null);
   }
-  disconnect.addEventListener('click', () => { autoConnect = false; detach(); find.focus(); });
+  disconnect.addEventListener('click', () => {
+    autoConnect = false;
+    resetPreview();
+    detach();
+    find.focus();
+  });
   const timer = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {

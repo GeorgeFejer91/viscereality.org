@@ -60,6 +60,38 @@ html[data-mode="quest"] #corner-actions {
 }
 html[data-mode="quest"]:has(#quest-join:not([hidden])) #recenter-vr { position: absolute; }
 #quest { width: min(100%, 640px); justify-self: center; }
+#breathing-preview { width: min(100%, 420px); justify-self: center; }
+.preview-body { justify-items: center; gap: clamp(6px, min(2vw, 2dvh), 14px); text-align: center; }
+.preview-figure { display: grid; justify-items: center; gap: inherit; width: 100%; }
+#preview-status { justify-self: stretch; }
+.preview-radius {
+  display: grid;
+  place-items: center;
+  inline-size: min(100%, clamp(76px, min(56vw, 23dvh), 240px));
+  aspect-ratio: 1;
+}
+#preview-circle {
+  inline-size: 100%;
+  aspect-ratio: 1;
+  border: 2px solid #c4e2a8;
+  border-radius: 50%;
+  background: #1b2219;
+  transform: scale(.68);
+}
+#preview-circle[data-breath="inhale"] { transform: scale(1); }
+#preview-circle[data-breath="exhale"] { transform: scale(.46); }
+@media (prefers-reduced-motion: no-preference) {
+  #preview-circle { transition: transform 400ms ease-out; }
+}
+.preview-controls {
+  display: grid;
+  width: min(100%, 320px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap);
+}
+#breathing-preview .actions { width: 100%; }
+#breathing-preview .actions > button { width: min(100%, 220px); }
+main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 .quest-body, .quest-join, .quest-join details[open], #quest-polar, #quest-data { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
 .quest-body { align-content: center; }
 #quest-participant { width: min(100%, 640px); justify-self: center; min-width: 0; }
@@ -133,3 +165,4 @@ html[data-layout="reflow"] .patient-fields { grid-template-rows: none; height: a
 html[data-layout="reflow"] #data-files { align-content: start; }
 html[data-layout="reflow"] .patient-fields, html[data-layout="reflow"] .gender-options { grid-template-columns: minmax(0, 1fr); }
 html[data-layout="reflow"] .actions { grid-template-columns: minmax(0, 1fr); }
+html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 1fr); }

@@ -105,7 +105,12 @@ async function measureLabels() {
     const observer = new ResizeObserver(measure);
     document.querySelectorAll('[data-measure], .screen-body, .actions').forEach((element) => observer.observe(element));
     const retry = () => { root.dataset.layout = 'bounded'; measure(); };
-    new MutationObserver(retry).observe(document.querySelector('main'), { childList: true, characterData: true, subtree: true });
+    const main = document.querySelector('main');
+    const screenChanges = new MutationObserver(retry);
+    screenChanges.observe(main, { childList: true, characterData: true, subtree: true });
+    main.querySelectorAll('.screen').forEach((screen) => {
+      screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
+    });
     const dialogChanges = new MutationObserver(measure);
     for (const id of ['install-dialog']) {
       const dialog = byId(id);
@@ -132,7 +137,7 @@ measureLabels();
 if (recovery) {
   void showSavedBrowserExports();
 } else {
-  import('./quest-ui.js?v=27').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=28').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

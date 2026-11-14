@@ -1,6 +1,6 @@
 # Subprojects
 
-Last updated: 2026-11-12
+Last updated: 2026-11-14
 
 This is the working map of website-adjacent subprojects. Update it when a subproject is added, retired, or gains durable behavioral constraints.
 
@@ -11,6 +11,12 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - Constraints: keep content readable without heavy media; preserve desktop and mobile navigation; keep research claims citation-backed or carefully framed.
 
 ## Atmungsraum
+
+- Phone breathing preview (2026-11-14): after setup, **Atemvorschau** shows
+  an illustrative radius. **Einatmen** and **Ausatmen** resize the circle.
+  **Weiter zur Auswahl** opens the existing practice and main choices.
+  Audio cues and the calibration protocol remain to be defined. See the
+  [smartphone UI tree](../atmungsraum/for-ai/PROJECT.md#smartphone-ui-decision-tree--2026-11-14).
 
 - Primary delivery target (2026-11-06): a progressive web app for smartphones.
   Users install it from the browser to the home screen; the existing Viscereality
