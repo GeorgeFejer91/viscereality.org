@@ -43,6 +43,12 @@ their own OpenXR clock. Sensor timestamps and frame/sample positions remain
 separate from these host clocks. Use their declared clock domains when joining
 streams, especially across device sleep.
 
+In this build, `breathing_phase` means the unbiased classification from the
+selected breathing input, including Controller State when fallback is selected.
+The native recording manifest retains `breath_tracking_configuration` and the
+calibrated model/source identity. CSV v4 does not add an input-mode column;
+retain that manifest when attributing classifications to a sensor or controller.
+
 The selected path supports zero guidance bias and rejects nonzero Arm or
 live-bias requests as `setup-guidance-bias-unsupported`. Intended phases are
 instructions, not proof that the participant followed them. The legacy timed
