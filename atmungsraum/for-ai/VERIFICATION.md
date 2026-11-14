@@ -1,5 +1,55 @@
 # Verification
 
+## Shared breathing setup release — 2026-11-14
+
+The selected developer app replaces the earlier simulated phone preview and
+embedded timed preparation with one native audio-frame schedule. Automatic is
+the startup input. Preparation loops 4–4–4–4 indefinitely; calibration starts
+on an inhale boundary and requires two complete cycles of valid Polar tilt
+evidence. Success activates the fitted model, retry returns to Automatic, and
+Controller State supplies the fixed-orientation fallback. The selected input
+continues through the next full cycle boundary into exactly 900 seconds of main
+playback. Nonzero guidance bias is unsupported in this selected path.
+
+The final native source passed 798 host tests with three ignored, plus the
+36-test standalone core suite. All 116 Node checks passed, including both real
+APK resolver assembly checks. Chromium rendered 59 states with the real phone
+controller and synthetic native-shaped status: native frame-driven progress,
+retry, failure, ready, Controller fallback, frozen frames, reload/re-enrollment,
+old APK compatibility, Bluetooth rediscovery and playback controls. Thirty-four
+reflow checks included 320px, 200% text, text spacing and keyboard focus. There
+were no app errors, actual overflow, missing measurements or undersized targets.
+These fixtures do not establish physical sensor or audio alignment quality.
+
+Independent reviews covered the native runtime, Java audio owner, enrolled
+gateway, phone UI and packaging. Regression checks exercise source-clock
+mapping, rejected and retired sensor evidence, retry model lineage, command
+timeouts, H10/frame loss, resumed Controller readiness, exact recording cutoff
+and incomplete-run finalization. Compilation checks use the actual Android SDK
+boot class path. The signed private developer APK matches the exact source tree
+and patch in the [release record](../quest/apks/README.md#020-dev--separate-developer-build-2026-11-14).
+Its 74 audio/catalog files, ARM64 OpenXR loader, five JNI exports, closed
+manifest fields and v2/v3 signatures passed readback. The private Meta Developer
+channel accepted code 1 and passed malware and security scans. Owner invite
+consent is pending in the separate distribution chat; the store is unpublished.
+
+[PR 3](https://github.com/GeorgeFejer91/viscereality.org/pull/3) preserved the
+source history and merged at `efaed6c13b17305ccd1e9c6ed7a5227330f9e179`.
+Its exact [Pages deployment 43647565252](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43647565252)
+succeeded. Eleven live files matched committed Git blob bytes by SHA-256:
+HTML, the five versioned JavaScript/CSS requests, `audio/box-loop.json`,
+`quest/native-source.patch`, and the experiment app/provider/session inputs.
+The loop digest is `b50ce8853b9d097b904cc90043e580a75ce17662e1ff2c985bb08b7df45a9ece`;
+the native patch digest is `fa5905c0a1f923989d2544d34bef01bb7b5b44acd2e1277610567284b458317d`.
+The context checker passed with `-RequireRemote` at the merged revision.
+
+The user explicitly requested finishing the build without hardware testing.
+No headset was installed, launched or changed during this feature release.
+Worn-Polar fit/retry quality, actual audio/visual phase alignment, Controller
+fallback on a wearer, a full 900-second Quest 2 recording, installed Pixel
+refresh and remote version-to-version replacement remain pending. Earlier
+hardware observations below describe their named older releases.
+
 ## Reconnect retry and lab bench sweep — 2026-11-14
 
 The Chromium screenshot suite uses the real controller and a synthetic
