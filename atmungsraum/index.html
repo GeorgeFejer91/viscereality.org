@@ -13,12 +13,12 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261114-guided-preview">
+  <link rel="stylesheet" href="./style.css?v=20261114-bluetooth-connect">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261114-guided-preview"></script>
+  <script type="module" src="./app.js?v=20261114-bluetooth-connect"></script>
 </head>
 <body>
-  <button id="recenter-vr" type="button" aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
+  <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
     <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
     <span id="recenter-vr-note" class="sr-only">Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.</span>
   </button>
@@ -44,23 +44,7 @@
       <h1 id="quest-title" tabindex="-1" data-measure>Quest-Steuerung</h1>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
-        <button id="quest-find" type="button" hidden><span data-measure>Quest verbinden</span></button>
-        <button id="quest-repair" type="button" hidden><span data-measure>Verbindung neu einrichten</span></button>
-        <form id="quest-join" class="quest-join" autocomplete="off" hidden>
-          <p id="quest-enrollment" data-measure>Gib die Zugangsdaten aus dem Netzwerkmenü der Quest ein. Dieses Smartphone merkt sich die Verbindung.</p>
-          <label for="quest-controller"><span data-measure>Controller-ID</span></label>
-          <input id="quest-controller" type="text" required pattern="[0-9a-f]{32}" maxlength="32" autocapitalize="none" spellcheck="false" aria-describedby="quest-enrollment">
-          <label for="quest-key"><span data-measure>Quest-Schlüssel</span></label>
-          <input id="quest-key" type="password" required pattern="[0-9a-f]{64}" maxlength="64" spellcheck="false">
-          <details>
-            <summary><span data-measure>Smartphone-Hotspot verwenden</span></summary>
-            <label for="quest-hotspot-ssid"><span data-measure>Hotspot-Name</span></label>
-            <input id="quest-hotspot-ssid" type="text" maxlength="32" autocapitalize="none" spellcheck="false">
-            <label for="quest-hotspot-password"><span data-measure>Hotspot-Passwort</span></label>
-            <input id="quest-hotspot-password" type="password" minlength="8" maxlength="63" spellcheck="false">
-          </details>
-          <button type="submit"><span data-measure>Verbindung speichern</span></button>
-        </form>
+        <button id="quest-find" type="button" aria-describedby="quest-status" hidden><span data-measure>Mit Bluetooth verbinden</span></button>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
         <details id="quest-participant" hidden>
           <summary><span id="quest-participant-label" data-measure>Teilnehmer-ID eingeben</span></summary>

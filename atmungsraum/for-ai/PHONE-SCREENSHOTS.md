@@ -31,7 +31,7 @@ the full PNG. Long forms include their full scrollable content. Put comments
 next to the corresponding numbers in `feedback.csv` or refer to the numbers
 when sending feedback.
 
-The pack covers connection and enrollment, participant entry, Polar setup,
+The pack covers Bluetooth connection and retry, participant entry, Polar setup,
 every Atemvorschau step, each participant scenario selection, playback,
 recordings, Drive setup, and recovery. It includes the peak of each button
 glow with motion enabled and steady frames for the rest of the sequence.

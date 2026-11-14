@@ -351,16 +351,14 @@ phone eventually finished the transfer over Wi-Fi and verified delivery.
 
 ## Operator procedure
 
-1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
-   On a fresh Quest profile, press **B** three times without holding the grip
-   in Remote mode to open the headset's maintenance panel. Under **Network
-   control**, select **Approve trusted LAN controller** on the trusted test
-   network. Tap **Quest verbinden**, select the Quest in Chrome and enter the
-   Controller ID and Quest key from the headset once. If using the Pixel
-   hotspot, turn it on and enter its name and password under
-   **Smartphone-Hotspot verwenden**. Approve Android Nearby devices, hotspot
-   join on Quest, and Chrome Local Network Access when prompted. Close the
-   maintenance panel to return to the immersive scene before starting.
+1. Open the installed Atmungsraum icon on the enrolled Pixel 10. The app
+   tries the saved Quest connection first. If needed, tap **Mit Bluetooth
+   verbinden** and select the Quest in Chrome. Grant Local Network Access if
+   prompted. A configured hotspot is reused when the shared LAN is
+   unreachable. Close the headset's maintenance panel to return to the
+   immersive scene before starting. The PWA expects prior trusted enrollment
+   from lab provisioning. See the [connection checklist](PROJECT.md#automatic-quest-connection--2026-11-14)
+   for fresh-phone provisioning and hotspot automation.
 2. Before a session, let the idle controller reconcile any finalized runs.
    In **Google Drive**, authorize the designated research account as described
    below. The PWA creates and remembers **Atmungsraum – Quest-Aufnahmen** as
@@ -376,7 +374,7 @@ phone eventually finished the transfer over Wi-Fi and verified delivery.
 5. After an interrupted connection, reopen the app while Quest is in Remote
    mode. The saved pairing opens VR-Probe and tries the last known address.
    If it changed, supported browsers can rediscover the Quest using its
-   saved Bluetooth grant. Use **Erneut verbinden** if Chrome needs the chooser
+   saved Bluetooth grant. Use **Mit Bluetooth verbinden** if Chrome needs the chooser
    again or Local Network Access has to be granted.
    Use **Jetzt abgleichen** if needed. If Google authorization expired,
    reconnect Drive. Confirm delivery before relying on the Drive copy.
@@ -387,7 +385,7 @@ The signed Quest rehearsals start in Remote. The installed Pixel Chrome
 157.0.8103.50 WebAPK discovers it over Bluetooth, then opens its authenticated
 Wi-Fi gateway. Close any floating overlays if Chrome blocks Local Network
 Access. A Quest APK update that changes the trusted build fingerprint
-requires the operator to set up the connection again. A restart on the same
+can be accepted using **Mit Bluetooth verbinden** with the same trusted enrollment. A restart on the same
 build can rejoin the saved address.
 
 The first two bench recordings used synthetic participant details and live

@@ -22,14 +22,19 @@ and proceeds to preparation. Controller ID, Quest key, hotspot details and
 a save action are absent from the operator flow. An enrolled phone reconnects
 automatically when the Quest becomes available again.
 
-The released PWA and APK 0.1.29 still follow the decision tree below. The
-browser selects a Bluetooth device and then opens its enrollment form.
-The Quest discovery service returns identity and LAN endpoints. The Wi-Fi
-setup characteristic requires a pre-existing enrolled key and credentials
-for an already running phone hotspot. These code paths explain the reported
-screen. A trusted registration or platform permission during device
-provisioning is separate from the operator's recurring connection flow.
+The PWA now offers one **Mit Bluetooth verbinden** action and no manual
+connection fields. It reads the selected Quest's identity and endpoints and
+opens the authenticated Wi-Fi connection with the saved enrollment. On
+reload it tries the saved endpoint first and uses an existing Bluetooth
+grant when Chrome exposes it. The Quest still owns trusted enrollment.
+APK 0.1.29 advertises identity and addresses. Its hotspot characteristic
+requires existing enrollment and credentials for a running phone hotspot.
 
+- [x] Remove the connection form and repair button. Use the same Bluetooth
+  action for discovery and recovery, including refreshing the signed build
+  for the same enrolled Quest. The local Chromium review captured 43 screens
+  and verified keyboard connection, status focus, and the missing-enrollment
+  state. All 89 Node tests, six scenario pairs and the context check passed.
 - [ ] Implement automatic discovery and hotspot management in an Android
   phone component. Chrome's first Web Bluetooth request requires a gesture
   and the browser's device chooser. Android requires the Nearby devices
@@ -58,14 +63,11 @@ selection. The Quest displays the VR scene and runs playback.
 
 ```text
 Open Atmungsraum → Quest-Steuerung
-├─ First use → Quest verbinden → choose the Quest in Bluetooth
-│  └─ Enter Controller-ID + Quest-Schlüssel
-│     ├─ Optional → Smartphone-Hotspot verwenden
-│     └─ Verbindung speichern → confirm Wi-Fi in the headset if prompted
-│        → preparation once connected
-├─ Saved Quest → reconnect automatically
+├─ Provisioned phone → automatic reconnect
 │  ├─ Connected → preparation
-│  └─ Unavailable → Erneut verbinden / Verbindung neu einrichten
+│  └─ Unavailable → Mit Bluetooth verbinden → choose Quest in Chrome
+│     → authenticated Wi-Fi connection → preparation
+├─ Phone without a trusted enrollment → authorization status
 └─ Quest connected → preparation
    ├─ Headset panel open → close it to return to the VR scene
    ├─ Teilnehmer-ID eingeben → surname prefix, age, gender

@@ -63,9 +63,12 @@ function command({ id, op, condition, d }) {
   return { v: 1, id, state: 'confirmed' };
 }
 export function sameQuest(a, b) { return a?.serial === b?.serial; }
-export async function selectQuest() { return { id: 'demo-bluetooth' }; }
+export async function selectQuest() {
+  if (window.reviewBluetooth === 'wait') await new Promise(() => {});
+  return { id: 'demo-bluetooth' };
+}
 export async function readQuest(_peer, _signal, setup) {
-  if (setup.hotspot) {
+  if (setup.forceHotspot) {
     setup.onApproval();
     await new Promise(() => {});
   }
@@ -92,7 +95,8 @@ export async function joinQuest() {
 }
 """
 
-PAIRED = "{endpoint:'synthetic',serial:'DEMO-QUEST',device:'demo-device'}"
+PAIRED = ("{endpoint:'synthetic',serial:'DEMO-QUEST',device:'demo-device',"
+          "enrollment:{controller:'" + "a" * 32 + "',key:'" + "b" * 64 + "'}}")
 
 
 class Review:
@@ -209,28 +213,40 @@ def capture(review):
     page.locator("#install-app").click()
     shot(page, "install-help", "Install help", page.locator("#install-dialog[open]"), "Connection")
     page.locator("#close-install").click()
-    find.click()
-    form = page.locator("#quest-join")
-    shot(page, "enrollment", "Quest enrollment", form, "Connection")
-    form.locator("summary").click()
-    shot(page, "hotspot", "Optional smartphone hotspot", form.locator("details[open]"), "Connection")
-    form.locator("#quest-controller").fill("a" * 32)
-    form.locator("#quest-key").fill("b" * 64)
-    form.locator("#quest-hotspot-ssid").fill("Review hotspot")
-    form.locator("#quest-hotspot-password").fill("demo-only")
-    form.get_by_role("button", name="Verbindung speichern").click()
-    expect(page.locator("#quest-status")).to_contain_text("Bestätige die WLAN-Verbindung")
-    shot(page, "wifi-approval", "Confirm Wi-Fi in the headset", page.locator("#quest-status"), "Connection")
+    expect(page.locator("#quest-join, #quest-controller, #quest-key, #quest-repair")).to_have_count(0)
+    find.focus()
+    find.press("Enter")
+    expect(page.locator("#quest-status")).to_contain_text("noch nicht freigegeben")
+    expect(find).to_be_focused()
+    shot(page, "unprovisioned", "Phone needs Quest authorization", page.locator("#quest-status"), "Connection")
+    page.context.close()
+
+    page = review.page("window.reviewBluetooth='wait';")
+    page.locator("#quest-find").click()
+    expect(page.locator("#quest-find")).to_have_attribute("aria-disabled", "true")
+    expect(page.locator("#quest-status")).to_contain_text("Quest wird verbunden")
+    shot(page, "bluetooth", "Waiting for Bluetooth", page.locator("#quest-status"), "Connection")
     page.context.close()
 
     paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    page = review.page(paired + "window.reviewJoin='fail';")
+    expect(page.locator("#quest-status")).to_contain_text("Erlaube den Bluetooth-Zugriff")
+    page.evaluate("window.reviewJoin = ''")
+    button = page.locator("#quest-find")
+    button.focus()
+    button.press("Enter")
+    expect(page.locator("#quest-polar")).to_be_visible()
+    expect(page.locator("#quest-status")).to_be_focused()
+    expect(button).to_be_hidden()
+    page.context.close()
+
     for mode, slug, title, locator in (
         ("wait", "reconnecting", "Reconnect to a saved Quest", "#quest-status"),
-        ("fail", "repair", "Connection unavailable and repair", "#quest-repair"),
+        ("fail", "retry-bluetooth", "Retry Bluetooth connection", "#quest-find"),
     ):
         page = review.page(paired + f"window.reviewJoin='{mode}';")
         if mode == "fail":
-            page.clock.run_for(100)
+            expect(page.locator("#quest-status")).to_contain_text("Erlaube den Bluetooth-Zugriff")
         if mode == "wait":
             expect(page.locator("#quest-status")).to_contain_text("Quest wird verbunden")
         shot(page, slug, title, page.locator(locator), "Connection")

@@ -41,9 +41,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewExhale = byId('preview-exhale');
   const previewContinue = byId('preview-continue');
   preview.style.setProperty('--preview-breath-duration', `${previewBreathDuration}ms`);
-  const form = byId('quest-join');
   const find = byId('quest-find');
-  const repair = byId('quest-repair');
   const statusText = byId('quest-status');
   const clock = byId('quest-clock');
   const recenter = byId('recenter-vr');
@@ -82,11 +80,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
   let connecting = null;
-  let pairingDevice = null;
   let rememberedDevice = null;
   let nextConnect = 0;
   let autoConnect = true;
-  let canRetry = false;
   let pairWarning = '';
   let userAction = null;
   let joinMessage = '';
@@ -101,25 +97,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
     const waiting = Boolean(connecting || busy || pending || status?.pending);
     const recenterAvailable = Boolean(rehearsal.gateway?.recenter && canRecenter(status) && !waiting && !unknown);
+    recenter.hidden = !status;
     recenter.setAttribute('aria-disabled', String(!recenterAvailable));
     text(recenterNote, recenterAvailable ? 'Richtet die VR-Szene an der aktuellen Blickrichtung aus.'
       : 'Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.');
-    const connectingFocus = [find, repair].includes(document.activeElement) || form.contains(document.activeElement);
+    const connectingFocus = document.activeElement === find;
     const hadFinishFocus = document.activeElement === finish;
     if (status && !connecting) joinMessage = '';
-    form.hidden = Boolean(status) || !pairingDevice;
-    form.querySelectorAll('input, button').forEach((element) => { element.disabled = Boolean(connecting); });
-    find.hidden = Boolean(status || pairingDevice || (savedPair && autoConnect && !canRetry));
-    find.disabled = Boolean(connecting);
-    text(find.firstElementChild, savedPair ? 'Erneut verbinden' : 'Quest verbinden');
-    repair.hidden = Boolean(status || !savedPair || !canRetry || pairingDevice || connecting);
-    const hint = !status ? (pairingDevice ? 'Quest ausgewählt.'
-      : savedPair && autoConnect
+    find.hidden = Boolean(status);
+    find.setAttribute('aria-disabled', String(Boolean(connecting)));
+    const hint = !status ? (savedPair?.enrollment && autoConnect
       ? 'Warte auf die gespeicherte Quest.'
       : 'Starte die Quest im Fernmodus und schalte Bluetooth am Smartphone ein.')
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : !rehearsalPolarAllowed(status) ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
-      : requiresParticipant && !armedWithParticipant ? 'Verbinde dich mit dem Quest-Schlüssel, um einen Probelauf zu starten.'
+      : requiresParticipant && !armedWithParticipant ? 'Dieses Smartphone ist für den Probelauf noch nicht freigegeben.'
       : status.pi?.r === true && status.pi.f !== true && ['ARMED', 'PAUSED'].includes(status.p)
         ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
       : status.p === 'IDLE' && !actions.play ? 'Warte auf die VR-Szene und den Probelauf.'
@@ -405,7 +397,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (document.hidden || connecting || userAction) return;
     await rehearsal.refresh();
     if (document.hidden || connecting || userAction) return;
-    if (!rehearsal.state.status && savedPair && autoConnect && !pairingDevice && performance.now() >= nextConnect) {
+    if (!rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
       void connect(savedPair);
       return;
     }
@@ -442,6 +434,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   async function connect(settings, chooseDevice = false) {
     if (connecting) return;
+    settings ??= {};
     const attempt = new AbortController();
     const { signal } = attempt;
     connecting = attempt;
@@ -458,8 +451,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       const selection = chooseDevice ? selectQuest(navigator.bluetooth) : null;
       paint();
       const join = (endpoint, discovery) => joinQuest({ endpoint, serial: discovery?.owner.serial ?? settings.serial,
-        device: settings.device, build: settings.build, enrollment: settings.enrollment, discovery: discovery?.owner, signal });
-      let peer = selection ? await selection : pairingDevice;
+        device: settings.device, build: chooseDevice ? undefined : settings.build,
+        enrollment: settings.enrollment, discovery: discovery?.owner, signal });
+      let peer = selection ? await selection : null;
       let gateway;
       let endpoint = settings.endpoint;
       if (endpoint && !peer) gateway = await join(endpoint).catch(() => null);
@@ -472,6 +466,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         }
         if (!peer) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
         const discovery = await readQuest(peer, signal, setup);
+        if (!settings.enrollment) {
+          throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
+        }
         for (const candidate of discovery.endpoints) {
           endpoint = candidate;
           try { gateway = await join(endpoint, discovery); break; }
@@ -495,10 +492,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         build: gateway.initial.build.packaging_fingerprint, enrollment: settings.enrollment, hotspot: settings.hotspot,
         bluetoothId: peer?.id ?? settings.bluetoothId, endpoint });
       if (peer) rememberedDevice = peer;
-      pairingDevice = null;
-      form.reset();
       autoConnect = true;
-      canRetry = false;
       joinMessage = '';
       if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
       rehearsal.attach(gateway);
@@ -507,10 +501,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (rehearsal.state.pending) await rehearsal.refresh();
     } catch (error) {
       if (connecting !== attempt) return;
-      canRetry = true;
-      joinMessage = error instanceof TypeError || ['TimeoutError', 'NotFoundError', 'SecurityError'].includes(error?.name)
-        ? 'Quest nicht erreichbar. Prüfe Bluetooth, WLAN und den Fernmodus.'
-        : error?.name === 'Error' ? error.message : 'Die Quest konnte nicht verbunden werden.';
+      joinMessage = error?.name === 'NotFoundError' && chooseDevice
+        ? 'Schalte Bluetooth ein und wähle die Quest aus.'
+        : error instanceof TypeError || ['TimeoutError', 'NotFoundError', 'SecurityError'].includes(error?.name)
+          ? 'Quest nicht erreichbar. Prüfe Bluetooth, WLAN und den Fernmodus.'
+          : error?.name === 'Error' ? error.message : 'Die Quest konnte nicht verbunden werden.';
     } finally {
       if (connecting === attempt) {
         nextConnect = performance.now() + 8000;
@@ -532,29 +527,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     savedPair = settings;
   }
 
-  async function beginPairing() {
-    if (connecting) return;
-    const attempt = new AbortController();
-    connecting = attempt;
-    joinMessage = '';
-    try {
-      const selection = selectQuest(navigator.bluetooth);
-      paint();
-      const peer = await selection;
-      if (attempt.signal.aborted) return;
-      pairingDevice = peer;
-    } catch (error) {
-      if (!attempt.signal.aborted) joinMessage = error?.name === 'NotFoundError'
-        ? 'Wähle die Quest aus, um sie zu verbinden.' : error.message;
-    } finally {
-      if (connecting === attempt) {
-        connecting = null;
-        paint();
-        if (pairingDevice) byId('quest-controller').focus({ preventScroll: true });
-      }
-    }
-  }
-
   async function act(action) {
     if (userAction) return;
     ecgAttempt?.abort();
@@ -569,14 +541,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     finally { if (userAction === attempt) userAction = null; }
   }
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const controller = byId('quest-controller').value;
-    const key = byId('quest-key').value;
-    const ssid = byId('quest-hotspot-ssid').value;
-    const passphrase = byId('quest-hotspot-password').value;
-    void connect({ enrollment: { controller, key }, hotspot: ssid || passphrase ? { ssid, passphrase } : undefined });
-  });
   participantForm.addEventListener('input', () => {
     try { text(participantOutput, participantIdentity(Object.fromEntries(new FormData(participantForm))).id); }
     catch { text(participantOutput, '—'); }
@@ -600,11 +564,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     }
   });
   find.addEventListener('click', () => {
-    if (!savedPair) return void beginPairing();
     autoConnect = true;
     void connect(savedPair, true);
   });
-  repair.addEventListener('click', beginPairing);
   polarConnect.addEventListener('click', () => act('polar'));
   previewInhale.addEventListener('click', () => startPreviewBreath('inhale'));
   previewExhale.addEventListener('click', () => startPreviewBreath('exhale'));
