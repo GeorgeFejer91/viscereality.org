@@ -35,6 +35,17 @@ requires existing enrollment and credentials for a running phone hotspot.
   for the same enrolled Quest. The local Chromium review captured 43 screens
   and verified keyboard connection, status focus, and the missing-enrollment
   state. All 89 Node tests, six scenario pairs and the context check passed.
+  Runtime commit `0fc97c2` deployed in
+  [Pages run 43631515034](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43631515034).
+  All four live runtime files matched Git. The enrolled lab Pixel 10 loaded
+  the release in standalone mode and reconnected on launch. After an idle
+  disconnect, the Bluetooth action opened Chrome's chooser and selection
+  rejoined Quest 2 APK 0.1.29 over Wi-Fi with participant and private
+  recording controls available. No app form appeared. Chrome displayed the
+  headset as an unnamed device, and the headset reported its panel open.
+  The test used an existing enrollment and a shared Wi-Fi network.
+  The connection button fit at five sizes from 320px mobile to desktop,
+  including landscape and a user text-spacing override.
 - [ ] Implement automatic discovery and hotspot management in an Android
   phone component. Chrome's first Web Bluetooth request requires a gesture
   and the browser's device chooser. Android requires the Nearby devices

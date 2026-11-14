@@ -117,10 +117,15 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
   padding-inline: 8px;
   text-align: center;
 }
-#quest-drive-form { display: grid; gap: var(--gap); min-width: 0; }
+#quest-drive[open], #quest-drive-form { display: grid; gap: var(--gap); min-width: 0; }
+#quest-drive label > span { display: block; }
+#quest-drive input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: inherit; }
+#quest-drive summary { min-height: 48px; align-content: center; cursor: pointer; }
 #quest-condition-label, #quest-scenario-label, #quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
 #quest-condition, #quest-scenario, #quest-archives { min-height: 48px; min-width: 0; max-width: 100%; padding: 6px 12px; font: inherit; border: 1px solid #4a5148; border-radius: 10px; background: #131712; color: inherit; }
 #quest-acknowledge, #quest-disconnect, #quest-find { justify-self: center; }
+#quest-find { width: min(100%, 280px); padding-inline: 16px; }
+#quest-find[aria-disabled="true"] { cursor: default; }
 .patient-body { grid-template-rows: minmax(0, 1fr); align-content: stretch; justify-items: center; }
 .patient-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); align-items: end; align-content: space-between; align-self: center; gap: var(--gap) var(--patient-gap); width: min(100%, 640px); height: 100%; max-height: 384px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; }
 .patient-field { display: grid; gap: 6px; min-width: 0; }
