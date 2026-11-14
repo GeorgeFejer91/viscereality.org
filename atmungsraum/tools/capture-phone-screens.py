@@ -74,6 +74,7 @@ export async function readQuest(_peer, _signal, setup) {
   }
   return { owner, endpoints: ['synthetic'] };
 }
+export async function rediscoverQuest() { return null; }
 export async function joinQuest() {
   if (window.reviewJoin === 'wait') await new Promise(() => {});
   if (window.reviewJoin === 'fail') throw Error('Simulated connection failure');
@@ -122,7 +123,7 @@ class Review:
             if url.netloc != "viscereality.org" or not url.path.startswith("/atmungsraum/"):
                 request_route.abort()
                 return
-            if path == "quest-gateway.js" and url.query == "v=7":
+            if path == "quest-gateway.js" and url.query == "v=8":
                 request_route.fulfill(content_type="text/javascript", body=GATEWAY)
                 return
             file = (ROOT / (path or "index.html")).resolve()

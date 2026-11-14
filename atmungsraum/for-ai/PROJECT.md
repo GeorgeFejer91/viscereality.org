@@ -40,6 +40,16 @@ Wi-Fi connection can continue with Bluetooth off.
   route, the app waits and resumes by itself when Bluetooth is enabled. Confirm
   it keeps the saved pairing when a different Quest is also nearby.
 
+An Android discovery companion now supplies the saved Quest's advertised
+address when Chrome has no Bluetooth device object. It reports the actual phone
+radio state. A lab Pixel build received the correct Quest 2 metadata without a
+chooser, and its loopback service reported Bluetooth off during a radio toggle.
+The new browser contract tests reject mismatched identities and public addresses.
+All 91 Node tests passed. Chrome requested one-time loopback permission, but
+the active RustDesk floating overlay blocked the lab approval. End-to-end
+cold launch, Bluetooth resume and recovery after an address change remain open.
+See [Android discovery setup](../phone-discovery/README.md).
+
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
 connection fields. It reads the selected Quest's identity and endpoints and
 opens the authenticated Wi-Fi connection with the saved enrollment. On

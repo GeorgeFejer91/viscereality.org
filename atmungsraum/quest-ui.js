@@ -1,4 +1,4 @@
-import { selectQuest, readQuest, joinQuest, sameQuest } from './quest-gateway.js?v=7';
+import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=8';
 import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=20';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=25';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
@@ -464,8 +464,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           const allowed = await navigator.bluetooth?.getDevices?.() ?? [];
           peer = allowed.find(device => device.id === settings.bluetoothId);
         }
-        if (!peer) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
-        const discovery = await readQuest(peer, signal, setup);
+        const discovery = peer ? await readQuest(peer, signal, setup)
+          : await rediscoverQuest(settings, signal);
+        if (discovery?.state && discovery.state !== 'ready') {
+          joinMessage = {
+            'bluetooth-off': 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.',
+            'searching': 'Suche die gespeicherte Quest über Bluetooth …',
+            'permission-required': 'Erlaube der Bluetooth-Suche den Zugriff auf Geräte in der Nähe.',
+          }[discovery.state];
+          return;
+        }
+        if (!discovery) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
         if (!settings.enrollment) {
           throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
         }
@@ -477,7 +486,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
             joinMessage = error.message;
           }
         }
-        if (!gateway && settings.hotspot) {
+        if (!gateway && peer && settings.hotspot) {
           const hotspot = await readQuest(peer, signal, { ...setup, ...discovery.owner, forceHotspot: true });
           endpoint = hotspot.endpoints[0];
           gateway = await join(endpoint, hotspot);
