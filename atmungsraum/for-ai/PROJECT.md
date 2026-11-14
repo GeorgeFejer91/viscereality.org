@@ -109,10 +109,14 @@ participant CSV, with the same bytes and SHA-256 as Quest and Pixel.
   writer loss, and time from a Quest checkpoint to Drive acknowledgement.
   Exercise LAN loss, a Drive failure, and a Pixel reload. Confirm catch-up,
   explicit interruption markers, and one private Drive object per run.
-  The sync-enabled run exercised all three planned transport faults and
-  recovered from one additional Chrome renderer exit on the Pixel. The
-  sync-disabled run is the remaining comparison. Record its matching
-  steady-state window and both terminal receipts before closing this item.
+  Both runs completed the 900-second audio and saved with zero writer drops.
+  The [paired comparison](QUEST-PHONE-SYNC.md#paired-physical-trial-results-on-2026-11-14)
+  records frame cadence, Polar freshness and the signed phone controls.
+  The sync-enabled run recovered from all three planned transport faults
+  and one additional Chrome renderer exit on the Pixel. The baseline used
+  live sync off and is uploading via the post-session path. Repeat the
+  enabled run with bounded diagnostics to check whether the browser exit
+  recurs and to compare the operator control response again.
   Follow the [paired measurement procedure](QUEST-PHONE-SYNC.md#paired-physical-trial-measurements).
 - [x] Reproduce the earlier phone lock after Resume immediately followed by a
   new Polar hold. Clear the pending control on a confirmed signed receipt

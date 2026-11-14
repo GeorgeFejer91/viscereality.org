@@ -141,6 +141,62 @@ retained the original Drive file ID. SHA-256
 The sync-disabled baseline and paired performance comparison are tracked
 in the [active checklist](PROJECT.md#live-recording-sync-to-google-drive).
 
+### Paired physical trial results on 2026-11-14
+
+Both sessions used Quest 2 APK `0.1.29`, the installed Pixel 10 PWA
+`20261113-live-repair`, condition A, the same H10 and the low-latency
+Polar presentation policy. Both played the complete 900-second audio and
+ended via the Pixel. The normal Pause and Resume actions were exercised
+around 04:23 and 12:09. The enabled run included the fault windows above.
+The baseline used `?live-sync=off`. Browser network observation saw no
+live prefix requests or Drive upload during baseline playback.
+
+The table uses the uninterrupted 165–235 second playback window.
+Values in the timing rows are median, p95 and p99 in milliseconds.
+
+| Measurement | Sync disabled | Sync enabled |
+| --- | --- | --- |
+| Radius observation intervals (5,027 per run) | 13.925 / 14.324 / 14.602 | 13.924 / 14.375 / 15.056 |
+| Scorecard mean period between frame numbers (41 intervals per run) | 13.925 / 13.950 / 13.958 | 13.925 / 13.933 / 13.942 |
+| CPU time per submitted OpenXR frame (42 scorecards per run) | 1.308 / 1.430 / 1.647 | 1.545 / 1.831 / 3.571 |
+| Native accepted Polar sample age | 112 / 313 / 356 (69) | 95 / 223 / 387 (70) |
+| Native ingress-to-commit | 0 / 0 / 0 (69) | 0 / 0 / 0 (70) |
+| Selected Polar sample age at the Java midpoint | 107.747 / 331.992 / 427.572 (4,979) | 91.957 / 216.979 / 287.418 (5,027) |
+| Valid Polar breath assessments | 4,979 of 4,979 | 5,027 of 5,027 |
+
+The scorecard period divides wall time between scorecards by the change in
+submitted frame number. Quest and Pixel clocks were checked at the bench.
+The Quest wall clock shifted by about two seconds during the baseline.
+The per-frame radius and source-age measurements use device monotonic clocks.
+Using either wall-clock offset to select the baseline scorecards gives the
+same p95 CPU time and frame period.
+
+The renderer used Polar phase mapping. In the enabled comparison window,
+314 matched inhale observations raised the radius, 246 matched exhale
+observations lowered it, and 4,322 hold observations kept it steady.
+The baseline comparison window contained only hold assessments, and its
+radius stayed steady. The first 445 seconds of baseline include 406
+matched inhale observations that raised the radius and 367 exhale
+observations that lowered it. Both recordings retained the applied radius.
+
+At the matched 12:09 phone actions, the enabled run showed Pause and Resume
+changes after 1.34 and 1.58 seconds. The baseline showed them after 1.56 and
+0.62 seconds. The confirmed signed receipts arrived after 1.22 and 1.44
+seconds with sync enabled, and after 1.47 and 0.47 seconds with sync disabled.
+The baseline also showed the expected state changes after 1.40 and 1.52
+seconds at the earlier pause and resume. This pair shows stable frame
+cadence, fresh biofeedback and an increase in submitted-frame CPU time
+with live sync. Phone response varied between actions. A transient Quest
+status rejection occurred during Finish in both runs, then the UI recovered.
+The enabled run had the additional Chrome renderer exit reported above.
+These observations describe one pair of runs with DevTools attached.
+
+Quest finalized both recordings with zero writer drops. The baseline
+recording was 67,609,282 bytes, with 13 naturally occurring ECG interruption
+and resumption pairs and no accelerometer interruption marker. Each reported
+ECG gap exceeded the one-second marker threshold. The enabled run retained
+the separate deliberate ECG and accelerometer gaps above.
+
 ## Operator procedure
 
 1. Open the installed Atmungsraum icon on the Pixel 10 and go to **VR-Probe**.
