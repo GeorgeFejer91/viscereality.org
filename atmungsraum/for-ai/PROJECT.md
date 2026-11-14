@@ -24,6 +24,61 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
 The independent Meta developer-distribution chat owns account/channel setup.
 Feature work remains in this owner. Current code is on a task branch; no new
 feature APK, device acceptance or live feature deployment is claimed yet.
+### Quest calibration menu voice cues — 2026-11-14
+
+The Quest **Direct → Developer settings → Breath → Calibration** menu plays
+“Atme bitte jetzt ganz ein.” after an accepted Start, then “Atme bitte ganz aus.”
+four seconds later if the same calibration is still active. Cancel, Reset,
+switching configuration, closing the menu or backgrounding it stops playback.
+The phone preview and the Haupt-Runde timeline retain their existing behavior.
+
+Both German scripts were explicitly approved. Secret Tunnel v6 generated the
+two MP3s from the EmoDB Atmungsraum 3 voice; its Whisper check reported zero word
+edits for both. See the [prompt inventory](../assets/audio/calibration-menu/manifest.json)
+and the [signed Quest release](../quest/apks/README.md#0130--quest-2-calibration-menu).
+APK 0.1.30 is signed by the same lab certificate as 0.1.29; both bundled
+MP3s and the unchanged scenario bytes passed archive readback. Release
+`b360e99` reached `origin/main` and deployed in
+[Pages run 43636115452](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43636115452).
+The public APK, both MP3s, and both transcripts matched the release bytes by
+SHA-256.
+Next: listen through an attended Quest 2 calibration with active sensor data,
+including Cancel before the exhale cue. Keep the overall rehearsal goal open.
+
+### Start-to-finish QA and reconnect latency — 2026-11-14
+
+From the clean sparse publication checkout, the Chromium review covered 43
+screens across startup, setup, all five scenario choices, playback, recording
+recovery and error states. The installed Pixel 10 PWA joined the already
+enrolled Quest on five consecutive reloads in 263–599 ms from navigation to
+the participant control. These are bench reload measurements. The Quest 2
+installed APK matched the signed 0.1.29 release, and the renderer's idle
+scorecards sampled 71.7–72.2 frames/s with no stale frames.
+
+The reconnect regression reproduced an eight-second wait after the companion
+reported that Bluetooth was off or scanning. The PWA now checks companion
+progress on its existing one-second tick and probes the failed saved address
+at most once every eight seconds while attempting recovery. It still tries
+that address first during normal startup and authenticates the same Quest
+before saving any replacement address. The rendered regression verifies
+Bluetooth off → scanning → Wi-Fi recovery without a tap or chooser.
+
+Reconnect fix `c469b92` reached GitHub main and shipped in the superseding
+[`b360e99` Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43636115452).
+The live HTML, versioned modules, manifest and QA notes matched Git bytes.
+The Pixel loaded the new runtime in standalone mode and rejoined five times:
+892 ms on the first updated load, then 260–285 ms on four warm reloads.
+The installed headset still ran 0.1.29. The newly published 0.1.30 artifact
+passed local signature and package-content checks; its attended run is open.
+
+The physical headset still reported an open panel and no live H10 streams
+during this sweep. After a wearer returns to the scene with the strap active,
+run the short guided scenario through Start, Pause, Resume, Finish and CSV
+retrieval, measuring the command-to-visible-state timings. Repeat the address
+change with the normal Chrome loopback permission; Chrome blocked its prompt
+while the Pixel's RustDesk overlay was visible. Maestro still failed to find
+the USB Pixel while the shared ADB server listed an offline emulator. The
+physical PWA observations used Chrome DevTools.
 
 ### Smartphone screenshot review — 2026-11-14
 
@@ -42,8 +97,43 @@ The operator's connection flow should require only turning on phone Bluetooth
 if it is off. Once Atmungsraum opens, the phone discovers the Quest, retrieves
 the connection information over Bluetooth, establishes the Wi-Fi control link,
 and proceeds to preparation. Controller ID, Quest key, hotspot details and
-a save action are absent from the operator flow. An enrolled phone reconnects
-automatically when the Quest becomes available again.
+a save action are absent from the operator flow.
+
+After the first verified connection, remember the same headset. On later
+launches and after a connection loss, restore its Wi-Fi control link without a
+tap or chooser. If Bluetooth is needed and switched off, show a status asking
+the operator to turn it on, then resume automatically. An existing authenticated
+Wi-Fi connection can continue with Bluetooth off.
+
+- [x] Save the Quest serial, stable device identity, signed build fingerprint,
+  Bluetooth device ID, last working gateway address, trusted enrollment and
+  any provisioned hotspot settings in the phone's browser profile after a
+  verified join. The installed lab Pixel reconnected using its saved address.
+- [x] Verify recovery on the installed Pixel after interrupting the live Quest
+  gateway requests. The app detected loss and automatically restored the
+  same authenticated connection and private recording controls when requests
+  were allowed again. A later physical Quest Wi-Fi disable/enable test also
+  passed with the installed Pixel. The headset received its previous Wi-Fi
+  address, and the phone restored the same authenticated Quest without a tap.
+  The check left Quest Wi-Fi enabled and retained the phone's saved pairing.
+- [x] Verify a reload with an unusable saved gateway and Bluetooth off. The
+  installed Pixel displayed the Bluetooth-off message, then recovered the
+  same Quest 2 and persisted its advertised gateway with no chooser or app
+  tap after Bluetooth was turned on. The test substituted an unreachable
+  address in the phone's saved pairing and temporarily granted Chrome
+  loopback permission through DevTools. Both test overrides were restored.
+- [ ] Repeat after changing the headset's actual Wi-Fi address. Confirm
+  recovery with a durable Chrome permission and with another Quest nearby.
+
+The Android discovery companion supplies the saved Quest's advertised address
+when Chrome has no Bluetooth device object. It reports the phone radio state.
+The browser contract tests reject mismatched identities and public addresses.
+All 91 Node tests passed. The companion and PWA integration deployed in
+[Pages run 43634783135](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43634783135)
+at `5cf2605`. The versioned public runtime matched Git, and the installed Pixel
+loaded it in standalone mode. Chrome's normal one-time loopback permission
+approval is pending because the active RustDesk overlay blocked the tap.
+See [Android discovery setup](../phone-discovery/README.md).
 
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
 connection fields. It reads the selected Quest's identity and endpoints and

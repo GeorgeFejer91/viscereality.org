@@ -1,4 +1,4 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=8';
+import { operationId, sameQuest } from './quest-gateway.js?v=9';
 
 const stages = new Set(['idle', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt', 'controller-state': 'Controller State · feste Ausrichtung' };

@@ -134,23 +134,49 @@ export async function readQuest(device, lifetime, setup) {
     if (serialBytes.byteLength > 64 || metadataBytes.byteLength > 512) throw Error('Ungültige Quest-Suchdaten.');
     const serial = decode.decode(serialBytes);
     const metadata = JSON.parse(decode.decode(metadataBytes));
-    const found = identity(metadata);
-    if (metadata.mode !== 'remote' || found.serial !== serial || !Array.isArray(metadata.gateways)
-      || metadata.gateways.length > 4) {
-      throw Error('Die Quest hat ungültige Bluetooth-Suchdaten gemeldet.');
-    }
-    if (setup?.serial && found.serial !== setup.serial || setup?.device && found.device !== setup.device) {
-      throw Error('Die gewählte Quest passt nicht zur gespeicherten Verbindung.');
-    }
+    const discovery = discoveryMetadata(metadata, serial, setup);
     if (credentials) {
-      const endpoint = await setupQuestWifi(service, found, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
-      return { owner: found, endpoints: [endpoint] };
+      const endpoint = await setupQuestWifi(service, discovery.owner, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
+      return { owner: discovery.owner, endpoints: [endpoint] };
     }
     if (!metadata.gateways.length && !setup?.hotspot) {
       throw Error('Verbinde die Quest mit demselben WLAN oder schalte den Smartphone-Hotspot ein.');
     }
-    return { owner: found, endpoints: metadata.gateways.map(questEndpoint) };
+    return discovery;
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
+}
+
+function discoveryMetadata(metadata, serial, expected) {
+  const owner = identity(metadata);
+  if (metadata.mode !== 'remote' || owner.serial !== serial || !Array.isArray(metadata.gateways)
+    || metadata.gateways.length > 4) {
+    throw Error('Die Quest hat ungültige Bluetooth-Suchdaten gemeldet.');
+  }
+  if (expected?.serial && owner.serial !== expected.serial || expected?.device && owner.device !== expected.device) {
+    throw Error('Die gewählte Quest passt nicht zur gespeicherten Verbindung.');
+  }
+  return { owner, endpoints: metadata.gateways.map(questEndpoint) };
+}
+
+export async function rediscoverQuest(settings, signal, fetcher = fetch) {
+  if (!hex32.test(settings.device ?? '') || !serialPattern.test(settings.serial ?? '')) return null;
+  let response;
+  try {
+    response = await fetcher('http://127.0.0.1:8767/v1/quest/' + settings.device, {
+      cache: 'no-store', credentials: 'omit', redirect: 'error', targetAddressSpace: 'loopback',
+      signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+    });
+  } catch {
+    signal.throwIfAborted();
+    return null;
+  }
+  const result = await readJson(response);
+  if (result.v !== 1) throw Error('Ungültige Antwort der Bluetooth-Suche.');
+  if (result.state === 'ready') {
+    return { state: 'ready', ...discoveryMetadata(result.metadata, settings.serial, settings) };
+  }
+  if (['bluetooth-off', 'searching', 'permission-required'].includes(result.state)) return { state: result.state };
+  throw Error('Ungültige Antwort der Bluetooth-Suche.');
 }
 
 async function readJson(response) {

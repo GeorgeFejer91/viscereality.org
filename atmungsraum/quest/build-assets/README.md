@@ -1,6 +1,6 @@
 # Atmungsraum Quest build assets
 
-These files are the Experimenter inputs for the 0.1.29 Quest 2 build.
+These files are the Experimenter inputs retained from the 0.1.29 Quest 2 build.
 Use the [public build recipe](../README.md#build-from-the-public-repository).
 
 | Path | Contents |
@@ -15,6 +15,12 @@ The six authored scenario timelines and cues are already tracked in
 [`atmungsraum/assets/audio/`](../../assets/audio/). The assembly script stages
 them and regenerates the scenario catalog. It resolves the feature lock on
 each developer's machine so the lock can bind that checkout's build inputs.
+The two [calibration menu prompts](../../assets/audio/calibration-menu/manifest.json)
+are staged and checked independently of the scenario timelines. Their source
+is Secret Tunnel v6 using the existing EmoDB Atmungsraum 3 voice profile
+([Berlin EmoDB](https://github.com/audeering/emodb), Burkhardt et al., 2005).
+Each MP3 has its exact approved German TXT alongside it.
+
 The provider schema calls these inputs a private asset provider because
 Rusty Quest binds them through an app-specific asset inventory. The files
 needed by this app are tracked here.

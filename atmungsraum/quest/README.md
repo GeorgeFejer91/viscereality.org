@@ -44,17 +44,18 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-029 `
-    -VersionCode 29 -VersionName 0.1.29
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-030 `
+    -VersionCode 30 -VersionName 0.1.30
 ```
 
 Use your Git author identity for the local patch commit. The current patch
-reconstructs source tree `cd2d5a5837d2c642a70ba6b1cf7256f14ebd7969`.
-The script stages the six authored scenarios from `../assets/audio/` and
+reconstructs source tree `170d6c3def526684d2b27ef8f54c3c3a0e3e8d7a`.
+The script stages the six authored scenarios and two calibration menu prompts
+from `../assets/audio/` and
 resolves the [bundled Experimenter inputs](build-assets/README.md). It verifies
 the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
-`rusty-quest/target/aq2/atmungsraum-029/`. Use a fresh run name for a second build
+`rusty-quest/target/aq2/atmungsraum-030/`. Use a fresh run name for a second build
 or add `-ResolveOnly` to check the feature lock without compiling.
 
 The native packager creates a local development keystore on first use. An

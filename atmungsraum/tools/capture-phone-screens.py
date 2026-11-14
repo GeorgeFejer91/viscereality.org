@@ -65,6 +65,8 @@ function snapshot() {
   };
 }
 function command({ id, op, condition, d }) {
+  settings.commands ??= [];
+  settings.commands.push(op);
   const states = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
   if (op === 'arm') {
     settings.generation++;
@@ -121,7 +123,15 @@ export async function readQuest(_peer, _signal, setup) {
   }
   return { owner, endpoints: ['synthetic'] };
 }
-export async function joinQuest() {
+export async function rediscoverQuest() {
+  window.reviewDiscovery?.push('bluetooth');
+  return window.reviewDiscoveryState === 'ready'
+    ? { state: 'ready', owner, endpoints: ['discovered'] }
+    : window.reviewDiscoveryState ? { state: window.reviewDiscoveryState } : null;
+}
+export async function joinQuest({ endpoint }) {
+  window.reviewDiscovery?.push(endpoint);
+  if (endpoint === 'unreachable') throw Error('Simulated address change');
   if (window.reviewJoin === 'wait') await new Promise(() => {});
   if (window.reviewJoin === 'fail') throw Error('Simulated connection failure');
   return {
@@ -301,6 +311,30 @@ def enter_participant(page):
     page.locator("#patient-next").press("Enter")
 
 
+def assert_automatic_rediscovery(review, paired):
+    page = review.page(paired + """
+      const pair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair'));
+      pair.endpoint = 'unreachable';
+      localStorage.setItem('atmungsraum-quest-pair', JSON.stringify(pair));
+      window.reviewDiscovery = [];
+      window.reviewDiscoveryState = 'bluetooth-off';
+    """)
+    try:
+        expect(page.locator("#quest-status")).to_contain_text("Schalte Bluetooth ein")
+        page.evaluate("window.reviewDiscoveryState = 'searching'")
+        page.clock.run_for(2100)
+        expect(page.locator("#quest-status")).to_contain_text("Suche die gespeicherte Quest", timeout=1000)
+        page.evaluate("window.reviewDiscoveryState = 'ready'")
+        page.clock.run_for(2100)
+        expect(page.locator("#quest-participant")).to_be_visible(timeout=1000)
+        expect(page.locator("#quest-find")).to_be_hidden()
+        calls = page.evaluate("window.reviewDiscovery")
+        assert calls[0] == "unreachable" and calls[-1] == "discovered", calls
+        assert len(calls[1:-1]) >= 3 and set(calls[1:-1]) == {"bluetooth"}, calls
+    finally:
+        page.context.close()
+
+
 def capture(review):
     shot = review.shot
     page = review.page()
@@ -325,6 +359,7 @@ def capture(review):
     page.context.close()
 
     paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    assert_automatic_rediscovery(review, paired)
     page = review.page(paired + "window.reviewJoin='fail';")
     expect(page.locator("#quest-status")).to_contain_text("Erlaube den Bluetooth-Zugriff")
     page.evaluate("window.reviewJoin = ''")
@@ -466,9 +501,8 @@ def capture(review):
 
     play = page.locator("#quest-play")
     finish = page.locator("#quest-finish")
-    wait_state(page, phase="ARMED", host="vr-session")
-    expect(status).to_contain_text("vorbereitet")
-    shot(page, "armed", "Run prepared", play, "Playback")
+    expect(play).to_have_text("Starten")
+    shot(page, "ready-to-start", "Ready to start the selected run", play, "Playback")
     play.click()
     expect(play).to_have_text("Pause")
     shot(page, "running", "Run active with ECG", page.locator("#quest-ecg"), "Playback")
@@ -479,6 +513,9 @@ def capture(review):
     expect(play).to_be_disabled()
     shot(page, "polar-hold", "Run held while Polar signal is stale", play, "Playback")
     wait_state(page, fresh=True, polar="ready")
+    play.click()
+    expect(play).to_have_text("Pause")
+    expect(status).to_contain_text("Probelauf läuft")
     for phase, slug, title, label in (
         ("FINALIZING", "finalizing", "Run ending", "beendet den Probelauf"),
         ("SAVING", "saving", "Quest saving the run", "speichert den Probelauf"),
@@ -492,6 +529,7 @@ def capture(review):
     wait_state(page, phase="PAUSED", host="vr-session", fresh=True, polar="ready")
     finish.click()
     expect(status).to_contain_text("Probelauf beendet")
+    assert page.evaluate("window.reviewQuest.commands.slice(-5)") == ["arm", "start", "pause", "resume", "save-next"]
     shot(page, "finished", "Run finished and returned to native input testing", detail, "Playback")
     expect(proceed).to_be_enabled()
     proceed.click()

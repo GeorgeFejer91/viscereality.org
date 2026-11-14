@@ -3330,10 +3330,24 @@ index c0c0c17e..4c8ef5b1 100644
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..382cbcda 100644
+index a694dfee..2e19a117 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-@@ -335,6 +335,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4,10 +4,13 @@ import android.app.Activity;
+ import android.content.ComponentName;
+ import android.content.Context;
+ import android.content.Intent;
++import android.content.res.AssetFileDescriptor;
+ import android.graphics.Canvas;
+ import android.graphics.Color;
+ import android.graphics.Paint;
+ import android.graphics.drawable.GradientDrawable;
++import android.media.AudioAttributes;
++import android.media.MediaPlayer;
+ import android.media.projection.MediaProjectionManager;
+ import android.os.Build;
+ import android.os.Bundle;
+@@ -335,6 +338,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          final ExperimentSessionControlCapability.Fence sessionFence;
          final long armGeneration;
          final String armCondition;
@@ -3341,7 +3355,7 @@ index a694dfee..382cbcda 100644
          int requestedBias = -1;
          boolean armCheckpointObserved;
          boolean awaitsDurableNativeOutcome() {
-@@ -549,9 +550,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -549,9 +553,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                      ExperimentSessionPanelState state = EXPERIMENT_SESSION_PANEL.snapshot();
                      if (state.phase == ExperimentSessionPanelState.Phase.ARMING
                              && state.recording) {
@@ -3352,7 +3366,7 @@ index a694dfee..382cbcda 100644
                      }
                  }
                  RemotePending pending = remotePending;
-@@ -828,6 +827,18 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -828,6 +830,18 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
@@ -3371,7 +3385,7 @@ index a694dfee..382cbcda 100644
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
-@@ -922,6 +933,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -922,6 +936,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
 
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
@@ -3386,7 +3400,7 @@ index a694dfee..382cbcda 100644
                  ExperimentSessionBleServer server = remoteServer();
                  if (server == null) return;
                  if(remoteTerminal!=null) {
-@@ -997,8 +1016,11 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -997,8 +1019,11 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
                          return;
                      }
@@ -3399,7 +3413,7 @@ index a694dfee..382cbcda 100644
                      server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
                      EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
                      return;
-@@ -1060,6 +1082,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1060,6 +1085,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
          };
 
@@ -3416,7 +3430,32 @@ index a694dfee..382cbcda 100644
      public static void reconcileCurrentExperimentSessionBleOwner() {
          ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
      }
-@@ -1864,6 +1896,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1195,6 +1230,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     private long breathCompositionGeneration;
+     private TextView breathOverviewReadback;
+     private TextView breathCalibrationReadback;
++    private CalibrationPromptSequence calibrationPrompts;
++    private MediaPlayer calibrationPromptPlayer;
+     private TextView breathOutputReadback;
+     private TextView breathDiagnosticsReadback;
+     private ProgressBar breathCalibrationProgress;
+@@ -1778,6 +1815,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     }
+
+     private void pausePanelProjection() {
++        stopCalibrationPrompts();
+         closeHubStatusLifetime();
+         remotePanelResumed = false;
+         cancelRemotePolarRender();
+@@ -1838,6 +1876,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     @Override
+     protected void onDestroy() {
+         if(experimentShellDestroyed)return;
++        stopCalibrationPrompts();
+         experimentShellDestroyed = true;
+         try{if(productPanelOperatorRegistration!=null)productPanelOperatorRegistration.close();}
+         catch(Exception unavailable){Log.w(TAG,"channel=product-panel-operator event=registration-retirement-failed");}
+@@ -1864,6 +1903,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
@@ -3425,7 +3464,7 @@ index a694dfee..382cbcda 100644
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1912,7 +1946,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1912,7 +1953,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
@@ -3434,7 +3473,15 @@ index a694dfee..382cbcda 100644
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -4214,10 +4248,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2682,6 +2723,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     }
+
+     private void replaceBreathCompositionPanelContent(String topic) {
++        stopCalibrationPrompts();
+         cancelRemotePolarRender();
+         rememberPanelScroll();
+         cancelPendingPrivateParticleDynamicsApply();
+@@ -4214,10 +4256,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -3446,7 +3493,7 @@ index a694dfee..382cbcda 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4268,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4276,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
 
@@ -3469,7 +3516,105 @@ index a694dfee..382cbcda 100644
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
-@@ -6281,6 +6328,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4526,6 +4581,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         try {
+             String response = nativeApplyBreathCompositionCommand(command.toString());
+             renderBreathCompositionResponse(response, readback);
++            updateCalibrationPrompts(command.optString("operation"), new JSONObject(response));
+             writeBreathCompositionOperatorReceipt(
+                 "ui-" + SystemClock.elapsedRealtimeNanos(),
+                 command.optString("operation", "unknown"),
+@@ -4536,6 +4592,89 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         }
+     }
+
++    private void updateCalibrationPrompts(String operation, JSONObject result) {
++        if (!"accepted".equals(result.optString("command_status"))) return;
++        if ("cancel".equals(operation) || "reset".equals(operation) || "select".equals(operation)) {
++            stopCalibrationPrompts();
++        } else if ("start_calibration".equals(operation)) {
++            JSONObject snapshot = result.optJSONObject("snapshot");
++            if (snapshot != null) calibrationPrompts().start(snapshot.optLong("generation"));
++        }
++    }
++
++    private CalibrationPromptSequence calibrationPrompts() {
++        if (calibrationPrompts == null) {
++            calibrationPrompts = new CalibrationPromptSequence(new CalibrationPromptSequence.Host() {
++                @Override public boolean play(String cue) { return playCalibrationPrompt(cue); }
++                @Override public void stopAudio() { releaseCalibrationPromptPlayer(); }
++                @Override public boolean isCollecting(long generation) {
++                    if (!remotePanelResumed || !localExperimentMutationAllowed()) return false;
++                    try {
++                        JSONObject snapshot = new JSONObject(nativeReadBreathCompositionStatus()).getJSONObject("snapshot");
++                        JSONObject readback = snapshot.optJSONObject("calibration_readback");
++                        return snapshot.optLong("generation") == generation
++                            && "running".equals(snapshot.optString("status"))
++                            && (readback == null || "collecting".equals(readback.optString("lifecycle")));
++                    } catch (Exception unavailable) {
++                        Log.w(TAG, "Calibration prompt skipped: native readback unavailable", unavailable);
++                        return false;
++                    }
++                }
++                @Override public void schedule(Runnable cue, long delayMs) {
++                    liveApplyHandler.postDelayed(cue, delayMs);
++                }
++                @Override public void cancel(Runnable cue) { liveApplyHandler.removeCallbacks(cue); }
++            });
++        }
++        return calibrationPrompts;
++    }
++
++    private boolean playCalibrationPrompt(String cue) {
++        releaseCalibrationPromptPlayer();
++        String path = "atmungsraum-audio/assets/audio/calibration-menu/" + cue + ".mp3";
++        try (AssetFileDescriptor asset = getAssets().openFd(path)) {
++            MediaPlayer player = new MediaPlayer();
++            calibrationPromptPlayer = player;
++            player.setAudioAttributes(new AudioAttributes.Builder()
++                .setUsage(AudioAttributes.USAGE_MEDIA)
++                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
++            player.setDataSource(asset.getFileDescriptor(), asset.getStartOffset(), asset.getLength());
++            player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
++                @Override public void onPrepared(MediaPlayer ready) {
++                    if (calibrationPromptPlayer == ready) ready.start();
++                }
++            });
++            player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
++                @Override public void onCompletion(MediaPlayer done) {
++                    if (calibrationPromptPlayer == done) releaseCalibrationPromptPlayer();
++                }
++            });
++            player.setOnErrorListener(new MediaPlayer.OnErrorListener() {
++                @Override public boolean onError(MediaPlayer failed, int what, int extra) {
++                    if (calibrationPromptPlayer == failed) releaseCalibrationPromptPlayer();
++                    Log.w(TAG, "Calibration prompt player error: " + what + "/" + extra);
++                    return true;
++                }
++            });
++            player.prepareAsync();
++            return true;
++        } catch (Exception unavailable) {
++            releaseCalibrationPromptPlayer();
++            Log.w(TAG, "Calibration prompt unavailable: " + cue, unavailable);
++            return false;
++        }
++    }
++
++    private void stopCalibrationPrompts() {
++        if (calibrationPrompts != null) calibrationPrompts.stop();
++    }
++
++    private void releaseCalibrationPromptPlayer() {
++        MediaPlayer player = calibrationPromptPlayer;
++        calibrationPromptPlayer = null;
++        if (player != null) player.release();
++    }
++
+     private void refreshBreathCompositionReadback(TextView readback) {
+         try {
+             renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
+@@ -6281,6 +6420,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -5814,10 +5959,18 @@ index 00000000..729b6fa9
 +    }
 +}
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
-index 0b6a0c00..184ad360 100644
+index 0b6a0c00..bf5f76c0 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 +++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
-@@ -84,6 +84,8 @@
+@@ -66,6 +66,7 @@
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionCommandReceiver.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ProductPanelOperator.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java",
++          "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelContext.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelActivity.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeProductPanelActivity.java",
+@@ -84,6 +85,8 @@
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java",
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java",
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java",
@@ -6276,10 +6429,34 @@ index 04d338aa..680d540c 100644
  Assert-Contains $runtime 'threshold-does-not-stop-audio'
  Assert-Contains $runtime 'natural-end-silence-session-continues'
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-index 966e9942..3d4a3245 100644
+index 966e9942..864d33ca 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
 +++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-@@ -272,6 +272,8 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -156,11 +156,15 @@ try {
+         (Join-Path $panelRoot 'ExperimentSessionPanelViewPolicy.java'),
+         (Join-Path $panelRoot 'ExperimenterPanelShortcutPolicy.java'),
+         (Join-Path $testRoot 'ExperimentSessionPanelCoordinatorTest.java'),
++        (Join-Path $panelRoot 'CalibrationPromptSequence.java'),
++        (Join-Path $testRoot 'CalibrationPromptSequenceTest.java'),
+         (Join-Path $testRoot 'ExperimentSessionPanelViewPolicyTest.java'),
+         (Join-Path $testRoot 'ExperimenterPanelShortcutPolicyTest.java')
+     )
+     & $javacCommand.Source '--release' '8' '-encoding' 'UTF-8' '-d' $output @sources
+     if ($LASTEXITCODE -ne 0) { throw "javac failed: $LASTEXITCODE" }
++    & $javaCommand.Source '-cp' $output 'io.github.mesmerprism.rustyquest.native_renderer.CalibrationPromptSequenceTest'
++    if ($LASTEXITCODE -ne 0) { throw 'Calibration prompt sequence test failed.' }
+     & $javaCommand.Source '-cp' $output 'io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionPanelCoordinatorTest'
+     if ($LASTEXITCODE -ne 0) { throw "Java test failed: $LASTEXITCODE" }
+     & $javaCommand.Source '-cp' $output 'io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionPanelViewPolicyTest'
+@@ -260,6 +264,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+         (Join-Path $mainRoot 'PanelImmersiveHandoffProofPolicy.java'),
+         (Join-Path $panelRoot 'BreathCompositionCommandReceiver.java'),
+         (Join-Path $panelRoot 'BreathCompositionPanelModule.java'),
++        (Join-Path $panelRoot 'CalibrationPromptSequence.java'),
+         (Join-Path $panelRoot 'ExperimentControlMode.java'),
+         (Join-Path $panelRoot 'ExperimentSessionJsonCodec.java'),
+         (Join-Path $panelRoot 'ExperimentSessionBleNamePolicy.java'),
+@@ -272,6 +277,8 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
          (Join-Path $panelRoot 'ExperimentSessionCommandGateway.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
@@ -7300,5 +7477,126 @@ index 0000000000000000000000000000000000000000..8c4f7cc7e4d78c1d6d01f3bf677bf3d7
 +            "session_id":prefix.session_id, "schema_version":SCHEMA_VERSION}),
 +            ended_at,
 +        )))
++    }
++}
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java
+new file mode 100644
+index 00000000..f306b067
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java
+@@ -0,0 +1,50 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++/** Owns the two one-shot cues for a calibration started from the visible menu. */
++final class CalibrationPromptSequence {
++    private static final long INHALE_WINDOW_MS = 4_000;
++
++    interface Host {
++        boolean play(String cue);
++        void stopAudio();
++        boolean isCollecting(long generation);
++        void schedule(Runnable cue, long delayMs);
++        void cancel(Runnable cue);
++    }
++
++    private final Host host;
++    private long generation;
++    private Runnable exhale;
++
++    CalibrationPromptSequence(Host host) {
++        this.host = host;
++    }
++
++    void start(long nextGeneration) {
++        if (nextGeneration <= 0 || nextGeneration == generation || !host.isCollecting(nextGeneration)) {
++            return;
++        }
++        stop();
++        if (!host.play("inhale")) return;
++        generation = nextGeneration;
++        exhale = new Runnable() {
++            @Override public void run() {
++                if (exhale != this) return;
++                exhale = null;
++                if (host.isCollecting(nextGeneration)) {
++                    host.play("exhale");
++                } else {
++                    stop();
++                }
++            }
++        };
++        host.schedule(exhale, INHALE_WINDOW_MS);
++    }
++
++    void stop() {
++        if (exhale != null) host.cancel(exhale);
++        exhale = null;
++        generation = 0;
++        host.stopAudio();
++    }
++}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java
+new file mode 100644
+index 00000000..9c9ab12b
+--- /dev/null
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java
+@@ -0,0 +1,59 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.List;
++
++public final class CalibrationPromptSequenceTest implements CalibrationPromptSequence.Host {
++    private final List<String> played = new ArrayList<>();
++    private Runnable pending;
++    private long activeGeneration;
++
++    @Override public boolean play(String cue) {
++        played.add(cue);
++        return true;
++    }
++    @Override public void stopAudio() {}
++    @Override public boolean isCollecting(long generation) {
++        return activeGeneration == generation;
++    }
++    @Override public void schedule(Runnable cue, long delayMs) {
++        if (delayMs != 4000L) throw new AssertionError("inhale window must be four seconds");
++        pending = cue;
++    }
++    @Override public void cancel(Runnable cue) {
++        if (pending == cue) pending = null;
++    }
++    private void requirePlayed(String... expected) {
++        if (!played.equals(Arrays.asList(expected))) throw new AssertionError(played);
++    }
++    public static void main(String[] args) {
++        CalibrationPromptSequenceTest host = new CalibrationPromptSequenceTest();
++        CalibrationPromptSequence sequence = new CalibrationPromptSequence(host);
++        sequence.start(1);
++        host.requirePlayed();
++
++        host.activeGeneration = 1;
++        sequence.start(1);
++        host.requirePlayed("inhale");
++        Runnable firstExhale = host.pending;
++        sequence.start(1);
++        firstExhale.run();
++        firstExhale.run();
++        host.requirePlayed("inhale", "exhale");
++
++        host.activeGeneration = 2;
++        sequence.start(2);
++        Runnable cancelled = host.pending;
++        sequence.stop();
++        if (host.pending != null) throw new AssertionError("cancel must remove the pending cue");
++        cancelled.run();
++        host.requirePlayed("inhale", "exhale", "inhale");
++
++        sequence.start(2);
++        host.activeGeneration = 3;
++        host.pending.run();
++        host.requirePlayed("inhale", "exhale", "inhale", "inhale");
++        System.out.println("Calibration prompt sequence passed");
 +    }
 +}

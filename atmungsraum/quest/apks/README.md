@@ -1,5 +1,33 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.1.30 — Quest 2 calibration menu
+
+| Build property | Verified value |
+| --- | --- |
+| Package / platform | `org.viscereality.atmungsraum.rehearsal`, Quest 2, `arm64-v8a` |
+| Release | 0.1.30, Android version code 30 |
+| Signed APK | [Atmungsraum-Quest2-0.1.30.apk](Atmungsraum-Quest2-0.1.30.apk) |
+| Size | 63,760,629 bytes |
+| SHA-256 | `580edecca5a51bc2653d561f08dc58c3621df87bc2d06efd7cfe8262c34c1be7` |
+| Signing certificate SHA-256 | `6c9b7c04bfbe88cae2509ad1533e6014ebb6abc97d855c666d687eee56a57f7d` (same as 0.1.29) |
+| Native commit | `ac5be2669cace0e75146ae3bae90a3026ff3f8d5` |
+| Native source tree | `170d6c3def526684d2b27ef8f54c3c3a0e3e8d7a` |
+| Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
+
+**Direct → Developer settings → Breath → Calibration** now plays the approved
+German inhale cue after an accepted Start and the exhale cue four seconds later
+while that calibration is active. Cancel, Reset and leaving the menu release
+playback. The two [Secret Tunnel clips and transcripts](../../assets/audio/calibration-menu/manifest.json)
+are independent of the six scenario timelines and the phone breathing preview.
+
+The reconstructed native tree, focused Java playback and existing audio tests,
+91 Node tests, six scenario pairs, and project context passed. The Android SDK
+verified the signature, manifest, package, version and ABI. All 68 files in
+the audio catalog matched, including both stored MP3s. The original 66
+scenario files and ARM64 OpenXR loader matched 0.1.29 byte for byte. The broader
+native panel check still stops at a source assertion already false in 0.1.29.
+An attended listening check on Quest 2 remains open.
+
 ## 0.1.29 — Quest 2 rehearsal, 2026-11-14
 
 | Build property | Verified value |
