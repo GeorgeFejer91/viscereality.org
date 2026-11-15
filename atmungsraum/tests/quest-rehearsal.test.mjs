@@ -237,6 +237,26 @@ test('native breathing setup is offered only by an enrolled capable Quest and ke
   enrolled.close(); guest.close(); old.close();
 });
 
+test('setup reconciliation authenticates an exact three-field read-only query and rejects malformed IDs before transport', async () => {
+  const fixture = server({ status: { ...snapshot(), breath_setup: 1 } }), payloads = [];
+  const gateway = await joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key },
+    fetcher: async (url, init) => {
+      const request = init.body && JSON.parse(init.body);
+      if (request?.action === 'breath-setup') payloads.push(JSON.parse(request.payload));
+      return fixture.fetch(url, init);
+    } });
+  const id = '0123456789abcdef';
+  await gateway.breathSetupReceipt(id);
+  assert.deepEqual(payloads, [{ v: 1, id, op: 'receipt' }]);
+  assert.equal(fixture.requests.at(-1), 'breath-setup');
+  for (const invalid of ['', 'A'.repeat(16), 'a'.repeat(15), 'a'.repeat(17), null, {}, 123]) {
+    await assert.rejects(async () => gateway.breathSetupReceipt(invalid));
+  }
+  await assert.rejects(async () => gateway.breathSetupReceipt(id, AbortSignal.abort()), { name: 'AbortError' });
+  assert.equal(payloads.length, 1);
+  gateway.close();
+});
+
 test('a command whose foreground lifetime ends while signing never reaches fetch', async () => {
   const fixture = server();
   const quest = await joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch });
@@ -535,4 +555,19 @@ test('leaving the foreground during a Polar scan requires a new browser action',
   await rehearsal.refresh();
   assert.equal(rehearsal.state.unknown, false);
   assert.deepEqual(quest.commands.map(({ op }) => op), ['scan']);
+});
+
+test('native audio recovery blocks parallel Polar and scenario setup at click and fresh-status admission', async () => {
+  for (const beginsRecovering of [true, false]) {
+    const quest = polarQuest();
+    const healthy = quest.initial, recovering = { ...healthy, setup: { stage: 'recovering' } };
+    if (beginsRecovering) quest.initial = recovering;
+    quest.status = async () => recovering;
+    const rehearsal = new QuestRehearsal();
+    rehearsal.attach(quest);
+    assert.deepEqual(rehearsalActions(recovering), {});
+    await rehearsal.run('polar');
+    await rehearsal.run('play');
+    assert.deepEqual(quest.commands, []);
+  }
 });

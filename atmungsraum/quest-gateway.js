@@ -330,6 +330,11 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
       scenarioArm: enrollment ? (command, requestSignal) => controlled('scenario-arm', command, requestSignal) : null,
       breathSetup: enrollment && initial.breath_setup === 1
         ? (command, requestSignal) => controlled('breath-setup', command, requestSignal) : null,
+      breathSetupReceipt: enrollment && initial.breath_setup === 1
+        ? (id, requestSignal) => {
+          if (typeof id !== 'string' || !/^[a-f0-9]{16}$/.test(id)) throw Error('Ungültige Kennung der Atemeinrichtung.');
+          return controlled('breath-setup', { v: 1, id, op: 'receipt' }, requestSignal);
+        } : null,
       recenter: enrollment ? (command, requestSignal) => controlled('recenter', command, requestSignal) : null,
       controllerAccess: enrollment && controllerAccessState(initial)
         ? (command, requestSignal) => exchange('controller-access', command, requestSignal) : null,

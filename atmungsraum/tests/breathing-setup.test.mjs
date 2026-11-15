@@ -27,7 +27,7 @@ function fixture(status = snapshot()) {
       if (failure) throw Error('Connection lost');
       return { v: 1, id: command.id, state: reply };
     },
-    async receipt(id) { return { v: 1, id, state: reply }; },
+    async breathSetupReceipt(id) { return { v: 1, id, state: reply }; },
   };
   return { gateway, calls, reply(value) { reply = value; }, fail(value) { failure = value; } };
 }
@@ -230,14 +230,14 @@ test('calibrate emits one closed journaled native command and waits for fresh re
 
 test('disconnect and reload preserve an uncertain command ID without resending it', async () => {
   const saved = storage();
-  let model = new BreathingSetup({ storage: saved });
+  let now = 0, model = new BreathingSetup({ storage: saved, now: () => now });
   const peer = fixture();
   peer.fail(true);
   model.update(peer.gateway, state(), true);
   await model.run('calibrate');
   const id = peer.calls[0].id;
   assert.equal(model.update(null, state(null), true).unknown, true);
-  model = new BreathingSetup({ storage: saved });
+  model = new BreathingSetup({ storage: saved, now: () => now });
   const newer = snapshot(native({ r: 1, calibration: 'ready', input: 'polar-tilt', ready: true, attempt: 1 }));
   peer.reply('outcome_unknown');
   assert.equal(model.update(peer.gateway, state(newer), true).actions.continue, false);
@@ -246,6 +246,7 @@ test('disconnect and reload preserve an uncertain command ID without resending i
   assert.equal(peer.calls.length, 1);
   assert.equal(model.pending.command.id, id);
   peer.reply('confirmed');
+  now += 1000;
   await model.refresh();
   assert.equal(model.update(peer.gateway, state(newer), true).actions.continue, true);
   assert.equal(peer.calls.length, 1);
@@ -377,4 +378,286 @@ test('native idle permits calibration, paused playback blocks continuation and a
   const view = model.update(peer.gateway, state(paused), true);
   assert.equal(view.actions.continue, false);
   assert.equal(view.actions.calibrate, false);
+});
+
+const recovery = (id, patch = {}) => ({ id, state: 'pending', deadline_ns: 2000000000, target_generation: null, ...patch });
+const recovering = (id, patch = {}) => native({ stage: 'recovering', ready: false, clock_valid: false,
+  recovery: recovery(id), ...patch });
+const receipt = (id, patch = {}) => ({ v: 1, id, state: 'pending', accepted: true, reason: 'audio-recovery-pending', ...patch });
+
+test('recovering status is bounded, prevents every setup admission and never implies completed calibration', () => {
+  const id = 'a'.repeat(16), model = new BreathingSetup(), peer = fixture();
+  const setup = recovering(id);
+  assert.equal(breathingSetup(snapshot(setup), owner), setup);
+  const view = model.update(peer.gateway, state(snapshot(setup)), true);
+  assert.equal(view.recovering, true);
+  assert.deepEqual(view.progress, { value: 0, max: 2 });
+  for (const action of ['calibrate', 'controller', 'continue', 'acknowledge']) assert.equal(view.actions[action], false);
+  for (const patch of [
+    { ready: true }, { recovery: null }, { recovery: recovery('A'.repeat(16)) },
+    { recovery: recovery(id, { deadline_ns: -1 }) }, { recovery: recovery(id, { state: 'confirmed' }) },
+    { recovery: recovery(id, { target_generation: 0 }) }, { clock_valid: 'false' },
+  ]) assert.equal(breathingSetup(snapshot({ ...setup, ...patch }), owner), null, JSON.stringify(patch));
+  assert.ok(breathingSetup(snapshot(native()), owner), 'older APK statuses remain valid without recovery telemetry');
+});
+
+test('pending recovery resolves the original ID after generation change and still waits for native two-cycle collection', async () => {
+  const model = new BreathingSetup({ storage: storage() }), peer = fixture(), reads = [];
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = async id => { reads.push(id); return receipt(id, { state: 'confirmed', reason: 'accepted', recovery_generation: 2 }); };
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const id = peer.calls[0].id;
+  let view = model.update(peer.gateway, state(snapshot(recovering(id))), true);
+  assert.equal(view.pending, true);
+  assert.equal(view.recovering, true);
+  await model.run('controller');
+  assert.equal(peer.calls.length, 1);
+  const waiting = snapshot(native({ g: 2, r: 1, stage: 'waiting', calibration: 'waiting', attempt: 1 }));
+  model.update(peer.gateway, state(waiting), true);
+  await model.refresh();
+  view = model.update(peer.gateway, state(waiting), true);
+  assert.deepEqual(reads, [id]);
+  assert.equal(view.pending, false);
+  assert.equal(view.unknown, false);
+  assert.equal(view.actions.continue, false);
+  assert.deepEqual(view.progress, { value: 0, max: 2 });
+  assert.equal(model.pending, null);
+});
+
+test('terminal recovery rejection permits an explicit retry and retains a practical failure explanation', async () => {
+  for (const reason of ['audio-recovery-failed', 'audio-recovery-timeout', 'audio-recovery-retired']) {
+    const model = new BreathingSetup(), peer = fixture();
+    peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+    peer.gateway.breathSetupReceipt = async id => receipt(id, { state: 'rejected', accepted: false, reason });
+    model.update(peer.gateway, state(), true);
+    await model.run('controller');
+    await model.refresh();
+    const view = model.update(peer.gateway, state(), true);
+    assert.equal(view.pending, false);
+    assert.equal(view.actions.calibrate, true);
+    assert.equal(view.actions.controller, true);
+    assert.match(view.message, /Atemschleife.*erneut/i);
+    assert.equal(peer.calls.length, 1);
+  }
+});
+
+test('wrong IDs and malformed recovery receipt shapes preserve uncertainty and the original mutation', async () => {
+  for (const patch of [
+    { id: 'f'.repeat(16) }, { id: 'A'.repeat(16) }, { accepted: false },
+    { accepted: 'true' }, { state: 'confirmed', accepted: false, reason: 'accepted' },
+    { state: 'rejected', accepted: true, reason: 'audio-recovery-failed' },
+    { state: 'confirmed', reason: 'audio-recovery-pending' }, { reason: 'bad\nreason' },
+  ]) {
+    const model = new BreathingSetup(), peer = fixture();
+    peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id, patch); };
+    model.update(peer.gateway, state(), true);
+    await model.run('calibrate');
+    const view = model.update(peer.gateway, state(), true);
+    assert.equal(view.pending, true, JSON.stringify(patch));
+    assert.equal(view.unknown, true, JSON.stringify(patch));
+    assert.equal(view.actions.calibrate, false);
+    assert.equal(model.pending.command.id, peer.calls[0].id);
+  }
+});
+
+test('a lost recovery admission reconciles through its full terminal receipt without replay after reload', async () => {
+  const saved = storage(), peer = fixture();
+  let model = new BreathingSetup({ storage: saved });
+  peer.fail(true);
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const id = peer.calls[0].id;
+  model.update(null, state(null), true);
+  model = new BreathingSetup({ storage: saved });
+  peer.gateway.breathSetupReceipt = async queryId => receipt(queryId, { state: 'confirmed', reason: 'accepted', recovery_generation: 2 });
+  const waiting = state(snapshot(native({ g: 2, r: 1, stage: 'waiting', calibration: 'waiting', attempt: 1 })));
+  model.update(peer.gateway, waiting, true);
+  await model.refresh();
+  assert.equal(model.update(peer.gateway, waiting, true).unknown, false);
+  assert.equal(model.pending, null);
+  assert.equal(peer.calls.length, 1);
+  assert.match(id, /^[a-f0-9]{16}$/);
+});
+
+test('receipt waiting deduplicates reads, bounds polling and offers only an explicit read-only recheck', async () => {
+  let now = 0, release, count = 0;
+  const model = new BreathingSetup({ now: () => now }), peer = fixture();
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = async id => { count++; await new Promise(resolve => { release = resolve; }); return receipt(id); };
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const first = model.refresh();
+  assert.equal(model.refresh(), first);
+  assert.equal(count, 1);
+  release(); await first;
+  await model.refresh();
+  assert.equal(count, 1, 'the existing UI tick cannot create an immediate duplicate read');
+  now = 20000;
+  await model.refresh();
+  let view = model.update(peer.gateway, state(), true);
+  assert.equal(count, 1, 'local waiting expiry must not keep polling indefinitely');
+  assert.equal(view.unknown, true);
+  assert.equal(view.actions.checkReceipt, true);
+  assert.equal(view.actions.calibrate, false);
+  assert.equal(model.recheckReceipt(), true);
+  const second = model.refresh();
+  assert.equal(count, 2);
+  release(); await second;
+  assert.equal(peer.calls.length, 1);
+  assert.ok(model.pending);
+});
+
+test('cancelling a receipt read preserves its pending ID and reconciles on reconnect without a mutation replay', async () => {
+  const saved = storage(), model = new BreathingSetup({ storage: saved }), peer = fixture();
+  let readingSignal;
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = (id, signal) => new Promise((resolve, reject) => {
+    readingSignal = signal;
+    signal.addEventListener('abort', () => reject(signal.reason), { once: true });
+  });
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const id = model.pending.command.id, read = model.refresh();
+  model.cancel();
+  assert.equal(readingSignal.aborted, true);
+  await read;
+  assert.equal(model.pending.command.id, id);
+  assert.equal(model.unknown, true);
+  model.update(null, state(null), true);
+  const rejoined = { ...peer.gateway, breathSetupReceipt: async queryId => receipt(queryId, { state: 'rejected', accepted: false, reason: 'audio-recovery-timeout' }) };
+  model.update(rejoined, state(), true);
+  await model.refresh();
+  assert.equal(model.pending, null);
+  assert.equal(peer.calls.length, 1);
+});
+
+test('an ordinary full receipt or wrong recovery generation cannot settle across an unrelated audio replacement', async () => {
+  for (const proof of [{}, { recovery_generation: null }, { recovery_generation: 1 }, { recovery_generation: 3 },
+    { recovery_generation: '2' }, { recovery_generation: -1 }]) {
+    const model = new BreathingSetup(), peer = fixture();
+    peer.gateway.breathSetupReceipt = async id => receipt(id, { state: 'confirmed', reason: 'accepted', ...proof });
+    model.update(peer.gateway, state(), true);
+    await model.run('calibrate');
+    const replacement = state(snapshot(native({ g: 2, r: 1 })));
+    model.update(peer.gateway, replacement, true);
+    await model.refresh();
+    assert.equal(model.update(peer.gateway, replacement, true).unknown, true, JSON.stringify(proof));
+    assert.ok(model.pending);
+  }
+});
+
+test('explicit native audio recovery availability admits repair while preserving participant, stream and controller barriers', () => {
+  const model = new BreathingSetup(), peer = fixture();
+  const failed = native({ calibration: 'failed', failure: 'clock_stalled', clock_valid: false, source_clock_ready: false });
+  assert.equal(model.update(peer.gateway, state(snapshot(failed)), true).actions.calibrate, false);
+  const eligible = { ...failed, audio_recovery_available: true };
+  assert.equal(model.update(peer.gateway, state(snapshot(eligible)), true).actions.calibrate, true);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...eligible, playing: false })), true).actions.calibrate, true);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...eligible, playing: false })), true).actions.controller, true);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...eligible, stage: 'main' })), true).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot(eligible, { p: 'RUNNING', h: 'vr-session', rec: true })), true).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot(eligible)), false).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot(eligible, { pi: { r: true, f: false } })), true).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot(eligible, { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } })), true).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...eligible, audio_recovery_available: false })), true).actions.calibrate, false);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...eligible, input: 'controller-state' })), true).actions.controller, true);
+  const ready = { ...eligible, ready: true, input: 'polar-tilt', calibration: 'ready' };
+  assert.equal(model.update(peer.gateway, state(snapshot(ready)), true).actions.continue, false);
+  for (const value of [null, 'true', 0, 1]) assert.equal(breathingSetup(snapshot({ ...eligible, audio_recovery_available: value }), owner), null);
+});
+
+test('waiting phones never poll setup receipts or accept another setup command', async () => {
+  const model = new BreathingSetup(), peer = fixture();
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  let reads = 0;
+  peer.gateway.breathSetupReceipt = async id => { reads++; return receipt(id); };
+  const status = snapshot(native(), { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } });
+  model.update(peer.gateway, state(status), true);
+  await model.refresh();
+  assert.equal(reads, 0);
+  assert.ok(model.pending);
+});
+
+test('recovery admission alone cannot settle from a field-light confirmation or a local wait deadline', async () => {
+  let now = 0;
+  const model = new BreathingSetup({ now: () => now }), peer = fixture();
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = async id => ({ v: 1, id, state: 'confirmed' });
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const changedRevision = state(snapshot(native({ r: 1, stage: 'waiting', calibration: 'waiting', attempt: 1 })));
+  model.update(peer.gateway, changedRevision, true);
+  await model.refresh();
+  assert.ok(model.pending, 'a recovery requires its native target generation proof');
+  now = 20000;
+  await model.refresh();
+  assert.ok(model.pending);
+  assert.equal(peer.calls.length, 1);
+  assert.equal(model.update(peer.gateway, changedRevision, true).actions.continue, false);
+});
+
+test('an admitted recovery remains pending without becoming uncertain merely because its native audio generation advances', async () => {
+  const model = new BreathingSetup(), peer = fixture();
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = async id => receipt(id, { recovery_generation: 2 });
+  model.update(peer.gateway, state(), true);
+  await model.run('controller');
+  const id = peer.calls[0].id;
+  const advancing = state(snapshot(recovering(id, { g: 2, r: 1, recovery: recovery(id, { target_generation: 2 }) })));
+  assert.equal(model.update(peer.gateway, advancing, true).unknown, false);
+  await model.refresh();
+  assert.equal(model.update(peer.gateway, advancing, true).unknown, false);
+  assert.ok(model.pending);
+});
+
+test('an actually retired native owner permits explicit recovery acknowledgement while an in-owner generation change does not', async () => {
+  const model = new BreathingSetup(), peer = fixture();
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  const replacedAudio = state(snapshot(native({ g: 2 })));
+  assert.equal(model.update(peer.gateway, replacedAudio, true).actions.acknowledge, false);
+  const renewed = { ...peer.gateway, owner: { ...owner, epoch: '9' } };
+  assert.equal(model.update(renewed, state(), true).actions.acknowledge, true);
+  assert.equal(model.acknowledgeRetired(), true);
+  assert.equal(model.update(renewed, state(), true).actions.calibrate, true);
+  assert.equal(peer.calls.length, 1);
+});
+
+test('a receipt budget caps rapid but spaced polls even before its local waiting deadline', async () => {
+  let now = 0, reads = 0;
+  const model = new BreathingSetup({ now: () => now }), peer = fixture();
+  peer.gateway.breathSetup = async command => { peer.calls.push(command); return receipt(command.id); };
+  peer.gateway.breathSetupReceipt = async id => { reads++; return receipt(id); };
+  model.update(peer.gateway, state(), true);
+  await model.run('controller');
+  for (let index = 0; index < 20; index++, now += 500) await model.refresh();
+  assert.equal(reads, 12);
+  assert.ok(model.pending);
+  assert.equal(model.update(peer.gateway, state(), true).actions.checkReceipt, true);
+});
+
+test('reload rejects malformed pending operation IDs before reconciliation can use them', () => {
+  for (const id of [1111111111111111, 'A'.repeat(16), 'f'.repeat(15), null]) {
+    const saved = storage();
+    saved.setItem('atmungsraum-breathing-setup-pending', JSON.stringify({ owner,
+      command: { v: 1, id, g: 1, r: 0, op: 'calibrate' }, recovery: true }));
+    const model = new BreathingSetup({ storage: saved });
+    assert.equal(model.pending, null);
+  }
+});
+
+test('a new native owner that reports recovery unavailable disables retries even when the last source projection was ready', () => {
+  const model = new BreathingSetup(), peer = fixture();
+  const unavailable = native({ clock_valid: false, audio_recovery_available: false, source_clock_ready: true });
+  const view = model.update(peer.gateway, state(snapshot(unavailable)), true);
+  assert.equal(view.actions.calibrate, false);
+  assert.equal(view.actions.controller, false);
+  assert.equal(view.actions.continue, false);
+  assert.match(view.blockedReason, /Quest-App erneut/);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...unavailable, clock_valid: true })), true).actions.calibrate, true);
+  const legacy = { ...unavailable }; delete legacy.audio_recovery_available;
+  assert.equal(model.update(peer.gateway, state(snapshot(legacy)), true).actions.calibrate, true);
 });

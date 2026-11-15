@@ -137,6 +137,11 @@ function breathSetup(command) {
     || !['start', 'calibrate', 'controller'].includes(op)) {
     return receipts[id] = { v: 1, id, state: 'rejected' };
   }
+  if (settings.audioRecovery) {
+    Object.assign(setup, { stage:'recovering',ready:false,clock_valid:false,audio_recovery_available:false,
+      recovery:{id,state:'pending',deadline_ns:2000000000,target_generation:null} });
+    return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'audio-recovery-pending',recovery_generation:null};
+  }
   setup.r++;
   const parked = setup.stage === 'idle' && !setup.playing;
   if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });
@@ -213,6 +218,12 @@ export async function joinQuest({ endpoint }) {
     owner: { ...owner }, initial: snapshot(), status: observedStatus, command: controlled(command),
     participantArm: controlled(command), scenarioArm: controlled(command),
     breathSetup: settings.oldApk ? null : controlled(breathSetup),
+    breathSetupReceipt: settings.oldApk ? null : controlled(id => {
+      (window.reviewSetupReceiptQueries ??= []).push({v:1,id,op:'receipt'});
+      return settings.setupReceiptPatch ? {v:1,id,...settings.setupReceiptPatch}
+        : settings.receiptState ? {v:1,id,state:settings.receiptState}
+          : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
+    }),
     recenter: controlled(value => {
       window.reviewRecenterCommands.push(structuredClone(value));
       return receipts[value.id] = { v: 1, id: value.id, state: 'confirmed' };
@@ -1486,10 +1497,87 @@ def capture_automatic_stream_recovery(review):
             page.context.close()
 
 
+def capture_audio_recovery(review):
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    for slug, viewport, text_size in (
+        ("390",VIEWPORT,""),("320",{"width":320,"height":568},""),
+        ("200-text",{"width":320,"height":568},"200%"),
+    ):
+        page = review.page(paired+"window.reviewInitialQuest={polar:'ready',audioRecovery:true};"
+            "window.reviewInitialSetup={stage:'testing',playing:true,calibration:'failed',failure:'clock_stalled',"
+            "clock_valid:false,source_clock_ready:false,audio_recovery_available:true};", viewport=viewport)
+        page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
+        enter_participant(page)
+        page.clock.run_for(1100)
+        calibrate, fallback = page.locator("#preview-calibrate"), page.locator("#preview-controller")
+        detail, proceed = page.locator("#preview-detail"), page.locator("#preview-continue")
+        expect(page.locator("#preview-circle")).to_be_hidden()
+        expect(page.locator("#preview-input-volume")).to_be_hidden()
+        assert page.evaluate("window.reviewQuest.setup.playing") is True
+        expect(calibrate).to_be_enabled()
+        calibrate.click()
+        page.clock.run_for(1100)
+        expect(detail).to_contain_text("Atemschleife")
+        expect(detail).to_contain_text("Warte")
+        expect(calibrate).to_be_disabled()
+        expect(fallback).to_be_disabled()
+        expect(proceed).to_be_disabled()
+        expect(page.locator("#preview-input-volume")).to_be_hidden()
+        expect(page.locator("#preview-circle")).to_be_hidden()
+        assert page.evaluate("window.reviewQuest.setup.playing") is True
+        assert page.locator("#preview-progress").evaluate("node=>node.value") == 0
+        assert len(page.evaluate("window.reviewSetupCommands")) == 1
+        operation_id = page.evaluate("window.reviewSetupCommands[0].id")
+        review.shot(page,f"audio-recovery-pending-{slug}",f"Audio recovery {slug} · admitted, no completed calibration",detail,"Audio recovery")
+        page.clock.run_for(14000)
+        recheck = page.locator("#preview-acknowledge")
+        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_be_enabled()
+        queries = page.evaluate("window.reviewSetupReceiptQueries")
+        assert 1 <= len(queries) <= 12
+        assert all(query == {"v":1,"id":operation_id,"op":"receipt"} for query in queries)
+        before = len(queries)
+        recheck.click()
+        page.clock.run_for(1100)
+        assert len(page.evaluate("window.reviewSetupReceiptQueries")) > before
+        assert len(page.evaluate("window.reviewSetupCommands")) == 1
+        wait_state(page,setupReceiptPatch={"state":"confirmed","accepted":True,"reason":"accepted","recovery_generation":2})
+        wait_setup(page,g=2,r=1,stage="waiting",calibration="waiting",attempt=1,completed_frames=0,
+            target_frames=1411200,recovery=None,clock_valid=True,source_clock_ready=True,audio_generation=2)
+        page.clock.run_for(1100)
+        expect(detail).to_contain_text("nächsten vollständigen Atemzyklus")
+        expect(proceed).to_be_disabled()
+        assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
+        assert len(page.evaluate("window.reviewSetupCommands")) == 1
+        review.shot(page,f"audio-recovery-confirmed-{slug}",f"Audio recovery {slug} · confirmed, collection still pending",detail,"Audio recovery")
+        wait_setup(page,stage="testing",calibration="failed",failure="clock_stalled",clock_valid=False,
+            source_clock_ready=False,audio_recovery_available=True)
+        calibrate.click()
+        page.clock.run_for(1100)
+        wait_state(page,setupReceiptPatch={"state":"rejected","accepted":False,"reason":"audio-recovery-timeout","recovery_generation":None})
+        wait_setup(page,stage="testing",recovery=None,audio_recovery_available=True)
+        page.clock.run_for(1100)
+        expect(detail).to_contain_text("Atemschleife konnte nicht")
+        expect(calibrate).to_be_enabled()
+        expect(fallback).to_be_enabled()
+        expect(proceed).to_be_disabled()
+        assert len(page.evaluate("window.reviewSetupCommands")) == 2
+        review.shot(page,f"audio-recovery-rejected-{slug}",f"Audio recovery {slug} · terminal failure allows explicit retry",detail,"Audio recovery")
+        wait_setup(page,audio_recovery_available=False,source_clock_ready=True)
+        expect(detail).to_contain_text("Quest-App erneut")
+        expect(calibrate).to_be_disabled()
+        expect(fallback).to_be_disabled()
+        expect(proceed).to_be_disabled()
+        review.shot(page,f"audio-recovery-unavailable-{slug}",f"Audio recovery {slug} · unavailable owner requires reopening Quest app",detail,"Audio recovery")
+        review.regressions.append({"kind":"audio-recovery","viewport":viewport,"text_size":text_size,
+            "original_id":operation_id,"queries":queries,"mutation_count":2,"fabricated_progress":False})
+        page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic"), default="all",
+    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic", "audio"), default="all",
                         help="Full suite or focused pairing, control, Location, scroll, Polar, or live presentation")
     args = parser.parse_args()
     output = args.output.resolve()
@@ -1520,6 +1608,8 @@ def main():
             capture_parked_calibration(review)
         if args.scope in ("all", "automatic"):
             capture_automatic_stream_recovery(review)
+        if args.scope in ("all", "audio"):
+            capture_audio_recovery(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")
