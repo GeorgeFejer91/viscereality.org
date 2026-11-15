@@ -23,6 +23,18 @@ const snapshot = (phase = 'IDLE', generation = 0, revision = 0, witness = '100')
   },
 });
 
+test('Polar automatic recovery is optional and accepts only actual boolean observations', () => {
+  const y = { s: 'a'.repeat(32), g: 8, r: 1, p: true, b: true, c: true,
+    a: false, e: false, sc: false, x: 'b'.repeat(12), d: [] };
+  assert.equal(polarSetup({ ...snapshot(), y }), y);
+  for (const ar of [true, false]) {
+    assert.equal(polarSetup({ ...snapshot(), y: { ...y, ar } })?.ar, ar);
+  }
+  for (const ar of [null, 0, 1, 'true', {}]) {
+    assert.equal(polarSetup({ ...snapshot(), y: { ...y, ar } }), null);
+  }
+});
+
 test('presentation timing charges status transport without rewriting the native observation', async () => {
   let now = 100;
   const native = snapshot();

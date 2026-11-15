@@ -26,6 +26,7 @@ export function polarSetup(status) {
     || !Number.isSafeInteger(setup.g) || setup.g <= 0 || String(setup.g) !== status.o?.e
     || !Number.isSafeInteger(setup.r) || setup.r < 0
     || !['p', 'b', 'c', 'a', 'e', 'sc'].every(flag => typeof setup[flag] === 'boolean')
+    || Object.hasOwn(setup, 'ar') && typeof setup.ar !== 'boolean'
     || setup.l !== undefined && !['enabled', 'disabled', 'unavailable', 'legacy-unobserved', 'permission-blocked', 'unknown'].includes(setup.l)
     || typeof setup.x !== 'string' || setup.x !== '' && !candidateId.test(setup.x)
     || setup.c && !setup.x || (setup.a || setup.e) && !setup.c

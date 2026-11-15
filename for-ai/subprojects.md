@@ -12,6 +12,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Setup correction (2026-11-15): Automatic is selected but parked at minimum and
+  silent on load. Explicit calibration or Controller selection starts the native
+  loop. Calibration assesses both complete cycles, masks bounded noisy segments
+  and judges usable phase coverage at the end. Connected Polar acquisition
+  automatically establishes/retries ECG and motion; explicit Stop remains a
+  barrier. The smooth percentage shares the native circle's freshness budget.
+  Current code-5 wearer calibration failed before collection; its repair and
+  the next local APK remain under validation. See the active project checklist.
+
 - Phone live controls (2026-11-15): telemetry preserves document scroll, focused
   fields, caret and unfinished edits. Partial Polar readiness names missing ECG
   or motion and offers explicit recovery. Compact Viscereality styling and

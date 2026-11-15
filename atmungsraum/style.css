@@ -65,6 +65,9 @@ html[data-mode="quest"] #corner-actions {
 .preview-body { justify-items: center; gap: clamp(6px, min(2vw, 2dvh), 14px); text-align: center; }
 .preview-figure { display: grid; justify-items: center; gap: inherit; width: 100%; }
 #preview-status, #preview-input, #preview-detail { justify-self: stretch; }
+#preview-input { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: .25em; }
+#preview-input-label { flex: 0 1 auto; }
+#preview-input-volume { flex: none; inline-size: 6ch; white-space: nowrap; font-variant-numeric: tabular-nums; }
 #preview-detail { overflow-wrap: anywhere; }
 #preview-progress-group { display: grid; justify-items: stretch; gap: 4px; width: min(100%, 320px); }
 #preview-progress { width: 100%; height: 12px; accent-color: #c4e2a8; }

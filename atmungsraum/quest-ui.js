@@ -1,12 +1,12 @@
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=10';
 import { pairPhone } from './quest-pairing.js?v=1';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=23';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=24';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=3';
-import { LiveBreathDisplay } from './live-breath-display.js?v=1';
+import { BreathingSetup } from './breathing-setup.js?v=4';
+import { LiveBreathDisplay } from './live-breath-display.js?v=2';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 
 const byId = (id) => document.getElementById(id);
@@ -34,13 +34,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewTitle = byId('preview-title');
   const previewCircle = byId('preview-circle');
   const previewStatus = byId('preview-status');
-  const previewInput = byId('preview-input');
+  const previewInputLabel = byId('preview-input-label');
+  const previewInputVolume = byId('preview-input-volume');
   const previewDetail = byId('preview-detail');
   const previewProgressGroup = byId('preview-progress-group');
   const previewProgress = byId('preview-progress');
   const previewProgressFill = byId('preview-progress-fill');
   const previewProgressText = byId('preview-progress-text');
-  const previewStart = byId('preview-start');
   const previewCalibrate = byId('preview-calibrate');
   const previewController = byId('preview-controller');
   const previewContinue = byId('preview-continue');
@@ -78,7 +78,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const participantOutput = byId('patient-id');
   let participantId = '';
   let previewAccepted = '';
-  let attemptedSetupStart = '';
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -200,6 +199,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     participantSubmit.disabled = participantFields.disabled;
     text(participantLabel, participantId ? `Teilnehmer-ID: ${participantId}` : 'Teilnehmer-ID eingeben');
     const hadPolarFocus = document.activeElement === polarConnect;
+    const recoveringStreams = Boolean(setup?.c && !ready && setup.ar === true);
     polar.hidden = status?.p !== 'IDLE' || active || waitingForControl;
     text(polarStatus, !setup ? 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.'
       : !setup.p ? 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.'
@@ -208,12 +208,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : setup.sc ? 'Quest sucht nach dem Polar H10 …'
       : ready ? 'Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.'
       : setup.c ? `Polar H10 per Bluetooth verbunden. ${setup.e ? 'EKG bereit; Bewegungsdaten fehlen.'
-        : setup.a ? 'Bewegungsdaten bereit; EKG fehlt.' : 'EKG und Bewegungsdaten fehlen.'}`
+        : setup.a ? 'Bewegungsdaten bereit; EKG fehlt.' : 'EKG und Bewegungsdaten fehlen.'}${recoveringStreams
+          ? ' Die Quest startet fehlende Messsignale automatisch erneut.' : ''}`
       : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
     text(polarConnect.firstElementChild, ready ? 'Messsignale bereit'
       : setup?.c ? 'Fehlende Messsignale starten' : 'Polar H10 verbinden');
-    polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
-    if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
+    polarConnect.hidden = recoveringStreams;
+    polarConnect.disabled = recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
+    if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
     const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
     const showScenario = selectionAllowed && available.length > 0;
@@ -276,23 +278,24 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     previewCircle.hidden = !view.available;
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
-      : !native.playing ? 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
+      : !native.playing ? native.stage === 'idle' ? 'Automatic ist bereit.' : 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
     const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
-    const volume = view.inputVolume === null ? '' : ` · ${Math.round(view.inputVolume * 100)} %`;
-    text(previewInput, view.available ? `Eingabe: ${view.inputLabel}${measured}${volume}` : 'Eingabe auf der Quest nicht verfügbar.');
+    const hasVolume = native?.input === 'automatic' || view.inputVolume !== null;
+    text(previewInputLabel, view.available ? `Eingabe: ${view.inputLabel}${measured}${hasVolume ? ' · ' : ''}` : 'Eingabe auf der Quest nicht verfügbar.');
     const collecting = ['waiting', 'collecting'].includes(native?.calibration);
     const detail = view.updateRequired ? 'Quest-App aktualisieren: Dieser Build unterstützt die Atemeinrichtung noch nicht.'
       : view.actions.acknowledge ? 'Die Quest-Verbindung wurde erneuert. Prüfe den aktuellen Zustand und bestätige mit „Quest geprüft“. Kein Befehl wird wiederholt.'
       : view.unknown ? 'Ergebnis unklar. Prüfe die Quest. Die Aktion wird nicht wiederholt; warte auf den bestätigten Status.'
       : view.pending ? 'Warte auf Bestätigung der Quest …'
       : !view.available ? 'Kein aktueller Atemstatus verfügbar. Prüfe die Verbindung zur Quest.'
-      : view.failure && native.input === 'automatic' ? `Einrichtung fehlgeschlagen: ${view.failure}. Automatic bleibt aktiv. Du kannst erneut einrichten oder Controller State wählen.`
+      : view.failure && native.input === 'automatic' ? `Einrichtung fehlgeschlagen: ${view.failureLabel}. Automatic bleibt aktiv. Du kannst erneut einrichten oder Controller State wählen.`
       : view.blockedReason ? view.blockedReason
       : view.message ? view.message
       : native.calibration === 'waiting' ? 'Automatic ist aktiv. Die Einrichtung beginnt mit dem nächsten vollständigen Atemzyklus.'
-      : native.calibration === 'collecting' ? 'Automatic ist aktiv. Folge dem Atemtakt für zwei vollständige Atemzyklen.'
+      : native.calibration === 'collecting' ? `Automatic ist aktiv. Folge dem Atemtakt für zwei vollständige Atemzyklen.${view.qualityWarning ? ` ${view.qualityWarning}` : ''}`
       : view.actions.continue ? 'Prüfe die Bewegung im Headset. Wenn die Eingabe passt, gehe weiter zur Auswahl.'
-      : !native.playing ? 'Warte auf die Atemschleife der Quest.'
+      : !native.playing ? native.stage === 'idle'
+        ? 'Wähle „Atmung einrichten“. Die Atmung beginnt erst danach auf der Quest.' : 'Warte auf die Atemschleife der Quest.'
       : 'Die Atemschleife läuft. Richte die Atmung ein oder wähle Controller State mit fester Ausrichtung.';
     text(previewDetail, detail);
     previewProgressGroup.hidden = !view.available || !(collecting || native?.attempt > 0);
@@ -303,8 +306,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const age = timing ? observation?.a + timing.transportMs + Math.max(0, now - timing.receivedAt) : 1501;
     breathDisplay.update(view, observation && { ...observation, a: age }, now);
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
-    previewStart.hidden = native?.stage !== 'idle';
-    previewStart.disabled = waiting || !view.actions.start;
     previewCalibrate.disabled = waiting || !view.actions.calibrate;
     text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Erneut einrichten' : 'Atmung einrichten');
     previewController.disabled = waiting || !view.actions.controller;
@@ -359,12 +360,19 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (current) {
         previewCircle.style.transform = `scale(${current.radius})`;
         previewProgressFill.style.transform = `scaleX(${current.progress / 2})`;
+        if (typeof current.inputVolume === 'number') {
+          if (previewInputVolume.hidden) previewInputVolume.hidden = false;
+          text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
+        } else if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
         const native = breathing.view?.setup;
         if (native?.playing && Number.isSafeInteger(native.audio_generation)) {
           text(previewStatus, current.live ? `Atemtakt: ${current.phaseLabel}` : 'Warte auf den aktuellen Atemtakt der Quest.');
         }
         moving = current.animating;
-      } else text(previewStatus, 'Warte auf den aktuellen Atemtakt der Quest.');
+      } else {
+        if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
+        text(previewStatus, 'Warte auf den aktuellen Atemtakt der Quest.');
+      }
     }
     if (!graph.hasAttribute('hidden')) {
       const current = ecgDisplay.frame(now);
@@ -541,13 +549,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (document.hidden || connecting || userAction) return;
     if (!rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
       void connect(savedPair);
-      return;
-    }
-    const setupStart = breathing.view?.setup;
-    const setupStartKey = setupStart && `${breathing.view.acceptance}/${setupStart.g}`;
-    if (breathing.view?.actions.start && attemptedSetupStart !== setupStartKey) {
-      attemptedSetupStart = setupStartKey;
-      void setupAct('start');
       return;
     }
     const gateway = rehearsal.gateway;
@@ -795,7 +796,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     autoConnect = true;
     void connect(savedPair, true);
   });
-  polarConnect.addEventListener('click', () => act('polar'));
+  polarConnect.addEventListener('click', () => { if (!polarConnect.hidden && !polarConnect.disabled) void act('polar'); });
   pairingConfirm.addEventListener('click', () => {
     if (!pairingChoice || pairingConfirm.disabled) return;
     pairingConfirm.disabled = true;
@@ -806,7 +807,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   pairingCancel.addEventListener('click', () => pairingChoice?.attempt.abort());
   controlClaim.addEventListener('click', () => { if (!controlClaim.disabled) void changeControl('claim'); });
   controlRelease.addEventListener('click', () => { if (!controlRelease.disabled) void changeControl('release'); });
-  previewStart.addEventListener('click', () => setupAct('start'));
   previewCalibrate.addEventListener('click', () => setupAct('calibrate'));
   previewController.addEventListener('click', () => setupAct('controller'));
   previewAcknowledge.addEventListener('click', () => {

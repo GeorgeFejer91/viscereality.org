@@ -18,6 +18,13 @@ samples and still expires; backgrounding suspends the display and shows a
 waiting state until a fresh observation. This never admits a command, trains
 a model, switches input or advances the main experiment.
 
+Automatic's percentage uses the same fresh native phase fraction as its circle.
+For Polar or Controller input, the displayed percentage interpolates only between
+already observed measurements. It cannot predict a future sample. Both displays
+share expiry, pause, replay, reduced-motion and visibility barriers. The numeric
+field reserves measured space for `100 %`; high-rate numeric changes do not
+trigger whole-page text remeasurement or reset document scroll.
+
 Calibration's accessible progress value and text remain the actual native
 completed-frame count. Only the visible fill interpolates between received
 counts, and it cannot exceed the last confirmed count or finish a calibration.
@@ -32,19 +39,31 @@ acquisition and calibration retain their native paths unchanged.
 
 ## Accepted behavior
 
-Automatic is the Atmungsraum startup input. One native audio-frame schedule owns
+Automatic is the Atmungsraum startup input, parked at minimum expansion with no
+audio playback. Loading the app, opening the phone setup and lifecycle resume
+cannot start it. An accepted explicit calibration or Controller selection starts
+the loop once. One native audio-frame schedule owns
 cue playback, intended breathing phase, automatic visual input, calibration
 labels, and experiment boundaries. Inhale, hold-in, exhale and hold-out each last
 four seconds. Preparation loops indefinitely. The phone projects native state;
 browser timers never advance the schedule.
 
-Polar stays connected and acquiring. Calibration selects Automatic and collects
-from the next inhale boundary through two full cycles (32 seconds). Progress
-uses actual audio frames and accepted samples. Missing, stale, malformed,
-reordered, motion-contaminated or insufficient-range data fails the attempt.
+Polar stays connected and automatically establishes/retries both ECG and motion
+streams while the selected native owner requires them. Explicit Stop and source
+retirement fence recovery; a connected Bluetooth link alone is not readiness.
+
+Calibration selects Automatic and collects two full cycles (32 seconds). The
+first parked start begins with the first actual playing observation; retries use
+the next inhale boundary without restarting the PCM track. Progress uses actual
+audio frames. Bounded invalid, motion-contaminated or mistimed intervals are
+masked throughout collection, with usable phase coverage and range evaluated
+only at the end. A brief bad interval alone must not end collection immediately.
+Source/clock retirement and an actual pause during active collection remain
+fatal. Missing coverage, sustained motion or insufficient range fails the fit.
 Elapsed time alone never proves success. A successful model is activated as
 Polar tilt atomically while the loop continues. Retry repeats this process.
-Controller State with fixed orientation cancels an outstanding calibration,
+Controller State with fixed orientation is available from parked startup and
+cancels an outstanding calibration,
 keeps the same audio clock and uses the existing controller assessment owner.
 Fallback selection stays available after Polar tracking becomes unreliable.
 Starting the participant run still requires the study's fresh H10 streams;
