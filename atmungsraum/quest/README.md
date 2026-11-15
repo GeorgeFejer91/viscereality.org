@@ -18,13 +18,20 @@ calibration labels and main boundaries. Inhale, hold-in, exhale and hold-out
 each last four seconds. Preparation has no time limit. The phone displays
 Quest state and does not advance the schedule with a browser timer.
 
-Automatic is the startup input. Polar calibration begins at the next inhale
+Automatic is the startup input, parked at minimum expansion and silent until
+explicit calibration or Controller selection. Polar calibration begins at the next inhale
 boundary and collects two full cycles (32 seconds). Success requires accepted,
 fresh directional samples across both cycles; elapsed time alone is not
 success. A successful model becomes Polar tilt while the same loop continues.
 Retry repeats calibration. Controller State with fixed orientation cancels an
 outstanding calibration and uses the existing controller assessment without
 restarting the audio. Fresh H10 streams remain required for the participant run.
+
+Calibrated Polar classifies the measured tilt into inhale, exhale or hold. The
+existing frame-time integrator drives radius. Between valid classifications it
+retains the last confirmed state: inhale keeps expanding, exhale contracting,
+hold stays still. Missing/invalid samples do not reset radius. Genuine source,
+projection, audio, model or input/configuration barriers still clear that state.
 
 The selected gateway offers only `haupt-15`. Start retains the chosen input
 and model, waits for the next complete cycle boundary, and starts a separate
@@ -80,16 +87,16 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-004 `
-    -Developer -Keystore $developerKeystore -VersionCode 4 -VersionName 0.2.3-dev
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-008 `
+    -Developer -Keystore $developerKeystore -VersionCode 8 -VersionName 0.2.7-dev
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `f78d4cad8b9c0e4521f98ad9993d675b5f2866ab`, matching
+reconstructs source tree `2b702ebeda4b69faadc97c3716f9db956d759a1f`, matching
 the current developer source. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
-Code 5 selects the generic opt-in particle adapter with a downstream private
+The current Developer build selects the generic opt-in particle adapter with a downstream private
 Showcase profile through the existing three-custom-input route. The bundled
 command above remains the base experiment composition; it does not reproduce
 those private particle inputs. Keep the full profile/shader bodies private,

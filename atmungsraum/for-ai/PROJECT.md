@@ -2,6 +2,37 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Retained Polar breath state — 2026-11-15
+
+- [x] Reproduce the radius reset through actual calibration, batched 200 Hz
+  samples, jittered receipts and frame-time driver updates.
+- [x] Retain the latest sensor-confirmed inhale/exhale/hold through unavailable
+  or invalid samples; preserve actual source/audio/model/configuration barriers.
+- [x] Review the source and verify native833 (three ignored), phone164 and exact
+  cumulative patch/tree reconstruction.
+- [x] Build, inspect and install same-key local Developer 0.2.7-dev/code 8.
+- [ ] Publish the source/record and verify exact Pages deployment and live bytes.
+- [ ] Require fresh wearer Ready; qualify smooth tracking, retry, Controller
+  fallback and the full 900-second main run.
+
+Reviewed native `304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1` reconstructs tree
+`2b702ebeda4b69faadc97c3716f9db956d759a1f`. Two scoped review corrections
+preserve a newly confirmed state before an invalid packet tail, and fence old
+confirmations at driver configuration/activation retirement. Both are cleared;
+spec and code-quality review pass. The new confirmation cursor remains monotonic
+across classifier re-prime; unavailable metadata cannot authorize a phase or
+mark input ready. The existing integrator/rates, classifier, learner, raw-data
+freshness and recording admission remain unchanged. Fresh APK assembly and actual
+session closure, manifest, 89 assets, signer and alignment checks pass. The
+[code-8 record](../quest/apks/README.md#027-dev--retain-confirmed-polar-breath-state-2026-11-15)
+binds the artifact. Exact installed bytes match; UID, grants and persistent
+identity are retained. Cold startup confirms controllers only, no hand extension,
+no simultaneous mode, app panel closed and gateway ready. Observed input is zero;
+configured inhale/exhale rates are 0.25 per second. Location remains ON and Wi-Fi
+ADB is retained. Startup observers and owned leases are released. GitHub/Pages
+publication is next. The overall milestone remains open; no Meta upload or new
+wearer test has started. Require fresh Ready before another calibration.
+
 ### Participant-led calibration and controller-only app — 2026-11-15
 
 - [x] Remove ideal-waveform compliance rejection without adding a recurrence
@@ -12,9 +43,13 @@
   manifest plus running input/hand-extension flags.
 - [x] Build and install same-key Developer 0.2.6-dev/code 7 with exact installed
   byte-hash readback and retained UID/grants/persistent identity.
-- [ ] Publish the final code-7 source record and verify exact Pages/live bytes.
-- [ ] Run a fresh attended personal calibration, inspect the resulting sphere
-  tracking with the participant, and test retry/Controller fallback/main.
+- [x] Publish the final code-7 source record and verify exact Pages/live bytes.
+- [x] Run a fresh attended personal calibration: both complete cycles collected,
+  800/800 training points accepted, automatic switch to calibrated Polar tilt.
+- [x] Correct the source of abrupt radius changes in the reviewed native path;
+  retain the last valid breath state through unavailable/invalid samples and
+  continue its frame-time ramp until valid data establishes a new state.
+- [ ] Repeat participant tracking acceptance, then test retry/Controller fallback/main.
 
 The [code-7 record](../quest/apks/README.md#026-dev--participant-led-calibration-and-controllers-only-2026-11-15)
 binds native `50eaa1ac55eb9161879c48916da82894cfaff9af`, tree
@@ -24,12 +59,48 @@ actual non-resolve builder regression and independent reviews pass. The first
 build exposed a legacy simultaneous-only guard; the reviewed fix preserves all
 other original-renderer checks. Fresh assembly, package/source proof and install
 succeed. Actual startup confirms controllers only, no live hand extension, no
-simultaneous mode and a closed app panel. The gateway is ready. The headset is
-unworn, so its black capture does not prove wearer rendering or calibration.
+simultaneous mode and a closed app panel. The gateway is ready. The initial
+unworn black capture did not prove rendering; the wearer later dismissed a
+Quest prompt and confirmed the actual stimulus.
 
 Location remains ON by explicit user instruction; requested Wi-Fi ADB remains
-available. Build/headset leases and observers are released. No code-7 calibration
-or Meta upload has started. Require a fresh wearer Ready. The overall goal is open.
+available. No Meta upload has started. The overall goal is open.
+
+[PR 14](https://github.com/GeorgeFejer91/viscereality.org/pull/14) merged as
+`2fbf5306cb8876bce52c8b87a70e838ca41c7c03`; exact
+[Pages run 43737821830](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43737821830)
+succeeded. All 24 checked live files match Git and the remote context gate passes.
+The user then supplied fresh code-7 readiness and USB Pixel access. The physical
+phone was refreshed; exact new brand CSS/app and setup-module resource URLs were
+verified on that phone. The attended code-7 attempt completed all 1,411,200 frames
+with 800/800 accepted training points and no quality masks, then selected Polar
+tilt without restarting the audio generation. Participant satisfaction failed:
+the sphere visibly jumped rather than following the expected smooth state ramp.
+Code 7's transient Waiting path reset the radius; sparse private readback
+contains 32 not-ready observations after successful calibration. The investigation
+led to the code-8 repair above. The code-7 app was stopped, its phone helper/
+forward and owned leases released, and Location retained ON.
+The wearer may remove the strap; require fresh Ready for another calibration.
+The user explicitly corrected the proposed radius freeze: hold the last valid
+breath state instead. Inhale/exhale must keep changing the radius through sample
+gaps; hold must remain still. Genuine lifecycle barriers still clear the state.
+The continuity regression is reproduced and its frame-time repair passes the
+native library suite (829 tests, three ignored) and phone suite (164 tests).
+Independent review found a same-packet edge: a newly confirmed state can be
+erased by a later masked sample before rendering. The fix must retain the latest
+confirmed sensor classification separately from current sample/classifier
+availability. Fix round 1 is implemented at native
+`d9b5f05082835bcb8c0605bb5758f8e02271999e`, with 831 native library passes and
+three ignored. Real Runtime regressions cover both Hold and Exhale confirmed
+before a masked batch tail. Scoped re-review accepts that repair but found a
+new cache-retirement edge: config/activation reset can reload a pre-barrier
+confirmed state from unavailable Runtime output. Fix round 2 is frozen at
+`304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1`: monotonic confirmation revisions
+and a driver fence retire pre-barrier confirmations while admitting newer valid
+ones, including valid data followed by an invalid batch tail. Runtime29 and the
+full native library suite (833 passed, three ignored) pass. The cumulative patch
+reconstructs tree `2b702ebeda4b69faadc97c3716f9db956d759a1f`. Scoped re-review
+is clear; build/install and wearer acceptance are tracked above.
 
 ### Core-site visual identity — 2026-11-15
 
@@ -39,14 +110,15 @@ black/white surfaces, thin frames, blue actions and gold accents. Product contro
 real Pretext, scroll/edit stability and percentage display isolation are retained.
 The final rendered sweep passes 132 screens and 30 regression records with zero
 app errors, overflow, unmeasured labels or undersized targets. Brand no-fit was
-corrected and independent visual/source review is clear. Cache-versioned style
-publication and physical phone refresh are the remaining gates for this increment.
+corrected and independent visual/source review is clear. The style is published
+and the physical Pixel's release resources were verified during the code-7 test.
 
 [PR 13](https://github.com/GeorgeFejer91/viscereality.org/pull/13) merged as
 `0a3451656351d00391b6ca1d9d55bd2805b1d960`; exact
 [Pages run 43736737421](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43736737421)
 succeeded. All 24 checked live files match Git. Public-URL phone/desktop smoke
-checks pass with zero app errors. The installed phone refresh remains pending.
+checks pass with zero app errors. Installed-phone refresh and exact resource
+version readback subsequently passed during the attended code-7 test.
 
 ### Parked startup and full-window calibration repair — 2026-11-15
 

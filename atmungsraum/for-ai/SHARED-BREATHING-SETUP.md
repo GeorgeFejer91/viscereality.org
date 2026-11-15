@@ -48,6 +48,28 @@ while the same loop continues. The experimenter may repeat calibration or choose
 Controller State. The fixed-tilt system's filtering and mapping lessons can inform
 the learner without becoming a pre-calibration breathing classifier.
 
+Calibrated tilt classifies inhale, exhale or hold for the existing frame-time
+radius integrator; its normalized measured coordinate is not the rendered radius.
+Preserve smooth state-driven expansion/contraction. The user's explicit correction
+is to retain the last valid breath state until valid data warrants a new state:
+inhale continues expanding, exhale continues contracting, and hold keeps its radius.
+Within the same source/model/audio lineage, unavailable or invalid samples cannot
+change that state. Continue integrating it once per rendered frame with the
+existing rates and limits, while reporting input readiness honestly. No packet
+catch-up or radius reset is permitted for a transient sample lapse.
+Actual source, projection, audio, model, input-selection and configuration barriers
+still retire the appropriate history. Code 7 exposed an undifferentiated Waiting
+reset during the participant preview. Reviewed code-8 source corrects this;
+fresh participant tracking acceptance remains open.
+
+The calibrated path uses the common normalized-tilt phase classifier, while the
+older fixed-tilt path uses its 25 Hz feature classifier. Their phase timing is
+not identical. A normalized box-wave probe at 25/50/100/200 Hz produces the same
+states for individual and batched delivery, without chatter on that fixture;
+Hold transition latency differs by up to 160ms because the common derivative
+filter is per observation. This is a qualification limit, not wearer tracking
+acceptance. The radius continuity repair does not change that classifier.
+
 The app must select controller-only input. Hand tracking and simultaneous
 hands/controllers must remain unselected for this product, including manifest
 capabilities and runtime activation, so automatic switching cannot interrupt the
