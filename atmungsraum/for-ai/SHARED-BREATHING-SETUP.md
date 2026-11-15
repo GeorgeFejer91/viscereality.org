@@ -39,6 +39,20 @@ acquisition and calibration retain their native paths unchanged.
 
 ## Accepted behavior
 
+Latest user ruling, 2026-11-15: calibration assumes the participant follows the
+guidance. Scheduled phases supply training labels for the person's tilt axis,
+direction and range. Reject obvious unusable data or technical failure; do not
+require an ideal waveform, flat holds or cross-cycle compliance/recurrence.
+After learning, switch to Polar tilt and let the participant assess tracking
+while the same loop continues. The experimenter may repeat calibration or choose
+Controller State. The fixed-tilt system's filtering and mapping lessons can inform
+the learner without becoming a pre-calibration breathing classifier.
+
+The app must select controller-only input. Hand tracking and simultaneous
+hands/controllers must remain unselected for this product, including manifest
+capabilities and runtime activation, so automatic switching cannot interrupt the
+Controller State breathing driver. Other products keep their existing selection.
+
 Automatic is the Atmungsraum startup input, parked at minimum expansion with no
 audio playback. Loading the app, opening the phone setup and lifecycle resume
 cannot start it. An accepted explicit calibration or Controller selection starts
@@ -110,7 +124,9 @@ four-second phase. Each inhale/exhale needs six usable observations in both its
 first and last second. Finite raw acceleration and 0.85–1.15 g magnitude remain
 required. A causal 100 ms gravity estimate feeds the 0.60 normalized-gravity
 chord/second motion guard, with 200 ms settling after bad intervals. Existing
-directed range and fit checks still apply. These are engineering thresholds
+engineering range limits still apply. Installed code 6 also applies an ideal
+per-cycle fit test; the attended result below demonstrates why that test is
+being removed under the latest user ruling. These are engineering thresholds
 awaiting wearer qualification. Optional quality counts are bounded 0–800 and
 do not change control revisions or prove success.
 

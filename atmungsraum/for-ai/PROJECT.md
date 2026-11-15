@@ -2,7 +2,24 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Core-site visual identity — 2026-11-15
+
+The user requests that the PWA visually match the core Viscereality website.
+The prepared style uses its white VR figure, bold centered Arial headings,
+black/white surfaces, thin frames, blue actions and gold accents. Product controls,
+real Pretext, scroll/edit stability and percentage display isolation are retained.
+The final rendered sweep passes 132 screens and 30 regression records with zero
+app errors, overflow, unmeasured labels or undersized targets. Brand no-fit was
+corrected and independent visual/source review is clear. Cache-versioned style
+publication and physical phone refresh are the remaining gates for this increment.
+
 ### Parked startup and full-window calibration repair — 2026-11-15
+
+Latest correction: assume guided breathing during calibration, learn the person's
+tilt movement and let their post-calibration test decide satisfaction. Remove
+ideal-waveform compliance rejection without adding a recurrence test. The app
+must also be controller-only to prevent hand/controller auto-switch interruptions.
+These source changes are in progress for the next local APK.
 
 The attended code-5 test did not collect calibration data. User attempts failed
 as `reordered_sample`; one assistant-operated retry, explicitly authorized by
@@ -30,6 +47,9 @@ streams. The phone percentage shares the circle's bounded display behavior.
 - [ ] Publish its verified public source record through exact Pages/live checks.
 - [ ] Resume a fresh attended test, inspect the actual ACC frame format, confirm
   advancing calibration progress, then qualify fit, retry and Controller fallback.
+- [ ] Replace ideal-waveform rejection with participant-decided calibration
+  acceptance, retaining technical/data-quality guards and usable signal limits.
+- [ ] Select controller-only app input and verify the locked manifest/runtime.
 
 Code 6 is now installed with exact byte-hash readback and retained app UID,
 grants and persistent identity. System Location remains OFF and this task's
@@ -58,6 +78,25 @@ passes actual signed-APK closure, manifest, signer, asset and ZIP checks; its
 binds the artifact and source. Native frames advance with the app panel closed
 and a ready gateway. The existing Location handoff leaves Meta system Settings
 over VR; fresh wearer silence/minimum and calibration acceptance remain open.
+
+The next attended code-6 attempt actually collected all 1,411,200 frames. Both
+H10 streams became ready with automatic recovery active; actual ACC is raw type 1
+at 200 Hz. Native parked readback was frame zero, stopped audio and input zero.
+Calibration accepted 795/800 training points with no motion/invalid/timing masks,
+then failed `poor_guided_motion`. The user confirms following audible cues.
+Sparse private readback shows tilt movement in both cycles; the strict ideal
+fit is the remaining rejection, so participant-fit acceptance is not passed.
+Controller selection was accepted but usable live tracking remains unqualified.
+The app was force-stopped for the repair, observers/leases released, and a new
+wearer Ready is required before another attempt. The user explicitly requests
+leaving Quest Location ON; current mode is 3. Do not restore the earlier OFF state.
+
+[PR 12](https://github.com/GeorgeFejer91/viscereality.org/pull/12) published the
+code-6 source record as `e3b4573cc7fb3107912b3959c14660c78ef762de`. Exact
+[Pages run 43733535771](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43733535771)
+succeeded and all 24 checked live files match Git, including timing provenance.
+The phone was actually refreshed and displayed the new parked/quality UI; exact
+resource-version readback was interrupted by USB disconnection at test cleanup.
 
 ### Stable phone controls and Showcase visuals — 2026-11-15
 

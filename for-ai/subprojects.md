@@ -12,6 +12,13 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Calibration acceptance and input correction (2026-11-15): assume compliance
+  with guidance and learn personal tilt movement; participant testing decides
+  satisfaction. Reject technical/unusable data, without an ideal-waveform or
+  recurrence gate. Select controller-only app input to prevent automatic hand
+  switching. Code 6 collected both full cycles with 795/800 points, then failed
+  its overly strict template test. These two follow-up repairs are in progress.
+
 - Setup correction (2026-11-15): Automatic is selected but parked at minimum and
   silent on load. Explicit calibration or Controller selection starts the native
   loop. Calibration assesses both complete cycles, masks bounded noisy segments

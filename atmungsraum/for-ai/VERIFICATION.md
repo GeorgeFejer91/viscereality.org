@@ -1,6 +1,42 @@
 # Verification
 
+## Core-site PWA styling — 2026-11-15
+
+The core site's rendered reference was inspected in IAB and retained privately.
+The PWA matches its black/white Arial typography, centered bold headings, white
+VR figure, hairline borders, blue primary actions and restrained gold accents.
+Measured white-on-blue contrast is 6.43:1, hover 4.98:1; gold carries no text.
+
+The final corrected sweep passes 132 screens and 30 regressions with zero app
+errors, horizontal/painted overflow, missing measurements, undersized targets or
+internal-panel overflow. Checks include 320px reflow, 200% text, WCAG spacing,
+focus/disabled controls, participant entry, ECG, reduced motion and preserved
+scroll/edit state. Independent review and direct reference/screenshot comparison
+are clear. No brand/title Pretext no-fit remains. This is rendered software
+evidence; physical installed-phone verification remains separate.
+
 ## Parked preparation and full-window repair — 2026-11-15
+
+Attended code 6 now proves progressing, full-duration collection: 1,411,200 frames
+and 795 accepted training points, with zero quality masks. Both actual streams
+were ready with automatic recovery active; the bounded diagnostic identifies raw
+type-1 200 Hz ACC. Parked native readback was frame zero, input zero and stopped
+audio. The final result was `poor_guided_motion`, after coverage/range checks;
+the user confirms following audible cues. This is a failure of the ideal-template
+acceptance policy, not a passed personal calibration. The latest user ruling
+removes waveform compliance checks and leaves satisfaction to participant testing.
+Controller-only composition is also newly required. Both repairs are in progress.
+
+The code-6 source record merged in
+[PR 12](https://github.com/GeorgeFejer91/viscereality.org/pull/12) at
+`e3b4573cc7fb3107912b3959c14660c78ef762de`; exact
+[Pages run 43733535771](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43733535771)
+succeeded. All 24 live file checks match Git and the remote context gate passes.
+The physical phone was refreshed and showed new controls/warnings; a separate
+module-version query failed after USB disconnection. No current claim of exact
+phone resource-version readback or successful wearer fit is made. The preview
+was stopped and run-owned observers/leases released. Location remains ON at the
+user's explicit request. Meta remains on hold.
 
 The attended code-5 test reproduced immediate `reordered_sample` and
 `excessive_motion` failures with zero completed frames. Focused probes show that
