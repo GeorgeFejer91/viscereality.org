@@ -13,6 +13,15 @@ The final Node suite passes all 156 checks with zero skips, including actual
 Java/WebCrypto pairing and both real native assembly resolvers. The focused
 re-review passes 48 presentation/transport tests. Context and diff checks pass.
 
+[PR 9](https://github.com/GeorgeFejer91/viscereality.org/pull/9) merged at
+`e68452f6467a7b2a838f5f29165e6d382cb38eec`; the exact
+[Pages run 43722083291](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43722083291)
+succeeded. All 23 live runtime/source/document requests matched committed Git
+blobs, including every changed cache-versioned import. Actual public-URL browser
+smoke checks passed at 390×844 and 1440×900 with no app errors or failed app
+requests and with real Pretext measurement. The context remote gate passed.
+Physical phone refresh remains pending while the user controls that device.
+
 Live checks prove breathing movement between native observations, fill bounded
 by confirmed progress, pause, delayed/replayed status expiry, reduced-motion
 expiry without animation, and background suspension/recovery. They also require

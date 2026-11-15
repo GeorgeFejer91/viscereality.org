@@ -21,8 +21,18 @@ port. Preparation and the main experiment keep their existing native authority.
 - [x] Integrate the generic particle adapter on top of the buffered-calibration
   source; stage full private Showcase coupling with experiment tracers and
   the separate pole/retention indicator disabled.
-- [ ] Finish publication evidence and the updated local APK record below.
+- [x] Publish the verified phone/source update and the updated local APK record.
 - [ ] Resume attended Quest/Polar validation after a fresh ready response.
+
+[PR 9](https://github.com/GeorgeFejer91/viscereality.org/pull/9) merged as
+`e68452f6467a7b2a838f5f29165e6d382cb38eec`. The exact
+[Pages run 43722083291](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43722083291)
+succeeded. All 23 checked live runtime/source/document requests matched Git
+blobs, including the new cache-versioned presentation modules. Real public-URL
+browser smoke checks passed on phone and desktop viewports with no app errors.
+The final Node suite passed 156 with zero skips; 112 rendered screens passed.
+Developer 0.2.4-dev/code 5 is installed locally and remains withheld from Meta.
+User-operated phone refresh and wearer testing are the next actions.
 
 The user operated the phone: control claim, Polar connection and the synthetic
 participant form succeeded, and both ECG and motion were received. Calibration
