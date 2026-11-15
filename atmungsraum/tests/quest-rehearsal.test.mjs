@@ -23,6 +23,22 @@ const snapshot = (phase = 'IDLE', generation = 0, revision = 0, witness = '100')
   },
 });
 
+test('presentation timing charges status transport without rewriting the native observation', async () => {
+  let now = 100;
+  const native = snapshot();
+  const quest = { owner, initial: native, close() {}, status: async () => { now += 1700; return native; } };
+  const rehearsal = new QuestRehearsal({ now: () => now });
+  rehearsal.attach(quest);
+  assert.equal(rehearsal.state.statusTiming, null, 'an initial join has no fresh display receipt');
+  await rehearsal.refresh();
+  assert.deepEqual(rehearsal.state.statusTiming, { receivedAt: 1800, transportMs: 1700 });
+  assert.equal(rehearsal.state.status, native);
+  assert.equal(native.o.a, 5);
+  assert.equal(Object.hasOwn(native, 'statusTiming'), false);
+  rehearsal.attach(null);
+  assert.equal(rehearsal.state.statusTiming, null);
+});
+
 function server({ identity = owner, status = snapshot(), tamper = false } = {}) {
   const requests = [];
   return { requests, async fetch(url, init) {

@@ -1,5 +1,41 @@
 # Verification
 
+## Stable controls and smooth live displays — 2026-11-15
+
+The exact unmodified baseline reproduces a scroll clamp from 300px to 105px
+on each telemetry update, with unchanged navigation origin, form nodes, focus,
+caret and draft values. The repair keeps live text updates in the current layout.
+Chromium passed 112 rendered screens and 17 regression records with zero app
+errors: repeated poll/edit/scroll checks, nine explicit missing-stream recovery
+flows, and live display cases across phone, desktop, 320px and 200% text layouts.
+The harness uses DPR 2, the actual locked Pretext runtime and production UI.
+The final Node suite passes all 156 checks with zero skips, including actual
+Java/WebCrypto pairing and both real native assembly resolvers. The focused
+re-review passes 48 presentation/transport tests. Context and diff checks pass.
+
+Live checks prove breathing movement between native observations, fill bounded
+by confirmed progress, pause, delayed/replayed status expiry, reduced-motion
+expiry without animation, and background suspension/recovery. They also require
+the actual SVG to be visible, moving from buffered received ECG samples, with
+gaps preserved. A transient status outage cannot revive duplicate ECG; newer
+data recovers it. No animation frame sends a control command or adds polling.
+
+Independent source review found display freshness and SVG reflection defects;
+these were corrected and the focused re-review found no remaining P1/P2 issue.
+Actual wearer calibration, installed-phone refresh and a full 900-second run
+are separate hardware gates and have not been claimed by rendered fixtures.
+
+The combined [local code-5 APK](../quest/apks/README.md#024-dev--combined-showcase-particle-update-2026-11-15)
+uses native `6cd05d6a` over the buffered-calibration source. The cumulative patch
+reconstructs its exact tree. Native tests passed 812 with three ignored; actual
+profile/reset checks and 71 permission diagnostics controls pass. Signature,
+16KiB ZIP alignment, manifest, library and actual-APK closure checks pass.
+Installed bytes match, the app panel is closed during visible VR startup, and
+the gateway is ready. No Meta upload or worn visual/performance acceptance is
+claimed. Pre-launch log capture distinguishes working startup dispatch from
+the still-failing attended Location-settings handoff; post-hoc logs can lose
+that interval amid renderer output. System Location was restored to OFF.
+
 ## Startup permissions and buffered calibration — 2026-11-15
 
 The local code-4 repair passed 131 Node tests with zero skips, including actual

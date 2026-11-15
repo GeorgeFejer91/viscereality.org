@@ -2,6 +2,48 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Stable phone controls and Showcase visuals — 2026-11-15
+
+The user requested one combined update while away: retain scroll and focused
+edits during live polling, clarify partial Polar readiness, reuse the Showcase
+PWA's stable controls and the website's visual language, smooth the breathing
+and ECG displays, and integrate the other chat's Showcase particle/coupling
+port. Preparation and the main experiment keep their existing native authority.
+
+- [x] Reproduce the scroll reset: telemetry briefly changed reflow to bounded,
+  clamping scroll from 300px to 105px without navigation or a focus change.
+- [x] Keep layout and form nodes stable during telemetry; preserve focused edits,
+  caret and scroll through repeated status updates.
+- [x] Name missing ECG or motion data and offer an explicit action to start
+  only the missing streams. Bluetooth connection alone is not readiness.
+- [x] Add bounded native-clock breathing presentation and buffered raw ECG
+  scrolling, with stale, delayed, replay, pause and background recovery checks.
+- [x] Integrate the generic particle adapter on top of the buffered-calibration
+  source; stage full private Showcase coupling with experiment tracers and
+  the separate pole/retention indicator disabled.
+- [ ] Finish publication evidence and the updated local APK record below.
+- [ ] Resume attended Quest/Polar validation after a fresh ready response.
+
+The user operated the phone: control claim, Polar connection and the synthetic
+participant form succeeded, and both ECG and motion were received. Calibration
+has never started collecting. The user then stepped away; no stale Ready answer
+authorizes starting it. Phone interaction remains user-controlled. The temporary
+Quest Location toggle was restored to OFF, USB observation was removed and
+the corresponding leases were released; Wi-Fi ADB stays available as requested.
+
+The code-4 cold restart did not display Location settings despite complete app
+grants. This remains an actual-device blocker; a resolved Android intent and
+passing host tests do not prove the settings surface appeared. Code 5 adds
+bounded diagnostics. A pre-launch live capture proves the closed-panel callback
+and zero missing runtime grants, followed by a Location intent that returns
+through Meta's relay with Location still disabled. Earlier post-hoc logs had
+already lost the startup interval. Do not claim that startup Location recovery
+or fresh-install permission handling has passed.
+
+The main experiment, wearer fit/retry/fallback, physical phone refresh, visual
+parity/performance and Meta version-to-version delivery remain open. Keep the
+overall milestone open and withhold iterative APKs from Meta until local tests.
+
 ### Quest 2 calibration acceptance — 2026-11-15
 
 Current local repair: Developer 0.2.3-dev/code 4 is installed from native

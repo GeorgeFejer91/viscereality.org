@@ -11,6 +11,13 @@ state-management and native/remote routes. Resume the goal/checklist in
 action and observed Git/publication state in that same owner.
 
 The primary delivery goal is a progressive web app (PWA) for smartphones.
+
+Live updates must preserve scroll, focused controls and unfinished form edits.
+Use the Showcase PWA's stable-DOM behavior and the website's restrained black
+presentation as references. Bluetooth connection and ready ECG/motion streams
+are separate states. Breathing/ECG animation is presentation only; see the
+[freshness and raw-data display contract](SHARED-BREATHING-SETUP.md#smooth-phone-presentation--2026-11-15).
+
 Users install Atmungsraum from their browser to the home screen; its Viscereality
 logo icon opens the live `/atmungsraum/` URL in a standalone app window.
 Prioritize touch, portrait/landscape, safe areas and installed-app behavior.

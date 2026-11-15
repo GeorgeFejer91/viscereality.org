@@ -1,5 +1,51 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.4-dev — combined Showcase particle update, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.4-dev, version code 5; local hardware testing only |
+| APK size / SHA-256 | 65,276,717 bytes; `a54fce521452a6f0f6afdaaed3a081267a2b4285510232eb6f9d96cf84dc4f2a` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `6cd05d6a511f02db426bcdcf8808d662639bd034` / `f78d4cad8b9c0e4521f98ad9993d675b5f2866ab` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `ac5082fd2605b92ca7a9c116a0b3eee5b52243297b796a5f549d4323c568ad3d` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install; v2/v3 and 16KiB ZIP alignment checks pass |
+
+The generic opt-in particle adapter is layered on the existing calibration,
+buffered-timing and permission source. It uses the full private Showcase visual
+and coupling profile while retaining experiment input, audio, recording and
+session authority. Experiment tracer drawing and the separate white pole/
+retention indicator are zero. The packaged profile survives experiment resets.
+Its preserved Showcase heartbeat default is synthetic at 60 BPM; a real Polar
+heartbeat selection is not implied by this visual port. Private profile bodies
+and shaders remain outside the public website repository.
+
+The selected particle profile digest is
+`2c5ce38b5403273d73f9a46444d012c460b0596177d95994985023c79aa17e35`;
+the compiled coupling payload matches the retained Showcase baseline. The
+private wrapper's late undeclared LSL path override was removed after an actual
+build reproduced its rejection. The repaired wrapper verifies the documented
+staged library before using the existing locked assembly; ambient-input checks
+remain enforced.
+
+The native suite passed 812 tests with three ignored, including actual-profile
+and reset checks. Permission diagnostics passed 71 controls, three negative
+controls, approval UI45, projection24 and actual API-36 compilation. Independent
+reviews found no remaining P1/P2 source issue. Actual signed-APK session closure,
+source-tree reconstruction, same signer and manifest/library checks pass.
+
+Code 5 is installed on Quest 2 with exact byte readback and the retained app UID,
+grants and memberships. Cold startup shows VR with the app panel closed and a
+ready gateway. Live startup capture proves that permission coordination runs
+while closed, finds all runtime grants, and dispatches Location recovery; Meta's
+relay returns with Location still disabled. This is a known recovery limitation,
+not a passed Location UI test. System Location remains at its original OFF
+setting. The wearer fit/retry/fallback, full trial, visual parity/performance and
+installed-phone refresh remain pending. No calibration has started collecting.
+Code 5 has not been uploaded to Meta.
+
 ## 0.2.3-dev — local permission and timing repair, 2026-11-15
 
 | Build property | Verified value |

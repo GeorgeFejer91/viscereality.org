@@ -1,5 +1,23 @@
 # Workflow
 
+## Current hardware-test handoff — 2026-11-15
+
+The user currently operates the phone personally. Keep assistant phone access
+read-only until that preference changes; do not click, fill, reload or focus its
+page for a release check. After a test pause, require fresh wearer readiness
+before starting calibration. Announce actual collection only after an accepted
+native calibration has begun advancing completed frames. A running Automatic
+loop or a waiting-for-cycle state does not establish collection.
+
+Keep iterative Developer APKs local until relevant hardware acceptance. Preserve
+the existing signing key and memberships. Record installation/hash and basic
+startup separately from visual parity, worn calibration and Meta delivery.
+When diagnosing startup, begin a bounded filtered live log capture before the
+launch: busy renderer output can displace the startup interval before a later
+log dump. Do not clear shared buffers or change global logging to compensate.
+
+## Normal development
+
 1. Read the root guidance and this control plane; inspect `git status` before edits.
 2. Keep the local checkout sparse and the fetch blob-filtered. Select only this
    subproject and the necessary root guidance; do not clone the full media-heavy

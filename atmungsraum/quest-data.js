@@ -96,7 +96,7 @@ export function ecgTrace(frame, transportMs) {
     const y = 46 - value / range * 43;
     return `${index === 0 || gap ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
   }).join(' ');
-  return { range, path, ttl: 2500 - frame.age_ms - transportMs };
+  return { range, path, points: window, ttl: 2500 - frame.age_ms - transportMs };
 }
 
 async function preparedRecordingQuery(gateway, query, signal) {

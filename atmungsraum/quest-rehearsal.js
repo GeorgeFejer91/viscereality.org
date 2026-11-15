@@ -65,12 +65,13 @@ export class QuestRehearsal {
   gateway = null;
   pending = null;
   refreshing = null;
-  state = { status: null, busy: false, pending: false, unknown: false, message: '' };
+  state = { status: null, statusTiming: null, busy: false, pending: false, unknown: false, message: '' };
 
-  constructor({ onChange = () => {}, storage, wait = () => new Promise(resolve => setTimeout(resolve, 350)) } = {}) {
+  constructor({ onChange = () => {}, storage, wait = () => new Promise(resolve => setTimeout(resolve, 350)), now = () => performance.now() } = {}) {
     this.onChange = onChange;
     this.storage = storage;
     this.wait = wait;
+    this.now = now;
     try {
       const saved = JSON.parse(storage?.getItem('atmungsraum-quest-pending') ?? 'null');
       const validOperation = saved && (saved.op === 'recenter' || Object.hasOwn(desiredPhase, saved.op)
@@ -100,7 +101,7 @@ export class QuestRehearsal {
   attach(gateway) {
     if (this.gateway !== gateway) this.gateway?.close();
     this.gateway = gateway;
-    this.update({ status: gateway?.initial ?? null, busy: false, message: '', unknown: Boolean(this.pending) });
+    this.update({ status: gateway?.initial ?? null, statusTiming: null, busy: false, message: '', unknown: Boolean(this.pending) });
   }
 
   canAcknowledgeIdle() {
@@ -117,9 +118,11 @@ export class QuestRehearsal {
   }
 
   async observe(gateway, receipt) {
+    const started = this.now();
     const status = await gateway.status();
     if (this.gateway !== gateway) return false;
-    this.update({ status });
+    const receivedAt = this.now();
+    this.update({ status, statusTiming: { receivedAt, transportMs: Math.max(0, receivedAt - started) } });
     if (!this.pending) return true;
     const { id, op, generation, owner } = this.pending;
     if (!sameQuest(owner, gateway.owner)) return false;
