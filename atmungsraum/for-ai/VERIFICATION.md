@@ -42,6 +42,14 @@ shutting down the headset; the finite startup observer/owned child and exact
 Quest lease are released. Publication/live URLs, installed-phone refresh and
 remaining wearer checks are pending. No Meta upload.
 
+The full reviewed increment and handoff are pushed to PR 18. Current primary
+normal-merge attempt returns GitHub 403 `Resource not accessible by integration`;
+secondary connector attempts returned no merge result before cancellation. The
+follow-up documentation head retires their old expected SHA. No exact code-10
+Pages/live pass is claimed: the deployed release remains PR 17, Pages run
+43756359679. Owner merge, exact 27-file/public-render verification and tomorrow's
+installed-phone refresh remain the next publication actions.
+
 ## Participant acceptance and follow-up scope — 2026-11-15
 
 After the post-reboot code-9 calibration and native calibrated-Polar readback,

@@ -20,7 +20,8 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   admission, explaining skipped startup automation. Software/build/inspection
   gates pass. Installed code-10 bytes match; trusted launch automatically connects
   H10 and starts both streams. Exact publication and remaining physical acceptance
-  are pending; the user ended testing for the day. Power-on boot autostart is not selected. No Meta upload.
+  are pending; PR 18 is pushed but merge is blocked by GitHub access. The live
+  site remains PR 17. The user ended testing for the day. Power-on boot autostart is not selected. No Meta upload.
 
 - Calibration acceptance and input correction (2026-11-15): assume compliance
   with guidance and learn personal tilt movement; participant testing decides

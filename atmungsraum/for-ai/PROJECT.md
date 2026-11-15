@@ -75,11 +75,28 @@ phone operation. Resume with fresh wearer Ready; check APK identity/current
 policy, actual-radius display, confirmed Controller UI and effective kiosk, then
 remaining retry/fallback/full-main acceptance. No Meta upload.
 
-Matching publication is in progress. Primary GitHub/browser access is READ;
-the secondary account is ADMIN but its command policy rejected a PR read before
-execution with only `rejected: blocked by policy`. A narrower connector attempt
-is pending; no permission widening or bypass was attempted. Keep the milestone
-open through exact Pages/live and affected device checks.
+Publication handoff, 2026-11-16: all implementation, cache revisions, cumulative
+native source and installation evidence are committed and pushed to
+[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), titled
+“restore automatic H10 recovery and clarify Quest controls”. The reviewed runtime
+release commit is `85d85e5ecbe6a91dd7871fa1e6f4bb8e1b8082b4`; the following
+handoff-only commit advances the PR head without changing runtime bytes.
+The current primary merge request returns exact GitHub 403
+`Resource not accessible by integration`. The secondary account was verified
+ADMIN earlier, but a command-policy read was rejected before execution with only
+`rejected: blocked by policy`; subsequent purpose-built connector sessions did
+not return a merge result. Obsolete expected-head requests were cancelled;
+advancing the documentation head also retires their old CAS target. No permission
+widening, protection bypass, model change or Meta upload was attempted.
+
+The live site remains PR 17 at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`
+with successful Pages run `43756359679`; it is NOT the code-10 PWA yet. Next
+publication action is an owner-authorized ordinary two-parent merge of PR 18 at
+its current head, then verify the exact Pages SHA and all 27 versioned live files,
+public phone/desktop render and remote context gate. The prepared ignored live
+verifier and private code-10 smoke script have current resource versions.
+Refresh/read back the installed phone release tomorrow with the user operating
+it. Keep the overall milestone open through publication and physical checks.
 
 ### Explicit audio retry recovery — 2026-11-15
 

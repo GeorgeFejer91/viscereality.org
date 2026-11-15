@@ -57,7 +57,9 @@ Without phone Connect, H10 discovery/connection and both ACC/ECG stream-start
 acknowledgements succeed. Kiosk service presence is observed; effective guard,
 signal quality, sustained retry, renderer/phone and remaining wearer checks are
 pending. The user ended today's testing and is shutting down the Quest. Matching
-live-site/installed-phone release is in progress. No Meta upload.
+live-site publication is blocked at PR 18 merge (primary GitHub 403, secondary
+sessions without a merge result); installed-phone refresh follows publication.
+No Meta upload.
 
 ## 0.2.8-dev — explicit audio-clock recovery and diagnostics, 2026-11-15
 

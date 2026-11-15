@@ -5,7 +5,9 @@
 Code 10 is installed with matching byte readback and an accepted canonical cold
 launch. H10 discovery/connection and ACC+ECG stream starts occurred automatically.
 The user ended testing and is shutting down the Quest; observer and exact Quest
-lease are released. Publish the matching PWA now. Tomorrow obtain fresh Ready,
+lease are released. Matching PWA is pushed in PR 18; merge is blocked by current
+GitHub 403 and nonresponding secondary sessions. Resume its ordinary merge and
+exact Pages/live checks; do not claim it deployed. Tomorrow obtain fresh Ready,
 with the user operating the phone, before continuing device acceptance. See the
 active PROJECT checklist; effective kiosk, dual-radius display, Controller UI,
 sustained recovery and full main remain separate acceptance items.
