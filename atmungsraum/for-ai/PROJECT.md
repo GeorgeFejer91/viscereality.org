@@ -43,9 +43,18 @@ at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`; exact
 succeeded. All 24 checked live files match that Git revision, including the
 versioned phone modules and cumulative native patch. Public phone/desktop checks
 at 390/1440px report ready Pretext, no horizontal overflow, script errors or
-failed app requests. The remote context gate passes. The branch is synchronized
-to that merge; the APK stays local. Installed-phone refresh and fresh wearer
-testing are the next actions, with original stall causation still open.
+failed app requests. The remote context gate passes. That runtime release is
+synchronized to GitHub and live; the APK stays local. Installed-phone refresh and
+fresh wearer testing are the next actions, with original stall causation open.
+
+The documentation-only evidence follow-up is pushed in
+[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), still open at
+handoff. The authorized secondary-account merge is blocked by repeated selected
+model capacity errors; the primary GitHub integration returns 403 for merge.
+No permission or model change was requested. Resume its normal two-parent merge,
+then exact Pages/live checks when that account is available. This blocks only
+publication of these follow-up notes; PR 17's runtime is already deployed and
+verified. No owned device/port/build leases or observers remain active.
 
 ### Retained Polar breath state — 2026-11-15
 
