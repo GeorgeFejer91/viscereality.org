@@ -111,6 +111,31 @@ Its recording clock starts at that boundary. Preparation is not experiment data.
 The old embedded 15-second calibration and introductory restart are retired.
 Other Rusty Quest products keep their existing defaults and feature activation.
 
+## Explicit unhealthy-audio recovery — 2026-11-15
+
+An explicit Calibrate or Controller action may reserve recovery only in owned
+preparation with no unretired main effects. Native validates the original ID/CAS
+before Java claims one transport replacement. The failed attempt/model/training
+and callback state are retired. A fresh owned generation, actual forward audio
+frames and fresh post-claim input must precede the new setup. Calibration then
+uses the next full boundary and a complete new two-cycle window. Healthy retries
+keep the same loop. Recovery never repairs or restarts a main recording.
+
+Pending recovery is not completed setup. The authenticated private-LAN/current-
+controller gateway retains native receipts. The existing three-field read-only
+lookup `{v:1,id,op:"receipt"}` needs no old CAS and cannot replay the operation.
+Cross-generation settlement requires the native `recovery_generation` proof for
+the original ID and current actor. A lost reply preserves uncertainty and the
+original ID; same-actor audio-generation changes cannot acknowledge it away.
+Actual actor retirement remains a separate boundary.
+
+Native `clock_valid` and `audio_recovery_available` are eligibility/health hints;
+native admission remains authoritative. Unhealthy/recovering display does not
+extrapolate a circle or percentage. Bounded poll/head/dispatch diagnostics are
+inert, with platform measurements tagged to their sampled generation. Intent
+playing and a retained sensor anchor do not prove advancing audio. The initial
+code-8 physical stall trigger remains unproven; code 9 requires fresh wearer QA.
+
 ## Buffered Polar timing — 2026-11-15
 
 Idle Automatic does not validate tilt evidence that no attempt or model

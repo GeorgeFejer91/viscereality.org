@@ -2,6 +2,39 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Explicit audio retry recovery — 2026-11-15
+
+- [x] Capture the code-8 failed attempt and distinguish the proven retry dead
+  end from the unproven initial player/head/publication stall trigger.
+- [x] Implement/review native admission, fresh track/generation, actual progress
+  and post-claim input gates, bounded diagnostics and typed gateway receipts.
+- [x] Implement/review phone pending/uncertain receipt reconciliation, native
+  eligibility and clock-health presentation with stable DOM/Pretext.
+- [x] Verify native842/four ignored, real Java/native and HTTP/auth integration,
+  phone182/zero skips, rendering/scroll, exact source tree and API36 compilation.
+- [x] Build, inspect and install same-key local Developer 0.2.8-dev/code 9.
+- [ ] Publish the combined phone/source/record increment; verify exact Pages,
+  live URLs and refreshed installed-phone resources.
+- [ ] Obtain fresh wearer Ready; test audible/advancing loop across holds and
+  wraps, calibration/tracking/retry/Controller fallback and the full main run.
+
+Native `9afdcf0ef2cf05569e7ccc67c31f711f0e2fdd87`, tree
+`46593d96e655dd515cd2bfbb39d696eae6eed2b3`, and phone candidate
+`0ce7eda855fe5f30f86322bc0680cfaf5e93a6a9` pass independent spec/quality review.
+Native authority remains actual audio frames. An explicit unhealthy preparation
+retry reserves one idempotent recovery before Java mutates transport; fresh
+forward frames and post-claim input precede a new full 32-second window.
+Healthy retry continuity, strict clock guards, main/recording and retired-owner
+fences remain. The original stall cause remains unproven.
+
+The [code-9 record](../quest/apks/README.md#028-dev--explicit-audio-clock-recovery-and-diagnostics-2026-11-15)
+binds the inspected APK. Installed bytes, UID, grants and persistent identity
+match. Cold start confirms controllers only, no live hand extension, no
+simultaneous mode, panel closed, input zero and a ready gateway. Location is ON;
+Wi-Fi ADB is retained. Startup observers and owned leases are released. The user
+controls the phone and removed the Polar after code 8; no new calibration is
+authorized until fresh Ready. No Meta upload. Overall acceptance remains open.
+
 ### Retained Polar breath state — 2026-11-15
 
 - [x] Reproduce the radius reset through actual calibration, batched 200 Hz
@@ -58,8 +91,22 @@ observer, phone helper/forward and all owned leases are released. Location stays
 ON and Wi-Fi ADB is retained. Fresh Ready is required before another calibration.
 The next bounded repair is explicit pre-main recovery into a fresh authoritative
 audio generation plus bounded clock diagnostics; normal healthy retries keep the
-same loop. Source design is in progress. The overall milestone remains open;
-no new APK after code 8 or Meta upload has occurred.
+same loop. The source design is accepted and implementation is under verification.
+Native admits one idempotent recovery reservation before Java replaces transport;
+fresh forward frames and post-claim input must precede a new complete calibration.
+Main/recording and retired-owner boundaries remain. The real HTTP gateway now
+preserves typed native pending/terminal receipts, with current-controller and
+route/authentication checks. Diagnostics separate intent, polling, dispatch and
+actual head advancement; the original stall trigger remains unproven.
+
+The local PWA candidate is `0ce7eda855fe5f30f86322bc0680cfaf5e93a6a9` (unpublished).
+Its 182 tests, 12 recovery renders, 13 receipt-fence renders and 3×6 scroll/edit
+checks pass. A scoped review correction preserves the original ID after a lost
+admission response: same-actor audio-generation changes offer read-only recheck;
+only proven actor retirement permits acknowledgement. The verified code-9
+source/build/install above supersedes that implementation checkpoint. Combined
+publication and fresh wearer qualification remain open. The overall milestone
+remains open; no Meta upload has occurred.
 
 ### Participant-led calibration and controller-only app — 2026-11-15
 

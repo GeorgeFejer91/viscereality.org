@@ -27,9 +27,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   Genuine source/audio/model/input barriers still clear state. Participant
   satisfaction and fallback acceptance remain open. Its attended calibration
   stopped at 6.144 audio seconds with `clock_stalled`; retries hit `clock-stale`.
-  The already-started Java player lacks explicit unhealthy-clock recovery.
-  That repair and raw clock diagnosis are active; no new wearer trial or Meta
-  upload until the next verified build and fresh readiness.
+  The already-started Java player's recovery dead end is repaired in reviewed,
+  installed local Developer code 9 with a matching pending/receipt phone update.
+  Its diagnostics distinguish poll/head/dispatch progress; the original trigger
+  remains unproven. Combined publication/phone refresh and fresh wearer testing
+  remain open; no Meta upload.
 
 - The phone app now follows the core site's black/white Arial, VR figure,
   thin frames and blue/gold accents. The style is live with rendered and public
