@@ -124,9 +124,10 @@ four-second phase. Each inhale/exhale needs six usable observations in both its
 first and last second. Finite raw acceleration and 0.85–1.15 g magnitude remain
 required. A causal 100 ms gravity estimate feeds the 0.60 normalized-gravity
 chord/second motion guard, with 200 ms settling after bad intervals. Existing
-engineering range limits still apply. Installed code 6 also applies an ideal
-per-cycle fit test; the attended result below demonstrates why that test is
-being removed under the latest user ruling. These are engineering thresholds
+engineering range limits still apply. Code 7 removes code 6's ideal per-cycle
+fit test, following its attended rejection and the latest user ruling. The
+retained measured span 0.02–0.50 is an engineering gain/noise limit and can reject
+smaller real motion; it is not a validated physiological cutoff. These thresholds
 awaiting wearer qualification. Optional quality counts are bounded 0–800 and
 do not change control revisions or prove success.
 

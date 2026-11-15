@@ -118,6 +118,14 @@ see the [setup and timing contract](../for-ai/SHARED-BREATHING-SETUP.md).
 The next local APK must pass the recorded source/package gates and fresh wearer
 qualification before any Meta upload.
 
+Code 7 assumes the participant follows the cues, learns their measured tilt
+mapping and leaves satisfaction to testing the resulting sphere. It removes
+ideal-waveform compliance checks while retaining technical/coverage/range guards.
+The app also selects `input.controllers_only`, removes hand/simultaneous features
+and declarations, and seals runtime hand interaction off. The original mesh
+renderer accepts exactly one locked input mode while preserving its renderer,
+background and panel requirements. Other native products keep their defaults.
+
 The Developer selection also enables `experiment_phone_pairing_enabled` and
 `experiment_panel_initially_closed`. The native visibility policy is compiled
 into the first frame, so the app starts in VR with its panel closed. A verified

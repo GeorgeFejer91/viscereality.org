@@ -2,6 +2,35 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Participant-led calibration and controller-only app — 2026-11-15
+
+- [x] Remove ideal-waveform compliance rejection without adding a recurrence
+  gate. Assume cue adherence and learn the participant's measured tilt mapping.
+- [x] Retain usable-data, coverage, source/clock and finite/range guards; disclose
+  the existing 0.02–0.50 measured-span engineering limitation.
+- [x] Select controller-only app capabilities and verify the actual locked
+  manifest plus running input/hand-extension flags.
+- [x] Build and install same-key Developer 0.2.6-dev/code 7 with exact installed
+  byte-hash readback and retained UID/grants/persistent identity.
+- [ ] Publish the final code-7 source record and verify exact Pages/live bytes.
+- [ ] Run a fresh attended personal calibration, inspect the resulting sphere
+  tracking with the participant, and test retry/Controller fallback/main.
+
+The [code-7 record](../quest/apks/README.md#026-dev--participant-led-calibration-and-controllers-only-2026-11-15)
+binds native `50eaa1ac55eb9161879c48916da82894cfaff9af`, tree
+`0d6e505055a77611b2f46a4b50d50d32ce8bc95d`. Core50, setup72 and native824 checks
+pass with three ignored; controller-only resolver/compiler and 32 panel checks,
+actual non-resolve builder regression and independent reviews pass. The first
+build exposed a legacy simultaneous-only guard; the reviewed fix preserves all
+other original-renderer checks. Fresh assembly, package/source proof and install
+succeed. Actual startup confirms controllers only, no live hand extension, no
+simultaneous mode and a closed app panel. The gateway is ready. The headset is
+unworn, so its black capture does not prove wearer rendering or calibration.
+
+Location remains ON by explicit user instruction; requested Wi-Fi ADB remains
+available. Build/headset leases and observers are released. No code-7 calibration
+or Meta upload has started. Require a fresh wearer Ready. The overall goal is open.
+
 ### Core-site visual identity — 2026-11-15
 
 The user requests that the PWA visually match the core Viscereality website.
@@ -13,13 +42,19 @@ app errors, overflow, unmeasured labels or undersized targets. Brand no-fit was
 corrected and independent visual/source review is clear. Cache-versioned style
 publication and physical phone refresh are the remaining gates for this increment.
 
+[PR 13](https://github.com/GeorgeFejer91/viscereality.org/pull/13) merged as
+`0a3451656351d00391b6ca1d9d55bd2805b1d960`; exact
+[Pages run 43736737421](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43736737421)
+succeeded. All 24 checked live files match Git. Public-URL phone/desktop smoke
+checks pass with zero app errors. The installed phone refresh remains pending.
+
 ### Parked startup and full-window calibration repair — 2026-11-15
 
 Latest correction: assume guided breathing during calibration, learn the person's
 tilt movement and let their post-calibration test decide satisfaction. Remove
 ideal-waveform compliance rejection without adding a recurrence test. The app
 must also be controller-only to prevent hand/controller auto-switch interruptions.
-These source changes are in progress for the next local APK.
+These source changes are implemented in the code-7 increment above.
 
 The attended code-5 test did not collect calibration data. User attempts failed
 as `reordered_sample`; one assistant-operated retry, explicitly authorized by
