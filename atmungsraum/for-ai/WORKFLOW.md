@@ -51,6 +51,13 @@ Do not publish them or machine-specific paths.
 
 ## Quest APK changes and releases
 
+The user's 2026-11-15 correction requires testing iterative APKs locally on the
+headset before Meta Developer submission. Do not upload every test build to the
+Dev Hub; hand off a qualified release after the relevant hardware checks.
+APK startup must request required runtime permissions using the attended
+platform flow even when its app panel starts closed. A one-off permission
+pre-grant is only a bench exception when explicitly authorized by the user.
+
 Follow the standing Superpowers and GitHub workflow above for every change
 that affects a Quest APK, including native code, assembly, features, toolchain
 or dependency pins, assets, and packaging-only changes.

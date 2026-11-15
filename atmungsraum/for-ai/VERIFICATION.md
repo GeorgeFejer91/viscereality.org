@@ -52,8 +52,11 @@ context gate passed. Actual Quest 2 startup rendered VR with its panel closed.
 The refreshed Pixel found the headset and the user confirmed matching codes
 on both devices. This user-observed physical flow is separate from the
 synthetic capture suite; saved reconnect, handover/revocation and wearer
-calibration remain open. A normal Nearby devices permission prompt for H10
-scanning followed. Meta code 3 passed its malware/security scans and the owner
+calibration remain open. H10 setup exposed missing Bluetooth Scan permission
+without a working startup/native request path. The user explicitly authorized
+pre-granting that permission on this installed APK to finish testing; readback
+confirmed the grant. Automatic attended startup permission handling remains a
+required fix and fresh-install gate. Meta code 3 passed its malware/security scans and the owner
 is joined to the private Developer channel; remote replacement remains untested.
 
 ## Shared breathing setup release — 2026-11-14

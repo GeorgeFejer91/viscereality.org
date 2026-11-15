@@ -46,7 +46,11 @@ devices. Saved reconnection, two-phone handover/revocation, worn calibration
 and the full 900-second trial remain pending. Meta accepted code 3 as private
 Developer build `1460570757141936`; malware/security scans passed and the owner
 is joined. The Store remains unpublished. This device update used ADB and does
-not prove remote replacement.
+not prove remote replacement. Subsequent H10 setup found that Bluetooth Scan
+was not requested at startup and had no visible native request option. The
+user authorized a one-permission pre-grant on this test installation; readback
+confirmed it. Fresh-install startup permissions still require a fix. Further
+iterative APKs must be tested locally before Meta submission.
 
 ## 0.2.1-dev — cold-start repair, 2026-11-15
 
