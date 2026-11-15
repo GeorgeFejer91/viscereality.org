@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261115-headset-setup">
+  <link rel="stylesheet" href="./style.css?v=20261115-smooth-control">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261115-startup-permissions"></script>
+  <script type="module" src="./app.js?v=20261115-smooth-control"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -41,7 +41,10 @@
   </dialog>
   <main>
     <section class="screen" id="quest" aria-labelledby="quest-title">
-      <h1 id="quest-title" tabindex="-1" data-measure>Quest-Steuerung</h1>
+      <header class="screen-header">
+        <p class="product-brand" data-measure>Viscereality</p>
+        <h1 id="quest-title" tabindex="-1" data-measure>Atmungsraum</h1>
+      </header>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
         <div id="quest-pairing" class="screen-body" hidden>
@@ -144,7 +147,10 @@
       </footer>
     </section>
     <section class="screen" id="breathing-preview" aria-labelledby="preview-title" hidden>
-      <h1 id="preview-title" tabindex="-1" data-measure>Atemvorschau</h1>
+      <header class="screen-header">
+        <p class="product-brand" data-measure>Viscereality · Atmungsraum</p>
+        <h1 id="preview-title" tabindex="-1" data-measure>Atmung einrichten</h1>
+      </header>
       <div class="screen-body preview-body">
         <figure class="preview-figure">
           <div class="preview-radius" aria-hidden="true"><div id="preview-circle"></div></div>
@@ -153,7 +159,10 @@
         <p id="preview-input" data-measure>Eingabe auf der Quest nicht verfügbar.</p>
         <div id="preview-progress-group" hidden>
           <label for="preview-progress" data-measure>Einrichtung auf der Quest</label>
-          <progress id="preview-progress" max="2" value="0" aria-describedby="preview-progress-text"></progress>
+          <div class="preview-progress-track">
+            <progress id="preview-progress" max="2" value="0" aria-describedby="preview-progress-text"></progress>
+            <span id="preview-progress-fill" aria-hidden="true"></span>
+          </div>
           <p id="preview-progress-text" aria-live="off" data-measure>0 von 2 Atemzyklen</p>
         </div>
         <p id="preview-detail" role="status" data-measure>Warte auf den aktuellen Atemstatus der Quest.</p>

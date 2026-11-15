@@ -104,10 +104,16 @@ async function measureLabels() {
     };
     const observer = new ResizeObserver(measure);
     document.querySelectorAll('[data-measure], .screen-body, .actions').forEach((element) => observer.observe(element));
-    const retry = () => { root.dataset.layout = 'bounded'; measure(); };
+    // A temporary bounded layout can clamp scrollTop before reflow returns.
+    // Telemetry changes only remeasure; reconsider compact layout on navigation
+    // or when the viewport/font changes outside an active scroll or editor.
+    const retry = () => {
+      if (!window.scrollY && !document.activeElement?.matches('input, select, textarea')) root.dataset.layout = 'bounded';
+      measure();
+    };
     const main = document.querySelector('main');
-    const screenChanges = new MutationObserver(retry);
-    screenChanges.observe(main, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(measure).observe(main, { childList: true, characterData: true, subtree: true });
+    const screenChanges = new MutationObserver(() => { root.dataset.layout = 'bounded'; measure(); });
     main.querySelectorAll('.screen').forEach((screen) => {
       screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
     });
@@ -137,7 +143,7 @@ measureLabels();
 if (recovery) {
   void showSavedBrowserExports();
 } else {
-  import('./quest-ui.js?v=35').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=36').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

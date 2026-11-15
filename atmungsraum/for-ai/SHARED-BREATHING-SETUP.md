@@ -2,6 +2,34 @@
 
 Approved user design, 2026-11-14. PROJECT.md remains the lifecycle owner.
 
+## Smooth phone presentation — 2026-11-15
+
+Live telemetry remeasures text without briefly returning the current page to
+a shorter bounded layout. It preserves the same form, focus, caret, draft values
+and scroll position. Real screen navigation may choose a new layout; viewport
+and font changes preserve an active scroll or editor. Retain actual Pretext
+measurement and readable document reflow rather than rebuilding controls on polls.
+
+The phone animates the breathing circle from a fresh accepted native audio
+position in the existing 16-second schedule. Its finite 1,500ms display budget
+charges native age, the full status transport and receipt-to-paint delay.
+Duplicate observations cannot renew it. Reduced motion uses discrete native
+samples and still expires; backgrounding suspends the display and shows a
+waiting state until a fresh observation. This never admits a command, trains
+a model, switches input or advances the main experiment.
+
+Calibration's accessible progress value and text remain the actual native
+completed-frame count. Only the visible fill interpolates between received
+counts, and it cannot exceed the last confirmed count or finish a calibration.
+
+The ECG preview retains bounded validated raw samples for a two-second rolling
+window with about one second of playout reserve. It changes position and scale,
+not microvolt values or sensor timestamps. Gaps remain open, starvation stops
+at the last received sample, and only newer timestamps extend age-adjusted
+freshness. A status outage clears the image while preserving the replay fence.
+Confirmed source/owner/generation changes reset the display. Recording, Polar
+acquisition and calibration retain their native paths unchanged.
+
 ## Accepted behavior
 
 Automatic is the Atmungsraum startup input. One native audio-frame schedule owns

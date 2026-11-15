@@ -12,6 +12,19 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Phone live controls (2026-11-15): telemetry preserves document scroll, focused
+  fields, caret and unfinished edits. Partial Polar readiness names missing ECG
+  or motion and offers explicit recovery. Compact Viscereality styling and
+  bounded breathing/ECG presentation use the Showcase PWA as a reference.
+  Animation cannot admit commands, complete calibration or manufacture samples;
+  stale, paused and backgrounded displays stop. See the
+  [display contract](../atmungsraum/for-ai/SHARED-BREATHING-SETUP.md#smooth-phone-presentation--2026-11-15).
+- The local Developer code-5 composition includes the private Showcase particle
+  visuals and full coupling, with experiment tracers and the separate pole/
+  retention indicator disabled. Its generic adapter retains experiment input,
+  audio and session ownership. Private payloads stay outside this repository;
+  actual wearer visual/calibration acceptance and Meta delivery remain open.
+
 - Phone onboarding (2026-11-15): selected Developer builds advertise read-only
   Bluetooth discovery without hardware-serial provisioning. A new phone and
   headset compare a code and each confirm with a button; no headset typing,

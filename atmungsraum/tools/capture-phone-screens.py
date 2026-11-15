@@ -36,6 +36,7 @@ settings.setup ??= {
   v: 1, g: 1, r: 0, stage: 'testing', input: 'automatic', phase: 'inhale',
   position_frames: 0, cycle_frames: 705600, target_frames: 0, completed_frames: 0,
   attempt: 0, calibration: 'idle', failure: '', ready: false, playing: true,
+  audio_state: 'playing', audio_generation: 1,
   experiment_elapsed_ms: 0, input_phase: 'unknown', input_volume01: null,
   ...window.reviewInitialSetup
 };
@@ -44,8 +45,11 @@ window.reviewAccessCommands ??= [];
 window.reviewRecenterCommands ??= [];
 const receipts = window.reviewReceipts ??= {};
 let witness = 100;
+let lastWitness = '';
+const ecgStarted = performance.now();
 const scenarios = ['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15'];
 function snapshot() {
+  window.reviewSnapshotCount = (window.reviewSnapshotCount ?? 0) + 1;
   const { phase, polar, generation, condition, clock, host, fresh, pending } = settings;
   const connected = ['stream-wait', 'ready'].includes(polar);
   const setup = { ...settings.setup };
@@ -59,10 +63,11 @@ function snapshot() {
     controller_access: settings.access,
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],
-    o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5, i: String(witness++), g: generation, r: 0 },
+    o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
+      i: settings.freezeObservation && lastWitness ? lastWitness : (lastWitness = String(witness++)), g: generation, r: 0 },
     scenarios, y: polar === 'unsupported' ? undefined : {
       s: 'a'.repeat(32), g: Number(owner.native_epoch), r: 1, p: polar !== 'permission', b: polar !== 'bluetooth',
-      c: connected, a: polar === 'ready', e: polar === 'ready' || Boolean(settings.ecg), sc: polar === 'scan',
+      c: connected, a: settings.acc ?? polar === 'ready', e: settings.ecg ?? polar === 'ready', sc: polar === 'scan',
       ...(settings.location === undefined ? {} : { l: settings.location }),
       x: connected ? candidate : settings.selected,
       d: [candidate, 'c'.repeat(12)].slice(0, settings.strapCount)
@@ -70,6 +75,36 @@ function snapshot() {
     q: { v: 2, s: 'a'.repeat(32), g: generation,
       o: [{ ARMED: 'start', RUNNING: 'pause', PAUSED: 'resume' }[phase]] }
   };
+}
+function ecgPacket() {
+  window.reviewEcgCalls = (window.reviewEcgCalls ?? 0) + 1;
+  if (!(settings.ecg ?? settings.polar === 'ready')) return null;
+  if (settings.ecgReplay && window.reviewLastEcg) return window.reviewLastEcg;
+  // Absolute native sample indices preserve every overlapping timestamp/value.
+  // The virtual browser clock advances the delivered 130 Hz window at 1 Hz.
+  const first = Math.floor((performance.now() - ecgStarted) * 130 / 1000);
+  if (settings.ecgGap === 'first-packet') settings.ecgGap = [first + 90, first + 110];
+  const packet = window.reviewLastEcg = {
+    v: 1, unit: 'uV', rate: 130, age_ms: 0,
+    samples: Array.from({ length: 260 }, (_, offset) => first + offset)
+      .filter(index => !settings.ecgGap || index < settings.ecgGap[0] || index >= settings.ecgGap[1])
+      .map(index => {
+        const cycle = index % 95;
+        const beat = 310 * Math.exp(-((cycle - 36) ** 2) / 2)
+          - 120 * Math.exp(-((cycle - 40) ** 2) / 3)
+          + 40 * Math.exp(-((cycle - 52) ** 2) / 36);
+        return [String(1000000000 + Math.floor(index * 1000000000 / 130)),
+          Math.round(beat + 12 * Math.sin(index / 11))];
+      })
+  };
+  window.reviewEcgPackets = [...(window.reviewEcgPackets ?? []), packet].slice(-3);
+  return packet;
+}
+async function observedStatus() {
+  const current = snapshot();
+  if (settings.statusDrop) throw Error('Simulated transient status loss');
+  if (settings.statusDelay) await new Promise(resolve => setTimeout(resolve, settings.statusDelay));
+  return current;
 }
 function command({ id, op, condition, d }) {
   settings.commands ??= [];
@@ -83,7 +118,7 @@ function command({ id, op, condition, d }) {
   if (op === 'start') settings.clock = 37000;
   if (op === 'select') settings.selected = d;
   if (op === 'connect') settings.polar = 'stream-wait';
-  if (op === 'start-acc') settings.polar = 'ready';
+  if (op === 'start-acc') { settings.acc = true; settings.polar = 'ready'; }
   if (op === 'save-next') {
     settings.clock = 0;
     settings.host = 'vr-preparation';
@@ -151,6 +186,7 @@ export async function joinQuest({ endpoint }) {
   }
   if (window.reviewJoin === 'wait') await new Promise(() => {});
   if (window.reviewJoin === 'fail') throw Error('Simulated connection failure');
+  if (settings.joinDelay) await new Promise(resolve => setTimeout(resolve, settings.joinDelay));
   const controlled = run => value => {
     if (!canControlQuest(snapshot())) throw Error('Fixture controller is read-only while waiting');
     return run(value);
@@ -170,7 +206,7 @@ export async function joinQuest({ endpoint }) {
     return { v: 1, id: value.id, state: 'confirmed' };
   };
   return {
-    owner: { ...owner }, initial: snapshot(), status: snapshot, command: controlled(command),
+    owner: { ...owner }, initial: snapshot(), status: observedStatus, command: controlled(command),
     participantArm: controlled(command), scenarioArm: controlled(command),
     breathSetup: settings.oldApk ? null : controlled(breathSetup),
     recenter: controlled(value => {
@@ -181,16 +217,7 @@ export async function joinQuest({ endpoint }) {
     receipt: async id => settings.receiptState ? { v: 1, id, state: settings.receiptState }
       : receipts[id] ?? { v: 1, id, state: 'outcome_unknown' }, close() {},
     recordings: async () => ({ v: 1, state: 'ready', entries: [], next_before: null }),
-    ecg: async () => settings.polar !== 'ready' ? null : ({
-      v: 1, unit: 'uV', rate: 130, age_ms: 0,
-      samples: Array.from({ length: 260 }, (_, i) => {
-        const cycle = i % 95;
-        const beat = 310 * Math.exp(-((cycle - 36) ** 2) / 2)
-          - 120 * Math.exp(-((cycle - 40) ** 2) / 3)
-          + 40 * Math.exp(-((cycle - 52) ** 2) / 36);
-        return [String(1000000000 + i * 7692308), Math.round(beat + 12 * Math.sin(i / 11))];
-      })
-    })
+    ecg: async () => ecgPacket()
   };
 }
 """
@@ -253,12 +280,13 @@ class Review:
         self.output = output
         self.rows = []
         self.checks = []
+        self.regressions = []
         self.errors = []
 
-    def page(self, init="", suffix="", viewport=None):
+    def page(self, init="", suffix="", viewport=None, reduced_motion="reduce"):
         context = self.browser.new_context(
             viewport=viewport or VIEWPORT, device_scale_factor=2, is_mobile=True, has_touch=True,
-            locale="de-DE", timezone_id="Europe/Berlin", reduced_motion="reduce",
+            locale="de-DE", timezone_id="Europe/Berlin", reduced_motion=reduced_motion,
             service_workers="block",
         )
 
@@ -350,7 +378,8 @@ class Review:
 
     def index(self):
         (self.output / "checks.json").write_text(
-            json.dumps({"screens": self.checks, "app_errors": self.errors}, indent=2), encoding="utf-8")
+            json.dumps({"screens": self.checks, "regressions": self.regressions,
+                        "app_errors": self.errors}, indent=2), encoding="utf-8")
         with (self.output / "feedback.csv").open("w", encoding="utf-8-sig", newline="") as out:
             writer = csv.writer(out)
             writer.writerow(("Screen", "Section", "State", "Image", "Feedback"))
@@ -401,6 +430,89 @@ def enter_participant(page):
     page.get_by_role("radio", name="Keine Angabe").check()
     page.locator("#patient-next").focus()
     page.locator("#patient-next").press("Enter")
+
+
+def capture_scroll_regression(review):
+    """Poll the real UI while a phone user edits and scrolls the participant form.
+
+    Live setup telemetry also updates the hidden preview. It must not shrink the
+    visible document for one frame, clamp scroll, or replace the focused editor.
+    Screenshots force real paint before the baseline and after each native poll;
+    measuring only the final reflow height missed the original transient clamp.
+    """
+    initial = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));" + """
+      window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
+      window.reviewInitialSetup={stage:'calibrating',calibration:'collecting',attempt:1,
+        target_frames:1411200,input_phase:'inhale',input_volume01:0,playing:true,position_frames:0};"""
+    for slug, viewport, text_size in (
+        ("390", VIEWPORT, ""),
+        ("320", {"width": 320, "height": 568}, ""),
+        ("200-text", {"width": 320, "height": 568}, "200%"),
+    ):
+        page = review.page(initial, viewport=viewport)
+        participant = page.locator("#quest-participant")
+        expect(participant).to_be_visible()
+        participant.locator("summary").click()
+        page.locator("#patient-age").fill("31")
+        page.get_by_role("radio", name="Keine Angabe").check()
+        editor = page.locator("#patient-surname")
+        editor.fill("Tes")
+        page.evaluate("size => document.documentElement.style.fontSize=size", text_size)
+        expect(page.locator("html")).to_have_attribute("data-measurement", "ready")
+        page.clock.run_for(2200)
+        page.screenshot()  # Let initial readable reflow reach the renderer.
+        page.evaluate("""() => {
+          window.reviewEditedNode = document.querySelector('#patient-surname');
+          window.reviewEditedForm = document.querySelector('#patient-form');
+          window.reviewPageOrigin = performance.timeOrigin;
+        }""")
+        samples = []
+        for i, letter in enumerate(("a", "o", "e", "a", "o", "e"), 1):
+            # A real edit on every poll, with an insertion point to preserve.
+            editor.evaluate("node => {node.focus({preventScroll:true}); node.setSelectionRange(1,2);}")
+            page.keyboard.type(letter)
+            value = editor.input_value()
+            page.clock.run_for(50)
+            page.screenshot()
+            page.evaluate("scrollTo(0,Math.min(300,document.documentElement.scrollHeight-innerHeight-20))")
+            page.screenshot()
+            before = page.evaluate("scrollY")
+            assert before >= 100, f"{slug}: test did not reach a scrollable rendered form: {before}"
+            wait_setup(page, position_frames=i * 88200, completed_frames=i * 88200,
+                       input_volume01=i / 10, input_phase="inhale" if i % 2 else "exhale")
+            page.screenshot()
+            state = page.evaluate("""() => ({
+              scroll:scrollY, documentHeight:document.documentElement.scrollHeight,
+              sameOrigin:performance.timeOrigin===reviewPageOrigin,
+              sameEditor:document.querySelector('#patient-surname')===reviewEditedNode,
+              sameForm:document.querySelector('#patient-form')===reviewEditedForm,
+              focus:document.activeElement.id, value:reviewEditedNode.value,
+              selection:[reviewEditedNode.selectionStart,reviewEditedNode.selectionEnd],
+              age:document.querySelector('#patient-age').value,
+              gender:document.querySelector('[name="gender"]:checked')?.value,
+              previewInput:document.querySelector('#preview-input').textContent,
+              progress:document.querySelector('#preview-progress').value,
+            })""")
+            samples.append({"before": before, **state})
+            assert state["sameOrigin"], f"{slug}: telemetry navigated or reloaded the page"
+            assert state["sameEditor"] and state["sameForm"], f"{slug}: telemetry replaced the live form"
+            assert state["focus"] == "patient-surname", f"{slug}: telemetry moved focus: {state}"
+            assert state["value"] == value and state["selection"] == [2, 2], f"{slug}: edited text changed: {state}"
+            assert state["age"] == "31" and state["gender"] == "prefer-not-to-say", f"{slug}: form values changed: {state}"
+            assert f"{i * 10} %" in state["previewInput"], f"{slug}: native telemetry did not render: {state}"
+            assert abs(state["progress"] - i / 8) < .001, f"{slug}: native calibration progress froze: {state}"
+            assert abs(state["scroll"] - before) <= 2, f"{slug}: native poll reset document scroll: {samples[-1]}"
+        assert page.evaluate("window.reviewQuest.commands ?? []") == []
+        assert page.evaluate("window.reviewSetupCommands") == []
+        review.regressions.append({"kind": "participant-scroll-edit", "viewport": viewport,
+                                   "textSize": text_size, "samples": samples})
+        review.shot(page, f"scroll-edit-{slug}", f"Participant {slug} · edits and scroll survive six live polls",
+                    editor, "Live update stability")
+        # A genuine user transition must still change screens and focus.
+        enter_participant(page)
+        expect(page.locator("#breathing-preview")).to_be_visible()
+        expect(page.locator("#preview-title")).to_be_focused()
+        page.context.close()
 
 
 def assert_automatic_rediscovery(review, paired):
@@ -497,7 +609,7 @@ def capture(review):
         ("bluetooth", "polar-bluetooth", "Quest Bluetooth switched off", "Schalte Bluetooth"),
         ("unsupported", "polar-unavailable", "Polar setup unavailable", "nicht verfügbar"),
         ("scan", "polar-scanning", "Searching for Polar H10", "Quest sucht"),
-        ("stream-wait", "polar-streams", "Waiting for ECG and acceleration", "Warte auf beide"),
+        ("stream-wait", "polar-streams", "Waiting for ECG and acceleration", "EKG und Bewegungsdaten fehlen"),
     ):
         wait_state(page, polar=state)
         expect(polar).to_contain_text(label)
@@ -1004,7 +1116,7 @@ def capture_polar_location(review):
         review.shot(page, f"location-off-{slug}", f"Location disabled {slug} · enable Standortdienste before H10 discovery", status, "Polar Location services")
 
         wait_state(page, polar="stream-wait")
-        expect(status).to_contain_text("Warte auf beide Messsignale")
+        expect(status).to_contain_text("EKG und Bewegungsdaten fehlen")
         expect(status).not_to_contain_text("Standortdienste")
         expect(connect).to_be_enabled()
         connect.focus()
@@ -1021,11 +1133,231 @@ def capture_polar_location(review):
         page.context.close()
 
 
+def capture_polar_stream_recovery(review):
+    paired = INSTALLATION + f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    for slug, viewport, text_size in (
+        ("390", VIEWPORT, ""),
+        ("320", {"width": 320, "height": 568}, ""),
+        ("200-text", {"width": 320, "height": 568}, "200%"),
+    ):
+        for missing, ecg, acc, label, commands in (
+            ("ecg", False, True, "Bewegungsdaten bereit; EKG fehlt.", ["start-ecg"]),
+            ("acc", True, False, "EKG bereit; Bewegungsdaten fehlen.", ["start-acc"]),
+            ("both", False, False, "EKG und Bewegungsdaten fehlen.", ["start-ecg", "start-acc"]),
+        ):
+            initial = paired + "window.reviewInitialQuest=" + json.dumps({
+                "polar": "stream-wait", "ecg": ecg, "acc": acc, "location": "disabled",
+                "access": {"v": 1, "role": "active", "active_phone": "Fixture", "revision": 1},
+            }) + ";"
+            page = review.page(initial, viewport=viewport)
+            page.evaluate("size => document.documentElement.style.fontSize=size", text_size)
+            status = page.locator("#quest-polar-status")
+            connect = page.locator("#quest-polar-connect")
+            expect(status).to_have_text("Polar H10 per Bluetooth verbunden. " + label)
+            expect(connect).to_have_text("Fehlende Messsignale starten")
+            expect(connect).to_be_enabled()  # Connected streams do not need Location discovery.
+            page.clock.run_for(3100)
+            assert page.evaluate("window.reviewQuest.commands ?? []") == [], "Polling issued a stream command"
+            expect(status).to_have_text("Polar H10 per Bluetooth verbunden. " + label)
+            review.shot(page, f"polar-missing-{missing}-{slug}", f"H10 {slug} · missing {missing}, explicit recovery",
+                        status, "Polar stream recovery")
+            connect.focus()
+            connect.press("Enter")
+            expect(status).to_have_text("Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.")
+            expect(connect).to_have_text("Messsignale bereit")
+            expect(connect).to_be_disabled()
+            assert page.evaluate("window.reviewQuest.commands") == commands
+            page.clock.run_for(3100)
+            assert page.evaluate("window.reviewQuest.commands") == commands, "Polling retried confirmed stream commands"
+            assert page.evaluate("window.reviewQuest.location") == "disabled"
+            review.shot(page, f"polar-recovered-{missing}-{slug}", f"H10 {slug} · {missing} recovery confirmed by both streams",
+                        status, "Polar stream recovery")
+            review.regressions.append({"kind": "polar-stream-recovery", "viewport": viewport,
+                                       "textSize": text_size, "missing": missing, "commands": commands})
+            page.context.close()
+
+
+def capture_live_display(review):
+    """Render presentation frames between native polls without granting authority."""
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    initial = paired + """
+      window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
+      window.reviewInitialSetup={stage:'calibrating',calibration:'collecting',attempt:1,
+        target_frames:1411200,completed_frames:176400,position_frames:88200,
+        audio_state:'playing',audio_generation:1,input_phase:'inhale',input_volume01:.3};
+      Object.defineProperty(document,'hidden',{configurable:true,get:()=>Boolean(window.reviewHidden)});
+    """
+    read = """() => ({
+      circle:Number(document.querySelector('#preview-circle').style.transform.match(/scale\\(([^)]+)\\)/)?.[1]),
+      fill:Number(document.querySelector('#preview-progress-fill').style.transform.match(/scaleX\\(([^)]+)\\)/)?.[1]),
+      progress:document.querySelector('#preview-progress').value,
+      continueDisabled:document.querySelector('#preview-continue').disabled,
+      calibrateDisabled:document.querySelector('#preview-calibrate').disabled,
+      controllerDisabled:document.querySelector('#preview-controller').disabled,
+      status:document.querySelector('#preview-status').textContent,
+      polls:window.reviewSnapshotCount, ecgCalls:window.reviewEcgCalls,
+      setupCommands:window.reviewSetupCommands.length, commands:(window.reviewQuest.commands??[]).length,
+    })"""
+    page = review.page(initial, reduced_motion="no-preference")
+    enter_participant(page)
+    page.clock.run_for(1100)
+    first = page.evaluate(read)
+    page.clock.run_for(200)
+    later = page.evaluate(read)
+    assert first["circle"] < later["circle"] <= 1, f"Native-anchored circle did not advance: {first}, {later}"
+    assert first["polls"] == later["polls"] and first["ecgCalls"] == later["ecgCalls"], "Animation added transport polls"
+    assert first["progress"] == later["progress"] == .25, "Presentation invented native calibration progress"
+    assert first["continueDisabled"] and later["continueDisabled"], "Animation admitted unfinished calibration"
+    assert first["calibrateDisabled"] == later["calibrateDisabled"] and first["controllerDisabled"] == later["controllerDisabled"]
+
+    wait_setup(page, completed_frames=352800, position_frames=132300)
+    progressing = page.evaluate(read)
+    page.clock.run_for(200)
+    progressed = page.evaluate(read)
+    assert progressing["progress"] == progressed["progress"] == .5
+    assert .125 <= progressing["fill"] < progressed["fill"] <= .25, "Visible fill must stop at the confirmed native count"
+    assert progressing["polls"] == progressed["polls"], "Fill animation added native polls"
+    assert progressed["continueDisabled"], "Interpolated fill admitted unfinished calibration"
+    review.shot(page, "live-breath-between-polls", "Breathing display · smooth frames, native progress and admission",
+                page.locator("#preview-status"), "Live presentation")
+
+    wait_setup(page, playing=False, audio_state="paused")
+    paused = page.evaluate(read)
+    page.clock.run_for(150)
+    assert page.evaluate(read)["circle"] == paused["circle"], "Paused native audio kept moving"
+    wait_setup(page, playing=True, audio_state="playing")
+    page.evaluate("window.reviewQuest.freezeObservation=true")
+    page.clock.run_for(3100)  # Polls replay one observation; they cannot renew its age.
+    stale = page.evaluate(read)
+    page.clock.run_for(200)
+    assert page.evaluate(read)["circle"] == stale["circle"], "Stale native audio kept moving"
+    expect(page.locator("#preview-status")).to_have_text("Warte auf den aktuellen Atemtakt der Quest.")
+    review.shot(page, "live-breath-stale", "Breathing display · replayed observation expires and stops",
+                page.locator("#preview-status"), "Live presentation")
+
+    page.evaluate("window.reviewHidden=true; document.dispatchEvent(new Event('visibilitychange'))")
+    hidden = page.evaluate(read)
+    page.clock.run_for(2100)
+    suspended = page.evaluate(read)
+    assert suspended["polls"] == hidden["polls"] and suspended["ecgCalls"] == hidden["ecgCalls"], "Hidden document kept polling"
+    assert suspended["circle"] == hidden["circle"], "Hidden document kept animating"
+    expect(page.locator("#quest-ecg")).to_be_hidden()
+    page.evaluate("window.reviewQuest.freezeObservation=false; window.reviewHidden=false; document.dispatchEvent(new Event('visibilitychange'))")
+    page.clock.run_for(100)
+    resumed = page.evaluate(read)
+    page.clock.run_for(200)
+    assert page.evaluate(read)["circle"] > resumed["circle"], "A fresh visible observation did not resume the circle"
+    assert not resumed["commands"] and not resumed["setupCommands"]
+    review.regressions.append({"kind": "live-breath-presentation", "first": first, "later": later,
+                               "progressing": progressing, "progressed": progressed,
+                               "paused": paused, "stale": stale, "suspended": suspended, "resumed": resumed})
+    page.context.close()
+
+    page = review.page(initial)  # Existing default remains reduced motion.
+    enter_participant(page)
+    page.clock.run_for(1100)
+    reduced = page.evaluate(read)
+    reduced_ecg = page.locator("#quest-ecg-trace").get_attribute("d")
+    page.clock.run_for(200)
+    reduced_later = page.evaluate(read)
+    assert reduced_later["circle"] == reduced["circle"] == .73
+    assert reduced_later["fill"] == reduced["fill"] == .125
+    assert reduced_later["progress"] == .25 and reduced_later["continueDisabled"]
+    assert reduced_later["polls"] == reduced["polls"]
+    assert reduced_ecg and page.locator("#quest-ecg-trace").get_attribute("d") == reduced_ecg, "Reduced motion kept ECG animating"
+    review.shot(page, "live-reduced-motion", "Reduced motion · discrete native breathing display",
+                page.locator("#preview-status"), "Live presentation")
+    review.regressions.append({"kind": "live-reduced-motion", "first": reduced, "later": reduced_later})
+    page.evaluate("window.reviewQuest.freezeObservation=true")
+    page.clock.run_for(2700)
+    expect(page.locator("#preview-status")).to_have_text("Warte auf den aktuellen Atemtakt der Quest.")
+    review.shot(page, "live-reduced-expiry", "Reduced motion · stale native observation still expires",
+                page.locator("#preview-status"), "Live presentation")
+    page.context.close()
+
+    page = review.page(initial + "window.reviewInitialQuest.statusDelay=1700;", reduced_motion="no-preference")
+    enter_participant(page)
+    page.clock.run_for(2100)
+    delayed = page.evaluate(read)
+    page.clock.run_for(200)
+    delayed_later = page.evaluate(read)
+    assert delayed["circle"] == delayed_later["circle"] == .73, "Slow transport renewed an expired native audio anchor"
+    expect(page.locator("#preview-status")).to_have_text("Warte auf den aktuellen Atemtakt der Quest.")
+    assert delayed_later["continueDisabled"] and delayed_later["progress"] == .25
+    assert not delayed_later["commands"] and not delayed_later["setupCommands"]
+    review.shot(page, "live-slow-status", "Native observation · 1700 ms transport cannot animate stale audio",
+                page.locator("#preview-status"), "Live presentation")
+    review.regressions.append({"kind": "live-slow-native-observation", "first": delayed, "later": delayed_later})
+    page.context.close()
+
+    page = review.page(paired + "window.reviewInitialQuest={polar:'ready',ecgGap:'first-packet'};",
+                       reduced_motion="no-preference")
+    expect(page.locator("#quest-polar-status")).to_contain_text("Quest empfängt EKG und Beschleunigungsdaten")
+    page.clock.run_for(1100)
+    for _ in range(20):
+        if page.locator("#quest-ecg").is_visible():
+            break
+        page.clock.run_for(100)
+    assert page.locator("#quest-ecg").is_visible(), page.evaluate("""() => ({
+      now:performance.now(),calls:window.reviewEcgCalls,polls:window.reviewSnapshotCount,
+      count:window.reviewLastEcg?.samples.length,
+      hiddenAttribute:document.querySelector('#quest-ecg').hasAttribute('hidden'),
+      display:getComputedStyle(document.querySelector('#quest-ecg')).display,
+      status:document.querySelector('#quest-ecg-status').textContent})""")
+    ecg_read = """() => {
+      const path=document.querySelector('#quest-ecg-trace').getAttribute('d');
+      const range=Number(document.querySelector('#quest-ecg-scale').textContent.match(/±(\\d+)/)?.[1]);
+      const raw=new Set((window.reviewEcgPackets??[]).flatMap(packet=>packet.samples.map(([,v])=>(46-v/range*43).toFixed(1))));
+      const packets=window.reviewEcgPackets??[];
+      const values=new Map(); let consistent=true;
+      for(const packet of packets) for(const [timestamp,value] of packet.samples) {
+        if(values.has(timestamp)&&values.get(timestamp)!==value) consistent=false;
+        values.set(timestamp,value);
+      }
+      return {path,polls:window.reviewSnapshotCount,calls:window.reviewEcgCalls,segments:(path.match(/M/g)??[]).length,
+        rawPointsOnly:[...path.matchAll(/[ML][\\d.]+ ([\\d.]+)/g)].every(point=>raw.has(point[1])),
+        overlapConsistent:consistent, latest:packets.at(-1)?.samples.at(-1)?.[0],
+        commands:(window.reviewQuest.commands??[]).length,setupCommands:window.reviewSetupCommands.length};
+    }"""
+    ecg_first = page.evaluate(ecg_read)
+    page.clock.run_for(200)
+    ecg_later = page.evaluate(ecg_read)
+    assert ecg_first["path"] and ecg_first["path"] != ecg_later["path"], "Buffered ECG did not move between deliveries"
+    assert ecg_first["polls"] == ecg_later["polls"] and ecg_first["calls"] == ecg_later["calls"], "ECG animation added requests"
+    assert ecg_first["segments"] >= 2 and ecg_later["segments"] >= 2, "ECG connected across missing native samples"
+    assert ecg_first["rawPointsOnly"] and ecg_later["rawPointsOnly"], "ECG invented a voltage between raw samples"
+    assert ecg_later["overlapConsistent"] and not ecg_later["commands"] and not ecg_later["setupCommands"]
+    review.shot(page, "live-ecg-buffered-gap", "Live ECG · buffered raw points move while the native gap stays open",
+                page.locator("#quest-ecg"), "Live presentation")
+    review.regressions.append({"kind": "live-ecg-presentation", "first": ecg_first, "later": ecg_later})
+    page.evaluate("""() => {
+      Object.assign(window.reviewQuest,{statusDrop:true,joinDelay:400,ecgReplay:true});
+      dispatchEvent(new Event('online'));
+    }""")
+    expect(page.locator("#quest-ecg")).to_be_hidden()
+    page.evaluate("window.reviewQuest.statusDrop=false")
+    page.clock.run_for(1600)
+    expect(page.locator("#quest-polar-status")).to_contain_text("Quest empfängt EKG und Beschleunigungsdaten")
+    expect(page.locator("#quest-ecg")).to_be_hidden()
+    assert page.locator("#quest-ecg-trace").get_attribute("d") == "", "Duplicate ECG packet revived a cleared trace"
+    page.evaluate("window.reviewQuest.ecgReplay=false; window.reviewQuest.joinDelay=0")
+    page.clock.run_for(1100)
+    expect(page.locator("#quest-ecg")).to_be_visible()
+    recovered = page.evaluate(ecg_read)
+    assert int(recovered["latest"]) > int(ecg_later["latest"]), "ECG did not recover on a fresh native packet"
+    assert not recovered["commands"] and not recovered["setupCommands"]
+    review.shot(page, "live-ecg-status-recovery", "Transient status loss · old ECG stays cleared until a new native packet",
+                page.locator("#quest-ecg"), "Live presentation")
+    review.regressions.append({"kind": "live-ecg-replay-recovery", "latestBefore": ecg_later["latest"],
+                               "latestAfter": recovered["latest"]})
+    page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control", "location"), default="all",
-                        help="Full suite, pairing, controller-access plus Location, or only Location screens")
+    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live"), default="all",
+                        help="Full suite or focused pairing, control, Location, scroll, Polar, or live presentation")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True)
@@ -1045,6 +1377,12 @@ def main():
             capture_controller_access(review)
         if args.scope in ("all", "control", "location"):
             capture_polar_location(review)
+        if args.scope in ("all", "scroll"):
+            capture_scroll_regression(review)
+        if args.scope in ("all", "polar"):
+            capture_polar_stream_recovery(review)
+        if args.scope in ("all", "live"):
+            capture_live_display(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")

@@ -1,11 +1,13 @@
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=10';
 import { pairPhone } from './quest-pairing.js?v=1';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=22';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=25';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=23';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=3';
+import { LiveBreathDisplay } from './live-breath-display.js?v=1';
+import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -36,6 +38,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewDetail = byId('preview-detail');
   const previewProgressGroup = byId('preview-progress-group');
   const previewProgress = byId('preview-progress');
+  const previewProgressFill = byId('preview-progress-fill');
   const previewProgressText = byId('preview-progress-text');
   const previewStart = byId('preview-start');
   const previewCalibrate = byId('preview-calibrate');
@@ -100,6 +103,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let storage;
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
+  const breathDisplay = new LiveBreathDisplay();
+  const ecgDisplay = new LiveEcgDisplay();
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  let animationFrame = 0;
+  let ecgOwner = '';
+  let ecgGeneration = null;
+  let ecgSensor = '';
+  let breathTimer;
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
 
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
@@ -151,6 +162,19 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       text(clock, [Math.floor(seconds / 60), seconds % 60].map((part) => String(part).padStart(2, '0')).join(':'));
     }
     const setup = polarSetup(status);
+    const source = rehearsal.gateway?.owner;
+    const ecgSource = source && `${source.device}/${source.epoch}/${source.native_epoch}`;
+    let sourceChanged = ecgOwner !== ecgSource;
+    if (sourceChanged) { ecgOwner = ecgSource; ecgGeneration = null; ecgSensor = ''; }
+    if (status) {
+      const sensor = status.y ? `${status.y.s}/${status.y.x}` : ecgSensor;
+      sourceChanged ||= ecgGeneration !== status.g || ecgSensor !== sensor;
+      ecgGeneration = status.g;
+      ecgSensor = sensor;
+    }
+    if (sourceChanged) ecgDisplay.reset();
+    // An unavailable status clears the image, but cannot retire its replay fence.
+    if (sourceChanged || !status) showTrace(null);
     const ready = setup?.p && setup.b && setup.c && setup.e && setup.a;
     const idle = status?.p === 'IDLE' && !active;
     const participantComplete = Boolean(!requiresParticipant || armedWithParticipant && participantId);
@@ -183,8 +207,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : !setup.c && setup.l === 'disabled' ? 'Aktiviere die Standortdienste in den Quest-Einstellungen, damit die Quest den H10 finden kann.'
       : setup.sc ? 'Quest sucht nach dem Polar H10 …'
       : ready ? 'Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.'
-      : setup.c ? 'Polar H10 verbunden. Warte auf beide Messsignale.'
+      : setup.c ? `Polar H10 per Bluetooth verbunden. ${setup.e ? 'EKG bereit; Bewegungsdaten fehlen.'
+        : setup.a ? 'Bewegungsdaten bereit; EKG fehlt.' : 'EKG und Bewegungsdaten fehlen.'}`
       : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
+    text(polarConnect.firstElementChild, ready ? 'Messsignale bereit'
+      : setup?.c ? 'Fehlende Messsignale starten' : 'Polar H10 verbinden');
     polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
@@ -239,6 +266,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         }
       }
     }
+    renderLive(performance.now());
+    scheduleBreathExpiry();
+    scheduleAnimation();
   }
 
   function paintBreathingSetup(view, waiting) {
@@ -267,6 +297,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(previewDetail, detail);
     previewProgressGroup.hidden = !view.available || !(collecting || native?.attempt > 0);
     previewProgress.value = view.progress.value;
+    const now = performance.now();
+    const observation = rehearsal.state.status?.o;
+    const timing = rehearsal.state.statusTiming;
+    const age = timing ? observation?.a + timing.transportMs + Math.max(0, now - timing.receivedAt) : 1501;
+    breathDisplay.update(view, observation && { ...observation, a: age }, now);
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
     previewStart.hidden = native?.stage !== 'idle';
     previewStart.disabled = waiting || !view.actions.start;
@@ -299,14 +334,59 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function showTrace(value) {
     clearTimeout(ecgTimer);
-    graph.toggleAttribute('hidden', !value);
-    scale.hidden = !value;
-    trace.setAttribute('d', value?.path ?? '');
-    text(ecgStatus, value ? 'Live-EKG vom Polar H10' : rehearsal.gateway?.ecg
+    const now = performance.now();
+    ecgDisplay.push(value, now);
+    const current = ecgDisplay.frame(now);
+    renderEcg(current);
+    if (current) ecgTimer = setTimeout(() => showTrace(null), current.ttl);
+    scheduleAnimation();
+  }
+
+  function renderEcg(current) {
+    graph.toggleAttribute('hidden', !current);
+    scale.hidden = !current;
+    trace.setAttribute('d', current?.path ?? '');
+    text(ecgStatus, current ? 'Live-EKG vom Polar H10' : rehearsal.gateway?.ecg
       ? 'Warte auf aktuelle EKG-Daten von der Quest.' : 'Für Live-EKG mit dem Quest-Schlüssel verbinden.');
-    if (value) {
-      text(scale, `2 s · 130 Hz · ±${value.range} µV`);
-      ecgTimer = setTimeout(() => showTrace(null), value.ttl);
+    if (current) text(scale, `2 s · 130 Hz · ±${current.range} µV`);
+  }
+
+  function renderLive(now) {
+    let moving = false;
+    if (!preview.hidden) {
+      const current = breathDisplay.frame(now, reducedMotion.matches);
+      previewCircle.hidden = !current;
+      if (current) {
+        previewCircle.style.transform = `scale(${current.radius})`;
+        previewProgressFill.style.transform = `scaleX(${current.progress / 2})`;
+        const native = breathing.view?.setup;
+        if (native?.playing && Number.isSafeInteger(native.audio_generation)) {
+          text(previewStatus, current.live ? `Atemtakt: ${current.phaseLabel}` : 'Warte auf den aktuellen Atemtakt der Quest.');
+        }
+        moving = current.animating;
+      } else text(previewStatus, 'Warte auf den aktuellen Atemtakt der Quest.');
+    }
+    if (!graph.hasAttribute('hidden')) {
+      const current = ecgDisplay.frame(now);
+      renderEcg(current);
+      moving ||= Boolean(current);
+    }
+    return moving;
+  }
+
+  function scheduleAnimation() {
+    if (animationFrame || document.hidden || reducedMotion.matches || preview.hidden && graph.hasAttribute('hidden')) return;
+    animationFrame = requestAnimationFrame(now => {
+      animationFrame = 0;
+      if (!document.hidden && !reducedMotion.matches && renderLive(now)) scheduleAnimation();
+    });
+  }
+
+  function scheduleBreathExpiry() {
+    clearTimeout(breathTimer);
+    const current = breathDisplay.frame(performance.now(), reducedMotion.matches);
+    if (!document.hidden && current?.live) {
+      breathTimer = setTimeout(() => renderLive(performance.now()), current.ttl + 1);
     }
   }
 
@@ -317,6 +397,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
 
   function clearArchives() {
+    ecgDisplay.reset();
+    breathDisplay.reset();
+    showTrace(null);
     exportAttempt?.abort();
     liveAttempt?.abort();
     liveGeneration = null;
@@ -759,6 +842,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const timer = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      clearTimeout(breathTimer);
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      breathDisplay.reset();
+      renderLive(performance.now());
       if (pairingChoice) connecting?.abort();
       userAction?.abort();
       ecgAttempt?.abort();
@@ -766,9 +854,19 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       liveAttempt?.abort();
       drive.cancel();
       showTrace(null);
-    } else { nextSync = 0; void tick(); }
+    } else { renderLive(performance.now()); nextSync = 0; void tick(); }
+  });
+  reducedMotion.addEventListener('change', () => {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
+    renderLive(performance.now());
+    scheduleBreathExpiry();
+    scheduleAnimation();
   });
   window.addEventListener('pagehide', (event) => {
+    clearTimeout(breathTimer);
+    cancelAnimationFrame(animationFrame);
+    animationFrame = 0;
     userAction?.abort();
     connecting?.abort();
     connecting = null;

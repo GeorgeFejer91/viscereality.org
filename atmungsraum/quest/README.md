@@ -85,10 +85,15 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `922b085585263bf68aebbd91d3011217aaf09d11`, matching
-the software-verified developer build. Its SHA-256 and native commit are in
+reconstructs source tree `f78d4cad8b9c0e4521f98ad9993d675b5f2866ab`, matching
+the current developer source. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
+Code 5 selects the generic opt-in particle adapter with a downstream private
+Showcase profile through the existing three-custom-input route. The bundled
+command above remains the base experiment composition; it does not reproduce
+those private particle inputs. Keep the full profile/shader bodies private,
+retain the existing signer, and qualify the actual APK before Meta upload.
 The script stages the [shared loop JSON](../audio/box-loop.json), its four phase
 cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
