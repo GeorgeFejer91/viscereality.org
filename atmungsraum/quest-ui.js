@@ -9,6 +9,7 @@ import { BreathingSetup } from './breathing-setup.js?v=7';
 import { LiveBreathDisplay } from './live-breath-display.js?v=3';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 import { KioskControl } from './kiosk-control.js?v=2';
+import { ApkRelease } from './quest-release.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -108,6 +109,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
   const kiosk = new KioskControl({ storage });
+  const apkRelease = new ApkRelease({ onChange: () => paint() });
   const breathDisplay = new LiveBreathDisplay();
   const ecgDisplay = new LiveEcgDisplay();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -116,6 +118,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let ecgGeneration = null;
   let ecgSensor = '';
   let breathTimer;
+  let versionGeometryKey = '';
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
 
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
@@ -201,6 +204,25 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const settings = byId('quest-settings');
     const settingsHost = byId(showPreview ? 'preview-settings-host' : 'quest-settings-host');
     if (settings.parentElement !== settingsHost) settingsHost.append(settings);
+    const versionPanel = byId('quest-version');
+    const versionHost = byId(showPreview ? 'preview-version-host' : 'quest-version-host');
+    if (versionPanel.parentElement !== versionHost) versionHost.append(versionPanel);
+    const version = apkRelease.update(rehearsal.gateway, status);
+    const versionKey = status ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${versionPanel.clientWidth}/${getComputedStyle(versionPanel).fontSize}/${byId('apk-identity').open}` : '';
+    if (versionGeometryKey !== versionKey) {
+      versionPanel.style.minBlockSize = '';
+      versionGeometryKey = versionKey;
+    } else if (!versionPanel.hidden) {
+      // A read-only policy refresh must not temporarily shrink the document
+      // and clamp an operator's scroll position near its bottom.
+      versionPanel.style.minBlockSize = `${Math.max(versionPanel.getBoundingClientRect().height, parseFloat(versionPanel.style.minBlockSize) || 0)}px`;
+    }
+    versionPanel.hidden = !status;
+    versionPanel.dataset.versionState = version.state;
+    text(byId('apk-update-status'), version.message);
+    text(byId('apk-installed'), version.installedLabel);
+    text(byId('apk-required'), version.required);
+    text(byId('apk-full-identity'), version.identity);
     settings.hidden = !status;
     const kioskView = kiosk.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
     text(byId('kiosk-summary'), kioskView.summary);
@@ -732,6 +754,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       joinMessage = '';
       if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
       rehearsal.attach(gateway);
+      void apkRelease.refresh();
       void drive.setOwner(gateway.recordings ? gateway.owner : null);
       showTrace(null);
       if (rehearsal.state.pending) await rehearsal.refresh();
@@ -855,6 +878,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   pairingCancel.addEventListener('click', () => pairingChoice?.attempt.abort());
   controlClaim.addEventListener('click', () => { if (!controlClaim.disabled) void changeControl('claim'); });
   controlRelease.addEventListener('click', () => { if (!controlRelease.disabled) void changeControl('release'); });
+  byId('apk-identity').addEventListener('toggle', () => {
+    byId('quest-version').style.minBlockSize = '';
+    versionGeometryKey = '';
+  });
   byId('kiosk-retry').addEventListener('click', async () => {
     if (userAction || connecting || document.hidden || !kiosk.view?.canRetry) return;
     const attempt = new AbortController(); userAction = attempt;
@@ -924,7 +951,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       liveAttempt?.abort();
       drive.cancel();
       showTrace(null);
-    } else { renderLive(performance.now()); nextSync = 0; void tick(); }
+    } else { renderLive(performance.now()); nextSync = 0; void apkRelease.refresh(); void tick(); }
   });
   reducedMotion.addEventListener('change', () => {
     cancelAnimationFrame(animationFrame);
@@ -946,5 +973,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   window.addEventListener('pageshow', () => { nextConnect = nextSavedProbe = 0; void tick(); });
   window.addEventListener('online', () => { nextConnect = nextSavedProbe = nextLive = 0; drive.schedule(); void tick(); });
   paint();
+  void apkRelease.refresh();
   void tick();
 }

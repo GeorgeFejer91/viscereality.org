@@ -62,6 +62,7 @@ function snapshot() {
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
     controller_access: settings.access,
+    ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],
@@ -319,6 +320,7 @@ class Review:
         self.checks = []
         self.regressions = []
         self.errors = []
+        self.release_policy_failure = False
 
     def page(self, init="", suffix="", viewport=None, reduced_motion="reduce"):
         context = self.browser.new_context(
@@ -336,6 +338,9 @@ class Review:
             path = url.path.removeprefix("/atmungsraum/")
             if url.netloc != "viscereality.org" or not url.path.startswith("/atmungsraum/"):
                 request_route.abort()
+                return
+            if path == 'quest-release.json' and self.release_policy_failure:
+                request_route.fulfill(status=503, content_type='application/json', body='{}')
                 return
             if path == "quest-gateway.js" and url.query != "review-contract=1":
                 request_route.fulfill(content_type="text/javascript", body=GATEWAY)

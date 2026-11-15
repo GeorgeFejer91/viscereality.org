@@ -4,6 +4,7 @@ import { createDecipheriv, createHmac } from 'node:crypto';
 import { discoverQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
 import { QuestRehearsal, rehearsalActions, polarSetup } from '../quest-rehearsal.js';
 import * as rehearsalContract from '../quest-rehearsal.js';
+import { installedApk } from '../quest-release.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const build = 'b'.repeat(64);
@@ -103,6 +104,26 @@ test('joins a private Quest, verifies signed observations, and never enrolls the
   for (const fixture of [server({ tamper: true }), server({ status: { ...snapshot(), o: { ...snapshot().o, a: 6000 } } }), server({ status: { ...snapshot(), build: { v: 1, packaging_fingerprint: key } } })]) {
     await assert.rejects(joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch }));
   }
+});
+
+test('APK identity stays inside the authenticated current-build status and rejects forged version payloads', async () => {
+  const apk = { v: 1, package_name: 'org.viscereality.atmungsraum.developer', version_code: 10,
+    version_name: '0.2.9-dev', build_id: build };
+  const native = { ...snapshot(), apk };
+  const fixture = server({ status: native });
+  const trusted = await joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key }, fetcher: fixture.fetch });
+  assert.deepEqual(installedApk(trusted.initial, trusted.owner), apk);
+  assert.equal(installedApk({ ...trusted.initial, apk: { ...apk, build_id: 'f'.repeat(64) } }, trusted.owner), null);
+  const forged = server({ status: native });
+  await assert.rejects(joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key }, fetcher: async (url, init) => {
+    const response = await forged.fetch(url, init);
+    const request = init.body && JSON.parse(init.body);
+    if (request?.action !== 'status') return response;
+    const reply = await response.json(); const payload = JSON.parse(reply.payload);
+    payload.apk.version_code = 100;
+    return Response.json({ ...reply, payload: JSON.stringify(payload) });
+  } }), /bestätigt/);
+  trusted.close();
 });
 
 test('v2 identifies an app installation without pretending an unavailable hardware serial exists', async () => {

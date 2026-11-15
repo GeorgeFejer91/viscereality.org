@@ -47,6 +47,17 @@
       </header>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
+        <div id="quest-version-host">
+          <aside id="quest-version" class="version-panel" aria-labelledby="apk-update-status" hidden>
+            <p id="apk-update-status" role="status" data-measure>APK-Versionsprüfung läuft …</p>
+            <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
+            <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+            <details id="apk-identity">
+              <summary><span data-measure>Vollständige APK-Kennung</span></summary>
+              <p id="apk-full-identity" data-measure></p>
+            </details>
+          </aside>
+        </div>
         <div id="quest-pairing" class="screen-body" hidden>
           <p data-measure>Vergleiche diesen Code mit dem Code im Headset.</p>
           <p id="quest-pairing-code" aria-label="Verbindungscode" data-measure></p>
@@ -203,6 +214,7 @@
           <button id="preview-controller" type="button" disabled><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button>
         </div>
         <div id="preview-settings-host"></div>
+        <div id="preview-version-host"></div>
       </div>
       <footer class="actions">
         <button id="preview-continue" type="button" disabled><span data-measure>Weiter zur Auswahl</span></button>
