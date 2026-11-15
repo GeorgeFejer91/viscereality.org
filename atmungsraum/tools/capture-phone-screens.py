@@ -18,6 +18,9 @@ ARCHIVE = "atmungsraum-smartphone-review.zip"
 VIEWPORT = {"width": 390, "height": 844}
 
 GATEWAY = """
+// Keep the actual pure access contract; replace transport, never its UI gates.
+import { canControlQuest } from './quest-gateway.js?review-contract=1';
+export { canControlQuest, controllerAccessState } from './quest-gateway.js?review-contract=1';
 // Every cache-versioned import shares one fixture, just as it reaches one Quest.
 export const owner = window.reviewOwner ??= {
   serial: 'DEMO-QUEST', device: 'd'.repeat(32), epoch: '7', native_epoch: '8',
@@ -37,6 +40,7 @@ settings.setup ??= {
   ...window.reviewInitialSetup
 };
 window.reviewSetupCommands ??= [];
+window.reviewAccessCommands ??= [];
 const receipts = window.reviewReceipts ??= {};
 let witness = 100;
 const scenarios = ['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15'];
@@ -51,6 +55,7 @@ function snapshot() {
     build: { v: 1, packaging_fingerprint: 'e'.repeat(64) }, p: phase, h: host, g: generation, r: 0,
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
+    controller_access: settings.access,
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5, i: String(witness++), g: generation, r: 0 },
@@ -107,8 +112,14 @@ function breathSetup(command) {
   if (settings.loseSetupReply) throw Error('Simulated lost setup reply');
   return receipt;
 }
-export const operationId = () => Array.from(crypto.getRandomValues(new Uint8Array(8)),
-  value => value.toString(16).padStart(2, '0')).join('');
+export const operationId = () => {
+  window.reviewOperationCounter = (window.reviewOperationCounter ?? 0) + 1;
+  return window.reviewOperationCounter.toString(16).padStart(16, '0');
+};
+export function questEndpoint(input) {
+  if (input !== 'http://192.168.2.48:8766/v1/gateway') throw Error('Unexpected fixture endpoint');
+  return input;
+}
 export function sameQuest(a, b) {
   return Boolean(a && b && ['device', 'serial', 'epoch', 'native_epoch'].every(key => a[key] === b[key]));
 }
@@ -121,22 +132,46 @@ export async function readQuest(_peer, _signal, setup) {
     setup.onApproval();
     await new Promise(() => {});
   }
-  return { owner, endpoints: ['synthetic'] };
+  return { owner, endpoints: ['synthetic'], ...(window.reviewPairingEnabled ? { pairing: 1 } : {}) };
 }
 export async function rediscoverQuest() {
   window.reviewDiscovery?.push('bluetooth');
   return window.reviewDiscoveryState === 'ready'
-    ? { state: 'ready', owner, endpoints: ['discovered'] }
+    ? { state: 'ready', owner, endpoints: ['discovered'], ...(window.reviewPairingEnabled ? { pairing: 1 } : {}) }
     : window.reviewDiscoveryState ? { state: window.reviewDiscoveryState } : null;
 }
 export async function joinQuest({ endpoint }) {
   window.reviewDiscovery?.push(endpoint);
   if (endpoint === 'unreachable') throw Error('Simulated address change');
+  if (settings.failJoinAfterPairing && window.reviewPairing?.state === 'approved' && !settings.pairJoinFailed) {
+    settings.pairJoinFailed = true;
+    throw Error('Simulated lost reply after pairing approval');
+  }
   if (window.reviewJoin === 'wait') await new Promise(() => {});
   if (window.reviewJoin === 'fail') throw Error('Simulated connection failure');
+  const controlled = run => value => {
+    if (!canControlQuest(snapshot())) throw Error('Fixture controller is read-only while waiting');
+    return run(value);
+  };
+  const controllerAccess = value => {
+    window.reviewAccessCommands.push(structuredClone(value));
+    const access = settings.access;
+    if (value.v !== 1 || !/^[a-f0-9]{16}$/.test(value.id)
+      || value.expected_control_revision !== access.revision
+      || !['claim', 'release'].includes(value.op)
+      || value.op === 'claim' && (access.role !== 'waiting' || access.active_phone)
+      || value.op === 'release' && access.role !== 'active') {
+      return { v: 1, id: value.id, state: 'rejected' };
+    }
+    Object.assign(access, { role: value.op === 'claim' ? 'active' : 'waiting',
+      active_phone: value.op === 'claim' ? 'Fixture-Smartphone' : '', revision: access.revision + 1 });
+    return { v: 1, id: value.id, state: 'confirmed' };
+  };
   return {
-    owner: { ...owner }, initial: snapshot(), status: snapshot, command, participantArm: command, scenarioArm: command,
-    breathSetup: settings.oldApk ? null : breathSetup, recenter: command,
+    owner: { ...owner }, initial: snapshot(), status: snapshot, command: controlled(command),
+    participantArm: controlled(command), scenarioArm: controlled(command),
+    breathSetup: settings.oldApk ? null : controlled(breathSetup), recenter: controlled(command),
+    controllerAccess: settings.access ? controllerAccess : null,
     receipt: async id => settings.receiptState ? { v: 1, id, state: settings.receiptState }
       : receipts[id] ?? { v: 1, id, state: 'outcome_unknown' }, close() {},
     recordings: async () => ({ v: 1, state: 'ready', entries: [], next_before: null }),
@@ -151,6 +186,54 @@ export async function joinQuest({ endpoint }) {
       })
     })
   };
+}
+"""
+
+PAIRING = """
+// Synthetic transport only: no key generation, derivation or HTTP; tickets are fixed dummy data.
+export async function pairPhone({ endpoint, owner, signal, onCode }) {
+  signal?.throwIfAborted();
+  window.reviewPairingCalls ??= [];
+  window.reviewPairingCalls.push('begin');
+  return new Promise((resolve, reject) => {
+    let complete = false;
+    const fixture = window.reviewPairing = {
+      code: '314159', state: 'pending', phoneConfirmed: false, headsetConfirmed: false,
+      finish(state) {
+        if (complete) return;
+        if (state === 'rejected') {
+          complete = true; fixture.state = state; cleanup();
+          window.reviewPairingCalls.push('rejected');
+          reject(Error('Die Verbindung wurde im Headset abgelehnt.'));
+        } else if (state === 'approved') {
+          fixture.headsetConfirmed = true;
+          settle();
+        }
+      },
+    };
+    const cleanup = () => signal?.removeEventListener('abort', aborted);
+    const aborted = () => {
+      if (complete) return;
+      complete = true; fixture.state = 'cancelled'; cleanup();
+      window.reviewPairingCalls.push('cancelled');
+      reject(signal.reason ?? new DOMException('Abgebrochen', 'AbortError'));
+    };
+    const settle = () => {
+      if (complete || !fixture.phoneConfirmed || !fixture.headsetConfirmed) return;
+      complete = true; fixture.state = 'approved'; cleanup();
+      window.reviewPairingCalls.push('approved');
+      resolve({ ...owner, v: 1, controller: 'a'.repeat(32), key: 'b'.repeat(64) });
+    };
+    signal?.addEventListener('abort', aborted, { once: true });
+    Promise.resolve().then(() => onCode({ code: fixture.code, signal, pairingId: 'c'.repeat(32) }))
+      .then(confirmed => {
+        if (complete) return;
+        if (confirmed !== true) { aborted(); return; }
+        fixture.phoneConfirmed = true;
+        window.reviewPairingCalls.push('phone-confirmed');
+        settle();
+      }, error => { if (!complete) { complete = true; cleanup(); reject(error); } });
+  });
 }
 """
 
@@ -183,8 +266,11 @@ class Review:
             if url.netloc != "viscereality.org" or not url.path.startswith("/atmungsraum/"):
                 request_route.abort()
                 return
-            if path == "quest-gateway.js":
+            if path == "quest-gateway.js" and url.query != "review-contract=1":
                 request_route.fulfill(content_type="text/javascript", body=GATEWAY)
+                return
+            if path == "quest-pairing.js":
+                request_route.fulfill(content_type="text/javascript", body=PAIRING)
                 return
             file = (ROOT / (path or "index.html")).resolve()
             if file.is_relative_to(ROOT) and file.is_file():
@@ -684,9 +770,196 @@ def capture_accessibility(review, paired):
     page.context.close()
 
 
+INSTALLATION = "window.reviewInitialOwner={identity_kind:'app-installation',serial:''};"
+NEW_PHONE = INSTALLATION + """window.reviewPairingEnabled=true;
+  window.reviewInitialQuest={access:{v:1,role:'waiting',active_phone:'',revision:0}};"""
+
+
+def begin_pairing(page):
+    find = page.locator("#quest-find")
+    expect(find).to_be_visible()
+    find.focus()
+    find.press("Enter")
+    expect(page.locator("#quest-pairing")).to_be_visible()
+    expect(page.locator("#quest-pairing-code")).to_have_text("314159")
+    expect(page.locator("#quest-pairing-confirm")).to_be_focused()
+    expect(page.locator("#quest-pairing input, #quest-pairing select, #quest-pairing textarea")).to_have_count(0)
+    assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") is None
+
+
+def capture_phone_pairing(review):
+    page = review.page(NEW_PHONE)
+    begin_pairing(page)
+    review.shot(page, "pairing-code", "New phone · compare the six-digit code without typing", page.locator("#quest-pairing-code"), "Phone pairing")
+    page.evaluate("window.reviewPairing.finish('approved')")
+    assert page.evaluate("window.reviewPairing.state") == "pending"
+    assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") is None
+    page.keyboard.press("Tab")
+    expect(page.locator("#quest-pairing-cancel")).to_be_focused()
+    page.keyboard.press("Shift+Tab")
+    expect(page.locator("#quest-pairing-confirm")).to_be_focused()
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-pairing")).to_be_hidden()
+    expect(page.locator("#quest-pairing-code")).to_have_text("")
+    expect(page.locator("#quest-control-claim")).to_be_visible()
+    expect(page.locator("#quest-control-release")).to_be_hidden()
+    stored = page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair'))")
+    assert stored["identity_kind"] == "app-installation" and stored["serial"] == ""
+    assert page.evaluate("window.reviewPairingCalls") == ["begin", "phone-confirmed", "approved"]
+    assert page.evaluate("window.reviewAccessCommands") == []
+    review.shot(page, "pairing-approved", "Both buttons confirmed · trusted app-installation owner", page.locator("#quest-control-status"), "Phone pairing")
+    page.locator("#quest-control-claim").focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-participant")).to_be_visible()
+    expect(page.locator("#quest-control-release")).to_be_visible()
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
+    page.context.close()
+
+    page = review.page(NEW_PHONE)
+    begin_pairing(page)
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-pairing-confirm")).to_be_disabled()
+    expect(page.locator("#quest-status")).to_contain_text("Warte auf die Freigabe im Headset")
+    assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") is None
+    review.shot(page, "pairing-headset-wait", "Phone confirmed · headset approval still required", page.locator("#quest-pairing-code"), "Phone pairing")
+    page.locator("#quest-pairing-cancel").focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-pairing")).to_be_hidden()
+    expect(page.locator("#quest-pairing-code")).to_have_text("")
+    expect(page.locator("#quest-find")).to_be_visible()
+    expect(page.locator("#quest-find")).to_be_focused()
+    assert page.evaluate("window.reviewPairing.state") == "cancelled"
+    assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") is None
+    review.shot(page, "pairing-cancelled", "Phone cancels · no membership saved", page.locator("#quest-find"), "Phone pairing")
+    page.context.close()
+
+    page = review.page(NEW_PHONE)
+    begin_pairing(page)
+    page.evaluate("window.reviewPairing.finish('rejected')")
+    expect(page.locator("#quest-pairing")).to_be_hidden()
+    expect(page.locator("#quest-status")).to_contain_text("im Headset abgelehnt")
+    expect(page.locator("#quest-find")).to_be_focused()
+    assert page.evaluate("localStorage.getItem('atmungsraum-quest-pair')") is None
+    review.shot(page, "pairing-rejected", "Headset rejects · code cleared and retry available", page.locator("#quest-status"), "Phone pairing")
+    page.context.close()
+
+    page = review.page(NEW_PHONE + "window.reviewInitialQuest.failJoinAfterPairing=true;")
+    begin_pairing(page)
+    page.evaluate("window.reviewPairing.finish('approved')")
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-status")).to_contain_text("lost reply after pairing approval")
+    saved = page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair'))")
+    assert saved["enrollment"] == {"controller": "a" * 32, "key": "b" * 64}
+    review.shot(page, "pairing-join-retry", "Approved membership survives a lost first connection reply", page.locator("#quest-find"), "Phone pairing")
+    page.locator("#quest-find").focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#quest-control-claim")).to_be_visible()
+    assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).enrollment") == saved["enrollment"]
+    assert page.evaluate("window.reviewPairingCalls") == ["begin", "phone-confirmed", "approved"]
+    assert page.evaluate("window.reviewAccessCommands") == []
+    review.shot(page, "pairing-join-recovered", "Retry reuses the approved membership without a second pairing", page.locator("#quest-control-status"), "Phone pairing")
+    page.context.close()
+
+
+def capture_controller_access(review):
+    paired = """localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({
+      endpoint:'synthetic',device:'d'.repeat(32),serial:'',identity_kind:'app-installation',
+      enrollment:{controller:'a'.repeat(32),key:'b'.repeat(64)}}));"""
+    initial = INSTALLATION + paired + """window.reviewInitialQuest={polar:'ready',
+      access:{v:1,role:'waiting',active_phone:'Anderes Smartphone',revision:4}};
+      window.reviewInitialSetup={r:2,input:'polar-tilt',ready:true,calibration:'ready',attempt:1,
+        target_frames:1411200,completed_frames:1411200,input_phase:'hold',input_volume01:.5};"""
+    page = review.page(initial + "window.reviewInitialQuest.access.active_phone='';")
+    expect(page.locator("#quest-control-status")).to_contain_text("Steuerung ist frei")
+    page.clock.run_for(2100)
+    expect(page.locator("#quest-control-claim")).to_be_visible()
+    expect(page.locator("#quest-participant")).to_be_hidden()
+    assert page.evaluate("window.reviewAccessCommands") == []
+    assert page.evaluate("window.reviewQuest.access.role") == "waiting"
+    review.shot(page, "control-saved-free", "Saved phone reconnects · a free lease still needs explicit claim", page.locator("#quest-control-claim"), "Controller access")
+    page.context.close()
+    page = review.page(initial)
+    status = page.locator("#quest-control-status")
+    claim = page.locator("#quest-control-claim")
+    release = page.locator("#quest-control-release")
+    expect(status).to_contain_text("Anderes Smartphone steuert die Quest")
+    expect(page.locator("#quest-participant")).to_be_hidden()
+    expect(page.locator("#quest-polar")).to_be_hidden()
+    expect(page.locator("#recenter-vr")).to_have_attribute("aria-disabled", "true")
+    expect(release).to_be_hidden()
+    expect(claim).to_be_disabled()
+    review.shot(page, "control-waiting", "Trusted phone waits · experiment controls stay unavailable", status, "Controller access")
+    assert page.evaluate("window.reviewAccessCommands") == []
+    assert page.evaluate("window.reviewQuest.access.revision") == 4
+    wait_state(page, access={"v": 1, "role": "waiting", "active_phone": "", "revision": 5})
+    expect(status).to_contain_text("Steuerung ist frei")
+    expect(claim).to_be_enabled()
+    review.shot(page, "control-free", "Previous phone released · explicit claim available", claim, "Controller access")
+    claim.focus()
+    claim.press("Enter")
+    expect(status).to_have_text("Dieses Smartphone steuert die Quest.")
+    expect(page.locator("#patient-fields")).to_be_enabled()
+    expect(release).to_be_visible()
+    review.shot(page, "control-claimed", "Trusted phone claims the free controller lease", status, "Controller access")
+    enter_participant(page)
+    expect(page.locator("#breathing-preview")).to_be_visible()
+    expect(page.locator("#preview-control-host #quest-control-access")).to_be_visible()
+    expect(page.locator("#quest-control-host")).to_be_hidden()
+    expect(page.locator("#preview-continue")).to_be_enabled()
+    review.shot(page, "control-preview-host", "Controller release remains reachable on the breathing preview", release, "Controller access")
+    before = page.evaluate("({g:reviewQuest.setup.g,position:reviewQuest.setup.position_frames})")
+    release.focus()
+    release.press("Enter")
+    expect(claim).to_be_visible()
+    expect(page.locator("#preview-continue")).to_be_disabled()
+    expect(page.locator("#preview-calibrate")).to_be_disabled()
+    expect(page.locator("#preview-controller")).to_be_disabled()
+    review.shot(page, "control-preview-released", "Preview releases control · native clock and input stay intact", claim, "Controller access")
+    claim.focus()
+    claim.press("Enter")
+    expect(release).to_be_visible()
+    expect(page.locator("#preview-continue")).to_be_enabled()
+    assert before == page.evaluate("({g:reviewQuest.setup.g,position:reviewQuest.setup.position_frames})")
+    assert page.evaluate("window.reviewQuest.commands ?? []") == []
+    assert page.evaluate("window.reviewSetupCommands") == []
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim", "release", "claim"]
+    page.context.close()
+
+    for slug, viewport, text_size in (
+        ("390", VIEWPORT, ""),
+        ("320", {"width": 320, "height": 568}, ""),
+        ("200-text", {"width": 320, "height": 568}, "200%"),
+    ):
+        page = review.page(NEW_PHONE, viewport=viewport)
+        begin_pairing(page)
+        page.locator("#quest-pairing-confirm [data-measure]").evaluate(
+            "node => node.textContent='Der sechsstellige Code stimmt mit dem angezeigten Code im Headset überein'")
+        page.evaluate("value => document.documentElement.style.fontSize=value", text_size)
+        page.clock.run_for(200)
+        review.shot(page, f"pairing-{slug}", f"Pairing {slug} · full code and long confirmation label", page.locator("#quest-pairing-code"), "Pairing accessibility")
+        page.locator("#quest-pairing-cancel").focus()
+        page.keyboard.press("Enter")
+        expect(page.locator("#quest-find")).to_be_focused()
+        page.context.close()
+
+        page = review.page(initial, viewport=viewport)
+        expect(status := page.locator("#quest-control-status")).to_be_visible()
+        wait_state(page, access={"v": 1, "role": "waiting", "revision": 4,
+                                "active_phone": "Studienleitung mit sehr langem Gerätenamen für diese Übergabe"})
+        page.evaluate("value => document.documentElement.style.fontSize=value", text_size)
+        page.clock.run_for(200)
+        review.shot(page, f"control-{slug}", f"Waiting controller {slug} · long active-phone label", status, "Pairing accessibility")
+        expect(page.locator("#patient-fields")).to_have_js_property("disabled", True)
+        expect(page.locator("#patient-surname")).to_be_disabled()
+        expect(page.locator("#recenter-vr")).to_have_attribute("aria-disabled", "true")
+        page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
+    parser.add_argument("--scope", choices=("all", "pairing", "control"), default="all",
+                        help="Full suite, new-phone pairing, or controller-access screens")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True)
@@ -695,10 +968,15 @@ def main():
         browser = playwright.chromium.launch()
         chromium = browser.version
         review = Review(browser, output)
-        capture(review)
-        paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
-        capture_setup_recovery(review, paired)
-        capture_accessibility(review, paired)
+        if args.scope == "all":
+            capture(review)
+            paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+            capture_setup_recovery(review, paired)
+            capture_accessibility(review, paired)
+        if args.scope in ("all", "pairing"):
+            capture_phone_pairing(review)
+        if args.scope in ("all", "control"):
+            capture_controller_access(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")

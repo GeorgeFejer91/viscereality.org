@@ -13,6 +13,24 @@ const toHex = (bytes) => Array.from(bytes, (byte) => byte.toString(16).padStart(
 const fromBase64 = (value) => Uint8Array.from(atob(value), (byte) => byte.charCodeAt(0));
 export const operationId = () => toHex(crypto.getRandomValues(new Uint8Array(8)));
 
+export function controllerAccessState(status) {
+  const access = status?.controller_access;
+  if (access === undefined) return null;
+  if (!access || Object.keys(access).sort().join(',') !== 'active_phone,revision,role,v'
+    || access.v !== 1 || !['active', 'waiting'].includes(access.role)
+    || typeof access.active_phone !== 'string' || access.active_phone.length > 64
+    || access.role === 'active' && !access.active_phone
+    || /[\x00-\x1f\x7f]/.test(access.active_phone)
+    || !Number.isSafeInteger(access.revision) || access.revision < 0) {
+    throw Error('Die Quest hat keine gültige Steuerungsfreigabe gemeldet.');
+  }
+  return access;
+}
+export function canControlQuest(status) {
+  try { return controllerAccessState(status)?.role !== 'waiting'; }
+  catch { return false; }
+}
+
 export function questEndpoint(input) {
   const candidate = input.trim();
   const match = /^(?:http:\/\/)?((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?::8766\/v1\/gateway)?$/.exec(candidate);
@@ -26,16 +44,19 @@ export function questEndpoint(input) {
 }
 
 function identity(raw) {
-  if (raw?.v !== 1 || !hex32.test(raw.device) || !serialPattern.test(raw.serial)
+  const installation = raw?.v === 2 && raw.identity_kind === 'app-installation';
+  if (!(raw?.v === 1 || installation) || !hex32.test(raw.device)
+    || typeof raw.serial !== 'string' || !(serialPattern.test(raw.serial) || installation && raw.serial === '')
     || typeof raw.epoch !== 'string' || !positive.test(raw.epoch)
     || typeof raw.native_epoch !== 'string' || !positive.test(raw.native_epoch)) {
     throw Error('Die Quest hat keine gültige Verbindungskennung gemeldet.');
   }
-  return { device: raw.device, serial: raw.serial, epoch: raw.epoch, native_epoch: raw.native_epoch };
+  return { device: raw.device, serial: raw.serial, epoch: raw.epoch, native_epoch: raw.native_epoch,
+    ...(installation ? { identity_kind: 'app-installation' } : {}) };
 }
 
 export function sameQuest(left, right) {
-  return Boolean(left && right && ['device', 'serial', 'epoch', 'native_epoch'].every((key) => left[key] === right[key]));
+  return Boolean(left && right && ['device', 'serial', 'identity_kind', 'epoch', 'native_epoch'].every((key) => left[key] === right[key]));
 }
 
 function hotspotCredentials(hotspot, enrollment) {
@@ -149,17 +170,18 @@ export async function readQuest(device, lifetime, setup) {
 function discoveryMetadata(metadata, serial, expected) {
   const owner = identity(metadata);
   if (metadata.mode !== 'remote' || owner.serial !== serial || !Array.isArray(metadata.gateways)
-    || metadata.gateways.length > 4) {
+    || metadata.gateways.length > 4 || metadata.v === 2 && metadata.pairing !== 1) {
     throw Error('Die Quest hat ungültige Bluetooth-Suchdaten gemeldet.');
   }
   if (expected?.serial && owner.serial !== expected.serial || expected?.device && owner.device !== expected.device) {
     throw Error('Die gewählte Quest passt nicht zur gespeicherten Verbindung.');
   }
-  return { owner, endpoints: metadata.gateways.map(questEndpoint) };
+  return { owner, endpoints: metadata.gateways.map(questEndpoint), ...(metadata.v === 2 ? { pairing: 1 } : {}) };
 }
 
 export async function rediscoverQuest(settings, signal, fetcher = fetch) {
-  if (!hex32.test(settings.device ?? '') || !serialPattern.test(settings.serial ?? '')) return null;
+  if (!hex32.test(settings.device ?? '') || !(typeof settings.serial === 'string' && serialPattern.test(settings.serial)
+    || settings.identity_kind === 'app-installation' && settings.serial === '')) return null;
   let response;
   try {
     response = await fetcher('http://127.0.0.1:8767/v1/quest/' + settings.device, {
@@ -180,7 +202,11 @@ export async function rediscoverQuest(settings, signal, fetcher = fetch) {
 }
 
 async function readJson(response) {
-  if (!response.ok || !response.body) throw Error('Die Quest-Verbindung wurde abgelehnt.');
+  if (!response.ok || !response.body) {
+    const error = Error('Die Quest-Verbindung wurde abgelehnt.');
+    error.status = response.status;
+    throw error;
+  }
   const reader = response.body.getReader();
   const buffer = new Uint8Array(65536);
   let length = 0;
@@ -196,9 +222,11 @@ async function readJson(response) {
   } finally { await reader.cancel().catch(() => {}); }
 }
 
-export async function joinQuest({ endpoint, serial, device, build, discovery, enrollment, signal, fetcher = fetch }) {
+export async function joinQuest({ endpoint, serial, device, identity_kind, build, discovery, enrollment, signal, fetcher = fetch }) {
   const url = questEndpoint(endpoint);
-  if (!serialPattern.test(serial) || (build === undefined ? !enrollment : !hex64.test(build))) {
+  const installation = identity_kind === 'app-installation' || discovery?.identity_kind === 'app-installation';
+  if (!(typeof serial === 'string' && serialPattern.test(serial) || installation && serial === '')
+    || (build === undefined ? !enrollment : !hex64.test(build))) {
     throw Error('Die Einstellungen für die Quest sind ungültig.');
   }
   if (enrollment && (!hex32.test(enrollment.controller) || !hex64.test(enrollment.key))) {
@@ -215,7 +243,8 @@ export async function joinQuest({ endpoint, serial, device, build, discovery, en
   try {
     const raw = await fetchJson();
     const owner = identity(raw);
-    if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial || device && owner.device !== device
+    if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial
+      || installation && owner.identity_kind !== 'app-installation' || device && owner.device !== device
       || discovery && !sameQuest(owner, discovery)) throw Error('Quest oder Fernmodus stimmt nicht mit der Auswahl überein.');
     const ticket = enrollment ?? await fetchJson({ v: 1, action: 'connect', device: owner.device, epoch: owner.epoch });
     if (!enrollment && (ticket.v !== 1 || ticket.device !== owner.device || ticket.epoch !== owner.epoch
@@ -256,6 +285,7 @@ export async function joinQuest({ endpoint, serial, device, build, discovery, en
       return JSON.parse(decode.decode(clear));
     };
     let witness = 0n;
+    let observedStatus;
     const status = async () => {
       const value = await exchange('status', {});
       const observation = value?.o;
@@ -274,6 +304,9 @@ export async function joinQuest({ endpoint, serial, device, build, discovery, en
         throw Error('Kein aktueller Status der Quest verfügbar.');
       }
       witness = BigInt(observation.i);
+      const access = controllerAccessState(value);
+      if (owner.identity_kind === 'app-installation' && !access) throw Error('Die Quest hat keine aktuelle Steuerungsfreigabe gemeldet.');
+      observedStatus = value;
       return value;
     };
     const initial = await status();
@@ -288,12 +321,18 @@ export async function joinQuest({ endpoint, serial, device, build, discovery, en
         armKey = await crypto.subtle.importKey('raw', armBytes, 'AES-GCM', false, ['encrypt']);
       }
     }
-    return { owner, initial, status, command: (command, requestSignal) => exchange('command', command, requestSignal),
-      participantArm: armKey ? (command, requestSignal) => exchange('participant-arm', command, requestSignal) : null,
-      scenarioArm: enrollment ? (command, requestSignal) => exchange('scenario-arm', command, requestSignal) : null,
+    const controlled = (action, body, requestSignal) => {
+      if (!canControlQuest(observedStatus)) throw Error('Ein anderes Smartphone steuert die Quest. Übernimm zuerst die Steuerung.');
+      return exchange(action, body, requestSignal);
+    };
+    return { owner, initial, status, command: (command, requestSignal) => controlled('command', command, requestSignal),
+      participantArm: armKey ? (command, requestSignal) => controlled('participant-arm', command, requestSignal) : null,
+      scenarioArm: enrollment ? (command, requestSignal) => controlled('scenario-arm', command, requestSignal) : null,
       breathSetup: enrollment && initial.breath_setup === 1
-        ? (command, requestSignal) => exchange('breath-setup', command, requestSignal) : null,
-      recenter: enrollment ? (command, requestSignal) => exchange('recenter', command, requestSignal) : null,
+        ? (command, requestSignal) => controlled('breath-setup', command, requestSignal) : null,
+      recenter: enrollment ? (command, requestSignal) => controlled('recenter', command, requestSignal) : null,
+      controllerAccess: enrollment && controllerAccessState(initial)
+        ? (command, requestSignal) => exchange('controller-access', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,
       recordings: ecgKey && initial.recordings === 1 ? (query, requestSignal) => exchange('recordings', query, requestSignal) : null,
       receipt: (id) => exchange('receipt', { id }), close: () => lifetime.abort() };

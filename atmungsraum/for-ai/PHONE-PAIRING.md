@@ -1,0 +1,178 @@
+# Phone pairing and control
+
+User decisions, 2026-11-15: Remote advertises public read-only Bluetooth
+discovery. A saved phone authenticates directly; a new phone requests pairing.
+Both devices show a matching code and confirm using buttons, without headset
+typing. Keep several independently revocable phone memberships and exactly one
+active experiment controller. New-phone setup must not require a laptop, USB,
+manually generated QR or entry of credentials. This is part of PROJECT.md's
+active Quest acceptance work, not a separate lifecycle.
+
+## Identity and transport
+
+New opt-in `experiment_phone_pairing_enabled` defaults off for other products.
+Selected public discovery/identity is v2 with `identity_kind: app-installation`.
+`device` remains the stable random installation ID; `serial` is the actual
+hardware serial when available and otherwise empty. Never substitute an app ID
+for a hardware serial. V1 retains its nonempty hardware-serial contract.
+Discovery metadata is `{v:2,identity_kind,device,serial,epoch,native_epoch,
+mode:remote,gateways,pairing:1}`. Hardware identity provisioning remains a
+separate optional machine-verification route.
+
+Bluetooth supplies only discovery. Pairing uses the existing private-LAN HTTP
+adapter with its peer, Origin, size, queue and timeout checks. The public
+pairing operations grant no experiment commands, private data or member-list
+access. Unknown users cannot claim active control.
+Selected mode rejects public writes and queued effects through the legacy BLE
+command service, including valid old pairing-code commands. Its internal
+carrier/receipt journal and bounded nonprivate health reads remain available;
+other unselected products keep their existing behavior.
+
+The Developer app starts with its panel closed. Only a verified incoming
+pairing request opens the wearer approval prompt. Allow/Reject, phone
+cancellation and expiry restore that prompt's own opening; they cannot undo a
+later manual visibility change. Triple-B still opens the regular app panel.
+
+## Pairing wire contract
+
+The pairing handshake is **v2 only**, with no fallback to the original
+uncommitted v1 exchange. Discovery's `pairing:1` is a capability flag; the
+ordinary authenticated command gateway remains a separate v1 protocol.
+Pairing `v` is the exact JSON integer 2. `epoch` and `native_epoch` are canonical
+positive decimal strings within signed 64-bit range. Every message has exactly
+the documented fields. Public keys are canonical named-P-256, uncompressed-point
+SPKI DER, encoded as unpadded canonical base64url (91 DER bytes). **Both nonces
+are 16 random bytes encoded as base64url, exactly 22 characters**, never hex.
+Pairing IDs are 16 random bytes encoded as 32 lower-case hex characters.
+Commitments and HMAC proofs are 32 bytes encoded as 64 lower-case hex characters.
+No private key leaves its side.
+
+The ordered hash commitment follows the anti-grinding principle described in
+[RFC 6189 section 4.4.1.1](https://www.rfc-editor.org/rfc/rfc6189.html#section-4.4.1.1)
+and [section 7](https://www.rfc-editor.org/rfc/rfc6189.html#section-7).
+This is a fixed-suite pairing protocol using that ordering, not ZRTP. An
+uncommitted short code permits an intermediary to choose keys or nonce values
+after learning both peers' contributions and search offline for matching codes.
+Here the phone fixes and hides **both** its fresh public key and nonce before
+the headset chooses its response; the headset freezes its own public key,
+nonce and pairing ID before learning that opening. The phone pins its first
+validated reply. Neither side may replace a contribution during a request.
+
+Let `N = base64url(UTF8(phone_name))`, without normalization. Phone names are
+nonempty, trimmed display labels of at most 64 UTF-16 code units / 128 UTF-8
+bytes, without controls, format characters or unpaired surrogates. Names are
+never authority claims. Encoding the name makes the following `|` delimiters
+unambiguous. Define exact canonical strings:
+
+```text
+C = device|serial|identity_kind|epoch|native_epoch|N
+commitment_input = RQ-PHONE-PAIR-2/commit|C|client_nonce|client_public_key
+client_commitment = lower_hex(SHA256(UTF8(commitment_input)))
+T = RQ-PHONE-PAIR-2|C|pairing_id|client_commitment|client_nonce|server_nonce|client_public_key|server_public_key
+```
+
+1. The phone generates its ephemeral P-256 key and nonce, computes the
+   commitment, and sends exactly `{v:2,action:"pair-begin",device,serial,
+   identity_kind,epoch,native_epoch,phone_name,client_commitment}`. It sends
+   neither its key nor its nonce. The headset validates the complete owner
+   context, stores the frozen commitment/name/context, then generates and
+   freezes its own ephemeral key, nonce and ID. Reply:
+   `{v:2,device,epoch,native_epoch,pairing_id,client_commitment,
+   server_public_key,server_nonce,expires_in_ms}`. No matching code or headset
+   prompt exists at this stage.
+2. The phone validates identity/epochs, commitment echo, canonical key/nonce
+   and expiry, pins the reply and derives the keys below using `T`. It sends
+   exactly `{v:2,action:"pair-reveal",device,epoch,native_epoch,pairing_id,
+   client_public_key,client_nonce,proof}`. The headset validates the canonical
+   opening and equality with the **original** commitment, then derives the
+   same keys and checks the action-specific proof. A mismatched opening or
+   valid-shaped wrong reveal proof irreversibly fails the request. Early
+   confirmation/status cannot bypass the reveal. Only a verified reveal
+   enables the headset prompt and returns `{v:2,pairing_id,state:"pending"}`;
+   only then may the phone call its matching-code UI. An exact duplicate
+   reveal is idempotent and never resets the original deadline or SAS.
+3. `pair-confirm`, `pair-status`, `pair-cancel` requests are exactly
+   `{v:2,action,device,epoch,native_epoch,pairing_id,proof}`. Proof for every
+   authenticated action, including reveal, is
+   `lower_hex(HMAC-SHA256(PROOF, UTF8(T + "|" + action)))`. A reveal is
+   possession proof, never either user's approval. Both actual buttons are
+   still required before storage or a credential ticket.
+
+HKDF-SHA256 uses salt `SHA256(UTF8(T))` and the 32-byte ECDH secret as input.
+RFC 5869 extract/expand derives independent 32-byte keys with infos
+`RQ-PHONE-PAIR-2/SAS`, `RQ-PHONE-PAIR-2/AEAD`, `RQ-PHONE-PAIR-2/PROOF`.
+The displayed six digits are the unsigned big-endian first four SAS bytes
+modulo 1,000,000, zero padded. Code comparison remains a human authentication
+step, with a small per-attempt guessing probability; it is not cryptographic
+proof by itself.
+
+Status is exactly `{v:2,pairing_id,state}` and, only when approved, `iv` and
+`data`. States are `pending`, `approved`, `cancelled`, `rejected`, `expired`,
+`failed`; the internal pre-opening state is never a public prompt. Credentials
+are AES-256-GCM encrypted with a fresh 12-byte IV, 128-bit tag and AAD
+`UTF8("RQ-PHONE-PAIR-2/result|" + T)`. `iv` and ciphertext/tag `data` are
+canonical base64url. Clear result contains exactly
+`{v:2,controller,key,device,serial,identity_kind,epoch,native_epoch}`. The phone
+checks every identity/epoch and saves that approved membership before joining,
+so a lost subsequent gateway reply does not orphan the approved phone key.
+It requires a matching authenticated gateway response before exposing control
+or private data. A cancelled phone may send an authenticated cancel
+after the reveal; an unopened commitment simply expires if the opening was
+never delivered.
+
+Require both confirmations before membership persists or a ticket is emitted.
+Allow at most one in-progress commitment or pending request, with the same
+120-second deadline starting at begin. Bound each live owner to four begin
+attempts and 180 total exchanges per 60-second window and at most eight retained
+results. Invalid requests also consume the applicable request budget. Reject
+new pairing during a main recording or calibration.
+Wrong keys/proofs, retirement, expiration, rejection, cancellation or malformed
+requests cannot store membership. Keep approved-result retries idempotent until
+expiry. No secret-bearing result in ordinary logs, public status or discovery.
+
+## Membership and active control
+
+Persist up to eight distinct members atomically with independent random keys
+and bounded labels. Reconnecting never rotates unrelated members. Migrate a
+valid existing legacy enrollment when this product opts in. A revoked phone
+cannot reuse a cached protocol. Membership and native-owner retirement are
+separate lifetimes.
+
+Authenticated status reports `controller_access` with version, active/waiting
+role, bounded active-phone label and monotonic revision. The first trusted
+phone can claim an unowned/expired 15-second lease; only that phone's
+authenticated status renews it. Other trusted phones wait. A release/claim
+uses the enrolled `controller-access` action and closed payload
+`{v:1,id,op,expected_control_revision}`, where op is `claim` or `release`.
+Reconnecting a saved membership never claims control; the phone's Claim button
+is an explicit separate action and stays disabled while another phone owns it.
+An alive owner is not silently replaced. A disconnected controller does not
+erase or finalize a running recording. Explicit handover retires deferred
+mutations from the old controller; it does not replay them under a new owner.
+Keep existing runtime/generation/replay fences in addition to the control lease.
+
+Expose saved-phone removal and active-control release in the headset panel.
+Phone UI shows when another controller owns control and offers the appropriate
+claim/release action; it cannot falsely enable experiment mutations while
+waiting. Read-only status and discovery remain separate from control authority.
+
+## Verification
+
+Require cross-runtime Java/WebCrypto interoperability, malformed/foreign key
+and proof rejection, both confirmation orders, expiry/reject/cancel/retirement,
+atomic persistence failure and capacity checks. Test independent membership,
+revocation, stale protocol invalidation, one active writer, renewal, release,
+reclaim, stale revision and deferred-start retirement. Verify actual package
+closure/signature/installed bytes and cold start, real Bluetooth advertisement,
+first phone pairing, remembered reconnect and the calibration flow on Quest 2.
+Keep software, synthetic-browser and wearer acceptance evidence distinct.
+
+The focused native gate `tools/checks/Test-ExperimentPhonePairing.ps1` accepts
+`-WebTest <web-repo>/atmungsraum/tests/quest-pairing.test.mjs`. That mode compiles
+the real Java owner and uses a synthetic stdin host to execute the browser's
+unchanged WebCrypto begin/reveal/confirm/status/decrypt flow against it, in both
+approval orders. It also tests mutated commitments/openings/proofs and ordering
+before either UI, plus the browser's 8192-byte streaming response limit. The
+Java test `--serve` harness and optional `--vector` output contain only synthetic
+host data and are not packaged. A derived-key fixture alone is insufficient
+wire interoperability evidence.

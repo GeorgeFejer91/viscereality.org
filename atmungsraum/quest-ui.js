@@ -1,9 +1,11 @@
-import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest } from './quest-gateway.js?v=9';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=20';
+import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
+  controllerAccessState } from './quest-gateway.js?v=10';
+import { pairPhone } from './quest-pairing.js?v=1';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=21';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=25';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=2';
+import { BreathingSetup } from './breathing-setup.js?v=3';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -42,6 +44,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewAcknowledge = byId('preview-acknowledge');
   const find = byId('quest-find');
   const statusText = byId('quest-status');
+  const pairing = byId('quest-pairing');
+  const pairingCode = byId('quest-pairing-code');
+  const pairingConfirm = byId('quest-pairing-confirm');
+  const pairingCancel = byId('quest-pairing-cancel');
+  const controlPanel = byId('quest-control-access');
+  const controlStatus = byId('quest-control-status');
+  const controlClaim = byId('quest-control-claim');
+  const controlRelease = byId('quest-control-release');
+  let pairingChoice = null;
   const clock = byId('quest-clock');
   const recenter = byId('recenter-vr');
   const recenterNote = byId('recenter-vr-note');
@@ -96,7 +107,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const active = Boolean(status?.rec);
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
-    const waiting = Boolean(connecting || userAction || busy || pending || status?.pending || breathing.busy || breathing.pending);
+    const access = controllerAccessState(status);
+    const waitingForControl = access?.role === 'waiting';
+    const commandWaiting = Boolean(connecting || userAction || busy || pending || status?.pending || breathing.busy || breathing.pending);
+    const waiting = waitingForControl || commandWaiting;
+    controlPanel.hidden = !access;
+    controlClaim.hidden = !waitingForControl;
+    controlRelease.hidden = access?.role !== 'active';
+    controlClaim.disabled = controlRelease.disabled = Boolean(connecting || userAction || busy || pending || unknown || status?.pending || breathing.pending);
+    if (waitingForControl && access.active_phone) controlClaim.disabled = true;
+    text(controlStatus, waitingForControl ? (access.active_phone
+      ? `${access.active_phone} steuert die Quest. Warte auf die Freigabe.` : 'Die Quest-Steuerung ist frei.')
+      : 'Dieses Smartphone steuert die Quest.');
     const recenterAvailable = Boolean(rehearsal.gateway?.recenter && canRecenter(status) && !waiting && !unknown);
     recenter.hidden = !status;
     recenter.setAttribute('aria-disabled', String(!recenterAvailable));
@@ -105,11 +127,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const connectingFocus = document.activeElement === find;
     const hadFinishFocus = document.activeElement === finish;
     if (status && !connecting) joinMessage = '';
-    find.hidden = Boolean(status);
+    find.hidden = Boolean(status || pairingChoice);
     find.setAttribute('aria-disabled', String(Boolean(connecting)));
     const hint = !status ? (savedPair?.enrollment && autoConnect
       ? 'Warte auf die gespeicherte Quest.'
       : 'Starte die Quest im Fernmodus und schalte Bluetooth am Smartphone ein.')
+      : waitingForControl ? (access.active_phone ? 'Ein anderes Smartphone steuert die Quest.' : 'Übernimm die Quest-Steuerung auf diesem Smartphone.')
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : !rehearsalPolarAllowed(status) ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
       : requiresParticipant && !armedWithParticipant ? 'Dieses Smartphone ist für den Probelauf noch nicht freigegeben.'
@@ -119,7 +142,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
-      : connecting ? 'Quest wird verbunden …' : waiting ? 'Warte auf Bestätigung der Quest …' : message || hint));
+      : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …' : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     clock.hidden = !status;
     if (status) {
@@ -138,8 +161,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const showPreview = idle && (participantComplete || recoveringSetup) && (setupComplete || !preview.hidden || breath.setup?.attempt > 0 || recoveringSetup)
       && !previewAccepted && status.h === 'vr-preparation'
       && rehearsalPolarAllowed(status) && !unknown && (!waiting || !preview.hidden || recoveringSetup);
+    byId('quest-control-host').hidden = !access || showPreview;
+    byId('preview-control-host').hidden = !access || !showPreview;
+    const controlHost = byId(showPreview ? 'preview-control-host' : 'quest-control-host');
+    if (access && controlPanel.parentElement !== controlHost) controlHost.append(controlPanel);
     paintBreathingSetup(breath, waiting);
-    const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active;
+    const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active && !waitingForControl;
     if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
       statusText.focus({ preventScroll: true });
     }
@@ -148,7 +175,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     participantSubmit.disabled = participantFields.disabled;
     text(participantLabel, participantId ? `Teilnehmer-ID: ${participantId}` : 'Teilnehmer-ID eingeben');
     const hadPolarFocus = document.activeElement === polarConnect;
-    polar.hidden = status?.p !== 'IDLE' || active;
+    polar.hidden = status?.p !== 'IDLE' || active || waitingForControl;
     text(polarStatus, !setup ? 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.'
       : !setup.p ? 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.'
       : !setup.b ? 'Schalte Bluetooth auf der Quest ein.'
@@ -182,7 +209,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     finish.disabled = waiting || unknown || !actions.finish;
     acknowledge.hidden = !rehearsal.canAcknowledgeIdle();
     acknowledge.disabled = busy;
-    disconnect.hidden = !status || active || Boolean(connecting || userAction || busy);
+    disconnect.hidden = !status || active && !waitingForControl || Boolean(connecting || userAction || busy);
     if (!idleForSync(rehearsal.state)) {
       exportAttempt?.abort();
       nextSync = 0;
@@ -489,7 +516,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       const selection = chooseDevice ? selectQuest(navigator.bluetooth) : null;
       paint();
       const join = (endpoint, discovery) => joinQuest({ endpoint, serial: discovery?.owner.serial ?? settings.serial,
-        device: settings.device, build: chooseDevice ? undefined : settings.build,
+        identity_kind: discovery?.owner.identity_kind ?? settings.identity_kind,
+        device: discovery?.owner.device ?? settings.device, build: chooseDevice || discovery ? undefined : settings.build,
         enrollment: settings.enrollment, discovery: discovery?.owner, signal });
       let peer = selection ? await selection : null;
       let gateway;
@@ -505,7 +533,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           const allowed = await navigator.bluetooth?.getDevices?.() ?? [];
           peer = allowed.find(device => device.id === settings.bluetoothId);
         }
-        const discovery = peer ? await readQuest(peer, signal, setup)
+        const discovery = peer ? await readQuest(peer, signal, chooseDevice ? {} : setup)
           : await rediscoverQuest(settings, signal);
         if (discovery?.state && discovery.state !== 'ready') {
           discoveryInProgress = true;
@@ -517,18 +545,39 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           return;
         }
         if (!discovery) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
-        if (!settings.enrollment) {
-          throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
-        }
+        let pairedThisAttempt = false;
+        const pairNewPhone = async () => {
+          if (!chooseDevice || discovery.pairing !== 1) throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
+          const candidate = discovery.endpoints[0];
+          if (!candidate) throw Error('Verbinde Quest und Smartphone mit demselben WLAN.');
+          const ticket = await pairPhone({ endpoint: candidate, owner: discovery.owner, signal,
+            onCode: prompt => showPairingCode(prompt, attempt) });
+          signal.throwIfAborted();
+          pairedThisAttempt = true;
+          settings = { ...discovery.owner, endpoint: candidate, bluetoothId: peer?.id,
+            hotspot: settings.device === discovery.owner.device ? settings.hotspot : undefined,
+            enrollment: { controller: ticket.controller, key: ticket.key } };
+          // Human approval already created this independent membership. Preserve
+          // it if the following authenticated status request loses its reply.
+          rememberPair(settings);
+        };
+        if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
+        let authenticationRejected = false;
         for (const candidate of discovery.endpoints) {
           endpoint = candidate;
           try { gateway = await join(endpoint, discovery); break; }
           catch (error) {
             signal.throwIfAborted();
+            authenticationRejected ||= error?.status === 403;
             joinMessage = error.message;
           }
         }
-        if (!gateway && peer && settings.hotspot) {
+        if (!gateway && authenticationRejected && !pairedThisAttempt && chooseDevice && discovery.pairing === 1) {
+          await pairNewPhone();
+          endpoint = discovery.endpoints[0];
+          gateway = await join(endpoint, discovery);
+        }
+        if (!gateway && peer && settings.hotspot && settings.device === discovery.owner.device) {
           const hotspot = await readQuest(peer, signal, { ...setup, ...discovery.owner, forceHotspot: true });
           endpoint = hotspot.endpoints[0];
           gateway = await join(endpoint, hotspot);
@@ -540,6 +589,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         resetPreview();
       }
       rememberPair({ serial: gateway.owner.serial, device: gateway.owner.device,
+        ...(gateway.owner.identity_kind ? { identity_kind: gateway.owner.identity_kind } : {}),
         build: gateway.initial.build.packaging_fingerprint, enrollment: settings.enrollment, hotspot: settings.hotspot,
         bluetoothId: peer?.id ?? settings.bluetoothId, endpoint });
       if (peer) rememberedDevice = peer;
@@ -559,11 +609,52 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           ? 'Quest nicht erreichbar. Prüfe Bluetooth, WLAN und den Fernmodus.'
           : error?.name === 'Error' ? error.message : 'Die Quest konnte nicht verbunden werden.';
     } finally {
+      let restorePairingFocus = false;
+      if (pairingChoice?.attempt === attempt) {
+        restorePairingFocus = pairing.contains(document.activeElement) || document.activeElement === document.body;
+        pairingChoice = null;
+        pairing.hidden = true;
+        text(pairingCode, '');
+      }
       if (connecting === attempt) {
         nextConnect = discoveryInProgress ? 0 : performance.now() + 8000;
         connecting = null;
         paint();
+        if (restorePairingFocus && !document.hidden) {
+          if (!rehearsal.state.status) find.focus({ preventScroll: true });
+          else if (preview.hidden) statusText.focus({ preventScroll: true });
+        }
       }
+    }
+  }
+
+  function showPairingCode({ code, signal }, attempt) {
+    signal.throwIfAborted();
+    if (connecting !== attempt || !/^[0-9]{6}$/.test(code)) throw Error('Die Verbindungsanfrage ist nicht mehr aktuell.');
+    return new Promise(resolve => {
+      pairingChoice = { attempt, resolve };
+      text(pairingCode, code);
+      pairing.hidden = false;
+      pairingConfirm.disabled = false;
+      joinMessage = 'Vergleiche den Code und bestätige auf Smartphone und Headset.';
+      paint();
+      pairingConfirm.focus({ preventScroll: true });
+    });
+  }
+
+  async function changeControl(op) {
+    const gateway = rehearsal.gateway;
+    const access = controllerAccessState(rehearsal.state.status);
+    if (!gateway?.controllerAccess || !access || userAction || connecting || document.hidden
+      || rehearsal.state.pending || rehearsal.state.unknown || breathing.pending) return;
+    const attempt = new AbortController(); userAction = attempt; paint();
+    try {
+      await gateway.controllerAccess({ v: 1, id: operationId(), op, expected_control_revision: access.revision }, attempt.signal);
+    } catch { /* Authority readback is decisive; a lost response is never replayed. */ }
+    finally {
+      if (userAction === attempt) userAction = null;
+      await rehearsal.refresh();
+      paint();
     }
   }
 
@@ -620,6 +711,16 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     void connect(savedPair, true);
   });
   polarConnect.addEventListener('click', () => act('polar'));
+  pairingConfirm.addEventListener('click', () => {
+    if (!pairingChoice || pairingConfirm.disabled) return;
+    pairingConfirm.disabled = true;
+    pairingChoice.resolve(true);
+    joinMessage = 'Warte auf die Freigabe im Headset …';
+    paint();
+  });
+  pairingCancel.addEventListener('click', () => pairingChoice?.attempt.abort());
+  controlClaim.addEventListener('click', () => { if (!controlClaim.disabled) void changeControl('claim'); });
+  controlRelease.addEventListener('click', () => { if (!controlRelease.disabled) void changeControl('release'); });
   previewStart.addEventListener('click', () => setupAct('start'));
   previewCalibrate.addEventListener('click', () => setupAct('calibrate'));
   previewController.addEventListener('click', () => setupAct('controller'));
@@ -656,6 +757,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const timer = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      if (pairingChoice) connecting?.abort();
       userAction?.abort();
       ecgAttempt?.abort();
       exportAttempt?.abort();

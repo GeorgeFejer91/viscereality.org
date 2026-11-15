@@ -2,6 +2,73 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Quest 2 calibration acceptance — 2026-11-15
+
+The user resumed hardware testing with Quest 2, a worn H10 and a Touch
+controller. Wi-Fi ADB was requested and verified against the same device and
+boot identity before releasing USB transport. Private device evidence stays
+outside Git.
+
+The installed Developer 0.2.0-dev/code 1 matched its published SHA-256 but
+failed its first cold start with `experiment-session-runtime-threshold-invalid`.
+The Java packaged-closure verifier still required a 30-second runtime while
+the selected shared-loop profile correctly requested 900 seconds. Native
+commit `252f8120` makes this check follow the strict boolean selection in the
+feature lock: selected is exactly 900 seconds; legacy remains 30 seconds.
+The outer legacy condition records and all asset/hash checks are preserved.
+A host regression reproduced the failure before the fix and passed afterward,
+including actual signed-APK assets. Assembly now requires that probe before
+reporting success. This probe executes host-compiled production Java against
+APK assets; physical startup remains a separate required check.
+
+Code 2 installed with exact byte/hash readback and reached foreground OpenXR
+rendering at approximately 72 frames/s. All 116 Node checks and the Java shell/
+closure policy suite passed. Its fresh release package then exposed a separate
+first-use gap: Android denied hardware-serial access, there was no provisioned
+serial, and discovery correctly refused to advertise incomplete metadata.
+The old lab setup had already been provisioned. Bluetooth permissions alone
+cannot populate identity or trust a new phone/package pairing.
+
+The approved permanent onboarding uses read-only discovery to any nearby phone; saved phones
+authenticate, while new phones request pairing. Phone and headset show the
+same code and each confirms with a button; no headset keyboard. Retain
+multiple distinct phone memberships, individual revocation, and one active
+experiment controller with explicit handover. Discoverability is not authority
+to control or read recordings. General phone enrollment must not require a
+laptop, USB or a generated QR. The next Developer APK selects this route and
+closed startup; its optional shell/DUMP machine bootstrap stays unselected.
+The headset acceptance panel opens only for a real, verified phone pairing
+request, never at app startup. Allow, Reject, cancellation and expiry dismiss
+the prompt-owned opening; manual triple-B panel access remains available.
+Normal Android permission and Bluetooth power dialogs remain separate.
+See the exact [pairing and control contract](PHONE-PAIRING.md).
+
+- [x] Implement independent persistent memberships, revocation and one active
+  controller, with selected read-only discovery and closed startup.
+- [x] Implement actual wearer code comparison and Allow/Reject controls.
+- [x] Resolve the reviewed commitment/reveal protocol and wire-encoding
+  defects; prove a complete WebCrypto-to-production-Java pairing flow.
+- [x] Complete rendered phone onboarding and control-handover checks.
+- [ ] Build and qualify a same-key Developer update, publish the source/PWA,
+  and verify exact Pages/live bytes.
+- [ ] Verify physical discovery, two-sided button pairing, saved reconnection,
+  wearer calibration/retry/fallback, main transition and the full trial.
+
+Developer 0.2.2-dev/code 3 is software-qualified and installed with exact byte
+readback. Actual Quest 2 cold startup rendered VR with the panel closed, and
+the gateway reported selected v2 discovery with an explicitly unavailable
+hardware serial. See the [APK record](../quest/apks/README.md). Real phone
+pairing and wearer acceptance remain pending. The initial unshipped protocol's adaptive
+SAS-code selection and nonce-encoding defects are repaired in native
+`0511b82d`. The full WebCrypto-to-production-Java exchange passes both approval
+orders and altered-transcript checks; the focused gate reports 369 Java and
+nine browser checks. Native `5f457bcb` closes the legacy public BLE mutation
+bypass. An independent source review found no remaining blocker in those
+bounded repairs. All 130 Node checks pass with zero skips, including actual
+Java interoperability and both real assembly resolvers. Chromium passed 78
+screens plus 12 focused final control screens, with actual Pretext and DOM
+checks. These are software fixtures; real headset/phone acceptance remains open.
+
 ### Shared scheduler and guided tilt setup — 2026-11-14
 
 The user approved Automatic on app load, one shared native audio/phase clock,
@@ -25,7 +92,7 @@ implementation checklist in [SHARED-BREATHING-SETUP.md](SHARED-BREATHING-SETUP.m
   tree, signer, 74 audio files, ARM64 libraries and five shared-loop JNI exports.
 - [x] Publish the verified source/PWA increment and verify the exact Pages run.
 - [ ] Complete Quest 2/worn-Polar, installed Pixel and remote update acceptance
-  (explicitly deferred by the user: finish the build without hardware testing).
+  (deferred on November 14; Quest 2 wearer testing resumed on November 15).
 
 The independent Meta developer-distribution chat owns account/channel setup.
 Feature work remains in this owner. Developer build 0.2.0-dev (code 1) was
@@ -34,7 +101,7 @@ passed. Owner enrollment still awaits the account owner's invite consent in
 that chat. The store remains unpublished. Its exact
 source/signature/hash are in the [APK log](../quest/apks/README.md). The developer
 manifest targets SDK 34 with install location auto; rehearsal defaults stay
-unchanged. Device acceptance remains pending at the user's explicit request.
+unchanged. Device acceptance remains pending; the resumed test is tracked above.
 
 Source [PR 3](https://github.com/GeorgeFejer91/viscereality.org/pull/3) merged
 as `efaed6c13b17305ccd1e9c6ed7a5227330f9e179` and deployed successfully in

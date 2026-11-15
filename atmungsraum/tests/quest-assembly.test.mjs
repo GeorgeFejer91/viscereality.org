@@ -79,6 +79,19 @@ test('developer resolution selects a distinct non-debuggable app and requires an
     assert.equal(run.lock.android_manifest.debuggable, false);
     assert.equal(run.lock.android_manifest.target_sdk_version, 34);
     assert.equal(run.lock.android_manifest.install_location, 'auto');
+    assert.equal(run.lock.android_manifest.experiment_phone_pairing_enabled, true);
+    assert.equal(run.lock.android_manifest.experiment_panel_initially_closed, true);
+    assert.equal(run.lock.android_manifest.experiment_headset_setup_enabled, false);
+    assert.match(run.manifest, /android:name="rusty\.quest\.experiment\.phone_pairing\.enabled" android:value="true"/);
+    assert.deepEqual(run.lock.build_inputs.env.filter(entry => entry.name === 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
+      .map(entry => entry.value), ['true']);
+    assert.doesNotMatch(run.manifest, /debug-experiment-control|\.headset-setup/);
+    assert.equal(run.lock.headset_setup_sources.length, 0);
+    assert.equal(run.lock.debug_experiment_operator_sources.length, 0);
+    assert.equal(run.lock.phone_pairing_sources.length, 4);
+    for (const source of run.lock.phone_pairing_sources) {
+      assert.equal(source.sha256, sha256(await readFile(join(questRepo, source.path))), source.path);
+    }
     const noKey = invoke(runName + '-nokey', ['-Developer', '-VersionCode', '31']);
     assert.notEqual(noKey.status, 0);
     assert.match(noKey.stdout + noKey.stderr, /Developer requires an explicit existing -Keystore/);

@@ -59,6 +59,7 @@ html[data-mode="quest"] #corner-actions {
   max-width: calc(100% - var(--top-corner-size) - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 8px);
 }
 #quest { width: min(100%, 640px); justify-self: center; }
+#quest-pairing-code { font-family: monospace; font-size: clamp(1.5rem, 8vw, 3rem); font-variant-numeric: tabular-nums; letter-spacing: .12em; }
 #breathing-preview { width: min(100%, 520px); justify-self: center; }
 .preview-body { justify-items: center; gap: clamp(6px, min(2vw, 2dvh), 14px); text-align: center; }
 .preview-figure { display: grid; justify-items: center; gap: inherit; width: 100%; }

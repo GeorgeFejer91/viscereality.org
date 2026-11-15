@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261114-breathing-setup">
+  <link rel="stylesheet" href="./style.css?v=20261115-headset-setup">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261114-breathing-setup"></script>
+  <script type="module" src="./app.js?v=20261115-headset-setup"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -44,6 +44,18 @@
       <h1 id="quest-title" tabindex="-1" data-measure>Quest-Steuerung</h1>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
+        <div id="quest-pairing" class="screen-body" hidden>
+          <p data-measure>Vergleiche diesen Code mit dem Code im Headset.</p>
+          <p id="quest-pairing-code" aria-label="Verbindungscode" data-measure></p>
+          <p data-measure>Diese Verbindung erlaubt dem Smartphone die Quest-Steuerung und den Zugriff auf Aufnahmen.</p>
+          <button id="quest-pairing-confirm" type="button"><span data-measure>Code stimmt überein</span></button>
+          <button id="quest-pairing-cancel" type="button"><span data-measure>Abbrechen</span></button>
+        </div>
+        <div id="quest-control-host" hidden><div id="quest-control-access" class="screen-body" hidden>
+          <p id="quest-control-status" role="status" data-measure></p>
+          <button id="quest-control-claim" type="button" hidden><span data-measure>Steuerung übernehmen</span></button>
+          <button id="quest-control-release" type="button" hidden><span data-measure>Steuerung freigeben</span></button>
+        </div></div>
         <button id="quest-find" type="button" aria-describedby="quest-status" hidden><span data-measure>Mit Bluetooth verbinden</span></button>
         <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure hidden>00:00</p>
         <details id="quest-participant" hidden>
@@ -154,6 +166,7 @@
       <footer class="actions">
         <button id="preview-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
         <button id="preview-continue" type="button" disabled><span data-measure>Weiter zur Auswahl</span></button>
+        <div id="preview-control-host" hidden></div>
       </footer>
     </section>
     <section class="screen" id="daten" aria-labelledby="data-title" hidden>

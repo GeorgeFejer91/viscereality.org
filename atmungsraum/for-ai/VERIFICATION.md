@@ -1,5 +1,48 @@
 # Verification
 
+## Phone pairing and closed startup — 2026-11-15
+
+The selected Developer source uses read-only Bluetooth discovery, explicit
+app-installation identity when Android cannot supply hardware serial, and
+two-sided matching-code buttons. Its initial panel visibility is compiled
+closed; startup and idle polling cannot open approval. Only a verified
+commitment opening and proof create the wearer prompt. Multiple independent
+memberships share one active control lease. Reconnection does not claim it;
+the phone offers explicit Claim/Release and waits while another phone owns it.
+
+All 130 Node checks passed with zero skips, including both real assembly
+resolvers and complete WebCrypto-to-production-Java begin/reveal/confirm/status/
+decrypt flows in both approval orders. The focused crypto gate passed 369
+Java checks. Gateway qualification includes 43 selected v2 integration checks,
+34 actual legacy-BLE admission checks, 31 registry and 95 discovery checks,
+alongside legacy, deferred-effect, recording and protocol regressions.
+Selected public BLE mutations are rejected at admission and queued dispatch;
+internal gateway receipts remain available.
+
+Native UI passed 45 controls, including cold startup with no pending request,
+phone cancellation, expiry, replacement owners and prompt-owned visibility.
+Current production sources compiled against Android API 36; source-hash joins,
+strict selection, manifest/schema defaults and the native shell policy passed.
+Independent source review closed the initial nonce-encoding, adaptive-code and
+legacy-BLE authority findings. This is a bounded review, not a formal protocol
+proof. The unshipped v1 pairing handshake has no fallback.
+
+Chromium rendered 78 states with 48 reflow checks, then 12 focused states after
+the occupied-controller Claim button was disabled. There were zero app errors,
+text/panel/document overflow failures, missing Pretext measurements or controls
+below 48px. Checks cover real button confirmation, cancellation/rejection focus,
+approved-key retention after a lost join, saved reconnection without claim,
+handover in the breathing preview, 320px, enlarged text and long labels.
+Private galleries and machine receipts remain in ignored output.
+
+The cumulative public patch reconstructs native tree
+`8bbc4937ab0fd9ab97d0d6c751dc624260ec0dbe` exactly from the pinned upstream.
+Its SHA-256 is
+`5059f3c5ac0ba9c20a7d7075ba007cc1a94a99b4a6a4777cd3a3475dc36df9c5`.
+APK qualification, exact installed bytes, rendered headset approval, actual
+phone discovery/reconnection and wearer calibration are separate gates in
+the [active checklist](PROJECT.md#quest-2-calibration-acceptance--2026-11-15).
+
 ## Shared breathing setup release — 2026-11-14
 
 The selected developer app replaces the earlier simulated phone preview and

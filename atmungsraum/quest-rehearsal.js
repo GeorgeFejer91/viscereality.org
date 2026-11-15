@@ -1,4 +1,4 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=5';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=10';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -9,7 +9,7 @@ const candidateId = /^[a-f0-9]{12}$/;
 const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
 
 export function canRecenter(status) {
-  return status?.recenter === 1 && !status.pending
+  return canControlQuest(status) && status?.recenter === 1 && !status.pending
     && (status.h === 'vr-preparation' && status.p === 'IDLE'
       || status.h === 'vr-session' && ['ARMED', 'RUNNING', 'PAUSED', 'RECORDING'].includes(status.p));
 }
@@ -43,7 +43,7 @@ function setupConfirmed(status, { op, setupRef, candidate }) {
 }
 
 export function rehearsalPolarAllowed(status) {
-  return status?.pi?.r === false || status?.pi?.r === true && status.participant_arm === 1;
+  return canControlQuest(status) && (status?.pi?.r === false || status?.pi?.r === true && status.participant_arm === 1);
 }
 
 export function rehearsalActions(status, condition = conditions[0]) {

@@ -80,12 +80,12 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-001 `
-    -Developer -Keystore $developerKeystore -VersionCode 1 -VersionName 0.2.0-dev
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-003 `
+    -Developer -Keystore $developerKeystore -VersionCode 3 -VersionName 0.2.2-dev
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `5962359ba086897f7bf1e9ef0c40568c95010cf5`, matching
+reconstructs source tree `8bbc4937ab0fd9ab97d0d6c751dc624260ec0dbe`, matching
 the software-verified developer build. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
@@ -94,7 +94,7 @@ cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
 the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
-`rusty-quest/target/aq2/atmungsraum-developer-001/`. Use a fresh run name for a
+`rusty-quest/target/aq2/atmungsraum-developer-003/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
 
 Assembly binds `RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256` to the exact
@@ -102,6 +102,25 @@ packaged `audio/box-loop.json`, selects
 `rusty.quest.experiment.breathing_setup.enabled=true`, and includes the audio
 owners in the locked Java source closure. Other native products retain their
 unselected defaults.
+
+The Developer selection also enables `experiment_phone_pairing_enabled` and
+`experiment_panel_initially_closed`. The native visibility policy is compiled
+into the first frame, so the app starts in VR with its panel closed. A verified
+new-phone request opens the matching-code Allow/Reject prompt; it has no text
+entry. Triple-B still opens the regular app panel. The optional
+`experiment_headset_setup_enabled` machine adapter stays disabled.
+
+Bluetooth exposes read-only app-installation discovery. On the same Wi-Fi,
+the phone and headset each confirm the code. Saved phones have independent
+keys and individual removal; one phone can hold experiment control. The phone
+must explicitly claim control after connecting. See the
+[pairing contract](../for-ai/PHONE-PAIRING.md) for the protocol and acceptance
+limits. No generated QR, laptop or USB is part of this onboarding flow.
+
+Before success, assembly executes the production Java packaged-closure
+validator against the signed APK's actual assets. This catches the selected
+900-second profile being rejected by a legacy duration check. It is a host
+probe of packaged bytes; rendered startup and wearer tests remain separate.
 
 ## Developer and rehearsal signing
 

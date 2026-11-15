@@ -1,5 +1,74 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.2-dev — button-only phone pairing, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / platform | `org.viscereality.atmungsraum.developer`, Quest 2, `arm64-v8a` |
+| Release | 0.2.2-dev, Android version code 3 |
+| Signed APK | Private developer distribution; not bundled in this repository |
+| Size | 65,293,101 bytes |
+| SHA-256 | `86b8e0fa5de95fbde47cd934552f4200352f50fa9a8c32410e6498f499ea6fa9` |
+| Signing certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit | `603a432db108220f1270695bd0bbda07a0d86371` |
+| Native source tree | `8bbc4937ab0fd9ab97d0d6c751dc624260ec0dbe` |
+| Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
+| Source patch SHA-256 | `5059f3c5ac0ba9c20a7d7075ba007cc1a94a99b4a6a4777cd3a3475dc36df9c5` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36; automatic install; v2/v3 signatures verified |
+
+The Developer app starts in VR with its panel closed. A verified incoming
+phone request opens a matching-code Allow/Reject prompt; no headset typing is
+required. Cancellation and expiry dismiss only the prompt-owned opening.
+Triple-B still opens the regular app panel. Read-only Bluetooth discovery uses
+explicit app-installation identity when hardware serial is unavailable. Up to
+eight independent phones can be saved and individually revoked; one explicitly
+claimed controller lease admits experiment mutations. Saved reconnection never
+claims control. Selected mode rejects public legacy BLE mutations while
+retaining its internal receipt carrier. The machine provisioning adapter and
+broad debug operator remain unselected.
+
+Pairing v2 uses ordered commitment/reveal, canonical nonce encoding and both
+human confirmations before storing membership. Its production Java/browser
+exchange and adversarial transcript checks passed. All 130 Node checks,
+369 focused crypto checks, gateway/registry/discovery suites, 45 native UI
+controls, actual API-36 compilation, source selection and shell policy passed.
+Chromium passed 78 screens plus 12 focused final control screens. Independent
+source review closed the initial unshipped protocol and BLE authority findings.
+See the [exact contract](../../for-ai/PHONE-PAIRING.md).
+
+The cumulative patch reconstructed the exact tree above. Assembly verified the
+74 catalog/audio files, ARM64 loader and signed-APK cold-start closure. The
+same-key update installed with exact byte readback over Wi-Fi ADB. Actual
+Quest 2 startup rendered VR with the panel closed; its public gateway reported
+v2 app-installation discovery without a hardware serial. Headset/Pixel button
+pairing, saved reconnection, two-phone handover/revocation, worn calibration and
+the full 900-second trial remain pending. Meta upload is tracked separately;
+this device update used ADB and does not prove remote replacement.
+
+## 0.2.1-dev — cold-start repair, 2026-11-15
+
+Private Developer package `org.viscereality.atmungsraum.developer`, version code
+2, uses the same certificate as code 1. APK size is 65,264,429 bytes; SHA-256
+`0ee0677944225910dfdd733a5397e746af83d7209870a169e8014e1e0a7347e5`.
+Native source is `252f8120cb518763b070b79519175470f1529398`, tree
+`fa0e7626958a67850056286effda6fea34a100cd`, against the unchanged upstream pin.
+Its cumulative source-patch digest was
+`1d2276e347b76aaa67b2bed1ad9ea6740400fd6ed8a7fb84e308ff2135119ead`.
+SDKs, ABI, install location, signing identity and audio inventory are unchanged.
+
+An actual code-1 cold start exposed a validator that still required the legacy
+30-second runtime. The repair follows the strict selected boolean: exactly
+900 seconds for shared breathing setup, 30 seconds for the legacy profile.
+The new host probe reads the signed APK's actual assets using the production
+Java validator. The probe, shell policy, signatures, manifest, loader and all
+74 catalog/audio files passed. Installed bytes matched on Quest 2; foreground
+OpenXR rendering at approximately 72 frames/s was observed.
+
+This local ADB update was not uploaded to Meta. It exposed a separate fresh-app
+onboarding gap: hardware serial was unavailable, so discovery would not
+advertise. Wearer calibration and phone pairing remained pending. The new
+phone-pairing update addresses that gap with explicit app-installation identity.
+
 ## 0.2.0-dev — separate developer build, 2026-11-14
 
 | Build property | Verified value |

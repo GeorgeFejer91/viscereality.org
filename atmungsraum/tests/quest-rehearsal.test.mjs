@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDecipheriv, createHmac } from 'node:crypto';
-import { discoverQuest, joinQuest, questEndpoint } from '../quest-gateway.js';
+import { discoverQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
 import { QuestRehearsal, rehearsalActions } from '../quest-rehearsal.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
@@ -31,7 +31,7 @@ function server({ identity = owner, status = snapshot(), tamper = false } = {}) 
     assert.equal(init.credentials, 'omit');
     const body = init.body && JSON.parse(init.body);
     requests.push(body?.action ?? 'GET');
-    if (!body) return Response.json({ ...identity, v: 1, enabled: true, remote_available: true });
+    if (!body) return Response.json({ v: 1, ...identity, enabled: true, remote_available: true });
     if (body.action === 'connect') {
       assert.deepEqual(body, { v: 1, action: 'connect', device: owner.device, epoch: owner.epoch });
       return Response.json({ v: 1, ...owner, key, controller });
@@ -57,6 +57,52 @@ test('joins a private Quest, verifies signed observations, and never enrolls the
   for (const fixture of [server({ tamper: true }), server({ status: { ...snapshot(), o: { ...snapshot().o, a: 6000 } } }), server({ status: { ...snapshot(), build: { v: 1, packaging_fingerprint: key } } })]) {
     await assert.rejects(joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch }));
   }
+});
+
+test('v2 identifies an app installation without pretending an unavailable hardware serial exists', async () => {
+  const identity = { ...owner, v: 2, identity_kind: 'app-installation', pairing: 1, serial: '' };
+  const activeStatus = { ...snapshot(), controller_access: { v: 1, role: 'active', active_phone: 'Pixel', revision: 1 } };
+  const valid = server({ identity, status: activeStatus });
+  const paired = await joinQuest({ endpoint, serial: '', identity_kind: 'app-installation',
+    enrollment: { controller, key }, build, fetcher: valid.fetch });
+  assert.equal(paired.owner.serial, '');
+  assert.equal(paired.owner.identity_kind, 'app-installation');
+  assert.deepEqual(valid.requests, ['GET', 'status']);
+  for (const invalid of [{ ...identity, v: 1 }, { ...identity, identity_kind: 'hardware' },
+    { ...identity, serial: undefined }]) {
+    await assert.rejects(joinQuest({ endpoint, serial: '', identity_kind: 'app-installation',
+      enrollment: { controller, key }, build, fetcher: server({ identity: invalid }).fetch }));
+  }
+  await assert.rejects(joinQuest({ endpoint, serial: '', enrollment: { controller, key }, build, fetcher: valid.fetch }));
+});
+
+test('a waiting trusted phone can read status and request control but cannot send experiment mutations', async () => {
+  const state = { ...snapshot(), controller_access: { v: 1, role: 'waiting', active_phone: 'Other phone', revision: 4 },
+    breath_setup: 1, participant_arm: 1, recordings: 1, ecg_preview: 1, recenter: 1 };
+  const fixture = server({ status: state });
+  const gateway = await joinQuest({ endpoint, serial: owner.serial, enrollment: { controller, key }, fetcher: fixture.fetch });
+  for (const act of [() => gateway.command({ op: 'start' }), () => gateway.breathSetup({ op: 'calibrate' }),
+    () => gateway.participantArm({}), () => gateway.recenter({})]) await assert.rejects(async () => act());
+  assert.deepEqual(fixture.requests, ['GET', 'status']);
+  assert.equal(typeof gateway.controllerAccess, 'function');
+  for (const capability of ['command', 'breathSetup', 'participantArm', 'scenarioArm', 'recenter']) {
+    assert.equal(typeof gateway[capability], 'function');
+  }
+  assert.deepEqual(rehearsalActions(state), {});
+});
+
+test('control authority rejects malformed roles and identity kind cannot silently change', () => {
+  assert.equal(canControlQuest(snapshot()), true);
+  const valid = { v: 1, role: 'active', active_phone: 'Pixel', revision: 3 };
+  assert.deepEqual(controllerAccessState({ controller_access: valid }), valid);
+  for (const invalid of [{ ...valid, active_phone: '' }, { ...valid, revision: -1 },
+    { ...valid, role: 'unknown' }, { ...valid, active_phone: 'a'.repeat(65) },
+    { ...valid, active_phone: 'Phone\n' }, { ...valid, extra: true }]) {
+    assert.throws(() => controllerAccessState({ controller_access: invalid }));
+    assert.equal(canControlQuest({ controller_access: invalid }), false);
+  }
+  assert.equal(sameQuest(owner, { ...owner }), true);
+  assert.equal(sameQuest(owner, { ...owner, identity_kind: 'app-installation' }), false);
 });
 
 test('learns the signed build during enrollment and pins the saved headset on reconnect', async () => {
@@ -125,6 +171,25 @@ test('Bluetooth reads both identity characteristics and releases GATT before LAN
   assert.deepEqual(found, { owner, endpoints: [endpoint] });
   assert.deepEqual(calls, ['02', '03']);
   assert.equal(gatt.connected, false);
+});
+
+test('fresh app discovery permits an explicitly unavailable serial and reads no enrollment characteristic', async () => {
+  const identity = { ...owner, serial: '', identity_kind: 'app-installation' };
+  for (const change of [{}, { v: 1 }, { pairing: 0 }, { identity_kind: 'hardware' }]) {
+    const calls = [];
+    const gatt = { connected: false,
+      async connect() { this.connected = true; return this; },
+      async getPrimaryService() { return { async getCharacteristic(id) {
+        calls.push(id.slice(-2));
+        return { async readValue() { return new TextEncoder().encode(id.endsWith('02') ? ''
+          : JSON.stringify({ ...identity, v: 2, mode: 'remote', gateways: [endpoint], pairing: 1, ...change })); } };
+      } }; }, disconnect() { this.connected = false; } };
+    const result = discoverQuest({ async requestDevice() { return { gatt }; } }, new AbortController().signal);
+    if (Object.keys(change).length) await assert.rejects(result);
+    else assert.deepEqual(await result, { owner: identity, endpoints: [endpoint], pairing: 1 });
+    assert.deepEqual(calls, ['02', '03']);
+    assert.equal(gatt.connected, false);
+  }
 });
 
 test('native breathing setup is offered only by an enrolled capable Quest and keeps its closed command', async () => {

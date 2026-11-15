@@ -54,6 +54,17 @@ test('accepts only bounded native setup observations from the current native epo
   }
 });
 
+test('an explicit installation identity permits an unavailable serial but waiting phones cannot calibrate', () => {
+  const installation = { ...owner, serial: '', identity_kind: 'app-installation' };
+  assert.deepEqual(breathingSetup(snapshot(), installation), native());
+  assert.equal(breathingSetup(snapshot(), { ...owner, serial: '' }), null);
+  const ui = new BreathingSetup(); const peer = fixture(); peer.gateway.owner = installation;
+  const waiting = state(snapshot(native(), { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } }));
+  const view = ui.update(peer.gateway, waiting, true);
+  assert.equal(view.available, true);
+  for (const operation of ['start', 'calibrate', 'controller', 'continue']) assert.equal(view.actions[operation], false);
+});
+
 test('projects only native four-phase positions and progress through exactly two cycles', () => {
   const model = new BreathingSetup();
   const { gateway } = fixture();

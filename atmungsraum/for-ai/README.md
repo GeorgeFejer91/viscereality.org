@@ -22,6 +22,12 @@ pairing and tries it again when the app opens. The isolated rehearsal APK
 defaults to Remote-only. Android handles Bluetooth permission. Enrolled
 operators can see the live H10 preview and download the verified native
 recording after each rehearsal.
+Selected Developer builds use [button-only phone pairing](PHONE-PAIRING.md):
+read-only Bluetooth discovery, matching codes confirmed on both devices,
+several independent saved phones and one explicitly claimed controller lease.
+The headset panel starts closed and opens approval only for a verified incoming
+request. This flow needs no laptop, USB or generated QR. Legacy provisioned
+rehearsal builds retain their existing connection contract.
 Quest shows only the Viscereality scenario to the wearer and owns the runtime,
 media, Polar H10 acquisition and recordings. **Meta Quest 2 and the installed
 Android PWA are the required physical acceptance targets.** Desktop browsers
