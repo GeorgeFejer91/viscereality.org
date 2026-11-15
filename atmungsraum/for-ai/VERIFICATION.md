@@ -1,5 +1,33 @@
 # Verification
 
+## Parked preparation and full-window repair — 2026-11-15
+
+The attended code-5 test reproduced immediate `reordered_sample` and
+`excessive_motion` failures with zero completed frames. Focused probes show that
+callback-backdated batches can reorder despite continuous sensor timestamps,
+and a 5 ms derivative can classify small direction noise as excessive movement.
+These are software reproductions, not a measurement of the worn sensor's exact
+frame format. Original raw acquisition records remain untouched.
+
+The current phone increment passes all 164 Node checks with zero skips,
+including actual Java/WebCrypto pairing and real native assembly resolvers.
+The 56 focused display/setup/transport checks pass. The full rendered fixture
+sweep passed 132 screenshots and 30 regression records with no app errors,
+including actual Pretext, 320px, 200% text and WCAG text spacing. Independent
+review's remaining counter-bound finding was corrected: all five optional
+quality counts are integer 0–800, each with a negative test above the bound.
+
+Java audio owner/backend checks and actual API-36 compilation pass. A new
+regression first reproduced a monitor acquisition bypassing the command timeout;
+the repair enters the bounded request before taking the owner monitor. Tests
+cover parked initialization, no lifecycle first-start, accepted explicit start,
+retry without replay, queued cancellation and admitted uncertain outcomes.
+Independent scoped re-review found no remaining audio issue.
+
+Native timing/quality and automatic acquisition review, new APK package and
+installation, publication, installed-phone refresh and fresh wearer acceptance
+are still pending. Do not interpret fixture progress as actual calibration.
+
 ## Stable controls and smooth live displays — 2026-11-15
 
 The exact unmodified baseline reproduces a scroll clamp from 300px to 105px

@@ -2,6 +2,41 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Parked startup and full-window calibration repair — 2026-11-15
+
+The attended code-5 test did not collect calibration data. User attempts failed
+as `reordered_sample`; one assistant-operated retry, explicitly authorized by
+the user's “try yourself”, failed immediately as `excessive_motion`. Neither an
+accepted command nor Automatic audio proves collection: completed frames never
+advanced. The user may remove the strap while this repair is built; require a
+fresh Ready before another physical calibration.
+
+The latest accepted behavior is Automatic selected but silent and held at minimum
+expansion on load. Only an explicit calibration or Controller selection starts
+the unlimited native loop. Calibration assesses the entire two-cycle window,
+masking bounded noisy intervals and fitting only after sufficient usable phase
+coverage; a short movement does not fail the attempt immediately. Real source
+retirement and an actual audio pause during collection still invalidate it.
+Connected Polar acquisition automatically establishes and recovers both required
+streams. The phone percentage shares the circle's bounded display behavior.
+
+- [x] Reproduce callback-derived host reordering and noise-sensitive motion
+  rejection in focused probes without changing original raw records.
+- [x] Verify parked Java audio startup and explicit first-start behavior with
+  host owner/backend checks and actual Android API-36 compilation.
+- [ ] Review and verify source-bound estimated alignment, whole-window quality,
+  automatic stream recovery and the matching phone controls.
+- [ ] Build, verify and install the next same-key local Developer APK; publish
+  the verified public source and phone increment through exact Pages/live checks.
+- [ ] Resume a fresh attended test, inspect the actual ACC frame format, confirm
+  advancing calibration progress, then qualify fit, retry and Controller fallback.
+
+Code 5 remains installed and was force-stopped to silence it. Temporary system
+Location was restored to OFF and this task's hardware leases were released.
+Wi-Fi ADB remains enabled as requested. The user has authorized assistant phone
+operation for this diagnosis; the earlier read-only preference is superseded
+within that scope. Meta upload remains on hold. The overall milestone stays open.
+
 ### Stable phone controls and Showcase visuals — 2026-11-15
 
 The user requested one combined update while away: retain scroll and focused

@@ -42,7 +42,7 @@ async function measureLabels() {
       frame = requestAnimationFrame(() => {
         const results = [...document.querySelectorAll('[data-measure]')].filter((element) => element.getClientRects().length).map((element) => {
           const style = getComputedStyle(element);
-          const value = element.textContent.trim();
+          const value = element.dataset.measureSample ?? element.textContent.trim();
           const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
           const letterSpacing = parseFloat(style.letterSpacing) || 0;
           const key = JSON.stringify([root.lang, value, font, letterSpacing, style.whiteSpace, style.wordBreak]);
@@ -112,7 +112,14 @@ async function measureLabels() {
       measure();
     };
     const main = document.querySelector('main');
-    new MutationObserver(measure).observe(main, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(records => {
+      // The bounded 0–100% field is measured against its largest label once.
+      // Changing its digits cannot change geometry or require a page-wide pass.
+      if (records.some(record => {
+        const element = record.target.nodeType === Node.TEXT_NODE ? record.target.parentElement : record.target;
+        return !element?.closest?.('[data-live-value]');
+      })) measure();
+    }).observe(main, { childList: true, characterData: true, subtree: true });
     const screenChanges = new MutationObserver(() => { root.dataset.layout = 'bounded'; measure(); });
     main.querySelectorAll('.screen').forEach((screen) => {
       screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
@@ -143,7 +150,7 @@ measureLabels();
 if (recovery) {
   void showSavedBrowserExports();
 } else {
-  import('./quest-ui.js?v=36').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=37').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

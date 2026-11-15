@@ -21,6 +21,8 @@ export class LiveBreathDisplay {
     this.anchor = {
       key, observation: observation.i, setup: { ...setup }, received: now,
       age: Math.max(0, observation.a), progress,
+      inputVolume: typeof view.inputVolume === 'number' ? view.inputVolume : null,
+      volumeFrom: continuing && typeof prior?.inputVolume === 'number' ? prior.inputVolume : view.inputVolume,
       from: continuing ? Math.min(prior.progress, progress) : progress,
       duration: continuing ? Math.max(1, Math.min(1000, now - this.anchor.received)) : 1,
     };
@@ -35,17 +37,25 @@ export class LiveBreathDisplay {
       && Number.isSafeInteger(setup.audio_generation) && setup.audio_generation > 0;
     // The accepted native schedule is four phases of four seconds. This clock
     // only paints that observed loop; it cannot train, finish or switch inputs.
-    const advance = followsAudio && !reducedMotion ? Math.min(elapsed, Math.max(0, 1500 - anchor.age)) : 0;
+    const freshElapsed = Math.min(elapsed, Math.max(0, 1500 - anchor.age));
+    const advance = followsAudio && !reducedMotion ? freshElapsed : 0;
     const position = setup.position_frames + advance * setup.cycle_frames / 16000;
     const phaseFrames = setup.cycle_frames / 4;
     const phase = Math.floor(position / phaseFrames) % 4;
     const fraction = position % phaseFrames / phaseFrames;
     const radius = [.46 + .54 * fraction, 1, 1 - .54 * fraction, .46][phase];
     const blend = reducedMotion ? 1 : Math.min(1, elapsed / anchor.duration);
+    const volumeBlend = reducedMotion ? 1 : Math.min(1, freshElapsed / anchor.duration);
+    const inputVolume = setup.input === 'automatic' ? [fraction, 1, 1 - fraction, 0][phase]
+      : anchor.inputVolume === null ? null
+        : typeof anchor.volumeFrom !== 'number' ? anchor.inputVolume
+          : anchor.volumeFrom + (anchor.inputVolume - anchor.volumeFrom) * volumeBlend;
     return {
       radius, phaseLabel: labels[phase], live: Boolean(followsAudio && elapsed + anchor.age <= 1500),
       ttl: Math.max(0, 1500 - anchor.age - elapsed),
-      animating: Boolean(followsAudio && elapsed + anchor.age <= 1500 || blend < 1),
+      animating: Boolean(followsAudio && elapsed + anchor.age <= 1500 || blend < 1
+        || elapsed + anchor.age <= 1500 && volumeBlend < 1 && anchor.volumeFrom !== anchor.inputVolume),
+      inputVolume,
       // Never paint progress beyond a frame count actually reported by Quest.
       progress: anchor.from + (anchor.progress - anchor.from) * blend,
     };

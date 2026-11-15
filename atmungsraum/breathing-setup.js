@@ -10,6 +10,32 @@ const operations = new Set(['start', 'calibrate', 'controller']);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
+const qualityWarnings = {
+  '': '', motion: 'Bewegung erkannt. Halte den Oberkörper ruhig und atme weiter mit.',
+  timing: 'Einige Messdaten kommen unregelmäßig an. Atme weiter mit.',
+  invalid: 'Einige Messdaten sind nicht nutzbar. Prüfe den Sitz des Gurts und atme weiter mit.',
+};
+const failureLabels = {
+  insufficient_coverage: 'Zu wenige nutzbare Atembewegungen wurden erfasst',
+  insufficient_range: 'Die Atembewegung war für die Einrichtung zu klein',
+  poor_guided_motion: 'Die Bewegung passte noch nicht zuverlässig zum Atemtakt',
+  excessive_motion: 'Zu viel zusätzliche Bewegung wurde erfasst',
+  invalid_sample: 'Zu viele Messdaten waren nicht nutzbar',
+  signal_gap: 'Zu viele Messdaten fehlten oder kamen unregelmäßig an',
+  audio_paused: 'Die Atemschleife wurde angehalten',
+  source_replaced: 'Die Verbindung zum Gurt wurde während der Einrichtung erneuert',
+  invalid_source: 'Die Messdaten konnten dem Gurt nicht zuverlässig zugeordnet werden',
+  clock_retired: 'Die Atemschleife wurde während der Einrichtung erneuert',
+  clock_reversed: 'Die Zeitzuordnung der Messdaten wurde unterbrochen',
+  clock_stale: 'Der aktuelle Atemtakt war nicht mehr verfügbar',
+  clock_stalled: 'Die Atemschleife lief nicht weiter',
+  frame_overflow: 'Die Zeitzuordnung der Atemschleife war nicht mehr nutzbar',
+};
+const validQuality = quality => quality && !Array.isArray(quality) && Object.keys(quality).length === 7
+  && ['accepted', 'masked', 'motion', 'timing', 'invalid'].every(key => nonnegative(quality[key]) && quality[key] <= 800)
+  && typeof quality.usable_fraction === 'number'
+  && Number.isFinite(quality.usable_fraction) && quality.usable_fraction >= 0 && quality.usable_fraction <= 1
+  && typeof quality.warning === 'string' && Object.hasOwn(qualityWarnings, quality.warning);
 const validOwner = owner => owner && /^[a-f0-9]{32}$/.test(owner.device)
   && typeof owner.serial === 'string' && (/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(owner.serial)
     || owner.identity_kind === 'app-installation' && owner.serial === '')
@@ -34,6 +60,9 @@ export function breathingSetup(status, owner) {
     || !nonnegative(setup.attempt) || !calibrations.has(setup.calibration)
     || typeof setup.failure !== 'string' || setup.failure.length > 256 || /[\x00-\x1f\x7f]/.test(setup.failure)
     || typeof setup.ready !== 'boolean' || typeof setup.playing !== 'boolean'
+    || Object.hasOwn(setup, 'source_clock_ready') && typeof setup.source_clock_ready !== 'boolean'
+    || Object.hasOwn(setup, 'parked') && typeof setup.parked !== 'boolean'
+    || Object.hasOwn(setup, 'quality') && !validQuality(setup.quality)
     || !nonnegative(setup.experiment_elapsed_ms) || setup.experiment_elapsed_ms > 900000
     || Object.hasOwn(setup, 'input_phase') && !Object.hasOwn(inputPhases, setup.input_phase)
     || Object.hasOwn(setup, 'input_volume01') && setup.input_volume01 !== null
@@ -109,6 +138,7 @@ export class BreathingSetup {
         || this.pending.owner.native_epoch !== gateway.owner.native_epoch || setup?.g > this.pending.command.g);
     const testing = setup?.stage === 'testing' && setup.playing;
     const preparing = setup && ['waiting', 'calibrating', 'testing'].includes(setup.stage) && setup.playing;
+    const parked = setup?.stage === 'idle' && !setup.playing;
     const phaseIndex = setup ? phases.indexOf(setup.phase) : -1;
     const phaseFraction = setup ? (setup.position_frames % (setup.cycle_frames / 4)) / (setup.cycle_frames / 4) : 0;
     const radius = [.46 + .54 * phaseFraction, 1, 1 - .54 * phaseFraction, .46][phaseIndex] ?? .46;
@@ -120,16 +150,20 @@ export class BreathingSetup {
       inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
       inputVolume: typeof setup?.input_volume01 === 'number' ? setup.input_volume01 : null,
       failure: setup?.calibration === 'failed' ? setup.failure : '',
+      failureLabel: setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
+      qualityWarning: setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
       blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
         : !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
-        : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.' : '',
+        : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
+        : setup?.input === 'automatic' && setup.source_clock_ready === false
+          ? 'Die Messsignale sind da. Warte kurz auf gleichmäßige Bewegungsdaten vom Gurt.' : '',
       actions: {
-        start: Boolean(gated && setup.stage === 'idle'),
-        calibrate: Boolean(gated && preparing),
-        controller: Boolean(idle && preparing && setup.input !== 'controller-state'),
+        start: false,
+        calibrate: Boolean(gated && (preparing || parked) && setup.source_clock_ready !== false),
+        controller: Boolean(idle && (preparing || parked) && setup.input !== 'controller-state'),
         continue: Boolean(gated && testing && setup.ready && ['polar-tilt', 'controller-state'].includes(setup.input)),
         acknowledge: Boolean(ownerIdle && retired),
       },

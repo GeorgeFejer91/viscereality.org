@@ -65,6 +65,48 @@ test('an explicit installation identity permits an unavailable serial but waitin
   for (const operation of ['start', 'calibrate', 'controller', 'continue']) assert.equal(view.actions[operation], false);
 });
 
+test('fresh parked native Automatic admits one calibration or controller choice without a separate start', async () => {
+  for (const op of ['calibrate', 'controller']) {
+    const model = new BreathingSetup(); const peer = fixture();
+    const parked = state(snapshot(native({ stage: 'idle', playing: false, input_volume01: 0 })));
+    const view = model.update(peer.gateway, parked, true);
+    assert.equal(view.actions.start, false);
+    assert.equal(view.actions[op], true);
+    assert.equal(peer.calls.length, 0);
+    await model.run(op);
+    await model.run(op);
+    assert.equal(peer.calls.length, 1);
+    assert.equal(peer.calls[0].op, op);
+  }
+});
+
+test('optional source clock readiness gates calibration but preserves the fixed controller alternative', () => {
+  const model = new BreathingSetup(); const peer = fixture();
+  const setup = native({ stage: 'idle', playing: false, source_clock_ready: false });
+  const view = model.update(peer.gateway, state(snapshot(setup)), true);
+  assert.equal(view.actions.calibrate, false);
+  assert.equal(view.actions.controller, true);
+  assert.match(view.blockedReason, /Bewegungsdaten/);
+  assert.equal(model.update(peer.gateway, state(snapshot({ ...setup, source_clock_ready: true })), true).actions.calibrate, true);
+  for (const invalid of [null, 0, 1, 'true']) {
+    assert.equal(breathingSetup(snapshot({ ...setup, source_clock_ready: invalid }), owner), null);
+  }
+});
+
+test('bounded optional quality warns during collection without fabricating failure or success', () => {
+  const quality = { accepted: 150, masked: 8, motion: 5, timing: 2, invalid: 1, usable_fraction: .9, warning: 'motion' };
+  const setup = native({ stage: 'calibrating', calibration: 'collecting', quality });
+  const model = new BreathingSetup(); const peer = fixture();
+  const view = model.update(peer.gateway, state(snapshot(setup)), true);
+  assert.match(view.qualityWarning, /Oberkörper ruhig/);
+  assert.equal(view.failure, '');
+  assert.equal(view.actions.continue, false);
+  for (const invalid of [null, [], ...['accepted', 'masked', 'motion', 'timing', 'invalid'].map(key => ({ ...quality, [key]: 801 })), { ...quality, masked: -1 },
+    { ...quality, usable_fraction: 1.1 }, { ...quality, warning: 'invented' }, { ...quality, extra: 1 }]) {
+    assert.equal(breathingSetup(snapshot({ ...setup, quality: invalid }), owner), null);
+  }
+});
+
 test('projects only native four-phase positions and progress through exactly two cycles', () => {
   const model = new BreathingSetup();
   const { gateway } = fixture();
@@ -123,6 +165,14 @@ test('native failure retains Automatic, gives its reason and permits retry or co
   assert.equal(view.actions.continue, false);
   const fallback = native({ ...failed, r: 2, input: 'controller-state', ready: true });
   assert.equal(model.update(gateway, state(snapshot(fallback)), true).actions.continue, true);
+});
+
+test('native terminal reasons get plain wording while retaining the exact failure token', () => {
+  const model = new BreathingSetup(); const peer = fixture();
+  const view = model.update(peer.gateway, state(snapshot(native({ calibration:'failed',failure:'audio_paused' }))), true);
+  assert.equal(view.failure, 'audio_paused');
+  assert.equal(view.failureLabel, 'Die Atemschleife wurde angehalten');
+  assert.equal(view.actions.continue, false);
 });
 
 test('preserves participant freshness, owner, idle-run and pending action gates', () => {
@@ -309,17 +359,17 @@ test('controller re-enrollment permits acknowledging an old gateway journal with
   assert.equal(peer.calls.length, 1);
 });
 
-test('native idle permits start, paused playback blocks continuation and an aborted action never dispatches', async () => {
+test('native idle permits calibration, paused playback blocks continuation and an aborted action never dispatches', async () => {
   const model = new BreathingSetup();
   const peer = fixture();
   const idle = snapshot(native({ stage: 'idle', playing: false }));
-  assert.equal(model.update(peer.gateway, state(idle), true).actions.start, true);
+  assert.equal(model.update(peer.gateway, state(idle), true).actions.calibrate, true);
   const aborted = AbortSignal.abort();
-  await assert.rejects(model.run('start', aborted));
+  await assert.rejects(model.run('calibrate', aborted));
   assert.equal(peer.calls.length, 0);
   assert.equal(model.pending, null);
-  await model.run('start');
-  assert.equal(peer.calls[0].op, 'start');
+  await model.run('calibrate');
+  assert.equal(peer.calls[0].op, 'calibrate');
   const next = snapshot(native({ r: 1 }));
   model.update(peer.gateway, state(next), true);
   await model.refresh();

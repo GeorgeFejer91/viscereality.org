@@ -33,11 +33,12 @@ const settings = window.reviewQuest ??= {
   ...window.reviewInitialQuest
 };
 settings.setup ??= {
-  v: 1, g: 1, r: 0, stage: 'testing', input: 'automatic', phase: 'inhale',
+  v: 1, g: 1, r: 0, stage: window.reviewInitialSetup ? 'testing' : 'idle', input: 'automatic', phase: 'inhale',
   position_frames: 0, cycle_frames: 705600, target_frames: 0, completed_frames: 0,
-  attempt: 0, calibration: 'idle', failure: '', ready: false, playing: true,
-  audio_state: 'playing', audio_generation: 1,
+  attempt: 0, calibration: 'idle', failure: '', ready: false, playing: Boolean(window.reviewInitialSetup),
+  audio_state: window.reviewInitialSetup ? 'playing' : 'paused', audio_generation: 1,
   experiment_elapsed_ms: 0, input_phase: 'unknown', input_volume01: null,
+  ...(!window.reviewInitialSetup ? {parked:true,input_volume01:0} : {}),
   ...window.reviewInitialSetup
 };
 window.reviewSetupCommands ??= [];
@@ -69,6 +70,7 @@ function snapshot() {
       s: 'a'.repeat(32), g: Number(owner.native_epoch), r: 1, p: polar !== 'permission', b: polar !== 'bluetooth',
       c: connected, a: settings.acc ?? polar === 'ready', e: settings.ecg ?? polar === 'ready', sc: polar === 'scan',
       ...(settings.location === undefined ? {} : { l: settings.location }),
+      ...(settings.autoRecovery === undefined ? {} : { ar: settings.autoRecovery }),
       x: connected ? candidate : settings.selected,
       d: [candidate, 'c'.repeat(12)].slice(0, settings.strapCount)
     },
@@ -136,13 +138,15 @@ function breathSetup(command) {
     return receipts[id] = { v: 1, id, state: 'rejected' };
   }
   setup.r++;
-  if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true });
+  const parked = setup.stage === 'idle' && !setup.playing;
+  if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });
   if (op === 'calibrate') Object.assign(setup, {
-    stage: 'waiting', input: 'automatic', ready: false, attempt: setup.attempt + 1,
-    calibration: 'waiting', failure: '', target_frames: 1411200, completed_frames: 0
+    stage: parked ? 'calibrating' : 'waiting', input: 'automatic', ready: false, attempt: setup.attempt + 1,
+    playing:true,audio_state:'playing',parked:false,
+    calibration: parked ? 'collecting' : 'waiting', failure: '', target_frames: 1411200, completed_frames: 0
   });
   if (op === 'controller') Object.assign(setup, {
-    stage: 'testing', input: 'controller-state', ready: true, calibration: 'idle',
+    stage: 'testing', input: 'controller-state', ready: true, calibration: 'idle', playing:true,audio_state:'playing',parked:false,
     input_phase: 'hold', input_volume01: .5
   });
   const receipt = receipts[id] = { v: 1, id, state: 'confirmed' };
@@ -491,6 +495,7 @@ def capture_scroll_regression(review):
               age:document.querySelector('#patient-age').value,
               gender:document.querySelector('[name="gender"]:checked')?.value,
               previewInput:document.querySelector('#preview-input').textContent,
+              nativeVolume:window.reviewQuest.setup.input_volume01,
               progress:document.querySelector('#preview-progress').value,
             })""")
             samples.append({"before": before, **state})
@@ -499,7 +504,8 @@ def capture_scroll_regression(review):
             assert state["focus"] == "patient-surname", f"{slug}: telemetry moved focus: {state}"
             assert state["value"] == value and state["selection"] == [2, 2], f"{slug}: edited text changed: {state}"
             assert state["age"] == "31" and state["gender"] == "prefer-not-to-say", f"{slug}: form values changed: {state}"
-            assert f"{i * 10} %" in state["previewInput"], f"{slug}: native telemetry did not render: {state}"
+            assert ("Einatmen" if i % 2 else "Ausatmen") in state["previewInput"], f"{slug}: native phase did not render: {state}"
+            assert state["nativeVolume"] == i / 10
             assert abs(state["progress"] - i / 8) < .001, f"{slug}: native calibration progress froze: {state}"
             assert abs(state["scroll"] - before) <= 2, f"{slug}: native poll reset document scroll: {samples[-1]}"
         assert page.evaluate("window.reviewQuest.commands ?? []") == []
@@ -631,20 +637,20 @@ def capture(review):
     calibrate = page.locator("#preview-calibrate")
     fallback = page.locator("#preview-controller")
     proceed = page.locator("#preview-continue")
-    expect(preview).to_have_text("Atemtakt: Einatmen")
+    expect(preview).to_have_text("Automatic ist bereit.")
     expect(page.locator("#preview-input")).to_contain_text("Automatic")
     expect(proceed).to_be_disabled()
     shot(page, "native-automatic", "Native Atemtakt · Automatic", preview, "Breathing setup")
     radius = page.locator("#preview-circle").get_attribute("style")
     page.clock.run_for(8500)
-    expect(preview).to_have_text("Atemtakt: Einatmen")
+    expect(preview).to_have_text("Automatic ist bereit.")
     expect(page.locator("#preview-circle")).to_have_attribute("style", radius)
     expect(page.locator("#preview-title")).to_be_focused()
     page.keyboard.press("Tab")
     expect(calibrate).to_be_focused()
     page.keyboard.press("Enter")
-    expect(detail).to_contain_text("nächsten vollständigen Atemzyklus")
-    shot(page, "native-waiting", "Calibration waits for the next native cycle", detail, "Breathing setup")
+    expect(detail).to_contain_text("zwei vollständige Atemzyklen")
+    shot(page, "native-waiting", "First calibration starts the native clock", detail, "Breathing setup")
     wait_setup(page, stage="calibrating", calibration="collecting", position_frames=705600)
     expect(detail).to_contain_text("zwei vollständige Atemzyklen")
     expect(page.locator("#preview-progress")).to_have_attribute("value", "0")
@@ -871,7 +877,8 @@ def capture_accessibility(review, paired):
         page.clock.run_for(200)
         review.shot(page, slug, title, page.locator("#preview-input"), "Accessibility and reflow")
         if spacing:
-            expect(page.locator("#preview-input")).to_have_attribute("data-text-measurement", "dom")
+            expect(page.locator("#preview-input-label")).to_have_attribute("data-text-measurement", "dom")
+            expect(page.locator("#preview-input-volume")).to_have_attribute("data-text-measurement", "dom")
         proceed = page.locator("#preview-continue")
         proceed.focus()
         proceed.press("Enter")
@@ -1191,6 +1198,8 @@ def capture_live_display(review):
       circle:Number(document.querySelector('#preview-circle').style.transform.match(/scale\\(([^)]+)\\)/)?.[1]),
       fill:Number(document.querySelector('#preview-progress-fill').style.transform.match(/scaleX\\(([^)]+)\\)/)?.[1]),
       progress:document.querySelector('#preview-progress').value,
+      volume:Number(document.querySelector('#preview-input-volume').textContent.match(/(\\d+)/)?.[1]),
+      measurementWrites:window.reviewMeasurementWrites??0,
       continueDisabled:document.querySelector('#preview-continue').disabled,
       calibrateDisabled:document.querySelector('#preview-calibrate').disabled,
       controllerDisabled:document.querySelector('#preview-controller').disabled,
@@ -1201,10 +1210,18 @@ def capture_live_display(review):
     page = review.page(initial, reduced_motion="no-preference")
     enter_participant(page)
     page.clock.run_for(1100)
+    page.evaluate("""() => {
+      window.reviewMeasurementWrites=0;
+      new MutationObserver(records=>window.reviewMeasurementWrites+=records.length)
+        .observe(document.querySelector('main'),{subtree:true,attributes:true,attributeFilter:['data-text-measurement']});
+    }""")
     first = page.evaluate(read)
     page.clock.run_for(200)
     later = page.evaluate(read)
     assert first["circle"] < later["circle"] <= 1, f"Native-anchored circle did not advance: {first}, {later}"
+    assert first["volume"] < later["volume"], f"Automatic percent did not move with the circle: {first}, {later}"
+    assert abs(later["volume"] - (later["circle"] - .46) / .54 * 100) <= .6
+    assert later["measurementWrites"] == first["measurementWrites"], "Numeric presentation remeasured the whole page between polls"
     assert first["polls"] == later["polls"] and first["ecgCalls"] == later["ecgCalls"], "Animation added transport polls"
     assert first["progress"] == later["progress"] == .25, "Presentation invented native calibration progress"
     assert first["continueDisabled"] and later["continueDisabled"], "Animation admitted unfinished calibration"
@@ -1261,6 +1278,7 @@ def capture_live_display(review):
     page.clock.run_for(200)
     reduced_later = page.evaluate(read)
     assert reduced_later["circle"] == reduced["circle"] == .73
+    assert reduced_later["volume"] == reduced["volume"] == 50
     assert reduced_later["fill"] == reduced["fill"] == .125
     assert reduced_later["progress"] == .25 and reduced_later["continueDisabled"]
     assert reduced_later["polls"] == reduced["polls"]
@@ -1273,6 +1291,28 @@ def capture_live_display(review):
     expect(page.locator("#preview-status")).to_have_text("Warte auf den aktuellen Atemtakt der Quest.")
     review.shot(page, "live-reduced-expiry", "Reduced motion · stale native observation still expires",
                 page.locator("#preview-status"), "Live presentation")
+    page.context.close()
+
+    page = review.page(initial + """Object.assign(window.reviewInitialSetup,{stage:'testing',calibration:'ready',
+      input:'polar-tilt',ready:true,completed_frames:1411200,input_volume01:.2});""", reduced_motion="no-preference")
+    enter_participant(page)
+    page.clock.run_for(1100)
+    expect(page.locator("#preview-input-volume")).to_have_text("20 %")
+    wait_setup(page, input_volume01=.8)
+    measured_first = page.evaluate(read)
+    page.clock.run_for(200)
+    measured_later = page.evaluate(read)
+    assert 20 <= measured_first["volume"] < measured_later["volume"] <= 80
+    assert measured_first["polls"] == measured_later["polls"]
+    page.evaluate("window.reviewQuest.freezeObservation=true")
+    page.clock.run_for(2700)
+    measured_stale = page.evaluate(read)
+    page.clock.run_for(200)
+    assert page.evaluate(read)["volume"] == measured_stale["volume"] <= 80
+    review.shot(page, "live-measured-percent", "Measured input · percent blends only between received samples",
+                page.locator("#preview-input-volume"), "Live presentation")
+    review.regressions.append({"kind":"live-measured-percent", "first":measured_first,
+                               "later":measured_later,"stale":measured_stale})
     page.context.close()
 
     page = review.page(initial + "window.reviewInitialQuest.statusDelay=1700;", reduced_motion="no-preference")
@@ -1353,10 +1393,103 @@ def capture_live_display(review):
     page.context.close()
 
 
+def capture_parked_calibration(review):
+    initial = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));" + """
+      window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};"""
+    for slug, viewport, text_size in (
+        ("390", VIEWPORT, ""), ("320", {"width":320,"height":568}, ""),
+        ("200-text", {"width":320,"height":568}, "200%"),
+    ):
+        page = review.page(initial, viewport=viewport, reduced_motion="no-preference")
+        enter_participant(page)
+        page.evaluate("size=>document.documentElement.style.fontSize=size", text_size)
+        page.clock.run_for(2700)
+        assert page.evaluate("window.reviewSetupCommands") == [], "Opening the app started native audio"
+        assert page.evaluate("window.reviewQuest.setup.playing") is False
+        expect(page.locator("#preview-status")).to_have_text("Automatic ist bereit.")
+        expect(page.locator("#preview-input-volume")).to_have_text("0 %")
+        expect(page.locator("#preview-calibrate")).to_be_enabled()
+        expect(page.locator("#preview-controller")).to_be_enabled()
+        expect(page.locator("#preview-start")).to_be_hidden()
+        assert page.locator("#preview-circle").evaluate("node=>node.style.transform") == "scale(0.46)"
+        review.shot(page, f"parked-{slug}", f"Automatic {slug} · parked until the calibration button",
+                    page.locator("#preview-calibrate"), "Parked startup")
+        page.locator("#preview-calibrate").focus()
+        page.keyboard.press("Enter")
+        expect(page.locator("#preview-detail")).to_contain_text("zwei vollständige Atemzyklen")
+        assert page.evaluate("window.reviewSetupCommands.map(command=>command.op)") == ["calibrate"]
+        assert page.evaluate("window.reviewQuest.setup.playing") is True
+        quality = {"accepted":150,"masked":8,"motion":5,"timing":2,"invalid":1,"usable_fraction":.9,"warning":"motion"}
+        wait_setup(page, position_frames=705600, completed_frames=705600, quality=quality)
+        expect(page.locator("#preview-progress")).to_have_js_property("value", 1)
+        expect(page.locator("#preview-detail")).to_contain_text("Oberkörper ruhig")
+        expect(page.locator("#preview-detail")).not_to_contain_text("fehlgeschlagen")
+        expect(page.locator("#preview-continue")).to_be_disabled()
+        review.shot(page, f"quality-masked-{slug}", f"Calibration {slug} · quality mask preserves the native 32-second attempt",
+                    page.locator("#preview-detail"), "Parked startup")
+        wait_setup(page, stage="testing", calibration="failed", completed_frames=1411200,
+                   position_frames=1411200, failure="excessive-motion")
+        expect(page.locator("#preview-calibrate")).to_be_enabled()
+        page.locator("#preview-controller").focus()
+        page.keyboard.press("Enter")
+        expect(page.locator("#preview-continue")).to_be_enabled()
+        assert page.evaluate("window.reviewSetupCommands.map(command=>command.op)") == ["calibrate","controller"]
+        review.shot(page, f"parked-fallback-{slug}", f"Controller {slug} · one native alternative after calibration failure",
+                    page.locator("#preview-input-label"), "Parked startup")
+        review.regressions.append({"kind":"parked-startup","viewport":viewport,"textSize":text_size,
+                                   "commands":["calibrate","controller"]})
+        page.context.close()
+
+    page = review.page(initial + "window.reviewInitialSetup={stage:'idle',playing:false,audio_state:'paused',source_clock_ready:false,input_volume01:0};")
+    enter_participant(page)
+    expect(page.locator("#preview-calibrate")).to_be_disabled()
+    expect(page.locator("#preview-controller")).to_be_enabled()
+    expect(page.locator("#preview-detail")).to_contain_text("Bewegungsdaten")
+    review.shot(page, "parked-clock-warming", "Fresh streams · warming clock leaves Controller State available",
+                page.locator("#preview-controller"), "Parked startup")
+    page.locator("#preview-controller").focus()
+    page.keyboard.press("Enter")
+    expect(page.locator("#preview-continue")).to_be_enabled()
+    assert page.evaluate("window.reviewSetupCommands.map(command=>command.op)") == ["controller"]
+    page.context.close()
+
+
+def capture_automatic_stream_recovery(review):
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    for slug, viewport, text_size in (
+        ("390",VIEWPORT,""),("320",{"width":320,"height":568},""),
+        ("200-text",{"width":320,"height":568},"200%"),
+    ):
+        for missing, ecg, acc, label in (
+            ("ecg",False,True,"Bewegungsdaten bereit; EKG fehlt."),
+            ("acc",True,False,"EKG bereit; Bewegungsdaten fehlen."),
+            ("both",False,False,"EKG und Bewegungsdaten fehlen."),
+        ):
+            page = review.page(paired+"window.reviewInitialQuest="+json.dumps({"polar":"stream-wait",
+                "ecg":ecg,"acc":acc,"autoRecovery":True})+";",viewport=viewport)
+            page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
+            expect(page.locator("#quest-polar-status")).to_have_text("Polar H10 per Bluetooth verbunden. "+label+
+                " Die Quest startet fehlende Messsignale automatisch erneut.")
+            expect(page.locator("#quest-polar-connect")).to_be_hidden()
+            page.clock.run_for(3100)
+            assert page.evaluate("window.reviewQuest.commands??[]") == [], "The phone wrote automatic stream commands"
+            review.shot(page,f"automatic-{missing}-{slug}",f"Native recovery {slug} · missing {missing}, no phone activation",
+                        page.locator("#quest-polar-status"),"Automatic Polar recovery")
+            wait_state(page,autoRecovery=False)
+            expect(page.locator("#quest-polar-connect")).to_be_visible()
+            expect(page.locator("#quest-polar-status")).not_to_contain_text("automatisch")
+            assert page.evaluate("window.reviewQuest.commands??[]") == []
+            wait_state(page,autoRecovery=True,ecg=True,acc=True)
+            expect(page.locator("#quest-polar-status")).to_have_text("Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.")
+            expect(page.locator("#quest-polar-connect")).to_be_disabled()
+            review.regressions.append({"kind":"native-stream-recovery","viewport":viewport,"missing":missing,"commands":[]})
+            page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live"), default="all",
+    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic"), default="all",
                         help="Full suite or focused pairing, control, Location, scroll, Polar, or live presentation")
     args = parser.parse_args()
     output = args.output.resolve()
@@ -1383,6 +1516,10 @@ def main():
             capture_polar_stream_recovery(review)
         if args.scope in ("all", "live"):
             capture_live_display(review)
+        if args.scope in ("all", "parked"):
+            capture_parked_calibration(review)
+        if args.scope in ("all", "automatic"):
+            capture_automatic_stream_recovery(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")

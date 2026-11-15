@@ -2,13 +2,51 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LiveBreathDisplay } from '../live-breath-display.js';
 
-const view = (overrides = {}, progress = 0) => ({
+const view = (overrides = {}, progress = 0, inputVolume = null) => ({
   available: true, acceptance: 'device/epoch/native/1/1/automatic',
-  radius: .46, phaseLabel: 'Einatmen', progress: { value: progress, max: 2 },
-  setup: { g: 1, attempt: 1, playing: true, audio_state: 'playing', audio_generation: 1,
+  radius: .46, phaseLabel: 'Einatmen', progress: { value: progress, max: 2 }, inputVolume,
+  setup: { g: 1, attempt: 1, input: 'automatic', playing: true, audio_state: 'playing', audio_generation: 1,
     position_frames: 0, cycle_frames: 705600, ...overrides },
 });
 const observation = (i, a = 0) => ({ i: String(i), a });
+
+test('Automatic percent follows the circle from the same fresh native phase clock', () => {
+  const display = new LiveBreathDisplay();
+  display.update(view({ position_frames: 88200 }), observation(1), 0);
+  assert.equal(display.frame(0).inputVolume, .5);
+  const frame = display.frame(500);
+  assert.equal(frame.inputVolume, .625);
+  assert.equal(frame.radius, .46 + .54 * frame.inputVolume);
+  assert.equal(frame.progress, 0);
+  assert.equal(display.frame(500, true).inputVolume, .5);
+  const expired = display.frame(1500);
+  assert.equal(display.frame(50000).inputVolume, expired.inputVolume);
+  display.update(view({ position_frames: 352800 }), observation(2), 51000);
+  assert.equal(display.frame(51500).inputVolume, .875);
+});
+
+test('parked Automatic stays at minimum with no local clock advance', () => {
+  const display = new LiveBreathDisplay();
+  display.update(view({ stage: 'idle', playing: false, audio_state: 'paused' }), observation(1), 0);
+  assert.equal(display.frame(500).radius, .46);
+  assert.equal(display.frame(500).inputVolume, 0);
+  assert.equal(display.frame(500).animating, false);
+});
+
+test('measured input percent interpolates only between observed samples and stops at expiry', () => {
+  for (const input of ['polar-tilt', 'controller-state']) {
+    const display = new LiveBreathDisplay();
+    display.update(view({ input }, 0, .2), observation(1), 0);
+    display.update(view({ input }, 0, .8), observation(2), 1000);
+    assert.equal(display.frame(1000).inputVolume, .2);
+    assert.ok(Math.abs(display.frame(1500).inputVolume - .5) < 1e-12);
+    assert.equal(display.frame(2000).inputVolume, .8);
+    assert.equal(display.frame(50000).inputVolume, .8);
+    assert.equal(display.frame(1500, true).inputVolume, .8);
+    display.update(view({ input }, 0, .1), observation(2), 51000);
+    assert.equal(display.frame(51000).inputVolume, .8, 'replay cannot introduce a new measured value');
+  }
+});
 
 test('breathing presentation follows a fresh native audio anchor through the actual phase boundary', () => {
   const display = new LiveBreathDisplay();

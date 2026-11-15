@@ -2,9 +2,9 @@
 
 ## Current hardware-test handoff — 2026-11-15
 
-The user currently operates the phone personally. Keep assistant phone access
-read-only until that preference changes; do not click, fill, reload or focus its
-page for a release check. After a test pause, require fresh wearer readiness
+The user explicitly authorized assistant phone operation for calibration
+diagnosis with “try yourself”, superseding the earlier read-only preference
+within this test scope. After a test pause, require fresh wearer readiness
 before starting calibration. Announce actual collection only after an accepted
 native calibration has begun advancing completed frames. A running Automatic
 loop or a waiting-for-cycle state does not establish collection.
