@@ -1,5 +1,50 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.6-dev — participant-led calibration and controllers only, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.6-dev, version code 7; local hardware testing only |
+| APK size / SHA-256 | 65,264,431 bytes; `613e536034e720ec0528dd933e22d4bb5bf736d267e451113db58f624c81402d` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `50eaa1ac55eb9161879c48916da82894cfaff9af` / `0d6e505055a77611b2f46a4b50d50d32ce8bc95d` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `7c27f93464c20dcc7500eb2fe4e784910f47aa616dff659ca4dce731be0fa725` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install; v2/v3 and 16KiB ZIP alignment checks pass |
+
+Calibration assumes cue adherence and learns the participant's tilt axis,
+direction and measured range. Ideal correlation, RMSE, flat-hold and ramp-shape
+checks are removed, without introducing recurrence/compliance rejection. Technical
+quality, usable coverage and finite mapping remain required. The existing measured
+span 0.02–0.50 remains an engineering gain/noise limit; it can reject smaller real
+movement and is not a validated physiological cutoff. Participant testing of the
+resulting Polar-driven sphere decides satisfaction and whether to repeat setup.
+
+The app now selects the existing locked controller-only policy, strips hand
+manifest support and rejects conflicting hand/simultaneous features. Runtime hand
+settings and assertions are disabled, while controller breathing and the optional
+base input substrate remain. A legacy original-renderer build guard now admits
+exactly one locked input mode, preserving its renderer/background/panel checks.
+No global headset hand-tracking setting is changed. Private visuals and the
+shared 900-second experiment remain unchanged.
+
+Verification: new waveform tests first failed then passed; core50, setup72 and
+full native824 pass, three ignored. Actual default/selected resolver, compiled
+input/extension selectors, 32 panel controls, real non-resolve builder preflight,
+both product assembly checks and independent reviews pass. The first assembly
+attempt exposed the legacy input guard before compilation; fresh assembly after
+the reviewed fix succeeds. Exact patch/tree reconstruction, signed-APK session
+closure, 89 assets, signer, manifest and ZIP checks pass.
+
+Code 7 is installed with matching installed-byte hash, retained UID/grants and
+persistent app identity. Actual startup reports `nativeControllerOnlyInput=true`,
+`liveHandTrackingExtensionEnabled=false`, `simultaneousHandsControllersSelected=false`
+and closed app-panel visibility. The gateway is ready. Location remains enabled
+at the user's request. An unworn-headset capture is black and does not establish
+wearer rendering. Fresh personal calibration, satisfactory tracking, retry,
+Controller fallback and the full trial remain open. No Meta upload occurred.
+
 ## 0.2.5-dev — parked startup and full-window quality, 2026-11-15
 
 | Build property | Verified value |

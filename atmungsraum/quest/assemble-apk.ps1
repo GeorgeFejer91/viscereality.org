@@ -184,6 +184,39 @@ $app.experiment_phone_pairing_enabled = [bool]$Developer
 $app.experiment_panel_initially_closed = [bool]$Developer
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
+$handInputFeatures = @(
+    'input.simultaneous_hands_and_controllers', 'hand_mesh_live_input',
+    'hand_mesh_visual', 'input.tracked_hand_pointer', 'hand_anchor_particles'
+)
+$app.requested_features = @(@($app.requested_features | Where-Object {
+    $_ -cnotin $handInputFeatures
+}) + 'input.controllers_only' | Select-Object -Unique)
+$app.denied_features = @(@($app.denied_features) + $handInputFeatures | Select-Object -Unique)
+$app.declared_manifest.permissions = @($app.declared_manifest.permissions | Where-Object {
+    $_ -cne 'com.oculus.permission.HAND_TRACKING'
+})
+$app.declared_manifest.uses_features = @($app.declared_manifest.uses_features | Where-Object {
+    $_ -cne 'oculus.software.handtracking'
+})
+foreach ($setting in @(
+    'hand_adapter.enabled', 'hand_mesh.graft_copies.enabled', 'hand_mesh.real_hands.visible',
+    'hand_mesh.visual.diagnostic.enabled', 'hand_mesh.visual.wireframe.enabled',
+    'simultaneous_hands_controllers.enabled'
+)) {
+    $app.runtime_profile.set["debug.rustyquest.native_renderer.$setting"] = 'false'
+    $app.settings_assertions.required_values["native_renderer.$setting"] = 'false'
+}
+$app.runtime_profile.set['debug.rustyquest.native_renderer.hand_mesh.input.source'] = 'disabled'
+$app.settings_assertions.required_values['native_renderer.hand_mesh.input.source'] = 'disabled'
+$handInputModules = @('hand/live-input', 'hand/mesh', 'input/simultaneous-hands-and-controllers')
+$app.settings_assertions.required_modules = @(@($app.settings_assertions.required_modules | Where-Object {
+    $_ -cnotin $handInputModules
+}) + 'input/controller-only' | Select-Object -Unique)
+$app.settings_assertions.forbidden_modules = @(@($app.settings_assertions.forbidden_modules) + $handInputModules | Select-Object -Unique)
+$app.expected_markers.required = @(@($app.expected_markers.required | Where-Object {
+    $_ -cnotin @('handAdapterApplied=true', 'simultaneousHandsControllersSelected=true')
+}) + @('nativeControllerOnlyInput=true', 'liveHandTrackingExtensionEnabled=false') | Select-Object -Unique)
+$app.expected_markers.forbidden = @(@($app.expected_markers.forbidden) + 'liveHandTrackingExtensionEnabled=true' | Select-Object -Unique)
 $app.declared_manifest.permissions = @($app.declared_manifest.permissions) + @(
     'android.permission.CHANGE_NETWORK_STATE',
     'android.permission.CHANGE_WIFI_STATE',

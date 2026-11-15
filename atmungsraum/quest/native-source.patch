@@ -761,10 +761,10 @@ index 5273a82f..e6143cd2 100644
  }
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
 new file mode 100644
-index 00000000..d33507a2
+index 00000000..64255321
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
-@@ -0,0 +1,1354 @@
+@@ -0,0 +1,1308 @@
 +//! Audio-frame-owned parked setup and whole-window participant tilt fitting.
 +//! No Android dependencies or implicit system clock.
 +//!
@@ -778,8 +778,9 @@ index 00000000..d33507a2
 +//! A causal 100 ms gravity estimate retains the 0.60/s motion threshold while
 +//! separating high-rate noise. Original source vectors/timestamps are untouched.
 +//! At 25 Hz, fit requires >=600/800 observations, >=280/cycle, >=60/phase and
-+//! >=6 in both endpoint quarters of each ramp. Existing directed fit/range/hold
-+//! tests remain. Whole-window coverage, not elapsed time, decides success.
++//! >=6 in both endpoint quarters of each ramp. Labels train the participant
++//! axis/direction/range; they are not a waveform-compliance test. Usable timed
++//! coverage and a nondegenerate mapping decide admission, not cue resemblance.
 +//!
 +//! Thirty-two healthy audio observations retain 250 ms history plus its bracket;
 +//! up to 64 future training labels wait for a real audio observation. No frames
@@ -828,7 +829,6 @@ index 00000000..d33507a2
 +    ExcessiveMotion,
 +    InsufficientCoverage,
 +    InsufficientRange,
-+    PoorGuidedMotion,
 +    ClockStalled,
 +    InvalidSource,
 +    FrameOverflow,
@@ -851,7 +851,6 @@ index 00000000..d33507a2
 +            Self::ExcessiveMotion => "excessive_motion",
 +            Self::InsufficientCoverage => "insufficient_coverage",
 +            Self::InsufficientRange => "insufficient_range",
-+            Self::PoorGuidedMotion => "poor_guided_motion",
 +            Self::ClockStalled => "clock_stalled",
 +            Self::InvalidSource => "invalid_source",
 +            Self::FrameOverflow => "frame_overflow",
@@ -1954,6 +1953,9 @@ index 00000000..d33507a2
 +        {
 +            return Err(SetupFailure::InsufficientCoverage);
 +        }
++        // The participant is assumed to follow the cues. Scheduled labels
++        // provide training context for direction, never a target waveform
++        // whose correlation, holds or recurrence can reject the participant.
 +        let mean_envelope = self
 +            .samples
 +            .iter()
@@ -1981,62 +1983,14 @@ index 00000000..d33507a2
 +        let low = projections[projections.len() / 10];
 +        let high = projections[projections.len() * 9 / 10];
 +        let range = high - low;
-+        // A normalized-gravity chord of 0.02 is about 1.15 degrees. The upper
-+        // bound rejects posture changes around 30 degrees as breath training.
++        // Existing engineering usable-signal/gain bounds, not compliance:
++        // 0.02 (~1.15 degrees) limits amplification of a very small signal;
++        // 0.50 (~29 degrees) limits posture-scale spans. The lower bound can
++        // exclude smaller real motion; neither bound is wearer-validated.
 +        if !(0.02..=0.50).contains(&range) {
 +            return Err(SetupFailure::InsufficientRange);
 +        }
 +
-+        for cycle in 0..2 {
-+            let mut n = 0.0;
-+            let (mut sx, mut sy, mut sxx, mut syy, mut sxy, mut squared_error) =
-+                (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-+            let mut quarters = [[0.0; 4]; 4];
-+            let mut hold_squares = [0.0; 2];
-+            let mut hold_counts = [0.0; 2];
-+            for sample in &self.samples {
-+                let (sample_cycle, phase, quarter) = self.training_bin(sample.frame, start);
-+                if sample_cycle != cycle {
-+                    continue;
-+                }
-+                let expected = self.schedule.phase_at(sample.frame).2;
-+                let measured = (dot(sample.unit, axis) - low) / range;
-+                n += 1.0;
-+                sx += expected;
-+                sy += measured;
-+                sxx += expected * expected;
-+                syy += measured * measured;
-+                sxy += expected * measured;
-+                squared_error += (measured - expected).powi(2);
-+                quarters[phase][quarter] += measured;
-+                if phase == 1 || phase == 3 {
-+                    let hold = if phase == 1 { 0 } else { 1 };
-+                    hold_squares[hold] += (measured - if hold == 0 { 1.0 } else { 0.0 }).powi(2);
-+                    hold_counts[hold] += 1.0;
-+                }
-+            }
-+            let variance_x = n * sxx - sx * sx;
-+            let variance_y = n * syy - sy * sy;
-+            let correlation = (n * sxy - sx * sy) / (variance_x * variance_y).sqrt();
-+            // Fit is evaluated separately: one good cycle cannot hide a reversed,
-+            // noisy, absent or out-of-phase second cycle. Labels remain cues;
-+            // they do not themselves assert actual inhale/hold/exhale truth.
-+            if !correlation.is_finite() || correlation < 0.90 || (squared_error / n).sqrt() > 0.16 {
-+                return Err(SetupFailure::PoorGuidedMotion);
-+            }
-+            for phase in 0..4 {
-+                for quarter in 0..4 {
-+                    quarters[phase][quarter] /= counts[cycle][phase][quarter].max(1) as f64;
-+                }
-+            }
-+            if quarters[0][3] - quarters[0][0] < 0.50
-+                || quarters[2][0] - quarters[2][3] < 0.50
-+                || (hold_squares[0] / hold_counts[0]).sqrt() > 0.12
-+                || (hold_squares[1] / hold_counts[1]).sqrt() > 0.12
-+            {
-+                return Err(SetupFailure::PoorGuidedMotion);
-+            }
-+        }
 +        Ok(TiltModel {
 +            source_owner: self.source_owner.ok_or(SetupFailure::InvalidSource)?,
 +            generation: self.calibration_generation,
@@ -4594,10 +4548,10 @@ index 00000000..768a7e86
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
-index 00000000..290298eb
+index 00000000..3513f312
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
-@@ -0,0 +1,1221 @@
+@@ -0,0 +1,1287 @@
 +use super::*;
 +
 +#[test]
@@ -4695,6 +4649,86 @@ index 00000000..290298eb
 +            assert!(setup.model().is_some());
 +        }
 +    }
++}
++
++fn labelled_participant_shape(pattern: u8, second: f64) -> f64 {
++    let cycle = (second / 16.0) as u64;
++    let t = second % 16.0;
++    if pattern == 0 {
++        // Smooth nonlinear breathing continues moving during both labelled
++        // holds. Labels train the mapping; they do not certify a waveform.
++        return 0.10 * (1.0 - (t * std::f64::consts::PI / 8.0).cos()) / 2.0;
++    }
++    let volume = if t < 4.0 {
++        (t / 4.0).sqrt()
++    } else if t < 8.0 {
++        1.0 - 0.45 * ((t - 4.0) / 4.0)
++    } else if t < 12.0 {
++        0.55 * (1.0 - ((t - 8.0) / 4.0).powi(2))
++    } else {
++        0.08 * ((t - 12.0) * std::f64::consts::PI / 4.0).sin()
++    };
++    if pattern == 1 || cycle == 0 {
++        0.10 * volume
++    } else {
++        // A shallower second breath has a different offset, hold slope and
++        // ramp shape. Neither recurrence nor equal amplitudes are required.
++        let other = if t < 4.0 {
++            (t / 4.0).powi(2)
++        } else if t < 8.0 {
++            1.0 - 0.70 * ((t - 4.0) / 4.0)
++        } else if t < 12.0 {
++            0.30 * (1.0 - ((t - 8.0) / 4.0).sqrt())
++        } else {
++            0.0
++        };
++        0.015 + 0.065 * other
++    }
++}
++
++fn calibrate_labelled_participant_shape(pattern: u8) {
++    let mut setup = BreathingSetup::new(schedule());
++    setup.observe_clock(1, 0, time(0), false);
++    setup.start_calibration(7, time(0)).unwrap();
++    setup.observe_clock(1, 0, time(0), true);
++    run(&mut setup, 1764, 1_422_666, |frame| {
++        let angle = labelled_participant_shape(pattern, frame as f64 / 44100.0);
++        Some([angle.sin(), 0.0, angle.cos()])
++    });
++    let status = setup.snapshot(time(1_422_666));
++    assert_eq!(
++        status.calibration,
++        CalibrationState::Succeeded,
++        "pattern={pattern}, failure={:?}",
++        status.failure
++    );
++    assert_eq!(status.calibration_completed_frames, 1_411_200);
++    assert!(status.accepted_samples >= 790);
++    assert_eq!(status.quality.masked, 0);
++    assert_eq!(status.input, SetupInput::PolarTilt);
++    let model = setup.model().unwrap();
++    assert!(model.project([0.0, 0.0, 1.0]).unwrap() < 0.15);
++    let high = 0.10_f64;
++    assert!(model.project([high.sin(), 0.0, high.cos()]).unwrap() > 0.85);
++    assert_eq!(
++        setup.driver_sample(time(1_422_666)).unwrap().input,
++        SetupInput::PolarTilt
++    );
++}
++
++#[test]
++fn labelled_nonlinear_breaths_learn_without_an_ideal_waveform() {
++    calibrate_labelled_participant_shape(0);
++}
++
++#[test]
++fn labelled_holds_can_change_without_rejecting_the_participant() {
++    calibrate_labelled_participant_shape(1);
++}
++
++#[test]
++fn a_different_second_cycle_still_learns_the_labelled_mapping() {
++    calibrate_labelled_participant_shape(2);
 +}
 +
 +#[test]
@@ -5203,28 +5237,14 @@ index 00000000..290298eb
 +}
 +
 +#[test]
-+fn stationary_gravity_and_wrong_phase_motion_fail() {
-+    for pattern in 0..3 {
-+        let mut setup = fresh_setup();
-+        setup.start_calibration(7, time(0)).unwrap();
-+        run(&mut setup, 1_764, 2_116_800, |f| {
-+            Some(match pattern {
-+                0 => [0.0, 0.0, 1.0],
-+                1 => guided_vector(f + 176_400), // movement during the instructed holds
-+                _ if f >= 1_411_200 => {
-+                    let v = guided_vector(f);
-+                    [-v[0], v[1], v[2]]
-+                }
-+                _ => guided_vector(f),
-+            })
-+        });
-+        assert_eq!(
-+            setup.snapshot(time(2_116_800)).calibration,
-+            CalibrationState::Failed,
-+            "pattern {pattern}"
-+        );
-+        assert!(setup.model().is_none());
-+    }
++fn stationary_gravity_does_not_create_a_model_from_labels() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    run(&mut setup, 1_764, 2_116_800, |_| Some([0.0, 0.0, 1.0]));
++    let status = setup.snapshot(time(2_116_800));
++    assert_eq!(status.calibration, CalibrationState::Failed);
++    assert_eq!(status.failure, Some(SetupFailure::InsufficientRange));
++    assert!(setup.model().is_none());
 +}
 +
 +#[test]
@@ -18728,10 +18748,10 @@ index 00000000..729b6fa9
 +}
 diff --git a/docs/EXPERIMENT_BREATHING_SETUP.md b/docs/EXPERIMENT_BREATHING_SETUP.md
 new file mode 100644
-index 00000000..75686aad
+index 00000000..4c0f2bad
 --- /dev/null
 +++ b/docs/EXPERIMENT_BREATHING_SETUP.md
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,136 @@
 +# Shared breathing setup contract
 +
 +This optional app-owned path uses the packaged 44,100 Hz loop. Each of inhale,
@@ -18811,7 +18831,7 @@ index 00000000..75686aad
 +segments are masked rather than ending an attempt at frame zero. The native
 +audio window runs to completion. Diagnostic `quality` counts/warnings are not
 +command revisions or a success authority. The final decision uses actual usable
-+timed samples and per-cycle fit. Elapsed time alone cannot succeed.
++timed samples and a usable learned mapping. Elapsed time alone cannot succeed.
 +Quality counts are bounded 25 Hz slots (at most 800), not raw 200 Hz sample
 +counts. Repeated rejections in one slot count once; a qualified usable point
 +releases that slot's masked count. Several diagnostic reasons can share a slot.
@@ -18828,14 +18848,30 @@ index 00000000..75686aad
 +- at least 280 in each cycle (70%);
 +- at least 60 in each of the eight four-second phases (60%);
 +- at least six observations in the first and last second of each inhale and
-+  exhale, so directed rise/fall is supported rather than inferred from labels;
-+- the existing range 0.02–0.50, per-cycle correlation at least 0.90, normalized
-+  fit RMSE at most 0.16, ramp-quarter change at least 0.50 and hold RMS at most 0.12.
++  exhale, providing timed observations across the labelled window;
++- finite, nondegenerate direction/range estimation and the existing measured
++  normalized-gravity projection span of 0.02–0.50.
++
++The participant is assumed to follow the scheduled cues. Their labels train the
++axis and its direction from observed vectors; the robust P10/P90 range comes from
++those observations. Admission does not compare the measured trajectory with an
++ideal ramp, require flat holds or enforce cross-cycle recurrence. Nonlinear
++breaths, movement during holds and a different second cycle can all train the
++mapping. The participant evaluates the resulting Polar-driven sphere.
++
++The retained span bounds are engineering usable-signal/gain limits, not evidence
++of cue compliance. A span of 0.02 is about 1.15 degrees and avoids amplifying very
++small variation into the full visual range; 0.50 is about 29 degrees and excludes
++posture-scale spans. These conservative limits are not wearer-validated. In
++particular, the lower limit can reject smaller genuine breathing motion; future
++wearer evidence must establish whether it should change. This increment preserves
++both limits rather than silently weakening them.
 +
 +Missing interior or final packets can be tolerated if the full window still
 +meets these criteria. A missing phase or sustained unusable data cannot. The
 +final tail has a bounded 250 ms delivery wait before coverage assessment.
-+Successful model selection never asserts that instructions proved compliance.
++Successful model selection means that a usable mapping was learned; it does not
++judge the participant's cue compliance or establish wearer acceptance.
 +
 +Historical samples use bounded healthy, playing audio observations from the same
 +generation. Future training labels wait for a real audio bracket; frames are not
@@ -18847,8 +18883,9 @@ index 00000000..75686aad
 +## Verification boundary
 +
 +Focused host tests cover 25/200 Hz input, packet jitter, preserved originals,
-+parked startup, full-window noise/motion masks, missing phases, source epochs,
-+retry/fallback and exact main boundaries. These engineering thresholds require
++parked startup, labelled nonlinear/variable breaths, full-window noise/motion
++masks, missing phases, source epochs, retry/fallback and exact main boundaries.
++These engineering thresholds require
 +worn-device qualification; synthetic fixtures establish software behavior, not
 +physiological or clinical accuracy. No successful wearer fit is implied.
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
@@ -19145,6 +19182,19 @@ index b9d29f76..a8a28a25 100644
  The optional BLE carrier can project an independent Polar stop capability `z`.
  Its compact fields are `{r,a,e,s?}`: action revision and ACC/ECG requested,
  PMD-ACK-active and recent-data bits (1/2/4). When `s` is absent, the existing
+diff --git a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json b/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
+index 82fee237..178956f6 100644
+--- a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
++++ b/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
+@@ -5,7 +5,7 @@
+   "module_kind": "input-affordance",
+   "settings_surface": {
+     "authority": "rusty.quest.native_app_settings.v1",
+-    "adapter": "packaged-feature-selection"
++    "adapter": "build_input"
+   },
+   "owner_lane": "rusty-quest",
+   "status": "public-substrate",
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 index 0b6a0c00..22746f1f 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
@@ -20458,6 +20508,54 @@ index 00000000..664dfef1
 +    }
 +}
 +Write-Output "PASS: typed manifest options, defaults, schema and lock identity ($scratch)"
+diff --git a/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1 b/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1
+new file mode 100644
+index 00000000..d5684097
+--- /dev/null
++++ b/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1
+@@ -0,0 +1,42 @@
++[CmdletBinding()]
++param(
++    [Parameter(Mandatory)][string]$AppBuildLock,
++    [string]$RepoRoot=(Join-Path $PSScriptRoot '../..'),
++    [string]$OutputRoot=(Join-Path ([IO.Path]::GetTempPath()) ('original-controller-build-preflight-'+[guid]::NewGuid().ToString('N')))
++)
++$ErrorActionPreference='Stop'
++$RepoRoot=(Resolve-Path -LiteralPath $RepoRoot).Path
++$AppBuildLock=(Resolve-Path -LiteralPath $AppBuildLock).Path
++if(Test-Path -LiteralPath $OutputRoot){throw 'Create-new preflight evidence required.'}
++New-Item -ItemType Directory -Path $OutputRoot | Out-Null
++$lock=Get-Content -Raw -LiteralPath $AppBuildLock | ConvertFrom-Json
++foreach($required in @('ui.native_mesh_panel.original_product','renderer.private_particles','renderer.background.solid_black','ui.breath_composition_control_panel','input.controllers_only')) {
++    if(@($lock.selected_feature_ids) -cnotcontains $required){throw 'Use an actual resolved original-product controller-only app lock.'}
++}
++$builder=Join-Path $RepoRoot 'tools/Build-NativeRendererAndroid.ps1'
++$log=Join-Path $OutputRoot 'actual-builder.log'
++# Execute the real non-resolve builder, including its source/descriptor/generated
++# hash joins. An intentionally unselected operator input makes its existing next
++# gate terminate before source composition, output creation, signing or Cargo.
++# Reaching that exact rejection proves the original controller-only composition
++# passed the same admission path that previously rejected the actual APK build.
++Push-Location $RepoRoot
++try {
++    & pwsh -NoProfile -File $builder -AppBuildLock $AppBuildLock -MetaXrOperatorLibrary 'unselected-preflight-boundary' *> $log
++    $code=$LASTEXITCODE
++} finally {Pop-Location}
++$observed=Get-Content -Raw -LiteralPath $log
++if($code -eq 0 -or !$observed.Contains('Operator inputs require explicit debug opt-in.')) {
++    throw "Actual locked non-resolve builder did not reach the bounded pre-Cargo gate. Inspect $log"
++}
++[ordered]@{
++    passed=$true
++    scope='Actual locked non-resolve builder preflight only; intentional existing downstream rejection, no APK/device proof'
++    feature_lock_sha256=(Get-FileHash -LiteralPath $AppBuildLock).Hash.ToLowerInvariant()
++    builder_sha256=(Get-FileHash -LiteralPath $builder).Hash.ToLowerInvariant()
++    panel_selection_sha256=(Get-FileHash -LiteralPath (Join-Path $RepoRoot 'tools/lib/NativeRendererPanelCompositionSelection.psm1')).Hash.ToLowerInvariant()
++    expected_stop='Operator inputs require explicit debug opt-in.'
++    compilation_invoked=$false
++    signing_invoked=$false
++}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $OutputRoot 'RESULT.json') -Encoding utf8NoBOM
++Write-Output "PASS actual locked non-resolve original/controller-only preflight ($OutputRoot)."
 diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
 index 04d338aa..680d540c 100644
 --- a/tools/checks/Test-NativeRendererConditionAudio.ps1
@@ -20471,6 +20569,102 @@ index 04d338aa..680d540c 100644
  Assert-Contains $runtime 'candidate.prepare(false)'
  Assert-Contains $runtime 'threshold-does-not-stop-audio'
  Assert-Contains $runtime 'natural-end-silence-session-continues'
+diff --git a/tools/checks/Test-NativeRendererControllerOnlyInput.ps1 b/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
+index 302fa990..804d8f25 100644
+--- a/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
++++ b/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
+@@ -1,6 +1,16 @@
+-param([string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)))
++param(
++    [string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)),
++    [string]$AppBuildLock = '',
++    [string]$OutputRoot = (Join-Path ([IO.Path]::GetTempPath()) ('controller-only-input-' + [guid]::NewGuid().ToString('N')))
++)
+ $ErrorActionPreference = 'Stop'
+ Import-Module (Join-Path $RepoRoot 'tools/lib/NativeRendererInputSelection.psm1') -Force
++$descriptor = Join-Path $RepoRoot 'fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json'
++if (!(Test-Json -Json (Get-Content -Raw -LiteralPath $descriptor) -SchemaFile (Join-Path $RepoRoot 'schemas/rusty.quest.native_app_feature.v1.schema.json'))) {
++    throw 'Controller-only descriptor violates its actual feature schema.'
++}
++if (Test-Path -LiteralPath $OutputRoot) { throw 'Create-new output required.' }
++New-Item -ItemType Directory -Path $OutputRoot | Out-Null
+ 
+ $name = 'RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY'
+ $permissions = @('org.khronos.openxr.permission.OPENXR','com.oculus.permission.HAND_TRACKING')
+@@ -29,4 +39,72 @@ foreach ($case in @(
+     } catch { $rejected = $true }
+     if (-not $rejected) { throw 'An unbound or conflicting input selection was admitted.' }
+ }
+-Write-Output 'PASS controller-only input selection, manifest isolation and default compatibility.'
++function Assert-ControllerOnlyManifest([xml]$Manifest) {
++    foreach ($entry in $Manifest.SelectNodes('//*')) {
++        $entryName = $entry.GetAttribute('name', 'http://schemas.android.com/apk/res/android')
++        if ($entryName -match '(?i)hand.?tracking|DETAILED_HAND|HAND_INTERACTION|simultaneous') {
++            throw "Controller-only manifest contains hand input activation: $entryName"
++        }
++    }
++}
++function Read-ResolvedLock([string]$Path) {
++    $lock = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json
++    $manifestPath = [string]$lock.generated_outputs.android_manifest
++    if (![IO.Path]::IsPathRooted($manifestPath)) { $manifestPath = Join-Path $RepoRoot $manifestPath }
++    [xml]$manifest = Get-Content -Raw -LiteralPath $manifestPath
++    return @{ lock = $lock; manifest = $manifest }
++}
++function Resolve-InputCase([string]$Name, [hashtable]$App) {
++    $path = Join-Path $OutputRoot "$Name.app.json"
++    $App | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $path -Encoding utf8NoBOM
++    $result = @(& pwsh -NoProfile -File (Join-Path $RepoRoot 'tools/Resolve-NativeAppBuild.ps1') -AppSpec $path -OutputRoot (Join-Path $OutputRoot $Name) -DryRun 2>&1)
++    if ($LASTEXITCODE) { throw ($result -join "`n") }
++    $lockPath = Get-ChildItem -LiteralPath (Join-Path $OutputRoot $Name) -Recurse -Filter feature-lock.json | Select-Object -ExpandProperty FullName
++    return Read-ResolvedLock $lockPath
++}
++$app = Get-Content -Raw -LiteralPath (Join-Path $RepoRoot 'fixtures/native-app-builds/native-worldspace-panel-test.app.json') | ConvertFrom-Json -AsHashtable
++$legacy = Resolve-InputCase 'legacy' $app
++if ($legacy.lock.android_manifest.permissions -cnotcontains 'com.oculus.permission.HAND_TRACKING' -or
++    $legacy.lock.android_manifest.uses_features -cnotcontains 'oculus.software.handtracking') {
++    throw 'Real unselected resolver control lost optional hands.'
++}
++$app.requested_features = @($app.requested_features | Where-Object { $_ -cne 'input.tracked_hand_pointer' }) + 'input.controllers_only'
++$app.declared_manifest.permissions = @($app.declared_manifest.permissions | Where-Object { $_ -cne 'com.oculus.permission.HAND_TRACKING' })
++$app.declared_manifest.uses_features = @($app.declared_manifest.uses_features | Where-Object { $_ -cne 'oculus.software.handtracking' })
++$app.settings_assertions.required_modules = @($app.settings_assertions.required_modules | Where-Object { $_ -cne 'input/tracked-hand-pointer' }) + 'input/controller-only'
++$controller = Resolve-InputCase 'selected' $app
++Assert-ControllerOnlyManifest $controller.manifest
++if ($controller.lock.selected_feature_ids -cnotcontains 'input.controllers_only' -or
++    @($controller.lock.build_inputs.env | Where-Object { $_.name -ceq $name -and $_.value -ceq 'true' }).Count -ne 1) {
++    throw 'Real resolver did not bind controller-only source selection.'
++}
++$bad = [xml]$controller.manifest.OuterXml
++$permission = $bad.CreateElement('uses-permission')
++$permission.SetAttribute('name', 'http://schemas.android.com/apk/res/android', 'com.oculus.permission.HAND_TRACKING') | Out-Null
++$bad.DocumentElement.AppendChild($permission) | Out-Null
++$rejected = $false
++try { Assert-ControllerOnlyManifest $bad } catch { $rejected = $true }
++if (!$rejected) { throw 'Hand activation damage escaped the manifest check.' }
++
++if ($AppBuildLock) {
++    $selectedApp = Read-ResolvedLock $AppBuildLock
++    $lock = $selectedApp.lock
++    Assert-ControllerOnlyManifest $selectedApp.manifest
++    if ($lock.selected_feature_ids -cnotcontains 'input.controllers_only' -or
++        $lock.selected_feature_ids -cnotcontains 'input.breath.controller_assessment' -or
++        @($lock.selected_feature_ids | Where-Object { $_ -cin @('input.simultaneous_hands_and_controllers','input.tracked_hand_pointer','hand_mesh_live_input','hand_mesh_visual','hand_anchor_particles') }).Count -or
++        @($lock.build_inputs.env | Where-Object { $_.name -ceq $name -and $_.value -ceq 'true' }).Count -ne 1) {
++        throw 'Selected app retained hand features or lost its controller assessment/build binding.'
++    }
++    foreach ($property in @('hand_adapter.enabled','hand_mesh.graft_copies.enabled','hand_mesh.real_hands.visible','hand_mesh.visual.diagnostic.enabled','hand_mesh.visual.wireframe.enabled','simultaneous_hands_controllers.enabled')) {
++        if (@($lock.runtime_profile.set_properties | Where-Object { $_.name -ceq "debug.rustyquest.native_renderer.$property" -and $_.value -ceq 'false' }).Count -ne 1) {
++            throw "Selected app did not disable $property."
++        }
++    }
++    if (@($lock.runtime_profile.set_properties | Where-Object { $_.name -ceq 'debug.rustyquest.native_renderer.hand_mesh.input.source' -and $_.value -ceq 'disabled' }).Count -ne 1) {
++        throw 'Selected app retained a compact hand input source.'
++    }
++}
++& python (Join-Path $PSScriptRoot 'test_native_controller_only_input.py') --repo $RepoRoot --output-root (Join-Path $OutputRoot 'compiled')
++if ($LASTEXITCODE) { throw 'Production controller-only input/compiler tests failed.' }
++Write-Output "PASS controller-only actual resolver/default control, closed binding, hand-free manifest and compiled runtime selection ($OutputRoot)."
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 index 966e9942..474fe245 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
@@ -20528,6 +20722,35 @@ index 966e9942..474fe245 100644
  & python (Join-Path $PSScriptRoot 'test_polar_recovery_callbacks.py')
  if ($LASTEXITCODE -ne 0) { throw 'Production Polar callback/UI owner controls failed' }
  Write-Host 'Test-NativeRendererExperimentPanel PASS'
+diff --git a/tools/checks/Test-NativeRendererPanelComposition.ps1 b/tools/checks/Test-NativeRendererPanelComposition.ps1
+index 2408b225..d4960b32 100644
+--- a/tools/checks/Test-NativeRendererPanelComposition.ps1
++++ b/tools/checks/Test-NativeRendererPanelComposition.ps1
+@@ -45,6 +45,24 @@ try {
+     $originalLock=@{selected_feature_ids=$originalIds};$originalEnv=@{};$originalEnv[$neutral]='false';$originalEnv[$mesh]='true';$originalEnv[$originalScene]='true'
+     $overlay=Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $originalEnv
+     if(-not $overlay.original_scene_mesh_selected -or $overlay.neutral_mesh_controls_enabled -or $overlay.solid_black_worldspace_selected){throw 'Original render route was replaced.'};$passed.Add('original-scene-overlay')
++    $controllerFlag='RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY'
++    $controllerIds=@($originalIds|Where-Object {$_ -cne 'input.simultaneous_hands_and_controllers'})+@('input.controllers_only')
++    $controllerLock=@{selected_feature_ids=$controllerIds};$controllerEnv=$originalEnv.Clone();$controllerEnv[$controllerFlag]='true'
++    $controllerOverlay=Get-NativeRendererPanelCompositionSelection -FeatureLock $controllerLock -BuildEnvByName $controllerEnv
++    if(-not $controllerOverlay.original_scene_mesh_selected -or $controllerOverlay.neutral_mesh_controls_enabled -or $controllerOverlay.solid_black_worldspace_selected){throw 'Controller-only input replaced the original render route.'};$passed.Add('original-scene-controller-only')
++    foreach($required in $controllerIds){$bad=@{selected_feature_ids=@($controllerIds|Where-Object {$_ -cne $required})};Deny ('controller-original-missing-'+$required) {Get-NativeRendererPanelCompositionSelection -FeatureLock $bad -BuildEnvByName $controllerEnv}}
++    $bothInputs=@{selected_feature_ids=$originalIds+@('input.controllers_only')}
++    Deny 'original-both-input-modes' {Get-NativeRendererPanelCompositionSelection -FeatureLock $bothInputs -BuildEnvByName $controllerEnv}
++    foreach($value in @('false','TRUE','invalid')){$bad=$controllerEnv.Clone();$bad[$controllerFlag]=$value;Deny ('original-controller-value-'+$value) {Get-NativeRendererPanelCompositionSelection -FeatureLock $controllerLock -BuildEnvByName $bad}}
++    $missingFlag=$controllerEnv.Clone();$missingFlag.Remove($controllerFlag)
++    Deny 'original-controller-missing-build-value' {Get-NativeRendererPanelCompositionSelection -FeatureLock $controllerLock -BuildEnvByName $missingFlag}
++    Deny 'original-simultaneous-with-unbound-controller-value' {Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $controllerEnv}
++    $priorControllerFlag=[Environment]::GetEnvironmentVariable($controllerFlag,'Process')
++    try {
++        [Environment]::SetEnvironmentVariable($controllerFlag,'true','Process')
++        Deny 'original-controller-ambient-cannot-replace-locked-value' {Get-NativeRendererPanelCompositionSelection -FeatureLock $controllerLock -BuildEnvByName $originalEnv}
++        Deny 'original-simultaneous-with-ambient-controller-input' {Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $originalEnv}
++    } finally {[Environment]::SetEnvironmentVariable($controllerFlag,$priorControllerFlag,'Process')}
+     foreach($required in $originalIds){$bad=@{selected_feature_ids=@($originalIds|Where-Object {$_ -cne $required})};Deny ('original-missing-'+$required) {Get-NativeRendererPanelCompositionSelection -FeatureLock $bad -BuildEnvByName $originalEnv}}
+     foreach($name in @($neutral,$mesh,$originalScene)){$bad=$originalEnv.Clone();$bad[$name]='invalid';Deny ('original-invalid-'+$name) {Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $bad}}
+     $mixed=@{selected_feature_ids=$originalIds+@('renderer.native_scene')}
 diff --git a/tools/checks/experiment_breathing_setup_stub.py b/tools/checks/experiment_breathing_setup_stub.py
 new file mode 100644
 index 00000000..8a380b1b
@@ -21999,6 +22222,142 @@ index d6a4bfd4..413ff5bd 100644
    for(String mode:new String[]{"choose","direct","remote"}){modes.controlMode.state.name=mode;check(mode.equals(modes.snapshot().getString("control_mode")),"explicit "+mode);}
    modes.controlMode.state.selected=false;check(modes.snapshot().has("control_mode"),"unselected owner still explicit");
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
+diff --git a/tools/checks/test_native_controller_only_input.py b/tools/checks/test_native_controller_only_input.py
+new file mode 100644
+index 00000000..ca2e0c42
+--- /dev/null
++++ b/tools/checks/test_native_controller_only_input.py
+@@ -0,0 +1,130 @@
++"""Compile real input owners and both OpenXR extension-selection bodies without Cargo."""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import subprocess
++
++
++def function(source, anchor):
++    start = source.index(anchor)
++    opening = source.index('{', start)
++    depth = 0
++    for end in range(opening, len(source)):
++        depth += (source[end] == '{') - (source[end] == '}')
++        if depth == 0:
++            return source[start:end + 1]
++    raise AssertionError('Unclosed production function')
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--repo', type=Path, required=True)
++    parser.add_argument('--output-root', type=Path, required=True)
++    args = parser.parse_args()
++    args.output_root.mkdir(parents=True, exist_ok=False)
++    root = args.repo / 'apps/native-renderer-android/native/src'
++    paths = [root / name for name in ('native_alternate_input.rs', 'xr_vulkan.rs', 'openxr_simultaneous_hands_controllers.rs')]
++    vulkan = paths[1].read_text(encoding='utf-8')
++    assignments = {}
++    for name, statement in re.findall(r'(enabled_extensions\.(ext_hand_tracking|fb_hand_tracking_aim|fb_hand_tracking_mesh)\s*=.*?;)', vulkan, re.S):
++        assignments.setdefault(statement, []).append(name)
++    assert [len(assignments[key]) for key in ('ext_hand_tracking', 'fb_hand_tracking_aim', 'fb_hand_tracking_mesh')] == [2, 1, 2], 'Both production OpenXR routes must be covered'
++    projection = '\n'.join(assignments[key][0] for key in ('ext_hand_tracking', 'fb_hand_tracking_aim', 'fb_hand_tracking_mesh'))
++    probe = '\n'.join(assignments[key][1] for key in ('ext_hand_tracking', 'fb_hand_tracking_mesh'))
++    simultaneous = function(paths[2].read_text(encoding='utf-8'), 'pub(crate) fn select_extension(')
++    fixture = r'''
++#![allow(dead_code)]
++#[path = "__INPUT_PATH__"] mod native_alternate_input;
++mod xr {
++ #[derive(Clone,Copy,Default,Debug)] pub struct ExtensionSet {
++  pub ext_hand_tracking: bool, pub fb_hand_tracking_aim: bool, pub fb_hand_tracking_mesh: bool,
++  pub meta_simultaneous_hands_and_controllers: bool,
++ }
++}
++mod native_geometry_selection { pub fn hand_geometry_enabled()->bool{true} }
++mod native_renderer_panel_bridge { pub fn packaged_control_panel_mode_is_breath_mapping_installed()->bool{true} }
++mod native_mesh_ui {
++ pub fn neutral_controls_enabled()->bool{false}
++ pub fn enabled_for_mode(_: &str)->bool{true}
++}
++struct Mode; impl Mode { fn marker_value(&self)->&str{"native-worldspace-integration"} }
++struct Options {render_mode:Mode}
++#[derive(Clone,Copy)] struct ActivationDecision(bool);
++impl ActivationDecision {fn is_selected(self)->bool{self.0}}
++const EXTENSION_NAME:&str="XR_META_simultaneous_hands_and_controllers";
++__SIMULTANEOUS__
++fn projection(available_extensions:xr::ExtensionSet)->xr::ExtensionSet {
++ let mut enabled_extensions=xr::ExtensionSet::default();let runtime_options=Options{render_mode:Mode};
++ __PROJECTION__
++ enabled_extensions
++}
++fn probe(available_extensions:xr::ExtensionSet)->xr::ExtensionSet {
++ let mut enabled_extensions=xr::ExtensionSet::default();
++ __PROBE__
++ enabled_extensions
++}
++fn main() {
++ let selected=std::env::args().nth(1).unwrap()=="selected";
++ assert_eq!(native_alternate_input::controller_only_selected(),selected);
++ let available=xr::ExtensionSet{ext_hand_tracking:true,fb_hand_tracking_aim:true,fb_hand_tracking_mesh:true,meta_simultaneous_hands_and_controllers:true};
++ let mut enabled=projection(available);
++ assert_eq!(enabled.ext_hand_tracking,!selected,"projection hand tracking");
++ assert_eq!(enabled.fb_hand_tracking_aim,!selected,"projection hand aim");
++ assert_eq!(enabled.fb_hand_tracking_mesh,!selected,"projection hand mesh");
++ let checked=probe(available);
++ assert_eq!(checked.ext_hand_tracking,!selected,"probe hand tracking");
++ assert_eq!(checked.fb_hand_tracking_mesh,!selected,"probe hand mesh");
++ select_extension(ActivationDecision(false),&available,&mut enabled).unwrap();
++ assert!(!enabled.meta_simultaneous_hands_and_controllers,"unselected simultaneous mode");
++ // Negative control: this exact production selector still enables a selected extension.
++ select_extension(ActivationDecision(true),&available,&mut enabled).unwrap();
++ assert!(enabled.meta_simultaneous_hands_and_controllers);
++ assert_eq!(native_alternate_input::tracked_pointer_enabled_for_mode("native-worldspace-integration"),!selected);
++ use native_alternate_input::{ControllerPointerPose,controller_pointer,AlternatePointer,PointerOwner,runtime_aim_pointer};
++ let pose=ControllerPointerPose{active:true,tracked:true,origin:[1.,2.,3.],orientation:[0.,0.,0.,1.]};
++ let ray=controller_pointer(Some(pose),None).unwrap();
++ assert_eq!(ray.origin,[1.,2.,3.]);assert_eq!(ray.direction,[0.,0.,-1.]);assert_eq!(ray.source,"right-aim");
++ let fallback=controller_pointer(Some(ControllerPointerPose{active:false,..pose}),Some(pose)).unwrap();
++ assert_eq!(fallback.source,"right-grip");
++ let mut pointer=AlternatePointer::default();
++ let hand=|pinch|runtime_aim_pointer([0.;3],[0.,0.,0.,1.],true,true,false,pinch);
++ pointer.update_original_product_interaction(selected,false,false,hand(false));
++ let press=pointer.update_original_product_interaction(selected,false,false,hand(true));
++ assert_eq!(press.1,!selected,"hand cannot become an interaction owner in controller-only mode");
++ pointer.reset();pointer.update_original_product_interaction(selected,true,false,None);
++ let controller=pointer.update_original_product_interaction(selected,true,true,None);
++ assert_eq!(controller.0,PointerOwner::Controllers);assert!(controller.1,"controller press retained");
++ println!("PASS compiled production input and projection/probe extension gates: {}",if selected{"controller-only"}else{"default optional hands"});
++}
++'''
++    fixture = fixture.replace('__INPUT_PATH__', paths[0].resolve().as_posix()).replace('__SIMULTANEOUS__', simultaneous).replace('__PROJECTION__', projection).replace('__PROBE__', probe)
++    source = args.output_root / 'input_selection.rs'
++    source.write_text(fixture, encoding='utf-8')
++    for selected in (False, True):
++        name = 'selected' if selected else 'default'
++        env = os.environ.copy()
++        env.pop('RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY', None)
++        env['RUSTY_QUEST_NATIVE_RENDERER_TRACKED_HAND_POINTER_ENABLED'] = 'true'
++        if selected:
++            env['RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY'] = 'true'
++        binary = args.output_root / (name + ('.exe' if os.name == 'nt' else ''))
++        result = subprocess.run(['rustc', '--edition=2021', str(source), '-o', str(binary)], env=env, capture_output=True, text=True)
++        (args.output_root / (name + '-compile.log')).write_text(result.stdout + result.stderr, encoding='utf-8')
++        result.check_returncode()
++        # Runtime ambient input cannot change the compiled selection.
++        env['RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY'] = 'false' if selected else 'true'
++        subprocess.run([str(binary), name], env=env, check=True)
++    (args.output_root / 'RESULT.json').write_text(json.dumps({
++        'passed': True,
++        'scope': 'Production source/compiler evidence only; no OpenXR runtime, APK or device claim',
++        'sources': {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths},
++        'fixture_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
++        'compiler': subprocess.check_output(['rustc', '--version'], text=True).strip(),
++    }, indent=2) + '\n', encoding='utf-8')
++
++
++if __name__ == '__main__':
++    main()
 diff --git a/tools/checks/test_particle_visual_profile_reset.py b/tools/checks/test_particle_visual_profile_reset.py
 new file mode 100644
 index 00000000..bac36337
@@ -22350,3 +22709,26 @@ index 4e7a895c..03165f05 100644
     .put("d",new JSONArray().put("111111111111").put("222222222222").put("333333333333").put("444444444444"));
    base.put("y",setup);byte[] projected=new PolarStopBleCapability().projectBoundedStatus(base,null);
    check(projected.length<=480&&new JSONObject(new String(projected,java.nio.charset.StandardCharsets.UTF_8)).getString("h").equals("vr-preparation"),"idle four candidate/readiness/presentation bounded projection");
+diff --git a/tools/lib/NativeRendererPanelCompositionSelection.psm1 b/tools/lib/NativeRendererPanelCompositionSelection.psm1
+index 21e2d2ec..2ce576a3 100644
+--- a/tools/lib/NativeRendererPanelCompositionSelection.psm1
++++ b/tools/lib/NativeRendererPanelCompositionSelection.psm1
+@@ -48,9 +48,16 @@ function Get-NativeRendererPanelCompositionSelection {
+         }
+     }
+     if ($originalScene) {
+-        foreach ($required in @('renderer.private_particles','renderer.background.solid_black','ui.breath_composition_control_panel','input.simultaneous_hands_and_controllers')) {
+-            if ($ids -cnotcontains $required) { throw 'Original mesh UI requires the exact original renderer, background, panel and simultaneous input.' }
++        foreach ($required in @('renderer.private_particles','renderer.background.solid_black','ui.breath_composition_control_panel')) {
++            if ($ids -cnotcontains $required) { throw 'Original mesh UI requires the exact original renderer, background and panel.' }
+         }
++        $controllerOnly = $ids -ccontains 'input.controllers_only'
++        $simultaneous = $ids -ccontains 'input.simultaneous_hands_and_controllers'
++        if ($controllerOnly -eq $simultaneous) {
++            throw 'Original mesh UI requires exactly one locked controller-only or simultaneous input mode.'
++        }
++        Import-Module (Join-Path $PSScriptRoot 'NativeRendererInputSelection.psm1') -Force
++        [void](Get-NativeRendererInputSelection -FeatureIds $ids -BuildEnvByName $BuildEnvByName)
+         foreach ($excluded in @('ui.native_mesh_panel','renderer.native_scene',$blackFeature,$originalFeature)) {
+             if ($ids -ccontains $excluded) { throw 'Original mesh UI cannot select the worldspace/composable render route.' }
+         }

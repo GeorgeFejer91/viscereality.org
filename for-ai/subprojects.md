@@ -17,7 +17,13 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   satisfaction. Reject technical/unusable data, without an ideal-waveform or
   recurrence gate. Select controller-only app input to prevent automatic hand
   switching. Code 6 collected both full cycles with 795/800 points, then failed
-  its overly strict template test. These two follow-up repairs are in progress.
+  its overly strict template test. Both follow-up repairs are installed as
+  Developer code 7 with matching byte readback and effective controller-only
+  flags. Fresh participant satisfaction and fallback acceptance remain open.
+
+- The phone app now follows the core site's black/white Arial, VR figure,
+  thin frames and blue/gold accents. The style is live with rendered and public
+  URL checks; installed-phone refresh remains part of the next wearer test.
 
 - Setup correction (2026-11-15): Automatic is selected but parked at minimum and
   silent on load. Explicit calibration or Controller selection starts the native

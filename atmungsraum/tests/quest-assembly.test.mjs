@@ -29,12 +29,33 @@ async function resolvedRun(runName, appId) {
   };
 }
 
+async function assertControllerOnly(run) {
+  assert.doesNotMatch(run.manifest, /com\.oculus\.permission\.HAND_TRACKING|oculus\.software\.handtracking/);
+  assert.deepEqual(run.lock.build_inputs.env.filter(entry => entry.name === 'RUSTY_QUEST_NATIVE_RENDERER_CONTROLLER_ONLY')
+    .map(entry => entry.value), ['true']);
+  const spec = JSON.parse(await readFile(run.specPath, 'utf8'));
+  assert.ok(spec.requested_features.includes('input.controllers_only'));
+  for (const feature of ['input.simultaneous_hands_and_controllers', 'hand_mesh_live_input',
+    'hand_mesh_visual', 'input.tracked_hand_pointer', 'hand_anchor_particles']) {
+    assert.ok(!spec.requested_features.includes(feature), feature);
+    assert.ok(spec.denied_features.includes(feature), feature);
+  }
+  for (const setting of ['hand_adapter.enabled', 'hand_mesh.graft_copies.enabled', 'hand_mesh.real_hands.visible',
+    'hand_mesh.visual.diagnostic.enabled', 'hand_mesh.visual.wireframe.enabled', 'simultaneous_hands_controllers.enabled']) {
+    assert.equal(spec.runtime_profile.set[`debug.rustyquest.native_renderer.${setting}`], 'false', setting);
+    assert.equal(spec.settings_assertions.required_values[`native_renderer.${setting}`], 'false', setting);
+  }
+  assert.ok(spec.settings_assertions.required_modules.includes('input/controller-only'));
+  assert.ok(spec.settings_assertions.required_modules.includes('breath/controller-assessment'));
+}
+
 test('assembly binds the real looping audio and selected Java definitions before packaging',
   { skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.' }, async () => {
     const runName = `asm-test-${randomUUID().slice(0, 12)}`;
     const result = invoke(runName);
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const run = await resolvedRun(runName, 'atmungsraum_quest2');
+    await assertControllerOnly(run);
     const catalogPath = join(questRepo, 'local-artifacts', 'atmungsraum', runName, 'atmungsraum-audio', 'scenario-catalog.json');
     const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
     const loop = await readFile(join(catalogPath, '..', catalog.box_loop.path));
@@ -71,6 +92,7 @@ test('developer resolution selects a distinct non-debuggable app and requires an
     const result = invoke(runName, ['-Developer', '-Keystore', key, '-VersionCode', '30', '-VersionName', '0.1.30-dev']);
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const run = await resolvedRun(runName, 'atmungsraum_developer');
+    await assertControllerOnly(run);
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.developer"/);
     assert.match(run.manifest, /android:label="Atmungsraum Developer"/);
     assert.match(run.manifest, /android:debuggable="false"/);

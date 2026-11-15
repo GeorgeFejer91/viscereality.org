@@ -1,5 +1,29 @@
 # Verification
 
+## Participant-led calibration and controller-only code 7 — 2026-11-15
+
+Three new waveform cases first failed the ideal-template check, then passed
+after its removal: nonlinear breathing, changing holds and a different second
+cycle. No recurrence/compliance gate replaced it. Core50, focused72 and native824
+checks pass, three ignored. Existing clock/source, missing/invalid-data, coverage
+and range guards remain. Independent production/test/document review is clear.
+
+Controller-only verification uses actual default/selected resolver outputs,
+negative controls and compiled production input/extension selectors. Both actual
+Developer and rehearsal assembly tests pass. A real build then exposed an older
+original-renderer simultaneous-input restriction. The narrow fix admits exactly
+one locked mode and preserves renderer/background/panel and all other constraints;
+32 cases, legacy page checks and the actual non-resolve builder path pass.
+The successful fresh build retains the normal locked preflight.
+
+The signed code-7 APK passes source-tree reconstruction, 89-asset/session closure,
+manifest, signer and ZIP checks. Installed bytes and retained identity/grants
+match. Actual running flags are controller-only true, live hand tracking false,
+simultaneous input false and app panel false. HTTP gateway readiness is confirmed.
+The unworn capture is black; physical rendering, participant satisfaction,
+retry/fallback and the full main experiment remain unqualified. Location stays
+enabled as requested; no Meta upload. See the [exact APK record](../quest/apks/README.md).
+
 ## Core-site PWA styling — 2026-11-15
 
 The core site's rendered reference was inspected in IAB and retained privately.
@@ -14,6 +38,12 @@ focus/disabled controls, participant entry, ECG, reduced motion and preserved
 scroll/edit state. Independent review and direct reference/screenshot comparison
 are clear. No brand/title Pretext no-fit remains. This is rendered software
 evidence; physical installed-phone verification remains separate.
+
+The style increment merged in [PR 13](https://github.com/GeorgeFejer91/viscereality.org/pull/13)
+at `0a3451656351d00391b6ca1d9d55bd2805b1d960`. Exact
+[Pages run 43736737421](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43736737421)
+succeeded. All 24 live files match Git, and actual public-URL phone/desktop checks
+pass with no app errors. Installed-phone refresh is pending.
 
 ## Parked preparation and full-window repair — 2026-11-15
 
