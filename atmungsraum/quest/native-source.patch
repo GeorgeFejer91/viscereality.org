@@ -1,5 +1,5 @@
 diff --git a/AGENTS.md b/AGENTS.md
-index ed265bb1..5ff62f76 100644
+index ed265bb1d6596fd4a1bf55a2dc58fffd0c29372f..5ff62f769a45211bbd45e283efe5bc8c40ea12c8 100644
 --- a/AGENTS.md
 +++ b/AGENTS.md
 @@ -68,6 +68,12 @@ classes nor authority suffixes. Debug fixture, bootstrap or peer-session
@@ -16,7 +16,7 @@ index ed265bb1..5ff62f76 100644
  retired and buffer-removal aware; disable reuse fail-safely on bookkeeping
  overflow. Apply the linked rendering contract when changing that path.
 diff --git a/Cargo.lock b/Cargo.lock
-index 43c5cba2..66f75248 100644
+index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a4518342fe55 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -36,6 +36,12 @@ dependencies = [
@@ -124,7 +124,7 @@ index 43c5cba2..66f75248 100644
  name = "version_check"
  version = "0.9.5"
 diff --git a/apps/native-renderer-android/native/Cargo.toml b/apps/native-renderer-android/native/Cargo.toml
-index 8d8f92c0..117796d0 100644
+index 8d8f92c0f6e2e8c6d84ddfe7e26633b97a183651..117796d026a0ce04fc1b5c9ab3f7be115493f0b4 100644
 --- a/apps/native-renderer-android/native/Cargo.toml
 +++ b/apps/native-renderer-android/native/Cargo.toml
 @@ -17,6 +17,8 @@ crate-type = ["cdylib", "rlib"]
@@ -148,7 +148,7 @@ index 8d8f92c0..117796d0 100644
  [target.'cfg(target_os = "android")'.dependencies]
  android-activity = { version = "0.6.1", features = ["native-activity"] }
 diff --git a/apps/native-renderer-android/native/build.rs b/apps/native-renderer-android/native/build.rs
-index 4037f9be..38ff428b 100644
+index 4037f9bea49adbcc8deb304eb474733f9e066d79..38ff428b20170fa9abd8327e144f4b279259b7da 100644
 --- a/apps/native-renderer-android/native/build.rs
 +++ b/apps/native-renderer-android/native/build.rs
 @@ -25,6 +25,7 @@ fn main() {
@@ -199,26 +199,76 @@ index 4037f9be..38ff428b 100644
          );
          let frame_extension_define = if extension_enabled { "1" } else { "0" };
 diff --git a/apps/native-renderer-android/native/src/breath_composition_driver.rs b/apps/native-renderer-android/native/src/breath_composition_driver.rs
-index 80046d3c..98869aca 100644
+index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d5443192e686 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_driver.rs
 +++ b/apps/native-renderer-android/native/src/breath_composition_driver.rs
-@@ -189,6 +189,7 @@ pub(crate) struct BreathCompositionDriver {
+@@ -159,6 +159,31 @@ enum DriverStatus {
+     AppliedState,
+ }
+ 
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++enum SetupBoundary {
++    Automatic(u64),
++    Polar(crate::experiment_breathing_setup_runtime::SetupPolarLineage),
++}
++impl SetupBoundary {
++    fn marker_token(self) -> String {
++        match self {
++            Self::Automatic(generation) => format!("automatic:{generation}"),
++            Self::Polar(lineage) => format!(
++                "polar:{}:{}:{}:{}:{}:{}:{}",
++                lineage.audio_generation,
++                lineage.driver_epoch,
++                lineage.source_binding.0,
++                lineage.source_binding.1,
++                lineage.source_reference,
++                lineage
++                    .projection_generation
++                    .map_or_else(|| "none".to_owned(), |g| g.to_string()),
++                lineage.model_generation,
++            ),
++        }
++    }
++}
++
+ impl DriverStatus {
+     const fn as_str(self) -> &'static str {
+         match self {
+@@ -189,6 +214,19 @@ pub(crate) struct BreathCompositionDriver {
      reason: &'static str,
      accepted_outputs: u64,
      reset_count: u64,
-+    setup_boundary: Option<(u64, u64)>,
++    setup_boundary: Option<SetupBoundary>,
++    setup_phase: Option<CommonBreathPhase>,
++    setup_availability: &'static str,
++    last_reset_reason: &'static str,
++    last_setup_confirmation: Option<(
++        crate::experiment_breathing_setup_runtime::SetupPolarLineage,
++        u64,
++    )>,
++    setup_confirmation_fence: Option<(
++        crate::experiment_breathing_setup_runtime::SetupPolarLineage,
++        u64,
++    )>,
++    setup_rearm_required: bool,
  }
  
  impl BreathCompositionDriver {
-@@ -210,6 +211,7 @@ impl BreathCompositionDriver {
+@@ -210,6 +248,13 @@ impl BreathCompositionDriver {
              reason: "not-observed",
              accepted_outputs: 0,
              reset_count: 0,
 +            setup_boundary: None,
++            setup_phase: None,
++            setup_availability: "none",
++            last_reset_reason: "not-observed",
++            last_setup_confirmation: None,
++            setup_confirmation_fence: None,
++            setup_rearm_required: false,
          }
      }
  
-@@ -223,6 +225,22 @@ impl BreathCompositionDriver {
+@@ -223,9 +268,29 @@ impl BreathCompositionDriver {
          snapshot: BreathCompositionSnapshot,
          observed_at: BreathTimestampMicros,
          dt_seconds: f32,
@@ -240,10 +290,33 @@ index 80046d3c..98869aca 100644
 +        setup: Option<crate::experiment_breathing_setup_runtime::SetupDriverOutput>,
      ) {
          self.requested = snapshot.requested;
++        if let Some(cursor) = setup.and_then(|s| s.confirmation_cursor()) {
++            self.last_setup_confirmation = Some(cursor);
++        }
          if settings != self.settings {
-@@ -259,6 +277,73 @@ impl BreathCompositionDriver {
++            self.fence_setup_confirmation();
+             self.pending_reset_slot = self
+                 .owns_slot
+                 .then_some((self.settings.target_slot, self.settings.loss_value01));
+@@ -233,6 +298,8 @@ impl BreathCompositionDriver {
+             self.reset("config-changed");
+         }
+         if !self.settings.requested_enabled {
++            self.fence_setup_confirmation();
++            self.setup_rearm_required = true;
+             self.owns_slot = false;
+             self.status = DriverStatus::Disabled;
+             self.reason = "settings-disabled";
+@@ -258,7 +325,116 @@ impl BreathCompositionDriver {
+             self.reject("activation-binding-mismatch");
              return;
          }
++        if self.setup_rearm_required {
++            // Reopening activation establishes its own admission boundary;
++            // confirmations observed while it was closed cannot rearm it.
++            self.fence_setup_confirmation();
++            self.setup_rearm_required = false;
++        }
          self.owns_slot = true;
 +        if let Some(setup) = setup {
 +            use crate::experiment_breathing_setup_runtime::SetupDriverOutput;
@@ -252,17 +325,23 @@ index 80046d3c..98869aca 100644
 +                    self.wait("setup-input-not-ready");
 +                    return;
 +                }
++                SetupDriverOutput::PolarUnavailable { .. } => {
++                    self.fence_setup_confirmation();
++                    self.wait("setup-input-not-ready");
++                    return;
++                }
 +                SetupDriverOutput::Automatic { volume, generation } => {
 +                    if !volume.is_finite() || !(0.0..=1.0).contains(&volume) {
 +                        self.wait("setup-volume-invalid");
 +                        return;
 +                    }
-+                    let boundary = (generation, 0);
++                    let boundary = SetupBoundary::Automatic(generation);
 +                    if self.setup_boundary != Some(boundary) {
 +                        self.reset("setup-input-changed");
 +                        self.setup_boundary = Some(boundary);
 +                    }
 +                    self.integrator.reset(volume as f32);
++                    self.setup_availability = "automatic";
 +                    self.status = DriverStatus::AppliedVolume;
 +                    self.reason = "setup-automatic-audio-frame";
 +                    self.last_observed_at = Some(observed_at);
@@ -270,25 +349,49 @@ index 80046d3c..98869aca 100644
 +                    return;
 +                }
 +                SetupDriverOutput::PolarTilt {
-+                    phase,
-+                    generation,
-+                    model_generation,
++                    confirmed_phase,
++                    confirmation_revision,
++                    lineage,
++                    availability,
 +                    ..
 +                } => {
-+                    if !matches!(
-+                        phase,
-+                        CommonBreathPhase::Inhale
-+                            | CommonBreathPhase::Exhale
-+                            | CommonBreathPhase::Hold
-+                    ) {
-+                        self.wait("setup-phase-not-established");
++                    if self
++                        .last_observed_at
++                        .is_some_and(|previous| observed_at < previous)
++                    {
++                        self.wait("observed-time-discontinuity");
 +                        return;
 +                    }
-+                    let boundary = (generation, model_generation);
++                    let boundary = SetupBoundary::Polar(lineage);
 +                    if self.setup_boundary != Some(boundary) {
 +                        self.reset("setup-model-changed");
 +                        self.setup_boundary = Some(boundary);
 +                    }
++                    self.setup_availability = availability.as_str();
++                    // Callback-side confirmation survives a masked batch tail;
++                    // sample availability stays independent of applied state.
++                    let newer_than_fence =
++                        self.setup_confirmation_fence
++                            .is_none_or(|(retired_lineage, revision)| {
++                                retired_lineage != lineage || confirmation_revision > revision
++                            });
++                    if let Some(phase) = confirmed_phase.filter(|phase| {
++                        newer_than_fence
++                            && matches!(
++                                phase,
++                                CommonBreathPhase::Inhale
++                                    | CommonBreathPhase::Exhale
++                                    | CommonBreathPhase::Hold
++                            )
++                    }) {
++                        self.setup_phase = Some(phase);
++                    }
++                    let Some(phase) = self.setup_phase else {
++                        self.status = DriverStatus::Waiting;
++                        self.reason = "setup-phase-not-established";
++                        self.last_observed_at = Some(observed_at);
++                        return;
++                    };
 +                    self.integrator.update(
 +                        phase,
 +                        dt_seconds,
@@ -298,7 +401,13 @@ index 80046d3c..98869aca 100644
 +                        self.settings.loss_value01,
 +                    );
 +                    self.status = DriverStatus::AppliedState;
-+                    self.reason = "setup-participant-tilt-phase";
++                    self.reason = if availability
++                        == crate::experiment_breathing_setup_runtime::SetupSampleAvailability::Ready
++                    {
++                        "setup-participant-tilt-phase"
++                    } else {
++                        "setup-retained-tilt-phase"
++                    };
 +                    self.effective = snapshot.effective;
 +                    self.generation = snapshot.generation;
 +                    self.last_observed_at = Some(observed_at);
@@ -315,18 +424,278 @@ index 80046d3c..98869aca 100644
          if snapshot.status != BreathCompositionStatus::Running {
              self.wait("composition-not-running");
              return;
-@@ -427,6 +512,7 @@ impl BreathCompositionDriver {
+@@ -396,7 +572,7 @@ impl BreathCompositionDriver {
+ 
+     pub(crate) fn marker_fields(&self) -> String {
+         format!(
+-            "{} breathCompositionDriverStatus={} breathCompositionDriverReason={} breathCompositionDriverRequestedSource={} breathCompositionDriverRequestedMapping={} breathCompositionDriverEffectiveSource={} breathCompositionDriverEffectiveMapping={} breathCompositionDriverGeneration={} breathCompositionDriverValue01={:.6} breathCompositionDriverLastSequenceId={} breathCompositionDriverAcceptedOutputs={} breathCompositionDriverResetCount={} breathCompositionDriverRrConsumed=false",
++            "{} breathCompositionDriverStatus={} breathCompositionDriverReason={} breathCompositionDriverRequestedSource={} breathCompositionDriverRequestedMapping={} breathCompositionDriverEffectiveSource={} breathCompositionDriverEffectiveMapping={} breathCompositionDriverGeneration={} breathCompositionDriverValue01={:.6} breathCompositionDriverLastSequenceId={} breathCompositionDriverAcceptedOutputs={} breathCompositionDriverResetCount={} breathCompositionDriverRrConsumed=false breathCompositionDriverSetupAvailability={} breathCompositionDriverSetupPhase={} breathCompositionDriverSetupLineage={} breathCompositionDriverLastResetReason={}",
+             self.settings.marker_fields(),
+             self.status.as_str(),
+             self.reason,
+@@ -409,10 +585,16 @@ impl BreathCompositionDriver {
+             self.last_sequence_id.map_or_else(|| "none".to_owned(), |value| value.to_string()),
+             self.accepted_outputs,
+             self.reset_count,
++            self.setup_availability,
++            self.setup_phase.map_or("none", |p| p.as_str()),
++            self.setup_boundary.map_or_else(|| "none".to_owned(), SetupBoundary::marker_token),
++            self.last_reset_reason,
+         )
+     }
+ 
+     fn reject(&mut self, reason: &'static str) {
++        self.fence_setup_confirmation();
++        self.setup_rearm_required = true;
+         if self.owns_slot && self.pending_reset_slot.is_none() {
+             self.pending_reset_slot = Some((self.settings.target_slot, self.settings.loss_value01));
+         }
+@@ -421,12 +603,24 @@ impl BreathCompositionDriver {
+         self.status = DriverStatus::Rejected;
+     }
+ 
++    fn fence_setup_confirmation(&mut self) {
++        // Reset deliberately preserves this floor across unavailable frames.
++        // Only newer sensor confirmation in the same lineage can rearm it.
++        if self.last_setup_confirmation.is_some() {
++            self.setup_confirmation_fence = self.last_setup_confirmation;
++        }
++    }
++
+     fn wait(&mut self, reason: &'static str) {
+         self.reset(reason);
+         self.status = DriverStatus::Waiting;
      }
  
      fn reset(&mut self, reason: &'static str) {
 +        self.setup_boundary = None;
++        self.setup_phase = None;
++        self.setup_availability = "none";
++        self.last_reset_reason = reason;
          self.integrator.reset(self.settings.loss_value01);
          self.effective = None;
          self.generation = None;
-@@ -481,6 +567,62 @@ mod tests {
-     use super::*;
+@@ -469,7 +663,7 @@ fn parse_required_f32(value: Option<String>, min: f32, max: f32) -> Option<f32>
+ }
+ 
+ #[cfg(test)]
+-mod tests {
++pub(crate) mod tests {
+     use rusty_quest_breath_contract::{
+         composition::{
+             BreathCompositionOutput, BreathCompositionTelemetry, ControllerProjectionSelection,
+@@ -482,7 +676,281 @@ mod tests {
  
      const BINDING: [u8; 32] = [0x5a; 32];
+ 
+-    fn settings() -> BreathCompositionDriverSettings {
++    pub(crate) fn setup_frame(
++        driver: &mut BreathCompositionDriver,
++        setup: crate::experiment_breathing_setup_runtime::SetupDriverOutput,
++        now_ns: u64,
++        dt: f32,
++    ) {
++        setup_frame_with_settings(driver, setup, driver.settings(), true, now_ns, dt);
++    }
++
++    pub(crate) fn changed_settings(rate: f32, slot: usize) -> BreathCompositionDriverSettings {
++        BreathCompositionDriverSettings {
++            inhale_rate_per_second: rate,
++            target_slot: slot,
++            ..settings()
++        }
++    }
++
++    pub(crate) fn setup_frame_with_settings(
++        driver: &mut BreathCompositionDriver,
++        setup: crate::experiment_breathing_setup_runtime::SetupDriverOutput,
++        settings: BreathCompositionDriverSettings,
++        feature_lock_active: bool,
++        now_ns: u64,
++        dt: f32,
++    ) {
++        let mut snapshot = running_snapshot(
++            BreathCompositionSource::PolarAcc,
++            BreathCompositionMapping::State,
++            1,
++            1,
++            now_ns / 1000,
++            None,
++            Some(CommonBreathPhase::Inhale),
++        );
++        snapshot.feature_lock_active = feature_lock_active;
++        driver.update_frame_with_setup(
++            settings,
++            snapshot,
++            BreathTimestampMicros::new(now_ns / 1000),
++            dt,
++            Some(setup),
++        );
++    }
++
++    fn polar_lineage() -> crate::experiment_breathing_setup_runtime::SetupPolarLineage {
++        crate::experiment_breathing_setup_runtime::SetupPolarLineage {
++            audio_generation: 7,
++            driver_epoch: 1,
++            source_binding: (5, 1),
++            source_reference: 1,
++            projection_generation: Some(3),
++            model_generation: 1,
++        }
++    }
++
++    #[test]
++    fn setup_retained_states_integrate_at_render_cadence_and_recover_without_catchup() {
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupSampleAvailability,
++        };
++        for cadence in [72_u64, 90, 120] {
++            for (phase, expected) in [
++                (CommonBreathPhase::Inhale, 0.45),
++                (CommonBreathPhase::Exhale, 0.075),
++                (CommonBreathPhase::Hold, 0.2),
++            ] {
++                let mut driver = BreathCompositionDriver::new(settings());
++                let current = SetupDriverOutput::PolarTilt {
++                    volume: Some(0.99),
++                    phase,
++                    confirmed_phase: Some(phase),
++                    confirmation_revision: 1,
++                    lineage: polar_lineage(),
++                    availability: SetupSampleAvailability::Ready,
++                };
++                setup_frame(&mut driver, current, 1_000_000_000, 0.0);
++                for frame in 1..=cadence / 2 {
++                    setup_frame(
++                        &mut driver,
++                        SetupDriverOutput::PolarTilt {
++                            volume: None,
++                            phase: CommonBreathPhase::Unknown,
++                            confirmed_phase: None,
++                            confirmation_revision: 1,
++                            lineage: polar_lineage(),
++                            availability: SetupSampleAvailability::SampleUnavailable,
++                        },
++                        1_000_000_000 + frame * 1_000_000_000 / cadence,
++                        1.0 / cadence as f32,
++                    );
++                    assert_eq!(driver.reset_count, 1);
++                }
++                assert!(
++                    (driver.value01() - expected).abs() < 0.000_001,
++                    "{phase:?} at {cadence} Hz"
++                );
++                assert!(driver
++                    .marker_fields()
++                    .contains("SetupAvailability=sample-unavailable"));
++                assert!(driver
++                    .marker_fields()
++                    .contains("Reason=setup-retained-tilt-phase"));
++                setup_frame(
++                    &mut driver,
++                    SetupDriverOutput::PolarTilt {
++                        volume: Some(0.01),
++                        phase: CommonBreathPhase::Hold,
++                        confirmed_phase: Some(CommonBreathPhase::Hold),
++                        confirmation_revision: 2,
++                        lineage: polar_lineage(),
++                        availability: SetupSampleAvailability::Ready,
++                    },
++                    1_600_000_000,
++                    0.1,
++                );
++                assert!((driver.value01() - expected).abs() < 0.000_001);
++            }
++        }
++    }
++
++    #[test]
++    fn setup_lineage_and_configuration_barriers_discard_retained_phase() {
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupSampleAvailability,
++        };
++        let original = polar_lineage();
++        let mut changed = [original; 7];
++        changed[0].audio_generation += 1;
++        changed[1].driver_epoch += 1;
++        changed[2].source_binding.0 += 1;
++        changed[3].source_binding.1 += 1;
++        changed[4].source_reference += 1;
++        changed[5].projection_generation = Some(4);
++        changed[6].model_generation += 1;
++        for lineage in changed {
++            let mut driver = BreathCompositionDriver::new(settings());
++            setup_frame(
++                &mut driver,
++                SetupDriverOutput::PolarTilt {
++                    volume: Some(0.99),
++                    phase: CommonBreathPhase::Inhale,
++                    confirmed_phase: Some(CommonBreathPhase::Inhale),
++                    confirmation_revision: 1,
++                    lineage: original,
++                    availability: SetupSampleAvailability::Ready,
++                },
++                1_000_000_000,
++                0.2,
++            );
++            assert!((driver.value01() - 0.3).abs() < 0.000_001);
++            setup_frame(
++                &mut driver,
++                SetupDriverOutput::PolarTilt {
++                    volume: None,
++                    phase: CommonBreathPhase::Unknown,
++                    confirmed_phase: None,
++                    confirmation_revision: 1,
++                    lineage,
++                    availability: SetupSampleAvailability::SampleUnavailable,
++                },
++                1_100_000_000,
++                0.1,
++            );
++            assert_eq!(driver.value01(), 0.2, "changed lineage {lineage:?}");
++            assert_eq!(driver.setup_phase, None);
++            assert_eq!(driver.reset_count, 2);
++        }
++        let mut driver = BreathCompositionDriver::new(settings());
++        let current = SetupDriverOutput::PolarTilt {
++            volume: Some(0.5),
++            phase: CommonBreathPhase::Inhale,
++            confirmed_phase: Some(CommonBreathPhase::Inhale),
++            confirmation_revision: 1,
++            lineage: original,
++            availability: SetupSampleAvailability::Ready,
++        };
++        setup_frame(&mut driver, current, 1_000_000_000, 0.2);
++        let mut changed_settings = settings();
++        changed_settings.inhale_rate_per_second = 0.6;
++        // The production frame supplies the accepted configuration, retiring
++        // the previous integration even when the next sample is unavailable.
++        let snapshot = running_snapshot(
++            BreathCompositionSource::PolarAcc,
++            BreathCompositionMapping::State,
++            1,
++            1,
++            1_100_000,
++            None,
++            Some(CommonBreathPhase::Inhale),
++        );
++        driver.update_frame_with_setup(
++            changed_settings,
++            snapshot,
++            BreathTimestampMicros::new(1_100_000),
++            0.1,
++            Some(SetupDriverOutput::PolarTilt {
++                volume: None,
++                phase: CommonBreathPhase::Unknown,
++                confirmed_phase: None,
++                confirmation_revision: 1,
++                lineage: original,
++                availability: SetupSampleAvailability::SampleUnavailable,
++            }),
++        );
++        assert_eq!(driver.value01(), 0.2);
++        assert_eq!(driver.setup_phase, None);
++    }
 +    #[test]
 +    fn selected_setup_drives_the_bound_slot_before_legacy_composition_is_running() {
 +        use crate::experiment_breathing_setup_runtime::SetupDriverOutput;
@@ -359,10 +728,20 @@ index 80046d3c..98869aca 100644
 +            BreathTimestampMicros::new(110),
 +            0.1,
 +            Some(SetupDriverOutput::PolarTilt {
-+                volume: 0.99,
++                volume: Some(0.99),
 +                phase: CommonBreathPhase::Exhale,
-+                generation: 7,
-+                model_generation: 1,
++                confirmed_phase: Some(CommonBreathPhase::Exhale),
++                confirmation_revision: 1,
++                lineage: crate::experiment_breathing_setup_runtime::SetupPolarLineage {
++                    audio_generation: 7,
++                    driver_epoch: 1,
++                    source_binding: (5, 1),
++                    source_reference: 1,
++                    projection_generation: None,
++                    model_generation: 1,
++                },
++                availability:
++                    crate::experiment_breathing_setup_runtime::SetupSampleAvailability::Ready,
 +            }),
 +        );
 +        assert!(
@@ -383,11 +762,13 @@ index 80046d3c..98869aca 100644
 +        );
 +        assert_eq!(driver.value01(), settings().loss_value01);
 +    }
- 
-     fn settings() -> BreathCompositionDriverSettings {
++
++    pub(crate) fn settings() -> BreathCompositionDriverSettings {
          BreathCompositionDriverSettings {
+             requested_enabled: true,
+             config_valid: true,
 diff --git a/apps/native-renderer-android/native/src/breath_composition_runtime.rs b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
-index 5273a82f..e6143cd2 100644
+index 5273a82f3aa0dcc517653e62af9aa8512f8674a4..e6143cd2f8a801d3db84ccdbacb5743e213e5219 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_runtime.rs
 +++ b/apps/native-renderer-android/native/src/breath_composition_runtime.rs
 @@ -1030,6 +1030,9 @@ impl BreathCompositionRuntime {
@@ -761,10 +1142,10 @@ index 5273a82f..e6143cd2 100644
  }
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
 new file mode 100644
-index 00000000..64255321
+index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8ca88fd7fe
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
-@@ -0,0 +1,1308 @@
+@@ -0,0 +1,1318 @@
 +//! Audio-frame-owned parked setup and whole-window participant tilt fitting.
 +//! No Android dependencies or implicit system clock.
 +//!
@@ -1043,6 +1424,7 @@ index 00000000..64255321
 +    live: Option<AccObservation>,
 +    last_acc: Option<AccObservation>,
 +    motion_continuity: bool,
++    phase_history_epoch: u64,
 +    alignment_anchor: Option<(u64, u64)>,
 +    signal_resume_ns: Option<u64>,
 +    samples: Vec<TrainingSample>,
@@ -1078,6 +1460,7 @@ index 00000000..64255321
 +            live: None,
 +            last_acc: None,
 +            motion_continuity: false,
++            phase_history_epoch: 0,
 +            alignment_anchor: None,
 +            signal_resume_ns: None,
 +            samples: Vec::with_capacity(MAX_TRAINING_SAMPLES),
@@ -1697,6 +2080,12 @@ index 00000000..64255321
 +        self.model.as_ref()
 +    }
 +
++    /// Classification history breaks on rejected signal evidence, independently
++    /// of retained model ownership and render-time sample freshness.
++    pub(crate) fn phase_history_epoch(&self) -> u64 {
++        self.phase_history_epoch
++    }
++
 +    pub(crate) fn driver_sample(&self, now_ns: u64) -> Option<TiltSample> {
 +        if self.parked() && self.clock_fresh(now_ns) {
 +            return Some(TiltSample {
@@ -1828,6 +2217,7 @@ index 00000000..64255321
 +        }
 +    }
 +    fn reset_sample_continuity(&mut self) {
++        self.phase_history_epoch = self.phase_history_epoch.saturating_add(1);
 +        self.last_acc = None;
 +        self.motion_continuity = false;
 +        self.alignment_anchor = None;
@@ -1847,6 +2237,7 @@ index 00000000..64255321
 +        )
 +    }
 +    fn mask_quality(&mut self, reason: SetupFailure) {
++        self.phase_history_epoch = self.phase_history_epoch.saturating_add(1);
 +        self.live = None;
 +        self.quality.warning = match reason {
 +            SetupFailure::ExcessiveMotion => "motion",
@@ -2075,10 +2466,10 @@ index 00000000..64255321
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 00000000..2b694fd6
+index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e11670789a
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,1382 @@
+@@ -0,0 +1,1536 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -2213,9 +2604,42 @@ index 00000000..2b694fd6
 +    classifier: CommonPhaseClassifier,
 +    classified_model: Option<u64>,
 +    classified_at: Option<u64>,
++    classified_signal_epoch: u64,
++    driver_epoch: u64,
++    // Sensor callbacks own confirmation even if a later callback re-primes
++    // history before rendering can observe the newly confirmed state.
++    last_confirmed_phase: Option<(SetupPolarLineage, CommonBreathPhase)>,
++    // Advances on accepted confirmed observations, never on mask/re-prime.
++    // It is independent of classifier history and never resets within Runtime.
++    confirmation_revision: u64,
 +    sequence: u64,
 +    phase: CommonBreathPhase,
 +    ledger: VecDeque<(Value, Value)>,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) struct SetupPolarLineage {
++    pub(crate) audio_generation: u64,
++    // Captures accepted temporal barriers even if no render frame saw them.
++    pub(crate) driver_epoch: u64,
++    pub(crate) source_binding: (u64, u64),
++    pub(crate) source_reference: u64,
++    pub(crate) projection_generation: Option<u64>,
++    pub(crate) model_generation: u64,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) enum SetupSampleAvailability {
++    Ready,
++    SampleUnavailable,
++    PhaseUnconfirmed,
++}
++impl SetupSampleAvailability {
++    pub(crate) fn as_str(self) -> &'static str {
++        match self {
++            Self::Ready => "ready",
++            Self::SampleUnavailable => "sample-unavailable",
++            Self::PhaseUnconfirmed => "phase-unconfirmed",
++        }
++    }
 +}
 +#[derive(Clone, Copy, Debug, PartialEq)]
 +pub(crate) enum SetupDriverOutput {
@@ -2225,12 +2649,36 @@ index 00000000..2b694fd6
 +        generation: u64,
 +    },
 +    PolarTilt {
-+        volume: f64,
++        volume: Option<f64>,
 +        phase: CommonBreathPhase,
-+        generation: u64,
-+        model_generation: u64,
++        confirmed_phase: Option<CommonBreathPhase>,
++        confirmation_revision: u64,
++        lineage: SetupPolarLineage,
++        availability: SetupSampleAvailability,
++    },
++    // Inert metadata lets retirement fence confirmations hidden by an audio
++    // or projection gate. This variant supplies no phase or readiness.
++    PolarUnavailable {
++        lineage: SetupPolarLineage,
++        confirmation_revision: u64,
 +    },
 +    Controller,
++}
++impl SetupDriverOutput {
++    pub(crate) fn confirmation_cursor(self) -> Option<(SetupPolarLineage, u64)> {
++        match self {
++            Self::PolarTilt {
++                lineage,
++                confirmation_revision,
++                ..
++            }
++            | Self::PolarUnavailable {
++                lineage,
++                confirmation_revision,
++            } => Some((lineage, confirmation_revision)),
++            _ => None,
++        }
++    }
 +}
 +impl Runtime {
 +    fn observe_source_pair(&mut self, nano: u64, elapsed: u64) {
@@ -2380,6 +2828,7 @@ index 00000000..2b694fd6
 +            host,
 +            mg.map(|v| f64::from(v) / 1000.0),
 +        );
++        self.refresh_classifier_continuity(source_ns);
 +        let now = self.now_ns().max(host);
 +        if let Some(sample) = self
 +            .core
@@ -2393,6 +2842,7 @@ index 00000000..2b694fd6
 +                self.classified_model = sample.model_generation;
 +                self.classified_at = None;
 +                self.phase = CommonBreathPhase::Unknown;
++                self.last_confirmed_phase = None;
 +            }
 +            if self.classified_at != Some(source_ns) {
 +                self.sequence = self.sequence.saturating_add(1);
@@ -2410,9 +2860,51 @@ index 00000000..2b694fd6
 +                    )
 +                    .phase;
 +                self.classified_at = Some(source_ns);
++                if matches!(
++                    self.phase,
++                    CommonBreathPhase::Inhale | CommonBreathPhase::Exhale | CommonBreathPhase::Hold
++                ) {
++                    if let Some(lineage) = self.polar_lineage(self.core.snapshot(now)) {
++                        self.confirmation_revision = self.confirmation_revision.saturating_add(1);
++                        self.last_confirmed_phase = Some((lineage, self.phase));
++                    }
++                }
 +            }
 +        }
 +        self.refresh(now);
++    }
++    fn refresh_classifier_continuity(&mut self, source_ns: u64) {
++        let epoch = self.core.phase_history_epoch();
++        if self.classified_signal_epoch != epoch {
++            let _ = self
++                .classifier
++                .reset(BreathTimestampMicros::new(source_ns / 1000));
++            self.classified_signal_epoch = epoch;
++            self.classified_at = None;
++            self.phase = CommonBreathPhase::Unknown;
++        }
++    }
++    fn retire_driver_phase(&mut self) {
++        self.driver_epoch = self.driver_epoch.saturating_add(1);
++        self.last_confirmed_phase = None;
++    }
++    fn polar_lineage(&self, s: SetupStatus) -> Option<SetupPolarLineage> {
++        let model = self.core.model()?;
++        let binding = self.source_binding?;
++        if s.input != SetupInput::PolarTilt
++            || binding.0 == 0
++            || s.source_owner != Some(model.source_owner)
++        {
++            return None;
++        }
++        Some(SetupPolarLineage {
++            audio_generation: self.generation,
++            driver_epoch: self.driver_epoch,
++            source_binding: binding,
++            source_reference: self.source_reference,
++            projection_generation: self.projection_generation,
++            model_generation: model.generation,
++        })
 +    }
 +    fn output(&self, now: u64) -> SetupDriverOutput {
 +        let s = self.core.snapshot(now);
@@ -2429,22 +2921,53 @@ index 00000000..2b694fd6
 +                SetupDriverOutput::Waiting
 +            };
 +        }
++        if s.input == SetupInput::PolarTilt {
++            if let Some(lineage) = self.polar_lineage(s) {
++                if !s.clock_valid || !s.playing || !self.projection_ready {
++                    return SetupDriverOutput::PolarUnavailable {
++                        lineage,
++                        confirmation_revision: self.confirmation_revision,
++                    };
++                }
++                let sample = self.core.driver_sample(now);
++                let classified = self.classified_model_matches(Some(lineage.model_generation));
++                let availability = if sample.is_none() {
++                    SetupSampleAvailability::SampleUnavailable
++                } else if !classified
++                    || !matches!(
++                        self.phase,
++                        CommonBreathPhase::Inhale
++                            | CommonBreathPhase::Exhale
++                            | CommonBreathPhase::Hold
++                    )
++                {
++                    SetupSampleAvailability::PhaseUnconfirmed
++                } else {
++                    SetupSampleAvailability::Ready
++                };
++                return SetupDriverOutput::PolarTilt {
++                    volume: sample.map(|s| s.volume),
++                    phase: if classified && sample.is_some() {
++                        self.phase
++                    } else {
++                        CommonBreathPhase::Unknown
++                    },
++                    confirmed_phase: self
++                        .last_confirmed_phase
++                        .filter(|(confirmed_lineage, _)| *confirmed_lineage == lineage)
++                        .map(|(_, phase)| phase),
++                    confirmation_revision: self.confirmation_revision,
++                    lineage,
++                    availability,
++                };
++            }
++            return SetupDriverOutput::Waiting;
++        }
 +        match self.core.driver_sample(now) {
 +            Some(sample) if sample.input == SetupInput::Automatic => SetupDriverOutput::Automatic {
 +                volume: sample.volume,
 +                generation: self.generation,
 +            },
-+            Some(sample)
-+                if sample.input == SetupInput::PolarTilt
-+                    && self.classified_model_matches(sample.model_generation) =>
-+            {
-+                SetupDriverOutput::PolarTilt {
-+                    volume: sample.volume,
-+                    phase: self.phase,
-+                    generation: self.generation,
-+                    model_generation: sample.model_generation.unwrap_or(0),
-+                }
-+            }
 +            _ => SetupDriverOutput::Waiting,
 +        }
 +    }
@@ -2483,6 +3006,10 @@ index 00000000..2b694fd6
 +            ),
 +            classified_model: None,
 +            classified_at: None,
++            classified_signal_epoch: 0,
++            driver_epoch: 0,
++            last_confirmed_phase: None,
++            confirmation_revision: 0,
 +            sequence: 0,
 +            phase: CommonBreathPhase::Unknown,
 +            ledger: VecDeque::new(),
@@ -2494,6 +3021,9 @@ index 00000000..2b694fd6
 +        })
 +    }
 +    fn observe_clock(&mut self, g: u64, frame: u64, ns: u64, playing: bool) {
++        if g != self.generation || self.last_clock.is_some_and(|(_, _, _, old)| old != playing) {
++            self.retire_driver_phase();
++        }
 +        let resuming = playing
 +            && self
 +                .last_clock
@@ -2541,6 +3071,7 @@ index 00000000..2b694fd6
 +    }
 +    fn bind_source(&mut self, binding: (u64, u64)) {
 +        if self.source_binding != Some(binding) {
++            self.retire_driver_phase();
 +            self.projection_generation = None;
 +            if self.source_binding.is_some_and(|old| old.0 != binding.0) {
 +                self.controller_generation = None;
@@ -2561,6 +3092,7 @@ index 00000000..2b694fd6
 +                .projection_generation
 +                .is_some_and(|previous| previous != projection.generation)
 +            {
++                self.retire_driver_phase();
 +                self.source_reference = self.source_reference.checked_add(1).unwrap_or(0);
 +                self.core.observe_source_owner(self.source_reference);
 +                self.classified_model = None;
@@ -2630,6 +3162,12 @@ index 00000000..2b694fd6
 +    }
 +    fn refresh(&mut self, now: u64) {
 +        let s = self.core.snapshot(now);
++        if self
++            .last_confirmed_phase
++            .is_some_and(|(lineage, _)| self.polar_lineage(s) != Some(lineage))
++        {
++            self.last_confirmed_phase = None;
++        }
 +        if s.experiment_start_frame.is_some() {
 +            self.last_admitted_frame = s.experiment_start_frame;
 +        }
@@ -2808,6 +3346,12 @@ index 00000000..2b694fd6
 +        };
 +        let accepted = result.is_ok();
 +        if accepted {
++            if matches!(
++                v["op"].as_str(),
++                Some("calibrate" | "controller" | "end-main")
++            ) {
++                self.retire_driver_phase();
++            }
 +            if v["op"] == "calibrate" || v["op"] == "controller" {
 +                self.started = true;
 +            }
@@ -2831,7 +3375,7 @@ index 00000000..2b694fd6
 +    }
 +    fn input_phase(&self, now: u64) -> &'static str {
 +        match self.output(now) {
-+            SetupDriverOutput::Waiting => "unknown",
++            SetupDriverOutput::Waiting | SetupDriverOutput::PolarUnavailable { .. } => "unknown",
 +            SetupDriverOutput::Automatic { .. } => match self.core.snapshot(now).phase {
 +                crate::experiment_breathing_setup::SetupPhase::Inhale => "inhale",
 +                crate::experiment_breathing_setup::SetupPhase::Exhale => "exhale",
@@ -2843,10 +3387,10 @@ index 00000000..2b694fd6
 +    }
 +    fn input_volume(&self, now: u64) -> Option<f64> {
 +        match self.output(now) {
-+            SetupDriverOutput::Automatic { volume, .. }
-+            | SetupDriverOutput::PolarTilt { volume, .. } => Some(volume),
++            SetupDriverOutput::Automatic { volume, .. } => Some(volume),
++            SetupDriverOutput::PolarTilt { volume, .. } => volume,
 +            SetupDriverOutput::Controller => self.controller_volume01,
-+            SetupDriverOutput::Waiting => None,
++            SetupDriverOutput::Waiting | SetupDriverOutput::PolarUnavailable { .. } => None,
 +        }
 +    }
 +    fn tilt_assessment(
@@ -3265,6 +3809,7 @@ index 00000000..2b694fd6
 +            crate::experiment_breathing_setup::SetupFailure::InvalidSample
 +        };
 +        r.core.reject_acc(r.source_reference, reason);
++        r.refresh_classifier_continuity(r.classified_at.unwrap_or(0));
 +        r.refresh(r.now_ns());
 +        r.core.snapshot(r.now_ns()).input == SetupInput::PolarTilt
 +    };
@@ -3463,10 +4008,10 @@ index 00000000..2b694fd6
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 00000000..768a7e86
+index 0000000000000000000000000000000000000000..c5ccba4fc8defac88facc4d2a26eb2df9ef81d6c
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,1079 @@
+@@ -0,0 +1,1604 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
@@ -3960,6 +4505,521 @@ index 00000000..768a7e86
 +    let a = -0.08 + 0.16 * volume;
 +    [(a.sin() * 1000.0) as f32, 0.0, (a.cos() * 1000.0) as f32]
 +}
++
++fn calibrated_inhale_runtime() -> (Runtime, u64, u64) {
++    let mut r = runtime();
++    r.observe_clock(7, 0, sample_time(0), true);
++    r.bind_source((5, 1));
++    r.observe_host_aligned_acc(
++        100_000_000_000 + sample_time(0),
++        sample_time(0),
++        vector(0.0),
++    );
++    assert_eq!(
++        command(&mut r, 1, "calibrate", sample_time(0))["accepted"],
++        true
++    );
++    for frame in (1764..=2_116_800).step_by(1764) {
++        let seconds = (frame % 705600) as f64 / 44100.0;
++        let v = match seconds {
++            t if t < 4.0 => t / 4.0,
++            t if t < 8.0 => 1.0,
++            t if t < 12.0 => (12.0 - t) / 4.0,
++            _ => 0.0,
++        };
++        let now = sample_time(frame);
++        r.observe_clock(7, frame, now, true);
++        r.observe_host_aligned_acc(100_000_000_000 + now, now, vector(v));
++    }
++    assert!(r.core.model().is_some());
++    let frame = 2_116_800 + 20 * 1764;
++    for i in 1..=20 {
++        let frame = 2_116_800 + i * 1764;
++        let now = sample_time(frame);
++        r.observe_clock(7, frame, now, true);
++        r.observe_host_aligned_acc(100_000_000_000 + now, now, vector(i as f64 / 100.0));
++    }
++    assert_eq!(r.phase, CommonBreathPhase::Inhale);
++    (r, frame, sample_time(frame))
++}
++
++#[test]
++fn calibrated_batched_tilt_retains_confirmed_phase_between_jittered_packets() {
++    use crate::breath_composition_driver::{tests::setup_frame, BreathCompositionDriver};
++    let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++    let mut driver =
++        BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++    setup_frame(&mut driver, r.output(base_ns), base_ns, 0.0);
++    let mut previous = driver.value01();
++    let mut packet = 1_u64;
++    let mut unavailable = 0;
++    for render in 1..=117_u64 {
++        let elapsed = render * 1_000_000_000 / 90;
++        let now = base_ns + elapsed;
++        r.observe_clock(7, base_frame + elapsed * 44100 / 1_000_000_000, now, true);
++        // Continuous 200 Hz source samples in 36-sample / 180 ms batches.
++        // Alternating 45 ms receipt jitter crosses the 200 ms freshness gate.
++        let packet_end = packet * 180_000_000;
++        let receipt = packet_end + if packet % 2 == 1 { 45_000_000 } else { 0 };
++        if elapsed >= receipt {
++            for index in 1..=36 {
++                let offset = (packet - 1) * 180_000_000 + index * 5_000_000;
++                let host = base_ns + offset;
++                r.observe_acc_with_source(
++                    100_000_000_000 + host,
++                    host,
++                    host,
++                    vector(0.2 + offset as f64 / 1_000_000_000.0 * 0.15),
++                );
++            }
++            packet += 1;
++        }
++        if !r.core.snapshot(now).ready {
++            unavailable += 1;
++        }
++        setup_frame(&mut driver, r.output(now), now, 1.0 / 90.0);
++        let delta = driver.value01() - previous;
++        assert!((delta - 0.5 / 90.0).abs() < 0.000_001,
++            "confirmed inhale must advance once per render frame, render={render}, ready={}, previous={previous}, value={}, marker={}",
++            r.core.snapshot(now).ready, driver.value01(), driver.marker_fields());
++        previous = driver.value01();
++    }
++    assert!(
++        unavailable >= 3,
++        "probe must cross actual freshness, count={unavailable}"
++    );
++    assert_eq!(r.phase, CommonBreathPhase::Inhale);
++    assert!((driver.value01() - 0.85).abs() < 0.000_01);
++}
++
++#[test]
++fn masked_samples_and_reprime_unknown_cannot_replace_a_confirmed_tilt_state() {
++    use crate::breath_composition_driver::{tests::setup_frame, BreathCompositionDriver};
++    let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++    let mut driver =
++        BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++    setup_frame(&mut driver, r.output(base_ns), base_ns, 0.2);
++    assert!((driver.value01() - 0.3).abs() < 0.000_001);
++    let now = base_ns + 40_000_000;
++    r.observe_clock(7, base_frame + 1764, now, true);
++    r.observe_acc_with_source(100_000_000_000 + now, now, now, [f32::NAN, 0.0, 1000.0]);
++    assert!(!r.core.snapshot(now).ready);
++    assert_eq!(
++        r.phase,
++        CommonBreathPhase::Unknown,
++        "invalid evidence re-primes classification"
++    );
++    setup_frame(&mut driver, r.output(now), now, 0.1);
++    assert!(
++        (driver.value01() - 0.35).abs() < 0.000_001,
++        "invalid sample must retain inhale"
++    );
++    // Settling and re-priming after a true source timestamp gap cannot make
++    // Unknown a new motion state; only confirmed valid evidence replaces it.
++    for i in 1..=18 {
++        let now = base_ns + 40_000_000 + i * 40_000_000;
++        r.observe_clock(
++            7,
++            base_frame + (now - base_ns) * 44100 / 1_000_000_000,
++            now,
++            true,
++        );
++        if i >= 8 {
++            r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(0.2));
++        }
++        if i == 13 {
++            assert_eq!(
++                r.phase,
++                CommonBreathPhase::Unknown,
++                "first settled sample only primes history"
++            );
++        }
++        setup_frame(&mut driver, r.output(now), now, 0.04);
++        assert!(
++            driver.value01() >= 0.35,
++            "re-prime must not reset integrated progress"
++        );
++    }
++    assert_eq!(r.phase, CommonBreathPhase::Hold);
++    let held = driver.value01();
++    let now = base_ns + 800_000_000;
++    r.observe_clock(
++        7,
++        base_frame + (now - base_ns) * 44100 / 1_000_000_000,
++        now,
++        true,
++    );
++    setup_frame(&mut driver, r.output(now), now, 0.1);
++    assert_eq!(
++        driver.value01(),
++        held,
++        "newly confirmed Hold must freeze progress"
++    );
++}
++
++#[test]
++fn latest_confirmed_sensor_phase_survives_a_masked_batch_tail_before_render() {
++    use crate::breath_composition_driver::{tests::setup_frame, BreathCompositionDriver};
++    for replacement in [CommonBreathPhase::Hold, CommonBreathPhase::Exhale] {
++        let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++        let mut driver =
++            BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++        setup_frame(&mut driver, r.output(base_ns), base_ns, 0.2);
++        assert!((driver.value01() - 0.3).abs() < 0.000_001);
++        let mut final_tick = 0;
++        let mut final_volume = 0.2;
++        // Several valid sensor callbacks can confirm a new state before the
++        // renderer polls. A rejected final callback must not erase that state.
++        for tick in 1..=30 {
++            let now = base_ns + tick * 40_000_000;
++            let volume = if replacement == CommonBreathPhase::Hold {
++                0.2
++            } else {
++                0.2 - tick as f64 / 200.0
++            };
++            r.observe_clock(7, base_frame + tick * 1764, now, true);
++            r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(volume));
++            if r.phase == replacement {
++                final_tick = tick;
++                final_volume = volume;
++                break;
++            }
++        }
++        assert!(
++            final_tick > 0,
++            "real classifier must confirm {replacement:?}"
++        );
++        let tail_ns = base_ns + final_tick * 40_000_000 + 5_000_000;
++        let tail_frame = base_frame + (tail_ns - base_ns) * 44100 / 1_000_000_000;
++        r.observe_clock(7, tail_frame, tail_ns, true);
++        r.observe_acc_with_source(
++            100_000_000_000 + tail_ns,
++            tail_ns,
++            tail_ns,
++            [f32::NAN, 0.0, 1000.0],
++        );
++        assert!(!r.core.snapshot(tail_ns).ready);
++        assert_eq!(r.phase, CommonBreathPhase::Unknown);
++        assert!(matches!(r.output(tail_ns), SetupDriverOutput::PolarTilt {
++            confirmed_phase: Some(phase), availability: SetupSampleAvailability::SampleUnavailable, ..
++        } if phase == replacement));
++        let mut first_render =
++            BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++        setup_frame(&mut first_render, r.output(tail_ns), tail_ns, 0.1);
++        let first_expected = if replacement == CommonBreathPhase::Hold {
++            0.2
++        } else {
++            0.175
++        };
++        assert!(
++            (first_render.value01() - first_expected).abs() < 0.000_001,
++            "a first render must accept a valid confirmation followed by an invalid tail"
++        );
++        setup_frame(&mut driver, r.output(tail_ns), tail_ns, 0.1);
++        let expected = if replacement == CommonBreathPhase::Hold {
++            0.3
++        } else {
++            0.275
++        };
++        assert!(
++            (driver.value01() - expected).abs() < 0.000_001,
++            "masked batch tail must apply newest confirmed {replacement:?}, value={}, marker={}",
++            driver.value01(),
++            driver.marker_fields()
++        );
++
++        // The first settled valid callback only primes classification. It also
++        // cannot replace the newer confirmed sensor state with render history.
++        for tick in 1..=5 {
++            let now = tail_ns + tick * 40_000_000;
++            r.observe_clock(7, tail_frame + tick * 1764, now, true);
++            r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(final_volume));
++        }
++        let now = tail_ns + 200_000_000;
++        assert_eq!(r.phase, CommonBreathPhase::Unknown);
++        assert!(r.core.snapshot(now).ready);
++        assert!(matches!(r.output(now), SetupDriverOutput::PolarTilt {
++            confirmed_phase: Some(phase), availability: SetupSampleAvailability::PhaseUnconfirmed, ..
++        } if phase == replacement));
++        setup_frame(&mut driver, r.output(now), now, 0.1);
++        let expected = if replacement == CommonBreathPhase::Hold {
++            0.3
++        } else {
++            0.25
++        };
++        assert!((driver.value01() - expected).abs() < 0.000_001);
++    }
++}
++
++#[test]
++fn driver_barriers_fence_real_runtime_confirmations_until_new_valid_sensor_evidence() {
++    use crate::breath_composition_driver::{
++        tests::{changed_settings, settings, setup_frame_with_settings},
++        BreathCompositionDriver,
++    };
++    for barrier in ["rate", "slot", "activation"] {
++        let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++        let mut driver = BreathCompositionDriver::new(settings());
++        setup_frame_with_settings(
++            &mut driver,
++            r.output(base_ns),
++            settings(),
++            true,
++            base_ns,
++            0.2,
++        );
++        let invalid_ns = base_ns + 5_000_000;
++        let original_revision = r.confirmation_revision;
++        r.observe_clock(7, base_frame + 220, invalid_ns, true);
++        r.observe_acc_with_source(
++            100_000_000_000 + invalid_ns,
++            invalid_ns,
++            invalid_ns,
++            [f32::NAN, 0.0, 1000.0],
++        );
++        assert_eq!(r.phase, CommonBreathPhase::Unknown);
++        let selected = match barrier {
++            "rate" => changed_settings(0.6, 2),
++            "slot" => changed_settings(0.5, 5),
++            _ => settings(),
++        };
++        for tick in 1..=4 {
++            let now = invalid_ns + tick * 20_000_000;
++            r.observe_clock(
++                7,
++                base_frame + (now - base_ns) * 44100 / 1_000_000_000,
++                now,
++                true,
++            );
++            setup_frame_with_settings(
++                &mut driver,
++                r.output(now),
++                selected,
++                barrier != "activation" || tick > 1,
++                now,
++                0.1,
++            );
++            assert_eq!(
++                driver.value01(),
++                0.2,
++                "{barrier} must fence cached inhale across unavailable frame {tick}"
++            );
++            assert!(driver.marker_fields().contains("SetupPhase=none"));
++            let mut values = [0.9; 8];
++            assert!(driver.apply_to_driver_values(&mut values));
++            assert_eq!(values[selected.target_slot()], 0.2);
++            if barrier == "slot" && tick == 1 {
++                assert_eq!(values[2], 0.2, "retired slot must reset too");
++            }
++        }
++        // A valid post-barrier classification can rearm the driver even when
++        // another invalid callback follows before the next rendered frame.
++        let mut confirmed_ns = 0;
++        for tick in 3..=30 {
++            let now = invalid_ns + tick * 40_000_000;
++            r.observe_clock(
++                7,
++                base_frame + (now - base_ns) * 44100 / 1_000_000_000,
++                now,
++                true,
++            );
++            r.observe_acc_with_source(
++                100_000_000_000 + now,
++                now,
++                now,
++                vector(0.2 + tick as f64 / 200.0),
++            );
++            if r.phase == CommonBreathPhase::Inhale {
++                confirmed_ns = now;
++                break;
++            }
++        }
++        assert!(
++            confirmed_ns > 0,
++            "new real classification must confirm after {barrier}"
++        );
++        assert!(
++            r.confirmation_revision > original_revision,
++            "confirmation revision must advance across mask/re-prime"
++        );
++        let tail_ns = confirmed_ns + 5_000_000;
++        r.observe_clock(
++            7,
++            base_frame + (tail_ns - base_ns) * 44100 / 1_000_000_000,
++            tail_ns,
++            true,
++        );
++        r.observe_acc_with_source(
++            100_000_000_000 + tail_ns,
++            tail_ns,
++            tail_ns,
++            [f32::NAN, 0.0, 1000.0],
++        );
++        assert!(!r.core.snapshot(tail_ns).ready);
++        setup_frame_with_settings(&mut driver, r.output(tail_ns), selected, true, tail_ns, 0.1);
++        let expected = if barrier == "rate" { 0.26 } else { 0.25 };
++        assert!(
++            (driver.value01() - expected).abs() < 0.000_001,
++            "new confirmed state must rearm {barrier}"
++        );
++    }
++}
++
++#[test]
++fn a_driver_barrier_fences_confirmations_hidden_by_a_projection_gate() {
++    use crate::breath_composition_driver::{
++        tests::{changed_settings, settings, setup_frame_with_settings},
++        BreathCompositionDriver,
++    };
++    let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++    let mut driver = BreathCompositionDriver::new(settings());
++    setup_frame_with_settings(
++        &mut driver,
++        r.output(base_ns),
++        settings(),
++        true,
++        base_ns,
++        0.2,
++    );
++    let rendered_revision = r.confirmation_revision;
++    for tick in 1..=5 {
++        let now = base_ns + tick * 40_000_000;
++        r.observe_clock(7, base_frame + tick * 1764, now, true);
++        r.observe_acc_with_source(
++            100_000_000_000 + now,
++            now,
++            now,
++            vector(0.2 + tick as f64 / 100.0),
++        );
++    }
++    assert!(
++        r.confirmation_revision > rendered_revision,
++        "callbacks must advance beyond the last rendered cursor"
++    );
++    let barrier_ns = base_ns + 200_000_000;
++    r.projection_ready = false;
++    assert!(matches!(
++        r.output(barrier_ns),
++        SetupDriverOutput::PolarUnavailable { .. }
++    ));
++    let selected = changed_settings(0.6, 2);
++    setup_frame_with_settings(
++        &mut driver,
++        r.output(barrier_ns),
++        selected,
++        true,
++        barrier_ns,
++        0.1,
++    );
++    assert_eq!(driver.value01(), 0.2);
++    // Restoring the projection gate alone supplies no valid sensor state.
++    r.projection_ready = true;
++    for tick in 1..=3 {
++        let now = barrier_ns + tick * 20_000_000;
++        r.observe_clock(
++            7,
++            base_frame + (now - base_ns) * 44100 / 1_000_000_000,
++            now,
++            true,
++        );
++        r.observe_acc_with_source(100_000_000_000 + now, now, now, [f32::NAN, 0.0, 1000.0]);
++        setup_frame_with_settings(&mut driver, r.output(now), selected, true, now, 0.1);
++        assert_eq!(
++            driver.value01(),
++            0.2,
++            "hidden pre-barrier confirmation must remain fenced"
++        );
++        assert!(driver.marker_fields().contains("SetupPhase=none"));
++    }
++}
++
++#[test]
++fn hard_runtime_barriers_clear_callback_confirmed_phase_memory() {
++    for barrier in [
++        "source-owner",
++        "source-selection",
++        "source-retired",
++        "audio-generation",
++        "audio-pause",
++        "clock-reversed",
++        "projection-generation",
++        "retry",
++        "controller",
++        "end-main",
++    ] {
++        let (mut r, frame, now) = calibrated_inhale_runtime();
++        assert!(
++            r.last_confirmed_phase.is_some(),
++            "fixture must have sensor-confirmed state"
++        );
++        match barrier {
++            "source-owner" => r.bind_source((6, 1)),
++            "source-selection" => r.bind_source((5, 2)),
++            "source-retired" => r.bind_source((0, 2)),
++            "audio-generation" => r.observe_clock(8, frame + 1764, now + 40_000_000, true),
++            "audio-pause" => r.observe_clock(7, frame, now + 40_000_000, false),
++            "clock-reversed" => r.observe_clock(7, frame - 1, now + 40_000_000, true),
++            "projection-generation" => {
++                // The owning SensorClock retirement path also invalidates the
++                // model. Independently protect the confirmed-memory binding.
++                r.projection_generation = Some(4);
++                r.refresh(now);
++            }
++            "end-main" => {
++                assert_eq!(command(&mut r, 2, "begin-main", now)["accepted"], true);
++                let s = r.status(now);
++                let receipt = r.command(
++                    &json!({"v":1,"id":"0000000000000003","g":s["g"],"r":s["r"],
++                    "op":"end-main","main_start_frame":r.last_admitted_frame.unwrap()}),
++                    now,
++                );
++                assert_eq!(receipt["accepted"], true, "{receipt}");
++            }
++            op => assert_eq!(
++                command(&mut r, 2, if op == "retry" { "calibrate" } else { op }, now)["accepted"],
++                true,
++                "barrier command {op}"
++            ),
++        }
++        assert_eq!(r.last_confirmed_phase, None, "barrier {barrier}");
++        if let SetupDriverOutput::PolarTilt {
++            confirmed_phase, ..
++        } = r.output(now + 40_000_000)
++        {
++            assert_eq!(confirmed_phase, None, "output after {barrier}");
++        }
++    }
++}
++
++#[test]
++fn pause_resume_between_render_frames_retires_retained_tilt_state() {
++    use crate::breath_composition_driver::{tests::setup_frame, BreathCompositionDriver};
++    let (mut r, base_frame, base_ns) = calibrated_inhale_runtime();
++    let mut driver =
++        BreathCompositionDriver::new(crate::breath_composition_driver::tests::settings());
++    setup_frame(&mut driver, r.output(base_ns), base_ns, 0.2);
++    assert!((driver.value01() - 0.3).abs() < 0.000_001);
++    r.observe_clock(7, base_frame + 1764, base_ns + 40_000_000, false);
++    let now = base_ns + 80_000_000;
++    r.observe_clock(7, base_frame + 1764, now, true);
++    r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(0.2));
++    assert!(
++        r.core.model().is_some(),
++        "ordinary pause retains the fitted model"
++    );
++    assert_eq!(
++        r.phase,
++        CommonBreathPhase::Unknown,
++        "resume must re-prime classification"
++    );
++    setup_frame(&mut driver, r.output(now), now, 0.1);
++    assert_eq!(
++        driver.value01(),
++        0.2,
++        "unseen pause is still a driver lineage barrier"
++    );
++    assert!(driver.marker_fields().contains("SetupPhase=none"));
++}
 +#[test]
 +fn learned_tilt_classifies_actual_motion_without_scheduled_phase_bias_and_retires_on_owner_change()
 +{
@@ -4112,7 +5172,14 @@ index 00000000..768a7e86
 +        r.core.snapshot(elapsed(final_frame)).model_generation,
 +        Some(2)
 +    );
-+    assert_eq!(r.output(elapsed(final_frame)), SetupDriverOutput::Waiting);
++    assert!(matches!(
++        r.output(elapsed(final_frame)),
++        SetupDriverOutput::PolarTilt {
++            availability: SetupSampleAvailability::PhaseUnconfirmed,
++            phase: CommonBreathPhase::Unknown,
++            ..
++        }
++    ));
 +    assert!(r.tilt_assessment(elapsed(final_frame)).is_none());
 +    assert_eq!(r.classified_model, None);
 +    assert_eq!(r.classified_at, None);
@@ -4127,7 +5194,10 @@ index 00000000..768a7e86
 +    assert!(matches!(
 +        r.output(elapsed(final_frame)),
 +        SetupDriverOutput::PolarTilt {
-+            model_generation: 2,
++            lineage: SetupPolarLineage {
++                model_generation: 2,
++                ..
++            },
 +            ..
 +        }
 +    ));
@@ -4548,7 +5618,7 @@ index 00000000..768a7e86
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
-index 00000000..3513f312
+index 0000000000000000000000000000000000000000..3513f3122d87891a2f036c3a25c52810921cd8a1
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 @@ -0,0 +1,1287 @@
@@ -5840,7 +6910,7 @@ index 00000000..3513f312
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_control_mode.rs b/apps/native-renderer-android/native/src/experiment_control_mode.rs
-index 1967f8b9..61dfc501 100644
+index 1967f8b96d7facf7ec11c8607942f6606de50cac..61dfc501d3e782bb77bb2665070d4068c3e86210 100644
 --- a/apps/native-renderer-android/native/src/experiment_control_mode.rs
 +++ b/apps/native-renderer-android/native/src/experiment_control_mode.rs
 @@ -49,12 +49,21 @@ impl ModeAuthority {
@@ -5953,7 +7023,7 @@ index 1967f8b9..61dfc501 100644
          }
 diff --git a/apps/native-renderer-android/native/src/experiment_recenter.rs b/apps/native-renderer-android/native/src/experiment_recenter.rs
 new file mode 100644
-index 00000000..b509cf18
+index 0000000000000000000000000000000000000000..b509cf184658ecba85fccb615015907a3b8c257b
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_recenter.rs
 @@ -0,0 +1,295 @@
@@ -6253,7 +7323,7 @@ index 00000000..b509cf18
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_session.rs b/apps/native-renderer-android/native/src/experiment_session.rs
-index f49b31f6..ef66a6b3 100644
+index f49b31f6a5755b13eff98390802846e82cdb4f66..ef66a6b3f797df8ced75bff690c8af54eefef5d7 100644
 --- a/apps/native-renderer-android/native/src/experiment_session.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session.rs
 @@ -320,6 +320,7 @@ pub(crate) struct ExperimentSessionController {
@@ -6423,7 +7493,7 @@ index f49b31f6..ef66a6b3 100644
  
      #[test]
 diff --git a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
-index 5cd22433..a82c07c1 100644
+index 5cd22433d980a12e4374f18dd3a5abfa848f84c8..a82c07c1686daa6499fa4fa11a74132385064003 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 @@ -65,8 +65,13 @@ fn bias_command(state: &Value, id: &str, bias: u8, at: u64) -> Value {
@@ -6443,7 +7513,7 @@ index 5cd22433..a82c07c1 100644
      for _ in 0..200 {
          let current:Value=serde_json::from_str(&runtime.status_json()).unwrap();
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..de0c47d8 100644
+index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..de0c47d893614c9ea4bfdb14b20a0c7335874bde 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -439,7 +439,7 @@ impl Projection {
@@ -7284,7 +8354,7 @@ index ee0417f3..de0c47d8 100644
      include!("experiment_session_live_bias_tests.rs");
  
 diff --git a/apps/native-renderer-android/native/src/gpu_private_particles.rs b/apps/native-renderer-android/native/src/gpu_private_particles.rs
-index 9b815a61..6d258d89 100644
+index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a8e2de60b 100644
 --- a/apps/native-renderer-android/native/src/gpu_private_particles.rs
 +++ b/apps/native-renderer-android/native/src/gpu_private_particles.rs
 @@ -8,7 +8,7 @@ use std::{
@@ -7501,7 +8571,7 @@ index 9b815a61..6d258d89 100644
          );
          let size_aux_row = PRIVATE_PARTICLE_DRIVER_BANK_VALUE_VEC4_ROWS
 diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
-index 2a8bc3a1..50000834 100644
+index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..5000083423e9e9921d2c296d1227600825c048e5 100644
 --- a/apps/native-renderer-android/native/src/lib.rs
 +++ b/apps/native-renderer-android/native/src/lib.rs
 @@ -38,6 +38,8 @@ mod breath_guidance;
@@ -7538,7 +8608,7 @@ index 2a8bc3a1..50000834 100644
  #[cfg(not(feature = "showcase"))]
  mod session_recording_writer;
 diff --git a/apps/native-renderer-android/native/src/native_mesh_ui.rs b/apps/native-renderer-android/native/src/native_mesh_ui.rs
-index dc169b88..f11dc56a 100644
+index dc169b881a7243c42ac84b219131e0c5657ef188..f11dc56a42f941c279c9cf1c44487c6378fd8ce4 100644
 --- a/apps/native-renderer-android/native/src/native_mesh_ui.rs
 +++ b/apps/native-renderer-android/native/src/native_mesh_ui.rs
 @@ -545,13 +545,21 @@ pub(crate) fn renderer_observed(generation: u64, revision: u64) -> bool {
@@ -7592,7 +8662,7 @@ index dc169b88..f11dc56a 100644
              generation: 7,
 diff --git a/apps/native-renderer-android/native/src/particle_visual_profile.rs b/apps/native-renderer-android/native/src/particle_visual_profile.rs
 new file mode 100644
-index 00000000..9c36c77a
+index 0000000000000000000000000000000000000000..9c36c77af54fe5f44203c4ca2fb3cdecbbfab202
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/particle_visual_profile.rs
 @@ -0,0 +1,151 @@
@@ -7748,7 +8818,7 @@ index 00000000..9c36c77a
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
-index d901fa96..eca6d93c 100644
+index d901fa96a008cc167244d6fc5e023759c7fe6f66..eca6d93c953c92172aa765b5d1de951efe523537 100644
 --- a/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
 +++ b/apps/native-renderer-android/native/src/polar_acc_breath_adapter.rs
 @@ -1431,6 +1431,7 @@ mod tests {
@@ -7760,7 +8830,7 @@ index d901fa96..eca6d93c 100644
              source_sequence_id: 7,
              host_time_ns: 123_456_789,
 diff --git a/apps/native-renderer-android/native/src/polar_composition_adapters.rs b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
-index c88c6ee6..b8951d31 100644
+index c88c6ee65e6eb0d17f6ba70686e6c42c254f4603..b8951d3115f652a94c7de839514105a569e89fb8 100644
 --- a/apps/native-renderer-android/native/src/polar_composition_adapters.rs
 +++ b/apps/native-renderer-android/native/src/polar_composition_adapters.rs
 @@ -209,6 +209,7 @@ pub(crate) fn validate_polar_presentation_provenance(value: &Value) -> Result<()
@@ -8298,7 +9368,7 @@ index c88c6ee6..b8951d31 100644
              source_sequence_id: 1,
              host_time_ns: 1,
 diff --git a/apps/native-renderer-android/native/src/polar_input_health.rs b/apps/native-renderer-android/native/src/polar_input_health.rs
-index 219ee2b7..2afb874d 100644
+index 219ee2b743af945024734b86e65ee028b897ce67..2afb874d4226070a228799b310fcb9665baffff5 100644
 --- a/apps/native-renderer-android/native/src/polar_input_health.rs
 +++ b/apps/native-renderer-android/native/src/polar_input_health.rs
 @@ -14,6 +14,8 @@ struct Acquisition {
@@ -8419,7 +9489,7 @@ index 219ee2b7..2afb874d 100644
      fn source_round_trip_retires_token_and_current_commit_holds_configuration_lock() {
 diff --git a/apps/native-renderer-android/native/src/polar_sensor_clock.rs b/apps/native-renderer-android/native/src/polar_sensor_clock.rs
 new file mode 100644
-index 00000000..bbb04e29
+index 0000000000000000000000000000000000000000..bbb04e29db8eeb85220372e2fc0078baad05107f
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/polar_sensor_clock.rs
 @@ -0,0 +1,298 @@
@@ -8722,7 +9792,7 @@ index 00000000..bbb04e29
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
-index 3cbbfb33..773a44f9 100644
+index 3cbbfb33e6524113067c9bae6084ed3d70842422..773a44f9689ce25a2cb3faf6ad62e8fa615e76d5 100644
 --- a/apps/native-renderer-android/native/src/session_recording_contract.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
 @@ -106,6 +106,7 @@ impl ConditionKey {
@@ -8808,7 +9878,7 @@ index 3cbbfb33..773a44f9 100644
              started_at: SessionTimestampKey::from_utc(utc),
              condition: ConditionKey::parse("condition-a").unwrap(),
 diff --git a/apps/native-renderer-android/native/src/session_recording_export.rs b/apps/native-renderer-android/native/src/session_recording_export.rs
-index faac6912..856b5c64 100644
+index faac691298ebdb58a93c773e1555128216415f14..856b5c6414d772e9c26e2929e50191990adf7f46 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export.rs
 @@ -3,12 +3,17 @@
@@ -9316,7 +10386,7 @@ index faac6912..856b5c64 100644
                  {
                      "not-finalized"
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index f71f79cb..75df8192 100644
+index f71f79cbb3c6b4792535a6b98eb1dee6152f0d4e..75df819211917d5b4dc40874644356eff5bd96b4 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -290,7 +290,9 @@ fn pinned_bad_stream_cannot_borrow_eligibility_from_a_swapped_valid_directory()
@@ -9568,7 +10638,7 @@ index f71f79cb..75df8192 100644
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..397764ac
+index 0000000000000000000000000000000000000000..397764aca7b321825b89915f7d2fc5365b26cad0
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
 @@ -0,0 +1,1124 @@
@@ -10698,7 +11768,7 @@ index 00000000..397764ac
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 new file mode 100644
-index 00000000..8c4f7cc7
+index 0000000000000000000000000000000000000000..8c4f7cc7e4d78c1d6d01f3bf677bf3d7745410b5
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 @@ -0,0 +1,459 @@
@@ -11163,7 +12233,7 @@ index 00000000..8c4f7cc7
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 new file mode 100644
-index 00000000..b1c43bdb
+index 0000000000000000000000000000000000000000..b1c43bdb17fde8012a8ec4e7736952a32a757168
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 @@ -0,0 +1,166 @@
@@ -11334,7 +12404,7 @@ index 00000000..b1c43bdb
 +    publish_json_exclusive(directory, RECOVERY_RECEIPT, &terminal)
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
-index e94da3ae..829184d6 100644
+index e94da3aec237281c31fed85072fdb8a602fadca7..829184d6d78e5ec5085cb2deac8c515cdfb00900 100644
 --- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
 @@ -265,16 +265,16 @@ fn recover_from_checkpoint(
@@ -11436,7 +12506,7 @@ index e94da3ae..829184d6 100644
                  SessionEventKind::Started => RowLifecycle::Started,
                  SessionEventKind::CompletionReached => RowLifecycle::Completed,
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 4aefeaf5..56c3f444 100644
+index 4aefeaf5588a438a541140cdfdf04e93312bd165..56c3f44473ac998165132a574dc2593399997b7d 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
 @@ -28,6 +28,7 @@ use crate::{
@@ -11824,7 +12894,7 @@ index 4aefeaf5..56c3f444 100644
          WriterConfig {
              root,
 diff --git a/apps/native-renderer-android/native/src/xr_vulkan.rs b/apps/native-renderer-android/native/src/xr_vulkan.rs
-index c0c0c17e..4c8ef5b1 100644
+index c0c0c17eb1ea85e90c024b3fe1b2206cb5a4cf79..4c8ef5b13131d014bdb952d0f1ed5128caa1d845 100644
 --- a/apps/native-renderer-android/native/src/xr_vulkan.rs
 +++ b/apps/native-renderer-android/native/src/xr_vulkan.rs
 @@ -4313,6 +4313,25 @@ unsafe fn run_projection_frames(
@@ -11872,7 +12942,7 @@ index c0c0c17e..4c8ef5b1 100644
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..e0a3002a 100644
+index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a06453f6a 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -12299,7 +13369,7 @@ index a694dfee..e0a3002a 100644
              } catch (Exception error) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java
 new file mode 100644
-index 00000000..f306b067
+index 0000000000000000000000000000000000000000..f306b067228494c7333a8bd135a6ab0bde81cb56
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequence.java
 @@ -0,0 +1,50 @@
@@ -12355,7 +13425,7 @@ index 00000000..f306b067
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java
 new file mode 100644
-index 00000000..28b6e2b4
+index 0000000000000000000000000000000000000000..28b6e2b43ab04c71631faa63e896fa5b9d9080ec
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java
 @@ -0,0 +1,290 @@
@@ -12650,7 +13720,7 @@ index 00000000..28b6e2b4
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
-index 11c7647f..68bfc2e9 100644
+index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..68bfc2e97777351cbb88a04a31352580b9b29e58 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
 @@ -39,6 +39,7 @@ final class ExperimentSessionBleServer {
@@ -12746,7 +13816,7 @@ index 11c7647f..68bfc2e9 100644
      }
  }
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..c73fdf3c 100644
+index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f410a18a9fa 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,10 @@ import org.json.JSONObject;
@@ -13594,7 +14664,7 @@ index 08732e53..c73fdf3c 100644
                  .put("build",buildIdentity).put("control_mode",mode.wireName()).put("breath_monitor",1).put("recordings",ExperimentSessionRecordingExport.selected(context)?1:0));
          } catch(Exception unavailable){session.clear();polar.clear();throw unavailable;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java
-index 2da04596..92d63dd4 100644
+index 2da045962f7a738e5659869ae6d41839e2644d0c..92d63dd44e6e10861542492717e447fae4e3851f 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java
 @@ -60,6 +60,7 @@ final class ExperimentSessionControlCapability {
@@ -13606,7 +14676,7 @@ index 2da04596..92d63dd4 100644
              && "pattern-ready".equals(status.optJSONArray("b")==null ? "" : status.getJSONArray("b").optString("condition-a".equals(condition)?0:1));
          this.projection=new JSONObject(nativeReadback.toString());this.observed=now;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-index f41c56ea..09381589 100644
+index f41c56ead2081794a92892b87e2209a31c3378f6..09381589409a3b7601da9e1e2a41fc3b706f40c0 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 @@ -5,12 +5,16 @@ import android.app.Activity;
@@ -13899,7 +14969,7 @@ index f41c56ea..09381589 100644
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..9cd3be89 100644
+index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..9cd3be895b329377b26234b4883fb1f85f0536b0 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -14067,7 +15137,7 @@ index cf6c5de1..9cd3be89 100644
      private static boolean constant(String a,String b) {
          return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
-index 5ce15656..bbc89ddc 100644
+index 5ce15656bf0656ab41e7e6e1533327e201bdbfcf..bbc89ddc0d6c68be3fca4f944b82734875e512b3 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
 @@ -44,6 +44,8 @@ final class ExperimentSessionJsonCodec
@@ -14080,7 +15150,7 @@ index 5ce15656..bbc89ddc 100644
                  return request.toString();
              } catch (Exception error) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
-index c3a44a7d..a497e5a4 100644
+index c3a44a7de9d9b098c343d599074853a7d1f34e78..a497e5a4abf61e8247a52d5e0e35522d58892a25 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
 @@ -271,6 +271,16 @@ final class ExperimentSessionPackagedClosure {
@@ -14129,7 +15199,7 @@ index c3a44a7d..a497e5a4 100644
          }
          ConditionIdentity outer = outerConditions.get(conditionId);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
-index 62ec84d8..a88ecadf 100644
+index 62ec84d890ffa634e477845ba7e1ea53319d0dfb..a88ecadf04942e038385858d4ca1d30a07ab507d 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
 @@ -23,6 +23,7 @@ final class ExperimentSessionPanelCoordinator {
@@ -14166,7 +15236,7 @@ index 62ec84d8..a88ecadf 100644
  
      // Raw fields retain JSON type information: strings/floats are not generation evidence.
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
-index de472e29..463a5163 100644
+index de472e2978cfa87ae7f15886738215106a6f5ec8..463a5163c1417bfd7a2987de5e560f615ed6d677 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
 @@ -10,9 +10,27 @@ final class ExperimentSessionRecordingExport {
@@ -14200,7 +15270,7 @@ index de472e29..463a5163 100644
   static JSONObject read(JSONObject query,String binding)throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java
 new file mode 100644
-index 00000000..ba158dcb
+index 0000000000000000000000000000000000000000..ba158dcb412e75d8bee531ad20a0476975a0c37a
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiConnection.java
 @@ -0,0 +1,82 @@
@@ -14288,7 +15358,7 @@ index 00000000..ba158dcb
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java
 new file mode 100644
-index 00000000..b565c439
+index 0000000000000000000000000000000000000000..b565c439a5e1fe9f3951a08028a9afd7c822c7a2
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentials.java
 @@ -0,0 +1,50 @@
@@ -14344,7 +15414,7 @@ index 00000000..b565c439
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java
 new file mode 100644
-index 00000000..2a093498
+index 0000000000000000000000000000000000000000..2a0934984807687a4bed6c43f8d7f0b7be61cd4a
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java
 @@ -0,0 +1,144 @@
@@ -14494,7 +15564,7 @@ index 00000000..2a093498
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
 new file mode 100644
-index 00000000..cf0c75fb
+index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505ddbc67c88
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
 @@ -0,0 +1,415 @@
@@ -14915,7 +15985,7 @@ index 00000000..cf0c75fb
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContract.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContract.java
 new file mode 100644
-index 00000000..af7819a0
+index 0000000000000000000000000000000000000000..af7819a023f226777b679f61dcda4ff81b981390
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContract.java
 @@ -0,0 +1,178 @@
@@ -15098,7 +16168,7 @@ index 00000000..af7819a0
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..0d2d5c10 100644
+index b042fc60cc3fa3ee09bdb4b3edeb3404467e3379..0d2d5c1048d93351873cf2a802e412c31391cb21 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 @@ -15,9 +15,17 @@ import java.util.Map;
@@ -15334,7 +16404,7 @@ index b042fc60..0d2d5c10 100644
      }
  }
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
-index f920e7db..7b70e42c 100644
+index f920e7dbb982310b0f9dcca48b6f53ee054a92af..7b70e42c9da5b981f47af9868341ea4c510f5439 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioContract.java
 @@ -160,6 +160,7 @@ final class ConditionAudioContract {
@@ -15377,7 +16447,7 @@ index f920e7db..7b70e42c 100644
              return new Command(CommandKind.START, generation, operationId, "", null);
          }
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
-index feb3ddc2..9a63e8e0 100644
+index feb3ddc299943bac9523e0a884ea154783fa3644..9a63e8e039b216d3d016c6014644bfb54ffa8164 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntime.java
 @@ -2,10 +2,11 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -15553,7 +16623,7 @@ index feb3ddc2..9a63e8e0 100644
  
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
 new file mode 100644
-index 00000000..2f3930bc
+index 0000000000000000000000000000000000000000..2f3930bc0d44d8737a2800f872839d3d7a07f908
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
 @@ -0,0 +1,79 @@
@@ -15638,7 +16708,7 @@ index 00000000..2f3930bc
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 new file mode 100644
-index 00000000..e12c53e1
+index 0000000000000000000000000000000000000000..e12c53e19d1a1bfe50b0cc9b48ce0d4f49850616
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 @@ -0,0 +1,345 @@
@@ -15988,7 +17058,7 @@ index 00000000..e12c53e1
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
-index f5bfbe84..d9985074 100644
+index f5bfbe849652cd4c5362d2baef880bab177bcea3..d9985074196b0771dfdc7c910281871073b2fb47 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
 @@ -17,6 +17,44 @@ import org.json.JSONObject;
@@ -16037,7 +17107,7 @@ index f5bfbe84..d9985074 100644
          if (activity == null || Build.VERSION.SDK_INT < 23) {
              return true;
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
-index e68547bd..939654ad 100644
+index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840f5acf2b6 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 @@ -140,6 +140,11 @@ final class PolarSensorPanel {
@@ -16488,7 +17558,7 @@ index e68547bd..939654ad 100644
              PolarBleRuntimeSupport.missingPermissions(appContext),
              ","
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
-index a3dcca7f..f89b7193 100644
+index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd57206fe54 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
 @@ -220,6 +220,16 @@ final class PolarSensorRuntime {
@@ -16636,7 +17706,7 @@ index a3dcca7f..f89b7193 100644
      static final String SCHEMA = "rusty.quest.native_renderer.polar_projected_stop.v1";
 diff --git a/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetup.java b/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetup.java
 new file mode 100644
-index 00000000..89bb0e61
+index 0000000000000000000000000000000000000000..89bb0e615c1a7181b3c3d17a58c1e209306bfc36
 --- /dev/null
 +++ b/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetup.java
 @@ -0,0 +1,121 @@
@@ -16763,7 +17833,7 @@ index 00000000..89bb0e61
 +}
 diff --git a/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetupProvider.java b/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetupProvider.java
 new file mode 100644
-index 00000000..6e7baca4
+index 0000000000000000000000000000000000000000..6e7baca46db6986350b107b2c8928886f10b5d39
 --- /dev/null
 +++ b/apps/native-renderer-android/src/headset-setup/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionHeadsetSetupProvider.java
 @@ -0,0 +1,39 @@
@@ -16807,7 +17877,7 @@ index 00000000..6e7baca4
 +    @Override public int update(Uri u,ContentValues v,String s,String[] a){throw new UnsupportedOperationException();}
 +}
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
-index 4f0b7864..a1f0fc8d 100644
+index 4f0b786401a3b37c50f1564746d9d3fb2a7838b5..a1f0fc8d3141ef3d849ce945d8f44546be1d1825 100644
 --- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
 @@ -44,7 +44,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
@@ -16838,7 +17908,7 @@ index 4f0b7864..a1f0fc8d 100644
          } catch (ReflectiveOperationException unavailableOwner) {
 diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java
 new file mode 100644
-index 00000000..eebc5bff
+index 0000000000000000000000000000000000000000..eebc5bff9f8cbad07e8510f33c22c7cab343b066
 --- /dev/null
 +++ b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java
 @@ -0,0 +1,147 @@
@@ -16991,7 +18061,7 @@ index 00000000..eebc5bff
 +}
 diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java
 new file mode 100644
-index 00000000..020e7617
+index 0000000000000000000000000000000000000000..020e7617aa4fcd195c95db3d1ceab9be538525d2
 --- /dev/null
 +++ b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java
 @@ -0,0 +1,52 @@
@@ -17049,7 +18119,7 @@ index 00000000..020e7617
 +}
 diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
 new file mode 100644
-index 00000000..64e97dc3
+index 0000000000000000000000000000000000000000..64e97dc3075662cc96e3c3b2ed81f042e3d6950f
 --- /dev/null
 +++ b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
 @@ -0,0 +1,190 @@
@@ -17244,7 +18314,7 @@ index 00000000..64e97dc3
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
-index 68b7cc01..daea3bee 100644
+index 68b7cc019d3a789d044f92817a08375ddccae185..daea3bee1b92a268b32368ffc5ff56529786a740 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
 @@ -32,6 +32,36 @@ public final class BreathPhaseAudioAndroidOwnerTest {
@@ -17286,7 +18356,7 @@ index 68b7cc01..daea3bee 100644
  }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
 new file mode 100644
-index 00000000..e909ae8c
+index 0000000000000000000000000000000000000000..e909ae8cf09fa2f26adb170c7769b96513ac13dc
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
 @@ -0,0 +1,152 @@
@@ -17444,7 +18514,7 @@ index 00000000..e909ae8c
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContractTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContractTest.java
 new file mode 100644
-index 00000000..31cd96aa
+index 0000000000000000000000000000000000000000..31cd96aae4120706ad14d58f82be57d2b69d5330
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContractTest.java
 @@ -0,0 +1,126 @@
@@ -17576,7 +18646,7 @@ index 00000000..31cd96aa
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java
 new file mode 100644
-index 00000000..6fcb5d59
+index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0dbc4682b0
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java
 @@ -0,0 +1,284 @@
@@ -17866,7 +18936,7 @@ index 00000000..6fcb5d59
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java
 new file mode 100644
-index 00000000..9c9ab12b
+index 0000000000000000000000000000000000000000..9c9ab12b2f92e827b556930b47dfd74a3426cb50
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/CalibrationPromptSequenceTest.java
 @@ -0,0 +1,59 @@
@@ -17930,7 +19000,7 @@ index 00000000..9c9ab12b
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
-index 0230ecc8..71d27a45 100644
+index 0230ecc819bada6780cdbf4faa880c1add81f303..71d27a4546b73ebb450edf2900f319292a8a0c68 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioRuntimeTest.java
 @@ -50,18 +50,31 @@ public final class ConditionAudioRuntimeTest {
@@ -17987,7 +19057,7 @@ index 0230ecc8..71d27a45 100644
          boolean releaseBlocked;
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingTest.java
 new file mode 100644
-index 00000000..9e4ace2f
+index 0000000000000000000000000000000000000000..9e4ace2fac68b46dea5de9c4221fbda043c250e6
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingTest.java
 @@ -0,0 +1,242 @@
@@ -18235,7 +19305,7 @@ index 00000000..9e4ace2f
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicyTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicyTest.java
 new file mode 100644
-index 00000000..8d4a7bb2
+index 0000000000000000000000000000000000000000..8d4a7bb235ce2cd37cf73fe65aa789cca30c93a3
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicyTest.java
 @@ -0,0 +1,36 @@
@@ -18276,7 +19346,7 @@ index 00000000..8d4a7bb2
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
-index 359afefe..08908504 100644
+index 359afefefe1b76018cc72ac946fa99ef06e1c36e..08908504260ea797c556f3794d73e28f4eb4e54b 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
 @@ -148,6 +148,11 @@ public final class ExperimentSessionControlCapabilityTest {
@@ -18292,7 +19362,7 @@ index 359afefe..08908504 100644
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","set-bias")),"missing bias");
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","pause").put("b",50)),"bias is not generic field");
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 36a65bbd..9b0716e4 100644
+index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..9b0716e4f0cdeab424029cc202e782c9033c8d33 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 @@ -26,6 +26,7 @@ public final class ExperimentSessionGatewayProtocolTest {
@@ -18341,7 +19411,7 @@ index 36a65bbd..9b0716e4 100644
          ExperimentSessionGatewayProtocol restarted=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,43,(action,payload)->{calls++;return payload;});
          denied(()->restarted.exchange(request("77777777777777777777777777777777","status","{}")));
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
-index 2ec7cb92..4ca85bc8 100644
+index 2ec7cb92e61590be2a4b215f0de042e1810ade0e..4ca85bc82e79a5cfe1735ce77dd9a636bc7f9feb 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
 @@ -32,6 +32,7 @@ public final class ExperimentSessionPackagedClosureTest {
@@ -18420,7 +19490,7 @@ index 2ec7cb92..4ca85bc8 100644
          byte[] lock = Files.readAllBytes(java.nio.file.Paths.get(args[1]));
          byte[] profile = Files.readAllBytes(java.nio.file.Paths.get(args[2]));
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
-index 56040232..5e5da2eb 100644
+index 560402325dd5d3b48d36269f6130f28d9e337bd6..5e5da2ebb27b5d7360cfb9867629eab43642e9d0 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
 @@ -1,4 +1,10 @@
@@ -18489,7 +19559,7 @@ index 56040232..5e5da2eb 100644
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java
 new file mode 100644
-index 00000000..a6b1d21f
+index 0000000000000000000000000000000000000000..a6b1d21fc1be4568ffc5fd821e293e41a6ffd994
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java
 @@ -0,0 +1,70 @@
@@ -18565,7 +19635,7 @@ index 00000000..a6b1d21f
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhonesTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhonesTest.java
 new file mode 100644
-index 00000000..4c17ef53
+index 0000000000000000000000000000000000000000..4c17ef53d52651491499019e244a76ed497acf67
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhonesTest.java
 @@ -0,0 +1,66 @@
@@ -18636,7 +19706,7 @@ index 00000000..4c17ef53
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
-index ebe21ddf..c8269669 100644
+index ebe21ddf3bcc3420a015c277a7e95b0cf092fe6e..c8269669768931306642dae97644957aabc2b08f 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 @@ -23,6 +23,8 @@ final class Handler {
@@ -18669,7 +19739,7 @@ index ebe21ddf..c8269669 100644
          long value = 20;
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
-index 00000000..729b6fa9
+index 0000000000000000000000000000000000000000..729b6fa9bd1bc40901326b29cd263504248f9fe2
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 @@ -0,0 +1,73 @@
@@ -18748,10 +19818,10 @@ index 00000000..729b6fa9
 +}
 diff --git a/docs/EXPERIMENT_BREATHING_SETUP.md b/docs/EXPERIMENT_BREATHING_SETUP.md
 new file mode 100644
-index 00000000..4c0f2bad
+index 0000000000000000000000000000000000000000..34ada7314f0e95669cf70f00ac1068e15d8170eb
 --- /dev/null
 +++ b/docs/EXPERIMENT_BREATHING_SETUP.md
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,204 @@
 +# Shared breathing setup contract
 +
 +This optional app-owned path uses the packaged 44,100 Hz loop. Each of inhale,
@@ -18880,16 +19950,84 @@ index 00000000..4c0f2bad
 +Hard source/clock barriers still invalidate model lineage. Controller operation
 +is independent of Polar quality.
 +
++## Measured phase and rendering continuity
++
++Calibrated tilt projects the measured gravity direction through the learned
++axis and range to obtain a normalized coordinate for phase classification.
++The selected render driver integrates only confirmed Inhale, Exhale or Hold
++using its existing bounded integrator, configured rates and current render
++frame duration. It never assigns the measured coordinate directly to its slot.
++
++Sample availability and the last confirmed applied phase are separate. While
++the same source, projection, model and playing audio lineage remains valid,
++missing/stale/masked samples or an unconfirmed classifier result retain the
++last confirmed phase. Inhale and Exhale continue at the configured render-frame
++rate with endpoint clamping; Hold preserves the integrated value. Recovery
++applies only the current frame duration, with no packet-count or elapsed-gap
++catch-up. Invalid or motion-masked samples cannot establish a replacement
++phase. A genuine signal-history break re-primes classification, while the
++runtime retains the latest sensor-confirmed phase for that exact lineage,
++independently of current classifier history and sample availability. The driver
++receives that phase even if later samples in the same batch are masked before
++the next render. A confirmed state does not need to have been rendered once
++to survive a sample lapse; valid sensor evidence owns replacement of the state.
++
++Source ownership replacement/retirement, projection generation retirement,
++audio generation/clock faults or pause, calibration retry/model replacement,
++input changes and driver configuration/activation barriers retire the retained
++phase. A pause/resume between render frames remains an explicit epoch barrier,
++even when the fitted model survives. Startup Automatic remains parked at zero;
++running Automatic retains its exact observed audio-envelope mapping. Generic
++composition loss/reset semantics are unchanged.
++
++Each accepted confirmed sensor observation advances a separate revision that
++does not reset on masking or classifier re-prime. Driver configuration changes
++and activation rejection/restoration fence the current revision for its exact
++lineage. Pre-barrier cached phases cannot rearm the driver on later unavailable
++frames; a newer valid confirmed observation is required. That newer confirmation
++still survives an invalid batch tail before rendering. Cursor-only metadata
++under an unavailable audio/projection gate can retire older confirmations but
++supplies neither phase authority nor readiness.
++
++The existing render-driver marker reports `SetupAvailability`, the applied
++`SetupPhase`, compact `SetupLineage`, integrated `Value01`, `ResetCount` and
++`LastResetReason` under the `breathCompositionDriver` prefix. Its reason is
++`setup-participant-tilt-phase` for current confirmed input and
++`setup-retained-tilt-phase` when applying retained state. Lineage fields follow
++`polar:audio-generation:driver-epoch:source-owner:source-selection:source-reference:projection-generation:model-generation`.
++The existing setup `input_volume01` remains the measured coordinate and can be
++unavailable while the applied render phase continues. Recording freshness and
++admission continue to use current measured evidence.
++
 +## Verification boundary
 +
 +Focused host tests cover 25/200 Hz input, packet jitter, preserved originals,
 +parked startup, labelled nonlinear/variable breaths, full-window noise/motion
 +masks, missing phases, source epochs, retry/fallback and exact main boundaries.
++Runtime-to-driver replay additionally covers continuous 200 Hz observations in
++36-sample/180 ms batches with 45 ms receipt jitter, crossing the unchanged
++200 ms freshness gate while preserving frame-rate phase integration. Driver
++tests cover retained Inhale/Exhale/Hold at 72/90/120 Hz, re-prime Unknown,
++newly confirmed Hold, lineage/configuration changes and an unseen audio pause.
++Additional callback-to-render cases confirm Hold/Exhale, append an invalid
++sample before rendering, and preserve the newer confirmed state through
++unavailable and re-prime Unknown output. Hard runtime barriers clear that
++callback-side memory independently of the driver's previous rendered state.
++Real runtime-to-driver rate/slot and activation barrier tests hold loss across
++unavailable frames, verify retired/current slot writes, and admit a newer
++post-barrier confirmation followed by an invalid tail. A separate projection
++gate case protects retirement of confirmations unseen by the previous render.
++The phase classifier itself remains unchanged: a normalized box-coordinate
++probe at 25/50/100/200 Hz has identical individual/burst phase ordering without
++chatter, but its per-observation derivative filter gives up to 160 ms difference
++in Hold transition latency between 25 and 200 Hz. This is a qualification limit,
++separate from render continuity; broader signal and participant quality remain
++unproven by that fixture.
 +These engineering thresholds require
 +worn-device qualification; synthetic fixtures establish software behavior, not
 +physiological or clinical accuracy. No successful wearer fit is implied.
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
-index 6cb1e8b1..d9157480 100644
+index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..d9157480b6e2321e785ca7cd1f12273674f8b234 100644
 --- a/docs/EXPERIMENT_SESSION_CONTROL.md
 +++ b/docs/EXPERIMENT_SESSION_CONTROL.md
 @@ -145,6 +145,175 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
@@ -19070,7 +20208,7 @@ index 6cb1e8b1..d9157480 100644
  The debug-only `enroll-trusted-lan` operation additionally requires Boolean
 diff --git a/docs/PARTICLE_VISUAL_PROFILE.md b/docs/PARTICLE_VISUAL_PROFILE.md
 new file mode 100644
-index 00000000..559b24c4
+index 0000000000000000000000000000000000000000..559b24c4bcc5f643aa52882559765035b4236747
 --- /dev/null
 +++ b/docs/PARTICLE_VISUAL_PROFILE.md
 @@ -0,0 +1,40 @@
@@ -19115,7 +20253,7 @@ index 00000000..559b24c4
 +the actual selected renderer/shader closure. Neither host tests nor compilation
 +establish device rendering parity.
 diff --git a/docs/POLAR_SENSOR_RECOVERY.md b/docs/POLAR_SENSOR_RECOVERY.md
-index b9d29f76..a8a28a25 100644
+index b9d29f761586921491d4348ffd68419a6f7247c6..a8a28a251b8a0b50f4fd0307739e82f69e745565 100644
 --- a/docs/POLAR_SENSOR_RECOVERY.md
 +++ b/docs/POLAR_SENSOR_RECOVERY.md
 @@ -1,5 +1,63 @@
@@ -19183,7 +20321,7 @@ index b9d29f76..a8a28a25 100644
  Its compact fields are `{r,a,e,s?}`: action revision and ACC/ECG requested,
  PMD-ACK-active and recent-data bits (1/2/4). When `s` is absent, the existing
 diff --git a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json b/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
-index 82fee237..178956f6 100644
+index 82fee237bf57cd2a771a069d0394192798f058be..178956f6bf73213433833d6a00512144515d33ed 100644
 --- a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
 +++ b/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
 @@ -5,7 +5,7 @@
@@ -19196,7 +20334,7 @@ index 82fee237..178956f6 100644
    "owner_lane": "rusty-quest",
    "status": "public-substrate",
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
-index 0b6a0c00..22746f1f 100644
+index 0b6a0c00a6cbf2388d232686be809746ddac7c3b..22746f1f0a55ae671e2b0215551574d211bfeec0 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 +++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 @@ -66,6 +66,7 @@
@@ -19232,7 +20370,7 @@ index 0b6a0c00..22746f1f 100644
          ]
 diff --git a/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json b/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json
 new file mode 100644
-index 00000000..170ae8ac
+index 0000000000000000000000000000000000000000..170ae8acb345d529cd20a8efe5bb1743cf9580d2
 --- /dev/null
 +++ b/fixtures/native-app-features/ui/experiment-private-lan-data/ui.experiment_private_lan_data.feature.json
 @@ -0,0 +1,41 @@
@@ -19279,7 +20417,7 @@ index 00000000..170ae8ac
 +}
 diff --git a/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json b/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json
 new file mode 100644
-index 00000000..087a1a00
+index 0000000000000000000000000000000000000000..087a1a002846a7bfc5b998aa41b7d4119c4b367e
 --- /dev/null
 +++ b/fixtures/native-app-features/ui/experiment-scene-recenter/ui.experiment_scene_recenter.feature.json
 @@ -0,0 +1,33 @@
@@ -19318,7 +20456,7 @@ index 00000000..087a1a00
 +}
 diff --git a/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
 new file mode 100644
-index 00000000..8db27129
+index 0000000000000000000000000000000000000000..8db271294d8c62b715fb745686b5350cf2036cc0
 --- /dev/null
 +++ b/fixtures/native-app-features/ui/experiment-wifi-setup/ui.experiment_wifi_setup.feature.json
 @@ -0,0 +1,35 @@
@@ -19358,7 +20496,7 @@ index 00000000..8db27129
 +  "public_private_boundary": "Hotspot credentials are authenticated, encrypted and supplied by the enrolled operator."
 +}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
-index 5bc5902d..9b62ecc1 100644
+index 5bc5902d29b287dde63304507f3443558c57e5d5..9b62ecc1c308a590664774908e33ed26685039d8 100644
 --- a/schemas/rusty.quest.native_app_build.v1.schema.json
 +++ b/schemas/rusty.quest.native_app_build.v1.schema.json
 @@ -43,6 +43,60 @@
@@ -19446,7 +20584,7 @@ index 5bc5902d..9b62ecc1 100644
            "type": "object",
            "additionalProperties": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..bdd9e771 100644
+index ccb3e308a50de2583021c82df3fae64f34cca2c0..bdd9e77154d5abd78cfa8369f7b22f29ce6350ea 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
@@ -19690,7 +20828,7 @@ index ccb3e308..bdd9e771 100644
  try {
      $env:ANDROID_HOME = $AndroidHome
 diff --git a/tools/Invoke-ExperimentSessionControl.ps1 b/tools/Invoke-ExperimentSessionControl.ps1
-index 13d86dee..f2255ea4 100644
+index 13d86dee01d70c3cbd888fb10c002025280b45bb..f2255ea4203c149c873b7bb48292f76425204343 100644
 --- a/tools/Invoke-ExperimentSessionControl.ps1
 +++ b/tools/Invoke-ExperimentSessionControl.ps1
 @@ -7,7 +7,8 @@ param(
@@ -19736,7 +20874,7 @@ index 13d86dee..f2255ea4 100644
   # Capture both streams privately. Never emit the secret-bearing Binder response.
   $start=[Diagnostics.ProcessStartInfo]::new($binary)
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881..bc497e76 100644
+index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..bc497e766d1f9a7d7b4615d43540fa4b55a17acd 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -10,7 +10,7 @@ param(
@@ -20025,7 +21163,7 @@ index 0bdd4881..bc497e76 100644
      feature_lock_sha256 = Get-FileSha256 -Path $featureLockPath
 diff --git a/tools/checks/Test-BreathingSetupAudioAndroid.ps1 b/tools/checks/Test-BreathingSetupAudioAndroid.ps1
 new file mode 100644
-index 00000000..1cff2d58
+index 0000000000000000000000000000000000000000..1cff2d5801bbb0f0c41db38fc0d78cda758ca66c
 --- /dev/null
 +++ b/tools/checks/Test-BreathingSetupAudioAndroid.ps1
 @@ -0,0 +1,22 @@
@@ -20053,7 +21191,7 @@ index 00000000..1cff2d58
 +Write-Output 'PASS selected breathing audio Android boot-class-path compilation'
 diff --git a/tools/checks/Test-ExperimentPhonePairing.ps1 b/tools/checks/Test-ExperimentPhonePairing.ps1
 new file mode 100644
-index 00000000..3e7de2e8
+index 0000000000000000000000000000000000000000..3e7de2e854682de8e9ef2a2a7025c19a1fa471c0
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairing.ps1
 @@ -0,0 +1,22 @@
@@ -20081,7 +21219,7 @@ index 00000000..3e7de2e8
 +@{passed=$true;web_java_interop_ran=[bool]$WebTest;scope='Real JCE pairing owner host tests and optional actual WebCrypto/Java request integration; no Android, network, APK or headset effects'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
 diff --git a/tools/checks/Test-ExperimentPhonePairingAndroid.ps1 b/tools/checks/Test-ExperimentPhonePairingAndroid.ps1
 new file mode 100644
-index 00000000..e60053ea
+index 0000000000000000000000000000000000000000..e60053ea45bdc7b88b1c69c6c7af34d0ed60740c
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingAndroid.ps1
 @@ -0,0 +1,23 @@
@@ -20110,7 +21248,7 @@ index 00000000..e60053ea
 +'PASS current module, pairing, registry, gateway/discovery and selected UI against actual selected Android shell classes and Android API'
 diff --git a/tools/checks/Test-ExperimentPhonePairingSelection.ps1 b/tools/checks/Test-ExperimentPhonePairingSelection.ps1
 new file mode 100644
-index 00000000..c7e6e005
+index 0000000000000000000000000000000000000000..c7e6e005b1b8c043e9ffa50dd284d95e9d8c7527
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingSelection.ps1
 @@ -0,0 +1,67 @@
@@ -20183,7 +21321,7 @@ index 00000000..c7e6e005
 +'PASS phone pairing actual resolver/manifest/source closure, default off, strict Boolean and missing/changed source/selection/gateway denials'
 diff --git a/tools/checks/Test-ExperimentPhonePairingUi.ps1 b/tools/checks/Test-ExperimentPhonePairingUi.ps1
 new file mode 100644
-index 00000000..6e663acf
+index 0000000000000000000000000000000000000000..6e663acf1b4ddaeef9a7f22b97999e101fa33cee
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingUi.ps1
 @@ -0,0 +1,26 @@
@@ -20215,7 +21353,7 @@ index 00000000..6e663acf
 +if($LASTEXITCODE){throw 'Polar Location-services projection controls failed'}
 diff --git a/tools/checks/Test-ExperimentSessionApkClosure.ps1 b/tools/checks/Test-ExperimentSessionApkClosure.ps1
 new file mode 100644
-index 00000000..65858368
+index 0000000000000000000000000000000000000000..65858368d15c1b30eb391dbcca3d74dc224378c9
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentSessionApkClosure.ps1
 @@ -0,0 +1,29 @@
@@ -20249,7 +21387,7 @@ index 00000000..65858368
 +if ($LASTEXITCODE -ne 0) { throw 'Actual signed APK cold-start closure was rejected' }
 +Write-Output 'PASS: actual signed APK session closure and locked runtime duration'
 diff --git a/tools/checks/Test-ExperimentSessionCommandGateway.ps1 b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
-index bafddd3d..894c091d 100644
+index bafddd3d4bd7e36b57a7e6bea5f06aac4b19b1a2..894c091d03053bfed8f9dc52eeaf8310672233f2 100644
 --- a/tools/checks/Test-ExperimentSessionCommandGateway.ps1
 +++ b/tools/checks/Test-ExperimentSessionCommandGateway.ps1
 @@ -8,26 +8,40 @@ $pkg='io/github/mesmerprism/rustyquest/native_renderer'
@@ -20297,7 +21435,7 @@ index bafddd3d..894c091d 100644
  @{passed=$true;scope='Production transport authentication host tests only; Android owner/native/LAN effects require separate evidence'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
 diff --git a/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1 b/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1
 new file mode 100644
-index 00000000..2db2745c
+index 0000000000000000000000000000000000000000..2db2745ce002eb1620d3b9912401078d082368bf
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1
 @@ -0,0 +1,25 @@
@@ -20328,7 +21466,7 @@ index 00000000..2db2745c
 +'PASS current gateway and separate release setup adapter/provider against actual selected Android shell classes and Android API'
 diff --git a/tools/checks/Test-ExperimentSessionHeadsetSetupSelection.ps1 b/tools/checks/Test-ExperimentSessionHeadsetSetupSelection.ps1
 new file mode 100644
-index 00000000..59166bba
+index 0000000000000000000000000000000000000000..59166bba51741ab1715cd5dc51e23ce71d04c891
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentSessionHeadsetSetupSelection.ps1
 @@ -0,0 +1,60 @@
@@ -20394,7 +21532,7 @@ index 00000000..59166bba
 +'PASS actual release resolver manifest/source hash closure, off-default and mismatched provider/selection/source/debug denials'
 diff --git a/tools/checks/Test-NativeAppManifestOptions.ps1 b/tools/checks/Test-NativeAppManifestOptions.ps1
 new file mode 100644
-index 00000000..664dfef1
+index 0000000000000000000000000000000000000000..664dfef181889aa8438d243a1101dcb2c08a4e7f
 --- /dev/null
 +++ b/tools/checks/Test-NativeAppManifestOptions.ps1
 @@ -0,0 +1,110 @@
@@ -20510,7 +21648,7 @@ index 00000000..664dfef1
 +Write-Output "PASS: typed manifest options, defaults, schema and lock identity ($scratch)"
 diff --git a/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1 b/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1
 new file mode 100644
-index 00000000..d5684097
+index 0000000000000000000000000000000000000000..d5684097c7c40fd394af46739780869151f143f5
 --- /dev/null
 +++ b/tools/checks/Test-NativeOriginalControllerOnlyBuildPreflight.ps1
 @@ -0,0 +1,42 @@
@@ -20557,7 +21695,7 @@ index 00000000..d5684097
 +}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $OutputRoot 'RESULT.json') -Encoding utf8NoBOM
 +Write-Output "PASS actual locked non-resolve original/controller-only preflight ($OutputRoot)."
 diff --git a/tools/checks/Test-NativeRendererConditionAudio.ps1 b/tools/checks/Test-NativeRendererConditionAudio.ps1
-index 04d338aa..680d540c 100644
+index 04d338aa1d994282433b0b87216e0aec12c467a9..680d540c9f3224b68fa52ee1d4bdd5a08acc51dc 100644
 --- a/tools/checks/Test-NativeRendererConditionAudio.ps1
 +++ b/tools/checks/Test-NativeRendererConditionAudio.ps1
 @@ -38,7 +38,7 @@ function Assert-NotContains([string]$Path, [string]$Literal) {
@@ -20570,7 +21708,7 @@ index 04d338aa..680d540c 100644
  Assert-Contains $runtime 'threshold-does-not-stop-audio'
  Assert-Contains $runtime 'natural-end-silence-session-continues'
 diff --git a/tools/checks/Test-NativeRendererControllerOnlyInput.ps1 b/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
-index 302fa990..804d8f25 100644
+index 302fa990d4045cba680bbb7a067678ecf91db87c..804d8f259b53df4c9ee290099e6182d5417cd0f4 100644
 --- a/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
 +++ b/tools/checks/Test-NativeRendererControllerOnlyInput.ps1
 @@ -1,6 +1,16 @@
@@ -20666,7 +21804,7 @@ index 302fa990..804d8f25 100644
 +if ($LASTEXITCODE) { throw 'Production controller-only input/compiler tests failed.' }
 +Write-Output "PASS controller-only actual resolver/default control, closed binding, hand-free manifest and compiled runtime selection ($OutputRoot)."
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-index 966e9942..474fe245 100644
+index 966e99422885a9ecc4f71c1ff4e1c9b364996a5b..474fe2456ae8dc5efa9e56ac76c915973ad8add5 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
 +++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 @@ -156,11 +156,15 @@ try {
@@ -20723,7 +21861,7 @@ index 966e9942..474fe245 100644
  if ($LASTEXITCODE -ne 0) { throw 'Production Polar callback/UI owner controls failed' }
  Write-Host 'Test-NativeRendererExperimentPanel PASS'
 diff --git a/tools/checks/Test-NativeRendererPanelComposition.ps1 b/tools/checks/Test-NativeRendererPanelComposition.ps1
-index 2408b225..d4960b32 100644
+index 2408b225e201b2e4a612fd79ab21836f632f9a97..d4960b32c47295000f37b79ee9ffbb8ad0befdf2 100644
 --- a/tools/checks/Test-NativeRendererPanelComposition.ps1
 +++ b/tools/checks/Test-NativeRendererPanelComposition.ps1
 @@ -45,6 +45,24 @@ try {
@@ -20753,7 +21891,7 @@ index 2408b225..d4960b32 100644
      $mixed=@{selected_feature_ids=$originalIds+@('renderer.native_scene')}
 diff --git a/tools/checks/experiment_breathing_setup_stub.py b/tools/checks/experiment_breathing_setup_stub.py
 new file mode 100644
-index 00000000..8a380b1b
+index 0000000000000000000000000000000000000000..8a380b1b6c65ac53350082847b8178c5f76c62b1
 --- /dev/null
 +++ b/tools/checks/experiment_breathing_setup_stub.py
 @@ -0,0 +1,14 @@
@@ -20772,7 +21910,7 @@ index 00000000..8a380b1b
 +}
 +'''
 diff --git a/tools/checks/test_experiment_ble_generation.py b/tools/checks/test_experiment_ble_generation.py
-index 4987f929..d2eb446f 100644
+index 4987f929862e88bf164cafa1e50330223e31c1b7..d2eb446f25c4615b2a83edbdf6ef081630f4ec1c 100644
 --- a/tools/checks/test_experiment_ble_generation.py
 +++ b/tools/checks/test_experiment_ble_generation.py
 @@ -5,6 +5,7 @@ import subprocess
@@ -20803,7 +21941,7 @@ index 4987f929..d2eb446f 100644
        public void onCharacteristicWriteRequest(BluetoothDevice d,int id,BluetoothGattCharacteristic c,boolean p,boolean r,int o,byte[] v){}}''',
 diff --git a/tools/checks/test_experiment_ble_phone_admission.py b/tools/checks/test_experiment_ble_phone_admission.py
 new file mode 100644
-index 00000000..ae47c5a7
+index 0000000000000000000000000000000000000000..ae47c5a7145d6e4f0569baef0e0ad5728971a082
 --- /dev/null
 +++ b/tools/checks/test_experiment_ble_phone_admission.py
 @@ -0,0 +1,82 @@
@@ -20890,7 +22028,7 @@ index 00000000..ae47c5a7
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_control_mode.py b/tools/checks/test_experiment_control_mode.py
-index f406a33a..7d114f22 100644
+index f406a33a76fdb91e7df6fc7f80e5a38a58c4eb1d..7d114f221124c5436c7b17f5ec1a1af800fd878a 100644
 --- a/tools/checks/test_experiment_control_mode.py
 +++ b/tools/checks/test_experiment_control_mode.py
 @@ -5,6 +5,7 @@ from pathlib import Path
@@ -20944,7 +22082,7 @@ index f406a33a..7d114f22 100644
  
  
 diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
-index 25bc4104..6790eb56 100644
+index 25bc41049f87ea662090871cdb90a7247a723937..6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b 100644
 --- a/tools/checks/test_experiment_discovery.py
 +++ b/tools/checks/test_experiment_discovery.py
 @@ -9,6 +9,36 @@ from test_experiment_gateway_dedupe import method
@@ -21120,7 +22258,7 @@ index 25bc4104..6790eb56 100644
    check("advertising".equals(d.readback().getString("state")),"Remote advertises");check(!a.data.name&&a.data.services==1&&a.scan==null,"service-only unnamed advertisement");
 diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
 new file mode 100644
-index 00000000..e05ba33e
+index 0000000000000000000000000000000000000000..e05ba33e31b3627daca83b35fa8316945eda53d0
 --- /dev/null
 +++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
 @@ -0,0 +1,124 @@
@@ -21249,7 +22387,7 @@ index 00000000..e05ba33e
 +if __name__ == '__main__':
 +    main()
 diff --git a/tools/checks/test_experiment_gateway_dedupe.py b/tools/checks/test_experiment_gateway_dedupe.py
-index fbc332fd..a9b8aa8a 100644
+index fbc332fdcfae0f1d8c7de7081aa38da540661ce0..a9b8aa8aba0fe9b0adcdc38a1ec678522946a67c 100644
 --- a/tools/checks/test_experiment_gateway_dedupe.py
 +++ b/tools/checks/test_experiment_gateway_dedupe.py
 @@ -3,6 +3,7 @@ import argparse
@@ -21307,7 +22445,7 @@ index fbc332fd..a9b8aa8a 100644
          fixture = output / "GatewayDedupeHarness.java"
 diff --git a/tools/checks/test_experiment_headset_setup.py b/tools/checks/test_experiment_headset_setup.py
 new file mode 100644
-index 00000000..a75e3ff1
+index 0000000000000000000000000000000000000000..a75e3ff12a326d213580bc6bf5f4b0478c750f99
 --- /dev/null
 +++ b/tools/checks/test_experiment_headset_setup.py
 @@ -0,0 +1,84 @@
@@ -21397,7 +22535,7 @@ index 00000000..a75e3ff1
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_headset_setup_cli.py b/tools/checks/test_experiment_headset_setup_cli.py
 new file mode 100644
-index 00000000..24a14208
+index 0000000000000000000000000000000000000000..24a142089164f28e247258a5dc1f40b4b652a21e
 --- /dev/null
 +++ b/tools/checks/test_experiment_headset_setup_cli.py
 @@ -0,0 +1,36 @@
@@ -21438,7 +22576,7 @@ index 00000000..24a14208
 +  print('PASS actual release CLI: separate closed authority/method, running actor, canonical serial and origin, broad-operation refusals, one call only; no device')
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_local_enrollment.py b/tools/checks/test_experiment_local_enrollment.py
-index 1596ca0d..9e3222b2 100644
+index 1596ca0d5da126d03b978d67cef2eb5e69b2c00a..9e3222b28ddf3290ddd9012b56f950c43dbf0d4b 100644
 --- a/tools/checks/test_experiment_local_enrollment.py
 +++ b/tools/checks/test_experiment_local_enrollment.py
 @@ -12,6 +12,11 @@ def main():
@@ -21463,7 +22601,7 @@ index 1596ca0d..9e3222b2 100644
  if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_phone_pairing_ui_runtime.py b/tools/checks/test_experiment_phone_pairing_ui_runtime.py
 new file mode 100644
-index 00000000..6f3d05ab
+index 0000000000000000000000000000000000000000..6f3d05ab74e4c1d97880ef6e226f53dc95149b3a
 --- /dev/null
 +++ b/tools/checks/test_experiment_phone_pairing_ui_runtime.py
 @@ -0,0 +1,113 @@
@@ -21581,7 +22719,7 @@ index 00000000..6f3d05ab
 +   result.check_returncode();print(result.stdout.strip())
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_recordings.py b/tools/checks/test_experiment_recordings.py
-index c849c2d5..8fb1d2e0 100644
+index c849c2d554a16171cd09bd908448dd6237538631..8fb1d2e0f23516896e054d2f355334c8b2165b63 100644
 --- a/tools/checks/test_experiment_recordings.py
 +++ b/tools/checks/test_experiment_recordings.py
 @@ -5,15 +5,81 @@ from test_experiment_gateway_dedupe import method
@@ -21788,7 +22926,7 @@ index c849c2d5..8fb1d2e0 100644
  }
  '''
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index d1d148eb..724f0e89 100644
+index d1d148eb645b28e74bc02adb25786400283cd031..724f0e897a77e6779479faac7f772f309e5fb379 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -9,6 +9,7 @@ from pathlib import Path
@@ -21886,7 +23024,7 @@ index d1d148eb..724f0e89 100644
          sources = [root/(n+'.java') for n in names] + [a.repo/'apps/native-renderer-android/src/main/java'/PACKAGE/'NativeRendererWriterAcknowledgedExitPolicy.java']
 diff --git a/tools/checks/test_experiment_startup_permissions.py b/tools/checks/test_experiment_startup_permissions.py
 new file mode 100644
-index 00000000..83f1fa46
+index 0000000000000000000000000000000000000000..83f1fa4632fd1ff5efafca47dbf0335ad24d3c5f
 --- /dev/null
 +++ b/tools/checks/test_experiment_startup_permissions.py
 @@ -0,0 +1,153 @@
@@ -22045,7 +23183,7 @@ index 00000000..83f1fa46
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
 new file mode 100644
-index 00000000..eceafd0a
+index 0000000000000000000000000000000000000000..eceafd0ae0df0c32171c52bf5d680c918dbf52a4
 --- /dev/null
 +++ b/tools/checks/test_experiment_trusted_phones.py
 @@ -0,0 +1,152 @@
@@ -22202,7 +23340,7 @@ index 00000000..eceafd0a
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
-index d6a4bfd4..413ff5bd 100644
+index d6a4bfd41ffbee149a1c834ee6b3160144829335..413ff5bd05cf627fc62369efdb572436e9ca9e06 100644
 --- a/tools/checks/test_experiment_wifi_snapshot.py
 +++ b/tools/checks/test_experiment_wifi_snapshot.py
 @@ -66,6 +66,7 @@ public final class WifiSnapshotHarness {
@@ -22224,7 +23362,7 @@ index d6a4bfd4..413ff5bd 100644
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
 diff --git a/tools/checks/test_native_controller_only_input.py b/tools/checks/test_native_controller_only_input.py
 new file mode 100644
-index 00000000..ca2e0c42
+index 0000000000000000000000000000000000000000..ca2e0c42dacadaf0c5d7079146e4c32cc7c15a7b
 --- /dev/null
 +++ b/tools/checks/test_native_controller_only_input.py
 @@ -0,0 +1,130 @@
@@ -22360,7 +23498,7 @@ index 00000000..ca2e0c42
 +    main()
 diff --git a/tools/checks/test_particle_visual_profile_reset.py b/tools/checks/test_particle_visual_profile_reset.py
 new file mode 100644
-index 00000000..bac36337
+index 0000000000000000000000000000000000000000..bac3633772770f64dece5a86b8e124c24111e536
 --- /dev/null
 +++ b/tools/checks/test_particle_visual_profile_reset.py
 @@ -0,0 +1,61 @@
@@ -22426,7 +23564,7 @@ index 00000000..bac36337
 +    subprocess.run([str(binary)],check=True)
 +print('PASS production reset method preserves the particle baseline through repeated experiment resets and first-frame pending reset')
 diff --git a/tools/checks/test_polar_acquisition_callbacks.py b/tools/checks/test_polar_acquisition_callbacks.py
-index 0d368041..2982a7b5 100644
+index 0d36804181502691f65e3af1ea9b9a92eb60d3b7..2982a7b5f3c66e32da26be5b6e5681c43a46f91c 100644
 --- a/tools/checks/test_polar_acquisition_callbacks.py
 +++ b/tools/checks/test_polar_acquisition_callbacks.py
 @@ -72,6 +72,8 @@ class AcquisitionCallbackTest {
@@ -22440,7 +23578,7 @@ index 0d368041..2982a7b5 100644
   void nativeSubmitPolarRrMeasurement(long t,float rr){commit();rrSubmits++;}
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
 new file mode 100644
-index 00000000..833f50b0
+index 0000000000000000000000000000000000000000..833f50b03335810d11063ffdd60c7c48017f760d
 --- /dev/null
 +++ b/tools/checks/test_polar_platform_projection.py
 @@ -0,0 +1,42 @@
@@ -22487,7 +23625,7 @@ index 00000000..833f50b0
 +  subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_polar_recovery_callbacks.py b/tools/checks/test_polar_recovery_callbacks.py
-index ea84ef26..8039f3b6 100644
+index ea84ef260867d1312eeca6b8c536810f7eb8bc7d..8039f3b668af2e4ea7ac15d006dc278ff9640400 100644
 --- a/tools/checks/test_polar_recovery_callbacks.py
 +++ b/tools/checks/test_polar_recovery_callbacks.py
 @@ -33,7 +33,7 @@ markers = ['private void handleConnectionState(', 'private void scheduleAutomati
@@ -22511,7 +23649,7 @@ index ea84ef26..8039f3b6 100644
   Object pmdControlCharacteristic=new Object(),pmdDataCharacteristic=new Object(),batteryCharacteristic;
 diff --git a/tools/checks/test_polar_required_stream_recovery.py b/tools/checks/test_polar_required_stream_recovery.py
 new file mode 100644
-index 00000000..2425c7ea
+index 0000000000000000000000000000000000000000..2425c7ea42a6a9e99a4f3e450b4a5c0f1a653350
 --- /dev/null
 +++ b/tools/checks/test_polar_required_stream_recovery.py
 @@ -0,0 +1,81 @@
@@ -22598,7 +23736,7 @@ index 00000000..2425c7ea
 + subprocess.run(['java','-cp',tmp,PACKAGE.replace('/','.')+'.RequiredStreamHost'],check=True)
 diff --git a/tools/checks/test_polar_required_stream_scope.py b/tools/checks/test_polar_required_stream_scope.py
 new file mode 100644
-index 00000000..dc0bab36
+index 0000000000000000000000000000000000000000..dc0bab363f105ecc62874888ade63aff2ea8dc2e
 --- /dev/null
 +++ b/tools/checks/test_polar_required_stream_scope.py
 @@ -0,0 +1,86 @@
@@ -22689,7 +23827,7 @@ index 00000000..dc0bab36
 +}'''.replace('__BODIES__',bodies)
 +run({pkg+'/AccDiagnosticHost.java':fixture+'\n'+support},'AccDiagnosticHost')
 diff --git a/tools/checks/test_remote_setup.py b/tools/checks/test_remote_setup.py
-index 4e7a895c..03165f05 100644
+index 4e7a895c0dd6c651a4dca898a38b4b456b4035c1..03165f05a3b1be0727471a02a0ba968b1c15e265 100644
 --- a/tools/checks/test_remote_setup.py
 +++ b/tools/checks/test_remote_setup.py
 @@ -11,6 +11,8 @@ import org.json.*;import android.os.SystemClock;
@@ -22710,7 +23848,7 @@ index 4e7a895c..03165f05 100644
    base.put("y",setup);byte[] projected=new PolarStopBleCapability().projectBoundedStatus(base,null);
    check(projected.length<=480&&new JSONObject(new String(projected,java.nio.charset.StandardCharsets.UTF_8)).getString("h").equals("vr-preparation"),"idle four candidate/readiness/presentation bounded projection");
 diff --git a/tools/lib/NativeRendererPanelCompositionSelection.psm1 b/tools/lib/NativeRendererPanelCompositionSelection.psm1
-index 21e2d2ec..2ce576a3 100644
+index 21e2d2ec0eaf86c7f2a15af875e350d7ee6ddcfc..2ce576a344fe8a237c54b8c9462c6c137c2c6265 100644
 --- a/tools/lib/NativeRendererPanelCompositionSelection.psm1
 +++ b/tools/lib/NativeRendererPanelCompositionSelection.psm1
 @@ -48,9 +48,16 @@ function Get-NativeRendererPanelCompositionSelection {

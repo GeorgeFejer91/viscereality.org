@@ -1,5 +1,50 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.7-dev — retain confirmed Polar breath state, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.7-dev, version code 8; local hardware testing only |
+| APK size / SHA-256 | 65,272,622 bytes; `93a3f9867f9d2666344b6d5703bc6b29ddb99a48cc8d9744d6c6c551f2f3d050` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1` / `2b702ebeda4b69faadc97c3716f9db956d759a1f` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `55fa7a2571ba14d9b11b1b551077a57922a81b3e0beabb558ac451ae9ca29a8f` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install; v2/v3 and 16KiB ZIP alignment checks pass |
+
+The code-7 wearer test exposed loss-value resets during ordinary Polar packet
+gaps. Code 8 retains the latest sensor-confirmed breath state: inhale keeps
+expanding, exhale contracting, and hold stays still until valid data establishes
+a new state. The existing frame-time integrator and configured rates drive
+radius; measured normalized tilt never assigns radius directly. Current sample
+readiness remains honest, including when retained state continues rendering.
+
+Confirmed state survives a later invalid packet tail before rendering. Separate
+monotonic confirmation revisions fence old state after configuration/activation
+retirement, while genuinely newer valid evidence can rearm it. Source, projection,
+audio, model, input and activation barriers retain their reset behavior. Generic
+composition loss semantics, learned mapping/classifier, parked startup, controller
+fallback, recording admission and the exact 900-second main remain unchanged.
+The existing private Showcase visuals and controller-only selection are retained.
+
+Verification: causal packet-gap and review-edge RED/GREEN regressions; runtime29,
+driver13, full native833 with three ignored, phone164, format/boundary/focused
+static checks and independent source review pass. Existing broader non-test-host
+cfg and static-token issues are recorded in the verification notes, rather than
+claimed as passing. The exact cumulative patch reconstructs the source tree.
+Fresh assembly and actual signed-APK session closure, 89 assets, signer, manifest
+and ZIP alignment checks pass.
+
+Code 8 is installed on Quest 2 with matching installed-byte hash, retained UID,
+runtime grants and persistent app identity. Actual cold-start flags confirm
+controllers only, no live hand extension, no simultaneous mode and the app panel
+closed. The gateway is ready; observed input is zero. Configured inhale/exhale
+rates remain 0.25 per second. Location remains ON as requested; Wi-Fi ADB is
+retained. Owned startup observers and leases are released. No new calibration
+has started: require fresh wearer Ready for tracking, retry/fallback and the full
+trial. No Meta upload occurred. Physical smoothness is not yet qualified.
+
 ## 0.2.6-dev — participant-led calibration and controllers only, 2026-11-15
 
 | Build property | Verified value |
@@ -41,9 +86,14 @@ Code 7 is installed with matching installed-byte hash, retained UID/grants and
 persistent app identity. Actual startup reports `nativeControllerOnlyInput=true`,
 `liveHandTrackingExtensionEnabled=false`, `simultaneousHandsControllersSelected=false`
 and closed app-panel visibility. The gateway is ready. Location remains enabled
-at the user's request. An unworn-headset capture is black and does not establish
-wearer rendering. Fresh personal calibration, satisfactory tracking, retry,
-Controller fallback and the full trial remain open. No Meta upload occurred.
+at the user's request. After dismissing a Quest prompt the wearer confirmed the
+stimulus. The attended calibration completed both full cycles with 800/800
+accepted points, then switched to Polar tilt in the same audio generation.
+The wearer rejected visibly jumping sphere expansion. Repeated same-lineage
+readiness lapses expose a driver reset path that needs a continuity repair;
+successful collection does not establish satisfactory tracking. Retry, Controller
+fallback and the full trial remain open. The app is stopped pending repair and
+fresh wearer readiness. No Meta upload occurred.
 
 ## 0.2.5-dev — parked startup and full-window quality, 2026-11-15
 

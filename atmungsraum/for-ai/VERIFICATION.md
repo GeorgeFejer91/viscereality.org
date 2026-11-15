@@ -1,5 +1,35 @@
 # Verification
 
+## Retained calibrated Polar state — 2026-11-15
+
+Native `304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1` passes 833 library tests,
+three ignored, and all 164 phone tests pass. The real Runtime/driver replay first
+reproduces a loss-value snap at 211ms, then verifies continuous per-render
+integration across 180/225ms packet delivery. Inhale/exhale/hold show equal-time
+parity at 72/90/120 Hz; measured tilt cannot assign radius directly.
+
+Review found and corrected two cache edges with RED/GREEN regressions: a valid
+Hold/Exhale followed by an invalid packet tail before any render, and pre-barrier
+cache reuse after rate/slot/activation changes. New valid post-barrier evidence
+still survives an invalid tail. A separate monotonic confirmation revision and
+lineage-bound fence preserve both rules. An inert unavailable-cursor mutation
+also fails before restoration and passes afterward. Runtime29, driver13,
+format, boundary and focused static checks pass. Independent spec/quality review
+is clear. No source change followed the final full library pass.
+
+The cumulative patch reconstructs tree `2b702ebeda4b69faadc97c3716f9db956d759a1f`
+exactly from the pinned upstream. The pre-existing non-test host cfg failure and
+broader exact-token static-gate mismatch remain documented baseline limits;
+they are not claimed as passing. Signed APK assembly/inspection, installation,
+publication and fresh participant acceptance are separate gates. Code 8 assembly,
+actual signed-APK session closure, 89 assets, manifest, certificate and ZIP checks
+now pass. Installed bytes match exactly; UID, runtime grants and persistent app
+identity are retained. Fresh cold startup captures controller-only true, hand
+extension false, simultaneous false, panel closed, gateway ready and input zero.
+Configured phase rates remain 0.25 per second. Location stays ON and Wi-Fi ADB is
+retained; observer/lease cleanup passes. Publication and fresh wearer tracking,
+retry/fallback and the full main run remain pending. No Meta upload.
+
 ## Participant-led calibration and controller-only code 7 — 2026-11-15
 
 Three new waveform cases first failed the ideal-template check, then passed
@@ -24,6 +54,31 @@ The unworn capture is black; physical rendering, participant satisfaction,
 retry/fallback and the full main experiment remain unqualified. Location stays
 enabled as requested; no Meta upload. See the [exact APK record](../quest/apks/README.md).
 
+The source record merged in [PR 14](https://github.com/GeorgeFejer91/viscereality.org/pull/14)
+at `2fbf5306cb8876bce52c8b87a70e838ca41c7c03`. Exact
+[Pages run 43737821830](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43737821830)
+succeeded; all 24 checked live files match Git. After fresh wearer readiness,
+the actual USB Pixel resource inventory verifies the new brand CSS/app and
+current setup modules after refresh. The attended attempt then completed both
+cycles (1,411,200 frames, 800/800 accepted points, zero quality masks) and selected
+Polar tilt with audio generation unchanged. The wearer confirmed the stimulus
+after dismissing a Quest prompt, but rejected its visibly jumping radius.
+Sparse private telemetry contains 32 not-ready observations among 255 snapshots
+after successful calibration, with source and audio generation unchanged. The
+code-7 Waiting branch reset the integrator to its loss value; the code-8 repair
+is verified above and wearer acceptance remains open. The code-7 app and owned
+observers were stopped, its phone forward and leases released, Location retained ON. Fresh
+wearer Ready is required before another calibration; no main run or Meta upload.
+
+The real trained Runtime-to-driver regression reproduces the reset with 200 Hz
+samples in 36-sample batches at 180ms cadence plus 45ms jitter: at render 19
+(211ms), a readiness lapse resets integrated progress from 0.30000013 to the
+test loss scalar 0.2. The user's required correction retains the last valid
+breath state, rather than freezing radius. The repaired replay advances at the
+configured rate on all 117 render frames, including unavailable intervals,
+without reset or packet catch-up. Barrier review and build subsequently passed
+in code 8; fresh wearer acceptance remains open.
+
 ## Core-site PWA styling — 2026-11-15
 
 The core site's rendered reference was inspected in IAB and retained privately.
@@ -43,7 +98,8 @@ The style increment merged in [PR 13](https://github.com/GeorgeFejer91/viscereal
 at `0a3451656351d00391b6ca1d9d55bd2805b1d960`. Exact
 [Pages run 43736737421](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43736737421)
 succeeded. All 24 live files match Git, and actual public-URL phone/desktop checks
-pass with no app errors. Installed-phone refresh is pending.
+pass with no app errors. The installed Pixel was subsequently refreshed and its
+exact brand/app/setup resource versions verified during the code-7 test.
 
 ## Parked preparation and full-window repair — 2026-11-15
 

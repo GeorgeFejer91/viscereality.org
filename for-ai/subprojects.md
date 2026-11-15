@@ -19,11 +19,18 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   switching. Code 6 collected both full cycles with 795/800 points, then failed
   its overly strict template test. Both follow-up repairs are installed as
   Developer code 7 with matching byte readback and effective controller-only
-  flags. Fresh participant satisfaction and fallback acceptance remain open.
+  flags. The attended code-7 attempt accepted 800/800 points and selected Polar
+  tilt, but the participant rejected jumping radius changes. The setup Waiting
+  reset is repaired in reviewed local Developer code 8. Retain the last valid
+  breath state through unavailable samples: inhale/exhale keep their smooth
+  frame-time ramp; hold stays still.
+  Genuine source/audio/model/input barriers still clear state. Participant
+  satisfaction and fallback acceptance remain open.
 
 - The phone app now follows the core site's black/white Arial, VR figure,
   thin frames and blue/gold accents. The style is live with rendered and public
-  URL checks; installed-phone refresh remains part of the next wearer test.
+  URL checks; installed-phone refresh and exact resource readback passed during
+  the code-7 wearer test.
 
 - Setup correction (2026-11-15): Automatic is selected but parked at minimum and
   silent on load. Explicit calibration or Controller selection starts the native
