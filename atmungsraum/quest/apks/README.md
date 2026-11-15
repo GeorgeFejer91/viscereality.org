@@ -1,5 +1,49 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.5-dev — parked startup and full-window quality, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.5-dev, version code 6; local hardware testing only |
+| APK size / SHA-256 | 65,280,816 bytes; `25a1b9464bc63f2e9c349a8c899c34ccec84c881eaabc8e6565fc7d7b260c2a8` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `f31156d7832f71b7caeff9ad005c311ea77c0c8e` / `c095a8df92480b6da4c7810ed3332bf3998667c2` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `eb5f53d397089478f2732ee889c0637ae67ad0fa8b5f9db0524ed8828f02c661` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install; v2/v3 and 16KiB ZIP alignment checks pass |
+
+Automatic is parked at minimum with prepared silent audio. Accepted calibration
+or Controller selection starts the shared loop once; ordinary lifecycle resume
+cannot first-start it. Calibration assesses all 32 seconds, masks bounded noisy
+segments and fits only with sufficient phase coverage. Fixed sensor/receipt-anchor
+estimation avoids callback-derived host reordering, with explicit non-exact
+timing provenance and unchanged raw timestamps. Source-clock warmup gates initial
+calibration; Controller remains available. See the
+[quality and timing contract](../../for-ai/SHARED-BREATHING-SETUP.md).
+
+Connected Polar acquisition establishes and recovers ECG and motion automatically.
+Explicit Stop, source ownership and uncertain START outcomes remain fenced. A
+single bounded raw-frame diagnostic is restricted to authenticated private LAN;
+relay and guest responses exclude it. The current phone release smooths the
+percentage and displays native warmup and quality warnings. Private Showcase
+visual/coupling inputs, zero tracers/indicator and synthetic heartbeat default
+remain identical to code 5.
+
+Checks: 69 focused setup tests; 821 full native passes, three ignored, no failures;
+three selected profile and one reset regression; recovery47, source-scope24,
+diagnostic15 and full gateway suites; actual Android API-36 compilation and
+independent reviews. The cumulative patch reconstructs the exact native tree.
+Signed-APK session closure, 89 assets, manifest, signer and ZIP alignment pass.
+
+Code 6 is installed on Quest 2 with exact installed-byte hash readback, retained
+UID, grants and persistent app identity. Native frames advance, effective app-panel
+visibility is false, and the HTTP gateway is ready. The known Location handoff
+can leave Meta system Settings over VR; this is separate from the closed app panel.
+System Location remains OFF. Fresh wearer confirmation of silence/minimum startup,
+actual ACC format, advancing calibration, fit/retry/fallback and the full trial
+remain pending. No calibration was started and no Meta upload was performed.
+
 ## 0.2.4-dev — combined Showcase particle update, 2026-11-15
 
 | Build property | Verified value |

@@ -24,9 +24,40 @@ cover parked initialization, no lifecycle first-start, accepted explicit start,
 retry without replay, queued cancellation and admitted uncertain outcomes.
 Independent scoped re-review found no remaining audio issue.
 
-Native timing/quality and automatic acquisition review, new APK package and
-installation, publication, installed-phone refresh and fresh wearer acceptance
-are still pending. Do not interpret fixture progress as actual calibration.
+The phone increment merged in [PR 11](https://github.com/GeorgeFejer91/viscereality.org/pull/11)
+as `578d330863ce0d3726417e5ee0c14d01df636393`. Its exact
+[Pages run 43729861453](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43729861453)
+succeeded; all 23 live file checks match Git, and public-URL phone/desktop smoke
+checks report zero app errors. The remote context gate passes.
+
+The focused native setup suite passes 69 checks, including the full packet /
+clock-pair / jitter / noise / 32-second fit path. Independent reviews identified
+and closed slot-counter bounds and a pre-first-packet warmup bypass. Diagnostics
+now count bounded 25 Hz slots; absent metadata cannot imply a ready clock, and
+explicit compatibility evidence must retain source, receipt and measured-pair
+freshness. Selected Android acquisition remains packet-only.
+
+Required-stream recovery passes 47 production controls, source scope 24 and the
+bounded diagnostic 15. The full authenticated gateway suite passes, including
+new enrolled-relay and guest exclusions. Review also caught and closed stale
+pre-Stop data reviving a stopped stream. All 14 actual API-36 compiler source
+hashes were rechecked. Original codecs, timestamps and recording bodies remain
+unchanged.
+
+The full native suite passes 821 tests with three ignored and no failures. Three
+selected private-profile checks and the packaged-default reset regression pass.
+The source is frozen at `f31156d7832f71b7caeff9ad005c311ea77c0c8e`, tree
+`c095a8df92480b6da4c7810ed3332bf3998667c2`; independent reviews are clear. The
+cumulative patch reconstructs that exact tree from the unchanged pinned upstream.
+The [code-6 APK](../quest/apks/README.md#025-dev--parked-startup-and-full-window-quality-2026-11-15)
+passes actual signed-package closure, manifest, signer, 89-asset and ZIP-alignment
+checks. Installed byte hash, version and retained UID/grants match. The persistent
+HTTP app identity is unchanged and ready; native frames advance with effective
+app-panel visibility false. Meta system Settings remains over VR from the known
+Location handoff, with system Location still OFF. Actual wearer silence/minimum,
+installed-phone refresh, ACC format and fit/retry/fallback remain pending. No
+calibration was started and no Meta upload occurred. Source publication is the
+next software gate. Do not interpret fixture progress as actual calibration.
 
 ## Stable controls and smooth live displays — 2026-11-15
 
