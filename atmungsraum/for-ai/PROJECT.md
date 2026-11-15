@@ -49,8 +49,10 @@ See the exact [pairing and control contract](PHONE-PAIRING.md).
 - [x] Resolve the reviewed commitment/reveal protocol and wire-encoding
   defects; prove a complete WebCrypto-to-production-Java pairing flow.
 - [x] Complete rendered phone onboarding and control-handover checks.
-- [ ] Build and qualify a same-key Developer update, publish the source/PWA,
+- [x] Build and qualify a same-key Developer update, publish the source/PWA,
   and verify exact Pages/live bytes.
+- [ ] Request all required Bluetooth permissions on app load independently of
+  closed panel visibility; qualify fresh-install permission handling.
 - [ ] Verify physical discovery, two-sided button pairing, saved reconnection,
   wearer calibration/retry/fallback, main transition and the full trial.
 
@@ -68,6 +70,29 @@ bounded repairs. All 130 Node checks pass with zero skips, including actual
 Java interoperability and both real assembly resolvers. Chromium passed 78
 screens plus 12 focused final control screens, with actual Pretext and DOM
 checks. These are software fixtures; real headset/phone acceptance remains open.
+
+[PR 5](https://github.com/GeorgeFejer91/viscereality.org/pull/5) merged as
+`90f2c759a0991a6b926a7bcaacc520b4c77e8d28` and deployed successfully in
+[Pages run 43706732014](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43706732014).
+All 18 checked live runtime/source/release files matched committed Git blobs,
+including every changed versioned JavaScript/CSS request and the native patch.
+The remote context gate passed. On the refreshed Pixel, the user found the
+Quest, saw matching codes on phone and headset and confirmed both buttons.
+This is user-observed physical first pairing; saved reconnection and subsequent
+wearer calibration remain open. The next step exposed a startup-permission
+defect: the phone reported missing Nearby devices permission, but no native
+permission-request option appeared. Only Bluetooth Scan was missing. At the
+user's explicit request, it was pre-granted on this installed test APK and
+read back as granted so testing could continue. This is a bench exception;
+future fresh installs must request required permissions automatically on load
+using the normal attended platform flow while keeping the app panel closed.
+
+Meta accepted code 3 as private Developer build `1460570757141936`; malware
+and security scans passed. The owner's existing invitation is now joined;
+no invitation action remains. The Store is unpublished. This exact headset
+update used ADB, so Meta version-to-version delivery remains untested.
+The user now requires local headset testing before Meta submission; keep
+iterative test APKs local and upload a qualified release afterward.
 
 ### Shared scheduler and guided tilt setup — 2026-11-14
 

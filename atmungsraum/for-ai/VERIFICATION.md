@@ -43,6 +43,22 @@ APK qualification, exact installed bytes, rendered headset approval, actual
 phone discovery/reconnection and wearer calibration are separate gates in
 the [active checklist](PROJECT.md#quest-2-calibration-acceptance--2026-11-15).
 
+[PR 5](https://github.com/GeorgeFejer91/viscereality.org/pull/5) merged at
+`90f2c759a0991a6b926a7bcaacc520b4c77e8d28`; its exact
+[Pages run 43706732014](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43706732014)
+succeeded. All 18 live runtime/source/document requests matched their committed
+Git blob bytes, including the actual cache-versioned imports. The remote
+context gate passed. Actual Quest 2 startup rendered VR with its panel closed.
+The refreshed Pixel found the headset and the user confirmed matching codes
+on both devices. This user-observed physical flow is separate from the
+synthetic capture suite; saved reconnect, handover/revocation and wearer
+calibration remain open. H10 setup exposed missing Bluetooth Scan permission
+without a working startup/native request path. The user explicitly authorized
+pre-granting that permission on this installed APK to finish testing; readback
+confirmed the grant. Automatic attended startup permission handling remains a
+required fix and fresh-install gate. Meta code 3 passed its malware/security scans and the owner
+is joined to the private Developer channel; remote replacement remains untested.
+
 ## Shared breathing setup release — 2026-11-14
 
 The selected developer app replaces the earlier simulated phone preview and
