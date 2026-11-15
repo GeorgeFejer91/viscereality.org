@@ -1,5 +1,45 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.3-dev — local permission and timing repair, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.3-dev, version code 4; local hardware testing only |
+| APK size / SHA-256 | 65,297,199 bytes; `7a5afc02e0895357e929ccbf4857a79232c4da64eb7e04d4c803ee05eb52a4bf` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `ff36ec42f4f0e0023ba68086cf6475a15c2ff91f` / `922b085585263bf68aebbd91d3011217aaf09d11` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `ea2426cc58bbbcfc840d77c0202899e544e1fc7cec90a4b1a922b9bb9c9a9ab0` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install, v2/v3 signatures |
+
+One selected startup coordinator handles the three existing permission
+requesters. It requests the declared runtime union once, then uses an attended
+Location settings surface when required. No app approval panel or programmatic
+Location toggle is involved. The five-source closure and optional phone `y.l`
+readiness field are bound into the build. Waiting phones receive the current
+claim-control hint rather than a stale earlier action message.
+
+The native setup owner no longer advances its control revision for unused
+idle Automatic tilt diagnostics. Valid buffered samples map into bounded
+actual audio history; future training labels wait for a real bracket, and
+fitting requires final-window evidence. Sensor gap, driver freshness and drift
+guards remain separate from delivery tolerance. Original acquisition timestamps
+are unchanged. See the [timing contract](../../for-ai/SHARED-BREATHING-SETUP.md#buffered-polar-timing--2026-11-15).
+
+Full native tests passed 809 with three ignored and zero failures; the focused
+setup gate passed 63, Node passed 131 with zero skips, and rendered control/
+Location checks passed 18. Permission lifecycle, approval UI, API-36 compilation,
+five-source selection and independent reviews passed. The cumulative patch
+reconstructed the exact source tree; assembly verified all 74 audio/catalog
+files, the ARM64 loader and actual signed-APK session closure.
+
+Installed bytes matched on Quest 2. Cold startup visibly rendered VR with the
+panel closed and the gateway ready. Existing grants and phone memberships were
+preserved. Wearer calibration, fresh permission dialogs, callback timing and
+the full trial remain pending. This APK is withheld from Meta until relevant
+local hardware testing passes, as requested by the user.
+
 ## 0.2.2-dev — button-only phone pairing, 2026-11-15
 
 | Build property | Verified value |

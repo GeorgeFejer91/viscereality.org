@@ -26,6 +26,7 @@ export function polarSetup(status) {
     || !Number.isSafeInteger(setup.g) || setup.g <= 0 || String(setup.g) !== status.o?.e
     || !Number.isSafeInteger(setup.r) || setup.r < 0
     || !['p', 'b', 'c', 'a', 'e', 'sc'].every(flag => typeof setup[flag] === 'boolean')
+    || setup.l !== undefined && !['enabled', 'disabled', 'unavailable', 'legacy-unobserved', 'permission-blocked', 'unknown'].includes(setup.l)
     || typeof setup.x !== 'string' || setup.x !== '' && !candidateId.test(setup.x)
     || setup.c && !setup.x || (setup.a || setup.e) && !setup.c
     || !Array.isArray(setup.d) || setup.d.length > 4 || new Set(setup.d).size !== setup.d.length
@@ -222,7 +223,7 @@ export class QuestRehearsal {
       const { status } = this.state;
       const setup = polarSetup(status);
       return this.gateway === gateway && !signal?.aborted && !status?.pending && status?.g === clicked.g
-        && setup?.s === original.s && setup.p && setup.b && !setup.sc ? setup : null;
+        && setup?.s === original.s && setup.p && setup.b && !setup.sc && (setup.c || setup.l !== 'disabled') ? setup : null;
     };
     let setup = current();
     if (!setup || (setup.e && setup.a)) return;
@@ -254,7 +255,7 @@ export class QuestRehearsal {
       ? 'recenter' : rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
     if (!gateway || clicked?.pending || this.state.busy || this.pending
-      || (!requested && (!setup?.p || !setup.b || setup.sc || (setup.e && setup.a)))) return;
+      || (!requested && (!setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || (setup.e && setup.a)))) return;
     this.update({ busy: true, message: '' });
     try {
       await this.refreshing;

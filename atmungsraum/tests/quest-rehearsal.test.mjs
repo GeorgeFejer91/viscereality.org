@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDecipheriv, createHmac } from 'node:crypto';
 import { discoverQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
-import { QuestRehearsal, rehearsalActions } from '../quest-rehearsal.js';
+import { QuestRehearsal, rehearsalActions, polarSetup } from '../quest-rehearsal.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const build = 'b'.repeat(64);
@@ -459,6 +459,27 @@ test('Polar setup refuses missing grants, stale owners and automatic choice amon
   await rehearsal.run('polar');
   assert.deepEqual(multiple.commands.map(({ op }) => op), ['scan']);
   assert.match(rehearsal.state.message, /Mehrere/);
+});
+
+test('Location service readiness is separate from grants and blocks scanning while preserving an existing connection', async () => {
+  const rehearsal = new QuestRehearsal({ wait: async () => {} });
+  const disabled = polarQuest();
+  disabled.polar.l = 'disabled';
+  rehearsal.attach(disabled);
+  await rehearsal.run('polar');
+  assert.deepEqual(disabled.commands, []);
+  for (const state of ['enabled', 'disabled', 'unavailable', 'legacy-unobserved', 'permission-blocked', 'unknown']) {
+    disabled.polar.l = state;
+    assert.equal(polarSetup(await disabled.status())?.l, state);
+  }
+  for (const invalid of [false, null, 'ready', {}]) {
+    assert.equal(polarSetup({ ...disabled.initial, y: { ...disabled.polar, l: invalid } }), null);
+  }
+  const connected = polarQuest();
+  Object.assign(connected.polar, { l: 'disabled', c: true, x: '0123456789ab' });
+  rehearsal.attach(connected);
+  await rehearsal.run('polar');
+  assert.deepEqual(connected.commands.map(({ op }) => op), ['start-ecg', 'start-acc']);
 });
 
 test('recovery only checks the original Polar receipt and never chains the remaining setup steps', async () => {

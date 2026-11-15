@@ -1,7 +1,7 @@
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=10';
 import { pairPhone } from './quest-pairing.js?v=1';
-import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=21';
+import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=22';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=25';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
@@ -142,7 +142,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
-      : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …' : message || hint));
+      : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …'
+        : waitingForControl ? hint : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     clock.hidden = !status;
     if (status) {
@@ -179,11 +180,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(polarStatus, !setup ? 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.'
       : !setup.p ? 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.'
       : !setup.b ? 'Schalte Bluetooth auf der Quest ein.'
+      : !setup.c && setup.l === 'disabled' ? 'Aktiviere die Standortdienste in den Quest-Einstellungen, damit die Quest den H10 finden kann.'
       : setup.sc ? 'Quest sucht nach dem Polar H10 …'
       : ready ? 'Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.'
       : setup.c ? 'Polar H10 verbunden. Warte auf beide Messsignale.'
       : 'Lege den Gurt an. Quest verbindet sich mit dem Polar H10.');
-    polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || setup.sc || ready;
+    polarConnect.disabled = waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if (polar.hidden && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
     const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];

@@ -1,5 +1,30 @@
 # Verification
 
+## Startup permissions and buffered calibration — 2026-11-15
+
+The local code-4 repair passed 131 Node tests with zero skips, including actual
+Java/WebCrypto pairing and both five-source assembly resolver checks. Native
+testing passed 809 with three ignored and zero failures, plus 63 focused setup
+tests. Regression cases reproduce idle revision churn and valid buffered-data
+rejection before the fixes, then prove accepted commands, bounded historical
+alignment, final-window evidence, pause/source barriers and genuine loss failure.
+
+The permission coordinator passed 31 lifecycle checks and compiled negative
+controls, with 45 approval UI and 24 Location projection checks. Actual current
+Java compiled against API 36. Independent reviews found no blocking issue in
+the frozen permission and timing commits. Chromium passed 18 targeted control/
+Location states, including 320px and 200% text. A negative rendered control
+reproduces the stale post-Recenter status; the repaired release instead prompts
+for control. Location OFF blocks scanning, while connected streams stay usable.
+
+The private code-4 APK, exact source tree and patch are recorded in the
+[APK log](../quest/apks/README.md#023-dev--local-permission-and-timing-repair-2026-11-15).
+Signatures, manifest, 74 catalog/audio files, ARM64 loader and actual-APK closure
+passed. Installed bytes matched, followed by actual closed-panel VR startup
+and a ready gateway. Runtime permissions had been pre-granted for this bench
+test under explicit user authorization; fresh dialog handling is not claimed.
+Actual callback timing, wearer fit and the full 900-second trial remain open.
+
 ## Phone pairing and closed startup — 2026-11-15
 
 The selected Developer source uses read-only Bluetooth discovery, explicit

@@ -33,6 +33,15 @@ pairing request opens the wearer approval prompt. Allow/Reject, phone
 cancellation and expiry restore that prompt's own opening; they cannot undo a
 later manual visibility change. Triple-B still opens the regular app panel.
 
+The selected native host coordinates the three existing startup permission
+requesters through one attended runtime request. It asks only for needed,
+declared permissions, then opens standard Location settings once if required.
+The wearer may leave Location off without a repeated prompt loop; the app
+never changes that system setting itself. The optional `y.l` reports enabled,
+disabled, unavailable, legacy-unobserved, permission-blocked or unknown. Only
+an unconnected Location-OFF phone flow blocks scanning; connected streams remain
+usable. These OS surfaces remain separate from phone approval.
+
 ## Pairing wire contract
 
 The pairing handshake is **v2 only**, with no fallback to the original

@@ -4,6 +4,42 @@
 
 ### Quest 2 calibration acceptance — 2026-11-15
 
+Current local repair: Developer 0.2.3-dev/code 4 is installed from native
+`ff36ec42`, tree `922b085585263bf68aebbd91d3011217aaf09d11`, with exact byte
+readback and visible closed-panel VR startup. Keep this test APK local until
+the relevant headset checks pass. Calibration has not started; the local
+update is ready for a fresh wearer test.
+
+Direct inspection of the USB-connected Pixel 6a showed the phone connected
+but waiting for control. Claiming the free lease made the Polar controls
+visible. The installed code also required fine/coarse location grants and
+enabled system Location services, beyond Bluetooth Scan. The user authorized
+the missing app grants for this test. Location was temporarily enabled for
+scanning and must be restored afterward. After an explicit acknowledgement of
+an uncertain setup result, both ECG and ACC were received. Synthetic participant
+ID `Tst_0_N` labels the bench test.
+
+Two fresh breathing-loop Starts were then rejected as `stale-revision`.
+Unconsumed idle Automatic ACC batches changed a diagnostic revision eight to
+ten times per second. Native `cda6e861` removes that churn while retaining
+source-owner CAS barriers. A further probe found that valid buffered history
+could fail latest-clock-only alignment. `ff36ec42` adds bounded actual audio
+history and final-window evidence; see the
+[timing contract](SHARED-BREATHING-SETUP.md#buffered-polar-timing--2026-11-15).
+
+Native `f77e98d3` unifies all three startup permission requesters independently
+of panel visibility. Normal attended dialogs request the declared permission
+union, followed when needed by one attended Location settings surface. The app
+never toggles system Location itself. The phone now distinguishes Location OFF
+from missing app grants and preserves already-connected stream controls.
+
+Checks pass: 809 native tests, three ignored and zero failures; 63 focused setup
+tests; 131 Node checks with zero skips; 31 permission lifecycle controls,
+45 approval UI controls, actual API-36 compilation and 18 targeted rendered
+control/Location states. Bounded independent reviews found no remaining blocker.
+Actual H10 callback timing, wearer fit/retry/fallback, the full trial and fresh
+permission-dialog acceptance remain separate hardware gates.
+
 The user resumed hardware testing with Quest 2, a worn H10 and a Touch
 controller. Wi-Fi ADB was requested and verified against the same device and
 boot identity before releasing USB transport. Private device evidence stays

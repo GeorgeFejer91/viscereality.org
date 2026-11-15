@@ -88,7 +88,7 @@ test('developer resolution selects a distinct non-debuggable app and requires an
     assert.doesNotMatch(run.manifest, /debug-experiment-control|\.headset-setup/);
     assert.equal(run.lock.headset_setup_sources.length, 0);
     assert.equal(run.lock.debug_experiment_operator_sources.length, 0);
-    assert.equal(run.lock.phone_pairing_sources.length, 4);
+    assert.equal(run.lock.phone_pairing_sources.length, 5);
     for (const source of run.lock.phone_pairing_sources) {
       assert.equal(source.sha256, sha256(await readFile(join(questRepo, source.path))), source.path);
     }

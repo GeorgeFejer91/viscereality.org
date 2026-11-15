@@ -80,12 +80,12 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-003 `
-    -Developer -Keystore $developerKeystore -VersionCode 3 -VersionName 0.2.2-dev
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-004 `
+    -Developer -Keystore $developerKeystore -VersionCode 4 -VersionName 0.2.3-dev
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `8bbc4937ab0fd9ab97d0d6c751dc624260ec0dbe`, matching
+reconstructs source tree `922b085585263bf68aebbd91d3011217aaf09d11`, matching
 the software-verified developer build. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
@@ -94,7 +94,7 @@ cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
 the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
-`rusty-quest/target/aq2/atmungsraum-developer-003/`. Use a fresh run name for a
+`rusty-quest/target/aq2/atmungsraum-developer-004/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
 
 Assembly binds `RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256` to the exact
