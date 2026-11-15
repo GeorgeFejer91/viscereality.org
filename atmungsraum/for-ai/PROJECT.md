@@ -11,8 +11,10 @@
 - [x] Review the source and verify native833 (three ignored), phone164 and exact
   cumulative patch/tree reconstruction.
 - [x] Build, inspect and install same-key local Developer 0.2.7-dev/code 8.
-- [ ] Publish the source/record and verify exact Pages deployment and live bytes.
-- [ ] Require fresh wearer Ready; qualify smooth tracking, retry, Controller
+- [x] Publish the source/record and verify exact Pages deployment and live bytes.
+- [ ] Diagnose the code-8 audio-clock stall and repair explicit retry recovery;
+  retain strict frame authority and require a new full calibration attempt.
+- [ ] Qualify smooth tracking after fresh wearer Ready, retry, Controller
   fallback and the full 900-second main run.
 
 Reviewed native `304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1` reconstructs tree
@@ -29,9 +31,35 @@ binds the artifact. Exact installed bytes match; UID, grants and persistent
 identity are retained. Cold startup confirms controllers only, no hand extension,
 no simultaneous mode, app panel closed and gateway ready. Observed input is zero;
 configured inhale/exhale rates are 0.25 per second. Location remains ON and Wi-Fi
-ADB is retained. Startup observers and owned leases are released. GitHub/Pages
-publication is next. The overall milestone remains open; no Meta upload or new
-wearer test has started. Require fresh Ready before another calibration.
+ADB is retained. Initial startup observers and owned leases were released.
+The source/record merged in [PR 15](https://github.com/GeorgeFejer91/viscereality.org/pull/15)
+at `b735f196b90ebe4d7dcccf0c446baf6886105849`; exact
+[Pages run 43745201300](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43745201300)
+succeeded. All 24 checked live files match Git and the remote context gate passes.
+The user supplied fresh code-8 Ready and explicitly controlled the phone. The
+first H10 link request became uncertain; observed Bluetooth was disconnected,
+so the user acknowledged it and began one new scan. Native then connected H10
+and automatically established both ACC and ECG. The attended calibration advanced
+to 270,950 frames (6.143991 audio seconds), accepted 150 training points and masked
+four motion points, then failed `clock_stalled`. Status kept advertising playing
+but the frame remained fixed for at least 20.976 seconds. Actual retry requests
+were rejected `clock-stale`. Calibrated Polar tracking was never reached.
+
+Read-only Java/native investigations establish a retry dead end: native requires
+a healthy clock before admission, while the already-started active Java owner
+does not reprepare/restart on retry. Native clock ingress itself is not latched;
+real advancing observations would restore clock health while leaving the failed
+attempt failed. The initial trigger is unproven without raw poll/head/dispatch
+history. A zero-volume stream and a silent PCM hold are leads, not demonstrated
+causes. The Java player/contract are unchanged from code 7's successful attempt.
+
+The user removed the Polar and requested diagnosis. The app is stopped; native
+observer, phone helper/forward and all owned leases are released. Location stays
+ON and Wi-Fi ADB is retained. Fresh Ready is required before another calibration.
+The next bounded repair is explicit pre-main recovery into a fresh authoritative
+audio generation plus bounded clock diagnostics; normal healthy retries keep the
+same loop. Source design is in progress. The overall milestone remains open;
+no new APK after code 8 or Meta upload has occurred.
 
 ### Participant-led calibration and controller-only app — 2026-11-15
 

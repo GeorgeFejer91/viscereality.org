@@ -45,6 +45,16 @@ retained. Owned startup observers and leases are released. No new calibration
 has started: require fresh wearer Ready for tracking, retry/fallback and the full
 trial. No Meta upload occurred. Physical smoothness is not yet qualified.
 
+Subsequent attended attempt: H10 connected and both streams became ready, but
+calibration failed `clock_stalled` at 270,950 frames (6.143991 seconds), before a
+model could be fitted. Playing remained advertised with no frame progress;
+explicit retries were rejected `clock-stale`. The already-started Java owner
+cannot reprepare a stalled transport through that retry path. The initial
+AudioTrack/head/publication trigger remains unproven. The app is stopped while
+explicit pre-main recovery and bounded diagnostics are developed. The wearer
+removed the Polar; another calibration requires fresh Ready. No tracking,
+Controller fallback, full-trial or Meta acceptance is claimed.
+
 ## 0.2.6-dev — participant-led calibration and controllers only, 2026-11-15
 
 | Build property | Verified value |
