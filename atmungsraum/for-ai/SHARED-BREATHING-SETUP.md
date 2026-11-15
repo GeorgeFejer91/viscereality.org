@@ -28,6 +28,33 @@ Its recording clock starts at that boundary. Preparation is not experiment data.
 The old embedded 15-second calibration and introductory restart are retired.
 Other Rusty Quest products keep their existing defaults and feature activation.
 
+## Buffered Polar timing — 2026-11-15
+
+Idle Automatic does not validate tilt evidence that no attempt or model
+consumes. Raw acquisition and source ownership remain active; real source
+changes still invalidate old command revisions. Repeated idle diagnostics must
+not churn control revisions or overwrite a terminal calibration failure.
+
+Map original sample timestamps into actual healthy, playing, same-generation
+audio observations. Retain at most 32 observations covering a 250 ms history
+window plus a bracket; never extrapolate a missing frame. At most 64 future
+training labels may wait for the next actual clock bracket. Pause, retirement,
+controller cancellation and source changes clear evidence at their relevant
+barriers. Original acquisition timestamps remain unchanged.
+
+Sensor timestamp gaps and driver readiness stay at 200 ms; sensor/host drift
+tolerance stays at 150 ms. A separate 250 ms accepted-ingress deadline admits
+normal 200 ms delivery with modest jitter while failing missing packets.
+Temporary unready output cannot fabricate missing sensor history. Fit only
+after the full two-cycle audio window and an accepted sample watermark within
+40 ms of its end, one 25 Hz interval. Wait only within the bounded delivery
+allowance for the final packet. Elapsed time alone cannot fit.
+
+Host tests cover valid 200 Hz and 25 Hz batches, 20 ms jitter, missing packets,
+genuine sensor gaps, stale clocks, pauses, source changes, history bounds and
+queued experiment boundaries. Physical H10 callback timing and wearer fit
+remain a separate acceptance gate.
+
 ## Design
 
 One JSON defines the loop's sample rate, phases, frame counts and cue identities.

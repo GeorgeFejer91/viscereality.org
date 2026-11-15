@@ -41,6 +41,7 @@ settings.setup ??= {
 };
 window.reviewSetupCommands ??= [];
 window.reviewAccessCommands ??= [];
+window.reviewRecenterCommands ??= [];
 const receipts = window.reviewReceipts ??= {};
 let witness = 100;
 const scenarios = ['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15'];
@@ -62,6 +63,7 @@ function snapshot() {
     scenarios, y: polar === 'unsupported' ? undefined : {
       s: 'a'.repeat(32), g: Number(owner.native_epoch), r: 1, p: polar !== 'permission', b: polar !== 'bluetooth',
       c: connected, a: polar === 'ready', e: polar === 'ready' || Boolean(settings.ecg), sc: polar === 'scan',
+      ...(settings.location === undefined ? {} : { l: settings.location }),
       x: connected ? candidate : settings.selected,
       d: [candidate, 'c'.repeat(12)].slice(0, settings.strapCount)
     },
@@ -170,7 +172,11 @@ export async function joinQuest({ endpoint }) {
   return {
     owner: { ...owner }, initial: snapshot(), status: snapshot, command: controlled(command),
     participantArm: controlled(command), scenarioArm: controlled(command),
-    breathSetup: settings.oldApk ? null : controlled(breathSetup), recenter: controlled(command),
+    breathSetup: settings.oldApk ? null : controlled(breathSetup),
+    recenter: controlled(value => {
+      window.reviewRecenterCommands.push(structuredClone(value));
+      return receipts[value.id] = { v: 1, id: value.id, state: 'confirmed' };
+    }),
     controllerAccess: settings.access ? controllerAccess : null,
     receipt: async id => settings.receiptState ? { v: 1, id, state: settings.receiptState }
       : receipts[id] ?? { v: 1, id, state: 'outcome_unknown' }, close() {},
@@ -894,13 +900,30 @@ def capture_controller_access(review):
     wait_state(page, access={"v": 1, "role": "waiting", "active_phone": "", "revision": 5})
     expect(status).to_contain_text("Steuerung ist frei")
     expect(claim).to_be_enabled()
-    review.shot(page, "control-free", "Previous phone released · explicit claim available", claim, "Controller access")
     claim.focus()
     claim.press("Enter")
     expect(status).to_have_text("Dieses Smartphone steuert die Quest.")
     expect(page.locator("#patient-fields")).to_be_enabled()
     expect(release).to_be_visible()
-    review.shot(page, "control-claimed", "Trusted phone claims the free controller lease", status, "Controller access")
+    recenter = page.locator("#recenter-vr")
+    expect(recenter).to_have_attribute("aria-disabled", "false")
+    recenter.focus()
+    recenter.press("Enter")
+    operator_status = page.locator("#quest-status")
+    expect(operator_status).to_have_text("VR-Szene zentriert.")
+    review.shot(page, "control-recentered", "Active phone · recenter confirmation", operator_status, "Controller access")
+    release.focus()
+    release.press("Enter")
+    expect(status).to_contain_text("Steuerung ist frei")
+    expect(operator_status).to_have_text("Übernimm die Quest-Steuerung auf diesem Smartphone.")
+    expect(operator_status).not_to_contain_text("VR-Szene zentriert")
+    expect(page.locator("#quest-polar")).to_be_hidden()
+    expect(claim).to_be_enabled()
+    expect(recenter).to_have_attribute("aria-disabled", "true")
+    review.shot(page, "control-free", "Recenter then release · Claim prompt replaces the old confirmation", operator_status, "Controller access")
+    claim.focus()
+    claim.press("Enter")
+    expect(release).to_be_visible()
     enter_participant(page)
     expect(page.locator("#breathing-preview")).to_be_visible()
     expect(page.locator("#preview-control-host #quest-control-access")).to_be_visible()
@@ -922,7 +945,8 @@ def capture_controller_access(review):
     assert before == page.evaluate("({g:reviewQuest.setup.g,position:reviewQuest.setup.position_frames})")
     assert page.evaluate("window.reviewQuest.commands ?? []") == []
     assert page.evaluate("window.reviewSetupCommands") == []
-    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim", "release", "claim"]
+    assert page.evaluate("window.reviewRecenterCommands.length") == 1
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim", "release", "claim", "release", "claim"]
     page.context.close()
 
     for slug, viewport, text_size in (
@@ -955,11 +979,53 @@ def capture_controller_access(review):
         page.context.close()
 
 
+def capture_polar_location(review):
+    initial = INSTALLATION + """localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({
+      endpoint:'synthetic',device:'d'.repeat(32),serial:'',identity_kind:'app-installation',
+      enrollment:{controller:'a'.repeat(32),key:'b'.repeat(64)}}));
+      window.reviewInitialQuest={polar:'off',access:{v:1,role:'active',active_phone:'Fixture-Smartphone',revision:4}};"""
+    for slug, viewport, text_size in (
+        ("390", VIEWPORT, ""),
+        ("320", {"width": 320, "height": 568}, ""),
+        ("200-text", {"width": 320, "height": 568}, "200%"),
+    ):
+        page = review.page(initial, viewport=viewport)
+        status = page.locator("#quest-polar-status")
+        connect = page.locator("#quest-polar-connect")
+        expect(status).to_contain_text("Lege den Gurt an")
+        expect(connect).to_be_enabled()  # Older observations omit optional y.l.
+        page.evaluate("value => document.documentElement.style.fontSize=value", text_size)
+        wait_state(page, location="disabled")
+        expect(status).to_have_text("Aktiviere die Standortdienste in den Quest-Einstellungen, damit die Quest den H10 finden kann.")
+        expect(connect).to_be_disabled()
+        connect.click(force=True)
+        page.clock.run_for(1100)
+        assert page.evaluate("window.reviewQuest.commands ?? []") == []
+        review.shot(page, f"location-off-{slug}", f"Location disabled {slug} · enable Standortdienste before H10 discovery", status, "Polar Location services")
+
+        wait_state(page, polar="stream-wait")
+        expect(status).to_contain_text("Warte auf beide Messsignale")
+        expect(status).not_to_contain_text("Standortdienste")
+        expect(connect).to_be_enabled()
+        connect.focus()
+        connect.press("Enter")
+        expect(status).to_have_text("Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.")
+        expect(connect).to_be_disabled()  # Both streams are already running.
+        assert page.evaluate("window.reviewQuest.location") == "disabled"
+        assert page.evaluate("window.reviewQuest.commands") == ["start-ecg", "start-acc"]
+        review.shot(page, f"location-connected-{slug}", f"Connected H10 {slug} · ECG and acceleration work while Location is off", status, "Polar Location services")
+        enter_participant(page)
+        expect(page.locator("#breathing-preview")).to_be_visible()
+        expect(page.locator("#preview-calibrate")).to_be_enabled()
+        expect(page.locator("#preview-controller")).to_be_enabled()
+        page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control"), default="all",
-                        help="Full suite, new-phone pairing, or controller-access screens")
+    parser.add_argument("--scope", choices=("all", "pairing", "control", "location"), default="all",
+                        help="Full suite, pairing, controller-access plus Location, or only Location screens")
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(parents=True)
@@ -977,6 +1043,8 @@ def main():
             capture_phone_pairing(review)
         if args.scope in ("all", "control"):
             capture_controller_access(review)
+        if args.scope in ("all", "control", "location"):
+            capture_polar_location(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")

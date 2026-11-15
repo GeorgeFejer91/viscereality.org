@@ -260,7 +260,7 @@ try {
             $lock.android_manifest.experiment_panel_initially_closed -cne $true -or
             $closed.Count -ne 1 -or $closed[0].value -cne 'true' -or
             $lock.android_manifest.experiment_headset_setup_enabled -cne $false -or
-            @($lock.phone_pairing_sources).Count -ne 4 -or
+            @($lock.phone_pairing_sources).Count -ne 5 -or
             @($lock.headset_setup_sources).Count -ne 0 -or
             @($lock.debug_experiment_operator_sources).Count -ne 0 -or
             $manifest.OuterXml -match 'debug-experiment-control|\.headset-setup') {

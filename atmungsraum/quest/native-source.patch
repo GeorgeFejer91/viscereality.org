@@ -682,10 +682,10 @@ index 5273a82f3aa0dcc517653e62af9aa8512f8674a4..59eb26358bf72580c52ff19b06d2801a
  }
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f4eedcb21
+index 0000000000000000000000000000000000000000..81dbb6177d4dfd5dcccd6b4d413b431c1690db1e
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
-@@ -0,0 +1,992 @@
+@@ -0,0 +1,1163 @@
 +//! Audio-frame-owned breathing preparation and participant tilt calibration.
 +//! No Android dependencies or implicit system clock; build tests with `rustc --test`.
 +//!
@@ -699,6 +699,15 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +//! order and alignment. Resume allows at most 200 ms for fresh observations;
 +//! any queued main boundary missed without evidence moves to the next full
 +//! cycle, so the recording owner can follow its exact updated start frame.
++//!
++//! Up to 32 audio observations retain 250 ms of played history and its bracket.
++//! Buffered samples use only actual healthy, playing observations from the same
++//! generation; future training labels wait in a bounded 64-entry queue. No audio
++//! frames are extrapolated from a timer. Actual-sample freshness and sensor gaps
++//! remain 200 ms, and sensor/host drift remains 150 ms. A separate 250 ms delivery
++//! witness permits bounded packet transport while output is temporarily unready.
++//! Fitting also requires in-window evidence within one 40 ms training interval
++//! of the end. Missing final data gets a bounded tail wait, never timer success.
 +//!
 +//! Training is limited to the next two complete audio cycles. Gravity magnitude
 +//! and motion guards run on original samples before a uniform 25 Hz grid selects
@@ -714,6 +723,8 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +//! Standalone host check (PowerShell; `-A dead_code` omits consumer-only APIs):
 +//! `rustc --edition 2021 -A dead_code --test experiment_breathing_setup.rs -o
 +//! $env:TEMP/experiment-breathing-setup-tests.exe`, then run that executable.
++
++use std::collections::VecDeque;
 +
 +#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 +pub(crate) enum SetupPhase {
@@ -878,6 +889,12 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +const TRAINING_STEP_NS: u64 = 40_000_000;
 +const MAX_TILT_SPEED_PER_S: f64 = 0.60; // normalized gravity chord / second
 +const MAX_TRAINING_SAMPLES: usize = 800;
++// Buffered source history and packet delivery use the existing 250 ms bridge
++// envelope. These are distinct from 200 ms actual-sample freshness/gaps and
++// 150 ms sensor/host clock drift. History never extrapolates audio frames.
++const BUFFERED_HISTORY_NS: u64 = CLOCK_FRESH_NS;
++const MAX_AUDIO_HISTORY: usize = 32;
++const MAX_PENDING_TRAINING: usize = 64;
 +
 +#[derive(Debug)]
 +pub(crate) struct TiltModel {
@@ -918,6 +935,10 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +pub(crate) struct BreathingSetup {
 +    schedule: LoopSchedule,
 +    clock: Option<AudioClock>,
++    clock_history: VecDeque<AudioClock>,
++    pending_training: VecDeque<AccObservation>,
++    delivery_witness_ns: Option<u64>,
++    calibration_last_mapped_frame: Option<u64>,
 +    input: SetupInput,
 +    calibration: CalibrationState,
 +    calibration_generation: u64,
@@ -942,6 +963,10 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        Self {
 +            schedule,
 +            clock: None,
++            clock_history: VecDeque::with_capacity(MAX_AUDIO_HISTORY),
++            pending_training: VecDeque::with_capacity(MAX_PENDING_TRAINING),
++            delivery_witness_ns: None,
++            calibration_last_mapped_frame: None,
 +            input: SetupInput::Automatic,
 +            calibration: CalibrationState::Idle,
 +            calibration_generation: 0,
@@ -975,6 +1000,7 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        if let Some(previous) = self.clock {
 +            if audio_generation < previous.generation {
 +                self.fail(SetupFailure::ClockRetired);
++                self.clock_history.clear();
 +                if let Some(clock) = &mut self.clock {
 +                    clock.healthy = false;
 +                }
@@ -1015,8 +1041,22 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +                    self.motion_continuity = false;
 +                    self.live = None;
 +                    self.signal_resume_ns = playing.then_some(monotonic_ns);
++                    self.delivery_witness_ns = playing.then_some(monotonic_ns);
 +                }
 +            }
++        }
++        let continuous = self.clock.is_some_and(|previous| {
++            healthy
++                && previous.healthy
++                && playing
++                && previous.playing
++                && previous.generation == audio_generation
++                && monotonic_ns >= previous.host_ns
++                && monotonic_ns - previous.host_ns <= CLOCK_FRESH_NS
++        });
++        if !continuous {
++            self.clock_history.clear();
++            self.pending_training.clear();
 +        }
 +        self.clock = Some(AudioClock {
 +            generation: audio_generation,
@@ -1029,23 +1069,41 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        if !healthy || !playing {
 +            return;
 +        }
++        self.remember_clock();
 +
 +        if self.calibration == CalibrationState::Waiting {
 +            if let Some(start) = self.calibration_start_frame {
 +                if absolute_frame >= start {
 +                    self.calibration = CalibrationState::Collecting;
-+                    if self.last_acc.is_none() {
-+                        self.signal_resume_ns = Some(monotonic_ns);
-+                    }
 +                }
 +            }
++        }
++        self.flush_pending_training();
++        if (self.model.is_some()
++            || matches!(
++                self.calibration,
++                CalibrationState::Waiting | CalibrationState::Collecting
++            ))
++            && self
++                .delivery_witness_ns
++                .is_some_and(|last| monotonic_ns.saturating_sub(last) > BUFFERED_HISTORY_NS)
++        {
++            self.fail_polar(SetupFailure::SignalGap);
 +        }
 +        if self.calibration == CalibrationState::Collecting {
 +            let start = self.calibration_start_frame.unwrap();
 +            self.calibration_completed_frames = absolute_frame
 +                .saturating_sub(start)
 +                .min(self.calibration_target_frames());
-+            if absolute_frame >= start + self.calibration_target_frames() {
++            let end = start + self.calibration_target_frames();
++            // One 25 Hz training interval bounds the last in-window evidence.
++            // End-of-audio alone cannot fit a missing final packet. Late valid
++            // history can finish within the separate bounded delivery window.
++            let tail_observed = self.calibration_last_mapped_frame.is_some_and(|last| {
++                last >= end
++                    .saturating_sub(frames_for_ns(TRAINING_STEP_NS, self.schedule.sample_rate))
++            });
++            if absolute_frame >= end && tail_observed && self.live.is_some() {
 +                match self.fit_model() {
 +                    Ok(model) => {
 +                        self.model = Some(model);
@@ -1055,20 +1113,11 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +                    }
 +                    Err(error) => self.fail(error),
 +                }
-+            } else if self.motion_continuity
-+                && self
-+                    .last_acc
-+                    .is_some_and(|last| monotonic_ns.saturating_sub(last.host_ns) > SIGNAL_FRESH_NS)
++            } else if absolute_frame.saturating_sub(end)
++                > frames_for_ns(BUFFERED_HISTORY_NS, self.schedule.sample_rate)
 +            {
-+                self.fail_polar(SetupFailure::SignalGap);
++                self.fail_polar(SetupFailure::InsufficientCoverage);
 +            }
-+        }
-+        if self.model.is_some()
-+            && self
-+                .live
-+                .is_some_and(|last| monotonic_ns.saturating_sub(last.host_ns) > SIGNAL_FRESH_NS)
-+        {
-+            self.fail_polar(SetupFailure::SignalGap);
 +        }
 +        if (self.model.is_some() || self.calibration == CalibrationState::Collecting)
 +            && self
@@ -1080,9 +1129,13 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        let signal_resuming = self
 +            .signal_resume_ns
 +            .is_some_and(|resumed| monotonic_ns.saturating_sub(resumed) <= SIGNAL_FRESH_NS);
++        let buffered_delivery = self.input == SetupInput::PolarTilt
++            && self
++                .delivery_witness_ns
++                .is_some_and(|last| monotonic_ns.saturating_sub(last) <= BUFFERED_HISTORY_NS);
 +        if self.experiment == ExperimentState::Waiting {
 +            if !self.input_ready(monotonic_ns) {
-+                if !signal_resuming {
++                if !signal_resuming && !buffered_delivery {
 +                    self.fail(SetupFailure::InputNotReady);
 +                } else if absolute_frame >= self.experiment_start_frame.unwrap() {
 +                    // Never admit or backdate a main without fresh input. A
@@ -1102,7 +1155,7 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +            }
 +        }
 +        if self.experiment == ExperimentState::Running {
-+            if !self.input_ready(monotonic_ns) && !signal_resuming {
++            if !self.input_ready(monotonic_ns) && !signal_resuming && !buffered_delivery {
 +                self.fail(SetupFailure::InputNotReady);
 +                return;
 +            }
@@ -1140,12 +1193,15 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        self.calibration_generation = generation;
 +        self.calibration_start_frame = Some(start);
 +        self.calibration_completed_frames = 0;
++        self.calibration_last_mapped_frame = None;
 +        self.failure = None;
 +        self.source_owner = Some(source_owner);
 +        self.model = None;
 +        self.live = None;
 +        self.reset_sample_continuity();
 +        self.signal_resume_ns = None;
++        self.delivery_witness_ns = Some(now_ns);
++        self.pending_training.clear();
 +        self.samples.clear();
 +        self.last_training_slot = None;
 +        self.experiment = ExperimentState::Preparation;
@@ -1171,6 +1227,12 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        }
 +        self.source_owner = next_owner;
 +        self.reset_sample_continuity();
++        self.clock_history.clear();
++        self.pending_training.clear();
++        self.delivery_witness_ns = None;
++        if let Some(clock) = self.clock.filter(|clock| clock.healthy && clock.playing) {
++            self.clock_history.push_back(clock);
++        }
 +        self.live = None;
 +        self.signal_resume_ns = None;
 +    }
@@ -1182,7 +1244,10 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +            return;
 +        }
 +        if self.input == SetupInput::PolarTilt
-+            || matches!(self.calibration, CalibrationState::Waiting | CalibrationState::Collecting)
++            || matches!(
++                self.calibration,
++                CalibrationState::Waiting | CalibrationState::Collecting
++            )
 +        {
 +            self.fail_polar(failure);
 +        }
@@ -1201,19 +1266,31 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +            return;
 +        }
 +        self.observe_source_owner(source_owner);
++        // Acquisition stays live outside this owner. Until an attempt or model
++        // consumes Polar, raw batch timing/motion is not a setup failure. In
++        // particular, backdated batches must not rewrite idle/terminal state and
++        // starve phone commands by churning their compare-and-set revision.
++        if self.model.is_none()
++            && !matches!(
++                self.calibration,
++                CalibrationState::Waiting | CalibrationState::Collecting
++            )
++        {
++            return;
++        }
 +        let Some(clock) = self.clock else {
 +            return;
 +        };
 +        if !clock.playing {
 +            return;
 +        }
-+        // Batches retain each sample's original monotonic timestamp. A recent
-+        // readback may bracket that time on either side; never relabel a batch
-+        // using callback time or the most recent playback head.
-+        if !clock.healthy || host_timestamp_ns.abs_diff(clock.host_ns) > ALIGNMENT_TOLERANCE_NS {
-+            self.fail_polar(SetupFailure::ClockStale);
-+            return;
-+        }
++        let mapped_frame = match self.frame_for_sample(host_timestamp_ns) {
++            Ok(frame) => frame,
++            Err(reason) => {
++                self.fail_polar(reason);
++                return;
++            }
++        };
 +        let Some(unit) = gravity_direction(vector_g) else {
 +            self.fail_polar(SetupFailure::InvalidSample);
 +            return;
@@ -1258,26 +1335,34 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        self.motion_continuity = true;
 +        self.live = Some(observation);
 +        self.signal_resume_ns = None;
++        self.delivery_witness_ns = Some(clock.host_ns);
++        if !matches!(
++            self.calibration,
++            CalibrationState::Waiting | CalibrationState::Collecting
++        ) {
++            return;
++        }
++        if let Some(frame) = mapped_frame {
++            self.record_training(frame, unit);
++        } else if self.pending_training.len() < MAX_PENDING_TRAINING {
++            self.pending_training.push_back(observation);
++        } else {
++            self.fail_polar(SetupFailure::InsufficientCoverage);
++        }
++    }
++
++    fn record_training(&mut self, frame: u64, unit: [f64; 3]) {
 +        if self.calibration != CalibrationState::Collecting {
 +            return;
 +        }
 +        let start = self.calibration_start_frame.unwrap();
-+        let difference = frames_for_ns(
-+            host_timestamp_ns.abs_diff(clock.host_ns),
-+            self.schedule.sample_rate,
-+        );
-+        let frame = if host_timestamp_ns >= clock.host_ns {
-+            clock.frame.checked_add(difference)
-+        } else {
-+            clock.frame.checked_sub(difference)
-+        };
-+        let Some(frame) = frame else {
-+            self.fail_polar(SetupFailure::ClockStale);
-+            return;
-+        };
 +        if frame < start || frame >= start + self.calibration_target_frames() {
 +            return;
 +        }
++        self.calibration_last_mapped_frame = Some(
++            self.calibration_last_mapped_frame
++                .map_or(frame, |last| last.max(frame)),
++        );
 +        let slot_frames = frames_for_ns(TRAINING_STEP_NS, self.schedule.sample_rate);
 +        let slot = (frame - start) / slot_frames;
 +        if self
@@ -1294,6 +1379,86 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        self.last_training_slot = Some(slot);
 +    }
 +
++    fn remember_clock(&mut self) {
++        let clock = self.clock.unwrap();
++        if self
++            .clock_history
++            .back()
++            .is_some_and(|last| last.host_ns == clock.host_ns)
++        {
++            return;
++        }
++        if self.clock_history.len() == MAX_AUDIO_HISTORY {
++            self.clock_history.pop_front();
++        }
++        self.clock_history.push_back(clock);
++        let oldest = clock.host_ns.saturating_sub(BUFFERED_HISTORY_NS);
++        while self.clock_history.len() > 2 && self.clock_history[1].host_ns < oldest {
++            self.clock_history.pop_front();
++        }
++    }
++
++    /// None means a future sample awaits its next actual audio observation.
++    fn frame_for_sample(&self, host_ns: u64) -> Result<Option<u64>, SetupFailure> {
++        let clock = self
++            .clock
++            .filter(|clock| clock.healthy && clock.playing)
++            .ok_or(SetupFailure::ClockStale)?;
++        if clock.host_ns.abs_diff(host_ns) > BUFFERED_HISTORY_NS {
++            return Err(SetupFailure::ClockStale);
++        }
++        if host_ns > clock.host_ns {
++            return Ok(None);
++        }
++        let mut previous: Option<AudioClock> = None;
++        for &next in &self.clock_history {
++            if host_ns == next.host_ns {
++                return Ok(Some(next.frame));
++            }
++            if let Some(before) = previous {
++                if before.host_ns < host_ns
++                    && host_ns < next.host_ns
++                    && before.generation == next.generation
++                    && before.healthy
++                    && next.healthy
++                    && before.playing
++                    && next.playing
++                {
++                    let span = next.host_ns - before.host_ns;
++                    let frames = next
++                        .frame
++                        .checked_sub(before.frame)
++                        .ok_or(SetupFailure::ClockReversed)?;
++                    let offset = (u128::from(host_ns - before.host_ns) * u128::from(frames)
++                        / u128::from(span)) as u64;
++                    return before
++                        .frame
++                        .checked_add(offset)
++                        .map(|frame| Some(frame))
++                        .ok_or(SetupFailure::FrameOverflow);
++                }
++            }
++            previous = Some(next);
++        }
++        Err(SetupFailure::ClockStale)
++    }
++
++    fn flush_pending_training(&mut self) {
++        while let Some(sample) = self.pending_training.front().copied() {
++            match self.frame_for_sample(sample.host_ns) {
++                Ok(None) => break,
++                Ok(Some(frame)) => {
++                    self.pending_training.pop_front();
++                    self.record_training(frame, sample.unit);
++                }
++                Err(reason) => {
++                    self.fail_polar(reason);
++                    break;
++                }
++            }
++        }
++    }
++
 +    pub(crate) fn select_controller(&mut self) -> Result<(), SetupFailure> {
 +        self.ensure_preparation()?;
 +        self.input = SetupInput::Controller;
@@ -1301,6 +1466,7 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        self.calibration_start_frame = None;
 +        self.calibration_completed_frames = 0;
 +        self.samples.clear();
++        self.pending_training.clear();
 +        self.failure = None;
 +        self.experiment = ExperimentState::Preparation;
 +        self.experiment_start_frame = None;
@@ -1311,8 +1477,11 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +    /// a real audio frame without that evidence, defer a queued Controller main
 +    /// to a later full cycle without inventing a pause or advancing the clock.
 +    pub(crate) fn defer_controller_main_until_after(&mut self, frame: u64) {
-+        if self.input != SetupInput::Controller || self.experiment != ExperimentState::Waiting
-+            || self.experiment_start_frame.is_none_or(|start| frame < start)
++        if self.input != SetupInput::Controller
++            || self.experiment != ExperimentState::Waiting
++            || self
++                .experiment_start_frame
++                .is_none_or(|start| frame < start)
 +        {
 +            return;
 +        }
@@ -1481,6 +1650,8 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +        self.model = None;
 +        self.live = None;
 +        self.signal_resume_ns = None;
++        self.delivery_witness_ns = None;
++        self.pending_training.clear();
 +        if matches!(
 +            self.calibration,
 +            CalibrationState::Waiting | CalibrationState::Collecting | CalibrationState::Succeeded
@@ -1680,10 +1851,10 @@ index 0000000000000000000000000000000000000000..7370a48470c35c0e176f8a00fcf46d9f
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..9a0e593d15abe83d8ac41fe9aa8b6d55d3342adc
+index 0000000000000000000000000000000000000000..434f7bab6bb98dde651c91b1b15cc62a13ad83fc
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,1302 @@
+@@ -0,0 +1,1305 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -2187,6 +2358,9 @@ index 0000000000000000000000000000000000000000..9a0e593d15abe83d8ac41fe9aa8b6d55
 +        }
 +        let semantic = json!([
 +            self.generation,
++            // Owner/selection changes are authority barriers independently of
++            // whether their diagnostic failure text happens to be identical.
++            self.source_binding,
 +            self.started,
 +            s.input.as_str(),
 +            s.calibration.as_str(),
@@ -2988,10 +3162,10 @@ index 0000000000000000000000000000000000000000..9a0e593d15abe83d8ac41fe9aa8b6d55
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..85f93b87173d81c41d0bdd8300835cd61df3c4ae
+index 0000000000000000000000000000000000000000..e37da4f02d6abe047df41daca108f4e3928cbf20
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,752 @@
+@@ -0,0 +1,821 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
@@ -3070,6 +3244,75 @@ index 0000000000000000000000000000000000000000..85f93b87173d81c41d0bdd8300835cd6
 +    let mut stale = request.clone();
 +    stale["id"] = json!("0000000000000002");
 +    assert_eq!(r.command(&stale, 1_200_000_000)["reason"], "stale-revision");
++}
++
++#[test]
++fn idle_automatic_acc_batches_cannot_starve_a_fresh_phone_start_revision() {
++    let mut r = runtime();
++    r.observe_clock(1, 0, 1_000_000_000, true);
++    r.bind_source((5, 1));
++    r.observe_acc(101_000_000_000, 1_000_000_000, [0.0, 0.0, 1000.0]);
++    let baseline = r.status(1_000_000_000);
++
++    // Keep the actual audio readback fresh throughout a 400 ms interruption.
++    // Original 200 Hz batch samples straddle the 150 ms alignment bound.
++    for i in 1..=20 {
++        r.observe_clock(1, i * 882, 1_000_000_000 + i * 20_000_000, true);
++    }
++    for host in (1_200_000_000..=1_400_000_000).step_by(5_000_000) {
++        r.observe_acc(100_000_000_000 + host, host, [0.0, 0.0, 1000.0]);
++    }
++    let before = r.status(1_400_000_000);
++    let request =
++        json!({"v":1,"id":"0000000000000001","g":before["g"],"r":before["r"],"op":"start"});
++
++    // A second normal batch can reach native between phone status and command.
++    for i in 21..=30 {
++        r.observe_clock(1, i * 882, 1_000_000_000 + i * 20_000_000, true);
++    }
++    for host in (1_400_000_001..=1_600_000_000).step_by(5_000_000) {
++        r.observe_acc(100_000_000_000 + host, host, [0.0, 0.0, 1000.0]);
++    }
++    let after = r.status(1_600_000_000);
++    let receipt = r.command(&request, 1_600_000_000);
++    assert_eq!(
++        receipt["accepted"], true,
++        "{receipt}; before={before}; after={after}"
++    );
++    assert_eq!(before["r"], baseline["r"]);
++    assert_eq!(after["r"], before["r"]);
++    assert_eq!(after["failure"], "");
++    assert_eq!(after["calibration"], "idle");
++    assert_eq!(after["attempt"], 0);
++    assert_eq!(after["playing"], true);
++    assert_eq!(after["position_frames"], 26460);
++}
++
++#[test]
++fn source_binding_and_actual_calibration_failure_remain_revision_barriers() {
++    let mut r = runtime();
++    r.observe_clock(1, 0, 1_000_000_000, true);
++    r.bind_source((5, 1));
++    r.bind_source((5, 2));
++    let before = r.status(1_000_000_000);
++    let request =
++        json!({"v":1,"id":"0000000000000001","g":before["g"],"r":before["r"],"op":"start"});
++    r.bind_source((5, 3));
++    assert_eq!(
++        r.command(&request, 1_000_000_000)["reason"],
++        "stale-revision"
++    );
++
++    assert_eq!(
++        command(&mut r, 2, "calibrate", 1_000_000_000)["accepted"],
++        true
++    );
++    let waiting = r.status(1_000_000_000);
++    let retry =
++        json!({"v":1,"id":"0000000000000003","g":waiting["g"],"r":waiting["r"],"op":"calibrate"});
++    r.observe_acc(101_000_000_000, 1_000_000_000, [f32::NAN, 0.0, 1000.0]);
++    assert_eq!(r.status(1_000_000_000)["calibration"], "failed");
++    assert_eq!(r.command(&retry, 1_000_000_000)["reason"], "stale-revision");
 +}
 +#[test]
 +fn controller_click_needs_actual_fresh_assessment_and_main_retains_the_loop() {
@@ -3746,10 +3989,10 @@ index 0000000000000000000000000000000000000000..85f93b87173d81c41d0bdd8300835cd6
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..9a603da543239165531c3c96af14aeccded7f191
+index 0000000000000000000000000000000000000000..e37efadb3c3b3cf8e57f53932a9e2d3e5bd1d7a1
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
-@@ -0,0 +1,833 @@
+@@ -0,0 +1,1104 @@
 +use super::*;
 +
 +#[test]
@@ -3792,7 +4035,10 @@ index 0000000000000000000000000000000000000000..9a603da543239165531c3c96af14aecc
 +        let mut live = calibrated();
 +        live.request_experiment(time(2_116_800)).unwrap();
 +        live.reject_acc(7, reason);
-+        assert_eq!(live.snapshot(time(2_116_800)).experiment, ExperimentState::Invalidated);
++        assert_eq!(
++            live.snapshot(time(2_116_800)).experiment,
++            ExperimentState::Invalidated
++        );
 +        assert_eq!(live.snapshot(time(2_116_800)).input, SetupInput::Automatic);
 +        assert!(live.model().is_none());
 +    }
@@ -3804,13 +4050,279 @@ index 0000000000000000000000000000000000000000..9a603da543239165531c3c96af14aecc
 +    setup.start_calibration(8, time(0)).unwrap();
 +    setup.reject_acc(7, SetupFailure::InvalidSample);
 +    setup.reject_acc(0, SetupFailure::InvalidSource);
-+    assert_eq!(setup.snapshot(time(0)).calibration, CalibrationState::Waiting);
++    assert_eq!(
++        setup.snapshot(time(0)).calibration,
++        CalibrationState::Waiting
++    );
 +    setup.select_controller().unwrap();
 +    setup.request_experiment(time(0)).unwrap();
 +    setup.reject_acc(8, SetupFailure::ReorderedSample);
 +    assert_eq!(setup.snapshot(time(0)).input, SetupInput::Controller);
 +    assert_eq!(setup.snapshot(time(0)).experiment, ExperimentState::Waiting);
 +    assert_eq!(setup.snapshot(time(0)).failure, None);
++}
++
++#[test]
++fn later_raw_acc_cannot_rewrite_a_terminal_calibration_failure() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    setup.observe_acc(7, 100_000_000_000, time(0), [f64::NAN, 0.0, 1.0]);
++    let failed = setup.snapshot(time(0));
++    assert_eq!(failed.calibration, CalibrationState::Failed);
++    assert_eq!(failed.failure, Some(SetupFailure::InvalidSample));
++    setup.observe_acc(7, 100_300_000_000, time(0) + 300_000_000, [0.0, 0.0, 1.0]);
++    let after = setup.snapshot(time(0));
++    assert_eq!(after.calibration, CalibrationState::Failed);
++    assert_eq!(after.failure, Some(SetupFailure::InvalidSample));
++    assert_eq!(after.accepted_samples, 0);
++    assert!(setup.model().is_none());
++}
++
++fn run_buffered_calibration(
++    sample_period_ns: u64,
++    missing_packet: Option<u64>,
++) -> (BreathingSetup, u64) {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    let mut packet = 1_u64;
++    for tick in 1..=2_425_u64 {
++        let now = 1_000_000_000 + tick * 20_000_000;
++        setup.observe_clock(1, tick * 882, now, true);
++        // Original sample times are fixed; transport alternates 0/20 ms delay.
++        // A 200 Hz packet has forty samples spanning 195 ms before receipt.
++        let packet_end = 1_000_000_000 + packet * 200_000_000;
++        let receipt = packet_end + if packet % 2 == 0 { 20_000_000 } else { 0 };
++        if receipt <= now {
++            if missing_packet != Some(packet) {
++                let first = packet_end - 200_000_000 + sample_period_ns;
++                for acquired in (first..=packet_end).step_by(sample_period_ns as usize) {
++                    let source_frame = (acquired - 1_000_000_000) * 44_100 / 1_000_000_000;
++                    setup.observe_acc(
++                        7,
++                        100_000_000_000 + acquired,
++                        acquired,
++                        guided_vector(source_frame),
++                    );
++                }
++            }
++            packet += 1;
++        }
++        let state = setup.snapshot(now).calibration;
++        if matches!(
++            state,
++            CalibrationState::Succeeded | CalibrationState::Failed
++        ) {
++            return (setup, now);
++        }
++    }
++    (setup, 49_500_000_000)
++}
++
++#[test]
++fn buffered_200ms_delivery_with_jitter_completes_full_window_at_200hz_and_25hz() {
++    for period in [5_000_000, 40_000_000] {
++        let (setup, now) = run_buffered_calibration(period, None);
++        let status = setup.snapshot(now);
++        assert_eq!(
++            status.calibration,
++            CalibrationState::Succeeded,
++            "period={period}, failure={:?}, now={now}",
++            status.failure
++        );
++        assert_eq!(status.calibration_completed_frames, 1_411_200);
++        assert!(status.accepted_samples >= 760);
++        assert!(status.ready);
++        let model = setup.model().unwrap();
++        assert!(
++            model
++                .project([-0.08_f64.sin(), 0.0, 0.08_f64.cos()])
++                .unwrap()
++                < 0.02
++        );
++        assert!(
++            model
++                .project([0.08_f64.sin(), 0.0, 0.08_f64.cos()])
++                .unwrap()
++                > 0.98
++        );
++    }
++}
++
++#[test]
++fn missing_a_whole_buffered_packet_fails_and_cannot_fit_a_missing_tail() {
++    for packet in [100, 240] {
++        let (setup, now) = run_buffered_calibration(5_000_000, Some(packet));
++        let status = setup.snapshot(now);
++        assert_eq!(status.calibration, CalibrationState::Failed);
++        assert_eq!(status.failure, Some(SetupFailure::SignalGap));
++        assert!(setup.model().is_none());
++        assert!(!status.ready);
++    }
++}
++
++#[test]
++fn stale_output_waits_for_bounded_delivery_without_destroying_a_good_model() {
++    let mut setup = calibrated();
++    for step in 1..=6_u64 {
++        let frame = 2_116_800 + step * 1_764;
++        setup.observe_clock(1, frame, time(frame), true);
++        if step == 6 {
++            let status = setup.snapshot(time(frame));
++            assert!(!status.ready);
++            assert!(setup.driver_sample(time(frame)).is_none());
++            assert!(
++                setup.model().is_some(),
++                "240 ms delivery age is within the separate 250 ms bound"
++            );
++        }
++    }
++    let frame = 2_127_384;
++    for acquired in ((time(2_116_800) + 45_000_000)..=time(frame)).step_by(5_000_000) {
++        let source_frame = (acquired - 1_000_000_000) * 44_100 / 1_000_000_000;
++        setup.observe_acc(
++            7,
++            100_000_000_000 + acquired,
++            acquired,
++            guided_vector(source_frame),
++        );
++    }
++    assert!(setup.snapshot(time(frame)).ready);
++    setup.observe_clock(1, frame + 1_764, time(frame) + 40_000_000, true);
++    // Subsequent truly missing delivery is irreversible after 250 ms.
++    for step in 2..=7_u64 {
++        setup.observe_clock(
++            1,
++            frame + step * 1_764,
++            time(frame) + step * 40_000_000,
++            true,
++        );
++    }
++    assert!(setup.model().is_none());
++}
++
++#[test]
++fn future_training_samples_wait_for_an_actual_audio_bracket() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    run(&mut setup, 1_764, 705_600, |frame| {
++        Some(guided_vector(frame))
++    });
++    let before = setup.snapshot(time(705_600)).accepted_samples;
++    let acquired = time(705_600) + 45_000_000;
++    setup.observe_acc(
++        7,
++        100_000_000_000 + acquired,
++        acquired,
++        guided_vector(707_584),
++    );
++    assert_eq!(setup.snapshot(time(705_600)).accepted_samples, before);
++    setup.observe_clock(1, 706_482, time(705_600) + 20_000_000, true);
++    assert_eq!(setup.snapshot(time(706_482)).accepted_samples, before);
++    setup.observe_clock(1, 708_246, time(705_600) + 60_000_000, true);
++    assert_eq!(setup.snapshot(time(708_246)).accepted_samples, before + 1);
++}
++
++#[test]
++fn buffered_history_rejects_pause_retirement_source_and_outside_envelope() {
++    for barrier in 0..4 {
++        let mut setup = fresh_setup();
++        setup.start_calibration(7, time(0)).unwrap();
++        run(&mut setup, 1_764, 705_600, |frame| {
++            Some(guided_vector(frame))
++        });
++        let origin = time(705_600);
++        let future = origin + 45_000_000;
++        setup.observe_acc(7, 100_000_000_000 + future, future, guided_vector(707_584));
++        let (owner, acquired, now) = match barrier {
++            0 => {
++                setup.observe_clock(1, 706_482, origin + 20_000_000, false);
++                setup.observe_clock(1, 706_482, origin + 80_000_000, true);
++                (7, origin + 60_000_000, origin + 80_000_000)
++            }
++            1 => {
++                setup.observe_clock(2, 0, origin + 80_000_000, true);
++                setup.start_calibration(7, origin + 80_000_000).unwrap();
++                (7, origin + 60_000_000, origin + 80_000_000)
++            }
++            2 => {
++                setup.observe_source_owner(8);
++                setup.start_calibration(8, origin).unwrap();
++                (8, origin - 5_000_000, origin)
++            }
++            _ => {
++                setup.observe_clock(1, 709_128, origin + 80_000_000, true);
++                (7, origin - 175_000_000, origin + 80_000_000)
++            }
++        };
++        let before = setup.snapshot(now).accepted_samples;
++        setup.observe_acc(owner, 100_000_000_000 + acquired, acquired, [0.0, 0.0, 1.0]);
++        let status = setup.snapshot(now);
++        assert_eq!(
++            status.calibration,
++            CalibrationState::Failed,
++            "barrier {barrier}"
++        );
++        assert_eq!(
++            status.failure,
++            Some(SetupFailure::ClockStale),
++            "barrier {barrier}"
++        );
++        assert_eq!(status.accepted_samples, before);
++        assert!(setup.model().is_none());
++    }
++}
++
++#[test]
++fn bounded_delivery_never_allows_a_real_sensor_timestamp_gap_over_200ms() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    run(&mut setup, 1_764, 705_600, |frame| {
++        Some(guided_vector(frame))
++    });
++    let origin = time(705_600);
++    for tick in 1..=11 {
++        setup.observe_clock(1, 705_600 + tick * 882, origin + tick * 20_000_000, true);
++    }
++    assert_eq!(
++        setup.snapshot(origin + 220_000_000).calibration,
++        CalibrationState::Collecting
++    );
++    let acquired = origin + 205_000_000;
++    setup.observe_acc(7, 100_000_000_000 + acquired, acquired, [0.0, 0.0, 1.0]);
++    assert_eq!(
++        setup.snapshot(origin + 220_000_000).failure,
++        Some(SetupFailure::SignalGap)
++    );
++}
++
++#[test]
++fn queued_main_defers_a_boundary_during_bounded_buffered_delivery() {
++    let mut setup = calibrated();
++    setup.request_experiment(time(2_116_800)).unwrap();
++    run(&mut setup, 2_118_564, 2_811_816, |frame| {
++        Some(guided_vector(frame))
++    });
++    for tick in 1..=12 {
++        let frame = 2_811_816 + tick * 882;
++        setup.observe_clock(1, frame, time(frame), true);
++    }
++    let now = time(2_822_400);
++    let waiting = setup.snapshot(now);
++    assert_eq!(waiting.experiment, ExperimentState::Waiting);
++    assert_eq!(waiting.experiment_start_frame, Some(3_528_000));
++    assert!(!waiting.ready);
++    assert!(setup.model().is_some());
++    for acquired in ((time(2_811_816) + 45_000_000)..=now).step_by(5_000_000) {
++        let frame = (acquired - 1_000_000_000) * 44_100 / 1_000_000_000;
++        setup.observe_acc(
++            7,
++            100_000_000_000 + acquired,
++            acquired,
++            guided_vector(frame),
++        );
++    }
++    assert!(setup.snapshot(now).ready);
++    assert_eq!(setup.snapshot(now).experiment, ExperimentState::Waiting);
 +}
 +
 +fn schedule() -> LoopSchedule {
@@ -4225,7 +4737,9 @@ index 0000000000000000000000000000000000000000..9a603da543239165531c3c96af14aecc
 +fn delayed_timestamped_samples_are_labeled_at_acquisition_time() {
 +    let mut setup = fresh_setup();
 +    setup.start_calibration(7, time(0)).unwrap();
-+    for frame in (1_764..=2_116_800).step_by(1_764) {
++    // Drain the final 80 ms packet after the audio collection window ends;
++    // earlier completion would fit without its final in-window evidence.
++    for frame in (1_764..=2_120_328).step_by(1_764) {
 +        setup.observe_clock(1, frame, time(frame), true);
 +        // Two samples behind playback, with the original acquisition time.
 +        if frame >= 3_528 {
@@ -4238,7 +4752,7 @@ index 0000000000000000000000000000000000000000..9a603da543239165531c3c96af14aecc
 +            );
 +        }
 +    }
-+    let status = setup.snapshot(time(2_116_800));
++    let status = setup.snapshot(time(2_120_328));
 +    assert_eq!(
 +        status.calibration,
 +        CalibrationState::Succeeded,
@@ -9464,7 +9978,7 @@ index c0c0c17eb1ea85e90c024b3fe1b2206cb5a4cf79..4c8ef5b13131d014bdb952d0f1ed5128
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc2ab0d23f 100644
+index a694dfeef9a373c330795ad06cc007e7c58d4ecd..865eacb10a2c2f21435d8e3ea0ec99a31217b859 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -9573,7 +10087,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      private TextView breathOutputReadback;
      private TextView breathDiagnosticsReadback;
      private ProgressBar breathCalibrationProgress;
-@@ -1211,6 +1248,33 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1211,6 +1248,42 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static final ExperimentControlMode controlMode=ExperimentControlMode.process();
      private TextView controlModeSessionReadback;
      private TextView controlModeNetworkReadback;
@@ -9604,10 +10118,19 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
 +    TextView phonePairingText(String value,int size,boolean muted){return text(value,size,muted?PANEL_MUTED:PANEL_FG);}
 +    Button phonePairingButton(String value){return operatorButton(value);}
 +    void phonePairingStatus(String value){updateStatus(value);}
++    /** Completion is posted by the selected platform owner after its normal system dialog settles. */
++    static void onSelectedStartupPermissionsSettled(Activity host,String[] permissions,int[] grants){
++        BreathCompositionPanelModule owner=controllerFor(host);
++        if(owner==null||!owner.phonePairingHostResumed||!PolarBleRuntimeSupport.managesStartupPermissions(host))return;
++        PolarSensorRuntime.forApplication(host.getApplicationContext()).onRequestPermissionsResult(host,9103,permissions,grants);
++        ExperimentSessionBleServer server=remoteServer();if(server!=null)server.onPermissionResult(host,9401);
++        ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
++        if(gateway!=null)gateway.discoveryPermissionResult(9403,host);
++    }
  
      private boolean productPanelOperatorAvailable(){
          return !experimentShellDestroyed&&!isFinishing()&&!isDestroyed()
-@@ -1244,6 +1308,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1244,6 +1317,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
      private JSONObject invokeProductPanelOperator(String action,JSONObject parameters)throws Exception {
          requireProductPanelOperator();
@@ -9616,7 +10139,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
          if("panel-visible".equals(action))return NativeMeshUiProducer.requestProductPanelVisibility(hostActivity(),parameters.getBoolean("visible"));
          if("navigate".equals(action)){
              String surface=parameters.getString("surface"),page=parameters.getString("page");
-@@ -1589,6 +1655,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1589,6 +1664,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              public JSONObject observe()throws Exception{return observeProductPanelOperator();}
              public JSONObject invoke(String action,JSONObject parameters)throws Exception{return invokeProductPanelOperator(action,parameters);}
          });
@@ -9624,15 +10147,16 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      }
  
      @Override
-@@ -1737,6 +1804,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1737,6 +1813,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onResume() {
          super.onResume();
 +        phonePairingHostResumed=true;
++        PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(hostActivity(),"resumed");
          activityPanelResumed=!nativePresentation();
          if(meshPanelAttachment!=null&&!nativePresentation())meshPanelAttachment.showInActivity();
          if(!nativePresentation()||meshPanelAttachment!=null&&meshPanelAttachment.presentationActive()
-@@ -1748,6 +1816,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1748,6 +1826,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          NativeMeshUiProducer.productOwnerReady(hostActivity());
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
          if(gateway!=null)gateway.requestDiscoveryPermissions(hostActivity());
@@ -9640,10 +10164,11 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      }
  
      private void resumePanelProjection() {
-@@ -1772,12 +1841,15 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1772,12 +1851,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
  
      @Override
      protected void onPause() {
++        PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(hostActivity(),"paused");
 +        phonePairingHostResumed=false;
 +        if(phonePairingUi!=null)phonePairingUi.paused();
          activityPanelResumed=false;
@@ -9656,35 +10181,39 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
          closeHubStatusLifetime();
          remotePanelResumed = false;
          cancelRemotePolarRender();
-@@ -1838,6 +1910,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1838,6 +1921,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onDestroy() {
          if(experimentShellDestroyed)return;
++        PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(hostActivity(),"retired");
 +        if(phonePairingUi!=null)phonePairingUi.close();phonePairingUi=null;
 +        phonePairingHostResumed=false;
 +        stopCalibrationPrompts();
          experimentShellDestroyed = true;
          try{if(productPanelOperatorRegistration!=null)productPanelOperatorRegistration.close();}
          catch(Exception unavailable){Log.w(TAG,"channel=product-panel-operator event=registration-retirement-failed");}
-@@ -1864,6 +1939,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1864,6 +1951,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
++        if(PolarBleRuntimeSupport.selectedStartupActivityResult(hostActivity(),requestCode))return;
 +        ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.existing();
 +        if (gateway != null) gateway.discoveryActivityResult(requestCode, hostActivity());
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1912,7 +1989,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1911,8 +2001,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     @Override
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
++        if(PolarBleRuntimeSupport.selectedStartupPermissionResult(hostActivity(),requestCode,permissions,grantResults))return;
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
 -        if(gateway!=null)gateway.discoveryPermissionResult(requestCode);
 +        if(gateway!=null)gateway.discoveryPermissionResult(requestCode, hostActivity());
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -2240,6 +2317,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2240,6 +2331,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterPhoneControl(LinearLayout root) {
@@ -9692,7 +10221,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
          appendExperimenterNetworkControl(root);
          if (!ExperimentSessionBleServer.featurePackaged(this)) return;
          final ExperimentSessionBleServer server =
-@@ -2277,6 +2355,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2277,6 +2369,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterNetworkControl(LinearLayout root) {
@@ -9700,7 +10229,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
          if(!ExperimentSessionCommandGateway.featurePackaged(this))return;
          final ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.process(this,REMOTE_DELEGATE);
          gateway.requestDiscoveryPermissions(hostActivity());
-@@ -2354,6 +2433,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2354,6 +2447,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          root.addView(network);
      }
  
@@ -9713,7 +10242,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      private void handleRemoteOpenPolarIntent(Intent intent) {
          if (intent != null && intent.getBooleanExtra(EXTRA_REMOTE_OPEN_POLAR, false)) {
              intent.removeExtra(EXTRA_REMOTE_OPEN_POLAR);
-@@ -2682,6 +2767,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2682,6 +2781,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void replaceBreathCompositionPanelContent(String topic) {
@@ -9721,7 +10250,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
          cancelRemotePolarRender();
          rememberPanelScroll();
          cancelPendingPrivateParticleDynamicsApply();
-@@ -4214,10 +4300,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4314,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -9733,7 +10262,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4320,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4334,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -9756,7 +10285,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
-@@ -4526,6 +4625,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4526,6 +4639,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          try {
              String response = nativeApplyBreathCompositionCommand(command.toString());
              renderBreathCompositionResponse(response, readback);
@@ -9764,7 +10293,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
              writeBreathCompositionOperatorReceipt(
                  "ui-" + SystemClock.elapsedRealtimeNanos(),
                  command.optString("operation", "unknown"),
-@@ -4536,6 +4636,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4536,6 +4650,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          }
      }
  
@@ -9855,7 +10384,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..1199c1241dd1bd8f37366dd749ec44fc
      private void refreshBreathCompositionReadback(TextView readback) {
          try {
              renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
-@@ -6281,6 +6465,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -6281,6 +6479,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -10217,7 +10746,7 @@ index 0000000000000000000000000000000000000000..28b6e2b43ab04c71631faa63e896fa5b
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
-index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..931ff6e304fddc18989b9682959bf22616ecd137 100644
+index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..68bfc2e97777351cbb88a04a31352580b9b29e58 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
 @@ -39,6 +39,7 @@ final class ExperimentSessionBleServer {
@@ -10263,7 +10792,23 @@ index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..931ff6e304fddc18989b9682959bf226
      boolean openControl() {
          Delegate current = delegate;
          return prefs.getBoolean(OPEN, current != null && current.openControlDefault());
-@@ -665,6 +680,11 @@ final class ExperimentSessionBleServer {
+@@ -353,12 +368,14 @@ final class ExperimentSessionBleServer {
+     void startFromPanel(Activity activity) {
+         if (activity == null || !featurePackaged(activity) || !enabled()
+                 || !hasNativeOwner()) return;
++        boolean coordinated=PolarBleRuntimeSupport.requestSelectedStartupPermissions(activity);
++        if(coordinated&&PolarBleRuntimeSupport.selectedStartupPermissionsBusy(activity))return;
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+             if (activity.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                     != PackageManager.PERMISSION_GRANTED
+                     || activity.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
+                     != PackageManager.PERMISSION_GRANTED) {
+-                activity.requestPermissions(new String[] {
++                if(!coordinated)activity.requestPermissions(new String[] {
+                     Manifest.permission.BLUETOOTH_CONNECT,
+                     Manifest.permission.BLUETOOTH_ADVERTISE
+                 }, PERMISSION_REQUEST);
+@@ -665,6 +682,11 @@ final class ExperimentSessionBleServer {
                  boolean responseNeeded, int offset, byte[] value) {
              synchronized (ExperimentSessionBleServer.this) {
                  if (!current()) return;
@@ -10275,7 +10820,7 @@ index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..931ff6e304fddc18989b9682959bf226
                  int response = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
                  CommandRequest accepted = null;
                  if (COMMAND.equals(characteristic.getUuid()) && !preparedWrite && offset == 0
-@@ -772,7 +792,7 @@ final class ExperimentSessionBleServer {
+@@ -772,7 +794,7 @@ final class ExperimentSessionBleServer {
                          @Override public void run() {
                              final Delegate target;
                              synchronized (ExperimentSessionBleServer.this) {
@@ -10284,7 +10829,7 @@ index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..931ff6e304fddc18989b9682959bf226
                                  target = delegate;
                              }
                              if (target == null) {
-@@ -792,5 +812,11 @@ final class ExperimentSessionBleServer {
+@@ -792,5 +814,11 @@ final class ExperimentSessionBleServer {
  
              }
          }
@@ -11152,7 +11697,7 @@ index 2da045962f7a738e5659869ae6d41839e2644d0c..92d63dd44e6e10861542492717e447fa
              && "pattern-ready".equals(status.optJSONArray("b")==null ? "" : status.getJSONArray("b").optString("condition-a".equals(condition)?0:1));
          this.projection=new JSONObject(nativeReadback.toString());this.observed=now;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e86007867086482619790a1ee1d5 100644
+index f41c56ead2081794a92892b87e2209a31c3378f6..09381589409a3b7601da9e1e2a41fc3b706f40c0 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 @@ -5,12 +5,16 @@ import android.app.Activity;
@@ -11258,7 +11803,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e8600786708648261979
      /** Invoked on the actual main owner; native retirement explicitly closes this owner. */
      void reconcile(long token,boolean available){
          long admitted;
-@@ -84,19 +122,70 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -84,19 +122,72 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
          return Build.VERSION.SDK_INT<31||context.checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)==PackageManager.PERMISSION_GRANTED
              &&context.checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE)==PackageManager.PERMISSION_GRANTED;
      }
@@ -11270,6 +11815,8 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e8600786708648261979
 +        return context.checkSelfPermission(wifiPermission()) == PackageManager.PERMISSION_GRANTED;
 +    }
      void requestPermissions(Activity host){
++        final boolean coordinated=PolarBleRuntimeSupport.requestSelectedStartupPermissions(host);
++        if(coordinated&&PolarBleRuntimeSupport.selectedStartupPermissionsBusy(host))return;
          boolean retry=false;
 -        synchronized(this){if(!remote||host==null)return;
 +        synchronized(this){if((!remote && !wifiSetup && !promptBluetoothPower)||host==null||systemPromptHost.get()!=null)return;
@@ -11281,7 +11828,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e8600786708648261979
 +                if(permitted() && !requestWifi) {
 +                    promptToEnableBluetooth(host);
 +                    retry=server==null&&recovery==null&&"unavailable".equals(state);
-+                } else if(!permissionRequested) {
++                } else if(!permissionRequested&&!coordinated) {
 +                    permissionRequested=true;
 +                    String connect = Manifest.permission.BLUETOOTH_CONNECT;
 +                    String advertise = Manifest.permission.BLUETOOTH_ADVERTISE;
@@ -11333,7 +11880,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e8600786708648261979
      void permissionResult(){
          long admitted;
          synchronized(this){if(!remote)return;stopPlatform();attempts=0;admitted=generation;}
-@@ -141,6 +230,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -141,6 +232,9 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
              BluetoothGattService service=new BluetoothGattService(UUID.fromString(SERVICE),BluetoothGattService.SERVICE_TYPE_PRIMARY);
              service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(SERIAL),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
              service.addCharacteristic(new BluetoothGattCharacteristic(UUID.fromString(METADATA),BluetoothGattCharacteristic.PROPERTY_READ,BluetoothGattCharacteristic.PERMISSION_READ));
@@ -11343,7 +11890,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..428e5b429a51e8600786708648261979
              if(!server.addService(service)){fail(admitted,"service-unavailable",true);return;}
              timeout=new Runnable(){@Override public void run(){synchronized(ExperimentSessionDiscoveryServer.this){if(current(admitted)&&!"advertising".equals(state))fail(admitted,"callback-timeout",true);}}};
              main.postDelayed(timeout,8000);
-@@ -175,24 +267,87 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+@@ -175,24 +269,87 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
          @Override public void onCharacteristicReadRequest(final BluetoothDevice device,int id,int offset,BluetoothGattCharacteristic characteristic){synchronized(ExperimentSessionDiscoveryServer.this){
              if(!current(admitted)||server==null)return;
              String uuid=characteristic.getUuid().toString();
@@ -13495,8 +14042,57 @@ index 0000000000000000000000000000000000000000..e12c53e19d1a1bfe50b0cc9b48ce0d4f
 +        }
 +    }
 +}
+diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
+index f5bfbe849652cd4c5362d2baef880bab177bcea3..d9985074196b0771dfdc7c910281871073b2fb47 100644
+--- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
++++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java
+@@ -17,6 +17,44 @@ import org.json.JSONObject;
+ final class PolarBleRuntimeSupport {
+     private PolarBleRuntimeSupport() {}
+ 
++    /** The selected native product shares one runtime-permission dialog owner.
++     * Other compositions keep their existing attended request routes. */
++    static boolean managesStartupPermissions(Activity host) {
++        if(host==null||!NativeRendererActivityComponents.isNative(host))return false;
++        try{return Boolean.TRUE.equals(host.getPackageManager().getApplicationInfo(host.getPackageName(),PackageManager.GET_META_DATA)
++            .metaData.get("rusty.quest.experiment.phone_pairing.enabled"));}catch(Exception unavailable){return false;}
++    }
++    private static Class<?> startupPermissionClass()throws Exception {
++        return Class.forName("io.github.mesmerprism.rustyquest.native_renderer.ExperimentStartupPermissions");
++    }
++    static boolean requestSelectedStartupPermissions(Activity host) {
++        if(!managesStartupPermissions(host))return false;
++        try{startupPermissionClass().getDeclaredMethod("request",Activity.class).invoke(null,host);}
++        catch(Exception unavailable){android.util.Log.w("RQStartupPermissions","event=selected-request-unavailable");}
++        return true;
++    }
++    static boolean selectedStartupPermissionsBusy(Activity host) {
++        if(!managesStartupPermissions(host))return false;
++        try{return !Boolean.FALSE.equals(startupPermissionClass().getDeclaredMethod("busy",Activity.class).invoke(null,host));}
++        catch(Exception unavailable){return true;}
++    }
++    static void selectedStartupPermissionLifecycle(Activity host,String event) {
++        if(!managesStartupPermissions(host))return;
++        if(!"resumed".equals(event)&&!"paused".equals(event)&&!"retired".equals(event))throw new IllegalArgumentException("closed-permission-lifecycle-required");
++        try{startupPermissionClass().getDeclaredMethod(event,Activity.class).invoke(null,host);}
++        catch(Exception unavailable){android.util.Log.w("RQStartupPermissions","event=selected-lifecycle-unavailable");}
++    }
++    static boolean selectedStartupPermissionResult(Activity host,int code,String[] permissions,int[] grants) {
++        if(!managesStartupPermissions(host))return false;
++        try{return Boolean.TRUE.equals(startupPermissionClass().getDeclaredMethod("result",Activity.class,int.class,String[].class,int[].class)
++            .invoke(null,host,code,permissions,grants));}catch(Exception unavailable){return code==9410;}
++    }
++    static boolean selectedStartupActivityResult(Activity host,int code) {
++        if(!managesStartupPermissions(host))return false;
++        try{return Boolean.TRUE.equals(startupPermissionClass().getDeclaredMethod("activityResult",Activity.class,int.class)
++            .invoke(null,host,code));}catch(Exception unavailable){return code==9411;}
++    }
++
+     static boolean ensureReady(Activity activity, int requestCode) {
+         if (activity == null || Build.VERSION.SDK_INT < 23) {
+             return true;
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
-index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3345b03c7 100644
+index e68547bd55f041ea405a1d63fbc5755ae57f8faf..4ac1fbdab724364e858f4faa6f28399789ca2097 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 @@ -140,6 +140,11 @@ final class PolarSensorPanel {
@@ -13511,7 +14107,37 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
      private final Queue<DescriptorTask> descriptorTasks = new ArrayDeque<DescriptorTask>();
      private final ExecutorService eventWriter = Executors.newSingleThreadExecutor();
      private final ExecutorService statusWriter = Executors.newSingleThreadExecutor();
-@@ -1679,7 +1684,10 @@ final class PolarSensorPanel {
+@@ -499,7 +504,7 @@ final class PolarSensorPanel {
+         if (requestCode != REQUEST_BLE_PERMISSIONS) {
+             return;
+         }
+-        if (permissionHost != null) {
++        if (permissionHost != null && !PolarBleRuntimeSupport.managesStartupPermissions(permissionHost)) {
+             NativeRendererSelfKioskApplication.endSystemPrompt(permissionHost);
+         }
+         if (hasRequiredPermissions()) {
+@@ -553,8 +558,10 @@ final class PolarSensorPanel {
+             return true;
+         }
+         pendingBleAction = PENDING_BLE_SCAN;
+-        NativeRendererSelfKioskApplication.beginSystemPrompt(permissionHost);
+-        PolarBleRuntimeSupport.ensureReady(permissionHost, REQUEST_BLE_PERMISSIONS);
++        if(!PolarBleRuntimeSupport.requestSelectedStartupPermissions(permissionHost)){
++            NativeRendererSelfKioskApplication.beginSystemPrompt(permissionHost);
++            PolarBleRuntimeSupport.ensureReady(permissionHost, REQUEST_BLE_PERMISSIONS);
++        }
+         String missing = PolarBleRuntimeSupport.join(
+             PolarBleRuntimeSupport.missingPermissions(appContext),
+             ","
+@@ -776,6 +783,7 @@ final class PolarSensorPanel {
+         synchronized(countersLock){accReceipt=lastAccFrameReceiptNs;ecgReceipt=lastEcgFrameReceiptNs;}
+         return new JSONObject().put("p",ble.optBoolean("runtime_permission_ready",false))
+             .put("b","on".equals(ble.optString("bluetooth_adapter_state")))
++            .put("l",ble.optString("location_services_state","unavailable"))
+             .put("c",connected&&selected.equals(connectedDeviceInstanceId)).put("x",selected.startsWith("polar-")?selected.substring(6):"")
+             .put("a",connected&&accPmdRunning&&accReceipt>0&&now>=accReceipt&&now-accReceipt<5000000000L)
+             .put("e",connected&&ecgPmdRunning&&ecgReceipt>0&&now>=ecgReceipt&&now-ecgReceipt<5000000000L)
+@@ -1679,7 +1687,10 @@ final class PolarSensorPanel {
  
      private void setStreamRunning(String mode, boolean running) {
          if ("ecg".equals(mode)) {
@@ -13523,7 +14149,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
          } else {
              accPmdRunning = running;
          }
-@@ -1689,6 +1697,44 @@ final class PolarSensorPanel {
+@@ -1689,6 +1700,44 @@ final class PolarSensorPanel {
              : (accPmdRunning ? "acc" : (ecgPmdRunning ? "ecg" : "none"));
      }
  
@@ -13568,7 +14194,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
      private void clearCounters() {
          synchronized (countersLock) {
              sequenceId = 0L;
-@@ -2571,6 +2617,8 @@ final class PolarSensorPanel {
+@@ -2571,6 +2620,8 @@ final class PolarSensorPanel {
                                  activeEcgSampleRateHz,
                                  sampleIndex,
                                  frame.sampleCount);
@@ -13577,7 +14203,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
                              nativeSubmitPolarEcgMeasurement(
                                  sampleHostTimeNs,
                                  sampleSensorTimeNs,
-@@ -2579,7 +2627,7 @@ final class PolarSensorPanel {
+@@ -2579,7 +2630,7 @@ final class PolarSensorPanel {
                                  sampleIndex,
                                  frame.sampleCount,
                                  System.nanoTime(),
@@ -13586,7 +14212,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
                          }
                          appendEcgEvent(frame);
                          scheduleStreamingStatusWrite();
-@@ -3210,6 +3258,7 @@ final class PolarSensorPanel {
+@@ -3210,6 +3261,7 @@ final class PolarSensorPanel {
              currentGatt = gatt;
              gatt = null;
              connected = false;
@@ -13594,6 +14220,19 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..65c927ea8b2736823759c337a8a1a2f3
          }
          pmdFlowGeneration += 1L;
          connectedLabel = "none";
+@@ -3298,8 +3350,10 @@ final class PolarSensorPanel {
+             marker("status=permission-required origin=headless pendingAction=" + pendingAction);
+             return false;
+         }
+-        NativeRendererSelfKioskApplication.beginSystemPrompt(activity);
+-        PolarBleRuntimeSupport.ensureReady(activity, REQUEST_BLE_PERMISSIONS);
++        if(!PolarBleRuntimeSupport.requestSelectedStartupPermissions(activity)){
++            NativeRendererSelfKioskApplication.beginSystemPrompt(activity);
++            PolarBleRuntimeSupport.ensureReady(activity, REQUEST_BLE_PERMISSIONS);
++        }
+         String missing = PolarBleRuntimeSupport.join(
+             PolarBleRuntimeSupport.missingPermissions(appContext),
+             ","
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
 index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..b34b14c0713b3d9276a103abf92c1576df84a1bf 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
@@ -14021,6 +14660,148 @@ index 0000000000000000000000000000000000000000..020e7617aa4fcd195c95db3d1ceab9be
 +            &&Boolean.TRUE.equals(visibility.opt("requested_visible"));
 +    }
 +    void finish(Token token){if(current==token)current=null;}
++}
+diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..32862b846564494d98e3f2bf8f7975b2149c6636
+--- /dev/null
++++ b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java
+@@ -0,0 +1,136 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import android.app.Activity;
++import android.content.pm.PackageManager;
++import android.content.Intent;
++import android.os.Build;
++import android.os.Handler;
++import android.os.Looper;
++import java.lang.ref.WeakReference;
++import java.util.ArrayList;
++import java.util.Arrays;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Set;
++
++/** One attended platform request for the selected native product's declared startup closure.
++ * Permission intent grants no session, sensor, pairing or presentation authority. */
++final class ExperimentStartupPermissions {
++    static final int REQUEST=9410;
++    private static final int LOCATION_SETTINGS=9411;
++    private static final Handler main=new Handler(Looper.getMainLooper());
++    private static WeakReference<Activity> owner=new WeakReference<Activity>(null);
++    private static long generation;
++    private static boolean resumed,pending,settled,awaitResume,deliveryPending,deliveryPosted,promptOwned;
++    private static boolean locationAsked,locationPending,locationPaused;
++    private static int attempts;
++    private static String[] resultPermissions=new String[0];
++    private static int[] resultGrants=new int[0];
++    private ExperimentStartupPermissions(){}
++    private static void requireMain(){if(Looper.myLooper()!=Looper.getMainLooper())throw new IllegalStateException("startup-permissions-main-owner-required");}
++    private static boolean selected(Activity host){
++        if(host==null||!NativeRendererActivityComponents.isNative(host))return false;
++        try{return Boolean.TRUE.equals(host.getPackageManager().getApplicationInfo(host.getPackageName(),PackageManager.GET_META_DATA)
++            .metaData.get("rusty.quest.experiment.phone_pairing.enabled"));}catch(Exception unavailable){return false;}
++    }
++    private static boolean current(Activity host){
++        return selected(host)&&!host.isFinishing()&&!host.isDestroyed()&&BreathCompositionPanelModule.controllerFor(host)!=null;
++    }
++    private static void bind(Activity host){
++        if(owner.get()==host)return;
++        Activity previous=owner.get();if(previous!=null)finishPrompt(previous);
++        owner=new WeakReference<Activity>(host);generation++;resumed=false;pending=false;settled=false;awaitResume=false;
++        deliveryPending=false;deliveryPosted=false;attempts=0;resultPermissions=new String[0];resultGrants=new int[0];
++        locationAsked=false;locationPending=false;locationPaused=false;
++    }
++    /** True consumes the selected route even when it must await the actual host's resume. */
++    public static boolean request(Activity host){
++        requireMain();if(!selected(host))return false;if(!current(host))return true;
++        bind(host);drive(host);return true;
++    }
++    public static void resumed(Activity host){
++        requireMain();if(!current(host))return;bind(host);resumed=true;
++        if(locationPending&&locationPaused)finishLocation(host);
++        if(awaitResume){awaitResume=false;if(attempts>=2)settled=true;}
++        drive(host);postDelivery(host);
++    }
++    public static void paused(Activity host){requireMain();if(owner.get()==host){resumed=false;if(locationPending)locationPaused=true;}}
++    public static void retired(Activity host){
++        requireMain();if(owner.get()!=host)return;finishPrompt(host);owner.clear();generation++;
++        resumed=false;pending=false;settled=false;awaitResume=false;deliveryPending=false;deliveryPosted=false;
++        locationPending=false;locationPaused=false;
++    }
++    /** Discovery may proceed with its own granted subset after the single attended request settles. */
++    public static boolean busy(Activity host){
++        requireMain();return !current(host)||owner.get()!=host||!resumed||pending||locationPending||!settled||deliveryPending||deliveryPosted;
++    }
++    private static List<String> missing(Activity host)throws Exception{
++        Set<String> declared=new HashSet<String>();
++        String[] permissions=host.getPackageManager().getPackageInfo(host.getPackageName(),PackageManager.GET_PERMISSIONS).requestedPermissions;
++        if(permissions!=null)declared.addAll(Arrays.asList(permissions));
++        List<String> missing=new ArrayList<String>();if(Build.VERSION.SDK_INT<23)return missing;
++        for(String permission:new String[]{"android.permission.BLUETOOTH_SCAN","android.permission.BLUETOOTH_CONNECT","android.permission.BLUETOOTH_ADVERTISE",
++                "android.permission.ACCESS_FINE_LOCATION","android.permission.ACCESS_COARSE_LOCATION","android.permission.NEARBY_WIFI_DEVICES"}){
++            if(permission.startsWith("android.permission.BLUETOOTH_")&&Build.VERSION.SDK_INT<31)continue;
++            if(permission.equals("android.permission.NEARBY_WIFI_DEVICES")&&Build.VERSION.SDK_INT<33)continue;
++            if(declared.contains(permission)&&host.checkSelfPermission(permission)!=PackageManager.PERMISSION_GRANTED)missing.add(permission);
++        }
++        return missing;
++    }
++    private static void drive(Activity host){
++        if(!resumed||pending||settled||awaitResume||owner.get()!=host||!current(host))return;
++        try{
++            List<String> missing=missing(host);
++            if(missing.isEmpty()){settled=true;deliveryPending=true;postDelivery(host);return;}
++            if(attempts>=2){settled=true;deliveryPending=true;postDelivery(host);return;}
++            attempts++;pending=true;promptOwned=true;NativeRendererSelfKioskApplication.beginSystemPrompt(host);
++            android.util.Log.i("RQStartupPermissions","event=runtime-request attempt="+attempts+" count="+missing.size()+" panelRequested=false");
++            host.requestPermissions(missing.toArray(new String[0]),REQUEST);
++        }catch(RuntimeException unavailable){
++            pending=false;settled=true;deliveryPending=true;finishPrompt(host);postDelivery(host);
++        }catch(Exception unavailable){settled=true;deliveryPending=true;postDelivery(host);}
++    }
++    public static boolean result(Activity host,int code,String[] permissions,int[] grants){
++        requireMain();if(code!=REQUEST||!selected(host))return false;
++        if(owner.get()!=host||!current(host)||!pending)return true;
++        pending=false;finishPrompt(host);
++        resultPermissions=permissions==null?new String[0]:permissions.clone();resultGrants=grants==null?new int[0]:grants.clone();
++        boolean cancelled=resultPermissions.length==0||resultGrants.length==0||resultPermissions.length!=resultGrants.length;
++        if(cancelled&&attempts<2){awaitResume=true;return true;}
++        // A denial is final for this actual owner. Only one cancellation can retry on a later resume.
++        settled=true;deliveryPending=true;postDelivery(host);return true;
++    }
++    public static boolean activityResult(Activity host,int code){
++        requireMain();if(code!=LOCATION_SETTINGS||!selected(host))return false;
++        if(owner.get()==host&&current(host)&&locationPending){finishLocation(host);postDelivery(host);}return true;
++    }
++    private static void finishLocation(Activity host){
++        locationPending=false;locationPaused=false;finishPrompt(host);deliveryPending=true;
++    }
++    private static boolean presentLocationPrerequisite(Activity host){
++        if(locationPending)return true;if(locationAsked)return false;
++        try{
++            String[] declared=host.getPackageManager().getPackageInfo(host.getPackageName(),PackageManager.GET_PERMISSIONS).requestedPermissions;
++            if(declared==null||!Arrays.asList(declared).contains("android.permission.BLUETOOTH_SCAN")||!missing(host).isEmpty()
++                    ||!"disabled".equals(PolarBleRuntimeSupport.locationServicesState(host)))return false;
++            // A normal attended OS surface, never a Settings write or app approval panel.
++            locationAsked=true;locationPending=true;promptOwned=true;NativeRendererSelfKioskApplication.beginSystemPrompt(host);
++            host.startActivityForResult(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS),LOCATION_SETTINGS);
++            return true;
++        }catch(Exception unavailable){locationPending=false;locationAsked=true;finishPrompt(host);return false;}
++    }
++    private static void finishPrompt(Activity host){
++        if(!promptOwned)return;promptOwned=false;NativeRendererSelfKioskApplication.endSystemPrompt(host);
++    }
++    private static void postDelivery(final Activity host){
++        if(!resumed||!settled||!deliveryPending||deliveryPosted||owner.get()!=host)return;
++        final long captured=generation;deliveryPosted=true;
++        main.post(new Runnable(){public void run(){
++            if(captured!=generation||owner.get()!=host)return;deliveryPosted=false;
++            if(!resumed||!settled||!deliveryPending||!current(host))return;
++            if(presentLocationPrerequisite(host))return;
++            deliveryPending=false;
++            BreathCompositionPanelModule.onSelectedStartupPermissionsSettled(host,resultPermissions.clone(),resultGrants.clone());
++        }});
++    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathPhaseAudioAndroidOwnerTest.java
 index 68b7cc019d3a789d044f92817a08375ddccae185..daea3bee1b92a268b32368ffc5ff56529786a740 100644
@@ -15363,10 +16144,10 @@ index 0000000000000000000000000000000000000000..729b6fa9bd1bc40901326b29cd263504
 +    }
 +}
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
-index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..7e88815965c0992d56c7fa847d87b5b7afadab58 100644
+index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..d9157480b6e2321e785ca7cd1f12273674f8b234 100644
 --- a/docs/EXPERIMENT_SESSION_CONTROL.md
 +++ b/docs/EXPERIMENT_SESSION_CONTROL.md
-@@ -145,6 +145,146 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
+@@ -145,6 +145,175 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
  native operator correlation and the existing owner receipt for legacy commands.
  Replay IDs are denied for the application lifetime; there is no automatic replay.
  
@@ -15438,11 +16219,12 @@ index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..7e88815965c0992d56c7fa847d87b5b7
 +`experiment_phone_pairing_enabled` is a strict default-off Boolean. Selection
 +requires the existing experiment gateway and original panel, emits
 +`rusty.quest.experiment.phone_pairing.enabled: true`, and locks the exact current
-+pairing protocol, trusted-phone registry, Android UI bridge and pure UI policy
++pairing protocol, trusted-phone registry, Android UI bridge, pure UI policy and
++selected startup-permission coordinator (five exact sources)
 +source hashes in `phone_pairing_sources`. The protocol/registry definitions also
 +belong to the existing explicit panel source closure because the gateway uses
 +their types. Their new behavior stays inactive when metadata is absent. The two
-+wearer UI definitions compile only in the selected phone-pairing source set.
++wearer UI definitions and startup coordinator compile only in the selected phone-pairing source set.
 +Selection does not enable the separate shell/DUMP provisioning provider.
 +
 +Selected Remote discovery and HTTP identity use v2 installation identity. The
@@ -15483,10 +16265,35 @@ index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..7e88815965c0992d56c7fa847d87b5b7
 +preserved. Pause, destruction and request expiration dismiss the old dialog.
 +Existing first-use Android permission requests and triple-B reopening remain
 +independent; pairing waits while the actual host lacks window focus.
-+Selected read-only Bluetooth discovery independently uses the standard attended
-+CONNECT/ADVERTISE permission and Bluetooth-power dialogs from the resumed launcher,
-+including with the app panel closed. This does not select the Wi-Fi setup GATT
++The selected actual native host coordinates Polar, legacy carrier and discovery
++runtime permissions in one ordinary Android request after resume, including with
++the app panel closed. It requests only missing declared SCAN/CONNECT/ADVERTISE,
++fine/coarse location and Nearby Wi-Fi permissions appropriate to the device API.
++Permission intent is independent of trusted experiment cold-launch admission;
++session/sensor effects keep their existing owners and gates. Completion is posted
++back to the three owners after pending state is cleared. An outstanding request
++survives pause/resume; denial does not loop and an empty cancellation permits only
++one later-resume retry. Other product selections retain their existing routes.
++Bluetooth-power approval follows the settled runtime request. This does not select the Wi-Fi setup GATT
 +characteristic or give public legacy BLE experiment commands new authority.
++
++App permission grants do not establish global Location-services readiness. If a
++selected product declares Polar SCAN, its runtime permissions are granted and
++Location services are actually disabled, startup opens the ordinary Android
++Location-settings surface once for that exact resumed host under the kiosk
++system-prompt fence. Only the wearer can change the setting. Return rechecks the
++existing Polar owner; leaving Location off does not repeat the settings surface.
++No app/pairing panel is opened and no setting is written programmatically.
++Compact Polar setup adds optional `y.l`, separate from `p` and `b`, with values
++`enabled`, `disabled`, `unavailable`, `legacy-unobserved`, `permission-blocked` or
++`unknown`. A disabled scan prerequisite does not invalidate connected streams.
++
++This uses the native Android permission/result flow described in
++[Android Bluetooth permissions](https://developer.android.com/develop/connectivity/bluetooth/bt-permissions)
++and [Meta's native Android Location guidance](https://developers.meta.com/vr/documentation/native/android/move-location/).
++[Android's Activity implementation](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/core/java/android/app/Activity.java)
++cancels a second simultaneous runtime request with empty result arrays; independent
++Polar and discovery requests therefore cannot stand in for a coordinated closure.
 +With phone pairing selected, the legacy public BLE write, prepare/execute and
 +queued main-effect paths reject mutations even with an open-control default or
 +valid legacy code. Read-only nonprivate status/receipts and the internal gateway
@@ -15507,12 +16314,40 @@ index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..7e88815965c0992d56c7fa847d87b5b7
 +(all current changed Java against actual selected shell classes and Android API).
 +Protocol/registry checks include `Test-ExperimentPhonePairing.ps1`,
 +`test_experiment_trusted_phones.py` and the existing gateway host harness.
++Startup checks include `test_experiment_startup_permissions.py` (actual coordinator,
++reflective adapter, completion mapping and NativeActivity lifecycle; compiled
++missing-SCAN/overlap negative controls) and `test_polar_platform_projection.py`.
 +Keep these software/compiler checks separate from real headset visibility,
 +first-use permissions, phone discovery, pairing and calibration acceptance.
 +
  ### Privileged local trusted-LAN enrollment
  
  The debug-only `enroll-trusted-lan` operation additionally requires Boolean
+diff --git a/docs/POLAR_SENSOR_RECOVERY.md b/docs/POLAR_SENSOR_RECOVERY.md
+index b9d29f761586921491d4348ffd68419a6f7247c6..deb246d63523611d7995f8b1c21fb23ce075a249 100644
+--- a/docs/POLAR_SENSOR_RECOVERY.md
++++ b/docs/POLAR_SENSOR_RECOVERY.md
+@@ -1,5 +1,20 @@
+ # Polar connection and stream recovery
+ 
++Selected native phone-control products use one attended startup permission
++coordinator for Polar and discovery. It requests the needed declared runtime
++closure after the real Activity resumes, independently of whether the app panel
++is visible or a trusted session cold-launch epoch was admitted. This permission
++request does not create sensor/session intent. A denied request is not retried in
++a resume loop; one cancelled request may retry on a later resume. Metadata-off
++products retain their existing permission behavior.
++
++Global Location services remain a separate scanning prerequisite. With declared
++Polar SCAN and granted runtime permissions, the selected host may present the
++ordinary Android Location-settings surface once; it never toggles Location.
++Returning rechecks actual state. The compact setup projection's optional `l`
++reports this state separately from app permission `p` and Bluetooth `b`; existing
++connected ACC/ECG streams remain represented independently.
++
+ The optional BLE carrier can project an independent Polar stop capability `z`.
+ Its compact fields are `{r,a,e,s?}`: action revision and ACC/ECG requested,
+ PMD-ACK-active and recent-data bits (1/2/4). When `s` is absent, the existing
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 index 0b6a0c00a6cbf2388d232686be809746ddac7c3b..22746f1f0a55ae671e2b0215551574d211bfeec0 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
@@ -15676,10 +16511,10 @@ index 0000000000000000000000000000000000000000..8db271294d8c62b715fb745686b5350c
 +  "public_private_boundary": "Hotspot credentials are authenticated, encrypted and supplied by the enrolled operator."
 +}
 diff --git a/schemas/rusty.quest.native_app_build.v1.schema.json b/schemas/rusty.quest.native_app_build.v1.schema.json
-index 5bc5902d29b287dde63304507f3443558c57e5d5..4d281480b95361cc3120c813ac880c848ddd8c3b 100644
+index 5bc5902d29b287dde63304507f3443558c57e5d5..9b62ecc1c308a590664774908e33ed26685039d8 100644
 --- a/schemas/rusty.quest.native_app_build.v1.schema.json
 +++ b/schemas/rusty.quest.native_app_build.v1.schema.json
-@@ -43,6 +43,59 @@
+@@ -43,6 +43,60 @@
        "type": "string",
        "minLength": 1
      },
@@ -15715,6 +16550,7 @@ index 5bc5902d29b287dde63304507f3443558c57e5d5..4d281480b95361cc3120c813ac880c84
 +      "default": false
 +    },
 +    "experiment_phone_pairing_enabled": {
++      "description": "Select authenticated phone pairing, wearer UI and coordinated attended startup permissions for the declared native product closure.",
 +      "type": "boolean",
 +      "default": false
 +    },
@@ -15739,7 +16575,7 @@ index 5bc5902d29b287dde63304507f3443558c57e5d5..4d281480b95361cc3120c813ac880c84
      "requested_features": {
        "type": "array",
        "items": {
-@@ -138,6 +191,11 @@
+@@ -138,6 +192,11 @@
            },
            "uniqueItems": true
          },
@@ -15751,7 +16587,7 @@ index 5bc5902d29b287dde63304507f3443558c57e5d5..4d281480b95361cc3120c813ac880c84
          "services": {
            "type": "array",
            "items": {
-@@ -158,6 +216,10 @@
+@@ -158,6 +217,10 @@
          "set"
        ],
        "properties": {
@@ -15763,7 +16599,7 @@ index 5bc5902d29b287dde63304507f3443558c57e5d5..4d281480b95361cc3120c813ac880c84
            "type": "object",
            "additionalProperties": {
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308a50de2583021c82df3fae64f34cca2c0..3a08314fa60e7f5464855050df43bd73595b05fb 100644
+index ccb3e308a50de2583021c82df3fae64f34cca2c0..02efe9d8141c6d126b22555e04141b8ca303f09f 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -882,6 +882,17 @@ if (-not [string]::IsNullOrWhiteSpace($selectedPanelModuleId)) {
@@ -15929,7 +16765,7 @@ index ccb3e308a50de2583021c82df3fae64f34cca2c0..3a08314fa60e7f5464855050df43bd73
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2135,64 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2135,65 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -15963,7 +16799,7 @@ index ccb3e308a50de2583021c82df3fae64f34cca2c0..3a08314fa60e7f5464855050df43bd73
 +}
 +$sourceFiles += $headsetSetupSources
 +# Pairing crypto/registry are inert in the baseline panel closure; only selected
-+# products compile the optional wearer UI. Bind all four exact current sources.
++# products compile the optional wearer UI and shared startup permission owner.
 +$phonePairingSources = @()
 +if ($script:BuildUsesLock) {
 +    $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['phone_pairing_sources']) { $appBuildLockObject.phone_pairing_sources })
@@ -15971,14 +16807,15 @@ index ccb3e308a50de2583021c82df3fae64f34cca2c0..3a08314fa60e7f5464855050df43bd73
 +    if ($null -ne $selection -and $selection.Value -isnot [bool]) { throw 'Phone pairing lock selection must be Boolean.' }
 +    $selected = $null -ne $selection -and $selection.Value -ceq $true
 +    if ($selected) {
-+        if ($records.Count -ne 4 -or @($appBuildLockObject.selected_feature_ids) -cnotcontains 'ui.experiment_session_command_gateway') {
-+            throw 'Phone pairing requires its exact gateway and four-source closure.'
++        if ($records.Count -ne 5 -or @($appBuildLockObject.selected_feature_ids) -cnotcontains 'ui.experiment_session_command_gateway') {
++            throw 'Phone pairing requires its exact gateway and five-source closure.'
 +        }
 +        $expected = @(
 +            'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java',
 +            'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java',
 +            'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java',
-+            'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java'
++            'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java',
++            'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java'
 +        )
 +        if ([string]::Join('|', @($records.path | Sort-Object)) -cne [string]::Join('|', @($expected | Sort-Object))) {
 +            throw 'Phone pairing source set differs from the closed implementation.'
@@ -16041,7 +16878,7 @@ index 13d86dee01d70c3cbd888fb10c002025280b45bb..f2255ea4203c149c873b7bb48292f764
   # Capture both streams privately. Never emit the secret-bearing Binder response.
   $start=[Diagnostics.ProcessStartInfo]::new($binary)
 diff --git a/tools/Resolve-NativeAppBuild.ps1 b/tools/Resolve-NativeAppBuild.ps1
-index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f654da9878b 100644
+index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..bc497e766d1f9a7d7b4615d43540fa4b55a17acd 100644
 --- a/tools/Resolve-NativeAppBuild.ps1
 +++ b/tools/Resolve-NativeAppBuild.ps1
 @@ -10,7 +10,7 @@ param(
@@ -16199,7 +17036,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
  Add-AppRuntimeSet `
      -RuntimeSet $runtimeSet `
      -RuntimeSources $runtimeSources `
-@@ -1500,8 +1564,36 @@ if ($EnableExperimentSessionDebugOperator) {
+@@ -1500,8 +1564,37 @@ if ($EnableExperimentSessionDebugOperator) {
          $debugOperatorSources += [ordered]@{path=$relative;sha256=Get-FileSha256 -Path (Join-Path $repoRootText $relative)}
      }
  }
@@ -16228,7 +17065,8 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
 +        'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java',
 +        'apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java',
 +        'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java',
-+        'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java'
++        'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingUiPolicy.java',
++        'apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentStartupPermissions.java'
 +    )
 +    foreach ($relative in $phonePairingPaths) {
 +        $phonePairingSources += [ordered]@{path=$relative;sha256=Get-FileSha256 -Path (Join-Path $repoRootText $relative)}
@@ -16237,7 +17075,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
  
  $environmentDepthMode = if ($runtimeSet.Contains($EnvironmentDepthModeProperty)) { [string]$runtimeSet[$EnvironmentDepthModeProperty] } else { "" }
  $environmentDepthSource = if ($runtimeSet.Contains($EnvironmentDepthSourceProperty)) { [string]$runtimeSet[$EnvironmentDepthSourceProperty] } else { "" }
-@@ -1706,6 +1798,8 @@ $resolutionInputs = [ordered]@{
+@@ -1706,6 +1799,8 @@ $resolutionInputs = [ordered]@{
      feature_descriptors = $featureDescriptorRecords
      panel_source_closure = $panelSourceClosure
      debug_experiment_operator_sources = $debugOperatorSources
@@ -16246,7 +17084,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
      private_particle_payload_linkage = $privateParticlePayloadLinkageReceipt
      private_asset_closure = $privateAssetClosure
      build_env = @($envByName.Keys | Sort-Object | ForEach-Object { $envByName[$_] })
-@@ -1937,6 +2031,8 @@ $featureLock = [ordered]@{
+@@ -1937,6 +2032,8 @@ $featureLock = [ordered]@{
      dependency_reasons = $dependencyReasons
      panel_source_closure = $panelSourceClosure
      debug_experiment_operator_sources = $debugOperatorSources
@@ -16255,7 +17093,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
      breath_composition_activation = if ($null -ne $breathCompositionActivationBinding) {
          [ordered]@{
              schema = "rusty.quest.breath_composition.activation_binding.v1"
-@@ -1960,6 +2056,13 @@ $featureLock = [ordered]@{
+@@ -1960,6 +2057,13 @@ $featureLock = [ordered]@{
      } else { $null }
      exclusive_groups = $exclusiveGroups
      android_manifest = [ordered]@{
@@ -16269,7 +17107,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
          permissions = $permissions
          uses_features = $usesFeatures
          activities = $activities
-@@ -2001,6 +2104,7 @@ $featureLock = [ordered]@{
+@@ -2001,6 +2105,7 @@ $featureLock = [ordered]@{
      generated_outputs = $generatedOutputs
  }
  if ($EnableExperimentSessionDebugOperator) { $featureLock.android_manifest['providers'] = @('ExperimentSessionDebugControlProvider') }
@@ -16277,7 +17115,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
  Write-JsonArtifact -Value $featureLock -Path $featureLockPath
  
  $runtimeProfile = [ordered]@{
-@@ -2029,7 +2133,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
+@@ -2029,7 +2134,34 @@ $applicationLabel = if ($null -ne $app.PSObject.Properties["application_label"])
  if ([string]::IsNullOrWhiteSpace($applicationLabel) -or $applicationLabel.Length -gt 64 -or $applicationLabel -match '[\r\n\t]') {
      throw "App build spec application_label must be 1..64 visible characters without control whitespace"
  }
@@ -16313,7 +17151,7 @@ index 0bdd4881c6a5e8d61b018ddbe2b9af00c7e2e30c..740b919ad285f49c98b0c4ef4cbd3f65
  New-Item -ItemType Directory -Path (Split-Path -Parent $androidManifestPath) -Force | Out-Null
  Set-Content -LiteralPath $androidManifestPath -Value $manifestText -Encoding UTF8
  
-@@ -2050,6 +2181,13 @@ $buildManifest = [ordered]@{
+@@ -2050,6 +2182,13 @@ $buildManifest = [ordered]@{
      resolution_fingerprint = $resolutionFingerprint
      package_name = [string]$app.package_name
      application_label = $applicationLabel
@@ -16385,10 +17223,10 @@ index 0000000000000000000000000000000000000000..3e7de2e854682de8e9ef2a2a7025c19a
 +@{passed=$true;web_java_interop_ran=[bool]$WebTest;scope='Real JCE pairing owner host tests and optional actual WebCrypto/Java request integration; no Android, network, APK or headset effects'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
 diff --git a/tools/checks/Test-ExperimentPhonePairingAndroid.ps1 b/tools/checks/Test-ExperimentPhonePairingAndroid.ps1
 new file mode 100644
-index 0000000000000000000000000000000000000000..b8a34a35b7aa77e59a367b60c6c0998220e678b6
+index 0000000000000000000000000000000000000000..e60053ea45bdc7b88b1c69c6c7af34d0ed60740c
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingAndroid.ps1
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,23 @@
 +param(
 + [Parameter(Mandatory)][string]$PriorClassesDirectory,
 + [Parameter(Mandatory)][string]$AndroidJar,
@@ -16403,7 +17241,9 @@ index 0000000000000000000000000000000000000000..b8a34a35b7aa77e59a367b60c6c09982
 +$panel=Join-Path $repo "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/$package"
 +$ui=Join-Path $repo "apps/native-renderer-android/src/phone-pairing/java/$package"
 +$sources=@('BreathCompositionPanelModule','ExperimentPhonePairing','ExperimentTrustedPhones','ExperimentSessionCommandGateway','ExperimentSessionGatewayProtocol','ExperimentSessionDiscoveryServer','ExperimentSessionBleServer')|ForEach-Object{Join-Path $panel "$_.java"}
-+$sources+=@((Join-Path $ui 'ExperimentPhonePairingPanel.java'),(Join-Path $ui 'ExperimentPhonePairingUiPolicy.java'))
++$sources+=@((Join-Path $ui 'ExperimentPhonePairingPanel.java'),(Join-Path $ui 'ExperimentPhonePairingUiPolicy.java'),(Join-Path $ui 'ExperimentStartupPermissions.java'))
++$polar=Join-Path $repo "apps/native-renderer-android/panel-modules/polar/src/main/java/$package"
++$sources+=@((Join-Path $polar 'PolarBleRuntimeSupport.java'),(Join-Path $polar 'PolarSensorPanel.java'),(Join-Path $polar 'PolarSensorRuntime.java'),(Join-Path $panel 'NativeProductPanelActivity.java'))
 +$observed=@($sources|ForEach-Object{@{path=$_;sha256=(Get-FileHash -LiteralPath $_).Hash.ToLowerInvariant()}})
 +& javac -encoding UTF-8 -source 1.8 -target 1.8 -bootclasspath $android -cp $classes -d $OutputDirectory @sources
 +if($LASTEXITCODE){throw 'Current phone pairing Java Android API compilation failed'}
@@ -16412,7 +17252,7 @@ index 0000000000000000000000000000000000000000..b8a34a35b7aa77e59a367b60c6c09982
 +'PASS current module, pairing, registry, gateway/discovery and selected UI against actual selected Android shell classes and Android API'
 diff --git a/tools/checks/Test-ExperimentPhonePairingSelection.ps1 b/tools/checks/Test-ExperimentPhonePairingSelection.ps1
 new file mode 100644
-index 0000000000000000000000000000000000000000..dca5c08e49fa9fd924b292fead7258571e859729
+index 0000000000000000000000000000000000000000..c7e6e005b1b8c043e9ffa50dd284d95e9d8c7527
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingSelection.ps1
 @@ -0,0 +1,67 @@
@@ -16446,7 +17286,7 @@ index 0000000000000000000000000000000000000000..dca5c08e49fa9fd924b292fead725857
 +$spec|Add-Member experiment_panel_initially_closed $true
 +
 +$on=Resolve-Case on $spec
-+if(@($on.phone_pairing_sources).Count-ne4-or@($on.debug_experiment_operator_sources).Count-ne0-or$on.android_manifest.debuggable-cne$false){throw 'Selected phone pairing closure missing or debug widened'}
++if(@($on.phone_pairing_sources).Count-ne5-or@($on.debug_experiment_operator_sources).Count-ne0-or$on.android_manifest.debuggable-cne$false){throw 'Selected phone pairing closure missing or debug widened'}
 +$manifest=[IO.File]::ReadAllText($on.generated_outputs.android_manifest)
 +if($manifest -notmatch 'rusty.quest.experiment.phone_pairing.enabled" android:value="true"' -or $manifest.Contains('debug-experiment-control') -or $manifest.Contains('.headset-setup')){throw 'Selected pairing metadata or separate release authority boundary missing'}
 +if($off.android_manifest.experiment_phone_pairing_enabled-cne$false-or@($off.phone_pairing_sources).Count-ne0){throw 'Phone pairing default changed'}
@@ -16480,15 +17320,15 @@ index 0000000000000000000000000000000000000000..dca5c08e49fa9fd924b292fead725857
 + }
 + $denied=$false;try{. $consumer}catch{$denied=$true}
 + if($denied-ne($case-cnotin@('on','off'))){throw "Unexpected pairing source consumer result $case"}
-+ if($case-ceq'on'-and$phonePairingSources.Count-ne4){throw 'Selected pairing source count differs'}
++ if($case-ceq'on'-and$phonePairingSources.Count-ne5){throw 'Selected pairing source count differs'}
 +}
 +'PASS phone pairing actual resolver/manifest/source closure, default off, strict Boolean and missing/changed source/selection/gateway denials'
 diff --git a/tools/checks/Test-ExperimentPhonePairingUi.ps1 b/tools/checks/Test-ExperimentPhonePairingUi.ps1
 new file mode 100644
-index 0000000000000000000000000000000000000000..d6c55439ad11bae8606a11aaf82166b6c3940113
+index 0000000000000000000000000000000000000000..6e663acf1b4ddaeef9a7f22b97999e101fa33cee
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentPhonePairingUi.ps1
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,26 @@
 +param([string]$RepoRoot=(Resolve-Path (Join-Path $PSScriptRoot '../..')).Path)
 +$ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 +$package='io/github/mesmerprism/rustyquest/native_renderer'
@@ -16509,6 +17349,12 @@ index 0000000000000000000000000000000000000000..d6c55439ad11bae8606a11aaf82166b6
 + if(-not$module.Contains($required)){throw "Pairing UI lost existing permission/shortcut or lifecycle hook: $required"}
 +}
 +'PASS current permission requests, triple-B and selected UI lifecycle hook invariants'
++foreach($arguments in @(@(),@('--negative','omit-scan'),@('--negative','overlap'))){
++ & python (Join-Path $PSScriptRoot 'test_experiment_startup_permissions.py') @arguments
++ if($LASTEXITCODE){throw 'Selected startup permission lifecycle controls failed'}
++}
++& python (Join-Path $PSScriptRoot 'test_polar_platform_projection.py')
++if($LASTEXITCODE){throw 'Polar Location-services projection controls failed'}
 diff --git a/tools/checks/Test-ExperimentSessionApkClosure.ps1 b/tools/checks/Test-ExperimentSessionApkClosure.ps1
 new file mode 100644
 index 0000000000000000000000000000000000000000..65858368d15c1b30eb391dbcca3d74dc224378c9
@@ -16593,10 +17439,10 @@ index bafddd3d4bd7e36b57a7e6bea5f06aac4b19b1a2..894c091d03053bfed8f9dc52eeaf8310
  @{passed=$true;scope='Production transport authentication host tests only; Android owner/native/LAN effects require separate evidence'}|ConvertTo-Json|Set-Content (Join-Path $OutputRoot 'RESULT.json')
 diff --git a/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1 b/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1
 new file mode 100644
-index 0000000000000000000000000000000000000000..245d66e342da0a9948f19d80e030946244405287
+index 0000000000000000000000000000000000000000..2db2745ce002eb1620d3b9912401078d082368bf
 --- /dev/null
 +++ b/tools/checks/Test-ExperimentSessionHeadsetSetupAndroid.ps1
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,25 @@
 +param(
 + [Parameter(Mandatory)][string]$PriorClassesDirectory,
 + [Parameter(Mandatory)][string]$AndroidJar,
@@ -16614,6 +17460,7 @@ index 0000000000000000000000000000000000000000..245d66e342da0a9948f19d80e0309462
 +foreach($name in @('ExperimentPhonePairing','ExperimentTrustedPhones','ExperimentSessionGatewayProtocol','ExperimentSessionDiscoveryServer')){
 + $source=Join-Path $panel "$name.java";if(Test-Path -LiteralPath $source){$sources+=$source}
 +}
++$sources+=Join-Path $repo 'apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java'
 +# No generated stubs or APK invocation: join current changed Java against the
 +# prior real selected shell classes and the supplied real Android bootclasspath.
 +& javac -encoding UTF-8 -source 1.8 -target 1.8 -bootclasspath $android -cp $classes -d $OutputDirectory @sources
@@ -16894,10 +17741,18 @@ index 0000000000000000000000000000000000000000..8a380b1b6c65ac53350082847b8178c5
 +}
 +'''
 diff --git a/tools/checks/test_experiment_ble_generation.py b/tools/checks/test_experiment_ble_generation.py
-index 4987f929862e88bf164cafa1e50330223e31c1b7..955cbee01c5c7053e0909070b171592c72f90c34 100644
+index 4987f929862e88bf164cafa1e50330223e31c1b7..d2eb446f25c4615b2a83edbdf6ef081630f4ec1c 100644
 --- a/tools/checks/test_experiment_ble_generation.py
 +++ b/tools/checks/test_experiment_ble_generation.py
-@@ -20,7 +20,8 @@ STUBS = {
+@@ -5,6 +5,7 @@ import subprocess
+ import tempfile
+ 
+ STUBS = {
++    "io/github/mesmerprism/rustyquest/native_renderer/PolarBleRuntimeSupport.java": 'package io.github.mesmerprism.rustyquest.native_renderer;class PolarBleRuntimeSupport {static boolean coordinated,busy;static boolean requestSelectedStartupPermissions(android.app.Activity a){return coordinated;}static boolean selectedStartupPermissionsBusy(android.app.Activity a){return busy;}}',
+     "android/Manifest.java": 'package android; public class Manifest {public static class permission {public static final String BLUETOOTH_CONNECT="connect",BLUETOOTH_ADVERTISE="advertise";}}',
+     "android/content/SharedPreferences.java": '''package android.content; import java.util.*; public class SharedPreferences {
+       public final Map<String,Boolean> values=new HashMap<>(); public int writes;
+@@ -20,7 +21,8 @@ STUBS = {
      "android/app/Activity.java": '''package android.app; public class Activity extends android.content.Context {
        public int requests; public void requestPermissions(String[] p,int n){requests++;}}''',
      "android/content/pm/PackageInfo.java": 'package android.content.pm; public class PackageInfo {public String[] requestedPermissions={android.Manifest.permission.BLUETOOTH_ADVERTISE};}',
@@ -16907,7 +17762,7 @@ index 4987f929862e88bf164cafa1e50330223e31c1b7..955cbee01c5c7053e0909070b171592c
      "android/os/Build.java": 'package android.os; public class Build {public static class VERSION {public static int SDK_INT=31;} public static class VERSION_CODES {public static final int S=31;}}',
      "android/os/Looper.java": 'package android.os; public class Looper {public static Looper getMainLooper(){return new Looper();}}',
      "android/os/Handler.java": '''package android.os; import java.util.*; public class Handler {
-@@ -45,6 +46,7 @@ STUBS = {
+@@ -45,6 +47,7 @@ STUBS = {
        public BluetoothGattService(java.util.UUID u,int t){uuid=u;} public java.util.UUID getUuid(){return uuid;}
        public boolean addCharacteristic(BluetoothGattCharacteristic c){return true;}}''',
      "android/bluetooth/BluetoothGattServerCallback.java": '''package android.bluetooth; public class BluetoothGattServerCallback {
@@ -16917,10 +17772,10 @@ index 4987f929862e88bf164cafa1e50330223e31c1b7..955cbee01c5c7053e0909070b171592c
        public void onCharacteristicWriteRequest(BluetoothDevice d,int id,BluetoothGattCharacteristic c,boolean p,boolean r,int o,byte[] v){}}''',
 diff --git a/tools/checks/test_experiment_ble_phone_admission.py b/tools/checks/test_experiment_ble_phone_admission.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..c2f07daa8a6effab4f59306d38fa52681d57e3b5
+index 0000000000000000000000000000000000000000..ae47c5a7145d6e4f0569baef0e0ad5728971a082
 --- /dev/null
 +++ b/tools/checks/test_experiment_ble_phone_admission.py
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,82 @@
 +"""Public legacy BLE cannot bypass selected trusted-phone authentication/control leases."""
 +import test_experiment_gateway_ble_journal as owner
 +
@@ -16951,6 +17806,10 @@ index 0000000000000000000000000000000000000000..c2f07daa8a6effab4f59306d38fa5268
 +  byte[] bytes=mac.doFinal(input.getBytes("UTF-8"));StringBuilder out=new StringBuilder();for(int i=0;i<16;i++)out.append(String.format(java.util.Locale.ROOT,"%02x",bytes[i]&255));return out.toString();
 + }
 + public static void main(String[] args)throws Exception {
++  ExperimentSessionBleServer startup=fresh(Boolean.TRUE);context.permission=-1;PolarBleRuntimeSupport.coordinated=true;PolarBleRuntimeSupport.busy=true;
++  startup.startFromPanel(context);check(context.requests==0,"selected carrier cannot overlap coordinated startup request");
++  PolarBleRuntimeSupport.busy=false;startup.startFromPanel(context);check(context.requests==0,"selected carrier cannot reask after a coordinated denial");
++  PolarBleRuntimeSupport.coordinated=false;
 +  ExperimentSessionBleServer owner=fresh(Boolean.TRUE);BluetoothGattServer selected=server();BluetoothDevice peer=new BluetoothDevice();selected.callback.onConnectionStateChange(peer,0,2);
 +  check(owner.openControl(),"fixture retains product open_control_default true");
 +  int before=effects;JSONObject body=ping("1111111111111111","2222222222222222");write(selected,peer,body,false,true,0);Handler.drain();
@@ -17054,7 +17913,7 @@ index f406a33a76fdb91e7df6fc7f80e5a38a58c4eb1d..7d114f221124c5436c7b17f5ec1a1af8
  
  
 diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
-index 25bc41049f87ea662090871cdb90a7247a723937..b6e69411bc42cffae30af6e6d16aeeca0d295f86 100644
+index 25bc41049f87ea662090871cdb90a7247a723937..6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b 100644
 --- a/tools/checks/test_experiment_discovery.py
 +++ b/tools/checks/test_experiment_discovery.py
 @@ -9,6 +9,36 @@ from test_experiment_gateway_dedupe import method
@@ -17107,7 +17966,7 @@ index 25bc41049f87ea662090871cdb90a7247a723937..b6e69411bc42cffae30af6e6d16aeeca
   public boolean isEnabled(){return enabled;}public android.bluetooth.le.BluetoothLeAdvertiser getBluetoothLeAdvertiser(){return advertiser;}}
  '''
  STUBS['android/bluetooth/BluetoothGattServerCallback.java'] = STUBS['android/bluetooth/BluetoothGattServerCallback.java'].replace('public void onServiceAdded', 'public void onMtuChanged(BluetoothDevice d,int mtu){} public void onServiceAdded')
-@@ -39,7 +73,110 @@ public class DiscoveryHostTest {
+@@ -39,7 +73,120 @@ public class DiscoveryHostTest {
   static byte[] read(BluetoothGattServer s,BluetoothDevice peer,String uuid,int offset){s.callback.onCharacteristicReadRequest(peer,1,offset,characteristic(uuid));return s.lastBytes;}
   static String all(BluetoothGattServer s,BluetoothDevice peer,String uuid){java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();for(int i=0;i<1024;i+=22){byte[] part=read(s,peer,uuid,i);check(s.lastStatus==0,"valid offset");out.write(part,0,part.length);if(part.length<22)break;}return new String(out.toByteArray(),StandardCharsets.UTF_8);}
   static BluetoothGattServer start(ExperimentSessionDiscoveryServer d,android.app.Activity c,long revision){d.reconcile(revision,true);BluetoothGattServer s=c.manager.servers.get(c.manager.servers.size()-1);s.callback.onServiceAdded(0,s.service);c.manager.adapter.advertiser.callbacks.get(c.manager.adapter.advertiser.callbacks.size()-1).onStartSuccess(new AdvertiseSettings());return s;}
@@ -17169,6 +18028,15 @@ index 25bc41049f87ea662090871cdb90a7247a723937..b6e69411bc42cffae30af6e6d16aeeca
 +  ExperimentSessionDiscoveryServer old=new ExperimentSessionDiscoveryServer(c,()->metadata(),false);old.reconcile(101,true);old.launcherResumed(c);
 +  check(c.bluetoothPrompts==2,"legacy false constructor remains off without a power dialog");old.close();
 + }
++ static void checkCoordinatedStartup()throws Exception {
++  android.app.Activity c=new android.app.Activity();c.permission=-1;c.manager.adapter.enabled=false;
++  ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata(),false,true);
++  PolarBleRuntimeSupport.coordinated=true;PolarBleRuntimeSupport.busy=true;
++  d.launcherResumed(c);check(c.requests==0&&c.bluetoothPrompts==0,"discovery cannot overlap the selected startup runtime prompt");
++  PolarBleRuntimeSupport.busy=false;d.requestPermissions(c);check(c.requests==0&&c.bluetoothPrompts==0,"coordinated denial cannot trigger a second discovery runtime request");
++  c.permission=0;d.requestPermissions(c);check(c.requests==0&&c.bluetoothPrompts==1,"standard Bluetooth power approval follows settled runtime permissions");
++  d.endSystemPrompt(c);d.close();PolarBleRuntimeSupport.coordinated=false;
++ }
 + static void checkWifiSetup() throws Exception {
 +  android.app.Activity c = new android.app.Activity();
 +  List<byte[]> accepted = new ArrayList<>();
@@ -17213,6 +18081,7 @@ index 25bc41049f87ea662090871cdb90a7247a723937..b6e69411bc42cffae30af6e6d16aeeca
   public static void main(String[] args)throws Exception {
 +  checkBluetoothStartup();
 +  checkReadOnlyBluetoothStartup();
++  checkCoordinatedStartup();
 +  checkV2Identity();
 +  checkWifiSetup();
    android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
@@ -17977,6 +18846,134 @@ index d1d148eb645b28e74bc02adb25786400283cd031..a0cd93d2f301ed37c2e26ab6613b8548
          if (root/'ExperimentSessionHeadsetIdentity.java').exists():names.append('ExperimentSessionHeadsetIdentity')
          if (root/'ExperimentSessionGuestRegistry.java').exists():names.append('ExperimentSessionGuestRegistry')
          sources = [root/(n+'.java') for n in names] + [a.repo/'apps/native-renderer-android/src/main/java'/PACKAGE/'NativeRendererWriterAcknowledgedExitPolicy.java']
+diff --git a/tools/checks/test_experiment_startup_permissions.py b/tools/checks/test_experiment_startup_permissions.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..b2894e3550215dd1d99bcb9ce2b5bee0782917bc
+--- /dev/null
++++ b/tools/checks/test_experiment_startup_permissions.py
+@@ -0,0 +1,122 @@
++"""Actual selected coordinator + NativeActivity lifecycle with inert Android permission dialogs."""
++import argparse, os, subprocess, tempfile
++from pathlib import Path
++from test_experiment_gateway_dedupe import method
++PACKAGE='io/github/mesmerprism/rustyquest/native_renderer'
++STUBS={
++'android/os/Looper.java':'''package android.os;public class Looper {static final Looper MAIN=new Looper();public static Looper getMainLooper(){return MAIN;}public static Looper myLooper(){return Thread.currentThread().getName().equals("main")?MAIN:null;}}''',
++'android/os/Handler.java':'''package android.os;public class Handler {public static final java.util.ArrayDeque<Runnable> queue=new java.util.ArrayDeque<>();public Handler(Looper l){}public boolean post(Runnable r){queue.add(r);return true;}public static void drain(){int n=0;while(!queue.isEmpty()){if(++n>50)throw new AssertionError("unbounded retry");queue.remove().run();}}}''',
++'android/os/Build.java':'package android.os;public class Build {public static class VERSION {public static int SDK_INT=34;}}',
++'android/os/Bundle.java':'package android.os;public class Bundle extends java.util.HashMap<String,Object>{}',
++'android/util/Log.java':'package android.util;public class Log {public static int i(String t,String m){return 0;}public static int w(String t,String m){return 0;}}',
++'android/content/pm/ApplicationInfo.java':'package android.content.pm;public class ApplicationInfo {public android.os.Bundle metaData=new android.os.Bundle();}',
++'android/content/pm/PackageInfo.java':'package android.content.pm;public class PackageInfo {public String[] requestedPermissions;}',
++'android/content/pm/PackageManager.java':'''package android.content.pm;public class PackageManager {public static final int GET_META_DATA=128,GET_PERMISSIONS=4096,PERMISSION_GRANTED=0;public static Object selected=Boolean.TRUE;public static String[] declared={"android.permission.BLUETOOTH_SCAN","android.permission.BLUETOOTH_CONNECT","android.permission.BLUETOOTH_ADVERTISE","android.permission.ACCESS_FINE_LOCATION","android.permission.ACCESS_COARSE_LOCATION","android.permission.NEARBY_WIFI_DEVICES"};public ApplicationInfo getApplicationInfo(String p,int flags){ApplicationInfo a=new ApplicationInfo();a.metaData.put("rusty.quest.experiment.phone_pairing.enabled",selected);return a;}public PackageInfo getPackageInfo(String p,int flags){PackageInfo i=new PackageInfo();i.requestedPermissions=declared;return i;}}''',
++'android/content/Context.java':'''package android.content;public class Context {public String location="enabled";public java.util.Set<String> granted=new java.util.HashSet<>();public int checkSelfPermission(String p){return granted.contains(p)?0:-1;}public String getPackageName(){return "test.app";}public android.content.pm.PackageManager getPackageManager(){return new android.content.pm.PackageManager();}public Context getApplicationContext(){return this;}}''',
++'android/content/Intent.java':'package android.content;public class Intent {public final String action;public Intent(String a){action=a;}}',
++'android/provider/Settings.java':'package android.provider;public class Settings {public static final String ACTION_LOCATION_SOURCE_SETTINGS="android.settings.LOCATION_SOURCE_SETTINGS";}',
++'android/view/KeyEvent.java':'package android.view;public class KeyEvent {}',
++'android/view/MotionEvent.java':'package android.view;public class MotionEvent {}',
++'android/app/Activity.java':'''package android.app;public class Activity extends android.content.Context {public boolean destroyed,finishing,inRequest,cancelImmediately,throwRequest,frameworkPending;public int requests,overlaps,settingsRequests;public boolean settingsUnavailable;public void startActivityForResult(android.content.Intent i,int code){if(settingsUnavailable)throw new IllegalStateException();if(code!=9411||!android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS.equals(i.action))throw new AssertionError("unexpected settings route");settingsRequests++;}public String[] requested;protected void onCreate(android.os.Bundle b){}protected void onNewIntent(android.content.Intent i){}protected void onSaveInstanceState(android.os.Bundle b){}protected void onResume(){}protected void onPause(){}protected void onDestroy(){destroyed=true;}protected void onActivityResult(int r,int result,android.content.Intent i){}public boolean dispatchKeyEvent(android.view.KeyEvent e){return false;}public boolean dispatchGenericMotionEvent(android.view.MotionEvent e){return false;}public boolean isFinishing(){return finishing;}public boolean isDestroyed(){return destroyed;}public void onRequestPermissionsResult(int r,String[] p,int[] g){}public void requestPermissions(String[] p,int r){inRequest=true;try{if(frameworkPending){overlaps++;onRequestPermissionsResult(r,new String[0],new int[0]);return;}requests++;requested=p;if(throwRequest)throw new IllegalStateException("platform unavailable");frameworkPending=true;if(cancelImmediately){frameworkPending=false;onRequestPermissionsResult(r,new String[0],new int[0]);}}finally{inRequest=false;}}public void result(boolean grant){frameworkPending=false;if(grant)granted.addAll(java.util.Arrays.asList(requested));int[] g=new int[requested.length];java.util.Arrays.fill(g,grant?0:-1);onRequestPermissionsResult(9410,requested,g);}}''',
++'android/app/NativeActivity.java':'package android.app;public class NativeActivity extends Activity {}',
++}
++HARNESS=r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import android.app.Activity;import android.os.*;import java.util.*;
++final class NativeRendererActivityComponents {static boolean isNative(Activity a){return a instanceof NativeProductPanelActivity;}}
++final class NativeRendererSelfKioskApplication {static int begins,ends;static void beginSystemPrompt(Activity a){begins++;}static void endSystemPrompt(Activity a){ends++;}}
++final class ControlPanelActivity {static void originalPanelHostCreated(Activity a){}}
++final class NativeMeshUiProducer {static int visibility;static void retireActivityProducer(Activity a){}}
++final class PolarSensorRuntime {static int calls;static PolarSensorRuntime forApplication(android.content.Context c){return new PolarSensorRuntime();}void onRequestPermissionsResult(Activity a,int code,String[] p,int[] g){if(code!=9103||a.inRequest)throw new AssertionError("Polar callback code/reentry");calls++;}}
++final class ExperimentSessionBleServer {static final ExperimentSessionBleServer INSTANCE=new ExperimentSessionBleServer();static int calls;void onPermissionResult(Activity a,int code){if(code!=9401||a.inRequest)throw new AssertionError("carrier callback code/reentry");calls++;}}
++final class ExperimentSessionCommandGateway {static int calls;static ExperimentSessionCommandGateway existing(){return new ExperimentSessionCommandGateway();}void discoveryPermissionResult(int code,Activity a){if(code!=9403||a.inRequest)throw new AssertionError("discovery callback code/reentry");calls++;}}
++final class BreathCompositionPanelModule {
++ static BreathCompositionPanelModule current;final Activity actor;boolean live=true,phonePairingHostResumed;static int notifications;static boolean gateAllows;
++ BreathCompositionPanelModule(Activity a){actor=a;}boolean hostCurrent(){return live&&!actor.isDestroyed();}
++ static BreathCompositionPanelModule controllerFor(Activity a){return current!=null&&current.actor==a&&current.hostCurrent()?current:null;}
++ static BreathCompositionPanelModule createFor(Activity a,boolean nativeView,Bundle b){current=new BreathCompositionPanelModule(a);if(gateAllows)PolarBleRuntimeSupport.requestSelectedStartupPermissions(a);return current;}
++ void onResume(){phonePairingHostResumed=true;PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(actor,"resumed");PolarBleRuntimeSupport.requestSelectedStartupPermissions(actor);PolarBleRuntimeSupport.requestSelectedStartupPermissions(actor);}
++ void onPause(){phonePairingHostResumed=false;PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(actor,"paused");}void onDestroy(){PolarBleRuntimeSupport.selectedStartupPermissionLifecycle(actor,"retired");live=false;}
++ void onNewIntent(android.content.Intent i){}void onSaveInstanceState(Bundle b){}void onActivityResult(int r,int v,android.content.Intent i){PolarBleRuntimeSupport.selectedStartupActivityResult(actor,r);}
++ boolean dispatchKeyEvent(android.view.KeyEvent e){return false;}boolean dispatchGenericMotionEvent(android.view.MotionEvent e){return false;}
++ void onRequestPermissionsResult(int r,String[] p,int[] g){PolarBleRuntimeSupport.selectedStartupPermissionResult(actor,r,p,g);}
++ static ExperimentSessionBleServer remoteServer(){return ExperimentSessionBleServer.INSTANCE;}
++ __SETTLED__
++}
++public final class StartupPermissionsHarness {
++ static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
++ static NativeProductPanelActivity fresh(boolean gate){BreathCompositionPanelModule.gateAllows=gate;NativeProductPanelActivity a=new NativeProductPanelActivity();a.onCreate(null);return a;}
++ static void retire(NativeProductPanelActivity a){a.onDestroy();Handler.drain();}
++ public static void main(String[] args)throws Exception {
++  android.content.pm.PackageManager.selected=Boolean.FALSE;NativeProductPanelActivity off=fresh(true);off.onResume();check(off.requests==0,"metadata-off product acquired new requests");retire(off);
++  android.content.pm.PackageManager.selected="true";NativeProductPanelActivity string=fresh(true);string.onResume();check(string.requests==0,"string metadata enabled startup");retire(string);
++  android.content.pm.PackageManager.selected=Boolean.TRUE;int notifications=BreathCompositionPanelModule.notifications,begins=NativeRendererSelfKioskApplication.begins,ends=NativeRendererSelfKioskApplication.ends;
++  NativeProductPanelActivity a=fresh(false);check(a.requests==0,"onCreate requested before actual resume");a.onResume();
++  Set<String> expected=new HashSet<>(Arrays.asList(android.content.pm.PackageManager.declared));
++  check(a.requests==1&&new HashSet<>(Arrays.asList(a.requested)).equals(expected),"fresh load without session cold gate did not request entire declared runtime closure once");
++  ExperimentStartupPermissions.request(a);a.onPause();a.onResume();check(a.requests==1&&a.overlaps==0,"competing owners or resume overlapped a pending Android request");
++  check(NativeRendererSelfKioskApplication.begins==begins+1&&NativeRendererSelfKioskApplication.ends==ends,"pending prompt lost kiosk owner on resume");
++  a.result(true);check(BreathCompositionPanelModule.notifications==notifications,"permission result reentered host inline");Handler.drain();
++  check(BreathCompositionPanelModule.notifications==notifications+1&&NativeRendererSelfKioskApplication.ends==ends+1,"grant readback/completion missing");
++  check(PolarSensorRuntime.calls==BreathCompositionPanelModule.notifications&&ExperimentSessionBleServer.calls==PolarSensorRuntime.calls&&ExperimentSessionCommandGateway.calls==PolarSensorRuntime.calls,"actual completion adapter did not notify all three existing owners");
++  a.onRequestPermissionsResult(9410,a.requested,new int[a.requested.length]);a.onResume();Handler.drain();check(a.requests==1&&BreathCompositionPanelModule.notifications==notifications+1,"callback replay or resumed grant redispatched");
++  check(NativeMeshUiProducer.visibility==0,"permission flow opened an app/pairing panel");retire(a);
++  NativeProductPanelActivity denied=fresh(true);check(denied.requests==0,"cold-root request bypassed actual-resume queue");denied.onResume();denied.result(false);Handler.drain();for(int i=0;i<5;i++){denied.onPause();denied.onResume();Handler.drain();}
++  check(denied.requests==1,"denial caused automatic prompt loop");retire(denied);
++  NativeProductPanelActivity cancelled=fresh(false);cancelled.cancelImmediately=true;cancelled.onResume();ExperimentStartupPermissions.request(cancelled);Handler.drain();check(cancelled.requests==1,"empty cancellation retried synchronously");
++  cancelled.onPause();cancelled.onResume();Handler.drain();for(int i=0;i<5;i++){cancelled.onPause();cancelled.onResume();Handler.drain();}
++  check(cancelled.requests==2&&cancelled.overlaps==0,"cancelled resumed retries not bounded to one");retire(cancelled);
++  NativeProductPanelActivity partial=fresh(false);partial.granted.add("android.permission.BLUETOOTH_CONNECT");partial.granted.add("android.permission.BLUETOOTH_ADVERTISE");partial.granted.add("android.permission.NEARBY_WIFI_DEVICES");partial.onResume();
++  check(new HashSet<>(Arrays.asList(partial.requested)).equals(new HashSet<>(Arrays.asList("android.permission.BLUETOOTH_SCAN","android.permission.ACCESS_FINE_LOCATION","android.permission.ACCESS_COARSE_LOCATION"))),"observed discovery-only grant failed to request remaining SCAN/location");retire(partial);
++  NativeProductPanelActivity old=fresh(false);old.onResume();int before=BreathCompositionPanelModule.notifications;old.onDestroy();NativeProductPanelActivity next=fresh(false);next.onResume();old.result(true);Handler.drain();check(BreathCompositionPanelModule.notifications==before,"retired owner delivered into replacement");next.result(true);Handler.drain();check(BreathCompositionPanelModule.notifications==before+1,"replacement owner did not receive own result");
++  final boolean[] threadDenied={false};Thread thread=new Thread(()->{try{ExperimentStartupPermissions.request(next);}catch(IllegalStateException expectedThread){threadDenied[0]=true;}});thread.start();thread.join();check(threadDenied[0],"non-main caller admitted");retire(next);
++  NativeProductPanelActivity location=fresh(false);location.location="disabled";before=BreathCompositionPanelModule.notifications;location.onResume();location.result(true);Handler.drain();
++  check(location.settingsRequests==1&&location.location.equals("disabled")&&BreathCompositionPanelModule.notifications==before,"Location OFF not presented as an attended separate prerequisite or changed programmatically");
++  location.onPause();location.onResume();Handler.drain();for(int i=0;i<3;i++){location.onPause();location.onResume();Handler.drain();}
++  check(location.settingsRequests==1&&BreathCompositionPanelModule.notifications==before+1,"leaving Location OFF caused repeated settings or lost actual return readback");retire(location);
++  NativeProductPanelActivity locationGrant=fresh(false);locationGrant.location="disabled";locationGrant.granted.addAll(Arrays.asList(android.content.pm.PackageManager.declared));before=BreathCompositionPanelModule.notifications;
++  locationGrant.onResume();check(ExperimentStartupPermissions.busy(locationGrant),"queued prerequisite delivery allowed a competing Bluetooth power prompt before Location settled");Handler.drain();check(ExperimentStartupPermissions.busy(locationGrant),"active Location prerequisite released the shared prompt gate");locationGrant.onPause();locationGrant.location="enabled";locationGrant.onActivityResult(9411,0,null);locationGrant.onResume();Handler.drain();
++  check(locationGrant.requests==0&&locationGrant.settingsRequests==1&&BreathCompositionPanelModule.notifications==before+1,"already-granted app still needs attended global Location and return recheck");retire(locationGrant);
++  NativeProductPanelActivity unavailable=fresh(false);unavailable.throwRequest=true;unavailable.onResume();Handler.drain();unavailable.onPause();unavailable.onResume();Handler.drain();check(unavailable.requests==1,"failed platform request replayed");retire(unavailable);
++  NativeProductPanelActivity unavailableSettings=fresh(false);unavailableSettings.location="disabled";unavailableSettings.settingsUnavailable=true;unavailableSettings.granted.addAll(Arrays.asList(android.content.pm.PackageManager.declared));before=BreathCompositionPanelModule.notifications;
++  unavailableSettings.onResume();Handler.drain();unavailableSettings.onPause();unavailableSettings.onResume();Handler.drain();check(unavailableSettings.settingsRequests==0&&BreathCompositionPanelModule.notifications==before+1,"unavailable Location activity looped or withheld actual state");retire(unavailableSettings);
++  for(int api:new int[]{29,32}){android.os.Build.VERSION.SDK_INT=api;NativeProductPanelActivity compatibility=fresh(false);compatibility.onResume();check(compatibility.requested.length==(api<31?2:5),"runtime API permission closure changed");retire(compatibility);}android.os.Build.VERSION.SDK_INT=34;
++  android.content.pm.PackageManager.declared=new String[]{"android.permission.BLUETOOTH_CONNECT","android.permission.BLUETOOTH_ADVERTISE","android.permission.INTERNET"};NativeProductPanelActivity minimal=fresh(false);minimal.location="disabled";minimal.onResume();check(minimal.requested.length==2,"undeclared scan/location or normal permissions requested");minimal.result(true);Handler.drain();check(minimal.settingsRequests==0,"phone-only product without declared Polar scan opened Location settings");retire(minimal);
++  check(NativeRendererSelfKioskApplication.begins==NativeRendererSelfKioskApplication.ends,"kiosk prompt guards unbalanced across retirement/cancellation");
++  System.out.println("PASS "+checks+" actual selected permission coordinator/native lifecycle controls: full declared closure, cold gate independence, one request, pending/resume, bounded denial/cancel, no reentry, stale owner, feature-off and no panel effects");
++ }
++}'''
++
++def main():
++ parser=argparse.ArgumentParser();parser.add_argument('--negative',choices=('omit-scan','overlap'));args=parser.parse_args()
++ repo=Path(__file__).resolve().parents[2];selected=repo/'apps/native-renderer-android/src/phone-pairing/java'/PACKAGE
++ panel=repo/'apps/native-renderer-android/panel-modules/breath-composition/src/main/java'/PACKAGE
++ with tempfile.TemporaryDirectory(prefix='rq-startup-permissions-') as t:
++  out=Path(t)
++  for path,body in STUBS.items():
++   f=out/path;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(body)
++  settled=method((panel/'BreathCompositionPanelModule.java').read_text(),'static void onSelectedStartupPermissionsSettled(')
++  settled=settled.replace('{','{if(host.inRequest)throw new AssertionError("inline host callback/reentry");notifications++;',1)
++  f=out/PACKAGE/'StartupPermissionsHarness.java';f.parent.mkdir(parents=True,exist_ok=True);f.write_text(HARNESS.replace('__SETTLED__',settled))
++  support=(repo/'apps/native-renderer-android/panel-modules/polar/src/main/java'/PACKAGE/'PolarBleRuntimeSupport.java').read_text()
++  names=['static boolean managesStartupPermissions(', 'private static Class<?> startupPermissionClass(', 'static boolean requestSelectedStartupPermissions(', 'static boolean selectedStartupPermissionsBusy(', 'static void selectedStartupPermissionLifecycle(', 'static boolean selectedStartupPermissionResult(']
++  activityResult='static boolean selectedStartupActivityResult(android.app.Activity a,int code){return false;}'
++  if 'static boolean selectedStartupActivityResult(' in support:activityResult=method(support,'static boolean selectedStartupActivityResult(')
++  (out/PACKAGE/'PolarBleRuntimeSupport.java').write_text('package io.github.mesmerprism.rustyquest.native_renderer;import android.app.Activity;import android.content.pm.PackageManager;final class PolarBleRuntimeSupport {'+'\n'.join(method(support,n) for n in names)+activityResult+'static String locationServicesState(android.content.Context c){return c.location;}}')
++  coordinator=selected/'ExperimentStartupPermissions.java'
++  if args.negative:
++   body=coordinator.read_text()
++   if args.negative=='omit-scan':body=body.replace('"android.permission.BLUETOOTH_SCAN",','')
++   else:body=body.replace('if(!resumed||pending||settled||awaitResume', 'if(!resumed||settled||awaitResume')
++   coordinator=out/PACKAGE/'ExperimentStartupPermissions.java';coordinator.write_text(body)
++  sources=[str(panel/'NativeProductPanelActivity.java'),*map(str,out.rglob('*.java'))]
++  if not args.negative:sources.append(str(coordinator))
++  subprocess.run(['javac','--release','8','-d',str(out),*sources],check=True)
++  result=subprocess.run(['java','-cp',str(out),PACKAGE.replace('/','.')+'.StartupPermissionsHarness'],text=True,capture_output=True)
++  if args.negative:
++   expected='fresh load without session cold gate' if args.negative=='omit-scan' else 'competing owners or resume overlapped'
++   assert result.returncode!=0 and expected in result.stderr,result.stderr
++   print('PASS compiled negative coordinator control: '+args.negative+' reproduces lifecycle permission assertion')
++  else:
++   if result.returncode:print(result.stderr)
++   result.check_returncode();print(result.stdout.strip())
++if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..281903ac01345419b6168271df26e3b7fdf9685d
@@ -18149,3 +19146,59 @@ index d6a4bfd41ffbee149a1c834ee6b3160144829335..413ff5bd05cf627fc62369efdb572436
    for(String mode:new String[]{"choose","direct","remote"}){modes.controlMode.state.name=mode;check(mode.equals(modes.snapshot().getString("control_mode")),"explicit "+mode);}
    modes.controlMode.state.selected=false;check(modes.snapshot().has("control_mode"),"unselected owner still explicit");
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
+diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..22e711d81cc9ec4654af841097a737c1d6f2eb81
+--- /dev/null
++++ b/tools/checks/test_polar_platform_projection.py
+@@ -0,0 +1,38 @@
++"""Actual compact Polar projection retains separate Location-services prerequisites."""
++import os,subprocess,tempfile
++from pathlib import Path
++from test_experiment_gateway_dedupe import method
++PACKAGE='io/github/mesmerprism/rustyquest/native_renderer'
++def main():
++ repo=Path(__file__).resolve().parents[2];source=repo/'apps/native-renderer-android/panel-modules/polar/src/main/java'/PACKAGE
++ projection=method((source/'PolarSensorPanel.java').read_text(),'synchronized JSONObject remoteSetupProjection(')
++ location=method((source/'PolarBleRuntimeSupport.java').read_text(),'static String locationServicesState(')
++ jars=list((Path.home()/'.gradle/caches/modules-2/files-2.1/org.json/json').rglob('json-*.jar'));jar=jars[0]
++ with tempfile.TemporaryDirectory(prefix='rq-polar-platform-') as t:
++  out=Path(t)
++  files={
++   'android/os/Build.java':'package android.os;public class Build{public static class VERSION{public static int SDK_INT=34;}public static class VERSION_CODES{public static final int P=28;}}',
++   'android/location/LocationManager.java':'package android.location;public class LocationManager{public boolean enabled=true,denied,unknown;public boolean isLocationEnabled(){if(denied)throw new SecurityException();if(unknown)throw new IllegalStateException();return enabled;}}',
++   'android/content/Context.java':'package android.content;public class Context{public static final String LOCATION_SERVICE="location";public android.location.LocationManager manager=new android.location.LocationManager();public Object getSystemService(String s){return manager;}}',
++  }
++  for name,body in files.items():
++   f=out/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(body)
++  body=r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import android.content.Context;import android.location.LocationManager;import android.os.Build;import org.json.*;
++class PolarBleRuntimeSupport {
++ __LOCATION__
++ static JSONObject statusJson(Context c)throws Exception{return new JSONObject().put("runtime_permission_ready",true).put("bluetooth_adapter_state","on").put("location_services_state",locationServicesState(c));}
++}
++public final class PolarPlatformProjectionHarness {
++ Context appContext=new Context();final Object countersLock=new Object();long lastAccFrameReceiptNs=System.nanoTime(),lastEcgFrameReceiptNs=System.nanoTime();
++ boolean connected=true,accPmdRunning=true,ecgPmdRunning=true,scanning;String connectedDeviceInstanceId="polar-111111111111";
++ static final class Device{String instanceId(){return "polar-111111111111";}}java.util.List<Device> devices=new java.util.ArrayList<>();String selectedDeviceInstanceId(){return connectedDeviceInstanceId;}
++ __PROJECTION__
++ static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
++ void state(String expected)throws Exception{JSONObject p=remoteSetupProjection();check(p.has("l"),"compact setup omits actual Location services prerequisite");check(p.getString("l").equals(expected),"Location state changed");check(p.getBoolean("p")&&p.getBoolean("b"),"Location conflated with app permissions/Bluetooth");check(p.getBoolean("c")&&p.getBoolean("a")&&p.getBoolean("e"),"Location prerequisite disabled already-connected streams");}
++ public static void main(String[]args)throws Exception{PolarPlatformProjectionHarness h=new PolarPlatformProjectionHarness();h.state("enabled");h.appContext.manager.enabled=false;h.state("disabled");h.appContext.manager.denied=true;h.state("permission-blocked");h.appContext.manager.denied=false;h.appContext.manager.unknown=true;h.state("unknown");h.appContext.manager=null;h.state("unavailable");Build.VERSION.SDK_INT=27;h.state("legacy-unobserved");System.out.println("PASS "+checks+" actual Polar compact platform projection controls: independent Location state and connected stream preservation");}
++}'''.replace('__LOCATION__',location).replace('__PROJECTION__',projection)
++  f=out/PACKAGE/'PolarPlatformProjectionHarness.java';f.parent.mkdir(parents=True,exist_ok=True);f.write_text(body)
++  subprocess.run(['javac','--release','8','-cp',str(jar),'-d',str(out),*map(str,out.rglob('*.java'))],check=True)
++  subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
++if __name__=='__main__':main()
+diff --git a/tools/checks/test_remote_setup.py b/tools/checks/test_remote_setup.py
+index 4e7a895c0dd6c651a4dca898a38b4b456b4035c1..ff0829967a1a19af81aca9cb69fee007b331575d 100644
+--- a/tools/checks/test_remote_setup.py
++++ b/tools/checks/test_remote_setup.py
+@@ -11,6 +11,7 @@ import org.json.*;import android.os.SystemClock;
+ class PolarSensorPanel {
+  int effects;JSONObject state=new JSONObject("{\"p\":true,\"b\":true,\"c\":false,\"x\":\"\",\"a\":false,\"e\":false,\"d\":[\"111111111111\"],\"sc\":false}");
+  JSONObject remoteSetupProjection()throws Exception{return new JSONObject(state.toString());}
++ JSONObject ecgPreview(){return null;}
+  void selectRemoteCandidate(String d)throws Exception{effects++;state.put("x",d);}
+  long remoteSetupEffectNs(String op){return 1000000;}
+  void handleCommand(String op)throws Exception{effects++;if(op.equals("scan"))state.put("sc",true);}
