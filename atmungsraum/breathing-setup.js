@@ -1,4 +1,4 @@
-import { operationId, sameQuest } from './quest-gateway.js?v=9';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=10';
 
 const stages = new Set(['idle', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt', 'controller-state': 'Controller State · feste Ausrichtung' };
@@ -11,7 +11,8 @@ const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outco
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
 const validOwner = owner => owner && /^[a-f0-9]{32}$/.test(owner.device)
-  && /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(owner.serial)
+  && typeof owner.serial === 'string' && (/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(owner.serial)
+    || owner.identity_kind === 'app-installation' && owner.serial === '')
   && ['epoch', 'native_epoch'].every(key => typeof owner[key] === 'string' && /^[1-9][0-9]{0,18}$/.test(owner[key]));
 
 // Status is already authenticated by the gateway. Recheck the bounded native
@@ -96,7 +97,7 @@ export class BreathingSetup {
     if (this.pending && (!sameQuest(this.pending.owner, gateway?.owner)
       || setup && setup.g !== this.pending.command.g)) this.unknown = true;
     const available = Boolean(setup && typeof gateway?.breathSetup === 'function');
-    const ownerIdle = available
+    const ownerIdle = available && canControlQuest(status)
       && status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec && !status.pending
       && !busy && !pending && !unknown && !this.busy;
     const idle = ownerIdle && !this.pending && !this.unknown;
@@ -122,7 +123,8 @@ export class BreathingSetup {
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
-      blockedReason: !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
+      blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
+        : !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
         : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.' : '',
       actions: {
         start: Boolean(gated && setup.stage === 'idle'),

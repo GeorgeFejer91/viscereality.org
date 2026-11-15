@@ -179,6 +179,9 @@ if ($Developer) {
     [void]$app.Remove('android_install_location')
 }
 $app.experiment_breathing_setup_enabled = $true
+$app.experiment_headset_setup_enabled = $false
+$app.experiment_phone_pairing_enabled = [bool]$Developer
+$app.experiment_panel_initially_closed = [bool]$Developer
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
 $app.declared_manifest.permissions = @($app.declared_manifest.permissions) + @(
@@ -250,6 +253,25 @@ try {
     if ($metadata['rusty.quest.experiment.breathing_setup.enabled'] -cne 'true') {
         throw 'The native manifest must explicitly select the shared breathing setup.'
     }
+    if ($Developer) {
+        $closed = @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
+        if ($metadata['rusty.quest.experiment.phone_pairing.enabled'] -cne 'true' -or
+            $lock.android_manifest.experiment_phone_pairing_enabled -cne $true -or
+            $lock.android_manifest.experiment_panel_initially_closed -cne $true -or
+            $closed.Count -ne 1 -or $closed[0].value -cne 'true' -or
+            $lock.android_manifest.experiment_headset_setup_enabled -cne $false -or
+            @($lock.phone_pairing_sources).Count -ne 4 -or
+            @($lock.headset_setup_sources).Count -ne 0 -or
+            @($lock.debug_experiment_operator_sources).Count -ne 0 -or
+            $manifest.OuterXml -match 'debug-experiment-control|\.headset-setup') {
+            throw 'Developer must select closed startup and button-only phone pairing without machine provisioning or a debug operator.'
+        }
+        foreach ($source in $lock.phone_pairing_sources) {
+            if ($source.sha256 -cne (Get-FileHash -LiteralPath (Join-Path $QuestRepo $source.path)).Hash.ToLowerInvariant()) {
+                throw 'The selected phone pairing source digest differs from the native implementation.'
+            }
+        }
+    }
     if ($metadata['com.oculus.supportedDevices'] -cne 'quest2' -or
         $metadata['rusty.quest.experiment.command_gateway.origins'] -cne 'https://viscereality.org') {
         throw 'The native manifest must target Quest 2 and admit the exact Atmungsraum origin.'
@@ -319,6 +341,12 @@ try {
         } finally { $stream.Dispose() }
     }
 } finally { $archive.Dispose() }
+$closureProbe = Join-Path $QuestRepo 'tools/checks/Test-ExperimentSessionApkClosure.ps1'
+if (!(Test-Path -LiteralPath $closureProbe -PathType Leaf)) {
+    throw 'Selected native source is missing the actual-APK cold-start closure probe.'
+}
+& pwsh -NoProfile -File $closureProbe -ApkPath $apk.FullName -OutputRoot (Join-Path $runRoot 'closure-host')
+if ($LASTEXITCODE -ne 0) { throw 'Signed APK cold-start closure validation failed.' }
 [pscustomobject]@{
     apk = $apk.FullName
     sha256 = (Get-FileHash -LiteralPath $apk.FullName).Hash.ToLowerInvariant()

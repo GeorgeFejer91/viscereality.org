@@ -12,6 +12,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Phone onboarding (2026-11-15): selected Developer builds advertise read-only
+  Bluetooth discovery without hardware-serial provisioning. A new phone and
+  headset compare a code and each confirm with a button; no headset typing,
+  laptop, USB or generated QR is required. The headset approval panel opens
+  only for a verified incoming request, never at startup. Multiple independently
+  revocable phones may be saved, with one active controller and explicit
+  claim/release. Reconnecting a saved phone does not acquire control. See the
+  [pairing contract and acceptance state](../atmungsraum/for-ai/PHONE-PAIRING.md).
+
 - Native breathing setup (2026-11-14): one Quest PCM-frame clock supplies
   the unlimited four-second box loop, intended phase, Automatic startup input,
   two-cycle tilt calibration and next-cycle main admission. The phone displays
