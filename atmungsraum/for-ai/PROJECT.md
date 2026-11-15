@@ -10,6 +10,13 @@ readback and visible closed-panel VR startup. Keep this test APK local until
 the relevant headset checks pass. Calibration has not started; the local
 update is ready for a fresh wearer test.
 
+[PR 7](https://github.com/GeorgeFejer91/viscereality.org/pull/7) merged as
+`c41c651482eec6781789c1f767c5a2073d9060f5` and deployed successfully in
+[Pages run 43714495396](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43714495396).
+All 20 checked live runtime/source/document requests matched committed Git
+blobs, including the updated cache-versioned imports and native patch. The
+remote context gate passed. The APK remains local; Meta still has code 3.
+
 Direct inspection of the USB-connected Pixel 6a showed the phone connected
 but waiting for control. Claiming the free lease made the Polar controls
 visible. The installed code also required fine/coarse location grants and

@@ -25,6 +25,14 @@ and a ready gateway. Runtime permissions had been pre-granted for this bench
 test under explicit user authorization; fresh dialog handling is not claimed.
 Actual callback timing, wearer fit and the full 900-second trial remain open.
 
+[PR 7](https://github.com/GeorgeFejer91/viscereality.org/pull/7) merged at
+`c41c651482eec6781789c1f767c5a2073d9060f5`; its exact
+[Pages run 43714495396](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43714495396)
+succeeded. All 20 checked live requests matched committed Git blob bytes,
+including app startup, the actual versioned imports, source patch and updated
+timing/permission notes. The remote context gate passed. Code 4 was not uploaded
+to Meta; local wearer acceptance remains pending.
+
 ## Phone pairing and closed startup — 2026-11-15
 
 The selected Developer source uses read-only Bluetooth discovery, explicit
