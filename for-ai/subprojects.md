@@ -25,7 +25,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   breath state through unavailable samples: inhale/exhale keep their smooth
   frame-time ramp; hold stays still.
   Genuine source/audio/model/input barriers still clear state. Participant
-  satisfaction and fallback acceptance remain open.
+  satisfaction and fallback acceptance remain open. Its attended calibration
+  stopped at 6.144 audio seconds with `clock_stalled`; retries hit `clock-stale`.
+  The already-started Java player lacks explicit unhealthy-clock recovery.
+  That repair and raw clock diagnosis are active; no new wearer trial or Meta
+  upload until the next verified build and fresh readiness.
 
 - The phone app now follows the core site's black/white Arial, VR figure,
   thin frames and blue/gold accents. The style is live with rendered and public

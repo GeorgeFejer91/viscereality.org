@@ -27,8 +27,29 @@ now pass. Installed bytes match exactly; UID, runtime grants and persistent app
 identity are retained. Fresh cold startup captures controller-only true, hand
 extension false, simultaneous false, panel closed, gateway ready and input zero.
 Configured phase rates remain 0.25 per second. Location stays ON and Wi-Fi ADB is
-retained; observer/lease cleanup passes. Publication and fresh wearer tracking,
-retry/fallback and the full main run remain pending. No Meta upload.
+retained; initial observer/lease cleanup passes. The source record merged in
+[PR 15](https://github.com/GeorgeFejer91/viscereality.org/pull/15) at
+`b735f196b90ebe4d7dcccf0c446baf6886105849`; exact
+[Pages run 43745201300](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43745201300)
+succeeded, all 24 live files match Git and the remote context gate passes.
+Fresh wearer Ready was then received, with the user controlling the phone.
+Both H10 streams became ready after a checked reconnection. The actual attempt
+failed `clock_stalled` at frame 270,950 (6.143991 seconds), with 150 accepted points
+and four motion masks. Twenty-three failed snapshots span 20.976 seconds at that
+same frame while playing remains advertised. Recorded retries are rejected
+`clock-stale`. This does not test calibrated Polar rendering: no fit completed.
+
+Source/evidence diagnosis confirms the native core would accept plausible forward
+clock observations after failure; the failed attempt itself stays terminal. The
+Java retry path never reconstructs an already-started active player, so an
+unhealthy transport blocks retries indefinitely. Original sink/head/publication
+stall cause is not established. AudioService zero stream volume and the silent
+hold interval are qualified leads only. The source-clock-ready boolean is a
+retained sensor anchor and does not attest ongoing Java clock publication.
+Bounded raw-clock diagnostics and explicit pre-main recovery are the next repair.
+The app is stopped and owned observers/forward/leases released, Location kept ON.
+New calibration requires fresh Ready. Tracking, retry/fallback and the full main
+run remain unqualified. No Meta upload.
 
 ## Participant-led calibration and controller-only code 7 — 2026-11-15
 
