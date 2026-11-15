@@ -2,6 +2,11 @@
 
 ## Current hardware-test handoff — 2026-11-15
 
+The user explicitly requests retaining system Location ON on the test Quest
+after the attended scan/calibration work. This supersedes the earlier temporary
+restore-to-OFF bench instruction. App code must still use normal attended
+permission/settings flows rather than toggling the system setting itself.
+
 The user explicitly authorized assistant phone operation for calibration
 diagnosis with “try yourself”, superseding the earlier read-only preference
 within this test scope. After a test pause, require fresh wearer readiness
