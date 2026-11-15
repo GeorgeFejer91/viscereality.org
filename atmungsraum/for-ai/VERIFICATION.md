@@ -39,8 +39,31 @@ succeeded. All 24 checked public files match Git, including versioned phone
 modules and the cumulative patch. Live 390px/1440px checks confirm ready Pretext,
 no horizontal overflow, script errors or failed app requests. The remote context
 gate passes. Installed-phone refresh and fresh wearer testing remain pending.
-The initial physical stall trigger remains unproven; no code-9 calibration or
-Meta upload has occurred.
+The initial physical stall trigger remained unproven at that release checkpoint.
+
+Fresh code-9 wearer testing subsequently failed before either cycle at frame
+zero: raw AudioTrack head stayed zero while real polls/dispatch and PLAYING
+continued. Actual player replacement through generation 6 also made no progress;
+typed recovery receipts correctly ended `audio-recovery-timeout`. Controller
+selection with the observed menu closed also failed. The installed standalone
+phone's new versioned resources were verified; first H10 connect became uncertain,
+then a checked second request established both ECG and ACC. The user reported
+the cold-connect waiting/failure recovery interface was unclear.
+
+A private isolated silent static/primed-stream/focus comparison likewise failed;
+the unchanged Horizon output counter and zero consumed queued frames support a
+shared playback issue, without proving universal audio failure. User-reported
+working system sounds and silent-probe/foreground limitations remain explicit.
+Probe cleanup passed. After attended reboot, Wi-Fi ADB and Location ON were
+verified, and the output counter advances again. Post-boot Controller audio and
+fresh Polar calibration were pending at that restart checkpoint. The user then
+independently connected Polar and started calibration, reporting success.
+Native readback confirms ready calibrated Polar with detected inhale/exhale/hold;
+observed unavailable/unconfirmed hold intervals retain their radius value.
+Participant tracking satisfaction, repeated-fit/fallback and full-main acceptance
+remain open. No product source change, replacement APK, main run or Meta upload
+occurred during this diagnosis. Reboot recovery does not establish the original
+intermittent playback trigger.
 
 ## Retained calibrated Polar state — 2026-11-15
 

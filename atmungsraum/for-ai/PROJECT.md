@@ -15,7 +15,7 @@
 - [x] Build, inspect and install same-key local Developer 0.2.8-dev/code 9.
 - [x] Publish the combined phone/source/record increment; verify exact Pages
   and live URLs.
-- [ ] Refresh the installed phone app and verify the new resources while the
+- [x] Refresh the installed phone app and verify the new resources while the
   user retains control of that device.
 - [ ] Obtain fresh wearer Ready; test audible/advancing loop across holds and
   wraps, calibration/tracking/retry/Controller fallback and the full main run.
@@ -54,7 +54,56 @@ model capacity errors; the primary GitHub integration returns 403 for merge.
 No permission or model change was requested. Resume its normal two-parent merge,
 then exact Pages/live checks when that account is available. This blocks only
 publication of these follow-up notes; PR 17's runtime is already deployed and
-verified. No owned device/port/build leases or observers remain active.
+verified. Owned resources were released at that earlier handoff.
+
+The user subsequently supplied fresh code-9 wearer Ready and retained phone
+control. Read-only inspection confirms the installed standalone PWA loaded
+the new app, UI39, gateway11, rehearsal25 and setup6; a separate Chrome tab
+still has the older release. The first scan/select completed, but its connect
+request ended `outcome_unknown` with H10 disconnected. The user reported that
+the grey controls and missing timely failure explanation made progress unclear.
+After checked idle acknowledgement, a second scan/select/connect succeeded;
+ECG and ACC became ready, with native automatic acquisition enabled. No
+calibration had started at that checkpoint; audio was parked at frame zero.
+Resolve the cold first-connect failure and its unclear recovery UI as an open
+issue.
+
+The subsequent code-9 calibration failed `clock_stalled` at frame zero. Real
+polling/dispatch continued, but Android reported PLAYING with raw head zero,
+no timestamp and no consumed frames. Explicit retries replaced actual players
+through generation 6 and returned typed `audio-recovery-timeout`; Controller
+selection also failed after the user closed an observed menu. No full window
+or calibrated tracking was reached. This is physical recovery failure, not an
+accepted code-9 calibration. The user was told the Polar could be removed.
+
+A separate local diagnostic APK compared identical silent PCM in primed STREAM
+and STATIC modes, with audio focus granted before/after creation; neither
+advanced. Horizon service counters stayed fixed across captures despite queued
+active sources and full, unmuted media volume. This supports a shared playback
+problem, with silent-probe/foreground limitations; the user reports system
+sounds work, so a universal audio failure is not established. The probe was
+removed, its private evidence retained, and its build lease released. Product
+source and installed code-9 bytes were unchanged.
+
+An attended Quest-2 reboot completed. Wi-Fi ADB was restored and verified against
+the same serial and new boot identity without restarting the shared host ADB
+daemon; Location remains ON. Pixel observation ended when its USB was removed,
+and its port/device leases were released. Fresh post-boot wearer Ready was
+received for audio only, with Polar off. Atmungsraum reopened parked/silent and
+the headset output counter now advances. User-operated Controller audio check
+is pending; require fresh Polar Ready before any new calibration. The exact
+Quest lease and a finite native observer remain owned during that check; clean
+them before handoff. No Meta upload or main experiment occurred.
+
+The user then connected Polar and started calibration themselves, reporting
+that it worked well after reboot. Actual native readback now selects a ready
+calibrated Polar lineage and measured inhale/exhale/hold states. Hold values
+remain unchanged through observed unavailable/unconfirmed samples, consistent
+with the retained-state repair. Tracking satisfaction is being requested;
+this is not yet qualification of repeated fits, Controller fallback or a full
+900-second main run. No replacement APK or speculative audio-adapter change
+was needed for that successful post-boot calibration. The intermittent playback
+trigger and cold-connect UI issue remain open.
 
 ### Retained Polar breath state — 2026-11-15
 
