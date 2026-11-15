@@ -1,5 +1,40 @@
 # Verification
 
+## Explicit audio retry recovery / code 9 — 2026-11-15
+
+Native `9afdcf0ef2cf05569e7ccc67c31f711f0e2fdd87` and PWA
+`0ce7eda855fe5f30f86322bc0680cfaf5e93a6a9` pass independent spec/quality review.
+Native842 passes/four ignored; the intentionally ignored stdio peer is exercised
+through five Java-owner/native groups. Production HTTP parser/auth/gateway through
+the real Java owner and Runtime passes 31 assertions with modeled Android/socket
+boundaries. Broad gateway regressions, actual API36 owner and joint gateway
+compilation, boundary checks and exact patch/tree reconstruction pass. The
+final Java diagnostic fix changes no Rust bytes; the final native proof is reused
+for that unchanged closure. Its new Java/native/gateway gates pass independently.
+
+The phone suite passes 182 tests with zero skips, including fresh gateway/audio
+fixture classes. Twelve recovery and thirteen receipt-fence rendered states pass
+with actual Pretext, including 320px/200% text. Existing scroll/edit stability
+passes three cases × six live polling rounds. A lost admission keeps its original
+ID and uses typed read-only reconciliation; generation change alone cannot
+acknowledge away uncertainty. Native capability controls unhealthy retries.
+
+Review/regression corrections cover original ID/proven recovery target, real
+gateway field stripping, unpublished old target generations, no late playback
+after timeout/retirement and diagnostic generation provenance. The former cached
+Polar projection test's 25ms assumption is replaced with a bounded wait for actual
+worker publication, retaining its live and final assertions. Clock thresholds,
+PCM, volume, learner, main duration and recording authority remain unchanged.
+
+Fresh signed code-9 assembly/session closure, 89 assets, manifest, signer and
+alignment pass. Installed bytes match; UID, runtime grants and persistent identity
+are retained. Actual cold startup reports controller-only true, hand extension
+false, simultaneous false, panel closed, gateway ready and input zero. Phase rates
+remain 0.25 per second. Location stays ON; Wi-Fi ADB retained; startup observer and
+lease cleanup pass. Combined publication/phone refresh and fresh wearer testing
+remain pending. The initial physical stall trigger remains unproven; no code-9
+calibration or Meta upload has occurred.
+
 ## Retained calibrated Polar state — 2026-11-15
 
 Native `304be3ccf20e960a2a4bac7dad8ea9ca9bce17b1` passes 833 library tests,

@@ -1,6 +1,6 @@
-import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=10';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=11';
 
-const stages = new Set(['idle', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
+const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt', 'controller-state': 'Controller State · feste Ausrichtung' };
 const phases = ['inhale', 'hold_in', 'exhale', 'hold_out'];
 const phaseLabels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
@@ -10,6 +10,22 @@ const operations = new Set(['start', 'calibrate', 'controller']);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
+const receiptId = value => typeof value === 'string' && /^[a-f0-9]{16}$/.test(value);
+const recoveryFailures = new Set(['audio-recovery-failed', 'audio-recovery-timeout', 'audio-recovery-retired']);
+const validRecovery = value => value && !Array.isArray(value) && Object.keys(value).length === 4
+  && receiptId(value.id) && value.state === 'pending' && nonnegative(value.deadline_ns)
+  && (value.target_generation === null || nonnegative(value.target_generation) && value.target_generation > 0);
+const validReceipt = value => value && !Array.isArray(value) && value.v === 1 && receiptId(value.id)
+  && outcomes.has(value.state)
+  && Object.keys(value).every(key => ['v', 'id', 'state', 'accepted', 'reason', 'recovery_generation'].includes(key))
+  && (!Object.hasOwn(value, 'recovery_generation') || value.recovery_generation === null
+    || nonnegative(value.recovery_generation) && value.recovery_generation > 0)
+  && (!Object.hasOwn(value, 'accepted') || typeof value.accepted === 'boolean'
+    && (value.state === 'rejected' ? !value.accepted : value.state === 'outcome_unknown' || value.accepted))
+  && (!Object.hasOwn(value, 'reason') || typeof value.reason === 'string' && value.reason.length <= 256
+    && !/[\x00-\x1f\x7f]/.test(value.reason))
+  && (value.reason !== 'audio-recovery-pending' || value.state === 'pending' && value.accepted === true)
+  && (!recoveryFailures.has(value.reason) || value.state === 'rejected' && value.accepted === false);
 const qualityWarnings = {
   '': '', motion: 'Bewegung erkannt. Halte den Oberkörper ruhig und atme weiter mit.',
   timing: 'Einige Messdaten kommen unregelmäßig an. Atme weiter mit.',
@@ -61,6 +77,9 @@ export function breathingSetup(status, owner) {
     || typeof setup.failure !== 'string' || setup.failure.length > 256 || /[\x00-\x1f\x7f]/.test(setup.failure)
     || typeof setup.ready !== 'boolean' || typeof setup.playing !== 'boolean'
     || Object.hasOwn(setup, 'source_clock_ready') && typeof setup.source_clock_ready !== 'boolean'
+    || Object.hasOwn(setup, 'clock_valid') && typeof setup.clock_valid !== 'boolean'
+    || Object.hasOwn(setup, 'audio_recovery_available') && typeof setup.audio_recovery_available !== 'boolean'
+    || Object.hasOwn(setup, 'recovery') && setup.recovery !== null && !validRecovery(setup.recovery)
     || Object.hasOwn(setup, 'parked') && typeof setup.parked !== 'boolean'
     || Object.hasOwn(setup, 'quality') && !validQuality(setup.quality)
     || !nonnegative(setup.experiment_elapsed_ms) || setup.experiment_elapsed_ms > 900000
@@ -70,6 +89,8 @@ export function breathingSetup(status, owner) {
         || setup.input_volume01 < 0 || setup.input_volume01 > 1)) return null;
   const phase = Math.floor((setup.position_frames % setup.cycle_frames) / (setup.cycle_frames / 4));
   if (setup.phase !== phases[phase]
+    || setup.stage === 'recovering' && (!setup.recovery || setup.ready)
+    || setup.recovery && setup.stage !== 'recovering'
     || ['waiting', 'collecting'].includes(setup.calibration) && (setup.input !== 'automatic' || setup.ready)
     || setup.calibration === 'collecting' && setup.target_frames !== setup.cycle_frames * 2
     || setup.ready && (setup.input === 'automatic' || !['testing', 'main-pending', 'main', 'complete'].includes(setup.stage))
@@ -79,9 +100,10 @@ export function breathingSetup(status, owner) {
 
 function validJournal(saved) {
   const command = saved?.command;
-  return validOwner(saved?.owner) && command?.v === 1 && /^[a-f0-9]{16}$/.test(command.id)
+  return validOwner(saved?.owner) && command?.v === 1 && receiptId(command.id)
     && nonnegative(command.g) && command.g > 0 && nonnegative(command.r) && operations.has(command.op)
-    && Object.keys(command).length === 5;
+    && Object.keys(command).length === 5
+    && (!Object.hasOwn(saved, 'recovery') || saved.recovery === true);
 }
 
 export class BreathingSetup {
@@ -93,9 +115,13 @@ export class BreathingSetup {
   setup = null;
   cursor = null;
   refreshing = null;
+  refreshAttempt = null;
+  waitBudget = null;
+  waitExpired = false;
 
-  constructor({ storage } = {}) {
+  constructor({ storage, now = () => performance.now() } = {}) {
     this.storage = storage;
+    this.now = now;
     try {
       const saved = JSON.parse(storage?.getItem(journalKey) ?? 'null');
       if (validJournal(saved)) {
@@ -106,6 +132,10 @@ export class BreathingSetup {
   }
 
   remember(pending) {
+    if (this.pending?.command.id !== pending?.command.id) {
+      this.waitBudget = null;
+      this.waitExpired = false;
+    }
     this.pending = pending;
     try {
       if (pending) this.storage?.setItem(journalKey, JSON.stringify(pending));
@@ -114,8 +144,14 @@ export class BreathingSetup {
   }
 
   update(gateway, state, participantReady) {
+    if (this.gateway !== gateway) {
+      this.cancel();
+      this.waitBudget = null;
+      this.waitExpired = false;
+    }
     this.gateway = gateway;
     const { status, busy, pending, unknown } = state;
+    this.status = status;
     let setup = breathingSetup(status, gateway?.owner);
     if (this.cursor && sameQuest(this.cursor.owner, gateway?.owner) && setup) {
       if (setup.g < this.cursor.g || setup.g === this.cursor.g
@@ -123,28 +159,36 @@ export class BreathingSetup {
     }
     if (setup) this.cursor = { owner: { ...gateway.owner }, g: setup.g, r: setup.r, position: setup.position_frames };
     this.setup = setup;
+    if (this.pending && sameQuest(this.pending.owner, gateway?.owner)
+      && setup?.recovery?.id === this.pending.command.id && !this.pending.recovery) {
+      this.remember({ ...this.pending, recovery: true });
+    }
     if (this.pending && (!sameQuest(this.pending.owner, gateway?.owner)
-      || setup && setup.g !== this.pending.command.g)) this.unknown = true;
+      || setup && setup.g !== this.pending.command.g && !this.pending.recovery)) this.unknown = true;
     const available = Boolean(setup && typeof gateway?.breathSetup === 'function');
     const ownerIdle = available && canControlQuest(status)
       && status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec && !status.pending
       && !busy && !pending && !unknown && !this.busy;
-    const idle = ownerIdle && !this.pending && !this.unknown;
+    const recovering = Boolean(setup?.recovery || this.pending?.recovery);
+    const recoveryUnavailable = setup?.clock_valid === false && setup.audio_recovery_available === false;
+    const idle = ownerIdle && !this.pending && !this.unknown && !recovering && !recoveryUnavailable;
     const gated = idle && participantReady
       && (status.pi?.r === false || status.pi?.r === true && status.pi.f === true);
-    const retired = this.pending && gateway?.owner
+    const ownerRetired = this.pending && gateway?.owner
       && this.pending.owner.device === gateway.owner.device && this.pending.owner.serial === gateway.owner.serial
       && (this.pending.owner.epoch !== gateway.owner.epoch
-        || this.pending.owner.native_epoch !== gateway.owner.native_epoch || setup?.g > this.pending.command.g);
+        || this.pending.owner.native_epoch !== gateway.owner.native_epoch);
     const testing = setup?.stage === 'testing' && setup.playing;
     const preparing = setup && ['waiting', 'calibrating', 'testing'].includes(setup.stage) && setup.playing;
     const parked = setup?.stage === 'idle' && !setup.playing;
+    const recoverable = setup?.audio_recovery_available === true
+      && ['idle', 'waiting', 'calibrating', 'testing'].includes(setup.stage);
     const phaseIndex = setup ? phases.indexOf(setup.phase) : -1;
     const phaseFraction = setup ? (setup.position_frames % (setup.cycle_frames / 4)) / (setup.cycle_frames / 4) : 0;
     const radius = [.46 + .54 * phaseFraction, 1, 1 - .54 * phaseFraction, .46][phaseIndex] ?? .46;
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
-      pending: Boolean(this.pending || this.busy), unknown: this.unknown,
+      pending: Boolean(this.pending || this.busy), unknown: this.unknown, recovering, recoveryUnavailable,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
       inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
@@ -156,16 +200,26 @@ export class BreathingSetup {
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
       blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
+        : recoveryUnavailable ? 'Die Atemschleife ist nicht bereit. Öffne die Quest-App erneut und verbinde dieses Smartphone wieder.'
         : !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
         : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
+        : setup?.audio_recovery_available === true ? 'Die Atemschleife läuft nicht weiter. Wähle erneut „Atmung einrichten“ oder Controller State.'
         : setup?.input === 'automatic' && setup.source_clock_ready === false
           ? 'Die Messsignale sind da. Warte kurz auf gleichmäßige Bewegungsdaten vom Gurt.' : '',
       actions: {
         start: false,
-        calibrate: Boolean(gated && (preparing || parked) && setup.source_clock_ready !== false),
-        controller: Boolean(idle && (preparing || parked) && setup.input !== 'controller-state'),
-        continue: Boolean(gated && testing && setup.ready && ['polar-tilt', 'controller-state'].includes(setup.input)),
-        acknowledge: Boolean(ownerIdle && retired),
+        calibrate: Boolean(gated && (preparing || parked || recoverable)
+          && (setup.source_clock_ready !== false || recoverable)),
+        controller: Boolean(idle && (preparing || parked || recoverable)
+          && (setup.input !== 'controller-state' || recoverable)),
+        continue: Boolean(gated && testing && setup.ready && setup.clock_valid !== false
+          && ['polar-tilt', 'controller-state'].includes(setup.input)),
+        // Audio generation changes can belong to an unobserved recovery of
+        // this exact operation. Only actual actor retirement permits discard.
+        acknowledge: Boolean(ownerIdle && ownerRetired),
+        checkReceipt: Boolean(available && canControlQuest(status) && this.pending && !this.busy
+          && !this.refreshing && (this.waitExpired || this.unknown && setup.g > this.pending.command.g)
+          && sameQuest(this.pending.owner, gateway?.owner)),
       },
     };
     return this.view;
@@ -182,7 +236,7 @@ export class BreathingSetup {
   observeReceipt(receipt) {
     const saved = this.pending;
     if (!saved || !sameQuest(saved.owner, this.gateway?.owner)) return;
-    if (receipt?.v !== 1 || receipt.id !== saved.command.id || !outcomes.has(receipt.state)
+    if (!validReceipt(receipt) || receipt.id !== saved.command.id
       || receipt.state === 'outcome_unknown') {
       this.unknown = true;
       return;
@@ -190,11 +244,20 @@ export class BreathingSetup {
     if (receipt.state === 'rejected') {
       this.remember(null);
       this.unknown = false;
-      this.message = 'Die Quest hat die Aktion abgelehnt. Prüfe den aktuellen Status.';
+      this.message = recoveryFailures.has(receipt.reason)
+        ? 'Die Atemschleife konnte nicht neu gestartet werden. Prüfe die Quest und versuche es erneut.'
+        : 'Die Quest hat die Aktion abgelehnt. Prüfe den aktuellen Status.';
     } else {
-      this.unknown = !this.setup || this.setup.g !== saved.command.g;
-      if (receipt.state === 'confirmed' && !this.unknown && this.setup.r > saved.command.r) {
+      if (receipt.reason === 'audio-recovery-pending' && !saved.recovery) this.remember({ ...saved, recovery: true });
+      // The authenticated native lookup binds this terminal result to the exact
+      // operation, even when recovery advanced the audio generation while the
+      // original admission reply was lost. It does not establish calibration.
+      const resolvedRecovery = receipt.state === 'confirmed' && receipt.accepted === true && receipt.reason === 'accepted'
+        && receipt.recovery_generation > saved.command.g && receipt.recovery_generation === this.setup?.g;
+      this.unknown = !this.setup || this.setup.g !== saved.command.g && !this.pending.recovery;
+      if (resolvedRecovery || !saved.recovery && receipt.state === 'confirmed' && !this.unknown && this.setup.r > saved.command.r) {
         this.remember(null);
+        this.unknown = false;
         this.message = '';
       }
     }
@@ -211,21 +274,50 @@ export class BreathingSetup {
     try {
       const receipt = await gateway.breathSetup(command, signal);
       if (this.gateway === gateway) this.observeReceipt(receipt);
-    } catch { this.unknown = true; }
+    } catch { if (this.pending?.command.id === command.id) this.unknown = true; }
     finally { this.busy = false; }
   }
 
   // Read receipts only. A reconnect never retransmits the journaled mutation.
-  refresh() {
+  refresh(signal) {
     const gateway = this.gateway;
-    if (!this.pending || !sameQuest(this.pending.owner, gateway?.owner) || this.busy || this.refreshing) return this.refreshing;
+    if (!this.pending || !sameQuest(this.pending.owner, gateway?.owner) || this.busy || this.refreshing
+      || typeof gateway?.breathSetupReceipt !== 'function' || !canControlQuest(this.status)) return this.refreshing;
+    if (signal?.aborted) { this.unknown = true; return; }
     const id = this.pending.command.id;
+    const now = this.now();
+    this.waitBudget ??= { started: now, last: -Infinity, reads: 0 };
+    if (now - this.waitBudget.started >= 12000 || this.waitBudget.reads >= 12) {
+      this.waitExpired = true;
+      this.unknown = true;
+      return;
+    }
+    if (now - this.waitBudget.last < 500) return;
+    this.waitBudget.last = now;
+    this.waitBudget.reads++;
+    const attempt = new AbortController();
+    this.refreshAttempt = attempt;
     this.refreshing = (async () => {
       try {
-        const receipt = await gateway.receipt(id);
-        if (this.gateway === gateway && this.pending?.command.id === id) this.observeReceipt(receipt);
-      } catch { if (this.gateway === gateway) this.unknown = true; }
-    })().finally(() => { this.refreshing = null; });
+        const receipt = await gateway.breathSetupReceipt(id, signal ? AbortSignal.any([signal, attempt.signal]) : attempt.signal);
+        if (this.gateway === gateway && this.pending?.command.id === id && !attempt.signal.aborted) this.observeReceipt(receipt);
+      } catch { if (this.gateway === gateway && this.pending?.command.id === id) this.unknown = true; }
+    })().finally(() => {
+      if (this.refreshAttempt === attempt) this.refreshAttempt = null;
+      this.refreshing = null;
+    });
     return this.refreshing;
+  }
+
+  recheckReceipt() {
+    if (!this.view?.actions.checkReceipt) return false;
+    this.waitBudget = null;
+    this.waitExpired = false;
+    return true;
+  }
+
+  cancel() {
+    this.refreshAttempt?.abort();
+    if (this.pending) this.unknown = true;
   }
 }

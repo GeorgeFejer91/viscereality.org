@@ -1142,10 +1142,10 @@ index 5273a82f3aa0dcc517653e62af9aa8512f8674a4..e6143cd2f8a801d3db84ccdbacb5743e
  }
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8ca88fd7fe
+index 0000000000000000000000000000000000000000..98a6b19f4b88e34f4943a2475e49dec701199541
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
-@@ -0,0 +1,1318 @@
+@@ -0,0 +1,1404 @@
 +//! Audio-frame-owned parked setup and whole-window participant tilt fitting.
 +//! No Android dependencies or implicit system clock.
 +//!
@@ -1385,7 +1385,9 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +    host_ns: u64,
 +    playing: bool,
 +    advanced_ns: u64,
++    observed_advance_ns: Option<u64>,
 +    healthy: bool,
++    fault: Option<SetupFailure>,
 +}
 +#[derive(Debug, Clone, Copy)]
 +struct AccObservation {
@@ -1403,6 +1405,7 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +    schedule: LoopSchedule,
 +    clock: Option<AudioClock>,
 +    ever_played: bool,
++    audio_advance_required: bool,
 +    quality: QualityStatus,
 +    quality_slot_flags: [u8; MAX_TRAINING_SAMPLES],
 +    quality_sample_frame: Option<u64>,
@@ -1439,6 +1442,7 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +            schedule,
 +            clock: None,
 +            ever_played: false,
++            audio_advance_required: false,
 +            quality: QualityStatus::default(),
 +            quality_slot_flags: [0; MAX_TRAINING_SAMPLES],
 +            quality_sample_frame: None,
@@ -1480,12 +1484,19 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +    ) {
 +        let mut advanced_ns = monotonic_ns;
 +        let mut healthy = true;
++        let mut fault = None;
++        let mut plausible_forward = false;
++        let mut observed_advance_ns = self
++            .clock
++            .filter(|clock| clock.generation == audio_generation)
++            .and_then(|clock| clock.observed_advance_ns);
 +        if let Some(previous) = self.clock {
 +            if audio_generation < previous.generation {
 +                self.fail(SetupFailure::ClockRetired);
 +                self.clock_history.clear();
 +                if let Some(clock) = &mut self.clock {
 +                    clock.healthy = false;
++                    clock.fault = Some(SetupFailure::ClockRetired);
 +                }
 +                return;
 +            }
@@ -1495,6 +1506,7 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +            } else if monotonic_ns < previous.host_ns || absolute_frame < previous.frame {
 +                self.fail(SetupFailure::ClockReversed);
 +                healthy = false;
++                fault = Some(SetupFailure::ClockReversed);
 +            } else {
 +                let elapsed = monotonic_ns - previous.host_ns;
 +                let advanced = absolute_frame - previous.frame;
@@ -1508,15 +1520,27 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +                {
 +                    self.fail(SetupFailure::ClockReversed);
 +                    healthy = false;
++                    fault = Some(SetupFailure::ClockReversed);
 +                } else if previous.playing && elapsed > CLOCK_FRESH_NS {
 +                    self.fail(SetupFailure::ClockStale);
++                    fault = Some(SetupFailure::ClockStale);
 +                }
 +                if playing && previous.playing && advanced == 0 {
 +                    advanced_ns = previous.advanced_ns;
 +                    if monotonic_ns.saturating_sub(advanced_ns) > CLOCK_FRESH_NS {
 +                        self.fail(SetupFailure::ClockStalled);
 +                        healthy = false;
++                        fault = Some(SetupFailure::ClockStalled);
 +                    }
++                }
++                plausible_forward = healthy
++                    && playing
++                    && previous.playing
++                    && advanced > 0
++                    && elapsed > 0
++                    && elapsed <= CLOCK_FRESH_NS;
++                if plausible_forward {
++                    observed_advance_ns = Some(monotonic_ns);
 +                }
 +                if previous.playing != playing {
 +                    if previous.playing && !playing && self.calibration_active() {
@@ -1529,6 +1553,14 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +                    self.signal_resume_ns = playing.then_some(monotonic_ns);
 +                    self.delivery_witness_ns = playing.then_some(monotonic_ns);
 +                }
++            }
++        }
++        if self.audio_advance_required {
++            if plausible_forward {
++                self.audio_advance_required = false;
++            } else {
++                healthy = false;
++                fault = Some(SetupFailure::ClockStale);
 +            }
 +        }
 +        let continuous = self.clock.is_some_and(|previous| {
@@ -1550,7 +1582,9 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +            host_ns: monotonic_ns,
 +            playing,
 +            advanced_ns,
++            observed_advance_ns,
 +            healthy,
++            fault,
 +        });
 +        if !healthy || !playing {
 +            return;
@@ -1721,6 +1755,58 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +        self.experiment_start_frame = None;
 +        self.experiment_completed_frames = 0;
 +        Ok(())
++    }
++
++    /// Retire evidence without replacing the core or inventing an audio observation.
++    /// The accepted transport owner must subsequently supply a real new clock.
++    pub(crate) fn retire_audio_evidence(&mut self) {
++        self.fail(self.failure.unwrap_or(SetupFailure::ClockStale));
++        self.input = SetupInput::Automatic;
++        self.samples.clear();
++        self.last_training_slot = None;
++        self.clock_history.clear();
++        self.pending_training.clear();
++        self.reset_sample_continuity();
++        self.audio_advance_required = true;
++        if let Some(clock) = &mut self.clock {
++            clock.healthy = false;
++            clock.fault = Some(SetupFailure::ClockStale);
++        }
++    }
++
++    /// The existing explicit main-end lifecycle resets preparation, never the
++    /// truth/age of its still-owned physical audio clock.
++    pub(crate) fn reset_preparation(&mut self) {
++        let clock = self.clock;
++        let ever_played = self.ever_played;
++        let audio_advance_required = self.audio_advance_required;
++        *self = Self::new(self.schedule);
++        self.clock = clock;
++        self.ever_played = ever_played;
++        self.audio_advance_required = audio_advance_required;
++        if clock.is_some_and(|clock| clock.healthy && clock.playing) {
++            self.remember_clock();
++        }
++    }
++
++    pub(crate) fn clock_diagnostics(&self, now: u64) -> (Option<u64>, Option<u64>, &'static str) {
++        let Some(clock) = self.clock else {
++            return (None, None, "clock-unavailable");
++        };
++        let reason = if now < clock.host_ns {
++            "clock-future"
++        } else if now - clock.host_ns > CLOCK_FRESH_NS {
++            "observation-stale"
++        } else if !clock.healthy {
++            clock.fault.unwrap_or(SetupFailure::ClockStale).as_str()
++        } else if !clock.playing {
++            "paused"
++        } else if clock.fault == Some(SetupFailure::ClockStale) {
++            "observation-gap"
++        } else {
++            "healthy"
++        };
++        (Some(clock.host_ns), clock.observed_advance_ns, reason)
 +    }
 +
 +    /// Apply source-health ownership before any current sample is available.
@@ -2466,10 +2552,10 @@ index 0000000000000000000000000000000000000000..9e1caa0b165ae9edc2d8ba4d7a122c8c
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e11670789a
+index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da21876e2a6eaf
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,1536 @@
+@@ -0,0 +1,1861 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -2578,6 +2664,21 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        Ok(())
 +    }
 +}
++const AUDIO_RECOVERY_NS: u64 = 2_000_000_000;
++
++struct AudioRecovery {
++    command: Value,
++    old_generation: u64,
++    target_generation: Option<u64>,
++    claimed_ns: Option<u64>,
++    deadline_ns: u64,
++    source_reference: u64,
++    projection_generation: Option<u64>,
++    controller_generation: Option<u64>,
++    forward: bool,
++    input_seen_ns: Option<u64>,
++}
++
 +struct Runtime {
 +    core: BreathingSetup,
 +    schedule: LoopSchedule,
@@ -2615,6 +2716,8 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +    sequence: u64,
 +    phase: CommonBreathPhase,
 +    ledger: VecDeque<(Value, Value)>,
++    recovery: Option<AudioRecovery>,
++    retired_audio_generation: u64,
 +}
 +#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 +pub(crate) struct SetupPolarLineage {
@@ -2822,6 +2925,26 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        self.observe_acc_with_source(sensor, host, host, mg);
 +    }
 +    fn observe_acc_with_source(&mut self, sensor: u64, host: u64, source_ns: u64, mg: [f32; 3]) {
++        let norm = mg.iter().map(|v| f64::from(*v).powi(2)).sum::<f64>().sqrt();
++        let mapped = self.map_raw_host(source_ns) == Some(host);
++        let observed_now = self.now_ns().max(host);
++        let s = self.core.snapshot(observed_now);
++        if let Some(recovery) = &mut self.recovery {
++            if recovery.command["op"] == "calibrate"
++                && recovery.target_generation == Some(self.generation)
++                && recovery.claimed_ns.is_some_and(|claim| host > claim)
++                && recovery.source_reference == self.source_reference
++                && recovery.projection_generation == self.projection_generation
++                && self.projection_ready
++                && mapped
++                && s.clock_valid
++                && s.playing
++                && observed_now.saturating_sub(host) <= 200_000_000
++                && (850.0..=1150.0).contains(&norm)
++            {
++                recovery.input_seen_ns = Some(host);
++            }
++        }
 +        self.core.observe_acc(
 +            self.source_reference,
 +            sensor,
@@ -2871,6 +2994,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +                }
 +            }
 +        }
++        self.complete_recovery_if_ready(now);
 +        self.refresh(now);
 +    }
 +    fn refresh_classifier_continuity(&mut self, source_ns: u64) {
@@ -3013,6 +3137,8 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            sequence: 0,
 +            phase: CommonBreathPhase::Unknown,
 +            ledger: VecDeque::new(),
++            recovery: None,
++            retired_audio_generation: 0,
 +        }
 +    }
 +    fn now_ns(&self) -> u64 {
@@ -3021,6 +3147,25 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        })
 +    }
 +    fn observe_clock(&mut self, g: u64, frame: u64, ns: u64, playing: bool) {
++        self.expire_recovery(ns);
++        if g <= self.retired_audio_generation {
++            return;
++        }
++        let advancing = playing
++            && self
++                .last_clock
++                .is_some_and(|(old_g, old_frame, old_ns, old_playing)| {
++                    old_g == g
++                        && old_playing
++                        && frame > old_frame
++                        && ns > old_ns
++                        && ns - old_ns <= 250_000_000
++                });
++        if let Some(recovery) = &self.recovery {
++            if recovery.target_generation != Some(g) {
++                return;
++            }
++        }
 +        if g != self.generation || self.last_clock.is_some_and(|(_, _, _, old)| old != playing) {
 +            self.retire_driver_phase();
 +        }
@@ -3052,6 +3197,11 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            self.last_clock = Some((g, frame, ns, playing));
 +        }
 +        let s = self.core.snapshot(ns);
++        if advancing && s.clock_valid {
++            if let Some(recovery) = &mut self.recovery {
++                recovery.forward = true;
++            }
++        }
 +        if s.input == SetupInput::Controller
 +            && playing
 +            && matches!(
@@ -3067,6 +3217,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            self.controller_lost_frames
 +                .get_or_insert(s.experiment_completed_frames);
 +        }
++        self.complete_recovery_if_ready(ns);
 +        self.refresh(ns);
 +    }
 +    fn bind_source(&mut self, binding: (u64, u64)) {
@@ -3129,14 +3280,35 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            self.controller_seen_ns = valid.then_some(now);
 +            if valid {
 +                self.controller_resume_deadline_ns = None;
++                if let Some(recovery) = &mut self.recovery {
++                    if recovery.command["op"] == "controller"
++                        && recovery.controller_generation == Some(g)
++                        && recovery.claimed_ns.is_some_and(|claim| now > claim)
++                    {
++                        recovery.input_seen_ns = Some(now);
++                    }
++                }
 +            }
++            self.complete_recovery_if_ready(now);
 +            self.refresh(now);
 +        }
 +    }
 +    fn ready(&self, s: SetupStatus, now: u64) -> bool {
-+        s.ready && (s.input != SetupInput::Controller || self.controller_ready(now))
++        self.recovery.is_none()
++            && s.ready
++            && (s.input != SetupInput::Controller || self.controller_ready(now))
++    }
++    fn recovery_available(&self, s: SetupStatus) -> bool {
++        self.generation > 0
++            && self.recovery.is_none()
++            && s.experiment == ExperimentState::Preparation
++            && self.last_admitted_frame.is_none()
++            && (!s.clock_valid || (!s.playing && !s.parked))
 +    }
 +    fn stage(&self, s: SetupStatus) -> &'static str {
++        if self.recovery.is_some() {
++            return "recovering";
++        }
 +        if self.controller_lost {
 +            return "waiting";
 +        }
@@ -3161,6 +3333,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        }
 +    }
 +    fn refresh(&mut self, now: u64) {
++        self.expire_recovery(now);
 +        let s = self.core.snapshot(now);
 +        if self
 +            .last_confirmed_phase
@@ -3189,7 +3362,10 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            s.playing,
 +            s.clock_valid,
 +            self.ready(s, now),
-+            self.controller_lost
++            self.controller_lost,
++            self.recovery
++                .as_ref()
++                .map(|recovery| (&recovery.command["id"], recovery.target_generation))
 +        ]);
 +        if self.semantic != semantic {
 +            self.semantic = semantic;
@@ -3199,7 +3375,13 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +    fn status(&mut self, now: u64) -> Value {
 +        self.refresh(now);
 +        let s = self.core.snapshot(now);
++        let (observed_ns, last_advance_ns, clock_reason) = self.core.clock_diagnostics(now);
 +        json!({"v":1,"g":self.generation,"r":self.revision,"stage":self.stage(s),"input":s.input.as_str(),"phase":s.phase.as_str(),
++            "clock_valid":s.clock_valid,"clock":{"healthy":s.clock_valid,"reason":clock_reason,
++                "observed_ns":observed_ns,"observation_age_ns":observed_ns.map(|ns|now.saturating_sub(ns)),
++                "last_advance_ns":last_advance_ns,"advance_age_ns":last_advance_ns.map(|ns|now.saturating_sub(ns))},
++            "recovery":self.recovery.as_ref().map(|recovery|json!({"id":recovery.command["id"],"state":"pending", "deadline_ns":recovery.deadline_ns,"target_generation":recovery.target_generation})),
++            "audio_recovery_available":self.recovery_available(s),
 +            "parked":s.parked,"source_clock_ready":self.projection_ready,
 +            "quality":{"accepted":s.accepted_samples,"masked":s.quality.masked,"motion":s.quality.motion,"timing":s.quality.timing,"invalid":s.quality.invalid,
 +                "usable_fraction":(s.accepted_samples as f64/((s.calibration_completed_frames/1764).max(1) as f64)).clamp(0.0,1.0),"warning":s.quality.warning},
@@ -3211,6 +3393,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            "main_start_frame":s.experiment_start_frame,"main_started":!self.controller_lost && matches!(s.experiment,ExperimentState::Running|ExperimentState::Finished),"maximum_bias_percent":0})
 +    }
 +    fn check_command(&mut self, v: &Value, now: u64) -> Result<Option<Value>, &'static str> {
++        self.expire_recovery(now);
 +        if v["op"] == "end-main" {
 +            closed(v, &["v", "id", "g", "r", "op", "main_start_frame"])?;
 +        } else {
@@ -3263,11 +3446,19 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            }
 +            return Ok(None);
 +        }
++        if self.recovery.is_some() {
++            return Err("audio-recovery-pending");
++        }
 +        let parked_start = s.parked && matches!(v["op"].as_str(), Some("calibrate" | "controller"));
 +        if !s.clock_valid || (!s.playing && !parked_start) {
-+            return Err("clock-stale");
++            if !matches!(v["op"].as_str(), Some("calibrate" | "controller")) {
++                return Err("clock-stale");
++            }
++            if s.experiment != ExperimentState::Preparation || self.last_admitted_frame.is_some() {
++                return Err("experiment-active");
++            }
 +        }
-+        if v["op"] == "calibrate" && !self.projection_ready {
++        if v["op"] == "calibrate" && !self.projection_ready && !self.recovery_available(s) {
 +            return Err("source-clock-warming");
 +        }
 +        if matches!(
@@ -3279,6 +3470,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        Ok(None)
 +    }
 +    fn command(&mut self, v: &Value, now: u64) -> Value {
++        self.expire_recovery(now);
 +        if v["op"] == "receipt" {
 +            if closed(v, &["v", "id", "op"]).is_err()
 +                || v["v"] != 1
@@ -3296,6 +3488,36 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +        self.apply_command(v, now)
 +    }
 +    fn apply_command(&mut self, v: &Value, now: u64) -> Value {
++        let s = self.core.snapshot(now);
++        if matches!(v["op"].as_str(), Some("calibrate" | "controller"))
++            && (!s.clock_valid || (!s.playing && !s.parked))
++        {
++            if v["op"] == "calibrate" && self.source_binding.is_none_or(|binding| binding.0 == 0) {
++                return receipt(v, false, "polar-source-unavailable");
++            }
++            self.core.retire_audio_evidence();
++            self.retire_driver_phase();
++            self.classified_model = None;
++            self.classified_at = None;
++            self.phase = CommonBreathPhase::Unknown;
++            self.recovery = Some(AudioRecovery {
++                command: v.clone(),
++                old_generation: self.generation,
++                target_generation: None,
++                claimed_ns: None,
++                deadline_ns: now.saturating_add(AUDIO_RECOVERY_NS),
++                source_reference: self.source_reference,
++                projection_generation: self.projection_generation,
++                controller_generation: self.controller_generation,
++                forward: false,
++                input_seen_ns: None,
++            });
++            let pending = json!({"v":1,"id":v["id"],"state":"pending","accepted":true,"reason":"audio-recovery-pending","recovery_generation":null});
++            self.store_receipt(v.clone(), pending.clone());
++            self.revision = self.revision.saturating_add(1);
++            self.refresh(now);
++            return pending;
++        }
 +        let result = match v["op"].as_str().unwrap_or("") {
 +            "start" => {
 +                self.started = true;
@@ -3325,7 +3547,7 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +                }
 +            }
 +            "end-main" => {
-+                self.core = BreathingSetup::new(self.schedule);
++                self.core.reset_preparation();
 +                self.controller_generation = None;
 +                self.controller_seen_ns = None;
 +                self.controller_volume01 = None;
@@ -3337,9 +3559,6 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +                self.phase = CommonBreathPhase::Unknown;
 +                self.started = false;
 +                self.last_admitted_frame = None;
-+                if let Some((g, frame, ns, playing)) = self.last_clock {
-+                    self.core.observe_clock(g, frame, ns, playing);
-+                }
 +                Ok(())
 +            }
 +            _ => Err("command-invalid"),
@@ -3367,11 +3586,167 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +            self.refresh(now);
 +        }
 +        let result = receipt(v, accepted, result.err().unwrap_or("accepted"));
-+        if self.ledger.len() == 64 {
-+            self.ledger.pop_front();
-+        }
-+        self.ledger.push_back((v.clone(), result.clone()));
++        self.store_receipt(v.clone(), result.clone());
 +        result
++    }
++
++    fn store_receipt(&mut self, command: Value, result: Value) {
++        if let Some((_, prior)) = self
++            .ledger
++            .iter_mut()
++            .find(|(prior, _)| prior["id"] == command["id"])
++        {
++            *prior = result;
++        } else {
++            if self.ledger.len() == 64 {
++                self.ledger.pop_front();
++            }
++            self.ledger.push_back((command, result));
++        }
++    }
++    fn finish_recovery(&mut self, accepted: bool, reason: &'static str) {
++        let Some(recovery) = self.recovery.take() else {
++            return;
++        };
++        if !accepted {
++            self.core.retire_audio_evidence();
++        }
++        let mut result = receipt(&recovery.command, accepted, reason);
++        result["recovery_generation"] = json!(recovery.target_generation);
++        self.store_receipt(recovery.command, result);
++        self.revision = self.revision.saturating_add(1);
++    }
++    fn expire_recovery(&mut self, now: u64) {
++        let Some(recovery) = &self.recovery else {
++            return;
++        };
++        if now > recovery.deadline_ns {
++            self.finish_recovery(false, "audio-recovery-timeout");
++        } else if self.core.snapshot(now).experiment != ExperimentState::Preparation
++            || self.last_admitted_frame.is_some()
++            || (recovery.command["op"] == "calibrate"
++                && (recovery.source_reference != self.source_reference
++                    || recovery.projection_generation != self.projection_generation))
++            || (recovery.command["op"] == "controller"
++                && recovery.controller_generation != self.controller_generation)
++            || (recovery.target_generation == Some(self.generation)
++                && self
++                    .last_clock
++                    .is_some_and(|(g, _, _, playing)| g == self.generation && !playing))
++        {
++            self.finish_recovery(false, "audio-recovery-retired");
++        }
++    }
++    /// Private Java-owner handshake, never an external setup command.
++    fn recovery_effect(
++        &mut self,
++        id: &str,
++        old: u64,
++        target: u64,
++        action: &str,
++        now: u64,
++    ) -> Value {
++        self.expire_recovery(now);
++        if action == "fault" {
++            if old == self.generation && target == old && old > self.retired_audio_generation {
++                self.core.retire_audio_evidence();
++                self.retire_driver_phase();
++                self.classified_model = None;
++                self.classified_at = None;
++                self.phase = CommonBreathPhase::Unknown;
++                self.finish_recovery(false, "audio-recovery-failed");
++                self.refresh(now);
++                return json!({"accepted":true,"effect":false,"reason":"audio-owner-fault"});
++            }
++            return json!({"accepted":false,"effect":false,"reason":"stale-generation"});
++        }
++        let Some(recovery) = &mut self.recovery else {
++            return json!({"accepted":false,"effect":false,"reason":"audio-recovery-retired"});
++        };
++        if recovery.command["id"] != id || recovery.old_generation != old || target <= old {
++            return json!({"accepted":false,"effect":false,"reason":"audio-recovery-mismatch"});
++        }
++        match action {
++            "claim" if recovery.target_generation.is_none() && self.generation == old => {
++                recovery.target_generation = Some(target);
++                recovery.claimed_ns = Some(now);
++                // Claims can skip a target that failed before its first clock
++                // publication. Every older Java-owned target is retired too.
++                self.retired_audio_generation = self.retired_audio_generation.max(target - 1);
++                self.source_clock_pair = None;
++                self.controller_seen_ns = None;
++                self.controller_volume01 = None;
++                self.retire_driver_phase();
++                if let Some((_, result)) = self
++                    .ledger
++                    .iter_mut()
++                    .find(|(command, _)| command["id"] == id)
++                {
++                    result["recovery_generation"] = json!(target);
++                }
++                self.refresh(now);
++                json!({"accepted":true,"effect":true,"reason":"audio-recovery-claimed"})
++            }
++            "claim" if recovery.target_generation == Some(target) => {
++                json!({"accepted":true,"effect":false,"reason":"audio-recovery-already-claimed"})
++            }
++            "check" if recovery.target_generation == Some(target) => {
++                json!({"accepted":true,"effect":false,"reason":"audio-recovery-current"})
++            }
++            "fail" if recovery.target_generation == Some(target) => {
++                self.finish_recovery(false, "audio-recovery-failed");
++                self.refresh(now);
++                json!({"accepted":true,"effect":false,"reason":"audio-recovery-failed"})
++            }
++            _ => json!({"accepted":false,"effect":false,"reason":"audio-recovery-mismatch"}),
++        }
++    }
++    fn complete_recovery_if_ready(&mut self, now: u64) {
++        self.expire_recovery(now);
++        let Some(recovery) = &self.recovery else {
++            return;
++        };
++        let s = self.core.snapshot(now);
++        if recovery.target_generation != Some(self.generation)
++            || !recovery.forward
++            || !s.clock_valid
++            || !s.playing
++            || !recovery
++                .input_seen_ns
++                .is_some_and(|seen| now >= seen && now - seen <= 200_000_000)
++        {
++            return;
++        }
++        let calibrate = recovery.command["op"] == "calibrate";
++        if calibrate
++            && (!self.projection_ready
++                || self
++                    .source_clock_pair
++                    .is_none_or(|(_, _, at)| at.elapsed().as_nanos() > 250_000_000))
++        {
++            return;
++        }
++        if !calibrate && !self.controller_ready(now) {
++            return;
++        }
++        let result = if calibrate {
++            self.core.start_calibration(self.source_reference, now)
++        } else {
++            self.core.select_controller()
++        };
++        self.started = true;
++        self.retire_driver_phase();
++        self.classified_model = None;
++        self.classified_at = None;
++        self.phase = CommonBreathPhase::Unknown;
++        self.finish_recovery(
++            result.is_ok(),
++            if result.is_ok() {
++                "accepted"
++            } else {
++                "audio-recovery-failed"
++            },
++        );
 +    }
 +    fn input_phase(&self, now: u64) -> &'static str {
 +        match self.output(now) {
@@ -3493,6 +3868,19 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +    if let Some(r) = state().lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
 +        r.observe_source_pair(nano, elapsed);
 +    }
++}
++pub(crate) fn recovery_effect(id: &str, old: u64, target: u64, action: &str, now: u64) -> Value {
++    if !selected() {
++        return json!({"accepted":false,"effect":false,"reason":"not-selected"});
++    }
++    let _gate = command_gate().lock().unwrap_or_else(|e| e.into_inner());
++    let binding = crate::polar_input_health::source_binding();
++    let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
++    let Some(runtime) = guard.as_mut() else {
++        return json!({"accepted":false,"effect":false,"reason":"not-configured"});
++    };
++    runtime.bind_source(binding);
++    runtime.recovery_effect(id, old, target, action, now)
 +}
 +pub(crate) fn refresh_source_projection(binding: (u64, u64)) {
 +    if !selected() || binding != crate::polar_input_health::source_binding() {
@@ -3956,6 +4344,29 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +    jni_response(env, result)
 +}
 +
++#[cfg(target_os = "android")]
++#[no_mangle]
++pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_BreathingSetupAudio_nativeRecoveryEffect(
++    mut env: jni::EnvUnowned,
++    _class: jni::objects::JClass,
++    id: jni::objects::JString,
++    old: jni::sys::jlong,
++    target: jni::sys::jlong,
++    action: jni::objects::JString,
++    now: jni::sys::jlong,
++) -> jni::sys::jstring {
++    let result = match env
++        .with_env(|e| Ok::<_, jni::errors::Error>((id.try_to_string(e)?, action.try_to_string(e)?)))
++        .into_outcome()
++    {
++        jni::Outcome::Ok((id, action)) if old > 0 && target > 0 && now > 0 => {
++            recovery_effect(&id, old as u64, target as u64, &action, now as u64)
++        }
++        _ => json!({"accepted":false,"effect":false,"reason":"recovery-invalid"}),
++    };
++    jni_response(env, result)
++}
++
 +#[cfg(test)]
 +#[path = "experiment_breathing_setup_runtime_tests.rs"]
 +mod tests;
@@ -4008,10 +4419,10 @@ index 0000000000000000000000000000000000000000..0b289e914bcb7b1d735e381b735176e1
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..c5ccba4fc8defac88facc4d2a26eb2df9ef81d6c
+index 0000000000000000000000000000000000000000..ef82911a370d1036efcbcddc3df6dc3c0413df99
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,1604 @@
+@@ -0,0 +1,2006 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
@@ -4065,6 +4476,408 @@ index 0000000000000000000000000000000000000000..c5ccba4fc8defac88facc4d2a26eb2df
 +        &json!({"v":1,"id":format!("{id:016x}"),"g":s["g"],"r":s["r"],"op":op}),
 +        now,
 +    )
++}
++
++#[test]
++fn explicit_preparation_retry_reserves_recovery_for_a_playing_stalled_head() {
++    let mut r = runtime();
++    r.observe_clock(7, 0, 1_000_000_000, false);
++    r.bind_source((5, 1));
++    r.projection_ready = true;
++    assert_eq!(
++        command(&mut r, 1, "calibrate", 1_000_000_000)["state"],
++        "confirmed"
++    );
++    r.observe_clock(7, 0, 1_020_000_000, true);
++    r.observe_clock(7, 882, 1_040_000_000, true);
++    for tick in 1..=14 {
++        r.observe_clock(7, 882, 1_040_000_000 + tick * 20_000_000, true);
++    }
++    let failed = r.status(1_320_000_000);
++    assert_eq!(failed["failure"], "clock_stalled");
++    assert_eq!(failed["calibration"], "failed");
++    let request =
++        json!({"v":1,"id":"0000000000000002","g":failed["g"],"r":failed["r"],"op":"calibrate"});
++    let pending = r.command(&request, 1_320_000_000);
++    assert_eq!(pending["state"], "pending", "explicit retry must reach an admitted recovery rather than the permanent clock-stale dead end");
++    assert_eq!(pending["reason"], "audio-recovery-pending");
++    assert_eq!(
++        r.command(&request, 1_320_000_000),
++        pending,
++        "duplicate ID keeps one reservation"
++    );
++    assert_eq!(r.status(1_320_000_000)["stage"], "recovering");
++    assert_eq!(r.status(1_320_000_000)["ready"], false);
++}
++
++fn stalled_recovery_runtime() -> (Runtime, Value, u64) {
++    let mut r = runtime();
++    r.observe_clock(7, 0, 1_000_000_000, false);
++    r.bind_source((5, 1));
++    r.projection_ready = true;
++    assert_eq!(
++        command(&mut r, 1, "calibrate", 1_000_000_000)["accepted"],
++        true
++    );
++    r.observe_clock(7, 0, 1_020_000_000, true);
++    r.observe_clock(7, 882, 1_040_000_000, true);
++    for tick in 1..=14 {
++        r.observe_clock(7, 882, 1_040_000_000 + tick * 20_000_000, true);
++    }
++    let now = 1_320_000_000;
++    let status = r.status(now);
++    let request =
++        json!({"v":1,"id":"0000000000000002","g":status["g"],"r":status["r"],"op":"calibrate"});
++    assert_eq!(r.command(&request, now)["state"], "pending");
++    (r, request, now)
++}
++
++#[test]
++fn recovery_requires_single_owner_claim_actual_forward_head_and_fresh_postclaim_input() {
++    let (mut r, request, now) = stalled_recovery_runtime();
++    let id = request["id"].as_str().unwrap();
++    r.observe_clock(8, 882, now + 20_000_000, true);
++    assert_eq!(
++        r.status(now + 20_000_000)["g"],
++        7,
++        "no unclaimed generation can complete reservation"
++    );
++    assert_eq!(
++        r.recovery_effect(id, 7, 8, "claim", now + 20_000_000)["effect"],
++        true
++    );
++    assert_eq!(
++        r.recovery_effect("", 7, 7, "fault", now + 20_000_000)["accepted"],
++        false,
++        "retired owner faults cannot poison the claimed generation"
++    );
++    assert_eq!(
++        r.recovery_effect(id, 7, 8, "claim", now + 20_000_000)["effect"],
++        false
++    );
++    assert_eq!(
++        r.recovery_effect(id, 7, 9, "claim", now + 20_000_000)["accepted"],
++        false
++    );
++    r.observe_clock(8, 0, now + 40_000_000, true);
++    r.observe_source_pair(now + 40_000_000, now + 40_000_000);
++    r.observe_acc_with_source(100_000_000_000 + now, now, now, vector(0.0));
++    r.observe_clock(8, 882, now + 60_000_000, true);
++    assert_eq!(
++        r.command(&request, now + 60_000_000)["state"],
++        "pending",
++        "old source evidence cannot finish a new generation"
++    );
++    let epoch = r.driver_epoch;
++    r.observe_clock(7, 100_000, now + 65_000_000, true);
++    assert_eq!(
++        r.driver_epoch, epoch,
++        "retired callbacks cannot retire the new driver cursor again"
++    );
++    assert_eq!(r.status(now + 65_000_000)["position_frames"], 882);
++    r.observe_source_pair(now + 60_000_000, now + 60_000_000);
++    r.observe_acc_with_source(
++        100_000_000_000 + now + 60_000_000,
++        now + 60_000_000,
++        now + 60_000_000,
++        [f32::NAN, 0.0, 1000.0],
++    );
++    assert_eq!(r.command(&request, now + 60_000_000)["state"], "pending");
++    r.observe_acc_with_source(
++        100_000_000_001 + now + 60_000_000,
++        now + 60_000_000,
++        now + 60_000_000,
++        vector(0.0),
++    );
++    assert_eq!(r.command(&request, now + 60_000_000)["state"], "confirmed");
++    let s = r.core.snapshot(now + 60_000_000);
++    assert_eq!(s.calibration_generation, 2);
++    assert_eq!(s.calibration_start_frame, Some(705_600));
++    assert_eq!(s.calibration_target_frames, 1_411_200);
++    assert_eq!(s.calibration_completed_frames, 0);
++    assert_eq!(s.accepted_samples, 0);
++    assert!(r.core.model().is_none());
++    // The original receipt remains queryable after g/r changed and cannot replay recovery.
++    assert_eq!(
++        r.command(&json!({"v":1,"id":id,"op":"receipt"}), now + 60_000_000)["state"],
++        "confirmed"
++    );
++    assert_eq!(
++        r.recovery_effect(id, 7, 8, "check", now + 60_000_000)["accepted"],
++        false
++    );
++    let base = now + 40_000_000;
++    for frame in (1764..=2_116_800).step_by(1764) {
++        let at = base + frame * 1_000_000_000 / 44_100;
++        r.observe_clock(8, frame, at, true);
++        r.observe_source_pair(at, at);
++        let seconds = (frame % 705600) as f64 / 44100.0;
++        let volume = match seconds {
++            t if t < 4.0 => t / 4.0,
++            t if t < 8.0 => 1.0,
++            t if t < 12.0 => (12.0 - t) / 4.0,
++            _ => 0.0,
++        };
++        r.observe_acc_with_source(100_000_000_000 + at, at, at, vector(volume));
++        if frame < 2_116_800 {
++            assert_ne!(r.status(at)["calibration"], "ready");
++        }
++    }
++    assert_eq!(r.status(base + 48_000_000_000)["calibration"], "ready");
++}
++
++#[test]
++fn recovery_timeout_source_retirement_and_cas_never_grant_late_effects() {
++    let (mut r, request, now) = stalled_recovery_runtime();
++    let id = request["id"].as_str().unwrap();
++    assert_eq!(r.recovery_effect(id, 7, 8, "claim", now)["effect"], true);
++    assert_eq!(
++        r.command(
++            &json!({"v":1,"id":id,"op":"receipt"}),
++            now + AUDIO_RECOVERY_NS + 1
++        )["reason"],
++        "audio-recovery-timeout",
++        "receipt lookup bounds pending lifetime even without status/poll callbacks"
++    );
++    assert_eq!(
++        r.status(now + AUDIO_RECOVERY_NS + 1)["recovery"],
++        Value::Null
++    );
++    assert_eq!(
++        r.command(&request, now + AUDIO_RECOVERY_NS + 1)["reason"],
++        "audio-recovery-timeout"
++    );
++    assert_eq!(
++        r.recovery_effect(id, 7, 8, "check", now + AUDIO_RECOVERY_NS + 1)["accepted"],
++        false
++    );
++    assert_eq!(r.status(now + AUDIO_RECOVERY_NS + 1)["ready"], false);
++    let mut stale = request.clone();
++    stale["id"] = json!("0000000000000003");
++    assert_eq!(
++        r.command(&stale, now + AUDIO_RECOVERY_NS + 1)["reason"],
++        "stale-revision"
++    );
++    assert_eq!(
++        command(&mut r, 3, "calibrate", now + AUDIO_RECOVERY_NS + 1)["state"],
++        "pending",
++        "an explicit current-CAS new ID can retry bounded failed recovery"
++    );
++    let retry_at = now + AUDIO_RECOVERY_NS + 1;
++    assert_eq!(
++        r.recovery_effect("0000000000000003", 7, 9, "claim", retry_at)["effect"],
++        true
++    );
++    r.observe_clock(9, 0, retry_at + 20_000_000, true);
++    r.observe_clock(9, 882, retry_at + 40_000_000, true);
++    r.observe_source_pair(retry_at + 40_000_000, retry_at + 40_000_000);
++    r.observe_acc_with_source(
++        100_000_000_000 + retry_at + 40_000_000,
++        retry_at + 40_000_000,
++        retry_at + 40_000_000,
++        vector(0.0),
++    );
++    assert_eq!(
++        r.command(
++            &json!({"v":1,"id":"0000000000000003","op":"receipt"}),
++            retry_at + 40_000_000
++        )["state"],
++        "confirmed"
++    );
++    let epoch = r.driver_epoch;
++    r.observe_clock(8, 882, retry_at + 50_000_000, true);
++    assert_eq!(
++        r.driver_epoch, epoch,
++        "a previously claimed but never published target is retired too"
++    );
++    assert_eq!(r.status(retry_at + 50_000_000)["clock_valid"], true);
++    assert_eq!(r.status(retry_at + 50_000_000)["g"], 9);
++    let (mut r, request, now) = stalled_recovery_runtime();
++    r.source_reference += 1;
++    assert_eq!(
++        r.recovery_effect(request["id"].as_str().unwrap(), 7, 8, "claim", now)["accepted"],
++        false
++    );
++    assert_eq!(r.command(&request, now)["reason"], "audio-recovery-retired");
++}
++
++#[test]
++fn preparation_recovery_is_blocked_through_main_until_explicit_owned_end() {
++    let mut r = runtime();
++    r.observe_clock(7, 0, 1_000_000_000, true);
++    r.controller_generation = Some(5);
++    assert_eq!(
++        command(&mut r, 1, "controller", 1_000_000_000)["accepted"],
++        true
++    );
++    r.observe_controller(5, true, 1_000_000_000);
++    assert_eq!(
++        command(&mut r, 2, "begin-main", 1_000_000_000)["accepted"],
++        true
++    );
++    r.status(1_000_000_000);
++    for tick in 1..=14 {
++        r.observe_clock(7, 0, 1_000_000_000 + tick * 20_000_000, true);
++    }
++    let now = 1_280_000_000;
++    assert_eq!(
++        command(&mut r, 3, "controller", now)["reason"],
++        "experiment-active"
++    );
++    let s = r.status(now);
++    let end = json!({"v":1,"id":"0000000000000004","g":s["g"],"r":s["r"],"op":"end-main","main_start_frame":s["main_start_frame"]});
++    assert_eq!(r.command(&end, now)["accepted"], true);
++    assert_eq!(
++        command(&mut r, 5, "controller", now)["state"],
++        "pending",
++        "accepted end-main retains the existing legitimate new-preparation lifecycle"
++    );
++}
++
++#[test]
++fn controller_recovery_needs_new_controller_evidence_and_preserves_full_main_duration() {
++    let (mut r, _, now) = stalled_recovery_runtime();
++    r.finish_recovery(false, "audio-recovery-failed");
++    r.controller_generation = Some(55);
++    let status = r.status(now);
++    let request =
++        json!({"v":1,"id":"0000000000000003","g":status["g"],"r":status["r"],"op":"controller"});
++    assert_eq!(r.command(&request, now)["state"], "pending");
++    assert_eq!(
++        r.recovery_effect("0000000000000003", 7, 8, "claim", now)["effect"],
++        true
++    );
++    r.observe_clock(8, 0, now + 20_000_000, true);
++    r.observe_clock(8, 882, now + 40_000_000, true);
++    assert_eq!(r.command(&request, now + 40_000_000)["state"], "pending");
++    r.observe_controller(54, true, now + 40_000_000);
++    assert_eq!(r.command(&request, now + 40_000_000)["state"], "pending");
++    r.observe_controller(55, true, now + 40_000_000);
++    assert_eq!(r.command(&request, now + 40_000_000)["state"], "confirmed");
++    assert_eq!(r.status(now + 40_000_000)["ready"], true);
++    assert_eq!(
++        r.core.snapshot(now + 40_000_000).experiment_target_frames,
++        39_690_000
++    );
++}
++
++#[test]
++fn recovery_of_warming_input_and_constant_fresh_head_stays_bounded_and_unready() {
++    let (mut r, _, now) = stalled_recovery_runtime();
++    r.finish_recovery(false, "audio-recovery-failed");
++    r.projection_ready = false;
++    assert_eq!(r.status(now)["audio_recovery_available"], true);
++    let s = r.status(now);
++    let request = json!({"v":1,"id":"0000000000000003","g":s["g"],"r":s["r"],"op":"calibrate"});
++    assert_eq!(
++        r.command(&request, now)["state"],
++        "pending",
++        "unhealthy transport can explicitly recover before source warmup finishes"
++    );
++    assert_eq!(
++        r.recovery_effect("0000000000000003", 7, 8, "claim", now)["effect"],
++        true
++    );
++    for tick in 1..=101 {
++        let at = now + tick * 20_000_000;
++        r.observe_source_pair(at, at);
++        r.observe_clock(8, 0, at, true);
++    }
++    let status = r.status(now + 2_020_000_000);
++    assert_eq!(status["attempt"], 1);
++    assert_eq!(status["ready"], false);
++    assert_eq!(status["clock_valid"], false);
++    assert_eq!(
++        r.command(&request, now + 2_020_000_000)["reason"],
++        "audio-recovery-timeout"
++    );
++    assert_eq!(
++        r.command(&request, now + 2_020_000_000)["recovery_generation"],
++        8
++    );
++}
++
++#[test]
++fn native_clock_diagnostics_distinguish_poll_silence_fixed_head_and_real_forward_recovery() {
++    let now = 1_320_000_000;
++    let mut r = runtime();
++    r.observe_clock(7, 0, now, true);
++    r.observe_clock(7, 882, now + 20_000_000, true);
++    for tick in 1..=14 {
++        r.observe_clock(7, 882, now + 20_000_000 + tick * 20_000_000, true);
++    }
++    let s = r.status(now + 300_000_000);
++    assert_eq!(s["clock"]["reason"], "clock_stalled");
++    assert_eq!(s["clock"]["observation_age_ns"], 0);
++    assert_eq!(s["clock"]["advance_age_ns"], 280_000_000u64);
++    assert_eq!(
++        r.status(now + 600_000_000)["clock"]["reason"],
++        "observation-stale"
++    );
++    r.observe_clock(7, 1764, now + 620_000_000, true);
++    assert_eq!(r.status(now + 620_000_000)["clock"]["healthy"], true);
++    assert_eq!(
++        r.status(now + 620_000_000)["clock"]["reason"],
++        "observation-gap"
++    );
++    r.observe_clock(7, 2646, now + 640_000_000, true);
++    assert_eq!(r.status(now + 640_000_000)["clock"]["reason"], "healthy");
++}
++
++/// Launched only by the JVM owner conformance harness. Every request executes
++/// this real Runtime; the Java test never copies its admission/receipt rules.
++#[test]
++#[ignore = "stdio peer for the Java audio-owner integration test"]
++fn java_audio_recovery_native_peer() {
++    use std::io::{BufRead, Write};
++    assert_eq!(std::env::var("RQ_AUDIO_RECOVERY_PEER").as_deref(), Ok("1"));
++    let mut r = runtime();
++    for line in std::io::stdin().lock().lines() {
++        let value: Value = serde_json::from_str(&line.unwrap()).unwrap();
++        let n = |key: &str| value[key].as_u64().unwrap();
++        let response = match value["kind"].as_str().unwrap() {
++            "configure" => {
++                let text = value["json"].as_str().unwrap();
++                let hash = value["hash"].as_str().unwrap();
++                let schedule = validate_loop(text, hash, Some(hash)).unwrap();
++                r = Runtime::new(schedule, hash.to_owned());
++                r.bind_source((5, 1));
++                r.projection_ready = true;
++                json!({"accepted":true})
++            }
++            "pair" => {
++                r.observe_source_pair(n("nano"), n("elapsed"));
++                json!({})
++            }
++            "observe" => {
++                r.observe_clock(
++                    n("g"),
++                    n("frame"),
++                    n("now"),
++                    value["playing"].as_bool().unwrap(),
++                );
++                json!({})
++            }
++            "status" => r.status(n("now")),
++            "command" => r.command(&value["command"], n("now")),
++            "effect" => r.recovery_effect(
++                value["id"].as_str().unwrap(),
++                n("old"),
++                n("target"),
++                value["action"].as_str().unwrap(),
++                n("now"),
++            ),
++            "acc" => {
++                let mg = std::array::from_fn(|index| value["mg"][index].as_f64().unwrap() as f32);
++                r.observe_acc_with_source(n("sensor"), n("host"), n("source"), mg);
++                r.status(n("now"))
++            }
++            "quit" => break,
++            _ => panic!("unknown JVM peer request"),
++        };
++        println!("RQ_AUDIO_PEER {response}");
++        std::io::stdout().flush().unwrap();
++    }
 +}
 +#[test]
 +fn audio_frames_do_not_churn_cas_and_start_confirmation_is_replay_safe() {
@@ -5618,10 +6431,10 @@ index 0000000000000000000000000000000000000000..c5ccba4fc8defac88facc4d2a26eb2df
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..3513f3122d87891a2f036c3a25c52810921cd8a1
+index 0000000000000000000000000000000000000000..41db6217965a70b64ff28cb864d8b590be3148e7
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
-@@ -0,0 +1,1287 @@
+@@ -0,0 +1,1356 @@
 +use super::*;
 +
 +#[test]
@@ -6438,6 +7251,75 @@ index 0000000000000000000000000000000000000000..3513f3122d87891a2f036c3a25c52810
 +        setup.snapshot(time(705_600) + 400_000_000).calibration,
 +        CalibrationState::Failed
 +    );
++}
++
++#[test]
++fn actual_forward_clock_recovers_health_but_only_explicit_retry_starts_a_new_window() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    run(&mut setup, 1_764, 705_600, |f| Some(guided_vector(f)));
++    for tick in 1..=7 {
++        setup.observe_clock(1, 705_600, time(705_600) + tick * 40_000_000, true);
++    }
++    let failed = setup.snapshot(time(705_600) + 280_000_000);
++    assert_eq!(failed.failure, Some(SetupFailure::ClockStalled));
++    assert!(!failed.clock_valid);
++    let now = time(705_600) + 320_000_000;
++    setup.observe_clock(1, 707_364, now, true);
++    let restored = setup.snapshot(now);
++    assert!(restored.clock_valid);
++    assert_eq!(restored.absolute_frame, 707_364);
++    assert_eq!(restored.calibration, CalibrationState::Failed);
++    setup.start_calibration(7, now).unwrap();
++    let retry = setup.snapshot(now);
++    assert_eq!(
++        retry.calibration_generation,
++        failed.calibration_generation + 1
++    );
++    assert_eq!(retry.calibration_start_frame, Some(1_411_200));
++    assert_eq!(retry.calibration_target_frames, 1_411_200);
++    assert_eq!(retry.calibration_completed_frames, 0);
++    assert_eq!(retry.accepted_samples, 0);
++    assert!(setup.model().is_none());
++}
++
++#[test]
++fn exact_stall_bound_catchup_and_explicit_retirement_keep_real_clock_authority() {
++    let mut setup = fresh_setup();
++    setup.start_calibration(7, time(0)).unwrap();
++    setup.observe_clock(1, 1764, time(1764), true);
++    assert_eq!(setup.clock_diagnostics(time(1764)).1, Some(time(1764)));
++    setup.observe_clock(1, 1764, time(1764) + 250_000_000, true);
++    assert!(setup.snapshot(time(1764) + 250_000_000).clock_valid);
++    setup.observe_clock(1, 1764, time(1764) + 250_000_001, true);
++    assert_eq!(
++        setup.snapshot(time(1764) + 250_000_001).failure,
++        Some(SetupFailure::ClockStalled)
++    );
++    // A coarse producer's catch-up jump is stored but cannot salvage the attempt.
++    setup.observe_clock(1, 1764 + 13230, time(1764) + 270_000_001, true);
++    assert_eq!(
++        setup.snapshot(time(1764) + 270_000_001).failure,
++        Some(SetupFailure::ClockReversed)
++    );
++    setup.observe_clock(1, 1764 + 13230 + 882, time(1764) + 290_000_001, true);
++    assert!(setup.snapshot(time(1764) + 290_000_001).clock_valid);
++    assert_eq!(
++        setup.snapshot(time(1764) + 290_000_001).calibration,
++        CalibrationState::Failed
++    );
++    setup.retire_audio_evidence();
++    setup.observe_clock(2, 0, time(1764) + 310_000_001, true);
++    assert!(!setup.snapshot(time(1764) + 310_000_001).clock_valid);
++    assert_eq!(
++        setup.clock_diagnostics(time(1764) + 310_000_001).1,
++        None,
++        "new head zero is not an observed frame advance"
++    );
++    setup.observe_clock(2, 0, time(1764) + 330_000_001, true);
++    assert!(!setup.snapshot(time(1764) + 330_000_001).clock_valid);
++    setup.observe_clock(2, 882, time(1764) + 350_000_001, true);
++    assert!(setup.snapshot(time(1764) + 350_000_001).clock_valid);
 +}
 +
 +#[test]
@@ -7512,6 +8394,32 @@ index 5cd22433d980a12e4374f18dd3a5abfa848f84c8..a82c07c1686daa6499fa4fa11a741323
      runtime.apply_command_json(&command.to_string());
      for _ in 0..200 {
          let current:Value=serde_json::from_str(&runtime.status_json()).unwrap();
+diff --git a/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs b/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
+index bc962d97b429794a74fac425e36c92db2846eee0..e224cabeb91ddee3c15e99f2c074ab3a5f75c73c 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_polar_tests.rs
+@@ -583,8 +583,19 @@ fn check_polar_requirement_during_preparation(guided: bool, combined: bool, disa
+             !runtime.polar_ready_at_receipt().required,
+             "a terminated recording must not carry its former configured source into a new request"
+         );
+-        thread::sleep(Duration::from_millis(25));
+-        Some(serde_json::from_str::<Value>(&runtime.status_json()).unwrap())
++        // Selection updates live acquisition immediately; the worker publishes
++        // its cached projection asynchronously. Wait for that actual predicate,
++        // rather than assuming a fixed sleep spans the worker's next turn.
++        let deadline = std::time::Instant::now() + Duration::from_secs(2);
++        loop {
++            let state: Value = serde_json::from_str(&runtime.status_json()).unwrap();
++            if state["readback"]["polar_input"]["required"] == false {
++                break Some(state);
++            }
++            assert!(std::time::Instant::now() < deadline,
++                "worker did not publish current Controller requirement after reset: {state}");
++            thread::sleep(Duration::from_millis(5));
++        }
+     } else {
+         None
+     };
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..de0c47d893614c9ea4bfdb14b20a0c7335874bde 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
@@ -13816,7 +14724,7 @@ index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..68bfc2e97777351cbb88a04a31352580
      }
  }
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f410a18a9fa 100644
+index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db2b73a587 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,10 @@ import org.json.JSONObject;
@@ -14267,7 +15175,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
          if("connect".equals(envelope.opt("action")))return connect(new JSONObject(envelope.toString()));
          return exchangeRoute(envelope,true);
      }
-@@ -352,39 +595,240 @@ public final class ExperimentSessionCommandGateway {
+@@ -352,39 +595,243 @@ public final class ExperimentSessionCommandGateway {
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
@@ -14293,7 +15201,9 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
 +                        try{return trustedPhones.control(controllerScope,payload,SystemClock.elapsedRealtime());}
 +                        finally{if(before!=trustedPhones.revision())retireControlEffects();}
 +                    }
-+                    boolean mutating=!("status".equals(action)||"receipt".equals(action)||"breath-monitor".equals(action)||"ecg-preview".equals(action));
++                    boolean setupReceipt="breath-setup".equals(action)
++                        && "receipt".equals(ExperimentSessionGatewayProtocol.setupQuery(payload).getString("op"));
++                    boolean mutating=!(setupReceipt||"status".equals(action)||"receipt".equals(action)||"breath-monitor".equals(action)||"ecg-preview".equals(action));
 +                    final long controlRevision=phonePairingEnabled&&trustedPhones!=null?trustedPhones.revision():0;
 +                    final LocalEnrollmentGuard admittedEffect=new LocalEnrollmentGuard(){public void check()throws Exception {
 +                        guard.check();
@@ -14302,7 +15212,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
 +                            requireActiveController(controllerScope,controlRevision);
 +                        }
 +                    }};
-+                    if(phonePairingEnabled&&mutating)admittedEffect.check();
++                    if(phonePairingEnabled&&(mutating||setupReceipt))admittedEffect.check();
 +                    LocalEnrollmentGuard previousEffect=effectGuard;effectGuard=mutating?admittedEffect:null;
 +                    try {
 +                    if ("ecg-preview".equals(action)) {
@@ -14345,6 +15255,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
 +                    }
 +                    JSONObject response = ownerExchange(action, payload);
 +                    guard.check();
++                    if(phonePairingEnabled&&setupReceipt)admittedEffect.check();
 +                    if(phonePairingEnabled&&enrolled&&"status".equals(action)){
 +                        long before=trustedPhones.revision();
 +                        try{response.put("controller_access",trustedPhones.status(controllerScope,SystemClock.elapsedRealtime()));}
@@ -14518,15 +15429,26 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -396,14 +840,134 @@ public final class ExperimentSessionCommandGateway {
+@@ -394,16 +841,161 @@ public final class ExperimentSessionCommandGateway {
+             try{snapshot();}catch(Exception unavailable){/* An unavailable new observation cannot erase an original receipt. */}
+             return journal.original(body.getString("id"));
          }
++        // Typed native setup lookups and original setup retries must reach the
++        // native ledger before the generic experiment journal can shadow them.
++        if ("breath-setup".equals(action)) {
++            JSONObject setup = ExperimentSessionGatewayProtocol.setupQuery(body);
++            if (!"receipt".equals(setup.getString("op"))) {
++                if (!deferredMainId.isEmpty()) throw new SecurityException("main-boundary-pending");
++                controlMode.readSnapshot().requireRemoteCommands();
++            }
++            return requestBreathingSetup(setup);
++        }
          String id=ExperimentSessionGatewayProtocol.string(body,"id");
          if(journal.known(body))return journal.original(id);
 +        if (!deferredMainId.isEmpty()) throw new SecurityException("main-boundary-pending");
          // This runs on the actual serialized owner, after any queued headset mode change.
          controlMode.readSnapshot().requireRemoteCommands();
 -        ExperimentSessionBleServer.CommandRequest request=parse(body);
-+        if ("breath-setup".equals(action)) return requestBreathingSetup(body);
 +        String scenario = "";
 +        String participantPlan = null;
 +        JSONObject command = body;
@@ -14576,8 +15498,14 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
      }
 +    private JSONObject requestBreathingSetup(JSONObject body) throws Exception {
 +        JSONObject command = ExperimentSessionGatewayProtocol.setupQuery(body);
-+        JSONObject current = snapshot();
 +        String id = command.getString("id");
++        if ("receipt".equals(command.getString("op"))) return setupReceipt(BreathingSetupAudio.command(command), id);
++        if (journal.known(command)) {
++            JSONObject original = setupReceipt(BreathingSetupAudio.command(new JSONObject().put("v", 1).put("id", id).put("op", "receipt")), id);
++            JSONObject audit = journal.original(id);
++            return "outcome_unknown".equals(original.optString("state")) && audit.has("accepted") ? audit : original;
++        }
++        JSONObject current = snapshot();
 +        if (!"IDLE".equals(current.opt("p")) || current.optBoolean("rec", true)
 +                || current.optBoolean("pending", true) || !deferredMainId.isEmpty()
 +                || !"vr-preparation".equals(current.opt("h")))
@@ -14590,11 +15518,21 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
 +        if (!journal.reserve(command)) return journal.original(id);
 +        carrier.updateReceipt(id, "accepted", "Breathing setup admitted.");
 +        revalidateEffect();
-+        JSONObject receipt = BreathingSetupAudio.command(command);
-+        String state = receipt.optString("state", "outcome_unknown");
-+        if (!"confirmed".equals(state) && !"rejected".equals(state)) state = "outcome_unknown";
++        JSONObject receipt = setupReceipt(BreathingSetupAudio.command(command), id);
++        String state = receipt.getString("state");
++        // Preserve the native result/provenance on the authenticated wire. The
++        // carrier's generic receipt remains an audit projection, not authority.
 +        carrier.updateReceipt(id, state, receipt.optString("reason", "Native setup outcome unavailable."));
-+        return journal.original(id);
++        journal.observe(receipt);
++        return receipt;
++    }
++    private static JSONObject setupReceipt(JSONObject receipt, String id) throws Exception {
++        String state = receipt.optString("state", "outcome_unknown");
++        if (!"confirmed".equals(state) && !"rejected".equals(state) && !"pending".equals(state)) state = "outcome_unknown";
++        receipt.put("v", 1).put("id", id).put("state", state);
++        if (!receipt.has("accepted")) receipt.put("accepted", false);
++        if (!receipt.has("reason")) receipt.put("reason", "Native setup outcome unavailable.");
++        return receipt;
 +    }
 +    private void deferMainStart(final String id, final ExperimentSessionBleServer.CommandRequest request) throws Exception {
 +        if (!deferredMainId.isEmpty()) throw new SecurityException("main-boundary-already-pending");
@@ -14655,7 +15593,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..c73fdf3c56e43570bde16efa167a1f41
      private JSONObject snapshot()throws Exception {
          try {
              long generation=carrier.currentGeneration(),owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision;
-@@ -431,6 +995,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -431,6 +1023,7 @@ public final class ExperimentSessionCommandGateway {
                  session.clear();polar.clear();throw new SecurityException("wifi-native-owner-changed");
              }
              status=observed.statusAt(SystemClock.elapsedRealtimeNanos(),nativeEpoch);
@@ -14969,7 +15907,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..09381589409a3b7601da9e1e2a41fc3b
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..9cd3be895b329377b26234b4883fb1f85f0536b0 100644
+index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e2b25c90b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -15107,13 +16045,18 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..9cd3be895b329377b26234b4883fb1f8
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -65,12 +148,27 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -65,12 +148,32 @@ public final class ExperimentSessionGatewayProtocol {
          return new JSONObject().put("schema","rusty.quest.experiment_session.command.v1")
              .put("operation","breath-monitor").put("run",run).put("after",after);
      }
 +    static JSONObject setupQuery(JSONObject body)throws Exception {
-+        Object generation=body.opt("g"),revision=body.opt("r");
 +        String operation=string(body,"op"),id=string(body,"id");
++        if ("receipt".equals(operation)) {
++            if (body.length()!=3 || !Integer.valueOf(1).equals(body.opt("v")) || !hex(id,16))
++                throw new IllegalArgumentException("closed-breathing-receipt-required");
++            return new JSONObject(body.toString());
++        }
++        Object generation=body.opt("g"),revision=body.opt("r");
 +        if(body.length()!=5||!Integer.valueOf(1).equals(body.opt("v"))||!hex(id,16)
 +                || !(generation instanceof Integer||generation instanceof Long)
 +                || !(revision instanceof Integer||revision instanceof Long)
@@ -15564,10 +16507,10 @@ index 0000000000000000000000000000000000000000..2a0934984807687a4bed6c43f8d7f0b7
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505ddbc67c88
+index 0000000000000000000000000000000000000000..7f190ca167917406d8763bc69dbb6345c3d88e7f
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudio.java
-@@ -0,0 +1,415 @@
+@@ -0,0 +1,559 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.Context;
@@ -15576,6 +16519,7 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +import android.media.AudioAttributes;
 +import android.media.AudioFormat;
 +import android.media.AudioTrack;
++import android.media.AudioTimestamp;
 +import android.os.SystemClock;
 +import java.io.InputStream;
 +import java.nio.charset.StandardCharsets;
@@ -15607,6 +16551,7 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        boolean playing();
 +        int head();
 +        void release();
++        default void diagnostics(JSONObject result) throws Exception { result.put("timestamp_available", false); }
 +    }
 +    interface NativeBridge {
 +        String configure(String json, String sha256);
@@ -15614,6 +16559,9 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        void observe(long generation, long frame, long monotonicNs, boolean playing);
 +        String status(long nowNs);
 +        String command(String json, long nowNs);
++        default String recoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long nowNs) {
++            return "{\"accepted\":false,\"effect\":false,\"reason\":\"audio-recovery-unavailable\"}";
++        }
 +    }
 +
 +    private static native String nativeConfigure(String loopJson, String sha256);
@@ -15621,6 +16569,7 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +    private static native void nativeObserveSourceClockPair(long javaNanoNs, long elapsedNs);
 +    private static native String nativeStatus(long nowNs);
 +    private static native String nativeCommand(String json, long nowNs);
++    private static native String nativeRecoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long nowNs);
 +
 +    static boolean selected(Context context) {
 +        if (context == null) return false;
@@ -15671,11 +16620,17 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        if (owner == null) return unavailable(selected ? installError : "breathing-setup-disabled");
 +        try {
 +            JSONObject status = new JSONObject(owner.nativeBridge.status(owner.clock.nowNs()));
-+            synchronized (owner) {
-+                status.put("audio_state", owner.closed ? "retired" : owner.active ? "playing" : "paused");
-+                status.put("audio_generation", owner.generation);
-+                if (!owner.failure.isEmpty()) status.put("audio_error", owner.failure);
++            // A blocked AudioTrack poll owns the player monitor. Diagnostics must
++            // still expose that incomplete poll rather than waiting on its lock.
++            status.put("audio_state", owner.closed ? "retired" : owner.active ? "playing" : "paused");
++            status.put("audio_generation", owner.generation);
++            status.put("audio_clock", owner.clockDiagnostics());
++            if (owner.closed || !owner.initialized || owner.worker.isShutdown() || owner.transportPreparing
++                    || (owner.pollInProgress && owner.clock.nowNs() - owner.pollStartedNs > 250000000L)) {
++                status.put("audio_recovery_available", false);
 +            }
++            if (owner.closed) status.put("ready", false);
++            if (!owner.failure.isEmpty()) status.put("audio_error", owner.failure);
 +            return status;
 +        } catch (Throwable error) { return unavailable("breathing-native-status-unavailable"); }
 +    }
@@ -15685,22 +16640,28 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        if (owner == null || command == null) return unavailable("breathing-setup-unavailable");
 +        final String body = command.toString();
 +        String operation = command.optString("op", "");
++        if (owner.closed && !"receipt".equals(operation)) return rejected("breathing-loop-retired");
 +        if ("calibrate".equals(operation) || "controller".equals(operation)) {
 +            try { return owner.call(new Callable<JSONObject>() {
 +                public JSONObject call() throws Exception { return owner.setupCommand(body); }
 +            }); }
 +            catch (TimeoutException cancelled) { return rejected("breathing-loop-command-cancelled-before-admission"); }
 +            catch (InterruptedException cancelled) { return rejected("breathing-loop-command-cancelled-before-admission"); }
++            catch (java.util.concurrent.RejectedExecutionException retired) { return rejected("breathing-loop-retired"); }
 +            catch (Throwable uncertain) { return unavailable("breathing-loop-command-outcome-uncertain"); }
 +        }
-+        synchronized (owner) { if (owner.closed) return unavailable(owner.failure); }
 +        try { return new JSONObject(owner.nativeBridge.command(command.toString(), owner.clock.nowNs())); }
 +        catch (Throwable error) { return unavailable("breathing-native-command-failed"); }
 +    }
 +
-+    private synchronized JSONObject setupCommand(String command) throws Exception {
-+        if (closed || !initialized) return rejected("breathing-loop-unavailable");
++    private JSONObject setupCommand(String command) throws Exception {
++        synchronized (this) { if (closed || !initialized) return rejected("breathing-loop-unavailable"); }
 +        JSONObject receipt = new JSONObject(nativeBridge.command(command, clock.nowNs()));
++        if (receipt.optBoolean("accepted", false) && "pending".equals(receipt.optString("state"))
++                && "audio-recovery-pending".equals(receipt.optString("reason"))) {
++            recover(new JSONObject(command));
++            return receipt;
++        }
 +        if (Boolean.TRUE.equals(receipt.opt("accepted")) && "confirmed".equals(receipt.optString("state")) && !started) {
 +            // Permission/lifecycle callbacks cannot start audio. Native must first
 +            // accept a real setup action; repeats never replay the PCM or unpause it.
@@ -15711,6 +16672,52 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +            } catch (RuntimeException failure) { fail("breathing-loop-start-failed"); throw failure; }
 +        }
 +        return receipt;
++    }
++
++    private void recover(JSONObject command) throws Exception {
++        final String id = command.getString("id");
++        synchronized (this) { if (closed || id.equals(recoveryId)) return; }
++        final long oldGeneration = command.getLong("g");
++        final long targetGeneration = GENERATIONS.incrementAndGet();
++        JSONObject claim = new JSONObject(nativeBridge.recoveryEffect(id, oldGeneration, targetGeneration, "claim", clock.nowNs()));
++        if (!claim.optBoolean("accepted", false) || !claim.optBoolean("effect", false)) return;
++        cancel(); // Retire callbacks outside the player monitor before any transport effect.
++        synchronized (this) {
++            recoveryId = id;
++            transportPreparing = true;
++            try {
++                if (closed) throw new IllegalStateException("breathing-loop-owner-retired");
++                transportUsable = false; active = false;
++                player.release();
++                // Retired track diagnostics must never be relabeled with the
++                // new generation, even before its first poll can complete.
++                platformDiagnostics = "{}"; lastPlatformDiagnosticsNs = 0;
++                generation = targetGeneration;
++                head = new BreathingSetupAudioContract.PlaybackHead(contract.sampleRate);
++                frame = 0; lastAdvanceNs = 0; rawHead = -1; actualPlaying = false;
++                player.prepare(pcm, contract.sampleRate, contract.cycleFrames);
++                // Preparation can block. A retired/expired reservation can never
++                // cause a late PLAY when Android eventually returns.
++                synchronized (playFence) {
++                    JSONObject current = new JSONObject(nativeBridge.recoveryEffect(id, oldGeneration, targetGeneration, "check", clock.nowNs()));
++                    if (closed || !current.optBoolean("accepted", false)) {
++                        player.release();
++                        failure = "breathing-loop-recovery-retired";
++                        return;
++                    }
++                    transportUsable = true; started = true;
++                    failure = "";
++                    player.play(); active = true;
++                }
++            } catch (Throwable error) {
++                transportUsable = false; active = false;
++                failure = exceptionReason("breathing-loop-recovery-failed", error);
++                try { player.release(); } catch (Throwable release) { failure += ";release:" + release.getClass().getSimpleName(); }
++                nativeBridge.recoveryEffect(id, oldGeneration, targetGeneration, "fail", clock.nowNs());
++                return;
++            } finally { transportPreparing = false; }
++        }
++        observe();
 +    }
 +
 +    private static JSONObject rejected(String reason) {
@@ -15779,14 +16786,24 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +    private final Player player;
 +    private final NativeBridge nativeBridge;
 +    private final Clock clock;
-+    private final long generation = GENERATIONS.incrementAndGet();
-+    private final BreathingSetupAudioContract.PlaybackHead head;
++    private volatile long generation = GENERATIONS.incrementAndGet();
++    private BreathingSetupAudioContract.PlaybackHead head;
 +    private final BreathingSetupAudioContract.BoundaryGate boundary = new BreathingSetupAudioContract.BoundaryGate();
 +    private final ScheduledThreadPoolExecutor worker;
 +    private volatile Thread workerThread;
-+    private long frame, mainStartFrame = -1;
-+    private boolean initialized, started, active, closed;
-+    private String failure = "";
++    private volatile long frame;
++    private long mainStartFrame = -1;
++    private volatile boolean initialized, started, active, closed;
++    private final AtomicInteger retirement = new AtomicInteger();
++    private final Object playFence = new Object();
++    private volatile boolean pollInProgress, transportPreparing;
++    private boolean transportUsable;
++    private volatile String failure = "";
++    private String recoveryId = "";
++    private volatile long pollSequence, pollStartedNs, pollEndedNs, lastDispatchNs, lastAdvanceNs, rawHead = -1;
++    private volatile boolean actualPlaying;
++    private volatile String platformDiagnostics = "{}";
++    private long lastPlatformDiagnosticsNs;
 +    private Runnable pending, pendingRetired;
 +
 +    BreathingSetupAudio(BreathingSetupAudioContract contract, String json, String hash, byte[] pcm,
@@ -15805,8 +16822,8 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        if (initialized || closed) throw new IllegalStateException("breathing-loop-owner-invalid");
 +        JSONObject configured = new JSONObject(nativeBridge.configure(loopJson, loopHash));
 +        if (!configured.optBoolean("accepted", false)) throw new IllegalStateException("breathing-native-config-rejected");
-+        player.prepare(pcm, contract.sampleRate, contract.cycleFrames); pcm = null;
-+        initialized = true; active = false;
++        player.prepare(pcm, contract.sampleRate, contract.cycleFrames);
++        initialized = true; active = false; transportUsable = true;
 +        observe();
 +        if (closed) throw new IllegalStateException("breathing-loop-initialization-failed");
 +    }
@@ -15817,12 +16834,25 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        try {
 +            synchronized (this) {
 +                if (closed || !initialized) return;
++                pollSequence++; pollStartedNs = clock.nowNs(); pollInProgress = true;
++                if (!transportUsable) return;
 +                long sourceNano = System.nanoTime();
 +                long now = clock.nowNs();
 +                nativeBridge.observeSourceClockPair(sourceNano, now);
-+                boolean actualPlaying = active && player.playing();
-+                frame = head.observe(player.head(), now, actualPlaying);
++                actualPlaying = player.playing();
++                int observedHead = player.head(); rawHead = observedHead & 0xffffffffL;
++                long observedFrame = head.observe(observedHead, now, actualPlaying);
++                if (observedFrame > frame) lastAdvanceNs = now;
++                frame = observedFrame;
 +                nativeBridge.observe(generation, frame, now, actualPlaying);
++                lastDispatchNs = clock.nowNs();
++                if (now - lastPlatformDiagnosticsNs >= 1000000000L || lastPlatformDiagnosticsNs == 0) {
++                    JSONObject platform = new JSONObject();
++                    try { player.diagnostics(platform); }
++                    catch (Throwable optional) { platform.put("diagnostic_error", exceptionReason("platform", optional)); }
++                    platform.put("platform_generation", generation);
++                    platformDiagnostics = platform.toString(); lastPlatformDiagnosticsNs = now;
++                }
 +                if (active && !actualPlaying) throw new IllegalStateException("breathing-loop-player-stopped");
 +                if (pending != null) {
 +                    JSONObject state = new JSONObject(nativeBridge.status(now));
@@ -15843,7 +16873,41 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +            // Native/session callback can re-enter other owners; never hold this owner's lock.
 +            if (retired != null) retired.run();
 +            if (callback != null) callback.run();
-+        } catch (Throwable error) { fail("breathing-loop-playback-failed"); }
++        } catch (Throwable error) { playbackFault(error); }
++        finally { pollEndedNs = clock.nowNs(); pollInProgress = false; }
++    }
++
++    private JSONObject clockDiagnostics() throws Exception {
++        long now = clock.nowNs();
++        long diagnosticGeneration = generation;
++        JSONObject result = new JSONObject(platformDiagnostics);
++        // Generation and serialized sample can be read across replacement.
++        // Match the sample's own tag instead of depending on read ordering.
++        if (result.optLong("platform_generation", -1L) != diagnosticGeneration) result = new JSONObject();
++        return result.put("generation", diagnosticGeneration).put("poll_sequence", pollSequence)
++            .put("poll_started_ns", pollStartedNs).put("poll_ended_ns", pollEndedNs)
++            .put("poll_in_progress", pollInProgress).put("preparing", transportPreparing)
++            .put("last_dispatch_ns", lastDispatchNs).put("raw_head", rawHead < 0 ? JSONObject.NULL : rawHead)
++            .put("actual_playing", actualPlaying).put("intent_playing", active).put("absolute_frame", frame)
++            .put("last_advance_ns", lastAdvanceNs == 0 ? JSONObject.NULL : lastAdvanceNs)
++            .put("poll_age_ns", pollStartedNs == 0 ? JSONObject.NULL : Math.max(0L, now - pollStartedNs))
++            .put("dispatch_age_ns", lastDispatchNs == 0 ? JSONObject.NULL : Math.max(0L, now - lastDispatchNs))
++            .put("advance_age_ns", lastAdvanceNs == 0 ? JSONObject.NULL : Math.max(0L, now - lastAdvanceNs))
++            .put("error", failure);
++    }
++    private static String exceptionReason(String reason, Throwable error) {
++        String message = error.getMessage();
++        return reason + ":" + error.getClass().getSimpleName()
++            + (message == null ? "" : ":" + message.replace('\n', ' ').replace('\r', ' ').substring(0, Math.min(160, message.length())));
++    }
++    private void playbackFault(Throwable error) {
++        synchronized (this) {
++            failure = exceptionReason("breathing-loop-playback-failed", error);
++            transportUsable = false;
++        }
++        cancel();
++        try { nativeBridge.recoveryEffect("", generation, generation, "fault", clock.nowNs()); }
++        catch (Throwable dispatch) { failure += ";fault-dispatch:" + dispatch.getClass().getSimpleName(); }
 +    }
 +
 +    synchronized boolean defer(Runnable callback, Runnable onRetired) {
@@ -15874,8 +16938,13 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +    }
 +    synchronized void resume() {
 +        if (closed || !initialized) throw new IllegalStateException("breathing-loop-unavailable");
-+        if (!started) return;
-+        if (!active) { player.play(); active = true; }
++        if (!started || !transportUsable) return;
++        if (!active) {
++            synchronized (playFence) {
++                if (closed) throw new IllegalStateException("breathing-loop-unavailable");
++                player.play(); active = true;
++            }
++        }
 +    }
 +    synchronized long positionMs() {
 +        if (closed || !initialized || mainStartFrame < 0) return -1;
@@ -15943,14 +17012,20 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        close();
 +    }
 +    @Override public void close() {
++        // Retirement is visible even if Android is blocking while holding the
++        // player monitor; its returning preparation must fail the pre-PLAY fence.
++        synchronized (playFence) {
++            if (!retirement.compareAndSet(0, 1)) return;
++            closed = true;
++        }
++        worker.shutdownNow();
 +        synchronized (this) {
-+            if (closed) return;
-+            closed = true; active = false;
++            active = false;
 +            try { nativeBridge.observe(generation, frame, clock.nowNs(), false); } catch (Throwable ignored) { }
 +            try { player.release(); } catch (RuntimeException ignored) { }
 +            pcm = null;
 +        }
-+        cancel(); worker.shutdownNow();
++        cancel();
 +    }
 +
 +    private static final NativeBridge JNI = new NativeBridge() {
@@ -15959,6 +17034,9 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        public void observe(long generation, long frame, long now, boolean playing) { nativeObserveClock(generation, frame, now, playing); }
 +        public String status(long now) { return nativeStatus(now); }
 +        public String command(String json, long now) { return nativeCommand(json, now); }
++        public String recoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long now) {
++            return nativeRecoveryEffect(id, oldGeneration, targetGeneration, action, now);
++        }
 +    };
 +
 +    private static final class StaticPlayer implements Player {
@@ -15981,6 +17059,15 @@ index 0000000000000000000000000000000000000000..cf0c75fb0aea6babca08ef2204ee505d
 +        public boolean playing() { return track.getPlayState() == AudioTrack.PLAYSTATE_PLAYING; }
 +        public int head() { return track.getPlaybackHeadPosition(); }
 +        public void release() { if (track != null) { track.release(); track = null; } }
++        public void diagnostics(JSONObject result) throws Exception {
++            AudioTimestamp timestamp = new AudioTimestamp();
++            boolean available = track.getTimestamp(timestamp);
++            result.put("timestamp_available", available);
++            if (available) result.put("timestamp_frame", timestamp.framePosition).put("timestamp_ns", timestamp.nanoTime);
++            result.put("play_state", track.getPlayState()).put("underruns", track.getUnderrunCount());
++            android.media.AudioDeviceInfo route = track.getRoutedDevice();
++            result.put("route_id", route == null ? JSONObject.NULL : route.getId());
++        }
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContract.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioContract.java
@@ -18644,12 +19731,267 @@ index 0000000000000000000000000000000000000000..31cd96aae4120706ad14d58f82be57d2
 +    }
 +    private static void check(boolean value, String reason) { if (!value) throw new AssertionError(reason); }
 +}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..ac11b2f922f4120fed0adf02d930095e90a19720
+--- /dev/null
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioNativeTest.java
+@@ -0,0 +1,249 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.io.BufferedReader;
++import java.io.InputStreamReader;
++import java.io.PrintWriter;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Paths;
++import java.util.concurrent.CountDownLatch;
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
++import java.util.concurrent.Future;
++import java.util.concurrent.ScheduledThreadPoolExecutor;
++import java.util.concurrent.TimeUnit;
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++/** Real Java owner <-> real Rust Runtime over a test-only stdio boundary. */
++public final class BreathingSetupAudioNativeTest {
++    public static void main(String[] args) throws Exception {
++        String json = new String(Files.readAllBytes(Paths.get(args[0])), StandardCharsets.UTF_8);
++        String executable = args[1];
++        stalledRetryAndFullNewWindow(json, executable);
++        blockedPreparationCannotPlayAfterNativeTimeout(json, executable);
++        hungPollRemainsObservableAndQueuedRetryCannotRunLater(json, executable);
++        stoppedAndExceptionedPlayersRemainExplicitlyRecoverable(json, executable);
++        terminalRetirementCannotPlayReturningPreparation(json, executable);
++        System.out.println("BreathingSetupAudioNativeTest PASS (real Rust admission/ledger, 5 groups)");
++    }
++
++    private static void stalledRetryAndFullNewWindow(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start(); f.advance(882, 20000000L);
++            long oldGeneration = f.state().getLong("g");
++            long sequence = f.state().getJSONObject("audio_clock").getLong("poll_sequence");
++            for (int i = 0; i < 14; i++) f.advance(882, 20000000L);
++            JSONObject stalled = f.state(); JSONObject diagnostics = stalled.getJSONObject("audio_clock");
++            check("clock_stalled".equals(stalled.getString("failure")) && !stalled.getBoolean("clock_valid"), "actual constant playing head fails the attempt");
++            check(diagnostics.getLong("poll_sequence") == sequence + 14 && diagnostics.getLong("dispatch_age_ns") == 0,
++                "poll and dispatch remain live while actual playback progress stalls");
++            check(diagnostics.getLong("advance_age_ns") == 280000000L && diagnostics.getLong("raw_head") == 882
++                && diagnostics.getBoolean("actual_playing") && diagnostics.getBoolean("intent_playing"), "intent and actual advancement are separate evidence");
++            check(!diagnostics.getBoolean("timestamp_available"), "unavailable platform timestamps do not synthesize frames");
++            check(stalled.getBoolean("audio_recovery_available"), "native preparation capability exposes explicit recovery");
++            JSONObject retry = f.request("calibrate");
++            JSONObject pending = BreathingSetupAudio.command(retry);
++            check("pending".equals(pending.getString("state")), "explicit retry is admitted pending rather than permanently clock-stale");
++            long generation = f.state().getLong("g");
++            check(generation > oldGeneration && f.player.prepares == 2 && f.player.plays == 2 && f.player.releases == 1,
++                "one accepted claim retires the old actual track and prepares/plays one fresh generation");
++            check(!f.state().getBoolean("clock_valid") && !f.state().getBoolean("ready"), "first frame zero alone cannot establish a fresh advancing clock");
++            check(f.receipt(retry).getLong("recovery_generation") == generation, "native receipt owns cross-generation provenance");
++            BreathingSetupAudio.command(retry);
++            check(f.player.prepares == 2 && f.player.plays == 2, "duplicate original pending command cannot replay its effect");
++            f.bridge.observe(oldGeneration, 1000000, f.clock.now, true);
++            check(f.state().getLong("position_frames") == 0 && f.state().getLong("g") == generation, "old generation callbacks cannot contaminate the fresh head");
++            long base = f.clock.now;
++            f.advance(882, 20000000L);
++            check("pending".equals(f.receipt(retry).getString("state")), "forward audio alone cannot substitute for fresh required input");
++            f.acc(0.0);
++            check("confirmed".equals(f.receipt(retry).getString("state")), "fresh mapped post-claim input completes the original native receipt");
++            check(f.state().getLong("attempt") == 2 && f.state().getLong("completed_frames") == 0
++                && f.state().getLong("target_frames") == 1411200, "new full two-cycle attempt starts with no retired training");
++            for (int frame = 1764; frame <= 2116800; frame += 1764) {
++                f.clock.now = base + frame * 1000000000L / 44100L; f.player.head = frame; f.owner.observe();
++                double t = (frame % 705600) / 44100.0;
++                double v = t < 4 ? t / 4 : t < 8 ? 1 : t < 12 ? (12 - t) / 4 : 0;
++                f.acc(v);
++                if (frame == 1411200) check(!"ready".equals(f.state().getString("calibration")), "one new cycle cannot salvage the failed attempt");
++            }
++            check("ready".equals(f.state().getString("calibration")) && f.state().getBoolean("ready"), "only complete fresh 32 s collection establishes the learned model");
++            BreathingSetupAudio.command(retry);
++            check(f.player.prepares == 2 && f.player.plays == 2, "late duplicate confirmed recovery cannot play again");
++            JSONObject healthy = BreathingSetupAudio.command(f.request("calibrate"));
++            check("confirmed".equals(healthy.getString("state")) && !healthy.has("recovery_generation")
++                && f.state().getLong("g") == generation && f.player.prepares == 2 && f.player.plays == 2,
++                "ordinary healthy retry preserves the same loop and receipt shape");
++        }
++    }
++
++    private static void blockedPreparationCannotPlayAfterNativeTimeout(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start(); f.advance(882, 20000000L); f.clock.now += 300000000L;
++            JSONObject retry = f.request("calibrate");
++            f.player.prepareEntered = new CountDownLatch(1); f.player.prepareRelease = new CountDownLatch(1);
++            ExecutorService caller = Executors.newSingleThreadExecutor();
++            try {
++                Future<JSONObject> result = caller.submit(() -> BreathingSetupAudio.command(retry));
++                check(f.player.prepareEntered.await(2, TimeUnit.SECONDS), "recovery entered real owner preparation");
++                JSONObject uncertain = result.get(3, TimeUnit.SECONDS);
++                check("breathing-loop-command-outcome-uncertain".equals(uncertain.optString("reason")), "already-admitted blocked prepare retains uncertain outcome");
++                f.clock.now += 2100000000L;
++                JSONObject status = f.state();
++                check(status.isNull("recovery") && !status.getBoolean("ready"), "status bounds pending lifetime independently of blocked player monitor");
++                check("audio-recovery-timeout".equals(f.receipt(retry).getString("reason")), "the original native receipt resolves failed after deadline");
++                f.player.prepareRelease.countDown(); f.drain();
++                check(f.player.plays == 1 && f.player.releases == 2 && !f.player.playing,
++                    "a prepared track returning after token retirement is released and never receives late PLAY");
++                JSONObject next = BreathingSetupAudio.command(f.request("calibrate"));
++                check("pending".equals(next.getString("state")) && f.player.plays == 2, "new current-CAS explicit recovery remains possible after bounded failure");
++            } finally { f.player.prepareRelease.countDown(); caller.shutdownNow(); }
++        }
++    }
++
++    private static void hungPollRemainsObservableAndQueuedRetryCannotRunLater(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start(); f.advance(882, 20000000L);
++            f.player.headEntered = new CountDownLatch(1); f.player.headRelease = new CountDownLatch(1);
++            f.worker().execute(() -> f.owner.observe());
++            try {
++                check(f.player.headEntered.await(2, TimeUnit.SECONDS), "actual poll entered a blocked head call");
++                f.clock.now += 400000000L;
++                JSONObject state = f.state(); JSONObject clock = state.getJSONObject("audio_clock");
++                check(clock.getLong("poll_started_ns") >= clock.getLong("poll_ended_ns") && clock.getLong("poll_age_ns") == 400000000L,
++                    "hung poll remains visible without acquiring its held player monitor");
++                check("observation-stale".equals(state.getJSONObject("clock").getString("reason")), "native accepted clock shows publication silence separately from raw fixed-head polling");
++                JSONObject cancelled = BreathingSetupAudio.command(f.request("calibrate"));
++                check("rejected".equals(cancelled.optString("state")), "retry queued behind hung poll is definitely cancelled before admission");
++            } finally { f.player.headRelease.countDown(); }
++            f.drain();
++            check(f.player.prepares == 1 && f.player.plays == 1, "cancelled queued recovery cannot start after poll unblocks");
++        }
++    }
++
++    private static void stoppedAndExceptionedPlayersRemainExplicitlyRecoverable(String json, String executable) throws Exception {
++        for (int fault = 0; fault < 3; fault++) {
++            try (Fixture f = new Fixture(json, executable)) {
++                f.start(); f.advance(882, 20000000L);
++                if (fault == 1) f.player.headFailure = new IllegalStateException("head-unavailable");
++                else if (fault == 2) f.bridge.dispatchFailure = new IllegalStateException("clock-dispatch-unavailable");
++                else f.player.playing = false;
++                f.clock.now += 20000000L; f.owner.observe();
++                JSONObject state = f.state();
++                check(!state.getBoolean("ready") && !state.getBoolean("clock_valid"), "stopped or exceptioned poll cannot retain audio readiness");
++                check(state.getJSONObject("audio_clock").getString("error").contains(fault == 1 ? "head-unavailable" : fault == 2 ? "clock-dispatch-unavailable" : "player-stopped"),
++                    "diagnostics retain the meaningful owner exception");
++                if (fault == 2) check(state.getJSONObject("audio_clock").getLong("dispatch_age_ns") == 20000000L
++                    && state.getJSONObject("audio_clock").getLong("poll_age_ns") == 0,
++                    "failed dispatch does not refresh the native-dispatch witness while the Java poll completes");
++                f.player.headFailure = null;
++                f.bridge.dispatchFailure = null;
++                JSONObject pending = BreathingSetupAudio.command(f.request("calibrate"));
++                check("pending".equals(pending.getString("state")) && f.player.prepares == 2 && f.player.plays == 2,
++                    "a recoverable preparation fault keeps explicit retry available instead of closing the owner permanently");
++            }
++        }
++    }
++
++    private static void terminalRetirementCannotPlayReturningPreparation(String json, String executable) throws Exception {
++        try (Fixture f = new Fixture(json, executable)) {
++            f.start(); f.advance(882, 20000000L); f.clock.now += 300000000L;
++            JSONObject retry = f.request("calibrate");
++            f.player.prepareEntered = new CountDownLatch(1); f.player.prepareRelease = new CountDownLatch(1);
++            f.player.ignorePrepareInterrupts = true;
++            ExecutorService caller = Executors.newFixedThreadPool(2);
++            try {
++                Future<JSONObject> result = caller.submit(() -> BreathingSetupAudio.command(retry));
++                check(f.player.prepareEntered.await(2, TimeUnit.SECONDS), "retirement race entered actual preparation");
++                Future<?> close = caller.submit(() -> f.owner.close());
++                long until = System.nanoTime() + 1000000000L;
++                while (!"retired".equals(f.state().optString("audio_state")) && System.nanoTime() < until) Thread.yield();
++                check("retired".equals(f.state().getString("audio_state")) && !f.state().getBoolean("audio_recovery_available"),
++                    "real terminal owner retirement remains visible while Android preparation is blocked");
++                f.player.prepareRelease.countDown();
++                result.get(3, TimeUnit.SECONDS); close.get(3, TimeUnit.SECONDS);
++                check(f.player.plays == 1 && !f.player.playing, "retired owner never receives a late PLAY after prepare returns");
++                check(!BreathingSetupAudio.command(f.request("calibrate")).optBoolean("accepted"), "terminal owner cannot be revived by a new setup request");
++            } finally { f.player.prepareRelease.countDown(); caller.shutdownNow(); }
++        }
++    }
++
++    static final class Fixture implements AutoCloseable {
++        final FakeClock clock = new FakeClock(); final FakePlayer player = new FakePlayer();
++        final NativePeer bridge; final BreathingSetupAudio owner;
++        private long nextId;
++        Fixture(String json, String executable) throws Exception {
++            bridge = new NativePeer(executable);
++            owner = new BreathingSetupAudio(BreathingSetupAudioContract.parse(json), json,
++                BreathingSetupAudioContract.sha256(json.getBytes(StandardCharsets.UTF_8)), new byte[1411200], player, bridge, clock);
++            java.lang.reflect.Field app = BreathingSetupAudio.class.getDeclaredField("appLifetime"); app.setAccessible(true); app.set(null, owner);
++            owner.initialize();
++        }
++        void start() throws Exception { check("confirmed".equals(BreathingSetupAudio.command(request("calibrate")).getString("state")), "parked initial calibration remains accepted and silent until explicit start"); }
++        JSONObject state() { return BreathingSetupAudio.status(); }
++        JSONObject request(String op) { JSONObject state = state(); return new JSONObject().put("v", 1).put("id", String.format("%016x", ++nextId)).put("g", state.getLong("g")).put("r", state.getLong("r")).put("op", op); }
++        JSONObject receipt(JSONObject request) { return new JSONObject(bridge.command(new JSONObject().put("v", 1).put("id", request.getString("id")).put("op", "receipt").toString(), clock.now)); }
++        void advance(int frame, long ns) { player.head = frame; clock.now += ns; owner.observe(); }
++        void acc(double volume) {
++            double angle = -0.08 + 0.16 * volume;
++            bridge.exchange(new JSONObject().put("kind", "acc").put("sensor", 100000000000L + clock.now)
++                .put("host", clock.now).put("source", bridge.nano).put("now", clock.now)
++                .put("mg", new JSONArray().put(Math.sin(angle) * 1000).put(0).put(Math.cos(angle) * 1000)));
++        }
++        ScheduledThreadPoolExecutor worker() throws Exception { java.lang.reflect.Field worker = BreathingSetupAudio.class.getDeclaredField("worker"); worker.setAccessible(true); return (ScheduledThreadPoolExecutor)worker.get(owner); }
++        void drain() throws Exception { worker().submit(() -> { }).get(2, TimeUnit.SECONDS); }
++        public void close() throws Exception { owner.close(); bridge.close(); java.lang.reflect.Field app = BreathingSetupAudio.class.getDeclaredField("appLifetime"); app.setAccessible(true); app.set(null, null); }
++    }
++    static final class FakeClock implements BreathingSetupAudio.Clock {
++        volatile long now = 1000000000L;
++        public long nowNs() { return now; }
++    }
++    static final class FakePlayer implements BreathingSetupAudio.Player {
++        volatile int head, prepares, plays, releases; volatile boolean playing;
++        volatile RuntimeException headFailure;
++        volatile boolean ignorePrepareInterrupts;
++        volatile CountDownLatch prepareEntered, prepareRelease, headEntered, headRelease;
++        public void prepare(byte[] pcm, int rate, int frames) {
++            check(pcm.length == 1411200 && rate == 44100 && frames == 705600, "recovery preserves the verified authored PCM contract");
++            prepares++; head = 0; playing = false;
++            if (prepares > 1 && prepareEntered != null) {
++                prepareEntered.countDown();
++                boolean done = false;
++                while (!done) { try { prepareRelease.await(); done = true; } catch (InterruptedException cancelled) {
++                    if (!ignorePrepareInterrupts) { Thread.currentThread().interrupt(); throw new IllegalStateException(cancelled); }
++                } }
++            }
++        }
++        public void play() { plays++; playing = true; }
++        public void pause() { playing = false; }
++        public boolean playing() { return playing; }
++        public int head() { if (headEntered != null) await(headEntered, headRelease); if (headFailure != null) throw headFailure; return head; }
++        public void release() { releases++; playing = false; }
++        private static void await(CountDownLatch entered, CountDownLatch release) { entered.countDown(); try { release.await(); } catch (InterruptedException cancelled) { Thread.currentThread().interrupt(); throw new IllegalStateException(cancelled); } }
++    }
++    static final class NativePeer implements BreathingSetupAudio.NativeBridge, AutoCloseable {
++        final Process process; final BufferedReader output; final PrintWriter input;
++        volatile long nano;
++        volatile RuntimeException dispatchFailure;
++        NativePeer(String executable) throws Exception {
++            ProcessBuilder builder = new ProcessBuilder(executable, "--ignored", "--exact", "experiment_breathing_setup_runtime::tests::java_audio_recovery_native_peer", "--nocapture", "--test-threads=1");
++            builder.environment().put("RQ_AUDIO_RECOVERY_PEER", "1"); builder.redirectError(ProcessBuilder.Redirect.INHERIT);
++            process = builder.start(); output = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)); input = new PrintWriter(process.getOutputStream(), true);
++        }
++        synchronized JSONObject exchange(JSONObject request) {
++            input.println(request.toString());
++            try { String line; while ((line = output.readLine()) != null) { int marker = line.indexOf("RQ_AUDIO_PEER "); if (marker >= 0) return new JSONObject(line.substring(marker + 14)); } }
++            catch (Exception error) { throw new IllegalStateException("native-peer-failed", error); }
++            throw new IllegalStateException("native-peer-closed");
++        }
++        public String configure(String json, String hash) { return exchange(new JSONObject().put("kind", "configure").put("json", json).put("hash", hash)).toString(); }
++        public void observeSourceClockPair(long javaNano, long elapsed) { nano = javaNano; exchange(new JSONObject().put("kind", "pair").put("nano", javaNano).put("elapsed", elapsed)); }
++        public void observe(long g, long frame, long now, boolean playing) { if (dispatchFailure != null) throw dispatchFailure; exchange(new JSONObject().put("kind", "observe").put("g", g).put("frame", frame).put("now", now).put("playing", playing)); }
++        public String status(long now) { return exchange(new JSONObject().put("kind", "status").put("now", now)).toString(); }
++        public String command(String json, long now) { return exchange(new JSONObject().put("kind", "command").put("command", new JSONObject(json)).put("now", now)).toString(); }
++        public String recoveryEffect(String id, long old, long target, String action, long now) { return exchange(new JSONObject().put("kind", "effect").put("id", id).put("old", old).put("target", target).put("action", action).put("now", now)).toString(); }
++        public void close() throws Exception { input.println(new JSONObject().put("kind", "quit")); if (!process.waitFor(2, TimeUnit.SECONDS)) process.destroyForcibly(); check(process.exitValue() == 0, "native peer exited cleanly"); }
++    }
++    private static void check(boolean value, String reason) { if (!value) throw new AssertionError(reason); }
++}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0dbc4682b0
+index 0000000000000000000000000000000000000000..3eef57a9d0b45d764b9d977202dc663a4cd5af61
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioOwnerTest.java
-@@ -0,0 +1,284 @@
+@@ -0,0 +1,344 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.nio.charset.StandardCharsets;
@@ -18713,6 +20055,7 @@ index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0d
 +        cancelledFirstStartCannotRunLater(json, loop);
 +        admittedFirstStartReportsUncertainty(json, loop);
 +        blockedOwnerMonitorCannotBypassRequestBudget(json, loop);
++        pendingRecoveryReplacesActualPlayerOnce(json, loop);
 +        System.out.println("BreathingSetupAudioOwnerTest PASS");
 +    }
 +    private static JSONObject setupCommand(BreathingSetupAudio owner, String operation) throws Exception {
@@ -18723,6 +20066,49 @@ index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0d
 +            return BreathingSetupAudio.command(new JSONObject().put("v", 1).put("id", "0123456789abcdef")
 +                .put("g", 1).put("r", 0).put("op", operation));
 +        } finally { app.set(null, previous); }
++    }
++    private static void pendingRecoveryReplacesActualPlayerOnce(String json, BreathingSetupAudioContract loop) throws Exception {
++        FakePlayer player = new FakePlayer(); FakeNative bridge = new FakeNative(); FakeClock clock = new FakeClock();
++        BreathingSetupAudio owner = new BreathingSetupAudio(loop, json,
++            BreathingSetupAudioContract.sha256(json.getBytes(StandardCharsets.UTF_8)), new byte[1411200], player, bridge, clock);
++        try {
++            owner.initialize(); setupCommand(owner, "calibrate");
++            JSONObject initialDiagnostics = setupStatus(owner).getJSONObject("audio_clock");
++            check(initialDiagnostics.getLong("timestamp_frame") == 100 && initialDiagnostics.getLong("route_id") == 1,
++                "the initial platform snapshot belongs to the first prepared actual track");
++            player.head = 882; clock.now += 20000000L; owner.observe();
++            long retiredGeneration = bridge.generation;
++            for (int tick = 0; tick < 14; tick++) { clock.now += 20000000L; owner.observe(); }
++            bridge.pendingRecovery = true;
++            JSONObject pending = setupCommand(owner, "calibrate");
++            check("pending".equals(pending.optString("state")), "native admission retains pending recovery receipt");
++            check(player.prepareCount == 2 && player.releaseCount == 1 && player.playCount == 2,
++                "accepted explicit recovery must release the old track and prepare/play a fresh actual track once");
++            check(bridge.generation > retiredGeneration && bridge.frame == 0,
++                "fresh generation resets actual playback head instead of expanding reset into rollover");
++            JSONObject recoveredDiagnostics = setupStatus(owner).getJSONObject("audio_clock");
++            check(recoveredDiagnostics.getLong("generation") == bridge.generation
++                    && recoveredDiagnostics.getLong("platform_generation") == bridge.generation
++                    && recoveredDiagnostics.getLong("timestamp_frame") == 200
++                    && recoveredDiagnostics.getLong("timestamp_ns") == 2000
++                    && recoveredDiagnostics.getInt("play_state") == 3
++                    && recoveredDiagnostics.getInt("underruns") == 2
++                    && recoveredDiagnostics.getInt("route_id") == 2,
++                "recovery inside one second must sample the fresh actual track rather than relabel retired platform diagnostics");
++            java.lang.reflect.Field platform = BreathingSetupAudio.class.getDeclaredField("platformDiagnostics"); platform.setAccessible(true);
++            platform.set(owner, initialDiagnostics.toString());
++            check(!setupStatus(owner).getJSONObject("audio_clock").has("timestamp_frame"),
++                "a retired serialized platform sample captured across replacement is discarded by its own generation tag");
++            setupCommand(owner, "calibrate");
++            check(player.prepareCount == 2 && player.playCount == 2,
++                "duplicate admitted recovery cannot prepare/play twice");
++        } finally { owner.close(); }
++    }
++    private static JSONObject setupStatus(BreathingSetupAudio owner) throws Exception {
++        java.lang.reflect.Field app = BreathingSetupAudio.class.getDeclaredField("appLifetime"); app.setAccessible(true);
++        Object previous = app.get(null);
++        try { app.set(null, owner); return BreathingSetupAudio.status(); }
++        finally { app.set(null, previous); }
 +    }
 +    private static void controllerStartsParkedLoop(String json, BreathingSetupAudioContract loop) throws Exception {
 +        FakePlayer player = new FakePlayer(); FakeNative bridge = new FakeNative(); FakeClock clock = new FakeClock();
@@ -18894,24 +20280,39 @@ index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0d
 +        public long nowNs() { return now; }
 +    }
 +    private static final class FakePlayer implements BreathingSetupAudio.Player {
-+        volatile int head; int playCount, loopFrames; boolean released, playing;
++        volatile int head; int playCount, prepareCount, releaseCount, loopFrames; boolean released, playing;
 +        public void prepare(byte[] pcm, int sampleRate, int frames) {
 +            check(sampleRate == 44100 && pcm.length == 1411200, "PCM format delivered to player"); loopFrames = frames;
++            prepareCount++; released = false; head = 0;
 +        }
 +        public void play() { playCount++; playing = true; }
 +        public void pause() { playing = false; }
 +        public boolean playing() { return playing; }
 +        public int head() { return head; }
-+        public void release() { released = true; playing = false; }
++        public void release() { releaseCount++; released = true; playing = false; }
++        public void diagnostics(JSONObject result) {
++            result.put("timestamp_available", true).put("timestamp_frame", prepareCount * 100L)
++                .put("timestamp_ns", prepareCount * 1000L).put("play_state", playing ? 3 : 2)
++                .put("underruns", prepareCount).put("route_id", prepareCount);
++        }
 +    }
 +    private static final class FakeNative implements BreathingSetupAudio.NativeBridge {
-+        boolean acceptCommands = true; int commands;
++        boolean acceptCommands = true, pendingRecovery; int commands;
++        long generation, frame, claimedGeneration;
++        public String recoveryEffect(String id, long oldGeneration, long targetGeneration, String action, long now) {
++            if ("claim".equals(action)) {
++                if (claimedGeneration != 0) return "{\"accepted\":true,\"effect\":false}";
++                claimedGeneration = targetGeneration;
++                return "{\"accepted\":true,\"effect\":true}";
++            }
++            return "{\"accepted\":true,\"effect\":false}";
++        }
 +        long sourceNano, elapsedPair;
 +        public void observeSourceClockPair(long nanoNs, long elapsedNs) { sourceNano = nanoNs; elapsedPair = elapsedNs; }
 +        long startFrame = -1; boolean mainStarted = true; volatile boolean playing;
 +        volatile CountDownLatch statusEntered, statusRelease, commandEntered, commandRelease;
 +        public String configure(String json, String hash) { return "{\"accepted\":true}"; }
-+        public void observe(long generation, long frame, long now, boolean active) { playing = active; }
++        public void observe(long generation, long frame, long now, boolean active) { this.generation = generation; this.frame = frame; playing = active; }
 +        public String status(long now) {
 +            if (statusEntered != null) {
 +                statusEntered.countDown();
@@ -18928,6 +20329,7 @@ index 0000000000000000000000000000000000000000..6fcb5d593e8f0a8e433e0c23e4f3fc0d
 +                try { commandRelease.await(); }
 +                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IllegalStateException(interrupted); }
 +            }
++            if (pendingRecovery) return "{\"accepted\":true,\"state\":\"pending\",\"reason\":\"audio-recovery-pending\",\"id\":\"0123456789abcdef\"}";
 +            return "{\"accepted\":" + acceptCommands
 +                + ",\"state\":\"" + (acceptCommands ? "confirmed" : "rejected") + "\"}";
 +        }
@@ -19361,8 +20763,125 @@ index 359afefefe1b76018cc72ac946fa99ef06e1c36e..08908504260ea797c556f3794d73e28f
    for(Object invalid:new Object[]{-1,101,1.5,true,"50"})deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","set-bias").put("b",invalid)),"closed bias integer");
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","set-bias")),"missing bias");
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","pause").put("b",50)),"bias is not generic field");
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayAudioRecoveryTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayAudioRecoveryTest.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..12731708c9146aa113df0dfdd60cb20f87608d50
+--- /dev/null
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayAudioRecoveryTest.java
+@@ -0,0 +1,111 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Paths;
++import org.json.JSONObject;
++
++/** Production HTTP/authenticated gateway -> real Java owner -> real Rust Runtime. */
++public final class ExperimentSessionGatewayAudioRecoveryTest {
++    private static boolean preparation = true, freshPolar = true;
++    private static int checks;
++    public static void main(String[] args) throws Exception {
++        String json = new String(Files.readAllBytes(Paths.get(args[0])), StandardCharsets.UTF_8);
++        try (BreathingSetupAudioNativeTest.Fixture f = new BreathingSetupAudioNativeTest.Fixture(json, args[1])) {
++            android.content.Context context = new android.content.Context();
++            context.prefs.values.put("controller", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
++            context.prefs.values.put("key", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
++            context.prefs.values.put("trusted-lan", true);
++            ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.process(context, new ExperimentSessionCommandGateway.WifiDelegate() {
++                public ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception {
++                    long epoch = Long.parseLong(ExperimentSessionCommandGateway.existing().identity().getString("native_epoch"));
++                    JSONObject nativeStatus = new JSONObject().put("runtime_epoch", epoch).put("generation", 0).put("revision", 1)
++                        .put("phase", "idle").put("control_state", "idle").put("active_time_ms", 0).put("initialization_status", "ready")
++                        .put("polar_input", new JSONObject().put("required", false).put("fresh", freshPolar).put("pause_latched", false));
++                    JSONObject response = new JSONObject().put("schema", "rusty.quest.experiment_session.response.v1").put("command_status", "accepted").put("readback", nativeStatus);
++                    long now = android.os.SystemClock.elapsedRealtimeNanos();
++                    ExperimentSessionWifiSnapshot.Read read = new ExperimentSessionWifiSnapshot().observe(response, now, now, epoch);
++                    read.status.put("h", preparation ? "vr-preparation" : "unknown");
++                    return read;
++                }
++                public JSONObject snapshot() { return new JSONObject().put("pending", false); }
++                public JSONObject sessionControlReadback() { return new JSONObject().put("phase", "idle").put("control_state", "idle").put("session_key", JSONObject.NULL); }
++                public JSONObject polarSetupReadback() { return new JSONObject().put("c", freshPolar).put("a", freshPolar).put("e", freshPolar); }
++                public JSONObject polarStopReadback() { return null; }
++                public void dispatch(ExperimentSessionBleServer.CommandRequest request) { throw new AssertionError("setup receipt dispatched generic experiment effect"); }
++            });
++            gateway.nativeOwnerChanged(1, 7, true);
++            String epoch = gateway.identity().getString("epoch");
++            JSONObject phone = new JSONObject().put("controller", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
++                .put("key", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb").put("epoch", epoch);
++            HttpAudioRecoveryBoundary http = new HttpAudioRecoveryBoundary(gateway);
++            JSONObject claim = new JSONObject().put("v", 1).put("id", "eeeeeeeeeeeeeeee").put("op", "claim").put("expected_control_revision", 0);
++            check("active".equals(wire(http, phone, "controller-access", claim).getString("role")), "current trusted controller admitted through real protocol");
++            JSONObject initial = wire(http, phone, "breath-setup", f.request("calibrate"));
++            check(initial.optBoolean("accepted") && "confirmed".equals(initial.optString("state")) && "accepted".equals(initial.optString("reason")),
++                "gateway preserves native accepted/reason fields instead of stripping them into a generic journal receipt");
++            f.advance(882, 20000000L);
++            for (int i = 0; i < 14; i++) f.advance(882, 20000000L);
++            JSONObject retry = f.request("calibrate");
++            long retiredGeneration = retry.getLong("g");
++            // Treat the first authenticated response as lost; the original ID
++            // must still resolve through the typed read-only setup query.
++            JSONObject lostEnvelope = auth(phone, "breath-setup", retry);
++            String lost = http.request(lostEnvelope, "https://controller.example");
++            check(lost.startsWith("HTTP/1.1 200"), "original pending command crosses the production HTTP adapter");
++            JSONObject pending = payload(lost);
++            check(pending.optBoolean("accepted") && "pending".equals(pending.optString("state")) && "audio-recovery-pending".equals(pending.optString("reason")),
++                "initial native pending receipt survives the real gateway wire");
++            JSONObject query = new JSONObject().put("v", 1).put("id", retry.getString("id")).put("op", "receipt");
++            JSONObject observed = wire(http, phone, "breath-setup", query);
++            long generation = f.state().getLong("g");
++            check(generation > retiredGeneration && observed.getLong("recovery_generation") == generation && "pending".equals(observed.getString("state")),
++                "three-field setup receipt bypasses old CAS/journal conflict after the native generation changes");
++            wire(http, phone, "breath-setup", retry);
++            check(f.player.plays == 2 && f.player.prepares == 2, "lost-response original-ID retry cannot replay transport");
++            check(http.request(auth(phone, "breath-setup", new JSONObject(retry.toString()).put("op", "controller")), "https://controller.example").startsWith("HTTP/1.1 403"),
++                "shared mutation journal still rejects changed payload under an original setup ID");
++            JSONObject unknown = wire(http, phone, "breath-setup", new JSONObject().put("v", 1).put("id", "dddddddddddddddd").put("op", "receipt"));
++            check("outcome_unknown".equals(unknown.getString("state")) && !unknown.getBoolean("accepted") && unknown.getString("id").equals("dddddddddddddddd"),
++                "unknown read-only lookup keeps canonical native uncertainty without reserving a mutation ID");
++            f.advance(882, 20000000L); f.acc(0.0);
++            freshPolar = false; preparation = false;
++            JSONObject terminal = wire(http, phone, "breath-setup", query);
++            check(terminal.optBoolean("accepted") && "confirmed".equals(terminal.getString("state"))
++                && terminal.getLong("recovery_generation") == generation && "accepted".equals(terminal.getString("reason")),
++                "terminal lookup remains read-only with no fresh-Polar or idle-preparation admission requirement");
++            check(wire(http, phone, "breath-setup", retry).getString("state").equals("confirmed") && f.player.plays == 2,
++                "same original mutation ID resolves native completion after readiness changes");
++            JSONObject malformed = new JSONObject(query.toString()).put("g", generation);
++            check(http.request(auth(phone, "breath-setup", malformed), "https://controller.example").startsWith("HTTP/1.1 403"), "extra receipt fields fail closed");
++            check(http.request(lostEnvelope, "https://controller.example").startsWith("HTTP/1.1 403"), "authenticated HTTP nonce replay remains rejected");
++            check(http.request(auth(phone, "breath-setup", query), "https://foreign.example").startsWith("HTTP/1.1 403"), "exact allowed Origin remains required");
++            check(http.request(auth(phone, "breath-setup", query).put("mac", "0"), "https://controller.example").startsWith("HTTP/1.1 403"), "forged request MAC remains rejected");
++            JSONObject signed = auth(phone, "breath-setup", query);
++            try { gateway.exchange(signed); throw new AssertionError("private setup receipt escaped onto relay route"); } catch (SecurityException expected) { checks++; }
++            gateway.releaseActiveController();
++            check(http.request(auth(phone, "breath-setup", query), "https://controller.example").startsWith("HTTP/1.1 403"), "typed read-only setup receipt still requires current active controller");
++            check(f.player.plays == 2 && f.player.prepares == 2, "all lookups and denied envelopes remain effect free");
++            System.out.println("ExperimentSessionGatewayAudioRecoveryTest PASS (" + checks + " production HTTP/auth/gateway/Java/native assertions)");
++        }
++    }
++    private static JSONObject auth(JSONObject phone, String action, JSONObject body) throws Exception {
++        String nonce = ExperimentSessionBleProtocol.newHex(16), payload = body.toString();
++        String controller = phone.getString("controller"), epoch = phone.getString("epoch");
++        return new JSONObject().put("v", 1).put("controller", controller).put("epoch", epoch).put("nonce", nonce).put("action", action).put("payload", payload)
++            .put("mac", ExperimentSessionGatewayProtocol.hmac(phone.getString("key"), "RQG1|" + controller + "|" + epoch + "|" + nonce + "|" + action + "|" + payload));
++    }
++    private static JSONObject wire(HttpAudioRecoveryBoundary http, JSONObject phone, String action, JSONObject body) throws Exception {
++        JSONObject envelope = auth(phone, action, body);
++        String response = http.request(envelope, "https://controller.example");
++        check(response.startsWith("HTTP/1.1 200"), "authorized production HTTP route rejected: " + response);
++        JSONObject reply = new JSONObject(response.substring(response.indexOf("\r\n\r\n") + 4));
++        String data = reply.getString("payload");
++        String expected = ExperimentSessionGatewayProtocol.hmac(phone.getString("key"), "RQG1-REPLY|" + phone.getString("controller") + "|" + reply.getString("device")
++            + "|" + reply.getString("epoch") + "|" + envelope.getString("nonce") + "|" + action + "|" + data);
++        check(expected.equals(reply.getString("mac")), "production reply preserves MAC-bound native payload");
++        return new JSONObject(data);
++    }
++    private static JSONObject payload(String response) { return new JSONObject(new JSONObject(response.substring(response.indexOf("\r\n\r\n") + 4)).getString("payload")); }
++    private static void check(boolean value, String reason) { checks++; if (!value) throw new AssertionError(reason); }
++}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..9b0716e4f0cdeab424029cc202e782c9033c8d33 100644
+index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..82717fa7b1fe91d9b3beb3a112e95ad1145d0c3b 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 @@ -26,6 +26,7 @@ public final class ExperimentSessionGatewayProtocolTest {
@@ -19373,7 +20892,7 @@ index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..9b0716e4f0cdeab424029cc202e782c9
          denied(()->protocol.exchange(request("55555555555555555555555555555555","status","{}").put("v",1.0)));
          protocol.exchange(request("55555555555555555555555555555555","status","{}"));
          JSONObject monitor=protocol.exchange(request("88888888888888888888888888888888","breath-monitor","{\"run\":\"\",\"after\":0}"));
-@@ -37,6 +38,36 @@ public final class ExperimentSessionGatewayProtocolTest {
+@@ -37,6 +38,42 @@ public final class ExperimentSessionGatewayProtocolTest {
          denied(()->ExperimentSessionGatewayProtocol.monitorQuery(new JSONObject().put("run","").put("after",0).put("operation","pause")));
          denied(()->protocol.exchange(request("99999999999999999999999999999999","breath-monitor","{}").put("payload","{\"after\":1}")));
          protocol.retire();denied(()->protocol.exchange(request("66666666666666666666666666666666","status","{}")));
@@ -19386,6 +20905,12 @@ index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..9b0716e4f0cdeab424029cc202e782c9
 +        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("op","begin-main")));
 +        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("source_owner",999)));
 +        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupBody).put("id","other")));
++        JSONObject setupReceipt = new JSONObject().put("v",1).put("id","abcdef0123456790").put("op","receipt");
++        if(!"receipt".equals(ExperimentSessionGatewayProtocol.setupQuery(setupReceipt).getString("op")))
++            throw new AssertionError("read-only native setup lookup was not admitted");
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupReceipt.toString()).put("g",2)));
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupReceipt.toString()).put("r",1)));
++        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupReceipt.toString()).put("id","other")));
 +        ExperimentSessionGatewayProtocol privateController=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,true,
 +            (action,payload)->{calls++;return new JSONObject().put("v",1).put("id",payload.optString("id")).put("state","confirmed")
 +                .put("breath_setup",1).put("setup",new JSONObject().put("input","automatic"))
@@ -19818,10 +21343,10 @@ index 0000000000000000000000000000000000000000..729b6fa9bd1bc40901326b29cd263504
 +}
 diff --git a/docs/EXPERIMENT_BREATHING_SETUP.md b/docs/EXPERIMENT_BREATHING_SETUP.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..34ada7314f0e95669cf70f00ac1068e15d8170eb
+index 0000000000000000000000000000000000000000..816ab0f5ad2ccd3ea01b01fca012621719755bb1
 --- /dev/null
 +++ b/docs/EXPERIMENT_BREATHING_SETUP.md
-@@ -0,0 +1,204 @@
+@@ -0,0 +1,306 @@
 +# Shared breathing setup contract
 +
 +This optional app-owned path uses the packaged 44,100 Hz loop. Each of inhale,
@@ -19841,7 +21366,7 @@ index 0000000000000000000000000000000000000000..34ada7314f0e95669cf70f00ac1068e1
 +start its existing player once. A warming/rejected command starts nothing.
 +Initial calibration reserves frame zero and waits for an actual playing native
 +observation; it then consumes exactly 1,411,200 audio frames (32 seconds).
-+No browser timer advances it. Subsequent retries clear the old model and reserve
++No browser timer advances it. Subsequent healthy retries clear the old model and reserve
 +the next full cycle without restarting PCM. Preparation continues after either
 +result. Controller does not require Polar clock readiness.
 +
@@ -19852,6 +21377,108 @@ index 0000000000000000000000000000000000000000..34ada7314f0e95669cf70f00ac1068e1
 +replacement, source clock retirement and audio generation/clock faults remain
 +hard barriers. Main admission requires ready calibrated tilt or controller,
 +starts on a full cycle boundary and lasts exactly 39,690,000 frames (900 seconds).
++
++## Explicit unhealthy transport recovery
++
++A playing intent is separate from actual frame progress. A constant playing
++head for more than 250 ms fails the current attempt. Later plausible real
++frames can restore clock health, but never revive that failed attempt. The
++original platform cause of a stopped head is not inferred from silence, volume,
++play state or render activity.
++
++An explicit Calibrate or Controller action can reserve recovery of an unhealthy
++preparation transport. Its external `{v,id,g,r,op}` tuple is unchanged. Native
++validates the closed command, original-ID ledger and current CAS before any
++transport effect. Recovery requires current preparation with no pending,
++running, finished or unretired main admission. The existing accepted end-main
++operation can establish a new preparation; it preserves the physical clock's
++health/age while resetting model/session evidence.
++
++Reservation retires old training, model, driver confirmation and callback
++evidence. It returns a same-ID `accepted:true,state:pending` receipt with reason
++`audio-recovery-pending`. One private Java-owner claim binds a strictly newer
++generation exactly once before track release or prepare. Java retains the
++verified PCM bytes, releases the old track, creates a new actual static track
++and a fresh unsigned playback-head expander. Immediately before PLAY it
++rechecks the live native token and terminal-owner retirement fence. A blocked
++prepare that returns after timeout or owner retirement releases its prepared
++track and cannot play it. Duplicate commands and claims do not replay effects.
++Queued cancellation remains definite; an already admitted timeout remains
++outcome unknown until its native receipt resolves.
++
++The reservation expires after two seconds through native observation, status,
++command or receipt lookup. Failure/timeout leaves input and main unready. A new
++explicit current-CAS ID can request another bounded recovery. A genuinely
++retired Java owner stays retired; a recoverable stopped/exceptioned preparation
++poll retains its worker for explicit recovery. A blocked owner poll/prepare
++does not advertise immediately executable recovery.
++
++Frame zero alone does not establish recovery. Native requires fresh plausible
++forward observations of the claimed generation. Calibrate also requires the
++same source/projection lineage, a fresh measured source-clock pair and a
++finite gravity-valid post-claim sample with a fresh mapped host time.
++Pre-claim buffered input cannot supply that witness. Controller requires a
++new valid observation of its currently selected controller. Source projection
++warmup can delay recovery; it is never bypassed for actual attempt admission.
++Once these gates pass, native reserves the next complete cycle and collects a
++new full two-cycle/32-second calibration. Old generations cannot revive or
++poison the new clock. Main duration, recording authority and raw sensor clocks
++remain unchanged.
++
++The read-only receipt query remains `{v:1,id:<original>,op:receipt}`, without
++generation/revision fields. Recovery receipts add `recovery_generation:null`
++before claim and the trusted target generation after claim, including terminal
++receipts. Ordinary receipts retain their shape. Status adds `stage:recovering`,
++pending `recovery` metadata or null, and `audio_recovery_available`. That
++capability describes strict preparation transport eligibility and current Java
++owner executability; it is not an admission or readiness grant.
++
++The authenticated private-LAN gateway carries this query under action
++`breath-setup`, with the strict three-field native lookup as its payload. It
++requires the current active controller and revalidates that binding after the
++lookup. The lookup runs before generic journal conflict/CAS and does not require
++a new idle-VR or fresh-Polar admission. It cannot reserve, claim, prepare or play.
++Mutation admission still checks idle VR, fresh Polar where required and the
++shared canonical ID journal. Original mutation retries retrieve the native
++ledger before that journal can shadow pending/late completion. HTTP/HMAC reply
++payloads preserve native `accepted`, `reason` and recovery provenance; generic
++carrier receipts are an audit projection. Nonces, actor/owner epochs, exact
++Origin, guest/relay exclusions and current-controller retirement remain enforced.
++`tools/checks/test_experiment_gateway_audio_recovery.py` executes production
++HTTP parsing/auth/gateway and the real Java/native owner seam using modeled
++Android, carrier and socket boundaries, without opening a network port.
++
++## Bounded clock diagnostics
++
++Native `clock_valid` and `clock` report accepted observation health/reason,
++observation time/age and the last actual forward witness time/age. A historical
++attempt failure remains separate from current clock health. `observation-stale`
++identifies missing fresh publication; `clock_stalled` identifies repeated
++accepted nonadvancing playing frames. `observation-gap` records an accepted
++forward observation after an excessive callback gap; it cannot save its failed
++attempt. A newly prepared zero head has no last-advance witness.
++
++Java `audio_clock` is an inert bounded snapshot of generation, poll sequence,
++start/end/in-progress, preparation state, last successful native dispatch, raw
++unsigned head, absolute frame, actual play state, playing intent, last forward
++time, ages and a bounded meaningful exception. Platform timestamp availability
++and frame/time, route identity and underruns are sampled on the first poll of
++each fresh track, then at most once per second within that generation. Track
++replacement clears the retired snapshot and throttle; each platform sample
++carries its own `platform_generation`. A lock-free status read discards a
++sample whose tag differs from its reported audio generation. Missing optional
++timestamps never produce estimated frames. Status
++does not wait for the player monitor, so a blocked poll remains diagnosable.
++These fields grant no readiness or effect and emit no unbounded high-rate log.
++
++The focused host gate is `tools/checks/Test-BreathingSetupAudioHost.ps1`, with
++explicit Android/JSON jars, authored loop JSON, a current native `--lib` test
++executable and a fresh output directory. It runs the real Java contract, owner,
++backend and Java-to-real-Runtime stdio peer. The peer is an intentionally ignored
++Rust test launched by that harness, not a production endpoint. The separate
++`Test-BreathingSetupAudioAndroid.ps1` gate compiles actual production against the
++Android boot class path. Host evidence does not establish physical AudioTrack
++recovery, silent-hold consumption, wearer fit or experiment readiness.
 +
 +## Original clocks and derived projection
 +
@@ -21189,6 +22816,54 @@ index 0000000000000000000000000000000000000000..1cff2d5801bbb0f0c41db38fc0d78cda
 +    android_jar_sha256 = (Get-FileHash -LiteralPath $AndroidJar).Hash.ToLowerInvariant()
 +} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OutputRoot 'RESULT.json') -Encoding utf8NoBOM
 +Write-Output 'PASS selected breathing audio Android boot-class-path compilation'
+diff --git a/tools/checks/Test-BreathingSetupAudioHost.ps1 b/tools/checks/Test-BreathingSetupAudioHost.ps1
+new file mode 100644
+index 0000000000000000000000000000000000000000..52e696991f9875ae1fd1d23af876d2e4d9310f95
+--- /dev/null
++++ b/tools/checks/Test-BreathingSetupAudioHost.ps1
+@@ -0,0 +1,42 @@
++[CmdletBinding()]
++param(
++    [Parameter(Mandatory)][string]$AndroidJar,
++    [Parameter(Mandatory)][string]$JsonJar,
++    [Parameter(Mandatory)][string]$LoopJson,
++    [Parameter(Mandatory)][string]$NativeTestExecutable,
++    [Parameter(Mandatory)][string]$OutputRoot
++)
++$ErrorActionPreference = 'Stop'
++Set-StrictMode -Version Latest
++if (Test-Path -LiteralPath $OutputRoot) { throw 'Create-new output required' }
++$null = New-Item -ItemType Directory -Path $OutputRoot
++$repo = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
++$production = Join-Path $repo 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer'
++$tests = Join-Path $repo 'apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer'
++$stubs = Join-Path $repo 'apps/native-renderer-android/tests/phase-audio-platform-stubs'
++$sources = @(
++    'BreathingSetupAudio.java', 'BreathingSetupAudioContract.java',
++    'ConditionAudioContract.java', 'ConditionAudioRuntime.java',
++    'ConditionAudioAndroidMediaBackendFactory.java'
++) | ForEach-Object { Join-Path $production $_ }
++$groups = @('BreathingSetupAudioContractTest', 'BreathingSetupAudioOwnerTest', 'BreathingSetupAudioBackendTest', 'BreathingSetupAudioNativeTest')
++$sources += $groups | ForEach-Object { Join-Path $tests "$_.java" }
++$sources += (Get-ChildItem -LiteralPath $stubs -Recurse -File -Filter '*.java').FullName
++$classpath = "$JsonJar$([IO.Path]::PathSeparator)$AndroidJar"
++& javac --release 8 -encoding UTF-8 -cp $classpath -d $OutputRoot @sources
++if ($LASTEXITCODE -ne 0) { throw 'Breathing audio host compilation failed' }
++$classpath = "$OutputRoot$([IO.Path]::PathSeparator)$classpath"
++foreach ($group in $groups) {
++    & java -cp $classpath "io.github.mesmerprism.rustyquest.native_renderer.$group" $LoopJson $NativeTestExecutable
++    if ($LASTEXITCODE -ne 0) { throw "Breathing audio host group failed: $group" }
++}
++@{
++    passed = $true
++    scope = 'Real Java owner/backend; real native Runtime stdio peer; modeled AudioTrack. No device evidence.'
++    native_test_executable_sha256 = (Get-FileHash -LiteralPath $NativeTestExecutable).Hash.ToLowerInvariant()
++    android_jar_sha256 = (Get-FileHash -LiteralPath $AndroidJar).Hash.ToLowerInvariant()
++    json_jar_sha256 = (Get-FileHash -LiteralPath $JsonJar).Hash.ToLowerInvariant()
++    loop_json_sha256 = (Get-FileHash -LiteralPath $LoopJson).Hash.ToLowerInvariant()
++    groups = $groups
++} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $OutputRoot 'RESULT.json') -Encoding utf8NoBOM
++Write-Output 'PASS selected breathing audio host owner/backend/native-peer controls'
 diff --git a/tools/checks/Test-ExperimentPhonePairing.ps1 b/tools/checks/Test-ExperimentPhonePairing.ps1
 new file mode 100644
 index 0000000000000000000000000000000000000000..3e7de2e854682de8e9ef2a2a7025c19a1fa471c0
@@ -22256,6 +23931,92 @@ index 25bc41049f87ea662090871cdb90a7247a723937..6790eb56e3d5ddeadeebb895d4d3edd3
    android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
    BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
    check("advertising".equals(d.readback().getString("state")),"Remote advertises");check(!a.data.name&&a.data.services==1&&a.scan==null,"service-only unnamed advertisement");
+diff --git a/tools/checks/test_experiment_gateway_audio_recovery.py b/tools/checks/test_experiment_gateway_audio_recovery.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..8cab703cdd1cd6e1068442893b8b86af53875450
+--- /dev/null
++++ b/tools/checks/test_experiment_gateway_audio_recovery.py
+@@ -0,0 +1,80 @@
++"""Production HTTP/auth/gateway -> real Java audio owner -> real Rust Runtime.
++
++Android, BLE carrier and socket IO are modeled. No network, APK or device effects.
++"""
++import argparse
++import json
++import os
++from pathlib import Path
++import subprocess
++
++import test_experiment_remote_join as boundary
++import test_experiment_trusted_phones  # Select the existing phone-registry fixtures.
++from test_experiment_gateway_dedupe import method
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[2])
++    parser.add_argument('--json-jar', type=Path, required=True)
++    parser.add_argument('--android-jar', type=Path, required=True)
++    parser.add_argument('--loop', type=Path, required=True)
++    parser.add_argument('--native-test-executable', type=Path, required=True)
++    parser.add_argument('--output', type=Path, required=True)
++    args = parser.parse_args()
++    args.output.mkdir(parents=True, exist_ok=False)
++    package = boundary.PACKAGE
++    root = args.repo / 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java' / package
++    audio = args.repo / 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java' / package
++    tests = args.repo / 'apps/native-renderer-android/tests/java' / package
++    stubs = dict(boundary.STUBS)
++    stubs['android/os/Bundle.java'] = stubs['android/os/Bundle.java'].replace(
++        'k.endsWith(".private_lan_data")', 'k.endsWith(".private_lan_data")||k.equals("rusty.quest.experiment.breathing_setup.enabled")')
++    stubs['android/content/pm/ApplicationInfo.java'] = 'package android.content.pm;public class ApplicationInfo {public String sourceDir="inert.apk";public android.os.Bundle metaData=new android.os.Bundle();}'
++    stubs['android/content/pm/PackageManager.java'] = stubs['android/content/pm/PackageManager.java'].replace('public static class Info {', 'public static class Info extends ApplicationInfo {')
++    for name, source in stubs.items():
++        path = args.output / name
++        path.parent.mkdir(parents=True, exist_ok=True)
++        path.write_text(source, encoding='utf-8')
++    generated = args.output / package
++    generated.mkdir(parents=True)
++    mode = method((root / 'ExperimentControlMode.java').read_text(), 'static final class Snapshot')
++    (generated / 'Boundaries.java').write_text(boundary.BOUNDARIES.replace('__SNAPSHOT__', mode), encoding='utf-8')
++    http = (root / 'ExperimentSessionGatewayHttpServer.java').read_text()
++    fixture = '''package io.github.mesmerprism.rustyquest.native_renderer;
++import java.io.*;import java.net.Socket;import java.util.*;import java.nio.charset.StandardCharsets;import org.json.JSONObject;
++final class HttpAudioRecoveryBoundary {
++ final ExperimentSessionCommandGateway owner;HttpAudioRecoveryBoundary(ExperimentSessionCommandGateway owner){this.owner=owner;}
++ static final class InertSocket extends Socket {
++  final ByteArrayInputStream input;final ByteArrayOutputStream output=new ByteArrayOutputStream();
++  InertSocket(String raw){input=new ByteArrayInputStream(raw.getBytes(StandardCharsets.UTF_8));}
++  @Override public InputStream getInputStream(){return input;}@Override public OutputStream getOutputStream(){return output;}@Override public void close(){}
++ }
++ String request(JSONObject request,String origin){String body=request.toString();InertSocket socket=new InertSocket("POST /v1/gateway HTTP/1.1\\r\\nHost: local\\r\\nOrigin: "+origin+"\\r\\nContent-Type: application/json\\r\\nContent-Length: "+body.getBytes(StandardCharsets.UTF_8).length+"\\r\\n\\r\\n"+body);serve(socket);return new String(socket.output.toByteArray(),StandardCharsets.UTF_8);}
++ __HTTP__
++}
++'''
++    (generated / 'HttpAudioRecoveryBoundary.java').write_text(fixture.replace('__HTTP__', '\n'.join(
++        method(http, anchor) for anchor in ['private void serve(', 'private static String line(', 'private static void reply('])), encoding='utf-8')
++    names = ['ExperimentPhonePairing', 'ExperimentTrustedPhones', 'ExperimentSessionWifiCredentials',
++             'ExperimentSessionBuildIdentity', 'ExperimentSessionRecordingExport', 'ExperimentSessionCommandGateway',
++             'ExperimentSessionGatewayProtocol', 'ExperimentSessionCommandJournal', 'ExperimentSessionBleProtocol',
++             'ExperimentSessionControlCapability', 'ExperimentSessionWifiSnapshot', 'ExperimentSessionPanelState',
++             'ExperimentSessionPanelCoordinator', 'ExperimentSessionPanelViewPolicy', 'ExperimentSessionAndroidShell',
++             'ExperimentSessionJsonCodec', 'ExperimentSessionHeadsetIdentity', 'ExperimentSessionGuestRegistry']
++    sources = [root / (name + '.java') for name in names]
++    sources += [args.repo / 'apps/native-renderer-android/src/main/java' / package / 'NativeRendererWriterAcknowledgedExitPolicy.java']
++    sources += [audio / 'BreathingSetupAudio.java', audio / 'BreathingSetupAudioContract.java',
++                tests / 'BreathingSetupAudioNativeTest.java', tests / 'ExperimentSessionGatewayAudioRecoveryTest.java']
++    classpath = os.pathsep.join([str(args.json_jar), str(args.android_jar)])
++    subprocess.run(['javac', '--release', '8', '-encoding', 'UTF-8', '-cp', classpath,
++                    '-d', str(args.output), *map(str, sources), *map(str, args.output.rglob('*.java'))], check=True)
++    subprocess.run(['java', '-cp', str(args.output) + os.pathsep + classpath,
++                    package.replace('/', '.') + '.ExperimentSessionGatewayAudioRecoveryTest',
++                    str(args.loop), str(args.native_test_executable)], check=True)
++    (args.output / 'RESULT.json').write_text(json.dumps({'passed': True,
++        'scope': 'Production HTTP/auth/gateway plus real Java owner and real Rust Runtime peer; modeled Android/carrier/socket; no network/device effects.'}, indent=2) + '\n')
++
++
++if __name__ == '__main__':
++    main()
 diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..e05ba33e31b3627daca83b35fa8316945eda53d0

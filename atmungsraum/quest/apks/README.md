@@ -1,5 +1,53 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.8-dev — explicit audio-clock recovery and diagnostics, 2026-11-15
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.8-dev, version code 9; local hardware testing only |
+| APK size / SHA-256 | 65,289,005 bytes; `9e0da5e7362353857bc5a88c10d0c243b39bd3d1d4dee81062f0aeb7fbdf7d46` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `9afdcf0ef2cf05569e7ccc67c31f711f0e2fdd87` / `46593d96e655dd515cd2bfbb39d696eae6eed2b3` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `a61c4a1d15ea1be85e5caf26032ce4caea71bec75aa3776c650f2bcac48ede67` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36, automatic install; v2/v3 and 16KiB ZIP alignment checks pass |
+
+An explicit setup retry can recover an unhealthy preparation audio transport.
+Native validates the original ID/CAS before reserving one recovery; Java claims
+it once, replaces the actual track/head with a fresh generation and rechecks
+retirement/deadline before playing. Fresh advancing frames and post-claim input
+are required before a new complete 32-second attempt at the next cycle boundary.
+Healthy retries keep the same loop. Main/recording recovery is excluded. Failed
+training, old callbacks and skipped unpublished generations cannot be reused.
+The existing 250ms clock guards, PCM, volume, phase classifier and duration stay
+unchanged. The first physical stall's trigger remains unproven.
+
+Bounded diagnostics distinguish player intent, raw head/play state, poll/dispatch
+health and optional platform timestamps. Per-track metadata is cleared and tagged
+at replacement. The authenticated gateway preserves native pending/terminal
+receipts; typed read-only original-ID lookup crosses a proven recovery generation
+without replaying a command. The phone shows recovery/unavailable state, hides
+unhealthy extrapolation and preserves uncertain IDs for reconciliation.
+
+Verification: native842 passes with four intentional ignores (the stdio peer is
+exercised separately); Java owner/backend and five real Java/native peer groups;
+31 production HTTP/auth/gateway/owner/native assertions with modeled Android/socket
+boundaries; broad gateway regression; actual API36 boot-classpath compilation;
+phone182 with zero skips; rendered recovery/receipt and scroll/edit checks.
+Independent native and phone spec/quality reviews are clear. A cached-status test
+now waits for actual worker publication instead of assuming a 25ms sleep. Exact
+patch/tree reconstruction, fresh Android assembly, signed-APK session closure,
+89 assets, signer, manifest and ZIP alignment checks pass.
+
+Code 9 is installed with matching byte hash and retained UID, grants and persistent
+app identity. Actual cold start confirms controller-only true, live hand extension
+false, simultaneous false, app panel closed, gateway ready and input zero. Phase
+rates remain 0.25 per second. Location stays ON and Wi-Fi ADB is retained. Owned
+startup observers/leases are released. The wearer removed the Polar after code 8;
+fresh Ready is required. No code-9 calibration, physical recovery/tracking, full
+trial or Meta acceptance is claimed. No Meta upload occurred.
+
 ## 0.2.7-dev — retain confirmed Polar breath state, 2026-11-15
 
 | Build property | Verified value |

@@ -1,4 +1,4 @@
-import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=10';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=11';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -7,6 +7,7 @@ const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg', 'star
 const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
 const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
+const audioRecovering = status => status?.setup?.stage === 'recovering';
 
 export function canRecenter(status) {
   return canControlQuest(status) && status?.recenter === 1 && !status.pending
@@ -49,7 +50,7 @@ export function rehearsalPolarAllowed(status) {
 }
 
 export function rehearsalActions(status, condition = conditions[0]) {
-  if (!rehearsalPolarAllowed(status) || status.pending || polarSetup(status)?.sc) return {};
+  if (!rehearsalPolarAllowed(status) || status.pending || audioRecovering(status) || polarSetup(status)?.sc) return {};
   const selected = conditions.indexOf(condition);
   if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec
     && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
@@ -226,7 +227,7 @@ export class QuestRehearsal {
     const current = () => {
       const { status } = this.state;
       const setup = polarSetup(status);
-      return this.gateway === gateway && !signal?.aborted && !status?.pending && status?.g === clicked.g
+      return this.gateway === gateway && !signal?.aborted && !status?.pending && !audioRecovering(status) && status?.g === clicked.g
         && setup?.s === original.s && setup.p && setup.b && !setup.sc && (setup.c || setup.l !== 'disabled') ? setup : null;
     };
     let setup = current();
@@ -258,7 +259,7 @@ export class QuestRehearsal {
     const requested = action === 'recenter' && gateway?.recenter && canRecenter(clicked)
       ? 'recenter' : rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
-    if (!gateway || clicked?.pending || this.state.busy || this.pending
+    if (!gateway || clicked?.pending || audioRecovering(clicked) || this.state.busy || this.pending
       || (!requested && (!setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || (setup.e && setup.a)))) return;
     this.update({ busy: true, message: '' });
     try {

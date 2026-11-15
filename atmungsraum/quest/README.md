@@ -33,6 +33,14 @@ retains the last confirmed state: inhale keeps expanding, exhale contracting,
 hold stays still. Missing/invalid samples do not reset radius. Genuine source,
 projection, audio, model or input/configuration barriers still clear that state.
 
+If a preparation audio clock is unhealthy, an explicit calibration or Controller
+request can reserve a fresh transport generation. Only actual forward playback
+and fresh post-claim input admit the new setup; failed training is discarded.
+Healthy retries retain the current loop. Recovery cannot restart a main run.
+The phone follows the original operation's read-only receipt and measured native
+progress. Diagnostics distinguish intent, polling and actual frame advancement;
+the initial physical stall trigger is not yet established.
+
 The selected gateway offers only `haupt-15`. Start retains the chosen input
 and model, waits for the next complete cycle boundary, and starts a separate
 900-second main run: 39,690,000 audio frames at 44,100 Hz. Preparation is not
@@ -87,12 +95,12 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-008 `
-    -Developer -Keystore $developerKeystore -VersionCode 8 -VersionName 0.2.7-dev
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-009 `
+    -Developer -Keystore $developerKeystore -VersionCode 9 -VersionName 0.2.8-dev
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `2b702ebeda4b69faadc97c3716f9db956d759a1f`, matching
+reconstructs source tree `46593d96e655dd515cd2bfbb39d696eae6eed2b3`, matching
 the current developer source. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.

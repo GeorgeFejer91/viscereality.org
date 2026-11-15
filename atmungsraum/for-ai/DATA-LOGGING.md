@@ -24,6 +24,12 @@ retried; Controller State provides the fallback input. These operations do not
 start participant recording. The selected gateway offers only `haupt-15`.
 Historical practice exports and their filenames remain valid.
 
+Explicit unhealthy-transport recovery is preparation-only. It retires the failed
+attempt and evidence, creates a fresh actual audio generation and requires fresh
+input before new setup. Arm binds that current generation and selected input;
+old-generation frames/samples cannot revive it. A main recording cannot use this
+recovery path or restart its 900-second interval.
+
 Official Start is admitted at the next complete audio cycle boundary and
 starts a separate main interval of exactly 39,690,000 frames at 44,100 Hz
 (900 seconds). Cue playback, intended phase, automatic visual input and main
