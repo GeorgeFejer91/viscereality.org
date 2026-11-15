@@ -36,12 +36,24 @@ the interval do not enter it merely because finalization is pending. Release
 checks must cover that tail cutoff as well as the exact 900-second audio limit.
 
 Polar raw records and Polar-derived breath records retain their original
-`JavaNanoTime` source clock. A measured, fresh nano-time/elapsed-realtime pair
-maps those timestamps into the core's audio-clock alignment; the original
-values are not relabelled as elapsed realtime. Controller observations retain
-their own OpenXR clock. Sensor timestamps and frame/sample positions remain
-separate from these host clocks. Use their declared clock domains when joining
-streams, especially across device sleep.
+`JavaNanoTime` source clock, sensor timestamp, frame receipt, index and count.
+Callback-backdated host samples can reorder between otherwise continuous PMD
+frames. Do not clamp, relabel or rewrite these originals to hide that fact.
+
+The repaired tilt path uses a separate source-bound estimate: after at least
+four packet anchors spanning 500 ms, it freezes one sensor-to-Java-nano offset
+from the minimum observed receipt offset. It does not reanchor each packet.
+Derived provenance declares `fixed-sensor-receipt-anchor-estimate`, the source
+and estimate generation, both anchor values, a 250 ms receipt uncertainty bound
+and `exact_acquisition_time: false`. This is estimated timing, not measured
+acoustic onset or exact sample acquisition time. A measured, fresh Java-nano /
+elapsed-realtime pair then maps that separate estimate onto actual native audio
+history. Clock/source retirement invalidates its old model and evidence.
+
+Controller observations retain their own OpenXR clock. Sensor timestamps and
+frame/sample positions remain separate from these host clocks. Use the declared
+clock domains and retained provenance when joining streams, especially across
+device sleep. The current repair does not change CSV columns or raw sample bytes.
 
 In this build, `breathing_phase` means the unbiased classification from the
 selected breathing input, including Controller State when fallback is selected.

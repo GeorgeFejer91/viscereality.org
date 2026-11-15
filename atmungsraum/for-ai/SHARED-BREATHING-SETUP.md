@@ -82,8 +82,15 @@ consumes. Raw acquisition and source ownership remain active; real source
 changes still invalidate old command revisions. Repeated idle diagnostics must
 not churn control revisions or overwrite a terminal calibration failure.
 
-Map original sample timestamps into actual healthy, playing, same-generation
-audio observations. Retain at most 32 observations covering a 250 ms history
+Keep original raw sample and callback timestamps. The selected repair separately
+warms a source-bound fixed sensor/receipt-anchor estimate before calibration;
+its provenance declares estimated acquisition timing and a 250 ms receipt bound.
+The offset does not move per packet or retry. See the
+[recording clock contract](DATA-LOGGING.md#shared-scheduler-recording-boundary).
+
+Map the derived estimate through a fresh measured Java-nano/elapsed pair into
+actual healthy, playing, same-generation audio observations. Retain at most
+32 observations covering a 250 ms history
 window plus a bracket; never extrapolate a missing frame. At most 64 future
 training labels may wait for the next actual clock bracket. Pause, retirement,
 controller cancellation and source changes clear evidence at their relevant
@@ -93,9 +100,19 @@ Sensor timestamp gaps and driver readiness stay at 200 ms; sensor/host drift
 tolerance stays at 150 ms. A separate 250 ms accepted-ingress deadline admits
 normal 200 ms delivery with modest jitter while failing missing packets.
 Temporary unready output cannot fabricate missing sensor history. Fit only
-after the full two-cycle audio window and an accepted sample watermark within
-40 ms of its end, one 25 Hz interval. Wait only within the bounded delivery
-allowance for the final packet. Elapsed time alone cannot fit.
+after the full two-cycle audio window and the bounded 250 ms final delivery
+allowance. Missing final or interior segments may be masked if the window still
+has sufficient usable evidence. Elapsed time alone cannot fit.
+
+The selected quality policy uses at most 800 uniformly timed 25 Hz observations.
+At least 600 must be usable overall, 280 in each cycle and 60 in each instructed
+four-second phase. Each inhale/exhale needs six usable observations in both its
+first and last second. Finite raw acceleration and 0.85–1.15 g magnitude remain
+required. A causal 100 ms gravity estimate feeds the 0.60 normalized-gravity
+chord/second motion guard, with 200 ms settling after bad intervals. Existing
+directed range and fit checks still apply. These are engineering thresholds
+awaiting wearer qualification. Optional quality counts are bounded 0–800 and
+do not change control revisions or prove success.
 
 Host tests cover valid 200 Hz and 25 Hz batches, 20 ms jitter, missing packets,
 genuine sensor gaps, stale clocks, pauses, source changes, history bounds and

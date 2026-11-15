@@ -108,6 +108,16 @@ packaged `audio/box-loop.json`, selects
 owners in the locked Java source closure. Other native products retain their
 unselected defaults.
 
+The current repair parks Automatic at minimum expansion with prepared, silent
+audio. Only accepted explicit calibration or Controller selection starts the
+shared player. Calibration evaluates the full 32-second window, masking bounded
+bad intervals before its coverage/fit decision. The Polar owner automatically
+establishes and recovers both required streams while respecting explicit Stop.
+Original raw timestamps remain separate from the source-bound timing estimate;
+see the [setup and timing contract](../for-ai/SHARED-BREATHING-SETUP.md).
+The next local APK must pass the recorded source/package gates and fresh wearer
+qualification before any Meta upload.
+
 The Developer selection also enables `experiment_phone_pairing_enabled` and
 `experiment_panel_initially_closed`. The native visibility policy is compiled
 into the first frame, so the app starts in VR with its panel closed. A verified

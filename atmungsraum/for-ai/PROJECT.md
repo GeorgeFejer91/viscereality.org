@@ -24,18 +24,40 @@ streams. The phone percentage shares the circle's bounded display behavior.
   rejection in focused probes without changing original raw records.
 - [x] Verify parked Java audio startup and explicit first-start behavior with
   host owner/backend checks and actual Android API-36 compilation.
-- [ ] Review and verify source-bound estimated alignment, whole-window quality,
+- [x] Review and verify source-bound estimated alignment, whole-window quality,
   automatic stream recovery and the matching phone controls.
-- [ ] Build, verify and install the next same-key local Developer APK; publish
-  the verified public source and phone increment through exact Pages/live checks.
+- [x] Build, verify and install the next same-key local Developer APK.
+- [ ] Publish its verified public source record through exact Pages/live checks.
 - [ ] Resume a fresh attended test, inspect the actual ACC frame format, confirm
   advancing calibration progress, then qualify fit, retry and Controller fallback.
 
-Code 5 remains installed and was force-stopped to silence it. Temporary system
-Location was restored to OFF and this task's hardware leases were released.
+Code 6 is now installed with exact byte-hash readback and retained app UID,
+grants and persistent identity. System Location remains OFF and this task's
+build/headset leases and startup observer were released.
 Wi-Fi ADB remains enabled as requested. The user has authorized assistant phone
 operation for this diagnosis; the earlier read-only preference is superseded
 within that scope. Meta upload remains on hold. The overall milestone stays open.
+
+The phone increment was published separately in
+[PR 11](https://github.com/GeorgeFejer91/viscereality.org/pull/11), normal merge
+`578d330863ce0d3726417e5ee0c14d01df636393`. The exact
+[Pages run 43729861453](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43729861453)
+succeeded. All 23 checked live files match committed Git bytes and actual
+public-URL phone/desktop smoke checks pass. The installed Pixel is currently
+disconnected from USB; its release refresh remains pending with the next
+attended headset test. Native timing and acquisition are a separate increment.
+
+The native repair is frozen at `f31156d7832f71b7caeff9ad005c311ea77c0c8e`,
+tree `c095a8df92480b6da4c7810ed3332bf3998667c2`. The cumulative patch reconstructs
+that exact tree from the pinned upstream. Focused setup tests pass 69; the full
+native suite passes 821 with three ignored and no failures. The three selected
+profile checks and packaged-default reset check pass with the retained private
+visual profile. Independent source reviews are clear. Developer 0.2.5-dev/code 6
+passes actual signed-APK closure, manifest, signer, asset and ZIP checks; its
+[APK record](../quest/apks/README.md#025-dev--parked-startup-and-full-window-quality-2026-11-15)
+binds the artifact and source. Native frames advance with the app panel closed
+and a ready gateway. The existing Location handoff leaves Meta system Settings
+over VR; fresh wearer silence/minimum and calibration acceptance remain open.
 
 ### Stable phone controls and Showcase visuals — 2026-11-15
 

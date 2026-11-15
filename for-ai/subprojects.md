@@ -18,8 +18,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   and judges usable phase coverage at the end. Connected Polar acquisition
   automatically establishes/retries ECG and motion; explicit Stop remains a
   barrier. The smooth percentage shares the native circle's freshness budget.
-  Current code-5 wearer calibration failed before collection; its repair and
-  the next local APK remain under validation. See the active project checklist.
+  Code-5 wearer calibration failed before collection. The reviewed repair is
+  installed as local Developer code 6 with matching byte readback; fresh wearer
+  calibration and Meta acceptance remain open. See the active project checklist.
 
 - Phone live controls (2026-11-15): telemetry preserves document scroll, focused
   fields, caret and unfinished edits. Partial Polar readiness names missing ECG
