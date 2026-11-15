@@ -13,8 +13,10 @@
 - [x] Verify native842/four ignored, real Java/native and HTTP/auth integration,
   phone182/zero skips, rendering/scroll, exact source tree and API36 compilation.
 - [x] Build, inspect and install same-key local Developer 0.2.8-dev/code 9.
-- [ ] Publish the combined phone/source/record increment; verify exact Pages,
-  live URLs and refreshed installed-phone resources.
+- [x] Publish the combined phone/source/record increment; verify exact Pages
+  and live URLs.
+- [ ] Refresh the installed phone app and verify the new resources while the
+  user retains control of that device.
 - [ ] Obtain fresh wearer Ready; test audible/advancing loop across holds and
   wraps, calibration/tracking/retry/Controller fallback and the full main run.
 
@@ -34,6 +36,16 @@ simultaneous mode, panel closed, input zero and a ready gateway. Location is ON;
 Wi-Fi ADB is retained. Startup observers and owned leases are released. The user
 controls the phone and removed the Polar after code 8; no new calibration is
 authorized until fresh Ready. No Meta upload. Overall acceptance remains open.
+
+The combined release merged in [PR 17](https://github.com/GeorgeFejer91/viscereality.org/pull/17)
+at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`; exact
+[Pages run 43756359679](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43756359679)
+succeeded. All 24 checked live files match that Git revision, including the
+versioned phone modules and cumulative native patch. Public phone/desktop checks
+at 390/1440px report ready Pretext, no horizontal overflow, script errors or
+failed app requests. The remote context gate passes. The branch is synchronized
+to that merge; the APK stays local. Installed-phone refresh and fresh wearer
+testing are the next actions, with original stall causation still open.
 
 ### Retained Polar breath state — 2026-11-15
 

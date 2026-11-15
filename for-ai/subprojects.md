@@ -30,8 +30,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   The already-started Java player's recovery dead end is repaired in reviewed,
   installed local Developer code 9 with a matching pending/receipt phone update.
   Its diagnostics distinguish poll/head/dispatch progress; the original trigger
-  remains unproven. Combined publication/phone refresh and fresh wearer testing
-  remain open; no Meta upload.
+  remains unproven. PR 17 and its exact Pages deployment are verified; all 24
+  checked live files match Git and public phone/desktop rendering passes.
+  Installed-phone refresh and fresh wearer testing remain open; no Meta upload.
 
 - The phone app now follows the core site's black/white Arial, VR figure,
   thin frames and blue/gold accents. The style is live with rendered and public

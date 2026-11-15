@@ -31,9 +31,16 @@ alignment pass. Installed bytes match; UID, runtime grants and persistent identi
 are retained. Actual cold startup reports controller-only true, hand extension
 false, simultaneous false, panel closed, gateway ready and input zero. Phase rates
 remain 0.25 per second. Location stays ON; Wi-Fi ADB retained; startup observer and
-lease cleanup pass. Combined publication/phone refresh and fresh wearer testing
-remain pending. The initial physical stall trigger remains unproven; no code-9
-calibration or Meta upload has occurred.
+lease cleanup pass. The combined phone/source record merged in
+[PR 17](https://github.com/GeorgeFejer91/viscereality.org/pull/17) at
+`73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`; exact
+[Pages run 43756359679](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43756359679)
+succeeded. All 24 checked public files match Git, including versioned phone
+modules and the cumulative patch. Live 390px/1440px checks confirm ready Pretext,
+no horizontal overflow, script errors or failed app requests. The remote context
+gate passes. Installed-phone refresh and fresh wearer testing remain pending.
+The initial physical stall trigger remains unproven; no code-9 calibration or
+Meta upload has occurred.
 
 ## Retained calibrated Polar state — 2026-11-15
 
