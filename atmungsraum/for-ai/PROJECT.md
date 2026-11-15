@@ -91,9 +91,8 @@ daemon; Location remains ON. Pixel observation ended when its USB was removed,
 and its port/device leases were released. Fresh post-boot wearer Ready was
 received for audio only, with Polar off. Atmungsraum reopened parked/silent and
 the headset output counter now advances. User-operated Controller audio check
-is pending; require fresh Polar Ready before any new calibration. The exact
-Quest lease and a finite native observer remain owned during that check; clean
-them before handoff. No Meta upload or main experiment occurred.
+was pending at that checkpoint; fresh Polar Ready was required before another
+calibration. No Meta upload or main experiment occurred.
 
 The user then connected Polar and started calibration themselves, reporting
 that it worked well after reboot. Actual native readback now selects a ready
@@ -103,7 +102,11 @@ with the retained-state repair. Tracking satisfaction is being requested;
 this is not yet qualification of repeated fits, Controller fallback or a full
 900-second main run. No replacement APK or speculative audio-adapter change
 was needed for that successful post-boot calibration. The intermittent playback
-trigger and cold-connect UI issue remain open.
+trigger and cold-connect UI issue remain open. The finite observer ended with
+its ADB child stopped; all owned device, port and build leases are released,
+with no remaining forwards. The app remains running for user-operated tracking
+assessment; Location is ON and Wi-Fi ADB is verified. PR 18's documentation merge
+remains blocked by the secondary account's selected-model capacity error.
 
 ### Retained Polar breath state — 2026-11-15
 
