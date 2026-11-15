@@ -319,21 +319,23 @@ test('audio generation replacement cannot confirm an earlier outstanding mutatio
   assert.ok(model.pending);
 });
 
-test('retired audio commands permit explicit acknowledgement without replaying the old mutation', async () => {
+test('same-actor audio replacement permits only receipt reconciliation without discarding or replaying the old mutation', async () => {
   const model = new BreathingSetup({ storage: storage() });
   const peer = fixture();
   peer.fail(true);
   model.update(peer.gateway, state(), true);
   await model.run('calibrate');
   assert.equal(model.update(peer.gateway, state(), true).actions.acknowledge, false);
-  const retired = snapshot(native({ g: 2, r: 0 }));
-  assert.equal(model.update(peer.gateway, state(retired), true).actions.acknowledge, true);
-  model.acknowledgeRetired();
-  const recovered = model.update(peer.gateway, state(retired), true);
-  assert.equal(recovered.unknown, false);
-  assert.equal(recovered.actions.calibrate, true);
+  const replaced = snapshot(native({ g: 2, r: 0 }));
+  const view = model.update(peer.gateway, state(replaced), true);
+  assert.equal(view.actions.acknowledge, false);
+  assert.equal(view.actions.checkReceipt, true);
+  assert.equal(model.acknowledgeRetired(), false);
+  const unresolved = model.update(peer.gateway, state(replaced), true);
+  assert.equal(unresolved.unknown, true);
+  assert.equal(unresolved.actions.calibrate, false);
   assert.equal(peer.calls.length, 1);
-  assert.equal(model.pending, null);
+  assert.equal(model.pending.command.id, peer.calls[0].id);
 });
 
 test('controller fallback cancels preparation despite lost Polar data while continuation stays gated', () => {
@@ -463,20 +465,49 @@ test('wrong IDs and malformed recovery receipt shapes preserve uncertainty and t
 
 test('a lost recovery admission reconciles through its full terminal receipt without replay after reload', async () => {
   const saved = storage(), peer = fixture();
-  let model = new BreathingSetup({ storage: saved });
+  let now = 0, model = new BreathingSetup({ storage: saved, now: () => now });
   peer.fail(true);
   model.update(peer.gateway, state(), true);
   await model.run('calibrate');
   const id = peer.calls[0].id;
   model.update(null, state(null), true);
-  model = new BreathingSetup({ storage: saved });
-  peer.gateway.breathSetupReceipt = async queryId => receipt(queryId, { state: 'confirmed', reason: 'accepted', recovery_generation: 2 });
-  const waiting = state(snapshot(native({ g: 2, r: 1, stage: 'waiting', calibration: 'waiting', attempt: 1 })));
-  model.update(peer.gateway, waiting, true);
+  model = new BreathingSetup({ storage: saved, now: () => now });
+  const reads = [];
+  let result = { v: 1, id, state: 'confirmed' };
+  peer.gateway.breathSetupReceipt = async queryId => { reads.push(queryId); return result; };
+  const waiting = state(snapshot(native({ g: 2, r: 1, stage: 'waiting', calibration: 'waiting', attempt: 1, recovery: null })));
+  let view = model.update(peer.gateway, waiting, true);
+  assert.equal(model.pending.recovery, undefined, 'the initial pending admission was never observed');
+  assert.equal(view.actions.acknowledge, false);
+  assert.equal(view.actions.checkReceipt, true);
+  assert.equal(model.acknowledgeRetired(), false);
+  assert.equal(model.pending.command.id, id);
+  assert.equal(model.recheckReceipt(), true);
+  await model.refresh();
+  view = model.update(peer.gateway, waiting, true);
+  assert.equal(view.unknown, true, 'a field-light confirmation cannot retire the original ID');
+  assert.equal(view.actions.acknowledge, false);
+  now += 20000;
+  await model.refresh();
+  view = model.update(peer.gateway, waiting, true);
+  assert.equal(view.actions.acknowledge, false);
+  assert.equal(view.actions.checkReceipt, true);
+  assert.equal(model.acknowledgeRetired(), false);
+  assert.equal(model.pending.command.id, id, 'local waiting expiry does not prove native actor retirement');
+  result = receipt(id, { state: 'confirmed', reason: 'accepted', recovery_generation: 3 });
+  assert.equal(model.recheckReceipt(), true);
+  await model.refresh();
+  view = model.update(peer.gateway, waiting, true);
+  assert.equal(view.unknown, true);
+  assert.equal(view.actions.acknowledge, false);
+  assert.equal(model.pending.command.id, id, 'a wrong target generation cannot discard the ID');
+  now += 1000;
+  result = receipt(id, { state: 'confirmed', reason: 'accepted', recovery_generation: 2 });
   await model.refresh();
   assert.equal(model.update(peer.gateway, waiting, true).unknown, false);
   assert.equal(model.pending, null);
   assert.equal(peer.calls.length, 1);
+  assert.deepEqual(reads, [id, id, id]);
   assert.match(id, /^[a-f0-9]{16}$/);
 });
 

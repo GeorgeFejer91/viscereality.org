@@ -838,7 +838,6 @@ def capture_setup_recovery(review, paired):
     for slug, title, renewal in (
         ("gateway", "Renewed gateway epoch", "window.reviewInitialOwner={epoch:'9'};"),
         ("native", "Replaced native owner", "window.reviewInitialOwner={epoch:'9',native_epoch:'10'};"),
-        ("audio", "Replaced native audio generation", "window.reviewInitialSetup={g:2};"),
     ):
         page = review.page(initial + saved + renewal)
         acknowledge = page.locator("#preview-acknowledge")
@@ -1574,10 +1573,64 @@ def capture_audio_recovery(review):
         page.context.close()
 
 
+def capture_setup_receipt_fence(review):
+    paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+    operation_id = "f" * 16
+    journal = {"owner":{"serial":"DEMO-QUEST","device":"d" * 32,"epoch":"7","native_epoch":"8"},
+        "command":{"v":1,"id":operation_id,"g":1,"r":0,"op":"calibrate"}}
+    initial = paired + "window.reviewInitialQuest={polar:'ready',receiptState:'outcome_unknown'};" + \
+        "window.reviewInitialSetup={g:2,r:1,stage:'waiting',calibration:'waiting',attempt:1,recovery:null,target_frames:1411200};" + \
+        "sessionStorage.setItem('atmungsraum-breathing-setup-pending',JSON.stringify(" + json.dumps(journal) + "));"
+    for slug, viewport, text_size in (
+        ("390",VIEWPORT,""),("320",{"width":320,"height":568},""),
+        ("200-text",{"width":320,"height":568},"200%"),
+    ):
+        page = review.page(initial,viewport=viewport)
+        page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
+        recheck = page.locator("#preview-acknowledge")
+        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_be_enabled()
+        assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).recovery??null") is None
+        before = page.evaluate("(window.reviewSetupReceiptQueries??[]).length")
+        recheck.click()
+        page.clock.run_for(1100)
+        assert page.evaluate("window.reviewSetupReceiptQueries.length") > before
+        page.clock.run_for(14000)
+        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_be_enabled()
+        for patch in ({"state":"confirmed"},
+            {"state":"confirmed","accepted":True,"reason":"accepted","recovery_generation":3}):
+            page.evaluate("patch=>window.reviewQuest.setupReceiptPatch=patch",patch)
+            recheck.click()
+            page.clock.run_for(1100)
+            expect(recheck).to_have_text("Status erneut prüfen")
+            expect(page.locator("#preview-calibrate")).to_be_disabled()
+            expect(page.locator("#preview-controller")).to_be_disabled()
+            expect(page.locator("#preview-continue")).to_be_disabled()
+            assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).command.id") == operation_id
+            assert page.evaluate("window.reviewSetupCommands") == []
+        queries = page.evaluate("window.reviewSetupReceiptQueries")
+        assert all(query == {"v":1,"id":operation_id,"op":"receipt"} for query in queries)
+        review.shot(page,f"receipt-fence-unknown-{slug}",f"Lost recovery admission {slug} · recheck preserves original ID",recheck,"Setup receipt fence")
+        page.evaluate("window.reviewQuest.setupReceiptPatch={state:'confirmed',accepted:true,reason:'accepted',recovery_generation:2}")
+        recheck.click()
+        page.clock.run_for(1100)
+        assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
+        assert page.evaluate("window.reviewSetupCommands") == []
+        enter_participant(page)
+        expect(page.locator("#preview-detail")).to_contain_text("nächsten vollständigen Atemzyklus")
+        expect(page.locator("#preview-continue")).to_be_disabled()
+        assert page.locator("#preview-progress").evaluate("node=>node.value") == 0
+        review.shot(page,f"receipt-fence-confirmed-{slug}",f"Lost recovery admission {slug} · matching receipt, collection remains native",page.locator("#preview-detail"),"Setup receipt fence")
+        review.regressions.append({"kind":"lost-admission-receipt-fence","viewport":viewport,"text_size":text_size,
+            "original_id":operation_id,"queries":queries,"mutations":[],"same_actor_audio_change_acknowledged":False})
+        page.context.close()
+
+
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic", "audio"), default="all",
+    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic", "audio", "receipts"), default="all",
                         help="Full suite or focused pairing, control, Location, scroll, Polar, or live presentation")
     args = parser.parse_args()
     output = args.output.resolve()
@@ -1610,6 +1663,11 @@ def main():
             capture_automatic_stream_recovery(review)
         if args.scope in ("all", "audio"):
             capture_audio_recovery(review)
+        if args.scope == "receipts":
+            paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
+            capture_setup_recovery(review,paired)
+        if args.scope in ("all", "receipts"):
+            capture_setup_receipt_fence(review)
         browser.close()
     review.index()
     shutil.copyfile(ROOT / "for-ai" / "PHONE-SCREENSHOTS.md", output / "protocol.md")

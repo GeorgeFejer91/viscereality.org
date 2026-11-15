@@ -5,7 +5,7 @@ import { canRecenter, polarSetup, QuestRehearsal, rehearsalActions, rehearsalPol
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=5';
+import { BreathingSetup } from './breathing-setup.js?v=6';
 import { LiveBreathDisplay } from './live-breath-display.js?v=2';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 

@@ -178,8 +178,6 @@ export class BreathingSetup {
       && this.pending.owner.device === gateway.owner.device && this.pending.owner.serial === gateway.owner.serial
       && (this.pending.owner.epoch !== gateway.owner.epoch
         || this.pending.owner.native_epoch !== gateway.owner.native_epoch);
-    const retired = ownerRetired || this.pending && sameQuest(this.pending.owner, gateway?.owner)
-      && setup?.g > this.pending.command.g;
     const testing = setup?.stage === 'testing' && setup.playing;
     const preparing = setup && ['waiting', 'calibrating', 'testing'].includes(setup.stage) && setup.playing;
     const parked = setup?.stage === 'idle' && !setup.playing;
@@ -216,9 +214,12 @@ export class BreathingSetup {
           && (setup.input !== 'controller-state' || recoverable)),
         continue: Boolean(gated && testing && setup.ready && setup.clock_valid !== false
           && ['polar-tilt', 'controller-state'].includes(setup.input)),
-        acknowledge: Boolean(ownerIdle && retired && (!recovering || ownerRetired)),
+        // Audio generation changes can belong to an unobserved recovery of
+        // this exact operation. Only actual actor retirement permits discard.
+        acknowledge: Boolean(ownerIdle && ownerRetired),
         checkReceipt: Boolean(available && canControlQuest(status) && this.pending && !this.busy
-          && !this.refreshing && this.waitExpired && sameQuest(this.pending.owner, gateway?.owner)),
+          && !this.refreshing && (this.waitExpired || this.unknown && setup.g > this.pending.command.g)
+          && sameQuest(this.pending.owner, gateway?.owner)),
       },
     };
     return this.view;
