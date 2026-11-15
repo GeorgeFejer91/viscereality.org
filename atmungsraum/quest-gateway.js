@@ -336,6 +336,13 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
           return controlled('breath-setup', { v: 1, id, op: 'receipt' }, requestSignal);
         } : null,
       recenter: enrollment ? (command, requestSignal) => controlled('recenter', command, requestSignal) : null,
+      kiosk: enrollment && initial.kiosk?.v === 1 ? (command, requestSignal) => {
+        if (command?.v !== 1 || typeof command.id !== 'string' || !/^[a-f0-9]{16}$/.test(command.id)
+          || !['receipt', 'retry'].includes(command.op)
+          || command.op === 'retry' && (!Number.isSafeInteger(command.g) || command.g < 0)
+          || Object.keys(command).length !== (command.op === 'retry' ? 4 : 3)) throw Error('Ungültige Kiosk-Anfrage.');
+        return controlled('kiosk', command, requestSignal);
+      } : null,
       controllerAccess: enrollment && controllerAccessState(initial)
         ? (command, requestSignal) => exchange('controller-access', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,

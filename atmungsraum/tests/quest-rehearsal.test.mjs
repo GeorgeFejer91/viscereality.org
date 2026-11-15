@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createDecipheriv, createHmac } from 'node:crypto';
 import { discoverQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
 import { QuestRehearsal, rehearsalActions, polarSetup } from '../quest-rehearsal.js';
+import * as rehearsalContract from '../quest-rehearsal.js';
 
 const owner = { device: 'a'.repeat(32), serial: 'TEST-QUEST', epoch: '7', native_epoch: '8' };
 const build = 'b'.repeat(64);
@@ -33,6 +34,23 @@ test('Polar automatic recovery is optional and accepts only actual boolean obser
   for (const ar of [null, 0, 1, 'true', {}]) {
     assert.equal(polarSetup({ ...snapshot(), y: { ...y, ar } }), null);
   }
+});
+
+test('native Polar automation distinguishes backoff, missing streams, stopped and selection-required', () => {
+  assert.equal(typeof rehearsalContract.polarReadiness, 'function');
+  const { polarReadiness } = rehearsalContract;
+  const base = { s: 'a'.repeat(32), g: 8, r: 1, p: true, b: true, c: false,
+    a: false, e: false, sc: false, x: '', d: [] };
+  const auto = { v: 1, state: 'backoff', retry_ms: 2000, reason: 'connection-timeout' };
+  const project = (patch = {}) => polarSetup({ ...snapshot(), y: { ...base, ...patch } });
+  assert.match(polarReadiness(project({ auto })), /automatisch.*2 s/);
+  assert.match(polarReadiness(project({ c: true, x: 'b'.repeat(12), e: true, auto: { ...auto, state: 'streams' } })), /Bewegungsdaten fehlen.*automatisch/);
+  assert.match(polarReadiness(project({ auto: { ...auto, state: 'stopped' } })), /gestoppt/);
+  assert.match(polarReadiness(project({ auto: { ...auto, state: 'selection-required' } })), /Mehrere.*Quest/);
+  for (const malformed of [null, { ...auto, v: 2 }, { ...auto, state: 'invented' }, { ...auto, retry_ms: 10001 }, { ...auto, reason: 'x'.repeat(241) }]) {
+    assert.equal(project({ auto: malformed }), null);
+  }
+  assert.match(polarReadiness(project()), /Automatische Verbindung nicht gemeldet/);
 });
 
 test('presentation timing charges status transport without rewriting the native observation', async () => {
@@ -235,6 +253,37 @@ test('native breathing setup is offered only by an enrolled capable Quest and ke
     enrollment: { controller, key }, fetcher: legacy.fetch });
   assert.equal(old.breathSetup, null);
   enrolled.close(); guest.close(); old.close();
+});
+
+test('kiosk capability is private, active-controller fenced and sends closed CAS retry or receipt queries', async () => {
+  const offered = { ...snapshot(), kiosk: { v: 1 } };
+  const fixture = server({ status: offered }); const payloads = [];
+  const gateway = await joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key },
+    fetcher: async (url, init) => {
+      const request = init.body && JSON.parse(init.body);
+      if (request?.action === 'kiosk') payloads.push(JSON.parse(request.payload));
+      return fixture.fetch(url, init);
+    } });
+  assert.equal(typeof gateway.kiosk, 'function');
+  const retry = { v: 1, id: 'f'.repeat(16), op: 'retry', g: 3 };
+  await gateway.kiosk(retry);
+  await gateway.kiosk({ v: 1, id: retry.id, op: 'receipt' });
+  assert.deepEqual(payloads, [retry, { v: 1, id: retry.id, op: 'receipt' }]);
+  for (const invalid of [{ ...retry, op: 'arm' }, { ...retry, g: -1 }, { ...retry, extra: true },
+    { v: 1, id: retry.id, op: 'receipt', g: 3 }]) {
+    await assert.rejects(async () => gateway.kiosk(invalid));
+  }
+  assert.equal(payloads.length, 2);
+  offered.controller_access = { v: 1, role: 'waiting', active_phone: 'Other', revision: 2 };
+  offered.o.i = '101';
+  await gateway.status();
+  await assert.rejects(async () => gateway.kiosk(retry), /Steuerung/);
+  const guest = await joinQuest({ endpoint, serial: owner.serial, build, fetcher: fixture.fetch });
+  assert.equal(guest.kiosk, null);
+  const legacy = server();
+  const old = await joinQuest({ endpoint, serial: owner.serial, build, enrollment: { controller, key }, fetcher: legacy.fetch });
+  assert.equal(old.kiosk, null);
+  gateway.close(); guest.close(); old.close();
 });
 
 test('setup reconciliation authenticates an exact three-field read-only query and rejects malformed IDs before transport', async () => {
@@ -441,6 +490,8 @@ test('a new native owner cannot clear an uncertain Finish or receive a replay', 
   assert.equal(rehearsal.state.unknown, true);
   const replacement = fakeQuest();
   replacement.owner = { ...owner, native_epoch: '9', epoch: '10' };
+  const replacementStatus = replacement.status;
+  replacement.status = async () => { const value = await replacementStatus(); return { ...value, o: { ...value.o, e: '9' } }; };
   rehearsal.attach(replacement);
   await rehearsal.refresh();
   await rehearsal.run('play');
@@ -448,6 +499,26 @@ test('a new native owner cannot clear an uncertain Finish or receive a replay', 
   assert.deepEqual(replacement.commands, []);
   rehearsal.acknowledgeIdle();
   assert.equal(rehearsal.state.unknown, false);
+});
+
+test('uncertain same-actor operations permit receipt reads but never local acknowledgement or replay', async () => {
+  const quest = fakeQuest({ lost: 'save-next' });
+  const rehearsal = new QuestRehearsal(); rehearsal.attach(quest);
+  await rehearsal.run('play'); await rehearsal.run('finish');
+  rehearsal.update({ status: snapshot(), busy: false });
+  assert.equal(rehearsal.canAcknowledgeIdle(), false);
+  assert.match(rehearsal.recovery().detail, /Bestätigung/);
+  assert.equal(rehearsal.recovery().action, 'Bestätigung erneut abfragen');
+  rehearsal.acknowledgeIdle();
+  assert.equal(rehearsal.state.unknown, true);
+  assert.ok(rehearsal.pending);
+  const replacement = { ...quest, owner: { ...owner, native_epoch: '9' } };
+  rehearsal.attach(replacement);
+  assert.equal(rehearsal.canAcknowledgeIdle(), false, 'stale prior-actor status cannot acknowledge the current actor');
+  rehearsal.update({ status: { ...snapshot(), o: { ...snapshot().o, e: '9' } } });
+  assert.equal(rehearsal.canAcknowledgeIdle(), true);
+  rehearsal.update({ status: { ...snapshot(), controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } } });
+  assert.equal(rehearsal.canAcknowledgeIdle(), false);
 });
 
 function polarQuest({ candidates = ['0123456789ab'], lost, delayedScan = false, permission = true } = {}) {
