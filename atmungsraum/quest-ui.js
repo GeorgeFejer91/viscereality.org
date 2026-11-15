@@ -8,7 +8,7 @@ import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=7';
 import { LiveBreathDisplay } from './live-breath-display.js?v=3';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
-import { KioskControl } from './kiosk-control.js?v=1';
+import { KioskControl } from './kiosk-control.js?v=2';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };

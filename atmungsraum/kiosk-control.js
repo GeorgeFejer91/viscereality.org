@@ -16,6 +16,30 @@ const validJournal = saved => saved?.owner && /^[a-f0-9]{32}$/.test(saved.owner.
   && saved.command?.v === 1 && id(saved.command.id) && saved.command.op === 'retry' && integer(saved.command.g)
   && Object.keys(saved.command).length === 4;
 
+function kioskGuidance(value) {
+  if (!value) return 'Aktualisiere die Quest-App für die Kiosk-Diagnose.';
+  if (value.effective) return 'Die Quest bestätigt den wirksamen Kiosk-Schutz.';
+  const blocker = value.blocked || value.state;
+  if (blocker === 'terminal' || value.state === 'terminal') return 'Die Quest hat den Kiosk-Schutz beim Beenden der App beendet. Öffne die Atmungsraum-App über die App-Bibliothek der Quest, wenn du einen neuen Durchlauf starten möchtest.';
+  if (!value.requested) return 'Kiosk ist nicht angefordert. Öffne die Atmungsraum-App regulär über die App-Bibliothek der Quest. Dieses Smartphone kann den Kiosk-Schutz nicht aktivieren.';
+  if (blocker === 'recovery-exhausted') return 'Die automatischen Rückkehrversuche sind ausgeschöpft. Beende die Atmungsraum-App im Headset und öffne sie erneut über die App-Bibliothek der Quest. Verbinde danach dieses Smartphone wieder.';
+  if (blocker === 'system-prompt-or-transition') return 'Ein Systemdialog oder App-Wechsel unterbricht den Schutz vorübergehend. Bearbeite den sichtbaren Dialog im Headset und kehre zur VR-App zurück. Warte danach auf die Bestätigung der Quest.';
+  if (blocker === 'presentation-stale' || value.state === 'watchdog-awaiting-presentation') return 'Die Quest bestätigt noch keine aktuelle Ansicht der VR-App. Setze das Headset auf und kehre zur Atmungsraum-App zurück. Warte, bis die VR-Szene oder ihr Bedienfeld wieder sichtbar ist.';
+  if (value.state === 'needs-accessibility-setup') return 'Dieser Quest-Modus meldet eine fehlende Bedienungshilfe. Richte die von der Quest-App angeforderte Android-Bedienungshilfe im Headset ein. Warte danach auf den bestätigten Kiosk-Status.';
+  if (value.state === 'watchdog-starting' || value.service === 'start-pending') return 'Der Kiosk-Dienst wird auf der Quest gestartet. Bitte warten. Erst ein verbundener Dienst und die sichtbare VR-App machen den Schutz wirksam.';
+  if (value.state === 'revoked' || value.service === 'revoked') return 'Die Quest hat den Kiosk-Dienst entzogen. Kehre zur Atmungsraum-App zurück und prüfe die dortige Meldung im Headset. Der Schutz ist noch nicht wirksam.';
+  if (['watchdog-failed', 'watchdog-missing', 'interrupted'].includes(value.state)
+    || ['start-failed', 'missing-or-disabled', 'interrupted'].includes(value.service)) {
+    const reason = value.state === 'watchdog-failed' || value.service === 'start-failed' ? 'Der Kiosk-Dienst konnte nicht starten.'
+      : value.state === 'interrupted' || value.service === 'interrupted' ? 'Die Verbindung zum Kiosk-Dienst wurde unterbrochen.' : 'Der Kiosk-Dienst ist nicht verbunden.';
+    return `${reason} ${value.retry_available ? 'Wenn dieses Smartphone steuert und keine Anfrage offen ist, wähle „Kiosk-Dienst erneut verbinden“.'
+      : 'Kehre zur Atmungsraum-App im Headset zurück und prüfe den Status erneut. Die Quest bietet gerade keinen Dienst-Neustart an.'}`;
+  }
+  if (value.state === 'degraded-home-resolving') return 'Die Quest bestimmt noch ihre Home-Oberfläche. Bitte warten, bis die Quest den Kiosk-Status bestätigt.';
+  if (value.state === 'unavailable-home-surface') return 'Die Home-Oberfläche der Quest ist nicht verfügbar. Prüfe die Meldung im Bedienfeld der App im Headset. Der Schutz ist noch nicht wirksam.';
+  return 'Die Quest meldet eine Kiosk-Unterbrechung. Prüfe die Meldung im Bedienfeld der Quest. Die Wirksamkeit ist noch nicht bestätigt.';
+}
+
 export class KioskControl {
   pending = null;
   busy = false;
@@ -55,10 +79,7 @@ export class KioskControl {
       available, value: available ? value : null,
       summary: !available ? 'Dieser Quest-Build meldet keinen aktuellen Kiosk-Status.'
         : `Kiosk: ${value.requested ? 'angefordert' : 'nicht angefordert'} · ${value.effective ? 'wirksam' : 'nicht wirksam'}.`,
-      prerequisites: !available ? 'Aktualisiere die Quest-App für die Kiosk-Diagnose.'
-        : value.effective ? 'Die Quest bestätigt den wirksamen Kiosk-Schutz.'
-          : value.requested ? 'Kiosk ist angefordert. Prüfe im Headset die Android-Bedienungshilfe und bestätige nötige Systemdialoge. Die Quest meldet die Wirksamkeit separat.'
-            : 'Kiosk muss im Bedienfeld der Quest eingerichtet und angefordert werden. Dieses Smartphone kann Systemfreigaben nicht erteilen.',
+      prerequisites: kioskGuidance(available ? value : null),
       canRetry: Boolean(idle && gateway?.kiosk && value.retry_available && !this.pending && !this.busy),
       canCheck: Boolean(active && gateway?.kiosk && this.pending && sameQuest(this.pending.owner, gateway.owner) && !this.busy && !this.refreshing),
       canAcknowledge: Boolean(idle && retired && !this.busy),
@@ -75,7 +96,7 @@ export class KioskControl {
       || !['pending', 'confirmed', 'rejected', 'outcome_unknown'].includes(receipt.state)) return;
     if (receipt.state === 'confirmed' || receipt.state === 'rejected') {
       this.message = receipt.state === 'confirmed' ? 'Kiosk-Dienst wieder verbunden. Ob der Schutz wirksam ist, zeigt der aktuelle Quest-Status.'
-        : 'Die Quest hat den Neustart des Kiosk-Dienstes abgelehnt oder abgebrochen. Prüfe den aktuellen Status und die Systemfreigaben im Headset.';
+        : 'Die Quest hat den Neustart des Kiosk-Dienstes abgelehnt oder abgebrochen. Prüfe die angezeigte Kiosk-Meldung der Quest.';
       this.remember(null);
     }
   }

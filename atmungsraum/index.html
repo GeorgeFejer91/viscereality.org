@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261115-operator-controls">
+  <link rel="stylesheet" href="./style.css?v=20261115-kiosk-guidance">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261115-operator-controls"></script>
+  <script type="module" src="./app.js?v=20261115-kiosk-guidance"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -149,7 +149,10 @@
             <summary><span data-measure>Quest-Einstellungen · Kiosk</span></summary>
             <p id="kiosk-summary" role="status" data-measure></p>
             <p id="kiosk-prerequisites" data-measure></p>
-            <p id="kiosk-detail" data-measure></p>
+            <details id="kiosk-diagnostics">
+              <summary><span data-measure>Technische Diagnose</span></summary>
+              <p id="kiosk-detail" data-measure></p>
+            </details>
             <p id="kiosk-message" role="status" data-measure hidden></p>
             <button id="kiosk-retry" type="button" hidden><span data-measure>Kiosk-Dienst erneut verbinden</span></button>
             <button id="kiosk-check" type="button" hidden><span data-measure>Bestätigung erneut abfragen</span></button>

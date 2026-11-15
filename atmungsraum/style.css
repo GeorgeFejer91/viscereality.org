@@ -81,6 +81,7 @@ html[data-mode="quest"] #corner-actions {
 #quest-settings-host, #preview-settings-host { width: 100%; min-width: 0; }
 #quest-settings { text-align: start; min-width: 0; }
 #quest-settings[open] { display: grid; gap: 10px; }
+#kiosk-diagnostics[open] { display: grid; gap: 10px; }
 #quest-settings summary { cursor: pointer; min-height: 48px; align-content: center; }
 #kiosk-detail { overflow-wrap: anywhere; color: var(--muted); }
 #preview-progress-group { display: grid; justify-items: stretch; gap: 4px; width: min(100%, 320px); }
