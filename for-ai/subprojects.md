@@ -12,6 +12,16 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Operator follow-up (2026-11-16): participant accepts code-9 calibration.
+  Reviewed local code 10 repairs explicit H10 connection recovery, clarifies
+  recovery and confirmed Controller mode, overlays desired/applied radius,
+  exposes effective kiosk state and reports installed APK identity versus a
+  public required-version policy. The prior test command omitted launcher
+  admission, explaining skipped startup automation. Software/build/inspection
+  gates pass. Installed code-10 bytes match; trusted launch automatically connects
+  H10 and starts both streams. Exact publication and remaining physical acceptance
+  are pending; the user ended testing for the day. Power-on boot autostart is not selected. No Meta upload.
+
 - Calibration acceptance and input correction (2026-11-15): assume compliance
   with guidance and learn personal tilt movement; participant testing decides
   satisfaction. Reject technical/unusable data, without an ideal-waveform or

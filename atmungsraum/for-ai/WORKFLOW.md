@@ -1,15 +1,24 @@
 # Workflow
 
-## Current hardware-test handoff — 2026-11-15
+## Current hardware-test handoff — 2026-11-16
+
+Code 10 is installed with matching byte readback and an accepted canonical cold
+launch. H10 discovery/connection and ACC+ECG stream starts occurred automatically.
+The user ended testing and is shutting down the Quest; observer and exact Quest
+lease are released. Publish the matching PWA now. Tomorrow obtain fresh Ready,
+with the user operating the phone, before continuing device acceptance. See the
+active PROJECT checklist; effective kiosk, dual-radius display, Controller UI,
+sustained recovery and full main remain separate acceptance items.
 
 The user explicitly requests retaining system Location ON on the test Quest
 after the attended scan/calibration work. This supersedes the earlier temporary
 restore-to-OFF bench instruction. App code must still use normal attended
 permission/settings flows rather than toggling the system setting itself.
 
-The user explicitly authorized assistant phone operation for calibration
-diagnosis with “try yourself”, superseding the earlier read-only preference
-within this test scope. After a test pause, require fresh wearer readiness
+The latest user preference is to control the phone themselves. Earlier
+“try yourself” permission applied to that diagnosis and does not override this
+later preference. Observe read-only unless the user renews phone-operation
+authorization. After a test pause, require fresh wearer readiness
 before starting calibration. Announce actual collection only after an accepted
 native calibration has begun advancing completed frames. A running Automatic
 loop or a waiting-for-cycle state does not establish collection.
@@ -20,6 +29,53 @@ startup separately from visual parity, worn calibration and Meta delivery.
 When diagnosing startup, begin a bounded filtered live log capture before the
 launch: busy renderer output can displace the startup interval before a later
 log dump. Do not clear shared buffers or change global logging to compensate.
+
+### Launch through the trusted launcher path
+
+Resolve the selected APK's launcher component, then use the normal explicit
+launcher intent for an authorized launch:
+
+```text
+adb -s <serial> shell am start -W -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -n <package>/<activity>
+```
+
+A bare `am start -n` can display the stimulus while failing guarded launcher
+admission. The code-9 test launch did this: startup logged rejected with
+`launchEpoch=0`, so its trusted automatic-connection and kiosk initialization
+were skipped. Do not weaken the production guard to accommodate that malformed
+test command. A running process, ready gateway and closed panel do not prove
+trusted startup. Capture admission and effective automatic-connection/kiosk
+readback separately. Test the actual Quest launcher intent too when available;
+do not assume its categories from a generic host fixture.
+
+### Build identity, boot selection and update delivery
+
+Read actual package version and generated packaging fingerprint through the
+authenticated APK status. Keep `quest-release.json` minimum/latest versions and
+the APK record current together; verify installed versus required on the phone.
+The identifier is not the signed APK byte hash. Unknown metadata or failed
+policy reads cannot be presented as an up-to-date result.
+
+Code 9 and code 10 do not register the optional system-boot receiver. Normal
+trusted cold launch and soft kiosk are separate from power-on autostart. Do not
+claim boot qualification from a successful manual launch. The existing optional
+receiver uses MAIN/LAUNCHER and requires its selected feature and user-granted
+overlay permission; changing that selection needs its own verified increment.
+
+Meta release-channel membership and delivery are separate from local APK
+installation. Eligible channel members receive updated builds, but do not
+guarantee installation before an immediate app or boot launch. Use an idle update
+window and verify the installed version before a session. See Meta's
+[channel membership](https://developers.meta.com/vr/resources/publish-release-channels-add-users/)
+and [headset update guidance](https://www.meta.com/help/quest/172903867975450/).
+Keep current iterative APKs local until relevant hardware qualification; no
+automatic Meta upload is authorized by a version-indicator change.
+
+Custom private-particle assembly requires applying its approved
+`experiment.env.json` to the child process for both initial resolution and
+assembly, then restoring the caller environment. A feature lock alone does not
+supply those caller environment inputs. Retain failed run logs and use a fresh
+run name; never mistake a partial failed staging directory for a built APK.
 
 ## Normal development
 

@@ -2,6 +2,85 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Automatic connection and clear operator controls — 2026-11-15
+
+The participant accepts the current calibration as good enough. Preserve its
+learner, retained breath-state integration and single PCM clock. The next user
+request covers five existing flows; continue under the standing implementation
+and publication authorization without an additional approval loop.
+
+- [x] Trace/repair cold-start H10 discovery and sustained bounded scan/connect
+  retries in the native owner; retain explicit Stop, permission and multi-sensor
+  selection barriers. Establish/retry both required streams after connection.
+- [x] Replace the obscure idle acknowledgement with visible, state-specific
+  failure/recovery guidance. Distinguish local uncertainty reconciliation from
+  an actual headset/app reset; never replay unknown mutations automatically.
+- [x] Display the confirmed active input and pending switch explicitly. In
+  Controller mode hide Polar calibration progress/failure controls; provide an
+  explicit route back to Polar setup/calibration while the shared loop continues.
+- [x] Overlay labelled, differently styled blue desired/gold actual radius
+  indicators using fresh Quest-applied renderer progress. Trace existing fields
+  before choosing the narrow additive telemetry contract; never substitute the
+  learned sensor coordinate or desired phase for actual renderer output.
+- [x] Trace effective soft-kiosk activation and expose truthful status, missing
+  prerequisites and supported controls in PWA settings. Preserve platform prompt
+  and permission boundaries; do not claim a requested guard is effective.
+- [x] Add authenticated installed APK package/version/build identity, a public
+  per-package required-version policy and honest unknown/update indicators.
+- [x] Run RED/GREEN regression, independent spec/quality review, narrow/200%
+  Pretext and stable-scroll checks, source reconstruction, signed local APK
+  build and inspection. No Meta upload.
+- [x] Install/read back code 10 while idle and verify trusted cold launch,
+  controller-only input and automatic H10 connection/ACC+ECG stream starts.
+- [ ] Publish through exact Pages/live checks and verify installed-phone
+  resources. Qualify remaining hardware flows after fresh wearer Ready;
+  full-main acceptance remains separately open.
+
+Implementation order: native bootstrap/retry/kiosk and actual-radius contract;
+phone receipt/mode/dual-display/settings; integration/review; package/publication
+and attended acceptance. Native and phone changes have separate file ownership,
+with this project state as the single plan/evidence owner. The current live runtime remains PR 17. The operator/source release is
+being prepared on PR 18 under the existing publication/access constraints.
+
+Software checkpoint, 2026-11-16: all requested source changes pass independent
+task and final cross-boundary review. Final phone gate is 203/203, zero skips;
+native 846 passes with the existing serial-runner requirement and five intentional
+ignores, plus the isolated real renderer/global-producer case passing separately.
+Actual source callback/receipt and non-recording GPU-publication RED/GREEN, API36
+and gateway/auth/identity gates pass. The local same-key code-10 APK is built and
+inspected; see the [code-10 record](../quest/apks/README.md#029-dev--operator-controls-and-installed-build-identity-2026-11-16).
+Native `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` reconstructs tree
+`ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856`; selected Android compilation and
+packaged build identity match it. The prior cold-start failure is traced to the
+root's malformed bare-component test launch; guarded startup remains unchanged.
+Current code 9 and new code 10 do not register the optional boot receiver, so
+true power-on autostart is not enabled or qualified. Controller-only tracking
+remains selected. APK update policy reports compatibility; it does not install
+updates or guarantee Meta update timing before launch.
+
+Installed checkpoint, 2026-11-16: the user confirmed no recording and authorized
+installation/launch. Exact installed bytes match the code-10 hash, UID 10159 is
+retained and trusted MAIN/LAUNCHER admission succeeds. Runtime reports controller
+only, no live hand extension, no simultaneous tracking and driver value zero.
+Without a phone Connect action, the app finds the H10, connects and receives ACC
+and ECG stream-start acknowledgements. This establishes automatic startup, not
+signal quality or sustained absent-sensor retry acceptance. The kiosk service
+record exists; effective protection still requires authenticated observation.
+Location remains ON. The optional boot receiver remains absent.
+
+The user ended today's testing and is shutting down the Quest. No new calibration
+or recording was started on code 10. The finite startup observer has stopped its
+owned ADB child and the exact Quest lease is released. The user continues to own
+phone operation. Resume with fresh wearer Ready; check APK identity/current
+policy, actual-radius display, confirmed Controller UI and effective kiosk, then
+remaining retry/fallback/full-main acceptance. No Meta upload.
+
+Matching publication is in progress. Primary GitHub/browser access is READ;
+the secondary account is ADMIN but its command policy rejected a PR read before
+execution with only `rejected: blocked by policy`. A narrower connector attempt
+is pending; no permission widening or bypass was attempted. Keep the milestone
+open through exact Pages/live and affected device checks.
+
 ### Explicit audio retry recovery — 2026-11-15
 
 - [x] Capture the code-8 failed attempt and distinguish the proven retry dead

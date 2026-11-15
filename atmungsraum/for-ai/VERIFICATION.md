@@ -1,5 +1,57 @@
 # Verification
 
+## Operator controls and APK identity / code 10 — 2026-11-16
+
+Native `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` and phone increments
+through `4a473c9d13a79bc54d8b606d60c3b72fd1cc3c50` pass independent task
+and final integration review. Final full phone gate passes 203 tests with zero
+skips, including native assembly and actual Java pairing interoperability;
+fresh JCE/state host checks pass 369. Native passes 846 library tests under its
+documented `--test-threads=1` runner, five intentionally ignored; the isolated
+actual renderer/global-producer case is separately run and passes. Earlier
+parallel diagnostic failures are retained, not counted as passes.
+
+Review corrections have real RED/GREEN proof: actual GPU preparation publication
+had wrongly depended on a recording-only clock, now uses an independent validated
+Android CLOCK_BOOTTIME observation; and a clean disconnect before connection now
+rejects the original attempt receipt before independent retry can succeed.
+Recording/PCM authority, learner and radius integration remain unchanged.
+Real producer/gateway/auth, explicit Connect, kiosk/epoch/CAS, cold-start and
+API36 production compilation gates pass. The new private APK-identity gate passes
+52 signed-status assertions, including caching, unknown metadata and guest/relay
+stripping. Rendered narrow/200% state, stale/fresh telemetry and targeted
+scroll/focus checks pass. Kiosk guidance follows actual foreground-service
+blockers; it does not generically require Accessibility.
+
+The public patch exactly reconstructs tree
+`ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856`. Fresh selected Android compilation
+and actual signed-APK session closure pass. Code 10 is 65,260,335 bytes with
+SHA-256 `5bde14b95ed0afed49932fda84bc0a53271f2d65d0e735747de85dfa41580d93`;
+its retained signer, manifest, 89 assets and alignment pass. The packaged build
+identifier `7dfad0b71d545bf126f027de2e977c9688e28c9a1e18b3f2ab940247b0ae0114`
+matches its source capsule. This is a packaging fingerprint, not the binary hash.
+Native Android ABI compilation is verified. Exact installed APK bytes match;
+UID 10159 is retained. Trusted MAIN/LAUNCHER startup is accepted, controller-only
+is true, live-hand and simultaneous tracking false, and driver input is zero.
+Without a phone Connect action the app discovers/connects H10 and receives both
+ACC and ECG stream-start acknowledgements. Continuous sample quality and absent-
+sensor retry are not yet physically qualified. A kiosk service record exists;
+effective protection remains unproven by authenticated observation. No boot
+receiver is registered. Location remains ON. The user ended testing and is
+shutting down the headset; the finite startup observer/owned child and exact
+Quest lease are released. Publication/live URLs, installed-phone refresh and
+remaining wearer checks are pending. No Meta upload.
+
+## Participant acceptance and follow-up scope — 2026-11-15
+
+After the post-reboot code-9 calibration and native calibrated-Polar readback,
+the participant reports that calibration works well enough. This closes that
+subjective fit assessment; it does not qualify repeated recovery, Controller
+fallback or a complete main recording. The next authorized increment repairs
+automatic discovery/recovery, clarifies input-mode and reset UI, adds an actual
+renderer-radius overlay and exposes effective kiosk status/settings. Source and
+render verification of that increment are pending in the active PROJECT checklist.
+
 ## Explicit audio retry recovery / code 9 — 2026-11-15
 
 Native `9afdcf0ef2cf05569e7ccc67c31f711f0e2fdd87` and PWA

@@ -16,7 +16,7 @@ index ed265bb1d6596fd4a1bf55a2dc58fffd0c29372f..5ff62f769a45211bbd45e283efe5bc8c
  retired and buffer-removal aware; disable reuse fail-safely on bookkeeping
  overflow. Apply the linked rendering contract when changing that path.
 diff --git a/Cargo.lock b/Cargo.lock
-index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a4518342fe55 100644
+index 43c5cba2155ea583db22d28927d2034567214e1c..bac7a4d14f827ed63840ec63e2f21111c98231c6 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
 @@ -36,6 +36,12 @@ dependencies = [
@@ -64,16 +64,18 @@ index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a451
  [[package]]
  name = "num_enum"
  version = "0.7.6"
-@@ -899,6 +923,8 @@ dependencies = [
+@@ -899,7 +923,10 @@ dependencies = [
   "android-activity",
   "android-properties",
   "ash",
 + "chrono",
 + "getrandom 0.4.3",
   "jni 0.22.4",
++ "libc",
   "ndk-sys",
   "openxr",
-@@ -910,6 +936,8 @@ dependencies = [
+  "rusty-lsl",
+@@ -910,6 +937,8 @@ dependencies = [
   "rusty-quest-particle-adapter",
   "serde_json",
   "sha2",
@@ -82,7 +84,7 @@ index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a451
  ]
  
  [[package]]
-@@ -1226,6 +1254,12 @@ dependencies = [
+@@ -1226,6 +1255,12 @@ dependencies = [
   "syn 3.0.3",
  ]
  
@@ -95,7 +97,7 @@ index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a451
  [[package]]
  name = "toml_datetime"
  version = "1.1.1+spec-1.1.0"
-@@ -1262,12 +1296,27 @@ version = "1.20.1"
+@@ -1262,12 +1297,27 @@ version = "1.20.1"
  source = "registry+https://github.com/rust-lang/crates.io-index"
  checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
  
@@ -124,7 +126,7 @@ index 43c5cba2155ea583db22d28927d2034567214e1c..66f752488a60c8cc31d9c9aac907a451
  name = "version_check"
  version = "0.9.5"
 diff --git a/apps/native-renderer-android/native/Cargo.toml b/apps/native-renderer-android/native/Cargo.toml
-index 8d8f92c0f6e2e8c6d84ddfe7e26633b97a183651..117796d026a0ce04fc1b5c9ab3f7be115493f0b4 100644
+index 8d8f92c0f6e2e8c6d84ddfe7e26633b97a183651..3e819cdd110ae7c7447f9c0b0d0365f788616b57 100644
 --- a/apps/native-renderer-android/native/Cargo.toml
 +++ b/apps/native-renderer-android/native/Cargo.toml
 @@ -17,6 +17,8 @@ crate-type = ["cdylib", "rlib"]
@@ -136,7 +138,7 @@ index 8d8f92c0f6e2e8c6d84ddfe7e26633b97a183651..117796d026a0ce04fc1b5c9ab3f7be11
  # Same-owner Vulkan presentation; never activates the experiment controller.
  showcase-vulkan-ui = ["showcase"]
  meta-xr-operator = []
-@@ -31,6 +33,10 @@ rusty-quest-broker-authority = { path = "../../../crates/rusty-quest-broker-auth
+@@ -31,10 +33,15 @@ rusty-quest-broker-authority = { path = "../../../crates/rusty-quest-broker-auth
  rusty-lsl = { git = "https://github.com/MesmerPrism/rusty-lsl.git", rev = "8b6b2a6cd0c0e5147b7e1cc076a116ef226cddbd", optional = true }
  serde_json = "1"
  sha2 = "=0.10.9"
@@ -147,6 +149,11 @@ index 8d8f92c0f6e2e8c6d84ddfe7e26633b97a183651..117796d026a0ce04fc1b5c9ab3f7be11
  
  [target.'cfg(target_os = "android")'.dependencies]
  android-activity = { version = "0.6.1", features = ["native-activity"] }
+ android-properties = "0.2"
++libc = "=0.2.189"
+ ash = "0.38"
+ jni = "0.22"
+ ndk-sys = "0.6"
 diff --git a/apps/native-renderer-android/native/build.rs b/apps/native-renderer-android/native/build.rs
 index 4037f9bea49adbcc8deb304eb474733f9e066d79..38ff428b20170fa9abd8327e144f4b279259b7da 100644
 --- a/apps/native-renderer-android/native/build.rs
@@ -198,8 +205,57 @@ index 4037f9bea49adbcc8deb304eb474733f9e066d79..38ff428b20170fa9abd8327e144f4b27
              "showcase and frame-extension source selections must match"
          );
          let frame_extension_define = if extension_enabled { "1" } else { "0" };
+diff --git a/apps/native-renderer-android/native/src/android_elapsed_clock.rs b/apps/native-renderer-android/native/src/android_elapsed_clock.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..75af7cfdb3aeb907bcec05075111a94b95dfd9a6
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/android_elapsed_clock.rs
+@@ -0,0 +1,43 @@
++//! Android elapsed realtime observations for display telemetry only.
++//! CLOCK_BOOTTIME shares Android SystemClock.elapsedRealtimeNanos's suspend-inclusive domain.
++//! This never establishes PCM, experiment, recording, or input authority.
++
++#[cfg(target_os = "android")]
++pub(crate) fn now_ns() -> Option<u64> {
++    let mut observation = std::mem::MaybeUninit::<libc::timespec>::uninit();
++    // SAFETY: clock_gettime writes the complete timespec on success. The pointer is
++    // aligned/writable and the value is read only after a successful return.
++    if unsafe { libc::clock_gettime(libc::CLOCK_BOOTTIME, observation.as_mut_ptr()) } != 0 {
++        return None;
++    }
++    // SAFETY: successful clock_gettime initialized the complete timespec above.
++    let observation = unsafe { observation.assume_init() };
++    timespec_ns(observation.tv_sec as i64, observation.tv_nsec as i64)
++}
++
++#[cfg(not(target_os = "android"))]
++pub(crate) fn now_ns() -> Option<u64> {
++    None
++}
++
++fn timespec_ns(seconds: i64, nanos: i64) -> Option<u64> {
++    if seconds < 0 || !(0..1_000_000_000).contains(&nanos) {
++        return None;
++    }
++    (seconds as u64)
++        .checked_mul(1_000_000_000)?
++        .checked_add(nanos as u64)
++        .filter(|value| *value > 0)
++}
++
++#[cfg(test)]
++mod tests {
++    #[test]
++    fn actual_elapsed_clock_parts_validate_sign_fraction_and_overflow() {
++        assert_eq!(super::timespec_ns(1, 7), Some(1_000_000_007));
++        assert_eq!(super::timespec_ns(0, 1), Some(1));
++        for (seconds, nanos) in [(0, 0), (-1, 1), (1, -1), (1, 1_000_000_000), (i64::MAX, 0)] {
++            assert_eq!(super::timespec_ns(seconds, nanos), None);
++        }
++    }
++}
 diff --git a/apps/native-renderer-android/native/src/breath_composition_driver.rs b/apps/native-renderer-android/native/src/breath_composition_driver.rs
-index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d5443192e686 100644
+index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..9c20f61a8dd24ffc9af6ad0304666efdb813d59e 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_driver.rs
 +++ b/apps/native-renderer-android/native/src/breath_composition_driver.rs
 @@ -159,6 +159,31 @@ enum DriverStatus {
@@ -234,7 +290,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
  impl DriverStatus {
      const fn as_str(self) -> &'static str {
          match self {
-@@ -189,6 +214,19 @@ pub(crate) struct BreathCompositionDriver {
+@@ -189,6 +214,20 @@ pub(crate) struct BreathCompositionDriver {
      reason: &'static str,
      accepted_outputs: u64,
      reset_count: u64,
@@ -251,10 +307,11 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
 +        u64,
 +    )>,
 +    setup_rearm_required: bool,
++    renderer_lineage: Option<crate::experiment_breathing_setup_runtime::SetupRendererLineage>,
  }
  
  impl BreathCompositionDriver {
-@@ -210,6 +248,13 @@ impl BreathCompositionDriver {
+@@ -210,6 +249,14 @@ impl BreathCompositionDriver {
              reason: "not-observed",
              accepted_outputs: 0,
              reset_count: 0,
@@ -265,21 +322,19 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
 +            last_setup_confirmation: None,
 +            setup_confirmation_fence: None,
 +            setup_rearm_required: false,
++            renderer_lineage: None,
          }
      }
  
-@@ -223,9 +268,29 @@ impl BreathCompositionDriver {
+@@ -223,9 +270,26 @@ impl BreathCompositionDriver {
          snapshot: BreathCompositionSnapshot,
          observed_at: BreathTimestampMicros,
          dt_seconds: f32,
 +    ) {
-+        self.update_frame_with_setup(
-+            settings,
-+            snapshot,
-+            observed_at,
-+            dt_seconds,
-+            crate::experiment_breathing_setup_runtime::driver_output(),
-+        );
++        let (setup, lineage) =
++            crate::experiment_breathing_setup_runtime::driver_output_with_lineage();
++        self.renderer_lineage = lineage;
++        self.update_frame_with_setup(settings, snapshot, observed_at, dt_seconds, setup);
 +    }
 +    fn update_frame_with_setup(
 +        &mut self,
@@ -298,7 +353,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
              self.pending_reset_slot = self
                  .owns_slot
                  .then_some((self.settings.target_slot, self.settings.loss_value01));
-@@ -233,6 +298,8 @@ impl BreathCompositionDriver {
+@@ -233,6 +297,8 @@ impl BreathCompositionDriver {
              self.reset("config-changed");
          }
          if !self.settings.requested_enabled {
@@ -307,7 +362,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
              self.owns_slot = false;
              self.status = DriverStatus::Disabled;
              self.reason = "settings-disabled";
-@@ -258,7 +325,116 @@ impl BreathCompositionDriver {
+@@ -258,7 +324,116 @@ impl BreathCompositionDriver {
              self.reject("activation-binding-mismatch");
              return;
          }
@@ -424,7 +479,21 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
          if snapshot.status != BreathCompositionStatus::Running {
              self.wait("composition-not-running");
              return;
-@@ -396,7 +572,7 @@ impl BreathCompositionDriver {
+@@ -390,13 +565,21 @@ impl BreathCompositionDriver {
+         wrote
+     }
+ 
++    pub(crate) fn renderer_lineage(
++        &self,
++    ) -> Option<crate::experiment_breathing_setup_runtime::SetupRendererLineage> {
++        (self.owns_slot && self.settings.target_slot == 0)
++            .then_some(self.renderer_lineage)
++            .flatten()
++    }
++
+     pub(crate) const fn value01(&self) -> f32 {
+         self.integrator.value01()
+     }
  
      pub(crate) fn marker_fields(&self) -> String {
          format!(
@@ -433,7 +502,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
              self.settings.marker_fields(),
              self.status.as_str(),
              self.reason,
-@@ -409,10 +585,16 @@ impl BreathCompositionDriver {
+@@ -409,10 +592,16 @@ impl BreathCompositionDriver {
              self.last_sequence_id.map_or_else(|| "none".to_owned(), |value| value.to_string()),
              self.accepted_outputs,
              self.reset_count,
@@ -450,7 +519,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
          if self.owns_slot && self.pending_reset_slot.is_none() {
              self.pending_reset_slot = Some((self.settings.target_slot, self.settings.loss_value01));
          }
-@@ -421,12 +603,24 @@ impl BreathCompositionDriver {
+@@ -421,12 +610,24 @@ impl BreathCompositionDriver {
          self.status = DriverStatus::Rejected;
      }
  
@@ -475,7 +544,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
          self.integrator.reset(self.settings.loss_value01);
          self.effective = None;
          self.generation = None;
-@@ -469,7 +663,7 @@ fn parse_required_f32(value: Option<String>, min: f32, max: f32) -> Option<f32>
+@@ -469,7 +670,7 @@ fn parse_required_f32(value: Option<String>, min: f32, max: f32) -> Option<f32>
  }
  
  #[cfg(test)]
@@ -484,7 +553,7 @@ index 80046d3ccb9c9040e5efb0712ac8dedfaf97623b..d7abe9a4bb4ef5151d225ade4601d544
      use rusty_quest_breath_contract::{
          composition::{
              BreathCompositionOutput, BreathCompositionTelemetry, ControllerProjectionSelection,
-@@ -482,7 +676,281 @@ mod tests {
+@@ -482,7 +683,281 @@ mod tests {
  
      const BINDING: [u8; 32] = [0x5a; 32];
  
@@ -2552,10 +2621,10 @@ index 0000000000000000000000000000000000000000..98a6b19f4b88e34f4943a2475e49dec7
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da21876e2a6eaf
+index 0000000000000000000000000000000000000000..ae442e10d58280a791a2df7385ac10ddeab469fc
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,1861 @@
+@@ -0,0 +1,1988 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -2718,6 +2787,55 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +    ledger: VecDeque<(Value, Value)>,
 +    recovery: Option<AudioRecovery>,
 +    retired_audio_generation: u64,
++    renderer_instance: u64,
++    renderer_radius: Option<RendererRadius>,
++    renderer_generation_floor: u64,
++}
++// The renderer captures this token with the setup output it actually consumes.
++// Status cannot relabel a frame after an input, source, calibration or owner boundary.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) struct SetupRendererLineage {
++    instance: u64,
++    audio_generation: u64,
++    driver_epoch: u64,
++    source_binding: Option<(u64, u64)>,
++    projection_generation: Option<u64>,
++    controller_generation: Option<u64>,
++    input: SetupInput,
++}
++#[derive(Clone, Copy)]
++struct RendererRadius {
++    lineage: SetupRendererLineage,
++    progress01: f32,
++    radius_m: f32,
++    frame: u64,
++    observed_ns: u64,
++    render_generation: u64,
++    settings_revision: u64,
++}
++impl RendererRadius {
++    fn json(self, lineage: SetupRendererLineage, now: u64) -> Value {
++        const SAFE: u64 = 9_007_199_254_740_991;
++        if self.lineage != lineage
++            || !self.progress01.is_finite()
++            || !(0.0..=1.0).contains(&self.progress01)
++            || !self.radius_m.is_finite()
++            || self.radius_m <= 0.0
++            || self.observed_ns == 0
++            || now < self.observed_ns
++            || now - self.observed_ns > 500_000_000
++            || self.frame > SAFE
++            || self.render_generation == 0
++            || self.render_generation > SAFE
++            || self.settings_revision > SAFE
++        {
++            return Value::Null;
++        }
++        json!({"v":1,"progress01":self.progress01,"radius_m":self.radius_m,
++            "frame":self.frame,"render_generation":self.render_generation,
++            "settings_revision":self.settings_revision,"observed_ns":self.observed_ns.to_string(),
++            "age_ns":now-self.observed_ns})
++    }
 +}
 +#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 +pub(crate) struct SetupPolarLineage {
@@ -3008,6 +3126,17 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +            self.phase = CommonBreathPhase::Unknown;
 +        }
 +    }
++    fn renderer_lineage(&self, now: u64) -> SetupRendererLineage {
++        SetupRendererLineage {
++            instance: self.renderer_instance,
++            audio_generation: self.generation,
++            driver_epoch: self.driver_epoch,
++            source_binding: self.source_binding,
++            projection_generation: self.projection_generation,
++            controller_generation: self.controller_generation,
++            input: self.core.snapshot(now).input,
++        }
++    }
 +    fn retire_driver_phase(&mut self) {
 +        self.driver_epoch = self.driver_epoch.saturating_add(1);
 +        self.last_confirmed_phase = None;
@@ -3139,6 +3268,12 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +            ledger: VecDeque::new(),
 +            recovery: None,
 +            retired_audio_generation: 0,
++            renderer_instance: {
++                static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
++                NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
++            },
++            renderer_radius: None,
++            renderer_generation_floor: 0,
 +        }
 +    }
 +    fn now_ns(&self) -> u64 {
@@ -3381,6 +3516,7 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +                "observed_ns":observed_ns,"observation_age_ns":observed_ns.map(|ns|now.saturating_sub(ns)),
 +                "last_advance_ns":last_advance_ns,"advance_age_ns":last_advance_ns.map(|ns|now.saturating_sub(ns))},
 +            "recovery":self.recovery.as_ref().map(|recovery|json!({"id":recovery.command["id"],"state":"pending", "deadline_ns":recovery.deadline_ns,"target_generation":recovery.target_generation})),
++            "renderer":self.renderer_radius.map_or(Value::Null,|radius|radius.json(self.renderer_lineage(now),now)),
 +            "audio_recovery_available":self.recovery_available(s),
 +            "parked":s.parked,"source_clock_ready":self.projection_ready,
 +            "quality":{"accepted":s.accepted_samples,"masked":s.quality.masked,"motion":s.quality.motion,"timing":s.quality.timing,"invalid":s.quality.invalid,
@@ -3827,7 +3963,7 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +    selected_digest().is_some_and(|v| is_hex(&v, 64))
 +}
 +fn empty_status(reason: &str) -> Value {
-+    json!({"v":1,"g":0,"r":0,"stage":"idle","input":"automatic","phase":"inhale","input_phase":"unknown","input_volume01":null,"position_frames":0,"cycle_frames":705600,
++    json!({"v":1,"g":0,"r":0,"stage":"idle","input":"automatic","phase":"inhale","input_phase":"unknown","input_volume01":null,"renderer":null,"position_frames":0,"cycle_frames":705600,
 +        "target_frames":1411200,"completed_frames":0,"attempt":0,"calibration":"idle","failure":reason,"ready":false,"playing":false,"experiment_elapsed_ms":0,"main_start_frame":null,"main_started":false})
 +}
 +pub(crate) fn configure(json_text: &str, digest: &str) -> Value {
@@ -3965,24 +4101,84 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +    crate::polar_input_health::set_setup_required(Some(required));
 +    result
 +}
++#[cfg(test)]
 +pub(crate) fn driver_output() -> Option<SetupDriverOutput> {
++    driver_output_with_lineage().0
++}
++pub(crate) fn driver_output_with_lineage(
++) -> (Option<SetupDriverOutput>, Option<SetupRendererLineage>) {
 +    if !selected() {
-+        return None;
++        return (None, None);
 +    }
 +    let binding = crate::polar_input_health::source_binding();
 +    let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
-+    Some(match guard.as_mut() {
++    match guard.as_mut() {
 +        Some(r) => {
 +            r.bind_source(binding);
 +            let now = r.now_ns();
 +            r.refresh(now);
-+            r.output(now)
++            (Some(r.output(now)), Some(r.renderer_lineage(now)))
 +        }
-+        None => SetupDriverOutput::Automatic {
-+            volume: 0.0,
-+            generation: 0,
-+        },
-+    })
++        None => (
++            Some(SetupDriverOutput::Automatic {
++                volume: 0.0,
++                generation: 0,
++            }),
++            None,
++        ),
++    }
++}
++/// Non-blocking publication from the actual renderer's selected slot-0 radius path.
++pub(crate) fn observe_renderer_radius(
++    lineage: Option<SetupRendererLineage>,
++    progress01: f32,
++    radius_m: f32,
++    frame: u64,
++    observed_ns: u64,
++    render_generation: u64,
++    settings_revision: u64,
++) {
++    let Some(lineage) = lineage else {
++        return;
++    };
++    let Ok(mut guard) = state().try_lock() else {
++        return;
++    };
++    let Some(r) = guard.as_mut() else {
++        return;
++    };
++    if lineage != r.renderer_lineage(observed_ns) || render_generation < r.renderer_generation_floor
++    {
++        return;
++    }
++    if r.renderer_radius.is_some_and(|last| {
++        last.render_generation == render_generation
++            && (settings_revision < last.settings_revision
++                || frame < last.frame
++                || observed_ns < last.observed_ns)
++    }) {
++        return;
++    }
++    r.renderer_generation_floor = render_generation;
++    r.renderer_radius = Some(RendererRadius {
++        lineage,
++        progress01,
++        radius_m,
++        frame,
++        observed_ns,
++        render_generation,
++        settings_revision,
++    });
++}
++pub(crate) fn invalidate_renderer_radius(render_generation: u64) {
++    let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
++    if let Some(r) = guard.as_mut() {
++        if r.renderer_radius
++            .is_some_and(|radius| radius.render_generation == render_generation)
++        {
++            r.renderer_radius = None;
++        }
++    }
 +}
 +pub(crate) fn selected_input() -> Option<SetupInput> {
 +    if !selected() {
@@ -4419,10 +4615,10 @@ index 0000000000000000000000000000000000000000..0a7dffa8cb00e2ea46fec09f28da2187
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..ef82911a370d1036efcbcddc3df6dc3c0413df99
+index 0000000000000000000000000000000000000000..2ae41a5e62af62c694a0c8d20337fdc65e6e9f8f
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,2006 @@
+@@ -0,0 +1,2142 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
@@ -6428,6 +6624,142 @@ index 0000000000000000000000000000000000000000..ef82911a370d1036efcbcddc3df6dc3c
 +    assert_eq!(segments[1], json!([4000, 8000, "hold", 1.0, 1.0]));
 +    assert_eq!(segments[2], json!([8000, 12000, "exhale", 1.0, 0.0]));
 +    assert_eq!(segments[3], json!([12000, 16000, "hold", 0.0, 0.0]));
++}
++
++#[test]
++fn renderer_readback_is_absent_until_a_real_frame_and_expires_at_half_second() {
++    let mut r = runtime();
++    assert!(
++        r.status(100).get("renderer").is_some(),
++        "typed renderer availability must be explicit"
++    );
++    assert!(r.status(100)["renderer"].is_null());
++}
++
++#[test]
++fn renderer_readback_fences_freshness_identity_and_invalid_values() {
++    let mut r = runtime();
++    let lineage = r.renderer_lineage(1_000_000_000);
++    let sample = RendererRadius {
++        lineage,
++        progress01: 0.75,
++        radius_m: 1.6,
++        frame: 42,
++        observed_ns: 1_000_000_000,
++        render_generation: 7,
++        settings_revision: 3,
++    };
++    assert_eq!(sample.json(lineage, 1_500_000_000)["progress01"], 0.75);
++    assert_eq!(
++        sample.json(lineage, 1_500_000_000)["observed_ns"],
++        "1000000000"
++    );
++    assert!(sample.json(lineage, 1_500_000_001).is_null());
++    assert!(sample.json(lineage, 999_999_999).is_null());
++    for invalid in [
++        RendererRadius {
++            progress01: f32::NAN,
++            ..sample
++        },
++        RendererRadius {
++            progress01: 1.1,
++            ..sample
++        },
++        RendererRadius {
++            radius_m: 0.0,
++            ..sample
++        },
++        RendererRadius {
++            render_generation: 0,
++            ..sample
++        },
++        RendererRadius {
++            settings_revision: 9_007_199_254_740_992,
++            ..sample
++        },
++    ] {
++        assert!(invalid.json(lineage, 1_000_000_001).is_null());
++    }
++    r.retire_driver_phase();
++    assert!(sample
++        .json(r.renderer_lineage(1_000_000_001), 1_000_000_001)
++        .is_null());
++    let fresh = runtime();
++    assert!(sample
++        .json(fresh.renderer_lineage(1_000_000_001), 1_000_000_001)
++        .is_null());
++    let mut changed = lineage;
++    changed.source_binding = Some((2, 3));
++    assert!(sample.json(changed, 1_000_000_001).is_null());
++    changed = lineage;
++    changed.input = SetupInput::Controller;
++    assert!(sample.json(changed, 1_000_000_001).is_null());
++    changed = lineage;
++    changed.audio_generation += 1;
++    assert!(sample.json(changed, 1_000_000_001).is_null());
++}
++#[test]
++fn renderer_readback_cannot_relabel_old_frame_after_audio_or_input_boundary() {
++    let mut r = runtime();
++    let lineage = r.renderer_lineage(1_000_000_000);
++    r.renderer_radius = Some(RendererRadius {
++        lineage,
++        progress01: 0.75,
++        radius_m: 1.6,
++        frame: 42,
++        observed_ns: 1_000_000_000,
++        render_generation: 7,
++        settings_revision: 3,
++    });
++    assert_eq!(r.status(1_000_000_001)["renderer"]["progress01"], 0.75);
++    assert_ne!(r.status(1_000_000_001)["input_volume01"], json!(0.75));
++    r.retire_driver_phase();
++    assert!(r.status(1_000_000_002)["renderer"].is_null());
++}
++
++/// Run alone in a fresh process: it deliberately selects the real global setup owner.
++#[test]
++#[ignore = "isolated process integration of actual renderer publication into global setup status"]
++fn renderer_publication_global_owner_integration() {
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let _setup = GlobalSetupGuard::install();
++    let (_, lineage) = driver_output_with_lineage();
++    assert!(crate::experiment_session_runtime::current_elapsed_realtime_ns().is_none());
++    // The actual GPU-called gate substitutes only its kernel observation boundary.
++    crate::renderer_radius_telemetry::observe_frame(
++        crate::renderer_radius_telemetry::RendererRadiusFrame {
++            lineage,
++            ready: true,
++            visible: true,
++            parameter_source: "particle-visual-profile-driver-slot-0",
++            progress01: 0.75,
++            radius_m: 1.6,
++            frame: 42,
++            render_generation: 7,
++            settings_revision: 3,
++        },
++        || Some(1_000_000_000),
++    );
++    assert!(crate::experiment_session_runtime::current_elapsed_realtime_ns().is_none());
++    assert_eq!(status_json(1_000_000_001)["renderer"]["progress01"], 0.75);
++    assert_ne!(status_json(1_000_000_001)["input_volume01"], json!(0.75));
++    observe_renderer_radius(lineage, 0.9, 1.8, 43, 1_000_000_002, 6, 3);
++    assert_eq!(
++        status_json(1_000_000_003)["renderer"]["render_generation"],
++        7
++    );
++    invalidate_renderer_radius(8);
++    assert!(status_json(1_000_000_003)["renderer"].is_object());
++    invalidate_renderer_radius(7);
++    assert!(status_json(1_000_000_003)["renderer"].is_null());
++    state()
++        .lock()
++        .unwrap()
++        .as_mut()
++        .unwrap()
++        .retire_driver_phase();
++    observe_renderer_radius(lineage, 0.9, 1.8, 43, 1_000_000_004, 7, 3);
++    assert!(status_json(1_000_000_005)["renderer"].is_null());
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
@@ -9262,7 +9594,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..de0c47d893614c9ea4bfdb14b20a0c73
      include!("experiment_session_live_bias_tests.rs");
  
 diff --git a/apps/native-renderer-android/native/src/gpu_private_particles.rs b/apps/native-renderer-android/native/src/gpu_private_particles.rs
-index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a8e2de60b 100644
+index 9b815a61f33202cc056836b2873610be0dd8b0b2..4dc966c991d563baaa08408c93f4138036cfa1f3 100644
 --- a/apps/native-renderer-android/native/src/gpu_private_particles.rs
 +++ b/apps/native-renderer-android/native/src/gpu_private_particles.rs
 @@ -8,7 +8,7 @@ use std::{
@@ -9355,7 +9687,17 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
              diagnostic_buffers,
              diagnostic_dispatched: [false; PARTICLE_DESCRIPTOR_SET_COUNT],
              diagnostic_source_frame_ids: [None; PARTICLE_DESCRIPTOR_SET_COUNT],
-@@ -2845,6 +2858,15 @@ impl GpuPrivateParticleRenderer {
+@@ -2755,6 +2768,9 @@ impl GpuPrivateParticleRenderer {
+     }
+ 
+     pub(crate) unsafe fn destroy(&mut self, device: &ash::Device) {
++        crate::experiment_breathing_setup_runtime::invalidate_renderer_radius(
++            self.render_session_generation,
++        );
+         if let Some(offscreen) = self.offscreen.take() {
+             offscreen.destroy(device);
+         }
+@@ -2845,6 +2861,18 @@ impl GpuPrivateParticleRenderer {
          };
          self.last_packaged_defaults_reset_revision = revision;
          self.panel_settings_override = None;
@@ -9368,10 +9710,13 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
 +                .map(|profile| profile.candidate().panel_settings());
 +            self.packaged_visual_applied = self.panel_settings_override.is_some();
 +        }
++        crate::experiment_breathing_setup_runtime::invalidate_renderer_radius(
++            self.render_session_generation,
++        );
          self.settings_revision = self.settings_revision.saturating_add(1);
          self.visual_scale_request_state.begin_session();
          self.heartbeat_orbit_request_state.begin_session();
-@@ -3076,6 +3098,23 @@ impl GpuPrivateParticleRenderer {
+@@ -3076,6 +3104,23 @@ impl GpuPrivateParticleRenderer {
              &crate::showcase_runtime::PreparedVisualFrame,
          >,
      ) -> GpuPrivateParticleFrameStats {
@@ -9395,7 +9740,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
          let mut runtime_settings = self.runtime_settings(frame_count);
          #[cfg(feature = "showcase")]
          if let Some(frame) = showcase_frame {
-@@ -3084,6 +3123,7 @@ impl GpuPrivateParticleRenderer {
+@@ -3084,6 +3129,7 @@ impl GpuPrivateParticleRenderer {
              runtime_settings.driver_values01[0] = progress;
              runtime_settings.driver_bank_values01[0] = progress;
          }
@@ -9403,7 +9748,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
          if let Some((_, _, scale_factor)) = mesh_ui_animation {
              runtime_settings.visual_scale *= scale_factor.clamp(0.5, 1.5);
              runtime_settings.visual_parameter_source = "native-mesh-ui";
-@@ -3094,7 +3134,15 @@ impl GpuPrivateParticleRenderer {
+@@ -3094,7 +3140,15 @@ impl GpuPrivateParticleRenderer {
              world_center_scale[3] = frame.radius_m();
          }
          let mut world_anchor_scale_parameter_source = world_anchor_scale_parameter_source;
@@ -9420,7 +9765,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
          if let Some(radius_m) = crate::experiment_session_runtime::active_radius_m_for_progress(
              runtime_settings.driver0_value01,
          ) {
-@@ -3105,6 +3153,12 @@ impl GpuPrivateParticleRenderer {
+@@ -3105,6 +3159,12 @@ impl GpuPrivateParticleRenderer {
              runtime_settings,
              #[cfg(feature = "showcase")]
              showcase_frame.map(|frame| frame.frame_extension()),
@@ -9433,7 +9778,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
          );
          if driver_bank_rows != self.driver_bank_uploaded_rows {
              match self.driver_bank_buffer.write_data(
-@@ -3125,7 +3179,7 @@ impl GpuPrivateParticleRenderer {
+@@ -3125,7 +3185,7 @@ impl GpuPrivateParticleRenderer {
                          ),
                      );
                      // Never draw new CPU settings against an old uploaded bank.
@@ -9442,7 +9787,40 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
                      return GpuPrivateParticleFrameStats::unavailable();
                  }
              }
-@@ -3882,7 +3936,7 @@ impl GpuPrivateParticleRenderer {
+@@ -3478,6 +3538,22 @@ impl GpuPrivateParticleRenderer {
+             diagnostic_snapshot: self.last_diagnostic_snapshot,
+         };
+         #[cfg(not(feature = "showcase"))]
++        crate::renderer_radius_telemetry::observe_frame(
++            crate::renderer_radius_telemetry::RendererRadiusFrame {
++                lineage: self.breath_composition_driver.renderer_lineage(),
++                ready: stats.ready,
++                visible: stats.visible,
++                parameter_source: world_anchor_scale_parameter_source,
++                progress01: runtime_settings.driver0_value01,
++                radius_m: world_center_scale[3],
++                frame: frame_count,
++                render_generation: self.render_session_generation,
++                settings_revision: self.settings_revision,
++            },
++            crate::android_elapsed_clock::now_ns,
++        );
++        // Recording retains its existing admitted clock and its own independent gate.
++        #[cfg(not(feature = "showcase"))]
+         if let Some(observed_at_ns) =
+             crate::experiment_session_runtime::current_elapsed_realtime_ns()
+         {
+@@ -3557,6 +3633,9 @@ impl GpuPrivateParticleRenderer {
+         frame_count: u64,
+         revision: i64,
+     ) -> GpuPrivateParticlePanelEffectiveSettings {
++        crate::experiment_breathing_setup_runtime::invalidate_renderer_radius(
++            self.render_session_generation,
++        );
+         let mut settings = settings.clamped();
+         settings.orbit_distance.normalize_legacy_source(
+             &mut settings.update_mask.orbit_distance,
+@@ -3882,7 +3961,7 @@ impl GpuPrivateParticleRenderer {
              }
              if let Some(panel_override) = self.panel_settings_override {
                  next.apply_panel_material_override(panel_override, material_defaults);
@@ -9451,7 +9829,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
                  next.apply_showcase_explicit_material(panel_override);
              }
              if let Some(preset) = self.render_experiment_request_state.active_preset() {
-@@ -3962,7 +4016,7 @@ impl GpuPrivateParticleRenderer {
+@@ -3962,7 +4041,7 @@ impl GpuPrivateParticleRenderer {
              next.apply_driver_source_values(self.driver_source_values01, driver_parameter_source);
              if let Some(panel_override) = self.panel_settings_override {
                  next.apply_panel_override(panel_override, self.driver_source_values01);
@@ -9460,7 +9838,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
                  next.apply_showcase_explicit_material(panel_override);
              }
              next.apply_heartbeat_orbit_control(self.heartbeat_orbit_control());
-@@ -7037,7 +7091,7 @@ mod material_request_tests {
+@@ -7037,7 +7116,7 @@ mod material_request_tests {
          assert_eq!(private_particle_size_limits(settings), (3.0, 12.0));
          let rows = private_particle_driver_bank_rows(
              settings,
@@ -9469,7 +9847,7 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
              None,
          );
          let size_aux_row = PRIVATE_PARTICLE_DRIVER_BANK_VALUE_VEC4_ROWS
-@@ -7123,7 +7177,7 @@ mod material_request_tests {
+@@ -7123,7 +7202,7 @@ mod material_request_tests {
          let settings = PrivateParticleRuntimeSettings::from_generated_defaults();
          let rows = private_particle_driver_bank_rows(
              settings,
@@ -9479,10 +9857,10 @@ index 9b815a61f33202cc056836b2873610be0dd8b0b2..6d258d8987941049c04d971f91a6734a
          );
          let size_aux_row = PRIVATE_PARTICLE_DRIVER_BANK_VALUE_VEC4_ROWS
 diff --git a/apps/native-renderer-android/native/src/lib.rs b/apps/native-renderer-android/native/src/lib.rs
-index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..5000083423e9e9921d2c296d1227600825c048e5 100644
+index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..d31b95e2a746269dab55a6ea87404d788293aceb 100644
 --- a/apps/native-renderer-android/native/src/lib.rs
 +++ b/apps/native-renderer-android/native/src/lib.rs
-@@ -38,6 +38,8 @@ mod breath_guidance;
+@@ -38,11 +38,15 @@ mod breath_guidance;
  mod breath_input_selection;
  #[cfg(not(feature = "showcase"))]
  mod breath_monitor;
@@ -9491,7 +9869,14 @@ index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..5000083423e9e9921d2c296d12276008
  #[cfg(all(feature = "showcase", target_os = "android"))]
  mod showcase_jni;
  #[cfg(feature = "showcase")]
-@@ -75,7 +77,12 @@ mod environment_depth_projection_alignment;
+ mod showcase_runtime;
+ mod source_clock;
++mod android_elapsed_clock;
++mod renderer_radius_telemetry;
+ 
+ #[cfg(target_os = "android")]
+ mod acamera_sys;
+@@ -75,7 +79,12 @@ mod environment_depth_projection_alignment;
  mod environment_depth_scene_map;
  #[cfg(any(test, not(target_os = "android")))]
  mod environment_depth_surface_support;
@@ -9504,7 +9889,7 @@ index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..5000083423e9e9921d2c296d12276008
  #[cfg(not(feature = "showcase"))]
  mod experiment_session;
  #[cfg(not(feature = "showcase"))]
-@@ -239,6 +246,10 @@ mod session_recording_export;
+@@ -239,6 +248,10 @@ mod session_recording_export;
  #[cfg(not(feature = "showcase"))]
  mod session_recording_inventory;
  #[cfg(not(feature = "showcase"))]
@@ -10698,6 +11083,55 @@ index 0000000000000000000000000000000000000000..bbb04e29db8eeb85220372e2fc0078ba
 +            assert_eq!(projected.original_host_ns, 2_020_000_000 - offset);
 +        }
 +    }
++}
+diff --git a/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs b/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c7240d8ef80d8acbc4190b940c9f367f3f7f69a
+--- /dev/null
++++ b/apps/native-renderer-android/native/src/renderer_radius_telemetry.rs
+@@ -0,0 +1,43 @@
++//! Display-only observation of the radius applied to a visible renderer frame.
++//! The clock boundary is independent from both PCM progress and recording admission.
++use crate::experiment_breathing_setup_runtime::{
++    invalidate_renderer_radius, observe_renderer_radius, SetupRendererLineage,
++};
++
++pub(crate) struct RendererRadiusFrame {
++    pub(crate) lineage: Option<SetupRendererLineage>,
++    pub(crate) ready: bool,
++    pub(crate) visible: bool,
++    pub(crate) parameter_source: &'static str,
++    pub(crate) progress01: f32,
++    pub(crate) radius_m: f32,
++    pub(crate) frame: u64,
++    pub(crate) render_generation: u64,
++    pub(crate) settings_revision: u64,
++}
++
++/// The real renderer calls this same gate with Android CLOCK_BOOTTIME. Host
++/// conformance substitutes only the kernel observation boundary, never an audio schedule.
++pub(crate) fn observe_frame(frame: RendererRadiusFrame, clock: impl FnOnce() -> Option<u64>) {
++    if frame.ready
++        && frame.visible
++        && matches!(
++            frame.parameter_source,
++            "particle-visual-profile-driver-slot-0" | "experiment-session-driver-slot-0"
++        )
++    {
++        if let Some(observed_ns) = clock().filter(|value| *value > 0) {
++            observe_renderer_radius(
++                frame.lineage,
++                frame.progress01,
++                frame.radius_m,
++                frame.frame,
++                observed_ns,
++                frame.render_generation,
++                frame.settings_revision,
++            );
++            return;
++        }
++    }
++    invalidate_renderer_radius(frame.render_generation);
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
 index 3cbbfb33e6524113067c9bae6084ed3d70842422..773a44f9689ce25a2cb3faf6ad62e8fa615e76d5 100644
@@ -13850,7 +14284,7 @@ index c0c0c17eb1ea85e90c024b3fe1b2206cb5a4cf79..4c8ef5b13131d014bdb952d0f1ed5128
          if let Some(frame) = showcase_frame.as_ref() {
              crate::showcase_runtime::confirm_visual_frame_submission(
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a06453f6a 100644
+index a694dfeef9a373c330795ad06cc007e7c58d4ecd..0565597bc8d1358a40dd52c5a5d529443faefa7b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -13950,7 +14384,87 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      public static void reconcileCurrentExperimentSessionBleOwner() {
          ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
      }
-@@ -1195,6 +1230,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1083,6 +1118,79 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+     private static String remoteSetupPendingId="";
+     private static long remoteSetupPendingCarrier,remoteSetupPendingEpoch;
+ 
++    private static final class RemoteKioskRetry {
++        final long epoch,generation,started;
++        final String canonical;
++        String outcome="pending",detail="Waiting for the selected session guard service.";
++        RemoteKioskRetry(long epoch,long generation,long started,String canonical) {
++            this.epoch=epoch;this.generation=generation;this.started=started;this.canonical=canonical;
++        }
++    }
++    private static final java.util.Map<String,RemoteKioskRetry> remoteKioskRetries=new java.util.LinkedHashMap<>();
++    static JSONObject remoteKioskProjection() throws Exception {
++        NativeRendererSoftKioskCoordinator coordinator=NativeRendererSoftKioskCoordinator.process();
++        NativeRendererSoftKioskCoordinator.Snapshot state=coordinator.snapshot();
++        String code=state.effectiveness.name().toLowerCase(java.util.Locale.ROOT).replace('_','-');
++        String blocked=state.terminal?"terminal":!state.armed?"not-requested":state.recoveryExhausted?"recovery-exhausted"
++            :coordinator.selfRecoverySuppressed(SystemClock.uptimeMillis())?"system-prompt-or-transition"
++            :state.effectiveness==NativeRendererSoftKioskCoordinator.Effectiveness.READY_ARMED
++                ?coordinator.ownPresentationFresh(SystemClock.uptimeMillis())?"":"presentation-stale":code;
++        String foreground=NativeRendererSelfKioskApplication.foregroundForOwnApp(remoteContext);
++        boolean retry=state.armed&&!state.terminal&&!state.recoveryExhausted
++            &&("focused".equals(foreground)||"panel".equals(foreground))
++            &&(state.serviceState==NativeRendererSoftKioskCoordinator.ServiceState.START_FAILED
++                ||state.serviceState==NativeRendererSoftKioskCoordinator.ServiceState.MISSING_OR_DISABLED
++                ||state.serviceState==NativeRendererSoftKioskCoordinator.ServiceState.INTERRUPTED);
++        String detail=NativeRendererSelfKioskService.readback();
++        return new JSONObject().put("v",1).put("g",state.generation).put("requested",state.armed&&!state.terminal)
++            .put("effective",blocked.isEmpty()).put("state",code)
++            .put("service",state.serviceState.name().toLowerCase(java.util.Locale.ROOT).replace('_','-'))
++            .put("blocked",blocked).put("detail",detail.length()>240?detail.substring(0,240):detail)
++            .put("retry_available",retry&&!coordinator.selfRecoverySuppressed(SystemClock.uptimeMillis()));
++    }
++    static JSONObject remoteKioskCommand(JSONObject command,long nativeEpoch) throws Exception {
++        if(Looper.myLooper()!=Looper.getMainLooper())throw new SecurityException("main-thread-required");
++        Object rawId=command.opt("id"),rawOp=command.opt("op");
++        if(!Integer.valueOf(1).equals(command.opt("v"))||!(rawId instanceof String)
++                ||!((String)rawId).matches("[a-f0-9]{16}")||!(rawOp instanceof String))
++            throw new IllegalArgumentException("closed-kiosk-request-required");
++        String id=(String)rawId,op=(String)rawOp;
++        boolean receipt="receipt".equals(op);
++        Object rawGeneration=command.opt("g");
++        if(receipt?command.length()!=3:!"retry".equals(op)||command.length()!=4
++                ||!(rawGeneration instanceof Integer||rawGeneration instanceof Long)
++                ||((Number)rawGeneration).longValue()<0||((Number)rawGeneration).longValue()>9007199254740991L)
++            throw new IllegalArgumentException("closed-kiosk-request-required");
++        RemoteKioskRetry original=remoteKioskRetries.get(id);
++        if(original!=null&&original.epoch!=nativeEpoch)throw new SecurityException("kiosk-owner-retired");
++        if(original!=null&&!receipt&&!original.canonical.equals(command.toString()))
++            throw new SecurityException("kiosk-id-conflict");
++        if(original==null) {
++            if(receipt)throw new SecurityException("kiosk-operation-unknown");
++            JSONObject status=remoteKioskProjection();
++            if(nativeEpoch<=0||!status.getBoolean("retry_available")||command.getLong("g")!=status.getLong("g"))
++                throw new SecurityException("kiosk-retry-unavailable");
++            if(remoteKioskRetries.size()>=128)throw new SecurityException("kiosk-operation-budget");
++            original=new RemoteKioskRetry(nativeEpoch,command.getLong("g"),SystemClock.elapsedRealtime(),command.toString());
++            remoteKioskRetries.put(id,original);
++            // Only the already-armed guard can start its selected service; never creates a launch epoch.
++            NativeRendererSelfKioskApplication.armed(remoteContext);
++        }
++        if("pending".equals(original.outcome)) {
++            NativeRendererSoftKioskCoordinator.Snapshot state=NativeRendererSoftKioskCoordinator.process().snapshot();
++            if(original.epoch!=nativeEpoch||original.generation!=state.generation||state.terminal||!state.armed) {
++                original.outcome="rejected";original.detail="The original guard owner was retired.";
++            } else if(state.serviceState==NativeRendererSoftKioskCoordinator.ServiceState.CONNECTED) {
++                original.outcome="confirmed";original.detail="Session guard service connected. Check effective status for presentation confirmation.";
++            } else if(state.serviceState==NativeRendererSoftKioskCoordinator.ServiceState.START_FAILED) {
++                original.outcome="rejected";original.detail="Android could not start the session guard service.";
++            } else if(SystemClock.elapsedRealtime()-original.started>15000L) {
++                original.outcome="outcome_unknown";original.detail="Service start is unconfirmed. Check Quest status before further action.";
++            }
++        }
++        return new JSONObject().put("id",id).put("state",original.outcome).put("detail",original.detail);
++    }
++
+     private static String remoteKioskState() {
+         NativeRendererSoftKioskCoordinator.Effectiveness effectiveness =
+             NativeRendererSoftKioskCoordinator.process().snapshot().effectiveness;
+@@ -1195,6 +1303,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private long breathCompositionGeneration;
      private TextView breathOverviewReadback;
      private TextView breathCalibrationReadback;
@@ -13959,7 +14473,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      private TextView breathOutputReadback;
      private TextView breathDiagnosticsReadback;
      private ProgressBar breathCalibrationProgress;
-@@ -1211,6 +1248,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1211,6 +1321,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static final ExperimentControlMode controlMode=ExperimentControlMode.process();
      private TextView controlModeSessionReadback;
      private TextView controlModeNetworkReadback;
@@ -14011,7 +14525,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
  
      private boolean productPanelOperatorAvailable(){
          return !experimentShellDestroyed&&!isFinishing()&&!isDestroyed()
-@@ -1244,6 +1326,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1244,6 +1399,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
      private JSONObject invokeProductPanelOperator(String action,JSONObject parameters)throws Exception {
          requireProductPanelOperator();
@@ -14020,7 +14534,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          if("panel-visible".equals(action))return NativeMeshUiProducer.requestProductPanelVisibility(hostActivity(),parameters.getBoolean("visible"));
          if("navigate".equals(action)){
              String surface=parameters.getString("surface"),page=parameters.getString("page");
-@@ -1589,6 +1673,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1589,6 +1746,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              public JSONObject observe()throws Exception{return observeProductPanelOperator();}
              public JSONObject invoke(String action,JSONObject parameters)throws Exception{return invokeProductPanelOperator(action,parameters);}
          });
@@ -14028,7 +14542,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      }
  
      @Override
-@@ -1737,6 +1822,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1737,6 +1895,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onResume() {
          super.onResume();
@@ -14038,7 +14552,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          activityPanelResumed=!nativePresentation();
          if(meshPanelAttachment!=null&&!nativePresentation())meshPanelAttachment.showInActivity();
          if(!nativePresentation()||meshPanelAttachment!=null&&meshPanelAttachment.presentationActive()
-@@ -1748,6 +1836,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1748,6 +1909,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          NativeMeshUiProducer.productOwnerReady(hostActivity());
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
          if(gateway!=null)gateway.requestDiscoveryPermissions(hostActivity());
@@ -14046,7 +14560,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      }
  
      private void resumePanelProjection() {
-@@ -1772,12 +1861,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1772,12 +1934,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
  
      @Override
      protected void onPause() {
@@ -14063,7 +14577,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          closeHubStatusLifetime();
          remotePanelResumed = false;
          cancelRemotePolarRender();
-@@ -1838,6 +1931,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1838,6 +2004,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onDestroy() {
          if(experimentShellDestroyed)return;
@@ -14074,7 +14588,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          experimentShellDestroyed = true;
          try{if(productPanelOperatorRegistration!=null)productPanelOperatorRegistration.close();}
          catch(Exception unavailable){Log.w(TAG,"channel=product-panel-operator event=registration-retirement-failed");}
-@@ -1864,6 +1961,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1864,6 +2034,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
@@ -14084,7 +14598,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1911,8 +2011,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1911,8 +2084,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -14095,7 +14609,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -2240,6 +2341,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2240,6 +2414,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterPhoneControl(LinearLayout root) {
@@ -14103,7 +14617,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          appendExperimenterNetworkControl(root);
          if (!ExperimentSessionBleServer.featurePackaged(this)) return;
          final ExperimentSessionBleServer server =
-@@ -2277,6 +2379,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2277,6 +2452,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterNetworkControl(LinearLayout root) {
@@ -14111,7 +14625,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          if(!ExperimentSessionCommandGateway.featurePackaged(this))return;
          final ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.process(this,REMOTE_DELEGATE);
          gateway.requestDiscoveryPermissions(hostActivity());
-@@ -2354,6 +2457,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2354,6 +2530,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          root.addView(network);
      }
  
@@ -14124,7 +14638,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      private void handleRemoteOpenPolarIntent(Intent intent) {
          if (intent != null && intent.getBooleanExtra(EXTRA_REMOTE_OPEN_POLAR, false)) {
              intent.removeExtra(EXTRA_REMOTE_OPEN_POLAR);
-@@ -2682,6 +2791,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2682,6 +2864,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void replaceBreathCompositionPanelContent(String topic) {
@@ -14132,7 +14646,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
          cancelRemotePolarRender();
          rememberPanelScroll();
          cancelPendingPrivateParticleDynamicsApply();
-@@ -4214,10 +4324,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4397,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -14144,7 +14658,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4344,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4417,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -14167,7 +14681,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
-@@ -4526,6 +4649,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4526,6 +4722,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          try {
              String response = nativeApplyBreathCompositionCommand(command.toString());
              renderBreathCompositionResponse(response, readback);
@@ -14175,7 +14689,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
              writeBreathCompositionOperatorReceipt(
                  "ui-" + SystemClock.elapsedRealtimeNanos(),
                  command.optString("operation", "unknown"),
-@@ -4536,6 +4660,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4536,6 +4733,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          }
      }
  
@@ -14266,7 +14780,7 @@ index a694dfeef9a373c330795ad06cc007e7c58d4ecd..e0a3002ae8c35ad988cf944bd358342a
      private void refreshBreathCompositionReadback(TextView readback) {
          try {
              renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
-@@ -6281,6 +6489,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -6281,6 +6562,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -14723,8 +15237,35 @@ index 11c7647f43afc0ca7b11ca89da5de10c64b3df18..68bfc2e97777351cbb88a04a31352580
 +        }
      }
  }
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBuildIdentity.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBuildIdentity.java
+index 362e6c7276d0ebbe8fc628efde8239a1eebe1e43..7583d278217b22d92adb655cef2cd6b90645f13e 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBuildIdentity.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBuildIdentity.java
+@@ -22,6 +22,22 @@ final class ExperimentSessionBuildIdentity {
+         }catch(Exception unavailable) { /* Source identity is optional on retained APKs. */ }
+         try{return project(code,name,asset);}catch(Exception unavailable){return new JSONObject();}
+     }
++    /** Projection of the same once-read own-package/build identity; never reads APK bytes. */
++    static JSONObject apk(Context context,JSONObject build) {
++        try {
++            String packageName=context.getPackageName();
++            Object code=build.opt("version_code"),name=build.opt("version_name"),hash=build.opt("packaging_fingerprint");
++            if(packageName==null||packageName.length()>200
++                    ||!packageName.matches("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+")
++                    ||!(code instanceof Integer||code instanceof Long)
++                    ||((Number)code).longValue()<=0||((Number)code).longValue()>9007199254740991L
++                    ||!(name instanceof String)||!((String)name).matches("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}")
++                    ||!(hash instanceof String)||!((String)hash).matches("[0-9a-f]{64}"))return null;
++            return new JSONObject().put("v",1).put("package_name",packageName).put("version_code",code)
++                .put("version_name",name).put("build_id",hash);
++        }catch(Exception unavailable){return null;}
++    }
++
+     static JSONObject project(long code,String name,String asset) throws Exception {
+         JSONObject out=new JSONObject().put("v",1).put("version_code",code>0&&code<=2147483647L?code:JSONObject.NULL)
+             .put("version_name",name!=null&&name.matches("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}")?name:JSONObject.NULL);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db2b73a587 100644
+index 08732e5319252e68275d2fa5287ff2300af7163d..f9ca4518ea14dd1e2c504de5ef5fd4f2113736b8 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -15,6 +15,10 @@ import org.json.JSONObject;
@@ -14738,10 +15279,11 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      private static ExperimentSessionCommandGateway process;
      private final Context context;
      private final SharedPreferences preferences;
-@@ -22,6 +26,19 @@ public final class ExperimentSessionCommandGateway {
+@@ -22,6 +26,20 @@ public final class ExperimentSessionCommandGateway {
      private final ExperimentSessionBleServer carrier;
      private final ExperimentSessionHeadsetIdentity headsetIdentity;
      private final JSONObject buildIdentity;
++    private final JSONObject apkIdentity;
 +    private final boolean privateLanData;
 +    private final boolean sceneRecenter;
 +    private final boolean phonePairingEnabled;
@@ -14758,7 +15300,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +60,19 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +61,19 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -14778,7 +15320,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      }
  
  
-@@ -52,22 +82,46 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,22 +83,47 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -14798,6 +15340,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          this.context=context;this.delegate=delegate;carrier=ExperimentSessionBleServer.process(context,delegate);
          headsetIdentity=new ExperimentSessionHeadsetIdentity(context);
          buildIdentity=ExperimentSessionBuildIdentity.read(context);
++        apkIdentity=ExperimentSessionBuildIdentity.apk(context,buildIdentity);
 +        privateLanData = manifestEnabled(context, PRIVATE_LAN_METADATA);
 +        sceneRecenter = manifestEnabled(context, RECENTER_METADATA);
 +        phonePairingEnabled = manifestEnabled(context, PHONE_PAIRING_METADATA);
@@ -14828,7 +15371,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      /** Operator readback excludes controller keys, tokens and temporary-network passwords. */
      JSONObject productPanelReadback()throws Exception {
          requireMain();return new JSONObject().put("selected",featurePackaged(context)).put("enabled",enabled())
-@@ -110,7 +164,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -110,7 +166,7 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -14837,7 +15380,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -153,17 +207,31 @@ public final class ExperimentSessionCommandGateway {
+@@ -153,17 +209,31 @@ public final class ExperimentSessionCommandGateway {
      JSONObject enrollFromHeadset(boolean trustedLan) throws Exception {
          return enrollLocalController(trustedLan);
      }
@@ -14871,7 +15414,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      JSONObject localOperatorEnrollmentStatus() throws Exception {
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
              clearLocalEnrollmentOffer();
-@@ -188,7 +256,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -188,7 +258,7 @@ public final class ExperimentSessionCommandGateway {
          if(owner<=0||owner!=identity||nativeEpoch<=0||nativeEpoch!=epoch||revision!=lifecycleRevision
                  ||!carrier.acceptsNativeOwner(owner,nativeEpoch))throw new SecurityException("local-enrollment-owner-retired");
      }
@@ -14880,7 +15423,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      JSONObject enrollFromLocalOperator(final JSONObject input,final LocalEnrollmentGuard guard) throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -217,14 +285,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -217,14 +287,22 @@ public final class ExperimentSessionCommandGateway {
                  return new JSONObject().put("operation_id",id).put("command_status","enrolled")
                      .put("credentials",credentials).put("trusted_lan",true).put("route",routeState)
                      .put("gateway_epoch",Long.toString(gatewayEpoch));
@@ -14905,7 +15448,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      JSONObject provisionHeadsetIdentity(JSONObject input,final LocalEnrollmentGuard guard)throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -236,7 +312,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -236,7 +314,13 @@ public final class ExperimentSessionCommandGateway {
              guard.check();
              if(!localEnrollmentIdle(delegate.sessionControlReadback(),delegate.snapshot()))throw new SecurityException("identity-provision-requires-idle");
              requireLocalEnrollmentOwner(owner,nativeEpoch,revision);
@@ -14919,7 +15462,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
              return new JSONObject().put("command_status","provisioned").put("serial",headsetIdentity.serial());
          }});
      }
-@@ -245,6 +327,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -245,6 +329,7 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionRecordingExport.retire();
          discovery.close();
          guests.clear();
@@ -14927,7 +15470,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          if(protocol!=null)protocol.retire();protocol=null;
          main.post(new Runnable(){@Override public void run(){
              if(revision!=lifecycleRevision)return;applyNativeOwnerChanged(owner,nextEpoch,live);
-@@ -257,6 +340,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -257,6 +342,7 @@ public final class ExperimentSessionCommandGateway {
      }
      private void reconcile() {
          if(!featurePackaged(context)||identity<=0||epoch<=0)return;
@@ -14935,7 +15478,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          carrier.attachCommandGateway(true);
          gatewayEpoch=(new java.security.SecureRandom().nextLong()&0xfffffffffffffL)+1;
          final long admittedGatewayEpoch=gatewayEpoch;
-@@ -267,18 +351,51 @@ public final class ExperimentSessionCommandGateway {
+@@ -267,18 +353,51 @@ public final class ExperimentSessionCommandGateway {
              @Override public boolean reserve(JSONObject body)throws Exception{return activeJournal.reserve(body);}
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
@@ -14992,7 +15535,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          if(journal==null)return;
          if(!trustedLanAllowed()){
              if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
-@@ -287,16 +404,35 @@ public final class ExperimentSessionCommandGateway {
+@@ -287,16 +406,35 @@ public final class ExperimentSessionCommandGateway {
          catch(Exception unavailable){routeState="listener-unavailable";if(http!=null)http.close();http=null;}
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
@@ -15030,7 +15573,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          session.clear();polar.clear();
      }
      private void retire() {
-@@ -305,19 +441,119 @@ public final class ExperimentSessionCommandGateway {
+@@ -305,19 +443,119 @@ public final class ExperimentSessionCommandGateway {
          if(http!=null)http.close();http=null;
          carrier.gatewayBinding(null,"","0");carrier.attachCommandGateway(false);if(journal!=null)journal.retire();journal=null;routeState="disabled";
      }
@@ -15152,7 +15695,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -332,7 +568,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +570,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -15161,7 +15704,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -345,6 +581,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -345,6 +583,13 @@ public final class ExperimentSessionCommandGateway {
      }
      /** Only HTTP after private-peer and Origin admission may bootstrap a local guest. */
      JSONObject exchangeLan(JSONObject envelope)throws Exception {
@@ -15175,7 +15718,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
          if("connect".equals(envelope.opt("action")))return connect(new JSONObject(envelope.toString()));
          return exchangeRoute(envelope,true);
      }
-@@ -352,39 +595,243 @@ public final class ExperimentSessionCommandGateway {
+@@ -352,39 +597,251 @@ public final class ExperimentSessionCommandGateway {
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
@@ -15243,6 +15786,12 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
 +                        String state = original.optString("state");
 +                        if ("confirmed".equals(state) || "rejected".equals(state)) return original;
 +                    }
++                    if ("kiosk".equals(action)) {
++                        if(!privateLanData||!enrolled||!remoteAvailable())throw new SecurityException("kiosk-controller-unavailable");
++                        revalidateEffect();
++                        controlMode.readSnapshot().requireRemoteCommands();
++                        return BreathCompositionPanelModule.remoteKioskCommand(payload,epoch);
++                    }
 +                    if ("recenter".equals(action)) {
 +                        if (!enrolled || !sceneRecenter || !(delegate instanceof WifiDelegate)) {
 +                            throw new SecurityException("scene-recenter-unavailable");
@@ -15267,6 +15816,8 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
 +                            if(diagnostic!=null)response.getJSONObject("y").put("ad",diagnostic);
 +                            guard.check();
 +                        }
++                        if(enrolled)response.put("apk",apkIdentity==null?JSONObject.NULL:new JSONObject(apkIdentity.toString()));
++                        if(enrolled)response.put("kiosk",BreathCompositionPanelModule.remoteKioskProjection());
 +                        response.put("ecg_preview", enrolled ? 1 : 0);
 +                        if (!enrolled) response.put("recordings", 0);
 +                        else if (delegate instanceof WifiDelegate) {
@@ -15429,7 +15980,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -394,16 +841,161 @@ public final class ExperimentSessionCommandGateway {
+@@ -394,16 +851,161 @@ public final class ExperimentSessionCommandGateway {
              try{snapshot();}catch(Exception unavailable){/* An unavailable new observation cannot erase an original receipt. */}
              return journal.original(body.getString("id"));
          }
@@ -15593,7 +16144,7 @@ index 08732e5319252e68275d2fa5287ff2300af7163d..4942646b4c5dbe41a464b259da1c63db
      private JSONObject snapshot()throws Exception {
          try {
              long generation=carrier.currentGeneration(),owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision;
-@@ -431,6 +1023,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -431,6 +1033,7 @@ public final class ExperimentSessionCommandGateway {
                  session.clear();polar.clear();throw new SecurityException("wifi-native-owner-changed");
              }
              status=observed.statusAt(SystemClock.elapsedRealtimeNanos(),nativeEpoch);
@@ -15907,7 +16458,7 @@ index f41c56ead2081794a92892b87e2209a31c3378f6..09381589409a3b7601da9e1e2a41fc3b
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e2b25c90b 100644
+index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..44535c247fe2e9edefe59d713ad3cf6f3d80e07a 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -15965,7 +16516,7 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e
      }
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
-@@ -36,16 +66,35 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -36,16 +66,37 @@ public final class ExperimentSessionGatewayProtocol {
                      || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
                  throw new SecurityException("controller-or-epoch-unavailable");
              nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
@@ -15975,7 +16526,7 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e
 +                || "breath-monitor".equals(action) || lan && ("recordings".equals(action)
 +                    || privateLan && ("ecg-preview".equals(action) || "scenario-arm".equals(action)
 +                        || "participant-arm".equals(action) || "recenter".equals(action)
-+                        || "breath-setup".equals(action)));
++                        || "breath-setup".equals(action) || "kiosk".equals(action)));
 +            if(!hex(nonce,32) || !allowedAction
                      || !constant(hmac(key,"RQG1|"+controller+"|"+epoch+"|"+nonce+"|"+action+"|"+payload),string(request,"mac")))
                  throw new SecurityException("authentication-failed");
@@ -15993,6 +16544,8 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e
 +        if ((!lan || !privateLan) && "status".equals(action)) {
 +            result.remove("breath_setup");
 +            result.remove("setup");
++            result.remove("kiosk");
++            result.remove("apk");
 +            JSONObject polar=result.optJSONObject("y");
 +            if(polar!=null)polar.remove("ad");
 +        }
@@ -16004,7 +16557,7 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e
              JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
                  .put("action",action).put("payload",body).put("mac",hmac(key,
                      "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
-@@ -53,6 +102,40 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -53,6 +104,40 @@ public final class ExperimentSessionGatewayProtocol {
              return reply;
          }
      }
@@ -16045,7 +16598,7 @@ index cf6c5de1386a9c9fd1e9ab02bf6af65ae1781735..e523652abfcca0c8dda8e37829806d8e
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -65,12 +148,32 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -65,12 +150,32 @@ public final class ExperimentSessionGatewayProtocol {
          return new JSONObject().put("schema","rusty.quest.experiment_session.command.v1")
              .put("operation","breath-monitor").put("run",run).put("after",after);
      }
@@ -18194,7 +18747,7 @@ index f5bfbe849652cd4c5362d2baef880bab177bcea3..d9985074196b0771dfdc7c9102818710
          if (activity == null || Build.VERSION.SDK_INT < 23) {
              return true;
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
-index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840f5acf2b6 100644
+index e68547bd55f041ea405a1d63fbc5755ae57f8faf..804b28297fe36a9a0826fbcc77422d051a412a3f 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 @@ -140,6 +140,11 @@ final class PolarSensorPanel {
@@ -18209,8 +18762,13 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
      private final Queue<DescriptorTask> descriptorTasks = new ArrayDeque<DescriptorTask>();
      private final ExecutorService eventWriter = Executors.newSingleThreadExecutor();
      private final ExecutorService statusWriter = Executors.newSingleThreadExecutor();
-@@ -225,6 +230,12 @@ final class PolarSensorPanel {
+@@ -223,8 +228,17 @@ final class PolarSensorPanel {
+     private long autoScanGeneration = -1L;
+     private long autoUniqueCandidateScheduledGeneration = -1L;
      private int autoConnectionAttempts;
++    private long connectionFailureRevision;
++    long connectionFailureRevision() { return connectionFailureRevision; }
++    private long automaticRecoveryNextElapsedMs;
      private boolean automaticConnectionRequested;
      private final PolarRecoveryIntent recoveryIntent = new PolarRecoveryIntent();
 +    private final PolarStartupCoordinator requiredStreams = new PolarStartupCoordinator();
@@ -18222,7 +18780,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
      private boolean automaticConnectionCycleActive;
      private boolean automaticConnectionRetryScheduled;
      private boolean manualConnectionControl;
-@@ -499,7 +510,7 @@ final class PolarSensorPanel {
+@@ -499,7 +513,7 @@ final class PolarSensorPanel {
          if (requestCode != REQUEST_BLE_PERMISSIONS) {
              return;
          }
@@ -18231,7 +18789,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              NativeRendererSelfKioskApplication.endSystemPrompt(permissionHost);
          }
          if (hasRequiredPermissions()) {
-@@ -553,8 +564,10 @@ final class PolarSensorPanel {
+@@ -553,8 +567,10 @@ final class PolarSensorPanel {
              return true;
          }
          pendingBleAction = PENDING_BLE_SCAN;
@@ -18244,7 +18802,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          String missing = PolarBleRuntimeSupport.join(
              PolarBleRuntimeSupport.missingPermissions(appContext),
              ","
-@@ -615,6 +628,7 @@ final class PolarSensorPanel {
+@@ -615,6 +631,7 @@ final class PolarSensorPanel {
              }
          }
          resumeAutomaticConnectionIfRequested();
@@ -18252,7 +18810,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
      }
  
      void shutdown() {
-@@ -774,12 +788,51 @@ final class PolarSensorPanel {
+@@ -774,12 +791,64 @@ final class PolarSensorPanel {
          String selected=selectedDeviceInstanceId();
          long now=System.nanoTime(),accReceipt,ecgReceipt;
          synchronized(countersLock){accReceipt=lastAccFrameReceiptNs;ecgReceipt=lastEcgFrameReceiptNs;}
@@ -18269,6 +18827,19 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              .put("d",candidates).put("sc",scanning);
 +        if(required)projection.put("ar",requiredStreamsMonitoring&&connected&&selected.equals(connectedDeviceInstanceId)&&pmdReady
 +            &&requiredStreams.current(gatt,autoConnectionGeneration)&&recoveryIntent.streamWanted("acc")&&recoveryIntent.streamWanted("ecg"));
++        String autoState;
++        if (!recoveryIntent.automaticStartupAllowed() || !automaticConnectionRequested) autoState="stopped";
++        else if (manualConnectionControl) autoState="selection-required";
++        else if (!ble.optBoolean("runtime_permission_ready",false)
++                || !"on".equals(ble.optString("bluetooth_adapter_state"))
++                || "disabled".equals(ble.optString("location_services_state"))) autoState="blocked";
++        else if (connected) autoState=projection.getBoolean("a")&&projection.getBoolean("e")?"ready":"streams";
++        else if (automaticConnectionRetryScheduled) autoState="backoff";
++        else if ("connecting".equals(automaticConnectionState)) autoState="connecting";
++        else autoState=scanning?"scanning":"blocked";
++        projection.put("auto",new JSONObject().put("v",1).put("state",autoState)
++            .put("retry_ms",Math.max(0L,Math.min(10000L,automaticRecoveryNextElapsedMs-SystemClock.elapsedRealtime())))
++            .put("reason",automaticConnectionDetail.length()>240?automaticConnectionDetail.substring(0,240):automaticConnectionDetail));
 +        return projection;
 +    }
 +
@@ -18307,7 +18878,96 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
      }
  
      long remoteSetupEffectNs(String operation) {
-@@ -1444,7 +1497,9 @@ final class PolarSensorPanel {
+@@ -1027,6 +1096,7 @@ final class PolarSensorPanel {
+         autoConnectionAttempts = 0;
+         automaticConnectionCycleActive = true;
+         automaticConnectionRetryScheduled = false;
++        automaticRecoveryNextElapsedMs = 0L;
+         automaticRecoveryGeneration += 1L;
+     }
+ 
+@@ -1065,6 +1135,7 @@ final class PolarSensorPanel {
+         );
+         final long recoveryGeneration = ++automaticRecoveryGeneration;
+         automaticConnectionRetryScheduled = true;
++        automaticRecoveryNextElapsedMs = SystemClock.elapsedRealtime() + delayMs;
+         if (nextCycle) automaticConnectionCycleActive = false;
+         if (announceRetry) {
+             setAutomaticConnectionState(
+@@ -1082,6 +1153,7 @@ final class PolarSensorPanel {
+                     return;
+                 }
+                 automaticConnectionRetryScheduled = false;
++                automaticRecoveryNextElapsedMs = 0L;
+                 if (!PolarAutoConnectionPolicy.automaticRecoveryAllowed(
+                         automaticConnectionRequested,
+                         manualConnectionControl,
+@@ -1101,6 +1173,7 @@ final class PolarSensorPanel {
+     private void finishAutomaticConnectionCycle() {
+         automaticRecoveryGeneration += 1L;
+         automaticConnectionRetryScheduled = false;
++        automaticRecoveryNextElapsedMs = 0L;
+         automaticConnectionCycleActive = false;
+         autoConnectionAttempts = 0;
+     }
+@@ -1108,6 +1181,7 @@ final class PolarSensorPanel {
+     private void cancelAutomaticRecovery(boolean clearRequest) {
+         automaticRecoveryGeneration += 1L;
+         automaticConnectionRetryScheduled = false;
++        automaticRecoveryNextElapsedMs = 0L;
+         automaticConnectionCycleActive = false;
+         autoUniqueCandidateScheduledGeneration = -1L;
+         if (clearRequest) automaticConnectionRequested = false;
+@@ -1315,7 +1389,15 @@ final class PolarSensorPanel {
+             setStatus("No Polar device selected.");
+             return;
+         }
+-        connectAdmittedCandidate(devices.get(index), false);
++        // Explicit selection transfers this exact identity to the same bounded
++        // owner loop used at cold start; transport success is still unconfirmed.
++        recoveryIntent.selectCandidate(devices.get(index).instanceId());
++        automaticConnectionRequested = true;
++        manualConnectionControl = false;
++        beginAutomaticConnectionCycle();
++        autoConnectionAttempts = 1;
++        setAutomaticConnectionState("connecting", "Connecting the selected sensor; bounded recovery is enabled.");
++        connectAdmittedCandidate(devices.get(index), true);
+     }
+ 
+     private void connectAdmittedCandidate(DeviceEntry entry, boolean automatic) {
+@@ -1359,6 +1441,7 @@ final class PolarSensorPanel {
+             }
+             if (nextGatt == null) {
+                 closeGatt();
++                connectionFailureRevision++;
+                 setStatusState("connection-failed", "BLE connect returned no transport handle.");
+                 if ("connecting".equals(automaticConnectionState)) {
+                     setAutomaticConnectionState("failed", "BLE connect returned no transport handle.");
+@@ -1378,12 +1461,14 @@ final class PolarSensorPanel {
+                 + " rawDeviceIdentifierLogged=false");
+         } catch (SecurityException ex) {
+             closeGatt();
++            connectionFailureRevision++;
+             setStatusState("permission-required", "BLE connect permission is missing.");
+             setAutomaticConnectionState("permission-required", "BLE connect permission is missing.");
+             if (automatic) scheduleAutomaticRecovery("BLE connect permission is missing.");
+             marker("status=error reason=connect-security-exception");
+         } catch (RuntimeException ex) {
+             closeGatt();
++            connectionFailureRevision++;
+             setStatusState("connection-failed", "BLE connect failed to start.");
+             if ("connecting".equals(automaticConnectionState)) {
+                 setAutomaticConnectionState("failed", "BLE connect failed to start.");
+@@ -1411,6 +1496,8 @@ final class PolarSensorPanel {
+                     return;
+                 }
+                 closeGatt();
++                connectionFailureRevision++;
++                setStatusState("connection-timeout", "Polar connection timed out; the selected sensor will retry automatically.");
+                 setAutomaticConnectionState("failed", "Polar connection timed out.");
+                 scheduleAutomaticRecovery("Polar connection timed out.");
+             }
+@@ -1444,7 +1531,9 @@ final class PolarSensorPanel {
              setStatus("PMD notifications are not ready yet.");
              return;
          }
@@ -18317,7 +18977,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          beginPmdStartFlow(selectedMode);
      }
  
-@@ -1457,9 +1512,11 @@ final class PolarSensorPanel {
+@@ -1457,9 +1546,11 @@ final class PolarSensorPanel {
              setStatus("PMD control point is not ready for parallel streams.");
              return;
          }
@@ -18329,7 +18989,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          if (!accPmdRunning) {
              beginPmdStartFlow("acc");
          } else if (!ecgPmdRunning) {
-@@ -1679,7 +1736,10 @@ final class PolarSensorPanel {
+@@ -1679,7 +1770,10 @@ final class PolarSensorPanel {
  
      private void setStreamRunning(String mode, boolean running) {
          if ("ecg".equals(mode)) {
@@ -18341,7 +19001,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          } else {
              accPmdRunning = running;
          }
-@@ -1689,6 +1749,44 @@ final class PolarSensorPanel {
+@@ -1689,6 +1783,44 @@ final class PolarSensorPanel {
              : (accPmdRunning ? "acc" : (ecgPmdRunning ? "ecg" : "none"));
      }
  
@@ -18386,7 +19046,15 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
      private void clearCounters() {
          synchronized (countersLock) {
              sequenceId = 0L;
-@@ -2054,6 +2152,7 @@ final class PolarSensorPanel {
+@@ -2038,6 +2170,7 @@ final class PolarSensorPanel {
+         }
+         if (statusCode != BluetoothGatt.GATT_SUCCESS) {
+             closeGatt();
++            connectionFailureRevision++;
+             setStatusState("connection-failed", "Connection failed: " + statusCode);
+             setAutomaticConnectionState("failed", "Polar connection failed.");
+             scheduleAutomaticRecovery("Polar connection failed with GATT status " + statusCode + ".");
+@@ -2054,6 +2187,7 @@ final class PolarSensorPanel {
              }
              connectedLabel = pendingConnectionLabel;
              connectedDeviceInstanceId = pendingConnectionDeviceInstanceId;
@@ -18394,7 +19062,17 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              pendingConnectionLabel = "none";
              pendingConnectionDeviceInstanceId = "none";
              setStatusState("connected", "Connected. Discovering services.");
-@@ -2166,9 +2265,12 @@ final class PolarSensorPanel {
+@@ -2080,6 +2214,9 @@ final class PolarSensorPanel {
+                 marker("status=error reason=discover-security-exception");
+             }
+         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
++            // A clean callback can still end the first attempt before a link ever
++            // existed. Record that known outcome before closeGatt clears its state.
++            if (!connected) connectionFailureRevision++;
+             closeGatt();
+             setAutomaticConnectionState("failed", "Polar device disconnected.");
+             setStatusState("disconnected", "Polar device disconnected.");
+@@ -2166,9 +2303,12 @@ final class PolarSensorPanel {
              pmdReady = true;
              marker("status=pmd-ready");
              setStatus("HR/RR notifications active; restoring requested PMD streams.");
@@ -18410,7 +19088,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          } else {
              pmdReady = false;
              setStatus("HR/RR notifications active; PMD service not available.");
-@@ -2176,11 +2278,75 @@ final class PolarSensorPanel {
+@@ -2176,11 +2316,75 @@ final class PolarSensorPanel {
          updateCounters();
      }
  
@@ -18486,7 +19164,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              setStatus("PMD command failed: " + command + " " + statusCode);
              marker("status=command-failed command=" + markerToken(command) + " statusCode=" + statusCode);
              return;
-@@ -2219,7 +2385,10 @@ final class PolarSensorPanel {
+@@ -2219,7 +2423,10 @@ final class PolarSensorPanel {
      }
  
      private void beginPmdStartFlow(String mode) {
@@ -18498,7 +19176,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          if (commandInFlight) {
              setStatus("PMD command is already in flight.");
              return;
-@@ -2229,6 +2398,7 @@ final class PolarSensorPanel {
+@@ -2229,6 +2436,7 @@ final class PolarSensorPanel {
          pmdSettingsAttempts = 0;
          pmdStartAttempts = 0;
          long generation = pmdFlowGeneration;
@@ -18506,7 +19184,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          if (streamRunning(mode)) {
              setStatus(mode.toUpperCase(Locale.US) + " PMD stream is already active.");
              if (startAllPending && "acc".equals(mode) && !ecgPmdRunning) {
-@@ -2242,7 +2412,7 @@ final class PolarSensorPanel {
+@@ -2242,7 +2450,7 @@ final class PolarSensorPanel {
      }
  
      private void requestPmdSettings(final long generation) {
@@ -18515,7 +19193,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              return;
          }
          if (commandInFlight) {
-@@ -2278,7 +2448,7 @@ final class PolarSensorPanel {
+@@ -2278,7 +2486,7 @@ final class PolarSensorPanel {
      }
  
      private void startPmdWithCurrentSettings(final long generation) {
@@ -18524,7 +19202,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              return;
          }
          if (commandInFlight) {
-@@ -2290,6 +2460,10 @@ final class PolarSensorPanel {
+@@ -2290,6 +2498,10 @@ final class PolarSensorPanel {
              }, 100L);
              return;
          }
@@ -18535,7 +19213,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          byte[] payload = buildStartCommand(pendingPmdMode, pmdStartAttempts);
          setStatus("Starting " + pendingPmdMode.toUpperCase(Locale.US) + " PMD.");
          writePmdCommand("start_stream", payload);
-@@ -2297,6 +2471,9 @@ final class PolarSensorPanel {
+@@ -2297,6 +2509,9 @@ final class PolarSensorPanel {
      }
  
      private void handleStartAckTimeout(long generation) {
@@ -18545,7 +19223,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          if (generation != pmdFlowGeneration || !"start_stream".equals(pendingCommand) || pmdRunning) {
              return;
          }
-@@ -2339,17 +2516,20 @@ final class PolarSensorPanel {
+@@ -2339,17 +2554,20 @@ final class PolarSensorPanel {
          pendingCommandGeneration = pmdFlowGeneration;
          try {
              commandInFlight = true;
@@ -18566,7 +19244,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              setStatus("BLE write permission is missing.");
              marker("status=error reason=write-security-exception");
          }
-@@ -2495,6 +2675,7 @@ final class PolarSensorPanel {
+@@ -2495,6 +2713,7 @@ final class PolarSensorPanel {
                                  : Math.max(0L, frame.hostTimeNs - lastAccFrameReceiptNs);
                              lastAccFrameReceiptNs = frame.hostTimeNs;
                          }
@@ -18574,7 +19252,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                          nativeSubmitPolarPmdFrame(
                              measurementType,
                              frameSequenceId,
-@@ -2571,6 +2752,8 @@ final class PolarSensorPanel {
+@@ -2571,6 +2790,8 @@ final class PolarSensorPanel {
                                  activeEcgSampleRateHz,
                                  sampleIndex,
                                  frame.sampleCount);
@@ -18583,7 +19261,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                              nativeSubmitPolarEcgMeasurement(
                                  sampleHostTimeNs,
                                  sampleSensorTimeNs,
-@@ -2579,7 +2762,7 @@ final class PolarSensorPanel {
+@@ -2579,7 +2800,7 @@ final class PolarSensorPanel {
                                  sampleIndex,
                                  frame.sampleCount,
                                  System.nanoTime(),
@@ -18592,7 +19270,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                          }
                          appendEcgEvent(frame);
                          scheduleStreamingStatusWrite();
-@@ -2619,6 +2802,7 @@ final class PolarSensorPanel {
+@@ -2619,6 +2840,7 @@ final class PolarSensorPanel {
                  && record.measurementType == measurementTypeInt(pendingPmdMode)) {
              if (record.errorCode == 0) {
                  final String startedMode = pendingPmdMode;
@@ -18600,7 +19278,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                  setStreamRunning(startedMode, true);
                  setStatus("PMD stream active: " + activePmdMode.toUpperCase(Locale.US));
                  marker("status=pmd-started mode=" + markerToken(startedMode)
-@@ -2647,6 +2831,7 @@ final class PolarSensorPanel {
+@@ -2647,6 +2869,7 @@ final class PolarSensorPanel {
                      marker("status=pmd-all-started activeModes=acc_ecg");
                  }
              } else if (!tryNextStartCandidate(pendingCommandGeneration, "err_" + record.errorCode)) {
@@ -18608,7 +19286,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                  setStatus("PMD start rejected for " + pendingPmdMode.toUpperCase(Locale.US)
                      + " error " + record.errorCode + ".");
                  marker("status=pmd-start-rejected mode=" + markerToken(pendingPmdMode)
-@@ -2661,6 +2846,7 @@ final class PolarSensorPanel {
+@@ -2661,6 +2884,7 @@ final class PolarSensorPanel {
                  && record.measurementType == measurementTypeInt(pendingPmdMode)
                  && ("stop_stream_only".equals(pendingCommand) || "stop_before_start".equals(pendingCommand))) {
              if (record.errorCode == 0) {
@@ -18616,7 +19294,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
                  setStreamRunning(pendingPmdMode, false);
                  setStatus(pendingPmdMode.toUpperCase(Locale.US) + " PMD stop acknowledged.");
                  marker("status=pmd-stopped mode=" + markerToken(pendingPmdMode));
-@@ -3205,11 +3391,14 @@ final class PolarSensorPanel {
+@@ -3205,11 +3429,14 @@ final class PolarSensorPanel {
      }
  
      private void closeGatt() {
@@ -18631,7 +19309,7 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
          }
          pmdFlowGeneration += 1L;
          connectedLabel = "none";
-@@ -3298,8 +3487,10 @@ final class PolarSensorPanel {
+@@ -3298,8 +3525,10 @@ final class PolarSensorPanel {
              marker("status=permission-required origin=headless pendingAction=" + pendingAction);
              return false;
          }
@@ -18645,10 +19323,18 @@ index e68547bd55f041ea405a1d63fbc5755ae57f8faf..939654ad794ebde6f0ad4ef34df22840
              PolarBleRuntimeSupport.missingPermissions(appContext),
              ","
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
-index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd57206fe54 100644
+index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..0744fae44cb8f7086c6b040d870d7f2141115a26 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
-@@ -220,6 +220,16 @@ final class PolarSensorRuntime {
+@@ -206,6 +206,7 @@ final class PolarSensorRuntime {
+     private final java.util.Map<String,String> setupOutcomes=new java.util.LinkedHashMap<>();
+     private String setupPendingId="",setupPendingOperation="",setupPendingCandidate="";
+     private long setupPendingSince;
++    private long setupPendingConnectionFailure;
+ 
+     synchronized JSONObject remoteSetupStatus(long epoch) throws Exception {
+         if(closed||instance!=this||!nativeLibraryReady)throw new SecurityException("polar-owner-unavailable");
+@@ -220,6 +221,16 @@ final class PolarSensorRuntime {
      static JSONObject existingRemoteSetupStatus(long epoch) throws Exception {
          PolarSensorRuntime owner=instance;return owner==null?null:owner.remoteSetupStatus(epoch);
      }
@@ -18665,7 +19351,26 @@ index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd5
      static JSONObject dispatchExistingRemoteSetup(JSONObject command,long epoch) throws Exception {
          PolarSensorRuntime owner=instance;if(owner==null)throw new SecurityException("polar-owner-unavailable");
          return owner.dispatchRemoteSetup(command,epoch);
-@@ -315,6 +325,24 @@ final class PolarSensorRuntime {
+@@ -238,6 +249,7 @@ final class PolarSensorRuntime {
+         if(!setupPendingId.isEmpty()||setupReceipts.size()>=128)throw new SecurityException("setup-pending-or-budget");
+         String operation=command.getString("op");
+         if("connect".equals(operation)&&current.getString("x").isEmpty() || operation.startsWith("start-")&&!current.getBoolean("c"))throw new SecurityException("sensor-not-ready");
++        setupPendingConnectionFailure=panel.connectionFailureRevision();
+         if("select".equals(operation))panel.selectRemoteCandidate(command.getString("d"));
+         else panel.handleCommand(operation.replace('-','_'));
+         if("scan".equals(operation)&&!panel.remoteSetupProjection().getBoolean("sc"))throw new SecurityException("scan-not-started");
+@@ -259,7 +271,9 @@ final class PolarSensorRuntime {
+             ||"start-ecg".equals(setupPendingOperation)&&state.getBoolean("e"));
+         long elapsed=SystemClock.elapsedRealtime()-setupPendingSince;
+         boolean expired="scan".equals(setupPendingOperation)?elapsed>=60000L:elapsed>30000L;
+-        String receiptState=effective?"confirmed":expired?"outcome_unknown":"pending";
++        boolean connectionFailed=id.equals(setupPendingId)&&"connect".equals(setupPendingOperation)
++            && panel.connectionFailureRevision()>setupPendingConnectionFailure;
++        String receiptState=connectionFailed?"rejected":effective?"confirmed":expired?"outcome_unknown":"pending";
+         if(!id.equals(setupPendingId))receiptState=setupOutcomes.containsKey(id)?setupOutcomes.get(id):"outcome_unknown";
+         if(effective&&!setupEffectTimes.containsKey(id))setupEffectTimes.put(id,panel.remoteSetupEffectNs(setupPendingOperation));
+         JSONObject result=new JSONObject().put("id",id).put("state",receiptState);
+@@ -315,6 +329,24 @@ final class PolarSensorRuntime {
          panel.onHostResume();
      }
  
@@ -18690,7 +19395,7 @@ index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd5
      private void dispatch(String rawCommand, String token, String origin) {
          if (closed) return;
          String safeToken = token == null ? "" : token;
-@@ -633,6 +661,7 @@ final class PolarRecoveryIntent {
+@@ -633,6 +665,7 @@ final class PolarRecoveryIntent {
      private boolean acc;
      private boolean ecg;
      private boolean streamsInitialized;
@@ -18698,7 +19403,7 @@ index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd5
      private long accRevision;
      private long ecgRevision;
      private long accStopDispatched = -1L;
-@@ -648,6 +677,7 @@ final class PolarRecoveryIntent {
+@@ -648,12 +681,22 @@ final class PolarRecoveryIntent {
              accRevision++;
              ecgRevision++;
              streamsInitialized = true;
@@ -18706,7 +19411,22 @@ index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd5
          }
          identity = exactIdentity;
          connection = true;
-@@ -676,19 +706,23 @@ final class PolarRecoveryIntent {
+         intentionallyDisconnected = false;
+     }
+ 
++    void selectCandidate(String exactIdentity) {
++        if (exactIdentity == null || exactIdentity.isEmpty() || "none".equals(exactIdentity))
++            throw new IllegalArgumentException("missing selected identity");
++        if (!exactIdentity.equals(identity)) streamsInitialized = false;
++        identity = exactIdentity;
++        connection = true;
++        intentionallyDisconnected = false;
++    }
++
+     boolean permitsCandidate(String candidate) {
+         return !connection || identity.equals(candidate);
+     }
+@@ -676,19 +719,23 @@ final class PolarRecoveryIntent {
  
      void startStream(String mode) {
          streamsInitialized = true;
@@ -18734,7 +19454,7 @@ index a3dcca7f6ba5293f9acb1ba69cd7dd3421168ebe..f89b7193d0fc78fb7417eed9e3ca3bd5
      void stopExplicitStream(String mode,String selectedDefault) {
          if(!"acc".equals(mode)&&!"ecg".equals(mode))throw new IllegalArgumentException("unsupported stream");
          if(!streamsInitialized&&!mode.equals(selectedDefault))startStream(selectedDefault);
-@@ -697,6 +731,56 @@ final class PolarRecoveryIntent {
+@@ -697,6 +744,56 @@ final class PolarRecoveryIntent {
      void disconnect() { connection = false; intentionallyDisconnected = true; identity = ""; stopStreams(); streamsInitialized = false; }
  }
  
@@ -18993,6 +19713,39 @@ index 4f0b786401a3b37c50f1564746d9d3fb2a7838b5..a1f0fc8d3141ef3d849ce945d8f44546
          } catch (ClassNotFoundException disabledModule) {
              // Other app compositions do not select the experiment transport.
          } catch (ReflectiveOperationException unavailableOwner) {
+diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSoftKioskCoordinator.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSoftKioskCoordinator.java
+index 4cbfe7e54f86e590d9135144cddfb66ee6c23db8..590c97f64ff7ef281a38023e6020448e5c12018d 100644
+--- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSoftKioskCoordinator.java
++++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSoftKioskCoordinator.java
+@@ -169,6 +169,7 @@ final class NativeRendererSoftKioskCoordinator {
+     private int recoveryAttempts;
+     private boolean selfWatchdog;
+     private boolean selfPresentationObserved;
++    private long selfPresentationObservedAtMs=-1L;
+     private long selfServiceStartAttempt;
+     private long selfPromptDeadlineMs = Long.MIN_VALUE;
+ 
+@@ -218,6 +219,7 @@ final class NativeRendererSoftKioskCoordinator {
+             // The other own surface remains allowed but never changes recovery intent.
+             if (presentation.componentClass.equals(component)) {
+                 selfPresentationObserved = true;
++                selfPresentationObservedAtMs = nowMs;
+                 transitionDeadlineMs = Long.MIN_VALUE;
+             }
+             deferredForeground = null;
+@@ -227,6 +229,12 @@ final class NativeRendererSoftKioskCoordinator {
+         return action(ActionKind.NONE, 0L, false, 0);
+     }
+ 
++    synchronized boolean ownPresentationFresh(long nowMs) {
++        return selfWatchdog&&serviceState==ServiceState.CONNECTED&&selfPresentationObserved
++            &&selfPresentationObservedAtMs>=0&&nowMs>=selfPresentationObservedAtMs
++            &&nowMs-selfPresentationObservedAtMs<=500L;
++    }
++
+     synchronized void observeSelfPresentationAbsent(long observedGeneration) {
+         if (selfWatchdog && generation == observedGeneration) selfPresentationObserved = false;
+     }
 diff --git a/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java b/apps/native-renderer-android/src/phone-pairing/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairingPanel.java
 new file mode 100644
 index 0000000000000000000000000000000000000000..eebc5bff9f8cbad07e8510f33c22c7cab343b066
@@ -20881,7 +21634,7 @@ index 0000000000000000000000000000000000000000..12731708c9146aa113df0dfdd60cb20f
 +    private static void check(boolean value, String reason) { checks++; if (!value) throw new AssertionError(reason); }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..82717fa7b1fe91d9b3beb3a112e95ad1145d0c3b 100644
+index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..5525e8fa0cf219e62b968e3c684fb502bc418849 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 @@ -26,6 +26,7 @@ public final class ExperimentSessionGatewayProtocolTest {
@@ -20892,7 +21645,7 @@ index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..82717fa7b1fe91d9b3beb3a112e95ad1
          denied(()->protocol.exchange(request("55555555555555555555555555555555","status","{}").put("v",1.0)));
          protocol.exchange(request("55555555555555555555555555555555","status","{}"));
          JSONObject monitor=protocol.exchange(request("88888888888888888888888888888888","breath-monitor","{\"run\":\"\",\"after\":0}"));
-@@ -37,6 +38,42 @@ public final class ExperimentSessionGatewayProtocolTest {
+@@ -37,6 +38,48 @@ public final class ExperimentSessionGatewayProtocolTest {
          denied(()->ExperimentSessionGatewayProtocol.monitorQuery(new JSONObject().put("run","").put("after",0).put("operation","pause")));
          denied(()->protocol.exchange(request("99999999999999999999999999999999","breath-monitor","{}").put("payload","{\"after\":1}")));
          protocol.retire();denied(()->protocol.exchange(request("66666666666666666666666666666666","status","{}")));
@@ -20913,7 +21666,7 @@ index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..82717fa7b1fe91d9b3beb3a112e95ad1
 +        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupReceipt.toString()).put("id","other")));
 +        ExperimentSessionGatewayProtocol privateController=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,true,
 +            (action,payload)->{calls++;return new JSONObject().put("v",1).put("id",payload.optString("id")).put("state","confirmed")
-+                .put("breath_setup",1).put("setup",new JSONObject().put("input","automatic"))
++                .put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("setup",new JSONObject().put("input","automatic"))
 +                .put("y",new JSONObject().put("ar",true).put("ad",new JSONObject().put("frame_type",1)));});
 +        JSONObject setupReply=privateController.exchangeLan(request("a1111111111111111111111111111111","breath-setup",setupBody));
 +        if(!"confirmed".equals(new JSONObject(setupReply.getString("payload")).getString("state")))
@@ -20921,17 +21674,23 @@ index 36a65bbd1e876fdf06fe0ed8f93cca0c47098eab..82717fa7b1fe91d9b3beb3a112e95ad1
 +        denied(()->privateController.exchange(request("a2222222222222222222222222222222","breath-setup",setupBody)));
 +        denied(()->privateController.exchangeLan(request("a1111111111111111111111111111111","breath-setup",setupBody)));
 +        ExperimentSessionGatewayProtocol guest=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,
-+            (action,payload)->{calls++;return new JSONObject().put("breath_setup",1).put("setup",new JSONObject())
++            (action,payload)->{calls++;return new JSONObject().put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("setup",new JSONObject())
 +                .put("y",new JSONObject().put("ad",new JSONObject().put("frame_type",1)));});
 +        denied(()->guest.exchangeLan(request("a3333333333333333333333333333333","breath-setup",setupBody)));
 +        JSONObject relayStatus=new JSONObject(privateController.exchange(request("a4444444444444444444444444444444","status","{}")).getString("payload"));
 +        if(relayStatus.getJSONObject("y").has("ad")||!relayStatus.getJSONObject("y").getBoolean("ar"))throw new AssertionError("signed enrolled relay must strip ACC diagnostic and preserve nonprivate recovery bit");
 +        JSONObject privateLanStatus=new JSONObject(privateController.exchangeLan(request("a6666666666666666666666666666666","status","{}")).getString("payload"));
++        if(!privateLanStatus.has("apk"))throw new AssertionError("private authenticated LAN omitted installed APK identity");
 +        if(!privateLanStatus.getJSONObject("y").has("ad"))throw new AssertionError("private LAN must retain authenticated ACC diagnostic");
 +        JSONObject guestStatus=new JSONObject(guest.exchangeLan(request("a5555555555555555555555555555555","status","{}")).getString("payload"));
 +        if(relayStatus.has("breath_setup")||relayStatus.has("setup")||guestStatus.has("breath_setup")||guestStatus.has("setup"))
 +            throw new AssertionError("unavailable route advertised native setup controls");
++        if(relayStatus.has("apk")||guestStatus.has("apk"))throw new AssertionError("nonprivate route disclosed installed APK identity");
 +        if(guestStatus.getJSONObject("y").has("ad"))throw new AssertionError("nonprivate LAN must strip ACC diagnostic even from an overbroad owner result");
++        JSONObject kioskRequest=request("b6666666666666666666666666666666","kiosk","{\"v\":1,\"id\":\"1111111111111111\",\"op\":\"retry\",\"g\":7}");
++        denied(()->guest.exchangeLan(kioskRequest));
++        denied(()->privateController.exchange(kioskRequest));
++        privateController.exchangeLan(kioskRequest);
          // A process restart gets a new gateway epoch even if its native epoch repeats.
          ExperimentSessionGatewayProtocol restarted=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,43,(action,payload)->{calls++;return payload;});
          denied(()->restarted.exchange(request("77777777777777777777777777777777","status","{}")));
@@ -21654,7 +22413,7 @@ index 0000000000000000000000000000000000000000..816ab0f5ad2ccd3ea01b01fca0126217
 +worn-device qualification; synthetic fixtures establish software behavior, not
 +physiological or clinical accuracy. No successful wearer fit is implied.
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
-index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..d9157480b6e2321e785ca7cd1f12273674f8b234 100644
+index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..d59433760752199909286b330d9bb8520dc8ba82 100644
 --- a/docs/EXPERIMENT_SESSION_CONTROL.md
 +++ b/docs/EXPERIMENT_SESSION_CONTROL.md
 @@ -145,6 +145,175 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
@@ -21833,6 +22592,86 @@ index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..d9157480b6e2321e785ca7cd1f122736
  ### Privileged local trusted-LAN enrollment
  
  The debug-only `enroll-trusted-lan` operation additionally requires Boolean
+@@ -312,3 +481,79 @@ Required Polar ACC sessions also use the native acquisition hold described in
+ [Polar recovery](POLAR_SENSOR_RECOVERY.md#native-session-acquisition-hold).
+ Official Start and Resume require fresh raw input in both Direct and Remote mode.
+ Reconnection never resumes a paused session automatically; Arm remains preparation.
++
++## Automatic acquisition and guarded operator recovery
++
++The selected native launch requests Polar discovery on the main handler through
++`NativeRendererAppStatusBridge.trustedColdLaunch`. It requires the existing
++explicit `MAIN` plus `LAUNCHER` admission; a component-only developer launch
++intentionally starts neither sensor discovery nor the session guard. A ready
++network gateway alone proves neither effect. The cold-start host gate tests
++selected and feature-off compositions, both physical native hosts, and the
++missing-category rejection.
++
++Explicit Connect now pins the chosen sensor before the first transport attempt
++and uses the same automatic owner loop: a 15-second exact-GATT timeout, two
++attempts per cycle, two-second retry delay and ten-second cycle backoff. Missing
++sensors continue discovery. Manual Scan/selection and ambiguous candidates retain
++their choice barrier; explicit Disconnect retains its stop intent. ACC and ECG
++keep their existing separately bounded acquisition recovery. The original
++Connect receipt rejects a known first-attempt failure (including a clean disconnect before a confirmed link) even if independent
++recovery later establishes the link; it never replays or rewrites that outcome.
++
++Polar setup status adds `auto` with `v:1`, a bounded state (`scanning`, `backoff`,
++`connecting`, `streams`, `ready`, `blocked`, `stopped`, `selection-required`),
++`retry_ms` in 0..10000 and a reason of at most 240 characters. Stream readiness
++still comes from actual current-owner data, not the automatic request.
++
++Private enrolled LAN status adds `kiosk` version 1: guard generation `g`,
++`requested`, `effective`, coordinator `state`, `service`, `blocked`, bounded
++`detail` and `retry_available`. Effective requires the actual connected service,
++its desired own-presentation observation no older than 500 ms, no exhausted
++recovery episode, and no protected platform prompt/transition. A request or
++service-start dispatch cannot attest effectiveness. This is the selected
++same-app watchdog; it grants no global foreground, overlay or shell authority.
++
++The authenticated private-LAN `kiosk` action accepts exactly
++`{v:1,id:<16 lowercase hex>,op:"retry",g:<advertised guard generation>}`.
++Only the current enrolled controller in Remote mode with a live native owner
++can retry an already armed, foreground guard whose service is missing,
++interrupted or failed. It cannot arm a disarmed/terminal guard or bypass a
++platform prompt. `{v:1,id:<same id>,op:"receipt"}` reads its retained result.
++The once-only receipt stays pending until the actual service callback, rejects
++known start failure or retirement, and never dispatches again for the same ID.
++A changed payload or native epoch cannot adopt the original result.
++
++Breathing setup status adds `renderer`, either null or version 1 with
++`progress01`, `radius_m`, `frame`, `render_generation`, `settings_revision`,
++`observed_ns` (decimal string) and `age_ns`. Its producer is the visible renderer
++frame's actual slot-0/profile radius path, independently of recording. Its observation timestamp is read directly from
++Android's suspend-inclusive `CLOCK_BOOTTIME`, in the same domain as
++`SystemClock.elapsedRealtimeNanos`. Clock failure invalidates display telemetry;
++it neither borrows nor establishes the experiment recording clock. Progress
++is the renderer's integrated value mapped through the selected physical radius
++range; `input_volume01` remains the sensor/controller coordinate. The captured
++setup instance, audio, driver, source, projection, controller and input lineage
++must still match. Values expire after 500 ms and invalidate on configuration or
++renderer retirement; malformed, regressed or unknown values cannot fabricate
++zero progress. This is applied renderer-state evidence, not physical-pixel or
++wearer acceptance.
++
++## Installed APK identity for the paired phone
++
++Authenticated private enrolled LAN status optionally adds `apk`, either null or
++`{v:1,package_name,version_code,version_name,build_id}`. The gateway caches this
++projection at construction from its own PackageManager version and the same
++bounded generated build asset already used by `build`. `build_id` is exactly
++`build.packaging_fingerprint`, a packaging-input identity; it is not an APK-byte
++or signing-certificate digest. The legacy `build` shape is unchanged.
++
++All fields are required for a non-null identity: package name is an ASCII dotted
++Java package of at most 200 characters, version code a positive JS-safe integer,
++version name the existing bounded 64-character ASCII form, and build ID 64
++lowercase hexadecimal characters. Missing/invalid metadata or read failures
++produce explicit null; no zero version or current-release claim is invented.
++Status polling performs no PackageManager/asset rereads or APK hashing and has
++no update/experiment effect. Relay and guest routes omit this private projection.
++The PWA compares this observed identity with its published package/version policy;
++this field neither installs software nor enables boot or updater features.
 diff --git a/docs/PARTICLE_VISUAL_PROFILE.md b/docs/PARTICLE_VISUAL_PROFILE.md
 new file mode 100644
 index 0000000000000000000000000000000000000000..559b24c4bcc5f643aa52882559765035b4236747
@@ -21947,6 +22786,57 @@ index b9d29f761586921491d4348ffd68419a6f7247c6..a8a28a251b8a0b50f4fd0307739e82f6
  The optional BLE carrier can project an independent Polar stop capability `z`.
  Its compact fields are `{r,a,e,s?}`: action revision and ACC/ECG requested,
  PMD-ACK-active and recent-data bits (1/2/4). When `s` is absent, the existing
+diff --git a/docs/VALIDATION.md b/docs/VALIDATION.md
+index 434b30608b637a831fbfc9c89ec9a6a87e2681aa..95b03c4a0a9d6d21a100c2f8b6098eff92120bd9 100644
+--- a/docs/VALIDATION.md
++++ b/docs/VALIDATION.md
+@@ -1722,3 +1722,46 @@ so its registered `check_all.ps1` invocation includes these regressions.
+ This focused gate invokes real host Cargo in isolated fixture sources, covers
+ Java-only freshness, native/dependency/feature/compiler-flag invalidation and
+ exclusive-lock cleanup, and retains its outputs. It proves no Android/device effect.
++
++## Selected operator automation controls
++
++The native renderer global-runtime suite uses its existing documented
++`--test-threads=1` contract (see `breath_composition_runtime::scoped_test_binding`).
++Default parallel execution permits existing setup-selection fixtures to race
++ordinary session inventory readers and is not the aggregate gate.
++
++```text
++cargo test -p rusty-quest-native-renderer-android-native --lib --locked -- --test-threads=1
++cargo test -p rusty-quest-native-renderer-android-native --lib --locked renderer_publication_global_owner_integration -- --ignored --exact experiment_breathing_setup_runtime::tests::renderer_publication_global_owner_integration
++python tools/checks/test_experiment_kiosk.py
++python tools/checks/test_renderer_radius_publication.py
++python tools/checks/test_polar_recovery_callbacks.py
++python tools/checks/test_polar_required_stream_recovery.py
++python tools/checks/test_remote_setup.py
++pwsh -NoProfile -File tools/checks/Test-PolarTrustedColdStart.ps1
++```
++
++The explicitly ignored renderer-publication case must run alone in a fresh
++process; it selects the actual global setup owner and checks publication into
++status, stale-renderer refusal and retirement. Its isolated scope supplements
++the regular pure runtime/lineage/freshness controls. The renderer caller gate
++extracts and executes the actual GPU publication block with recording clock
++absent; it substitutes only kernel time and observer boundaries and includes
++the actual shared publisher. The isolated global integration calls that same
++publisher through to real setup status, proving recording admission stays absent.
++The callback gate joins the actual clean-disconnect callback to the actual
++original Connect receipt, including later automatic retry success. Kiosk tests execute actual
++projection/command bodies with the real coordinator and inert Android effects.
++The full gateway authentication aggregate and actual Android source compilation
++remain required. These host checks establish no headset connection, actual
++background return, rendered pixels, acoustic output or wearer acceptance.
++
++Installed APK identity has a focused production-helper host gate:
++`python tools/checks/test_installed_apk_identity.py`. It executes the actual
++PackageManager/build-asset read and cached projection with inert Android metadata
++boundaries, covering valid version/name/hash, unavailable/error/malformed data,
++closed output and no repeated source reads. The selected trusted-phone gateway
++host gate additionally checks signed private status values, the matching legacy
++build fingerprint, repeated status without metadata rereads/experiment effects,
++and relay/guest exclusion. Fresh actual Android source compilation remains
++required after these Java changes; Rust/driver behavior is outside this addition.
 diff --git a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json b/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
 index 82fee237bf57cd2a771a069d0394192798f058be..178956f6bf73213433833d6a00512144515d33ed 100644
 --- a/fixtures/native-app-features/input/controller-only/input.controllers_only.feature.json
@@ -23564,6 +24454,21 @@ index 2408b225e201b2e4a612fd79ab21836f632f9a97..d4960b32c47295000f37b79ee9ffbb8a
      foreach($required in $originalIds){$bad=@{selected_feature_ids=@($originalIds|Where-Object {$_ -cne $required})};Deny ('original-missing-'+$required) {Get-NativeRendererPanelCompositionSelection -FeatureLock $bad -BuildEnvByName $originalEnv}}
      foreach($name in @($neutral,$mesh,$originalScene)){$bad=$originalEnv.Clone();$bad[$name]='invalid';Deny ('original-invalid-'+$name) {Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $bad}}
      $mixed=@{selected_feature_ids=$originalIds+@('renderer.native_scene')}
+diff --git a/tools/checks/Test-PolarTrustedColdStart.ps1 b/tools/checks/Test-PolarTrustedColdStart.ps1
+index 9a54376f81b79e63d505471a1da7832c601f068b..9d1d24553e8b155e7d2a6436b727cc173e295143 100644
+--- a/tools/checks/Test-PolarTrustedColdStart.ps1
++++ b/tools/checks/Test-PolarTrustedColdStart.ps1
+@@ -44,6 +44,10 @@ public class ColdTest {public static void main(String[] args){
+  if(PolarSensorRuntime.calls!=0||!android.os.Handler.queue.isEmpty())throw new AssertionError("preparation/read cannot request sensor");
+  a.intent.action="internal";if(NativeRendererExperimentLaunchAuthority.issueFromNativeActivity(a,false)!=0)throw new AssertionError("internal accepted");
+  a.intent.action="android.intent.action.MAIN";
++ a.intent.categories.clear();
++ if(NativeRendererExperimentLaunchAuthority.issueFromNativeActivity(a,false)!=0)throw new AssertionError("bare component-only test launch accepted");
++ if(PolarSensorRuntime.calls!=0||android.content.Context.serviceStarts!=0)throw new AssertionError("bare test launch mutated sensor/service");
++ a.intent.categories.add("android.intent.category.LAUNCHER");
+  if(NativeRendererExperimentLaunchAuthority.issueFromNativeActivity(a,true)!=0)throw new AssertionError("recreation accepted");
+  long epoch=NativeRendererExperimentLaunchAuthority.issueFromNativeActivity(a,false);
+  if(epoch<=0||PolarSensorRuntime.calls!=0)throw new AssertionError("admission/async main thread");
 diff --git a/tools/checks/experiment_breathing_setup_stub.py b/tools/checks/experiment_breathing_setup_stub.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..8a380b1b6c65ac53350082847b8178c5f76c62b1
@@ -24336,6 +25241,77 @@ index 0000000000000000000000000000000000000000..24a142089164f28e247258a5dc1f40b4
 +  for op in ('set-control-mode','official-start','open-polar','pause','save-exit'):run(dict(status,operation=op),False)
 +  print('PASS actual release CLI: separate closed authority/method, running actor, canonical serial and origin, broad-operation refusals, one call only; no device')
 +if __name__=='__main__':main()
+diff --git a/tools/checks/test_experiment_kiosk.py b/tools/checks/test_experiment_kiosk.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c4c88db0310342a6e3d2f0943ee29d86c9a424f4
+--- /dev/null
++++ b/tools/checks/test_experiment_kiosk.py
+@@ -0,0 +1,65 @@
++"""Actual kiosk projection/command bodies with real coordinator and inert Android boundaries."""
++from pathlib import Path
++import subprocess,tempfile,os
++root=Path(__file__).resolve().parents[2]
++pkg='io/github/mesmerprism/rustyquest/native_renderer'
++source=(root/'apps/native-renderer-android/panel-modules/breath-composition/src/main/java'/pkg/'BreathCompositionPanelModule.java').read_text()
++start=source.index('    private static final class RemoteKioskRetry')
++end=source.index('    private static String remoteKioskState()',start)
++methods=source[start:end]
++java=r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import org.json.*;
++class Looper {static final Looper MAIN=new Looper();static boolean main=true;static Looper myLooper(){return main?MAIN:null;}static Looper getMainLooper(){return MAIN;}}
++class SystemClock {static long now=100;static long uptimeMillis(){return now;}static long elapsedRealtime(){return now;}}
++class NativeRendererSelfKioskService {static String readback(){return "service observation";}}
++class NativeRendererSelfKioskApplication {
++ static String foreground="focused";static int starts;
++ static String foregroundForOwnApp(Object c){return foreground;}
++ static void armed(Object c){starts++;NativeRendererSoftKioskCoordinator.process().beginSelfServiceStart();}
++}
++public class KioskHost {
++ static Object remoteContext=new Object();
++ __METHODS__
++ static void check(boolean yes,String why){if(!yes)throw new AssertionError(why);}
++ interface Attempt {void run()throws Exception;}
++ static void deny(Attempt attempt)throws Exception{int prior=NativeRendererSelfKioskApplication.starts;try{attempt.run();throw new AssertionError("denial missing");}catch(SecurityException|IllegalArgumentException expected){}check(prior==NativeRendererSelfKioskApplication.starts,"rejected request started service");}
++ static JSONObject retry(String id,long g){return new JSONObject().put("v",1).put("id",id).put("op","retry").put("g",g);}
++ static JSONObject receipt(String id){return new JSONObject().put("v",1).put("id",id).put("op","receipt");}
++ public static void main(String[] args)throws Exception {
++  NativeRendererSoftKioskCoordinator c=NativeRendererSoftKioskCoordinator.process();c.useSelfWatchdog();
++  check(!remoteKioskProjection().getBoolean("requested")&&!remoteKioskProjection().getBoolean("effective"),"no launch cannot claim kiosk");
++  deny(()->remoteKioskCommand(retry("1111111111111111",0),7));
++  c.armFromExplicitColdLaunch(1,NativeRendererForegroundGuardPolicy.Presentation.IMMERSIVE,"experimenter");
++  check(remoteKioskProjection().getBoolean("requested")&&!remoteKioskProjection().getBoolean("effective")&&remoteKioskProjection().getBoolean("retry_available"),"requested missing worker is never effective");
++  deny(()->remoteKioskCommand(retry("1111111111111111",2),7));
++  NativeRendererSelfKioskApplication.foreground="background";deny(()->remoteKioskCommand(retry("1111111111111111",1),7));NativeRendererSelfKioskApplication.foreground="focused";
++  c.beginSelfSystemPrompt(100);check(!remoteKioskProjection().getBoolean("retry_available")&&!remoteKioskProjection().getBoolean("effective"),"platform prompt remains protected");c.endSelfSystemPrompt();
++  Looper.main=false;deny(()->remoteKioskCommand(retry("1111111111111111",1),7));Looper.main=true;
++  check("pending".equals(remoteKioskCommand(retry("1111111111111111",1),7).getString("state")),"dispatch cannot claim connected service");
++  check("pending".equals(remoteKioskCommand(retry("1111111111111111",1),7).getString("state"))&&NativeRendererSelfKioskApplication.starts==1,"identical command never repeats service dispatch");
++  deny(()->remoteKioskCommand(retry("1111111111111111",2),7));
++  c.updateServiceState(NativeRendererSoftKioskCoordinator.ServiceState.CONNECTED);
++  check("confirmed".equals(remoteKioskCommand(receipt("1111111111111111"),7).getString("state")),"real worker callback confirms original receipt");
++  deny(()->remoteKioskCommand(receipt("1111111111111111"),8));
++  check(!remoteKioskProjection().getBoolean("effective"),"worker presence is not presentation confirmation");
++  c.observeOwnSurface(NativeRendererForegroundGuardPolicy.NATIVE_ACTIVITY,1,100);
++  check(remoteKioskProjection().getBoolean("effective"),"fresh own presentation qualifies effective guard");
++  SystemClock.now=701;check(!remoteKioskProjection().getBoolean("effective"),"stalled worker cannot retain effective presentation forever");SystemClock.now=100;
++  c.beginSelfSystemPrompt(100);check(!remoteKioskProjection().getBoolean("effective"),"confirmed guard suspends for real platform prompt");c.endSelfSystemPrompt();
++  c.updateServiceState(NativeRendererSoftKioskCoordinator.ServiceState.INTERRUPTED);
++  check("pending".equals(remoteKioskCommand(retry("2222222222222222",1),7).getString("state")),"interrupted worker supports bounded retry");
++  c.updateServiceState(NativeRendererSoftKioskCoordinator.ServiceState.START_FAILED);
++  check("rejected".equals(remoteKioskCommand(receipt("2222222222222222"),7).getString("state")),"known platform failure rejects immediately");
++  check("pending".equals(remoteKioskCommand(retry("3333333333333333",1),7).getString("state")),"known failure may explicitly retry");
++  c.releaseImmersiveOwner();check("rejected".equals(remoteKioskCommand(receipt("3333333333333333"),7).getString("state")),"retired owner cannot confirm pending start");
++  deny(()->remoteKioskCommand(retry("4444444444444444",1),7));
++  System.out.println("PASS actual kiosk requested/effective/service/prerequisite projection, foreground/prompt/main/generation barriers, pending callback receipt, known failure, idempotence/conflict and retired owner controls");
++ }
++}
++'''.replace('__METHODS__',methods)
++jar=next((Path.home()/'.gradle/caches/modules-2/files-2.1/org.json/json/20240303').rglob('*.jar'))
++production=root/'apps/native-renderer-android/src/main/java'/pkg
++with tempfile.TemporaryDirectory(prefix='rq-kiosk-control-') as tmp:
++ out=Path(tmp);fixture=out/'KioskHost.java';fixture.write_text(java)
++ subprocess.run(['javac','--release','8','-cp',str(jar),'-d',tmp,str(fixture),str(production/'NativeRendererSoftKioskCoordinator.java'),str(production/'NativeRendererForegroundGuardPolicy.java')],check=True)
++ subprocess.run(['java','-cp',tmp+os.pathsep+str(jar),'io.github.mesmerprism.rustyquest.native_renderer.KioskHost'],check=True)
 diff --git a/tools/checks/test_experiment_local_enrollment.py b/tools/checks/test_experiment_local_enrollment.py
 index 1596ca0d5da126d03b978d67cef2eb5e69b2c00a..9e3222b28ddf3290ddd9012b56f950c43dbf0d4b 100644
 --- a/tools/checks/test_experiment_local_enrollment.py
@@ -24687,7 +25663,7 @@ index c849c2d554a16171cd09bd908448dd6237538631..8fb1d2e0f23516896e054d2f355334c8
  }
  '''
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index d1d148eb645b28e74bc02adb25786400283cd031..724f0e897a77e6779479faac7f772f309e5fb379 100644
+index d1d148eb645b28e74bc02adb25786400283cd031..598c961345c1babf707f1b42fdea0acfea0908aa 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -9,6 +9,7 @@ from pathlib import Path
@@ -24698,7 +25674,7 @@ index d1d148eb645b28e74bc02adb25786400283cd031..724f0e897a77e6779479faac7f772f30
  
  PACKAGE = 'io/github/mesmerprism/rustyquest/native_renderer'
  STUBS = {
-@@ -45,24 +46,40 @@ STUBS['android/app/Activity.java']='package android.app;public class Activity ex
+@@ -45,30 +46,46 @@ STUBS['android/app/Activity.java']='package android.app;public class Activity ex
  
  BOUNDARIES = r'''package io.github.mesmerprism.rustyquest.native_renderer;
  import org.json.JSONObject;
@@ -24743,6 +25719,13 @@ index d1d148eb645b28e74bc02adb25786400283cd031..724f0e897a77e6779479faac7f772f30
  }
  final class ExperimentSessionGatewayHttpServer {static int starts,closes;ExperimentSessionGatewayHttpServer(ExperimentSessionCommandGateway g,int p){}void start(){starts++;}void close(){closes++;}}
  final class ExperimentSessionDirectNetwork {ExperimentSessionDirectNetwork(android.content.Context c){}static boolean featurePackaged(android.content.Context c){return false;}JSONObject snapshot(){return new JSONObject();}JSONObject localJoinDetails(){return new JSONObject();}void start(String m){}void close(){}}
+ final class ExperimentSessionRelayClient {interface Endpoint{JSONObject identity()throws Exception;JSONObject exchange(JSONObject r)throws Exception;}static class Config{Config(String a,String b,String c,String d,long e){}}ExperimentSessionRelayClient(Config c,Endpoint e){}JSONObject snapshot(){return new JSONObject();}void start(){}void close(){}}
+ final class ControlPanelActivity {static String applyExperimentSessionCommand(String s){return "{}";}static String nativeReadBreathCompositionStatus(){return "{}";}static String conditionAudioReadiness(String s){return "unavailable";}static String conditionBreathGuidanceReadiness(String s){return "no-pattern";}}
+-final class BreathCompositionPanelModule {static JSONObject queueExperimentOperator(JSONObject s){return new JSONObject();}static JSONObject experimentOperatorOwnerReceipt(){return new JSONObject();}
++final class BreathCompositionPanelModule {static JSONObject remoteKioskProjection(){return new JSONObject();}static JSONObject remoteKioskCommand(JSONObject c,long e){return new JSONObject();}static JSONObject queueExperimentOperator(JSONObject s){return new JSONObject();}static JSONObject experimentOperatorOwnerReceipt(){return new JSONObject();}
+  static JSONObject experimentControlModeStatus(){return new JSONObject();}static JSONObject selectExperimentOperatorMode(JSONObject s,Runnable guard){return new JSONObject();}}
+ final class NativeMeshUiProducer {static class VisibilityReadback {static Boolean applied(JSONObject r,long g,long v){return null;}}}
+ '''
 @@ -174,10 +191,14 @@ final class RemoteJoinHarness {
    deny(()->g.provisionHeadsetIdentity(provision,()->{throw new SecurityException("wrong actor");}));
    deny(()->g.provisionHeadsetIdentity(new JSONObject(provision.toString()).put("hardware_serial","unknown"),good));
@@ -24944,16 +25927,28 @@ index 0000000000000000000000000000000000000000..83f1fa4632fd1ff5efafca47dbf0335a
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..eceafd0ae0df0c32171c52bf5d680c918dbf52a4
+index 0000000000000000000000000000000000000000..77f725996495f555144400618f0b897a3aff8128
 --- /dev/null
 +++ b/tools/checks/test_experiment_trusted_phones.py
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,172 @@
 +"""Selected trusted-phone gateway: production HMAC/owner code with inert Android/network."""
 +import test_experiment_remote_join as owner
 +
 +owner.STUBS['android/os/Bundle.java']=owner.STUBS['android/os/Bundle.java'].replace(
 +    'return k.equals("rusty.quest.experiment.command_gateway.enabled");',
 +    'return k.equals("rusty.quest.experiment.command_gateway.enabled")||k.equals("rusty.quest.experiment.phone_pairing.enabled")||k.endsWith(".private_lan_data");')
++# The actual gateway must expose the same cached installed PackageManager/asset
++# metadata without performing per-poll identity reads or command effects.
++owner.STUBS['android/content/res/AssetManager.java']=owner.STUBS['android/content/res/AssetManager.java'].replace(
++    '~source_commit~:~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~',
++    '~source_commit~:~aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa~,~packaging_fingerprint~:~'+'a'*64+'~')
++owner.STUBS['android/content/res/AssetManager.java']=owner.STUBS['android/content/res/AssetManager.java'].replace(
++    'public class AssetManager {','public class AssetManager {public static int reads;').replace(
++    'open(String name)throws java.io.IOException {','open(String name)throws java.io.IOException {reads++;')
++owner.STUBS['android/content/pm/PackageManager.java']=owner.STUBS['android/content/pm/PackageManager.java'].replace(
++    'public class PackageManager {','public class PackageManager {public static int packageInfoReads;').replace(
++    'getPackageInfo(String p,int f){return new PackageInfo();}',
++    'getPackageInfo(String p,int f){packageInfoReads++;return new PackageInfo();}')
 +# The storage boundary stages a complete editor transaction, including failures.
 +owner.STUBS['android/content/SharedPreferences.java']='''package android.content;
 +public class SharedPreferences {
@@ -25029,9 +26024,17 @@ index 0000000000000000000000000000000000000000..eceafd0ae0df0c32171c52bf5d680c91
 +  JSONObject guest=join(g);deny(()->read(g,guest,"command",ping("1111111111111111")));
 +  PolarSensorRuntime.diagnostic=new JSONObject().put("frame_type",1).put("frame_samples",8);
 +  check(read(g,a,"status",new JSONObject()).getJSONObject("y").getJSONObject("ad").getInt("frame_type")==1,"signed trusted private status receives bounded ACC diagnostic");
++  JSONObject installedStatus=read(g,a,"status",new JSONObject()),apk=installedStatus.getJSONObject("apk");
++  check(apk.getInt("v")==1&&apk.getString("package_name").equals("synthetic.app")&&apk.getLong("version_code")==61&&apk.getString("version_name").equals("0.1.61"),"signed private status contains actual cached installed PackageManager identity");
++  check(apk.getString("build_id").equals(installedStatus.getJSONObject("build").getString("packaging_fingerprint")),"actual status build ID matches same APK asset");
++  int packageReads=android.content.pm.PackageManager.packageInfoReads,assetReads=android.content.res.AssetManager.reads,priorDispatches=dispatches;
++  read(g,a,"status",new JSONObject());read(g,a,"status",new JSONObject());
++  check(android.content.pm.PackageManager.packageInfoReads==packageReads&&android.content.res.AssetManager.reads==assetReads&&dispatches==priorDispatches,"actual status polls neither reopen identity sources nor dispatch experiment effects");
 +  JSONObject relayStatus=new JSONObject(g.exchange(auth(a,"status",new JSONObject())).getString("payload"));
++  check(!relayStatus.has("apk"),"relay cannot disclose installed APK identity");
 +  check(!relayStatus.getJSONObject("y").has("ad")&&relayStatus.getJSONObject("y").getBoolean("ar"),"signed enrolled relay excludes ACC diagnostic while retaining recovery intent");
 +  JSONObject guestStatus=read(g,guest,"status",new JSONObject());
++  check(!guestStatus.has("apk"),"guest cannot disclose installed APK identity");
 +  check(guestStatus.optJSONObject("y")==null||!guestStatus.getJSONObject("y").has("ad"),"guest status must not expose raw ACC diagnostic");
 +  PolarSensorRuntime.diagnostic=null;check(!read(g,a,"status",new JSONObject()).getJSONObject("y").has("ad"),"unavailable/retired diagnostic is omitted from trusted status");
 +  deny(()->read(g,guest,"controller-access",operation("1111111111111111","claim",0)));
@@ -25101,7 +26104,7 @@ index 0000000000000000000000000000000000000000..eceafd0ae0df0c32171c52bf5d680c91
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
-index d6a4bfd41ffbee149a1c834ee6b3160144829335..413ff5bd05cf627fc62369efdb572436e9ca9e06 100644
+index d6a4bfd41ffbee149a1c834ee6b3160144829335..b764813013c424c4afab9d1063d163eec5d6d130 100644
 --- a/tools/checks/test_experiment_wifi_snapshot.py
 +++ b/tools/checks/test_experiment_wifi_snapshot.py
 @@ -66,6 +66,7 @@ public final class WifiSnapshotHarness {
@@ -25121,6 +26124,88 @@ index d6a4bfd41ffbee149a1c834ee6b3160144829335..413ff5bd05cf627fc62369efdb572436
    for(String mode:new String[]{"choose","direct","remote"}){modes.controlMode.state.name=mode;check(mode.equals(modes.snapshot().getString("control_mode")),"explicit "+mode);}
    modes.controlMode.state.selected=false;check(modes.snapshot().has("control_mode"),"unselected owner still explicit");
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
+@@ -202,9 +205,9 @@ public final class WifiSnapshotHarness {
+ final class PolarReceiptHarness {
+  java.util.Map<String,String> setupReceipts=new java.util.LinkedHashMap<>(),setupOutcomes=new java.util.LinkedHashMap<>();
+  java.util.Map<String,Long> setupEffectTimes=new java.util.LinkedHashMap<>();
+- String setupPendingId="original",setupPendingOperation="scan",setupPendingCandidate="";long setupPendingSince=0;boolean scanning=true;
++ String setupPendingId="original",setupPendingOperation="scan",setupPendingCandidate="";long setupPendingSince=0,setupPendingConnectionFailure=0;boolean scanning=true;
+  long setupRevision=1;
+- class Panel {int effects;long remoteSetupEffectNs(String op){return 42;}
++ class Panel {long connectionFailureRevision(){return 0;}int effects;long remoteSetupEffectNs(String op){return 42;}
+   void selectRemoteCandidate(String d){}void handleCommand(String op){effects++;scanning=true;}
+   JSONObject remoteSetupProjection()throws Exception{return remoteSetupStatus(7);}}Panel panel=new Panel();
+  PolarReceiptHarness(){setupReceipts.put("original","original canonical command");}
+diff --git a/tools/checks/test_installed_apk_identity.py b/tools/checks/test_installed_apk_identity.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..941ad65aa2ad0d12fb6d014cd31956a4b52712d1
+--- /dev/null
++++ b/tools/checks/test_installed_apk_identity.py
+@@ -0,0 +1,64 @@
++"""Actual installed build metadata producer with inert PackageManager/asset boundaries."""
++from pathlib import Path
++import subprocess,tempfile,os
++root=Path(__file__).resolve().parents[2]
++pkg='io/github/mesmerprism/rustyquest/native_renderer'
++production=root/'apps/native-renderer-android/panel-modules/breath-composition/src/main/java'/pkg/'ExperimentSessionBuildIdentity.java'
++jar=next((Path.home()/'.gradle/caches/modules-2/files-2.1/org.json/json/20240303').rglob('*.jar'))
++sources={
++'android/content/Context.java':r'''package android.content;public class Context {
++ public String packageName="org.viscereality.atmungsraum.developer";public boolean packageFails;
++ public final android.content.pm.PackageManager pm=new android.content.pm.PackageManager();
++ public final android.content.res.AssetManager assets=new android.content.res.AssetManager();
++ public String getPackageName(){if(packageFails)throw new SecurityException();return packageName;}
++ public android.content.pm.PackageManager getPackageManager(){return pm;}
++ public android.content.res.AssetManager getAssets(){return assets;}
++}''',
++'android/content/pm/PackageInfo.java':r'''package android.content.pm;public class PackageInfo {
++ public long code=10;public int versionCode=10;public String versionName="0.2.9-dev";
++ public long getLongVersionCode(){return code;}
++}''',
++'android/content/pm/PackageManager.java':r'''package android.content.pm;public class PackageManager {
++ public int reads;public boolean fails;public final PackageInfo info=new PackageInfo();
++ public PackageInfo getPackageInfo(String name,int flags){reads++;if(fails)throw new SecurityException();return info;}
++}''',
++'android/content/res/AssetManager.java':r'''package android.content.res;public class AssetManager {
++ public int reads;public boolean fails;public String asset="{\"schema\":\"rusty.quest.android_build_identity.v1\",\"packaging_fingerprint\":\""+String.join("",java.util.Collections.nCopies(64,"a"))+"\"}";
++ public java.io.InputStream open(String name)throws java.io.IOException {reads++;if(fails)throw new java.io.IOException();if(!name.equals("android-build-identity.json"))throw new AssertionError("Unexpected asset or APK read");return new java.io.ByteArrayInputStream(asset.getBytes(java.nio.charset.StandardCharsets.UTF_8));}
++}''',
++'android/os/Build.java':'package android.os;public class Build {public static class VERSION {public static int SDK_INT=36;}}',
++pkg+'/InstalledApkIdentityHost.java':r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import org.json.*;import android.content.Context;
++public class InstalledApkIdentityHost {
++ static void check(boolean yes,String why){if(!yes)throw new AssertionError(why);}
++ static JSONObject read(Context c){return ExperimentSessionBuildIdentity.apk(c,ExperimentSessionBuildIdentity.read(c));}
++ public static void main(String[]args)throws Exception {
++  Context c=new Context();JSONObject legacy=ExperimentSessionBuildIdentity.read(c);String before=legacy.toString();
++  JSONObject apk=ExperimentSessionBuildIdentity.apk(c,legacy);
++  check(apk!=null&&apk.keySet().equals(new java.util.HashSet<>(java.util.Arrays.asList("v","package_name","version_code","version_name","build_id"))),"closed APK projection");
++  check(apk.getString("package_name").equals(c.packageName)&&apk.getLong("version_code")==10&&apk.getString("version_name").equals("0.2.9-dev"),"actual installed PackageManager version and own package");
++  check(apk.getString("build_id").equals(legacy.getString("packaging_fingerprint")),"own immutable asset packaging fingerprint is the build identifier");
++  check(before.equals(legacy.toString())&&!apk.toString().contains("sourceDir"),"legacy projection unchanged and no APK path exposed");
++  for(int i=0;i<100;i++)ExperimentSessionBuildIdentity.apk(c,legacy);
++  check(c.pm.reads==1&&c.assets.reads==1,"cached projection never rereads PackageManager, assets or APK bytes per poll");
++  c=new Context();c.pm.fails=true;check(read(c)==null,"PackageManager failure is unknown");
++  c=new Context();c.assets.fails=true;check(read(c)==null,"absent asset fingerprint is unknown");
++  c=new Context();c.assets.asset="{}";check(read(c)==null,"malformed asset identity is unknown");
++  c=new Context();c.pm.info.versionName="bad/name";check(read(c)==null,"invalid version name is unknown");
++  c=new Context();c.pm.info.code=0;check(read(c)==null,"zero is never an installed version");
++  c=new Context();c.packageName="bad/package";check(read(c)==null,"invalid own package cannot fabricate identity");
++  c=new Context();JSONObject raw=new JSONObject(legacy.toString()).put("version_code",10.0);
++  check(ExperimentSessionBuildIdentity.apk(c,raw)==null,"float code rejected");
++  raw.put("version_code","10");check(ExperimentSessionBuildIdentity.apk(c,raw)==null,"string code rejected");
++  raw.put("version_code",9007199254740992L);check(ExperimentSessionBuildIdentity.apk(c,raw)==null,"unsafe JS integer rejected");
++  raw.put("version_code",10).put("packaging_fingerprint","unknown");check(ExperimentSessionBuildIdentity.apk(c,raw)==null,"unbound build hash cannot claim freshness");
++  c.packageFails=true;check(ExperimentSessionBuildIdentity.apk(c,legacy)==null,"package access error remains unknown");
++  System.out.println("PASS actual cached PackageManager/build-asset APK projection; version/name/hash, absence/error/type/range, no reread/mutation/path controls");
++ }
++}'''}
++with tempfile.TemporaryDirectory(prefix='rq-installed-apk-identity-') as tmp:
++ out=Path(tmp);paths=[]
++ for name,body in sources.items():
++  p=out/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(body,encoding='utf-8');paths.append(str(p))
++ subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(jar),'-d',tmp,str(production),*paths],check=True)
++ subprocess.run(['java','-cp',tmp+os.pathsep+str(jar),'io.github.mesmerprism.rustyquest.native_renderer.InstalledApkIdentityHost'],check=True)
 diff --git a/tools/checks/test_native_controller_only_input.py b/tools/checks/test_native_controller_only_input.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..ca2e0c42dacadaf0c5d7079146e4c32cc7c15a7b
@@ -25386,10 +26471,34 @@ index 0000000000000000000000000000000000000000..833f50b03335810d11063ffdd60c7c48
 +  subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_polar_recovery_callbacks.py b/tools/checks/test_polar_recovery_callbacks.py
-index ea84ef260867d1312eeca6b8c536810f7eb8bc7d..8039f3b668af2e4ea7ac15d006dc278ff9640400 100644
+index ea84ef260867d1312eeca6b8c536810f7eb8bc7d..abcbe7084ed26a90dc108f49df0a7d45f5c0b587 100644
 --- a/tools/checks/test_polar_recovery_callbacks.py
 +++ b/tools/checks/test_polar_recovery_callbacks.py
-@@ -33,7 +33,7 @@ markers = ['private void handleConnectionState(', 'private void scheduleAutomati
+@@ -3,7 +3,7 @@
+ This validates owner decisions, not physical Bluetooth behavior. The source bodies
+ are extracted on every run; fixture methods only record platform effects.
+ """
+-import hashlib, pathlib, subprocess, tempfile, sys, json
++import hashlib, pathlib, subprocess, tempfile, sys, json, argparse
+ 
+ root = pathlib.Path(__file__).resolve().parents[2]
+ pkg = 'io/github/mesmerprism/rustyquest/native_renderer'
+@@ -20,7 +20,8 @@ def block(text, marker):
+         end += 1
+     return text[start:end]
+ 
+-text = panel.read_text(encoding='utf-8-sig')
++parser=argparse.ArgumentParser();parser.add_argument('--source-ref');args=parser.parse_args()
++text = subprocess.check_output(['git','show',args.source_ref+':'+panel.relative_to(root).as_posix()],cwd=root,text=True) if args.source_ref else panel.read_text(encoding='utf-8-sig')
+ markers = ['private void handleConnectionState(', 'private void scheduleAutomaticRecovery(String detail) {',
+            'private void scheduleAutomaticRecovery(String detail, boolean announceRetry)',
+            'private void finishAutomaticConnectionCycle()', 'private void cancelAutomaticRecovery(',
+@@ -29,14 +30,15 @@ markers = ['private void handleConnectionState(', 'private void scheduleAutomati
+            'private void stopAllPmd()', 'private void beginStreams(',
+            'private void requestUndesiredStreamStop(', 'private void completeUndesiredStreamStop(',
+            'private void handlePmdControlRecord(', 'void ensureAutoConnection()',
+-           'private void beginAutomaticConnectionCycle()']
++           'private void beginAutomaticConnectionCycle()', 'private void connectSelected()', 'long connectionFailureRevision()']
  bodies = [block(text, marker) for marker in markers]
  runtime_text = runtime.read_text(encoding='utf-8-sig')
  support = '\n'.join(block(runtime_text, marker) for marker in
@@ -25398,7 +26507,22 @@ index ea84ef260867d1312eeca6b8c536810f7eb8bc7d..8039f3b668af2e4ea7ac15d006dc278f
  fixture = r'''
  package io.github.mesmerprism.rustyquest.native_renderer;
  import java.util.*;
-@@ -56,6 +56,9 @@ public final class PolarRecoveryCallbacksHost {
++import org.json.JSONObject;
+ final class BluetoothGatt {
+  static final int GATT_SUCCESS=0, CONNECTION_PRIORITY_HIGH=1;
+  void requestConnectionPriority(int value) {} void discoverServices() {}
+@@ -47,15 +49,18 @@ final class Looper { static final Looper MAIN=new Looper();static Looper myLoope
+ public final class PolarRecoveryCallbacksHost {
+  boolean closing, connected, manualConnectionControl, automaticConnectionRequested;
+  boolean automaticConnectionRetryScheduled, automaticConnectionCycleActive;
+- long automaticRecoveryGeneration, autoUniqueCandidateScheduledGeneration, autoScanGeneration=7;
++ long connectionFailureRevision,automaticRecoveryNextElapsedMs; long automaticRecoveryGeneration, autoUniqueCandidateScheduledGeneration, autoScanGeneration=7;
+  long automaticConnectionDeadlineElapsedMs, generation=1;
+- int autoConnectionAttempts, selectedDeviceIndex, attempts, closes, admissions;
++ int autoConnectionAttempts, selectedDeviceIndex, attempts, closes, admissions; boolean admittedAutomatic; Object activity=new Object(); static final int PENDING_BLE_CONNECT=1,PENDING_BLE_NONE=0;int pendingBleAction; boolean ensurePermissions(int action){return true;}int selectedDeviceIndex(){return selectedDeviceIndex;}
+  static final int AUTO_CONNECTION_MAX_ATTEMPTS=2;
+  static final long AUTO_CONNECTION_RETRY_DELAY_MS=2000, AUTO_CONNECTION_CYCLE_DELAY_MS=10000, AUTO_CONNECTION_TIMEOUT_MS=15000;
+  final Object connectionIdentityLock=new Object();
   BluetoothGatt gatt;
   String connectedLabel="none", connectedDeviceInstanceId="none", pendingConnectionLabel="H10", pendingConnectionDeviceInstanceId="sensor-A";
   final PolarRecoveryIntent recoveryIntent=new PolarRecoveryIntent();
@@ -25408,6 +26532,66 @@ index ea84ef260867d1312eeca6b8c536810f7eb8bc7d..8039f3b668af2e4ea7ac15d006dc278f
   final Handler handler=new Handler();
   final List<DeviceEntry> devices=new ArrayList<DeviceEntry>();
   Object pmdControlCharacteristic=new Object(),pmdDataCharacteristic=new Object(),batteryCharacteristic;
+@@ -92,15 +97,38 @@ public final class PolarRecoveryCallbacksHost {
+  long currentAutoConnectionGeneration(){return generation;}
+  void advanceAutoConnectionGeneration(){generation++;}
+  int pairedCandidateMatches(){return 0;} int pairedCandidateIndex(){return -1;}
+- void connectAdmittedCandidate(DeviceEntry entry,boolean automatic){admissions++;pendingConnectionDeviceInstanceId=entry.id;}
++ void connectAdmittedCandidate(DeviceEntry entry,boolean automatic){admissions++;admittedAutomatic=automatic;pendingConnectionDeviceInstanceId=entry.id;}
+  static void check(boolean condition,String why){if(!condition)throw new AssertionError(why);}
+  static PolarRecoveryCallbacksHost connectedOwner(){
+    PolarRecoveryCallbacksHost h=new PolarRecoveryCallbacksHost();h.gatt=new BluetoothGatt();h.manualConnectionControl=true;
+    h.handleConnectionState(h.gatt,0,2);
+    check(h.connected&&h.automaticConnectionRequested&&h.recoveryIntent.connectionWanted(),"actual successful manual callback arms recovery");return h;
+  }
+- public static void main(String[] args){
+-   PolarRecoveryCallbacksHost h=connectedOwner();BluetoothGatt original=h.gatt;
++ class ReceiptOwner {
++  final PolarRecoveryCallbacksHost panel=PolarRecoveryCallbacksHost.this;
++  final Map<String,String> setupReceipts=new HashMap<>(),setupOutcomes=new HashMap<>();
++  final Map<String,Long> setupEffectTimes=new HashMap<>();
++  String setupPendingId="original",setupPendingOperation="connect",setupPendingCandidate="";
++  long setupPendingSince=100,setupPendingConnectionFailure=connectionFailureRevision;
++  ReceiptOwner(){setupReceipts.put("original","payload");}
++  JSONObject remoteSetupStatus(long epoch){return new JSONObject().put("c",connected).put("sc",false).put("x","").put("a",false).put("e",false);}
++  __ORIGINAL_RECEIPT__
++ }
++ long remoteSetupEffectNs(String operation){return 1000000;}
++ public static void main(String[] args)throws Exception {
++   PolarRecoveryCallbacksHost connecting=new PolarRecoveryCallbacksHost();connecting.gatt=new BluetoothGatt();connecting.automaticConnectionRequested=true;
++   ReceiptOwner receipt=connecting.new ReceiptOwner();BluetoothGatt first=connecting.gatt;
++   connecting.handleConnectionState(first,BluetoothGatt.GATT_SUCCESS,BluetoothProfile.STATE_DISCONNECTED);
++   check("rejected".equals(receipt.remoteSetupReceipt("original",7).getString("state")),"actual clean failed first callback must terminally reject original Connect receipt");
++   check(connecting.automaticConnectionRetryScheduled,"known failed first attempt keeps independent selected-sensor recovery");
++   connecting.gatt=new BluetoothGatt();connecting.handleConnectionState(connecting.gatt,BluetoothGatt.GATT_SUCCESS,BluetoothProfile.STATE_CONNECTED);
++   check("rejected".equals(receipt.remoteSetupReceipt("original",7).getString("state")),"actual later retry success cannot rewrite first failed receipt");
++   long failures=connecting.connectionFailureRevision;connecting.handleConnectionState(first,BluetoothGatt.GATT_SUCCESS,BluetoothProfile.STATE_DISCONNECTED);
++   check(connecting.connectionFailureRevision==failures&&connecting.connected,"stale clean callback cannot change failure lineage");
++   PolarRecoveryCallbacksHost h=new PolarRecoveryCallbacksHost();h.manualConnectionControl=true;h.devices.add(new DeviceEntry("sensor-A"));h.connectSelected();
++   check(h.admittedAutomatic&&h.automaticConnectionRequested&&!h.manualConnectionControl&&h.recoveryIntent.connectionWanted(),"explicit selected connection enters bounded automatic timeout/recovery before transport success");
++   check(h.recoveryIntent.permitsCandidate("sensor-A")&&!h.recoveryIntent.permitsCandidate("sensor-B"),"explicit selected identity pinned before first callback");
++   h=connectedOwner();BluetoothGatt original=h.gatt;
+    h.handleConnectionState(new BluetoothGatt(),8,0);check(h.connected&&h.closes==0,"stale GATT failure denied");
+    h.handleConnectionState(original,8,0);check(!h.connected&&h.closes==1&&h.handler.tasks.size()==1,"actual status8 schedules one recovery");
+    check(h.handler.delays.get(0)==2000,"recovery has bounded nonzero backoff");
+@@ -157,13 +185,15 @@ public final class PolarRecoveryCallbacksHost {
+    System.out.println("Production Polar callback/timeout controls PASS");
+  }
+ '''
++fixture=fixture.replace('__ORIGINAL_RECEIPT__',block(runtime_text,'synchronized JSONObject remoteSetupReceipt('))
+ fixture += '\n' + '\n'.join(bodies) + '\n}\n' + support
++jar=next((pathlib.Path.home()/'.gradle/caches/modules-2/files-2.1/org.json/json/20240303').rglob('*.jar'))
+ with tempfile.TemporaryDirectory(prefix='polar-recovery-controls-') as tmp:
+     output=pathlib.Path(tmp)
+     source=output/'PolarRecoveryCallbacksHost.java'
+     source.write_text(fixture,encoding='utf-8')
+-    subprocess.run(['javac','--release','8','-encoding','UTF-8','-d',tmp,str(source)],check=True)
+-    subprocess.run(['java','-cp',tmp,'io.github.mesmerprism.rustyquest.native_renderer.PolarRecoveryCallbacksHost'],check=True)
++    subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(jar),'-d',tmp,str(source)],check=True)
++    subprocess.run(['java','-cp',tmp+';'+str(jar),'io.github.mesmerprism.rustyquest.native_renderer.PolarRecoveryCallbacksHost'],check=True)
+ 
+ # Execute the actual UI entrypoint and runtime entrypoint with inert Android
+ # projection/dispatch boundaries. Retired callbacks must not call a factory,
 diff --git a/tools/checks/test_polar_required_stream_recovery.py b/tools/checks/test_polar_required_stream_recovery.py
 new file mode 100644
 index 0000000000000000000000000000000000000000..2425c7ea42a6a9e99a4f3e450b4a5c0f1a653350
@@ -25588,19 +26772,36 @@ index 0000000000000000000000000000000000000000..dc0bab363f105ecc62874888ade63aff
 +}'''.replace('__BODIES__',bodies)
 +run({pkg+'/AccDiagnosticHost.java':fixture+'\n'+support},'AccDiagnosticHost')
 diff --git a/tools/checks/test_remote_setup.py b/tools/checks/test_remote_setup.py
-index 4e7a895c0dd6c651a4dca898a38b4b456b4035c1..03165f05a3b1be0727471a02a0ba968b1c15e265 100644
+index 4e7a895c0dd6c651a4dca898a38b4b456b4035c1..d6cfede7649330719ad32131393454fff6dc2cd0 100644
 --- a/tools/checks/test_remote_setup.py
 +++ b/tools/checks/test_remote_setup.py
-@@ -11,6 +11,8 @@ import org.json.*;import android.os.SystemClock;
+@@ -9,8 +9,10 @@ package='io.github.mesmerprism.rustyquest.native_renderer'
+ java=r'''package io.github.mesmerprism.rustyquest.native_renderer;
+ import org.json.*;import android.os.SystemClock;
  class PolarSensorPanel {
-  int effects;JSONObject state=new JSONObject("{\"p\":true,\"b\":true,\"c\":false,\"x\":\"\",\"a\":false,\"e\":false,\"d\":[\"111111111111\"],\"sc\":false}");
+- int effects;JSONObject state=new JSONObject("{\"p\":true,\"b\":true,\"c\":false,\"x\":\"\",\"a\":false,\"e\":false,\"d\":[\"111111111111\"],\"sc\":false}");
++ long failures;long connectionFailureRevision(){return failures;} int effects;JSONObject state=new JSONObject("{\"p\":true,\"b\":true,\"c\":false,\"x\":\"\",\"a\":false,\"e\":false,\"d\":[\"111111111111\"],\"sc\":false}");
   JSONObject remoteSetupProjection()throws Exception{return new JSONObject(state.toString());}
 + JSONObject ecgPreview(){return null;}
 + JSONObject authenticatedAccDiagnostic(){return null;}
   void selectRemoteCandidate(String d)throws Exception{effects++;state.put("x",d);}
   long remoteSetupEffectNs(String op){return 1000000;}
   void handleCommand(String op)throws Exception{effects++;if(op.equals("scan"))state.put("sc",true);}
-@@ -56,6 +58,7 @@ class PolarSensorRuntime {
+@@ -41,6 +43,13 @@ class PolarSensorRuntime {
+   o.panel.state.put("p",false);final JSONObject blocked=o.command("4444444444444444","scan");int prior=o.panel.effects;deny(()->o.dispatchRemoteSetup(blocked,7));check(o.panel.effects==prior,"permission cannot be bypassed");
+   o.panel.state.put("p",true);JSONObject pending=o.command("5555555555555555","scan");o.dispatchRemoteSetup(pending,7);int beforeEpoch=o.panel.effects;
+   o.remoteSetupStatus(8);check(o.remoteSetupReceipt(pending.getString("id"),8).getString("state").equals("outcome_unknown")&&o.panel.effects==beforeEpoch,"native owner change retires pending without replay");
++  o.remoteSetupStatus(7);o.panel.state.put("c",false);o.panel.state.put("sc",false);
++  JSONObject connection=o.command("6666666666666666","connect");
++  check(o.dispatchRemoteSetup(connection,7).getString("state").equals("pending"),"connect dispatch is not a link");
++  o.panel.failures++;
++  check(o.remoteSetupReceipt(connection.getString("id"),7).getString("state").equals("rejected"),"known first connection failure retires original receipt while recovery may continue");
++  int effects=o.panel.effects;o.panel.state.put("c",true);
++  check(o.dispatchRemoteSetup(connection,7).getString("state").equals("rejected")&&o.panel.effects==effects,"late auto recovery cannot rewrite or replay failed original connect");
+   o.closed=true;deny(()->o.remoteSetupStatus(7));
+   JSONObject wire=ExperimentSessionBleProtocol.parseSetup(scan);check(wire.getInt("v")==4,"production codec");
+   try{ExperimentSessionBleProtocol.parseSetup(new JSONObject(scan.toString()).put("extra",true));throw new AssertionError("open fields");}catch(IllegalArgumentException expected){}
+@@ -56,6 +65,7 @@ class PolarSensorRuntime {
     .put("p","IDLE").put("g",7).put("c","").put("st","ready").put("h","vr-preparation").put("pending",false)
     .put("a",new JSONArray().put("track-ready").put("track-ready")).put("b",new JSONArray().put("pattern-ready").put("pattern-ready"));
    JSONObject setup=new JSONObject(o.panel.state.toString()).put("s",o.projectedOwnerEpoch).put("g",7).put("r",1000).put("x","111111111111")
@@ -25608,6 +26809,71 @@ index 4e7a895c0dd6c651a4dca898a38b4b456b4035c1..03165f05a3b1be0727471a02a0ba968b
     .put("d",new JSONArray().put("111111111111").put("222222222222").put("333333333333").put("444444444444"));
    base.put("y",setup);byte[] projected=new PolarStopBleCapability().projectBoundedStatus(base,null);
    check(projected.length<=480&&new JSONObject(new String(projected,java.nio.charset.StandardCharsets.UTF_8)).getString("h").equals("vr-preparation"),"idle four candidate/readiness/presentation bounded projection");
+diff --git a/tools/checks/test_renderer_radius_publication.py b/tools/checks/test_renderer_radius_publication.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..1e042ef6ffdc4c55801ada8e0d1bb6b829847edb
+--- /dev/null
++++ b/tools/checks/test_renderer_radius_publication.py
+@@ -0,0 +1,59 @@
++"""Execute the exact GPU radius-publication caller with only clock/runtime boundaries inert."""
++from pathlib import Path
++import subprocess,tempfile,argparse
++root=Path(__file__).resolve().parents[2]
++base=root/'apps/native-renderer-android/native/src'
++parser=argparse.ArgumentParser();parser.add_argument('--source-ref');args=parser.parse_args()
++s=subprocess.check_output(['git','show',args.source_ref+':apps/native-renderer-android/native/src/gpu_private_particles.rs'],cwd=root,text=True) if args.source_ref else (base/'gpu_private_particles.rs').read_text()
++start=s.index('let stats = GpuPrivateParticleFrameStats {')
++opening=s.index('{',start);end=opening+1;depth=1
++while depth:
++ depth+=(s[end]=='{')-(s[end]=='}');end+=1
++start=s.index(';',end)+1
++end=s.index('        self.visual_scale_request_state',start)
++caller=s[start:end]
++helper=base/'renderer_radius_telemetry.rs'
++production_helper=f'#[path = "{helper.as_posix()}"] mod renderer_radius_telemetry;' if helper.exists() else ''
++java=r'''
++use std::sync::atomic::{AtomicU64,Ordering};
++static KERNEL_TIME:AtomicU64=AtomicU64::new(1_000_000_000);
++static PUBLISHED:AtomicU64=AtomicU64::new(0);
++static INVALIDATED:AtomicU64=AtomicU64::new(0);
++static RECORDING_ATTEMPTS:AtomicU64=AtomicU64::new(0);
++mod android_elapsed_clock { pub(crate) fn now_ns()->Option<u64>{let n=crate::KERNEL_TIME.load(crate::Ordering::SeqCst);(n>0).then_some(n)} }
++mod experiment_session_runtime {
++ pub(crate) fn current_elapsed_realtime_ns()->Option<u64>{None}
++ pub(crate) fn record_effective_radius_snapshot(_:u64,_:u64,_:f32,_:f32,_:f32,_:u64,_:u64,_:&'static str){crate::RECORDING_ATTEMPTS.fetch_add(1,crate::Ordering::SeqCst);}
++}
++mod experiment_breathing_setup_runtime {
++ pub(crate) type SetupRendererLineage=u64;
++ pub(crate) fn observe_renderer_radius(lineage:Option<u64>,progress:f32,radius:f32,frame:u64,ns:u64,g:u64,r:u64){
++  assert_eq!((lineage,progress,radius,frame,g,r),(Some(91),0.75,1.6,42,7,3));crate::PUBLISHED.store(ns,crate::Ordering::SeqCst);
++ }
++ pub(crate) fn invalidate_renderer_radius(g:u64){assert_eq!(g,7);crate::INVALIDATED.fetch_add(1,crate::Ordering::SeqCst);}
++}
++__HELPER__
++struct Driver;impl Driver{fn renderer_lineage(&self)->Option<u64>{Some(91)}}
++struct Owner{breath_composition_driver:Driver,render_session_generation:u64,settings_revision:u64}
++struct Stats{ready:bool,visible:bool}
++struct Settings{driver0_value01:f32}
++impl Owner {fn hook(&self,visible:bool){
++ let frame_count=42;let stats=Stats{ready:true,visible};let runtime_settings=Settings{driver0_value01:0.75};
++ let world_center_scale=[0.0,0.0,0.0,1.6];let world_anchor_scale_parameter_source="particle-visual-profile-driver-slot-0";
++ __CALLER__
++}}
++#[test]fn actual_gpu_caller_publishes_preparation_with_no_recording_bridge(){
++ let owner=Owner{breath_composition_driver:Driver,render_session_generation:7,settings_revision:3};
++ assert!(experiment_session_runtime::current_elapsed_realtime_ns().is_none());
++ owner.hook(true);
++ assert_eq!(PUBLISHED.load(Ordering::SeqCst),1_000_000_000,"actual GPU preparation path must publish while recording bridge is absent");
++ assert_eq!(RECORDING_ATTEMPTS.load(Ordering::SeqCst),0,"display telemetry cannot open recording admission");
++ KERNEL_TIME.store(0,Ordering::SeqCst);owner.hook(true);assert_eq!(INVALIDATED.load(Ordering::SeqCst),1,"failed kernel observation invalidates display");
++ KERNEL_TIME.store(1_000_000_001,Ordering::SeqCst);owner.hook(false);assert_eq!(INVALIDATED.load(Ordering::SeqCst),2,"hidden frame invalidates display");
++}
++'''.replace('__HELPER__',production_helper).replace('__CALLER__',caller)
++with tempfile.TemporaryDirectory(prefix='rq-renderer-radius-caller-') as tmp:
++ source=Path(tmp)/'caller.rs';exe=Path(tmp)/'caller.exe';source.write_text(java)
++ subprocess.run(['rustc','--edition','2021','--test',str(source),'-o',str(exe)],check=True)
++ subprocess.run([str(exe),'--nocapture'],check=True)
++print('PASS source-extracted actual GPU caller with absent recording clock and independent kernel boundary')
 diff --git a/tools/lib/NativeRendererPanelCompositionSelection.psm1 b/tools/lib/NativeRendererPanelCompositionSelection.psm1
 index 21e2d2ec0eaf86c7f2a15af875e350d7ee6ddcfc..2ce576a344fe8a237c54b8c9462c6c137c2c6265 100644
 --- a/tools/lib/NativeRendererPanelCompositionSelection.psm1
