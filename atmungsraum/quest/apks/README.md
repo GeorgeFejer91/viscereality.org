@@ -40,10 +40,13 @@ The cumulative patch reconstructed the exact tree above. Assembly verified the
 74 catalog/audio files, ARM64 loader and signed-APK cold-start closure. The
 same-key update installed with exact byte readback over Wi-Fi ADB. Actual
 Quest 2 startup rendered VR with the panel closed; its public gateway reported
-v2 app-installation discovery without a hardware serial. Headset/Pixel button
-pairing, saved reconnection, two-phone handover/revocation, worn calibration and
-the full 900-second trial remain pending. Meta upload is tracked separately;
-this device update used ADB and does not prove remote replacement.
+v2 app-installation discovery without a hardware serial. The refreshed Pixel
+found the Quest; the user observed matching codes and confirmed on both
+devices. Saved reconnection, two-phone handover/revocation, worn calibration
+and the full 900-second trial remain pending. Meta accepted code 3 as private
+Developer build `1460570757141936`; malware/security scans passed and the owner
+is joined. The Store remains unpublished. This device update used ADB and does
+not prove remote replacement.
 
 ## 0.2.1-dev — cold-start repair, 2026-11-15
 
