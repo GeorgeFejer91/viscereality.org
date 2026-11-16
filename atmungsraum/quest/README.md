@@ -117,6 +117,21 @@ location and SHA-256. The output and its build receipts are under
 `rusty-quest/target/aq2/atmungsraum-developer-004/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
 
+Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
+existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,
+receiver, metadata and permissions before building. Assemblies without the
+switch retain the opt-out default. The receiver requires the app's overlay
+permission and a genuine, new Android boot count; it launches this APK through
+MAIN/LAUNCHER once per boot. Selecting the feature does not grant permission
+or prove that Quest delivered the app to the wearer.
+
+The selected same-APK kiosk watchdog observes its own lifecycle and OpenXR
+presentation. It does not require enabling the separate Accessibility adapter.
+Verify effective service, app focus and frame progression, then test physical
+Meta-menu recovery and the operator exit separately. Follow the
+[boot and Meta-update qualification contract](../for-ai/BOOT-KIOSK-UPDATE.md);
+neither a host launch nor an ADB installation proves automatic Meta delivery.
+
 Assembly binds `RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256` to the exact
 packaged `audio/box-loop.json`, selects
 `rusty.quest.experiment.breathing_setup.enabled=true`, and includes the audio

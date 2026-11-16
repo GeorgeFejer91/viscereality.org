@@ -69,6 +69,8 @@ test('assembly binds the real looping audio and selected Java definitions before
       assert.equal(selected[0].sha256, sha256(await readFile(join(questRepo, path))));
     }
     assert.match(run.manifest, /android:debuggable="true"/);
+    assert.ok(!run.lock.selected_feature_ids.includes('ui.experiment_boot_autostart'));
+    assert.doesNotMatch(run.manifest, /NativeRendererBootReceiver|android\.intent\.action\.BOOT_COMPLETED|rusty\.quest\.experiment\.boot_autostart/);
     assert.match(run.manifest, /android:targetSdkVersion="35"/);
     assert.doesNotMatch(run.manifest, /android:installLocation=/);
     assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.rehearsal"/);
@@ -80,6 +82,26 @@ test('assembly binds the real looping audio and selected Java definitions before
       ASM_TEST_FEATURE: join(run.specPath, '..', 'features/audio.atmungsraum_scenarios.feature.json'),
       ASM_TEST_FEATURE_SCHEMA: join(questRepo, 'schemas/rusty.quest.native_app_feature.v1.schema.json') } });
     assert.equal(schemaCheck.status, 0, schemaCheck.stdout + schemaCheck.stderr);
+  });
+
+test('boot autostart opt-in resolves the actual own-app receiver and permission closure',
+  { skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.' }, async () => {
+    const runName = `asm-boot-${randomUUID().slice(0, 12)}`;
+    const result = invoke(runName, ['-BootAutostart']);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const run = await resolvedRun(runName, 'atmungsraum_quest2');
+    await assertControllerOnly(run);
+    for (const feature of ['ui.experiment_boot_autostart', 'ui.same_apk_soft_kiosk', 'ui.experiment_session_ble_control']) {
+      assert.ok(run.lock.selected_feature_ids.includes(feature), feature);
+    }
+    assert.ok(run.lock.android_manifest.receivers.includes('NativeRendererBootReceiver'));
+    assert.match(run.manifest, /<receiver android:name="io\.github\.mesmerprism\.rustyquest\.native_renderer\.NativeRendererBootReceiver" android:exported="false">/);
+    assert.match(run.manifest, /android:name="android\.intent\.action\.BOOT_COMPLETED"/);
+    assert.match(run.manifest, /android:name="rusty\.quest\.experiment\.boot_autostart" android:value="true"/);
+    for (const permission of ['android.permission.RECEIVE_BOOT_COMPLETED', 'android.permission.SYSTEM_ALERT_WINDOW']) {
+      assert.ok(run.lock.android_manifest.permissions.includes(permission), permission);
+      assert.ok(run.manifest.includes(`android:name="${permission}"`), permission);
+    }
   });
 
 test('developer resolution selects a distinct non-debuggable app and requires an explicit external key and version',

@@ -2,6 +2,34 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Autoboot, kiosk and Meta update test — 2026-11-16
+
+The user reports the latest attended APK/PWA works well enough for now, with
+fine UI/calibration tuning deferred. They explicitly request power-on launch,
+menu/foreground recovery and a higher version distributed through the existing
+Meta developer channel to test unattended update behavior with autoboot.
+Follow [the composition and acceptance contract](BOOT-KIOSK-UPDATE.md).
+
+Current verified installed baseline is code11/0.2.10-dev with its exact APK
+hash, retained UID/grants, trusted launcher admission, controller-only input,
+closed startup panel and target-owned XR focus. Wi-Fi ADB works; Location isON.
+Code11 has no selected boot receiver. Current authenticated dashboard readback
+confirms code3 in the existing private Developer channel, one member and latest-
+build launch enforcement disabled. Preserve those access and launch settings.
+
+The explicit `-BootAutostart` recipe increment passes independent source review,
+three real resolver tests with zero skips, boot controls and the soft-kiosk gate.
+Baseline12/0.2.11-dev and candidate13/0.2.12-dev are locally built and inspected:
+same signer/package/native/private inputs, actual boot closure and signed APK
+session checks pass. See the [APK record](../quest/apks/README.md) for hashes.
+The selected kiosk is the app-owned self-watchdog; do not enable the separate
+Accessibility adapter. Autoboot still requires the overlay grant.
+
+No new APK upload, install or reboot for this task has occurred yet. An attended
+idle/USB confirmation is pending before replacing code11 and testing a genuine
+reboot. Preserve code12 as the outdated device baseline when later publishing13;
+never ADB-install13 as evidence of Meta delivery. Overall acceptance stays open.
+
 ### Operator layout improvement — 2026-11-16
 
 The user requests clearer information hierarchy, shorter sequential pages and

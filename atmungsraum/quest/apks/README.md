@@ -1,5 +1,31 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.11-dev / 0.2.12-dev — autoboot candidates, 2026-11-16
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Baseline | code12, `0.2.11-dev`;65,174,320 bytes; SHA-256 `fd89a3e4c33fcb09524fafef4b7320b261bd581b935d8bb368c9cd861b4dbf74` |
+| Meta candidate | code13, `0.2.12-dev`;65,174,319 bytes; SHA-256 `b0d5260cc0cee6e5d79f5e3bd27e353bc4eac0144459e5d9e4b52180b0e62ed2` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` / `9a482a67f80342cb612b50112996488fac422c3a` |
+| Packaging | Non-debuggable; min29/target34/compile36; automatic install location; v2/v3 signatures and16KiB ZIP alignment pass;89assets |
+
+Both candidates explicitly select the existing boot feature through
+`-BootAutostart`, with actual APK metadata, non-exported BOOT_COMPLETED receiver,
+permissions and boot Java-definition closure inspected. The native source,
+private visual inputs, controller-only policy, pairing, audio, calibration and
+recording behavior remain the code11 composition. Code13 is prepared for the
+same-functionality N→N+1 delivery test; run-addressed provenance and version
+identity differ.
+
+The source recipe passes independent review, three real resolver tests without
+skips, the boot admission/receiver controls and the soft-kiosk gate. Both signed
+APKs pass the actual session closure probe. These are local package results.
+At this checkpoint code11 remains installed; no candidate install, reboot or
+new Meta upload has occurred. Actual boot, foreground recovery and update
+delivery remain pending under the [qualification contract](../../for-ai/BOOT-KIOSK-UPDATE.md).
+
 ## 0.2.10-dev — smooth actual display and selectable Polar presets, 2026-11-16
 
 | Build property | Verified value |
