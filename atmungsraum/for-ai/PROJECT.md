@@ -18,6 +18,7 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 - [x] Restore older advertised scenarios and condition selection, receipt
   access after reconnect, and the recordings and Drive recovery routes. Keep
   the native freshness and recording gates, including condition A for Haupt-Runde.
+- [x] Verify both PWA increments on GitHub Pages and smoke-test the public app.
 - [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
   and the authorized Drive account at the next attended idle session.
 
@@ -27,6 +28,12 @@ Compatibility release `dd80712` reached `origin/main` and passed the exact
 [Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43947472089).
 All 14 changed paths matched Git, and the live startup, offline recordings,
 history and install dialog passed in Chromium at four viewport sizes.
+The focus and startup follow-up `d0f049b` matched `origin/main` and passed
+[Pages run 43948845817](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43948845817).
+All eight changed live paths matched Git. Live Chromium repeated the four
+viewport checks, including moving focus to Bluetooth before the dialog's
+close event. A browser fixture also completed Drive authorization with fake
+OAuth and verified the selected account and private folder readback.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress

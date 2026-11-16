@@ -42,7 +42,8 @@ The existing runtime gates still require native receipt confirmation, current
 preparation and current sensor evidence as applicable. No participant data or real
 Drive authentication is used by these tests.
 
-Node: 245 passed, six skipped for native assembly and Java pairing prerequisites.
+The Node suite passed 245 checks and skipped six that require native assembly
+and Java pairing prerequisites.
 Scenario JSON/CSV consistency, context and browser launch/update gates passed.
 Chromium passed 135 operator states across five viewport/text settings, seven
 pairing states, 18 control and Polar location states, 13 receipt recovery states,
