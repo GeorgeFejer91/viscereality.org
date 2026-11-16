@@ -30,7 +30,10 @@ def releases():
         def do_GET(self):
             request = urlsplit(self.path)
             if request.path != '/atmungsraum/':
-                return super().do_GET()
+                try:
+                    return super().do_GET()
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    return
             probe = parse_qs(request.query).get(PROBE)
             if probe:
                 current['probes'].append(probe[0])
@@ -103,8 +106,26 @@ def run():
         page = launch(slow)
         assert page.url == slow and version(page) == OLD
         assert len(set(release['probes'])) == 4, release['probes']
+        release.update(app_url=OLD, probe_result=None)
+        idle = url.replace('#daten', '').replace('live-sync=off', 'live-sync=off&check=return')
+        page = launch(idle)
+        page.locator('#quest-find').wait_for(state='visible')
+        assert version(page) == OLD
+        probe_count = len(set(release['probes']))
+        release['app_url'] = NEW
+        page.locator('#settings-open').click()
+        page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+        page.wait_for_timeout(250)
+        assert version(page) == OLD and len(set(release['probes'])) == probe_count
+        page.locator('#settings-screen [data-operator-return]').click()
+        page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+        page.wait_for_selector('script[src="./app.js?v=pwa-test-new"]', state='attached', timeout=5000)
+        page.wait_for_function("document.documentElement.dataset.operatorStep === 'connect' && !location.search.includes('_pwa=')")
+        assert page.url == idle + '#connect' and page.locator('#quest').is_visible()
+        assert len(set(release['probes'])) == probe_count + 1
+        assert page.evaluate("localStorage.getItem('pwa-test-sentinel')") == 'original'
         assert not errors, errors
-        print('PASS cached launch updates, current launch checks once, URL/storage kept, error/timeout still start')
+        print('PASS cached launch and idle resume update; settings, URL, storage and error/timeout fallback preserved')
 
 
 if __name__ == '__main__':

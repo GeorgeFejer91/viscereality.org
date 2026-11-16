@@ -156,15 +156,16 @@ async function measureLabels() {
 
 let questMounted = false;
 function mountOperator() {
-  if (questMounted || location.hash === '#daten') return;
+  if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=52').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=operator-header-20261116').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }
 
-async function replaceWithPublishedRelease() {
-  const entry = new URL(location.href);
+async function replaceWithPublishedRelease(canReplace = () => true) {
+  const currentEntry = location.href;
+  const entry = new URL(currentEntry);
   if (entry.searchParams.has('_pwa')) {
     // This navigation was just checked by the previous document.
     entry.searchParams.delete('_pwa');
@@ -183,6 +184,7 @@ async function replaceWithPublishedRelease() {
     const source = published.content.querySelector('script[type="module"][src^="./app.js?v="]')?.getAttribute('src');
     const release = source && new URL(source, entry).searchParams.get('v');
     if (!release || release === new URL(import.meta.url).searchParams.get('v')) return false;
+    if (location.href !== currentEntry || !canReplace()) return false;
     location.replace(entry);
     return true;
   } catch {
@@ -192,7 +194,26 @@ async function replaceWithPublishedRelease() {
   }
 }
 
+function idleConnectionPage() {
+  const find = byId('quest-find');
+  return !document.hidden && root.dataset.operatorStep === 'connect'
+    && byId('check-bridge').dataset.check !== 'ok' && !find.hidden && !find.disabled
+    && !document.querySelector('dialog[open], #quest-pairing:not([hidden]), #quest-recovery:not([hidden]), #preview-recovery:not([hidden])')
+    && ![...byId('patient-form').querySelectorAll('input, select')].some(field => field.value);
+}
+
 if (!await replaceWithPublishedRelease()) {
+  let refreshingIdlePage = false;
+  const refreshIdlePage = async () => {
+    if (refreshingIdlePage || !idleConnectionPage()) return;
+    refreshingIdlePage = true;
+    try { await replaceWithPublishedRelease(idleConnectionPage); }
+    finally { refreshingIdlePage = false; }
+  };
+  document.addEventListener('visibilitychange', refreshIdlePage);
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) void refreshIdlePage();
+  });
   window.addEventListener('hashchange', mountOperator);
   const recovery = location.hash === '#daten';
   const browserExports = byId('daten');

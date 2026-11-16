@@ -13,15 +13,46 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-operator-history">
+  <link rel="stylesheet" href="./style.css?v=operator-header-20261116">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261116-operator-history"></script>
+  <script type="module" src="./app.js?v=operator-header-20261116"></script>
 </head>
 <body>
-  <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
-    <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
-    <span id="recenter-vr-note" class="sr-only">Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.</span>
-  </button>
+  <header id="operator-toolbar" aria-label="Geräte und Aktionen">
+    <button id="check-bluetooth" class="check-icon" type="button" data-check="checking" disabled
+       aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Bluetooth: wird geprüft" title="Bluetooth: wird geprüft">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#bluetooth"/></svg>
+      <span class="check-symbol" aria-hidden="true"></span>
+    </button>
+    <button id="check-bridge" class="check-icon" type="button" data-check="checking" disabled
+       aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="WLAN-Brücke: wird geprüft" title="WLAN-Brücke: wird geprüft">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#bridge"/></svg>
+      <span class="check-symbol" aria-hidden="true"></span>
+    </button>
+    <button id="check-apk" class="check-icon" type="button" data-check="checking" disabled
+       aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Quest-App: wird geprüft" title="Quest-App: wird geprüft">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#apk"/></svg>
+      <span class="check-symbol" aria-hidden="true"></span>
+    </button>
+    <button id="check-polar" class="check-icon" type="button" data-check="checking" disabled
+       aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Polar H10: wird geprüft" title="Polar H10: wird geprüft">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#polar"/></svg>
+      <span class="check-symbol" aria-hidden="true"></span>
+    </button>
+    <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
+      <img src="./assets/icons/recenter-vr.svg" width="108" height="108" alt="" aria-hidden="true">
+      <span id="recenter-vr-note" class="sr-only">Verbinde dich mit einer Quest im Fernmodus, um die VR-Szene zu zentrieren.</span>
+    </button>
+    <button id="settings-open" class="operator-tool" data-operator-go="settings" type="button" aria-label="Einstellungen" aria-controls="settings-screen" title="Einstellungen" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M10.3 2.7h3.4l.5 2.3 1.2.5 2-1.3 2.4 2.4-1.3 2 .5 1.2 2.3.5v3.4l-2.3.5-.5 1.2 1.3 2-2.4 2.4-2-1.3-1.2.5-.5 2.3h-3.4l-.5-2.3-1.2-.5-2 1.3-2.4-2.4 1.3-2-.5-1.2-2.3-.5v-3.4l2.3-.5.5-1.2-1.3-2 2.4-2.4 2 1.3 1.2-.5z"/>
+        <circle cx="12" cy="12" r="3.3"/>
+      </svg>
+    </button>
+    <button id="recordings-open" class="operator-tool" data-operator-go="recordings" type="button" aria-label="Aufnahmen" aria-controls="recordings-screen" title="Aufnahmen" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4M4 15v5h16v-5"/></svg>
+    </button>
+  </header>
   <dialog id="install-dialog" aria-labelledby="install-title" aria-describedby="install-intro">
     <header class="files-header">
       <h2 id="install-title" data-measure>App installieren</h2>
@@ -104,28 +135,6 @@
           <button id="quest-pairing-cancel" type="button"><span data-measure>Abbrechen</span></button>
         </div>
         <button id="quest-find" aria-describedby="quest-status" hidden type="button"><span data-measure>Mit Bluetooth verbinden</span></button>
-        <div class="connection-checks" role="group" aria-label="Verbindungsstatus">
-        <button id="check-bluetooth" class="check-icon" type="button" data-check="checking" disabled
-           aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Bluetooth: wird geprüft" title="Bluetooth: wird geprüft">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#bluetooth"/></svg>
-          <span class="check-symbol" aria-hidden="true"></span>
-        </button>
-        <button id="check-bridge" class="check-icon" type="button" data-check="checking" disabled
-           aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="WLAN-Brücke: wird geprüft" title="WLAN-Brücke: wird geprüft">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#bridge"/></svg>
-          <span class="check-symbol" aria-hidden="true"></span>
-        </button>
-        <button id="check-apk" class="check-icon" type="button" data-check="checking" disabled
-           aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Quest-App: wird geprüft" title="Quest-App: wird geprüft">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#apk"/></svg>
-          <span class="check-symbol" aria-hidden="true"></span>
-        </button>
-        <button id="check-polar" class="check-icon" type="button" data-check="checking" disabled
-           aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Polar H10: wird geprüft" title="Polar H10: wird geprüft">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg#polar"/></svg>
-          <span class="check-symbol" aria-hidden="true"></span>
-        </button>
-        </div>
         <div id="quest-polar" hidden>
           <p id="quest-polar-status" data-measure role="status">
           </p>
@@ -153,10 +162,6 @@
           <button id="drive-open" type="button" hidden aria-haspopup="dialog" aria-controls="drive-dialog"><span data-measure>Google Drive</span></button>
           <div id="drive-status-host"><p id="quest-drive-status" data-measure hidden role="status"></p></div>
         </div>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button" disabled><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button" disabled><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button id="operator-connect-next" class="primary-navigation" type="button" data-operator-go="participant" disabled><span data-measure>Weiter</span></button>
@@ -204,10 +209,6 @@
             </fieldset>
           </form>
         </details>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
@@ -221,10 +222,6 @@
         <h1 id="signals-screen-title" data-measure tabindex="-1">Messsignale prüfen</h1>
       </header>
       <div class="screen-body operator-body">
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
@@ -261,10 +258,6 @@
           <button id="preview-polar-adaptive" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar tilt STATE · dynamische Achse</span><small data-measure>Vortrainiert · Achse passt sich laufend an</small></button>
           <div id="preview-controller-host"><button id="preview-controller" disabled type="button"><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button></div>
         </div>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
@@ -279,10 +272,6 @@
         <p class="preparation-step" data-measure>Schritt 3 von 4</p>
       </header>
       <div class="screen-body operator-body">
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button id="preview-retry" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
@@ -325,15 +314,11 @@
             <p id="preview-progress-text" aria-live="off" data-measure>0 von 2 Atemzyklen</p>
           </div>
         </div>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
-        <button id="preview-restart" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
+        <button id="preview-restart" type="button" hidden disabled><span data-measure>Kalibrierung wiederholen</span></button>
         <button data-operator-go="input" type="button"><span data-measure>Eingabe ändern</span></button>
-        <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Einrichtung bestätigen</span></button>
+        <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Kalibrierung bestätigen</span></button>
       </footer>
     </section>
     <section id="session-screen" aria-labelledby="session-screen-title" class="screen operator-screen" hidden>
@@ -374,10 +359,6 @@
           </fieldset>
           <p id="quest-scenario-unavailable" data-measure role="status" hidden></p>
         </div>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
@@ -398,9 +379,6 @@
           <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure data-measure-sample="88:88 / 88:88" data-live-value>00:00</p>
           <progress id="quest-progress" aria-label="Szenariofortschritt" aria-describedby="quest-clock" value="0" hidden></progress>
         </div>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
       </footer>
@@ -427,9 +405,6 @@
         <div id="recordings-drive-actions" class="setup-actions"></div>
         <a class="text-link" href="#daten"><span data-measure>Frühere Browser-Aufnahmen</span>
         </a>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button type="button" data-operator-return><span data-measure>Zurück</span></button>
@@ -479,9 +454,6 @@
           <button id="kiosk-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Zustand übernehmen</span></button>
         </details>
         <button id="quest-disconnect" hidden type="button"><span data-measure>Verbindung trennen</span></button>
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
         <button data-operator-return type="button"><span data-measure>Zurück</span></button>
@@ -494,9 +466,6 @@
         <h1 id="recovery-screen-title" data-measure tabindex="-1">Bestätigung prüfen</h1>
       </header>
       <div class="screen-body operator-body">
-        <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-        </nav>
       </div>
       <footer class="actions operator-actions">
       </footer>

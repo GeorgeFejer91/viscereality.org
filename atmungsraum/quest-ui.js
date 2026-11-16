@@ -149,14 +149,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       driveOpen.focus({ preventScroll: true });
     }
   });
-  const checks = Array.from(document.querySelectorAll('.connection-checks button'));
+  const toolbar = byId('operator-toolbar');
+  const utilities = { settings: byId('settings-open'), recordings: byId('recordings-open') };
+  const checks = toolbar.querySelectorAll('.check-icon');
   const diagnosticState = new Map();
   let diagnosticTrigger;
   diagnostics.addEventListener('close', () => {
     if (!needsDialogFocus(diagnostics)) return;
     if (diagnosticTrigger?.getClientRects().length && !diagnosticTrigger.disabled) diagnosticTrigger.focus({ preventScroll: true });
-    else if (!find.hidden) find.focus({ preventScroll: true });
-    else byId('quest-title').focus({ preventScroll: true });
+    else document.querySelector('.screen:not([hidden]) h1')?.focus({ preventScroll: true });
   });
   for (const button of checks) button.addEventListener('click', () => {
     const entry = diagnosticState.get(button.id);
@@ -201,13 +202,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let localView = restoreOperatorView(location.hash, history.state);
   let displayedStep = '';
   let wasActive = false;
-  let settingsReturnFocus = null;
+  let utilityReturnFocus = null;
 
   function livePreviewVisible() {
     return ['calibration', 'tracking'].includes(displayedStep) && location.hash !== '#daten';
   }
   function navigateLocal(event) {
-    if (event.step === 'settings') settingsReturnFocus = document.activeElement;
+    utilityReturnFocus = event.type === 'return' ? utilities[displayedStep] : null;
     localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event,
       rehearsal.state.status?.participant_arm === 1);
     const hash = `#${localView.step}`;
@@ -225,7 +226,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       wasActive = nativeActive;
     }
     if (location.hash === '#daten' && !nativeActive && !context.recovery) {
-      if (diagnostics.open) diagnostics.close();
+      utilities.settings.disabled = utilities.recordings.disabled = false;
+      for (const button of Object.values(utilities)) button.removeAttribute('aria-current');
       if (driveDialog.open) driveDialog.close();
       for (const id of Object.values(operatorSteps)) if (!byId(id).hidden) byId(id).hidden = true;
       if (byId('daten').hidden) byId('daten').hidden = false;
@@ -247,7 +249,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (['connect', 'signals'].includes(step)) move('quest-polar', body);
     byId('corner-actions').hidden = step !== 'connect' || byId('install-app').hidden;
     driveOpen.hidden = drivePanel.hidden;
-    if (step !== 'connect' && diagnostics.open) diagnostics.close();
     if ((!['connect', 'recordings'].includes(step) || drivePanel.hidden) && driveDialog.open) driveDialog.close();
     const recordingStatusHost = activeControls ? body : byId('recording-files');
     move('quest-export-status', recordingStatusHost);
@@ -264,14 +265,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       move('operator-common', body);
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
-      const returning = displayedStep === 'settings' && step !== 'settings';
       displayedStep = step;
       if (['connect', 'recordings'].includes(step)) {
         driveActionsHost().append(driveOpen, driveStatusHost);
       } else if (driveDialog.open) driveDialog.close();
       document.documentElement.dataset.operatorStep = step;
-      if (returning && settingsReturnFocus?.isConnected && settingsReturnFocus.getClientRects().length) {
-        settingsReturnFocus.focus();
+      if (utilityReturnFocus) {
+        utilityReturnFocus.disabled = false;
+        utilityReturnFocus.focus();
+        utilityReturnFocus = null;
       } else page.querySelector('h1').focus();
     }
     if (step === 'session' || activeControls) {
@@ -297,6 +299,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
+    for (const [name, button] of Object.entries(utilities)) {
+      if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
+      else if (name !== step) button.removeAttribute('aria-current');
+    }
+    utilities.recordings.disabled = nativeActive || Boolean(context.recovery);
     const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
@@ -305,7 +312,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
-    if (!control || control.disabled) return;
+    if (!control || control.disabled || control.getAttribute('aria-current') === 'page') return;
     navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
       : control.hasAttribute('data-operator-return') ? { type: 'return' }
       : { type: 'go', step: control.dataset.operatorGo });
@@ -884,7 +891,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     await kiosk.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
-    if (!rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
+    if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
       void connect(savedPair);
       return;
     }

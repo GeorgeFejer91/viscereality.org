@@ -120,8 +120,13 @@ cloud-backed files; it was left untouched. The verified runtime commit
   All 14 changed public files matched Git; live setup and installation tested
   in four Chromium viewports. The primary checkout's existing index state was
   left alone; production was published from the sparse sync checkout.
-- [ ] Reduce 200% text reflow on the smallest phone and qualify the final
-  layout with the physical keyboard and safe areas.
+- [x] Bring the current playground header and illustrated tiles to production.
+  The four diagnostics, recenter, Einstellungen and Aufnahmen share the top
+  row. The three Quest-supported options stay separated into Vorbereitung and
+  Hauptstudie. Enlarged labels can reflow without clipping.
+- [x] Check for updates on each fresh web/PWA launch and on return to the idle
+  connection screen. The installed app keeps its ID and browser storage.
+  Active views defer refresh. See the [startup workflow](WORKFLOW.md#smartphone-pwa).
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 

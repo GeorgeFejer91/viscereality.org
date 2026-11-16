@@ -11,9 +11,13 @@ outside this sparse checkout). Retain Arial, black/white, blue `#00639c`, gold
 `#a26f19`, the existing authentic VR icon and readable telemetry colors. Reuse
 the site's restrained framed groups, thin left rules, 5–8px corners, and clear
 20–30px spacing. Scope app styles; do not import the promotional root CSS.
-Controls retain 48px touch targets. Do not copy tiny website navigation.
-Install belongs to the connection and setup page. Reserve document space for
-recenter and keep it clear of form choices and mode labels. Check corner-control intersections at actual scroll tiles.
+Controls retain a 48px minimum height. Reserve one top row for Bluetooth,
+WLAN, APK and Polar checks, the connected recenter control, and the grey
+Einstellungen and Aufnahmen icons. Put the row before every page, including
+historical recordings, and above device, installation and Drive dialogs.
+Settings and recordings open their existing pages; return restores the toolbar
+button. Disable recordings while native playback or receipt recovery needs the
+operator's attention. Installation stays on the connection and setup page.
 
 Use real HTML/CSS prototypes and actual rendered fixture screens as the visual
 design artifact: these are forms, navigation and existing code-native SVG/CSS
@@ -33,8 +37,8 @@ when selected → tracking check → scenario tiles and Start → running/finali
 signals route and the earlier browser-recordings route usable. Pairing codes
 belong only to an actual incoming pairing request.
 
-The first page groups Bluetooth, authenticated WLAN, APK and Polar checks, live
-ECG, installation, Drive setup and the existing device utilities. Require an
+The connection page groups Bluetooth pairing, live ECG, installation and Drive
+setup beside the shared status toolbar. Require an
 authenticated WLAN connection and eligible control state for **Weiter**. Polar
 readiness remains a separate native fact; the controller alternative must
 stay accessible. Checking or unnecessary checks are neutral, confirmed checks
@@ -54,7 +58,9 @@ supported pretrained Polar modes without this shortcut gate.
 Show three choices on the scenario page. Group **Anleitung**
 (`probe-anleitung`) and **Probe-Runde** (`probe-5`, five minutes) under
 **Vorbereitung**. Place **Haupt-Runde** (`haupt-15`, 900 seconds) in a
-separate **Hauptstudie** section. The operator selects a scenario. Quest
+separate **Hauptstudie** section. Show illustrated square tiles where the
+labels and available height fit. Reflow by available width and text size,
+keeping preparation and the main study separate. The operator selects a scenario. Quest
 receives the established condition value with the exact scenario ID. Arm,
 recording metadata, filenames and per-participant counters retain their
 existing `probe` and `main` rules. Playback uses the authenticated Quest elapsed

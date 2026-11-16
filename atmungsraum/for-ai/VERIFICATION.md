@@ -154,6 +154,25 @@ fit at 320 × 568, 390 × 844, 844 × 390 and 1440 × 900. At 200% text it
 used readable document reflow. Browser tests used simulated equipment.
 
 
+## Playground header and automatic PWA refresh — 2026-11-16
+
+Production picks up the playground presentation through `72a1920`. The
+existing Quest catalog, calibration evidence, timer, receipts and recording
+authority remain in use. The browser regression first failed to find the
+shared header, then verified keyboard entry and return focus, one aligned row,
+offline recordings, native command guards and the Drive dialog below the row.
+The cached-launch regression also first failed on idle resume; it now checks
+cached launch, idle return, the settings guard, 503/timeout fallback, and
+preservation of the launch URL and browser storage.
+
+Chromium passed the production controller walkthrough, 135 layout states
+across 390px, 320px, 200% text, landscape and desktop, and 18 control and
+Polar states. Settings and enlarged text can use readable document reflow.
+The Node suite passed 244 with eight native/Java prerequisites skipped.
+Scenario JSON/CSV, context, and Git whitespace checks passed. These are
+browser and synthetic gateway checks; physical installed-device acceptance
+remains open.
+
 ## Playground UI port — 2026-11-16
 
 Ported the presentation from the playground through `60994c4` onto the

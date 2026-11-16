@@ -26,7 +26,8 @@ def compact_setup(review):
                 measured: root.dataset.measurement,
                 page: [root.scrollWidth, root.scrollHeight],
                 viewport: [innerWidth, innerHeight],
-                dialogFits: !open || open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth,
+                dialogFits: !open || (open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth
+                  && open.getBoundingClientRect().top >= document.querySelector('#operator-toolbar').getBoundingClientRect().bottom),
                 textFits: ![...(open || scope).querySelectorAll('[data-text-fit="reflow"]')]
                   .some(node => node.checkVisibility())
               };
@@ -35,6 +36,21 @@ def compact_setup(review):
             assert result['dialogFits'] and result['textFits'], result
 
         assert_fits()
+        header = page.get_by_role('banner', name='Geräte und Aktionen')
+        settings = header.get_by_role('button', name='Einstellungen')
+        recordings = header.get_by_role('button', name='Aufnahmen')
+        expect(settings).to_be_visible(timeout=1500)
+        expect(recordings).to_be_visible()
+        controls = header.locator('button:visible').evaluate_all(
+            '(buttons) => buttons.map(button => button.getBoundingClientRect().y)')
+        assert len(controls) >= 6 and max(controls) - min(controls) < 2, controls
+        settings.focus()
+        page.keyboard.press('Enter')
+        expect(page.locator('#settings-screen-title')).to_be_focused()
+        expect(recordings).to_be_visible()
+        page.locator('#settings-screen [data-operator-return]').click()
+        expect(settings).to_be_focused()
+        assert mutations(page)['session'] == []
         page.locator('#drive-open').click()
         expect(page.locator('#drive-dialog')).to_be_visible()
         assert_fits()
@@ -74,7 +90,7 @@ sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({op:'start', 
     page = review.page(initial(c))
     page.clock.run_for(4000)
     expect(page.locator('#operator-connect-next')).to_be_enabled()
-    page.locator('#quest [data-operator-go="recordings"]').click()
+    page.get_by_role('banner', name='Geräte und Aktionen').get_by_role('button', name='Aufnahmen').click()
     expect(page.locator('#recordings-screen')).to_be_visible()
     page.locator('#recordings-screen #drive-open').click()
     expect(page.locator('#drive-dialog')).to_be_visible()

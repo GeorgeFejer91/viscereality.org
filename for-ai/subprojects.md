@@ -14,13 +14,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 - PWA startup updates (2026-11-16): each fresh launch checks the published web
   release before starting the controller, automatically switches if the release
-  differs and can continue with the loaded version if the check fails. Existing
-  open sessions keep their document. See the
+  differs and can continue with the loaded version if the check fails.
+  Returning to the idle connection screen also checks. Active sessions keep
+  their document, and the installed app keeps its original launcher. See the
   [release workflow](../atmungsraum/for-ai/WORKFLOW.md#smartphone-pwa).
 
 - Playground UI port (2026-11-16): the production operator starts with setup
   checks and live ECG, then participant entry, native input/calibration,
-  tracking and illustrated scenario selection. The
+  tracking and illustrated scenario selection. Device checks, recenter,
+  settings and recordings share one top row. The
   [smartphone design contract](../atmungsraum/for-ai/UI-LAYOUT.md#smartphone-gui-rules)
   and release checks apply to the real controller and its diagnostics. Quest
   capability, authorization, recovery and recordings remain authoritative.
