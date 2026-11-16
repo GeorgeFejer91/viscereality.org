@@ -3,14 +3,14 @@ param([string]$ProjectRoot = (Join-Path $PSScriptRoot '../..'), [switch]$Require
 
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
-$required = @('index.html', 'app.js', 'quest-ui.js', 'quest-rehearsal.js', 'quest-data.js', 'quest-drive.js',
+$required = @('index.html', 'app.js', 'quest-ui.js', 'operator-layout.js', 'quest-rehearsal.js', 'quest-data.js', 'quest-drive.js',
     'breathing-setup.js', 'quest-pairing.js', 'live-breath-display.js', 'live-ecg-display.js', 'style.css', 'package.json',
     'manifest.webmanifest', 'pwa-install.js', 'assets/icons/app-192.png', 'assets/icons/app-512.png',
     'assets/icons/app-maskable-512.png', 'assets/icons/apple-touch-icon.png',
     'data-files.js', 'quest-recording-store.js', 'data-logging.js',
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
     'AGENTS.md', 'for-ai/README.md', 'for-ai/PROJECT.md',
-    'for-ai/SKILLS.md', 'for-ai/VERIFICATION.md', 'for-ai/WORKFLOW.md', 'for-ai/DATA-LOGGING.md',
+    'for-ai/SKILLS.md', 'for-ai/VERIFICATION.md', 'for-ai/WORKFLOW.md', 'for-ai/UI-LAYOUT.md', 'for-ai/DATA-LOGGING.md',
     'for-ai/DECISIONS.md', 'for-ai/scripts/check-context.ps1')
 foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $root $relative) -PathType Leaf)) {
@@ -36,7 +36,8 @@ if ($html -match 'data-delivery-locked' -or $css -match 'data-delivery-locked' -
 if ($html -notmatch '<html lang="de"(?:\s|>)' -or $css -notmatch 'background:\s*#000\s*;') {
     throw 'The page must use German and retain its black background'
 }
-if ($html -notmatch '<section class="screen" id="quest" aria-labelledby="quest-title">' -or
+$questSection = [regex]::IsMatch($html, '<section\b(?=[^>]*\sid="quest")(?=[^>]*\saria-labelledby="quest-title")(?=[^>]*\sclass="[^"]*\bscreen\b[^"]*")[^>]*>')
+if (-not $questSection -or
     $html -notmatch 'id="quest-participant"' -or $html -notmatch 'id="quest-polar-connect"' -or
     $html -notmatch 'id="quest-export-download"' -or $html -notmatch 'id="quest-drive"') {
     throw 'The entry must expose Quest pairing, participant setup, Polar, download and Drive'

@@ -37,7 +37,11 @@ ECG remains4, pending receipts4with original ID/no replay, max in-flight1 and
 hidden reads0. Native actual50%/touching geometry and all mode/acceptance/new-
 session/history cases pass. Reduced-motion quiet-window checks freeze only
 interpolation and separately verify fresh native delivery advances the trace.
-All independent reviews pass. Publication/live checks are next.
+All independent reviews pass. PR24 ordinary-merges reviewed5519104 at4a351ecd;
+their full trees match. Exact Pages43896368744 succeeds. All34 affected checked
+live files match Git; public390px/1440px page/module loads, settings/return,
+install-help interaction, cold legacy recordings and no-error/overflow checks
+pass. Entry/style `operator-layout-r1`, UI45, resolver1 are live.
 Installed-phone qualification remains pending
 because the phone is unavailable; deferred new-mode wearer/cadence acceptance
 is not implied by these software checks. See PROJECT.md for the active state.

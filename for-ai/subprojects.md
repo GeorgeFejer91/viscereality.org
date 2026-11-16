@@ -19,7 +19,8 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   recordings and Controller fallback. Phone availability and physical acceptance
   remain separate from software render qualification; APK11 stays unchanged.
   Independent review,235zero-skip phone tests and288rendered states/636viewport
-  tiles pass. Exact publication/live checks are tracked in PROJECT.md.
+  tiles pass. PR24/Pages43896368744,34live-file comparisons and public phone/
+  desktop navigation/render checks pass. Physical phone acceptance remains open.
 
 - Physical display correction (2026-11-16): actual Pixel inspection confirms
   current assets and correct126px/122px touching inset. Real timing exposes
