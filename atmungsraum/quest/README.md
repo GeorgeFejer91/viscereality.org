@@ -222,6 +222,11 @@ first use only in that rehearsal/development route. A new external key does
 not become update-compatible by using the same package name. The two packages
 can coexist and have separate controller enrollment and app data.
 
+Add `-PhonePairing` to a rehearsal assembly for the current smartphone PWA.
+This enables the same matching-code protocol and closed-at-launch panel as
+the Developer build, using the rehearsal package and signer. Follow
+[phone pairing](../for-ai/PHONE-PAIRING.md) for the attended setup.
+
 ## Build with a separate Experimenter configuration
 
 Use the Experimenter lane in MesmerPrism's shared Viscereality repository. Its

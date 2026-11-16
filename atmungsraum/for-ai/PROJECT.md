@@ -11,6 +11,26 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Windows rehearsal phone pairing — 2026-11-16
+
+- [x] Identify the missing pairing capability in the standard local code 18
+  rehearsal package and qualify the opt-in `-PhonePairing` assembly profile.
+- [ ] Install and confirm the paired rehearsal package on the authorized Quest.
+- [ ] Open the installed Pixel PWA, match the code on both devices, and claim
+  control. Verify Polar readiness, Start/Pause/Resume/Finish, and recording recovery.
+
+The Windows PC has the powered Pixel and a USB-connected Quest. The Quest
+reports `unauthorized`, so the wearer must approve USB debugging and reach
+Quest Home before installation and launch. The Pixel WebAPK is already
+installed. Run the attended test on the same LAN or phone hotspot.
+
+Local rehearsal code `19` (`0.2.17-local-pairing`) uses the verified code 18
+native tree and existing Windows rehearsal signer. The signed manifest and DEX
+include matching-code pairing. The six assembly checks, 369 native pairing
+assertions, nine browser-to-Java checks, 16 KiB alignment, and the packaged
+900-second session check passed. The private build capsule retains the APK
+digest and exact input lock. Hardware acceptance awaits USB approval.
+
 ### Operator UI compatibility audit — 2026-11-16
 
 - [x] Apply the user's clarification that only Anleitung, five-minute Probe-Runde

@@ -12,6 +12,7 @@ param(
     [ValidateRange(1, 2100000000)][int]$VersionCode = 1,
     [string]$VersionName = '0.1.0',
     [switch]$Developer,
+    [switch]$PhonePairing,
     [switch]$BootAutostart,
     [switch]$MetaPlatformUpdate,
     [string]$MetaPlatformAppId,
@@ -206,8 +207,9 @@ if ($Developer) {
 }
 $app.experiment_breathing_setup_enabled = $true
 $app.experiment_headset_setup_enabled = $false
-$app.experiment_phone_pairing_enabled = [bool]$Developer
-$app.experiment_panel_initially_closed = [bool]$Developer
+$phonePairingEnabled = $Developer -or $PhonePairing
+$app.experiment_phone_pairing_enabled = $phonePairingEnabled
+$app.experiment_panel_initially_closed = $phonePairingEnabled
 $app.experiment_gateway_origins = @('https://viscereality.org')
 $app.quest_supported_devices = @('quest2')
 $handInputFeatures = @(
@@ -366,7 +368,7 @@ try {
     if ($metadata['rusty.quest.experiment.breathing_setup.enabled'] -cne 'true') {
         throw 'The native manifest must explicitly select the shared breathing setup.'
     }
-    if ($Developer) {
+    if ($phonePairingEnabled) {
         $closed = @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_PANEL_INITIALLY_CLOSED')
         if ($metadata['rusty.quest.experiment.phone_pairing.enabled'] -cne 'true' -or
             $lock.android_manifest.experiment_phone_pairing_enabled -cne $true -or
@@ -377,7 +379,7 @@ try {
             @($lock.headset_setup_sources).Count -ne 0 -or
             @($lock.debug_experiment_operator_sources).Count -ne 0 -or
             $manifest.OuterXml -match 'debug-experiment-control|\.headset-setup') {
-            throw 'Developer must select closed startup and button-only phone pairing without machine provisioning or a debug operator.'
+            throw 'Phone pairing must select closed startup and button-only admission without machine provisioning or a debug operator.'
         }
         foreach ($source in $lock.phone_pairing_sources) {
             if ($source.sha256 -cne (Get-FileHash -LiteralPath (Join-Path $QuestRepo $source.path)).Hash.ToLowerInvariant()) {
