@@ -127,6 +127,12 @@ cloud-backed files; it was left untouched. The verified runtime commit
 - [x] Check for updates on each fresh web/PWA launch and on return to the idle
   connection screen. The installed app keeps its ID and browser storage.
   Active views defer refresh. See the [startup workflow](WORKFLOW.md#smartphone-pwa).
+- [x] Verify production release `a9d4096` on [Pages run 43962255351](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43962255351).
+  The six public entry, runtime and manifest responses matched Git. Live
+  Chromium passed the toolbar, focus and historical-recordings flow at
+  320 × 640, 390 × 844, 844 × 390 and 1440 × 900. The exact previous release
+  bootstrapped into the live update while preserving its URL and storage.
+  ADB and Mobile MCP listed no local phone; standalone Pixel acceptance is open.
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 
