@@ -739,3 +739,92 @@ test('a new native owner that reports recovery unavailable disables retries even
   const legacy = { ...unavailable }; delete legacy.audio_recovery_available;
   assert.equal(model.update(peer.gateway, state(snapshot(legacy)), true).actions.calibrate, true);
 });
+
+test('native Polar capabilities admit builtin STATE choices without participant calibration', async () => {
+  for (const [op, input, word] of [['polar-fixed', 'polar-tilt-fixed', 'feste Achse'], ['polar-adaptive', 'polar-tilt-adaptive', 'dynamische Achse']]) {
+    const model = new BreathingSetup(), peer = fixture();
+    const polar_modes = ['calibrated', 'fixed', 'adaptive'];
+    const parked = state(snapshot(native({ polar_modes, stage: 'idle', playing: false })));
+    let view = model.update(peer.gateway, parked, true);
+    assert.equal(view.actions[op], true);
+    assert.equal(peer.calls.length, 0, 'Automatic stays parked until an explicit choice');
+    peer.reply('pending'); await model.run(op);
+    view = model.update(peer.gateway, parked, true);
+    assert.equal(view.inputLabel, 'Automatic');
+    assert.match(view.pendingInputLabel, new RegExp(word));
+    assert.equal(peer.calls.length, 1);
+    assert.deepEqual(Object.keys(peer.calls[0]).sort(), ['g', 'id', 'op', 'r', 'v']);
+    const confirmed = state(snapshot(native({ polar_modes, r: 1, input, ready: true, calibration: 'idle' })));
+    model.update(peer.gateway, confirmed, true); peer.reply('confirmed'); await model.refresh();
+    view = model.update(peer.gateway, confirmed, true);
+    assert.equal(view.pending, false);
+    assert.match(view.inputLabel, new RegExp(word));
+    assert.equal(view.showPolarCalibration, false);
+    assert.equal(view.failureLabel, '');
+    assert.equal(view.actions.continue, true);
+    assert.equal(view.actions.calibrate, true, 'explicit return to participant fit');
+    assert.equal(view.actions[op], false, 'already selected mode is not reissued');
+  }
+});
+
+test('absent or malformed Polar capability never offers or confirms builtin modes', async () => {
+  for (const polar_modes of [undefined, null, 'fixed', ['fixed', 'fixed'], ['fixed', 'invented'], [1], {}]) {
+    const patch = polar_modes === undefined ? {} : { polar_modes };
+    const model = new BreathingSetup(), peer = fixture();
+    const view = model.update(peer.gateway, state(snapshot(native(patch))), true);
+    assert.equal(view.available, true, 'existing participant calibration remains compatible');
+    assert.equal(view.polarModesUpdateRequired, true);
+    assert.equal(view.actions['polar-fixed'], false);
+    assert.equal(view.actions['polar-adaptive'], false);
+    await model.run('polar-fixed'); assert.equal(peer.calls.length, 0);
+    assert.equal(breathingSetup(snapshot(native({ ...patch, input: 'polar-tilt-fixed', ready: true })), owner), null);
+  }
+});
+
+test('builtin modes retain participant, source, recording, authorization and pending barriers', async () => {
+  const polar_modes = ['calibrated', 'fixed', 'adaptive'];
+  for (const op of ['polar-fixed', 'polar-adaptive']) {
+    for (const [setupPatch, statusPatch, statePatch, participantReady] of [
+      [{ source_clock_ready: false }, {}, {}, true], [{ stage: 'main' }, {}, {}, true],
+      [{}, { rec: true, p: 'RUNNING', h: 'vr-session' }, {}, true],
+      [{}, { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 1 } }, {}, true],
+      [{}, { pi: { r: true, f: false } }, {}, true], [{}, {}, {}, false],
+      [{}, {}, { busy: true }, true], [{}, {}, { pending: true }, true], [{}, {}, { unknown: true }, true],
+    ]) {
+      const model = new BreathingSetup(), peer = fixture();
+      const view = model.update(peer.gateway, state(snapshot(native({ polar_modes, ...setupPatch }), statusPatch), statePatch), participantReady);
+      assert.equal(view.actions[op], false);
+      await model.run(op); assert.equal(peer.calls.length, 0);
+    }
+  }
+});
+
+test('unknown builtin switches survive reload with their original ID and reconcile read-only', async () => {
+  for (const [op, input] of [['polar-fixed', 'polar-tilt-fixed'], ['polar-adaptive', 'polar-tilt-adaptive']]) {
+    const saved = storage(), peer = fixture(); const polar_modes = ['calibrated', 'fixed', 'adaptive'];
+    let model = new BreathingSetup({ storage: saved });
+    model.update(peer.gateway, state(snapshot(native({ polar_modes }))), true);
+    peer.fail(true); await model.run(op);
+    const id = peer.calls[0].id; model = new BreathingSetup({ storage: saved });
+    const confirmed = state(snapshot(native({ polar_modes, r: 1, input, ready: true })));
+    peer.reply('outcome_unknown'); model.update(peer.gateway, confirmed, true); await model.refresh();
+    assert.equal(model.pending.command.id, id);
+    assert.equal(model.view.actions.continue, false);
+    await model.run(op); assert.equal(peer.calls.length, 1);
+    model.observeReceipt({ v: 1, id: 'b'.repeat(16), state: 'confirmed' });
+    assert.equal(model.pending.command.id, id, 'wrong receipt cannot resolve switch');
+    model.observeReceipt({ v: 1, id, state: 'rejected', accepted: false, reason: 'source-not-ready' });
+    assert.equal(model.pending, null);
+    assert.equal(peer.calls.length, 1);
+  }
+});
+
+test('choosing a builtin mode hides personal-fit presentation before confirmation without changing confirmed input', async () => {
+  const model = new BreathingSetup(), peer = fixture(); peer.reply('pending');
+  const original = state(snapshot(native({ polar_modes: ['calibrated', 'fixed', 'adaptive'],
+    calibration: 'failed', failure: 'clock_stalled', attempt: 1 })));
+  model.update(peer.gateway, original, true); await model.run('polar-fixed');
+  const view = model.update(peer.gateway, original, true);
+  assert.equal(view.inputLabel, 'Automatic'); assert.equal(view.showPolarCalibration, false);
+  assert.equal(view.failureLabel, ''); assert.match(view.pendingInputLabel, /feste Achse/);
+});

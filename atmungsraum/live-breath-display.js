@@ -13,7 +13,9 @@ export class LiveBreathDisplay {
       return;
     }
     const key = `${view.acceptance}/${setup.g}/${setup.attempt}/${setup.audio_generation}`;
-    if (this.lastObservation?.key === key && this.lastObservation.i === observation.i) return;
+    if (this.lastObservation?.key === key && (this.lastObservation.i === observation.i
+      || /^[0-9]+$/.test(this.lastObservation.i) && /^[0-9]+$/.test(observation.i)
+        && BigInt(observation.i) < BigInt(this.lastObservation.i))) return;
     this.lastObservation = { key, i: observation.i };
     const prior = this.frame(now);
     const progress = Math.max(0, Math.min(2, view.progress.value));
@@ -47,12 +49,22 @@ export class LiveBreathDisplay {
       return;
     }
     const rendererContinuing = same && this.actual?.generation === renderer.render_generation && this.actual.settings === renderer.settings_revision;
+    // Follow the spacing of real GPU observations. A fixed short blend finishes
+    // before the next poll and produces a step/plateau even on a steady stream.
+    // Both contributing endpoints must remain fresh. An unfinished blend also
+    // carries its oldest support expiry through an early subsequent poll.
+    const old = this.actual;
+    const oldExpiry = rendererContinuing ? (now - old.received < old.duration ? old.supportExpires : old.expires) : now;
+    const expires = now + 500 - age;
+    const duration = rendererContinuing ? Math.max(0, Math.min(now - old.received, oldExpiry - now, expires - now)) : 0;
+    const blending = duration > 0;
     this.actual = {
       progress: renderer.progress01, meters: renderer.radius_m, received: now, age,
       generation: renderer.render_generation, settings: renderer.settings_revision,
-      from: rendererContinuing ? prior.actualProgress : renderer.progress01,
-      metersFrom: rendererContinuing ? prior.actualMeters : renderer.radius_m,
-      duration: Math.max(1, Math.min(250, 500 - age)),
+      from: blending ? prior.actualProgress : renderer.progress01,
+      metersFrom: blending ? prior.actualMeters : renderer.radius_m,
+      duration: Math.max(1, duration), expires,
+      supportExpires: blending ? Math.min(oldExpiry, expires) : expires,
     };
   }
 

@@ -1,5 +1,42 @@
 # Verification
 
+## Actual display and selectable Polar state modes / code 11 — 2026-11-16
+
+Native `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` and the combined phone
+candidate pass separate task and final integration review. Root phone gate is
+218/218 with zero skips; fresh actual Java JCE/state checks pass 369. Native
+serial `--lib` gate passes 856, five intentional ignores, with isolated actual
+GPU publication separately passing. Reviewer independently reran four preset
+cases. Actual Java/native owner tests cover six scenarios; authenticated
+HTTP/gateway/Java/native tests pass 45 assertions. Selected production Android36
+Java compiles. The earlier non-lib host diagnostic's baseline cfg failure is
+retained, not counted as a pass; actual selected Android APK compilation passes.
+
+RED/GREEN covers missing modes/capability, gateway closed parsing, parked PCM
+ownership and readiness retirement between command validation/application.
+Preset modes retain actual accepted source/clock/quality checks, same confirmed
+phase integration and truthful preset provenance. Both traverse the next-cycle
+main boundary through exactly 900 seconds in host tests, without inferred
+continuous volume. No physiological/wearer acceptance follows from these checks.
+
+Display20 tests, 25 exact stroke-geometry cases, 26 actual Pretext states and
+seven scroll/focus/cadence regressions pass. Synthetic browser timing confirms
+preview200ms status coalescing, unchanged ordinary work, no hidden polling and
+original-ID receipt reconciliation. Both renderer endpoints retain500ms expiry;
+source/replay/reduced-motion/stale barriers remain. Native per-request status
+and actual GPU publisher tests confirm no one-second producer cache. Physical
+LAN/installed-phone cadence remains to measure.
+
+The cumulative patch reconstructs tree `9a482a67f80342cb612b50112996488fac422c3a`.
+The signed code-11 APK is 65,170,222 bytes, SHA-256
+`71b4fc48ba2a4950e5d9b86204bd1426c1b1f2c80819e36430040daeb32a3b3d`.
+Its source capsule, packaged identity, retained certificate, manifest, 89 assets,
+16KiB alignment and actual signed session closure pass. Build identifier is
+`770823055efe4f31d29af29b6f71d747e6bcfaa9f07b3ddf3c71b4b93f9107ec`.
+Controller-only/private particle selection stays unchanged; boot receiver absent.
+Installation, exact live publication, refreshed phone and wearer checks are
+separate pending gates. No Meta upload.
+
 ## Operator controls and APK identity / code 10 — 2026-11-16
 
 Native `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` and phone increments

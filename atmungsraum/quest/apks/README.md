@@ -1,5 +1,52 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.10-dev — smooth actual display and selectable Polar presets, 2026-11-16
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.10-dev, version code 11; local test build, no Meta upload |
+| APK size / SHA-256 | 65,170,222 bytes; `71b4fc48ba2a4950e5d9b86204bd1426c1b1f2c80819e36430040daeb32a3b3d` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` / `9a482a67f80342cb612b50112996488fac422c3a` |
+| Source patch SHA-256 | `6b1180654ba1fadda6bb88a2bbf677c3c2d0c2b3dca1ca8ae4a5ee2289c150ef` |
+| Readable build identifier | `770823055efe4f31d29af29b6f71d747e6bcfaa9f07b3ddf3c71b4b93f9107ec` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36; v2/v3 and 16KiB ZIP alignment pass; 89 assets |
+
+The phone previews actual radius and its percentage from the same bounded
+observed-sample interpolation. Preview-only 200ms status reads replace the
+one-second stepping, without speeding up receipt, ECG, export or connection
+work. Both interpolation endpoints expire within 500ms; stale gaps snap and
+replay cannot renew freshness. Gold's inner border box is four CSS pixels
+narrower before the shared scale, so its outer edge touches blue's inner edge
+at equal physical progress across responsive sizes.
+
+In addition to participant calibration, the phone can select the existing
+pretrained fixed-axis tilt-state classifier or its adaptive-axis variant.
+Native advertises the explicit capability and confirms the selected input;
+older APKs cannot receive unsupported preset commands. Presets have no personal
+calibration progress. They use existing ACC/clock/quality admission, confirmed
+breath-state integration and original command receipts. Healthy PCM continuity,
+Controller fallback, parked Automatic startup and the exact 900-second main
+remain. Recording provenance distinguishes presets from a participant fit.
+Classifier weights/adaptive math, private particle inputs and signer are unchanged.
+
+Verification: 218 phone tests pass, zero skips; fresh Java pairing/state checks
+pass 369. Native serial library gate passes 856, five intentional ignores;
+isolated actual GPU publication and four independently rerun preset tests pass.
+Six real Java/native owner scenarios, 45 actual HTTP/auth/gateway/native
+assertions and selected production Android36 Java compilation pass. Both new
+modes traverse the full 900-second main in host tests. Display20, geometry25 and
+actual Pretext26 states/seven stability regressions pass. Independent display,
+phone, native and final integration reviews are clear. Exact source
+reconstruction, selected Android native compilation, signed-APK session closure,
+manifest, signer, assets and packaged identity checks pass.
+
+The optional boot receiver remains absent. Code 11 installation/readback and
+matching exact Pages/live release are in progress. Actual phone/LAN cadence,
+mode tracking satisfaction and remaining wearer/main acceptance are pending.
+No Meta upload.
+
 ## 0.2.9-dev — operator controls and installed-build identity, 2026-11-16
 
 | Build property | Verified value |

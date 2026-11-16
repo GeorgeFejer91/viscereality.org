@@ -2,6 +2,62 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Smooth actual-radius display and selectable Polar state modes — 2026-11-16
+
+User requests smooth yellow actual-circle/percentage updates, an inner yellow
+stroke touching the blue stroke at equal progress, and PWA selection of the
+existing pretrained fixed-axis and adaptively adjusting tilt-state modes.
+Continue under standing authorized implementation/publication; retain the
+participant-calibrated mode, Controller fallback, Automatic parked default,
+single audio clock and 900-second main. No additional approval loop.
+
+- [x] Reproduce actual-display cadence/freshness at the real polling interval;
+  repair bounded observed-sample blending and shared circle/percentage animation.
+  Do not invent future radius data or extend actual-sample freshness silently.
+- [x] Give equal-progress strokes exact touching geometry across responsive
+  sizes, while percentages retain the same physical 0–100% meaning.
+- [x] Add authenticated native setup selection for pretrained fixed and adaptive
+  tilt classifiers, with typed receipts, readiness/source-generation fences,
+  recording provenance and unchanged audio/retained-state integration.
+- [x] Expose confirmed selection and capability-aware mode controls in the PWA;
+  show participant calibration only where applicable. Old APKs cannot claim
+  the new choices. Preserve scroll/focus and actual Pretext measurement.
+- [x] Focused RED/GREEN, task spec/quality and combined integration review;
+  native/phone host gates and narrow/200% rendered checks.
+- [ ] Bind cumulative source, package/inspect local code 11, publish exact
+  Pages/live, install while idle and qualify affected device behavior. No Meta
+  upload; wearer testing requires fresh Ready and user keeps phone control.
+
+Task ownership: display implementation owns live-breath-display.js, display
+CSS and display tests; native implementation owns selected native adapter,
+setup/core/gateway and host tests; phone-mode implementation owns setup/UI/HTML
+and mode tests. Parent owns shared evidence, resource coordination, source
+binding, release policy/cache bumps, packaging, publication and final checks.
+Use this checklist as the single plan; private task/review evidence is under
+the 2026-11-16 display-and-modes validation folder. No competing GSD plan.
+
+Software progress: display and phone task reviews pass independently. All 218
+phone tests pass with zero skips and fresh actual Java pairing interoperability
+(369 JCE/state checks). Observed-cadence blending expires both endpoints within
+500ms, snaps after stale gaps, and shares actual progress with the integer
+percentage. Preview-only 200ms status reads coalesce without accelerating the
+ordinary receipt/ECG/export/connection work. Twenty display tests, 25 stroke
+geometry cases and 26 actual Pretext states/seven stability regressions pass.
+Native mode selection, shared-loop continuity, recording provenance and full-main
+behavior pass task and final integration review. Native serial library gate is
+856 passes/five intentional ignores; isolated actual renderer publication passes,
+as do six Java/native peer scenarios, 45 actual HTTP/auth/gateway assertions and
+selected API36 compilation. The earlier non-library host cfg diagnostic fails
+on a preexisting Android-only bridge and is not counted as a pass. Native source
+`b1ba2c2b750dbff70488e351c4233b7cd62b73d5` is clean; the public cumulative patch
+reconstructs tree `9a482a67f80342cb612b50112996488fac422c3a`, SHA-256
+`6b1180654ba1fadda6bb88a2bbf677c3c2d0c2b3dca1ca8ae4a5ee2289c150ef`.
+Selected code-11 Android compilation and signed-APK inspection pass with the
+unchanged private particle inputs and retained signer. See the APK log for exact
+bytes/source/build identity. The build lease is released. Installation awaits
+the requested idle/no-recording answer; publication is in progress. Actual
+phone/LAN timing and wearer acceptance remain open. No new wearer calibration has been started.
+
 ### Publication resumed through secondary account — 2026-11-16
 
 The user explicitly requests merging PR 18 through the secondary Codex account.

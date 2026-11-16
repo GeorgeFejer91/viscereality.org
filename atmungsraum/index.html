@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261115-operator-controls-r2">
+  <link rel="stylesheet" href="./style.css?v=20261116-polar-modes-r1">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261115-operator-controls-r2"></script>
+  <script type="module" src="./app.js?v=20261116-polar-modes-r1"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -194,6 +194,7 @@
         <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Eingabe auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span></p>
         <p id="preview-switch" role="status" data-measure hidden></p>
         <p id="preview-polar-status" data-measure></p>
+        <p id="preview-modes-compatibility" data-measure hidden>Quest-App aktualisieren, um vortrainierte Polar-STATE-Modi mit fester oder dynamischer Achse auszuwählen.</p>
         <div id="preview-progress-group" hidden>
           <label for="preview-progress" data-measure>Einrichtung auf der Quest</label>
           <div class="preview-progress-track">
@@ -210,7 +211,10 @@
         </aside>
         <div class="preview-controls">
           <button id="preview-start" type="button" hidden disabled><span data-measure>Atemschleife starten</span></button>
-          <button id="preview-calibrate" type="button" disabled><span data-measure>Atmung einrichten</span></button>
+          <button id="preview-calibrate" type="button" disabled><span data-measure>Atmung persönlich einrichten</span><small data-measure>Zwei Atemzyklen mit dieser Person</small></button>
+          <button id="preview-personal-return" type="button" hidden disabled><span data-measure>Zur persönlichen Einrichtung wechseln</span><small data-measure>Polar tilt mit dieser Person einrichten</small></button>
+          <button id="preview-polar-fixed" type="button" hidden disabled aria-pressed="false"><span data-measure>Polar tilt STATE · feste Achse</span><small data-measure>Vortrainiert · ohne persönliche Einrichtung</small></button>
+          <button id="preview-polar-adaptive" type="button" hidden disabled aria-pressed="false"><span data-measure>Polar tilt STATE · dynamische Achse</span><small data-measure>Vortrainiert · Achse passt sich laufend an</small></button>
           <button id="preview-controller" type="button" disabled><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button>
         </div>
         <div id="preview-settings-host"></div>

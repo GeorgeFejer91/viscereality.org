@@ -96,11 +96,11 @@ git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
 ./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-009 `
-    -Developer -Keystore $developerKeystore -VersionCode 10 -VersionName 0.2.9-dev
+    -Developer -Keystore $developerKeystore -VersionCode 11 -VersionName 0.2.10-dev
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856`, matching
+reconstructs source tree `9a482a67f80342cb612b50112996488fac422c3a`, matching
 the current developer source. Its SHA-256 and native commit are in
 the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.

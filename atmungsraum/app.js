@@ -150,7 +150,7 @@ measureLabels();
 if (recovery) {
   void showSavedBrowserExports();
 } else {
-  import('./quest-ui.js?v=42').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=43').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

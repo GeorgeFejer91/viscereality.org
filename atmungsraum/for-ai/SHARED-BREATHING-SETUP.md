@@ -2,6 +2,66 @@
 
 Approved user design, 2026-11-14. PROJECT.md remains the lifecycle owner.
 
+## Smooth actual display and optional pretrained Polar modes — 2026-11-16
+
+The yellow actual-radius circle and percentage use one animated physical
+progress value. During the visible preparation preview, read-only status may
+refresh at 200ms with one request in flight. Ordinary receipt reconciliation,
+ECG, recording sync, connection attempts and commands retain their existing
+cadence. Stop fast reads outside the preview or while backgrounded. The native
+500ms total renderer freshness limit stays; blend only between observed values,
+charge both endpoints and any unfinished older support, and snap after a stale
+gap. Never extrapolate the desired phase into an actual radius measurement.
+
+At equal physical progress, the yellow outer stroke touches the blue inner
+stroke. Keep the same center and physical scale; subtract the blue's two border
+widths from the yellow's unscaled border-box diameter. Geometry does not change
+the measured progress or percentage and must hold at minimum/maximum sizes.
+
+Keep the existing participant-calibrated Polar mode and add explicit choices
+for the existing pretrained fixed-axis and adaptively adjusting tilt-state
+classifiers. The latter adjusts the classifier's motion frame; it is distinct
+from the generic principal-axis projection. Preserve the shipped classifier
+weights and the accepted participant learner. The new presets do not claim a
+participant calibration or require the two-cycle fit. Display the confirmed
+input separately from a pending selection, and show participant calibration
+controls only in its applicable path. Controller State remains the fixed-axis
+fallback. Older APKs must not imply support for the new choices.
+
+Native setup owns selection, capability, source/clock/quality readiness and
+original-ID receipts. Preparation mode switches keep a healthy shared box loop;
+they cannot change an active or queued main experiment. Classified inhale,
+exhale and hold feed the existing retained-state radius integration. Record
+truthful selected-preset provenance, not a fabricated participant model. Startup
+remains Automatic, parked and silent, and the main remains exactly 900 seconds.
+
+The selected native setup advertises `polar_modes: ["calibrated", "fixed",
+"adaptive"]`. Existing `polar-tilt` remains the participant fit. New closed
+operations `polar-fixed` and `polar-adaptive` confirm inputs `polar-tilt-fixed`
+and `polar-tilt-adaptive`. They reuse the shipped fitted tilt-state classifier,
+respectively with its fixed sensor frame or adaptive compensation. They do not
+run a participant fit or substitute the principal-axis DynamicAxis algorithm.
+The phone distinguishes the requested mode from confirmed input and hides
+personal calibration controls for those presets. Missing/malformed capability
+cannot authorize either operation. Existing receipt/CAS, active-controller,
+preparation-only and source/clock/readiness guards remain.
+
+Preset selection preserves healthy PCM position/generation and retires old
+classifier/driver confirmations. Source/audio/projection changes still fence
+state; ordinary masked samples retain the last confirmed breath state. Preset
+tracking provenance names its exact classifier and packaged model, never an
+invented participant axis/range or continuous volume measurement. Main remains
+900 seconds with current required streams. Automatic stays parked on load.
+
+The preview requests status-only observations every 200ms while visible and
+connected; requests coalesce. The ordinary one-second receipt/ECG/export/Drive
+loop is unchanged. Actual blending uses unique renderer observations and their
+receive spacing, bounded by both endpoints' remaining 500ms freshness, including
+the oldest support of an unfinished blend. Stale resumption snaps. Radius and
+percentage share that same actual progress. Gold's border box is four CSS pixels
+narrower before the shared physical scale, placing its outer edge at blue's
+inner edge at equal progress, including responsive minimum/maximum sizes.
+
 ## Operator controls and continuous connection — 2026-11-15
 
 The participant accepts the current tilt calibration as good enough. Keep its
