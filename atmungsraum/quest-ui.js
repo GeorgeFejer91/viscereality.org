@@ -1,9 +1,9 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=2';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=3';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=12';
 import { pairPhone } from './quest-pairing.js?v=1';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=28';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=29';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
@@ -16,11 +16,13 @@ import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
+const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
+  || dialog.contains(document.activeElement);
+const mainCondition = 'condition-a';
 const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
   return [Math.floor(seconds / 60), seconds % 60].map(part => String(part).padStart(2, '0')).join(':');
 };
-const operatorCondition = 'condition-a';
 const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
 const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
 
@@ -90,6 +92,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const sessionChoices = byId('session-choices');
   const scenarioChoices = byId('quest-scenario');
   const scenarioOptions = Array.from(scenarioChoices.querySelectorAll('input'));
+  const condition = byId('quest-condition');
+  const legacyOptions = byId('quest-legacy-options');
+  const legacyScenarios = byId('quest-legacy-scenarios');
   const participant = byId('quest-participant');
   const participantLabel = byId('quest-participant-label');
   const participantForm = byId('patient-form');
@@ -137,14 +142,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (driveDialog.open && !drivePanel.open) driveDialog.close();
   });
   driveDialog.addEventListener('close', () => {
+    if (driveDialog.open) return;
     drivePanel.open = false;
-    driveStatusHost.append(driveStatus);
-    if (!driveOpen.hidden && driveOpen.getClientRects().length) driveOpen.focus({ preventScroll: true });
+    if (driveDialog.contains(driveStatus)) {
+      (displayedStep === 'recordings' ? byId('recording-files') : driveStatusHost).prepend(driveStatus);
+    }
+    if (needsDialogFocus(driveDialog) && !driveOpen.hidden && driveOpen.getClientRects().length) {
+      driveOpen.focus({ preventScroll: true });
+    }
   });
   const checks = Array.from(document.querySelectorAll('.connection-checks button'));
   const diagnosticState = new Map();
   let diagnosticTrigger;
   diagnostics.addEventListener('close', () => {
+    if (!needsDialogFocus(diagnostics)) return;
     if (diagnosticTrigger?.getClientRects().length && !diagnosticTrigger.disabled) diagnosticTrigger.focus({ preventScroll: true });
     else if (!find.hidden) find.focus({ preventScroll: true });
     else byId('quest-title').focus({ preventScroll: true });
@@ -206,6 +217,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   function paintOperatorLayout(context) {
     const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
     if (location.hash === '#daten' && !nativeActive && !context.recovery) {
+      if (diagnostics.open) diagnostics.close();
+      if (driveDialog.open) driveDialog.close();
       for (const id of Object.values(operatorSteps)) if (!byId(id).hidden) byId(id).hidden = true;
       if (byId('daten').hidden) byId('daten').hidden = false;
       document.documentElement.dataset.operatorStep = 'daten';
@@ -215,29 +228,32 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     // Rewriting an unchanged screen flag triggers the layout observer, whose
     // bounded-layout retry can clamp document scroll before reflow completes.
     if (!byId('daten').hidden) byId('daten').hidden = true;
-    if (wasActive && !context.active && context.status?.p === 'IDLE') {
-      localView = { ...localView, step: 'recordings' };
+    if (context.status) {
+      if (wasActive && !nativeActive && context.status.p === 'IDLE') localView = { ...localView, step: 'recordings' };
+      wasActive = nativeActive;
     }
-    wasActive = nativeActive;
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
-      participantRequired: context.requiresParticipant, active: Boolean(wasActive) });
+      participantRequired: context.requiresParticipant, active: nativeActive });
     if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
     const page = byId(operatorSteps[step]);
     const body = page.querySelector('.operator-body');
     const move = (id, host) => { const element = byId(id); if (element.parentElement !== host) host.prepend(element); };
-    if (['connect', 'signals', 'running'].includes(step) || step === 'settings' && nativeActive) move('quest-data', body);
+    const activeControls = step === 'running' || step === 'settings' && nativeActive;
+    if (['connect', 'signals'].includes(step) || activeControls) move('quest-data', body);
     if (['connect', 'signals'].includes(step)) move('quest-polar', body);
     byId('corner-actions').hidden = step !== 'connect' || byId('install-app').hidden;
     driveOpen.hidden = drivePanel.hidden;
     if (step !== 'connect' && diagnostics.open) diagnostics.close();
-    if ((step !== 'connect' || drivePanel.hidden) && driveDialog.open) driveDialog.close();
-    if (!driveDialog.open) move('quest-drive-status', byId(step === 'recordings' ? 'recording-files' : 'drive-status-host'));
+    if ((!['connect', 'recordings'].includes(step) || drivePanel.hidden) && driveDialog.open) driveDialog.close();
+    const recordingStatusHost = activeControls ? body : byId('recording-files');
+    move('quest-export-status', recordingStatusHost);
+    if (!driveDialog.open) move('quest-drive-status', activeControls || step === 'recordings' ? recordingStatusHost : driveStatusHost);
     const controllerHost = byId('preview-controller-host');
     const fallback = byId('preview-controller-fallback');
     const offerFallback = context.polarAttempts >= 2 && ['calibration', 'tracking'].includes(step);
     move('preview-controller', offerFallback ? fallback : controllerHost);
     fallback.hidden = !offerFallback;
-    if (step === 'running' || step === 'settings' && nativeActive) move('quest-playback', body);
+    if (activeControls) move('quest-playback', body);
     // Only transitions move shared nodes; polling never detaches a focused editor.
     if (step !== displayedStep) {
       if (['input', 'calibration', 'tracking', 'recovery'].includes(step)) move('operator-input-status', body);
@@ -254,7 +270,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         settingsReturnFocus.focus();
       } else page.querySelector('h1').focus();
     }
-    if (['session', 'running'].includes(step) || step === 'settings' && nativeActive) {
+    if (step === 'session' || activeControls) {
       move('operator-session-actions', page.querySelector('.actions'));
     }
     const fullConnection = ['connect', 'settings'].includes(step);
@@ -281,6 +297,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
     byId('operator-connect-next').disabled = context.status?.wifi_snapshot !== 1 || context.waitingForControl;
+    byId('operator-next-session').disabled = !context.status || context.waitingForControl;
   }
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
@@ -298,6 +315,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     localView = restoreOperatorView(location.hash, history.state);
     paint();
   });
+  byId('recordings-screen').querySelector('a[href="#daten"]').addEventListener('click', event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    history.pushState({ browserExportsFromRecordings: true }, '', '#daten');
+    paint();
+  });
 
   function selectedScenario() {
     return scenarioChoices.querySelector('input:checked:not([disabled])')?.value ?? '';
@@ -306,6 +329,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
     const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
     const available = supportsScenarios ? rehearsalScenarios(status) : [];
+    const advertised = status?.scenarios !== undefined;
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
     for (const option of scenarioOptions) {
       option.closest('label').hidden = option.disabled = !available.includes(option.value);
@@ -315,7 +339,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (firstOffered) firstOffered.checked = true;
     }
     const scenario = selectedScenario();
-    const actions = rehearsalActions(status, operatorCondition);
+    for (const [index, option] of Array.from(condition.options).entries()) {
+      option.disabled = status?.a?.[index] !== 'track-ready';
+    }
+    const [trackA, trackB] = condition.options;
+    const mainSelected = scenario === 'haupt-15';
+    const actions = rehearsalActions(status, mainSelected ? mainCondition : condition.value);
     const active = Boolean(status?.rec);
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
@@ -339,9 +368,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     controlPanel.hidden = !access;
     controlClaim.hidden = !waitingForControl;
     controlRelease.hidden = access?.role !== 'active';
-    controlClaim.disabled = controlRelease.disabled = Boolean(connecting || userAction || busy || pending || unknown
-      || status?.pending || breathing.pending || nativeRecovering);
-    if (waitingForControl && access.active_phone) controlClaim.disabled = true;
+    controlClaim.disabled = !canChangeControl('claim');
+    controlRelease.disabled = !canChangeControl('release');
     text(controlStatus, waitingForControl ? (access.active_phone
       ? `${access.active_phone} steuert die Quest. Warte auf die Freigabe.` : 'Die Quest-Steuerung ist frei.')
       : 'Dieses Smartphone steuert die Quest.');
@@ -484,13 +512,24 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polarConnect.disabled = !metaUpdate.allowed || recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
-    sessionChoices.hidden = scenarioChoices.hidden = !selectionAllowed || !scenario;
+    const onlyTrackB = trackA.disabled && !trackB.disabled;
+    const showConditions = !mainSelected && (!advertised || !trackB.disabled || condition.value === trackB.value);
+    const hasLegacyScenario = scenarioOptions.some(option => !option.disabled && legacyScenarios.contains(option));
+    const hasPrimaryScenario = scenarioOptions.some(option => !option.disabled && !legacyScenarios.contains(option));
+    const showLegacyOptions = selectionAllowed && (hasLegacyScenario || showConditions);
+    legacyScenarios.hidden = !hasLegacyScenario;
+    byId('quest-condition-label').hidden = !showConditions;
+    if (showLegacyOptions && legacyOptions.hidden) legacyOptions.open = !hasPrimaryScenario || onlyTrackB;
+    legacyOptions.hidden = !showLegacyOptions;
+    sessionChoices.hidden = !selectionAllowed;
+    scenarioChoices.hidden = !selectionAllowed || advertised && !scenario;
+    byId('quest-scenario-unavailable').hidden = !advertised || Boolean(scenario);
     scenarioChoices.disabled = waiting || unknown;
     if (focusedChoice && (focusedChoice.closest('[hidden]') || focusedChoice.matches(':disabled'))) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
     play.disabled = waiting || unknown || !actions.play
-      || actions.play === 'arm' && (!selectionAllowed || supportsScenarios && !scenario);
+      || actions.play === 'arm' && (!selectionAllowed || advertised && !scenario);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -1039,11 +1078,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     });
   }
 
+  function canChangeControl(op) {
+    const { status, busy, pending, unknown } = rehearsal.state;
+    const access = controllerAccessState(status);
+    if (!rehearsal.gateway?.controllerAccess || !access || userAction || connecting || document.hidden
+      || busy || status.pending || status.setup?.stage === 'recovering') return false;
+    // A trusted phone can reclaim free control to read an earlier receipt.
+    // The pending operation still guards every session and setup command.
+    return op === 'claim' ? access.role === 'waiting' && !access.active_phone
+      : access.role === 'active' && !pending && !unknown && !breathing.pending && !breathing.view?.recovering;
+  }
+
   async function changeControl(op) {
-    const gateway = rehearsal.gateway;
-    const access = controllerAccessState(rehearsal.state.status);
-    if (!gateway?.controllerAccess || !access || userAction || connecting || document.hidden
-      || rehearsal.state.pending || rehearsal.state.unknown || breathing.pending || breathing.view?.recovering) return;
+    if (!canChangeControl(op)) return;
+    const { gateway, state } = rehearsal;
+    const access = controllerAccessState(state.status);
     const attempt = new AbortController(); userAction = attempt; paint();
     try {
       await gateway.controllerAccess({ v: 1, id: operationId(), op, expected_control_revision: access.revision }, attempt.signal);
@@ -1077,7 +1126,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     userAction = attempt;
     const scenario = scenarioChoices.hidden ? '' : selectedScenario();
-    try { await rehearsal.run(action, attempt.signal, operatorCondition, participantId, scenario); }
+    try { await rehearsal.run(action, attempt.signal, scenario === 'haupt-15' ? mainCondition : condition.value, participantId, scenario); }
     finally { if (userAction === attempt) userAction = null; }
   }
 
@@ -1178,6 +1227,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   disconnect.addEventListener('click', () => {
     autoConnect = false;
     resetPreview();
+    navigateLocal({ type: 'go', step: 'connect' });
     detach();
     find.focus();
   });

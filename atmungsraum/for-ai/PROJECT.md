@@ -11,6 +11,29 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Operator UI compatibility audit — 2026-11-16
+
+- [x] Trace the sequential screens to the existing Quest pairing, control,
+  Polar and preparation, scenario Arm and playback, and recording/Drive paths.
+- [x] Restore older advertised scenarios and condition selection, receipt
+  access after reconnect, and the recordings and Drive recovery routes. Keep
+  the native freshness and recording gates, including condition A for Haupt-Runde.
+- [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
+  and the authorized Drive account at the next attended idle session.
+
+The audit started from `fa22ff4` on `origin/main`, deployed by Pages run
+[43939877200](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43939877200).
+Compatibility release `dd80712` reached `origin/main` and passed the exact
+[Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43947472089).
+All 14 changed paths matched Git, and the live startup, offline recordings,
+history and install dialog passed in Chromium at four viewport sizes.
+See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
+The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
+the corresponding native capability fields to show determinate session progress
+or in-app Meta update progress. The earlier patient-first browser mode was
+retired with the move to Quest-only operation. Its CSVs remain available at
+`#daten`.
+
 ### Automatic PWA startup updates — 2026-11-16
 
 - [x] Check the published release at every fresh launch before starting the
@@ -31,13 +54,25 @@ Started from clean sparse publication main at `b3a6a59`, matching
 cloud-backed files; it was left untouched. The verified runtime commit
 `726204d` matched remote main, and the remote context gate passed.
 
-### Main study cue placeholders — 2026-11-16
+### Main study audio — 2026-11-16
 
 - [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
   WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
   owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
   All eight files contain silence. Their timeline totals 900 seconds and
   serves cue preparation. The active native loop owns Quest playback.
+- [x] Catalogue the 23 supplied recordings as 22 unique MP3/TXT pairs.
+  [Main study audio](../assets/audio/main-study/de/README.md) documents source
+  identity, German transcripts, phase pools, music credit, and staging.
+- [x] Render the candidate with the three intact instructions, 45 complete
+  cycles and a music tail. Native scenario decoder host check accepted the
+  same 184-event speech schedule and rendered exactly 39,690,000 frames.
+- [ ] Confirm the opening versus cycle budget for the selected Quest path.
+  The recordings extend the old 81-second opening to about 160 seconds;
+  the exact 900-second candidate fits 45 cycles. Then bind the approved
+  programme to the native main playback clock, include the music, and verify
+  a signed package and a physical Quest run. The review staging option does
+  not replace the current shared-loop app or its preparation behavior.
 
 ### Separation of preparation and main study — 2026-11-16
 

@@ -68,15 +68,17 @@ function snapshot() {
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     ...(Number.isSafeInteger(settings.duration_ms) ? {duration_ms: settings.duration_ms} : {}),
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
+    ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
     ...(Object.hasOwn(window,'reviewMetaUpdate') ? {meta_update:window.reviewMetaUpdate} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
-    pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],
+    pi: { r: true, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
       i: settings.freezeObservation && lastWitness ? lastWitness : (lastWitness = String(witness++)), g: generation, r: 0 },
-    scenarios, y: polar === 'unsupported' ? undefined : {
+    scenarios: Object.hasOwn(settings, 'scenarios') ? settings.scenarios ?? undefined : scenarios,
+    y: polar === 'unsupported' ? undefined : {
       s: 'a'.repeat(32), g: Number(owner.native_epoch), r: 1, p: polar !== 'permission', b: polar !== 'bluetooth',
       c: connected, a: settings.acc ?? polar === 'ready', e: settings.ecg ?? polar === 'ready', sc: polar === 'scan',
       ...(settings.location === undefined ? {} : { l: settings.location }),
@@ -894,7 +896,7 @@ def capture(review):
     scenario = page.locator("#quest-scenario")
     expect(scenario).to_be_visible()
     expect(scenario.get_by_role("radio")).to_have_count(3)
-    expect(page.locator("#quest-condition")).to_have_count(0)
+    expect(page.locator("#quest-condition")).to_be_hidden()
     instruction = scenario.locator('input[value="probe-anleitung"]')
     practice = scenario.locator('input[value="probe-5"]')
     main = scenario.locator('input[value="haupt-15"]')

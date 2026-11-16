@@ -64,6 +64,13 @@ The running screen shows the native elapsed clock. Render percentage progress
 only if the authenticated Quest snapshot reports a positive duration; a missing
 duration still shows elapsed time, without estimating the total.
 
+Older Quest catalogs may advertise the 10- and 15-minute practice rounds or
+the 20-minute box-breathing scenario. Keep those exact IDs and eligible VR
+conditions in the secondary options. A condition-only snapshot with no catalog
+keeps the existing condition Arm. An explicitly unavailable or invalid catalog
+blocks Start and shows the operator a diagnostic. A main-only Quest presents
+Haupt-Runde alone. Haupt-Runde requires condition A even on a mixed catalog.
+
 ## Smartphone GUI rules
 
 Adapt the [playground design and release rules](https://github.com/GeorgeFejer91/atmungsraum-ui/blob/main/for-ai/PROJECT.md#smartphone-gui-design-rules)
@@ -106,6 +113,11 @@ counted as a strict fit.
 - On native completion, show recordings. “Nächste Sitzung” is local navigation:
   retain the participant and return through tracking if the native generation
   invalidated the previous acceptance; never fabricate a new accepted token.
+- The earlier browser-recordings link works without a Quest. Return to the
+  same history entry when coming from Aufnahmen. Keep the Drive dialog usable
+  on both setup and recordings, and show live transfer status during a run.
+- A disconnected controller can reconnect with an unresolved receipt. An
+  enrolled waiting phone can claim free control to recover the original journal.
 - Navigation never starts scenarios, changes duration (main 900 s), changes files,
   Drive authorization, native source state or kiosk policy.
 - Telemetry preserves page, focus, caret, unfinished edits and scroll. View

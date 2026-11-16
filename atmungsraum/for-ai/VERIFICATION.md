@@ -21,6 +21,38 @@ it does not establish immediate update-on-autoboot or precise continuously
 observed installer timing. Post-update boot/kiosk remains pending. The user-
 approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
+## Operator UI compatibility — 2026-11-16
+
+The original browser regression checks reproduced blocked Start for a legacy-only
+advertised scenario, a missing scenario catalog, and a practice track with only
+condition B ready. Recovery could hide the Bluetooth button and prevent a trusted
+phone from reclaiming a free lease to read an old receipt. The recordings Drive
+dialog closed during polling, and the visible Back link from `#daten` relaunched
+the app and lost the patient draft.
+
+`py -3.12 -B tools/test-operator-layout.py` uses the actual PWA and synthetic
+Quest responses. It verifies older scenario IDs and condition-only Arm, mixed
+catalogs with Haupt-Runde fixed to A, reconnect and local receipt acknowledgement
+without replay, offline access to earlier browser exports, history and draft
+preservation, Drive form values across polls, and visible live-recording status.
+The existing runtime gates still require native receipt confirmation, current
+preparation and current sensor evidence as applicable. No participant data or real
+Drive authentication is used by these tests.
+
+Node: 245 passed, six skipped for native assembly and Java pairing prerequisites.
+Scenario JSON/CSV consistency, context and browser launch/update gates passed.
+Chromium passed 135 operator states across five viewport/text settings, seven
+pairing states, 18 control and Polar location states, 13 receipt recovery states,
+and 12 Meta update states. Physical Quest, H10, installed phone and Google Drive
+qualification still needs an attended test.
+
+The 42-state operator walkthrough also reproduced a delayed native dialog close
+event reclaiming focus after the operator moved to Bluetooth or the next session
+button. The install and Drive dialogs preserve the new focus. Ordinary close still
+returns focus to the opener. The walkthrough includes the saved Quest recording
+and historical browser CSV download through their actual links.
+Connection-page navigation enables after the operator module mounts so a slow
+startup release check cannot present actions before their handlers are ready.
 
 ## Current boot/update checkpoint — 2026-11-16
 

@@ -1,5 +1,10 @@
 # Scenario audio timelines
 
+The [German main study recordings](../../assets/audio/main-study/de/README.md)
+include full transcripts, separate take pools and a 900-second review render.
+They can be staged as a candidate authored `haupt-15` plan. The selected Quest
+preparation/main loop remains the playback owner in production builds.
+
 ## Haupt-Runde cue placeholders
 
 The [eight named cue placeholders](../../assets/audio/scenarios/haupt-15/cue-placeholders/)
