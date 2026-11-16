@@ -154,18 +154,11 @@ async function measureLabels() {
   }
 }
 
-let browserExportsLoaded = false;
-function updateBrowserExportsRoute() {
-  if (location.hash !== '#daten' || ['running', 'recovery'].includes(root.dataset.operatorStep)) return;
-  document.querySelectorAll('.screen').forEach(screen => { screen.hidden = screen.id !== 'daten'; });
-  if (!browserExportsLoaded) { browserExportsLoaded = true; void showSavedBrowserExports(); }
-  byId('data-title').focus();
-}
 let questMounted = false;
 function mountOperator() {
   if (questMounted || location.hash === '#daten') return;
   questMounted = true;
-  import('./quest-ui.js?v=48').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=49').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }
@@ -200,11 +193,23 @@ async function replaceWithPublishedRelease() {
 }
 
 if (!await replaceWithPublishedRelease()) {
-  window.addEventListener('hashchange', () => { updateBrowserExportsRoute(); mountOperator(); });
+  window.addEventListener('hashchange', mountOperator);
   const recovery = location.hash === '#daten';
+  const browserExports = byId('daten');
+  browserExports.querySelector('.back').addEventListener('click', event => {
+    if (!history.state?.browserExportsFromRecordings || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    history.back();
+  });
+  let browserExportsLoaded = false;
+  const showBrowserExports = () => {
+    if (browserExports.hidden) return;
+    if (!browserExportsLoaded) { browserExportsLoaded = true; void showSavedBrowserExports(); }
+    byId('data-title').focus();
+  };
+  new MutationObserver(showBrowserExports).observe(browserExports, { attributes: true, attributeFilter: ['hidden'] });
   byId('quest').hidden = recovery;
-  byId('daten').hidden = !recovery;
+  browserExports.hidden = !recovery;
   measureLabels();
-  updateBrowserExportsRoute();
   mountOperator();
 }

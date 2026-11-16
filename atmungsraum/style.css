@@ -85,7 +85,7 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 #quest-settings { text-align: start; min-width: 0; }
 #quest-settings[open] { display: grid; gap: 10px; }
 #kiosk-diagnostics[open] { display: grid; gap: 10px; }
-#quest-settings summary { cursor: pointer; min-height: 48px; align-content: center; }
+#quest-settings summary, #quest-legacy-options summary { cursor: pointer; min-height: 48px; align-content: center; }
 #kiosk-detail { overflow-wrap: anywhere; color: var(--muted); }
 #quest-version-host, #preview-version-host { width: 100%; min-width: 0; }
 .version-panel { display: grid; gap: 8px; min-width: 0; width: 100%; padding: 12px; border: 1px solid var(--border); text-align: start; }
@@ -412,7 +412,7 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
   gap: 4px 12px;
 }
 #participant-screen .patient-field { grid-row: span 2; grid-template-rows: subgrid; }
-#patient-gender, #patient-id { min-height: 48px; width: 100%; }
+#patient-gender, #patient-id, #quest-condition { min-height: 48px; width: 100%; }
 #patient-id { display: grid; align-items: center; }
 
 #session-choices { display: grid; justify-items: center; gap: 12px; width: 100%; }

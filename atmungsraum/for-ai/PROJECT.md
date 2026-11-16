@@ -2,6 +2,25 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Operator UI compatibility audit — 2026-11-16
+
+- [x] Trace the sequential screens to the existing Quest pairing, control,
+  Polar and preparation, scenario Arm and playback, and recording/Drive paths.
+- [x] Restore older advertised scenarios and condition selection, receipt
+  access after reconnect, and the recordings and Drive recovery routes. Keep
+  the native freshness and recording gates, including condition A for Haupt-Runde.
+- [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
+  and the authorized Drive account at the next attended idle session.
+
+The audit started from `fa22ff4` on `origin/main`, deployed by Pages run
+[43939877200](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43939877200).
+See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
+The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
+the corresponding native capability fields to show determinate session progress
+or in-app Meta update progress. The earlier patient-first browser mode was
+retired with the move to Quest-only operation. Its CSVs remain available at
+`#daten`.
+
 ### Automatic PWA startup updates — 2026-11-16
 
 - [x] Check the published release at every fresh launch before starting the

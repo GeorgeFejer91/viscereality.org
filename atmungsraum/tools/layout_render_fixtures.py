@@ -109,7 +109,7 @@ def capture_layout(review):
         page.locator('#preview-continue').click()
         expect(page.get_by_role('region', name='Vorbereitung').get_by_role('radio')).to_have_count(2)
         expect(page.get_by_role('region', name='Hauptstudie').get_by_role('radio')).to_have_count(1)
-        expect(page.locator('#quest-condition, #quest-practice')).to_have_count(0)
+        expect(page.locator('#quest-condition')).to_be_hidden()
         requested_scenario = {'390':'haupt-15', '320':'probe-5'}.get(size, 'probe-anleitung')
         selection = page.locator(f'input[name="quest-scenario"][value="{requested_scenario}"]')
         selection.check()

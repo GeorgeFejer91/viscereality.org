@@ -16,6 +16,7 @@ def compact_setup(review):
         page.clock.run_for(4000)
 
         def assert_fits():
+            expect(page.locator('html')).to_have_attribute('data-measurement', 'ready')
             page.clock.run_for(150)
             result = page.evaluate('''() => {
               const root = document.documentElement;
@@ -46,6 +47,85 @@ def compact_setup(review):
         page.context.close()
 
 
+def recovery_and_recordings(review):
+    page = review.page()
+    expect(page.locator('#quest-find')).to_be_visible()
+    page.locator('[data-operator-go="recordings"]:visible').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    page.locator('a[href="#daten"]').click()
+    expect(page.locator('#data-status')).to_contain_text('Keine früheren Browser-Aufnahmen')
+    page.locator('#daten .back').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    page.context.close()
+
+    init = initial(c, {'access': {'v': 1, 'role': 'waiting', 'active_phone': '', 'revision': 2}}) + """
+sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({op:'start', id:'f'.repeat(16), generation:0,
+    owner:{serial:'DEMO-QUEST', device:'d'.repeat(32), epoch:'6', native_epoch:'7'}}));
+"""
+    page = review.page(init)
+    expect(page.locator('#quest-control-claim')).to_be_visible()
+    expect(page.locator('#quest-control-claim')).to_be_enabled(timeout=3000)
+    page.locator('#quest-control-claim').click()
+    expect(page.locator('#quest-acknowledge')).to_contain_text('Aktuellen Quest-Zustand übernehmen')
+    page.locator('#quest-acknowledge').click()
+    assert mutations(page)['session'] == []
+    page.context.close()
+
+    page = review.page(initial(c))
+    page.clock.run_for(4000)
+    page.locator('[data-operator-go="recordings"]:visible').click()
+    page.locator('#drive-open').click()
+    expect(page.locator('#drive-dialog')).to_be_visible()
+    page.locator('#quest-drive-account').fill('fixture@example.test')
+    page.clock.run_for(2400)
+    expect(page.locator('#drive-dialog')).to_be_visible()
+    expect(page.locator('#quest-drive-account')).to_have_value('fixture@example.test')
+    page.keyboard.press('Escape')
+    expect(page.locator('#drive-open')).to_be_focused()
+    page.locator('[data-operator-go="settings"]:visible').click()
+    page.locator('#quest-disconnect').click()
+    expect(page.locator('#quest-find')).to_be_focused()
+    page.context.close()
+
+
+def scenario_compatibility(review):
+    for offered, tracks, scenario, condition in (
+        (['haupt-15'], ['track-ready', 'track-ready'], 'haupt-15', 'condition-a'),
+        (['probe-10'], ['track-ready', 'track-ready'], 'probe-10', 'condition-a'),
+        (['probe-5'], ['missing', 'track-ready'], 'probe-5', 'condition-b'),
+        (None, ['track-ready', 'track-ready'], None, 'condition-b'),
+    ):
+        page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}))
+        c.enter_participant(page)
+        page.locator('#preview-controller').click()
+        page.locator('#preview-continue').click()
+        if condition == 'condition-b':
+            page.locator('#quest-condition').select_option(condition)
+        if scenario:
+            expect(page.locator(f'input[value="{scenario}"]')).to_be_checked()
+        page.locator('#quest-play').click()
+        expect(page.locator('#running-screen')).to_be_visible()
+        assert page.evaluate('reviewQuest.armedScenario ?? null') == scenario
+        assert page.evaluate('reviewQuest.condition') == condition
+        assert mutations(page)['session'] == ['arm', 'start']
+        page.context.close()
+
+    page = review.page(initial(c, {'scenarios': ['probe-5', 'haupt-15']}))
+    c.enter_participant(page)
+    page.locator('#preview-controller').click()
+    page.locator('#preview-continue').click()
+    page.locator('#quest-legacy-options summary').click()
+    page.locator('#quest-condition').select_option('condition-b')
+    page.locator('input[value="haupt-15"]').check()
+    expect(page.locator('#quest-condition')).to_be_hidden()
+    c.wait_state(page, tracks=['missing', 'track-ready'])
+    expect(page.locator('#quest-play')).to_be_disabled()
+    c.wait_state(page, tracks=['track-ready', 'track-ready'])
+    page.locator('#quest-play').click()
+    assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == ['haupt-15', 'condition-a']
+    page.context.close()
+
+
 def run():
     init = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({c.PAIRED}));" + """
 window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
@@ -54,6 +134,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
     with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
         browser = p.chromium.launch()
         review = c.Review(browser, Path(output))
+        recovery_and_recordings(review)
+        scenario_compatibility(review)
         page = review.page(init)
         page.clock.run_for(4000)
         expect(page.locator('#quest')).to_be_visible()
@@ -94,6 +176,11 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         assert page.locator('.screen:visible').count() == 1
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#input-screen')).to_be_visible()
+        page.locator('[data-operator-go="recordings"]:visible').click()
+        page.locator('a[href="#daten"]').click()
+        page.locator('#daten .back').click()
+        page.locator('[data-operator-return]:visible').click()
+        expect(page.locator('#input-screen')).to_be_visible()
         c.show_operator(page, 'settings')
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#input-screen')).to_be_visible()
@@ -106,7 +193,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         expect(page.locator('#input-screen')).to_be_visible()
         assert before == mutations(page)
         assert page.locator('#patient-surname').input_value() == 'Tes'
-        c.wait_state(page, phase='RUNNING', host='vr-session', clock=18000)
+        c.wait_state(page, phase='RUNNING', host='vr-session', clock=18000, liveRecording=True)
+        expect(page.locator('#running-screen #quest-export-status')).to_contain_text('Live-Abgleich unterbrochen')
         expect(page.locator('#quest-progress')).to_be_hidden()
         c.wait_state(page, duration_ms=900000)
         expect(page.locator('#quest-progress')).to_have_js_property('value', 18000)
@@ -119,6 +207,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         expect(page.locator('#settings-screen')).to_be_visible()
         expect(page.locator('#settings-screen #quest-play')).to_be_visible()
         expect(page.locator('#settings-screen #quest-finish')).to_be_visible()
+        expect(page.locator('#settings-screen #quest-export-status')).to_be_visible()
         expect(page.locator('#quest-control-release')).to_be_visible()
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#running-screen')).to_be_visible()
@@ -133,7 +222,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         compact_setup(review)
         assert not review.errors, review.errors
         browser.close()
-    print('PASS real-app legacy history, local return, draft persistence and zero-command navigation')
+    print('PASS real-app scenario Arm, receipt recovery, recording status, Drive dialog, draft and history')
 
 
 if __name__ == '__main__':

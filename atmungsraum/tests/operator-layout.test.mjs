@@ -39,6 +39,12 @@ test('waiting phone stays at connection and settings return is bounded to known 
   assert.equal(navigateOperatorView({ step: 'input' }, { type: 'go', step: 'abc_23_m' }).step, 'input');
 });
 
+test('reconnect and read-only recordings stay available without a control lease', () => {
+  assert.equal(resolveOperatorView('session', { connected: false, recovery: true }), 'connect');
+  assert.equal(resolveOperatorView('recordings', { connected: false }), 'recordings');
+  assert.equal(resolveOperatorView('recordings', { connected: true, waitingForControl: true }), 'recordings');
+});
+
 test('stored enrollment still starts at connection before participant entry', () => {
   assert.equal(resolveOperatorView('connect', connected), 'connect');
   assert.equal(resolveOperatorView(null, { ...connected, participantComplete: false }), 'connect');
