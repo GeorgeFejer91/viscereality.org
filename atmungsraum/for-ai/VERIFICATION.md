@@ -35,6 +35,51 @@ hardware-evidence/policy increment and SDK implementation await publication.
 Historical checkpoint notes below describe their observation time.
 
 
+## Scenario selection — 2026-11-16
+
+Chromium exercised the three choices with real radio navigation across the
+Vorbereitung and Hauptstudie sections. The production fixture gateway received
+`probe-anleitung`, `probe-5`, and `haupt-15` on Arm. The relevant controller,
+connection, recording-sync and naming unit tests passed 38/38. The selector
+fit at 320 × 568, 390 × 844, 844 × 390 and 1440 × 900. At 200% text it
+used readable document reflow. Browser tests used simulated equipment.
+
+
+## Playground UI port — 2026-11-16
+
+Ported the presentation from the playground through `60994c4` onto the
+production controller. The production gateway, enrollment, native models,
+audio, scenario IDs, export writer and Google Drive controller are reused.
+
+The Node suite passed 230 tests with no failures. Six native assembly and Java
+pairing interoperability tests require the patched native build environment.
+Chromium ran the 45-state operator walkthrough and the 135-state layout suite
+with the production JavaScript and fixture gateway. The focused operator test
+also exercised Drive form loading and focus return, the red Polar diagnostic,
+progress with a native duration, and history without native commands.
+
+Standard 320 × 640 and 390 × 844 input states fit the viewport. The layout audit checked
+320px portrait, 200% text, short landscape and desktop for unclipped measured
+text, control geometry and complete native actions. Some very short,
+enlarged-text and expanded settings states use document reflow under the
+[layout contract](UI-LAYOUT.md#smartphone-gui-rules). This is browser evidence
+with simulated equipment. Physical keyboard, hardware and OAuth authorization
+qualification remains open.
+
+The supplementary phone-pairing (7 states), control/Polar location (18 states),
+and editor/caret/scroll (3 states and six live polls each) suites passed.
+The 200% Drive popup at 320 × 640 retains complete text without internal
+scroll; the surrounding setup, form and input screens still use document
+reflow at that text size.
+
+The official main/root Pages deployment
+[43930833015](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43930833015)
+succeeded for `4d5d3b3ee56e369a03911cfa859d297a20d4aa64`. All 14 changed
+public file responses matched that commit exactly. The actual public URL
+loaded the controller, four connection checks and measured labels, kept
+Weiter disabled on an unpaired profile, and opened and closed the install
+dialog with focus return at 320 × 640, 390 × 844, 844 × 390 and 1440 × 900.
+
 ## Meta-compatible main builds and one-time helper — 2026-11-16
 
 After the user approved a separate boot helper, main15/16 were built from the

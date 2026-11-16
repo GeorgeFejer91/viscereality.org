@@ -2,6 +2,40 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Main study cue placeholders — 2026-11-16
+
+- [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
+  WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
+  owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
+  All eight files contain silence. Their timeline totals 900 seconds and
+  serves cue preparation. The active native loop owns Quest playback.
+
+### Separation of preparation and main study — 2026-11-16
+
+- [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute
+  Haupt-Runde. Give Haupt-Runde its own Hauptstudie section. See the
+  [scenario selection verification](VERIFICATION.md#scenario-selection--2026-11-16).
+
+### Operator UI port from Atmungsraum UI — 2026-11-16
+
+- [x] Port the connection checks/setup, aligned participant form, large tracking
+  confirmation, and session tiles from the playground onto production main.
+- [x] Verify the controller flow, recovery, recordings, and rendered desktop/phone
+  layouts with production browser fixtures. See [verification](VERIFICATION.md#playground-ui-port--2026-11-16).
+- [x] Verify `4d5d3b3` in [Pages run 43930833015](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43930833015).
+  All 14 changed public files matched Git; live setup and installation tested
+  in four Chromium viewports. The primary checkout's existing index state was
+  left alone; production was published from the sparse sync checkout.
+- [ ] Reduce 200% text reflow on the smallest phone and qualify the final
+  layout with the physical keyboard and safe areas.
+- [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
+  live Polar data and Google authorization on physical hardware.
+
+Scope: production HTML/CSS, Pretext integration, and controller presentation;
+keep native state, command admission, recording/Drive, audio, enrollment, and
+the existing utility and recovery routes.
+
+### Autoboot, kiosk and Meta update test — 2026-11-16
 
 ## Current boot/update checkpoint — 2026-11-16
 

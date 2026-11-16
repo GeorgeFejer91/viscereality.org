@@ -3,11 +3,47 @@ from pathlib import Path
 import importlib.util
 import tempfile
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import mutations
+from layout_render_fixtures import initial, mutations
 
 spec = importlib.util.spec_from_file_location('capture_phone', Path(__file__).with_name('capture-phone-screens.py'))
 c = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(c)
+
+
+def compact_setup(review):
+    for width, height in ((320, 640), (390, 844), (844, 390)):
+        page = review.page(initial(c), viewport={'width': width, 'height': height})
+        page.clock.run_for(4000)
+
+        def assert_fits():
+            page.clock.run_for(150)
+            result = page.evaluate('''() => {
+              const root = document.documentElement;
+              const scope = document.querySelector('dialog[open], .screen:not([hidden])');
+              const open = document.querySelector('dialog[open]');
+              return {
+                measured: root.dataset.measurement,
+                page: [root.scrollWidth, root.scrollHeight],
+                viewport: [innerWidth, innerHeight],
+                dialogFits: !open || open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth,
+                textFits: ![...(open || scope).querySelectorAll('[data-text-fit="reflow"]')]
+                  .some(node => node.checkVisibility())
+              };
+            }''')
+            assert result['measured'] == 'ready' and result['page'] == result['viewport'], result
+            assert result['dialogFits'] and result['textFits'], result
+
+        assert_fits()
+        page.locator('#drive-open').click()
+        expect(page.locator('#drive-dialog')).to_be_visible()
+        assert_fits()
+        page.keyboard.press('Escape')
+        expect(page.locator('#drive-open')).to_be_focused()
+        page.locator('#operator-connect-next').click()
+        assert_fits()
+        c.enter_participant(page)
+        assert_fits()
+        page.context.close()
 
 
 def run():
@@ -19,14 +55,35 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         browser = p.chromium.launch()
         review = c.Review(browser, Path(output))
         page = review.page(init)
-        page.clock.run_for(1500)
+        page.clock.run_for(4000)
+        expect(page.locator('#quest')).to_be_visible()
+        expect(page.locator('#quest #quest-ecg')).to_be_visible()
+        expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok')
+        expect(page.locator('#quest #drive-open')).to_be_visible()
+        page.locator('#drive-open').click()
+        expect(page.locator('#drive-dialog #quest-drive-form')).to_be_visible()
+        expect(page.locator('#quest-drive-connect')).to_be_enabled()
+        page.keyboard.press('Escape')
+        expect(page.locator('#drive-dialog')).to_be_hidden()
+        expect(page.locator('#drive-open')).to_be_focused()
+        c.wait_state(page, polar='off')
+        polar_check = page.locator('#check-polar')
+        expect(polar_check).to_have_attribute('data-check', 'unconfirmed')
+        polar_check.click()
+        expect(page.locator('#connection-diagnostic-title')).to_have_text('Polar H10')
+        expect(page.locator('#connection-diagnostic-message')).to_contain_text('Polar H10')
+        page.keyboard.press('Escape')
+        expect(polar_check).to_be_focused()
+        c.wait_state(page, polar='ready')
+        before_connect = mutations(page)
+        page.locator('#operator-connect-next').click()
+        assert before_connect == mutations(page)
         expect(page.locator('#participant-screen')).to_be_visible()
         page.locator('#patient-surname').fill('Tes')
         page.locator('#patient-age').fill('30')
-        page.get_by_role('radio', name='Keine Angabe').check()
+        page.locator('#patient-gender').select_option('prefer-not-to-say')
         page.locator('#patient-next').click()
-        expect(page.locator('#signals-screen')).to_be_visible()
-        page.locator('[data-operator-go="input"]:visible').click()
+        expect(page.locator('#input-screen')).to_be_visible()
         before = mutations(page)
         page.locator('[data-operator-go="recordings"]:visible').click()
         page.locator('a[href="#daten"]').click()
@@ -37,7 +94,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         assert page.locator('.screen:visible').count() == 1
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#input-screen')).to_be_visible()
-        page.locator('[data-operator-go="settings"]:visible').click()
+        c.show_operator(page, 'settings')
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#input-screen')).to_be_visible()
         page.locator('[data-operator-go="recordings"]:visible').click()
@@ -50,6 +107,10 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         assert before == mutations(page)
         assert page.locator('#patient-surname').input_value() == 'Tes'
         c.wait_state(page, phase='RUNNING', host='vr-session', clock=18000)
+        expect(page.locator('#quest-progress')).to_be_hidden()
+        c.wait_state(page, duration_ms=900000)
+        expect(page.locator('#quest-progress')).to_have_js_property('value', 18000)
+        expect(page.locator('#quest-progress')).to_have_js_property('max', 900000)
         expect(page.locator('#running-screen')).to_be_visible()
         expect(page.locator('#running-screen #quest-data')).to_be_visible()
         expect(page.locator('#quest-play')).to_be_visible()
@@ -69,6 +130,7 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
             expect(page.locator('#quest-play')).to_be_visible()
             expect(page.locator('#quest-finish')).to_be_visible()
         assert before == mutations(page)
+        compact_setup(review)
         assert not review.errors, review.errors
         browser.close()
     print('PASS real-app legacy history, local return, draft persistence and zero-command navigation')

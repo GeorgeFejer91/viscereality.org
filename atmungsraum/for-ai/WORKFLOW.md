@@ -37,6 +37,16 @@ Historical checkpoint notes below describe their observation time.
 
 ## Operator layout qualification — 2026-11-16
 
+Before a UI feature push, run `python -B tools/test-operator-layout.py` and
+`python -B tools/capture-phone-screens.py --scope layout --output <new-dir>`
+against the actual candidate. Include disconnected and connected setup,
+participant editing, diagnostics, Drive, native input/calibration modes, the
+scenario tiles and existing controls during recovery/recording. Check the
+[single-viewport rules](UI-LAYOUT.md#smartphone-gui-rules) at phone portrait,
+short landscape, 200% text, custom spacing and focused editing. Record any
+deliberate accessibility reflow and physical keyboard/safe-area gaps separately.
+Do not move permission, recording, Drive, or audio ownership into the UI.
+
 The [layout contract](UI-LAYOUT.md) preserves native/domain authority while
 splitting preparation, tracking, running, recordings and settings. Use the real
 app/gateway fixture and actual Pretext, not static mockup HTML. Check configured
