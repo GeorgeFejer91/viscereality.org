@@ -828,3 +828,22 @@ test('choosing a builtin mode hides personal-fit presentation before confirmatio
   assert.equal(view.inputLabel, 'Automatic'); assert.equal(view.showPolarCalibration, false);
   assert.equal(view.failureLabel, ''); assert.match(view.pendingInputLabel, /feste Achse/);
 });
+
+test('native update gate denies preparation independently of IDLE and keeps safe failure usable', async () => {
+  const update = (state, session_allowed) => ({ v: 1, state, reason: '', installed_code: 15,
+    available_code: 16, downloaded_bytes: 0, total_bytes: null, session_allowed });
+  for (const meta_update of [null, {}, update('checking', false), update('downloading', true),
+    update('installing', false), update('waiting', false), update('restart_required', true),
+    update('current', false), { ...update('current', true), downloaded_bytes: -1 }]) {
+    const model = new BreathingSetup(); const peer = fixture();
+    const view = model.update(peer.gateway, state(snapshot(native({ stage: 'idle', playing: false }), { meta_update })), true);
+    for (const op of ['calibrate', 'controller', 'continue']) assert.equal(view.actions[op], false, JSON.stringify(meta_update));
+    await model.run('controller');
+    assert.equal(peer.calls.length, 0);
+  }
+  for (const name of ['current', 'updated', 'failed']) {
+    const model = new BreathingSetup(); const peer = fixture();
+    assert.equal(model.update(peer.gateway, state(snapshot(native({ stage: 'idle', playing: false }), {
+      meta_update: update(name, true) })), true).actions.controller, true);
+  }
+});

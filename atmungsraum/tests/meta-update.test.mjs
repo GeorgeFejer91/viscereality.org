@@ -1,0 +1,90 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { nativeMetaUpdate, nativeSessionAllowed, metaUpdateView } from '../meta-update.js';
+
+const value = (state = 'current', patch = {}) => ({ v: 1, state, reason: '', installed_code: 15,
+  available_code: 16, downloaded_bytes: 0, total_bytes: null, session_allowed: true, ...patch });
+const status = meta_update => ({ meta_update, o: { v: 1, s: 'observed', e: '8', i: '100', a: 5 } });
+
+test('read-only Meta status distinguishes all native states and absent legacy feature', () => {
+  assert.equal(nativeSessionAllowed({}), true);
+  assert.equal(metaUpdateView({}).state, 'legacy');
+  for (const state of ['waiting', 'checking', 'downloading', 'installing', 'restart_required']) {
+    assert.equal(nativeSessionAllowed(status(value(state))), false, state);
+    assert.match(metaUpdateView(status(value(state))).summary, /gesperrt/);
+  }
+  for (const state of ['current', 'updated', 'failed']) {
+    assert.equal(nativeSessionAllowed(status(value(state))), true, state);
+    assert.equal(nativeSessionAllowed(status(value(state, { session_allowed: false }))), false, state);
+    assert.match(metaUpdateView(status(value(state, { session_allowed: false }))).summary, /gesperrt/);
+  }
+});
+
+test('malformed advertised native status and stale observations fail closed', () => {
+  for (const malformed of [null, [], {}, value('invented'), value('current', { v: 2 }),
+    value('current', { session_allowed: 1 }), value('current', { installed_code: 0 }),
+    value('current', { available_code: -1 }), value('current', { downloaded_bytes: -1 }),
+    value('current', { downloaded_bytes: Number.MAX_SAFE_INTEGER + 1 }),
+    value('current', { total_bytes: 0 }), value('current', { total_bytes: 2, downloaded_bytes: 3 }),
+    value('current', { reason: 'x'.repeat(97) }), value('current', { reason: 'line\nfeed' })]) {
+    const view = metaUpdateView(status(malformed));
+    assert.equal(view.state, 'invalid', JSON.stringify(malformed));
+    assert.equal(view.allowed, false);
+  }
+  for (const o of [null, { ...status().o, a: 1501 }, { ...status().o, s: 'unavailable' }]) {
+    assert.equal(nativeSessionAllowed({ ...status(value()), o }), false);
+  }
+  assert.equal(nativeSessionAllowed({ ...status(value()), apk: { version_code: 14 } }), false);
+});
+
+test('download progress uses native byte counts and leaves unknown totals indeterminate', () => {
+  const view = metaUpdateView(status(value('downloading', { downloaded_bytes: 1024 })));
+  assert.deepEqual(view.progress, { value: 1024, max: null });
+  assert.match(view.detail, /1.024 Byte.*unbekannt/);
+  const known = metaUpdateView(status(value('downloading', { downloaded_bytes: 1024, total_bytes: 2048 })));
+  assert.deepEqual(known.progress, { value: 1024, max: 2048 });
+  assert.match(known.detail, /1.024.*2.048/);
+});
+
+test('safe failure and uncertain install have distinct recovery without claiming installed target', () => {
+  const failed = metaUpdateView(status(value('failed', { reason: 'download-timeout' })));
+  assert.equal(failed.allowed, true);
+  assert.match(failed.summary, /installierte APK.*verwendet/);
+  assert.match(failed.detail, /Quest neu starten/);
+  assert.match(failed.detail, /zu lange/);
+  assert.doesNotMatch(failed.detail, /download-timeout/);
+  const install = metaUpdateView(status(value('installing', { session_allowed: false })));
+  assert.match(install.summary, /angefragt/);
+  assert.match(install.detail, /bestätigt keine neue APK/);
+  const updated = metaUpdateView(status(value('updated')));
+  assert.match(updated.summary, /Code 15/);
+  assert.doesNotMatch(updated.summary, /16/);
+  assert.equal(nativeMetaUpdate(status(value())).value.installed_code, 15);
+});
+
+test('native failure reasons use readable wording and hide unknown technical codes', () => {
+  for (const [reason, expected] of [['offline', /Internetverbindung/], ['storage', /Speicherplatz/],
+    ['authentication', /Meta-Konto/], ['mystery_' + 'x'.repeat(70), /erneute Prüfung/]]) {
+    const view = metaUpdateView(status(value('failed', { reason })));
+    assert.match(view.detail, expected);
+    assert.equal(view.detail.includes(reason), false);
+  }
+});
+
+test('persisted unconfirmed install requires Meta library and operator maintenance, not another retry', () => {
+  for (const reason of ['prior-install-unconfirmed-maintenance-required', 'pending-install-record-invalid',
+    'pending-install-record-unreadable', 'pending-install-record-clear-failed']) {
+    const view = metaUpdateView(status(value('restart_required', { reason, session_allowed: false })));
+    assert.equal(view.allowed, false);
+    assert.match(view.detail, /Meta-Bibliothek/);
+    assert.match(view.detail, /Betreiberwartung/);
+    assert.doesNotMatch(view.summary, /neu starten/);
+  }
+});
+
+test('a warm native app relaunch requires a headset restart for another check', () => {
+  const view = metaUpdateView(status(value('failed', { reason: 'fresh-process-required-for-update-check' })));
+  assert.equal(view.allowed, true);
+  assert.match(view.detail, /Quest neu starten/);
+  assert.match(view.detail, /reicht dafür nicht aus/);
+});

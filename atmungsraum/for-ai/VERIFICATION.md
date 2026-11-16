@@ -1,5 +1,39 @@
 # Verification
 
+## Current boot/update checkpoint — 2026-11-16
+
+Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/
+initiator, with retained UID. The separate same-signer boot helper is installed,
+overlay Allowed and enabled by the user. Genuine reboot automatically launches15:
+trusted native cold admission, first submitted frame, OpenXR focus and advancing
+frames are observed. The wearer confirms single-menu recovery and protected
+three-departure escape; native terminal/task-removal/retired-owner logs corroborate
+escape. Helper27policy checks, signed package inspection and independent review pass.
+
+Meta16 was published with the Quest off. Processing completes, malware passes
+and security details say all tests passed. The next genuine boot still launches15.
+A69-sample window over about208seconds observes no16; available version readbacks
+are15 with validated Wi-Fi and charging;
+later closed/asleep readbacks remain15. This is a bounded negative result, not
+proof Meta updating never works or that kiosk causes it. No host install, host
+app launch or manual Update established the test result. Both actual experiment
+versions must continue through Meta distribution. Phone control stays with the
+user, Location stays ON; normal main updates do not require helper updates.
+
+The user now approves an official in-app startup check/download/install/relaunch.
+Use the same [active contract](BOOT-KIOSK-UPDATE.md) extension tasks5–9. Native
+Platform SDK207 has a16KiB-aligned ARM64 loader; implementation is in progress,
+not built or hardware-qualified. Preserve signer, data/trust, private visuals,
+controller-only policy and audio/calibration math. A shared native maintenance
+fence must protect calibration, preparation and recording. SDK acknowledgement
+is not installed-version evidence. Overall update acceptance remains open.
+
+Verified split source: PR27 merge `4bae41fa3c0d4d30a10996e4e2c569419eefab38`,
+exact Pages43921087088 success and18 public files byte-match Git. Public policy
+now advertises available16/minimum11; installed15 is still compatible. The new
+hardware-evidence/policy increment and SDK implementation await publication.
+Historical checkpoint notes below describe their observation time.
+
 ## PWA startup updates — 2026-11-16
 
 `python -B tools/test-pwa-startup.py` first failed on a cached launch that

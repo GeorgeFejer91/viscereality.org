@@ -3,15 +3,16 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=12';
 import { pairPhone } from './quest-pairing.js?v=1';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=27';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=28';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=8';
+import { BreathingSetup } from './breathing-setup.js?v=9';
 import { LiveBreathDisplay } from './live-breath-display.js?v=5';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 import { KioskControl } from './kiosk-control.js?v=2';
 import { ApkRelease } from './quest-release.js?v=1';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -24,7 +25,7 @@ const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeS
 const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
 
 function idleForSync({ status, busy, pending, unknown }) {
-  return status?.p === 'IDLE' && !status.rec && !status.pending && !busy && !pending && !unknown;
+  return status?.p === 'IDLE' && nativeSessionAllowed(status) && !status.rec && !status.pending && !busy && !pending && !unknown;
 }
 function activeForSync({ status, busy, pending, unknown }) {
   return liveSync && status?.live_recording === 1 && status.rec && !status.pending && !busy && !pending && !unknown
@@ -185,6 +186,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let ecgSensor = '';
   let breathTimer;
   let versionGeometryKey = '';
+  let updateGeometryKey = '';
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
 
   let localView = restoreOperatorView(location.hash, history.state);
@@ -320,6 +322,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const access = controllerAccessState(status);
     const waitingForControl = access?.role === 'waiting';
     const nativeRecovering = status?.setup?.stage === 'recovering';
+    const metaUpdate = metaUpdateView(status);
+    const common = byId('operator-common');
+    const updateKey = status && metaUpdate.advertised ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${displayedStep}/${common.clientWidth}/${getComputedStyle(common).fontSize}` : '';
+    if (updateGeometryKey !== updateKey) {
+      common.style.minBlockSize = '';
+      updateGeometryKey = updateKey;
+    } else if (updateKey && common.getClientRects().length) {
+      // Both the native notice and the shared status can shorten at completion.
+      // Preserve their combined geometry before writing either text node.
+      common.style.minBlockSize = `${Math.max(common.getBoundingClientRect().height, parseFloat(common.style.minBlockSize) || 0)}px`;
+    }
     const commandWaiting = Boolean(connecting || userAction || busy || pending || status?.pending
       || breathing.busy || breathing.pending || nativeRecovering);
     const waiting = waitingForControl || commandWaiting;
@@ -356,7 +369,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(statusText, joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
       : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …'
-        : waitingForControl ? hint : message || hint));
+        : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     playback.hidden = !status;
     const duration = status?.duration_ms;
@@ -407,6 +420,27 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('apk-installed'), version.installedLabel);
     text(byId('apk-required'), version.required);
     text(byId('apk-full-identity'), version.identity);
+    const updateNotice = byId('operator-meta-update');
+    // Stable nodes only: progress never replaces controls, editors or journals.
+    const noticeHidden = !status || !metaUpdate.advertised;
+    if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
+    for (const panel of [updateNotice, byId('meta-update')]) {
+      panel.dataset.updateState = metaUpdate.state;
+      panel.dataset.updateAllowed = String(metaUpdate.allowed);
+    }
+    text(byId('meta-update-status'), metaUpdate.summary);
+    text(byId('meta-update-detail'), metaUpdate.detail);
+    text(byId('operator-meta-summary'), metaUpdate.summary);
+    text(byId('operator-meta-detail'), metaUpdate.detail);
+    const updateProgress = byId('meta-update-progress');
+    updateProgress.hidden = !metaUpdate.progress;
+    if (metaUpdate.progress && metaUpdate.progress.max !== null) {
+      updateProgress.max = metaUpdate.progress.max;
+      updateProgress.value = metaUpdate.progress.value;
+    } else {
+      updateProgress.removeAttribute('value');
+      updateProgress.removeAttribute('max');
+    }
     byId('quest-settings').hidden = !status;
     const kioskView = kiosk.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
     text(byId('kiosk-summary'), kioskView.summary);
@@ -433,7 +467,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       statusText.focus({ preventScroll: true });
     }
     participant.hidden = !showParticipant;
-    participantFields.disabled = !showParticipant || waiting || unknown;
+    participantFields.disabled = !showParticipant || waiting || unknown || !metaUpdate.allowed;
     participantSubmit.disabled = participantFields.disabled;
     text(participantLabel, participantId ? `Teilnehmer-ID: ${participantId}` : 'Teilnehmer-ID eingeben');
     const hadPolarFocus = document.activeElement === polarConnect;
@@ -447,7 +481,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(polarConnect.firstElementChild, ready ? 'Messsignale bereit'
       : setup?.c ? 'Fehlende Messsignale starten' : 'Polar H10 verbinden');
     polarConnect.hidden = recoveringStreams || automaticConnection;
-    polarConnect.disabled = recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
+    polarConnect.disabled = !metaUpdate.allowed || recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
     sessionChoices.hidden = scenarioChoices.hidden = !selectionAllowed || !scenario;

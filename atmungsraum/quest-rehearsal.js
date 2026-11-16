@@ -1,4 +1,5 @@
 import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=11';
+import { nativeSessionAllowed } from './meta-update.js?v=1';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -77,13 +78,14 @@ export function rehearsalActions(status, condition = conditions[0]) {
   if (!rehearsalPolarAllowed(status) || status.pending || audioRecovering(status) || polarSetup(status)?.sc) return {};
   const selected = conditions.indexOf(condition);
   if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec
-    && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
+    && nativeSessionAllowed(status) && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
   if (!status.rec || !conditions.includes(status.c)) return {};
   const next = { ARMED: 'start', RUNNING: 'pause', PAUSED: 'resume' }[status.p];
   const grant = status.q;
   const allowed = status.h === 'vr-session' && next && grant?.v === 2 && grant.g === status.g
     && typeof grant.s === 'string' && /^[a-f0-9]{32}$/.test(grant.s) && Array.isArray(grant.o) && grant.o.includes(next);
-  const canPlay = allowed && (next === 'pause' || status.pi.r === false || status.pi.f === true);
+  const canPlay = allowed && (next === 'pause' || nativeSessionAllowed(status))
+    && (next === 'pause' || status.pi.r === false || status.pi.f === true);
   return { play: canPlay ? next : undefined, finish: next || status.p === 'RECORDING' ? 'save-next' : undefined };
 }
 
@@ -278,7 +280,7 @@ export class QuestRehearsal {
     const current = () => {
       const { status } = this.state;
       const setup = polarSetup(status);
-      return this.gateway === gateway && !signal?.aborted && !status?.pending && !audioRecovering(status) && status?.g === clicked.g
+      return this.gateway === gateway && !signal?.aborted && nativeSessionAllowed(status) && !status?.pending && !audioRecovering(status) && status?.g === clicked.g
         && setup?.s === original.s && setup.p && setup.b && !setup.sc && (setup.c || setup.l !== 'disabled') ? setup : null;
     };
     let setup = current();
@@ -310,7 +312,7 @@ export class QuestRehearsal {
     const requested = action === 'recenter' && gateway?.recenter && canRecenter(clicked)
       ? 'recenter' : rehearsalActions(clicked, condition)[action];
     const setup = action === 'polar' ? polarSetup(clicked) : null;
-    if (!gateway || clicked?.pending || audioRecovering(clicked) || this.state.busy || this.pending
+    if (!gateway || action === 'polar' && !nativeSessionAllowed(clicked) || clicked?.pending || audioRecovering(clicked) || this.state.busy || this.pending
       || (!requested && (!setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || (setup.e && setup.a)))) return;
     this.update({ busy: true, message: '' });
     try {

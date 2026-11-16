@@ -165,7 +165,7 @@ let questMounted = false;
 function mountOperator() {
   if (questMounted || location.hash === '#daten') return;
   questMounted = true;
-  import('./quest-ui.js?v=47').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=48').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

@@ -79,20 +79,99 @@ for Meta distribution.
   policy checks and independent task/package review pass.
 - [x] Publish15 to the existing private Quest2 Developer channel; Meta completes
   its checks, malware passes and vulnerability details report all tests passed.
-- [ ] Establish actual Meta-delivered15 baseline and provision the helper.
-- [ ] Prove genuine boot, effective kiosk/menu recovery and protected exit.
+- [x] Establish actual Meta-delivered15 baseline and provision the helper.
+- [x] Prove genuine boot, effective kiosk/menu recovery and protected exit.
 - [ ] Publish16 and prove automatic Meta delivery plus post-update behavior.
-- [ ] Publish verified split implementation and exact acceptance evidence.
+- [x] Publish verified split implementation; PR27/Pages43921087088 and18 live files pass.
 
-No helper permission grant/install or reboot has yet occurred. Main15 is Meta-
-published and16 is local/unpublished. The user thought15 had arrived, but fresh
-Package Manager and exact hash readback still show local12 with shell installer
-provenance. Actual library/active-channel diagnosis is pending; do not count
-this as automatic delivery. Phone control remains with the user; Location stays
-ON. Signing files, account identifiers, raw device logs and build artifacts
-remain private.
+Actual Meta15, helper installation/permission/opt-in, genuine boot and physical
+menu recovery/escape are now verified. Meta16 is published with completed tests.
+The subsequent genuine boot observes no16 across69 samples over about208seconds; later
+closed/asleep readbacks also remain15. Automatic delivery and post-update behavior
+remain open. PR27/Pages43921087088 and18 public-file comparisons pass. The user
+now authorizes the extension below. Phone control stays with the user, Location
+stays ON. Account/device IDs, raw logs and APKs remain private.
 
-Source-preparation PR26 merged at `2418869c19b0fb1f84723fcf566c225bd9dfcf5b`;
-exact Pages run43915823855 succeeded and eight affected/preserved public files
-matched the Git blobs. Subsequent split/evidence changes remain in progress.
-The overall task stays open until its own hardware/update criteria pass.
+## Extension: automatic in-app Meta updates — 2026-11-16
+
+The user explicitly requests that the APK check, download and install available
+Meta-channel updates at startup, including when launched by the boot helper.
+The helper remains unchanged. Current actual baseline15 was installed by Meta
+with retained UID; genuine boot and physical menu recovery/escape passed.
+Meta16 is published. A bounded real boot observation (69 samples, about208s)
+and subsequent closed/asleep readbacks still showed15. This establishes no
+observed automatic15-to16 transition, not a general failure of Meta updating.
+
+### Binding behavior
+
+- The updater is an explicitly selected optional native app composition. The
+  Meta app ID and SDK paths enter through validated build inputs; other apps
+  remain inert. Use official Platform SDK207 native C APIs through a small owned
+  JNI adapter. SDK archive SHA256 is
+  `00c4035dce5cda094eaf0272ad70f2deda389c32bf0d3eacc12135c16d385401`;
+  actual ARM64 loader has16KiB PT_LOAD alignment. SDK binaries stay external.
+- A genuine trusted cold native launch arms maintenance before preparation can
+  begin. Start SDK work only after first submitted frame/current owner proof.
+  Do not block XR rendering. Initialize asynchronously, request version, download
+  only when the numeric latest code is strictly greater than actual installed
+  code, poll progress, then request install-and-relaunch with default options.
+  SDK current-code disagreement or malformed values fail closed for updating.
+- One shared native admission fence serializes maintenance with actual breathing
+  setup, calibration/rehearsal, Arm/Start, delayed experiment entry and recording
+  persistence. IDLE alone is insufficient. Direct/local commands retain the same
+  fence. No update starts during a session; revalidate before install. No locks
+  are held across SDK/JNI callbacks. Owner retirement invalidates callbacks.
+- Initialization/version have15s limits each; download stalls after45s without
+  byte progress or reaches a10min total limit. Before install dispatch, failures
+  revoke the attempt's install authority and permit normal installed-version
+  setup with an explicit warning. Never interpret a late callback as authority.
+  No automatic retry in the same process. A Quest restart provides a fresh trusted
+  process for retry; normal app closure may retain its cached process. A warm
+  trusted activity relaunch reports a fresh safe warning instead of stale success.
+- Persist a minimal pending target/attempt before requesting install. SDK dispatch
+  or acknowledgement is not proof of installation. After dispatch, timeout or
+  ambiguous outcomes stay blocked with a restart-required explanation; do not
+  allow preparation while a late install may still terminate the process.
+  Bound repeated same-target installation across failed relaunches. Only fresh
+  actual package identity can confirm completion. Do not persist launch trust.
+- Preserve strict existing trusted MAIN/sole-LAUNCHER admission. Do not weaken it
+  based on an assumed SDK relaunch intent. Qualify actual Meta relaunch; a distinct
+  route needs an explicit reviewed one-shot provenance contract if observed.
+- Native status provides optional `meta_update` version1: `state`, `reason`,
+  `installed_code`, nullable `available_code`, nonnegative `downloaded_bytes`,
+  nullable `total_bytes`, and `session_allowed`. States: `waiting`, `checking`,
+  `current`, `downloading`, `installing`, `updated`, `failed`, `restart_required`.
+  Busy states and restart_required deny preparation. Legacy feature absence
+  preserves existing behavior. Malformed advertised status is not success.
+- The PWA displays native progress/warnings beside APK identity and before
+  preparation; existing controls respect the native gate. Public release JSON
+  remains an availability hint, never install authority. Rendering, refresh and
+  preview polls never initiate an update. No new remote update commands in this
+  increment; retry is a clearly described Quest restart after safe failure.
+- Preserve signer, package, controller-only policy, private visuals, breathing
+  math/audio/900s recording and stored phone trust. No overlay, installer, admin,
+  Accessibility or new account permissions in the experiment APK.
+
+### Implementation and qualification order
+
+5. Implement the native SDK bridge and explicit packaging selection, with exact
+   external artifact hashes, SDK/API/ELF/dependency and signed APK closure checks.
+   Test asynchronous request IDs, errors and stale callback behavior with a fake
+   SDK; compile against actual SDK207 headers/library. Preserve opt-out packages.
+6. Implement the native maintenance/session fence, trusted startup orchestration,
+   persisted attempt/relaunch bookkeeping and read-only status. Test races,
+   timeouts, equal/lower/latest versions, direct bypasses, setup-under-IDLE and
+   post-dispatch uncertainty. Independently review tasks5/6 together.
+7. Implement the PWA display and native readiness gate, preserving stable DOM,
+   scroll, edits, existing journals and100ms preview-only cadence. Test valid,
+   absent and malformed status plus all blocking/terminal states and render
+   narrow/200% text cases. Review the task and whole increment.
+8. Build a new SDK-enabled baseline and higher successor with retained private
+   inputs/signer. Publish both through the existing private Meta channel in
+   sequence. Establish actual Meta baseline, then genuinely boot it with a newer
+   version available; prove download/install/new package identity, data/UID/trust,
+   post-update initialization, focus/frame progression, boot-helper and kiosk.
+   Never count a host install, channel listing or SDK acknowledgement as success.
+9. Update existing PROJECT/evidence and publish each verified source/PWA increment
+   through ordinary PR/exact Pages/live checks. Keep physical update acceptance
+   open until the Meta-managed transition is witnessed.

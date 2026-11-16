@@ -56,48 +56,45 @@ the existing utility and recovery routes.
 
 ### Autoboot, kiosk and Meta update test — 2026-11-16
 
-The user accepts current APK/PWA behavior for now and requests power-on launch,
-menu/foreground recovery and actual automatic Meta updates. Both the outdated
-baseline and its successor must arrive through Meta. Follow the accepted
-[boot/helper/update contract](BOOT-KIOSK-UPDATE.md); overall acceptance is open.
+## Current boot/update checkpoint — 2026-11-16
 
-Meta rejected the initial internal-boot code13 for unsupported
-`SYSTEM_ALERT_WINDOW`. After a local12 smoke installation, the user approved a
-separate one-time USB boot helper. Main15/0.2.14-dev and16/0.2.15-dev omit that
-internal boot feature and permission while retaining the same signer, private
-inputs, controller-only input, pairing, audio/calibration and own-app kiosk.
-The helper resolves the current installed same-signer MAIN/LAUNCHER each boot;
-normal experiment updates do not require helper updates. No native source change.
+Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/
+initiator, with retained UID. The separate same-signer boot helper is installed,
+overlay Allowed and enabled by the user. Genuine reboot automatically launches15:
+trusted native cold admission, first submitted frame, OpenXR focus and advancing
+frames are observed. The wearer confirms single-menu recovery and protected
+three-departure escape; native terminal/task-removal/retired-owner logs corroborate
+escape. Helper27policy checks, signed package inspection and independent review pass.
 
-Main15/16 actual signed-package gates and full normalized functional comparisons
-pass. The signed helper passes27policy checks, SDK36 compilation, actual package
-inspection and independent source/package review. See the
-[APK record](../quest/apks/README.md) for exact byte hashes and evidence limits.
-Root reruns helper27checks, signature, release-policy6/6zero-skip and context/diff
-checks. The PWA policy advertises available15 while retaining protocol minimum11.
+Meta16 was published with the Quest off. Processing completes, malware passes
+and security details say all tests passed. The next genuine boot still launches15.
+A69-sample window over about208seconds observes no16; available version readbacks
+are15 with validated Wi-Fi and charging;
+later closed/asleep readbacks remain15. This is a bounded negative result, not
+proof Meta updating never works or that kiosk causes it. No host install, host
+app launch or manual Update established the test result. Both actual experiment
+versions must continue through Meta distribution. Phone control stays with the
+user, Location stays ON; normal main updates do not require helper updates.
 
-Code15 is the current existing private Developer-channel Quest2 build; Meta
-checks are Complete, malware passes and vulnerability review reports all tests
-passed. Channel access, existing one-member enrollment and latest-build launch
-policy were preserved. Code16 remains local/unpublished pending baseline testing.
+The user now approves an official in-app startup check/download/install/relaunch.
+Use the same [active contract](BOOT-KIOSK-UPDATE.md) extension tasks5–9. Native
+Platform SDK207 has a16KiB-aligned ARM64 loader; implementation is in progress,
+not built or hardware-qualified. Preserve signer, data/trust, private visuals,
+controller-only policy and audio/calibration math. A shared native maintenance
+fence must protect calibration, preparation and recording. SDK acknowledgement
+is not installed-version evidence. Overall update acceptance remains open.
 
-**Current device:** after explicit idle/USB readiness, local12 installation was
-confirmed by exact APK hash/version and retained UID. The user then thought the
-library updated automatically, but fresh Package Manager/hash/installer readback
-still shows local12 with Android-shell provenance. The user confirms Developer
-is selected and offers15, while installed12 has no Update option. They are
-trying Meta's original invitation-page “Install on headset” route. Actual Meta15
-adoption is pending;
-never ADB-install15/16 for this test. No helper is installed/granted and no reboot
-has occurred. No enrollment/account-mode change or overall boot/kiosk/update
-acceptance is claimed. Phone control stays with the user; Location remains ON.
+Verified split source: PR27 merge `4bae41fa3c0d4d30a10996e4e2c569419eefab38`,
+exact Pages43921087088 success and18 public files byte-match Git. Public policy
+now advertises available16/minimum11; installed15 is still compatible. The new
+hardware-evidence/policy increment and SDK implementation await publication.
+The read-only PWA update display and readiness gates pass independent task review,
+249/249 full phone tests with real native/Java prerequisites and zero skips,
+12 current rendered update states (including320px/200% text),18 release-policy
+renders, preserved drafts/focus/scroll and unchanged preview-only cadence. Native
+SDK packaging/startup review and actual SDK-enabled Meta delivery are still open.
 
-Source-preparation PR26 merged at `2418869c19b0fb1f84723fcf566c225bd9dfcf5b`;
-exact Pages run43915823855 succeeded with eight affected/preserved public files
-matching exact Git blobs and remote equality passing. The verified helper/split
-and updated evidence are the next publication increment. Remaining steps:
-Meta15 adoption, one-time helper setup, genuine boot/focus/menu/exit qualification,
-then Meta16 publication and observed automatic delivery/post-update behavior.
+Historical checkpoint notes below describe their observation time.
 
 ### Operator layout improvement — 2026-11-16
 

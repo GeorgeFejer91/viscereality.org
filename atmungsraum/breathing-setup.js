@@ -1,4 +1,5 @@
 import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=11';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=1';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt · persönlich eingerichtet',
@@ -185,7 +186,8 @@ export class BreathingSetup {
       && !busy && !pending && !unknown && !this.busy;
     const recovering = Boolean(setup?.recovery || this.pending?.recovery);
     const recoveryUnavailable = setup?.clock_valid === false && setup.audio_recovery_available === false;
-    const idle = ownerIdle && !this.pending && !this.unknown && !recovering && !recoveryUnavailable;
+    const updateAllowed = nativeSessionAllowed(status);
+    const idle = ownerIdle && updateAllowed && !this.pending && !this.unknown && !recovering && !recoveryUnavailable;
     const gated = idle && participantReady
       && (status.pi?.r === false || status.pi?.r === true && status.pi.f === true);
     const ownerRetired = this.pending && gateway?.owner
@@ -228,6 +230,7 @@ export class BreathingSetup {
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
       blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
+        : !updateAllowed ? metaUpdateView(status).summary
         : recoveryUnavailable ? 'Die Atemschleife ist nicht bereit. Öffne die Quest-App erneut und verbinde dieses Smartphone wieder.'
         : !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
         : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
