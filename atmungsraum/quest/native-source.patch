@@ -16188,6 +16188,31 @@ index 00000000..28b6e2b4
 +        public int hashCode(){return device.hashCode();}
 +    }
 +}
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
+index debfbb6a..95917381 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
+@@ -312,6 +312,8 @@ final class PolarStopBleCapability {
+     }
+     synchronized byte[] projectBoundedStatus(org.json.JSONObject base,org.json.JSONObject offer) throws Exception {
+         org.json.JSONObject candidate=new org.json.JSONObject(base.toString());
++        // Private enrolled-LAN diagnostics never consume compact BLE bytes or evict grants.
++        candidate.remove("meta_update");
+         // Readiness and presentation have priority over optional diagnostics.
+         if(candidate.has("y"))for(String field:new String[]{"done","early","ms","k","rec","co","bt","po","pf","f","r"}) {
+             if(candidate.toString().getBytes(StandardCharsets.UTF_8).length<=430)break;
+@@ -340,6 +342,11 @@ final class PolarStopBleCapability {
+         }
+         if(bytes.length<=480)return bytes;
+         clear();candidate.remove("z");bytes=candidate.toString().getBytes(StandardCharsets.UTF_8);
++        // Full idle setup (including automatic recovery detail) is optional on BLE.
++        // Withdraw grants first; native readiness still gates every Start/Resume.
++        if(bytes.length>480&&candidate.has("y")) {
++            candidate.remove("y");bytes=candidate.toString().getBytes(StandardCharsets.UTF_8);
++        }
+         if(bytes.length>480)throw new IllegalArgumentException("status-budget-exceeded");
+         return bytes;
+     }
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
 index 11c7647f..68bfc2e9 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleServer.java
@@ -23187,7 +23212,7 @@ index 00000000..8d4a7bb2
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
-index 359afefe..08908504 100644
+index 359afefe..183e6b49 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
 @@ -148,6 +148,11 @@ public final class ExperimentSessionControlCapabilityTest {
@@ -23202,6 +23227,70 @@ index 359afefe..08908504 100644
    for(Object invalid:new Object[]{-1,101,1.5,true,"50"})deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","set-bias").put("b",invalid)),"closed bias integer");
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","set-bias")),"missing bias");
    deny(()->ExperimentSessionBleProtocol.sessionBias(new JSONObject().put("op","pause").put("b",50)),"bias is not generic field");
+@@ -180,7 +185,63 @@ public final class ExperimentSessionControlCapabilityTest {
+   require(!status.has("pi"),"malformed readiness cannot manufacture Boolean capability");
+   System.out.println("PASS native Polar input projection: legacy absence, loss/recovery hold, exact booleans and480-byte optional fallback");
+  }
++ static void oversizedOptionalIdleSetupKeepsCoreStatus()throws Exception {
++  JSONObject core=new JSONObject("{\"o\":{\"v\":1,\"s\":\"observed\",\"e\":\"7\",\"i\":\"123456789012345\",\"g\":0,\"r\":1,\"a\":750},\"v\":1,\"m\":\"open\",\"p\":\"IDLE\",\"g\":0,\"c\":\"\",\"st\":\"ready\",\"h\":\"vr-preparation\",\"pending\":false,\"a\":[\"track-ready\",\"track-ready\"],\"b\":[\"pattern-ready\",\"pattern-ready\"]}");
++  byte[] expected=new PolarStopBleCapability().projectBoundedStatus(core,null);
++  JSONObject setup=new JSONObject().put("p",true).put("b",true).put("l","enabled").put("c",false).put("x","111111111111")
++   .put("a",false).put("e",false).put("sc",true).put("ar",false).put("s",repeat("a",32)).put("g",7).put("r",1000)
++   .put("d",new org.json.JSONArray().put("111111111111").put("222222222222").put("333333333333").put("444444444444"))
++   .put("auto",new JSONObject().put("v",1).put("state","backoff").put("retry_ms",15000).put("reason",repeat("Sensor connection retry. ",10).substring(0,240)));
++  require(setup.getJSONObject("auto").getString("reason").length()==240,"actual automatic reason maximum bound");
++  JSONObject full=new JSONObject(core.toString()).put("y",setup);
++  require(!full.has("meta_update")&&full.toString().getBytes(StandardCharsets.UTF_8).length>480,"ordinary native idle setup overflows without SDK diagnostics");
++  String original=full.toString();
++  byte[] actual=new PolarStopBleCapability().projectBoundedStatus(full,null);
++  require(java.util.Arrays.equals(actual,expected),"optional idle setup cannot hide fitting mandatory status");
++  require(original.equals(full.toString()),"full LAN setup and automatic diagnostics preserved");
++  PolarStopBleCapability owner=new PolarStopBleCapability();
++  JSONObject offered=owner.offer(polar(),read(),9,11,2,1000);
++  byte[] retired=owner.projectBoundedStatus(full,offered);
++  require(new JSONObject(new String(retired,StandardCharsets.UTF_8)).similar(core),"last-resort setup fallback preserves core without reviving overflowing Polar grant");
++  deny(()->owner.admit(offered.getString("s"),0,"stop-acc",1001,9,11,2),"omitted Polar grant remains retired after setup fallback");
++  JSONObject small=new JSONObject().put("v",1).put("p","IDLE").put("g",0).put("y",new JSONObject().put("p",true).put("c",false));
++  require(new JSONObject(new String(new PolarStopBleCapability().projectBoundedStatus(small,null),StandardCharsets.UTF_8)).has("y"),"fitting legacy setup remains available");
++  final JSONObject oversizedCore=new JSONObject(core.toString()).put("padding",repeat("x",500)).put("y",setup);
++  deny(()->new PolarStopBleCapability().projectBoundedStatus(oversizedCore,null),"omitting optional setup cannot truncate oversized core status");
++  System.out.println("PASS idle automatic Polar setup overflow without Meta: full="+original.getBytes(StandardCharsets.UTF_8).length+"B; exact retained core="+actual.length+"B; full LAN source and fitting legacy setup preserved");
++ }
++ static void privateMetaUpdateNeverConsumesBleBudget()throws Exception {
++  JSONObject legacy=new JSONObject("{\"o\":{\"v\":1,\"s\":\"observed\",\"e\":\"1\",\"i\":\"10000000000000\",\"g\":7,\"r\":0,\"a\":741},\"f\":\"panel\",\"p\":\"ARMED\",\"g\":7,\"r\":0,\"c\":\"condition-a\",\"rec\":true,\"co\":\"NOT_REACHED\",\"ms\":0,\"st\":\"ready\",\"k\":\"starting\",\"bt\":\"ON\",\"po\":\"CONNECTED\",\"pf\":true,\"done\":0,\"early\":0,\"a\":[\"track-ready\",\"track-ready\"],\"b\":[\"pattern-ready\",\"pattern-ready\"],\"pending\":false,\"v\":1,\"m\":\"open\"}");
++  JSONObject grant=new JSONObject().put("s",repeat("c",32)).put("r",0).put("a",7).put("e",0);
++  legacy.put("q",new JSONObject().put("v",2).put("s",grant.getString("s")).put("g",7)
++    .put("o",new org.json.JSONArray().put("start").put("save-next").put("save-exit")));
++  byte[] expected=new PolarStopBleCapability().projectBoundedStatus(legacy,grant);
++  require(expected.length<=480&&new JSONObject(new String(expected,StandardCharsets.UTF_8)).has("z"),"legacy production-shaped status retains both grants");
++  java.util.zip.CRC32 expectedCrc=new java.util.zip.CRC32();expectedCrc.update(expected);
++  int cases=0;
++  for(String state:new String[]{"waiting","checking","current","downloading","installing","updated","failed","restart_required"})
++   for(String reason:new String[]{"awaiting-first-submitted-frame","external-install-handoff-uncertain-restart-required"})
++    for(boolean known:new boolean[]{false,true}) {
++     JSONObject update=new JSONObject().put("v",1).put("state",state).put("reason",reason)
++      .put("installed_code",9007199254740990L).put("available_code",known?9007199254740991L:JSONObject.NULL)
++      .put("downloaded_bytes",known?9007199254740991L:0L).put("total_bytes",known?9007199254740991L:JSONObject.NULL)
++      .put("session_allowed",state.equals("current")||state.equals("updated")||state.equals("failed"));
++     JSONObject full=new JSONObject(legacy.toString()).put("meta_update",update);
++     String original=full.toString();
++     require(original.getBytes(StandardCharsets.UTF_8).length>480,"fixture reproduces full updater object overflowing compact budget");
++     byte[] actual=new PolarStopBleCapability().projectBoundedStatus(full,grant);
++     require(java.util.Arrays.equals(expected,actual),"private update cannot evict fields/grants or alter exact BLE body: "+state);
++     java.util.zip.CRC32 crc=new java.util.zip.CRC32();crc.update(actual);
++     require(crc.getValue()==expectedCrc.getValue(),"private update cannot alter compact body CRC");
++     require(original.equals(full.toString())&&full.getJSONObject("meta_update").toString().equals(update.toString()),"projection preserves full private-LAN source object");
++     cases++;
++    }
++  require(java.util.Arrays.equals(expected,new PolarStopBleCapability().projectBoundedStatus(legacy,grant)),"SDK-absent legacy bytes unchanged");
++  System.out.println("PASS private Meta update excluded before BLE budget: "+cases+" state/reason/progress fixtures; exact legacy body="+expected.length+"B CRC32="+Long.toHexString(expectedCrc.getValue())+"; full source and both grants retained");
++ }
+  public static void main(String[]args)throws Exception{
++  privateMetaUpdateNeverConsumesBleBudget();
++  oversizedOptionalIdleSetupKeepsCoreStatus();
+   polarInputReadiness();
+   armObservationTransition();
+   liveBias();
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayAudioRecoveryTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayAudioRecoveryTest.java
 new file mode 100644
 index 00000000..a240aaea
@@ -23328,10 +23417,24 @@ index 00000000..a240aaea
 +    private static void check(boolean value, String reason) { checks++; if (!value) throw new AssertionError(reason); }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 36a65bbd..aeb69e56 100644
+index 36a65bbd..e6d786b0 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-@@ -26,6 +26,7 @@ public final class ExperimentSessionGatewayProtocolTest {
+@@ -5,6 +5,13 @@ public final class ExperimentSessionGatewayProtocolTest {
+     static final String CONTROLLER="11111111111111111111111111111111",DEVICE="22222222222222222222222222222222",
+         KEY="3333333333333333333333333333333333333333333333333333333333333333";
+     static int calls;
++    static JSONObject metaUpdate()throws Exception {
++        return new JSONObject().put("v",1).put("state","restart_required")
++            .put("reason","external-install-handoff-uncertain-restart-required")
++            .put("installed_code",9007199254740990L).put("available_code",9007199254740991L)
++            .put("downloaded_bytes",9007199254740991L).put("total_bytes",9007199254740991L)
++            .put("session_allowed",false);
++    }
+     static JSONObject request(String nonce,String action,String payload)throws Exception {
+         return new JSONObject().put("v",1).put("controller",CONTROLLER).put("epoch","42").put("nonce",nonce).put("action",action).put("payload",payload)
+             .put("mac",ExperimentSessionGatewayProtocol.hmac(KEY,"RQG1|"+CONTROLLER+"|42|"+nonce+"|"+action+"|"+payload));
+@@ -26,6 +33,7 @@ public final class ExperimentSessionGatewayProtocolTest {
          denied(()->protocol.exchange(request("55555555555555555555555555555555","status","{}").put("controller",DEVICE)));
          denied(()->protocol.exchange(request("55555555555555555555555555555555","status","{}").put("extra",true)));
          denied(()->protocol.exchange(request("55555555555555555555555555555555","shell","{}")));
@@ -23339,7 +23442,7 @@ index 36a65bbd..aeb69e56 100644
          denied(()->protocol.exchange(request("55555555555555555555555555555555","status","{}").put("v",1.0)));
          protocol.exchange(request("55555555555555555555555555555555","status","{}"));
          JSONObject monitor=protocol.exchange(request("88888888888888888888888888888888","breath-monitor","{\"run\":\"\",\"after\":0}"));
-@@ -37,6 +38,56 @@ public final class ExperimentSessionGatewayProtocolTest {
+@@ -37,6 +45,56 @@ public final class ExperimentSessionGatewayProtocolTest {
          denied(()->ExperimentSessionGatewayProtocol.monitorQuery(new JSONObject().put("run","").put("after",0).put("operation","pause")));
          denied(()->protocol.exchange(request("99999999999999999999999999999999","breath-monitor","{}").put("payload","{\"after\":1}")));
          protocol.retire();denied(()->protocol.exchange(request("66666666666666666666666666666666","status","{}")));
@@ -23365,7 +23468,7 @@ index 36a65bbd..aeb69e56 100644
 +        denied(()->ExperimentSessionGatewayProtocol.setupQuery(new JSONObject(setupReceipt.toString()).put("id","other")));
 +        ExperimentSessionGatewayProtocol privateController=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,true,
 +            (action,payload)->{calls++;return new JSONObject().put("v",1).put("id",payload.optString("id")).put("state","confirmed")
-+                .put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("meta_update",new JSONObject().put("v",1)).put("setup",new JSONObject().put("input","automatic"))
++                .put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("meta_update",metaUpdate()).put("setup",new JSONObject().put("input","automatic"))
 +                .put("y",new JSONObject().put("ar",true).put("ad",new JSONObject().put("frame_type",1)));});
 +        JSONObject setupReply=privateController.exchangeLan(request("a1111111111111111111111111111111","breath-setup",setupBody));
 +        if(!"confirmed".equals(new JSONObject(setupReply.getString("payload")).getString("state")))
@@ -23373,14 +23476,14 @@ index 36a65bbd..aeb69e56 100644
 +        denied(()->privateController.exchange(request("a2222222222222222222222222222222","breath-setup",setupBody)));
 +        denied(()->privateController.exchangeLan(request("a1111111111111111111111111111111","breath-setup",setupBody)));
 +        ExperimentSessionGatewayProtocol guest=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,42,
-+            (action,payload)->{calls++;return new JSONObject().put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("meta_update",new JSONObject().put("v",1)).put("setup",new JSONObject())
++            (action,payload)->{calls++;return new JSONObject().put("breath_setup",1).put("apk",new JSONObject().put("v",1)).put("meta_update",metaUpdate()).put("setup",new JSONObject())
 +                .put("y",new JSONObject().put("ad",new JSONObject().put("frame_type",1)));});
 +        denied(()->guest.exchangeLan(request("a3333333333333333333333333333333","breath-setup",setupBody)));
 +        JSONObject relayStatus=new JSONObject(privateController.exchange(request("a4444444444444444444444444444444","status","{}")).getString("payload"));
 +        if(relayStatus.getJSONObject("y").has("ad")||!relayStatus.getJSONObject("y").getBoolean("ar"))throw new AssertionError("signed enrolled relay must strip ACC diagnostic and preserve nonprivate recovery bit");
 +        JSONObject privateLanStatus=new JSONObject(privateController.exchangeLan(request("a6666666666666666666666666666666","status","{}")).getString("payload"));
 +        if(!privateLanStatus.has("apk"))throw new AssertionError("private authenticated LAN omitted installed APK identity");
-+        if(!privateLanStatus.has("meta_update"))throw new AssertionError("private LAN omitted selected updater projection");
++        if(!privateLanStatus.getJSONObject("meta_update").toString().equals(metaUpdate().toString()))throw new AssertionError("private LAN changed full updater projection");
 +        if(!privateLanStatus.getJSONObject("y").has("ad"))throw new AssertionError("private LAN must retain authenticated ACC diagnostic");
 +        JSONObject guestStatus=new JSONObject(guest.exchangeLan(request("a5555555555555555555555555555555","status","{}")).getString("payload"));
 +        if(relayStatus.has("breath_setup")||relayStatus.has("setup")||guestStatus.has("breath_setup")||guestStatus.has("setup"))
@@ -24141,7 +24244,7 @@ index 00000000..816ab0f5
 +worn-device qualification; synthetic fixtures establish software behavior, not
 +physiological or clinical accuracy. No successful wearer fit is implied.
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
-index 6cb1e8b1..28922a28 100644
+index 6cb1e8b1..45e7ea8b 100644
 --- a/docs/EXPERIMENT_SESSION_CONTROL.md
 +++ b/docs/EXPERIMENT_SESSION_CONTROL.md
 @@ -145,6 +145,175 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
@@ -24320,7 +24423,7 @@ index 6cb1e8b1..28922a28 100644
  ### Privileged local trusted-LAN enrollment
  
  The debug-only `enroll-trusted-lan` operation additionally requires Boolean
-@@ -312,3 +481,168 @@ Required Polar ACC sessions also use the native acquisition hold described in
+@@ -312,3 +481,178 @@ Required Polar ACC sessions also use the native acquisition hold described in
  [Polar recovery](POLAR_SENSOR_RECOVERY.md#native-session-acquisition-hold).
  Official Start and Resume require fresh raw input in both Direct and Remote mode.
  Reconnection never resumes a paused session automatically; Arm remains preparation.
@@ -24478,6 +24581,16 @@ index 6cb1e8b1..28922a28 100644
 +for localized presentation. The outer native observation remains authoritative;
 +relay/guest status strips this object. Reads never initiate an update. No remote
 +update command exists. The full status bound is checked after decoration.
++Compact BLE projection removes `meta_update` from its own copy before applying
++the unchanged 480-byte budget or optional-field fallbacks. Update state, reason
++and progress cannot evict BLE readiness or command grants, alter legacy status
++bytes, or mutate the full enrolled private-LAN status. If idle Polar setup `y`
++(including its automatic recovery detail) still exceeds the BLE budget after
++existing optional-field and grant fallbacks, BLE omits `y` as a final fallback.
++It preserves the core observation and native readiness gates; a core status
++that still exceeds the budget remains unavailable. Fitting legacy setup and
++full private-LAN setup are unchanged. Discovery metadata uses
++its separate closed identity/endpoint projection and carries no update object.
 +
 +Focused host checks are `python tools/checks/test_meta_update_startup.py`,
 +`python tools/checks/test_meta_install_kiosk_handoff.py`,
@@ -29527,7 +29640,7 @@ index 00000000..dc0bab36
 +}'''.replace('__BODIES__',bodies)
 +run({pkg+'/AccDiagnosticHost.java':fixture+'\n'+support},'AccDiagnosticHost')
 diff --git a/tools/checks/test_remote_setup.py b/tools/checks/test_remote_setup.py
-index 4e7a895c..d6cfede7 100644
+index 4e7a895c..00d0b699 100644
 --- a/tools/checks/test_remote_setup.py
 +++ b/tools/checks/test_remote_setup.py
 @@ -9,8 +9,10 @@ package='io.github.mesmerprism.rustyquest.native_renderer'
@@ -29556,14 +29669,19 @@ index 4e7a895c..d6cfede7 100644
    o.closed=true;deny(()->o.remoteSetupStatus(7));
    JSONObject wire=ExperimentSessionBleProtocol.parseSetup(scan);check(wire.getInt("v")==4,"production codec");
    try{ExperimentSessionBleProtocol.parseSetup(new JSONObject(scan.toString()).put("extra",true));throw new AssertionError("open fields");}catch(IllegalArgumentException expected){}
-@@ -56,6 +65,7 @@ class PolarSensorRuntime {
+@@ -56,9 +65,12 @@ class PolarSensorRuntime {
     .put("p","IDLE").put("g",7).put("c","").put("st","ready").put("h","vr-preparation").put("pending",false)
     .put("a",new JSONArray().put("track-ready").put("track-ready")).put("b",new JSONArray().put("pattern-ready").put("pattern-ready"));
    JSONObject setup=new JSONObject(o.panel.state.toString()).put("s",o.projectedOwnerEpoch).put("g",7).put("r",1000).put("x","111111111111")
 +   .put("l","enabled").put("ar",true)
++   .put("auto",new JSONObject().put("v",1).put("state","backoff").put("retry_ms",15000).put("reason","Automatic connection retry pending."))
     .put("d",new JSONArray().put("111111111111").put("222222222222").put("333333333333").put("444444444444"));
    base.put("y",setup);byte[] projected=new PolarStopBleCapability().projectBoundedStatus(base,null);
    check(projected.length<=480&&new JSONObject(new String(projected,java.nio.charset.StandardCharsets.UTF_8)).getString("h").equals("vr-preparation"),"idle four candidate/readiness/presentation bounded projection");
++  check(!new JSONObject(new String(projected,java.nio.charset.StandardCharsets.UTF_8)).has("y")&&base.getJSONObject("y").has("auto"),"automatic recovery overflow omits optional BLE setup while preserving full LAN source");
+   System.out.println("Setup signed command bytes="+scan.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length+"; idle four-candidate status bytes="+projected.length);
+   System.out.println("PASS extracted production setup stale/generation/permission fences, selection, actual data confirmation, exact ID no replay, closed owner and wire fields; inert transport");
+  }
 diff --git a/tools/checks/test_renderer_radius_publication.py b/tools/checks/test_renderer_radius_publication.py
 new file mode 100644
 index 00000000..1e042ef6

@@ -100,9 +100,9 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `db0980b0cc6d6cbc399cde2102e9a77c110cb223`, matching
-the SDK-enabled developer source `b4a2d418abaccb3c317a820b88b2477bef798b93`.
-Patch SHA256 is `db00bc88563f62f88cfe582b16f50eba88108d9203ec30d89ed1cf27f9ab3a72`;
+reconstructs source tree `7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`, matching
+the SDK-enabled developer source `f5946e19058e347f1dc69fde85b7265814c8ed9d`.
+Patch SHA256 is `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71`;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
 The current Developer build selects the generic opt-in particle adapter with a downstream private

@@ -64,6 +64,17 @@ Scope: production HTML/CSS, Pretext integration, and controller presentation;
 keep native state, command admission, recording/Drive, audio, enrollment, and
 the existing utility and recovery routes.
 
+### Code18 successor checkpoint — 2026-11-16
+
+The final BLE correction is reviewed and packaged at native `f5946e19058e347f1dc69fde85b7265814c8ed9d`,
+tree `7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`. New cumulative patch SHA256 `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71` reconstructs exactly;
+code17's original source remains in Git at `0fa9046`. Final18-r3 SHA256 is
+`1463fa802a5439548bfda055b662ca483c86bf4cd59e03e4f75cc224c8aacb14`,
+65,662,083bytes. Only the intended BLE class changes; all79 audio/session assets,
+private inputs and SDK transport match17. Full product qualification passes.
+Meta18 upload is in progress while the confirmed17 headset is off. Do not power
+it on until release availability is verified; no manual/host18 installation.
+
 ### Autoboot, kiosk and explicit Meta startup updates — 2026-11-16
 
 Follow [BOOT-KIOSK-UPDATE.md](BOOT-KIOSK-UPDATE.md). Overall hardware acceptance
@@ -99,7 +110,10 @@ is not claimed.
   budget errors with the strap off. A valid oversized optional Polar retry
   summary reproduces the error in host tests; exact installed payload is not
   captured. Code18 will include the bounded optional-summary fix.
-- [ ] Verify the final code18 package after that transport fix.
+- [x] Rebuild and independently qualify final18-r3 with the bounded BLE fix;
+  all79 audio/guidance/session assets and private input files match17.
+- [x] User confirms17 headset completely off, USB connected, before18 upload.
+- [ ] Confirm Meta18 availability, then attended boot/update/relaunch test.
 - [ ] With17 installed and the Quest powered off, publish18, then prove the
   explicit in-app download/install/new-version/relaunch/focus/kiosk path.
 - [ ] Publish the final SDK source/package evidence and verify exact Pages/live URLs.
