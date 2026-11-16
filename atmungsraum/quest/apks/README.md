@@ -1,5 +1,76 @@
 # Atmungsraum Quest 2 APKs
 
+Code18 successor correction: final18-r3 retains all79 code17 audio/guidance/session
+assets and all15 private input files. Its native source is `f5946e19058e347f1dc69fde85b7265814c8ed9d`, tree
+`7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`, cumulative patch SHA256 `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71`.
+The exact code17 patch remains in Git at public commit `0fa9046`; its source
+b4a2d418 and package hash remain unchanged. APK18 was assembled with the frozen
+public staging inputs at `5834bd4`, before the concurrent new audio-review work;
+that review audio is not activated by this update test.
+
+The compact BLE projector now excludes private Meta status and, only after the
+existing grant-withdrawal fallbacks, omits an oversized optional Polar setup
+summary. Core480-byte refusal, grants, native readiness and full authenticated
+LAN status remain. Real Java SDK-absent overflow771B and Unicode1971B fixtures
+reduce to241B; fitting legacy476B/CRC stays exact. Independent review passes;
+actual signed package/SDK/signature/16KiB/source/private-input checks pass.
+Only PolarStopBleCapability.class differs among756 JVM classes. Native .text
+and all22 allocated sections match after exact activation-binding normalization;
+DEX/source metadata differences are expected. Exact headset overflow payload was
+not captured, so the original on-device cause remains bounded inference.
+Meta18 build1463187006880311 is available in Developer with malware/security
+passes and retained13+ age group. The17 headset was off before publication.
+Genuine autoboot17/GetVersion/focus and wearer stimulus are observed; actual
+SDK download/install/relaunch acceptance remains pending.
+
+
+## 0.2.16-dev / 0.2.17-dev — SDK startup updater, 2026-11-16
+
+| Property | Qualified value |
+| --- | --- |
+| Baseline17 |0.2.16-dev,65,662,083bytes, SHA256 `720da4cbc082a41fcd169b743987e70127dcc4ecfe55e38840a3bccbf3c2b693` |
+| Successor18 |0.2.17-dev,65,662,083bytes, SHA256 `1463fa802a5439548bfda055b662ca483c86bf4cd59e03e4f75cc224c8aacb14` |
+| Signer | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit/tree | `b4a2d418abaccb3c317a820b88b2477bef798b93` / `db0980b0cc6d6cbc399cde2102e9a77c110cb223` |
+| Cumulative patch SHA256 | `db00bc88563f62f88cfe582b16f50eba88108d9203ec30d89ed1cf27f9ab3a72` |
+
+Official SDK207 performs the trusted startup version/download/install path with
+shared native session exclusion, bounded safe failures and durable uncertainty.
+Kiosk recovery hands off before installation; external/queued and persisted
+uncertainty cannot release through a warm activity restart. Fresh process startup
+restores ordinary kiosk. Strict launcher trust is preserved; actual Meta SDK
+relaunch compatibility still requires physical acceptance.
+
+Both signed packages pass actual Java/ARM64/session closure, SDK/manifest/all-DEX,
+v3+API24–27v2 signatures,16KiB ZIP/ELF alignment and independent private-input
+qualification. No overlay/boot/hand-tracking authority enters the main APK.
+All15 original private bundle files match;85 original16 payload assets match,
+four generated provenance/binding assets change and two SDK notice assets are
+added. Only two activation digests vary in environment/runtime settings. Pair
+DEX/SDK/LSL/OpenXR/panel closure match; all22 allocated native sections match
+after exact activation-binding normalization, including unchanged .text.
+Nonallocated symbol metadata differs; native binary identity is not claimed.
+
+17 is published to the existing private Quest2 Developer channel. Its malware
+requirement and detailed security tests pass, retaining the existing age group
+and access. Actual Meta17 installation is confirmed by exact digest, Meta attribution and
+retained UID. Trusted cold launch reaches FOCUSED; vendor logs show SDK
+initialization and GetVersion. No USB main-APK installation occurs. The wearer
+now confirms the17 headset is completely off, with USB connected. The final18-r3
+package above includes the reviewed bounded BLE projection correction: optional Polar retry data can overflow the existing480
+byte channel when the strap is off. Exact installed payload is unobserved; an
+SDK-absent production-shaped overflow is reproduced. Private LAN status and
+native readiness authority remain unchanged. SDK-driven update/relaunch/focus/kiosk
+and installed-phone trust acceptance remain open. Prior local17/18 candidates
+were superseded before upload by the reviewed kiosk-handoff build.
+
+Latest readback20:15 confirms actual Meta-installed16, exact published digest,
+Meta installer/initiator and lastUpdateTime19:43:44. It arrived after the initial
+negative power-on window and later idle observations. No host16 install or
+manual Update action occurred. Post-update boot/kiosk remains pending; historical
+checkpoint details below retain their observation scope.
+
+
 ## 0.2.14-dev / 0.2.15-dev — Meta baseline and update candidate, 2026-11-16
 
 | Build property | Verified value |

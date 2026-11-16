@@ -12,6 +12,36 @@ const assembler = fileURLToPath(new URL('../quest/assemble-apk.ps1', import.meta
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const audioDirectory = 'apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/';
 
+test('Meta startup updates require explicit complete inputs before assembly effects',
+  { skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.' }, () => {
+    const runName = `asm-meta-${randomUUID().slice(0, 12)}`;
+    const missing = invoke(runName, ['-MetaPlatformUpdate']);
+    assert.notEqual(missing.status, 0);
+    assert.match(missing.stdout + missing.stderr, /MetaPlatformUpdate requires/);
+    const ambient = invoke(runName + '-ambient', ['-MetaPlatformAppId', '123']);
+    assert.notEqual(ambient.status, 0);
+    assert.match(ambient.stdout + ambient.stderr, /require explicit -MetaPlatformUpdate/);
+  });
+
+test('Meta update resolution binds the explicit app identity and preserves the external boot helper split',
+  { skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to a patched native checkout.' }, async () => {
+    const runName = `asm-meta-on-${randomUUID().slice(0, 10)}`;
+    const scratch = await mkdtemp(join(tmpdir(), 'meta-update-resolve-'));
+    const key = join(scratch, 'resolve-only.keystore');
+    await writeFile(key, 'resolve-only path fixture');
+    const result = invoke(runName, ['-Developer', '-Keystore', key, '-VersionCode', '32',
+      '-MetaPlatformUpdate', '-MetaPlatformAppId', '1234567890123456',
+      '-MetaPlatformSdkRoot', scratch, '-MetaPlatformHeadersSha256', 'a'.repeat(64),
+      '-MetaPlatformLoaderSha256', 'b'.repeat(64), '-MetaPlatformArchiveSha256', 'c'.repeat(64)]);
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const run = await resolvedRun(runName, 'atmungsraum_developer');
+    assert.equal(run.lock.android_manifest.experiment_meta_update_enabled, true);
+    assert.match(run.manifest, /android:name="com\.oculus\.sdk\.appid" android:value="1234567890123456"/);
+    assert.match(run.manifest, /android:name="rusty\.quest\.meta_update\.enabled" android:value="true"/);
+    assert.doesNotMatch(run.manifest, /SYSTEM_ALERT_WINDOW|RECEIVE_BOOT_COMPLETED|NativeRendererBootReceiver/);
+    await assertControllerOnly(run);
+  });
+
 function invoke(runName, extra = []) {
   return spawnSync('pwsh', ['-NoProfile', '-File', assembler, '-QuestRepo', questRepo,
     '-BundledAssets', '-ResolveOnly', '-RunName', runName, ...extra], { encoding: 'utf8', timeout: 60000 });
@@ -69,6 +99,7 @@ test('assembly binds the real looping audio and selected Java definitions before
       assert.equal(selected[0].sha256, sha256(await readFile(join(questRepo, path))));
     }
     assert.match(run.manifest, /android:debuggable="true"/);
+    assert.doesNotMatch(run.manifest, /com\.oculus\.sdk\.appid|rusty\.quest\.meta_update\.enabled/);
     assert.ok(!run.lock.selected_feature_ids.includes('ui.experiment_boot_autostart'));
     assert.doesNotMatch(run.manifest, /NativeRendererBootReceiver|android\.intent\.action\.BOOT_COMPLETED|rusty\.quest\.experiment\.boot_autostart/);
     assert.match(run.manifest, /android:targetSdkVersion="35"/);

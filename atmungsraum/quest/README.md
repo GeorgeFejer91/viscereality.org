@@ -100,9 +100,10 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `9a482a67f80342cb612b50112996488fac422c3a`, matching
-the current developer source. Its SHA-256 and native commit are in
-the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
+reconstructs source tree `7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`, matching
+the SDK-enabled developer source `f5946e19058e347f1dc69fde85b7265814c8ed9d`.
+Patch SHA256 is `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71`;
+product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
 The current Developer build selects the generic opt-in particle adapter with a downstream private
 Showcase profile through the existing three-custom-input route. The bundled
@@ -261,6 +262,23 @@ inputs, APK and device evidence with the native release work.
 
 Add `-Developer` with its durable key and explicit version code to use the
 separate developer identity with custom Experimenter inputs.
+
+For the optional Meta startup updater, select `-MetaPlatformUpdate` and supply
+`-MetaPlatformAppId`, `-MetaPlatformSdkRoot`, `-MetaPlatformHeadersSha256`,
+`-MetaPlatformLoaderSha256` and `-MetaPlatformArchiveSha256` explicitly. The
+native packager verifies the externally supplied official Platform SDK207,
+actual JNI/DEX/manifest closure and16KiB library alignment. SDK binaries and
+signing inputs remain external. Without this option there is no SDK selection.
+Meta-distributed experiment builds omit `-BootAutostart`; the separate
+[boot helper](boot-helper/README.md) retains its one-time setup.
+
+The APK owns the update check, download and install admission before experiment
+preparation. The phone only displays native progress and blocks preparation
+while maintenance is active. A safe pre-install failure permits the installed
+version with a warning; an uncertain dispatched installation requires explicit
+recovery. SDK acknowledgement is not installed-version proof. See the
+[startup/update contract](../for-ai/BOOT-KIOSK-UPDATE.md) for qualification and
+the current evidence limits.
 
 On startup, the Quest APK requests Android’s turn-on dialog if its Bluetooth
 radio is off. The provisioned PWA reconnects using the saved connection. Tap

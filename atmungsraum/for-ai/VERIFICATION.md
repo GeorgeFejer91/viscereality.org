@@ -1,5 +1,29 @@
 # Verification
 
+Current SDK release checkpoint: Meta17 is actually installed with exact signed
+package hash, Meta attribution and retained UID. Final18-r3 is independently
+qualified from native f5946e19 and published as Meta build1463187006880311 to the
+same Developer channel. Malware/security pass;13+ age group is retained. The
+headset was off before publication. Genuine boot10 launches17, reaches FOCUSED
+and calls GetVersion; the wearer confirms automatic stimulus. Actual SDK
+download/install/relaunch remains open. All79 audio/session assets and15 private
+input files match17. Latest main audio-review staging is preserved in source but
+not activated in this APK. Fresh integrated web checks pass253/253 with zero
+skips after merging concurrent operator compatibility/focus work. Native75,
+service12/binding3/admission5, Android lifecycle12/110 and scoped BLE budget
+checks pass; broad existing panel/standalone audio fixtures remain unqualified.
+PR29 source/publication is pending. See PROJECT.md and BOOT-KIOSK-UPDATE.md.
+Older checkpoint paragraphs below are dated evidence, not the current release.
+
+
+Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
+APK digest matches the published16, installer/initiator are Meta, and Android
+records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes
+a delayed Meta15-to16 transition after the earlier bounded negative boot window;
+it does not establish immediate update-on-autoboot or precise continuously
+observed installer timing. Post-update boot/kiosk remains pending. The user-
+approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
+
 ## Operator UI compatibility — 2026-11-16
 
 The original browser regression checks reproduced blocked Start for a legacy-only

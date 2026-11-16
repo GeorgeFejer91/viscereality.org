@@ -1,5 +1,14 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
+Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
+APK digest matches the published16, installer/initiator are Meta, and Android
+records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes
+a delayed Meta15-to16 transition after the earlier bounded negative boot window;
+it does not establish immediate update-on-autoboot or precise continuously
+observed installer timing. Post-update boot/kiosk remains pending. The user-
+approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
+
+
 PROJECT.md owns the active lifecycle. The user accepts the latest attended
 APK/PWA as sufficient for now and requests power-on launch, menu/foreground
 recovery and a genuine Meta-distributed update while autoboot is enabled.
@@ -81,7 +90,8 @@ for Meta distribution.
   its checks, malware passes and vulnerability details report all tests passed.
 - [x] Establish actual Meta-delivered15 baseline and provision the helper.
 - [x] Prove genuine boot, effective kiosk/menu recovery and protected exit.
-- [ ] Publish16 and prove automatic Meta delivery plus post-update behavior.
+- [x] Publish16 and prove delayed automatic Meta delivery (exact digest/Meta installer/retained UID at20:15).
+- [ ] Qualify post-update boot/kiosk and the new explicit SDK path.
 - [x] Publish verified split implementation; PR27/Pages43921087088 and18 live files pass.
 
 Actual Meta15, helper installation/permission/opt-in, genuine boot and physical
@@ -99,8 +109,8 @@ Meta-channel updates at startup, including when launched by the boot helper.
 The helper remains unchanged. Current actual baseline15 was installed by Meta
 with retained UID; genuine boot and physical menu recovery/escape passed.
 Meta16 is published. A bounded real boot observation (69 samples, about208s)
-and subsequent closed/asleep readbacks still showed15. This establishes no
-observed automatic15-to16 transition, not a general failure of Meta updating.
+and subsequent closed/asleep readbacks still showed15. A later20:15 readback confirms actual16, lastUpdateTime19:43:44. This proves
+delayed automatic delivery after the earlier bounded negative window.
 
 ### Binding behavior
 
@@ -120,7 +130,11 @@ observed automatic15-to16 transition, not a general failure of Meta updating.
   setup, calibration/rehearsal, Arm/Start, delayed experiment entry and recording
   persistence. IDLE alone is insufficient. Direct/local commands retain the same
   fence. No update starts during a session; revalidate before install. No locks
-  are held across SDK/JNI callbacks. Owner retirement invalidates callbacks.
+  are held across SDK/JNI callbacks. After durable pending state and native
+  install admission, latch a process-local kiosk handoff on the main looper
+  before SDK dispatch. Cancel scheduled recovery and departure accounting;
+  retain suppression through ambiguous outcomes and warm activity restarts.
+  Fresh installed-process startup restores ordinary kiosk initialization. Owner retirement invalidates callbacks.
 - Initialization/version have15s limits each; download stalls after45s without
   byte progress or reaches a10min total limit. Before install dispatch, failures
   revoke the attempt's install authority and permit normal installed-version
