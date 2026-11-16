@@ -182,7 +182,7 @@ async function replaceWithPublishedRelease() {
   const controller = new AbortController();
   const deadline = setTimeout(() => controller.abort(), 2000);
   try {
-    // Bypass the Pages edge cache and let the browser reuse this response for navigation.
+    // Refresh the browser cache before handing this URL to navigation.
     const response = await fetch(entry, { cache: 'reload', redirect: 'error', signal: controller.signal });
     if (!response.ok) return false;
     const published = document.createElement('template');

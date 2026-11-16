@@ -288,7 +288,9 @@ ordinary cached entry URL. A different release ID triggers one replacement
 navigation with the same query options and fragment. An unavailable check
 falls back to the loaded release after at most two seconds of network wait.
 Returning to an already open app does not restart it. Existing installations
-pick up the checker the first time they load this release.
+pick up the checker the first time they load this release. The check uses
+the release currently served by Pages; it retries on the next launch if
+the hosting edge still serves the previous release.
 
 Run `python -B tools/test-pwa-startup.py` for the Chromium launch regression.
 It simulates publishing a newer release while the old entry is cached, and

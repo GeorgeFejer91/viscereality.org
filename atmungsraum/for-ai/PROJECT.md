@@ -9,13 +9,17 @@
   the loaded version if the check fails. See the [release workflow](WORKFLOW.md#smartphone-pwa).
 - [x] Verify a cached two-release launch, error and timeout fallback, and
   existing controller behavior in Chromium. See [verification](VERIFICATION.md#pwa-startup-updates--2026-11-16).
-- [ ] Verify the exact Pages deployment and the public startup behavior.
-- [ ] Confirm standalone relaunch on the lab Pixel 10. ADB showed no connected
-  devices at local verification; the physical check remains open.
+- [x] Verify `726204d` in [Pages run 43938500111](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43938500111).
+  Nine public files matched Git; both entry URLs and the live current/stale
+  Chromium launches passed.
+- [ ] Reopen the installed app on the idle lab Pixel 10 and confirm standalone
+  mode and release `20261116-pwa-startup-r1`. No device was listed by ADB at
+  release verification, so physical acceptance remains open.
 
 Started from clean sparse publication main at `b3a6a59`, matching
 `origin/main`. The primary checkout has pre-existing index changes and
-cloud-backed files; it was left untouched.
+cloud-backed files; it was left untouched. The verified runtime commit
+`726204d` matched remote main, and the remote context gate passed.
 
 ### Main study cue placeholders — 2026-11-16
 
