@@ -165,6 +165,12 @@ The cached-launch regression also first failed on idle resume; it now checks
 cached launch, idle return, the settings guard, 503/timeout fallback, and
 preservation of the launch URL and browser storage.
 
+The 320px screenshot also exposed duration labels outside the tile borders.
+The rendered catalog test now checks the contents against their own tile
+bounds. More space for the captions, smaller illustrations on narrow phones,
+and a text-driven stacked layout keep the full labels visible. The original
+layout and control checks were repeated after the correction.
+
 Chromium passed the production controller walkthrough, 135 layout states
 across 390px, 320px, 200% text, landscape and desktop, and 18 control and
 Polar states. Settings and enlarged text can use readable document reflow.

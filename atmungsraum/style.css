@@ -378,7 +378,7 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 }
 #operator-toolbar .check-icon[data-check="ok"] { color: #81e9a4; }
 #operator-toolbar .check-icon[data-check="unconfirmed"] { color: #ff8f8f; }
-.check-symbol { font-weight: bold; }
+.check-symbol { font-size: 14px; line-height: 1; font-weight: bold; }
 :is(#connection-diagnostic, #drive-dialog) {
   width: min(480px, calc(100vw - 24px));
   max-block-size: calc(100dvh - 24px);
@@ -413,21 +413,21 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
 .session-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .session-tile {
   position: relative; display: grid; place-items: center; text-align: center;
-  min-block-size: 48px; padding: 8px;
+  min-block-size: 48px; padding: clamp(4px, 1.5cqi, 8px);
   border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
   line-height: 1.15; cursor: pointer;
 }
 .session-tile input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
-.session-tile-text { display: grid; gap: 4px; width: 100%; pointer-events: none; }
-#quest-scenario .session-tile-text img { width: min(100%, 2.5em); height: auto; justify-self: center; }
+.session-tile-text { display: grid; gap: 3px; width: 100%; pointer-events: none; }
+#quest-scenario .session-tile-text img { width: min(100%, clamp(24px, 8cqi, 2.5em)); height: auto; justify-self: center; }
 .session-tile:has(:checked) { background: #0e2a3c; border-color: #74c5f2; box-shadow: inset 0 0 0 1px #74c5f2; }
 .session-tile:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 .session-tile:has(:disabled) { color: #979797; cursor: default; }
 #quest-scenario { width: min(100%, 34rem); container: operator-scenario / inline-size; }
-.session-segments { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: clamp(6px, min(2vw, 2dvh), 12px); }
+.session-segments { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.08fr); gap: clamp(6px, min(2vw, 2dvh), 12px); }
 .session-segment { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; min-width: 0; }
 .session-segment:not(:has(.session-tile:not([hidden]))) { display: none; }
-.session-segment h2 { margin: 0; font-size: 1em; font-weight: 700; }
+.session-segment h2 { margin: 0; font-size: .9375em; font-weight: 700; }
 .main-session-segment { padding-inline-start: 6px; border-inline-start: 2px solid var(--site-gold); }
 .main-session-segment .session-tiles { grid-template-columns: minmax(0, 1fr); }
 .main-session-segment .session-tile { align-self: stretch; border-color: var(--site-gold); }
@@ -437,12 +437,12 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
   margin-inline: auto;
 }
 @media (min-height: 481px) {
-  .session-tile { aspect-ratio: 1; width: 100%; max-width: 11rem; justify-self: center; }
+  .session-tile { aspect-ratio: 1; min-block-size: min-content; width: 100%; max-width: 11rem; justify-self: center; }
 }
 @container operator-scenario (max-width: 15rem) {
-  .session-segments { grid-template-columns: minmax(0, 1fr); }
+  .session-segments, .session-tiles { grid-template-columns: minmax(0, 1fr); }
   .main-session-segment { padding: 8px 0 0; border: 0; border-block-start: 2px solid var(--site-gold); }
-  .session-tile { aspect-ratio: auto; max-width: none; }
+  .session-tile { aspect-ratio: auto; min-block-size: 48px; max-width: none; }
 }
 #preview-review {
   font-size: clamp(1.1rem, min(4vw, 3dvh), 1.6rem);

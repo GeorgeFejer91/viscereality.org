@@ -118,13 +118,21 @@ def scenario_compatibility(review):
         (None, ['track-ready', 'track-ready'], [], None),
         (['probe-5'], ['missing', 'track-ready'], ['probe-5'], None),
     ):
-        page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}))
+        page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}),
+                           viewport={'width': 320, 'height': 568})
         c.enter_participant(page)
         page.locator('#preview-controller').click()
         page.locator('#preview-continue').click()
         expect(page.locator('#session-screen')).to_be_visible()
         expect(page.locator('#quest-condition, #quest-legacy-options')).to_have_count(0)
         radios = page.locator('#quest-scenario').get_by_role('radio')
+        outside = page.locator('.session-tile:visible').evaluate_all('''tiles => tiles.filter(tile => {
+          const box = tile.getBoundingClientRect();
+          const contents = tile.querySelector('.session-tile-text').getBoundingClientRect();
+          return contents.top < box.top || contents.bottom > box.bottom
+            || contents.left < box.left || contents.right > box.right;
+        }).map(tile => tile.textContent.trim())''')
+        assert not outside, f'scenario label extends outside its tile: {outside}'
         assert radios.evaluate_all('nodes => nodes.map(node => node.value)') == visible
         if selected:
             page.locator(f'input[value="{selected}"]').check()
