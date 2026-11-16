@@ -1,5 +1,26 @@
 # Verification
 
+## Autoboot recipe and local candidates — 2026-11-16
+
+Explicit `-BootAutostart` opts into the existing native boot feature. Default
+assembly remains opted out. Real resolver tests pass3/3 with zero skips; boot
+gate passes12 admission plus104 receiver/observation/lifecycle controls; the
+same-APK kiosk static/Java gate passes. Independent source/spec review reports
+no actionable findings. Native source remains the clean code11 revision.
+
+Actual Developer12 and13 APKs pass session closure, package/version/non-debuggable
+manifest, controller-only selection, boot metadata/action/two permissions,
+non-exported receiver and unique boot DEX definition checks. Original signer,
+v2/v3 signatures and16KiB ZIP alignment pass;89assets remain. The private build
+receipts and public APK record bind their exact bytes. No permission grant,
+installation, reboot, wearer foreground/menu acceptance or Meta delivery can
+be inferred from these gates. Code11 is still installed at this checkpoint.
+
+The current authenticated Meta dashboard confirms the existing Developer
+channel is private, holds code3 with one member, and does not require latest
+build at launch. No account setting or channel build was changed. Candidate13
+upload is authorized for the test after relevant baseline12 hardware acceptance.
+
 ## Sequential operator layout — 2026-11-16
 
 PWA-only presentation change: persistent connection/participant/signals/input/

@@ -12,6 +12,7 @@ param(
     [ValidateRange(1, 2100000000)][int]$VersionCode = 1,
     [string]$VersionName = '0.1.0',
     [switch]$Developer,
+    [switch]$BootAutostart,
     [switch]$ResolveOnly,
     [switch]$BundledAssets
 )
@@ -228,6 +229,13 @@ $app.requested_features = @($app.requested_features) + @(
     'ui.experiment_scene_recenter',
     'ui.experiment_wifi_setup'
 )
+if ($BootAutostart) {
+    $app.requested_features += 'ui.experiment_boot_autostart'
+    $app.declared_manifest.receivers = @(@($app.declared_manifest.receivers) + 'NativeRendererBootReceiver' | Select-Object -Unique)
+    $app.declared_manifest.permissions = @(@($app.declared_manifest.permissions) + @(
+        'android.permission.RECEIVE_BOOT_COMPLETED', 'android.permission.SYSTEM_ALERT_WINDOW'
+    ) | Select-Object -Unique)
+}
 if ('ui.native_mesh_panel' -cnotin $app.requested_features -and
     'ui.native_mesh_panel.original_product' -cnotin $app.requested_features) {
     $app.requested_features += 'ui.native_mesh_panel.original_product'
@@ -266,6 +274,35 @@ try {
     $metadata = @{}
     foreach ($entry in $manifest.SelectNodes('/manifest/application/meta-data')) {
         $metadata[$entry.GetAttribute('name', $androidNamespace)] = $entry.GetAttribute('value', $androidNamespace)
+    }
+    $bootSelected = 'ui.experiment_boot_autostart' -cin @($lock.selected_feature_ids)
+    $bootReceivers = @($manifest.SelectNodes('/manifest/application/receiver') | Where-Object {
+        $_.GetAttribute('name', $androidNamespace) -ceq 'io.github.mesmerprism.rustyquest.native_renderer.NativeRendererBootReceiver'
+    })
+    if ($bootSelected -ne [bool]$BootAutostart -or
+        ('NativeRendererBootReceiver' -cin @($lock.android_manifest.receivers)) -ne [bool]$BootAutostart -or
+        $bootReceivers.Count -ne [int][bool]$BootAutostart) {
+        throw 'The resolved boot selection and own-app receiver must match the explicit -BootAutostart option.'
+    }
+    if ($BootAutostart) {
+        if ($metadata['rusty.quest.experiment.boot_autostart'] -cne 'true' -or
+            $bootReceivers[0].GetAttribute('exported', $androidNamespace) -cne 'false' -or
+            @($bootReceivers[0].SelectNodes('intent-filter/action') | Where-Object {
+                $_.GetAttribute('name', $androidNamespace) -ceq 'android.intent.action.BOOT_COMPLETED'
+            }).Count -ne 1) {
+            throw 'Boot autostart must bind the non-exported system boot receiver and selection metadata.'
+        }
+        foreach ($permission in @('android.permission.RECEIVE_BOOT_COMPLETED', 'android.permission.SYSTEM_ALERT_WINDOW')) {
+            if ($permission -cnotin @($lock.android_manifest.permissions) -or
+                @($manifest.SelectNodes('/manifest/uses-permission') | Where-Object {
+                    $_.GetAttribute('name', $androidNamespace) -ceq $permission
+                }).Count -ne 1) {
+                throw "Boot autostart is missing its declared permission: $permission"
+            }
+        }
+    } elseif ($metadata.ContainsKey('rusty.quest.experiment.boot_autostart') -or
+        $manifest.OuterXml.Contains('android.intent.action.BOOT_COMPLETED')) {
+        throw 'Default assembly must omit boot autostart metadata and the system boot action.'
     }
     if ($manifest.manifest.GetAttribute('package') -cne $app.package_name -or
         $manifest.manifest.application.GetAttribute('label', $androidNamespace) -cne $app.application_label -or
