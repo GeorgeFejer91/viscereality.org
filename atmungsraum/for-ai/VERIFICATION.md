@@ -26,6 +26,15 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ## Operator UI compatibility — 2026-11-16
 
+The user subsequently confirmed that the legacy scenario and condition controls
+are intentionally omitted from the smartphone UI. The Chromium fixture verifies
+the three supported choices against mixed, main-only, legacy-only and missing
+catalogs, plus a Quest with only track B ready. The PWA sends the selected
+visible scenario with condition A. Missing admission produces a diagnostic and
+zero session commands. The 135-state operator layout matrix and cached startup
+release test pass from the `c14d67f` source baseline with this change. The Node
+suite passes 244 checks and skips eight native build and Java prerequisites.
+
 The original browser regression checks reproduced blocked Start for a legacy-only
 advertised scenario, a missing scenario catalog, and a practice track with only
 condition B ready. Recovery could hide the Bluetooth button and prevent a trusted

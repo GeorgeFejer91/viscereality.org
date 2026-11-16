@@ -13,11 +13,13 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ### Operator UI compatibility audit — 2026-11-16
 
+- [x] Apply the user's clarification that only Anleitung, five-minute Probe-Runde
+  and fifteen-minute Haupt-Runde belong in the smartphone PWA. Use condition A
+  and preserve the original native scenario and condition commands.
 - [x] Trace the sequential screens to the existing Quest pairing, control,
   Polar and preparation, scenario Arm and playback, and recording/Drive paths.
-- [x] Restore older advertised scenarios and condition selection, receipt
-  access after reconnect, and the recordings and Drive recovery routes. Keep
-  the native freshness and recording gates, including condition A for Haupt-Runde.
+- [x] Restore receipt access after reconnect and the recordings and Drive
+  recovery routes. Keep the native freshness and recording gates.
 - [x] Verify both PWA increments on GitHub Pages and smoke-test the public app.
 - [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
   and the authorized Drive account at the next attended idle session.

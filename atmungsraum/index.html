@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-controller-compat-r2">
+  <link rel="stylesheet" href="./style.css?v=20261116-operator-choices">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261116-controller-compat-r2"></script>
+  <script type="module" src="./app.js?v=20261116-operator-choices"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -371,22 +371,8 @@
                 </div>
               </section>
             </div>
-            <details id="quest-legacy-options" hidden>
-              <summary><span data-measure>Weitere Abläufe und Bedingungen</span></summary>
-              <div id="quest-legacy-scenarios" class="session-tiles">
-                <label class="session-tile"><input type="radio" name="quest-scenario" value="probe-10"><span class="session-tile-text" data-measure>Probe · 10 Min.</span></label>
-                <label class="session-tile"><input type="radio" name="quest-scenario" value="probe-15"><span class="session-tile-text" data-measure>Probe · 15 Min.</span></label>
-                <label class="session-tile"><input type="radio" name="quest-scenario" value="box-20"><span class="session-tile-text" data-measure>Box-Atmung · 20 Min.</span></label>
-              </div>
-              <label id="quest-condition-label"><span data-measure>VR-Bedingung</span>
-                <select id="quest-condition">
-                  <option value="condition-a">Bedingung A</option>
-                  <option value="condition-b">Bedingung B</option>
-                </select>
-              </label>
-            </details>
           </fieldset>
-          <p id="quest-scenario-unavailable" data-measure role="status" hidden>Die Quest bietet keinen verfügbaren Ablauf an. Prüfe die Quest-App unter Einstellungen.</p>
+          <p id="quest-scenario-unavailable" data-measure role="status" hidden></p>
         </div>
         <nav aria-label="Weitere Ansichten" class="utility-navigation">
           <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>

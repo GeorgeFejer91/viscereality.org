@@ -64,12 +64,13 @@ The running screen shows the native elapsed clock. Render percentage progress
 only if the authenticated Quest snapshot reports a positive duration; a missing
 duration still shows elapsed time, without estimating the total.
 
-Older Quest catalogs may advertise the 10- and 15-minute practice rounds or
-the 20-minute box-breathing scenario. Keep those exact IDs and eligible VR
-conditions in the secondary options. A condition-only snapshot with no catalog
-keeps the existing condition Arm. An explicitly unavailable or invalid catalog
-blocks Start and shows the operator a diagnostic. A main-only Quest presents
-Haupt-Runde alone. Haupt-Runde requires condition A even on a mixed catalog.
+The user confirmed that the 10- and 15-minute practice rounds, the 20-minute
+box-breathing scenario, and the condition selector are intentionally absent
+from the operator UI. Keep their existing native contracts. The PWA offers
+the intersection of its three choices and the authenticated Quest catalog,
+using condition A. Start requires an offered choice and a ready A track.
+When either is unavailable, show the diagnostic. A main-only Quest presents
+Haupt-Runde alone.
 
 ## Smartphone GUI rules
 

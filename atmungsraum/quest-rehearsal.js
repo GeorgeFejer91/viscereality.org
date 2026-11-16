@@ -340,7 +340,6 @@ export class QuestRehearsal {
       const streams = polarSetup(status);
       if (status.participant_arm === 1 && (!participantId || !gateway.participantArm || !streams?.e || !streams.a)) return;
       if (scenario && (!gateway.scenarioArm || !rehearsalScenarios(status).includes(scenario))) return;
-      if (!scenario && clicked.scenarios === undefined && status.scenarios !== undefined) return;
       // Only a confirmed Arm in the same foreground action may immediately lead to Start.
       // Polling and reconnect only read the original receipt.
       if (await this.dispatchAndConfirm(gateway, 'arm', signal, 10000, condition, participantId, scenario)

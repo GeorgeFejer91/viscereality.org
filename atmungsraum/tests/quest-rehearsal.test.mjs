@@ -421,16 +421,6 @@ test('an enrolled scenario Arm binds the native generation and the selected time
   assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start']);
 });
 
-test('a legacy Arm cannot start the default after the Quest advertises a scenario catalog', async () => {
-  const quest = fakeQuest();
-  const read = quest.status;
-  quest.status = async () => ({ ...await read(), scenarios: ['haupt-15'] });
-  const rehearsal = new QuestRehearsal();
-  rehearsal.attach(quest);
-  await rehearsal.run('play');
-  assert.deepEqual(quest.commands, []);
-});
-
 test('a lost Arm reply is reconciled without starting or replaying after reconnect', async () => {
   const quest = fakeQuest({ lost: 'arm' });
   const rehearsal = new QuestRehearsal();

@@ -93,41 +93,34 @@ sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({op:'start', 
 
 
 def scenario_compatibility(review):
-    for offered, tracks, scenario, condition in (
-        (['haupt-15'], ['track-ready', 'track-ready'], 'haupt-15', 'condition-a'),
-        (['probe-10'], ['track-ready', 'track-ready'], 'probe-10', 'condition-a'),
-        (['probe-5'], ['missing', 'track-ready'], 'probe-5', 'condition-b'),
-        (None, ['track-ready', 'track-ready'], None, 'condition-b'),
+    primary = ['probe-anleitung', 'probe-5', 'haupt-15']
+    legacy = ['probe-10', 'probe-15', 'box-20']
+    for offered, tracks, visible, selected in (
+        (primary + legacy, ['track-ready', 'track-ready'], primary, 'probe-5'),
+        (['haupt-15'], ['track-ready', 'track-ready'], ['haupt-15'], 'haupt-15'),
+        (legacy, ['track-ready', 'track-ready'], [], None),
+        (None, ['track-ready', 'track-ready'], [], None),
+        (['probe-5'], ['missing', 'track-ready'], ['probe-5'], None),
     ):
         page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}))
         c.enter_participant(page)
         page.locator('#preview-controller').click()
         page.locator('#preview-continue').click()
-        if condition == 'condition-b':
-            page.locator('#quest-condition').select_option(condition)
-        if scenario:
-            expect(page.locator(f'input[value="{scenario}"]')).to_be_checked()
-        page.locator('#quest-play').click()
-        expect(page.locator('#running-screen')).to_be_visible()
-        assert page.evaluate('reviewQuest.armedScenario ?? null') == scenario
-        assert page.evaluate('reviewQuest.condition') == condition
-        assert mutations(page)['session'] == ['arm', 'start']
+        expect(page.locator('#session-screen')).to_be_visible()
+        expect(page.locator('#quest-condition, #quest-legacy-options')).to_have_count(0)
+        radios = page.locator('#quest-scenario').get_by_role('radio')
+        assert radios.evaluate_all('nodes => nodes.map(node => node.value)') == visible
+        if selected:
+            page.locator(f'input[value="{selected}"]').check()
+            page.locator('#quest-play').click()
+            expect(page.locator('#running-screen')).to_be_visible()
+            assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == [selected, 'condition-a']
+            assert mutations(page)['session'] == ['arm', 'start']
+        else:
+            expect(page.locator('#quest-play')).to_be_disabled()
+            expect(page.locator('#quest-scenario-unavailable')).to_be_visible()
+            assert mutations(page)['session'] == []
         page.context.close()
-
-    page = review.page(initial(c, {'scenarios': ['probe-5', 'haupt-15']}))
-    c.enter_participant(page)
-    page.locator('#preview-controller').click()
-    page.locator('#preview-continue').click()
-    page.locator('#quest-legacy-options summary').click()
-    page.locator('#quest-condition').select_option('condition-b')
-    page.locator('input[value="haupt-15"]').check()
-    expect(page.locator('#quest-condition')).to_be_hidden()
-    c.wait_state(page, tracks=['missing', 'track-ready'])
-    expect(page.locator('#quest-play')).to_be_disabled()
-    c.wait_state(page, tracks=['track-ready', 'track-ready'])
-    page.locator('#quest-play').click()
-    assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == ['haupt-15', 'condition-a']
-    page.context.close()
 
 
 def run():
