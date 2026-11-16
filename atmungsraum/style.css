@@ -97,6 +97,8 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 .meta-update-panel p { overflow-wrap: break-word; }
 .meta-update-panel[data-update-allowed="false"], .meta-update-panel[data-update-state="failed"] { border-left-color: var(--site-gold); }
 #meta-update-progress { width: 100%; min-width: 0; height: 12px; accent-color: var(--site-gold); }
+#meta-update-controls { display: grid; gap: 12px; min-width: 0; }
+#meta-update-controls button { width: 100%; }
 /* Their block sizes are retained during native progress updates. Grid tracks
    can still redistribute that space; do not let the browser move scroll to
    follow a disclosure or status line inside these read-only regions. */

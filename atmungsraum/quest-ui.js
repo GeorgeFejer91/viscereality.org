@@ -1,18 +1,19 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=4';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=12';
-import { pairPhone } from './quest-pairing.js?v=1';
+  controllerAccessState } from './quest-gateway.js?v=13';
+import { pairPhone } from './quest-pairing.js?v=2';
 import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=30';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=9';
+import { BreathingSetup } from './breathing-setup.js?v=10';
 import { LiveBreathDisplay } from './live-breath-display.js?v=5';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
-import { KioskControl } from './kiosk-control.js?v=2';
+import { KioskControl } from './kiosk-control.js?v=3';
 import { ApkRelease } from './quest-release.js?v=1';
-import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=1';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=2';
+import { MetaUpdateControl } from './meta-update-control.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -186,6 +187,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
   const kiosk = new KioskControl({ storage });
+  const metaControl = new MetaUpdateControl({ storage });
   const apkRelease = new ApkRelease({ onChange: () => paint() });
   const breathDisplay = new LiveBreathDisplay();
   const ecgDisplay = new LiveEcgDisplay();
@@ -465,6 +467,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('meta-update-detail'), metaUpdate.detail);
     text(byId('operator-meta-summary'), metaUpdate.summary);
     text(byId('operator-meta-detail'), metaUpdate.detail);
+    const updateControls = metaControl.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
+    byId('meta-update-controls').hidden = !updateControls.available;
+    byId('meta-update-check').disabled = !updateControls.canRequest;
+    text(byId('meta-update-prerequisites'), updateControls.prerequisites);
+    text(byId('meta-update-message'), updateControls.message);
+    byId('meta-update-message').hidden = !updateControls.message;
+    byId('meta-update-receipt').hidden = !updateControls.canReadReceipt || !metaControl.expired;
+    byId('meta-update-acknowledge').hidden = !updateControls.canAcknowledge;
     const updateProgress = byId('meta-update-progress');
     updateProgress.hidden = !metaUpdate.progress;
     if (metaUpdate.progress && metaUpdate.progress.max !== null) {
@@ -889,6 +899,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (document.hidden || connecting || userAction) return;
     await breathing.refresh();
     await kiosk.refresh();
+    await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
     if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
@@ -1173,6 +1184,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   byId('apk-identity').addEventListener('toggle', () => {
     byId('quest-version').style.minBlockSize = '';
     versionGeometryKey = '';
+  });
+  byId('meta-update-check').addEventListener('click', async () => {
+    if (userAction || connecting || document.hidden || !metaControl.view?.canRequest) return;
+    const attempt = new AbortController(); userAction = attempt;
+    const request = metaControl.request(attempt.signal); paint();
+    try { await request; }
+    finally { if (userAction === attempt) userAction = null; paint(); }
+  });
+  byId('meta-update-receipt').addEventListener('click', () => {
+    if (userAction || connecting || document.hidden || !metaControl.view?.canReadReceipt) return;
+    metaControl.recheck(); void metaControl.refresh().finally(paint); paint();
+  });
+  byId('meta-update-acknowledge').addEventListener('click', () => {
+    if (userAction || connecting || document.hidden) return;
+    metaControl.acknowledge(); paint();
   });
   byId('kiosk-retry').addEventListener('click', async () => {
     if (userAction || connecting || document.hidden || !kiosk.view?.canRetry) return;

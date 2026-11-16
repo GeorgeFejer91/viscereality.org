@@ -140,6 +140,32 @@ Scope: production HTML/CSS, Pretext integration, and controller presentation;
 keep native state, command admission, recording/Drive, audio, enrollment, and
 the existing utility and recovery routes.
 
+### Active update extension — 2026-11-16
+
+User requests manual check/update and fresh verification for each new native
+session. On unavailable service/internet, permit installed build with warning;
+known required update or installation uncertainty still blocks. Extend the
+existing helper for bounded same-signer post-update launch and startup replacement
+race; add public-repo branded Developer listing artwork. Follow the dated
+[amendment and tasks10–16](BOOT-KIOSK-UPDATE.md#user-amendment-repeatable-checks-session-freshness-and-launch-fallback--2026-11-16).
+
+Actual Meta18 installation is confirmed by exact hash/Meta attribution/retained
+UID, following ordinary background replacement during boot12. It did not
+relaunch automatically. Root subsequently host-launched18; this is not SDK
+install/relaunch proof. Progress correction7b442a41 passes152/3/12 independent
+checks, with real Android closure checked; new package/hardware proof remains
+pending. PR29 ordinary mergec14d67f/Pages43953141067 succeeds; all16 affected/
+preserved live files match and public PWA startup reaches ready. Phone's actual
+native status verified boot10 channel17 and boot11 channel18 with progress error.
+
+- [x] Diagnose actual Meta channel delay and download progress failure separately.
+- [x] Review/test bounded progress correction and retain numeric diagnostics.
+- [x] Repeatable native checks/policy/cycle grant and authenticated action implemented and independently reviewed; selected19 package/hardware qualification pending.
+- [x] PWA v2/manual controls, original receipts and native status gates;266 zero-skip web checks,15 rendered states and independent review pass. Live publication pending.
+- [x] Bounded helper fallback source/review and signed helper2 package pass; actual helper2 bytes/UID/overlay retained after host update. Protocol2 main/physical acceptance pending.
+- [ ] Private Developer cover/library artwork from existing public material.
+- [ ] Correct actual19 product javac lambda/Android bootclasspath compatibility, then signed increasing Meta builds, exact source/publication and physical proof.
+
 ### Code18 successor checkpoint — 2026-11-16
 
 The final BLE correction is reviewed and packaged at native `f5946e19058e347f1dc69fde85b7265814c8ed9d`,

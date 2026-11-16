@@ -33,17 +33,18 @@ public final class SetupActivity extends Activity {
         } catch (RuntimeException failure) { target = "Status unavailable"; }
         info.setText("Atmungsraum Boot Helper\n\nTarget: " + BootPolicy.TARGET_PACKAGE +
             "\nTarget status: " + target + "\nOverlay permission: " + (host.overlayAllowed() ? "Allowed" : "Not allowed") +
-            "\n\nEnable below and allow the overlay permission in Android settings. The helper requests this target once after each real restart. " +
-            "It does not restart it after exit or force-stop. Ordinary target updates need no helper update.\n\n" +
+            "\n\nEnable below and allow the overlay permission in Android settings. The helper requests this target once after each real restart. Compatible builds can request a bounded update launch fallback. " +
+            "It does not restart after protected exit or force-stop. A compatible pending replacement has one fallback after Meta gets its first chance.\n\n" +
             "Current boot: " + host.currentBoot() + "\nLast admitted boot: " + host.admittedBoot() +
             "\nLast status: " + host.state.getString("status", "No boot attempt") +
             "\nLast requested launcher: " + host.state.getString("launcher", "None") +
-            "\nLaunch confirmation: unavailable. A request does not prove the app opened.");
+            "\nBounded update watch: " + (WatchPolicy.watching(host) ? "Active" : "Inactive") + "\nA request does not prove the app opened.");
         body.addView(info);
         CheckBox enabled = new CheckBox(this);
         enabled.setText("Enable launch after restart");
         enabled.setChecked(host.enabled());
         enabled.setOnCheckedChangeListener((button, checked) -> {
+            if(!checked){WatchPolicy.cancelInternal(host);stopService(new Intent(this,WatchService.class));}
             if (!host.state.edit().putBoolean("enabled", checked).commit()) {
                 Toast.makeText(this, "Could not save setup", Toast.LENGTH_LONG).show(); render();
             }

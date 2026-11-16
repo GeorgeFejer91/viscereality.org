@@ -189,3 +189,163 @@ delayed automatic delivery after the earlier bounded negative window.
 9. Update existing PROJECT/evidence and publish each verified source/PWA increment
    through ordinary PR/exact Pages/live checks. Keep physical update acceptance
    open until the Meta-managed transition is witnessed.
+
+
+## User amendment: repeatable checks, session freshness and launch fallback — 2026-11-16
+
+This supersedes the earlier startup-only/no-remote-command/fresh-process-retry
+limits. The user requests manual check/update from the PWA and a fresh check
+for each new experiment session. On unavailable internet/Meta, the user selects
+**allow the installed version with a warning**. A known newer required build or
+uncertain installation still blocks new sessions. Offline cannot discover an
+unseen release. Remember the highest known required code across process restarts;
+a failed check, lower/stale channel response or phone cannot erase that floor.
+The user also authorizes extending the existing separately installed helper for
+post-update launch, and adding existing public Viscereality cover/library artwork
+to the private Developer listing. No public Store release or new account access.
+
+### Observed boundary and intent
+
+Meta17 was genuinely installed and autobooted. Boot10 GetVersion reported17
+although the channel dashboard already showed18. Boot11 reported18; download
+progress was rejected by our cross-state monotonic check, and the SDK subsequently
+reported download SUCCESS. Exact rejected sample/status was not captured.
+Boot12 launched17 before ordinary Meta replacement installed18 at22:00:41;
+Meta/UID/exact18 hash match, but no in-app install request or automatic relaunch
+was observed. Root explicitly host-launched18 afterward. Do not count that as
+SDK relaunch proof. Progress correction7b442a41 scopes monotonic telemetry to
+active DownloadQueued/Downloading, retaining strict bounds and independent
+Success plus subsequently issued fresh progress. Independent152/3/12 checks
+pass; package/hardware qualification for that correction remains pending.
+
+### Contract for implementation
+
+- Extend the **same** native cycle/update owner, not a second updater. A native
+  preparation cycle exists before Arm, bound to actual owner/epoch. After actual
+  terminal writer finalization and acknowledged parked preparation/audio, advance
+  the cycle and require a new verification. PWA navigation, reconnect, pause,
+  resume or save request alone cannot advance it. Delayed main/Arm/Start effects
+  must retain and revalidate the same cycle grant. Existing calibration math,
+  32-second loop and main900s clock remain unchanged.
+- SDK initialization is process-owned; checks have distinct random attempts and
+  request lineage. Retire an attempt's IDs separately from final process close.
+  Admit before invoking an SDK function, discard stale responses, serialize the
+  pump, and do not hold native authority locks over JNI/SDK/network calls.
+- Check/update requests are allowed only at an actual safe parked boundary.
+  Active calibration/tracking/preparation, queued/main/paused/writer/finalization,
+  unknown mutation and unresolved install return typed busy/prerequisite; they
+  must not secretly cancel preparation or queue a later install. Existing status,
+  acquisition, receipt lookup and terminal cleanup remain available.
+- Every new cycle automatically starts one native **check-and-update** attempt.
+  A manually requested check uses the same path. If newer required code is known,
+  sessions remain blocked while download/install/relaunch runs or fails. Only
+  fresh actual package identity satisfying the remembered floor clears it.
+  Safe unavailable checks with no known higher floor release with warning.
+- Native independently fetches the composition-bound canonical HTTPS required
+  manifest: `https://viscereality.org/atmungsraum/quest-release.json`. Add explicit
+  `meta_required_version_manifest_url` schema/resolver/metadata/source closure;
+  it is never supplied by the phone. Bounded fresh GET, no credentials/redirects/
+  cached304 fallback, deadline/size limits and strict package/integer validation.
+  Public minimum is required floor; latest is a hint. Native Meta latest also
+  establishes known update availability. Keep actual installed, policy minimum
+  and Meta latest separate. A required floor above Meta's offered code is
+  `required-update-not-yet-on-channel`, never current. Retain normal Meta install.
+- Persist pending installation before dispatch; exact main-looper kiosk handoff
+  and native irreversible admission remain mandatory. No retry during ambiguous
+  installation, no remote acknowledgment/unavailable policy clearing phase3.
+
+### Shared wire/API agreement
+
+Native private enrolled LAN status advertises `meta_update_control:1` and
+`meta_update.v:2`. Preserve existing v1 read-only support. v2 has existing fields
+plus `cycle` and `revision` canonical positive decimal strings, nullable `attempt`
+canonical positive decimal string, `required_code` positive integer or null,
+`can_check` boolean and bounded canonical `busy_reason`. Existing states plus
+`update_required`; session_allowed is native truth. Missing/invalid selected-v2
+state must not manufacture a session grant. Meta-v1/legacy exposes no new actions.
+
+One enrolled-current-controller private-LAN action `meta-update`, using the
+existing authenticated command journal/owner/controller revision and payload:
+`{v:1,id,op:"check-and-update",cycle,revision}`. Read-only original receipt lookup:
+`{v:1,id,op:"receipt"}`. IDs use the existing project journal ID format and exact
+original canonical body binding. Reply includes v/id/state (accepted, busy,
+stale, unsupported, rejected), cycle/revision/attempt and canonical reason.
+Same ID cannot start another attempt; lost replies reconcile the original ID.
+Automatic native attempts are adopted/read by the PWA rather than duplicated.
+No URL, APK, AppID, component, shell or arbitrary SDK method is remote input.
+
+Service bridge to be agreed by native owners before editing shared seams:
+Java service owns request/pump/policy/persistence, Rust owns cycle/grant/park/
+effect admission. Cycle/revision must be native-authoritative and included in
+all manual admission and release. Distinct release-with-grant versus blocked
+required-update release; never revive an irreversible install. Do not merely
+reset session_seen, Java acquired or JNI Queue.closed. Preserve disabled builds.
+
+PWA Settings offers `Updates prüfen und installieren`, native busy explanation,
+progress/error/required-code and original receipt recovery. Auto-cycle preflight
+is visible before new participant/preparation. Existing stable DOM/focus/scroll,
+Pretext narrow320/200% layout, journals and recordings/Drive remain intact.
+
+### Helper fallback contract
+
+Update the existing helper once, retaining enabled/overlay preferences and signer.
+Normal main updates then use it without ADB or another helper update. Only exact
+same-signer Atmungsraum launcher may be launched; helper never installs/downloads.
+Use a signature-protected exact-main-caller handoff before install, with durable
+attempt/expected-newer-code/current-boot and finite expiry. Give Meta an initial
+relaunch opportunity; stop on acknowledged new trusted launch/frame and expire
+otherwise. At most one fallback launch for the bound attempt/actual target version.
+Also cover version replacement during the original unconfirmed boot launch.
+Do not create an indefinite foreground watchdog or undo intentional kiosk escape.
+Early trusted-launch/frame acknowledgments and explicit exit revoke watcher
+state where needed. No broad broadcast/APK URL/arbitrary launch authority.
+Exact helper/main protocol and Android34 background/FGS closure must be agreed
+and tested; do not assume the existing one-shot BOOT receiver stays alive.
+
+### Bounded implementation tasks (same SDD/lifecycle owner)
+
+10. Complete reviewed progress correction and bounded numeric diagnostics;
+    preserve final18 package identity and historical source in Git. **Software
+    complete at native7b442a41;152 coordinator/3 metadata/12 kiosk checks pass.**
+11. Native Java/JNI reusable attempts + canonical policy reader/explicit builder
+    composition + selected offline/known-floor semantics. Red tests before edits;
+    stale IDs, repeat checks, no SDK effects on invalid attempt, policy boundaries.
+12. Native cycle/grant/admission + safe post-finalization park/ack + authenticated
+    journaled gateway. Agree service seam with11. Test queued effects, writer/
+    calibration/finalization races, same-PID two sessions and all bypass paths.
+13. Same-signer bounded helper fallback and main handshake, including boot update
+    race and explicit exit. Tests permission/caller/version/replay/expiry/warm
+    launch/ack/no-duplicate. Root owns device install/reboot, no worker effects.
+14. PWA action/progress/required-version/session-check UI and tests against frozen
+    contract, real Pretext/stable DOM/reflow. Independent cross-boundary review.
+15. Build/inspect/sign with retained private inputs/audio/cert, increasing Meta
+    versions, actual two-cycle/manual/offline/known-update qualification and real
+    Meta install/relaunch/focus. Publish source/PWA via ordinary PR + exact Pages
+    and live assets; update installed phone. Keep hardware criteria open until
+    actual proof. Existing task8/9 acceptance stays active.
+16. Use appropriate existing public artwork for Developer listing assets; inspect
+    actual Meta slots, retain private distribution and verify saved result.
+
+
+Helper wire freeze for tasks11/13: declare signature permission
+`org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF` in helper2 and
+provider authority `org.viscereality.atmungsraum.boot.handoff`, exported only with
+that permission. Provider also checks Binder UID resolves exact main package and
+same current signer; main verifies helper package/signer before calling it.
+Use ContentResolver.call, methods `arm-update`, `launch-started`, `launch-ready`,
+`cancel-watch`, `status`. Bundle v1; arm has attempt canonical decimal string,
+installed_code and target_code positive actual values. Helper owns boot/time/
+expiry, clamps duration to a finite internal bound, and synchronously persists
+before accepting. arm reply has accepted boolean and canonical reason. Other
+ack methods include immutable loaded-process installed_code; compare to actual
+PM identity so a replaced old process cannot acknowledge the new binary.
+Main trusted cold launch acknowledges started, first submitted focused frame
+acknowledges ready; intentional kiosk escape cancels the watch. No raw paths,
+components, caller-provided expiry or arbitrary package input. Helper status is
+read-only. Both products retain same signing key. Main explicit composition flag
+`experiment_meta_update_helper_enabled` selects metadata/protocol2 and custom
+uses-permission; selected own SDK install requires positive helper arm ACK.
+Main metadata `org.viscereality.atmungsraum.boot_protocol=2` lets helper enable the
+bounded boot-update watcher only for compatible main builds; old18 retains
+legacy one-shot boot behavior until main19 is Meta-installed. New helper FGS/
+notification/receiver closure and actual Android34 eligibility must be qualified.

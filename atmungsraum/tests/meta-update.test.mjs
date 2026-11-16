@@ -6,6 +6,69 @@ const value = (state = 'current', patch = {}) => ({ v: 1, state, reason: '', ins
   available_code: 16, downloaded_bytes: 0, total_bytes: null, session_allowed: true, ...patch });
 const status = meta_update => ({ meta_update, o: { v: 1, s: 'observed', e: '8', i: '100', a: 5 } });
 
+const cycle = (patch = {}) => ({ ...status(value('current', { v: 2, available_code: 15,
+  required_code: 15, cycle: '2', revision: '7', attempt: '19', can_check: true, busy_reason: '', ...patch })),
+  meta_update_control: 1 });
+
+test('repeatable native update status requires a fresh cycle and preserves known required versions', () => {
+  assert.equal(nativeSessionAllowed(cycle()), true);
+  assert.equal(metaUpdateView(cycle()).value.cycle, '2');
+  for (const patch of [{ cycle: '0' }, { revision: 7 }, { attempt: '' }, { required_code: -1 },
+    { can_check: 1 }, { busy_reason: 'x'.repeat(97) }]) {
+    assert.equal(metaUpdateView(cycle(patch)).state, 'invalid');
+    assert.equal(nativeSessionAllowed(cycle(patch)), false);
+  }
+  assert.equal(nativeSessionAllowed(cycle({ required_code: 18 })), false);
+  assert.equal(nativeSessionAllowed(cycle({ available_code: 18 })), false);
+  const required = metaUpdateView(cycle({ state: 'update_required', required_code: 18,
+    available_code: 17, session_allowed: false, reason: 'required-update-not-yet-on-channel' }));
+  assert.equal(required.allowed, false);
+  assert.match(required.summary, /Update.*erforderlich/);
+  assert.match(required.detail, /18/);
+  assert.match(required.detail, /Meta.*17/);
+});
+
+test('selected repeatable updater cannot become legacy through absent status; offline warning is conditional', () => {
+  const missing = metaUpdateView({ o: status().o, meta_update_control: 1 });
+  assert.equal(missing.state, 'invalid');
+  assert.equal(missing.allowed, false);
+  const warn = metaUpdateView(cycle({ state: 'failed', reason: 'version-check-timeout' }));
+  assert.equal(warn.allowed, true);
+  assert.match(warn.detail, /Updates prüfen und installieren/);
+  assert.doesNotMatch(warn.detail, /Quest neu starten/);
+  const known = metaUpdateView(cycle({ state: 'failed', required_code: 18, available_code: 18 }));
+  assert.equal(known.allowed, false);
+});
+
+test('advertised repeatable capability cannot downgrade to a version-one warning or malformed legacy fallback', () => {
+  for (const state of ['current', 'failed']) {
+    const mixed = { ...status(value(state, { installed_code: 18, available_code: 20, reason: 'offline' })), meta_update_control: 1 };
+    assert.equal(metaUpdateView(mixed).state, 'invalid');
+    assert.equal(nativeSessionAllowed(mixed), false);
+    assert.equal(nativeSessionAllowed(status(value(state))), true);
+  }
+  for (const capability of [0, 2, '1', null]) {
+    assert.equal(nativeSessionAllowed({ o: status().o, meta_update_control: capability }), false);
+    assert.equal(nativeSessionAllowed({ ...status(value()), meta_update_control: capability }), false);
+  }
+});
+
+test('malformed JSON numeric fields return blocked status without coercion exceptions', () => {
+  for (const field of ['required_code', 'available_code', 'downloaded_bytes', 'total_bytes']) {
+    const malformed = cycle({ [field]: JSON.parse('{"toString":null}') });
+    assert.doesNotThrow(() => metaUpdateView(malformed));
+    assert.equal(metaUpdateView(malformed).state, 'invalid');
+    assert.equal(nativeSessionAllowed(malformed), false);
+  }
+});
+
+test('process initialization failure explains the specific restart exception to manual retries', () => {
+  const view = metaUpdateView(cycle({ state: 'failed', reason: 'meta-platform-process-init-failed-restart-required' }));
+  assert.equal(view.allowed, true);
+  assert.match(view.detail, /Quest.*neu starten/);
+  assert.doesNotMatch(view.detail, /Wähle „Updates prüfen/);
+});
+
 test('read-only Meta status distinguishes all native states and absent legacy feature', () => {
   assert.equal(nativeSessionAllowed({}), true);
   assert.equal(metaUpdateView({}).state, 'legacy');

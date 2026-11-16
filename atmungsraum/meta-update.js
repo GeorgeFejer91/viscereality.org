@@ -1,16 +1,23 @@
-// A read-only projection of native startup maintenance. Public release metadata
+// A read-only projection of native update maintenance. Public release metadata
 // and phone timers never authorize an install or release this admission fence.
-const states = new Set(['waiting', 'checking', 'current', 'downloading', 'installing', 'updated', 'failed', 'restart_required']);
-const blocking = new Set(['waiting', 'checking', 'downloading', 'installing', 'restart_required']);
+const states = new Set(['waiting', 'checking', 'current', 'downloading', 'installing', 'updated', 'failed', 'restart_required', 'update_required']);
+const blocking = new Set(['waiting', 'checking', 'downloading', 'installing', 'restart_required', 'update_required']);
 const integer = value => Number.isSafeInteger(value) && value >= 0;
 const positive = value => integer(value) && value > 0;
+const lineage = value => typeof value === 'string' && /^[1-9][0-9]{0,18}$/.test(value);
+const reason = value => typeof value === 'string' && value.length <= 96 && !/[^\x20-\x7e]/.test(value);
 
 export function nativeMetaUpdate(status) {
-  if (!status || !Object.hasOwn(status, 'meta_update')) return { advertised: false, allowed: true, value: null };
+  if (!status || !Object.hasOwn(status, 'meta_update')) return status && Object.hasOwn(status, 'meta_update_control')
+    ? { advertised: true, allowed: false, value: null }
+    : { advertised: false, allowed: true, value: null };
   const value = status.meta_update;
   const observation = status.o;
-  const valid = value && !Array.isArray(value) && value.v === 1 && states.has(value.state)
-    && typeof value.reason === 'string' && value.reason.length <= 96 && !/[^\x20-\x7e]/.test(value.reason)
+  const repeatable = value?.v === 2;
+  const valid = value && !Array.isArray(value) && [1, 2].includes(value.v) && states.has(value.state)
+    && (!Object.hasOwn(status, 'meta_update_control') || status.meta_update_control === 1 && repeatable)
+    && (value.v !== 1 || value.state !== 'update_required')
+    && reason(value.reason)
     && positive(value.installed_code) && (value.available_code === null || positive(value.available_code))
     && integer(value.downloaded_bytes) && (value.total_bytes === null || positive(value.total_bytes)
       && value.downloaded_bytes <= value.total_bytes)
@@ -19,8 +26,12 @@ export function nativeMetaUpdate(status) {
     && typeof observation.e === 'string' && /^[1-9][0-9]{0,18}$/.test(observation.e)
     && typeof observation.i === 'string' && /^[1-9][0-9]{0,18}$/.test(observation.i)
     && integer(observation.a) && observation.a <= 1500
-    && (!status.apk || status.apk.version_code === value.installed_code);
-  return { advertised: true, allowed: Boolean(valid && value.session_allowed && !blocking.has(value.state)),
+    && (!status.apk || status.apk.version_code === value.installed_code)
+    && (!repeatable || status.meta_update_control === 1 && lineage(value.cycle) && lineage(value.revision)
+      && (value.attempt === null || lineage(value.attempt)) && typeof value.can_check === 'boolean'
+      && reason(value.busy_reason) && (value.required_code === null || positive(value.required_code)));
+  const required = valid && repeatable && Math.max(value.required_code ?? 0, value.available_code ?? 0) > value.installed_code;
+  return { advertised: true, allowed: Boolean(valid && value.session_allowed && !blocking.has(value.state) && !required),
     value: valid ? value : null };
 }
 
@@ -39,6 +50,9 @@ const failureReasons = {
   'download-total-timeout': 'Das Herunterladen hat zu lange gedauert.',
   'download-progress-stalled': 'Das Herunterladen ist nicht weitergekommen.',
   'meta-platform-unavailable': 'Der Meta-Dienst ist gerade nicht verfügbar.',
+  'meta-download-progress-invalid': 'Meta hat einen widersprüchlichen Download-Fortschritt gemeldet. Die Installation wurde nicht angefragt.',
+  'required-update-not-yet-on-channel': 'Die benötigte Version wird von Meta noch nicht angeboten. Warte und prüfe erneut.',
+  'meta-platform-process-init-failed-restart-required': 'Der Meta-Dienst konnte in diesem App-Prozess nicht starten. Die Quest für eine erneute Meta-Prüfung neu starten.',
   'fresh-process-required-for-update-check': 'Die App wurde im selben Quest-Prozess erneut geöffnet. Für eine neue Meta-Prüfung die Quest neu starten.',
   'pending-install-record-write-failed': 'Der Update-Stand konnte auf der Quest nicht gespeichert werden.',
 };
@@ -60,6 +74,7 @@ export function metaUpdateView(status) {
     downloading: 'Quest lädt das Meta-Update herunter. Vorbereitung gesperrt.',
     installing: 'Quest hat die Installation angefragt. Vorbereitung gesperrt.',
     updated: `Quest meldet die erneuerte APK · installierter Code ${value.installed_code}.`,
+    update_required: 'Ein Quest-App-Update ist erforderlich. Vorbereitung gesperrt.',
     failed: result.allowed ? 'Meta-Startprüfung fehlgeschlagen. Die installierte APK kann verwendet werden.'
       : 'Meta-Startprüfung fehlgeschlagen. Vorbereitung bleibt gesperrt.',
     restart_required: maintenanceRequired ? 'Meta-Update nicht bestätigt. Vorbereitung gesperrt; Wartung erforderlich.'
@@ -68,7 +83,10 @@ export function metaUpdateView(status) {
   let detail = maintenanceRequired
     ? 'Prüfe und vervollständige das Update in der Meta-Bibliothek der Quest. Bleibt der Update-Stand offen, ist Betreiberwartung erforderlich. Die Vorbereitung bleibt bis zur bestätigten APK-Kennung gesperrt.'
     : value.state === 'failed' && result.allowed
-    ? 'Für eine erneute Prüfung die Quest neu starten. Die App nur zu schließen und neu zu öffnen reicht dafür nicht aus.'
+    ? value.v === 2 ? value.reason === 'meta-platform-process-init-failed-restart-required'
+      ? 'Ohne bekanntes Pflichtupdate kann die installierte Version mit dieser Warnung verwendet werden.'
+      : 'Die Prüfung ist nicht vollständig. Ohne bekanntes Pflichtupdate kann die installierte Version mit dieser Warnung verwendet werden. Wähle „Updates prüfen und installieren“ für einen neuen Versuch.'
+      : 'Für eine erneute Prüfung die Quest neu starten. Die App nur zu schließen und neu zu öffnen reicht dafür nicht aus.'
     : ['installing', 'restart_required'].includes(value.state)
       ? 'Eine Installationsanfrage bestätigt keine neue APK. Starte die Quest neu; erst die danach tatsächlich gemeldete APK-Kennung bestätigt den Stand.'
       : result.allowed ? 'Die Quest hat die Vorbereitung freigegeben.' : 'Warte, bis die Quest die Vorbereitung freigibt.';
@@ -77,8 +95,10 @@ export function metaUpdateView(status) {
   if (progress) detail = `${value.downloaded_bytes.toLocaleString('de-DE')} Byte geladen${value.total_bytes === null
     ? ' · Gesamtgröße noch unbekannt.' : ` von ${value.total_bytes.toLocaleString('de-DE')} Byte.`} ${detail}`;
   if (value.available_code !== null) detail += ` Meta-Kanalcode: ${value.available_code}.`;
+  if (value.v === 2 && value.required_code !== null) detail += ` Benötigt: mindestens Code ${value.required_code}.`;
+  if (value.state === 'update_required') detail += ` ${failureReasons[value.reason] || 'Prüfe und installiere die verfügbare Version, bevor eine neue Sitzung startet.'}`;
   if (value.state === 'failed' && failureReasons[value.reason]) detail += ` ${failureReasons[value.reason]}`;
-  const summary = summaries[value.state] + (!result.allowed && ['current', 'updated'].includes(value.state)
+  const summary = (value.v === 2 ? summaries[value.state].replaceAll('Meta-Startprüfung', 'Update-Prüfung') : summaries[value.state]) + (!result.allowed && ['current', 'updated'].includes(value.state)
     ? ' Vorbereitung bleibt gesperrt.' : '');
   return { ...result, state: value.state, summary, detail, progress };
 }

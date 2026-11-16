@@ -1,18 +1,20 @@
 # Verification
 
-Current SDK release checkpoint: Meta17 is actually installed with exact signed
-package hash, Meta attribution and retained UID. Final18-r3 is independently
-qualified from native f5946e19 and published as Meta build1463187006880311 to the
-same Developer channel. Malware/security pass;13+ age group is retained. The
-headset was off before publication. Genuine boot10 launches17, reaches FOCUSED
-and calls GetVersion; the wearer confirms automatic stimulus. Actual SDK
-download/install/relaunch remains open. All79 audio/session assets and15 private
-input files match17. Latest main audio-review staging is preserved in source but
-not activated in this APK. Fresh integrated web checks pass253/253 with zero
-skips after merging concurrent operator compatibility/focus work. Native75,
-service12/binding3/admission5, Android lifecycle12/110 and scoped BLE budget
-checks pass; broad existing panel/standalone audio fixtures remain unqualified.
-PR29 source/publication is pending. See PROJECT.md and BOOT-KIOSK-UPDATE.md.
+Current repeatable-updater checkpoint: PWA v2/manual journal/action integration
+passes266/266 zero-skip full web tests,21 focused Meta checks,15 real Pretext/
+320px/200% render states and independent review. Native cycle/park/gateway software
+and whole integration pass independent review. Helper2 source/policy/compiled
+manifest checks pass; actual signed helper2 is host-updated on the Quest with
+exact hash and retained UID/overlay. Actual installed main18 matches Meta bytes
+and retains UID; it arrived through ordinary replacement and was host-launched.
+Full SDK install/relaunch acceptance remains open. Candidate19's initial product
+packaging exposed a Java lambda/Android bootclasspath compatibility failure.
+Explicit Java callbacks correct it without changing updater policy; the actual
+signed code19-r2 assembly and session closure now pass at native62ddb621.
+Independent final artifact inspection and Meta installation remain pending.
+BootEntry12/110 and actual Android API compile also pass. Concurrent production
+UI changes are merged at43e5a4a; exact publication is pending this increment.
+See PROJECT.md and BOOT-KIOSK-UPDATE.md for current tasks and hardware limits.
 Older checkpoint paragraphs below are dated evidence, not the current release.
 
 
