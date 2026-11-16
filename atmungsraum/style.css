@@ -10,7 +10,7 @@ main {
   --inset: clamp(16px, 4vw, 28px);
   width: min(100%, 960px);
   height: 100svh;
-  height: 100dvh;
+  height: var(--usable-height, 100dvh);
   margin-inline: auto;
   padding: var(--inset);
   padding-top: calc(var(--corner-reserve) + var(--corner-clearance));
@@ -246,11 +246,11 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 #quest-participant .patient-body { justify-items: stretch; margin-top: 16px; }
 .patient-fields { width: 100%; --patient-gap: 16px; gap: 20px 16px; }
 #quest-participant .patient-fields { align-content: start; }
-#patient-next { margin-top: 8px; width: 100%; }
+#patient-next { width: 100%; }
 #quest-polar, #quest-data { width: 100%; gap: 12px; }
 #quest-condition-label, #quest-scenario-label, #quest-archives-label { width: 100%; justify-self: stretch; text-align: start; }
 #quest-condition, #quest-scenario, #quest-archives { width: 100%; }
-#quest-clock { font-size: 2rem; font-variant-numeric: tabular-nums; text-align: center; }
+#quest-clock { font-size: clamp(1.1rem, min(5vw, 5dvh), 2rem); font-variant-numeric: tabular-nums; text-align: center; }
 #operator-live { width: 100%; gap: 16px; }
 #operator-input-status { width: 100%; text-align: start; }
 #operator-input-status #preview-input { justify-content: start; }
@@ -302,3 +302,171 @@ summary > [data-measure] { display: inline-block; width: calc(100% - 1.5em); ver
 }
 #quest-participant > summary { display: none; }
 #quest-participant .patient-body { margin-top: 0; }
+
+html[data-mode="quest"] main {
+  --gap: clamp(8px, min(2.5vw, 1.8dvh), 20px);
+  padding-bottom: var(--inset);
+}
+.screen-header { gap: 4px; padding-bottom: 8px; }
+.operator-body { gap: var(--gap); }
+.utility-navigation { gap: 4px 16px; padding-top: 4px; }
+.operator-common:not(:has(> :not([hidden]))) { display: none; }
+#input-screen .preview-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+#input-screen .preview-controls button { padding: 6px; }
+#input-screen .preview-controls small { line-height: 1.25; }
+#input-screen #preview-controller-host:not(:has(> button:not([hidden]))) { display: none; }
+#input-screen .preview-controls #preview-calibrate { grid-column: auto; }
+#quest-polar > button { width: 100%; }
+#input-screen #operator-input-status { gap: 6px; }
+#quest-participant { align-self: stretch; }
+#participant-screen > .operator-body { align-content: stretch; }
+#quest-participant .patient-body { height: 100%; grid-template-rows: minmax(0, 1fr); }
+html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows: auto; }
+#participant-screen .patient-fields { grid-template-rows: auto auto; }
+#participant-screen .patient-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#participant-screen .patient-field > [data-measure] { overflow-wrap: anywhere; }
+#preview-review { max-inline-size: 32ch; justify-self: center; }
+@media (max-height: 900px) {
+  .screen-header .product-brand img { width: 28px; height: 28px; }
+}
+@media (max-height: 720px) {
+  html[data-mode="quest"] { --top-corner-size: 48px; --corner-clearance: 8px; }
+  html[data-mode="quest"] main { --inset: max(10px, env(safe-area-inset-left), env(safe-area-inset-right)); }
+  .operator-screen .product-brand, .operator-screen .preparation-step { display: none; }
+  html[data-layout] .operator-screen .operator-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .operator-actions > button { padding: 4px 6px; }
+  #quest #quest-ecg { max-block-size: min(13dvh, 85px); }
+  .operator-screen .screen-header { padding-block-end: 4px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  #quest .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  #quest :is(#operator-common, .connection-checks, #quest-pairing) { grid-column: 1 / -1; }
+  #quest .operator-body > .utility-navigation { border: 0; align-content: start; }
+  #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+  #input-screen .operator-body > .utility-navigation { grid-column: 1 / -1; }
+  #quest-drive-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #quest-drive-connect { grid-column: 1 / -1; }
+}
+@media (max-width: 360px) and (max-height: 640px) {
+  #input-screen .preview-controls small { display: none; }
+}
+/* Connection and participant setup use the operator body's available tracks. */
+#quest .operator-body, #participant-screen .operator-body, #session-screen .operator-body {
+  align-content: space-evenly;
+  gap: clamp(6px, min(2vw, 1.5dvh), 16px);
+}
+.setup-actions, .connection-checks { display: grid; gap: 8px; min-width: 0; }
+.setup-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8em), 1fr)); align-items: start; }
+html[data-mode="quest"] .setup-actions #corner-actions { position: static; display: grid; max-width: none; }
+.setup-actions #install-app { width: 100%; min-height: 48px; height: auto; }
+.setup-actions #install-app svg { display: none; }
+.setup-actions #install-app > span { display: block; }
+#drive-status-host { grid-column: 1 / -1; }
+#drive-status-host:not(:has(> p:not([hidden]))) { display: none; }
+.connection-checks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.connection-checks .check-icon {
+  grid-template-columns: minmax(0, 1.5em) auto;
+  gap: 4px;
+  padding: 4px;
+  color: #fff;
+}
+.connection-checks .check-icon svg {
+  width: 100%; height: auto; fill: none; stroke: currentColor;
+  stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+}
+.connection-checks .check-icon[data-check="ok"] { color: #81e9a4; }
+.connection-checks .check-icon[data-check="unconfirmed"] { color: #ff8f8f; }
+.check-symbol { font-weight: bold; }
+:is(#connection-diagnostic, #drive-dialog) {
+  width: min(480px, calc(100vw - 24px));
+  max-block-size: calc(100dvh - 24px);
+  padding: clamp(12px, 3vw, 24px);
+  color: var(--text);
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+:is(#connection-diagnostic, #drive-dialog)[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
+:is(#connection-diagnostic, #drive-dialog)::backdrop { background: #000b; }
+:is(#connection-diagnostic, #drive-dialog) h2 { margin: 0; font-size: 1.25em; }
+:is(#connection-diagnostic, #drive-dialog) .actions { width: 100%; }
+:is(#connection-diagnostic, #drive-dialog) button { width: 100%; }
+#drive-dialog { line-height: 1.25; }
+#drive-dialog #quest-drive-form { gap: 8px; }
+#quest #quest-ecg { max-block-size: clamp(48px, 12dvh, 120px); }
+
+html[data-layout] #participant-screen .patient-fields { grid-template-columns: minmax(0, 1fr); height: 100%; align-content: space-evenly; }
+.patient-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7em), 1fr));
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+}
+#participant-screen .patient-field { grid-row: span 2; grid-template-rows: subgrid; }
+#patient-gender, #patient-id { min-height: 48px; width: 100%; }
+#patient-id { display: grid; align-items: center; }
+
+#session-choices { display: grid; justify-items: center; gap: 12px; width: 100%; }
+#session-choices fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
+.session-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+#quest-condition .session-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.session-tile {
+  position: relative; display: grid; place-items: center; text-align: center;
+  min-block-size: 48px; aspect-ratio: 1; padding: 4px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
+  line-height: 1.15; cursor: pointer;
+}
+.session-tile input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.session-tile-text { display: grid; gap: 4px; width: 100%; pointer-events: none; }
+#quest-scenario .session-tile-text img { width: min(100%, 2.5em); height: auto; justify-self: center; }
+#quest-practice-label { display: grid; gap: 4px; width: min(100%, 22rem); }
+#quest-practice { width: 100%; min-height: 48px; padding: 4px 8px; font: inherit; }
+.session-tile:has(:checked) { background: #0e2a3c; border-color: #74c5f2; box-shadow: inset 0 0 0 1px #74c5f2; }
+.session-tile:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
+.session-tile:has(:disabled) { color: #979797; cursor: default; }
+#quest-scenario { width: min(100%, 22rem); }
+#quest-condition { width: min(100%, 15rem); }
+#quest-condition .session-tile { aspect-ratio: 2; }
+#preview-review {
+  font-size: clamp(1.1rem, min(4vw, 3dvh), 1.6rem);
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: center;
+}
+#preview-controller-host button, #preview-controller-fallback button { width: 100%; }
+
+#quest-playback { display: grid; gap: 8px; min-width: 0; }
+#quest-progress { width: 100%; height: 12px; accent-color: #74c5f2; }
+
+main { padding-bottom: max(var(--inset), env(safe-area-inset-bottom)); }
+body:has(#recenter-vr[hidden]) main { padding-top: max(var(--inset), env(safe-area-inset-top)); }
+#breathing-preview .operator-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#breathing-preview .operator-actions > button { grid-column: auto; }
+#breathing-preview .operator-actions > #preview-continue { grid-column: 1 / -1; }
+#breathing-preview .operator-actions:has(#preview-restart[hidden]) > [data-operator-go] { grid-column: 1 / -1; }
+#preview-continue:enabled { background: var(--site-blue); }
+#drive-dialog #quest-drive-form { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr)); }
+#drive-dialog #quest-drive-connect { grid-column: 1 / -1; }
+
+@media (max-height: 690px) {
+  #operator-live, #operator-live .preview-figure { gap: 6px; }
+  #operator-live .preview-figure { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+  #operator-live .preview-radius { inline-size: clamp(52px, 12dvh, 78px); }
+  #preview-status { grid-column: 1 / -1; }
+  #calibration-screen .operator-body, #breathing-preview .operator-body { gap: 8px; }
+}
+
+@media (max-height: 640px) {
+  #calibration-screen #operator-input-status { gap: 6px; }
+}
+@media (orientation: landscape) and (max-height: 480px) {
+  #quest .operator-body { row-gap: 4px; }
+  #quest .screen-header { padding-block-end: 1px; }
+  #calibration-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #calibration-screen #operator-common { grid-column: 1 / -1; }
+  #calibration-screen #operator-live { grid-row: span 2; }
+  #breathing-preview .operator-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #breathing-preview .operator-actions > #preview-continue,
+  #breathing-preview .operator-actions:has(#preview-restart[hidden]) > [data-operator-go],
+  #session-screen .session-actions { grid-column: auto; }
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="bluetooth" viewBox="0 0 24 24">
+    <path d="M6 7l12 10-6 5V2l6 5L6 17"/>
+  </symbol>
+  <symbol id="bridge" viewBox="0 0 24 24">
+    <path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-11 4a6 6 0 0 1 8 0m-4 4h.01"/>
+  </symbol>
+  <symbol id="apk" viewBox="0 0 24 24">
+    <path d="M5 2h9l5 5v15H5zm9 0v6h5m-10 5h6m-6 4h6"/>
+  </symbol>
+  <symbol id="polar" viewBox="0 0 24 24">
+    <path d="M2 12h5l2-6 4 12 2-6h7"/>
+  </symbol>
+  <symbol id="kiosk" viewBox="0 0 24 24">
+    <path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4m-4 4v2"/>
+  </symbol>
+  <symbol id="alert" viewBox="0 0 24 24">
+    <path d="M12 3 2 21h20zM12 9v5m0 3h.01"/>
+  </symbol>
+</svg>

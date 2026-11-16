@@ -2,6 +2,20 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Operator UI port from Atmungsraum UI — 2026-11-16
+
+- [x] Port the connection checks/setup, aligned participant form, large tracking
+  confirmation, and session tiles from the playground onto production main.
+- [x] Verify the controller flow, recovery, recordings, and rendered desktop/phone
+  layouts with production browser fixtures. See [verification](VERIFICATION.md#playground-ui-port--2026-11-16).
+- [ ] Record exact Pages deployment and public assets for the port.
+- [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
+  live Polar data and Google authorization on physical hardware.
+
+Scope: production HTML/CSS, Pretext integration, and controller presentation;
+keep native state, command admission, recording/Drive, audio, enrollment, and
+the existing utility and recovery routes.
+
 ### Autoboot, kiosk and Meta update test — 2026-11-16
 
 The user accepts current APK/PWA behavior for now and requests power-on launch,

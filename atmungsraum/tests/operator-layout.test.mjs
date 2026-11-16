@@ -7,7 +7,7 @@ const connected = { connected: true, participantRequired: true, participantCompl
 test('local Back, Next and settings preserve all external experiment state', () => {
   const experiment = { participant: 'abc_23_m', acceptance: 'owner/epoch/attempt/input', journal: { id: 'original' }, draft: 'abc' };
   const before = structuredClone(experiment);
-  let view = { step: 'signals', previous: 'participant' };
+  let view = { step: 'participant' };
   view = navigateOperatorView(view, { type: 'go', step: 'input' });
   assert.equal(view.step, 'input');
   view = navigateOperatorView(view, { type: 'go', step: 'settings' });
@@ -15,7 +15,7 @@ test('local Back, Next and settings preserve all external experiment state', () 
   view = navigateOperatorView(view, { type: 'return' });
   assert.equal(view.step, 'input');
   view = navigateOperatorView(view, { type: 'back' });
-  assert.equal(view.step, 'signals');
+  assert.equal(view.step, 'participant');
   assert.deepEqual(experiment, before);
 });
 test('missing streams never block input choice or Controller fallback', () => {
@@ -35,14 +35,14 @@ test('domain acceptance alone admits session selection; changing input is local'
 });
 test('waiting phone stays at connection and settings return is bounded to known step names', () => {
   assert.equal(resolveOperatorView('input', { ...connected, waitingForControl: true }), 'connect');
-  assert.equal(resolveOperatorView('not-a-step', connected), 'signals');
+  assert.equal(resolveOperatorView('not-a-step', connected), 'connect');
   assert.equal(navigateOperatorView({ step: 'input' }, { type: 'go', step: 'abc_23_m' }).step, 'input');
 });
 
-test('explicit connection review stays reachable while initial setup advances', () => {
+test('stored enrollment still starts at connection before participant entry', () => {
   assert.equal(resolveOperatorView('connect', connected), 'connect');
-  assert.equal(resolveOperatorView(null, { ...connected, participantComplete: false }), 'participant');
-  assert.equal(resolveOperatorView(null, connected), 'signals');
+  assert.equal(resolveOperatorView(null, { ...connected, participantComplete: false }), 'connect');
+  assert.equal(resolveOperatorView(null, connected), 'connect');
 });
 test('utility navigation cannot create a settings and recordings return loop', () => {
   let view = navigateOperatorView({ step: 'recordings', returnTo: 'input' }, { type: 'go', step: 'settings' });

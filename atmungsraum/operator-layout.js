@@ -5,7 +5,7 @@ export const operatorSteps = Object.freeze({
   session: 'session-screen', running: 'running-screen', recordings: 'recordings-screen',
   settings: 'settings-screen', recovery: 'recovery-screen',
 });
-const previous = { participant: 'connect', signals: 'participant', input: 'signals',
+const previous = { participant: 'connect', signals: 'participant', input: 'participant',
   calibration: 'input', tracking: 'input', session: 'tracking', recordings: 'session' };
 export function navigateOperatorView(state, event) {
   if (event.type === 'return') return { ...state,
@@ -21,10 +21,10 @@ export function resolveOperatorView(step, context) {
   if (context.active) return 'running';
   if (context.recovery) return 'recovery';
   if (!context.connected || context.waitingForControl) return 'connect';
+  if (!Object.hasOwn(operatorSteps, step)) return 'connect';
   if (step === 'recordings') return 'recordings';
   if (context.participantRequired && !context.participantComplete && step !== 'connect') return 'participant';
-  if (step === 'participant' && !context.participantRequired) return 'signals';
-  if (!Object.hasOwn(operatorSteps, step)) return context.participantRequired && !context.participantComplete ? 'participant' : 'signals';
+  if (step === 'participant' && !context.participantRequired) return 'input';
   if (step === 'session' && !context.selectionAllowed) return 'tracking';
   if (step === 'calibration' && context.calibrationComplete) return 'tracking';
   if (['running', 'recovery'].includes(step)) return context.selectionAllowed ? 'session' : 'signals';

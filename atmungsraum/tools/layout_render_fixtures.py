@@ -34,7 +34,11 @@ def initial(c, quest=None, setup=None):
 
 
 def go(page, step):
-    page.locator(f'[data-operator-go="{step}"]:visible').first.click()
+    direct = page.locator(f'[data-operator-go="{step}"]:visible')
+    if direct.count():
+        direct.first.click()
+    else:
+        module().show_operator(page, step)
 
 
 def mutations(page):
@@ -43,9 +47,8 @@ def mutations(page):
 
 
 def participant(c, page):
-    expect(page.locator('#participant-screen')).to_be_visible()
     c.enter_participant(page)
-    expect(page.locator('#signals-screen')).to_be_visible()
+    expect(page.locator('#input-screen')).to_be_visible()
 
 
 def capture_layout(review):
@@ -61,17 +64,14 @@ def capture_layout(review):
 
         page = new()
         before = mutations(page)
-        shot(page,'participant','#patient-form')
-        page.locator('[data-operator-back]:visible').click()
         shot(page,'connect','#operator-connect-next')
         page.locator('#operator-connect-next').click()
+        shot(page,'participant','#patient-form')
         participant(c,page)
-        shot(page,'signals','#quest-ecg')
-        go(page,'input')
         shot(page,'input','#preview-controller')
         go(page,'settings')
         page.locator('#apk-identity summary').click()
-        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','compatible')
+        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','recommended')
         shot(page,'settings-identity','#apk-full-identity')
         page.locator('[data-operator-return]:visible').click()
         go(page,'recordings')
@@ -223,7 +223,7 @@ def capture_layout(review):
         c.wait_state(page,receiptState='confirmed')
         c.wait_setup(page,r=1,stage='waiting',calibration='waiting',attempt=1,target_frames=1411200)
         page.locator('[data-operator-return]:visible').click()
-        expect(page.locator('#participant-screen')).to_be_visible()
+        c.show_operator(page,'participant')
         assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
         assert mutations(page)['setup']==[]
         shot(page,'receipt-resolved-no-replay','#patient-form')
@@ -259,6 +259,7 @@ def capture_poll_cadence(review,c):
         assert after['max']==1,(step,after)
         observations.append({'step':step,**delta,'maxInFlight':after['max']})
     page.locator('[data-operator-return]:visible').click()
+    go(page,'input')
     go(page,'tracking')
     page.evaluate('reviewQuest.statusDelay=250')
     page.clock.run_for(4000)

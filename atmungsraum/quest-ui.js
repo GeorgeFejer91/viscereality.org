@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=1';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=2';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=12';
 import { pairPhone } from './quest-pairing.js?v=1';
@@ -15,6 +15,10 @@ import { ApkRelease } from './quest-release.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
+const runTime = ms => {
+  const seconds = Math.floor(ms / 1000);
+  return [Math.floor(seconds / 60), seconds % 60].map(part => String(part).padStart(2, '0')).join(':');
+};
 const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
 const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
 
@@ -48,6 +52,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const previewProgressFill = byId('preview-progress-fill');
   const previewProgressText = byId('preview-progress-text');
   const previewCalibrate = byId('preview-calibrate');
+  const previewRestart = byId('preview-restart');
+  const previewRetry = byId('preview-retry');
+  let calibrationBaseline;
   const previewPersonalReturn = byId('preview-personal-return');
   const previewPolarFixed = byId('preview-polar-fixed');
   const previewPolarAdaptive = byId('preview-polar-adaptive');
@@ -66,7 +73,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const controlClaim = byId('quest-control-claim');
   const controlRelease = byId('quest-control-release');
   let pairingChoice = null;
+  const playback = byId('quest-playback');
   const clock = byId('quest-clock');
+  const progress = byId('quest-progress');
   const recenter = byId('recenter-vr');
   const recenterNote = byId('recenter-vr-note');
   const polar = byId('quest-polar');
@@ -76,10 +85,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const finish = byId('quest-finish');
   const acknowledge = byId('quest-acknowledge');
   const disconnect = byId('quest-disconnect');
-  const condition = byId('quest-condition');
+  const sessionChoices = byId('session-choices');
+  const conditionChoices = byId('quest-condition');
   const conditionName = byId('quest-condition-name');
-  const scenario = byId('quest-scenario');
-  const scenarioOptions = Array.from(scenario.options);
+  const conditionLabels = conditionChoices.querySelectorAll('.session-tile-text [data-measure]');
+  const scenarioChoices = byId('quest-scenario');
+  const scenarioOptions = Array.from(scenarioChoices.querySelectorAll('input'));
+  const practice = byId('quest-practice');
+  const practiceOptions = Array.from(practice.options);
   const participant = byId('quest-participant');
   const participantLabel = byId('quest-participant-label');
   const participantForm = byId('patient-form');
@@ -105,6 +118,59 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let nextConnect = 0;
   let nextSavedProbe = 0;
   let discoveryInProgress = false;
+  let bluetoothCheck = null;
+  let bridgeFailed = false;
+  const diagnostics = byId('connection-diagnostic');
+  const driveDialog = byId('drive-dialog');
+  const driveOpen = byId('drive-open');
+  const drivePanel = byId('quest-drive');
+  const driveStatus = byId('quest-drive-status');
+  const driveStatusHost = byId('drive-status-host');
+  function driveActionsHost() {
+    return byId(displayedStep === 'recordings' ? 'recordings-drive-actions' : 'connection-drive-actions');
+  }
+  driveOpen.addEventListener('click', () => {
+    if (drivePanel.hidden) return;
+    driveDialog.querySelector('.screen-body').append(driveStatus);
+    drivePanel.open = true;
+    driveDialog.showModal();
+    byId('quest-drive-client').focus({ preventScroll: true });
+  });
+  drivePanel.addEventListener('toggle', () => {
+    if (driveDialog.open && !drivePanel.open) driveDialog.close();
+  });
+  driveDialog.addEventListener('close', () => {
+    drivePanel.open = false;
+    driveStatusHost.append(driveStatus);
+    if (!driveOpen.hidden && driveOpen.getClientRects().length) driveOpen.focus({ preventScroll: true });
+  });
+  const checks = Array.from(document.querySelectorAll('.connection-checks button'));
+  const diagnosticState = new Map();
+  let diagnosticTrigger;
+  diagnostics.addEventListener('close', () => {
+    if (diagnosticTrigger?.getClientRects().length && !diagnosticTrigger.disabled) diagnosticTrigger.focus({ preventScroll: true });
+    else if (!find.hidden) find.focus({ preventScroll: true });
+    else byId('quest-title').focus({ preventScroll: true });
+  });
+  for (const button of checks) button.addEventListener('click', () => {
+    const entry = diagnosticState.get(button.id);
+    diagnosticTrigger = button;
+    text(byId('connection-diagnostic-title'), entry.label);
+    text(byId('connection-diagnostic-message'), entry.detail);
+    diagnostics.showModal();
+  });
+
+  function paintCheck(name, confirmed, label, detail, neutral = 'wird geprüft') {
+    const button = byId('check-' + name);
+    diagnosticState.set(button.id, { label, detail });
+    button.dataset.check = confirmed === null ? 'checking' : confirmed ? 'ok' : 'unconfirmed';
+    button.disabled = confirmed !== false;
+    const accessible = label + (confirmed === null ? ': ' + neutral : confirmed ? ': bestätigt' : ': nicht bestätigt');
+    button.title = accessible;
+    button.setAttribute('aria-label', accessible);
+    text(button.querySelector('.check-symbol'), confirmed === null ? '' : confirmed ? '✓' : '!');
+    if (diagnostics.open && diagnosticTrigger === button) text(byId('connection-diagnostic-message'), detail);
+  }
   let autoConnect = true;
   let pairWarning = '';
   let userAction = null;
@@ -161,8 +227,19 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const page = byId(operatorSteps[step]);
     const body = page.querySelector('.operator-body');
     const move = (id, host) => { const element = byId(id); if (element.parentElement !== host) host.prepend(element); };
-    if (step === 'signals' || step === 'running' || step === 'settings' && nativeActive) move('quest-data', body);
-    if (step === 'running' || step === 'settings' && nativeActive) move('quest-clock', body);
+    if (['connect', 'signals', 'running'].includes(step) || step === 'settings' && nativeActive) move('quest-data', body);
+    if (['connect', 'signals'].includes(step)) move('quest-polar', body);
+    byId('corner-actions').hidden = step !== 'connect' || byId('install-app').hidden;
+    driveOpen.hidden = drivePanel.hidden;
+    if (step !== 'connect' && diagnostics.open) diagnostics.close();
+    if ((step !== 'connect' || drivePanel.hidden) && driveDialog.open) driveDialog.close();
+    if (!driveDialog.open) move('quest-drive-status', byId(step === 'recordings' ? 'recording-files' : 'drive-status-host'));
+    const controllerHost = byId('preview-controller-host');
+    const fallback = byId('preview-controller-fallback');
+    const offerFallback = context.polarAttempts >= 2 && ['calibration', 'tracking'].includes(step);
+    move('preview-controller', offerFallback ? fallback : controllerHost);
+    fallback.hidden = !offerFallback;
+    if (step === 'running' || step === 'settings' && nativeActive) move('quest-playback', body);
     // Only transitions move shared nodes; polling never detaches a focused editor.
     if (step !== displayedStep) {
       if (['input', 'calibration', 'tracking', 'recovery'].includes(step)) move('operator-input-status', body);
@@ -171,6 +248,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
       const returning = displayedStep === 'settings' && step !== 'settings';
       displayedStep = step;
+      if (['connect', 'recordings'].includes(step)) {
+        driveActionsHost().append(driveOpen, driveStatusHost);
+      } else if (driveDialog.open) driveDialog.close();
       document.documentElement.dataset.operatorStep = step;
       if (returning && settingsReturnFocus?.isConnected && settingsReturnFocus.getClientRects().length) {
         settingsReturnFocus.focus();
@@ -179,16 +259,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (['session', 'running'].includes(step) || step === 'settings' && nativeActive) {
       move('operator-session-actions', page.querySelector('.actions'));
     }
-    byId('operator-connect-next').hidden = !context.status || context.waitingForControl;
     const fullConnection = ['connect', 'settings'].includes(step);
     const routineStatus = ['IDLE', 'RUNNING'].includes(context.status?.p) && Object.values(labels).includes(statusText.textContent);
     text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
-    statusText.hidden = !fullConnection && routineStatus;
-    byId('quest-control-host').hidden = !fullConnection && !context.waitingForControl || !controllerAccessState(context.status);
+    const access = controllerAccessState(context.status);
+    statusText.hidden = (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
+    byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
     text(byId('operator-connection-summary'), controllerAccessState(context.status)?.role === 'active'
       ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
+    byId('operator-input-status').hidden = step === 'tracking' && context.inputReady;
     previewProgressGroup.hidden ||= step !== 'calibration';
-    byId('operator-connection-summary').hidden = fullConnection || !context.status || context.recovery || !routineStatus;
+    byId('operator-connection-summary').hidden = step !== 'connect' || !context.status || context.recovery || !routineStatus;
     byId('quest-control-release').hidden = step !== 'settings' || controllerAccessState(context.status)?.role !== 'active';
     const warning = byId('operator-compatibility');
     const version = byId('quest-version').dataset.versionState;
@@ -198,6 +279,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
+    const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
+    polarStatus.hidden = polarAlreadyReady;
+    if (polarAlreadyReady) polarConnect.hidden = true;
+    byId('operator-connect-next').disabled = context.status?.wifi_snapshot !== 1 || context.waitingForControl;
   }
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
@@ -216,8 +301,29 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     paint();
   });
 
+  function runSelection() {
+    const choice = scenarioChoices.querySelector('input:checked:not([disabled])')?.value;
+    const scenario = choice === 'practice' ? practice.value : choice ?? '';
+    const condition = scenario === 'haupt-15' ? 'condition-a' : conditionChoices.querySelector('input:checked').value;
+    return { scenario, condition };
+  }
+
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
-    const actions = rehearsalActions(status, condition.value);
+    const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
+    const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
+    for (const option of practiceOptions) option.hidden = option.disabled = !available.includes(option.value);
+    const availablePractice = practiceOptions.filter(option => !option.disabled);
+    if (availablePractice.length && !available.includes(practice.value)) practice.value = availablePractice[0].value;
+    for (const option of scenarioOptions) {
+      const offered = option.value === 'practice' ? availablePractice.length > 0 : available.includes(option.value);
+      option.closest('label').hidden = option.disabled = !offered;
+    }
+    if (!runSelection().scenario) {
+      const firstOffered = scenarioOptions.find(option => !option.disabled);
+      if (firstOffered) firstOffered.checked = true;
+    }
+    const { scenario, condition } = runSelection();
+    const actions = rehearsalActions(status, condition);
     const active = Boolean(status?.rec);
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
@@ -262,13 +368,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …'
         : waitingForControl ? hint : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
-    clock.hidden = !status;
-    if (status) {
-      const seconds = Math.floor(status.ms / 1000);
-      text(clock, [Math.floor(seconds / 60), seconds % 60].map((part) => String(part).padStart(2, '0')).join(':'));
+    playback.hidden = !status;
+    const duration = status?.duration_ms;
+    const timed = active && Number.isSafeInteger(duration) && duration > 0;
+    progress.hidden = !timed;
+    if (timed) {
+      progress.max = duration;
+      progress.value = Math.min(status.ms, duration);
     }
+    if (status) text(clock, timed ? `${runTime(progress.value)} / ${runTime(duration)}` : runTime(status.ms));
     const setup = polarSetup(status);
     const source = rehearsal.gateway?.owner;
+    if (calibrationBaseline && source && !sameQuest(calibrationBaseline.owner, source)) resetPreview();
     const ecgSource = source && `${source.device}/${source.epoch}/${source.native_epoch}`;
     let sourceChanged = ecgOwner !== ecgSource;
     if (sourceChanged) { ecgOwner = ecgSource; ecgGeneration = null; ecgSensor = ''; }
@@ -316,7 +427,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     byId('kiosk-retry').hidden = !kioskView.canRetry;
     byId('kiosk-check').hidden = !kioskView.canCheck;
     byId('kiosk-acknowledge').hidden = !kioskView.canAcknowledge;
+    const polarAttempts = breath.setup && calibrationBaseline ? breath.setup.attempt - calibrationBaseline.attempt : 0;
     paintBreathingSetup(breath, waiting);
+    paintCheck('bluetooth', bluetoothCheck, 'Bluetooth', bluetoothCheck
+      ? 'Die Quest wurde über Bluetooth gefunden.' : 'Prüfe Bluetooth am Smartphone und den Fernmodus der Quest.',
+      status ? 'für diese WLAN-Verbindung nicht benötigt' : connecting ? 'wird geprüft' : 'nicht geprüft');
+    paintCheck('bridge', status ? true : bridgeFailed ? false : null, 'WLAN-Brücke', status
+      ? 'Die WLAN-Brücke liefert bestätigte Quest-Daten.' : joinMessage || 'Prüfe, ob Smartphone und Quest im selben WLAN sind.');
+    paintCheck('apk', status && !['checking', 'loading'].includes(version.state) ? version.compatible : null, 'Quest-App', version.message);
+    const polarChecking = setup?.sc || ['scanning', 'backoff', 'connecting', 'streams'].includes(setup?.auto?.state);
+    paintCheck('polar', status && !polarChecking ? Boolean(ready || active && status.pi?.f === true) : null,
+      'Polar H10', polarReadiness(setup));
     const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active && !waitingForControl;
     if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
       statusText.focus({ preventScroll: true });
@@ -339,22 +460,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polarConnect.disabled = recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
-    const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
-    const showScenario = selectionAllowed && available.length > 0;
-    if (!showScenario && document.activeElement === scenario) statusText.focus({ preventScroll: true });
-    scenario.parentElement.hidden = !showScenario;
-    scenario.disabled = !showScenario || waiting || unknown;
-    if (showScenario) {
-      for (const option of scenarioOptions) option.hidden = option.disabled = !available.includes(option.value);
-      if (!available.includes(scenario.value)) scenario.value = scenarioOptions.find(option => !option.disabled).value;
+    const showScenario = selectionAllowed && Boolean(scenario);
+    const showCondition = selectionAllowed && status.ecg_preview === 1 && scenario !== 'haupt-15';
+    sessionChoices.hidden = !showScenario && !showCondition;
+    scenarioChoices.hidden = !showScenario;
+    conditionChoices.hidden = !showCondition;
+    practice.parentElement.hidden = !showScenario || !availablePractice.some(option => option.value === scenario);
+    practice.disabled = waiting || unknown;
+    scenarioChoices.disabled = conditionChoices.disabled = waiting || unknown;
+    if (focusedChoice && (focusedChoice.closest('[hidden]') || focusedChoice.matches(':disabled'))) {
+      byId('session-screen-title').focus({ preventScroll: true });
     }
-    const showCondition = selectionAllowed && status.ecg_preview === 1;
-    if (!showCondition && document.activeElement === condition) statusText.focus({ preventScroll: true });
-    condition.parentElement.hidden = !showCondition;
-    condition.disabled = waiting || unknown;
     text(conditionName, showScenario ? 'VR-Bedingung' : 'Szenario');
-    text(condition.options[0], showScenario ? 'Bedingung A' : 'Szenario A');
-    text(condition.options[1], showScenario ? 'Bedingung B' : 'Szenario B');
+    text(conditionLabels[0], showScenario ? 'Bedingung A' : 'Szenario A');
+    text(conditionLabels[1], showScenario ? 'Bedingung B' : 'Szenario B');
     play.disabled = waiting || unknown || !actions.play || actions.play === 'arm' && !selectionAllowed;
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
@@ -385,7 +504,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
     download.hidden = !status || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
-      requiresParticipant, selectionAllowed, recovery: Boolean(recovery || breath.recovery
+      requiresParticipant, selectionAllowed, polarAttempts, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
@@ -435,7 +554,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
     previewCalibrate.disabled = waiting || !view.actions.calibrate;
     previewCalibrate.hidden = !view.showPolarCalibration;
-    text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Erneut persönlich einrichten' : 'Atmung persönlich einrichten');
+    text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Erneut einrichten' : 'Einrichtung starten');
     previewPersonalReturn.hidden = view.showPolarCalibration;
     previewPersonalReturn.disabled = waiting || !view.actions.calibrate;
     for (const [button, mode, input] of [[previewPolarFixed, 'fixed', 'polar-tilt-fixed'], [previewPolarAdaptive, 'adaptive', 'polar-tilt-adaptive']]) {
@@ -447,6 +566,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     previewController.hidden = native?.input === 'controller-state';
     previewController.disabled = waiting || !view.actions.controller;
     previewContinue.disabled = waiting || !view.actions.continue;
+    previewContinue.hidden = !view.actions.continue;
+    const reviewPrompt = byId('preview-review');
+    reviewPrompt.hidden = !view.actions.continue;
+    text(reviewPrompt, native?.input === 'controller-state'
+      ? 'Prüfe, ob die Partikel im Headset auf die Bewegung des Controllers reagieren.'
+      : 'Prüfe bei der teilnehmenden Person, ob sich die Partikel im Headset mit der Atmung bewegen.');
+    previewRestart.hidden = !view.actions.continue || !view.showPolarCalibration;
+    previewRetry.hidden = !view.failure || collecting;
+    previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
     byId('preview-recovery').hidden = !view.recovery;
     if (view.recovery) {
       text(byId('preview-recovery-title'), view.recovery.title);
@@ -459,12 +587,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function resetPreview() {
     previewAccepted = '';
+    calibrationBaseline = undefined;
   }
 
   async function setupAct(op) {
     if (userAction || connecting || document.hidden || !breathing.view?.actions[op]) return;
     const attempt = new AbortController();
     userAction = attempt;
+    if (op === 'calibrate') calibrationBaseline ??= { owner: breathing.gateway.owner, attempt: breathing.view.setup.attempt };
     const request = breathing.run(op, attempt.signal);
     navigateLocal({ type: 'go', step: op === 'calibrate' ? 'calibration' : 'tracking' });
     paint();
@@ -744,6 +874,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     const { signal } = attempt;
     connecting = attempt;
+    if (chooseDevice) bluetoothCheck = null;
+    bridgeFailed = false;
     if (chooseDevice || !discoveryInProgress) joinMessage = '';
     discoveryInProgress = false;
     const setup = {
@@ -779,6 +911,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           : await rediscoverQuest(settings, signal);
         if (discovery?.state && discovery.state !== 'ready') {
           discoveryInProgress = true;
+          bluetoothCheck = discovery.state === 'searching' ? null : false;
           joinMessage = {
             'bluetooth-off': 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.',
             'searching': 'Suche die gespeicherte Quest über Bluetooth …',
@@ -787,6 +920,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
           return;
         }
         if (!discovery) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
+        bluetoothCheck = true;
         let pairedThisAttempt = false;
         const pairNewPhone = async () => {
           if (!chooseDevice || discovery.pairing !== 1) throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
@@ -846,6 +980,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (rehearsal.state.pending) await rehearsal.refresh();
     } catch (error) {
       if (connecting !== attempt) return;
+      if (!signal.aborted) {
+        if (bluetoothCheck === true || settings.endpoint && !chooseDevice) bridgeFailed = true;
+        if (chooseDevice && bluetoothCheck !== true) bluetoothCheck = false;
+      }
       joinMessage = error?.name === 'NotFoundError' && chooseDevice
         ? 'Schalte Bluetooth ein und wähle die Quest aus.'
         : error instanceof TypeError || ['TimeoutError', 'NotFoundError', 'SecurityError'].includes(error?.name)
@@ -922,8 +1060,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
-    const selected = scenario.parentElement.hidden ? '' : scenario.value;
-    try { await rehearsal.run(action, attempt.signal, condition.value, participantId, selected); }
+    const { scenario, condition } = runSelection();
+    try { await rehearsal.run(action, attempt.signal, condition, participantId, scenarioChoices.hidden ? '' : scenario); }
     finally { if (userAction === attempt) userAction = null; }
   }
 
@@ -942,7 +1080,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     try {
       participantId = participantIdentity(Object.fromEntries(new FormData(participantForm))).id;
       participant.open = true;
-      navigateLocal({ type: 'go', step: 'signals' });
+      navigateLocal({ type: 'go', step: 'input' });
       paint();
     } catch {
       participantId = '';
@@ -983,7 +1121,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (userAction || connecting || document.hidden) return;
     kiosk.acknowledge(); paint();
   });
-  previewCalibrate.addEventListener('click', () => setupAct('calibrate'));
+  for (const button of [previewCalibrate, previewRestart, previewRetry]) {
+    button.addEventListener('click', () => setupAct('calibrate'));
+  }
   previewPersonalReturn.addEventListener('click', () => setupAct('calibrate'));
   previewPolarFixed.addEventListener('click', () => setupAct('polar-fixed'));
   previewPolarAdaptive.addEventListener('click', () => setupAct('polar-adaptive'));
@@ -998,7 +1138,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     navigateLocal({ type: 'go', step: 'session' });
     paint();
   });
-  condition.addEventListener('change', () => paint());
+  sessionChoices.addEventListener('change', () => paint());
   play.addEventListener('click', () => {
     if (!play.hidden && !play.disabled) void act('play');
   });

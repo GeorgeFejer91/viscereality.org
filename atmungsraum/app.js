@@ -38,8 +38,9 @@ async function measureLabels() {
     const cache = new Map();
     let frame;
     const measure = () => {
-      cancelAnimationFrame(frame);
+      if (frame) return;
       frame = requestAnimationFrame(() => {
+        frame = undefined;
         const results = [...document.querySelectorAll('[data-measure]')].filter((element) => element.getClientRects().length).map((element) => {
           const style = getComputedStyle(element);
           const value = element.dataset.measureSample ?? element.textContent.trim();
@@ -56,7 +57,7 @@ async function measureLabels() {
           const lineHeight = parseFloat(style.lineHeight);
           const stats = measureLineStats(prepared, Math.max(1, width - 2));
           const naturalWidth = measureNaturalWidth(prepared);
-          const singleLine = root.dataset.layout !== 'reflow' && !element.closest('dialog') && element.closest('button, .actions a');
+          const singleLine = root.dataset.layout !== 'reflow' && !element.closest('dialog, .preview-controls, .operator-actions, .setup-actions') && element.closest('button, .actions a');
           // User word spacing is outside Pretext's model; the painted DOM owns that check.
           const domOnly = (parseFloat(style.wordSpacing) || 0) !== 0 || style.hyphens === 'auto';
           const range = document.createRange();
@@ -77,7 +78,7 @@ async function measureLabels() {
         });
         const visible = document.querySelector('.screen:not([hidden])');
         if (!visible) return;
-        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, #data-files, [data-measure], aside, details, .operator-common, #quest-data')].filter(element => element.getClientRects().length);
+        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .patient-row, .session-tiles, .session-tile, #data-files, [data-measure], aside, details, .operator-common, #quest-data')].filter(element => element.getClientRects().length);
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
@@ -120,14 +121,28 @@ async function measureLabels() {
     main.querySelectorAll('.screen').forEach((screen) => {
       screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
     });
+    const liveVisibility = new MutationObserver(records => {
+      if (records.some(({ target, oldValue }) => oldValue !== target.getAttribute('hidden'))) measure();
+    });
+    main.querySelectorAll('[data-live-value]').forEach(element => {
+      liveVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
+    });
     const dialogChanges = new MutationObserver(measure);
-    for (const id of ['install-dialog']) {
+    for (const id of ['install-dialog', 'connection-diagnostic', 'drive-dialog']) {
       const dialog = byId(id);
       dialogChanges.observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
       observer.observe(dialog);
     }
     new MutationObserver(() => { setLocale(root.lang); cache.clear(); retry(); }).observe(root, { attributes: true, attributeFilter: ['lang', 'style'] });
-    window.addEventListener('resize', retry);
+    const viewport = window.visualViewport;
+    const resize = () => {
+      const size = `${Math.floor(viewport?.scale === 1 ? viewport.height : innerHeight)}px`;
+      if (root.style.getPropertyValue('--usable-height') !== size) root.style.setProperty('--usable-height', size);
+      retry();
+    };
+    window.addEventListener('resize', resize);
+    viewport?.addEventListener('resize', resize);
+    resize();
     document.fonts.addEventListener('loadingdone', retry);
     window.addEventListener('hashchange', measure);
     measure();
@@ -150,7 +165,7 @@ let questMounted = false;
 function mountOperator() {
   if (questMounted || location.hash === '#daten') return;
   questMounted = true;
-  import('./quest-ui.js?v=45').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=46').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }

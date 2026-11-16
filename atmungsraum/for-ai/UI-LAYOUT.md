@@ -12,9 +12,8 @@ outside this sparse checkout). Retain Arial, black/white, blue `#00639c`, gold
 the site's restrained framed groups, thin left rules, 5–8px corners, and clear
 20–30px spacing. Scope app styles; do not import the promotional root CSS.
 Controls retain 48px touch targets. Do not copy tiny website navigation.
-Install/recenter tools occupy the reserved document header space and scroll
-away with it; a floating recenter target must not cover form choices or mode
-labels on long pages. Check corner-control intersections at actual scroll tiles.
+Install belongs to the connection and setup page. Reserve document space for
+recenter and keep it clear of form choices and mode labels. Check corner-control intersections at actual scroll tiles.
 
 Use real HTML/CSS prototypes and actual rendered fixture screens as the visual
 design artifact: these are forms, navigation and existing code-native SVG/CSS
@@ -28,18 +27,63 @@ playout, physical percentage semantics, and exact touching inset geometry.
 
 ## Page sequence
 
-One main job per page: connect/claim → participant → signals → input choice →
-personal calibration when selected → tracking check → session selection →
-running/finalizing → recordings. Settings/version/kiosk are a separate utility
-view with a clear return. Preserve the legacy browser-recordings route.
-Native recovery and pending operations must remain visible and actionable.
-Pairing codes belong only to actual incoming pairing, not routine startup.
+Connection and setup → participant ID → input choice → personal calibration
+when selected → tracking check → scenario tiles and Start → running/finalizing
+→ recordings. Settings and recovery remain available as before. Keep the saved
+signals route and the earlier browser-recordings route usable. Pairing codes
+belong only to an actual incoming pairing request.
 
-Use short headings, a small preparation step indicator, left-aligned status
-groups, and one clear primary action. Keep advanced identity/diagnostic values
-accessible in settings. A compact compatibility warning remains visible in
-context, without creating a new experiment gate. The full tracking display
-belongs on calibration/tracking pages, not every setup page.
+The first page groups Bluetooth, authenticated WLAN, APK and Polar checks, live
+ECG, installation, Drive setup and the existing device utilities. Require an
+authenticated WLAN connection and eligible control state for **Weiter**. Polar
+readiness remains a separate native fact; the controller alternative must
+stay accessible. Checking or unnecessary checks are neutral, confirmed checks
+are green, and failed checks are red with a named diagnostic popup. Use a
+visible symbol as well as color. A saved WLAN rejoin does not prove Bluetooth
+was checked. Keep required recovery actions visible on the page.
+
+Enter participant details on a dedicated, aligned form. Preserve field values
+and the existing identity generator. During personal calibration the Quest
+still owns the two-cycle cue, measurement and completion. Leave the circles
+visible at review and ask the operator to confirm the appropriate movement.
+Retry invokes the existing native calibration command. Expose the direct
+Controller shortcut at review after two Quest-reported attempts in this
+participant setup; the existing input chooser still offers Controller and
+supported pretrained Polar modes without this shortcut gate.
+
+Use illustrated scenario tiles on one screen. Main uses the one selected
+study condition and the existing 900-second plan. Practice retains the
+advertised durations and the standalone Box-Atmung where available. Guidance
+uses the existing Anleitung plan. The playground's manual-ended **Freie
+Erkundung** has no production native plan and must not be offered as runnable.
+Keep any legacy A/B choices offered by the real controller outside the main
+round. Send native scenario IDs. Playback uses the authenticated Quest elapsed
+clock. Show a determinate bar when that status also reports a valid total
+duration. The elapsed time remains available on older builds.
+The running screen shows the native elapsed clock. Render percentage progress
+only if the authenticated Quest snapshot reports a positive duration; a missing
+duration still shows elapsed time, without estimating the total.
+
+## Smartphone GUI rules
+
+Adapt the [playground design and release rules](https://github.com/GeorgeFejer91/atmungsraum-ui/blob/main/for-ai/PROJECT.md#smartphone-gui-design-rules)
+to the real operator and recovery flow. With ordinary phone text, every input
+step, popup and its actions must fit together in one usable viewport. Allocate
+the available shell first, with reserved heading and action rows, ordered
+groups, balanced safe-area insets and 48px targets. Use shrinkable tracks and
+shared label/control rows. Use surplus space on both axes between the groups.
+Provide optional diagnostics and settings in their own views rather than
+stacking them on the primary task. No generic arrow controls, clipped content
+or scrollbar hiding.
+
+Keep real local Pretext 0.0.9 measurement of bounded labels using their actual
+font and inner geometry. Verify painted DOM and focus as well as measurement.
+Keep text enlargement and browser zoom enabled. An unbounded recording list,
+extreme text/keyboard constraints or lengthy native recovery information may
+require readable document reflow while preserving full text and actions; treat
+unexpected scrolling in ordinary input states as a layout failure. An
+exception must be evidenced, with its state and viewport recorded rather than
+counted as a strict fit.
 
 ## Behavior invariants
 
@@ -62,7 +106,7 @@ belongs on calibration/tracking pages, not every setup page.
 - On native completion, show recordings. “Nächste Sitzung” is local navigation:
   retain the participant and return through tracking if the native generation
   invalidated the previous acceptance; never fabricate a new accepted token.
-- Navigation never changes scenarios/defaults, duration (main900s), files,
+- Navigation never starts scenarios, changes duration (main 900 s), changes files,
   Drive authorization, native source state or kiosk policy.
 - Telemetry preserves page, focus, caret, unfinished edits and scroll. View
   transitions focus the visible heading; polling does not steal focus.

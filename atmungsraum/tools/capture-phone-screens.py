@@ -66,6 +66,7 @@ function snapshot() {
     v: 1, wifi_snapshot: 1, control_mode: 'remote',
     build: { v: 1, packaging_fingerprint: 'e'.repeat(64) }, p: phase, h: host, g: generation, r: 0,
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
+    ...(Number.isSafeInteger(settings.duration_ms) ? {duration_ms: settings.duration_ms} : {}),
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
     controller_access: settings.access,
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
@@ -362,6 +363,7 @@ class Review:
               for(const target of targets){
                 const r=target.getBoundingClientRect();
                 for(const corner of corners){
+                  if(corner.contains(target))continue;
                   const c=corner.getBoundingClientRect();
                   const x1=Math.max(r.left,c.left,0),x2=Math.min(r.right,c.right,innerWidth);
                   const y1=Math.max(r.top,c.top,0),y2=Math.min(r.bottom,c.bottom,innerHeight);
@@ -449,6 +451,9 @@ class Review:
         expect(expected).to_be_visible()
         page.evaluate("window.scrollTo(0, 0)")
         page.clock.run_for(50)  # Paint the restored scroll position before capture.
+        page.wait_for_function('''() => [...document.querySelectorAll('.screen:not([hidden]) [data-measure], dialog[open] [data-measure]')]
+          .filter(node => node.checkVisibility() && node.getClientRects().length)
+          .every(node => ['pretext','dom'].includes(node.dataset.textMeasurement))''')
         geometry = page.evaluate("""() => {
           const root = document.documentElement;
           const screen = document.querySelector('.screen:not([hidden])');
@@ -566,7 +571,7 @@ def wait_setup(page, **setup):
 def show_operator(page, step):
     """Follow real local navigation, without changing a domain model or gateway."""
     page.wait_for_function('Boolean(window.reviewQuest)')
-    ids = {'input':'input-screen','tracking':'breathing-preview','signals':'signals-screen',
+    ids = {'connect':'quest','input':'input-screen','tracking':'breathing-preview','signals':'signals-screen',
            'settings':'settings-screen','recordings':'recordings-screen','participant':'participant-screen'}
     target=page.locator('#'+ids[step])
     if target.is_visible():
@@ -580,6 +585,12 @@ def show_operator(page, step):
             page.locator('[data-operator-return]:visible').first.click()
         elif page.locator('[data-operator-go="input"]:visible').count():
             page.locator('[data-operator-go="input"]:visible').first.click()
+        elif step == 'signals':
+            page.evaluate("location.hash = 'signals'")
+        elif step != 'connect' and page.locator('#operator-connect-next:visible').count():
+            page.locator('#operator-connect-next').click()
+        elif step not in ('connect', 'participant') and page.locator('#patient-next:visible').count() and page.locator('#patient-id').text_content() != '—':
+            page.locator('#patient-next').click()
         elif page.locator('[data-operator-back]:visible').count():
             page.locator('[data-operator-back]:visible').first.click()
         else:
@@ -590,17 +601,17 @@ def show_operator(page, step):
     assert before==page.evaluate('({commands:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})'), 'Local navigation mutated native state'
 
 
-def enter_participant(page, then='signals'):
+def enter_participant(page, then='input'):
     show_operator(page,'participant')
     participant = page.locator("#quest-participant")
     if participant.get_attribute("open") is None:
         participant.locator("summary").click()
     page.locator("#patient-surname").fill("Tes")
     page.locator("#patient-age").fill("30")
-    page.get_by_role("radio", name="Keine Angabe").check()
+    page.locator("#patient-gender").select_option("prefer-not-to-say")
     page.locator("#patient-next").focus()
     page.locator("#patient-next").press("Enter")
-    if then!='signals':
+    if then!='input':
         show_operator(page,then)
 
 
@@ -627,7 +638,7 @@ def capture_scroll_regression(review):
         if participant.get_attribute('open') is None:
             participant.locator("summary").click()
         page.locator("#patient-age").fill("31")
-        page.get_by_role("radio", name="Keine Angabe").check()
+        page.locator("#patient-gender").select_option("prefer-not-to-say")
         editor = page.locator("#patient-surname")
         editor.fill("Tes")
         page.evaluate("size => document.documentElement.style.fontSize=size", text_size)
@@ -687,8 +698,8 @@ def capture_scroll_regression(review):
                     editor, "Live update stability")
         # A genuine user transition must still change screens and focus.
         enter_participant(page)
-        expect(page.locator("#signals-screen")).to_be_visible()
-        expect(page.locator("#signals-screen-title")).to_be_focused()
+        expect(page.locator("#input-screen")).to_be_visible()
+        expect(page.locator("#input-screen-title")).to_be_focused()
         page.context.close()
 
 
@@ -707,7 +718,8 @@ def assert_automatic_rediscovery(review, paired):
         expect(page.locator("#quest-status")).to_contain_text("Suche die gespeicherte Quest", timeout=1000)
         page.evaluate("window.reviewDiscoveryState = 'ready'")
         page.clock.run_for(2100)
-        expect(page.locator("#quest-participant")).to_be_visible(timeout=1000)
+        expect(page.locator("#operator-connect-next")).to_be_enabled(timeout=1000)
+        expect(page.locator("#check-bluetooth")).to_have_attribute("data-check","ok")
         expect(page.locator("#quest-find")).to_be_hidden()
         calls = page.evaluate("window.reviewDiscovery")
         assert calls[0] == "unreachable" and calls[-1] == "discovered", calls
@@ -747,6 +759,7 @@ def capture(review):
     button = page.locator("#quest-find")
     button.focus()
     button.press("Enter")
+    show_operator(page, 'participant')
     expect(page.locator("#quest-participant")).to_be_visible()
     expect(page.locator("#participant-screen-title")).to_be_focused()
     expect(button).to_be_hidden()
@@ -772,15 +785,17 @@ def capture(review):
     expect(status).to_contain_text("Schließe das Bedienfeld")
     shot(page, "headset-panel", "Headset panel still open", status, "Connection")
     wait_state(page, host="vr-preparation", polar="off")
+    show_operator(page, "participant")
     if page.locator('#quest-participant').get_attribute('open') is None:
         page.locator("#quest-participant summary").click()
     shot(page, "participant-empty", "Participant form", page.locator("#patient-form"), "Participant and Polar")
     page.locator("#patient-surname").fill("Tes")
     page.locator("#patient-age").fill("30")
-    page.get_by_role("radio", name="Keine Angabe").check()
+    page.locator("#patient-gender").select_option("prefer-not-to-say")
     expect(page.locator("#patient-id")).to_have_text("Tes_30_N")
     shot(page, "participant-ready", "Completed participant form", page.locator("#patient-id"), "Participant and Polar")
     page.locator("#patient-next").click()
+    show_operator(page, "connect")
     for state, slug, title, label in (
         ("off", "polar-connect", "Connect Polar H10", "Lege den Gurt an"),
         ("permission", "polar-permission", "Quest Bluetooth permission required", "Geräte in der Nähe"),
@@ -880,10 +895,19 @@ def capture(review):
         ("probe-15", "Probe · 15 Min."),
         ("haupt-15", "Haupt-Runde · 15 Min."),
     ):
-        scenario.select_option(value)
-        expect(scenario).to_have_value(value)
+        if value.startswith("probe-") and value != "probe-anleitung":
+            scenario.locator('input[value="practice"]').check()
+            page.locator("#quest-practice").select_option(value)
+            expect(page.locator("#quest-practice")).to_have_value(value)
+        else:
+            tile = scenario.locator(f'input[value="{value}"]')
+            tile.check()
+            expect(tile).to_be_checked()
         shot(page, value, title, scenario, "Scenario selection")
-    condition.select_option("condition-b")
+    expect(condition).to_be_hidden()
+    scenario.locator('input[value="practice"]').check()
+    page.locator("#quest-practice").select_option("probe-15")
+    condition.locator('input[value="condition-b"]').check()
     shot(page, "condition-b", "VR-Bedingung B selected", condition, "Scenario selection")
 
     play = page.locator("#quest-play")
@@ -918,7 +942,7 @@ def capture(review):
     expect(status).to_contain_text("Probelauf beendet")
     assert page.evaluate("window.reviewQuest.commands.slice(-5)") == ["arm", "start", "pause", "resume", "save-next"]
     show_operator(page,'tracking')
-    shot(page, "finished", "Run finished and returned to native input testing", detail, "Playback")
+    shot(page, "finished", "Run finished and returned to native input testing", page.locator("#preview-review"), "Playback")
     expect(proceed).to_be_enabled()
     proceed.click()
 
@@ -935,7 +959,8 @@ def capture(review):
     show_operator(page,'recordings')
     page.locator("#quest-export-retry").click()
     shot(page, "quest-recording", "Saved Quest recording and download", await_archive, "Recordings and Drive")
-    page.locator("#quest-drive summary").click()
+    show_operator(page, 'connect')
+    page.locator("#drive-open").click()
     shot(page, "drive", "Google Drive setup form", page.locator("#quest-drive-form"), "Recordings and Drive")
     page.context.close()
 
@@ -997,6 +1022,7 @@ def capture_setup_recovery(review, paired):
     wait_state(page, receiptState="confirmed")
     wait_setup(page, r=1, stage="waiting", calibration="waiting", attempt=1, target_frames=1411200)
     expect(page.locator("#breathing-preview")).to_be_hidden()
+    show_operator(page, "participant")
     expect(page.locator("#patient-fields")).to_be_enabled()
     assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
     assert page.evaluate("window.reviewSetupCommands.length") == 0
@@ -1017,6 +1043,7 @@ def capture_setup_recovery(review, paired):
         acknowledge.focus()
         acknowledge.press("Enter")
         expect(page.locator("#breathing-preview")).to_be_hidden()
+        show_operator(page, "participant")
         expect(page.locator("#participant-screen-title")).to_be_focused()
         expect(page.locator("#patient-fields")).to_be_enabled()
         assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None

@@ -1,5 +1,26 @@
 # Verification
 
+## Playground UI port — 2026-11-16
+
+Ported the presentation from the playground through `60994c4` onto the
+production controller. The production gateway, enrollment, native models,
+audio, scenario IDs, export writer and Google Drive controller are reused.
+
+The Node suite passed 230 tests with no failures. Six native assembly and Java
+pairing interoperability tests require the patched native build environment.
+Chromium ran the 45-state operator walkthrough and the 135-state layout suite
+with the production JavaScript and fixture gateway. The focused operator test
+also exercised Drive form loading and focus return, the red Polar diagnostic,
+progress with a native duration, and history without native commands.
+
+Standard 320 × 640 and 390 × 844 input states fit the viewport. The layout audit checked
+320px portrait, 200% text, short landscape and desktop for unclipped measured
+text, control geometry and complete native actions. Some very short,
+enlarged-text and expanded settings states use document reflow under the
+[layout contract](UI-LAYOUT.md#smartphone-gui-rules). This is browser evidence
+with simulated equipment. Physical keyboard, hardware and OAuth authorization
+qualification remains open.
+
 ## Meta-compatible main builds and one-time helper — 2026-11-16
 
 After the user approved a separate boot helper, main15/16 were built from the

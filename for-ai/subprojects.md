@@ -12,6 +12,14 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Playground UI port (2026-11-16): the production operator starts with setup
+  checks and live ECG, then participant entry, native input/calibration,
+  tracking and illustrated scenario selection. The
+  [smartphone design contract](../atmungsraum/for-ai/UI-LAYOUT.md#smartphone-gui-rules)
+  and release checks apply to the real controller and its diagnostics. Quest
+  capability, authorization, recovery and recordings remain authoritative.
+  Simulation and unsupported manual-ended exploration stay in the playground.
+
 - Operator layout (2026-11-16): the user requests clearer sequential pages and
   actual root-site code styling, without feature changes. Follow the
   [layout contract](../atmungsraum/for-ai/UI-LAYOUT.md) and existing PROJECT
