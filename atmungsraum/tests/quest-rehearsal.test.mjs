@@ -663,3 +663,31 @@ test('native audio recovery blocks parallel Polar and scenario setup at click an
     assert.deepEqual(quest.commands, []);
   }
 });
+
+test('preview status-only refresh shares a flight and never reads or settles mutation receipts', async () => {
+  let release, statuses = 0, receipts = 0;
+  const quest = { owner, initial: snapshot(), close() {},
+    status: async () => { statuses++; await new Promise(resolve => { release = resolve; }); return snapshot(); },
+    receipt: async id => { receipts++; return { v: 1, id, state: 'confirmed' }; } };
+  const rehearsal = new QuestRehearsal(); rehearsal.attach(quest);
+  rehearsal.remember({ id: 'f'.repeat(16), op: 'recenter', owner, generation: 0 });
+  const first = rehearsal.refresh({ statusOnly: true });
+  const duplicate = rehearsal.refresh({ statusOnly: true });
+  assert.equal(statuses, 1); assert.equal(receipts, 0); assert.equal(first, duplicate);
+  release(); await first;
+  assert.ok(rehearsal.pending); assert.equal(rehearsal.state.unknown, false);
+  assert.equal(receipts, 0);
+});
+
+test('ordinary reconciliation joining preview status-only work follows with the required receipt read', async () => {
+  let release, statuses = 0, receipts = 0;
+  const quest = { owner, initial: snapshot(), close() {},
+    status: async () => { if (++statuses === 1) await new Promise(resolve => { release = resolve; }); return snapshot(); },
+    receipt: async id => { receipts++; return { v: 1, id, state: 'confirmed' }; } };
+  const rehearsal = new QuestRehearsal(); rehearsal.attach(quest);
+  rehearsal.remember({ id: 'f'.repeat(16), op: 'recenter', owner, generation: 0 });
+  const fast = rehearsal.refresh({ statusOnly: true });
+  const regular = rehearsal.refresh();
+  release(); await Promise.all([fast, regular]);
+  assert.equal(receipts, 1); assert.equal(statuses, 2); assert.equal(rehearsal.pending, null);
+});

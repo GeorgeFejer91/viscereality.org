@@ -2,6 +2,13 @@
 
 ## Current hardware-test handoff — 2026-11-16
 
+Code 11 (0.2.10-dev) is built/inspected with selectable pretrained fixed/adaptive
+Polar state modes and matching smooth inset actual-radius phone display. The
+participant fit and Controller fallback remain. Code 10 is the last confirmed
+installed baseline until fresh idle installation/readback. The user has been
+asked whether any recording is running; do not install before that answer.
+Fresh wearer Ready is still required before calibration. No Meta upload.
+
 Code 10 is installed with matching byte readback and an accepted canonical cold
 launch. H10 discovery/connection and ACC+ECG stream starts occurred automatically.
 After yesterday's test ended, observer and exact Quest lease were released.

@@ -1,12 +1,18 @@
 import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=11';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
-const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt', 'controller-state': 'Controller State · feste Ausrichtung' };
+const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt · persönlich eingerichtet',
+  'polar-tilt-fixed': 'Polar tilt STATE · vortrainiert · feste Achse',
+  'polar-tilt-adaptive': 'Polar tilt STATE · vortrainiert · dynamische Achse',
+  'controller-state': 'Controller State · feste Ausrichtung' };
+const polarModes = setup => Array.isArray(setup?.polar_modes) && setup.polar_modes.length <= 3
+  && new Set(setup.polar_modes).size === setup.polar_modes.length
+  && setup.polar_modes.every(mode => ['calibrated', 'fixed', 'adaptive'].includes(mode)) ? setup.polar_modes : [];
 const phases = ['inhale', 'hold_in', 'exhale', 'hold_out'];
 const phaseLabels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
 const inputPhases = { inhale: 'Einatmen', exhale: 'Ausatmen', hold: 'Atem halten', unknown: 'noch nicht erkannt', 'bad-tracking': 'Tracking unzuverlässig' };
 const calibrations = new Set(['idle', 'waiting', 'collecting', 'ready', 'failed']);
-const operations = new Set(['start', 'calibrate', 'controller']);
+const operations = new Set(['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive']);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
@@ -100,7 +106,9 @@ export function breathingSetup(status, owner) {
     || ['waiting', 'collecting'].includes(setup.calibration) && (setup.input !== 'automatic' || setup.ready)
     || setup.calibration === 'collecting' && setup.target_frames !== setup.cycle_frames * 2
     || setup.ready && (setup.input === 'automatic' || !['testing', 'main-pending', 'main', 'complete'].includes(setup.stage))
-    || setup.input === 'polar-tilt' && setup.ready && setup.calibration !== 'ready') return null;
+    || setup.input === 'polar-tilt' && setup.ready && setup.calibration !== 'ready'
+    || setup.input === 'polar-tilt-fixed' && !polarModes(setup).includes('fixed')
+    || setup.input === 'polar-tilt-adaptive' && !polarModes(setup).includes('adaptive')) return null;
   return setup;
 }
 
@@ -193,21 +201,29 @@ export class BreathingSetup {
     const phaseFraction = setup ? (setup.position_frames % (setup.cycle_frames / 4)) / (setup.cycle_frames / 4) : 0;
     const radius = [.46 + .54 * phaseFraction, 1, 1 - .54 * phaseFraction, .46][phaseIndex] ?? .46;
     const controller = setup?.input === 'controller-state';
-    const pendingInputLabel = this.pending ? { calibrate: 'Polar einrichten', controller: 'Controller auswählen', start: 'Atemschleife starten' }[this.pending.command.op] : '';
+    const builtin = ['polar-tilt-fixed', 'polar-tilt-adaptive'].includes(setup?.input);
+    const choosingAlternative = ['polar-fixed', 'polar-adaptive', 'controller'].includes(this.pending?.command.op);
+    const showPolarCalibration = !controller && !builtin && !choosingAlternative;
+    const supportedModes = polarModes(setup);
+    const polarChoice = Boolean(gated && (preparing || parked || recoverable)
+      && (setup.source_clock_ready !== false || recoverable));
+    const pendingInputLabel = this.pending ? { calibrate: 'Polar einrichten', controller: 'Controller auswählen', start: 'Atemschleife starten',
+      'polar-fixed': inputs['polar-tilt-fixed'], 'polar-adaptive': inputs['polar-tilt-adaptive'] }[this.pending.command.op] : '';
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
       pending: Boolean(this.pending || this.busy), unknown: this.unknown, recovering, recoveryUnavailable,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
-      title: controller ? 'Controller testen' : 'Atmung einrichten',
-      showPolarCalibration: !controller,
+      title: controller ? 'Controller testen' : builtin ? 'Polar STATE testen' : 'Atmung einrichten',
+      showPolarCalibration, supportedModes,
+      polarModesUpdateRequired: Boolean(setup && (!supportedModes.includes('fixed') || !supportedModes.includes('adaptive'))),
       pendingInputLabel,
       inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
       inputVolume: typeof setup?.input_volume01 === 'number' ? setup.input_volume01 : null,
       renderer: setup?.renderer ?? null,
-      failure: !controller && setup?.calibration === 'failed' ? setup.failure : '',
-      failureLabel: !controller && setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
-      qualityWarning: !controller && setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
+      failure: showPolarCalibration && setup?.calibration === 'failed' ? setup.failure : '',
+      failureLabel: showPolarCalibration && setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
+      qualityWarning: showPolarCalibration && setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
@@ -220,12 +236,15 @@ export class BreathingSetup {
           ? 'Die Messsignale sind da. Warte kurz auf gleichmäßige Bewegungsdaten vom Gurt.' : '',
       actions: {
         start: false,
-        calibrate: Boolean(gated && (preparing || parked || recoverable)
-          && (setup.source_clock_ready !== false || recoverable)),
+        calibrate: polarChoice,
+        'polar-fixed': Boolean(polarChoice && supportedModes.includes('fixed')
+          && (setup.input !== 'polar-tilt-fixed' || recoverable)),
+        'polar-adaptive': Boolean(polarChoice && supportedModes.includes('adaptive')
+          && (setup.input !== 'polar-tilt-adaptive' || recoverable)),
         controller: Boolean(idle && (preparing || parked || recoverable)
           && (setup.input !== 'controller-state' || recoverable)),
         continue: Boolean(gated && testing && setup.ready && setup.clock_valid !== false
-          && ['polar-tilt', 'controller-state'].includes(setup.input)),
+          && ['polar-tilt', 'polar-tilt-fixed', 'polar-tilt-adaptive', 'controller-state'].includes(setup.input)),
         // Audio generation changes can belong to an unobserved recovery of
         // this exact operation. Only actual actor retirement permits discard.
         acknowledge: Boolean(ownerIdle && ownerRetired),

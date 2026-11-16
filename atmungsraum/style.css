@@ -111,7 +111,10 @@ html[data-mode="quest"] #corner-actions {
   transform: scale(.46);
 }
 #preview-circle { border-color: #69b4e0; }
-#preview-actual-circle { border: 3px dashed #efc570; background: transparent; }
+/* Both boxes share their center and physical-progress scale. Subtract the
+   blue border before scaling: gold's outer edge meets blue's inner edge at
+   every radius and responsive box size, including the minimum radius. */
+#preview-actual-circle { inline-size: calc(100% - 4px); border: 3px dashed #efc570; background: transparent; }
 #preview-actual-circle[data-stale] { opacity: .45; }
 .preview-legend { display: grid; gap: 4px; width: 100%; min-width: 0; text-align: start; }
 .preview-legend p { padding-inline-start: 12px; overflow-wrap: anywhere; }

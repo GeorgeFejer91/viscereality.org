@@ -36,9 +36,8 @@ test('ACTUAL blends only renderer-applied progress, with independent age and rep
   assert.equal(display.frame(0).actualRadius, .46 + .54 * .2);
   assert.equal(display.frame(0).actualLive, true);
   display.update(rendered(applied(.8, 2)), observation(2), 1000);
-  assert.equal(display.frame(1000).actualProgress, .2);
-  assert.ok(Math.abs(display.frame(1125).actualProgress - .5) < 1e-12);
-  assert.equal(display.frame(1250).actualProgress, .8);
+  assert.equal(display.frame(1000).actualProgress, .8, 'fresh resumption cannot animate a stale endpoint as current');
+  assert.equal(display.frame(1500).actualProgress, .8);
   assert.equal(display.frame(1501).actualLive, false);
   assert.equal(display.frame(50000).actualProgress, .8, 'stale ACTUAL freezes without waveform extrapolation');
   display.update(rendered(applied(.1, 2)), observation(3), 51000);
@@ -46,6 +45,98 @@ test('ACTUAL blends only renderer-applied progress, with independent age and rep
   display.update(rendered(applied(.4, 3, { age_ns: 400000000 })), observation(4, 90), 52000);
   assert.equal(display.frame(52010).actualLive, true);
   assert.equal(display.frame(52011).actualLive, false, 'renderer age plus outer age share the 500ms budget');
+});
+
+test('ACTUAL uses observed receive cadence so 200ms polls do not interrupt circle and percent motion', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(1), 0);
+  display.update(rendered(applied(.4, 2)), observation(2), 200);
+  assert.equal(display.frame(200).actualProgress, .2);
+  assert.ok(Math.abs(display.frame(300).actualProgress - .3) < 1e-12);
+  assert.equal(display.frame(400).actualProgress, .4);
+  display.update(rendered(applied(.6, 3)), observation(3), 400);
+  for (const [now, expected] of [[450, .45], [500, .5], [550, .55], [600, .6]]) {
+    const current = display.frame(now);
+    assert.ok(Math.abs(current.actualProgress - expected) < 1e-12);
+    assert.ok(Math.abs(current.actualRadius - (.46 + .54 * expected)) < 1e-12);
+    assert.equal(current.actualLive, true);
+  }
+  assert.equal(display.frame(500, true).actualProgress, .6, 'reduced motion shows the latest real GPU sample');
+});
+
+test('ACTUAL cannot fill a one-second polling gap with imagined or freshened GPU samples', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(1), 0);
+  display.update(rendered(applied(.8, 2)), observation(2), 1000);
+  assert.equal(display.frame(1000).actualProgress, .8, 'resume immediately at the fresh sample after a stale gap');
+  assert.equal(display.frame(1499).actualLive, true);
+  const expired = display.frame(1500);
+  assert.equal(expired.actualProgress, .8);
+  assert.equal(display.frame(1750).actualLive, false);
+  assert.equal(display.frame(1750).actualProgress, expired.actualProgress);
+  assert.equal(display.frame(50000).actualProgress, expired.actualProgress);
+});
+
+test('ACTUAL stays smooth at 200ms cadence with 100ms of native and transport age', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2, 1, { age_ns: 60000000 })), observation(1, 40), 0);
+  display.update(rendered(applied(.4, 2, { age_ns: 60000000 })), observation(2, 40), 200);
+  assert.ok(Math.abs(display.frame(300).actualProgress - .3) < 1e-12);
+  assert.equal(display.frame(400).actualProgress, .4);
+  display.update(rendered(applied(.6, 3, { age_ns: 60000000 })), observation(3, 40), 400);
+  assert.ok(Math.abs(display.frame(500).actualProgress - .5) < 1e-12);
+  assert.equal(display.frame(600).actualProgress, .6);
+});
+
+test('ACTUAL retires the prior endpoint when its own age budget runs out', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2, 1, { age_ns: 300000000 })), observation(1, 50), 0);
+  display.update(rendered(applied(.8, 2)), observation(2), 100);
+  assert.ok(Math.abs(display.frame(125).actualProgress - .5) < 1e-12);
+  assert.equal(display.frame(150).actualProgress, .8, 'the old endpoint expires at150ms, not the new sample TTL');
+  assert.equal(display.frame(150).actualLive, true);
+});
+
+test('early polls do not refill the oldest support age while an ACTUAL blend is unfinished', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2, 1, { age_ns: 300000000 })), observation(1, 50), 0);
+  display.update(rendered(applied(.6, 2)), observation(2), 100);
+  display.update(rendered(applied(.8, 3)), observation(3), 140);
+  assert.equal(display.frame(150).actualProgress, .8, 'chained interpolation still finishes before oldest contributing support expires');
+});
+
+test('ACTUAL cadence smoothing spends transport and carrier age rather than extending sample life', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(1), 0);
+  display.update(rendered(applied(.8, 2, { age_ns: 300000000 })), observation(2, 100), 200);
+  assert.ok(Math.abs(display.frame(250).actualProgress - .5) < 1e-12);
+  assert.equal(display.frame(300).actualProgress, .8);
+  assert.equal(display.frame(300).actualLive, true);
+  assert.equal(display.frame(301).actualLive, false);
+  display.update(rendered(applied(.99, 2)), observation(3), 350);
+  assert.equal(display.frame(350).actualLive, false, 'status replay does not renew GPU sample life');
+  assert.equal(display.frame(350).actualProgress, .8);
+});
+
+test('ACTUAL does not blend retired source, renderer or settings lineages', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(1), 0);
+  const replacement = rendered(applied(.9, 2));
+  replacement.acceptance = 'new-owner';
+  display.update(replacement, observation(2), 200);
+  assert.equal(display.frame(200).actualProgress, .9);
+  display.update({ ...replacement, renderer: applied(.4, 3, { settings_revision: 1 }) }, observation(3), 400);
+  assert.equal(display.frame(400).actualProgress, .4);
+});
+
+test('reordered status observations cannot introduce or freshen an ACTUAL sample', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(5), 0);
+  display.update(rendered(applied(.8, 2)), observation(4), 200);
+  assert.equal(display.frame(200).actualProgress, .2);
+  assert.equal(display.frame(501).actualLive, false);
+  display.update(rendered(applied(.8, 2)), observation(6), 600);
+  assert.equal(display.frame(600).actualLive, true);
 });
 
 test('ACTUAL is unavailable on older APK, null renderer, hidden reset or regressing renderer lineage', () => {

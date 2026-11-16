@@ -12,6 +12,14 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Display/modes follow-up (2026-11-16): reviewed local code 11 adds explicit
+  pretrained fixed/adaptive Polar tilt-state choices alongside participant fit
+  and Controller fallback. Preview-only200ms observations and freshness-bounded
+  blending smooth actual radius/percentage; the inner gold stroke touches blue
+  at equal progress. Host/render/source/signed-APK gates pass. Installation and
+  exact publication are in progress; wearer/main acceptance remains open.
+
+
 - Operator follow-up (2026-11-16): participant accepts code-9 calibration.
   Reviewed local code 10 repairs explicit H10 connection recovery, clarifies
   recovery and confirmed Controller mode, overlays desired/applied radius,

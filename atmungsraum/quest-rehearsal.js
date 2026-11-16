@@ -163,13 +163,13 @@ export class QuestRehearsal {
     this.update({ unknown: false, message: '' });
   }
 
-  async observe(gateway, receipt) {
+  async observe(gateway, receipt, { reconcile = true } = {}) {
     const started = this.now();
     const status = await gateway.status();
     if (this.gateway !== gateway) return false;
     const receivedAt = this.now();
     this.update({ status, statusTiming: { receivedAt, transportMs: Math.max(0, receivedAt - started) } });
-    if (!this.pending) return true;
+    if (!reconcile || !this.pending) return true;
     const { id, op, generation, owner } = this.pending;
     if (!sameQuest(owner, gateway.owner)) return false;
     if (op === 'recenter' && receipt?.v === 1 && receipt.id === id && receipt.state === 'outcome_unknown') {
@@ -204,18 +204,25 @@ export class QuestRehearsal {
     return true;
   }
 
-  refresh() {
+  refresh({ statusOnly = false } = {}) {
     const gateway = this.gateway;
-    if (!gateway || this.state.busy || this.refreshing) return this.refreshing;
+    if (!gateway || this.state.busy) return this.refreshing;
+    if (this.refreshing) {
+      if (statusOnly || !this.refreshingStatusOnly) return this.refreshing;
+      // A normal tick must still reconcile its receipt after joining a fast
+      // preview read. Concurrent normal callers coalesce into that next flight.
+      return this.refreshing.then(() => this.gateway === gateway ? this.refresh() : undefined);
+    }
+    this.refreshingStatusOnly = statusOnly;
     this.refreshing = (async () => {
       try {
-        const receipt = this.pending && sameQuest(this.pending.owner, gateway.owner)
+        const receipt = !statusOnly && this.pending && sameQuest(this.pending.owner, gateway.owner)
           ? await gateway.receipt(this.pending.id).catch(() => null) : null;
-        await this.observe(gateway, receipt);
+        await this.observe(gateway, receipt, { reconcile: !statusOnly });
       } catch {
         if (this.gateway === gateway) this.update({ status: null, unknown: Boolean(this.pending) });
       }
-    })().finally(() => { this.refreshing = null; });
+    })().finally(() => { this.refreshing = null; this.refreshingStatusOnly = false; });
     return this.refreshing;
   }
 
