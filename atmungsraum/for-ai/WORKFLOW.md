@@ -7,10 +7,11 @@ percentage stepping under Automatic, diagnosed read-only on the connected Pixel.
 Actual current assets are loaded; blue126px/gold122px is the requested touching
 inset. Uneven arrivals truncate the original composite blends. The corrective
 PWA uses100ms coalesced preview-only reads and bounded280ms adjacent GPU-sample
-playout; endpoint expiry stays500ms. Its exact same-phone confirmation is pending.
-Keep phone control with the user; do not reload/click, switch modes or calibrate
-without the corresponding user action/readiness. Clean the owned CDP forward
-and leases when observation ends. APK11 and native/audio/recording are unchanged.
+playout; endpoint expiry stays500ms. PR22/Pages43877648195 and27 live/public-render checks pass. Exact same-phone
+confirmation is pending because the user no longer has the phone available.
+Read-only observers ended; owned9226 CDP forward and phone/port leases are released.
+Keep phone control with the user. Wait for their return before requesting refresh
+or readiness; do not switch modes or calibrate. APK11/native remain unchanged.
 
 Code11 (0.2.10-dev) is installed with exact byte/version readback and retained
 UID after the user confirmed no recording. Trusted MAIN/LAUNCHER cold start and

@@ -22,8 +22,9 @@ is reopened for this observed behavior.
 - [x] RED/GREEN against captured jitter; bounded adjacent observed-sample playout
   with a finite reserve, original500ms endpoint expiry and no future estimate.
 - [x] Independent corrective review and full223/223 zero-skip phone gate.
-- [ ] Publish PWA-only fix and exact Pages/live, then user refresh and read-only
-  physical cadence confirmation. APK11 unchanged.
+- [x] Publish PWA-only fix and exact Pages/live plus public phone/desktop checks.
+- [ ] Repeat read-only physical cadence check after phone availability/user refresh.
+  APK11 is unchanged; user defers new-mode testing.
 
 Corrective source checkpoint: 25 focused display tests pass, including the
 anonymous captured-timing fixture and exact continuous interpolation where a
@@ -34,7 +35,24 @@ Preview reads are now100ms, with44status reads/four seconds, ordinary4ECG and
 4receipts, at most one in flight, and no hidden/outside-preview acceleration.
 Source-time playout is bounded280ms; strict500ms endpoint freshness remains.
 Rare unsupported gaps still clamp/freeze. Corrective spec/quality review and full223/223 zero-skip gate pass.
-Publication and same-phone confirmation are pending. APK11 stays unchanged.
+The correction is published; same-phone confirmation remains pending. APK11
+stays unchanged.
+
+Publication verified: [PR22](https://github.com/GeorgeFejer91/viscereality.org/pull/22)
+merged at `5b602970a37f14a4659dd5a9232ca3a42736287c`; exact
+[Pages43877648195](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43877648195)
+succeeded. All27 live files match Git, and public390px/1440px loading, policy,
+install-help interaction, no-error/overflow and remote-context gates pass. Entry
+is `actual-playout-r2`, UI44 and display5; CSS and native code11 are unchanged.
+Concurrent origin documentation d92cb2e was retained by ordinary merge.
+
+The user says the phone is no longer available. Actual new-100ms physical
+smoothness is NOT yet confirmed. Read-only observers ended, the owned9226 CDP
+forward is removed/absent, and phone/port leases are released. Do not request
+further phone interaction or mode/calibration readiness until the user resumes.
+When available, user refreshes the PWA and parent compares the same read-only
+moving-ramp timing/perception; preserve the user's control. Overall milestone
+stays open; no new mode/calibration/recording was initiated.
 
 Private evidence: `2026-11-16-yellow-diagnosis`. The display implementer owns
 live-breath-display.js and focused tests; parent owns phone observation, cache,

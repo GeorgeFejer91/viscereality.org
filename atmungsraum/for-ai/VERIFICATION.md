@@ -24,6 +24,15 @@ Actual same-phone100ms confirmation is required after publication/user refresh.
 No new APK/native, sensor, audio, classification or recording change is needed.
 New mode wearer tests are postponed at the user's request.
 
+The corrective release merged in PR22 at
+`5b602970a37f14a4659dd5a9232ca3a42736287c`; exact Pages43877648195 succeeds.
+All27 live Git-blob comparisons and public390px/1440px load/policy/install-help,
+error/overflow checks pass. Remote context passes. NativeAPK11 is unchanged.
+The user reports phone unavailable before the new physical capture. Its owned
+CDP forward and phone/port leases are released; no observer remains. No actual
+same-phone fix acceptance is inferred from the replay, model or public renders.
+
+
 ## Actual display and selectable Polar state modes / code 11 — 2026-11-16
 
 Native `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` and the combined phone
