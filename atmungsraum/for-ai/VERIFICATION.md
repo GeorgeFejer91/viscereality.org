@@ -67,6 +67,32 @@ and historical browser CSV download through their actual links.
 Connection-page navigation enables after the operator module mounts so a slow
 startup release check cannot present actions before their handlers are ready.
 
+On the three-choice controller release, real-app Chromium checks reproduced
+two more defects: Back from input stayed on input when Quest skipped the
+participant form, and Back from earlier browser recordings returned to the
+pre-run URL after native completion. Both checks now pass. The second drives
+Arm → Start → Pause → Resume → Finish, with Start pending at the native cycle
+boundary, and checks the exact commands, resulting screens and elapsed clock.
+Returning to Recordings keeps the participant draft. Both checks verify visible
+heading focus; navigation sends no additional commands. No participant data or
+real accounts were used.
+
+The APK comparison traced Bluetooth enrollment and lease, APK and kiosk status,
+Polar/ECG, breathing setup and renderer data, scenario Arm and run receipts,
+and recording export from the phone controller to the native contracts. The
+code 18 source patch matched the SHA-256 recorded by the APK release. Code 17
+and 18 expose the shared main scenario and private Meta update status. Their
+session snapshot reports elapsed time but no total-duration field, so the phone
+show elapsed time alone. Input diagnostics also render the older APK's raw
+breathing value when no renderer field is available. The custom text spacing
+test checks that the actual value stays visible and uses DOM measurement.
+Independent Chromium review verified replay fencing, a new input observation,
+modern renderer precedence, and suppression of the raw caption during recovery.
+The Node suite passed 244 checks, with eight native build or Java integration
+checks skipped on this host. Focused browser checks covered the 135-state layout
+matrix, enrollment and controller handover, explicit and automatic Polar
+recovery, startup cache updates, APK identity and Meta status, and audio recovery.
+
 ## Current boot/update checkpoint — 2026-11-16
 
 Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/

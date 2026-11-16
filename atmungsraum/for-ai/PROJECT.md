@@ -20,6 +20,10 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
   Polar and preparation, scenario Arm and playback, and recording/Drive paths.
 - [x] Restore receipt access after reconnect and the recordings and Drive
   recovery routes. Keep the native freshness and recording gates.
+- [x] Keep Back working when Quest skips participant entry and preserve
+  the Recordings history entry after a native run finishes.
+- [x] Restore the raw breathing value in Input diagnostics on APKs that report
+  raw input but do not supply the newer renderer radius.
 - [x] Verify both PWA increments on GitHub Pages and smoke-test the public app.
 - [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
   and the authorized Drive account at the next attended idle session.
@@ -42,6 +46,10 @@ All 12 changed paths matched Git. The public PWA passed the synthetic Quest
 catalog and exact Arm payload checks, plus startup and recovery in four
 Chromium viewports. This PC's ADB inventory listed no device for the installed
 lab Pixel refresh. Verify the installed phone release when it is available idle.
+The follow-up reproduced and fixed two navigation failures and the missing raw
+breathing value without changing Quest commands or polling. The APK comparison
+uses the recorded code 17 and 18 source contracts. ADB listed neither the lab
+phone nor the headset; installed-device verification remains open.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress

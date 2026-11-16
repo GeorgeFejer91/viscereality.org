@@ -123,6 +123,49 @@ def scenario_compatibility(review):
         page.context.close()
 
 
+def optional_participant_navigation(review):
+    page = review.page(initial(c, {'participantArm': False, 'scenarios': None}))
+    expect(page.locator('#operator-connect-next')).to_be_enabled()
+    page.locator('#operator-connect-next').click()
+    expect(page.locator('#input-screen')).to_be_visible()
+    page.locator('#input-screen [data-operator-back]').press('Enter')
+    expect(page.locator('#quest')).to_be_visible()
+    expect(page.locator('#quest-title')).to_be_focused()
+    sent = mutations(page)
+    assert sent['session'] == sent['setup'] == []
+    page.context.close()
+
+
+def completed_session_history(review):
+    page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
+    c.enter_participant(page)
+    page.locator('#preview-controller').click()
+    page.locator('#preview-continue').click()
+    play = page.locator('#quest-play')
+    play.click()
+    page.wait_for_function('reviewQuest.pending && reviewQuest.commands.at(-1) === "start"')
+    expect(play).to_be_disabled()
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.clock.run_for(3200)
+    expect(play).to_have_text('Pause')
+    expect(page.locator('#quest-clock')).to_have_text('00:37')
+    expect(page.locator('#quest-progress')).to_be_hidden()
+    play.click()
+    expect(play).to_have_text('Fortsetzen')
+    play.click()
+    expect(play).to_have_text('Pause')
+    page.locator('#quest-finish').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    page.locator('a[href="#daten"]').click()
+    expect(page.locator('#data-title')).to_be_focused()
+    page.locator('#daten .back').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    expect(page.locator('#recordings-screen-title')).to_be_focused()
+    assert mutations(page)['session'] == ['arm', 'start', 'pause', 'resume', 'save-next']
+    assert page.locator('#patient-surname').input_value() == 'Tes'
+    page.context.close()
+
+
 def run():
     init = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({c.PAIRED}));" + """
 window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
@@ -133,6 +176,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         review = c.Review(browser, Path(output))
         recovery_and_recordings(review)
         scenario_compatibility(review)
+        optional_participant_navigation(review)
+        completed_session_history(review)
         page = review.page(init)
         page.clock.run_for(4000)
         expect(page.locator('#quest')).to_be_visible()

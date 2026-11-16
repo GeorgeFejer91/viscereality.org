@@ -114,6 +114,9 @@ counted as a strict fit.
 - On native completion, show recordings. “Nächste Sitzung” is local navigation:
   retain the participant and return through tracking if the native generation
   invalidated the previous acceptance; never fabricate a new accepted token.
+- A Quest that does not require a participant ID skips that page in both
+  directions. Native completion replaces the current history entry with
+  Recordings so returning from the earlier browser exports opens Recordings.
 - The earlier browser-recordings link works without a Quest. Return to the
   same history entry when coming from Aufnahmen. Keep the Drive dialog usable
   on both setup and recordings, and show live transfer status during a run.
@@ -135,6 +138,8 @@ counted as a strict fit.
   connection messages: keep them visible in the current heading/status.
 - Preview-only100ms status reads belong to visible calibration/tracking;
   ordinary ECG/receipt/export cadence and singleflight remain unchanged.
+  Input diagnostics show the raw breathing value on older snapshots that
+  supply it without a renderer. This view uses the ordinary status cadence.
 
 ## Required verification
 

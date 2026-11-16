@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=3';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=4';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=12';
 import { pairPhone } from './quest-pairing.js?v=1';
@@ -208,12 +208,22 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
   function navigateLocal(event) {
     if (event.step === 'settings') settingsReturnFocus = document.activeElement;
-    localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event);
+    localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event,
+      rehearsal.state.status?.participant_arm === 1);
     const hash = `#${localView.step}`;
     if (location.hash !== hash) history.pushState({ operatorStep: localView.step, operatorReturnTo: localView.returnTo }, '', hash);
   }
   function paintOperatorLayout(context) {
     const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
+    if (context.status) {
+      if (wasActive && !nativeActive && context.status.p === 'IDLE') {
+        localView = { step: 'recordings', returnTo: null };
+        // Native completion changes the current view. History must reflect it
+        // before a link can open the older browser recordings and return.
+        history.replaceState({ operatorStep: localView.step }, '', '#recordings');
+      }
+      wasActive = nativeActive;
+    }
     if (location.hash === '#daten' && !nativeActive && !context.recovery) {
       if (diagnostics.open) diagnostics.close();
       if (driveDialog.open) driveDialog.close();
@@ -226,10 +236,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     // Rewriting an unchanged screen flag triggers the layout observer, whose
     // bounded-layout retry can clamp document scroll before reflow completes.
     if (!byId('daten').hidden) byId('daten').hidden = true;
-    if (context.status) {
-      if (wasActive && !nativeActive && context.status.p === 'IDLE') localView = { ...localView, step: 'recordings' };
-      wasActive = nativeActive;
-    }
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
       participantRequired: context.requiresParticipant, active: nativeActive });
     if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
@@ -560,9 +566,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
       : !native.playing ? native.stage === 'idle' ? 'Automatic ist bereit.' : 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
-    const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
-    const hasVolume = !view.renderer && (native?.input === 'automatic' || view.inputVolume !== null);
-    text(previewInputLabel, view.available ? `Bestätigte Eingabe: ${view.inputLabel}${measured}${hasVolume ? ' · Rohwert der Eingabe: ' : ''}` : 'Eingabe auf der Quest nicht verfügbar.');
     previewSwitch.hidden = !view.pendingInputLabel;
     text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Die bestätigte Eingabe gilt bis zur Rückmeldung der Quest.` : '');
     const collecting = view.showPolarCalibration && ['waiting', 'collecting'].includes(native?.calibration);
@@ -669,8 +672,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function renderLive(now) {
     let moving = false;
-    if (livePreviewVisible()) {
-      const current = breathDisplay.frame(now, reducedMotion.matches);
+    const previewVisible = livePreviewVisible();
+    const view = breathing.view;
+    const current = previewVisible || displayedStep === 'input'
+      ? breathDisplay.frame(now, !previewVisible || reducedMotion.matches) : null;
+    const showInputVolume = Boolean(current?.desiredAvailable) && !view?.renderer
+      && typeof current.inputVolume === 'number';
+    if (view?.available) {
+      const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
+      const rawLabel = showInputVolume ? ' · Rohwert der Eingabe: ' : '';
+      text(previewInputLabel, `Bestätigte Eingabe: ${view.inputLabel}${measured}${rawLabel}`);
+    } else text(previewInputLabel, 'Eingabe auf der Quest nicht verfügbar.');
+    if (previewInputVolume.hidden === showInputVolume) previewInputVolume.hidden = !showInputVolume;
+    if (showInputVolume) text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
+    if (previewVisible) {
       actualCircle.hidden = current?.actualRadius === null || !current;
       actualVolume.hidden = actualCircle.hidden;
       if (!actualCircle.hidden) {
@@ -684,17 +699,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (current) {
         previewCircle.style.transform = `scale(${current.radius})`;
         previewProgressFill.style.transform = `scaleX(${current.progress / 2})`;
-        if (current.desiredAvailable && !breathing.view?.renderer && typeof current.inputVolume === 'number') {
-          if (previewInputVolume.hidden) previewInputVolume.hidden = false;
-          text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
-        } else if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
         const native = breathing.view?.setup;
         if (native?.playing && Number.isSafeInteger(native.audio_generation)) {
           text(previewStatus, current.live ? `Atemtakt: ${current.phaseLabel}` : 'Warte auf den aktuellen Atemtakt der Quest.');
         }
         moving = current.animating;
       } else {
-        if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
         text(previewStatus, breathing.view?.recovering ? 'Atemschleife wird neu gestartet. Bitte warten.'
           : 'Warte auf den aktuellen Atemtakt der Quest.');
       }
