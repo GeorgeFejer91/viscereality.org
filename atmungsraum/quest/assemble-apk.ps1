@@ -13,12 +13,32 @@ param(
     [string]$VersionName = '0.1.0',
     [switch]$Developer,
     [switch]$BootAutostart,
+    [switch]$MetaPlatformUpdate,
+    [string]$MetaPlatformAppId,
+    [string]$MetaPlatformSdkRoot,
+    [string]$MetaPlatformHeadersSha256,
+    [string]$MetaPlatformLoaderSha256,
+    [string]$MetaPlatformArchiveSha256,
     [switch]$ResolveOnly,
     [switch]$BundledAssets
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+$metaInputs = @($MetaPlatformAppId, $MetaPlatformSdkRoot, $MetaPlatformHeadersSha256,
+    $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256)
+if ($MetaPlatformUpdate) {
+    if (@($metaInputs | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -gt 0 -or
+        $MetaPlatformAppId -cnotmatch '^[1-9][0-9]{0,19}$' -or
+        @(@($MetaPlatformHeadersSha256, $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256) |
+            Where-Object { $_ -cnotmatch '^[0-9a-f]{64}$' }).Count -gt 0) {
+        throw 'MetaPlatformUpdate requires an explicit canonical MetaPlatformAppId, SDK root and three SHA256 digests.'
+    }
+    $MetaPlatformSdkRoot = (Resolve-Path -LiteralPath $MetaPlatformSdkRoot).Path
+} elseif (@($metaInputs | Where-Object { ![string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
+    throw 'Meta SDK inputs require explicit -MetaPlatformUpdate.'
+}
 
 $QuestRepo = (Resolve-Path -LiteralPath $QuestRepo).Path
 if ($Developer) {
@@ -241,6 +261,13 @@ if ('ui.native_mesh_panel' -cnotin $app.requested_features -and
     $app.requested_features += 'ui.native_mesh_panel.original_product'
 }
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
+if ($MetaPlatformUpdate) {
+    $app.experiment_meta_update_enabled = $true
+    $app.meta_platform_app_id = $MetaPlatformAppId
+} else {
+    $app.Remove('experiment_meta_update_enabled')
+    $app.Remove('meta_platform_app_id')
+}
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
 $previousEnvironment = @{}
@@ -374,6 +401,12 @@ try {
     if ($Keystore) { $buildArgs += @('-Keystore', $Keystore) }
     if ($RetainedCargoTargetDirectory) {
         $buildArgs += @('-RetainedCargoTargetDirectory', $RetainedCargoTargetDirectory)
+    }
+    if ($MetaPlatformUpdate) {
+        $buildArgs += @('-EnableMetaPlatformUpdate', '-MetaPlatformSdkRoot', $MetaPlatformSdkRoot,
+            '-MetaPlatformHeadersSha256', $MetaPlatformHeadersSha256,
+            '-MetaPlatformLoaderSha256', $MetaPlatformLoaderSha256,
+            '-MetaPlatformArchiveSha256', $MetaPlatformArchiveSha256)
     }
     & pwsh -NoProfile -File ./tools/Build-NativeRendererAndroid.ps1 @buildArgs
     if ($LASTEXITCODE -ne 0) { throw 'Native APK build failed.' }

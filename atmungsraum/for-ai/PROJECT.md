@@ -1,5 +1,14 @@
 # Project
 
+Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
+APK digest matches the published16, installer/initiator are Meta, and Android
+records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes
+a delayed Meta15-to16 transition after the earlier bounded negative boot window;
+it does not establish immediate update-on-autoboot or precise continuously
+observed installer timing. Post-update boot/kiosk remains pending. The user-
+approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
+
+
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
 ### Automatic PWA startup updates — 2026-11-16
@@ -9,7 +18,7 @@
   the loaded version if the check fails. See the [release workflow](WORKFLOW.md#smartphone-pwa).
 - [x] Verify a cached two-release launch, error and timeout fallback, and
   existing controller behavior in Chromium. See [verification](VERIFICATION.md#pwa-startup-updates--2026-11-16).
-- [ ] Verify the exact Pages deployment and the public startup behavior.
+- [x] Verify the exact Pages deployment and the public startup behavior (PR28/Pages43939877200,21file matches and live ready/no-error check).
 - [ ] Confirm standalone relaunch on the lab Pixel 10. ADB showed no connected
   devices at local verification; the physical check remains open.
 
@@ -50,47 +59,63 @@ Scope: production HTML/CSS, Pretext integration, and controller presentation;
 keep native state, command admission, recording/Drive, audio, enrollment, and
 the existing utility and recovery routes.
 
-### Autoboot, kiosk and Meta update test — 2026-11-16
+### Autoboot, kiosk and explicit Meta startup updates — 2026-11-16
 
-## Current boot/update checkpoint — 2026-11-16
+Follow [BOOT-KIOSK-UPDATE.md](BOOT-KIOSK-UPDATE.md). Overall hardware acceptance
+remains open. Meta15 was installed through Meta with retained UID. The enabled,
+same-signer boot helper passed genuine reboot, submitted-frame/focus progression,
+physical menu recovery and protected escape. Meta16 later arrived automatically
+at19:43:44 while idle; exact APK digest and Meta attribution match. The initial
+208-second power-on window had not observed16, so immediate autoboot updating
+is not claimed.
 
-Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/
-initiator, with retained UID. The separate same-signer boot helper is installed,
-overlay Allowed and enabled by the user. Genuine reboot automatically launches15:
-trusted native cold admission, first submitted frame, OpenXR focus and advancing
-frames are observed. The wearer confirms single-menu recovery and protected
-three-departure escape; native terminal/task-removal/retired-owner logs corroborate
-escape. Helper27policy checks, signed package inspection and independent review pass.
+- [x] Implement official SDK207 check/download/install/relaunch before preparation.
+- [x] Shared native maintenance admission protects calibration, direct/local
+  Arm/Start/Resume, delayed main entry and recording. Safe failure permits setup;
+  dispatched/external/persisted install uncertainty stays blocked across warm
+  activity restarts. Kiosk hands off before installation and stays suppressed
+  until a fresh process. Retrying a safe failure requires a Quest restart.
+- [x] Independent native task and whole reviews, coordinator75checks,
+  service/policy12checks, binding3cases, native admission5tests and actual
+  Android BootEntry12/110checks pass. Native suite before the final bounded
+  handoff passes862with five existing ignores. Existing broad panel/standalone
+  audio-closure blockers are retained explicitly; they are not passing claims.
+- [x] Build/sign/inspect final17/0.2.16-dev and18/0.2.17-dev. Actual Java/ARM64,
+  session closure, SDK/DEX/manifest/hash closure, retained signer,16KiB alignment
+  and independent private-input/pair comparisons pass. Both are65,662,083bytes.
+  No SDK-enabled main APK is installed through USB.
+- [x] Publish17 only to the existing private Quest2 Developer channel; Meta
+  malware passes and security details say all tests passed. Same13+ age group,
+  one-member channel and access policy retained.18 remains local/unpublished.
+- [x] Actual Meta17 baseline installation confirmed by exact digest, Meta
+  installer/initiator and retained UID10159. Explicit trusted cold launch reaches
+  FOCUSED; SDK initialization and GetVersion request are observed in vendor logs.
+- [ ] Phone trust/result acceptance: compact BLE snapshots currently report
+  budget errors with the strap off. A valid oversized optional Polar retry
+  summary reproduces the error in host tests; exact installed payload is not
+  captured. Code18 will include the bounded optional-summary fix.
+- [ ] Verify the final code18 package after that transport fix.
+- [ ] With17 installed and the Quest powered off, publish18, then prove the
+  explicit in-app download/install/new-version/relaunch/focus/kiosk path.
+- [ ] Publish the final SDK source/package evidence and verify exact Pages/live URLs.
 
-Meta16 was published with the Quest off. Processing completes, malware passes
-and security details say all tests passed. The next genuine boot still launches15.
-A69-sample window over about208seconds observes no16; available version readbacks
-are15 with validated Wi-Fi and charging;
-later closed/asleep readbacks remain15. This is a bounded negative result, not
-proof Meta updating never works or that kiosk causes it. No host install, host
-app launch or manual Update established the test result. Both actual experiment
-versions must continue through Meta distribution. Phone control stays with the
-user, Location stays ON; normal main updates do not require helper updates.
+Current native commit `b4a2d418abaccb3c317a820b88b2477bef798b93`, tree
+`db0980b0cc6d6cbc399cde2102e9a77c110cb223`; cumulative patch SHA256
+`db00bc88563f62f88cfe582b16f50eba88108d9203ec30d89ed1cf27f9ab3a72`
+reconstructs that exact tree. SDK binaries, keys and private visual bodies remain
+external. All15 original private input files match;85 original payload assets
+are byte-identical. Four provenance/binding metadata assets change and two SDK
+notices are added. Pair comparison normalizes only declared provenance/bindings;
+native binary identity is not claimed. See [APK record](../quest/apks/README.md).
 
-The user now approves an official in-app startup check/download/install/relaunch.
-Use the same [active contract](BOOT-KIOSK-UPDATE.md) extension tasks5–9. Native
-Platform SDK207 has a16KiB-aligned ARM64 loader; implementation is in progress,
-not built or hardware-qualified. Preserve signer, data/trust, private visuals,
-controller-only policy and audio/calibration math. A shared native maintenance
-fence must protect calibration, preparation and recording. SDK acknowledgement
-is not installed-version evidence. Overall update acceptance remains open.
-
-Verified split source: PR27 merge `4bae41fa3c0d4d30a10996e4e2c569419eefab38`,
-exact Pages43921087088 success and18 public files byte-match Git. Public policy
-now advertises available16/minimum11; installed15 is still compatible. The new
-hardware-evidence/policy increment and SDK implementation await publication.
-The read-only PWA update display and readiness gates pass independent task review,
-249/249 full phone tests with real native/Java prerequisites and zero skips,
-12 current rendered update states (including320px/200% text),18 release-policy
-renders, preserved drafts/focus/scroll and unchanged preview-only cadence. Native
-SDK packaging/startup review and actual SDK-enabled Meta delivery are still open.
-
-Historical checkpoint notes below describe their observation time.
+The readonly PWA progress/native gates are live in PR28 merge
+`fa22ff4ba839173a474e886c9929d89332d02130`; Pages43939877200 succeeds,
+21files byte-match Git, live startup is ready with no errors. Latest production
+visual/session-section and PWA startup-refresh changes are preserved. Full web
+249/249zero-skip, independent integration103/103,12update renders at320px/200%,
+18release-policy renders, navigation/scroll/draft/focus and cadence checks pass.
+Phone control remains with the user; Location stays ON. The user is ready for
+the attended test and has been told to keep the Quest on until explicit power-off.
 
 ### Operator layout improvement — 2026-11-16
 

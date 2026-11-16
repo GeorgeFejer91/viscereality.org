@@ -1,5 +1,53 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.16-dev / 0.2.17-dev — SDK startup updater, 2026-11-16
+
+| Property | Qualified value |
+| --- | --- |
+| Baseline17 |0.2.16-dev,65,662,083bytes, SHA256 `720da4cbc082a41fcd169b743987e70127dcc4ecfe55e38840a3bccbf3c2b693` |
+| Successor18 |0.2.17-dev,65,662,083bytes, SHA256 `bddc43368f2525bc7cc7b1c174648857b07f1a8f6226eab01175062f34ff978c` |
+| Signer | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit/tree | `b4a2d418abaccb3c317a820b88b2477bef798b93` / `db0980b0cc6d6cbc399cde2102e9a77c110cb223` |
+| Cumulative patch SHA256 | `db00bc88563f62f88cfe582b16f50eba88108d9203ec30d89ed1cf27f9ab3a72` |
+
+Official SDK207 performs the trusted startup version/download/install path with
+shared native session exclusion, bounded safe failures and durable uncertainty.
+Kiosk recovery hands off before installation; external/queued and persisted
+uncertainty cannot release through a warm activity restart. Fresh process startup
+restores ordinary kiosk. Strict launcher trust is preserved; actual Meta SDK
+relaunch compatibility still requires physical acceptance.
+
+Both signed packages pass actual Java/ARM64/session closure, SDK/manifest/all-DEX,
+v3+API24–27v2 signatures,16KiB ZIP/ELF alignment and independent private-input
+qualification. No overlay/boot/hand-tracking authority enters the main APK.
+All15 original private bundle files match;85 original16 payload assets match,
+four generated provenance/binding assets change and two SDK notice assets are
+added. Only two activation digests vary in environment/runtime settings. Pair
+DEX/SDK/LSL/OpenXR/panel closure match; all22 allocated native sections match
+after exact activation-binding normalization, including unchanged .text.
+Nonallocated symbol metadata differs; native binary identity is not claimed.
+
+17 is published to the existing private Quest2 Developer channel. Its malware
+requirement and detailed security tests pass, retaining the existing age group
+and access. Actual Meta17 installation is confirmed by exact digest, Meta attribution and
+retained UID. Trusted cold launch reaches FOCUSED; vendor logs show SDK
+initialization and GetVersion. No USB main-APK installation occurs. The wearer
+now confirms the17 headset is completely off, with USB connected. The local18
+package below is qualified but will be replaced before upload by a bounded BLE
+projection correction: optional Polar retry data can overflow the existing480
+byte channel when the strap is off. Exact installed payload is unobserved; an
+SDK-absent production-shaped overflow is reproduced. Private LAN status and
+native readiness authority remain unchanged. SDK-driven update/relaunch/focus/kiosk
+and installed-phone trust acceptance remain open. Prior local17/18 candidates
+were superseded before upload by the reviewed kiosk-handoff build.
+
+Latest readback20:15 confirms actual Meta-installed16, exact published digest,
+Meta installer/initiator and lastUpdateTime19:43:44. It arrived after the initial
+negative power-on window and later idle observations. No host16 install or
+manual Update action occurred. Post-update boot/kiosk remains pending; historical
+checkpoint details below retain their observation scope.
+
+
 ## 0.2.14-dev / 0.2.15-dev — Meta baseline and update candidate, 2026-11-16
 
 | Build property | Verified value |

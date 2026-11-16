@@ -1,5 +1,27 @@
 # Workflow
 
+Current SDK release checkpoint: final17/18 packages are built/signed and
+independently qualified from native b4a2d418, with retained private inputs,
+signer and controller policy. Meta17 is published in the private Developer
+channel with malware/security passes; actual baseline installation is requested.
+18 remains unpublished for the genuine17-to18 startup-update test. Kiosk handoff,
+sticky uncertain-install guards, native75/service12/binding3/admission5 and
+Android lifecycle12/110 checks pass; broad pre-existing panel/standalone audio
+closure blockers remain explicitly unqualified. PWA28/Pages43939877200 and21
+live-file comparisons pass, preserving current visual and startup-refresh work.
+See PROJECT.md and BOOT-KIOSK-UPDATE.md for current acceptance, source and limits.
+Older checkpoint paragraphs below are dated evidence, not the current release.
+
+
+Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
+APK digest matches the published16, installer/initiator are Meta, and Android
+records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes
+a delayed Meta15-to16 transition after the earlier bounded negative boot window;
+it does not establish immediate update-on-autoboot or precise continuously
+observed installer timing. Post-update boot/kiosk remains pending. The user-
+approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
+
+
 ## Current boot/update checkpoint — 2026-11-16
 
 Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/
