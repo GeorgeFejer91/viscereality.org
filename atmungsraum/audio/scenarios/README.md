@@ -1,5 +1,16 @@
 # Scenario audio timelines
 
+## Haupt-Runde cue placeholders
+
+The [eight named cue placeholders](../../assets/audio/scenarios/haupt-15/cue-placeholders/)
+follow the 15-minute cue sequence. The two controls and instructions take
+81 seconds, the four-phase pattern repeats 50 times for 800 seconds,
+and `end.wav` takes 19 seconds. Each silent WAV has matching TXT, JSON and
+CSV sidecars. Its manifest and timeline are for cue preparation. Selected
+Quest playback is owned by [the native loop plan](../box-loop.json).
+
+## Numbered scenario cue libraries
+
 Every final sequence uses one of these JSON/CSV pairs and its own folder under
 [`assets/audio/scenarios/`](../../assets/audio/scenarios/). Each unique cue has
 a numbered WAV, CSV, JSON and TXT with the same basename. Numbers follow first occurrence, including quiet

@@ -1,0 +1,2 @@
+order,asset_file,event_id,start_seconds,duration_seconds,end_seconds,offset_frames,duration_frames,cycle,audio_status,script_status,transcript_de
+204,end.wav,end,881,19,900,38852100,837900,,silent-placeholder,no-speech,

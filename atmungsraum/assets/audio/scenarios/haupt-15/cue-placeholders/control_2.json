@@ -1,0 +1,20 @@
+{
+  "id": "control_2",
+  "file": "control_2.wav",
+  "transcript_file": "control_2.txt",
+  "frames": 661500,
+  "duration_seconds": 15.0,
+  "sample_rate": 44100,
+  "bytes": 1323044,
+  "sha256": "52be802926b5ac395437d0863ed3d7b3f848f18ed4f4e3450d2c5ce577b22bce",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "no-speech",
+  "text": "",
+  "spoken_text": "",
+  "scenario_id": "haupt-15",
+  "occurrence_count": 1,
+  "occurrence_offsets_frames": [
+    1146600
+  ]
+}

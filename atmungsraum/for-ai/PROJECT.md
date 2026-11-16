@@ -2,6 +2,14 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Main study cue placeholders — 2026-11-16
+
+- [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
+  WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
+  owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
+  All eight files contain silence. Their timeline totals 900 seconds and
+  serves cue preparation. The active native loop owns Quest playback.
+
 ### Separation of preparation and main study — 2026-11-16
 
 - [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute

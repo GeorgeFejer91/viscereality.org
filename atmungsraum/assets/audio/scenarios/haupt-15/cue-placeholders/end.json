@@ -1,0 +1,20 @@
+{
+  "id": "end",
+  "file": "end.wav",
+  "transcript_file": "end.txt",
+  "frames": 837900,
+  "duration_seconds": 19.0,
+  "sample_rate": 44100,
+  "bytes": 1675844,
+  "sha256": "c8ef517cb103568294a90904420a488ee6394430a0e068e2296cbac048c36122",
+  "placeholder": true,
+  "audio_status": "silent-placeholder",
+  "script_status": "no-speech",
+  "text": "",
+  "spoken_text": "",
+  "scenario_id": "haupt-15",
+  "occurrence_count": 1,
+  "occurrence_offsets_frames": [
+    38852100
+  ]
+}
