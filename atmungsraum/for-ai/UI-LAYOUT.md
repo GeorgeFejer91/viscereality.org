@@ -11,9 +11,13 @@ outside this sparse checkout). Retain Arial, black/white, blue `#00639c`, gold
 `#a26f19`, the existing authentic VR icon and readable telemetry colors. Reuse
 the site's restrained framed groups, thin left rules, 5–8px corners, and clear
 20–30px spacing. Scope app styles; do not import the promotional root CSS.
-Controls retain 48px touch targets. Do not copy tiny website navigation.
-Install belongs to the connection and setup page. Reserve document space for
-recenter and keep it clear of form choices and mode labels. Check corner-control intersections at actual scroll tiles.
+Controls retain a 48px minimum height. Reserve one top row for Bluetooth,
+WLAN, APK and Polar checks, the connected recenter control, and the grey
+Einstellungen and Aufnahmen icons. Put the row before every page, including
+historical recordings, and above device, installation and Drive dialogs.
+Settings and recordings open their existing pages; return restores the toolbar
+button. Disable recordings while native playback or receipt recovery needs the
+operator's attention. Installation stays on the connection and setup page.
 
 Use real HTML/CSS prototypes and actual rendered fixture screens as the visual
 design artifact: these are forms, navigation and existing code-native SVG/CSS
@@ -33,8 +37,8 @@ when selected → tracking check → scenario tiles and Start → running/finali
 signals route and the earlier browser-recordings route usable. Pairing codes
 belong only to an actual incoming pairing request.
 
-The first page groups Bluetooth, authenticated WLAN, APK and Polar checks, live
-ECG, installation, Drive setup and the existing device utilities. Require an
+The connection page groups Bluetooth pairing, live ECG, installation and Drive
+setup beside the shared status toolbar. Require an
 authenticated WLAN connection and eligible control state for **Weiter**. Polar
 readiness remains a separate native fact; the controller alternative must
 stay accessible. Checking or unnecessary checks are neutral, confirmed checks
@@ -54,7 +58,9 @@ supported pretrained Polar modes without this shortcut gate.
 Show three choices on the scenario page. Group **Anleitung**
 (`probe-anleitung`) and **Probe-Runde** (`probe-5`, five minutes) under
 **Vorbereitung**. Place **Haupt-Runde** (`haupt-15`, 900 seconds) in a
-separate **Hauptstudie** section. The operator selects a scenario. Quest
+separate **Hauptstudie** section. Show illustrated square tiles where the
+labels and available height fit. Reflow by available width and text size,
+keeping preparation and the main study separate. The operator selects a scenario. Quest
 receives the established condition value with the exact scenario ID. Arm,
 recording metadata, filenames and per-participant counters retain their
 existing `probe` and `main` rules. Playback uses the authenticated Quest elapsed
@@ -64,12 +70,13 @@ The running screen shows the native elapsed clock. Render percentage progress
 only if the authenticated Quest snapshot reports a positive duration; a missing
 duration still shows elapsed time, without estimating the total.
 
-Older Quest catalogs may advertise the 10- and 15-minute practice rounds or
-the 20-minute box-breathing scenario. Keep those exact IDs and eligible VR
-conditions in the secondary options. A condition-only snapshot with no catalog
-keeps the existing condition Arm. An explicitly unavailable or invalid catalog
-blocks Start and shows the operator a diagnostic. A main-only Quest presents
-Haupt-Runde alone. Haupt-Runde requires condition A even on a mixed catalog.
+The user confirmed that the 10- and 15-minute practice rounds, the 20-minute
+box-breathing scenario, and the condition selector are intentionally absent
+from the operator UI. Keep their existing native contracts. The PWA offers
+the intersection of its three choices and the authenticated Quest catalog,
+using condition A. Start requires an offered choice and a ready A track.
+When either is unavailable, show the diagnostic. A main-only Quest presents
+Haupt-Runde alone.
 
 ## Smartphone GUI rules
 
@@ -113,6 +120,9 @@ counted as a strict fit.
 - On native completion, show recordings. “Nächste Sitzung” is local navigation:
   retain the participant and return through tracking if the native generation
   invalidated the previous acceptance; never fabricate a new accepted token.
+- A Quest that does not require a participant ID skips that page in both
+  directions. Native completion replaces the current history entry with
+  Recordings so returning from the earlier browser exports opens Recordings.
 - The earlier browser-recordings link works without a Quest. Return to the
   same history entry when coming from Aufnahmen. Keep the Drive dialog usable
   on both setup and recordings, and show live transfer status during a run.
@@ -134,6 +144,8 @@ counted as a strict fit.
   connection messages: keep them visible in the current heading/status.
 - Preview-only100ms status reads belong to visible calibration/tracking;
   ordinary ECG/receipt/export cadence and singleflight remain unchanged.
+  Input diagnostics show the raw breathing value on older snapshots that
+  supply it without a renderer. This view uses the ordinary status cadence.
 
 ## Required verification
 

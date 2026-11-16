@@ -26,7 +26,8 @@ def compact_setup(review):
                 measured: root.dataset.measurement,
                 page: [root.scrollWidth, root.scrollHeight],
                 viewport: [innerWidth, innerHeight],
-                dialogFits: !open || open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth,
+                dialogFits: !open || (open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth
+                  && open.getBoundingClientRect().top >= document.querySelector('#operator-toolbar').getBoundingClientRect().bottom),
                 textFits: ![...(open || scope).querySelectorAll('[data-text-fit="reflow"]')]
                   .some(node => node.checkVisibility())
               };
@@ -35,6 +36,21 @@ def compact_setup(review):
             assert result['dialogFits'] and result['textFits'], result
 
         assert_fits()
+        header = page.get_by_role('banner', name='Geräte und Aktionen')
+        settings = header.get_by_role('button', name='Einstellungen')
+        recordings = header.get_by_role('button', name='Aufnahmen')
+        expect(settings).to_be_visible(timeout=1500)
+        expect(recordings).to_be_visible()
+        controls = header.locator('button:visible').evaluate_all(
+            '(buttons) => buttons.map(button => button.getBoundingClientRect().y)')
+        assert len(controls) >= 6 and max(controls) - min(controls) < 2, controls
+        settings.focus()
+        page.keyboard.press('Enter')
+        expect(page.locator('#settings-screen-title')).to_be_focused()
+        expect(recordings).to_be_visible()
+        page.locator('#settings-screen [data-operator-return]').click()
+        expect(settings).to_be_focused()
+        assert mutations(page)['session'] == []
         page.locator('#drive-open').click()
         expect(page.locator('#drive-dialog')).to_be_visible()
         assert_fits()
@@ -74,7 +90,7 @@ sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({op:'start', 
     page = review.page(initial(c))
     page.clock.run_for(4000)
     expect(page.locator('#operator-connect-next')).to_be_enabled()
-    page.locator('#quest [data-operator-go="recordings"]').click()
+    page.get_by_role('banner', name='Geräte und Aktionen').get_by_role('button', name='Aufnahmen').click()
     expect(page.locator('#recordings-screen')).to_be_visible()
     page.locator('#recordings-screen #drive-open').click()
     expect(page.locator('#drive-dialog')).to_be_visible()
@@ -93,40 +109,84 @@ sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({op:'start', 
 
 
 def scenario_compatibility(review):
-    for offered, tracks, scenario, condition in (
-        (['haupt-15'], ['track-ready', 'track-ready'], 'haupt-15', 'condition-a'),
-        (['probe-10'], ['track-ready', 'track-ready'], 'probe-10', 'condition-a'),
-        (['probe-5'], ['missing', 'track-ready'], 'probe-5', 'condition-b'),
-        (None, ['track-ready', 'track-ready'], None, 'condition-b'),
+    primary = ['probe-anleitung', 'probe-5', 'haupt-15']
+    legacy = ['probe-10', 'probe-15', 'box-20']
+    for offered, tracks, visible, selected in (
+        (primary + legacy, ['track-ready', 'track-ready'], primary, 'probe-5'),
+        (['haupt-15'], ['track-ready', 'track-ready'], ['haupt-15'], 'haupt-15'),
+        (legacy, ['track-ready', 'track-ready'], [], None),
+        (None, ['track-ready', 'track-ready'], [], None),
+        (['probe-5'], ['missing', 'track-ready'], ['probe-5'], None),
     ):
-        page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}))
+        page = review.page(initial(c, {'scenarios': offered, 'tracks': tracks}),
+                           viewport={'width': 320, 'height': 568})
         c.enter_participant(page)
         page.locator('#preview-controller').click()
         page.locator('#preview-continue').click()
-        if condition == 'condition-b':
-            page.locator('#quest-condition').select_option(condition)
-        if scenario:
-            expect(page.locator(f'input[value="{scenario}"]')).to_be_checked()
-        page.locator('#quest-play').click()
-        expect(page.locator('#running-screen')).to_be_visible()
-        assert page.evaluate('reviewQuest.armedScenario ?? null') == scenario
-        assert page.evaluate('reviewQuest.condition') == condition
-        assert mutations(page)['session'] == ['arm', 'start']
+        expect(page.locator('#session-screen')).to_be_visible()
+        expect(page.locator('#quest-condition, #quest-legacy-options')).to_have_count(0)
+        radios = page.locator('#quest-scenario').get_by_role('radio')
+        outside = page.locator('.session-tile:visible').evaluate_all('''tiles => tiles.filter(tile => {
+          const box = tile.getBoundingClientRect();
+          const contents = tile.querySelector('.session-tile-text').getBoundingClientRect();
+          return contents.top < box.top || contents.bottom > box.bottom
+            || contents.left < box.left || contents.right > box.right;
+        }).map(tile => tile.textContent.trim())''')
+        assert not outside, f'scenario label extends outside its tile: {outside}'
+        assert radios.evaluate_all('nodes => nodes.map(node => node.value)') == visible
+        if selected:
+            page.locator(f'input[value="{selected}"]').check()
+            page.locator('#quest-play').click()
+            expect(page.locator('#running-screen')).to_be_visible()
+            assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == [selected, 'condition-a']
+            assert mutations(page)['session'] == ['arm', 'start']
+        else:
+            expect(page.locator('#quest-play')).to_be_disabled()
+            expect(page.locator('#quest-scenario-unavailable')).to_be_visible()
+            assert mutations(page)['session'] == []
         page.context.close()
 
-    page = review.page(initial(c, {'scenarios': ['probe-5', 'haupt-15']}))
+
+def optional_participant_navigation(review):
+    page = review.page(initial(c, {'participantArm': False, 'scenarios': None}))
+    expect(page.locator('#operator-connect-next')).to_be_enabled()
+    page.locator('#operator-connect-next').click()
+    expect(page.locator('#input-screen')).to_be_visible()
+    page.locator('#input-screen [data-operator-back]').press('Enter')
+    expect(page.locator('#quest')).to_be_visible()
+    expect(page.locator('#quest-title')).to_be_focused()
+    sent = mutations(page)
+    assert sent['session'] == sent['setup'] == []
+    page.context.close()
+
+
+def completed_session_history(review):
+    page = review.page(initial(c, {'scenarios': ['haupt-15'], 'startDelayMs': 2400}))
     c.enter_participant(page)
     page.locator('#preview-controller').click()
     page.locator('#preview-continue').click()
-    page.locator('#quest-legacy-options summary').click()
-    page.locator('#quest-condition').select_option('condition-b')
-    page.locator('input[value="haupt-15"]').check()
-    expect(page.locator('#quest-condition')).to_be_hidden()
-    c.wait_state(page, tracks=['missing', 'track-ready'])
-    expect(page.locator('#quest-play')).to_be_disabled()
-    c.wait_state(page, tracks=['track-ready', 'track-ready'])
-    page.locator('#quest-play').click()
-    assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == ['haupt-15', 'condition-a']
+    play = page.locator('#quest-play')
+    play.click()
+    page.wait_for_function('reviewQuest.pending && reviewQuest.commands.at(-1) === "start"')
+    expect(play).to_be_disabled()
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.clock.run_for(3200)
+    expect(play).to_have_text('Pause')
+    expect(page.locator('#quest-clock')).to_have_text('00:37')
+    expect(page.locator('#quest-progress')).to_be_hidden()
+    play.click()
+    expect(play).to_have_text('Fortsetzen')
+    play.click()
+    expect(play).to_have_text('Pause')
+    page.locator('#quest-finish').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    page.locator('a[href="#daten"]').click()
+    expect(page.locator('#data-title')).to_be_focused()
+    page.locator('#daten .back').click()
+    expect(page.locator('#recordings-screen')).to_be_visible()
+    expect(page.locator('#recordings-screen-title')).to_be_focused()
+    assert mutations(page)['session'] == ['arm', 'start', 'pause', 'resume', 'save-next']
+    assert page.locator('#patient-surname').input_value() == 'Tes'
     page.context.close()
 
 
@@ -140,6 +200,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         review = c.Review(browser, Path(output))
         recovery_and_recordings(review)
         scenario_compatibility(review)
+        optional_participant_navigation(review)
+        completed_session_history(review)
         page = review.page(init)
         page.clock.run_for(4000)
         expect(page.locator('#quest')).to_be_visible()

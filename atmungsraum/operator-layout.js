@@ -7,13 +7,17 @@ export const operatorSteps = Object.freeze({
 });
 const previous = { participant: 'connect', signals: 'participant', input: 'participant',
   calibration: 'input', tracking: 'input', session: 'tracking', recordings: 'session' };
-export function navigateOperatorView(state, event) {
+export function navigateOperatorView(state, event, participantRequired = true) {
   if (event.type === 'return') return { ...state,
     step: Object.hasOwn(operatorSteps, state.returnTo) && state.returnTo !== state.step ? state.returnTo : 'signals', returnTo: null };
-  if (event.type === 'back') return { ...state, step: previous[state.step] || 'connect' };
+  if (event.type === 'back') {
+    const step = previous[state.step];
+    return { ...state, step: step === 'participant' && !participantRequired ? 'connect' : step || 'connect' };
+  }
   if (event.type !== 'go' || !Object.hasOwn(operatorSteps, event.step)) return state;
-  return { ...state, step: event.step, returnTo: event.step === state.returnTo ? null
-    : ['settings', 'recordings'].includes(event.step) ? state.step : state.returnTo };
+  const step = event.step === 'participant' && !participantRequired ? 'input' : event.step;
+  return { ...state, step, returnTo: step === state.returnTo ? null
+    : ['settings', 'recordings'].includes(step) ? state.step : state.returnTo };
 }
 export function resolveOperatorView(step, context) {
   // Settings retains shared recovery and session controls in its own view.

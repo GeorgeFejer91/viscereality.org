@@ -344,14 +344,18 @@ starting the Quest controller or CSV recovery. The request bypasses the
 ordinary cached entry URL. A different release ID triggers one replacement
 navigation with the same query options and fragment. An unavailable check
 falls back to the loaded release after at most two seconds of network wait.
-Returning to an already open app does not restart it. Existing installations
-pick up the checker the first time they load this release. The check uses
-the release currently served by Pages; it retries on the next launch if
-the hosting edge still serves the previous release.
+Returning to an already open app also checks if it is on the disconnected
+connection page with the Bluetooth button ready and no dialog, pairing, receipt
+recovery or participant draft. Recheck that condition and the URL before
+replacing the document. On other pages the update waits until a fresh launch
+or a later idle return. The same installed launcher and browser storage
+survive both updates; keep the manifest identity stable. The check uses
+the release currently served by Pages and retries on the next eligible open
+if the hosting edge still serves the prior release.
 
 Run `python -B tools/test-pwa-startup.py` for the Chromium launch regression.
-It simulates publishing a newer release while the old entry is cached, and
-checks fallback, URL retention and storage retention.
+It covers a cached release, an idle return, the guard in settings, fallback,
+URL retention and storage retention.
 
 The four app icons derive from the root site's `Images/logo.png` (Git blob
 `bcd94ca74f6305eb7cd2e8a9a8b4a66cf99f6caa`): composite the unchanged, contained

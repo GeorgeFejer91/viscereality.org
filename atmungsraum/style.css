@@ -85,7 +85,7 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 #quest-settings { text-align: start; min-width: 0; }
 #quest-settings[open] { display: grid; gap: 10px; }
 #kiosk-diagnostics[open] { display: grid; gap: 10px; }
-#quest-settings summary, #quest-legacy-options summary { cursor: pointer; min-height: 48px; align-content: center; }
+#quest-settings summary { cursor: pointer; min-height: 48px; align-content: center; }
 #kiosk-detail { overflow-wrap: anywhere; color: var(--muted); }
 #quest-version-host, #preview-version-host { width: 100%; min-width: 0; }
 .version-panel { display: grid; gap: 8px; min-width: 0; width: 100%; padding: 12px; border: 1px solid var(--border); text-align: start; }
@@ -274,10 +274,7 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 #breathing-preview .actions > button { width: 100%; }
 .session-actions { display: grid; gap: 12px; grid-column: 1 / -1; }
 .primary-navigation:enabled { border-color: #3487b7; background: var(--site-blue); }
-.utility-navigation { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 8px; border-top: 1px solid #ffffff26; }
-.utility-navigation button { background: transparent; border-color: transparent; padding-inline: 0; justify-items: start; text-align: start; color: #b9def4; }
 /* Intrinsic labels need the same measured end space as the brand label. */
-.utility-navigation button > [data-measure]::after, #quest-disconnect > [data-measure]::after { content: ""; display: inline-block; width: 4px; }
 .text-link { display: grid; align-items: center; min-height: 48px; color: #b9def4; }
 #settings-screen #quest-settings { width: 100%; }
 #settings-screen .version-panel { border-radius: 5px; }
@@ -320,7 +317,6 @@ html[data-mode="quest"] main {
 }
 .screen-header { gap: 4px; padding-bottom: 8px; }
 .operator-body { gap: var(--gap); }
-.utility-navigation { gap: 4px 16px; padding-top: 4px; }
 .operator-common:not(:has(> :not([hidden]))) { display: none; }
 #input-screen .preview-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 #input-screen .preview-controls button { padding: 6px; }
@@ -351,10 +347,8 @@ html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows
 }
 @media (orientation: landscape) and (max-height: 480px) {
   #quest .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
-  #quest :is(#operator-common, .connection-checks, #quest-pairing) { grid-column: 1 / -1; }
-  #quest .operator-body > .utility-navigation { border: 0; align-content: start; }
+  #quest :is(#operator-common, #quest-pairing) { grid-column: 1 / -1; }
   #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
-  #input-screen .operator-body > .utility-navigation { grid-column: 1 / -1; }
   #quest-drive-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   #quest-drive-connect { grid-column: 1 / -1; }
 }
@@ -366,7 +360,7 @@ html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows
   align-content: space-evenly;
   gap: clamp(6px, min(2vw, 1.5dvh), 16px);
 }
-.setup-actions, .connection-checks { display: grid; gap: 8px; min-width: 0; }
+.setup-actions { display: grid; gap: 8px; min-width: 0; }
 .setup-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8em), 1fr)); align-items: start; }
 html[data-mode="quest"] .setup-actions #corner-actions { position: static; display: grid; max-width: none; }
 .setup-actions #install-app { width: 100%; min-height: 48px; height: auto; }
@@ -374,20 +368,19 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 .setup-actions #install-app > span { display: block; }
 #drive-status-host { grid-column: 1 / -1; }
 #drive-status-host:not(:has(> p:not([hidden]))) { display: none; }
-.connection-checks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.connection-checks .check-icon {
+#operator-toolbar .check-icon {
   grid-template-columns: minmax(0, 1.5em) auto;
   gap: 4px;
   padding: 4px;
   color: #fff;
 }
-.connection-checks .check-icon svg {
+#operator-toolbar .check-icon svg {
   width: 100%; height: auto; fill: none; stroke: currentColor;
   stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
 }
-.connection-checks .check-icon[data-check="ok"] { color: #81e9a4; }
-.connection-checks .check-icon[data-check="unconfirmed"] { color: #ff8f8f; }
-.check-symbol { font-weight: bold; }
+#operator-toolbar .check-icon[data-check="ok"] { color: #81e9a4; }
+#operator-toolbar .check-icon[data-check="unconfirmed"] { color: #ff8f8f; }
+.check-symbol { font-size: 14px; line-height: 1; font-weight: bold; }
 :is(#connection-diagnostic, #drive-dialog) {
   width: min(480px, calc(100vw - 24px));
   max-block-size: calc(100dvh - 24px);
@@ -414,7 +407,7 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
   gap: 4px 12px;
 }
 #participant-screen .patient-field { grid-row: span 2; grid-template-rows: subgrid; }
-#patient-gender, #patient-id, #quest-condition { min-height: 48px; width: 100%; }
+#patient-gender, #patient-id { min-height: 48px; width: 100%; }
 #patient-id { display: grid; align-items: center; }
 
 #session-choices { display: grid; justify-items: center; gap: 12px; width: 100%; }
@@ -422,28 +415,36 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
 .session-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .session-tile {
   position: relative; display: grid; place-items: center; text-align: center;
-  min-block-size: 48px; padding: 8px;
+  min-block-size: 48px; padding: clamp(4px, 1.5cqi, 8px);
   border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
   line-height: 1.15; cursor: pointer;
 }
 .session-tile input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
-.session-tile-text { display: grid; gap: 4px; width: 100%; pointer-events: none; }
-#quest-scenario .session-tile-text img { width: min(100%, 2.5em); height: auto; justify-self: center; }
+.session-tile-text { display: grid; gap: 3px; width: 100%; pointer-events: none; }
+#quest-scenario .session-tile-text img { width: min(100%, clamp(24px, 8cqi, 2.5em)); height: auto; justify-self: center; }
 .session-tile:has(:checked) { background: #0e2a3c; border-color: #74c5f2; box-shadow: inset 0 0 0 1px #74c5f2; }
 .session-tile:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 .session-tile:has(:disabled) { color: #979797; cursor: default; }
-#quest-scenario { width: min(100%, 34rem); }
-.session-segments { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(8px, min(3vw, 2dvh), 16px); }
-.session-segment { display: grid; align-content: start; gap: 6px; min-width: 0; }
+#quest-scenario { width: min(100%, 34rem); container: operator-scenario / inline-size; }
+.session-segments { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.08fr); gap: clamp(6px, min(2vw, 2dvh), 12px); }
+.session-segment { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 6px; min-width: 0; }
 .session-segment:not(:has(.session-tile:not([hidden]))) { display: none; }
-.session-segment h2 { margin: 0; font-size: 1em; font-weight: 700; }
-.main-session-segment { padding-block-start: 8px; border-block-start: 2px solid var(--site-gold); }
+.session-segment h2 { margin: 0; font-size: .9375em; font-weight: 700; }
+.main-session-segment { padding-inline-start: 6px; border-inline-start: 2px solid var(--site-gold); }
 .main-session-segment .session-tiles { grid-template-columns: minmax(0, 1fr); }
 .main-session-segment .session-tile { align-self: stretch; border-color: var(--site-gold); }
-@media (orientation: landscape), (min-width: 600px) {
-  .session-segments { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
-  .session-segment { align-content: stretch; grid-template-rows: auto minmax(0, 1fr); }
-  .main-session-segment { padding-block-start: 0; padding-inline-start: 8px; border-block-start: 0; border-inline-start: 2px solid var(--site-gold); }
+.session-segments:has(> .session-segment:not(:has(.session-tile:not([hidden])))) {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, 24rem);
+  margin-inline: auto;
+}
+@media (min-height: 481px) {
+  .session-tile { aspect-ratio: 1; min-block-size: min-content; width: 100%; max-width: 11rem; justify-self: center; }
+}
+@container operator-scenario (max-width: 15rem) {
+  .session-segments, .session-tiles { grid-template-columns: minmax(0, 1fr); }
+  .main-session-segment { padding: 8px 0 0; border: 0; border-block-start: 2px solid var(--site-gold); }
+  .session-tile { aspect-ratio: auto; min-block-size: 48px; max-width: none; }
 }
 #preview-review {
   font-size: clamp(1.1rem, min(4vw, 3dvh), 1.6rem);
@@ -487,4 +488,46 @@ body:has(#recenter-vr[hidden]) main { padding-top: max(var(--inset), env(safe-ar
   #breathing-preview .operator-actions > #preview-continue,
   #breathing-preview .operator-actions:has(#preview-restart[hidden]) > [data-operator-go],
   #session-screen .session-actions { grid-column: auto; }
+}
+
+html {
+  --operator-toolbar-top: max(8px, env(safe-area-inset-top));
+  --operator-toolbar-height: calc(var(--operator-toolbar-top) + 48px);
+  scroll-padding-block-start: calc(var(--operator-toolbar-height) + 8px);
+}
+#operator-toolbar {
+  position: relative;
+  display: flex;
+  gap: clamp(4px, 1.5vw, 8px);
+  width: min(100%, 720px);
+  height: var(--operator-toolbar-height);
+  margin-inline: auto;
+  padding: var(--operator-toolbar-top) max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+  background: #000;
+}
+#operator-toolbar > button { flex: 1 1 0; min-width: 0; height: 48px; }
+#operator-toolbar .check-icon { grid-template-columns: minmax(0, 24px) auto; justify-content: center; }
+#operator-toolbar .operator-tool { padding: 4px; background: #292929; color: #eee; }
+#operator-toolbar .operator-tool svg {
+  width: min(100%, 24px); fill: none; stroke: currentColor;
+  stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round;
+}
+#operator-toolbar .operator-tool[aria-current="page"] { border-color: #74c5f2; }
+html #operator-toolbar #recenter-vr { position: static; width: auto; height: 48px; padding: 6px; }
+#operator-toolbar #recenter-vr img { max-width: 32px; max-height: 32px; }
+html[data-mode] body main {
+  height: calc(var(--usable-height, 100dvh) - var(--operator-toolbar-height));
+  padding-top: 8px;
+}
+html[data-layout="reflow"][data-mode] body main {
+  height: auto;
+  min-height: calc(100dvh - var(--operator-toolbar-height));
+}
+:is(#connection-diagnostic, #drive-dialog, #install-dialog) {
+  inset-block-start: calc(var(--operator-toolbar-height) + 6px);
+  inset-block-end: max(8px, env(safe-area-inset-bottom));
+  max-block-size: calc(var(--usable-height, 100dvh) - var(--operator-toolbar-height) - max(8px, env(safe-area-inset-bottom)) - 6px);
+}
+:is(#connection-diagnostic, #drive-dialog, #install-dialog)::backdrop {
+  background: linear-gradient(transparent var(--operator-toolbar-height), #000b var(--operator-toolbar-height));
 }

@@ -26,6 +26,15 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ## Operator UI compatibility — 2026-11-16
 
+The user subsequently confirmed that the legacy scenario and condition controls
+are intentionally omitted from the smartphone UI. The Chromium fixture verifies
+the three supported choices against mixed, main-only, legacy-only and missing
+catalogs, plus a Quest with only track B ready. The PWA sends the selected
+visible scenario with condition A. Missing admission produces a diagnostic and
+zero session commands. The 135-state operator layout matrix and cached startup
+release test pass from the `c14d67f` source baseline with this change. The Node
+suite passes 244 checks and skips eight native build and Java prerequisites.
+
 The original browser regression checks reproduced blocked Start for a legacy-only
 advertised scenario, a missing scenario catalog, and a practice track with only
 condition B ready. Recovery could hide the Bluetooth button and prevent a trusted
@@ -57,6 +66,32 @@ returns focus to the opener. The walkthrough includes the saved Quest recording
 and historical browser CSV download through their actual links.
 Connection-page navigation enables after the operator module mounts so a slow
 startup release check cannot present actions before their handlers are ready.
+
+On the three-choice controller release, real-app Chromium checks reproduced
+two more defects: Back from input stayed on input when Quest skipped the
+participant form, and Back from earlier browser recordings returned to the
+pre-run URL after native completion. Both checks now pass. The second drives
+Arm → Start → Pause → Resume → Finish, with Start pending at the native cycle
+boundary, and checks the exact commands, resulting screens and elapsed clock.
+Returning to Recordings keeps the participant draft. Both checks verify visible
+heading focus; navigation sends no additional commands. No participant data or
+real accounts were used.
+
+The APK comparison traced Bluetooth enrollment and lease, APK and kiosk status,
+Polar/ECG, breathing setup and renderer data, scenario Arm and run receipts,
+and recording export from the phone controller to the native contracts. The
+code 18 source patch matched the SHA-256 recorded by the APK release. Code 17
+and 18 expose the shared main scenario and private Meta update status. Their
+session snapshot reports elapsed time but no total-duration field, so the phone
+show elapsed time alone. Input diagnostics also render the older APK's raw
+breathing value when no renderer field is available. The custom text spacing
+test checks that the actual value stays visible and uses DOM measurement.
+Independent Chromium review verified replay fencing, a new input observation,
+modern renderer precedence, and suppression of the raw caption during recovery.
+The Node suite passed 244 checks, with eight native build or Java integration
+checks skipped on this host. Focused browser checks covered the 135-state layout
+matrix, enrollment and controller handover, explicit and automatic Polar
+recovery, startup cache updates, APK identity and Meta status, and audio recovery.
 
 ## Current boot/update checkpoint — 2026-11-16
 
@@ -118,6 +153,31 @@ connection, recording-sync and naming unit tests passed 38/38. The selector
 fit at 320 × 568, 390 × 844, 844 × 390 and 1440 × 900. At 200% text it
 used readable document reflow. Browser tests used simulated equipment.
 
+
+## Playground header and automatic PWA refresh — 2026-11-16
+
+Production picks up the playground presentation through `72a1920`. The
+existing Quest catalog, calibration evidence, timer, receipts and recording
+authority remain in use. The browser regression first failed to find the
+shared header, then verified keyboard entry and return focus, one aligned row,
+offline recordings, native command guards and the Drive dialog below the row.
+The cached-launch regression also first failed on idle resume; it now checks
+cached launch, idle return, the settings guard, 503/timeout fallback, and
+preservation of the launch URL and browser storage.
+
+The 320px screenshot also exposed duration labels outside the tile borders.
+The rendered catalog test now checks the contents against their own tile
+bounds. More space for the captions, smaller illustrations on narrow phones,
+and a text-driven stacked layout keep the full labels visible. The original
+layout and control checks were repeated after the correction.
+
+Chromium passed the production controller walkthrough, 135 layout states
+across 390px, 320px, 200% text, landscape and desktop, and 18 control and
+Polar states. Settings and enlarged text can use readable document reflow.
+The Node suite passed 244 with eight native/Java prerequisites skipped.
+Scenario JSON/CSV, context, and Git whitespace checks passed. These are
+browser and synthetic gateway checks; physical installed-device acceptance
+remains open.
 
 ## Playground UI port — 2026-11-16
 

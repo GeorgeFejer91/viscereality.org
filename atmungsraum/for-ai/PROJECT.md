@@ -13,11 +13,17 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ### Operator UI compatibility audit — 2026-11-16
 
+- [x] Apply the user's clarification that only Anleitung, five-minute Probe-Runde
+  and fifteen-minute Haupt-Runde belong in the smartphone PWA. Use condition A
+  and preserve the original native scenario and condition commands.
 - [x] Trace the sequential screens to the existing Quest pairing, control,
   Polar and preparation, scenario Arm and playback, and recording/Drive paths.
-- [x] Restore older advertised scenarios and condition selection, receipt
-  access after reconnect, and the recordings and Drive recovery routes. Keep
-  the native freshness and recording gates, including condition A for Haupt-Runde.
+- [x] Restore receipt access after reconnect and the recordings and Drive
+  recovery routes. Keep the native freshness and recording gates.
+- [x] Keep Back working when Quest skips participant entry and preserve
+  the Recordings history entry after a native run finishes.
+- [x] Restore the raw breathing value in Input diagnostics on APKs that report
+  raw input but do not supply the newer renderer radius.
 - [x] Verify both PWA increments on GitHub Pages and smoke-test the public app.
 - [ ] Repeat the operator flow on the installed phone with Quest, a worn H10
   and the authorized Drive account at the next attended idle session.
@@ -34,6 +40,23 @@ All eight changed live paths matched Git. Live Chromium repeated the four
 viewport checks, including moving focus to Bluetooth before the dialog's
 close event. A browser fixture also completed Drive authorization with fake
 OAuth and verified the selected account and private folder readback.
+The reduced picker release `4ccec3d` is live from
+[Pages run 43956101913](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43956101913).
+All 12 changed paths matched Git. The public PWA passed the synthetic Quest
+catalog and exact Arm payload checks, plus startup and recovery in four
+Chromium viewports. This PC's ADB inventory listed no device for the installed
+lab Pixel refresh. Verify the installed phone release when it is available idle.
+The follow-up reproduced and fixed two navigation failures and the missing raw
+breathing value without changing Quest commands or polling. Runtime commit
+`502d111` matched `origin/main` and passed
+[Pages run 43959145457](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43959145457).
+All nine changed paths plus both APK update assets matched Git. Chromium
+startup and recovery passed at four sizes, and all three fixes passed against
+the public assets with synthetic Quest transport. The APK comparison verified
+both code 17 and 18 source-patch digests. Neither local device inventory found
+the lab phone or headset. At the next attended idle session, refresh the
+installed phone and verify pairing, Polar and input, Start/Pause/Resume/Finish,
+and a synthetic recording through private Drive.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress
@@ -53,7 +76,7 @@ retired with the move to Quest-only operation. Its CSVs remain available at
   Nine public files matched Git; both entry URLs and the live current/stale
   Chromium launches passed.
 - [ ] Reopen the installed app on the idle lab Pixel 10 and confirm standalone
-  mode and the current release `20261116-meta-update-r4`. No device was listed by ADB at
+  mode and the current release `20261116-operator-history`. No device was listed by ADB at
   release verification, so physical acceptance remains open.
 
 Started from clean sparse publication main at `b3a6a59`, matching
@@ -97,8 +120,19 @@ cloud-backed files; it was left untouched. The verified runtime commit
   All 14 changed public files matched Git; live setup and installation tested
   in four Chromium viewports. The primary checkout's existing index state was
   left alone; production was published from the sparse sync checkout.
-- [ ] Reduce 200% text reflow on the smallest phone and qualify the final
-  layout with the physical keyboard and safe areas.
+- [x] Bring the current playground header and illustrated tiles to production.
+  The four diagnostics, recenter, Einstellungen and Aufnahmen share the top
+  row. The three Quest-supported options stay separated into Vorbereitung and
+  Hauptstudie. Enlarged labels can reflow without clipping.
+- [x] Check for updates on each fresh web/PWA launch and on return to the idle
+  connection screen. The installed app keeps its ID and browser storage.
+  Active views defer refresh. See the [startup workflow](WORKFLOW.md#smartphone-pwa).
+- [x] Verify production release `a9d4096` on [Pages run 43962255351](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43962255351).
+  The six public entry, runtime and manifest responses matched Git. Live
+  Chromium passed the toolbar, focus and historical-recordings flow at
+  320 × 640, 390 × 844, 844 × 390 and 1440 × 900. The exact previous release
+  bootstrapped into the live update while preserving its URL and storage.
+  ADB and Mobile MCP listed no local phone; standalone Pixel acceptance is open.
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 

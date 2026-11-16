@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=3';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=4';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
@@ -19,7 +19,7 @@ const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
 const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
   || dialog.contains(document.activeElement);
-const mainCondition = 'condition-a';
+const operatorCondition = 'condition-a';
 const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
   return [Math.floor(seconds / 60), seconds % 60].map(part => String(part).padStart(2, '0')).join(':');
@@ -93,9 +93,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const sessionChoices = byId('session-choices');
   const scenarioChoices = byId('quest-scenario');
   const scenarioOptions = Array.from(scenarioChoices.querySelectorAll('input'));
-  const condition = byId('quest-condition');
-  const legacyOptions = byId('quest-legacy-options');
-  const legacyScenarios = byId('quest-legacy-scenarios');
+  const scenarioUnavailable = byId('quest-scenario-unavailable');
   const participant = byId('quest-participant');
   const participantLabel = byId('quest-participant-label');
   const participantForm = byId('patient-form');
@@ -152,14 +150,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       driveOpen.focus({ preventScroll: true });
     }
   });
-  const checks = Array.from(document.querySelectorAll('.connection-checks button'));
+  const toolbar = byId('operator-toolbar');
+  const utilities = { settings: byId('settings-open'), recordings: byId('recordings-open') };
+  const checks = toolbar.querySelectorAll('.check-icon');
   const diagnosticState = new Map();
   let diagnosticTrigger;
   diagnostics.addEventListener('close', () => {
     if (!needsDialogFocus(diagnostics)) return;
     if (diagnosticTrigger?.getClientRects().length && !diagnosticTrigger.disabled) diagnosticTrigger.focus({ preventScroll: true });
-    else if (!find.hidden) find.focus({ preventScroll: true });
-    else byId('quest-title').focus({ preventScroll: true });
+    else document.querySelector('.screen:not([hidden]) h1')?.focus({ preventScroll: true });
   });
   for (const button of checks) button.addEventListener('click', () => {
     const entry = diagnosticState.get(button.id);
@@ -205,21 +204,32 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let localView = restoreOperatorView(location.hash, history.state);
   let displayedStep = '';
   let wasActive = false;
-  let settingsReturnFocus = null;
+  let utilityReturnFocus = null;
 
   function livePreviewVisible() {
     return ['calibration', 'tracking'].includes(displayedStep) && location.hash !== '#daten';
   }
   function navigateLocal(event) {
-    if (event.step === 'settings') settingsReturnFocus = document.activeElement;
-    localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event);
+    utilityReturnFocus = event.type === 'return' ? utilities[displayedStep] : null;
+    localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event,
+      rehearsal.state.status?.participant_arm === 1);
     const hash = `#${localView.step}`;
     if (location.hash !== hash) history.pushState({ operatorStep: localView.step, operatorReturnTo: localView.returnTo }, '', hash);
   }
   function paintOperatorLayout(context) {
     const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
+    if (context.status) {
+      if (wasActive && !nativeActive && context.status.p === 'IDLE') {
+        localView = { step: 'recordings', returnTo: null };
+        // Native completion changes the current view. History must reflect it
+        // before a link can open the older browser recordings and return.
+        history.replaceState({ operatorStep: localView.step }, '', '#recordings');
+      }
+      wasActive = nativeActive;
+    }
     if (location.hash === '#daten' && !nativeActive && !context.recovery) {
-      if (diagnostics.open) diagnostics.close();
+      utilities.settings.disabled = utilities.recordings.disabled = false;
+      for (const button of Object.values(utilities)) button.removeAttribute('aria-current');
       if (driveDialog.open) driveDialog.close();
       for (const id of Object.values(operatorSteps)) if (!byId(id).hidden) byId(id).hidden = true;
       if (byId('daten').hidden) byId('daten').hidden = false;
@@ -230,10 +240,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     // Rewriting an unchanged screen flag triggers the layout observer, whose
     // bounded-layout retry can clamp document scroll before reflow completes.
     if (!byId('daten').hidden) byId('daten').hidden = true;
-    if (context.status) {
-      if (wasActive && !nativeActive && context.status.p === 'IDLE') localView = { ...localView, step: 'recordings' };
-      wasActive = nativeActive;
-    }
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
       participantRequired: context.requiresParticipant, active: nativeActive });
     if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
@@ -245,7 +251,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (['connect', 'signals'].includes(step)) move('quest-polar', body);
     byId('corner-actions').hidden = step !== 'connect' || byId('install-app').hidden;
     driveOpen.hidden = drivePanel.hidden;
-    if (step !== 'connect' && diagnostics.open) diagnostics.close();
     if ((!['connect', 'recordings'].includes(step) || drivePanel.hidden) && driveDialog.open) driveDialog.close();
     const recordingStatusHost = activeControls ? body : byId('recording-files');
     move('quest-export-status', recordingStatusHost);
@@ -262,14 +267,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       move('operator-common', body);
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
-      const returning = displayedStep === 'settings' && step !== 'settings';
       displayedStep = step;
       if (['connect', 'recordings'].includes(step)) {
         driveActionsHost().append(driveOpen, driveStatusHost);
       } else if (driveDialog.open) driveDialog.close();
       document.documentElement.dataset.operatorStep = step;
-      if (returning && settingsReturnFocus?.isConnected && settingsReturnFocus.getClientRects().length) {
-        settingsReturnFocus.focus();
+      if (utilityReturnFocus) {
+        utilityReturnFocus.disabled = false;
+        utilityReturnFocus.focus();
+        utilityReturnFocus = null;
       } else page.querySelector('h1').focus();
     }
     if (step === 'session' || activeControls) {
@@ -295,6 +301,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
+    for (const [name, button] of Object.entries(utilities)) {
+      if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
+      else if (name !== step) button.removeAttribute('aria-current');
+    }
+    utilities.recordings.disabled = nativeActive || Boolean(context.recovery);
     const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
@@ -303,7 +314,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
-    if (!control || control.disabled) return;
+    if (!control || control.disabled || control.getAttribute('aria-current') === 'page') return;
     navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
       : control.hasAttribute('data-operator-return') ? { type: 'return' }
       : { type: 'go', step: control.dataset.operatorGo });
@@ -331,7 +342,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
     const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
     const available = supportsScenarios ? rehearsalScenarios(status) : [];
-    const advertised = status?.scenarios !== undefined;
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
     for (const option of scenarioOptions) {
       option.closest('label').hidden = option.disabled = !available.includes(option.value);
@@ -341,12 +351,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (firstOffered) firstOffered.checked = true;
     }
     const scenario = selectedScenario();
-    for (const [index, option] of Array.from(condition.options).entries()) {
-      option.disabled = status?.a?.[index] !== 'track-ready';
-    }
-    const [trackA, trackB] = condition.options;
-    const mainSelected = scenario === 'haupt-15';
-    const actions = rehearsalActions(status, mainSelected ? mainCondition : condition.value);
+    const actions = rehearsalActions(status, operatorCondition);
     const active = Boolean(status?.rec);
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
@@ -522,24 +527,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polarConnect.disabled = !metaUpdate.allowed || recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
-    const onlyTrackB = trackA.disabled && !trackB.disabled;
-    const showConditions = !mainSelected && (!advertised || !trackB.disabled || condition.value === trackB.value);
-    const hasLegacyScenario = scenarioOptions.some(option => !option.disabled && legacyScenarios.contains(option));
-    const hasPrimaryScenario = scenarioOptions.some(option => !option.disabled && !legacyScenarios.contains(option));
-    const showLegacyOptions = selectionAllowed && (hasLegacyScenario || showConditions);
-    legacyScenarios.hidden = !hasLegacyScenario;
-    byId('quest-condition-label').hidden = !showConditions;
-    if (showLegacyOptions && legacyOptions.hidden) legacyOptions.open = !hasPrimaryScenario || onlyTrackB;
-    legacyOptions.hidden = !showLegacyOptions;
+    const scenarioIssue = !scenario ? 'Die Quest bietet keinen der hier verfügbaren Abläufe an. Prüfe die Quest-App unter Einstellungen.'
+      : status?.a?.[0] !== 'track-ready' ? 'VR-Bedingung A ist auf der Quest nicht verfügbar.' : '';
     sessionChoices.hidden = !selectionAllowed;
-    scenarioChoices.hidden = !selectionAllowed || advertised && !scenario;
-    byId('quest-scenario-unavailable').hidden = !advertised || Boolean(scenario);
+    scenarioChoices.hidden = !selectionAllowed || !scenario;
+    scenarioUnavailable.hidden = !scenarioIssue;
+    text(scenarioUnavailable, scenarioIssue);
     scenarioChoices.disabled = waiting || unknown;
     if (focusedChoice && (focusedChoice.closest('[hidden]') || focusedChoice.matches(':disabled'))) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
     play.disabled = waiting || unknown || !actions.play
-      || actions.play === 'arm' && (!selectionAllowed || advertised && !scenario);
+      || actions.play === 'arm' && (!selectionAllowed || !scenario);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -584,9 +583,6 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
       : !native.playing ? native.stage === 'idle' ? 'Automatic ist bereit.' : 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
-    const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
-    const hasVolume = !view.renderer && (native?.input === 'automatic' || view.inputVolume !== null);
-    text(previewInputLabel, view.available ? `Bestätigte Eingabe: ${view.inputLabel}${measured}${hasVolume ? ' · Rohwert der Eingabe: ' : ''}` : 'Eingabe auf der Quest nicht verfügbar.');
     previewSwitch.hidden = !view.pendingInputLabel;
     text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Die bestätigte Eingabe gilt bis zur Rückmeldung der Quest.` : '');
     const collecting = view.showPolarCalibration && ['waiting', 'collecting'].includes(native?.calibration);
@@ -693,8 +689,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function renderLive(now) {
     let moving = false;
-    if (livePreviewVisible()) {
-      const current = breathDisplay.frame(now, reducedMotion.matches);
+    const previewVisible = livePreviewVisible();
+    const view = breathing.view;
+    const current = previewVisible || displayedStep === 'input'
+      ? breathDisplay.frame(now, !previewVisible || reducedMotion.matches) : null;
+    const showInputVolume = Boolean(current?.desiredAvailable) && !view?.renderer
+      && typeof current.inputVolume === 'number';
+    if (view?.available) {
+      const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
+      const rawLabel = showInputVolume ? ' · Rohwert der Eingabe: ' : '';
+      text(previewInputLabel, `Bestätigte Eingabe: ${view.inputLabel}${measured}${rawLabel}`);
+    } else text(previewInputLabel, 'Eingabe auf der Quest nicht verfügbar.');
+    if (previewInputVolume.hidden === showInputVolume) previewInputVolume.hidden = !showInputVolume;
+    if (showInputVolume) text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
+    if (previewVisible) {
       actualCircle.hidden = current?.actualRadius === null || !current;
       actualVolume.hidden = actualCircle.hidden;
       if (!actualCircle.hidden) {
@@ -708,17 +716,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       if (current) {
         previewCircle.style.transform = `scale(${current.radius})`;
         previewProgressFill.style.transform = `scaleX(${current.progress / 2})`;
-        if (current.desiredAvailable && !breathing.view?.renderer && typeof current.inputVolume === 'number') {
-          if (previewInputVolume.hidden) previewInputVolume.hidden = false;
-          text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
-        } else if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
         const native = breathing.view?.setup;
         if (native?.playing && Number.isSafeInteger(native.audio_generation)) {
           text(previewStatus, current.live ? `Atemtakt: ${current.phaseLabel}` : 'Warte auf den aktuellen Atemtakt der Quest.');
         }
         moving = current.animating;
       } else {
-        if (!previewInputVolume.hidden) previewInputVolume.hidden = true;
         text(previewStatus, breathing.view?.recovering ? 'Atemschleife wird neu gestartet. Bitte warten.'
           : 'Warte auf den aktuellen Atemtakt der Quest.');
       }
@@ -899,7 +902,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
-    if (!rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
+    if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
       void connect(savedPair);
       return;
     }
@@ -1137,7 +1140,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     userAction = attempt;
     const scenario = scenarioChoices.hidden ? '' : selectedScenario();
-    try { await rehearsal.run(action, attempt.signal, scenario === 'haupt-15' ? mainCondition : condition.value, participantId, scenario); }
+    try { await rehearsal.run(action, attempt.signal, operatorCondition, participantId, scenario); }
     finally { if (userAction === attempt) userAction = null; }
   }
 

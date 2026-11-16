@@ -67,7 +67,7 @@ function snapshot() {
     build: { v: 1, packaging_fingerprint: 'e'.repeat(64) }, p: phase, h: host, g: generation, r: 0,
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     ...(Number.isSafeInteger(settings.duration_ms) ? {duration_ms: settings.duration_ms} : {}),
-    pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
+    pending, participant_arm: settings.participantArm === false ? undefined : 1, ecg_preview: 1, recenter: 1, recordings: 1,
     ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
@@ -76,7 +76,7 @@ function snapshot() {
     ...(settings.metaUpdate ? {meta_update_control:1} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
-    pi: { r: true, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
+    pi: { r: settings.participantArm !== false, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
       i: settings.freezeObservation && lastWitness ? lastWitness : (lastWitness = String(witness++)), g: generation, r: 0 },
     scenarios: Object.hasOwn(settings, 'scenarios') ? settings.scenarios ?? undefined : scenarios,
@@ -137,6 +137,16 @@ function command({ id, op, condition, d, scenario }) {
     settings.condition = condition;
     settings.armedScenario = scenario;
     settings.host = 'vr-session';
+  }
+  if (op === 'start' && settings.startDelayMs) {
+    settings.pending = true;
+    setTimeout(() => {
+      settings.pending = false;
+      settings.phase = 'RUNNING';
+      settings.clock = 37000;
+      receipts[id] = { v: 1, id, state: 'confirmed' };
+    }, settings.startDelayMs);
+    return receipts[id] = { v: 1, id, state: 'pending' };
   }
   if (op === 'start') settings.clock = 37000;
   if (op === 'select') settings.selected = d;
@@ -911,7 +921,7 @@ def capture(review):
     scenario = page.locator("#quest-scenario")
     expect(scenario).to_be_visible()
     expect(scenario.get_by_role("radio")).to_have_count(3)
-    expect(page.locator("#quest-condition")).to_be_hidden()
+    expect(page.locator("#quest-condition")).to_have_count(0)
     instruction = scenario.locator('input[value="probe-anleitung"]')
     practice = scenario.locator('input[value="probe-5"]')
     main = scenario.locator('input[value="haupt-15"]')
@@ -1094,18 +1104,20 @@ def capture_accessibility(review, paired):
         ("desktop", "Desktop · native input testing", {"width": 1440, "height": 900}, "", False),
     ):
         page = review.page(initial, viewport=viewport)
-        enter_participant(page,then='tracking')
-        expect(page.locator("#preview-continue")).to_be_enabled()
+        enter_participant(page,then='input')
         if spacing:
             page.add_style_tag(content="""* {line-height:1.5 !important;letter-spacing:.12em !important;word-spacing:.16em !important;}
               p {margin-bottom:2em !important;}""")
         page.evaluate("value => {document.documentElement.style.fontSize=value; document.documentElement.style.setProperty('--review-check','1');}", text_size)
         page.clock.run_for(200)
         review.shot(page, slug, title, page.locator("#preview-input"), "Accessibility and reflow")
+        expect(page.locator("#preview-input-volume")).to_have_text("62 %")
         if spacing:
             expect(page.locator("#preview-input-label")).to_have_attribute("data-text-measurement", "dom")
             expect(page.locator("#preview-input-volume")).to_have_attribute("data-text-measurement", "dom")
+        show_operator(page, 'tracking')
         proceed = page.locator("#preview-continue")
+        expect(proceed).to_be_enabled()
         proceed.focus()
         proceed.press("Enter")
         expect(page.locator("#quest-scenario")).to_be_visible()
@@ -1389,7 +1401,6 @@ def capture_polar_stream_recovery(review):
                 "access": {"v": 1, "role": "active", "active_phone": "Fixture", "revision": 1},
             }) + ";"
             page = review.page(initial, viewport=viewport)
-            enter_participant(page)
             page.evaluate("size => document.documentElement.style.fontSize=size", text_size)
             status = page.locator("#quest-polar-status")
             connect = page.locator("#quest-polar-connect")
@@ -1405,13 +1416,15 @@ def capture_polar_stream_recovery(review):
             connect.press("Enter")
             expect(status).to_have_text("Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.")
             expect(connect).to_have_text("Messsignale bereit")
-            expect(connect).to_be_disabled()
+            expect(connect).to_be_hidden()
+            ready_check = page.locator("#check-polar")
+            expect(ready_check).to_have_attribute("data-check", "ok")
             assert page.evaluate("window.reviewQuest.commands") == commands
             page.clock.run_for(3100)
             assert page.evaluate("window.reviewQuest.commands") == commands, "Polling retried confirmed stream commands"
             assert page.evaluate("window.reviewQuest.location") == "disabled"
             review.shot(page, f"polar-recovered-{missing}-{slug}", f"H10 {slug} · {missing} recovery confirmed by both streams",
-                        status, "Polar stream recovery")
+                        ready_check, "Polar stream recovery")
             review.regressions.append({"kind": "polar-stream-recovery", "viewport": viewport,
                                        "textSize": text_size, "missing": missing, "commands": commands})
             page.context.close()
@@ -1571,7 +1584,7 @@ def capture_live_display(review):
     page.clock.run_for(200)
     assert page.evaluate(read)["volume"] == measured_stale["volume"] <= 80
     review.shot(page, "live-measured-percent", "Measured input · percent blends only between received samples",
-                page.locator("#preview-input-volume"), "Live presentation")
+                page.locator("#preview-status"), "Live presentation")
     review.regressions.append({"kind":"live-measured-percent", "first":measured_first,
                                "later":measured_later,"stale":measured_stale})
     page.context.close()
@@ -1593,7 +1606,6 @@ def capture_live_display(review):
 
     page = review.page(paired + "window.reviewInitialQuest={polar:'ready',ecgGap:'first-packet'};",
                        reduced_motion="no-preference")
-    enter_participant(page)
     expect(page.locator("#quest-polar-status")).to_contain_text("Quest empfängt EKG und Beschleunigungsdaten")
     page.clock.run_for(1100)
     for _ in range(20):
@@ -1698,7 +1710,7 @@ def capture_parked_calibration(review):
         expect(page.locator("#preview-continue")).to_be_enabled()
         assert page.evaluate("window.reviewSetupCommands.map(command=>command.op)") == ["calibrate","controller"]
         review.shot(page, f"parked-fallback-{slug}", f"Controller {slug} · one native alternative after calibration failure",
-                    page.locator("#preview-input-label"), "Parked startup")
+                    page.locator("#preview-review"), "Parked startup")
         review.regressions.append({"kind":"parked-startup","viewport":viewport,"textSize":text_size,
                                    "commands":["calibrate","controller"]})
         page.context.close()
@@ -1730,7 +1742,6 @@ def capture_automatic_stream_recovery(review):
         ):
             page = review.page(paired+"window.reviewInitialQuest="+json.dumps({"polar":"stream-wait",
                 "ecg":ecg,"acc":acc,"autoRecovery":True})+";",viewport=viewport)
-            enter_participant(page)
             page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
             expect(page.locator("#quest-polar-status")).to_have_text("Polar H10 per Bluetooth verbunden. "+label+
                 " Die Quest startet fehlende Messsignale automatisch erneut.")
@@ -1766,6 +1777,7 @@ def capture_audio_recovery(review):
         detail, proceed = page.locator("#preview-detail:visible, #preview-recovery:visible"), page.locator("#preview-continue")
         expect(page.locator("#preview-circle")).to_be_hidden()
         expect(page.locator("#preview-input-volume")).to_be_hidden()
+        expect(page.locator("#preview-input-label")).not_to_contain_text("Rohwert der Eingabe")
         assert page.evaluate("window.reviewQuest.setup.playing") is True
         expect(calibrate).to_be_enabled()
         calibrate.click()
