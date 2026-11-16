@@ -47,9 +47,16 @@ catalog and exact Arm payload checks, plus startup and recovery in four
 Chromium viewports. This PC's ADB inventory listed no device for the installed
 lab Pixel refresh. Verify the installed phone release when it is available idle.
 The follow-up reproduced and fixed two navigation failures and the missing raw
-breathing value without changing Quest commands or polling. The APK comparison
-uses the recorded code 17 and 18 source contracts. ADB listed neither the lab
-phone nor the headset; installed-device verification remains open.
+breathing value without changing Quest commands or polling. Runtime commit
+`502d111` matched `origin/main` and passed
+[Pages run 43959145457](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43959145457).
+All nine changed paths plus both APK update assets matched Git. Chromium
+startup and recovery passed at four sizes, and all three fixes passed against
+the public assets with synthetic Quest transport. The APK comparison verified
+both code 17 and 18 source-patch digests. Neither local device inventory found
+the lab phone or headset. At the next attended idle session, refresh the
+installed phone and verify pairing, Polar and input, Start/Pause/Resume/Finish,
+and a synthetic recording through private Drive.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress
@@ -69,7 +76,7 @@ retired with the move to Quest-only operation. Its CSVs remain available at
   Nine public files matched Git; both entry URLs and the live current/stale
   Chromium launches passed.
 - [ ] Reopen the installed app on the idle lab Pixel 10 and confirm standalone
-  mode and the current release `20261116-meta-update-r4`. No device was listed by ADB at
+  mode and the current release `20261116-operator-history`. No device was listed by ADB at
   release verification, so physical acceptance remains open.
 
 Started from clean sparse publication main at `b3a6a59`, matching
