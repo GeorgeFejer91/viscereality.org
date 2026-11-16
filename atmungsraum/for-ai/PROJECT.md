@@ -161,10 +161,23 @@ native status verified boot10 channel17 and boot11 channel18 with progress error
 - [x] Diagnose actual Meta channel delay and download progress failure separately.
 - [x] Review/test bounded progress correction and retain numeric diagnostics.
 - [x] Repeatable native checks/policy/cycle grant and authenticated action implemented and independently reviewed; selected19 package/hardware qualification pending.
-- [x] PWA v2/manual controls, original receipts and native status gates;266 zero-skip web checks,15 rendered states and independent review pass. Live publication pending.
+- [x] PWA v2/manual controls, original receipts and native status gates;266 zero-skip web checks,15 rendered states and independent review pass. PR30 ordinary merge7855177/Pages43970922434 succeeds;34 live files match. Installed-phone refresh remains pending; the connected Pixel6a is no longer listed by ADB.
 - [x] Bounded helper fallback source/review and signed helper2 package pass; actual helper2 bytes/UID/overlay retained after host update. Protocol2 main/physical acceptance pending.
-- [ ] Private Developer cover/library artwork from existing public material.
-- [ ] Correct actual19 product javac lambda/Android bootclasspath compatibility, then signed increasing Meta builds, exact source/publication and physical proof.
+- [x] Adapted Developer landscape/square/portrait/hero covers and original icon saved and reload-verified in Meta draft metadata. Private distribution retained. Actual headset-library propagation remains pending. Public assets and prompts are in `assets/store/`.
+- [x] Correct actual19 product javac lambda/Android bootclasspath compatibility. Signed19-r2 assembly/session closure and independent actual SDK/helper2/DEX/manifest/signer/private-input/audio qualification pass at native62ddb621; public cumulative patch reconstructs tree7806ebcf exactly.
+- [ ] Establish Meta-installed19 baseline, publish higher20 and prove manual/in-process SDK install, automatic relaunch/focus and repeat-session freshness. Code20 assembly and independent actual package inspection pass. No main19/20 USB install.
+
+Code19-r2 is65,682,565bytes, SHA256
+`bc74a2bedc7cfc67c3ac4bf2cdbc57293f440361f870b97de73d729bd1604cb2`.
+All15 private profile inputs and79 original audio/guidance/session assets match18;
+new public audio-review material is not activated. Current publication checkpoint
+does not establish physical updater/helper2 acceptance. The late answer to an
+old reboot question is excluded from new-test evidence; no additional reboot
+has occurred since boot12.
+Meta19 build1463329980199347 is published in the private Developer channel;
+Quest2 and13+ are retained, malware passes and detailed security says all tests
+passed. Closing idle18 lets Meta perform the baseline update; it is not yet
+confirmed installed. Successor20 stays unpublished until that readback.
 
 ### Code18 successor checkpoint — 2026-11-16
 

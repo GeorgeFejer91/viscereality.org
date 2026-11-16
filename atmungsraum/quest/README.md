@@ -5,8 +5,10 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The shared-scheduler developer APK has passed software and packaging checks;
-device acceptance is pending. The APK log records its exact source, signer
+The code19 shared-scheduler developer APK has passed software and actual signed
+package checks and is published in the private Meta Developer channel;
+installation and hardware acceptance are pending.
+The APK log records its exact source, signer
 and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
 source identity and verification history.
 
@@ -57,7 +59,7 @@ See the [approved setup contract](../for-ai/SHARED-BREATHING-SETUP.md) and
 
 ## Build from the public repository
 
-Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 35,
+Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 36,
 Android Build Tools 36.0.0, Android NDK 27.2.12479018, and Rust with the
 `aarch64-linux-android` target. Keep the native checkouts together in a short
 ordinary directory. The following commands run from the `atmungsraum/quest`
@@ -100,9 +102,11 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`, matching
-the SDK-enabled developer source `f5946e19058e347f1dc69fde85b7265814c8ed9d`.
-Patch SHA256 is `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71`;
+reconstructs source tree `7806ebcfb2de37503034c2d63fc74a0a5e7bf1da`, matching
+the code19 developer source `62ddb621a81302866a488bd554d65451aa67260b`.
+Patch SHA256 is `8aac253fec39959d20377f0418f939130faea602034d2e7ca54ca9746f73965a`
+(1,877,521 bytes). Applying the exact binary patch to an isolated index at the
+pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.
 The current Developer build selects the generic opt-in particle adapter with a downstream private
@@ -115,7 +119,7 @@ cues, and the retained scenario library and calibration menu prompts. It
 resolves the [bundled Experimenter inputs](build-assets/README.md) and verifies
 the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
-`rusty-quest/target/aq2/atmungsraum-developer-004/`. Use a fresh run name for a
+`rusty-quest/target/aq2/<RunName>/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
@@ -265,18 +269,29 @@ separate developer identity with custom Experimenter inputs.
 
 For the optional Meta startup updater, select `-MetaPlatformUpdate` and supply
 `-MetaPlatformAppId`, `-MetaPlatformSdkRoot`, `-MetaPlatformHeadersSha256`,
-`-MetaPlatformLoaderSha256` and `-MetaPlatformArchiveSha256` explicitly. The
+`-MetaPlatformLoaderSha256`, `-MetaPlatformArchiveSha256` and
+`-MetaRequiredVersionManifestUrl https://viscereality.org/atmungsraum/quest-release.json`
+explicitly. Add `-MetaUpdateHelper` for the separately installed same-signer
+helper2 fallback; it selects only the fixed signature-protected handoff
+permission and protocol metadata. No overlay or boot permission enters the main
+APK. The
 native packager verifies the externally supplied official Platform SDK207,
 actual JNI/DEX/manifest closure and16KiB library alignment. SDK binaries and
 signing inputs remain external. Without this option there is no SDK selection.
 Meta-distributed experiment builds omit `-BootAutostart`; the separate
 [boot helper](boot-helper/README.md) retains its one-time setup.
 
-The APK owns the update check, download and install admission before experiment
-preparation. The phone only displays native progress and blocks preparation
-while maintenance is active. A safe pre-install failure permits the installed
-version with a warning; an uncertain dispatched installation requires explicit
-recovery. SDK acknowledgement is not installed-version proof. See the
+The APK owns update checks, download and install admission for each native
+preparation cycle. A new cycle automatically checks once; an explicit check uses
+the same owner and rejects unsafe or stale boundaries. The canonical required
+manifest and Meta's offered version remain distinct from actual installed
+identity. An unavailable check with no known higher floor permits the installed
+version with a warning; a known higher floor or uncertain dispatched install
+keeps preparation blocked. The phone displays native progress and original
+receipts. Helper2 provides a bounded same-signer relaunch fallback after an
+admitted installation; SDK or helper acknowledgement is not installed-version
+proof. Actual Meta delivery and physical repeat-cycle/relaunch qualification
+remain pending for code19. See the
 [startup/update contract](../for-ai/BOOT-KIOSK-UPDATE.md) for qualification and
 the current evidence limits.
 

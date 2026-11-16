@@ -1,5 +1,70 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.18-dev — repeatable native update cycles, qualified code19, 2026-11-16
+
+| Property | Qualified value |
+| --- | --- |
+| Package / release | `org.viscereality.atmungsraum.developer`, code19 / `0.2.18-dev` |
+| Signed APK | Private artifact; not bundled in this repository |
+| Size / SHA256 |65,682,565bytes / `bc74a2bedc7cfc67c3ac4bf2cdbc57293f440361f870b97de73d729bd1604cb2` |
+| Certificate SHA256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `62ddb621a81302866a488bd554d65451aa67260b` / `7806ebcfb2de37503034c2d63fc74a0a5e7bf1da` |
+| Cumulative patch |1,877,521bytes; SHA256 `8aac253fec39959d20377f0418f939130faea602034d2e7ca54ca9746f73965a` |
+| Source composition fingerprint | `a90d2cbb8d743e3ebb4d6d0d40865536eb88c49b130ae57847cf04373b465730` |
+| Packaging fingerprint | `6b69ffa4e06a48fecee98a85a6664b2452b59f38832b00e8517ce3f19b83b8b9` |
+| Packaging | Non-debuggable; ARM64; min29/target34/compile36; automatic install location;91assets |
+
+The qualified19-r2 artifact extends the existing updater with native cycle and
+revision grants, one automatic check per preparation cycle, explicit checks at
+safe parked boundaries and original receipt recovery. Native independently
+fetches the composition-bound canonical required-version manifest. Known higher
+required versions and ambiguous installations remain blocked; unavailable checks
+without a known higher floor permit the installed version with a warning.
+SDK initialization is process-owned; attempt retirement does not replace it.
+Completed recording advances the cycle only after finalization and acknowledged
+parked preparation; safe owner retirement before admitted preparation also
+requires a fresh cycle. Existing calibration math, private visuals, controller input and main
+900-second schedule remain.
+
+Main19 selects helper protocol2 and only the fixed signature-protected
+`org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF` permission. The
+separate same-signer helper provides the bounded install/relaunch fallback.
+The main APK retains the original native launcher and own-app kiosk watchdog,
+with no overlay, boot or hand-tracking authority. Actual JNI/SDK207/all-DEX
+closure includes the ten update/lifecycle owners and their required cycle,
+frame, request and receipt methods. V3 and independently restricted API24–27/v2
+signature checks,16KiB ZIP/SDK ELF alignment, and actual signed session closure
+pass. The production updater javac command now uses the real Android
+bootclasspath contract.
+
+All15 original private input files and all79 audio/guidance/session assets match
+qualified18-r3. The APK retains its91-asset inventory:87assets match exactly;
+four generated provenance/source-closure assets change. LSL/OpenXR bytes and
+selected/denied feature identities match. Only the two source-bound activation
+digests differ in environment/runtime settings. Native binary identity with18
+is not claimed. New public audio-review material is not activated by this build.
+
+The exact cumulative binary source patch applies to upstream
+`99352620fd79ec5cdcee71b47c2ba4056241af16` and reconstructs the qualified tree in
+an isolated index. Five actual assembly resolver tests pass without skips;
+production Android javac and the native boundary scan pass. Actual signed
+artifact qualification and independent review pass. **Code19 is published as
+Meta build1463329980199347 in the private Developer channel, with the existing
+Quest2 target and13+ age group. Malware passes; detailed security says all tests
+passed. Installation and hardware acceptance are pending.**
+Host/package checks do not prove Meta install/relaunch, repeated native cycles,
+real helper fallback or physical focus/frame behavior. Follow the
+[active qualification contract](../../for-ai/BOOT-KIOSK-UPDATE.md).
+
+Successor20 (`0.2.19-dev`) is built and independently package-qualified from the
+same62ddb621 source,65,682,564bytes, SHA256
+`63f3d72f1fa5e7b0f55bbd4679a59348c0d27566d644799b2d0c909f7df084b5`.
+Its DEX, original payload/audio and retained private inputs match19; declared
+version and source-bound activation metadata account for the expected changes.
+It remains unpublished until the actual Meta19 baseline is verified.
+
+## 0.2.17-dev — code18 successor correction, 2026-11-16
+
 Code18 successor correction: final18-r3 retains all79 code17 audio/guidance/session
 assets and all15 private input files. Its native source is `f5946e19058e347f1dc69fde85b7265814c8ed9d`, tree
 `7307b9c5a15e053fcb0aa211cc8a6afdfe2296ec`, cumulative patch SHA256 `d787082a4bf358af4cfc4bf17cede57aebb9bb43766c4571bd53d5f7c5736d71`.

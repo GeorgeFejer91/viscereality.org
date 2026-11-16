@@ -31,11 +31,16 @@ test('Meta update resolution binds the explicit app identity and preserves the e
     await writeFile(key, 'resolve-only path fixture');
     const result = invoke(runName, ['-Developer', '-Keystore', key, '-VersionCode', '32',
       '-MetaPlatformUpdate', '-MetaPlatformAppId', '1234567890123456',
+      '-MetaRequiredVersionManifestUrl', 'https://viscereality.org/atmungsraum/quest-release.json', '-MetaUpdateHelper',
       '-MetaPlatformSdkRoot', scratch, '-MetaPlatformHeadersSha256', 'a'.repeat(64),
       '-MetaPlatformLoaderSha256', 'b'.repeat(64), '-MetaPlatformArchiveSha256', 'c'.repeat(64)]);
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const run = await resolvedRun(runName, 'atmungsraum_developer');
     assert.equal(run.lock.android_manifest.experiment_meta_update_enabled, true);
+    assert.equal(run.lock.android_manifest.meta_required_version_manifest_url, 'https://viscereality.org/atmungsraum/quest-release.json');
+    assert.equal(run.lock.android_manifest.experiment_meta_update_helper_enabled, true);
+    assert.match(run.manifest, /org\.viscereality\.atmungsraum\.boot\.permission\.UPDATE_HANDOFF/);
+    assert.match(run.manifest, /android:name="org\.viscereality\.atmungsraum\.boot_protocol" android:value="2"/);
     assert.match(run.manifest, /android:name="com\.oculus\.sdk\.appid" android:value="1234567890123456"/);
     assert.match(run.manifest, /android:name="rusty\.quest\.meta_update\.enabled" android:value="true"/);
     assert.doesNotMatch(run.manifest, /SYSTEM_ALERT_WINDOW|RECEIVE_BOOT_COMPLETED|NativeRendererBootReceiver/);
