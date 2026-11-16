@@ -7,11 +7,13 @@ and whole integration pass independent review. Helper2 source/policy/compiled
 manifest checks pass; actual signed helper2 is host-updated on the Quest with
 exact hash and retained UID/overlay. Actual installed main18 matches Meta bytes
 and retains UID; it arrived through ordinary replacement and was host-launched.
-Full SDK install/relaunch acceptance remains open. Candidate19 product packaging
-exposed a Java lambda/Android bootclasspath compatibility failure; it is being
-corrected without changing updater policy. BootEntry12/110 and actual Android
-API compile pass, but do not substitute them for the selected product package.
-Current main/UI integration and exact publication are still pending this increment.
+Full SDK install/relaunch acceptance remains open. Candidate19's initial product
+packaging exposed a Java lambda/Android bootclasspath compatibility failure.
+Explicit Java callbacks correct it without changing updater policy; the actual
+signed code19-r2 assembly and session closure now pass at native62ddb621.
+Independent final artifact inspection and Meta installation remain pending.
+BootEntry12/110 and actual Android API compile also pass. Concurrent production
+UI changes are merged at43e5a4a; exact publication is pending this increment.
 See PROJECT.md and BOOT-KIOSK-UPDATE.md for current tasks and hardware limits.
 Older checkpoint paragraphs below are dated evidence, not the current release.
 
