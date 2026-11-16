@@ -8,7 +8,12 @@
   confirmation, and session tiles from the playground onto production main.
 - [x] Verify the controller flow, recovery, recordings, and rendered desktop/phone
   layouts with production browser fixtures. See [verification](VERIFICATION.md#playground-ui-port--2026-11-16).
-- [ ] Record exact Pages deployment and public assets for the port.
+- [x] Verify `4d5d3b3` in [Pages run 43930833015](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43930833015).
+  All 14 changed public files matched Git; live setup and installation tested
+  in four Chromium viewports. The primary checkout's existing index state was
+  left alone; production was published from the sparse sync checkout.
+- [ ] Reduce 200% text reflow on the smallest phone and qualify the final
+  layout with the physical keyboard and safe areas.
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 

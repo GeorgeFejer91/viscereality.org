@@ -633,6 +633,7 @@ def capture_scroll_regression(review):
         ("200-text", {"width": 320, "height": 568}, "200%"),
     ):
         page = review.page(initial, viewport=viewport)
+        show_operator(page, 'participant')
         participant = page.locator("#quest-participant")
         expect(participant).to_be_visible()
         if participant.get_attribute('open') is None:
@@ -658,10 +659,14 @@ def capture_scroll_regression(review):
             value = editor.input_value()
             page.clock.run_for(50)
             page.screenshot()
-            page.evaluate("scrollTo(0,Math.min(300,document.documentElement.scrollHeight-innerHeight-20))")
+            scroll_range = page.evaluate("document.documentElement.scrollHeight - innerHeight")
+            page.evaluate("height => scrollTo(0, Math.min(300, height))", scroll_range)
             page.screenshot()
             before = page.evaluate("scrollY")
-            assert before >= 20, f"{slug}: test did not reach a scrollable rendered form: {before}"
+            if text_size:
+                assert before >= 20, f"{slug}: enlarged-text reflow was not exercised: {before}"
+            else:
+                assert before == min(300, scroll_range), f"{slug}: rendered scroll range did not match: {before}"
             wait_setup(page, position_frames=i * 88200, completed_frames=i * 88200,
                        input_volume01=i / 10, input_phase="inhale" if i % 2 else "exhale")
             page.screenshot()
@@ -673,7 +678,7 @@ def capture_scroll_regression(review):
               focus:document.activeElement.id, value:reviewEditedNode.value,
               selection:[reviewEditedNode.selectionStart,reviewEditedNode.selectionEnd],
               age:document.querySelector('#patient-age').value,
-              gender:document.querySelector('[name="gender"]:checked')?.value,
+              gender:document.querySelector('#patient-gender').value,
               previewInput:document.querySelector('#preview-input').textContent,
               nativeVolume:window.reviewQuest.setup.input_volume01,
               progress:document.querySelector('#preview-progress').value,
@@ -1140,6 +1145,8 @@ def capture_phone_pairing(review):
     review.shot(page, "pairing-approved", "Both buttons confirmed · trusted app-installation owner", page.locator("#quest-control-status"), "Phone pairing")
     page.locator("#quest-control-claim").focus()
     page.keyboard.press("Enter")
+    expect(page.locator("#operator-connect-next")).to_be_enabled()
+    page.locator("#operator-connect-next").click()
     expect(page.locator("#quest-participant")).to_be_visible()
     show_operator(page,'settings')
     expect(page.locator("#quest-control-release")).to_be_visible()
@@ -1317,7 +1324,7 @@ def capture_polar_location(review):
         ("200-text", {"width": 320, "height": 568}, "200%"),
     ):
         page = review.page(initial, viewport=viewport)
-        enter_participant(page)
+        enter_participant(page, then='signals')
         status = page.locator("#quest-polar-status")
         connect = page.locator("#quest-polar-connect")
         expect(status).to_contain_text("Lege den Gurt an")

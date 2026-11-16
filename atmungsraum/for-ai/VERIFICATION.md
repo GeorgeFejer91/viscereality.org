@@ -21,6 +21,20 @@ enlarged-text and expanded settings states use document reflow under the
 with simulated equipment. Physical keyboard, hardware and OAuth authorization
 qualification remains open.
 
+The supplementary phone-pairing (7 states), control/Polar location (18 states),
+and editor/caret/scroll (3 states and six live polls each) suites passed.
+The 200% Drive popup at 320 × 640 retains complete text without internal
+scroll; the surrounding setup, form and input screens still use document
+reflow at that text size.
+
+The official main/root Pages deployment
+[43930833015](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43930833015)
+succeeded for `4d5d3b3ee56e369a03911cfa859d297a20d4aa64`. All 14 changed
+public file responses matched that commit exactly. The actual public URL
+loaded the controller, four connection checks and measured labels, kept
+Weiter disabled on an unpaired profile, and opened and closed the install
+dialog with focus return at 320 × 640, 390 × 844, 844 × 390 and 1440 × 900.
+
 ## Meta-compatible main builds and one-time helper — 2026-11-16
 
 After the user approved a separate boot helper, main15/16 were built from the
