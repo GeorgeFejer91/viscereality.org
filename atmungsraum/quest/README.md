@@ -132,6 +132,18 @@ Meta-menu recovery and the operator exit separately. Follow the
 [boot and Meta-update qualification contract](../for-ai/BOOT-KIOSK-UPDATE.md);
 neither a host launch nor an ADB installation proves automatic Meta delivery.
 
+**Meta distribution limitation, observed 2026-11-16:** the dashboard rejects
+`android.permission.SYSTEM_ALERT_WINDOW` as unsupported, including for the
+private Developer-channel upload. Therefore this boot-enabled composition is
+currently a local-development candidate, not a Meta-distributable release.
+Removing the permission alone breaks the receiver's admission contract. The
+user requires both update-test versions through Meta; resolve the boot route
+before claiming combined distribution/autoboot support. The approved alternative
+is the [one-time boot helper](boot-helper/README.md), with a Meta-compatible
+main APK that leaves `-BootAutostart` unset. The helper source/package is
+qualified locally; actual Meta baseline adoption and genuine boot/menu/update
+testing remain separate acceptance gates.
+
 Assembly binds `RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256` to the exact
 packaged `audio/box-loop.json`, selects
 `rusty.quest.experiment.breathing_setup.enabled=true`, and includes the audio

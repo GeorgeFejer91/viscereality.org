@@ -1,5 +1,39 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.14-dev / 0.2.15-dev — Meta baseline and update candidate, 2026-11-16
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Meta baseline | code15, `0.2.14-dev`;65,170,221 bytes; SHA-256 `7f61a5c212002091820cb2daa17d5e7c7f38b925c87ba9633d8d522e674e7de8` |
+| Local successor | code16, `0.2.15-dev`;65,170,221 bytes; SHA-256 `4efdb2de64c889a10f6e0231045e8525e75d925c436462c021c9775c282eb493` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` / `9a482a67f80342cb612b50112996488fac422c3a` |
+| Packaging | Non-debuggable; min29/target34/compile36; automatic install location; v2/v3 signatures and16KiB ZIP alignment pass;89assets |
+
+Both actual APKs opt out of the unsupported internal boot feature: no overlay
+or boot permission, boot receiver/action/metadata. The own-app kiosk watchdog,
+controller-only policy, private visuals, pairing, breathing and experiment data
+behavior remain. Full13→15 resolution and compiled-manifest comparison confirms
+only the boot selection removal plus version/run-derived identity. Full15↔16
+normalized functional closure matches;90/98ZIP entries, all scenario/payload
+assets and classes.dex match exactly. Native embedded binding/provenance and
+signature differences are recorded; native binary identity is not claimed.
+
+Code15 is accepted in the existing private Developer channel for Quest2;
+Meta reports completed tests, malware requirement passed and security review
+“All tests passed.” Code16 remains local and unpublished until the Meta-delivered
+baseline passes. Neither is installed by ADB for this test. Actual Meta baseline
+adoption, boot/kiosk and automatic15→16 delivery remain pending.
+
+The separately provisioned [boot helper](../boot-helper/README.md) has its own
+package and the same signer. Its current signed APK SHA-256 is
+`ffb8eb5decc8d0dd6bb6dbd34569b3a45359a605d6476bdc1f300f97d889c587`.
+Policy27checks, SDK36 Java compilation, actual manifest/DEX/signature/alignment
+and independent source/package review pass. It resolves the current target
+launcher at each boot; normal experiment updates do not require helper updates.
+The helper is not yet installed or permission-enabled at this checkpoint.
+
 ## 0.2.11-dev / 0.2.12-dev — autoboot candidates, 2026-11-16
 
 | Build property | Verified value |
@@ -25,6 +59,15 @@ APKs pass the actual session closure probe. These are local package results.
 At this checkpoint code11 remains installed; no candidate install, reboot or
 new Meta upload has occurred. Actual boot, foreground recovery and update
 delivery remain pending under the [qualification contract](../../for-ai/BOOT-KIOSK-UPDATE.md).
+
+Later checkpoint: after explicit idle/USB confirmation, local12 installed with
+exact remote digest/version and retained UID. The user requires both versions
+in the actual update experiment through Meta, so local12 cannot count as that
+baseline. Attempting13 as the Meta baseline failed dashboard validation:
+`android.permission.SYSTEM_ALERT_WINDOW` is unsupported. No new build was
+accepted; code14 was cancelled before signing. No permission grant, reboot,
+automatic boot/menu acceptance or Meta delivery is claimed. The boot/distribution
+architecture must be resolved before resuming this combined test.
 
 ## 0.2.10-dev — smooth actual display and selectable Polar presets, 2026-11-16
 

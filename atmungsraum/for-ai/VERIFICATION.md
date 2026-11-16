@@ -1,5 +1,34 @@
 # Verification
 
+## Meta-compatible main builds and one-time helper — 2026-11-16
+
+After the user approved a separate boot helper, main15/16 were built from the
+unchanged native source/private inputs/signer with the internal boot feature
+opted out. Actual signed manifests omit overlay/boot permission, receiver,
+action and metadata; the own-app kiosk manifest/unique DEX closure remains.
+Both pass actual signed session closure, package/version/non-debuggable SDK,
+89asset inventory, signer, v2/v3 signature and16KiB alignment checks.
+Full13→15 resolved/compiled-manifest comparison confirms only the removed boot
+selection plus version/run-derived identity. Full15↔16 normalized resolution
+matches;90/98ZIP entries, all payload/audio and classes.dex match exactly.
+
+The separate boot helper passes27meaningful policy checks after an observed
+pre-implementation failure, SDK36 Java compile, PowerShell parse and signed APK
+manifest/DEX/signature/alignment/hash checks. Independent task review reports
+no actionable source or package findings. Root reran27policy checks and actual
+signature verification. Only boot/overlay permissions and a fixed target query
+are declared; setup opt-in and effective permission are required. Current
+same-signer MAIN/LAUNCHER is resolved at boot with durable at-most-once admission.
+No helper network, installation/update, arbitrary target or kiosk authority.
+
+Actual Meta15 upload to the existing private Quest2 Developer channel succeeds.
+Channel test status is Complete; malware requirement passes and vulnerability
+details state “All tests passed.” Private screenshots preserve those outcomes.
+This is not headset installation or runtime acceptance. Meta15 adoption is
+pending user library action; helper is not installed/granted; no reboot has
+occurred. Local16 stays unpublished pending the Meta baseline's boot/kiosk test.
+Policy latest15/minimum11 reflects availability without inventing incompatibility.
+
 ## Autoboot recipe and local candidates — 2026-11-16
 
 Explicit `-BootAutostart` opts into the existing native boot feature. Default
@@ -19,7 +48,18 @@ be inferred from these gates. Code11 is still installed at this checkpoint.
 The current authenticated Meta dashboard confirms the existing Developer
 channel is private, holds code3 with one member, and does not require latest
 build at launch. No account setting or channel build was changed. Candidate13
-upload is authorized for the test after relevant baseline12 hardware acceptance.
+upload was authorized for the test. The user's subsequent correction requires
+both baseline and successor to arrive through Meta, superseding the initial
+local12→Meta13 acceptance sequence.
+
+After explicit idle/USB readiness, local12 installation is confirmed by Package
+Manager, exact remote APK digest/version and retained UID. This is not Meta
+delivery. Attempted code13 upload then failed Meta's APK validation because
+`android.permission.SYSTEM_ALERT_WINDOW` is unsupported. The current boot owner
+requires that permission; no new channel build was accepted. Private screenshot
+and install receipts retain the direct observations. No permission setup,
+reboot or true boot/kiosk/update acceptance occurred. Code14 was cancelled
+before signing; partial/unsigned artifacts are not a qualified release.
 
 ## Sequential operator layout — 2026-11-16
 

@@ -84,6 +84,17 @@ do not assume its categories from a generic host fixture.
 
 ### Build identity, boot selection and update delivery
 
+The 2026-11-16 private-channel upload of boot-enabled code13 was rejected by
+Meta for unsupported `SYSTEM_ALERT_WINDOW`. The existing boot feature requires
+that permission. Both versions in the user's update experiment must be installed
+through Meta; local12 only served as a packaging smoke-check. Do not count a
+local Dev Hub/ADB installation or a manually selected Update as automatic Meta
+delivery, spoof installer attribution, or remove a prerequisite while claiming
+the feature works. The user approved a separately provisioned one-time helper;
+the main Meta builds omit internal boot/overlay authority. Qualify the actual
+split setup and real boot before claiming combined support; see
+[the current boot/update contract](BOOT-KIOSK-UPDATE.md).
+
 Read actual package version and generated packaging fingerprint through the
 authenticated APK status. Keep `quest-release.json` minimum/latest versions and
 the APK record current together; verify installed versus required on the phone.
