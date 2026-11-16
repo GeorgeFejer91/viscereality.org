@@ -2,6 +2,22 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Publication resumed through secondary account — 2026-11-16
+
+The user explicitly requests merging PR 18 through the secondary Codex account.
+That account completed the ordinary two-parent merge at
+`f79800de0836cc2d8b37c4f75d2592df697b92ec`, preserving reviewed head
+`bd0af7db9063533987e1b83b137086d2a5afe87c`. The earlier access blocker below
+is historical and resolved for this release. Exact Pages run 43838565290 and all
+27 checked live files pass, with public phone/desktop renders. Installed-phone refresh and
+remaining device acceptance are separate and still open; user operates the phone.
+
+Quest 2 Wi-Fi ADB was restored after today's reboot and verified against the
+same canonical device and current boot over a shell connection. Code 10 remains
+installed. No shared daemon restart or app launch was performed. Its setup leases
+were released; retain the requested network transport and Location ON. Obtain
+fresh wearer Ready before any calibration or recording.
+
 ### Automatic connection and clear operator controls — 2026-11-15
 
 The participant accepts the current calibration as good enough. Preserve its
@@ -32,15 +48,15 @@ and publication authorization without an additional approval loop.
   build and inspection. No Meta upload.
 - [x] Install/read back code 10 while idle and verify trusted cold launch,
   controller-only input and automatic H10 connection/ACC+ECG stream starts.
-- [ ] Publish through exact Pages/live checks and verify installed-phone
-  resources. Qualify remaining hardware flows after fresh wearer Ready;
-  full-main acceptance remains separately open.
+- [x] Publish the matching PWA through exact Pages/live and public phone/
+  desktop checks.
+- [ ] Verify refreshed installed-phone resources. Qualify remaining hardware
+  flows after fresh wearer Ready; full-main acceptance remains separately open.
 
 Implementation order: native bootstrap/retry/kiosk and actual-radius contract;
 phone receipt/mode/dual-display/settings; integration/review; package/publication
 and attended acceptance. Native and phone changes have separate file ownership,
-with this project state as the single plan/evidence owner. The current live runtime remains PR 17. The operator/source release is
-being prepared on PR 18 under the existing publication/access constraints.
+with this project state as the single plan/evidence owner. PR 18 is now merged; see the current publication checkpoint above.
 
 Software checkpoint, 2026-11-16: all requested source changes pass independent
 task and final cross-boundary review. Final phone gate is 203/203, zero skips;
@@ -75,28 +91,31 @@ phone operation. Resume with fresh wearer Ready; check APK identity/current
 policy, actual-radius display, confirmed Controller UI and effective kiosk, then
 remaining retry/fallback/full-main acceptance. No Meta upload.
 
-Publication handoff, 2026-11-16: all implementation, cache revisions, cumulative
-native source and installation evidence are committed and pushed to
-[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), titled
-“restore automatic H10 recovery and clarify Quest controls”. The reviewed runtime
-release commit is `85d85e5ecbe6a91dd7871fa1e6f4bb8e1b8082b4`; the following
-handoff-only commit advances the PR head without changing runtime bytes.
-The current primary merge request returns exact GitHub 403
-`Resource not accessible by integration`. The secondary account was verified
-ADMIN earlier, but a command-policy read was rejected before execution with only
-`rejected: blocked by policy`; subsequent purpose-built connector sessions did
-not return a merge result. Obsolete expected-head requests were cancelled;
-advancing the documentation head also retires their old CAS target. No permission
-widening, protection bypass, model change or Meta upload was attempted.
+Publication verified, 2026-11-16: the secondary Codex account successfully
+performed the ordinary two-parent merge of
+[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), exact reviewed
+head `bd0af7db9063533987e1b83b137086d2a5afe87c`, at merge commit
+`f79800de0836cc2d8b37c4f75d2592df697b92ec`. Exact
+[Pages run 43838565290](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43838565290)
+succeeded. All 27 checked live files match Git blobs, including entry/cache
+versions, the APK release policy, kiosk/version modules and cumulative source.
+Live 390px phone and 1440px desktop checks pass with ready Pretext, no horizontal
+overflow, no script or failed-app requests, and working install-help open/close.
+The source/remote context gate passes. The initial private smoke assertion read
+the async policy-response map too early; waiting for its actual response fixes
+the test, with no product change. Browser plugin is unavailable; existing regular
+Playwright is the recorded validation route. Public screenshots are inspected.
+No permissions/protections, selected model, private payload or Meta upload changed.
 
-The live site remains PR 17 at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`
-with successful Pages run `43756359679`; it is NOT the code-10 PWA yet. Next
-publication action is an owner-authorized ordinary two-parent merge of PR 18 at
-its current head, then verify the exact Pages SHA and all 27 versioned live files,
-public phone/desktop render and remote context gate. The prepared ignored live
-verifier and private code-10 smoke script have current resource versions.
-Refresh/read back the installed phone release tomorrow with the user operating
-it. Keep the overall milestone open through publication and physical checks.
+The user returned for testing. Exact Quest-2 Wi-Fi ADB is restored and verified
+against the same canonical serial and current boot over the network shell;
+code 10 remains installed. Shared ADB was not restarted. Transport/headset setup
+leases are released. This verifies transport, not immersive readiness or an
+experiment. The user controls the phone; a refreshed installed-phone version
+readback is requested. Next verify APK 0.2.9-dev/code 10, automatic H10 readiness,
+actual-radius overlay, confirmed Controller UI and effective kiosk; obtain fresh
+wearer Ready before calibration. Sustained retry/fallback and full-main acceptance
+remain open. The overall milestone stays open.
 
 ### Explicit audio retry recovery — 2026-11-15
 

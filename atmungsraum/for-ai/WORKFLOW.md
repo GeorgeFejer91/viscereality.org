@@ -4,10 +4,11 @@
 
 Code 10 is installed with matching byte readback and an accepted canonical cold
 launch. H10 discovery/connection and ACC+ECG stream starts occurred automatically.
-The user ended testing and is shutting down the Quest; observer and exact Quest
-lease are released. Matching PWA is pushed in PR 18; merge is blocked by current
-GitHub 403 and nonresponding secondary sessions. Resume its ordinary merge and
-exact Pages/live checks; do not claim it deployed. Tomorrow obtain fresh Ready,
+After yesterday's test ended, observer and exact Quest lease were released.
+The user returned today. PR 18 is merged through the secondary account; exact
+Pages run 43838565290, 27 live files and public phone/desktop checks pass.
+Quest Wi-Fi ADB is restored and verified. Installed-phone readback is requested.
+Obtain fresh Ready,
 with the user operating the phone, before continuing device acceptance. See the
 active PROJECT checklist; effective kiosk, dual-radius display, Controller UI,
 sustained recovery and full main remain separate acceptance items.
