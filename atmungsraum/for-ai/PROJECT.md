@@ -2,6 +2,21 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Automatic PWA startup updates — 2026-11-16
+
+- [x] Check the published release at every fresh launch before starting the
+  Quest controller. Switch once if the release differs, and continue with
+  the loaded version if the check fails. See the [release workflow](WORKFLOW.md#smartphone-pwa).
+- [x] Verify a cached two-release launch, error and timeout fallback, and
+  existing controller behavior in Chromium. See [verification](VERIFICATION.md#pwa-startup-updates--2026-11-16).
+- [ ] Verify the exact Pages deployment and the public startup behavior.
+- [ ] Confirm standalone relaunch on the lab Pixel 10. ADB showed no connected
+  devices at local verification; the physical check remains open.
+
+Started from clean sparse publication main at `b3a6a59`, matching
+`origin/main`. The primary checkout has pre-existing index changes and
+cloud-backed files; it was left untouched.
+
 ### Main study cue placeholders — 2026-11-16
 
 - [x] Prepare two control WAVs, one instructions WAV, four reusable breathing

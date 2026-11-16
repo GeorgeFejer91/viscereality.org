@@ -34,6 +34,15 @@ now advertises available16/minimum11; installed15 is still compatible. The new
 hardware-evidence/policy increment and SDK implementation await publication.
 Historical checkpoint notes below describe their observation time.
 
+## PWA startup updates — 2026-11-16
+
+`python -B tools/test-pwa-startup.py` first failed on a cached launch that
+stayed on the old release. With the checker, Chromium made one check when
+current, switched to the published release from cached HTML, and kept the
+query options, `#daten` and origin storage. HTTP 503 and a delayed newer
+response both left the loaded version usable. No page errors were observed.
+The real-app operator/history fixture, Node suite (six native prerequisites
+skipped), context, syntax and Git whitespace checks passed.
 
 ## Scenario selection — 2026-11-16
 
