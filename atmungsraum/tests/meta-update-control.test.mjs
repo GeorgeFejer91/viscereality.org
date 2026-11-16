@@ -102,3 +102,16 @@ test('accepted receipt polling remains finite and retains the unresolved origina
   assert.equal(model.pending.accepted.attempt, '20');
   assert.ok(peer.calls.slice(1).every(c => c.op === 'receipt'));
 });
+
+test('a completed native check clears accepted-request copy and idle instructions do not claim a check is running', async () => {
+  const peer = fixture(), model = new MetaUpdateControl();
+  model.update(peer.gateway, state()); await model.request();
+  const completed = state();
+  Object.assign(completed.status.meta_update, { attempt: '20', revision: '9' });
+  const view = model.update(peer.gateway, completed);
+  assert.equal(model.pending, null);
+  assert.equal(view.message, '');
+  assert.equal(view.canRequest, true);
+  assert.doesNotMatch(view.prerequisites, /^Die Quest prüft die erforderliche Version/);
+  assert.equal(peer.calls.length, 1);
+});

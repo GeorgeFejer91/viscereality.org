@@ -1,5 +1,5 @@
 import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=13';
-import { nativeSessionAllowed } from './meta-update.js?v=2';
+import { nativeSessionAllowed } from './meta-update.js?v=3';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);

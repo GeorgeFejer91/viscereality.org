@@ -126,6 +126,26 @@ def run():
             expect(page.locator('#patient-next')).to_be_disabled()
             review.shot(page,f'meta-repeatable-required-{width}-{text_size or "normal"}','Required update',page.locator('#meta-update-status'),'Meta update')
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            error=dict(v=1,stage=3,code=1971054,http=None,install_result='DUPLICATE_REQUEST')
+            for native_state,native_reason,title in [
+                ('checking','checking-duplicate-download','Existing Meta download'),
+                ('checking','restarting-duplicate-download','Restarting Meta download'),
+                ('installing','queued-meta-update-handoff','Queued Meta handoff'),
+                ('update_required','duplicate-download-already-retried','Meta duplicate error')]:
+                changed=dict(blocked,state=native_state,reason=native_reason,sdk_error=error,can_check=False)
+                page.evaluate('window.reviewMetaUpdate='+json.dumps(changed))
+                page.clock.run_for(1200)
+                expect(page.locator('#patient-next')).to_be_disabled()
+                if native_reason=='queued-meta-update-handoff':
+                    expect(page.locator('#meta-update-status')).to_contain_text('schließt')
+                    expect(page.locator('#meta-update-status')).not_to_contain_text('Installation angefragt')
+                review.shot(page,f'meta-sdk-{native_reason}-{width}-{text_size or "normal"}',title,page.locator('#meta-update-status'),'Meta update')
+            changed=dict(native2,attempt='777',revision='10')
+            page.evaluate('window.reviewMetaUpdate='+json.dumps(changed))
+            page.clock.run_for(1200)
+            expect(page.locator('#meta-update-status')).to_contain_text('abgeschlossen')
+            expect(page.locator('#meta-update-message')).to_be_hidden()
+            expect(page.locator('#meta-update-prerequisites')).not_to_contain_text('Die Quest prüft die erforderliche Version')
             page.context.close()
         assert not review.errors, review.errors
         browser.close()

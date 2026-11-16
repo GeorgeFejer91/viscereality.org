@@ -1,5 +1,5 @@
 import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=13';
-import { nativeMetaUpdate } from './meta-update.js?v=2';
+import { nativeMetaUpdate } from './meta-update.js?v=3';
 
 const key = 'atmungsraum-meta-update-pending';
 const lineage = v => typeof v === 'string' && /^[1-9][0-9]{0,18}$/.test(v);
@@ -55,7 +55,7 @@ export class MetaUpdateControl {
     if (available && this.pending?.accepted && sameQuest(this.pending.owner, gateway.owner)
       && value.attempt === this.pending.accepted.attempt && value.cycle === this.pending.accepted.cycle
       && BigInt(value.revision) >= BigInt(this.pending.accepted.revision)) {
-      this.remember(null); this.message = 'Die Quest hat die Update-Prüfung übernommen. Der aktuelle Quest-Status zeigt den Fortschritt.';
+      this.remember(null); this.message = '';
     }
     const idle = active && state.status.p === 'IDLE' && !state.status.rec && !state.status.pending
       && !state.busy && !state.pending && !state.unknown;
@@ -69,7 +69,7 @@ export class MetaUpdateControl {
       canAcknowledge: Boolean(active && retired && !this.busy),
       prerequisites: !available ? '' : !active ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
         : !value.can_check ? guidance[value.busy_reason] || 'Die Quest gibt eine neue Update-Prüfung gerade nicht frei. Warte auf einen sicheren Abschluss.'
-        : 'Die Quest prüft die erforderliche Version und den Meta-Kanal. Eine nötige Aktualisierung beendet die App vorübergehend und startet sie danach neu.',
+        : 'Mit „Updates prüfen und installieren“ startest du eine neue Prüfung. Eine nötige Installation kann die Quest-App vorübergehend schließen.',
       message: this.pending ? this.expired
         ? 'Die Bestätigung ist noch offen. Frage das Ergebnis der ursprünglichen Anfrage erneut ab. Die Aktualisierung wird nicht erneut angefragt.'
         : 'Warte auf die Bestätigung der Quest. Die ursprüngliche Update-Anfrage bleibt gespeichert.' : this.message,

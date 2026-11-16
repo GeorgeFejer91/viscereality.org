@@ -1,5 +1,37 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
+## Queued Meta update amendment — 2026-11-17
+
+The user accepts closing the main app to let Meta apply its queued update.
+Observed20 replaces19 only after the idle app is closed; actual bytes/Meta
+attribution/UID are verified, without a new launch. The prior SDK StartDownload
+attempt fails and OCMS rejects a duplicate StartDelayed request. Existing-job
+target and completion are not exposed by the SDK progress API.
+
+Selected helper builds may therefore hand off an exact duplicate update at a
+fresh, valid, parked boundary: persist the required newer target, admit native
+irreversible maintenance, receive positive same-signer helper arm confirmation
+and install the existing main-looper kiosk latch, then cooperatively close only
+the current app/process. The helper waits a finite period for actual package
+replacement and the expected newer code before its bounded launch fallback.
+This route uses `installing` with reason `queued-meta-update-handoff`; it does
+not claim a successful SDK Install request or infer completion from a duplicate,
+bytes or progress status. Normal SDK installation still requires its own matched
+DownloadSuccess plus a subsequently issued valid progress response. Known floors
+and uncertain installations remain blocked. Active recording/preparation/writer
+boundaries cannot use the close path. Helper-off builds retain a bounded
+cancel/requery/new-download recovery with all original success gates.
+
+Optional private v2 status `sdk_error` is null or the closed shape
+`{v:1,stage,code,http,install_result}`. Stage is1–6, code is a nonzero signed32-bit
+integer, HTTP is null or100–599, and result is one of UNKNOWN, LOW_STORAGE,
+NETWORK_ERROR, DUPLICATE_REQUEST, INSTALLER_ERROR, USER_CANCELLED,
+AUTHORIZATION_ERROR, SUCCESS. Only a normalized enum and numeric provenance
+cross the boundary. Raw error text, tokens and URLs do not. An error containing
+SUCCESS never authorizes install or a session. New attempts clear stale error
+provenance; unrelated/retired responses cannot replace it. The PWA displays
+native state and the distinct handoff reason without granting authority.
+
 Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
 APK digest matches the published16, installer/initiator are Meta, and Android
 records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes

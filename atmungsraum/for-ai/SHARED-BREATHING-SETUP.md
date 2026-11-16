@@ -315,10 +315,32 @@ calibration; labeling the two clocks identically is invalid after device sleep.
 
 A participant tilt model learns a directed movement axis and robust range from
 normalized three-axis gravity direction. Scheduled labels describe instructions,
-not proof of compliance: both cycles must contain valid directional motion.
+not proof of compliance. The fitter requires timed coverage in each cycle and
+phase, then tests covariance and range across the whole window; it does not
+independently validate directional movement or amplitude in each cycle.
 The existing scalar phase classifier supplies confirmation/hold/dwell behavior.
 The model belongs to the Polar source owner and calibration generation. Source
 replacement invalidates it. Collection uses unbiased samples and is bounded.
+
+### Personal calibration and the recording-trained presets — 2026-11-16
+
+Personal calibration normalizes/smooths gravity direction, computes its
+three-axis covariance with the instructed expansion envelope, and normalizes
+that vector into a signed projection axis. Projected10th/90th percentiles set
+the low/high range. The resulting normalized coordinate feeds the common
+derivative/hysteresis phase classifier. It does not retrain phase thresholds,
+classifier weights or renderer speed. Inhale/exhale/hold drive the frame-time
+radius integrator; the measured coordinate is not assigned directly to radius.
+
+The fixed preset is a different causal15-feature, three-class classifier fitted
+from three paired Polar/controller recordings. It uses multiaxis slopes and
+baseline residuals, fitted softmax weights, probability smoothing and temporal
+confirmation. The adaptive preset uses the same fitted weights with sensor-frame
+compensation; it is not the personal32-second fit. Historical training/export
+scripts were recovered privately: scaler-folded45 weights match current Rust
+constants within floating-point rounding, with all three biases identical.
+Controller states are comparison labels, not physiological ground truth. Keep
+recordings and historical working reports outside this public repository.
 
 Closed setup commands and bounded status use the existing enrolled LAN gateway.
 Preserve Origin, identity, epoch, authentication, replay and command-ID checks.

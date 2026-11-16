@@ -6,6 +6,14 @@ const integer = value => Number.isSafeInteger(value) && value >= 0;
 const positive = value => integer(value) && value > 0;
 const lineage = value => typeof value === 'string' && /^[1-9][0-9]{0,18}$/.test(value);
 const reason = value => typeof value === 'string' && value.length <= 96 && !/[^\x20-\x7e]/.test(value);
+const installResults = new Set(['UNKNOWN', 'LOW_STORAGE', 'NETWORK_ERROR', 'DUPLICATE_REQUEST',
+  'INSTALLER_ERROR', 'USER_CANCELLED', 'AUTHORIZATION_ERROR', 'SUCCESS']);
+const validSdkError = value => value === null || value && !Array.isArray(value)
+  && Object.keys(value).length === 5 && value.v === 1
+  && integer(value.stage) && value.stage >= 1 && value.stage <= 6
+  && Number.isSafeInteger(value.code) && value.code !== 0 && value.code >= -2147483648 && value.code <= 2147483647
+  && (value.http === null || integer(value.http) && value.http >= 100 && value.http <= 599)
+  && installResults.has(value.install_result);
 
 export function nativeMetaUpdate(status) {
   if (!status || !Object.hasOwn(status, 'meta_update')) return status && Object.hasOwn(status, 'meta_update_control')
@@ -29,7 +37,8 @@ export function nativeMetaUpdate(status) {
     && (!status.apk || status.apk.version_code === value.installed_code)
     && (!repeatable || status.meta_update_control === 1 && lineage(value.cycle) && lineage(value.revision)
       && (value.attempt === null || lineage(value.attempt)) && typeof value.can_check === 'boolean'
-      && reason(value.busy_reason) && (value.required_code === null || positive(value.required_code)));
+      && reason(value.busy_reason) && (value.required_code === null || positive(value.required_code))
+      && (!Object.hasOwn(value, 'sdk_error') || validSdkError(value.sdk_error)));
   const required = valid && repeatable && Math.max(value.required_code ?? 0, value.available_code ?? 0) > value.installed_code;
   return { advertised: true, allowed: Boolean(valid && value.session_allowed && !blocking.has(value.state) && !required),
     value: valid ? value : null };
@@ -50,6 +59,13 @@ const failureReasons = {
   'download-total-timeout': 'Das Herunterladen hat zu lange gedauert.',
   'download-progress-stalled': 'Das Herunterladen ist nicht weitergekommen.',
   'meta-platform-unavailable': 'Der Meta-Dienst ist gerade nicht verfügbar.',
+  'meta-sdk-request-failed': 'Meta hat die Update-Anfrage mit einem Fehler beantwortet. Prüfe den aktuellen App-Stand im Headset.',
+  'duplicate-download-already-retried': 'Meta meldet erneut eine vorhandene Download-Anfrage. Prüfe das Update in der Meta-Bibliothek.',
+  'duplicate-download-cancel-failed': 'Meta hat den Neustart des Downloads nicht bestätigt. Prüfe das Update in der Meta-Bibliothek.',
+  'duplicate-download-recovery-timeout': 'Meta hat die Wiederaufnahme des Downloads nicht rechtzeitig bestätigt.',
+  'duplicate-download-status-unavailable': 'Der Stand der vorhandenen Update-Anfrage ist nicht verlässlich. Prüfe das Update in der Meta-Bibliothek.',
+  'duplicate-download-owner-or-floor-changed': 'Der Quest- oder Versionsstand hat sich während der Prüfung geändert. Prüfe den aktuellen App-Stand.',
+  'duplicate-download-package-changed-restart-required': 'Meta hat die Quest-App während der Prüfung ersetzt. Verbinde dich mit der neu gestarteten App.',
   'meta-download-progress-invalid': 'Meta hat einen widersprüchlichen Download-Fortschritt gemeldet. Die Installation wurde nicht angefragt.',
   'required-update-not-yet-on-channel': 'Die benötigte Version wird von Meta noch nicht angeboten. Warte und prüfe erneut.',
   'meta-platform-process-init-failed-restart-required': 'Der Meta-Dienst konnte in diesem App-Prozess nicht starten. Die Quest für eine erneute Meta-Prüfung neu starten.',
@@ -58,6 +74,24 @@ const failureReasons = {
 };
 const maintenanceReasons = new Set(['prior-install-unconfirmed-maintenance-required',
   'pending-install-record-invalid', 'pending-install-record-unreadable', 'pending-install-record-clear-failed']);
+const recoveryCopy = {
+  'checking-duplicate-download': ['Quest prüft den vorgemerkten Meta-Download.',
+    'Meta hat bereits eine Anfrage für diese App gespeichert. Die Quest prüft deren Stand.'],
+  'restarting-duplicate-download': ['Quest startet den Meta-Download erneut.',
+    'Die Quest erneuert die vorgemerkte Download-Anfrage und prüft anschließend die Version.'],
+  'queued-meta-update-handoff': ['Quest schließt die App für das vorgemerkte Meta-Update.',
+    'Der Helfer wartet zeitlich begrenzt auf die erforderliche APK und startet sie nach Bestätigung der neuen APK-Kennung.'],
+};
+const sdkErrorCopy = {
+  UNKNOWN: 'Meta nennt keine nähere Fehlerursache.',
+  LOW_STORAGE: 'Meta meldet zu wenig freien Speicher auf der Quest.',
+  NETWORK_ERROR: 'Meta meldet einen Netzwerkfehler beim Update.',
+  DUPLICATE_REQUEST: 'Meta hat bereits eine Update-Anfrage für diese App gespeichert.',
+  INSTALLER_ERROR: 'Der Meta-Installer meldet einen Fehler.',
+  USER_CANCELLED: 'Meta meldet eine abgebrochene Update-Anfrage.',
+  AUTHORIZATION_ERROR: 'Meta hat die Berechtigung für das Update nicht bestätigt.',
+  SUCCESS: 'Meta hat eine widersprüchliche Fehlerantwort geliefert.',
+};
 
 export function metaUpdateView(status) {
   const result = nativeMetaUpdate(status);
@@ -98,7 +132,12 @@ export function metaUpdateView(status) {
   if (value.v === 2 && value.required_code !== null) detail += ` Benötigt: mindestens Code ${value.required_code}.`;
   if (value.state === 'update_required') detail += ` ${failureReasons[value.reason] || 'Prüfe und installiere die verfügbare Version, bevor eine neue Sitzung startet.'}`;
   if (value.state === 'failed' && failureReasons[value.reason]) detail += ` ${failureReasons[value.reason]}`;
-  const summary = (value.v === 2 ? summaries[value.state].replaceAll('Meta-Startprüfung', 'Update-Prüfung') : summaries[value.state]) + (!result.allowed && ['current', 'updated'].includes(value.state)
+  if (value.v === 2 && value.sdk_error && ['failed', 'update_required', 'restart_required'].includes(value.state)) {
+    detail += ` ${sdkErrorCopy[value.sdk_error.install_result]}`;
+  }
+  const recovery = value.v === 2 && ['checking', 'installing'].includes(value.state) && recoveryCopy[value.reason];
+  if (recovery) detail = `${recovery[1]}${value.required_code === null ? '' : ` Benötigt: mindestens Code ${value.required_code}.`}`;
+  const summary = (recovery ? recovery[0] : value.v === 2 ? summaries[value.state].replaceAll('Meta-Startprüfung', 'Update-Prüfung') : summaries[value.state]) + (!result.allowed && ['current', 'updated'].includes(value.state)
     ? ' Vorbereitung bleibt gesperrt.' : '');
   return { ...result, state: value.state, summary, detail, progress };
 }
