@@ -2,6 +2,29 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Box-breathing audio evidence review — 2026-11-16
+
+The [Haupt-Runde timeline](../audio/scenarios/haupt-15.json) allocates
+13:20 to 50 complete cycles of four seconds per phase within the 15-minute
+session. The review found no 10–15-minute recording with both a verified
+open reuse license and efficacy evidence for that exact recording and dose.
+[Balban et al.](https://pubmed.ncbi.nlm.nih.gov/36630953/) used five-minute
+sessions with individualized phase timings. The [ASIP study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12881409/)
+used six minutes of synchronized 4-4-4-4 audio and video guidance and found
+little average change in daily stress. The [15-minute trial registration](https://clinicaltrials.gov/study/NCT07698652)
+had no posted results at review.
+
+For an external listening reference, the [MIT-licensed Cosmos Lab pacer](https://github.com/cosmoslab58/box-breathing)
+provides synthesized spoken or chime cues. For a reusable study recording,
+the recommendation is to use original German cues on the existing timeline
+and document the recording's license and exact cue schedule. Wording and
+listening acceptance remain open. Recheck cue timing and audibility on the
+headset before participant use.
+
+This evidence review is based on main `cd91f67` and its successful
+[Pages run 43878794914](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43878794914).
+The smartphone and Quest rehearsal checklist remains active.
+
 ### Physical display correction — 2026-11-16
 
 The user postpones fixed/adaptive mode testing and reports that yellow radius
