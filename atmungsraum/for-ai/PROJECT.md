@@ -129,6 +129,16 @@ yellow percentage/circle, exact stroke contact, personal-fit and Controller
 fallback continuity. The user retains phone control. Full-main physical
 acceptance and effective kiosk qualification remain open. No Meta upload.
 
+Local sync verification, 2026-11-16: the clean sparse checkout matched
+`b01cb3e277f99e63bea1dce6e83f0b77d04cbee6` (PR 21) and
+[Pages run 43849311195](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43849311195).
+Fifteen live files matched Git. The 390px and 1440px live views passed Pretext,
+overflow, install-help focus and code-11 policy checks. The remote context
+check and all six scenario pairs passed. The local Node run passed 213 tests
+with five native Java interoperability cases skipped because the harness
+was unavailable on this PC. The original checkout has an inaccessible Git
+index and config. The synced sparse checkout uses separate local Git metadata.
+
 
 ### Publication resumed through secondary account — 2026-11-16
 
