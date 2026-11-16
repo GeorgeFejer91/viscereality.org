@@ -71,7 +71,9 @@ function snapshot() {
     ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
-    ...(Object.hasOwn(window,'reviewMetaUpdate') ? {meta_update:window.reviewMetaUpdate} : {}),
+    ...(Object.hasOwn(window,'reviewMetaUpdate') ? {meta_update:window.reviewMetaUpdate}
+      : settings.metaUpdate ? {meta_update:settings.metaUpdate} : {}),
+    ...(settings.metaUpdate ? {meta_update_control:1} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: settings.tracks ?? ['track-ready', 'track-ready'],
@@ -267,6 +269,19 @@ export async function joinQuest({ endpoint }) {
       (window.reviewKioskCommands ??= []).push(structuredClone(value));
       if(value.op === 'receipt') return settings.kioskReceipt ?? {id:value.id,state:'pending',detail:'Waiting'};
       return {id:value.id,state:settings.kioskReply ?? 'pending',detail:'Service restart pending'};
+    }) : null,
+    metaUpdate: settings.metaUpdate ? controlled(value => {
+      (window.reviewMetaUpdateCommands ??= []).push(structuredClone(value));
+      if(value.op === 'receipt') return receipts[value.id] ?? {v:1,id:value.id,state:'rejected',cycle:settings.metaUpdate.cycle,
+        revision:settings.metaUpdate.revision,attempt:null,reason:'unknown-id'};
+      const current=settings.metaUpdate;
+      if(value.cycle !== current.cycle || value.revision !== current.revision || !current.can_check) {
+        return {v:1,id:value.id,state:'stale',cycle:current.cycle,revision:current.revision,attempt:null,reason:'changed'};
+      }
+      Object.assign(current,{state:'checking',revision:String(BigInt(current.revision)+1n),attempt:'777',can_check:false,session_allowed:false});
+      const result=receipts[value.id]={v:1,id:value.id,state:'accepted',cycle:current.cycle,revision:current.revision,attempt:current.attempt,reason:''};
+      if(settings.lostUpdateReply) throw Error('fixture lost reply after native admission');
+      return result;
     }) : null,
     recenter: controlled(value => {
       window.reviewRecenterCommands.push(structuredClone(value));

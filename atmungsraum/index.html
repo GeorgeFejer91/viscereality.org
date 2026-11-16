@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-controller-compat-r2">
+  <link rel="stylesheet" href="./style.css?v=20261116-meta-session-r1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261116-controller-compat-r2"></script>
+  <script type="module" src="./app.js?v=20261116-meta-session-r1"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -465,6 +465,13 @@
             <p id="meta-update-status" data-measure role="status"></p>
             <progress id="meta-update-progress" aria-labelledby="meta-update-status" aria-describedby="meta-update-detail" hidden></progress>
             <p id="meta-update-detail" data-measure></p>
+            <div id="meta-update-controls" hidden>
+              <p id="meta-update-prerequisites" data-measure></p>
+              <button id="meta-update-check" type="button"><span data-measure>Updates prüfen und installieren</span></button>
+              <p id="meta-update-message" data-measure hidden role="status"></p>
+              <button id="meta-update-receipt" hidden type="button"><span data-measure>Bestätigung erneut abfragen</span></button>
+              <button id="meta-update-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Stand übernehmen</span></button>
+            </div>
           </div>
           <details id="apk-identity">
             <summary><span data-measure>Vollständige APK-Kennung</span>

@@ -6,11 +6,17 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageInfo;
+import android.content.pm.Signature;
+import android.os.SystemClock;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import android.content.pm.ResolveInfo;
 import android.provider.Settings;
 import android.util.Log;
 
-final class AndroidHost implements BootPolicy.Host {
+final class AndroidHost implements BootPolicy.Host, WatchPolicy.Host {
     final Context context;
     final SharedPreferences state;
     private Intent currentIntent;
@@ -21,7 +27,7 @@ final class AndroidHost implements BootPolicy.Host {
     public boolean enabled() { return state.getBoolean("enabled", false); }
     public boolean overlayAllowed() { return Settings.canDrawOverlays(context); }
     public long admittedBoot() { return state.getLong("admitted_boot", -1); }
-    long currentBoot() { return Settings.Global.getInt(context.getContentResolver(), Settings.Global.BOOT_COUNT, -1); }
+    public long currentBoot() { return Settings.Global.getInt(context.getContentResolver(), Settings.Global.BOOT_COUNT, -1); }
     public boolean admit(long boot) {
         return state.edit().putLong("admitted_boot", boot).putLong("attempt_time_ms", System.currentTimeMillis())
             .putString("status", "ADMITTED_UNCONFIRMED").remove("launcher").commit();
@@ -35,13 +41,19 @@ final class AndroidHost implements BootPolicy.Host {
             .setPackage(BootPolicy.TARGET_PACKAGE);
         ResolveInfo resolved = pm.resolveActivity(query, 0);
         ActivityInfo activity = resolved == null ? null : resolved.activityInfo;
-        boolean signer = pm.checkSignatures(context.getPackageName(), BootPolicy.TARGET_PACKAGE) == PackageManager.SIGNATURE_MATCH;
+        boolean signer = sameCurrentSigner(pm, context.getPackageName(), BootPolicy.TARGET_PACKAGE);
+        long version=0; int protocol=0;
+        try {
+            PackageInfo info=pm.getPackageInfo(BootPolicy.TARGET_PACKAGE, PackageManager.GET_META_DATA);
+            version=info.getLongVersionCode();
+            if(info.applicationInfo.metaData!=null)protocol=info.applicationInfo.metaData.getInt("org.viscereality.atmungsraum.boot_protocol",0);
+        } catch(PackageManager.NameNotFoundException absent) { return null; }
         if (activity == null || !activity.enabled || !activity.exported || !activity.applicationInfo.enabled)
             return new BootPolicy.Target(BootPolicy.TARGET_PACKAGE, "", signer, true, true);
         currentIntent = new Intent(query).setComponent(new ComponentName(activity.packageName, activity.name))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         return new BootPolicy.Target(activity.packageName, activity.name, signer,
-            Intent.ACTION_MAIN.equals(currentIntent.getAction()), currentIntent.hasCategory(Intent.CATEGORY_LAUNCHER));
+            Intent.ACTION_MAIN.equals(currentIntent.getAction()), currentIntent.hasCategory(Intent.CATEGORY_LAUNCHER),version,protocol);
     }
     public void dispatch(BootPolicy.Target target) {
         // Recheck package/component and signature at dispatch; no Intent extras,
@@ -49,11 +61,63 @@ final class AndroidHost implements BootPolicy.Host {
         if (currentIntent == null || currentIntent.getComponent() == null ||
             !BootPolicy.TARGET_PACKAGE.equals(currentIntent.getComponent().getPackageName()) ||
             !target.activity.equals(currentIntent.getComponent().getClassName()) ||
-            context.getPackageManager().checkSignatures(context.getPackageName(), BootPolicy.TARGET_PACKAGE) != PackageManager.SIGNATURE_MATCH)
+            !sameCurrentSigner(context.getPackageManager(), context.getPackageName(), BootPolicy.TARGET_PACKAGE))
             throw new SecurityException("Target identity changed");
         if (!state.edit().putString("launcher", currentIntent.getComponent().flattenToShortString()).commit())
             throw new IllegalStateException("Cannot persist launch request");
+        if(target.protocol==2) {
+            WatchPolicy.Result watch=WatchPolicy.armBoot(this,target);
+            if(!watch.accepted||!WatchService.ensureRunning(context,false)) {
+                WatchPolicy.cancelInternal(this);
+                throw new IllegalStateException("Bounded boot watch unavailable");
+            }
+        }
         context.startActivity(currentIntent);
+    }
+    static boolean sameCurrentSigner(PackageManager pm,String first,String second) {
+        try {
+            Signature[] a=pm.getPackageInfo(first,PackageManager.GET_SIGNING_CERTIFICATES).signingInfo.getApkContentsSigners();
+            Signature[] b=pm.getPackageInfo(second,PackageManager.GET_SIGNING_CERTIFICATES).signingInfo.getApkContentsSigners();
+            return a!=null&&b!=null&&a.length>0&&new HashSet<Signature>(Arrays.asList(a)).equals(new HashSet<Signature>(Arrays.asList(b)));
+        }catch(PackageManager.NameNotFoundException|RuntimeException unavailable){return false;}
+    }
+    public long now(){return SystemClock.elapsedRealtime();}
+    public WatchPolicy.Ledger load() {
+        long boot=state.getLong("watch_boot",-1);
+        Set<String> attempts=new HashSet<String>(state.getStringSet("watch_attempts",java.util.Collections.<String>emptySet()));
+        if(attempts.size()>WatchPolicy.MAX_ATTEMPTS)throw new IllegalStateException("Invalid attempt ledger");
+        for(String id:attempts)if(!id.matches("[1-9][0-9]{0,18}")||Long.parseLong(id)<=0)throw new IllegalStateException("Invalid attempt");
+        WatchPolicy.Watch watch=null;
+        String kind=state.getString("watch_kind","");
+        if(!kind.isEmpty()) {
+            if(state.getInt("watch_format",0)!=1||(!kind.equals("boot")&&!kind.equals("update")))throw new IllegalStateException("Invalid watch");
+            String attempt=state.getString("watch_attempt","");
+            long installed=state.getLong("watch_installed",0),target=state.getLong("watch_target",0),deadline=state.getLong("watch_deadline",0);
+            long detected=state.getLong("watch_detected",0),notBefore=state.getLong("watch_not_before",0),dispatched=state.getLong("watch_dispatched",0),started=state.getLong("watch_started",0);
+            if(installed<=0||target<=installed||target>WatchPolicy.SAFE_INTEGER||deadline<=0||boot==currentBoot()&&deadline>now()+WatchPolicy.WATCH_MS
+                ||detected<0||detected>WatchPolicy.SAFE_INTEGER||notBefore<0||notBefore>deadline+WatchPolicy.META_GRACE_MS
+                ||dispatched<0||dispatched>WatchPolicy.SAFE_INTEGER||started<0||started>WatchPolicy.SAFE_INTEGER
+                ||kind.equals("update")&&!attempts.contains(attempt)||kind.equals("boot")&&!attempt.equals("boot"))throw new IllegalStateException("Invalid watch binding");
+            watch=new WatchPolicy.Watch(kind,attempt,installed,target,deadline,detected,notBefore,dispatched,started);
+        }
+        return new WatchPolicy.Ledger(boot,attempts,watch);
+    }
+    public boolean save(WatchPolicy.Ledger value) {
+        android.content.SharedPreferences.Editor edit=state.edit().putLong("watch_boot",value.boot).putStringSet("watch_attempts",new HashSet<String>(value.attempts));
+        String[] fields={"watch_format","watch_kind","watch_attempt","watch_installed","watch_target","watch_deadline","watch_detected","watch_not_before","watch_dispatched","watch_started"};
+        for(String field:fields)edit.remove(field);
+        WatchPolicy.Watch w=value.watch;
+        if(w!=null)edit.putInt("watch_format",1).putString("watch_kind",w.kind).putString("watch_attempt",w.attempt)
+            .putLong("watch_installed",w.installed).putLong("watch_target",w.target).putLong("watch_deadline",w.deadline)
+            .putLong("watch_detected",w.detectedCode).putLong("watch_not_before",w.notBefore).putLong("watch_dispatched",w.dispatchedCode).putLong("watch_started",w.startedCode);
+        return edit.commit();
+    }
+    public void dispatchFallback(BootPolicy.Target expected) {
+        BootPolicy.Target current=resolveCurrentTarget();
+        if(current==null||current.version!=expected.version||current.protocol!=2||!current.sameSigner||!current.activity.equals(expected.activity)
+            ||!BootPolicy.TARGET_PACKAGE.equals(current.packageName)||currentIntent==null)throw new SecurityException("Fallback target changed");
+        context.startActivity(currentIntent);
+        record("FALLBACK_REQUESTED_UNCONFIRMED");
     }
     public void record(String status) {
         boolean saved = state.edit().putString("status", status).commit();

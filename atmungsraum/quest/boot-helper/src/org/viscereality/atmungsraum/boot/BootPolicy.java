@@ -5,7 +5,12 @@ public final class BootPolicy {
     public static final class Target {
         public final String packageName, activity;
         public final boolean sameSigner, main, launcher;
+        public final long version; public final int protocol;
         public Target(String packageName, String activity, boolean sameSigner, boolean main, boolean launcher) {
+            this(packageName, activity, sameSigner, main, launcher, 0, 0);
+        }
+        public Target(String packageName, String activity, boolean sameSigner, boolean main, boolean launcher, long version, int protocol) {
+            this.version=version; this.protocol=protocol;
             this.packageName = packageName; this.activity = activity; this.sameSigner = sameSigner;
             this.main = main; this.launcher = launcher;
         }

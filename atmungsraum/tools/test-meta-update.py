@@ -2,6 +2,7 @@
 from pathlib import Path
 import tempfile
 import json
+import os
 from playwright.sync_api import sync_playwright, expect
 from layout_render_fixtures import module, initial, mutations, go
 
@@ -10,7 +11,9 @@ def run():
     c = module()
     with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
         browser = p.chromium.launch()
-        review = c.Review(browser, Path(output))
+        evidence = Path(os.environ.get('ATMUNGSRAUM_META_UI_OUTPUT', output))
+        evidence.mkdir(parents=True, exist_ok=True)
+        review = c.Review(browser, evidence)
         for width, text_size in [(390, ''), (320, ''), (320, '200%')]:
             update = dict(v=1, state='downloading', reason='download-in-progress-'+'x'*70,
                           installed_code=11, available_code=16, downloaded_bytes=1024,
@@ -95,6 +98,35 @@ def run():
         expect(page.locator('#meta-update-detail')).to_contain_text('Betreiberwartung')
         review.shot(page, 'meta-maintenance-320-200text', 'Meta maintenance', page.locator('#meta-update-status'), 'Meta update')
         page.context.close()
+        # Repeatable control uses the real mounted UI and native cycle fixture.
+        # Status/paint never invokes a check; one manual click creates one ID.
+        native2=dict(v=2,state='current',reason='',installed_code=11,available_code=11,
+                     required_code=11,downloaded_bytes=0,total_bytes=None,session_allowed=True,
+                     cycle='2',revision='7',attempt='19',can_check=True,busy_reason='')
+        for width,text_size in [(390,''),(320,''),(320,'200%')]:
+            page=review.page(initial(c,quest={'metaUpdate':native2}),viewport={'width':width,'height':844})
+            page.evaluate('size=>document.documentElement.style.fontSize=size',text_size)
+            page.clock.run_for(1500)
+            go(page,'settings')
+            expect(page.locator('#meta-update-check')).to_be_visible()
+            expect(page.locator('#meta-update-check')).to_be_enabled()
+            assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
+            page.locator('#meta-update-check').click()
+            page.clock.run_for(1800)
+            expect(page.locator('#meta-update-status')).to_contain_text('prüft')
+            expect(page.locator('#meta-update-check')).to_be_disabled()
+            commands=page.evaluate('window.reviewMetaUpdateCommands??[]')
+            assert len([x for x in commands if x['op']=='check-and-update']) == 1,commands
+            blocked=dict(native2,state='update_required',reason='required-update-not-yet-on-channel',required_code=20,
+                         session_allowed=False,available_code=18,attempt='777',revision='9')
+            page.evaluate('window.reviewMetaUpdate='+json.dumps(blocked))
+            page.clock.run_for(1200)
+            expect(page.locator('#meta-update-status')).to_contain_text('erforderlich')
+            expect(page.locator('#meta-update-detail')).to_contain_text('20')
+            expect(page.locator('#patient-next')).to_be_disabled()
+            review.shot(page,f'meta-repeatable-required-{width}-{text_size or "normal"}','Required update',page.locator('#meta-update-status'),'Meta update')
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.context.close()
         assert not review.errors, review.errors
         browser.close()
     print('PASS native Meta read-only display, stable nodes, native gates, 320px/200% and actual Pretext')

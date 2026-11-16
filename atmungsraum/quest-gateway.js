@@ -343,6 +343,13 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
           || Object.keys(command).length !== (command.op === 'retry' ? 4 : 3)) throw Error('Ungültige Kiosk-Anfrage.');
         return controlled('kiosk', command, requestSignal);
       } : null,
+      ...(enrollment && initial.meta_update_control === 1 && initial.meta_update?.v === 2 ? { metaUpdate: (command, requestSignal) => {
+        if (command?.v !== 1 || typeof command.id !== 'string' || !/^[a-f0-9]{16}$/.test(command.id)
+          || !['receipt', 'check-and-update'].includes(command.op)
+          || command.op === 'check-and-update' && !['cycle', 'revision'].every(key => typeof command[key] === 'string' && /^[1-9][0-9]{0,18}$/.test(command[key]))
+          || Object.keys(command).length !== (command.op === 'check-and-update' ? 5 : 3)) throw Error('Ungültige Update-Anfrage.');
+        return controlled('meta-update', command, requestSignal);
+      } } : {}),
       controllerAccess: enrollment && controllerAccessState(initial)
         ? (command, requestSignal) => exchange('controller-access', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,

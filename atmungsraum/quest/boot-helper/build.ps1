@@ -32,7 +32,7 @@ if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable($SigningPasswo
     throw 'Set the named signing-password environment variable privately before building.'
 }
 $tools = Join-Path $AndroidSdk 'build-tools/36.0.0'
-$platform = Join-Path $AndroidSdk 'platforms/android-36/android.jar'
+$platform = Join-Path $AndroidSdk 'platforms/android-34/android.jar'
 $aapt = Join-Path $tools 'aapt.exe'
 $aapt2 = Join-Path $tools 'aapt2.exe'
 $d8 = Join-Path $tools 'd8.bat'
@@ -48,7 +48,7 @@ $classes = Join-Path $OutputRoot 'classes'
 $dex = Join-Path $OutputRoot 'dex'
 New-Item -ItemType Directory -Path $classes, $dex | Out-Null
 $sourceRoot = Join-Path $PSScriptRoot 'src/org/viscereality/atmungsraum/boot'
-$sources = @('AndroidHost.java', 'BootPolicy.java', 'BootReceiver.java', 'SetupActivity.java') | ForEach-Object { Join-Path $sourceRoot $_ }
+$sources = @('AndroidHost.java', 'BootPolicy.java', 'BootReceiver.java', 'SetupActivity.java', 'WatchPolicy.java', 'HandoffProvider.java', 'WatchService.java') | ForEach-Object { Join-Path $sourceRoot $_ }
 $unsigned = Join-Path $OutputRoot 'unsigned.apk'
 $aligned = Join-Path $OutputRoot 'aligned.apk'
 $apk = Join-Path $OutputRoot 'atmungsraum-boot-helper.apk'
@@ -77,15 +77,52 @@ try {
     $manifest = @(& $aapt2 dump xmltree $apk --file AndroidManifest.xml)
     if ($LASTEXITCODE -ne 0) { throw 'Actual APK manifest decoding failed.' }
     $permissions = @($badging | Select-String "^uses-permission: name='([^']+)'" | ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object)
-    if (($permissions -join ',') -cne 'android.permission.RECEIVE_BOOT_COMPLETED,android.permission.SYSTEM_ALERT_WINDOW') { throw 'Unexpected actual APK permissions.' }
-    if (!($badging -match "^package: name='org.viscereality.atmungsraum.boot' versionCode='1' versionName='1.0'") -or
+    if (($permissions -join ',') -cne 'android.permission.FOREGROUND_SERVICE,android.permission.FOREGROUND_SERVICE_SPECIAL_USE,android.permission.RECEIVE_BOOT_COMPLETED,android.permission.SYSTEM_ALERT_WINDOW') { throw 'Unexpected actual APK permissions.' }
+    if (!($badging -match "^package: name='org.viscereality.atmungsraum.boot' versionCode='2' versionName='2.0'") -or
         !($badging -match "^sdkVersion:'29'") -or !($badging -match "^targetSdkVersion:'34'") -or
         ($badging -match '^application-debuggable')) { throw 'Actual APK identity/SDK/debugging differs from helper contract.' }
+    $actualXml = $manifest -join "`n"
+    function Actual-Node([string]$Name) {
+        $nodes = [regex]::Matches($actualXml, ('(?m)^([ ]*)E: ' + [regex]::Escape($Name) + '\b'))
+        if ($nodes.Count -ne 1) { throw "Expected one actual manifest node: $Name" }
+        $node = $nodes[0]; $indent = $node.Groups[1].Value.Length
+        $remaining = $actualXml.Substring($node.Index + $node.Length)
+        $next = [regex]::Match($remaining, ('(?m)^[ ]{0,' + $indent + '}E:'))
+        if ($next.Success) { return $remaining.Substring(0,$next.Index) }
+        return $remaining
+    }
+    $provider = Actual-Node 'provider'; $service = Actual-Node 'service'
+    $permission = Actual-Node 'permission'; $receiver = Actual-Node 'receiver'
+    # aapt2 emits text booleans or typed hex depending on its version. Match
+    # the complete value: integer flags, quoted strings and prefix matches deny.
+    $attributeId = '(?:\(0x[0-9a-fA-F]+\))?[ \t]*=[ \t]*'
+    $trueValue = '(?:true|(?:\(type[ \t]+0x0*12\)[ \t]*)?0x[fF]{8})[ \t]*\r?$'
+    $falseValue = '(?:false|(?:\(type[ \t]+0x0*12\)[ \t]*)?0x0+)[ \t]*\r?$'
+    $enumValue = '(?:\(type[ \t]+0x0*11\)[ \t]*)?'
+    $exportedTrue = '(?m)android:exported' + $attributeId + $trueValue
+    $exportedFalse = '(?m)android:exported' + $attributeId + $falseValue
+    if ($provider -notmatch 'android:name[^\r\n]*\.HandoffProvider' -or
+        $provider -notmatch 'android:authorities[^\r\n]*"org\.viscereality\.atmungsraum\.boot\.handoff"' -or
+        $provider -notmatch 'android:permission[^\r\n]*"org\.viscereality\.atmungsraum\.boot\.permission\.UPDATE_HANDOFF"' -or
+        $provider -notmatch $exportedTrue -or
+        $service -notmatch 'android:name[^\r\n]*\.WatchService' -or
+        $service -notmatch $exportedFalse -or
+        $service -notmatch ('(?m)android:foregroundServiceType' + $attributeId + $enumValue + '0x0*40000000[ \t]*\r?$') -or
+        $service -notmatch 'android\.app\.PROPERTY_SPECIAL_USE_FGS_SUBTYPE' -or
+        $permission -notmatch 'android:name[^\r\n]*"org\.viscereality\.atmungsraum\.boot\.permission\.UPDATE_HANDOFF"' -or
+        $permission -notmatch ('(?m)android:protectionLevel' + $attributeId + $enumValue + '0x0*2[ \t]*\r?$') -or
+        $receiver -notmatch $exportedFalse -or
+        $actualXml -notmatch 'org\.viscereality\.atmungsraum\.boot_protocol') { throw 'Actual helper2 IPC/FGS closure differs.' }
     $dexText = @(& $dexdump -d (Join-Path $dex 'classes.dex'))
     if ($LASTEXITCODE -ne 0) { throw 'Actual packaged DEX inspection failed.' }
     $definitions = @($dexText | Select-String "Class descriptor\s*: '([^']+)'" | ForEach-Object { $_.Matches[0].Groups[1].Value })
-    foreach ($owner in @('AndroidHost','BootPolicy','BootReceiver','SetupActivity')) {
+    foreach ($owner in @('AndroidHost','BootPolicy','BootReceiver','SetupActivity','WatchPolicy','HandoffProvider','WatchService')) {
         if (@($definitions | Where-Object { $_ -ceq "Lorg/viscereality/atmungsraum/boot/$owner;" }).Count -ne 1) { throw "Missing/duplicate DEX owner: $owner" }
+    }
+    foreach ($definition in $definitions) {
+        if ($definition -cnotmatch '^Lorg/viscereality/atmungsraum/boot/(AndroidHost|BootPolicy|BootReceiver|SetupActivity|WatchPolicy|HandoffProvider|WatchService)(\$[^;]+)?;$') {
+            throw "Unexpected actual DEX owner: $definition"
+        }
     }
     $archive = [IO.Compression.ZipFile]::OpenRead($apk)
     try {
@@ -105,7 +142,7 @@ try {
         apk = $apk; sha256 = (Get-FileHash -LiteralPath $apk).Hash.ToLowerInvariant()
         certificate_sha256 = $certificate[0]; reference_sha256 = (Get-FileHash -LiteralPath $ReferenceApk).Hash.ToLowerInvariant()
         dex_sha256 = $packagedDexHash; permissions = $permissions; dex_classes = $definitions
-        entries = $entries; min_sdk = 29; target_sdk = 34; compile_sdk = 36
+        entries = $entries; min_sdk = 29; target_sdk = 34; compile_sdk = 34
         source_files = @(@($sources) + @(Join-Path $PSScriptRoot 'AndroidManifest.xml') + @($PSCommandPath) | ForEach-Object {
             [ordered]@{ name = [IO.Path]::GetFileName($_); sha256 = (Get-FileHash -LiteralPath $_).Hash.ToLowerInvariant() }
         })
