@@ -1,15 +1,18 @@
 # Verification
 
-Current SDK release checkpoint: final17/18 packages are built/signed and
-independently qualified from native b4a2d418, with retained private inputs,
-signer and controller policy. Meta17 is published in the private Developer
-channel with malware/security passes; actual baseline installation is requested.
-18 remains unpublished for the genuine17-to18 startup-update test. Kiosk handoff,
-sticky uncertain-install guards, native75/service12/binding3/admission5 and
-Android lifecycle12/110 checks pass; broad pre-existing panel/standalone audio
-closure blockers remain explicitly unqualified. PWA28/Pages43939877200 and21
-live-file comparisons pass, preserving current visual and startup-refresh work.
-See PROJECT.md and BOOT-KIOSK-UPDATE.md for current acceptance, source and limits.
+Current SDK release checkpoint: Meta17 is actually installed with exact signed
+package hash, Meta attribution and retained UID. Final18-r3 is independently
+qualified from native f5946e19 and published as Meta build1463187006880311 to the
+same Developer channel. Malware/security pass;13+ age group is retained. The
+headset was off before publication. Genuine boot10 launches17, reaches FOCUSED
+and calls GetVersion; the wearer confirms automatic stimulus. Actual SDK
+download/install/relaunch remains open. All79 audio/session assets and15 private
+input files match17. Latest main audio-review staging is preserved in source but
+not activated in this APK. Fresh integrated web checks pass253/253 with zero
+skips after merging concurrent operator compatibility/focus work. Native75,
+service12/binding3/admission5, Android lifecycle12/110 and scoped BLE budget
+checks pass; broad existing panel/standalone audio fixtures remain unqualified.
+PR29 source/publication is pending. See PROJECT.md and BOOT-KIOSK-UPDATE.md.
 Older checkpoint paragraphs below are dated evidence, not the current release.
 
 

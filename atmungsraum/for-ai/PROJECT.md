@@ -107,8 +107,11 @@ code17's original source remains in Git at `0fa9046`. Final18-r3 SHA256 is
 `1463fa802a5439548bfda055b662ca483c86bf4cd59e03e4f75cc224c8aacb14`,
 65,662,083bytes. Only the intended BLE class changes; all79 audio/session assets,
 private inputs and SDK transport match17. Full product qualification passes.
-Meta18 upload is in progress while the confirmed17 headset is off. Do not power
-it on until release availability is verified; no manual/host18 installation.
+Meta18 build1463187006880311 is available in Developer with retained13+ age
+group and malware/security passes. The headset was off before publication.
+Genuine boot10 launches17, reaches FOCUSED and calls Meta GetVersion; the wearer
+confirms automatic stimulus. Download/install acceptance remains pending.
+No manual/host18 installation.
 
 ### Autoboot, kiosk and explicit Meta startup updates — 2026-11-16
 
@@ -137,7 +140,7 @@ is not claimed.
   No SDK-enabled main APK is installed through USB.
 - [x] Publish17 only to the existing private Quest2 Developer channel; Meta
   malware passes and security details say all tests passed. Same13+ age group,
-  one-member channel and access policy retained.18 remains local/unpublished.
+  one-member channel and access policy retained.18 is now published separately.
 - [x] Actual Meta17 baseline installation confirmed by exact digest, Meta
   installer/initiator and retained UID10159. Explicit trusted cold launch reaches
   FOCUSED; SDK initialization and GetVersion request are observed in vendor logs.
@@ -148,12 +151,14 @@ is not claimed.
 - [x] Rebuild and independently qualify final18-r3 with the bounded BLE fix;
   all79 audio/guidance/session assets and private input files match17.
 - [x] User confirms17 headset completely off, USB connected, before18 upload.
-- [ ] Confirm Meta18 availability, then attended boot/update/relaunch test.
+- [x] Confirm Meta18 availability and malware/security passes before power-on.
+- [x] Genuine17 autoboot reaches FOCUSED and calls GetVersion; wearer sees stimulus.
+- [ ] Complete the attended download/install/relaunch test.
 - [ ] With17 installed and the Quest powered off, publish18, then prove the
   explicit in-app download/install/new-version/relaunch/focus/kiosk path.
 - [ ] Publish the final SDK source/package evidence and verify exact Pages/live URLs.
 
-Current native commit `b4a2d418abaccb3c317a820b88b2477bef798b93`, tree
+Code17 native commit `b4a2d418abaccb3c317a820b88b2477bef798b93`, tree
 `db0980b0cc6d6cbc399cde2102e9a77c110cb223`; cumulative patch SHA256
 `db00bc88563f62f88cfe582b16f50eba88108d9203ec30d89ed1cf27f9ab3a72`
 reconstructs that exact tree. SDK binaries, keys and private visual bodies remain

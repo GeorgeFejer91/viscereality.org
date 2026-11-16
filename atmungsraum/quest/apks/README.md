@@ -18,7 +18,10 @@ Only PolarStopBleCapability.class differs among756 JVM classes. Native .text
 and all22 allocated sections match after exact activation-binding normalization;
 DEX/source metadata differences are expected. Exact headset overflow payload was
 not captured, so the original on-device cause remains bounded inference.
-Meta18 upload is in progress with the user-confirmed17 headset powered off.
+Meta18 build1463187006880311 is available in Developer with malware/security
+passes and retained13+ age group. The17 headset was off before publication.
+Genuine autoboot17/GetVersion/focus and wearer stimulus are observed; actual
+SDK download/install/relaunch acceptance remains pending.
 
 
 ## 0.2.16-dev / 0.2.17-dev — SDK startup updater, 2026-11-16
@@ -53,9 +56,8 @@ requirement and detailed security tests pass, retaining the existing age group
 and access. Actual Meta17 installation is confirmed by exact digest, Meta attribution and
 retained UID. Trusted cold launch reaches FOCUSED; vendor logs show SDK
 initialization and GetVersion. No USB main-APK installation occurs. The wearer
-now confirms the17 headset is completely off, with USB connected. The local18
-package below is qualified but will be replaced before upload by a bounded BLE
-projection correction: optional Polar retry data can overflow the existing480
+now confirms the17 headset is completely off, with USB connected. The final18-r3
+package above includes the reviewed bounded BLE projection correction: optional Polar retry data can overflow the existing480
 byte channel when the strap is off. Exact installed payload is unobserved; an
 SDK-absent production-shaped overflow is reproduced. Private LAN status and
 native readiness authority remain unchanged. SDK-driven update/relaunch/focus/kiosk
