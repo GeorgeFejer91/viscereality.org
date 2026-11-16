@@ -29,6 +29,19 @@ calibration progress. They use existing ACC/clock/quality admission, confirmed
 breath-state integration and original command receipts. Healthy PCM continuity,
 Controller fallback, parked Automatic startup and the exact 900-second main
 remain. Recording provenance distinguishes presets from a participant fit.
+
+Verification: phone218/zero skips, native856 serial passes/five intentional
+ignores, isolated actual GPU1, fresh pairing369, actual HTTP/auth/Java/native45,
+six Java/native scenarios and API36 production compilation pass. Independent
+display, phone, native and final integration reviews pass; Pretext26/seven
+stability checks and25 circle geometry cases pass. Exact source reconstruction,
+selected Android compilation, signed APK closure/signer/assets/manifest/identity
+and16KiB alignment pass.
+
+The matching PWA is live through PR20/Pages43848286245 with27 live-file matches
+and public phone/desktop checks. Installation waits for user confirmation that
+no recording is running; current device version is still code10. Fresh wearer
+and installed-phone qualification remain open. No Meta upload.
 Classifier weights/adaptive math, private particle inputs and signer are unchanged.
 
 Verification: 218 phone tests pass, zero skips; fresh Java pairing/state checks

@@ -12,6 +12,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Display and mode follow-up (2026-11-16): actual gold radius/percentage share
+  observed-sample blending and preview-only200ms status; both endpoints keep
+  500ms expiry. Its inset stroke touches blue at equal progress. Personal Polar
+  calibration is retained alongside the shipped fixed/adaptive tilt-state
+  presets, with explicit capability, native confirmation and preset provenance.
+  Code11 is built/inspected; PR20/Pages43848286245 and27 live files/public renders
+  pass. Installation awaits idle confirmation; physical acceptance stays open.
+  No Meta upload.
+
 - Display/modes follow-up (2026-11-16): reviewed local code 11 adds explicit
   pretrained fixed/adaptive Polar tilt-state choices alongside participant fit
   and Controller fallback. Preview-only200ms observations and freshness-bounded
