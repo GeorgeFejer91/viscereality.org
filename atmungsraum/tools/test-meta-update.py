@@ -18,6 +18,8 @@ def run():
             page = review.page(initial(c), viewport={'width':width,'height':568 if width == 320 else 844})
             page.evaluate('size=>document.documentElement.style.fontSize=size', text_size)
             page.clock.run_for(1500)
+            page.locator('#operator-connect-next').click()
+            expect(page.locator('#patient-surname')).to_be_visible()
             page.locator('#patient-surname').fill('Tes')
             before = mutations(page)
             page.evaluate('window.reviewMetaUpdate='+json.dumps(update))
@@ -52,7 +54,10 @@ def run():
             scroll_before = page.evaluate('scrollY')
             page.evaluate("reviewMetaUpdate.state='current';reviewMetaUpdate.session_allowed=true;reviewMetaUpdate.reason=''")
             page.clock.run_for(1200)
-            assert abs(page.evaluate('scrollY') - scroll_before) < 2
+            scroll_after = page.evaluate('scrollY')
+            assert abs(scroll_after - scroll_before) < 2, {
+                'viewport': width, 'text': text_size, 'before': scroll_before,
+                'after': scroll_after, 'documentHeight': page.evaluate('document.documentElement.scrollHeight')}
             assert page.locator('#apk-identity summary').evaluate('n=>n===document.activeElement')
             expect(page.locator('#patient-next')).to_be_enabled()
             assert mutations(page) == before

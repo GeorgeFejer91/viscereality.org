@@ -97,6 +97,11 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 .meta-update-panel p { overflow-wrap: break-word; }
 .meta-update-panel[data-update-allowed="false"], .meta-update-panel[data-update-state="failed"] { border-left-color: var(--site-gold); }
 #meta-update-progress { width: 100%; min-width: 0; height: 12px; accent-color: var(--site-gold); }
+/* Their block sizes are retained during native progress updates. Grid tracks
+   can still redistribute that space; do not let the browser move scroll to
+   follow a disclosure or status line inside these read-only regions. */
+#operator-common:has(#operator-meta-update:not([hidden])),
+#quest-version:has(#meta-update[data-update-state]:not([data-update-state="legacy"])) { overflow-anchor: none; }
 #preview-progress-group { display: grid; justify-items: stretch; gap: 4px; width: min(100%, 320px); }
 #preview-progress { width: 100%; height: 12px; accent-color: var(--site-gold); }
 .preview-progress-track { position: relative; height: 12px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; background: var(--surface); }
