@@ -62,6 +62,8 @@ function snapshot() {
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
     controller_access: settings.access,
+    ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
+    ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],
     o: { v: 1, s: 'observed', e: owner.native_epoch, a: 5,
@@ -71,6 +73,7 @@ function snapshot() {
       c: connected, a: settings.acc ?? polar === 'ready', e: settings.ecg ?? polar === 'ready', sc: polar === 'scan',
       ...(settings.location === undefined ? {} : { l: settings.location }),
       ...(settings.autoRecovery === undefined ? {} : { ar: settings.autoRecovery }),
+      ...(settings.automation === undefined ? {} : { auto: settings.automation }),
       x: connected ? candidate : settings.selected,
       d: [candidate, 'c'.repeat(12)].slice(0, settings.strapCount)
     },
@@ -119,6 +122,20 @@ function command({ id, op, condition, d }) {
   }
   if (op === 'start') settings.clock = 37000;
   if (op === 'select') settings.selected = d;
+  if (op === 'connect' && settings.connectTimeoutOnce) {
+    settings.connectTimeoutOnce = false;
+    settings.automation = {v:1,state:'connecting',retry_ms:0,reason:''};
+    setTimeout(() => {
+      receipts[id] = {v:1,id,state:'rejected',reason:'connection-timeout'};
+      settings.automation = {v:1,state:'backoff',retry_ms:2000,reason:'connection-timeout'};
+      setTimeout(() => {
+        settings.polar='stream-wait';
+        settings.automation={v:1,state:'streams',retry_ms:0,reason:''};
+        setTimeout(() => {settings.polar='ready';settings.automation={v:1,state:'ready',retry_ms:0,reason:''};},1000);
+      },2000);
+    },15000);
+    return receipts[id] = {v:1,id,state:'pending'};
+  }
   if (op === 'connect') settings.polar = 'stream-wait';
   if (op === 'start-acc') { settings.acc = true; settings.polar = 'ready'; }
   if (op === 'save-next') {
@@ -142,6 +159,7 @@ function breathSetup(command) {
       recovery:{id,state:'pending',deadline_ns:2000000000,target_generation:null} });
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'audio-recovery-pending',recovery_generation:null};
   }
+  if (settings.deferSetup) return receipts[id] = {v:1,id,state:'pending'};
   setup.r++;
   const parked = setup.stage === 'idle' && !setup.playing;
   if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });
@@ -224,6 +242,11 @@ export async function joinQuest({ endpoint }) {
         : settings.receiptState ? {v:1,id,state:settings.receiptState}
           : receipts[id] ?? {v:1,id,state:'outcome_unknown'};
     }),
+    kiosk: settings.kiosk ? controlled(value => {
+      (window.reviewKioskCommands ??= []).push(structuredClone(value));
+      if(value.op === 'receipt') return settings.kioskReceipt ?? {id:value.id,state:'pending',detail:'Waiting'};
+      return {id:value.id,state:settings.kioskReply ?? 'pending',detail:'Service restart pending'};
+    }) : null,
     recenter: controlled(value => {
       window.reviewRecenterCommands.push(structuredClone(value));
       return receipts[value.id] = { v: 1, id: value.id, state: 'confirmed' };
@@ -297,6 +320,7 @@ class Review:
         self.checks = []
         self.regressions = []
         self.errors = []
+        self.release_policy_failure = False
 
     def page(self, init="", suffix="", viewport=None, reduced_motion="reduce"):
         context = self.browser.new_context(
@@ -314,6 +338,9 @@ class Review:
             path = url.path.removeprefix("/atmungsraum/")
             if url.netloc != "viscereality.org" or not url.path.startswith("/atmungsraum/"):
                 request_route.abort()
+                return
+            if path == 'quest-release.json' and self.release_policy_failure:
+                request_route.fulfill(status=503, content_type='application/json', body='{}')
                 return
             if path == "quest-gateway.js" and url.query != "review-contract=1":
                 request_route.fulfill(content_type="text/javascript", body=GATEWAY)
@@ -674,7 +701,7 @@ def capture(review):
                position_frames=2293200, input="polar-tilt", ready=True,
                input_phase="exhale", input_volume01=.23)
     expect(preview).to_have_text("Atemtakt: Atem halten")
-    expect(page.locator("#preview-input")).to_contain_text("Erkannt: Ausatmen · 23 %")
+    expect(page.locator("#preview-input")).to_contain_text("Erkannt: Ausatmen · Rohwert der Eingabe: 23 %")
     expect(proceed).to_be_enabled()
     shot(page, "native-ready", "Polar ready · measured input differs from intended hold", proceed, "Breathing setup")
     calibrate.focus()
@@ -815,12 +842,12 @@ def capture_setup_recovery(review, paired):
     }""" % json.dumps(journal)
 
     page = review.page(initial + saved)
-    detail = page.locator("#preview-detail")
-    expect(detail).to_contain_text("Ergebnis unklar")
+    detail = page.locator("#preview-recovery")
+    expect(detail).to_contain_text("Ergebnis der Anfrage unklar")
     expect(page.locator("#patient-surname")).to_have_value("")
     page.reload(wait_until="load")
     expect(detail).to_be_visible()
-    expect(detail).to_contain_text("Ergebnis unklar")
+    expect(detail).to_contain_text("Ergebnis der Anfrage unklar")
     expect(page.locator("#preview-continue")).to_be_disabled()
     expect(page.locator("#preview-acknowledge")).to_be_hidden()
     assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).command.id") == "f" * 16
@@ -1509,7 +1536,7 @@ def capture_audio_recovery(review):
         enter_participant(page)
         page.clock.run_for(1100)
         calibrate, fallback = page.locator("#preview-calibrate"), page.locator("#preview-controller")
-        detail, proceed = page.locator("#preview-detail"), page.locator("#preview-continue")
+        detail, proceed = page.locator("#preview-detail:visible, #preview-recovery:visible"), page.locator("#preview-continue")
         expect(page.locator("#preview-circle")).to_be_hidden()
         expect(page.locator("#preview-input-volume")).to_be_hidden()
         assert page.evaluate("window.reviewQuest.setup.playing") is True
@@ -1517,7 +1544,7 @@ def capture_audio_recovery(review):
         calibrate.click()
         page.clock.run_for(1100)
         expect(detail).to_contain_text("Atemschleife")
-        expect(detail).to_contain_text("Warte")
+        expect(detail).to_contain_text("Bitte warten")
         expect(calibrate).to_be_disabled()
         expect(fallback).to_be_disabled()
         expect(proceed).to_be_disabled()
@@ -1530,7 +1557,7 @@ def capture_audio_recovery(review):
         review.shot(page,f"audio-recovery-pending-{slug}",f"Audio recovery {slug} · admitted, no completed calibration",detail,"Audio recovery")
         page.clock.run_for(14000)
         recheck = page.locator("#preview-acknowledge")
-        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_have_text("Bestätigung erneut abfragen")
         expect(recheck).to_be_enabled()
         queries = page.evaluate("window.reviewSetupReceiptQueries")
         assert 1 <= len(queries) <= 12
@@ -1563,7 +1590,7 @@ def capture_audio_recovery(review):
         assert len(page.evaluate("window.reviewSetupCommands")) == 2
         review.shot(page,f"audio-recovery-rejected-{slug}",f"Audio recovery {slug} · terminal failure allows explicit retry",detail,"Audio recovery")
         wait_setup(page,audio_recovery_available=False,source_clock_ready=True)
-        expect(detail).to_contain_text("Quest-App erneut")
+        expect(detail).to_contain_text("Atmungsraum-App im Headset")
         expect(calibrate).to_be_disabled()
         expect(fallback).to_be_disabled()
         expect(proceed).to_be_disabled()
@@ -1588,7 +1615,7 @@ def capture_setup_receipt_fence(review):
         page = review.page(initial,viewport=viewport)
         page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
         recheck = page.locator("#preview-acknowledge")
-        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_have_text("Bestätigung erneut abfragen")
         expect(recheck).to_be_enabled()
         assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).recovery??null") is None
         before = page.evaluate("(window.reviewSetupReceiptQueries??[]).length")
@@ -1596,14 +1623,14 @@ def capture_setup_receipt_fence(review):
         page.clock.run_for(1100)
         assert page.evaluate("window.reviewSetupReceiptQueries.length") > before
         page.clock.run_for(14000)
-        expect(recheck).to_have_text("Status erneut prüfen")
+        expect(recheck).to_have_text("Bestätigung erneut abfragen")
         expect(recheck).to_be_enabled()
         for patch in ({"state":"confirmed"},
             {"state":"confirmed","accepted":True,"reason":"accepted","recovery_generation":3}):
             page.evaluate("patch=>window.reviewQuest.setupReceiptPatch=patch",patch)
             recheck.click()
             page.clock.run_for(1100)
-            expect(recheck).to_have_text("Status erneut prüfen")
+            expect(recheck).to_have_text("Bestätigung erneut abfragen")
             expect(page.locator("#preview-calibrate")).to_be_disabled()
             expect(page.locator("#preview-controller")).to_be_disabled()
             expect(page.locator("#preview-continue")).to_be_disabled()

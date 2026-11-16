@@ -66,13 +66,30 @@ html[data-mode="quest"] #corner-actions {
 #quest { width: min(100%, 640px); justify-self: center; }
 #quest-pairing-code { font-family: monospace; font-size: clamp(1.5rem, 8vw, 3rem); font-variant-numeric: tabular-nums; letter-spacing: .12em; }
 #breathing-preview { width: min(100%, 520px); justify-self: center; }
-.preview-body { justify-items: center; gap: clamp(6px, min(2vw, 2dvh), 14px); text-align: center; }
+.preview-body { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: clamp(6px, min(2vw, 2dvh), 14px); text-align: center; }
+.preview-body > [data-measure] { justify-self: stretch; overflow-wrap: anywhere; }
 .preview-figure { display: grid; justify-items: center; gap: inherit; width: 100%; }
 #preview-status, #preview-input, #preview-detail { justify-self: stretch; }
 #preview-input { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: .25em; }
 #preview-input-label { flex: 0 1 auto; }
 #preview-input-volume { flex: none; inline-size: 6ch; white-space: nowrap; font-variant-numeric: tabular-nums; }
 #preview-detail { overflow-wrap: anywhere; }
+.recovery-panel { display: grid; gap: 10px; width: 100%; padding: 14px; border: 2px solid #c9a25e; text-align: start; }
+.recovery-panel h2 { margin: 0; font-size: 1.125em; line-height: 1.3; }
+.recovery-panel button { width: 100%; border-color: #c9a25e; }
+#preview-switch { width: 100%; padding-inline-start: 12px; border-inline-start: 3px solid #c9a25e; text-align: start; }
+#quest-settings-host, #preview-settings-host { width: 100%; min-width: 0; }
+#quest-settings { text-align: start; min-width: 0; }
+#quest-settings[open] { display: grid; gap: 10px; }
+#kiosk-diagnostics[open] { display: grid; gap: 10px; }
+#quest-settings summary { cursor: pointer; min-height: 48px; align-content: center; }
+#kiosk-detail { overflow-wrap: anywhere; color: var(--muted); }
+#quest-version-host, #preview-version-host { width: 100%; min-width: 0; }
+.version-panel { display: grid; gap: 8px; min-width: 0; width: 100%; padding: 12px; border: 1px solid var(--border); text-align: start; }
+.version-panel[data-version-state="required"] { border: 2px solid #efc570; }
+.version-panel[data-version-state="compatible"] { border-color: #69b4e0; }
+.version-panel summary { min-height: 48px; cursor: pointer; align-content: center; }
+#apk-full-identity { white-space: pre-line; overflow-wrap: anywhere; }
 #preview-progress-group { display: grid; justify-items: stretch; gap: 4px; width: min(100%, 320px); }
 #preview-progress { width: 100%; height: 12px; accent-color: var(--site-gold); }
 .preview-progress-track { position: relative; height: 12px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; background: var(--surface); }
@@ -84,7 +101,8 @@ html[data-mode="quest"] #corner-actions {
   inline-size: min(100%, clamp(64px, min(40vw, 15dvh), 160px));
   aspect-ratio: 1;
 }
-#preview-circle {
+#preview-circle, #preview-actual-circle {
+  grid-area: 1 / 1;
   inline-size: 100%;
   aspect-ratio: 1;
   border: 2px solid #b9def4;
@@ -92,6 +110,18 @@ html[data-mode="quest"] #corner-actions {
   background: #061923;
   transform: scale(.46);
 }
+#preview-circle { border-color: #69b4e0; }
+#preview-actual-circle { border: 3px dashed #efc570; background: transparent; }
+#preview-actual-circle[data-stale] { opacity: .45; }
+.preview-legend { display: grid; gap: 4px; width: 100%; min-width: 0; text-align: start; }
+.preview-legend p { padding-inline-start: 12px; overflow-wrap: anywhere; }
+.desired-key { border-inline-start: 3px solid #69b4e0; }
+.actual-key { border-inline-start: 3px dashed #efc570; }
+#preview-actual { display: flex; width: 100%; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: .25em; }
+.actual-status-box { display: grid; flex: 1 1 100%; min-width: 0; }
+.actual-status-box > span { grid-area: 1 / 1; min-width: 0; overflow-wrap: anywhere; }
+.actual-status-reserve { visibility: hidden; }
+#preview-actual-volume { flex: none; inline-size: 6ch; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .preview-controls {
   display: grid;
   width: min(100%, 460px);
@@ -99,6 +129,7 @@ html[data-mode="quest"] #corner-actions {
   gap: var(--gap);
 }
 .preview-controls button:enabled { border-color: var(--border); background: var(--surface); }
+.preview-controls:has(#preview-controller[hidden]) #preview-calibrate { grid-column: 1 / -1; }
 #preview-controller:enabled { border-color: var(--site-gold); }
 :is(#preview-calibrate, #preview-continue, #quest-find, #quest-pairing-confirm, #quest-play, #patient-next):enabled:not([aria-disabled="true"]) { color: var(--text); border-color: #3487b7; background: var(--site-blue); }
 #preview-start { grid-column: 1 / -1; }

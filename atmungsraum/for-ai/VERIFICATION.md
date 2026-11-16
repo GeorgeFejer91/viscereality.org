@@ -1,5 +1,65 @@
 # Verification
 
+## Operator controls and APK identity / code 10 — 2026-11-16
+
+Native `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` and phone increments
+through `4a473c9d13a79bc54d8b606d60c3b72fd1cc3c50` pass independent task
+and final integration review. Final full phone gate passes 203 tests with zero
+skips, including native assembly and actual Java pairing interoperability;
+fresh JCE/state host checks pass 369. Native passes 846 library tests under its
+documented `--test-threads=1` runner, five intentionally ignored; the isolated
+actual renderer/global-producer case is separately run and passes. Earlier
+parallel diagnostic failures are retained, not counted as passes.
+
+Review corrections have real RED/GREEN proof: actual GPU preparation publication
+had wrongly depended on a recording-only clock, now uses an independent validated
+Android CLOCK_BOOTTIME observation; and a clean disconnect before connection now
+rejects the original attempt receipt before independent retry can succeed.
+Recording/PCM authority, learner and radius integration remain unchanged.
+Real producer/gateway/auth, explicit Connect, kiosk/epoch/CAS, cold-start and
+API36 production compilation gates pass. The new private APK-identity gate passes
+52 signed-status assertions, including caching, unknown metadata and guest/relay
+stripping. Rendered narrow/200% state, stale/fresh telemetry and targeted
+scroll/focus checks pass. Kiosk guidance follows actual foreground-service
+blockers; it does not generically require Accessibility.
+
+The public patch exactly reconstructs tree
+`ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856`. Fresh selected Android compilation
+and actual signed-APK session closure pass. Code 10 is 65,260,335 bytes with
+SHA-256 `5bde14b95ed0afed49932fda84bc0a53271f2d65d0e735747de85dfa41580d93`;
+its retained signer, manifest, 89 assets and alignment pass. The packaged build
+identifier `7dfad0b71d545bf126f027de2e977c9688e28c9a1e18b3f2ab940247b0ae0114`
+matches its source capsule. This is a packaging fingerprint, not the binary hash.
+Native Android ABI compilation is verified. Exact installed APK bytes match;
+UID 10159 is retained. Trusted MAIN/LAUNCHER startup is accepted, controller-only
+is true, live-hand and simultaneous tracking false, and driver input is zero.
+Without a phone Connect action the app discovers/connects H10 and receives both
+ACC and ECG stream-start acknowledgements. Continuous sample quality and absent-
+sensor retry are not yet physically qualified. A kiosk service record exists;
+effective protection remains unproven by authenticated observation. No boot
+receiver is registered. Location remains ON. The user ended testing and is
+shutting down the headset; the finite startup observer/owned child and exact
+Quest lease are released. Publication/live URLs, installed-phone refresh and
+remaining wearer checks are pending. No Meta upload.
+
+The full reviewed increment and handoff are pushed to PR 18. Current primary
+normal-merge attempt returns GitHub 403 `Resource not accessible by integration`;
+secondary connector attempts returned no merge result before cancellation. The
+follow-up documentation head retires their old expected SHA. No exact code-10
+Pages/live pass is claimed: the deployed release remains PR 17, Pages run
+43756359679. Owner merge, exact 27-file/public-render verification and tomorrow's
+installed-phone refresh remain the next publication actions.
+
+## Participant acceptance and follow-up scope — 2026-11-15
+
+After the post-reboot code-9 calibration and native calibrated-Polar readback,
+the participant reports that calibration works well enough. This closes that
+subjective fit assessment; it does not qualify repeated recovery, Controller
+fallback or a complete main recording. The next authorized increment repairs
+automatic discovery/recovery, clarifies input-mode and reset UI, adds an actual
+renderer-radius overlay and exposes effective kiosk status/settings. Source and
+render verification of that increment are pending in the active PROJECT checklist.
+
 ## Explicit audio retry recovery / code 9 — 2026-11-15
 
 Native `9afdcf0ef2cf05569e7ccc67c31f711f0e2fdd87` and PWA
@@ -31,9 +91,39 @@ alignment pass. Installed bytes match; UID, runtime grants and persistent identi
 are retained. Actual cold startup reports controller-only true, hand extension
 false, simultaneous false, panel closed, gateway ready and input zero. Phase rates
 remain 0.25 per second. Location stays ON; Wi-Fi ADB retained; startup observer and
-lease cleanup pass. Combined publication/phone refresh and fresh wearer testing
-remain pending. The initial physical stall trigger remains unproven; no code-9
-calibration or Meta upload has occurred.
+lease cleanup pass. The combined phone/source record merged in
+[PR 17](https://github.com/GeorgeFejer91/viscereality.org/pull/17) at
+`73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`; exact
+[Pages run 43756359679](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43756359679)
+succeeded. All 24 checked public files match Git, including versioned phone
+modules and the cumulative patch. Live 390px/1440px checks confirm ready Pretext,
+no horizontal overflow, script errors or failed app requests. The remote context
+gate passes. Installed-phone refresh and fresh wearer testing remain pending.
+The initial physical stall trigger remained unproven at that release checkpoint.
+
+Fresh code-9 wearer testing subsequently failed before either cycle at frame
+zero: raw AudioTrack head stayed zero while real polls/dispatch and PLAYING
+continued. Actual player replacement through generation 6 also made no progress;
+typed recovery receipts correctly ended `audio-recovery-timeout`. Controller
+selection with the observed menu closed also failed. The installed standalone
+phone's new versioned resources were verified; first H10 connect became uncertain,
+then a checked second request established both ECG and ACC. The user reported
+the cold-connect waiting/failure recovery interface was unclear.
+
+A private isolated silent static/primed-stream/focus comparison likewise failed;
+the unchanged Horizon output counter and zero consumed queued frames support a
+shared playback issue, without proving universal audio failure. User-reported
+working system sounds and silent-probe/foreground limitations remain explicit.
+Probe cleanup passed. After attended reboot, Wi-Fi ADB and Location ON were
+verified, and the output counter advances again. Post-boot Controller audio and
+fresh Polar calibration were pending at that restart checkpoint. The user then
+independently connected Polar and started calibration, reporting success.
+Native readback confirms ready calibrated Polar with detected inhale/exhale/hold;
+observed unavailable/unconfirmed hold intervals retain their radius value.
+Participant tracking satisfaction, repeated-fit/fallback and full-main acceptance
+remain open. No product source change, replacement APK, main run or Meta upload
+occurred during this diagnosis. Reboot recovery does not establish the original
+intermittent playback trigger.
 
 ## Retained calibrated Polar state — 2026-11-15
 

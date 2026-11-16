@@ -10,6 +10,11 @@ const operations = new Set(['start', 'calibrate', 'controller']);
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
 const journalKey = 'atmungsraum-breathing-setup-pending';
 const nonnegative = value => Number.isSafeInteger(value) && value >= 0;
+const validRenderer = value => value?.v === 1 && typeof value.progress01 === 'number' && Number.isFinite(value.progress01)
+  && value.progress01 >= 0 && value.progress01 <= 1 && typeof value.radius_m === 'number' && Number.isFinite(value.radius_m) && value.radius_m > 0
+  && nonnegative(value.frame) && nonnegative(value.render_generation) && value.render_generation > 0
+  && nonnegative(value.settings_revision) && typeof value.observed_ns === 'string' && /^(0|[1-9][0-9]{0,19})$/.test(value.observed_ns)
+  && nonnegative(value.age_ns) && value.age_ns <= 500000000;
 const receiptId = value => typeof value === 'string' && /^[a-f0-9]{16}$/.test(value);
 const recoveryFailures = new Set(['audio-recovery-failed', 'audio-recovery-timeout', 'audio-recovery-retired']);
 const validRecovery = value => value && !Array.isArray(value) && Object.keys(value).length === 4
@@ -82,6 +87,7 @@ export function breathingSetup(status, owner) {
     || Object.hasOwn(setup, 'recovery') && setup.recovery !== null && !validRecovery(setup.recovery)
     || Object.hasOwn(setup, 'parked') && typeof setup.parked !== 'boolean'
     || Object.hasOwn(setup, 'quality') && !validQuality(setup.quality)
+    || Object.hasOwn(setup, 'renderer') && setup.renderer !== null && !validRenderer(setup.renderer)
     || !nonnegative(setup.experiment_elapsed_ms) || setup.experiment_elapsed_ms > 900000
     || Object.hasOwn(setup, 'input_phase') && !Object.hasOwn(inputPhases, setup.input_phase)
     || Object.hasOwn(setup, 'input_volume01') && setup.input_volume01 !== null
@@ -186,16 +192,22 @@ export class BreathingSetup {
     const phaseIndex = setup ? phases.indexOf(setup.phase) : -1;
     const phaseFraction = setup ? (setup.position_frames % (setup.cycle_frames / 4)) / (setup.cycle_frames / 4) : 0;
     const radius = [.46 + .54 * phaseFraction, 1, 1 - .54 * phaseFraction, .46][phaseIndex] ?? .46;
+    const controller = setup?.input === 'controller-state';
+    const pendingInputLabel = this.pending ? { calibrate: 'Polar einrichten', controller: 'Controller auswählen', start: 'Atemschleife starten' }[this.pending.command.op] : '';
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
       pending: Boolean(this.pending || this.busy), unknown: this.unknown, recovering, recoveryUnavailable,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
+      title: controller ? 'Controller testen' : 'Atmung einrichten',
+      showPolarCalibration: !controller,
+      pendingInputLabel,
       inputPhaseLabel: setup && inputPhases[setup.input_phase] || '',
       inputVolume: typeof setup?.input_volume01 === 'number' ? setup.input_volume01 : null,
-      failure: setup?.calibration === 'failed' ? setup.failure : '',
-      failureLabel: setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
-      qualityWarning: setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
+      renderer: setup?.renderer ?? null,
+      failure: !controller && setup?.calibration === 'failed' ? setup.failure : '',
+      failureLabel: !controller && setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
+      qualityWarning: !controller && setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
       acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
       message: this.message,
@@ -222,6 +234,18 @@ export class BreathingSetup {
           && sameQuest(this.pending.owner, gateway?.owner)),
       },
     };
+    const { actions } = this.view;
+    this.view.recovery = actions.acknowledge ? {
+      title: 'Die Quest-App wurde erneuert', action: 'Aktuellen Quest-Zustand übernehmen',
+      detail: 'Die frühere Anfrage gehört zur beendeten Verbindung. Übernimm den aktuellen Zustand, um weiterzumachen. Das bestätigt nur lokal und setzt die Quest nicht zurück. Kein Befehl wird wiederholt.',
+    } : this.pending || recovering ? {
+      title: this.waitExpired ? 'Bestätigung noch offen' : this.unknown ? 'Ergebnis der Anfrage unklar' : recovering ? 'Atemschleife wird wiederhergestellt' : 'Quest bestätigt die Anfrage',
+      action: actions.checkReceipt ? 'Bestätigung erneut abfragen' : '',
+      detail: `${pendingInputLabel || 'Atemschleife wiederherstellen'}: ${recovering ? 'Die Quest startet den Audio-Takt neu. Danach kann die Einrichtung beginnen.' : 'Die Bestätigung der Quest steht noch aus.'} ${this.waitExpired ? 'Die Wartezeit am Smartphone ist abgelaufen. Frage die Bestätigung erneut ab. Bleibt das Ergebnis unklar, beende und öffne die Atmungsraum-App im Headset erneut und verbinde dieses Smartphone wieder. Erst eine bestätigte neue App-Verbindung kann die alte Anfrage ablösen.' : this.unknown ? 'Die Verbindung wird weiter geprüft; warte auf die Bestätigung.' : 'Bitte warten.'} Die Anfrage wird nicht erneut gesendet.`,
+    } : recoveryUnavailable ? {
+      title: 'Atemschleife benötigt einen App-Neustart', action: '',
+      detail: 'Die Quest meldet, dass eine automatische Audio-Wiederherstellung nicht verfügbar ist. Beende und öffne die Atmungsraum-App im Headset erneut; verbinde danach dieses Smartphone. Das startet die App tatsächlich neu. Eine lokale Bestätigung kann diesen Schritt nicht ersetzen.',
+    } : null;
     return this.view;
   }
 

@@ -8,6 +8,10 @@ const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
 const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
 const audioRecovering = status => status?.setup?.stage === 'recovering';
+const automationStates = new Set(['scanning', 'backoff', 'connecting', 'streams', 'ready', 'blocked', 'stopped', 'selection-required']);
+const validAutomation = value => value?.v === 1 && automationStates.has(value.state)
+  && Number.isSafeInteger(value.retry_ms) && value.retry_ms >= 0 && value.retry_ms <= 10000
+  && typeof value.reason === 'string' && value.reason.length <= 240 && !/[\x00-\x1f\x7f]/.test(value.reason);
 
 export function canRecenter(status) {
   return canControlQuest(status) && status?.recenter === 1 && !status.pending
@@ -28,12 +32,32 @@ export function polarSetup(status) {
     || !Number.isSafeInteger(setup.r) || setup.r < 0
     || !['p', 'b', 'c', 'a', 'e', 'sc'].every(flag => typeof setup[flag] === 'boolean')
     || Object.hasOwn(setup, 'ar') && typeof setup.ar !== 'boolean'
+    || Object.hasOwn(setup, 'auto') && !validAutomation(setup.auto)
     || setup.l !== undefined && !['enabled', 'disabled', 'unavailable', 'legacy-unobserved', 'permission-blocked', 'unknown'].includes(setup.l)
     || typeof setup.x !== 'string' || setup.x !== '' && !candidateId.test(setup.x)
     || setup.c && !setup.x || (setup.a || setup.e) && !setup.c
     || !Array.isArray(setup.d) || setup.d.length > 4 || new Set(setup.d).size !== setup.d.length
     || !setup.d.every(id => typeof id === 'string' && candidateId.test(id))) return null;
   return setup;
+}
+
+export function polarReadiness(setup) {
+  if (!setup) return 'Polar-Einrichtung ist auf der Quest gerade nicht verfügbar.';
+  if (!setup.p) return 'Erlaube „Geräte in der Nähe“ für Viscereality auf der Quest.';
+  if (!setup.b) return 'Schalte Bluetooth auf der Quest ein.';
+  if (!setup.c && setup.l === 'disabled') return 'Aktiviere die Standortdienste in den Quest-Einstellungen, damit die Quest den H10 finden kann.';
+  if (setup.c && setup.e && setup.a) return 'Polar H10 verbunden. Quest empfängt EKG und Beschleunigungsdaten.';
+  const automation = setup.auto?.state;
+  if (setup.c) return `Polar H10 per Bluetooth verbunden. ${setup.e ? 'EKG bereit; Bewegungsdaten fehlen.'
+    : setup.a ? 'Bewegungsdaten bereit; EKG fehlt.' : 'EKG und Bewegungsdaten fehlen.'}${automation === 'streams' || setup.ar === true
+      ? ' Die Quest startet fehlende Messsignale automatisch erneut.' : automation === 'stopped' ? ' Automatische Verbindung ist gestoppt.' : ''}`;
+  if (setup.sc || automation === 'scanning') return 'Quest sucht automatisch nach dem Polar H10 … Lege den Gurt an.';
+  if (automation === 'backoff') return `Kein H10 verbunden. Quest sucht automatisch in ${Math.ceil(setup.auto.retry_ms / 1000)} s erneut. Lege den Gurt an.`;
+  if (automation === 'connecting') return 'Quest verbindet sich automatisch mit dem Polar H10 …';
+  if (automation === 'selection-required') return 'Mehrere H10 gefunden. Wähle den richtigen Gurt im Bedienfeld der Quest aus.';
+  if (automation === 'stopped') return 'Automatische Verbindung ist gestoppt. Verbinde den Polar H10 ausdrücklich erneut.';
+  if (automation === 'blocked') return 'Automatische H10-Verbindung blockiert. Prüfe Bluetooth und die Berechtigungen auf der Quest.';
+  return 'Lege den Gurt an. Automatische Verbindung nicht gemeldet; du kannst den Polar H10 verbinden.';
 }
 
 function setupConfirmed(status, { op, setupRef, candidate }) {
@@ -108,9 +132,29 @@ export class QuestRehearsal {
 
   canAcknowledgeIdle() {
     const { busy, unknown, status } = this.state;
-    return !busy && unknown && status?.p === 'IDLE' && !status.pending && !status.rec && !polarSetup(status)?.sc
+    return !busy && unknown && canControlQuest(status) && status?.p === 'IDLE' && !status.pending && !status.rec && !polarSetup(status)?.sc
+      && status.o?.v === 1 && status.o.s === 'observed' && status.o.e === this.gateway?.owner.native_epoch
+      && Number.isSafeInteger(status.o.a) && status.o.a >= 0 && status.o.a <= 1500
       && this.pending?.owner.device === this.gateway?.owner.device
-      && this.pending?.owner.serial === this.gateway?.owner.serial;
+      && this.pending?.owner.serial === this.gateway?.owner.serial
+      && !sameQuest(this.pending.owner, this.gateway.owner);
+  }
+
+  recovery() {
+    if (!this.pending) return null;
+    const operation = { arm: 'Vorbereiten', start: 'Starten', pause: 'Pause', resume: 'Fortsetzen',
+      'save-next': 'Beenden und Speichern', recenter: 'VR zentrieren', scan: 'Polar suchen',
+      select: 'Polar auswählen', connect: 'Polar verbinden', 'start-ecg': 'EKG starten', 'start-acc': 'Bewegungsdaten starten' }[this.pending.op];
+    if (this.canAcknowledgeIdle()) return {
+      title: 'Die Quest-Verbindung wurde erneuert', action: 'Aktuellen Quest-Zustand übernehmen',
+      detail: `${operation}: Die frühere Anfrage gehört zur beendeten Verbindung. Übernimm den jetzt angezeigten Zustand. Das bestätigt nur lokal und setzt die Quest nicht zurück. Kein Befehl wird wiederholt.`,
+    };
+    const canRead = !this.state.busy && canControlQuest(this.state.status) && sameQuest(this.pending.owner, this.gateway?.owner);
+    return {
+      title: this.state.unknown ? 'Ergebnis der Anfrage unklar' : 'Bestätigung noch offen',
+      action: canRead ? 'Bestätigung erneut abfragen' : '',
+      detail: `${operation}: Die Bestätigung der Quest steht noch aus. ${canRead ? 'Frage den Status erneut ab; dabei wird die Anfrage nur gelesen.' : 'Verbinde die ursprüngliche Quest und übernimm bei Bedarf die Steuerung, um die Bestätigung abzufragen.'} ${this.state.unknown ? 'Bleibt das Ergebnis unklar, beende und öffne die Atmungsraum-App im Headset erneut und verbinde dieses Smartphone wieder. Übernimm erst den bestätigten neuen App-Zustand.' : ''} Die Aktion wird nicht erneut gesendet.`,
+    };
   }
 
   acknowledgeIdle() {

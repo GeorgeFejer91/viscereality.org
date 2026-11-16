@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261115-viscereality-brand">
+  <link rel="stylesheet" href="./style.css?v=20261115-operator-controls-r2">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261115-audio-recovery-r1"></script>
+  <script type="module" src="./app.js?v=20261115-operator-controls-r2"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -47,6 +47,17 @@
       </header>
       <div class="screen-body quest-body">
         <p id="quest-status" role="status" tabindex="-1" data-measure>Quest-Steuerung wird geladen …</p>
+        <div id="quest-version-host">
+          <aside id="quest-version" class="version-panel" aria-labelledby="apk-update-status" hidden>
+            <p id="apk-update-status" role="status" data-measure>APK-Versionsprüfung läuft …</p>
+            <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
+            <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+            <details id="apk-identity">
+              <summary><span data-measure>Vollständige APK-Kennung</span></summary>
+              <p id="apk-full-identity" data-measure></p>
+            </details>
+          </aside>
+        </div>
         <div id="quest-pairing" class="screen-body" hidden>
           <p data-measure>Vergleiche diesen Code mit dem Code im Headset.</p>
           <p id="quest-pairing-code" aria-label="Verbindungscode" data-measure></p>
@@ -138,8 +149,27 @@
           </details>
           <p id="quest-drive-status" role="status" data-measure hidden></p>
         </div>
-        <button id="quest-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
+        <aside id="quest-recovery" class="recovery-panel" aria-labelledby="quest-recovery-title" hidden>
+          <h2 id="quest-recovery-title" data-measure></h2>
+          <p id="quest-recovery-detail" role="status" data-measure></p>
+          <button id="quest-acknowledge" type="button" hidden><span data-measure>Bestätigung erneut abfragen</span></button>
+        </aside>
         <button id="quest-disconnect" type="button" hidden><span data-measure>Verbindung trennen</span></button>
+        <div id="quest-settings-host">
+          <details id="quest-settings">
+            <summary><span data-measure>Quest-Einstellungen · Kiosk</span></summary>
+            <p id="kiosk-summary" role="status" data-measure></p>
+            <p id="kiosk-prerequisites" data-measure></p>
+            <details id="kiosk-diagnostics">
+              <summary><span data-measure>Technische Diagnose</span></summary>
+              <p id="kiosk-detail" data-measure></p>
+            </details>
+            <p id="kiosk-message" role="status" data-measure hidden></p>
+            <button id="kiosk-retry" type="button" hidden><span data-measure>Kiosk-Dienst erneut verbinden</span></button>
+            <button id="kiosk-check" type="button" hidden><span data-measure>Bestätigung erneut abfragen</span></button>
+            <button id="kiosk-acknowledge" type="button" hidden><span data-measure>Aktuellen Quest-Zustand übernehmen</span></button>
+          </details>
+        </div>
       </div>
       <footer class="actions">
         <button id="quest-play" type="button" hidden><span data-measure>Starten</span></button>
@@ -153,10 +183,17 @@
       </header>
       <div class="screen-body preview-body">
         <figure class="preview-figure">
-          <div class="preview-radius" aria-hidden="true"><div id="preview-circle"></div></div>
+          <div class="preview-radius" aria-hidden="true"><div id="preview-circle"></div><div id="preview-actual-circle" hidden></div></div>
+          <div class="preview-legend">
+            <p class="desired-key" data-measure>SOLL · blauer, durchgezogener Atemtakt</p>
+            <p class="actual-key" data-measure>IST · goldener, gestrichelter VR-Radius</p>
+          </div>
           <figcaption id="preview-status" role="status" data-measure>Warte auf den Atemtakt der Quest.</figcaption>
         </figure>
+        <p id="preview-actual"><span class="actual-status-box"><span class="actual-status-reserve" aria-hidden="true">IST-Radius · eingefroren, warte auf Renderer:</span><span class="actual-status-reserve" aria-hidden="true">IST-Radius nicht verfügbar · warte auf aktuellen Renderer.</span><span class="actual-status-reserve" aria-hidden="true">IST-Radius nicht verfügbar · Quest-App aktualisieren.</span><span id="preview-actual-status" data-measure>IST-Radius nicht verfügbar.</span></span><span id="preview-actual-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span></p>
         <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Eingabe auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span></p>
+        <p id="preview-switch" role="status" data-measure hidden></p>
+        <p id="preview-polar-status" data-measure></p>
         <div id="preview-progress-group" hidden>
           <label for="preview-progress" data-measure>Einrichtung auf der Quest</label>
           <div class="preview-progress-track">
@@ -166,14 +203,20 @@
           <p id="preview-progress-text" aria-live="off" data-measure>0 von 2 Atemzyklen</p>
         </div>
         <p id="preview-detail" role="status" data-measure>Warte auf den aktuellen Atemstatus der Quest.</p>
+        <aside id="preview-recovery" class="recovery-panel" aria-labelledby="preview-recovery-title" hidden>
+          <h2 id="preview-recovery-title" data-measure></h2>
+          <p id="preview-recovery-detail" role="status" data-measure></p>
+          <button id="preview-acknowledge" type="button" hidden><span data-measure>Bestätigung erneut abfragen</span></button>
+        </aside>
         <div class="preview-controls">
           <button id="preview-start" type="button" hidden disabled><span data-measure>Atemschleife starten</span></button>
           <button id="preview-calibrate" type="button" disabled><span data-measure>Atmung einrichten</span></button>
           <button id="preview-controller" type="button" disabled><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button>
         </div>
+        <div id="preview-settings-host"></div>
+        <div id="preview-version-host"></div>
       </div>
       <footer class="actions">
-        <button id="preview-acknowledge" type="button" hidden><span data-measure>Quest geprüft</span></button>
         <button id="preview-continue" type="button" disabled><span data-measure>Weiter zur Auswahl</span></button>
         <div id="preview-control-host" hidden></div>
       </footer>

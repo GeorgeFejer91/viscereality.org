@@ -2,6 +2,102 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Automatic connection and clear operator controls — 2026-11-15
+
+The participant accepts the current calibration as good enough. Preserve its
+learner, retained breath-state integration and single PCM clock. The next user
+request covers five existing flows; continue under the standing implementation
+and publication authorization without an additional approval loop.
+
+- [x] Trace/repair cold-start H10 discovery and sustained bounded scan/connect
+  retries in the native owner; retain explicit Stop, permission and multi-sensor
+  selection barriers. Establish/retry both required streams after connection.
+- [x] Replace the obscure idle acknowledgement with visible, state-specific
+  failure/recovery guidance. Distinguish local uncertainty reconciliation from
+  an actual headset/app reset; never replay unknown mutations automatically.
+- [x] Display the confirmed active input and pending switch explicitly. In
+  Controller mode hide Polar calibration progress/failure controls; provide an
+  explicit route back to Polar setup/calibration while the shared loop continues.
+- [x] Overlay labelled, differently styled blue desired/gold actual radius
+  indicators using fresh Quest-applied renderer progress. Trace existing fields
+  before choosing the narrow additive telemetry contract; never substitute the
+  learned sensor coordinate or desired phase for actual renderer output.
+- [x] Trace effective soft-kiosk activation and expose truthful status, missing
+  prerequisites and supported controls in PWA settings. Preserve platform prompt
+  and permission boundaries; do not claim a requested guard is effective.
+- [x] Add authenticated installed APK package/version/build identity, a public
+  per-package required-version policy and honest unknown/update indicators.
+- [x] Run RED/GREEN regression, independent spec/quality review, narrow/200%
+  Pretext and stable-scroll checks, source reconstruction, signed local APK
+  build and inspection. No Meta upload.
+- [x] Install/read back code 10 while idle and verify trusted cold launch,
+  controller-only input and automatic H10 connection/ACC+ECG stream starts.
+- [ ] Publish through exact Pages/live checks and verify installed-phone
+  resources. Qualify remaining hardware flows after fresh wearer Ready;
+  full-main acceptance remains separately open.
+
+Implementation order: native bootstrap/retry/kiosk and actual-radius contract;
+phone receipt/mode/dual-display/settings; integration/review; package/publication
+and attended acceptance. Native and phone changes have separate file ownership,
+with this project state as the single plan/evidence owner. The current live runtime remains PR 17. The operator/source release is
+being prepared on PR 18 under the existing publication/access constraints.
+
+Software checkpoint, 2026-11-16: all requested source changes pass independent
+task and final cross-boundary review. Final phone gate is 203/203, zero skips;
+native 846 passes with the existing serial-runner requirement and five intentional
+ignores, plus the isolated real renderer/global-producer case passing separately.
+Actual source callback/receipt and non-recording GPU-publication RED/GREEN, API36
+and gateway/auth/identity gates pass. The local same-key code-10 APK is built and
+inspected; see the [code-10 record](../quest/apks/README.md#029-dev--operator-controls-and-installed-build-identity-2026-11-16).
+Native `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` reconstructs tree
+`ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856`; selected Android compilation and
+packaged build identity match it. The prior cold-start failure is traced to the
+root's malformed bare-component test launch; guarded startup remains unchanged.
+Current code 9 and new code 10 do not register the optional boot receiver, so
+true power-on autostart is not enabled or qualified. Controller-only tracking
+remains selected. APK update policy reports compatibility; it does not install
+updates or guarantee Meta update timing before launch.
+
+Installed checkpoint, 2026-11-16: the user confirmed no recording and authorized
+installation/launch. Exact installed bytes match the code-10 hash, UID 10159 is
+retained and trusted MAIN/LAUNCHER admission succeeds. Runtime reports controller
+only, no live hand extension, no simultaneous tracking and driver value zero.
+Without a phone Connect action, the app finds the H10, connects and receives ACC
+and ECG stream-start acknowledgements. This establishes automatic startup, not
+signal quality or sustained absent-sensor retry acceptance. The kiosk service
+record exists; effective protection still requires authenticated observation.
+Location remains ON. The optional boot receiver remains absent.
+
+The user ended today's testing and is shutting down the Quest. No new calibration
+or recording was started on code 10. The finite startup observer has stopped its
+owned ADB child and the exact Quest lease is released. The user continues to own
+phone operation. Resume with fresh wearer Ready; check APK identity/current
+policy, actual-radius display, confirmed Controller UI and effective kiosk, then
+remaining retry/fallback/full-main acceptance. No Meta upload.
+
+Publication handoff, 2026-11-16: all implementation, cache revisions, cumulative
+native source and installation evidence are committed and pushed to
+[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), titled
+“restore automatic H10 recovery and clarify Quest controls”. The reviewed runtime
+release commit is `85d85e5ecbe6a91dd7871fa1e6f4bb8e1b8082b4`; the following
+handoff-only commit advances the PR head without changing runtime bytes.
+The current primary merge request returns exact GitHub 403
+`Resource not accessible by integration`. The secondary account was verified
+ADMIN earlier, but a command-policy read was rejected before execution with only
+`rejected: blocked by policy`; subsequent purpose-built connector sessions did
+not return a merge result. Obsolete expected-head requests were cancelled;
+advancing the documentation head also retires their old CAS target. No permission
+widening, protection bypass, model change or Meta upload was attempted.
+
+The live site remains PR 17 at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`
+with successful Pages run `43756359679`; it is NOT the code-10 PWA yet. Next
+publication action is an owner-authorized ordinary two-parent merge of PR 18 at
+its current head, then verify the exact Pages SHA and all 27 versioned live files,
+public phone/desktop render and remote context gate. The prepared ignored live
+verifier and private code-10 smoke script have current resource versions.
+Refresh/read back the installed phone release tomorrow with the user operating
+it. Keep the overall milestone open through publication and physical checks.
+
 ### Explicit audio retry recovery — 2026-11-15
 
 - [x] Capture the code-8 failed attempt and distinguish the proven retry dead
@@ -13,8 +109,10 @@
 - [x] Verify native842/four ignored, real Java/native and HTTP/auth integration,
   phone182/zero skips, rendering/scroll, exact source tree and API36 compilation.
 - [x] Build, inspect and install same-key local Developer 0.2.8-dev/code 9.
-- [ ] Publish the combined phone/source/record increment; verify exact Pages,
-  live URLs and refreshed installed-phone resources.
+- [x] Publish the combined phone/source/record increment; verify exact Pages
+  and live URLs.
+- [x] Refresh the installed phone app and verify the new resources while the
+  user retains control of that device.
 - [ ] Obtain fresh wearer Ready; test audible/advancing loop across holds and
   wraps, calibration/tracking/retry/Controller fallback and the full main run.
 
@@ -34,6 +132,77 @@ simultaneous mode, panel closed, input zero and a ready gateway. Location is ON;
 Wi-Fi ADB is retained. Startup observers and owned leases are released. The user
 controls the phone and removed the Polar after code 8; no new calibration is
 authorized until fresh Ready. No Meta upload. Overall acceptance remains open.
+
+The combined release merged in [PR 17](https://github.com/GeorgeFejer91/viscereality.org/pull/17)
+at `73d9d896ecb3d44da304b4c9b52009ebc1dc7a8b`; exact
+[Pages run 43756359679](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43756359679)
+succeeded. All 24 checked live files match that Git revision, including the
+versioned phone modules and cumulative native patch. Public phone/desktop checks
+at 390/1440px report ready Pretext, no horizontal overflow, script errors or
+failed app requests. The remote context gate passes. That runtime release is
+synchronized to GitHub and live; the APK stays local. Installed-phone refresh and
+fresh wearer testing are the next actions, with original stall causation open.
+
+The documentation-only evidence follow-up is pushed in
+[PR 18](https://github.com/GeorgeFejer91/viscereality.org/pull/18), still open at
+handoff. The authorized secondary-account merge is blocked by repeated selected
+model capacity errors; the primary GitHub integration returns 403 for merge.
+No permission or model change was requested. Resume its normal two-parent merge,
+then exact Pages/live checks when that account is available. This blocks only
+publication of these follow-up notes; PR 17's runtime is already deployed and
+verified. Owned resources were released at that earlier handoff.
+
+The user subsequently supplied fresh code-9 wearer Ready and retained phone
+control. Read-only inspection confirms the installed standalone PWA loaded
+the new app, UI39, gateway11, rehearsal25 and setup6; a separate Chrome tab
+still has the older release. The first scan/select completed, but its connect
+request ended `outcome_unknown` with H10 disconnected. The user reported that
+the grey controls and missing timely failure explanation made progress unclear.
+After checked idle acknowledgement, a second scan/select/connect succeeded;
+ECG and ACC became ready, with native automatic acquisition enabled. No
+calibration had started at that checkpoint; audio was parked at frame zero.
+Resolve the cold first-connect failure and its unclear recovery UI as an open
+issue.
+
+The subsequent code-9 calibration failed `clock_stalled` at frame zero. Real
+polling/dispatch continued, but Android reported PLAYING with raw head zero,
+no timestamp and no consumed frames. Explicit retries replaced actual players
+through generation 6 and returned typed `audio-recovery-timeout`; Controller
+selection also failed after the user closed an observed menu. No full window
+or calibrated tracking was reached. This is physical recovery failure, not an
+accepted code-9 calibration. The user was told the Polar could be removed.
+
+A separate local diagnostic APK compared identical silent PCM in primed STREAM
+and STATIC modes, with audio focus granted before/after creation; neither
+advanced. Horizon service counters stayed fixed across captures despite queued
+active sources and full, unmuted media volume. This supports a shared playback
+problem, with silent-probe/foreground limitations; the user reports system
+sounds work, so a universal audio failure is not established. The probe was
+removed, its private evidence retained, and its build lease released. Product
+source and installed code-9 bytes were unchanged.
+
+An attended Quest-2 reboot completed. Wi-Fi ADB was restored and verified against
+the same serial and new boot identity without restarting the shared host ADB
+daemon; Location remains ON. Pixel observation ended when its USB was removed,
+and its port/device leases were released. Fresh post-boot wearer Ready was
+received for audio only, with Polar off. Atmungsraum reopened parked/silent and
+the headset output counter now advances. User-operated Controller audio check
+was pending at that checkpoint; fresh Polar Ready was required before another
+calibration. No Meta upload or main experiment occurred.
+
+The user then connected Polar and started calibration themselves, reporting
+that it worked well after reboot. Actual native readback now selects a ready
+calibrated Polar lineage and measured inhale/exhale/hold states. Hold values
+remain unchanged through observed unavailable/unconfirmed samples, consistent
+with the retained-state repair. Tracking satisfaction is being requested;
+this is not yet qualification of repeated fits, Controller fallback or a full
+900-second main run. No replacement APK or speculative audio-adapter change
+was needed for that successful post-boot calibration. The intermittent playback
+trigger and cold-connect UI issue remain open. The finite observer ended with
+its ADB child stopped; all owned device, port and build leases are released,
+with no remaining forwards. The app remains running for user-operated tracking
+assessment; Location is ON and Wi-Fi ADB is verified. PR 18's documentation merge
+remains blocked by the secondary account's selected-model capacity error.
 
 ### Retained Polar breath state — 2026-11-15
 

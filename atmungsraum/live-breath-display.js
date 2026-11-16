@@ -2,7 +2,7 @@
 const labels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
 
 export class LiveBreathDisplay {
-  reset() { this.anchor = null; }
+  reset() { this.anchor = null; this.actual = null; }
 
   update(view, observation, now) {
     const setup = view?.setup;
@@ -20,11 +20,39 @@ export class LiveBreathDisplay {
     const continuing = this.anchor?.key === key;
     this.anchor = {
       key, observation: observation.i, setup: { ...setup }, received: now,
+      desiredAvailable: !view.recovering && setup.clock_valid !== false,
       age: Math.max(0, observation.a), progress,
       inputVolume: typeof view.inputVolume === 'number' ? view.inputVolume : null,
       volumeFrom: continuing && typeof prior?.inputVolume === 'number' ? prior.inputVolume : view.inputVolume,
       from: continuing ? Math.min(prior.progress, progress) : progress,
       duration: continuing ? Math.max(1, Math.min(1000, now - this.anchor.received)) : 1,
+    };
+    const renderer = view.renderer;
+    if (!renderer) { this.actual = null; return; }
+    const previous = this.rendererCursor;
+    const same = previous?.key === key;
+    if (same && (renderer.render_generation < previous.generation
+      || renderer.render_generation === previous.generation && (renderer.settings_revision < previous.settings
+        || renderer.settings_revision === previous.settings && renderer.frame < previous.frame))) {
+      this.actual = null;
+      return;
+    }
+    // A new status witness cannot make an old renderer frame fresh again.
+    if (same && renderer.render_generation === previous.generation && renderer.settings_revision === previous.settings
+      && renderer.frame === previous.frame) return;
+    this.rendererCursor = { key, generation: renderer.render_generation, settings: renderer.settings_revision, frame: renderer.frame };
+    const age = Math.max(0, observation.a) + renderer.age_ns / 1000000;
+    if (age > 500) {
+      if (!same || this.actual?.generation !== renderer.render_generation || this.actual?.settings !== renderer.settings_revision) this.actual = null;
+      return;
+    }
+    const rendererContinuing = same && this.actual?.generation === renderer.render_generation && this.actual.settings === renderer.settings_revision;
+    this.actual = {
+      progress: renderer.progress01, meters: renderer.radius_m, received: now, age,
+      generation: renderer.render_generation, settings: renderer.settings_revision,
+      from: rendererContinuing ? prior.actualProgress : renderer.progress01,
+      metersFrom: rendererContinuing ? prior.actualMeters : renderer.radius_m,
+      duration: Math.max(1, Math.min(250, 500 - age)),
     };
   }
 
@@ -33,7 +61,7 @@ export class LiveBreathDisplay {
     if (!anchor) return null;
     const { setup } = anchor;
     const elapsed = Math.max(0, now - anchor.received);
-    const followsAudio = setup.playing && setup.audio_state === 'playing'
+    const followsAudio = anchor.desiredAvailable && setup.playing && setup.audio_state === 'playing'
       && Number.isSafeInteger(setup.audio_generation) && setup.audio_generation > 0;
     // The accepted native schedule is four phases of four seconds. This clock
     // only paints that observed loop; it cannot train, finish or switch inputs.
@@ -50,12 +78,20 @@ export class LiveBreathDisplay {
       : anchor.inputVolume === null ? null
         : typeof anchor.volumeFrom !== 'number' ? anchor.inputVolume
           : anchor.volumeFrom + (anchor.inputVolume - anchor.volumeFrom) * volumeBlend;
+    const actual = this.actual;
+    const actualElapsed = actual ? Math.max(0, now - actual.received) : 0;
+    const actualBlend = !actual || reducedMotion ? 1 : Math.min(1, Math.min(actualElapsed, Math.max(0, 500 - actual.age)) / actual.duration);
+    const actualProgress = actual ? actual.from + (actual.progress - actual.from) * actualBlend : null;
+    const actualLive = Boolean(actual && actualElapsed + actual.age <= 500);
     return {
-      radius, phaseLabel: labels[phase], live: Boolean(followsAudio && elapsed + anchor.age <= 1500),
+      radius, desiredAvailable: anchor.desiredAvailable, phaseLabel: labels[phase], live: Boolean(followsAudio && elapsed + anchor.age <= 1500),
       ttl: Math.max(0, 1500 - anchor.age - elapsed),
-      animating: Boolean(followsAudio && elapsed + anchor.age <= 1500 || blend < 1
+      animating: Boolean(actualLive && actualBlend < 1 || followsAudio && elapsed + anchor.age <= 1500 || blend < 1
         || elapsed + anchor.age <= 1500 && volumeBlend < 1 && anchor.volumeFrom !== anchor.inputVolume),
       inputVolume,
+      actualProgress, actualRadius: actualProgress === null ? null : .46 + .54 * actualProgress,
+      actualMeters: actual ? actual.metersFrom + (actual.meters - actual.metersFrom) * actualBlend : null,
+      actualLive, actualTTL: actual ? Math.max(0, 500 - actual.age - actualElapsed) : 0,
       // Never paint progress beyond a frame count actually reported by Quest.
       progress: anchor.from + (anchor.progress - anchor.from) * blend,
     };

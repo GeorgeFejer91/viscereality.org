@@ -2,6 +2,57 @@
 
 Approved user design, 2026-11-14. PROJECT.md remains the lifecycle owner.
 
+## Operator controls and continuous connection — 2026-11-15
+
+The participant accepts the current tilt calibration as good enough. Keep its
+learner, frame-clock authority and retained breath-state integration unchanged.
+
+Quest owns H10 discovery, connection and both required streams. On normal app
+load it must begin discovery and keep making bounded, delayed attempts if the
+strap is absent or a connection fails. Reuse the native retry owner; phone
+polling must not create connection effects. A manual connection must not silently
+disable that recovery path after failure. Preserve explicit Stop and ambiguous
+multi-strap selection barriers.
+
+The phone names the confirmed active breath input and any pending switch.
+Controller State has no calibration: hide Polar progress, quality and failure
+controls after confirmed Controller selection, with an explicit route back to
+Polar setup. The same box loop continues throughout. Successful clicks alone
+cannot assert a confirmed input change.
+
+Overlay desired expansion in blue with fresh headset-applied radius progress in
+gold, with text labels and distinct stroke styles. Sensor/model coordinates are
+not applied radius. Use the actual renderer hook and its live generation/settings
+and age fences; unavailable/stale data must not become an invented actual trace.
+Smooth animation remains presentation only and preserves raw observations.
+
+Connection uncertainty needs a prominent explanation and a clearly named next
+action. Read-only reconciliation, local acknowledgement and an actual headset
+or app reset must be distinguished. Never silently replay an uncertain mutation.
+If a reset is genuinely required, state what is being reset and why.
+
+Expose effective soft-kiosk state and prerequisites in PWA headset settings.
+Distinguish requested, armed, running, blocked and unknown observations. Offer
+only supported authenticated recovery actions under the existing native owner;
+request admission does not prove foreground protection. Preserve platform prompts,
+pairing approval and permission boundaries. No silent system-shell suppression.
+
+### Installed build and update indication
+
+Authenticated private status exposes optional `apk`: null or
+`{v:1,package_name,version_code,version_name,build_id}`. Values come from the
+installed own package and its generated build-identity asset, cached once.
+`build_id` must match authenticated `build.packaging_fingerprint`; it is not the
+APK-byte hash or certificate fingerprint. Missing, malformed, cross-build or
+retired-actor metadata is unknown.
+
+The same-origin public `quest-release.json` declares minimum/latest integer
+version codes per package. The phone shows installed and required versions,
+with required/recommended/compatible/unknown/unavailable states. Policy fetches
+are read-only and uncached; failed checks must not retain a false up-to-date
+claim. No install, Meta API access or experiment admission effect is introduced.
+Update the policy with release evidence, and verify it at the deployed URL.
+
 ## Smooth phone presentation — 2026-11-15
 
 Live telemetry remeasures text without briefly returning the current page to

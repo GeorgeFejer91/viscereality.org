@@ -36,6 +36,53 @@ const storage = () => {
   return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 };
 
+test('confirmed Controller mode hides Polar progress and reports a requested switch without claiming it happened', async () => {
+  const model = new BreathingSetup(); const peer = fixture(); peer.reply('pending');
+  const controller = state(snapshot(native({ input: 'controller-state', ready: true, attempt: 2,
+    calibration: 'failed', failure: 'clock_stalled', completed_frames: 100 })));
+  let view = model.update(peer.gateway, controller, true);
+  assert.equal(view.title, 'Controller testen');
+  assert.equal(view.showPolarCalibration, false);
+  assert.equal(view.failureLabel, '');
+  assert.equal(view.qualityWarning, '');
+  assert.equal(view.actions.calibrate, true, 'explicit Polar setup remains available');
+  await model.run('calibrate');
+  view = model.update(peer.gateway, controller, true);
+  assert.equal(view.inputLabel, 'Controller State · feste Ausrichtung');
+  assert.equal(view.pendingInputLabel, 'Polar einrichten');
+  assert.match(view.recovery.detail, /Bestätigung/);
+  assert.equal(peer.calls.length, 1);
+});
+
+test('ACTUAL radius is an optional bounded renderer projection and never an input-volume fallback', () => {
+  const model = new BreathingSetup(); const peer = fixture();
+  assert.equal(model.update(peer.gateway, state(snapshot(native({ input_volume01: .9 }))), true).renderer, null);
+  const renderer = { v: 1, progress01: .2, radius_m: 1.4, frame: 7, render_generation: 2,
+    settings_revision: 0, observed_ns: '1200000000', age_ns: 10000000 };
+  assert.deepEqual(model.update(peer.gateway, state(snapshot(native({ renderer }))), true).renderer, renderer);
+  for (const patch of [{ v: 2 }, { progress01: 1.01 }, { radius_m: 0 }, { frame: -1 },
+    { render_generation: 0 }, { settings_revision: -1 }, { observed_ns: '1e9' }, { age_ns: 500000001 }]) {
+    assert.equal(breathingSetup(snapshot(native({ renderer: { ...renderer, ...patch } })), owner), null);
+  }
+  assert.ok(breathingSetup(snapshot(native({ renderer: null })), owner));
+});
+
+test('an expired unknown setup exposes read-only checking and explains a local acknowledgement separately', async () => {
+  let now = 0;
+  const model = new BreathingSetup({ now: () => now }); const peer = fixture(); peer.reply('outcome_unknown');
+  model.update(peer.gateway, state(), true); await model.run('controller');
+  await model.refresh(); now = 13000; await model.refresh();
+  let view = model.update(peer.gateway, state(), true);
+  assert.equal(view.recovery.action, 'Bestätigung erneut abfragen');
+  assert.match(view.recovery.detail, /Controller/);
+  assert.match(view.recovery.detail, /nicht erneut gesendet/);
+  assert.equal(view.actions.acknowledge, false);
+  const next = { ...peer.gateway, owner: { ...owner, native_epoch: '9' } };
+  view = model.update(next, state(snapshot(native(), { o: { ...snapshot().o, e: '9' } })), true);
+  assert.equal(view.recovery.action, 'Aktuellen Quest-Zustand übernehmen');
+  assert.match(view.recovery.detail, /setzt die Quest nicht zurück/);
+});
+
 test('accepts only bounded native setup observations from the current native epoch', () => {
   assert.deepEqual(breathingSetup(snapshot(), owner), native());
   for (const patch of [

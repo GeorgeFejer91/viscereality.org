@@ -1,5 +1,66 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.9-dev — operator controls and installed-build identity, 2026-11-16
+
+| Build property | Verified value |
+| --- | --- |
+| Package / ABI | `org.viscereality.atmungsraum.developer`, `arm64-v8a` |
+| Release | 0.2.9-dev, version code 10; local test build, no Meta upload |
+| APK size / SHA-256 | 65,260,335 bytes; `5bde14b95ed0afed49932fda84bc0a53271f2d65d0e735747de85dfa41580d93` |
+| Certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `695ef0d4a8c2a482b6ab3a6d37b21dee64f94770` / `ec3ad8be7eabe2b8878f58ce7cfc50e41ff78856` |
+| Upstream | `99352620fd79ec5cdcee71b47c2ba4056241af16`, unchanged sibling pins |
+| Source patch SHA-256 | `2699ef1f7b9e908e774099dfcabed58543b118bcec41b563d1bae8e2b8a004cb` |
+| Readable build identifier | `7dfad0b71d545bf126f027de2e977c9688e28c9a1e18b3f2ab940247b0ae0114` |
+| Packaging | Non-debuggable; min 29, target 34, compile 36; v2/v3 and 16KiB ZIP alignment pass; 89 assets |
+
+Explicit H10 Connect now enters the existing bounded automatic retry owner,
+including the native timeout. Known first-attempt failure rejects that original
+receipt while recovery continues, including clean disconnect before connection.
+Stop and ambiguous-sensor selection barriers remain. Private status exposes
+automatic connection/backoff/stream readiness. Trusted cold startup already
+requested automatic connection and kiosk activation: the prior bare-component
+test command skipped its guarded admission. Use explicit MAIN/LAUNCHER as in
+[the launch workflow](../../for-ai/WORKFLOW.md#launch-through-the-trusted-launcher-path).
+
+The phone distinguishes confirmed input and pending changes, hides Polar-only
+calibration in Controller mode, names recovery/reset actions, and overlays blue
+desired expansion with gold renderer-applied progress. The latter is published
+outside recording, using an independent real Android elapsed-time observation
+for freshness; it does not advance the audio scheduler. Source/configuration/
+generation and 500ms freshness fences remain. Kiosk settings distinguish actual
+service connection from effective foreground protection and expose a narrow
+original-ID watchdog retry. Guidance follows the real blocker; raw diagnostics
+are collapsed.
+
+Private authenticated APK identity reports the real installed package/version
+and the generated packaging fingerprint shown above. It is a build identifier,
+not the APK-byte or certificate hash. The PWA compares integer versions with
+`quest-release.json`; unknown, mismatched or unavailable evidence cannot report
+up to date. The check does not install updates or gate experiments.
+
+Verification: 846 serial Rust tests pass, five intentional ignores, with the
+isolated actual renderer/global-producer test separately passing. Real callback/
+receipt and GPU-caller regressions were RED/GREEN. Fresh API36 production Java,
+gateway/authentication and 52 signed APK-identity assertions pass. All 203 final
+phone tests pass with zero skips. Targeted Pretext/320px/200% renders and
+scroll/focus checks pass. Independent native, phone and cross-boundary reviews
+are clear. Exact source reconstruction, selected Android native compilation,
+fresh signed-APK session closure, signer, manifest and asset inspection pass.
+
+The learner, retained breath-state integration, controller-only tracking,
+Automatic parked/silent startup and exact 900-second main remain unchanged.
+This APK does not register the optional system-boot receiver. Installation is
+verified by exact device hash with the same UID. Trusted cold launch is accepted;
+controller-only is true, hand/simultaneous tracking false, Automatic input zero.
+Without phone Connect, H10 discovery/connection and both ACC/ECG stream-start
+acknowledgements succeed. Kiosk service presence is observed; effective guard,
+signal quality, sustained retry, renderer/phone and remaining wearer checks are
+pending. The user ended today's testing and is shutting down the Quest. Matching
+live-site publication is blocked at PR 18 merge (primary GitHub 403, secondary
+sessions without a merge result); installed-phone refresh follows publication.
+No Meta upload.
+
 ## 0.2.8-dev — explicit audio-clock recovery and diagnostics, 2026-11-15
 
 | Build property | Verified value |

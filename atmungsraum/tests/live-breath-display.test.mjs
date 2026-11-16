@@ -25,6 +25,66 @@ test('Automatic percent follows the circle from the same fresh native phase cloc
   assert.equal(display.frame(51500).inputVolume, .875);
 });
 
+const applied = (progress01, frame = 1, patch = {}) => ({ v: 1, progress01, radius_m: 1 + progress01,
+  frame, render_generation: 2, settings_revision: 0, observed_ns: String(frame * 1000000000), age_ns: 0, ...patch });
+const rendered = (renderer, overrides = {}) => ({ ...view(overrides, 0, .9), renderer });
+
+test('ACTUAL blends only renderer-applied progress, with independent age and replay fences', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.2)), observation(1), 0);
+  assert.equal(display.frame(0).actualProgress, .2);
+  assert.equal(display.frame(0).actualRadius, .46 + .54 * .2);
+  assert.equal(display.frame(0).actualLive, true);
+  display.update(rendered(applied(.8, 2)), observation(2), 1000);
+  assert.equal(display.frame(1000).actualProgress, .2);
+  assert.ok(Math.abs(display.frame(1125).actualProgress - .5) < 1e-12);
+  assert.equal(display.frame(1250).actualProgress, .8);
+  assert.equal(display.frame(1501).actualLive, false);
+  assert.equal(display.frame(50000).actualProgress, .8, 'stale ACTUAL freezes without waveform extrapolation');
+  display.update(rendered(applied(.1, 2)), observation(3), 51000);
+  assert.equal(display.frame(51000).actualLive, false, 'new status cannot renew a replayed renderer frame');
+  display.update(rendered(applied(.4, 3, { age_ns: 400000000 })), observation(4, 90), 52000);
+  assert.equal(display.frame(52010).actualLive, true);
+  assert.equal(display.frame(52011).actualLive, false, 'renderer age plus outer age share the 500ms budget');
+});
+
+test('ACTUAL is unavailable on older APK, null renderer, hidden reset or regressing renderer lineage', () => {
+  const display = new LiveBreathDisplay();
+  display.update(view({}, 0, .99), observation(1), 0);
+  assert.equal(display.frame(0).actualRadius, null, 'desired waveform and learned input cannot manufacture ACTUAL');
+  display.update(rendered(applied(.3)), observation(2), 100);
+  display.update(rendered(applied(.8, 2, { render_generation: 1 })), observation(3), 200);
+  assert.equal(display.frame(200).actualRadius, null);
+  display.update(rendered(applied(.4, 2)), observation(4), 300);
+  assert.equal(display.frame(300).actualProgress, .4);
+  display.update(rendered(null), observation(5), 400);
+  assert.equal(display.frame(400).actualRadius, null);
+  display.update(rendered(applied(.5, 3)), observation(6), 500);
+  display.reset();
+  display.update(rendered(applied(.5, 3)), observation(6), 51000);
+  assert.equal(display.frame(51000), null, 'visibility reset cannot revive the old native observation');
+});
+
+test('fresh applied renderer remains independent when the desired audio clock is invalid', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.6), { clock_valid: false }), observation(1), 0);
+  assert.equal(display.frame(0).desiredAvailable, false);
+  assert.equal(display.frame(0).actualLive, true);
+  assert.equal(display.frame(500).radius, .46, 'invalid desired clock cannot advance locally');
+  assert.equal(display.frame(0).actualProgress, .6);
+});
+
+test('transport-expired renderer packets cannot introduce or change an ACTUAL value', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.9)), observation(1, 600), 0);
+  assert.equal(display.frame(0).actualRadius, null);
+  display.update(rendered(applied(.2, 2)), observation(2), 1000);
+  assert.equal(display.frame(1000).actualProgress, .2);
+  display.update(rendered(applied(.8, 3)), observation(3, 600), 2000);
+  assert.equal(display.frame(2000).actualProgress, .2);
+  assert.equal(display.frame(2000).actualLive, false);
+});
+
 test('parked Automatic stays at minimum with no local clock advance', () => {
   const display = new LiveBreathDisplay();
   display.update(view({ stage: 'idle', playing: false, audio_state: 'paused' }), observation(1), 0);
