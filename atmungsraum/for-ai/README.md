@@ -12,6 +12,12 @@ action and observed Git/publication state in that same owner.
 
 The primary delivery goal is a progressive web app (PWA) for smartphones.
 
+The operator layout follows the [sequential-page contract](UI-LAYOUT.md):
+focused preparation, tracking, session, recordings and settings views reuse
+actual root-site code primitives. Page navigation is local presentation only;
+existing native authority, recovery, readiness and recording guards remain
+authoritative. PROJECT.md records implementation and qualification status.
+
 Live updates must preserve scroll, focused controls and unfinished form edits.
 Use the Showcase PWA's stable-DOM behavior and the website's restrained black
 presentation as references. Bluetooth connection and ready ECG/motion streams

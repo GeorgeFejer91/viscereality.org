@@ -37,7 +37,7 @@ main {
 #install-dialog::backdrop { background: #000b; }
 .files-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 body:has(#install-dialog[open]) { overflow: hidden; }
-.screen { --edge-size: 48px; display: grid; grid-template-rows: var(--edge-size) minmax(0, 1fr) var(--edge-size); gap: var(--gap); min-width: 0; min-height: 0; }
+.screen { --edge-size: 48px; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--gap); min-width: 0; min-height: 0; }
 .screen > :first-child { align-self: start; }
 h1 { margin: 0; font-size: clamp(1.375rem, min(4vw, 4.5svh), 1.75rem); line-height: 1.3; font-weight: 700; text-align: center; text-shadow: 0 0 12px #00639c40; }
 h1:focus { outline: none; }
@@ -63,6 +63,9 @@ html[data-mode="quest"] #corner-actions {
   bottom: auto;
   max-width: calc(100% - var(--top-corner-size) - max(12px, env(safe-area-inset-left)) - max(12px, env(safe-area-inset-right)) - 8px);
 }
+/* Keep both header tools in document space so scrolling forms cannot pass
+   underneath a floating recenter target. */
+html[data-mode="quest"] #recenter-vr { position: absolute; }
 #quest { width: min(100%, 640px); justify-self: center; }
 #quest-pairing-code { font-family: monospace; font-size: clamp(1.5rem, 8vw, 3rem); font-variant-numeric: tabular-nums; letter-spacing: .12em; }
 #breathing-preview { width: min(100%, 520px); justify-self: center; }
@@ -220,3 +223,82 @@ html[data-layout="reflow"] #data-files { align-content: start; }
 html[data-layout="reflow"] .patient-fields, html[data-layout="reflow"] .gender-options { grid-template-columns: minmax(0, 1fr); }
 html[data-layout="reflow"] .actions { grid-template-columns: minmax(0, 1fr); }
 html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 1fr); }
+
+/* Sequential operator pages, derived from the root site's framed text groups. */
+.operator-screen { width: min(100%, 720px); justify-self: center; }
+.screen-header { gap: 8px; padding-bottom: 16px; }
+.screen-header h1 { text-shadow: none; }
+.product-brand img { width: 40px; height: 40px; }
+.preparation-step { color: var(--muted); text-align: center; font-size: .875rem; }
+.operator-body { align-content: start; justify-items: stretch; gap: 20px; }
+.operator-common, .task-group, #operator-input-status, #recording-files {
+  display: grid; min-width: 0; gap: 12px; padding: 16px;
+  border: 1px solid #ffffff26; border-left: 2px solid #ffffff80;
+  border-radius: 5px; background: #000b;
+}
+#operator-common:has(> :not([hidden])) { width: 100%; }
+#quest-status, #quest-polar-status, #quest-data p, #recording-files p { text-align: start; }
+#quest-control-host, #quest-control-access { min-width: 0; }
+#quest-control-access { gap: 12px; }
+.compatibility-note { color: #efc570; border-left: 2px solid var(--site-gold); padding-left: 12px; }
+#quest-participant { width: 100%; }
+#quest-participant > summary { min-height: 48px; align-content: center; cursor: pointer; }
+#quest-participant .patient-body { justify-items: stretch; margin-top: 16px; }
+.patient-fields { width: 100%; --patient-gap: 16px; gap: 20px 16px; }
+#quest-participant .patient-fields { align-content: start; }
+#patient-next { margin-top: 8px; width: 100%; }
+#quest-polar, #quest-data { width: 100%; gap: 12px; }
+#quest-condition-label, #quest-scenario-label, #quest-archives-label { width: 100%; justify-self: stretch; text-align: start; }
+#quest-condition, #quest-scenario, #quest-archives { width: 100%; }
+#quest-clock { font-size: 2rem; font-variant-numeric: tabular-nums; text-align: center; }
+#operator-live { width: 100%; gap: 16px; }
+#operator-input-status { width: 100%; text-align: start; }
+#operator-input-status #preview-input { justify-content: start; }
+#operator-live #preview-actual { text-align: start; }
+.preview-controls { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.preview-controls small { color: var(--muted); font-size: .875em; margin-top: 4px; line-height: 1.5; }
+.preview-controls [aria-pressed="true"] { border-color: #69b4e0; border-left-width: 3px; }
+.operator-actions { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.operator-actions > :only-child, .operator-actions:has(> [hidden]) > :not([hidden]) { width: 100%; }
+#breathing-preview .actions > button { width: 100%; }
+.session-actions { display: grid; gap: 12px; grid-column: 1 / -1; }
+.primary-navigation:enabled { border-color: #3487b7; background: var(--site-blue); }
+.utility-navigation { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 8px; border-top: 1px solid #ffffff26; }
+.utility-navigation button { background: transparent; border-color: transparent; padding-inline: 0; justify-items: start; text-align: start; color: #b9def4; }
+/* Intrinsic labels need the same measured end space as the brand label. */
+.utility-navigation button > [data-measure]::after, #quest-disconnect > [data-measure]::after { content: ""; display: inline-block; width: 4px; }
+.text-link { display: grid; align-items: center; min-height: 48px; color: #b9def4; }
+#settings-screen #quest-settings { width: 100%; }
+#settings-screen .version-panel { border-radius: 5px; }
+#recording-files > a { width: 100%; justify-self: stretch; }
+@media (max-width: 480px) {
+  .operator-actions { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Routine connection information stays compact; exceptions remain fully visible. */
+.operator-common { padding: 10px 12px; gap: 8px; border: 0; border-left: 2px solid #00639c; background: transparent; }
+#operator-input-status { display: grid; gap: 12px; padding: 0; border: 0; background: transparent; }
+#operator-confirmed-input { color: #b9def4; }
+#operator-input-diagnostics { min-width: 0; color: var(--muted); }
+#operator-input-diagnostics > summary { min-height: 48px; align-content: center; cursor: pointer; }
+#operator-input-diagnostics[open] { display: grid; gap: 12px; padding: 12px; border-left: 2px solid #ffffff80; }
+#operator-input-diagnostics [data-measure] { overflow-wrap: anywhere; }
+.actual-status-box { display: block; }
+#operator-live .preview-figure { gap: 12px; }
+#operator-live #preview-actual { justify-content: start; gap: .25em; }
+#operator-live #preview-progress-group { justify-self: center; }
+#calibration-screen #preview-progress-group { order: -1; }
+#operator-live .actual-status-box { flex-basis: auto; }
+
+summary > [data-measure] { display: inline-block; width: calc(100% - 1.5em); vertical-align: middle; }
+html[data-layout="reflow"] .operator-screen .patient-fields,
+html[data-layout="reflow"] .operator-screen .gender-options { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr)); }
+
+/* Keep disclosure markers and measured labels on the same line. */
+summary > [data-measure] { display: inline-block; width: calc(100% - 1.5em); vertical-align: middle; }
+/* Reflow is content driven: ordinary phone text can retain two useful columns. */
+.operator-screen .patient-fields, .operator-screen .gender-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr));
+}
+#quest-participant > summary { display: none; }
+#quest-participant .patient-body { margin-top: 0; }

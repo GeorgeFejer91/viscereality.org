@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 test('Quest setup uses Bluetooth discovery and button-only pairing without manual connection fields', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const setup = html.slice(html.indexOf('<div id="quest-pairing"'), html.indexOf('id="quest-clock"'));
+  const setup = html.match(/<section\b[^>]*id="quest"[^>]*>[\s\S]*?<\/section>/)?.[0] ?? '';
   assert.equal((setup.match(/id="quest-find"/g) ?? []).length, 1);
   assert.match(setup, /id="quest-pairing"[^>]*hidden/);
   assert.match(setup, /id="quest-pairing-confirm"/);

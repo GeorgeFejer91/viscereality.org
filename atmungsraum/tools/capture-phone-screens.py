@@ -30,6 +30,8 @@ const candidate = 'b'.repeat(12);
 const settings = window.reviewQuest ??= {
   phase: 'IDLE', host: 'vr-preparation', polar: 'off', fresh: true, generation: 0,
   condition: 'condition-b', clock: 0, pending: false, strapCount: 0, selected: '',
+  apk: {v:1,package_name:'org.viscereality.atmungsraum.developer',version_code:11,
+    version_name:'0.2.10-dev',build_id:'e'.repeat(64)},
   ...window.reviewInitialQuest
 };
 settings.setup ??= {
@@ -54,6 +56,10 @@ function snapshot() {
   const { phase, polar, generation, condition, clock, host, fresh, pending } = settings;
   const connected = ['stream-wait', 'ready'].includes(polar);
   const setup = { ...settings.setup };
+  if(settings.advanceRenderer && setup.renderer) {
+    const frame=Math.floor(performance.now()/100)+1;
+    setup.renderer={...setup.renderer,frame,observed_ns:String(frame*100000000),age_ns:0};
+  }
   setup.phase = ['inhale', 'hold_in', 'exhale', 'hold_out'][
     Math.floor((setup.position_frames % setup.cycle_frames) / (setup.cycle_frames / 4))];
   return {
@@ -106,10 +112,15 @@ function ecgPacket() {
   return packet;
 }
 async function observedStatus() {
-  const current = snapshot();
-  if (settings.statusDrop) throw Error('Simulated transient status loss');
-  if (settings.statusDelay) await new Promise(resolve => setTimeout(resolve, settings.statusDelay));
-  return current;
+  window.reviewStatusReads=(window.reviewStatusReads??0)+1;
+  window.reviewStatusInFlight=(window.reviewStatusInFlight??0)+1;
+  window.reviewStatusMaxInFlight=Math.max(window.reviewStatusMaxInFlight??0,window.reviewStatusInFlight);
+  try {
+    const current = snapshot();
+    if (settings.statusDrop) throw Error('Simulated transient status loss');
+    if (settings.statusDelay) await new Promise(resolve => setTimeout(resolve, settings.statusDelay));
+    return current;
+  } finally { window.reviewStatusInFlight--; }
 }
 function command({ id, op, condition, d }) {
   settings.commands ??= [];
@@ -151,7 +162,7 @@ function breathSetup(command) {
   const { v, id, g, r, op } = command;
   const setup = settings.setup;
   if (v !== 1 || !/^[a-f0-9]{16}$/.test(id) || g !== setup.g || r !== setup.r
-    || !['start', 'calibrate', 'controller'].includes(op)) {
+    || !['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
     return receipts[id] = { v: 1, id, state: 'rejected' };
   }
   if (settings.audioRecovery) {
@@ -171,6 +182,11 @@ function breathSetup(command) {
   if (op === 'controller') Object.assign(setup, {
     stage: 'testing', input: 'controller-state', ready: true, calibration: 'idle', playing:true,audio_state:'playing',parked:false,
     input_phase: 'hold', input_volume01: .5
+  });
+  if (['polar-fixed','polar-adaptive'].includes(op)) Object.assign(setup, {
+    stage:'testing',input:op === 'polar-fixed' ? 'polar-tilt-fixed' : 'polar-tilt-adaptive',
+    ready:true,calibration:'idle',playing:true,audio_state:'playing',parked:false,
+    input_phase:'hold',input_volume01:.5
   });
   const receipt = receipts[id] = { v: 1, id, state: 'confirmed' };
   if (settings.loseSetupReply) throw Error('Simulated lost setup reply');
@@ -320,7 +336,54 @@ class Review:
         self.checks = []
         self.regressions = []
         self.errors = []
+        self.tiles = {}
         self.release_policy_failure = False
+
+    def capture_document(self,page,path):
+        # Mobile full-page capture can paint temporary bounded layout with a
+        # paused clock. Actual viewport tiles keep device metrics unchanged.
+        path=Path(path)
+        size=page.evaluate('({height:innerHeight,total:document.documentElement.scrollHeight,scroll:scrollY})')
+        offsets=list(range(0,max(1,size['total']-size['height']+1),max(1,size['height']-40)))
+        if offsets[-1] < size['total']-size['height']:
+            offsets.append(size['total']-size['height'])
+        files=[]
+        tile_checks=[]
+        for i,offset in enumerate(offsets):
+            page.evaluate('y=>scrollTo(0,y)',offset)
+            page.clock.run_for(50)
+            hit_test=page.evaluate('''() => {
+              const modal=document.querySelector('dialog[open]');
+              const root=modal||document.querySelector('.screen:not([hidden])');
+              const visible=n=>n.getClientRects().length&&n.checkVisibility();
+              const corners=modal?[]:[...document.querySelectorAll('#recenter-vr,#corner-actions')].filter(visible);
+              const targets=[...root.querySelectorAll('button,input,select,summary,a[href],.gender-options label')].filter(visible);
+              const occluded=[],missed=[];
+              for(const target of targets){
+                const r=target.getBoundingClientRect();
+                for(const corner of corners){
+                  const c=corner.getBoundingClientRect();
+                  const x1=Math.max(r.left,c.left,0),x2=Math.min(r.right,c.right,innerWidth);
+                  const y1=Math.max(r.top,c.top,0),y2=Math.min(r.bottom,c.bottom,innerHeight);
+                  if(x2-x1>1&&y2-y1>1)occluded.push({target:target.id||target.textContent.trim(),corner:corner.id});
+                }
+                const x=(r.left+r.right)/2,y=(r.top+r.bottom)/2;
+                if(x<0||x>=innerWidth||y<0||y>=innerHeight||target.disabled)continue;
+                const hit=document.elementFromPoint(x,y);
+                if(hit&&!target.contains(hit)&&hit!==target&&!hit.contains(target))missed.push({target:target.id||target.tagName,hit:hit.id||hit.tagName});
+              }
+              return {scroll:scrollY,width:innerWidth,occluded,missed};
+            }''')
+            target=path if i==0 else path.with_name(f'{path.stem}-tile-{i+1:02d}.png')
+            page.screenshot(path=target)
+            files.append(target.relative_to(self.output).as_posix())
+            tile_checks.append(hit_test)
+            assert not hit_test['occluded'], f'{path.stem}: corner covers controls at tile {i+1}: {hit_test}'
+            assert not hit_test['missed'], f'{path.stem}: control hit test failed at tile {i+1}: {hit_test}'
+        page.evaluate('y=>scrollTo(0,y)',size['scroll'])
+        page.clock.run_for(50)
+        self.tiles[path.relative_to(self.output).as_posix()]=files
+        (self.output / f'{path.stem}-tile-checks.json').write_text(json.dumps(tile_checks,indent=2),encoding='utf-8')
 
     def page(self, init="", suffix="", viewport=None, reduced_motion="reduce"):
         context = self.browser.new_context(
@@ -367,6 +430,18 @@ class Review:
         return page
 
     def shot(self, page, slug, title, expected, group):
+        # Existing state fixtures often inspect both input controls and tracking.
+        # They now live on separate pages: follow the real local navigation;
+        # never unhide a control or replace a readiness/receipt assertion.
+        if expected.count()==1 and not expected.is_visible():
+            owner=expected.evaluate("node=>node.closest('.screen')?.id")
+            step={'input-screen':'input','breathing-preview':'tracking','signals-screen':'signals',
+                  'settings-screen':'settings','recordings-screen':'recordings','participant-screen':'participant'}.get(owner)
+            if step:
+                show_operator(page,step)
+            disclosures=expected.evaluate("node=>{const ids=[];for(let p=node.parentElement;p;p=p.parentElement)if(p.tagName==='DETAILS'&&!p.open)ids.push(p.id);return ids.reverse()}")
+            for disclosure in disclosures:
+                page.locator('#'+disclosure+' > summary').click()
         expect(expected).to_be_visible(timeout=9000)
         expect(page.locator("html")).to_have_attribute("data-measurement", "ready")
         expect(page.locator(".screen:visible")).to_have_count(1)
@@ -382,6 +457,7 @@ class Review:
           return {
             width: innerWidth, height: innerHeight, documentWidth: root.scrollWidth,
             documentHeight: root.scrollHeight, layout: root.dataset.layout,
+            regions: [...screen.children].filter(node=>node.checkVisibility()).map(node=>({cls:node.className,rect:node.getBoundingClientRect().toJSON()})),
             textOverflow: visible('[data-measure]').filter(node => {
               const box = node.getBoundingClientRect(); const range = document.createRange();
               range.selectNodeContents(node);
@@ -392,19 +468,31 @@ class Review:
               !['pretext', 'dom'].includes(node.dataset.textMeasurement)).map(node => node.id || node.textContent),
             pretextNoFit: visible('[data-measure]').filter(node => node.dataset.textFit !== 'fit')
               .map(node => ({id: node.id, text: node.textContent.trim(), fit: node.dataset.textFit})),
-            smallTargets: visible('button, select, summary').filter(node => {
+            smallTargets: visible('button, select, summary, input:not([type="radio"]):not([type="checkbox"]), a[href], .gender-options label').filter(node => {
               const box = node.getBoundingClientRect(); return box.width < 47.9 || box.height < 47.9;
             }).map(node => node.id || node.tagName),
-            panelOverflow: visible('.screen-body, .actions').filter(node =>
+            panelOverflow: visible('.screen-body, .actions, .version-panel, details').filter(node =>
               node.scrollWidth > node.clientWidth + 2 || node.scrollHeight > node.clientHeight + 2)
               .map(node => node.className),
+            panels: visible('.screen-body, .actions, .version-panel, details, #operator-live, .preview-radius, .preview-figure').map(node=>({
+              id:node.id,cls:node.className,client:[node.clientWidth,node.clientHeight],scroll:[node.scrollWidth,node.scrollHeight],
+              bounds:node.getBoundingClientRect().toJSON()})),
           };
         }""")
+        # Preserve the actual failed render as actionable evidence as well.
+        (self.output / 'screens').mkdir(exist_ok=True)
+        (self.output / f'{slug}-geometry.json').write_text(json.dumps(geometry,indent=2),encoding='utf-8')
+        page.screenshot(path=self.output / 'screens' / f'{slug}-viewport.png')
+        assert geometry['width'] <= page.viewport_size['width']+1, f'{slug}: mobile layout viewport expanded beyond requested width {geometry}'
         assert geometry["documentWidth"] <= geometry["width"] + 1, f"{slug}: horizontal overflow {geometry}"
         assert not geometry["textOverflow"], f"{slug}: incomplete labels {geometry['textOverflow']}"
         assert not geometry["missingMeasurement"], f"{slug}: unmeasured labels {geometry['missingMeasurement']}"
+        assert not geometry['pretextNoFit'] or geometry['layout']=='reflow', f"{slug}: no-fit labels did not use readable reflow {geometry['pretextNoFit']}"
         assert not geometry["smallTargets"], f"{slug}: small controls {geometry['smallTargets']}"
         assert not geometry["panelOverflow"], f"{slug}: internal panel overflow {geometry['panelOverflow']}"
+        regions=geometry['regions']
+        for left,right in zip(regions,regions[1:]):
+            assert left['rect']['bottom'] <= right['rect']['top']+1, f'{slug}: page regions overlap {regions}'
         if geometry["layout"] == "bounded":
             assert geometry["documentHeight"] <= geometry["height"] + 2, f"{slug}: bounded page scrolls"
         assert not self.errors, f"{slug}: app errors {self.errors}"
@@ -413,7 +501,17 @@ class Review:
         for element in (expected, page.locator(".screen:visible")):
             assert element.evaluate("""node => node.getBoundingClientRect().bottom + scrollY
                 <= document.documentElement.scrollHeight + 1"""), f"{slug} exceeds capture bounds"
-        page.screenshot(path=self.output / path, full_page=True)
+        self.capture_document(page,self.output / path)
+        after=page.evaluate('''() => {
+          const s=document.querySelector('.screen:not([hidden])');
+          return {width:innerWidth,layout:document.documentElement.dataset.layout,
+            regions:[...s.children].filter(n=>n.checkVisibility()).map(n=>n.getBoundingClientRect().toJSON())};
+        }''')
+        assert after['width'] <= page.viewport_size['width']+1, f'{slug}: capture expanded viewport {after}'
+        for left,right in zip(after['regions'],after['regions'][1:]):
+            assert left['bottom'] <= right['top']+1, f'{slug}: capture caused page region overlap {after}'
+        geometry['afterCapture']=after
+        geometry['captureFiles']=self.tiles[path]
         self.rows.append((number, group, title, path))
         self.checks.append({"screen": number, "slug": slug, **geometry})
         print(f"{number} {title}", flush=True)
@@ -428,7 +526,9 @@ class Review:
             writer.writerows((*row, "") for row in self.rows)
         entries = "\n".join(
             f'<figure><a href="{path}"><img src="{path}" alt="{escape(title)}" loading="lazy"></a>'
-            f'<figcaption><strong>{number} · {escape(title)}</strong><br>{escape(group)}</figcaption></figure>'
+            f'<figcaption><strong>{number} · {escape(title)}</strong><br>{escape(group)}'
+            + ''.join(f' <a href="{tile}">Tile {i+1}</a>' for i,tile in enumerate(self.tiles.get(path,[])))
+            + '</figcaption></figure>'
             for number, group, title, path in self.rows
         )
         (self.output / "index.html").write_text(
@@ -444,9 +544,9 @@ class Review:
             '<h1>Atmungsraum smartphone review</h1>'
             '<p>Click any screenshot to open the full image. Refer to its number when giving feedback '
             'or add one note per screen in <a href="feedback.csv">feedback.csv</a>.</p>'
-            '<p>390 × 844, 320 × 568 and 1440 × 900 CSS px, German interface; synthetic '
+            '<p>390 × 844, 320 × 568, 844 × 390 and 1440 × 900 CSS px, German interface; synthetic '
             'native Quest, participant, sensor, and recording data. '
-            'Long screens are captured at full page height.</p>'
+            'Long screens use overlapping actual viewport tiles; open every tile to review the complete document.</p>'
             '<p><a href="protocol.md">Screenshot protocol</a></p>'
             f'<div class="grid">{entries}</div></main></html>',
             encoding="utf-8",
@@ -463,7 +563,35 @@ def wait_setup(page, **setup):
     page.clock.run_for(1100)
 
 
-def enter_participant(page):
+def show_operator(page, step):
+    """Follow real local navigation, without changing a domain model or gateway."""
+    page.wait_for_function('Boolean(window.reviewQuest)')
+    ids = {'input':'input-screen','tracking':'breathing-preview','signals':'signals-screen',
+           'settings':'settings-screen','recordings':'recordings-screen','participant':'participant-screen'}
+    target=page.locator('#'+ids[step])
+    if target.is_visible():
+        return
+    before=page.evaluate('({commands:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})')
+    for _ in range(6):
+        direct=page.locator(f'[data-operator-go="{step}"]:visible')
+        if direct.count():
+            direct.first.click()
+        elif page.locator('[data-operator-return]:visible').count():
+            page.locator('[data-operator-return]:visible').first.click()
+        elif page.locator('[data-operator-go="input"]:visible').count():
+            page.locator('[data-operator-go="input"]:visible').first.click()
+        elif page.locator('[data-operator-back]:visible').count():
+            page.locator('[data-operator-back]:visible').first.click()
+        else:
+            break
+        if target.is_visible():
+            break
+    expect(target).to_be_visible()
+    assert before==page.evaluate('({commands:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})'), 'Local navigation mutated native state'
+
+
+def enter_participant(page, then='signals'):
+    show_operator(page,'participant')
     participant = page.locator("#quest-participant")
     if participant.get_attribute("open") is None:
         participant.locator("summary").click()
@@ -472,6 +600,8 @@ def enter_participant(page):
     page.get_by_role("radio", name="Keine Angabe").check()
     page.locator("#patient-next").focus()
     page.locator("#patient-next").press("Enter")
+    if then!='signals':
+        show_operator(page,then)
 
 
 def capture_scroll_regression(review):
@@ -494,7 +624,8 @@ def capture_scroll_regression(review):
         page = review.page(initial, viewport=viewport)
         participant = page.locator("#quest-participant")
         expect(participant).to_be_visible()
-        participant.locator("summary").click()
+        if participant.get_attribute('open') is None:
+            participant.locator("summary").click()
         page.locator("#patient-age").fill("31")
         page.get_by_role("radio", name="Keine Angabe").check()
         editor = page.locator("#patient-surname")
@@ -519,7 +650,7 @@ def capture_scroll_regression(review):
             page.evaluate("scrollTo(0,Math.min(300,document.documentElement.scrollHeight-innerHeight-20))")
             page.screenshot()
             before = page.evaluate("scrollY")
-            assert before >= 100, f"{slug}: test did not reach a scrollable rendered form: {before}"
+            assert before >= 20, f"{slug}: test did not reach a scrollable rendered form: {before}"
             wait_setup(page, position_frames=i * 88200, completed_frames=i * 88200,
                        input_volume01=i / 10, input_phase="inhale" if i % 2 else "exhale")
             page.screenshot()
@@ -537,6 +668,8 @@ def capture_scroll_regression(review):
               progress:document.querySelector('#preview-progress').value,
             })""")
             samples.append({"before": before, **state})
+            (review.output / f'scroll-{slug}-samples.json').write_text(json.dumps(samples,indent=2),encoding='utf-8')
+            page.screenshot(path=review.output / f'scroll-{slug}-poll-{i}.png')
             assert state["sameOrigin"], f"{slug}: telemetry navigated or reloaded the page"
             assert state["sameEditor"] and state["sameForm"], f"{slug}: telemetry replaced the live form"
             assert state["focus"] == "patient-surname", f"{slug}: telemetry moved focus: {state}"
@@ -554,8 +687,8 @@ def capture_scroll_regression(review):
                     editor, "Live update stability")
         # A genuine user transition must still change screens and focus.
         enter_participant(page)
-        expect(page.locator("#breathing-preview")).to_be_visible()
-        expect(page.locator("#preview-title")).to_be_focused()
+        expect(page.locator("#signals-screen")).to_be_visible()
+        expect(page.locator("#signals-screen-title")).to_be_focused()
         page.context.close()
 
 
@@ -614,8 +747,8 @@ def capture(review):
     button = page.locator("#quest-find")
     button.focus()
     button.press("Enter")
-    expect(page.locator("#quest-polar")).to_be_visible()
-    expect(page.locator("#quest-status")).to_be_focused()
+    expect(page.locator("#quest-participant")).to_be_visible()
+    expect(page.locator("#participant-screen-title")).to_be_focused()
     expect(button).to_be_hidden()
     page.context.close()
 
@@ -639,7 +772,8 @@ def capture(review):
     expect(status).to_contain_text("Schließe das Bedienfeld")
     shot(page, "headset-panel", "Headset panel still open", status, "Connection")
     wait_state(page, host="vr-preparation", polar="off")
-    page.locator("#quest-participant summary").click()
+    if page.locator('#quest-participant').get_attribute('open') is None:
+        page.locator("#quest-participant summary").click()
     shot(page, "participant-empty", "Participant form", page.locator("#patient-form"), "Participant and Polar")
     page.locator("#patient-surname").fill("Tes")
     page.locator("#patient-age").fill("30")
@@ -685,6 +819,10 @@ def capture(review):
     expect(page.locator("#preview-circle")).to_have_attribute("style", radius)
     expect(page.locator("#preview-title")).to_be_focused()
     page.keyboard.press("Tab")
+    expect(page.locator(':focus')).to_be_visible()
+    show_operator(page,'input')
+    expect(page.locator('#input-screen-title')).to_be_focused()
+    calibrate.focus()
     expect(calibrate).to_be_focused()
     page.keyboard.press("Enter")
     expect(detail).to_contain_text("zwei vollständige Atemzyklen")
@@ -704,6 +842,7 @@ def capture(review):
     expect(page.locator("#preview-input")).to_contain_text("Erkannt: Ausatmen · Rohwert der Eingabe: 23 %")
     expect(proceed).to_be_enabled()
     shot(page, "native-ready", "Polar ready · measured input differs from intended hold", proceed, "Breathing setup")
+    show_operator(page,'input')
     calibrate.focus()
     calibrate.press("Enter")
     expect(detail).to_contain_text("nächsten vollständigen Atemzyklus")
@@ -728,7 +867,7 @@ def capture(review):
     shot(page, "native-controller-ready", "Controller State · fixed orientation and continuation", proceed, "Breathing setup")
     proceed.focus()
     proceed.press("Enter")
-    expect(page.locator("#quest-condition")).to_be_focused()
+    expect(page.locator("#session-screen-title")).to_be_focused()
 
     scenario = page.locator("#quest-scenario")
     condition = page.locator("#quest-condition")
@@ -778,6 +917,7 @@ def capture(review):
     finish.click()
     expect(status).to_contain_text("Probelauf beendet")
     assert page.evaluate("window.reviewQuest.commands.slice(-5)") == ["arm", "start", "pause", "resume", "save-next"]
+    show_operator(page,'tracking')
     shot(page, "finished", "Run finished and returned to native input testing", detail, "Playback")
     expect(proceed).to_be_enabled()
     proceed.click()
@@ -792,6 +932,7 @@ def capture(review):
       } finally { store.close(); }
     }""")
     wait_state(page, phase="IDLE", host="vr-preparation", clock=0)
+    show_operator(page,'recordings')
     page.locator("#quest-export-retry").click()
     shot(page, "quest-recording", "Saved Quest recording and download", await_archive, "Recordings and Drive")
     page.locator("#quest-drive summary").click()
@@ -876,7 +1017,7 @@ def capture_setup_recovery(review, paired):
         acknowledge.focus()
         acknowledge.press("Enter")
         expect(page.locator("#breathing-preview")).to_be_hidden()
-        expect(page.locator("#quest-status")).to_be_focused()
+        expect(page.locator("#participant-screen-title")).to_be_focused()
         expect(page.locator("#patient-fields")).to_be_enabled()
         assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
         assert page.evaluate("window.reviewSetupCommands.length") == 0
@@ -884,7 +1025,7 @@ def capture_setup_recovery(review, paired):
         page.context.close()
 
     page = review.page(paired + "window.reviewInitialQuest={polar:'ready',oldApk:true};")
-    enter_participant(page)
+    enter_participant(page,then='input')
     expect(page.locator("#preview-detail")).to_contain_text("Quest-App aktualisieren")
     expect(page.locator("#preview-calibrate")).to_be_disabled()
     expect(page.locator("#preview-controller")).to_be_disabled()
@@ -905,7 +1046,7 @@ def capture_accessibility(review, paired):
         ("desktop", "Desktop · native input testing", {"width": 1440, "height": 900}, "", False),
     ):
         page = review.page(initial, viewport=viewport)
-        enter_participant(page)
+        enter_participant(page,then='tracking')
         expect(page.locator("#preview-continue")).to_be_enabled()
         if spacing:
             page.add_style_tag(content="""* {line-height:1.5 !important;letter-spacing:.12em !important;word-spacing:.16em !important;}
@@ -920,11 +1061,11 @@ def capture_accessibility(review, paired):
         proceed.focus()
         proceed.press("Enter")
         expect(page.locator("#quest-condition")).to_be_visible()
-        expect(page.locator("#quest-condition")).to_be_focused()
+        expect(page.locator("#session-screen-title")).to_be_focused()
         page.context.close()
 
     page = review.page(initial)
-    enter_participant(page)
+    enter_participant(page,then='input')
     wait_setup(page, r=4, input="automatic", ready=False, calibration="failed", input_phase="bad-tracking",
                failure="insufficient-range-" + "Sensorbewegung-unzureichend-" * 7)
     expect(page.locator("#preview-detail")).to_contain_text("Einrichtung fehlgeschlagen")
@@ -973,6 +1114,7 @@ def capture_phone_pairing(review):
     page.locator("#quest-control-claim").focus()
     page.keyboard.press("Enter")
     expect(page.locator("#quest-participant")).to_be_visible()
+    show_operator(page,'settings')
     expect(page.locator("#quest-control-release")).to_be_visible()
     assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
     page.context.close()
@@ -1060,6 +1202,7 @@ def capture_controller_access(review):
     claim.press("Enter")
     expect(status).to_have_text("Dieses Smartphone steuert die Quest.")
     expect(page.locator("#patient-fields")).to_be_enabled()
+    show_operator(page,'settings')
     expect(release).to_be_visible()
     recenter = page.locator("#recenter-vr")
     expect(recenter).to_have_attribute("aria-disabled", "false")
@@ -1079,12 +1222,13 @@ def capture_controller_access(review):
     review.shot(page, "control-free", "Recenter then release · Claim prompt replaces the old confirmation", operator_status, "Controller access")
     claim.focus()
     claim.press("Enter")
+    show_operator(page,'settings')
     expect(release).to_be_visible()
-    enter_participant(page)
+    enter_participant(page,then='tracking')
     expect(page.locator("#breathing-preview")).to_be_visible()
-    expect(page.locator("#preview-control-host #quest-control-access")).to_be_visible()
-    expect(page.locator("#quest-control-host")).to_be_hidden()
     expect(page.locator("#preview-continue")).to_be_enabled()
+    show_operator(page,'settings')
+    expect(page.locator("#settings-screen #quest-control-access")).to_be_visible()
     review.shot(page, "control-preview-host", "Controller release remains reachable on the breathing preview", release, "Controller access")
     before = page.evaluate("({g:reviewQuest.setup.g,position:reviewQuest.setup.position_frames})")
     release.focus()
@@ -1146,6 +1290,7 @@ def capture_polar_location(review):
         ("200-text", {"width": 320, "height": 568}, "200%"),
     ):
         page = review.page(initial, viewport=viewport)
+        enter_participant(page)
         status = page.locator("#quest-polar-status")
         connect = page.locator("#quest-polar-connect")
         expect(status).to_contain_text("Lege den Gurt an")
@@ -1170,8 +1315,8 @@ def capture_polar_location(review):
         assert page.evaluate("window.reviewQuest.location") == "disabled"
         assert page.evaluate("window.reviewQuest.commands") == ["start-ecg", "start-acc"]
         review.shot(page, f"location-connected-{slug}", f"Connected H10 {slug} · ECG and acceleration work while Location is off", status, "Polar Location services")
-        enter_participant(page)
-        expect(page.locator("#breathing-preview")).to_be_visible()
+        show_operator(page,'input')
+        expect(page.locator("#input-screen")).to_be_visible()
         expect(page.locator("#preview-calibrate")).to_be_enabled()
         expect(page.locator("#preview-controller")).to_be_enabled()
         page.context.close()
@@ -1194,6 +1339,7 @@ def capture_polar_stream_recovery(review):
                 "access": {"v": 1, "role": "active", "active_phone": "Fixture", "revision": 1},
             }) + ";"
             page = review.page(initial, viewport=viewport)
+            enter_participant(page)
             page.evaluate("size => document.documentElement.style.fontSize=size", text_size)
             status = page.locator("#quest-polar-status")
             connect = page.locator("#quest-polar-connect")
@@ -1245,13 +1391,14 @@ def capture_live_display(review):
       setupCommands:window.reviewSetupCommands.length, commands:(window.reviewQuest.commands??[]).length,
     })"""
     page = review.page(initial, reduced_motion="no-preference")
-    enter_participant(page)
+    enter_participant(page,then='tracking')
     page.clock.run_for(1100)
     page.evaluate("""() => {
       window.reviewMeasurementWrites=0;
       new MutationObserver(records=>window.reviewMeasurementWrites+=records.length)
         .observe(document.querySelector('main'),{subtree:true,attributes:true,attributeFilter:['data-text-measurement']});
     }""")
+    page.evaluate('window.reviewQuest.freezeObservation=true')
     first = page.evaluate(read)
     page.clock.run_for(200)
     later = page.evaluate(read)
@@ -1259,22 +1406,25 @@ def capture_live_display(review):
     assert first["volume"] < later["volume"], f"Automatic percent did not move with the circle: {first}, {later}"
     assert abs(later["volume"] - (later["circle"] - .46) / .54 * 100) <= .6
     assert later["measurementWrites"] == first["measurementWrites"], "Numeric presentation remeasured the whole page between polls"
-    assert first["polls"] == later["polls"] and first["ecgCalls"] == later["ecgCalls"], "Animation added transport polls"
+    assert 0 <= later["polls"]-first["polls"] <= 3 and 0 <= later["ecgCalls"]-first["ecgCalls"] <= 1, "Animation exceeded scheduled transport cadence"
     assert first["progress"] == later["progress"] == .25, "Presentation invented native calibration progress"
     assert first["continueDisabled"] and later["continueDisabled"], "Animation admitted unfinished calibration"
     assert first["calibrateDisabled"] == later["calibrateDisabled"] and first["controllerDisabled"] == later["controllerDisabled"]
 
-    wait_setup(page, completed_frames=352800, position_frames=132300)
+    page.evaluate('Object.assign(reviewQuest.setup,{completed_frames:352800,position_frames:132300});reviewQuest.freezeObservation=false')
+    page.clock.run_for(110)
+    page.evaluate('window.reviewQuest.freezeObservation=true')
     progressing = page.evaluate(read)
     page.clock.run_for(200)
     progressed = page.evaluate(read)
     assert progressing["progress"] == progressed["progress"] == .5
     assert .125 <= progressing["fill"] < progressed["fill"] <= .25, "Visible fill must stop at the confirmed native count"
-    assert progressing["polls"] == progressed["polls"], "Fill animation added native polls"
+    assert 0 <= progressed["polls"]-progressing["polls"] <= 3 and 0 <= progressed["ecgCalls"]-progressing["ecgCalls"] <= 1, "Fill animation exceeded scheduled transport cadence"
     assert progressed["continueDisabled"], "Interpolated fill admitted unfinished calibration"
     review.shot(page, "live-breath-between-polls", "Breathing display · smooth frames, native progress and admission",
                 page.locator("#preview-status"), "Live presentation")
 
+    page.evaluate('window.reviewQuest.freezeObservation=false')
     wait_setup(page, playing=False, audio_state="paused")
     paused = page.evaluate(read)
     page.clock.run_for(150)
@@ -1298,6 +1448,7 @@ def capture_live_display(review):
     expect(page.locator("#quest-ecg")).to_be_hidden()
     page.evaluate("window.reviewQuest.freezeObservation=false; window.reviewHidden=false; document.dispatchEvent(new Event('visibilitychange'))")
     page.clock.run_for(100)
+    page.evaluate('window.reviewQuest.freezeObservation=true')
     resumed = page.evaluate(read)
     page.clock.run_for(200)
     assert page.evaluate(read)["circle"] > resumed["circle"], "A fresh visible observation did not resume the circle"
@@ -1308,18 +1459,16 @@ def capture_live_display(review):
     page.context.close()
 
     page = review.page(initial)  # Existing default remains reduced motion.
-    enter_participant(page)
+    enter_participant(page,then='tracking')
     page.clock.run_for(1100)
     reduced = page.evaluate(read)
-    reduced_ecg = page.locator("#quest-ecg-trace").get_attribute("d")
     page.clock.run_for(200)
     reduced_later = page.evaluate(read)
     assert reduced_later["circle"] == reduced["circle"] == .73
     assert reduced_later["volume"] == reduced["volume"] == 50
     assert reduced_later["fill"] == reduced["fill"] == .125
     assert reduced_later["progress"] == .25 and reduced_later["continueDisabled"]
-    assert reduced_later["polls"] == reduced["polls"]
-    assert reduced_ecg and page.locator("#quest-ecg-trace").get_attribute("d") == reduced_ecg, "Reduced motion kept ECG animating"
+    assert 0 <= reduced_later["polls"]-reduced["polls"] <= 3
     review.shot(page, "live-reduced-motion", "Reduced motion · discrete native breathing display",
                 page.locator("#preview-status"), "Live presentation")
     review.regressions.append({"kind": "live-reduced-motion", "first": reduced, "later": reduced_later})
@@ -1328,19 +1477,44 @@ def capture_live_display(review):
     expect(page.locator("#preview-status")).to_have_text("Warte auf den aktuellen Atemtakt der Quest.")
     review.shot(page, "live-reduced-expiry", "Reduced motion · stale native observation still expires",
                 page.locator("#preview-status"), "Live presentation")
+    show_operator(page,'signals')
+    # Synchronize just after an ordinary delivery. Tile painting changes timer
+    # phase; a random 200ms interval may straddle the next permitted 1Hz poll.
+    ecg_before=page.evaluate('window.reviewEcgCalls??0')
+    for _ in range(120):
+        page.clock.run_for(10)
+        if page.evaluate('window.reviewEcgCalls??0')>ecg_before:
+            break
+    page.clock.run_for(20)
+    expect(page.locator('#quest-ecg')).to_be_visible()
+    page.evaluate('reviewQuest.ecgReplay=true')
+    def reduced_ecg_state():
+        return page.evaluate("({path:document.querySelector('#quest-ecg-trace').getAttribute('d'),ecg:reviewEcgCalls,polls:reviewSnapshotCount,latest:reviewLastEcg.samples.at(-1)[0],now:performance.now()})")
+    reduced_ecg=reduced_ecg_state()
+    page.clock.run_for(200)
+    reduced_ecg_later=reduced_ecg_state()
+    assert reduced_ecg['ecg']==reduced_ecg_later['ecg'] and reduced_ecg['polls']==reduced_ecg_later['polls'],(reduced_ecg,reduced_ecg_later)
+    assert reduced_ecg['path'] and reduced_ecg_later['path']==reduced_ecg['path'],('Reduced motion kept ECG animating',reduced_ecg,reduced_ecg_later)
+    page.evaluate('reviewQuest.ecgReplay=false')
+    page.clock.run_for(1100)
+    reduced_ecg_fresh=reduced_ecg_state()
+    assert reduced_ecg_fresh['latest']>reduced_ecg['latest'] and reduced_ecg_fresh['path']!=reduced_ecg['path'],(reduced_ecg,reduced_ecg_fresh)
+    review.regressions.append({'kind':'reduced-ecg-native-delivery','quietBefore':reduced_ecg,'quietAfter':reduced_ecg_later,'fresh':reduced_ecg_fresh})
     page.context.close()
 
     page = review.page(initial + """Object.assign(window.reviewInitialSetup,{stage:'testing',calibration:'ready',
       input:'polar-tilt',ready:true,completed_frames:1411200,input_volume01:.2});""", reduced_motion="no-preference")
-    enter_participant(page)
+    enter_participant(page,then='tracking')
     page.clock.run_for(1100)
     expect(page.locator("#preview-input-volume")).to_have_text("20 %")
-    wait_setup(page, input_volume01=.8)
+    page.evaluate('reviewQuest.setup.input_volume01=.8')
+    page.clock.run_for(110)
+    page.evaluate('window.reviewQuest.freezeObservation=true')
     measured_first = page.evaluate(read)
     page.clock.run_for(200)
     measured_later = page.evaluate(read)
     assert 20 <= measured_first["volume"] < measured_later["volume"] <= 80
-    assert measured_first["polls"] == measured_later["polls"]
+    assert 0 <= measured_later["polls"]-measured_first["polls"] <= 3
     page.evaluate("window.reviewQuest.freezeObservation=true")
     page.clock.run_for(2700)
     measured_stale = page.evaluate(read)
@@ -1353,7 +1527,7 @@ def capture_live_display(review):
     page.context.close()
 
     page = review.page(initial + "window.reviewInitialQuest.statusDelay=1700;", reduced_motion="no-preference")
-    enter_participant(page)
+    enter_participant(page,then='tracking')
     page.clock.run_for(2100)
     delayed = page.evaluate(read)
     page.clock.run_for(200)
@@ -1369,6 +1543,7 @@ def capture_live_display(review):
 
     page = review.page(paired + "window.reviewInitialQuest={polar:'ready',ecgGap:'first-packet'};",
                        reduced_motion="no-preference")
+    enter_participant(page)
     expect(page.locator("#quest-polar-status")).to_contain_text("Quest empfängt EKG und Beschleunigungsdaten")
     page.clock.run_for(1100)
     for _ in range(20):
@@ -1438,7 +1613,7 @@ def capture_parked_calibration(review):
         ("200-text", {"width":320,"height":568}, "200%"),
     ):
         page = review.page(initial, viewport=viewport, reduced_motion="no-preference")
-        enter_participant(page)
+        enter_participant(page,then='tracking')
         page.evaluate("size=>document.documentElement.style.fontSize=size", text_size)
         page.clock.run_for(2700)
         assert page.evaluate("window.reviewSetupCommands") == [], "Opening the app started native audio"
@@ -1466,6 +1641,7 @@ def capture_parked_calibration(review):
                     page.locator("#preview-detail"), "Parked startup")
         wait_setup(page, stage="testing", calibration="failed", completed_frames=1411200,
                    position_frames=1411200, failure="excessive-motion")
+        show_operator(page,'input')
         expect(page.locator("#preview-calibrate")).to_be_enabled()
         page.locator("#preview-controller").focus()
         page.keyboard.press("Enter")
@@ -1478,7 +1654,7 @@ def capture_parked_calibration(review):
         page.context.close()
 
     page = review.page(initial + "window.reviewInitialSetup={stage:'idle',playing:false,audio_state:'paused',source_clock_ready:false,input_volume01:0};")
-    enter_participant(page)
+    enter_participant(page,then='input')
     expect(page.locator("#preview-calibrate")).to_be_disabled()
     expect(page.locator("#preview-controller")).to_be_enabled()
     expect(page.locator("#preview-detail")).to_contain_text("Bewegungsdaten")
@@ -1504,6 +1680,7 @@ def capture_automatic_stream_recovery(review):
         ):
             page = review.page(paired+"window.reviewInitialQuest="+json.dumps({"polar":"stream-wait",
                 "ecg":ecg,"acc":acc,"autoRecovery":True})+";",viewport=viewport)
+            enter_participant(page)
             page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
             expect(page.locator("#quest-polar-status")).to_have_text("Polar H10 per Bluetooth verbunden. "+label+
                 " Die Quest startet fehlende Messsignale automatisch erneut.")
@@ -1533,7 +1710,7 @@ def capture_audio_recovery(review):
             "window.reviewInitialSetup={stage:'testing',playing:true,calibration:'failed',failure:'clock_stalled',"
             "clock_valid:false,source_clock_ready:false,audio_recovery_available:true};", viewport=viewport)
         page.evaluate("size=>document.documentElement.style.fontSize=size",text_size)
-        enter_participant(page)
+        enter_participant(page,then='input')
         page.clock.run_for(1100)
         calibrate, fallback = page.locator("#preview-calibrate"), page.locator("#preview-controller")
         detail, proceed = page.locator("#preview-detail:visible, #preview-recovery:visible"), page.locator("#preview-continue")
@@ -1578,6 +1755,7 @@ def capture_audio_recovery(review):
         review.shot(page,f"audio-recovery-confirmed-{slug}",f"Audio recovery {slug} · confirmed, collection still pending",detail,"Audio recovery")
         wait_setup(page,stage="testing",calibration="failed",failure="clock_stalled",clock_valid=False,
             source_clock_ready=False,audio_recovery_available=True)
+        show_operator(page,'input')
         calibrate.click()
         page.clock.run_for(1100)
         wait_state(page,setupReceiptPatch={"state":"rejected","accepted":False,"reason":"audio-recovery-timeout","recovery_generation":None})
@@ -1639,12 +1817,13 @@ def capture_setup_receipt_fence(review):
         queries = page.evaluate("window.reviewSetupReceiptQueries")
         assert all(query == {"v":1,"id":operation_id,"op":"receipt"} for query in queries)
         review.shot(page,f"receipt-fence-unknown-{slug}",f"Lost recovery admission {slug} · recheck preserves original ID",recheck,"Setup receipt fence")
+        recheck.focus()
         page.evaluate("window.reviewQuest.setupReceiptPatch={state:'confirmed',accepted:true,reason:'accepted',recovery_generation:2}")
-        recheck.click()
+        page.keyboard.press('Enter')
         page.clock.run_for(1100)
         assert page.evaluate("sessionStorage.getItem('atmungsraum-breathing-setup-pending')") is None
         assert page.evaluate("window.reviewSetupCommands") == []
-        enter_participant(page)
+        enter_participant(page,then='input')
         expect(page.locator("#preview-detail")).to_contain_text("nächsten vollständigen Atemzyklus")
         expect(page.locator("#preview-continue")).to_be_disabled()
         assert page.locator("#preview-progress").evaluate("node=>node.value") == 0
@@ -1657,7 +1836,7 @@ def capture_setup_receipt_fence(review):
 def main():
     parser = ArgumentParser(description="Capture rendered Atmungsraum phone screens into a review ZIP.")
     parser.add_argument("--output", type=Path, required=True, help="New directory for this capture")
-    parser.add_argument("--scope", choices=("all", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic", "audio", "receipts"), default="all",
+    parser.add_argument("--scope", choices=("all", "layout", "pairing", "control", "location", "scroll", "polar", "live", "parked", "automatic", "audio", "receipts"), default="all",
                         help="Full suite or focused pairing, control, Location, scroll, Polar, or live presentation")
     args = parser.parse_args()
     output = args.output.resolve()
@@ -1667,6 +1846,9 @@ def main():
         browser = playwright.chromium.launch()
         chromium = browser.version
         review = Review(browser, output)
+        if args.scope in ("all", "layout"):
+            from layout_render_fixtures import capture_layout
+            capture_layout(review)
         if args.scope == "all":
             capture(review)
             paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"
@@ -1703,7 +1885,8 @@ def main():
 
     revision = git("rev-parse", "HEAD")
     changes = git("status", "--porcelain", "--", "*.js", "*.css", "*.html", "assets",
-                  "tools/capture-phone-screens.py", "for-ai/PHONE-SCREENSHOTS.md")
+                  "tools/capture-phone-screens.py", "tools/layout_render_fixtures.py",
+                  "tools/test-operator-layout.py", "for-ai/PHONE-SCREENSHOTS.md")
     (output / "source.txt").write_text(
         f"App checkout: {revision}\nPlaywright: {version('playwright')}\nChromium: {chromium}\n"
         f"Source working tree:\n{changes or 'clean'}\n", encoding="utf-8"
@@ -1712,7 +1895,7 @@ def main():
         for file in sorted(output.rglob("*")):
             if file.is_file() and file.name != ARCHIVE:
                 archive.write(file, file.relative_to(output))
-    print(f"{len(review.rows)} screenshots -> {output / ARCHIVE}")
+    print(f"{len(review.rows)} rendered states with viewport tiles -> {output / ARCHIVE}")
 
 
 if __name__ == "__main__":

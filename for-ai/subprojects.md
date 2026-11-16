@@ -12,6 +12,15 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Operator layout (2026-11-16): the user requests clearer sequential pages and
+  actual root-site code styling, without feature changes. Follow the
+  [layout contract](../atmungsraum/for-ai/UI-LAYOUT.md) and existing PROJECT
+  checklist. Local navigation must preserve native guards, journals, drafts,
+  recordings and Controller fallback. Phone availability and physical acceptance
+  remain separate from software render qualification; APK11 stays unchanged.
+  Independent review,235zero-skip phone tests and288rendered states/636viewport
+  tiles pass. Exact publication/live checks are tracked in PROJECT.md.
+
 - Physical display correction (2026-11-16): actual Pixel inspection confirms
   current assets and correct126px/122px touching inset. Real timing exposes
   pauses from the original composite blends. A reviewed PWA-only correction

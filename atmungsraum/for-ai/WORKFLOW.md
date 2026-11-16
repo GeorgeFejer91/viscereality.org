@@ -1,5 +1,22 @@
 # Workflow
 
+## Operator layout qualification — 2026-11-16
+
+The [layout contract](UI-LAYOUT.md) preserves native/domain authority while
+splitting preparation, tracking, running, recordings and settings. Use the real
+app/gateway fixture and actual Pretext, not static mockup HTML. Check configured
+viewport width (mobile overflow can expand `innerWidth`), painted text/control
+bounds, header/body/footer separation,48px targets and document reflow. Preserve
+six-poll scroll/editor/caret and zero-command local-navigation checks.
+
+With the fixture's paused browser clock, Chromium full-page/captureBeyondViewport
+screenshots can paint a stale footer position after measurement/viewport changes,
+even when actual viewport paint and before/after DOM regions are correct. Use
+actual configured-viewport screenshots and scrolled viewport tiles as visual
+evidence, restoring scroll afterward. Do not change production CSS or suppress
+geometry failures to accommodate a capture artifact. Native sample cadence and
+command assertions remain separate deterministic checks.
+
 ## Current hardware-test handoff — 2026-11-16
 
 The user defers new-mode testing. Current focus is physical yellow-circle/
