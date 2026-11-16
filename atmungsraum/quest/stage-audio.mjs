@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateManifest } from '../audio/box-breathing.js';
 import { AUDIO_LIBRARY, SCENARIOS, validateScenario } from '../audio/scenario-protocol.js';
 import { loadBoxLoop } from './box-loop.mjs';
+import { buildMainStudyScenario } from './main-study-audio.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const scenarioDirectory = 'audio/scenarios';
@@ -12,7 +13,7 @@ const libraryPath = posix.join(scenarioDirectory, AUDIO_LIBRARY);
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const describe = (path, data) => ({ path, bytes: data.length, sha256: sha256(data) });
 
-export async function stageQuestAudio({ sourceRoot = projectRoot, output }) {
+export async function stageQuestAudio({ sourceRoot = projectRoot, output, mainStudy = false }) {
   const files = new Map();
   const libraryBytes = await readFile(join(sourceRoot, libraryPath));
   const library = validateManifest(JSON.parse(libraryBytes.toString('utf8')));
@@ -27,6 +28,13 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output }) {
       scenarioId: id,
       manifestHash: libraryRecord.sha256,
     });
+    if (mainStudy && id === 'haupt-15') {
+      const study = await buildMainStudyScenario(sourceRoot, plan);
+      files.set(path, Buffer.from(JSON.stringify(study.plan, null, 2) + '\n'));
+      for (const [cuePath, cue] of study.files) files.set(cuePath, cue);
+      scenarios.push({ id, path, total_frames: study.plan.total_frames });
+      continue;
+    }
     files.set(path, data);
     scenarios.push({ id, path, total_frames: plan.total_frames });
     const assetDirectory = posix.join(scenarioDirectory, plan.audio_assets_base_directory);
@@ -105,12 +113,13 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output }) {
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   const output = process.argv[2];
-  if (!output || process.argv.length !== 3) {
-    console.error('Usage: node quest/stage-audio.mjs <new output directory>');
+  const option = process.argv[3];
+  if (!output || process.argv.length > 4 || (option !== undefined && option !== '--main-study')) {
+    console.error('Usage: node quest/stage-audio.mjs <new output directory> [--main-study]');
     process.exitCode = 2;
   } else {
     try {
-      const catalog = await stageQuestAudio({ output });
+      const catalog = await stageQuestAudio({ output, mainStudy: option === '--main-study' });
       console.log(JSON.stringify({
         output: resolve(output),
         scenarios: catalog.scenarios.length,

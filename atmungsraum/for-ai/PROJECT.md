@@ -21,13 +21,25 @@ Started from clean sparse publication main at `b3a6a59`, matching
 cloud-backed files; it was left untouched. The verified runtime commit
 `726204d` matched remote main, and the remote context gate passed.
 
-### Main study cue placeholders — 2026-11-16
+### Main study audio — 2026-11-16
 
 - [x] Prepare two control WAVs, one instructions WAV, four reusable breathing
   WAVs and `end.wav`. The [cue library](../assets/audio/scenarios/haupt-15/cue-placeholders/README.md)
   owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
   All eight files contain silence. Their timeline totals 900 seconds and
   serves cue preparation. The active native loop owns Quest playback.
+- [x] Catalogue the 23 supplied recordings as 22 unique MP3/TXT pairs.
+  [Main study audio](../assets/audio/main-study/de/README.md) documents source
+  identity, German transcripts, phase pools, music credit, and staging.
+- [x] Render the candidate with the three intact instructions, 45 complete
+  cycles and a music tail. Native scenario decoder host check accepted the
+  same 184-event speech schedule and rendered exactly 39,690,000 frames.
+- [ ] Confirm the opening versus cycle budget for the selected Quest path.
+  The recordings extend the old 81-second opening to about 160 seconds;
+  the exact 900-second candidate fits 45 cycles. Then bind the approved
+  programme to the native main playback clock, include the music, and verify
+  a signed package and a physical Quest run. The review staging option does
+  not replace the current shared-loop app or its preparation behavior.
 
 ### Separation of preparation and main study — 2026-11-16
 
