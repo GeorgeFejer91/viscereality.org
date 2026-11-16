@@ -2,28 +2,21 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
-### Box-breathing audio evidence review — 2026-11-16
+### Reusable ambient background music — 2026-11-16
 
-The [Haupt-Runde timeline](../audio/scenarios/haupt-15.json) allocates
-13:20 to 50 complete cycles of four seconds per phase within the 15-minute
-session. The review found no 10–15-minute recording with both a verified
-open reuse license and efficacy evidence for that exact recording and dose.
-[Balban et al.](https://pubmed.ncbi.nlm.nih.gov/36630953/) used five-minute
-sessions with individualized phase timings. The [ASIP study](https://pmc.ncbi.nlm.nih.gov/articles/PMC12881409/)
-used six minutes of synchronized 4-4-4-4 audio and video guidance and found
-little average change in daily stress. The [15-minute trial registration](https://clinicaltrials.gov/study/NCT07698652)
-had no posted results at review.
+The request is for ambient background music during a 10–15-minute session.
+The first choice is Kevin MacLeod's [Wisps of Whorls](https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1200082),
+a 14:16 electric-piano and synth track. [New Direction](https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100677)
+is an 11:20 synth alternative. The composer lists both tracks as
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and both original
+MP3 download endpoints returned HTTP 200. Credit the title, composer, source
+and license in the distribution, and disclose any edits.
 
-For an external listening reference, the [MIT-licensed Cosmos Lab pacer](https://github.com/cosmoslab58/box-breathing)
-provides synthesized spoken or chime cues. For a reusable study recording,
-the recommendation is to use original German cues on the existing timeline
-and document the recording's license and exact cue schedule. Wording and
-listening acceptance remain open. Recheck cue timing and audibility on the
-headset before participant use.
-
-This evidence review is based on main `cd91f67` and its successful
-[Pages run 43878794914](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43878794914).
-The smartphone and Quest rehearsal checklist remains active.
+The options are ready for listening and selection. The next step if a track
+is selected for participant use is to audition it under the breathing cues
+on the target device and record the selected file and playback level.
+The smartphone and Quest rehearsal checklist remains active. The preceding
+audio review was committed to main as `1d88415`.
 
 ### Physical display correction — 2026-11-16
 
