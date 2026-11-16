@@ -36,6 +36,12 @@ All eight changed live paths matched Git. Live Chromium repeated the four
 viewport checks, including moving focus to Bluetooth before the dialog's
 close event. A browser fixture also completed Drive authorization with fake
 OAuth and verified the selected account and private folder readback.
+The reduced picker release `4ccec3d` is live from
+[Pages run 43956101913](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43956101913).
+All 12 changed paths matched Git. The public PWA passed the synthetic Quest
+catalog and exact Arm payload checks, plus startup and recovery in four
+Chromium viewports. This PC's ADB inventory listed no device for the installed
+lab Pixel refresh. Verify the installed phone release when it is available idle.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress
