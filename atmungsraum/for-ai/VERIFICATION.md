@@ -1,5 +1,29 @@
 # Verification
 
+## Physical yellow-display correction — 2026-11-16
+
+Read-only standalone Pixel inspection proves UI43/setup8/display4 and current
+CSS are loaded. Blue126px/gold122px at equal progress is the intended2px/side
+inset. The phone is not running a stale PWA. Its actual18s capture has1079rAF
+frames/89status responses, median54msHTTP, rendererage6ms and zero stale frames,
+but repeated150–220ms interior-ramp pauses. The source is the original composite
+replanning/oldest-support expiry under uneven replies, not absent native data.
+
+The corrective candidate uses a bounded32-point adjacent GPU source-time history
+with280ms presentation playout. Original absolute500ms endpoint expiries remain;
+no desired-phase/actual-future prediction, freshness renewal or native authority
+change is added. Preview-only reads are100ms/singleflight. Ordinary1Hz work,
+source/reset/reduced-motion/visibility fences and physical percent are retained.
+An anonymous89-triple timing fixture is independently regenerated from the
+private capture. Focused25tests and full223/223 zero-skip gate pass; corrective
+spec/quality review passes. The old5Hz exact replay improves34.51%stopped/290ms
+maximum to7.90%/140ms; the10Hz captured-age model is1.34%/80ms. These are replay/
+model results. Fresh supported brackets interpolate continuously; unsupported
+gaps clamp/freeze and prevent a claim of universally continuous live motion.
+Actual same-phone100ms confirmation is required after publication/user refresh.
+No new APK/native, sensor, audio, classification or recording change is needed.
+New mode wearer tests are postponed at the user's request.
+
 ## Actual display and selectable Polar state modes / code 11 — 2026-11-16
 
 Native `b1ba2c2b750dbff70488e351c4233b7cd62b73d5` and the combined phone
@@ -37,10 +61,19 @@ Controller-only/private particle selection stays unchanged; boot receiver absent
 PR20 merged at `e9e8048d39843865a6db95697e0ecadba2524e72`; exact Pages run
 43848286245 succeeds. All27 live files match Git; new cache URLs, release policy,
 390px/1440px renders, no-error/overflow and install-help checks pass. Source/remote
-context and native boundary gates pass. Code11 is not installed yet: a user
-idle/no-recording question is pending. Refreshed installed-phone and wearer checks
-remain separate gates. Build lease is released; no device/ADB observer held.
-No Meta upload.
+context and native boundary gates pass.
+
+After explicit no-recording confirmation, code11 is installed over Wi-Fi ADB.
+Refreshed Package Manager reports0.2.10-dev/11, same UID10159; installed APK
+SHA-256 exactly matches the inspected build. Current canonical serial/boot is
+verified, Location3 remains unchanged and shared ADB is not restarted. Trusted
+cold launch is accepted and Android focus belongs to the app. Controller-only
+true, live hand/simultaneous false and initial driver0 are observed. Automatic
+H10 preferred-candidate admission is recorded; no sensor quality/wearer pass is
+inferred. The user confirms0.2.10-dev/code11 after refreshing/reconnecting the
+phone and taking control. Installed-phone resource capture/cadence and physical
+mode/display acceptance are still pending. No agent calibration/recording or
+Meta upload occurred. The finite observer/owned child and leases are released.
 
 ## Operator controls and APK identity / code 10 — 2026-11-16
 

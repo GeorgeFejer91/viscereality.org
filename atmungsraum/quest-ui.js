@@ -6,7 +6,7 @@ import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from '.
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=8';
-import { LiveBreathDisplay } from './live-breath-display.js?v=4';
+import { LiveBreathDisplay } from './live-breath-display.js?v=5';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 import { KioskControl } from './kiosk-control.js?v=2';
 import { ApkRelease } from './quest-release.js?v=1';
@@ -951,12 +951,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     find.focus();
   });
   const timer = setInterval(tick, 1000);
-  // Renderer samples expire after 500 ms. Only the visible preview needs this
-  // faster read; receipts, ECG, archives and Drive keep the ordinary tick.
+  // Renderer samples expire after 500 ms. Read the visible preview every 100 ms
+  // to leave room for observed-sample playout; other work keeps the ordinary tick.
   const previewTimer = setInterval(() => {
     if (document.hidden || preview.hidden || connecting || userAction || !rehearsal.gateway?.owner) return;
     void rehearsal.refresh({ statusOnly: true });
-  }, 200);
+  }, 100);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       clearTimeout(breathTimer);

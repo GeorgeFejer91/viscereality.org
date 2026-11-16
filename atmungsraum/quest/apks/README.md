@@ -30,35 +30,27 @@ breath-state integration and original command receipts. Healthy PCM continuity,
 Controller fallback, parked Automatic startup and the exact 900-second main
 remain. Recording provenance distinguishes presets from a participant fit.
 
-Verification: phone218/zero skips, native856 serial passes/five intentional
-ignores, isolated actual GPU1, fresh pairing369, actual HTTP/auth/Java/native45,
-six Java/native scenarios and API36 production compilation pass. Independent
-display, phone, native and final integration reviews pass; Pretext26/seven
-stability checks and25 circle geometry cases pass. Exact source reconstruction,
-selected Android compilation, signed APK closure/signer/assets/manifest/identity
-and16KiB alignment pass.
-
-The matching PWA is live through PR20/Pages43848286245 with27 live-file matches
-and public phone/desktop checks. Installation waits for user confirmation that
-no recording is running; current device version is still code10. Fresh wearer
-and installed-phone qualification remain open. No Meta upload.
 Classifier weights/adaptive math, private particle inputs and signer are unchanged.
 
 Verification: 218 phone tests pass, zero skips; fresh Java pairing/state checks
-pass 369. Native serial library gate passes 856, five intentional ignores;
+pass369. Native serial library gate passes856, five intentional ignores;
 isolated actual GPU publication and four independently rerun preset tests pass.
-Six real Java/native owner scenarios, 45 actual HTTP/auth/gateway/native
-assertions and selected production Android36 Java compilation pass. Both new
-modes traverse the full 900-second main in host tests. Display20, geometry25 and
-actual Pretext26 states/seven stability regressions pass. Independent display,
-phone, native and final integration reviews are clear. Exact source
-reconstruction, selected Android native compilation, signed-APK session closure,
-manifest, signer, assets and packaged identity checks pass.
+Six real Java/native owner scenarios,45 actual HTTP/auth/gateway/native assertions
+and selected production Android36 Java compilation pass. Both new modes traverse
+the full900-second main in host tests. Display20, geometry25 and actual Pretext26
+states/seven stability regressions pass. Independent display, phone, native and
+final reviews are clear. Exact source reconstruction, selected Android native
+compilation, signed session closure, manifest/signer/assets/identity and alignment
+checks pass.
 
-The optional boot receiver remains absent. Code 11 installation/readback and
-matching exact Pages/live release are in progress. Actual phone/LAN cadence,
-mode tracking satisfaction and remaining wearer/main acceptance are pending.
-No Meta upload.
+Matching PWA is live through PR20/Pages43848286245,27 live-file matches and public
+phone/desktop checks. After explicit idle confirmation, code11 is installed with
+exact byte/version readback and retained UID. Trusted MAIN/LAUNCHER startup and
+Android activity focus are observed; controller-only is true, hand/simultaneous
+tracking false. Initial driver is0. The user confirms0.2.10-dev/code11 on the
+refreshed connected phone. Physical cadence, tracking satisfaction and remaining
+wearer/main acceptance are pending. Observer/owned child and leases are released.
+The optional boot receiver remains absent. No Meta upload.
 
 ## 0.2.9-dev — operator controls and installed-build identity, 2026-11-16
 

@@ -6,12 +6,16 @@ Approved user design, 2026-11-14. PROJECT.md remains the lifecycle owner.
 
 The yellow actual-radius circle and percentage use one animated physical
 progress value. During the visible preparation preview, read-only status may
-refresh at 200ms with one request in flight. Ordinary receipt reconciliation,
+refresh at 100ms with one request in flight. Ordinary receipt reconciliation,
 ECG, recording sync, connection attempts and commands retain their existing
 cadence. Stop fast reads outside the preview or while backgrounded. The native
-500ms total renderer freshness limit stays; blend only between observed values,
-charge both endpoints and any unfinished older support, and snap after a stale
-gap. Never extrapolate the desired phase into an actual radius measurement.
+500ms total renderer freshness limit stays. A bounded history of distinct GPU
+observations paints adjacent source-time samples with 280ms playout delay;
+incoming samples append rather than restarting a composite blend. Each endpoint
+keeps its original absolute expiry. Where no fresh bracket exists, clamp to a
+supported sample or freeze/snap honestly. Never extrapolate the desired phase
+into an actual radius measurement. This is presentation delay, not a clock,
+recording, classifier or command-authority change.
 
 At equal physical progress, the yellow outer stroke touches the blue inner
 stroke. Keep the same center and physical scale; subtract the blue's two border
@@ -53,11 +57,15 @@ tracking provenance names its exact classifier and packaged model, never an
 invented participant axis/range or continuous volume measurement. Main remains
 900 seconds with current required streams. Automatic stays parked on load.
 
-The preview requests status-only observations every 200ms while visible and
+The preview requests status-only observations every 100ms while visible and
 connected; requests coalesce. The ordinary one-second receipt/ECG/export/Drive
-loop is unchanged. Actual blending uses unique renderer observations and their
-receive spacing, bounded by both endpoints' remaining 500ms freshness, including
-the oldest support of an unfinished blend. Stale resumption snaps. Radius and
+loop is unchanged. Actual playout uses unique renderer observations with exact relative
+`observed_ns` spacing. The first accepted arrival anchors the source timeline
+using its full charged age; the bounded 32-sample history adds no source data or
+future prediction. The fixed 280ms playhead interpolates only a supported pair
+whose original absolute 500ms expiries both remain valid. Expiry, replay, source/
+settings/owner/audio replacement and visibility barriers remain. Unsupported
+intervals clamp or freeze; reduced motion selects discrete supported samples. Radius and
 percentage share that same actual progress. Gold's border box is four CSS pixels
 narrower before the shared physical scale, placing its outer edge at blue's
 inner edge at equal progress, including responsive minimum/maximum sizes.
