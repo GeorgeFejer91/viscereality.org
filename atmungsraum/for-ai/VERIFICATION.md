@@ -42,13 +42,22 @@ shutting down the headset; the finite startup observer/owned child and exact
 Quest lease are released. Publication/live URLs, installed-phone refresh and
 remaining wearer checks are pending. No Meta upload.
 
-The full reviewed increment and handoff are pushed to PR 18. Current primary
-normal-merge attempt returns GitHub 403 `Resource not accessible by integration`;
-secondary connector attempts returned no merge result before cancellation. The
-follow-up documentation head retires their old expected SHA. No exact code-10
-Pages/live pass is claimed: the deployed release remains PR 17, Pages run
-43756359679. Owner merge, exact 27-file/public-render verification and tomorrow's
-installed-phone refresh remain the next publication actions.
+The secondary account normally merged PR 18 at
+`f79800de0836cc2d8b37c4f75d2592df697b92ec`; exact Pages run 43838565290 succeeds.
+All 27 checked live files match Git blobs, including new cache URLs, release
+policy and native patch. Live 390px/1440px renders pass with ready Pretext, no
+horizontal overflow, script errors or failed app requests, and install help
+open/close. Screenshots are inspected. Browser plugin is unavailable; the
+existing regular Playwright runtime is used. The private smoke script's initial
+response-map assertion preceded the asynchronous release-policy response; it
+now waits for the real response and both viewport checks pass without a product
+change. The source/remote context gate passes. Installed-phone readback is
+requested from the user, who retains phone control.
+
+For resumed testing, Wi-Fi ADB returns the same canonical Quest-2 serial and
+current boot identity through an authenticated shell. Code 10 remains installed.
+The shared ADB daemon is unchanged and setup leases released. This is transport
+confirmation, not worn OpenXR/calibration or effective kiosk qualification.
 
 ## Participant acceptance and follow-up scope — 2026-11-15
 
