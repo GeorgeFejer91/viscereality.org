@@ -16,7 +16,7 @@ the existing operator state/DOM were audited. Independent preflight passes.
 - [x] Implement persistent sequential screens and source-matched styling.
 - [x] Qualify rendered flows, actual Pretext, accessibility, edit/scroll
   stability and complete phone interoperability suite; independent review.
-- [ ] Publish exact reviewed increment and verify Pages/live assets/flows.
+- [x] Publish exact reviewed increment and verify Pages/live assets/flows.
 - [ ] Installed-phone layout acceptance when the phone is available again.
 
 Phone is unavailable; no device operation is part of this layout increment.
@@ -33,8 +33,20 @@ receipts, explicit modes, acceptance invalidation, next-session identity,
 preview-only100ms/singleflight reads and six-poll editor/scroll stability pass.
 Task, whole-change and fixture reviews pass after the recorded corrections.
 Entry/style are `operator-layout-r1`, UI45, local resolver1; setup8/display5 and
-APK policy11 are unchanged. Publication is the next step; no phone/device
+APK policy11 are unchanged. No phone/device
 operation, native/APK rebuild, audio change or Meta upload occurred.
+
+Publication verified: [PR24](https://github.com/GeorgeFejer91/viscereality.org/pull/24)
+ordinary-merges reviewed source `55191045607255305b81a3023654a3af4be704d8` at
+`4a351ecd3916ed50221499b81cac2a4d6e69a8c2`, with identical tree
+`35f2820500a9e8de7cdd4b69bb65f1008fa0f785`. Exact
+[Pages43896368744](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43896368744)
+succeeds. All34 live-file comparisons match Git; public390px/1440px loading,
+new module/cache graph, local settings/return, install help, cold legacy route,
+no-error and width checks pass. The runtime is live. This evidence follow-up
+changes notes and the context checker, which now recognizes the additional
+screen class/attribute order and requires the local layout module/contract.
+Its remote/context gate passes; physical phone refresh/acceptance stays pending.
 
 ### Reusable ambient background music — 2026-11-16
 

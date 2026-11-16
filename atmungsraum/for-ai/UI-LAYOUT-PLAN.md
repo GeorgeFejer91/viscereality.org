@@ -49,7 +49,7 @@ static HTML screenshots.
   running/finalizing controls and six-poll draft/scroll/focus preservation.
 - [x] Run full zero-skip Node gate; inspect independent task and whole-change
   reviews, correct actionable findings, rerun affected checks.
-- [ ] Version the complete changed module graph, update PROJECT/For-AI evidence,
+- [x] Version the complete changed module graph, update PROJECT/For-AI evidence,
   commit/push/ordinary PR merge, exact Pages and live-file/render checks.
 - [x] Record physical phone verification pending, untouched APK11 and deferred
   wearer tests. Keep the overall hardware milestone open.
