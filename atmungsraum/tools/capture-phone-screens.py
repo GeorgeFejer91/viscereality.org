@@ -123,13 +123,14 @@ async function observedStatus() {
     return current;
   } finally { window.reviewStatusInFlight--; }
 }
-function command({ id, op, condition, d }) {
+function command({ id, op, condition, d, scenario }) {
   settings.commands ??= [];
   settings.commands.push(op);
   const states = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 'RUNNING', 'save-next': 'IDLE' };
   if (op === 'arm') {
     settings.generation++;
     settings.condition = condition;
+    settings.armedScenario = scenario;
     settings.host = 'vr-session';
   }
   if (op === 'start') settings.clock = 37000;
@@ -890,30 +891,26 @@ def capture(review):
     expect(page.locator("#session-screen-title")).to_be_focused()
 
     scenario = page.locator("#quest-scenario")
-    condition = page.locator("#quest-condition")
     expect(scenario).to_be_visible()
-    page.clock.run_for(1100)
+    expect(scenario.get_by_role("radio")).to_have_count(3)
+    expect(page.locator("#quest-condition")).to_have_count(0)
+    instruction = scenario.locator('input[value="probe-anleitung"]')
+    practice = scenario.locator('input[value="probe-5"]')
+    main = scenario.locator('input[value="haupt-15"]')
+    instruction.check()
+    instruction.press("ArrowRight")
+    expect(practice).to_be_checked()
+    practice.press("ArrowRight")
+    expect(main).to_be_checked()
     for value, title in (
         ("probe-anleitung", "Anleitung"),
-        ("probe-5", "Probe · 5 Min."),
-        ("probe-10", "Probe · 10 Min."),
-        ("probe-15", "Probe · 15 Min."),
-        ("haupt-15", "Haupt-Runde · 15 Min."),
+        ("probe-5", "Probe-Runde"),
+        ("haupt-15", "Haupt-Runde"),
     ):
-        if value.startswith("probe-") and value != "probe-anleitung":
-            scenario.locator('input[value="practice"]').check()
-            page.locator("#quest-practice").select_option(value)
-            expect(page.locator("#quest-practice")).to_have_value(value)
-        else:
-            tile = scenario.locator(f'input[value="{value}"]')
-            tile.check()
-            expect(tile).to_be_checked()
+        tile = scenario.locator(f'input[value="{value}"]')
+        tile.check()
+        expect(tile).to_be_checked()
         shot(page, value, title, scenario, "Scenario selection")
-    expect(condition).to_be_hidden()
-    scenario.locator('input[value="practice"]').check()
-    page.locator("#quest-practice").select_option("probe-15")
-    condition.locator('input[value="condition-b"]').check()
-    shot(page, "condition-b", "VR-Bedingung B selected", condition, "Scenario selection")
 
     play = page.locator("#quest-play")
     finish = page.locator("#quest-finish")
@@ -921,6 +918,7 @@ def capture(review):
     shot(page, "ready-to-start", "Ready to start the selected run", play, "Playback")
     play.click()
     expect(play).to_have_text("Pause")
+    assert page.evaluate("reviewQuest.armedScenario") == "haupt-15"
     shot(page, "running", "Run active with ECG", page.locator("#quest-ecg"), "Playback")
     play.click()
     expect(play).to_have_text("Fortsetzen")
@@ -1092,7 +1090,7 @@ def capture_accessibility(review, paired):
         proceed = page.locator("#preview-continue")
         proceed.focus()
         proceed.press("Enter")
-        expect(page.locator("#quest-condition")).to_be_visible()
+        expect(page.locator("#quest-scenario")).to_be_visible()
         expect(page.locator("#session-screen-title")).to_be_focused()
         page.context.close()
 

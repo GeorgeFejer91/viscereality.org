@@ -107,6 +107,12 @@ def capture_layout(review):
         review.regressions.append({'kind':'actual-renderer-inset','size':size,**inset})
         expect(page.locator('#preview-continue')).to_be_enabled()
         page.locator('#preview-continue').click()
+        expect(page.get_by_role('region', name='Vorbereitung').get_by_role('radio')).to_have_count(2)
+        expect(page.get_by_role('region', name='Hauptstudie').get_by_role('radio')).to_have_count(1)
+        expect(page.locator('#quest-condition, #quest-practice')).to_have_count(0)
+        requested_scenario = {'390':'haupt-15', '320':'probe-5'}.get(size, 'probe-anleitung')
+        selection = page.locator(f'input[name="quest-scenario"][value="{requested_scenario}"]')
+        selection.check()
         shot(page,'session','#quest-play')
         # A new native attempt invalidates the accepted tracking token without
         # a browser command; the operator must deliberately accept it again.
@@ -118,6 +124,7 @@ def capture_layout(review):
         page.locator('#quest-play').click()
         expect(page.locator('#running-screen')).to_be_visible()
         assert page.evaluate('reviewQuest.commands') == ['arm','start']
+        assert page.evaluate('reviewQuest.armedScenario') == requested_scenario
         for phase in ('RUNNING','PAUSED','FINALIZING','SAVING'):
             c.wait_state(page,phase=phase,host='vr-session',clock=18000)
             expect(page.locator('#running-screen #quest-ecg')).to_be_visible()

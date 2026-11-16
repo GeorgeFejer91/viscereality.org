@@ -19,6 +19,7 @@ const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
   return [Math.floor(seconds / 60), seconds % 60].map(part => String(part).padStart(2, '0')).join(':');
 };
+const operatorCondition = 'condition-a';
 const archiveDate = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
 const liveSync = new URLSearchParams(location.search).get('live-sync') !== 'off';
 
@@ -86,13 +87,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const acknowledge = byId('quest-acknowledge');
   const disconnect = byId('quest-disconnect');
   const sessionChoices = byId('session-choices');
-  const conditionChoices = byId('quest-condition');
-  const conditionName = byId('quest-condition-name');
-  const conditionLabels = conditionChoices.querySelectorAll('.session-tile-text [data-measure]');
   const scenarioChoices = byId('quest-scenario');
   const scenarioOptions = Array.from(scenarioChoices.querySelectorAll('input'));
-  const practice = byId('quest-practice');
-  const practiceOptions = Array.from(practice.options);
   const participant = byId('quest-participant');
   const participantLabel = byId('quest-participant-label');
   const participantForm = byId('patient-form');
@@ -301,29 +297,23 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     paint();
   });
 
-  function runSelection() {
-    const choice = scenarioChoices.querySelector('input:checked:not([disabled])')?.value;
-    const scenario = choice === 'practice' ? practice.value : choice ?? '';
-    const condition = scenario === 'haupt-15' ? 'condition-a' : conditionChoices.querySelector('input:checked').value;
-    return { scenario, condition };
+  function selectedScenario() {
+    return scenarioChoices.querySelector('input:checked:not([disabled])')?.value ?? '';
   }
 
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
-    const available = rehearsal.gateway?.scenarioArm ? rehearsalScenarios(status) : [];
+    const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
+    const available = supportsScenarios ? rehearsalScenarios(status) : [];
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
-    for (const option of practiceOptions) option.hidden = option.disabled = !available.includes(option.value);
-    const availablePractice = practiceOptions.filter(option => !option.disabled);
-    if (availablePractice.length && !available.includes(practice.value)) practice.value = availablePractice[0].value;
     for (const option of scenarioOptions) {
-      const offered = option.value === 'practice' ? availablePractice.length > 0 : available.includes(option.value);
-      option.closest('label').hidden = option.disabled = !offered;
+      option.closest('label').hidden = option.disabled = !available.includes(option.value);
     }
-    if (!runSelection().scenario) {
+    if (!selectedScenario()) {
       const firstOffered = scenarioOptions.find(option => !option.disabled);
       if (firstOffered) firstOffered.checked = true;
     }
-    const { scenario, condition } = runSelection();
-    const actions = rehearsalActions(status, condition);
+    const scenario = selectedScenario();
+    const actions = rehearsalActions(status, operatorCondition);
     const active = Boolean(status?.rec);
     const requiresParticipant = status?.participant_arm === 1;
     const armedWithParticipant = Boolean(rehearsal.gateway?.participantArm);
@@ -460,21 +450,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polarConnect.disabled = recoveringStreams || waiting || unknown || !setup?.p || !setup.b || !setup.c && setup.l === 'disabled' || setup.sc || ready;
     if ((polar.hidden || polarConnect.hidden) && hadPolarFocus) statusText.focus({ preventScroll: true });
     play.hidden = !status || idle && !selectionAllowed;
-    const showScenario = selectionAllowed && Boolean(scenario);
-    const showCondition = selectionAllowed && status.ecg_preview === 1 && scenario !== 'haupt-15';
-    sessionChoices.hidden = !showScenario && !showCondition;
-    scenarioChoices.hidden = !showScenario;
-    conditionChoices.hidden = !showCondition;
-    practice.parentElement.hidden = !showScenario || !availablePractice.some(option => option.value === scenario);
-    practice.disabled = waiting || unknown;
-    scenarioChoices.disabled = conditionChoices.disabled = waiting || unknown;
+    sessionChoices.hidden = scenarioChoices.hidden = !selectionAllowed || !scenario;
+    scenarioChoices.disabled = waiting || unknown;
     if (focusedChoice && (focusedChoice.closest('[hidden]') || focusedChoice.matches(':disabled'))) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
-    text(conditionName, showScenario ? 'VR-Bedingung' : 'Szenario');
-    text(conditionLabels[0], showScenario ? 'Bedingung A' : 'Szenario A');
-    text(conditionLabels[1], showScenario ? 'Bedingung B' : 'Szenario B');
-    play.disabled = waiting || unknown || !actions.play || actions.play === 'arm' && !selectionAllowed;
+    play.disabled = waiting || unknown || !actions.play
+      || actions.play === 'arm' && (!selectionAllowed || supportsScenarios && !scenario);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -1060,8 +1042,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     nextSync = 0;
     const attempt = new AbortController();
     userAction = attempt;
-    const { scenario, condition } = runSelection();
-    try { await rehearsal.run(action, attempt.signal, condition, participantId, scenarioChoices.hidden ? '' : scenario); }
+    const scenario = scenarioChoices.hidden ? '' : selectedScenario();
+    try { await rehearsal.run(action, attempt.signal, operatorCondition, participantId, scenario); }
     finally { if (userAction === attempt) userAction = null; }
   }
 

@@ -2,6 +2,12 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Separation of preparation and main study — 2026-11-16
+
+- [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute
+  Haupt-Runde. Give Haupt-Runde its own Hauptstudie section. See the
+  [scenario selection verification](VERIFICATION.md#scenario-selection--2026-11-16).
+
 ### Operator UI port from Atmungsraum UI — 2026-11-16
 
 - [x] Port the connection checks/setup, aligned participant form, large tracking

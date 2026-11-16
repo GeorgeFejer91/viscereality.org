@@ -1,5 +1,15 @@
 # Verification
 
+## Scenario selection — 2026-11-16
+
+Chromium exercised the three choices with real radio navigation across the
+Vorbereitung and Hauptstudie sections. The production fixture gateway received
+`probe-anleitung`, `probe-5`, and `haupt-15` on Arm. The relevant controller,
+connection, recording-sync and naming unit tests passed 38/38. The selector
+fit at 320 × 568, 390 × 844, 844 × 390 and 1440 × 900. At 200% text it
+used readable document reflow. Browser tests used simulated equipment.
+
+
 ## Playground UI port — 2026-11-16
 
 Ported the presentation from the playground through `60994c4` onto the

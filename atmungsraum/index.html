@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-operator-ui-port-r1">
+  <link rel="stylesheet" href="./style.css?v=20261116-session-segments-r1">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261116-operator-ui-port-r1"></script>
+  <script type="module" src="./app.js?v=20261116-session-segments-r1"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -342,42 +342,30 @@
       <div class="screen-body operator-body">
         <div id="session-choices" hidden>
           <fieldset id="quest-scenario" hidden>
-            <legend class="sr-only">Ablauf</legend>
-            <div class="session-tiles">
-              <label class="session-tile">
-                <input type="radio" name="quest-scenario" value="practice">
-                <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Probe-Runde</span></span>
-              </label>
-              <label class="session-tile">
-                <input type="radio" name="quest-scenario" value="probe-anleitung" checked>
-                <span class="session-tile-text"><img src="./assets/scenes/exploration.svg" alt="" width="96" height="96"><span data-measure>Anleitung</span></span>
-              </label>
-              <label class="session-tile">
-                <input type="radio" name="quest-scenario" value="haupt-15">
-                <span class="session-tile-text"><img src="./assets/scenes/main.svg" alt="" width="96" height="96"><span data-measure>Haupt-Runde</span></span>
-              </label>
-            </div>
-          </fieldset>
-          <label id="quest-practice-label" for="quest-practice" hidden>
-            <span data-measure>Ablauf der Probe-Runde</span>
-            <select id="quest-practice">
-              <option value="probe-5">Probe · 5 Min.</option>
-              <option value="probe-10">Probe · 10 Min.</option>
-              <option value="probe-15">Probe · 15 Min.</option>
-              <option value="box-20">Box-Atmung · 20 Min.</option>
-            </select>
-          </label>
-          <fieldset id="quest-condition" hidden>
-            <legend id="quest-condition-name" class="sr-only">VR-Bedingung</legend>
-            <div class="session-tiles">
-              <label class="session-tile">
-                <input type="radio" name="quest-condition" value="condition-a" checked>
-                <span class="session-tile-text"><span data-measure>Bedingung A</span></span>
-              </label>
-              <label class="session-tile">
-                <input type="radio" name="quest-condition" value="condition-b">
-                <span class="session-tile-text"><span data-measure>Bedingung B</span></span>
-              </label>
+            <legend class="sr-only">Sitzungsablauf</legend>
+            <div class="session-segments">
+              <section class="session-segment" aria-labelledby="trial-segment-title">
+                <h2 id="trial-segment-title" data-measure>Vorbereitung</h2>
+                <div class="session-tiles">
+                  <label class="session-tile">
+                    <input type="radio" name="quest-scenario" value="probe-anleitung" checked>
+                    <span class="session-tile-text"><img src="./assets/scenes/exploration.svg" alt="" width="96" height="96"><span data-measure>Anleitung</span></span>
+                  </label>
+                  <label class="session-tile">
+                    <input type="radio" name="quest-scenario" value="probe-5">
+                    <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Probe-Runde</span><small data-measure>5 Min.</small></span>
+                  </label>
+                </div>
+              </section>
+              <section class="session-segment main-session-segment" aria-labelledby="main-segment-title">
+                <h2 id="main-segment-title" data-measure>Hauptstudie</h2>
+                <div class="session-tiles">
+                  <label class="session-tile">
+                    <input type="radio" name="quest-scenario" value="haupt-15">
+                    <span class="session-tile-text"><img src="./assets/scenes/main.svg" alt="" width="96" height="96"><span data-measure>Haupt-Runde</span><small data-measure>15 Min.</small></span>
+                  </label>
+                </div>
+              </section>
             </div>
           </fieldset>
         </div>

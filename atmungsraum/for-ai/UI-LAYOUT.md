@@ -51,13 +51,13 @@ Controller shortcut at review after two Quest-reported attempts in this
 participant setup; the existing input chooser still offers Controller and
 supported pretrained Polar modes without this shortcut gate.
 
-Use illustrated scenario tiles on one screen. Main uses the one selected
-study condition and the existing 900-second plan. Practice retains the
-advertised durations and the standalone Box-Atmung where available. Guidance
-uses the existing Anleitung plan. The playground's manual-ended **Freie
-Erkundung** has no production native plan and must not be offered as runnable.
-Keep any legacy A/B choices offered by the real controller outside the main
-round. Send native scenario IDs. Playback uses the authenticated Quest elapsed
+Show three choices on the scenario page. Group **Anleitung**
+(`probe-anleitung`) and **Probe-Runde** (`probe-5`, five minutes) under
+**Vorbereitung**. Place **Haupt-Runde** (`haupt-15`, 900 seconds) in a
+separate **Hauptstudie** section. The operator selects a scenario. Quest
+receives the established condition value with the exact scenario ID. Arm,
+recording metadata, filenames and per-participant counters retain their
+existing `probe` and `main` rules. Playback uses the authenticated Quest elapsed
 clock. Show a determinate bar when that status also reports a valid total
 duration. The elapsed time remains available on older builds.
 The running screen shows the native elapsed clock. Render percentage progress

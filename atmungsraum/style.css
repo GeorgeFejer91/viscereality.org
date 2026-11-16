@@ -167,8 +167,8 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 #quest-drive label > span { display: block; }
 #quest-drive input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-drive summary { min-height: 48px; align-content: center; cursor: pointer; }
-#quest-condition-label, #quest-scenario-label, #quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
-#quest-condition, #quest-scenario, #quest-archives { min-height: 48px; min-width: 0; max-width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
+#quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
+#quest-archives { min-height: 48px; min-width: 0; max-width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-acknowledge, #quest-disconnect, #quest-find { justify-self: center; }
 #quest-find { width: min(100%, 280px); padding-inline: 16px; }
 #quest-find[aria-disabled="true"] { cursor: default; }
@@ -248,8 +248,8 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 #quest-participant .patient-fields { align-content: start; }
 #patient-next { width: 100%; }
 #quest-polar, #quest-data { width: 100%; gap: 12px; }
-#quest-condition-label, #quest-scenario-label, #quest-archives-label { width: 100%; justify-self: stretch; text-align: start; }
-#quest-condition, #quest-scenario, #quest-archives { width: 100%; }
+#quest-archives-label { width: 100%; justify-self: stretch; text-align: start; }
+#quest-archives { width: 100%; }
 #quest-clock { font-size: clamp(1.1rem, min(5vw, 5dvh), 2rem); font-variant-numeric: tabular-nums; text-align: center; }
 #operator-live { width: 100%; gap: 16px; }
 #operator-input-status { width: 100%; text-align: start; }
@@ -408,25 +408,32 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
 
 #session-choices { display: grid; justify-items: center; gap: 12px; width: 100%; }
 #session-choices fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
-.session-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-#quest-condition .session-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.session-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .session-tile {
   position: relative; display: grid; place-items: center; text-align: center;
-  min-block-size: 48px; aspect-ratio: 1; padding: 4px;
+  min-block-size: 48px; padding: 8px;
   border: 1px solid var(--border); border-radius: 6px; background: var(--surface);
   line-height: 1.15; cursor: pointer;
 }
 .session-tile input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
 .session-tile-text { display: grid; gap: 4px; width: 100%; pointer-events: none; }
 #quest-scenario .session-tile-text img { width: min(100%, 2.5em); height: auto; justify-self: center; }
-#quest-practice-label { display: grid; gap: 4px; width: min(100%, 22rem); }
-#quest-practice { width: 100%; min-height: 48px; padding: 4px 8px; font: inherit; }
 .session-tile:has(:checked) { background: #0e2a3c; border-color: #74c5f2; box-shadow: inset 0 0 0 1px #74c5f2; }
 .session-tile:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 .session-tile:has(:disabled) { color: #979797; cursor: default; }
-#quest-scenario { width: min(100%, 22rem); }
-#quest-condition { width: min(100%, 15rem); }
-#quest-condition .session-tile { aspect-ratio: 2; }
+#quest-scenario { width: min(100%, 34rem); }
+.session-segments { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(8px, min(3vw, 2dvh), 16px); }
+.session-segment { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.session-segment:not(:has(.session-tile:not([hidden]))) { display: none; }
+.session-segment h2 { margin: 0; font-size: 1em; font-weight: 700; }
+.main-session-segment { padding-block-start: 8px; border-block-start: 2px solid var(--site-gold); }
+.main-session-segment .session-tiles { grid-template-columns: minmax(0, 1fr); }
+.main-session-segment .session-tile { align-self: stretch; border-color: var(--site-gold); }
+@media (orientation: landscape), (min-width: 600px) {
+  .session-segments { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+  .session-segment { align-content: stretch; grid-template-rows: auto minmax(0, 1fr); }
+  .main-session-segment { padding-block-start: 0; padding-inline-start: 8px; border-block-start: 0; border-inline-start: 2px solid var(--site-gold); }
+}
 #preview-review {
   font-size: clamp(1.1rem, min(4vw, 3dvh), 1.6rem);
   line-height: 1.25;
