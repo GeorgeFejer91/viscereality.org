@@ -16,8 +16,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   current assets and correct126px/122px touching inset. Real timing exposes
   pauses from the original composite blends. A reviewed PWA-only correction
   uses bounded adjacent GPU history/280ms playout and100ms singleflight preview
-  reads, retaining500ms endpoint expiry. Full223phone tests pass. Publication
-  and same-phone confirmation are pending; new-mode testing is postponed.
+  reads, retaining500ms endpoint expiry. Full223phone tests pass. PR22/Pages43877648195,27 live-file and public-render checks pass. Same-phone
+  confirmation is pending because the phone became unavailable. Its observer/
+  forward/leases are released; new-mode testing is postponed.
 
 
 - Display and mode follow-up (2026-11-16): actual gold radius/percentage share
