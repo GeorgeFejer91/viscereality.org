@@ -4,31 +4,48 @@
 
 ### Autoboot, kiosk and Meta update test — 2026-11-16
 
-The user reports the latest attended APK/PWA works well enough for now, with
-fine UI/calibration tuning deferred. They explicitly request power-on launch,
-menu/foreground recovery and a higher version distributed through the existing
-Meta developer channel to test unattended update behavior with autoboot.
-Follow [the composition and acceptance contract](BOOT-KIOSK-UPDATE.md).
+The user accepts current APK/PWA behavior for now and requests power-on launch,
+menu/foreground recovery and actual automatic Meta updates. Both the outdated
+baseline and its successor must arrive through Meta. Follow the accepted
+[boot/helper/update contract](BOOT-KIOSK-UPDATE.md); overall acceptance is open.
 
-Current verified installed baseline is code11/0.2.10-dev with its exact APK
-hash, retained UID/grants, trusted launcher admission, controller-only input,
-closed startup panel and target-owned XR focus. Wi-Fi ADB works; Location isON.
-Code11 has no selected boot receiver. Current authenticated dashboard readback
-confirms code3 in the existing private Developer channel, one member and latest-
-build launch enforcement disabled. Preserve those access and launch settings.
+Meta rejected the initial internal-boot code13 for unsupported
+`SYSTEM_ALERT_WINDOW`. After a local12 smoke installation, the user approved a
+separate one-time USB boot helper. Main15/0.2.14-dev and16/0.2.15-dev omit that
+internal boot feature and permission while retaining the same signer, private
+inputs, controller-only input, pairing, audio/calibration and own-app kiosk.
+The helper resolves the current installed same-signer MAIN/LAUNCHER each boot;
+normal experiment updates do not require helper updates. No native source change.
 
-The explicit `-BootAutostart` recipe increment passes independent source review,
-three real resolver tests with zero skips, boot controls and the soft-kiosk gate.
-Baseline12/0.2.11-dev and candidate13/0.2.12-dev are locally built and inspected:
-same signer/package/native/private inputs, actual boot closure and signed APK
-session checks pass. See the [APK record](../quest/apks/README.md) for hashes.
-The selected kiosk is the app-owned self-watchdog; do not enable the separate
-Accessibility adapter. Autoboot still requires the overlay grant.
+Main15/16 actual signed-package gates and full normalized functional comparisons
+pass. The signed helper passes27policy checks, SDK36 compilation, actual package
+inspection and independent source/package review. See the
+[APK record](../quest/apks/README.md) for exact byte hashes and evidence limits.
+Root reruns helper27checks, signature, release-policy6/6zero-skip and context/diff
+checks. The PWA policy advertises available15 while retaining protocol minimum11.
 
-No new APK upload, install or reboot for this task has occurred yet. An attended
-idle/USB confirmation is pending before replacing code11 and testing a genuine
-reboot. Preserve code12 as the outdated device baseline when later publishing13;
-never ADB-install13 as evidence of Meta delivery. Overall acceptance stays open.
+Code15 is the current existing private Developer-channel Quest2 build; Meta
+checks are Complete, malware passes and vulnerability review reports all tests
+passed. Channel access, existing one-member enrollment and latest-build launch
+policy were preserved. Code16 remains local/unpublished pending baseline testing.
+
+**Current device:** after explicit idle/USB readiness, local12 installation was
+confirmed by exact APK hash/version and retained UID. The user then thought the
+library updated automatically, but fresh Package Manager/hash/installer readback
+still shows local12 with Android-shell provenance. The user confirms Developer
+is selected and offers15, while installed12 has no Update option. They are
+trying Meta's original invitation-page “Install on headset” route. Actual Meta15
+adoption is pending;
+never ADB-install15/16 for this test. No helper is installed/granted and no reboot
+has occurred. No enrollment/account-mode change or overall boot/kiosk/update
+acceptance is claimed. Phone control stays with the user; Location remains ON.
+
+Source-preparation PR26 merged at `2418869c19b0fb1f84723fcf566c225bd9dfcf5b`;
+exact Pages run43915823855 succeeded with eight affected/preserved public files
+matching exact Git blobs and remote equality passing. The verified helper/split
+and updated evidence are the next publication increment. Remaining steps:
+Meta15 adoption, one-time helper setup, genuine boot/focus/menu/exit qualification,
+then Meta16 publication and observed automatic delivery/post-update behavior.
 
 ### Operator layout improvement — 2026-11-16
 
