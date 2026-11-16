@@ -66,6 +66,13 @@ response both left the loaded version usable. No page errors were observed.
 The real-app operator/history fixture, Node suite (six native prerequisites
 skipped), context, syntax and Git whitespace checks passed.
 
+[Pages run 43938500111](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43938500111)
+deployed `726204db55b6defa01b47b3ad1cfe990e933a884`. Both entry URLs and nine
+public files matched Git. Live Chromium confirmed a current launch made one
+successful check without reloading. A seeded stale entry made one check and
+switched to the live release with its original route. The lab Pixel 10 was
+unavailable for a physical standalone check.
+
 ## Scenario selection — 2026-11-16
 
 Chromium exercised the three choices with real radio navigation across the
