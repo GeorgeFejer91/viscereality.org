@@ -24,9 +24,10 @@ single audio clock and 900-second main. No additional approval loop.
   the new choices. Preserve scroll/focus and actual Pretext measurement.
 - [x] Focused RED/GREEN, task spec/quality and combined integration review;
   native/phone host gates and narrow/200% rendered checks.
-- [ ] Bind cumulative source, package/inspect local code 11, publish exact
-  Pages/live, install while idle and qualify affected device behavior. No Meta
-  upload; wearer testing requires fresh Ready and user keeps phone control.
+- [x] Bind cumulative source, package/inspect local code 11 and publish exact
+  Pages/live with public phone/desktop checks.
+- [ ] Install while idle and qualify affected device behavior. No Meta upload;
+  wearer testing requires fresh Ready and user keeps phone control.
 
 Task ownership: display implementation owns live-breath-display.js, display
 CSS and display tests; native implementation owns selected native adapter,
@@ -57,6 +58,27 @@ unchanged private particle inputs and retained signer. See the APK log for exact
 bytes/source/build identity. The build lease is released. Installation awaits
 the requested idle/no-recording answer; publication is in progress. Actual
 phone/LAN timing and wearer acceptance remain open. No new wearer calibration has been started.
+
+Publication verified: [PR 20](https://github.com/GeorgeFejer91/viscereality.org/pull/20)
+merged through the secondary account at
+`e9e8048d39843865a6db95697e0ecadba2524e72`; exact
+[Pages run 43848286245](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43848286245)
+succeeded. All 27 checked live files match Git, including the code-11 release
+policy and new cache versions. Live390px/1440px rendering, actual policy fetch,
+install-help interaction and source/remote context gates pass. The live policy
+requires code11/0.2.10-dev; new preset choices also require explicit capability.
+
+Last installed device version remains code10. A pending user question asks
+whether any recording is running before installation of the inspected local
+code11 APK; do not infer idle/approval from elapsed time. Retain user phone
+control. After idle confirmation, reserve the exact Quest, verify current Wi-Fi
+identity/boot, capture startup, install/read back exact bytes, launch through
+MAIN/LAUNCHER and verify effective startup/phone identity. Require fresh wearer
+Ready before calibration or mode tracking tests. No Meta upload or recording was
+started. Next hardware checks are smooth yellow/percent, stroke contact, both
+preset modes and participant-fit/Controller fallback continuity; full-main
+physical acceptance remains open.
+
 
 ### Publication resumed through secondary account — 2026-11-16
 

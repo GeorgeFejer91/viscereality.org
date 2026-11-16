@@ -34,8 +34,13 @@ Its source capsule, packaged identity, retained certificate, manifest, 89 assets
 16KiB alignment and actual signed session closure pass. Build identifier is
 `770823055efe4f31d29af29b6f71d747e6bcfaa9f07b3ddf3c71b4b93f9107ec`.
 Controller-only/private particle selection stays unchanged; boot receiver absent.
-Installation, exact live publication, refreshed phone and wearer checks are
-separate pending gates. No Meta upload.
+PR20 merged at `e9e8048d39843865a6db95697e0ecadba2524e72`; exact Pages run
+43848286245 succeeds. All27 live files match Git; new cache URLs, release policy,
+390px/1440px renders, no-error/overflow and install-help checks pass. Source/remote
+context and native boundary gates pass. Code11 is not installed yet: a user
+idle/no-recording question is pending. Refreshed installed-phone and wearer checks
+remain separate gates. Build lease is released; no device/ADB observer held.
+No Meta upload.
 
 ## Operator controls and APK identity / code 10 — 2026-11-16
 

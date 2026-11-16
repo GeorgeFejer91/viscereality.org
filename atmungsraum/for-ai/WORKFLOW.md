@@ -9,16 +9,19 @@ installed baseline until fresh idle installation/readback. The user has been
 asked whether any recording is running; do not install before that answer.
 Fresh wearer Ready is still required before calibration. No Meta upload.
 
-Code 10 is installed with matching byte readback and an accepted canonical cold
-launch. H10 discovery/connection and ACC+ECG stream starts occurred automatically.
-After yesterday's test ended, observer and exact Quest lease were released.
-The user returned today. PR 18 is merged through the secondary account; exact
-Pages run 43838565290, 27 live files and public phone/desktop checks pass.
-Quest Wi-Fi ADB is restored and verified. Installed-phone readback is requested.
-Obtain fresh Ready,
-with the user operating the phone, before continuing device acceptance. See the
-active PROJECT checklist; effective kiosk, dual-radius display, Controller UI,
-sustained recovery and full main remain separate acceptance items.
+Local code11 (0.2.10-dev) is built and inspected with retained signer and private
+particle inputs. Matching PWA is live through PR20, exact Pages43848286245,
+27 live-file matches and public phone/desktop checks. Build lease is released.
+The last installed Quest version is code10. A pending user idle/no-recording
+question must be answered before installation; the Polar can remain off.
+
+After confirmation, reserve the exact Quest and verify current Wi-Fi serial/boot
+before effects. Capture startup before install/MAIN+LAUNCHER, read back exact
+installed bytes/version/identity and truthful native startup. The user operates
+the phone. Fresh wearer Ready is required before calibration or tracking tests.
+See PROJECT for the smooth actual display, preset choices, participant/Controller
+fallback, effective kiosk and full-main acceptance still requiring device checks.
+No Meta upload or recording has been started in this increment.
 
 The user explicitly requests retaining system Location ON on the test Quest
 after the attended scan/calibration work. This supersedes the earlier temporary
