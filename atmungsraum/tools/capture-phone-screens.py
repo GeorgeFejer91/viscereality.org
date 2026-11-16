@@ -69,6 +69,7 @@ function snapshot() {
     pending, participant_arm: 1, ecg_preview: 1, recenter: 1, recordings: 1,
     controller_access: settings.access,
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
+    ...(Object.hasOwn(window,'reviewMetaUpdate') ? {meta_update:window.reviewMetaUpdate} : {}),
     ...(settings.kiosk ? {kiosk:settings.kiosk} : {}),
     breath_setup: settings.oldApk ? undefined : 1, setup: settings.oldApk ? undefined : setup,
     pi: { r: true, f: fresh }, a: ['track-ready', 'track-ready'],

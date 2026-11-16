@@ -16,11 +16,14 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output / 'screens').mkdir(exist_ok=True)
+    policy = json.loads(Path(__file__).parents[1].joinpath('quest-release.json').read_text(encoding='utf8'))['packages']['org.viscereality.atmungsraum.developer']
+    current_code, current_name = policy['latest_version_code'], policy['version_name']
+    outdated_code = policy['minimum_version_code'] - 1
     metadata = {'v': 1, 'package_name': 'org.viscereality.atmungsraum.developer',
-                'version_code': 10, 'version_name': '0.2.9-dev', 'build_id': 'e' * 64}
+                'version_code': current_code, 'version_name': current_name, 'build_id': 'e' * 64}
     cases = [('old-apk-no-metadata', None, 'unknown', False),
-             ('installed-10', metadata, 'compatible', False),
-             ('installed-9', {**metadata, 'version_code': 9, 'version_name': '0.2.8-dev'}, 'required', False),
+             ('installed-current', metadata, 'compatible', False),
+             ('installed-outdated', {**metadata, 'version_code': outdated_code, 'version_name': 'older-dev'}, 'required', False),
              ('policy-unavailable', metadata, 'check-unavailable', True),
              ('unknown-package', {**metadata, 'package_name': 'org.other.application'}, 'unknown', False)]
     receipts = []
@@ -51,9 +54,9 @@ def main():
                 expect(page.locator('#preview-continue')).to_be_enabled()
                 if expected == 'required':
                     expect(page.locator('#apk-update-status')).to_contain_text('erforderlich')
-                    expect(page.locator('#apk-required')).to_contain_text('Mindestens Code 10')
+                    expect(page.locator('#apk-required')).to_contain_text(f"Mindestens Code {policy['minimum_version_code']}")
                 if expected == 'compatible':
-                    expect(page.locator('#apk-installed')).to_contain_text('0.2.9-dev · Code 10 · Build eeeeeeeeeeee')
+                    expect(page.locator('#apk-installed')).to_contain_text(f'{current_name} · Code {current_code} · Build eeeeeeeeeeee')
                 if apk is None:
                     expect(page.locator('#apk-installed')).to_have_text('Installiert: nicht verlässlich gemeldet.')
                 review.shot(page, f'{slug}-{width}', f'APK {slug} · {width}px/{size}', page.locator('#quest-version'), 'APK release indicator')
@@ -67,7 +70,7 @@ def main():
                 requests = page.evaluate('window.reviewPolicyRequests')
                 assert len(requests) > initial_reads
                 assert all(request['cache'] == 'no-store' and request['credentials'] == 'omit' for request in requests)
-                if slug == 'installed-10':
+                if slug == 'installed-current':
                     summary = page.locator('#apk-identity summary')
                     summary.click()
                     expect(page.locator('#apk-full-identity')).to_contain_text('e' * 64)

@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-operator-layout-r1">
+  <link rel="stylesheet" href="./style.css?v=20261116-meta-update-r1">
   <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261116-operator-layout-r1"></script>
+  <script type="module" src="./app.js?v=20261116-meta-update-r1"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -74,6 +74,10 @@
           </aside>
           <p id="operator-compatibility" class="compatibility-note" data-measure hidden role="status">
           </p>
+          <aside id="operator-meta-update" class="meta-update-panel" hidden aria-labelledby="operator-meta-summary">
+            <p id="operator-meta-summary" data-measure role="status"></p>
+            <p id="operator-meta-detail" data-measure></p>
+          </aside>
         </div>
         <div id="quest-pairing" class="screen-body" hidden>
           <p data-measure>Vergleiche diesen Code mit dem Code im Headset.</p>
@@ -388,6 +392,11 @@
           <p id="apk-update-status" data-measure role="status">APK-Versionsprüfung läuft …</p>
           <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
           <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+          <div id="meta-update" class="meta-update-panel" aria-labelledby="meta-update-status">
+            <p id="meta-update-status" data-measure role="status"></p>
+            <progress id="meta-update-progress" aria-labelledby="meta-update-status" aria-describedby="meta-update-detail" hidden></progress>
+            <p id="meta-update-detail" data-measure></p>
+          </div>
           <details id="apk-identity">
             <summary><span data-measure>Vollständige APK-Kennung</span>
             </summary>

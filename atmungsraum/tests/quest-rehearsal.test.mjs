@@ -691,3 +691,49 @@ test('ordinary reconciliation joining preview status-only work follows with the 
   release(); await Promise.all([fast, regular]);
   assert.equal(receipts, 1); assert.equal(statuses, 2); assert.equal(rehearsal.pending, null);
 });
+
+test('native update gate denies Arm and Start but retains stop controls and legacy admission', () => {
+  const update = (state, session_allowed) => ({ v: 1, state, reason: '', installed_code: 15,
+    available_code: 16, downloaded_bytes: 0, total_bytes: null, session_allowed });
+  assert.equal(rehearsalActions(snapshot()).play, 'arm');
+  for (const meta_update of [null, {}, update('waiting', false), update('checking', false),
+    update('downloading', true), update('installing', false), update('restart_required', true), update('current', false)]) {
+    assert.equal(rehearsalActions({ ...snapshot(), meta_update }).play, undefined);
+    assert.equal(rehearsalActions({ ...snapshot('ARMED'), meta_update }).play, undefined);
+    assert.equal(rehearsalActions({ ...snapshot('RUNNING'), meta_update }).play, 'pause');
+    assert.equal(rehearsalActions({ ...snapshot('RUNNING'), meta_update }).finish, 'save-next');
+  }
+  for (const name of ['current', 'updated', 'failed']) {
+    assert.equal(rehearsalActions({ ...snapshot(), meta_update: update(name, true) }).play, 'arm');
+  }
+});
+
+test('native update admission revalidates before Polar setup effects', async () => {
+  const calls = [];
+  const y = { s: 'a'.repeat(32), g: 8, r: 1, p: true, b: true, c: false,
+    a: false, e: false, sc: false, x: '', d: [] };
+  const initial = { ...snapshot(), y };
+  const blocked = { ...initial, meta_update: { v: 1, state: 'checking', reason: '', installed_code: 15,
+    available_code: null, downloaded_bytes: 0, total_bytes: null, session_allowed: false } };
+  const gateway = { owner, initial, close() {}, status: async () => blocked,
+    command: async command => { calls.push(command); } };
+  const model = new QuestRehearsal(); model.attach(gateway);
+  await model.run('polar');
+  assert.equal(calls.length, 0);
+});
+
+test('Meta update status stays in authenticated enrolled status without adding command authority', async () => {
+  const meta_update = { v: 1, state: 'downloading', reason: '', installed_code: 15,
+    available_code: 16, downloaded_bytes: 1024, total_bytes: null, session_allowed: false };
+  const native = { ...snapshot(), meta_update };
+  const fixture = server({ status: native });
+  const gateway = await joinQuest({ endpoint, serial: owner.serial, build,
+    enrollment: { controller, key }, fetcher: fixture.fetch });
+  assert.deepEqual(gateway.initial.meta_update, meta_update);
+  native.o.i = '101';
+  await gateway.status();
+  assert.deepEqual(fixture.requests, ['GET', 'status', 'status']);
+  assert.equal(gateway.metaUpdate, undefined);
+  assert.equal(gateway.update, undefined);
+  gateway.close();
+});
