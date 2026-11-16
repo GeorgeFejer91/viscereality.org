@@ -11,9 +11,17 @@ Full SDK install/relaunch acceptance remains open. Candidate19's initial product
 packaging exposed a Java lambda/Android bootclasspath compatibility failure.
 Explicit Java callbacks correct it without changing updater policy; the actual
 signed code19-r2 assembly and session closure now pass at native62ddb621.
-Independent final artifact inspection and Meta installation remain pending.
+Independent final artifact inspection passes: actual signer/SDK207/all-DEX,
+helper protocol2/signature permission,16KiB owned SDK/JNI and ZIP closure,
+all15 private inputs and79 original audio/guidance/session assets. Meta19 is
+published as1463329980199347 in Developer with retained Quest2/13+ and passing
+malware/security checks. Actual installation and physical acceptance remain
+pending. Successor20 is also built and independently qualified; it stays
+unpublished until the actual19 baseline is confirmed.
 BootEntry12/110 and actual Android API compile also pass. Concurrent production
-UI changes are merged at43e5a4a; exact publication is pending this increment.
+UI changes are preserved. PR30 ordinary merge7855177 and exact Pages43970922434
+succeed;34 affected/preserved files match live Git bytes. Installed-phone refresh
+is pending because the Pixel6a is no longer present in the ADB inventory.
 See PROJECT.md and BOOT-KIOSK-UPDATE.md for current tasks and hardware limits.
 Older checkpoint paragraphs below are dated evidence, not the current release.
 

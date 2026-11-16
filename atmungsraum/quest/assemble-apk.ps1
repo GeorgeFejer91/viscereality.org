@@ -15,6 +15,8 @@ param(
     [switch]$BootAutostart,
     [switch]$MetaPlatformUpdate,
     [string]$MetaPlatformAppId,
+    [string]$MetaRequiredVersionManifestUrl,
+    [switch]$MetaUpdateHelper,
     [string]$MetaPlatformSdkRoot,
     [string]$MetaPlatformHeadersSha256,
     [string]$MetaPlatformLoaderSha256,
@@ -27,16 +29,19 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $metaInputs = @($MetaPlatformAppId, $MetaPlatformSdkRoot, $MetaPlatformHeadersSha256,
-    $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256)
+    $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256, $MetaRequiredVersionManifestUrl)
 if ($MetaPlatformUpdate) {
     if (@($metaInputs | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -gt 0 -or
         $MetaPlatformAppId -cnotmatch '^[1-9][0-9]{0,19}$' -or
         @(@($MetaPlatformHeadersSha256, $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256) |
             Where-Object { $_ -cnotmatch '^[0-9a-f]{64}$' }).Count -gt 0) {
-        throw 'MetaPlatformUpdate requires an explicit canonical MetaPlatformAppId, SDK root and three SHA256 digests.'
+        throw 'MetaPlatformUpdate requires an explicit canonical MetaPlatformAppId, required-version manifest URL, SDK root and three SHA256 digests.'
+    }
+    if ($MetaRequiredVersionManifestUrl -cne 'https://viscereality.org/atmungsraum/quest-release.json') {
+        throw 'MetaPlatformUpdate requires the canonical Atmungsraum required-version manifest URL.'
     }
     $MetaPlatformSdkRoot = (Resolve-Path -LiteralPath $MetaPlatformSdkRoot).Path
-} elseif (@($metaInputs | Where-Object { ![string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
+} elseif ($MetaUpdateHelper -or @($metaInputs | Where-Object { ![string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
     throw 'Meta SDK inputs require explicit -MetaPlatformUpdate.'
 }
 
@@ -261,12 +266,23 @@ if ('ui.native_mesh_panel' -cnotin $app.requested_features -and
     $app.requested_features += 'ui.native_mesh_panel.original_product'
 }
 $specPath = Join-Path $runRoot 'atmungsraum.app.json'
+$helperPermission = 'org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF'
+$app.permission_allowlist = @($app.permission_allowlist | Where-Object { $_ -cne $helperPermission })
+$app.declared_manifest.permissions = @($app.declared_manifest.permissions | Where-Object { $_ -cne $helperPermission })
+if ($MetaUpdateHelper) {
+    $app.permission_allowlist = @(@($app.permission_allowlist) + $helperPermission | Select-Object -Unique)
+    $app.declared_manifest.permissions = @(@($app.declared_manifest.permissions) + $helperPermission | Select-Object -Unique)
+}
 if ($MetaPlatformUpdate) {
     $app.experiment_meta_update_enabled = $true
     $app.meta_platform_app_id = $MetaPlatformAppId
+    $app.meta_required_version_manifest_url = $MetaRequiredVersionManifestUrl
+    $app.experiment_meta_update_helper_enabled = [bool]$MetaUpdateHelper
 } else {
     $app.Remove('experiment_meta_update_enabled')
     $app.Remove('meta_platform_app_id')
+    $app.Remove('meta_required_version_manifest_url')
+    $app.Remove('experiment_meta_update_helper_enabled')
 }
 $app | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $specPath -Encoding utf8NoBOM
 
