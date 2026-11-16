@@ -77,11 +77,7 @@ async function measureLabels() {
         });
         const visible = document.querySelector('.screen:not([hidden])');
         if (!visible) return;
-        // Equal outer tracks keep the main controls at the viewport midpoint.
-        const headerHeight = visible.firstElementChild.getBoundingClientRect().height;
-        const footerHeight = visible.querySelector('.actions')?.getBoundingClientRect().height ?? 0;
-        visible.style.setProperty('--edge-size', `${Math.max(headerHeight, footerHeight)}px`);
-        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, #data-files, [data-measure]')].filter(element => element.getClientRects().length);
+        const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .gender-options, #data-files, [data-measure], aside, details, .operator-common, #quest-data')].filter(element => element.getClientRects().length);
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector('.actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
@@ -143,14 +139,25 @@ async function measureLabels() {
   }
 }
 
+let browserExportsLoaded = false;
+function updateBrowserExportsRoute() {
+  if (location.hash !== '#daten' || ['running', 'recovery'].includes(root.dataset.operatorStep)) return;
+  document.querySelectorAll('.screen').forEach(screen => { screen.hidden = screen.id !== 'daten'; });
+  if (!browserExportsLoaded) { browserExportsLoaded = true; void showSavedBrowserExports(); }
+  byId('data-title').focus();
+}
+let questMounted = false;
+function mountOperator() {
+  if (questMounted || location.hash === '#daten') return;
+  questMounted = true;
+  import('./quest-ui.js?v=45').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+    byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
+  });
+}
+window.addEventListener('hashchange', () => { updateBrowserExportsRoute(); mountOperator(); });
 const recovery = location.hash === '#daten';
 byId('quest').hidden = recovery;
 byId('daten').hidden = !recovery;
 measureLabels();
-if (recovery) {
-  void showSavedBrowserExports();
-} else {
-  import('./quest-ui.js?v=44').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
-    byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
-  });
-}
+updateBrowserExportsRoute();
+mountOperator();

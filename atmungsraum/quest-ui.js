@@ -1,3 +1,5 @@
+import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=1';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=12';
 import { pairPhone } from './quest-pairing.js?v=1';
@@ -31,9 +33,8 @@ const labels = {
 
 export function mountQuestRehearsal(participantIdentity, savedPair) {
   const drive = mountQuestDrive();
-  const questScreen = byId('quest');
   const preview = byId('breathing-preview');
-  const previewTitle = byId('preview-title');
+  const versionPanel = byId('quest-version');
   const previewCircle = byId('preview-circle');
   const actualCircle = byId('preview-actual-circle');
   const actualStatus = byId('preview-actual-status');
@@ -124,6 +125,97 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let versionGeometryKey = '';
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
 
+  let localView = restoreOperatorView(location.hash, history.state);
+  let displayedStep = '';
+  let wasActive = false;
+  let settingsReturnFocus = null;
+
+  function livePreviewVisible() {
+    return ['calibration', 'tracking'].includes(displayedStep) && location.hash !== '#daten';
+  }
+  function navigateLocal(event) {
+    if (event.step === 'settings') settingsReturnFocus = document.activeElement;
+    localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event);
+    const hash = `#${localView.step}`;
+    if (location.hash !== hash) history.pushState({ operatorStep: localView.step, operatorReturnTo: localView.returnTo }, '', hash);
+  }
+  function paintOperatorLayout(context) {
+    const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
+    if (location.hash === '#daten' && !nativeActive && !context.recovery) {
+      for (const id of Object.values(operatorSteps)) if (!byId(id).hidden) byId(id).hidden = true;
+      if (byId('daten').hidden) byId('daten').hidden = false;
+      document.documentElement.dataset.operatorStep = 'daten';
+      displayedStep = '';
+      return;
+    }
+    // Rewriting an unchanged screen flag triggers the layout observer, whose
+    // bounded-layout retry can clamp document scroll before reflow completes.
+    if (!byId('daten').hidden) byId('daten').hidden = true;
+    if (wasActive && !context.active && context.status?.p === 'IDLE') {
+      localView = { ...localView, step: 'recordings' };
+    }
+    wasActive = nativeActive;
+    const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
+      participantRequired: context.requiresParticipant, active: Boolean(wasActive) });
+    if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
+    const page = byId(operatorSteps[step]);
+    const body = page.querySelector('.operator-body');
+    const move = (id, host) => { const element = byId(id); if (element.parentElement !== host) host.prepend(element); };
+    if (step === 'signals' || step === 'running' || step === 'settings' && nativeActive) move('quest-data', body);
+    if (step === 'running' || step === 'settings' && nativeActive) move('quest-clock', body);
+    // Only transitions move shared nodes; polling never detaches a focused editor.
+    if (step !== displayedStep) {
+      if (['input', 'calibration', 'tracking', 'recovery'].includes(step)) move('operator-input-status', body);
+      if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
+      move('operator-common', body);
+      for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
+      const returning = displayedStep === 'settings' && step !== 'settings';
+      displayedStep = step;
+      document.documentElement.dataset.operatorStep = step;
+      if (returning && settingsReturnFocus?.isConnected && settingsReturnFocus.getClientRects().length) {
+        settingsReturnFocus.focus();
+      } else page.querySelector('h1').focus();
+    }
+    if (['session', 'running'].includes(step) || step === 'settings' && nativeActive) {
+      move('operator-session-actions', page.querySelector('.actions'));
+    }
+    byId('operator-connect-next').hidden = !context.status || context.waitingForControl;
+    const fullConnection = ['connect', 'settings'].includes(step);
+    const routineStatus = ['IDLE', 'RUNNING'].includes(context.status?.p) && Object.values(labels).includes(statusText.textContent);
+    text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
+    statusText.hidden = !fullConnection && routineStatus;
+    byId('quest-control-host').hidden = !fullConnection && !context.waitingForControl || !controllerAccessState(context.status);
+    text(byId('operator-connection-summary'), controllerAccessState(context.status)?.role === 'active'
+      ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
+    previewProgressGroup.hidden ||= step !== 'calibration';
+    byId('operator-connection-summary').hidden = fullConnection || !context.status || context.recovery || !routineStatus;
+    byId('quest-control-release').hidden = step !== 'settings' || controllerAccessState(context.status)?.role !== 'active';
+    const warning = byId('operator-compatibility');
+    const version = byId('quest-version').dataset.versionState;
+    warning.hidden = !context.status || !operatorCompatibilityWarning(version) || step === 'settings';
+    text(warning, byId('apk-update-status').textContent);
+    // An overriding native operation cannot be escaped through utility links.
+    for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
+      control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
+    }
+  }
+  document.addEventListener('click', event => {
+    const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
+    if (!control || control.disabled) return;
+    navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
+      : control.hasAttribute('data-operator-return') ? { type: 'return' }
+      : { type: 'go', step: control.dataset.operatorGo });
+    paint();
+  });
+  window.addEventListener('popstate', () => {
+    localView = restoreOperatorView(location.hash, history.state);
+    paint();
+  });
+  window.addEventListener('hashchange', () => {
+    localView = restoreOperatorView(location.hash, history.state);
+    paint();
+  });
+
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
     const actions = rehearsalActions(status, condition.value);
     const active = Boolean(status?.rec);
@@ -196,26 +288,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const breath = breathing.update(rehearsal.gateway, { status, busy, pending, unknown }, setupComplete);
     if (!breath.actions.continue || previewAccepted !== breath.acceptance) previewAccepted = '';
     const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && breath.actions.continue;
-    const recoveringSetup = breath.pending || breath.unknown || breath.recovering;
-    const showPreview = idle && (participantComplete || recoveringSetup) && (setupComplete || !preview.hidden || breath.setup?.attempt > 0 || recoveringSetup)
-      && !previewAccepted && status.h === 'vr-preparation'
-      && rehearsalPolarAllowed(status) && !unknown && (!waiting || !preview.hidden || recoveringSetup);
-    byId('quest-control-host').hidden = !access || showPreview;
-    byId('preview-control-host').hidden = !access || !showPreview;
-    const controlHost = byId(showPreview ? 'preview-control-host' : 'quest-control-host');
-    if (access && controlPanel.parentElement !== controlHost) controlHost.append(controlPanel);
-    const settings = byId('quest-settings');
-    const settingsHost = byId(showPreview ? 'preview-settings-host' : 'quest-settings-host');
-    if (settings.parentElement !== settingsHost) settingsHost.append(settings);
-    const versionPanel = byId('quest-version');
-    const versionHost = byId(showPreview ? 'preview-version-host' : 'quest-version-host');
-    if (versionPanel.parentElement !== versionHost) versionHost.append(versionPanel);
+    // Authority and readiness remain owned by the existing domain models.
+    byId('quest-control-host').hidden = !access;
     const version = apkRelease.update(rehearsal.gateway, status);
     const versionKey = status ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${versionPanel.clientWidth}/${getComputedStyle(versionPanel).fontSize}/${byId('apk-identity').open}` : '';
     if (versionGeometryKey !== versionKey) {
       versionPanel.style.minBlockSize = '';
       versionGeometryKey = versionKey;
-    } else if (!versionPanel.hidden) {
+    } else if (!versionPanel.hidden && versionPanel.getClientRects().length) {
       // A read-only policy refresh must not temporarily shrink the document
       // and clamp an operator's scroll position near its bottom.
       versionPanel.style.minBlockSize = `${Math.max(versionPanel.getBoundingClientRect().height, parseFloat(versionPanel.style.minBlockSize) || 0)}px`;
@@ -226,7 +306,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('apk-installed'), version.installedLabel);
     text(byId('apk-required'), version.required);
     text(byId('apk-full-identity'), version.identity);
-    settings.hidden = !status;
+    byId('quest-settings').hidden = !status;
     const kioskView = kiosk.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
     text(byId('kiosk-summary'), kioskView.summary);
     text(byId('kiosk-prerequisites'), kioskView.prerequisites);
@@ -251,6 +331,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     polar.hidden = status?.p !== 'IDLE' || active || waitingForControl;
     text(polarStatus, polarReadiness(setup));
     text(byId('preview-polar-status'), polarStatus.textContent);
+    text(byId('operator-signal-warning'), polarStatus.textContent);
+    byId('operator-signal-warning').hidden = Boolean(ready);
     text(polarConnect.firstElementChild, ready ? 'Messsignale bereit'
       : setup?.c ? 'Fehlende Messsignale starten' : 'Polar H10 verbinden');
     polarConnect.hidden = recoveringStreams || automaticConnection;
@@ -302,19 +384,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
     archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
     download.hidden = !status || !download.hasAttribute('href');
-    if (showPreview !== !preview.hidden) {
-      const hadPreviewFocus = preview.contains(document.activeElement);
-      preview.hidden = !showPreview;
-      questScreen.hidden = showPreview;
-      if (showPreview) previewTitle.focus();
-      else {
-        if (hadPreviewFocus || document.activeElement === document.body) {
-          if (showCondition) condition.focus();
-          else if (showScenario) scenario.focus();
-          else statusText.focus();
-        }
-      }
-    }
+    paintOperatorLayout({ status, active, waitingForControl, participantComplete,
+      requiresParticipant, selectionAllowed, recovery: Boolean(recovery || breath.recovery
+        || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
+      calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
     scheduleBreathExpiry();
     scheduleAnimation();
@@ -322,7 +395,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function paintBreathingSetup(view, waiting) {
     const native = view.setup;
-    text(previewTitle, view.title);
+    text(byId('operator-confirmed-input'), view.available ? `Bestätigte Eingabe: ${view.inputLabel}` : 'Kein aktueller Eingabestatus.');
     previewCircle.hidden = !view.available;
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
@@ -393,6 +466,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     userAction = attempt;
     const request = breathing.run(op, attempt.signal);
+    navigateLocal({ type: 'go', step: op === 'calibrate' ? 'calibration' : 'tracking' });
     paint();
     try { await request; }
     finally {
@@ -424,7 +498,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function renderLive(now) {
     let moving = false;
-    if (!preview.hidden) {
+    if (livePreviewVisible()) {
       const current = breathDisplay.frame(now, reducedMotion.matches);
       actualCircle.hidden = current?.actualRadius === null || !current;
       actualVolume.hidden = actualCircle.hidden;
@@ -463,7 +537,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
 
   function scheduleAnimation() {
-    if (animationFrame || document.hidden || reducedMotion.matches || preview.hidden && graph.hasAttribute('hidden')) return;
+    if (animationFrame || document.hidden || reducedMotion.matches || !livePreviewVisible() && graph.hasAttribute('hidden')) return;
     animationFrame = requestAnimationFrame(now => {
       animationFrame = 0;
       if (!document.hidden && !reducedMotion.matches && renderLive(now)) scheduleAnimation();
@@ -867,8 +941,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (participantFields.disabled) return;
     try {
       participantId = participantIdentity(Object.fromEntries(new FormData(participantForm))).id;
-      participant.open = false;
-      participant.querySelector('summary').focus({ preventScroll: true });
+      participant.open = true;
+      navigateLocal({ type: 'go', step: 'signals' });
       paint();
     } catch {
       participantId = '';
@@ -921,6 +995,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   previewContinue.addEventListener('click', () => {
     if (preview.hidden || previewContinue.disabled || !breathing.view?.actions.continue) return;
     previewAccepted = breathing.view.acceptance;
+    navigateLocal({ type: 'go', step: 'session' });
     paint();
   });
   condition.addEventListener('change', () => paint());
@@ -954,7 +1029,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   // Renderer samples expire after 500 ms. Read the visible preview every 100 ms
   // to leave room for observed-sample playout; other work keeps the ordinary tick.
   const previewTimer = setInterval(() => {
-    if (document.hidden || preview.hidden || connecting || userAction || !rehearsal.gateway?.owner) return;
+    if (document.hidden || !livePreviewVisible() || connecting || userAction || !rehearsal.gateway?.owner) return;
     void rehearsal.refresh({ statusOnly: true });
   }, 100);
   document.addEventListener('visibilitychange', () => {

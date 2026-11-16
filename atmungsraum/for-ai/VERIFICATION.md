@@ -1,5 +1,47 @@
 # Verification
 
+## Sequential operator layout — 2026-11-16
+
+PWA-only presentation change: persistent connection/participant/signals/input/
+calibration/tracking/session/running/recordings/settings/recovery views follow
+the actual root site's code primitives. The native APK11, domain state owners,
+audio,900-second main, recording bytes and all explicit commands are unchanged.
+Local navigation never starts, calibrates, stops, claims or clears a journal.
+
+Task review found and repaired legacy browser-Back visibility, contextual
+unknown/failed APK status, active/recovery access to existing diagnostics and
+release, and running ECG. Independent scoped re-review passes (68focusedtests
+plus actual pending-journal/recovery/settings checks). Root full phone gate:
+**235/235 pass, zero skips**, using the existing real Java/native prerequisites.
+Real-app route regression passes: browser Back, local settings/recordings
+return, persistent participant fields, zero setup/session navigation mutations,
+running ECG, and active settings retaining the original clock/play/finish/release.
+Independent whole-change re-review passes after history-return restoration,
+visible native paused/finalizing/saving feedback and conditional screen flags
+repairing a genuine telemetry scroll clamp. The original three-size/six-poll
+edit/caret/scroll regression passes. A fixture review found the inherited fixed
+recenter target obscuring scrolled fields; it now occupies document header
+space. Independent320px/plain+200% checks pass at15offsets;28enlarged-text
+screens/125actual viewport tiles pass region/corner/hit-target checks.
+Strict desktop pending-settings checks additionally caught nested APK/kiosk
+overlap: hidden-panel height locking is now prevented and actual aside/details
+bounds participate in reflow measurement. Independent reproduction plus desktop
+journal/scroll and320px/200% editor/caret regressions pass without commands.
+
+The final combined capture command passes288states (140layout +148original),
+70regression groups and636actual viewport tiles. Strict configured viewport,
+painted text/Pretext fallback, nested panels, regions,48px targets, corner
+intersections and click hit checks pass; no app errors, occlusions or missed
+targets. Preview/calibration each read44statuses/four seconds, ordinary pages4;
+ECG remains4, pending receipts4with original ID/no replay, max in-flight1 and
+hidden reads0. Native actual50%/touching geometry and all mode/acceptance/new-
+session/history cases pass. Reduced-motion quiet-window checks freeze only
+interpolation and separately verify fresh native delivery advances the trace.
+All independent reviews pass. Publication/live checks are next.
+Installed-phone qualification remains pending
+because the phone is unavailable; deferred new-mode wearer/cadence acceptance
+is not implied by these software checks. See PROJECT.md for the active state.
+
 ## Physical yellow-display correction — 2026-11-16
 
 Read-only standalone Pixel inspection proves UI43/setup8/display4 and current

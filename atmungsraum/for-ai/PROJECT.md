@@ -2,6 +2,40 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Operator layout improvement — 2026-11-16
+
+The user requests clearer information hierarchy, shorter sequential pages and
+closer styling to the actual Viscereality website code, without new features.
+The [layout contract](UI-LAYOUT.md) and [bounded plan](UI-LAYOUT-PLAN.md) own
+this implementation inside the existing milestone. Actual root HTML/CSS and
+the existing operator state/DOM were audited. Independent preflight passes.
+
+- [x] Audit root-site primitives and existing screen/state/action ownership.
+- [x] Specify focused preparation/run/recordings/settings pages with purely
+  local navigation and preserved native guards, drafts and recovery.
+- [x] Implement persistent sequential screens and source-matched styling.
+- [x] Qualify rendered flows, actual Pretext, accessibility, edit/scroll
+  stability and complete phone interoperability suite; independent review.
+- [ ] Publish exact reviewed increment and verify Pages/live assets/flows.
+- [ ] Installed-phone layout acceptance when the phone is available again.
+
+Phone is unavailable; no device operation is part of this layout increment.
+APK11 and the deferred wearer/new-mode/physical-cadence checks remain unchanged.
+Overall hardware acceptance stays open.
+
+Reviewed software candidate: full235/235 phone tests pass with zero skips and
+the real Java/native prerequisites. The final combined real-app capture suite
+passes288states (140new layout +148original),70regression groups and636actual
+viewport tiles with no app errors, control occlusions or failed hit tests.
+All five viewport/text configurations pass, including320px/200% text. Actual
+native renderer50%/touching inset, native two-cycle progress, original pending
+receipts, explicit modes, acceptance invalidation, next-session identity,
+preview-only100ms/singleflight reads and six-poll editor/scroll stability pass.
+Task, whole-change and fixture reviews pass after the recorded corrections.
+Entry/style are `operator-layout-r1`, UI45, local resolver1; setup8/display5 and
+APK policy11 are unchanged. Publication is the next step; no phone/device
+operation, native/APK rebuild, audio change or Meta upload occurred.
+
 ### Reusable ambient background music — 2026-11-16
 
 The request is for ambient background music during a 10–15-minute session.

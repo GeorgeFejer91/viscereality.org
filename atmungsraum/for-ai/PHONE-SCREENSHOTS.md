@@ -15,7 +15,7 @@ From `atmungsraum/`, with Python 3.10 or later:
 ```powershell
 python -m pip install playwright==1.58.0
 python -m playwright install chromium
-python tools/capture-phone-screens.py --output output/playwright/phone-review-2026-11-14
+python tools/capture-phone-screens.py --scope all --output output/playwright/phone-review-2026-11-16
 ```
 
 Choose a new output directory for each run. The command stops if a required
@@ -27,7 +27,8 @@ gallery, `feedback.csv`, this protocol, and checkout and browser versions in
 ## Review one screen at a time
 
 Unzip the pack, open `index.html`, and click a numbered thumbnail to see
-the full PNG. Long forms include their full scrollable content. Put comments
+the viewport PNG. Long forms include linked, overlapping viewport tiles covering
+their scrollable content at the configured viewport size. Put comments
 next to the corresponding numbers in `feedback.csv` or refer to the numbers
 when sending feedback.
 
@@ -65,6 +66,25 @@ reflow is allowed; internal scrolling and clipped labels fail. `checks.json`
 records these results and any Pretext no-fit indications separately from
 actual painted overflow. Closed details are excluded from painted checks.
 
+The sequential layout scope adds focused participant/signals/input/calibration/
+tracking/session/recordings/settings views, native running/finalizing/saving,
+utility history return, explicit input changes, acceptance invalidation, next
+session and pending-receipt checks. It covers390/320px,320px at200% text,
+844×390 landscape and1440×900 desktop; `--scope all` retains the original
+connection/recovery/live-display groups as well. Native render samples in
+positive examples advance their own frame/observation identity.
+
+Check header/body/footer separation and the configured viewport width, not
+just `documentWidth <= innerWidth` (mobile overflow can expand both). Every
+actual viewport tile checks corner-control intersections and click hit targets.
+Header tools scroll away rather than covering lower fields. Conservative
+Pretext no-fit must select readable reflow with full painted labels.
+
+Paused-clock Chromium full-page captures can show a stale footer position even
+when before/after DOM regions and actual viewport paint are correct. Use raw
+viewport tiles (40px overlap) as the visual evidence; do not stitch images,
+alter production CSS for a capture artifact or bypass the strict bounds tests.
+
 Main and practice runs share the same
 playback controls, so they have separate selection screenshots and a shared
 set of playback screenshots. The browser's Bluetooth chooser, phone
@@ -72,7 +92,19 @@ permission dialogs, Google account chooser, and headset display belong to
 their respective platforms and need separate device captures. The current
 participant gateway does not offer the Box-Atmung diagnostic timeline.
 
-## Latest local verification — 2026-11-14
+## Latest software qualification — 2026-11-16
+
+The combined sequential-layout and retained original scopes pass288states,
+70regression groups and636actual viewport tiles with no app errors, corner
+occlusions or failed hit tests. All five layout configurations, original
+receipt/recovery/domain assertions and six-poll editor/scroll checks pass.
+Rare conservative Pretext no-fit cases use explicit readable document reflow
+and pass full painted bounds. Full phone gate235/235 passes with zero skips;
+independent runtime/fixture review passes. This is synthetic browser evidence,
+not physical phone/headset qualification. See PROJECT.md for publication and
+remaining hardware acceptance.
+
+## Earlier local verification — 2026-11-14
 
 The updated native fixtures passed all 59 captures against app commit
 `deb617b9a8a099603895f5e4c75c857dd421f9bf` with Python Playwright 1.58.0 and
