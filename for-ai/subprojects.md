@@ -12,22 +12,24 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- Physical display correction (2026-11-16): actual Pixel inspection confirms
+  current assets and correct126px/122px touching inset. Real timing exposes
+  pauses from the original composite blends. A reviewed PWA-only correction
+  uses bounded adjacent GPU history/280ms playout and100ms singleflight preview
+  reads, retaining500ms endpoint expiry. Full223phone tests pass. Publication
+  and same-phone confirmation are pending; new-mode testing is postponed.
+
+
 - Display and mode follow-up (2026-11-16): actual gold radius/percentage share
   observed-sample blending and preview-only200ms status; both endpoints keep
   500ms expiry. Its inset stroke touches blue at equal progress. Personal Polar
   calibration is retained alongside the shipped fixed/adaptive tilt-state
   presets, with explicit capability, native confirmation and preset provenance.
   Code11 is built/inspected; PR20/Pages43848286245 and27 live files/public renders
-  pass. Installation awaits idle confirmation; physical acceptance stays open.
+  pass. Code11 is installed with exact byte/version readback and trusted launch;
+  the user confirms its version on the refreshed phone. Physical acceptance
+  stays open.
   No Meta upload.
-
-- Display/modes follow-up (2026-11-16): reviewed local code 11 adds explicit
-  pretrained fixed/adaptive Polar tilt-state choices alongside participant fit
-  and Controller fallback. Preview-only200ms observations and freshness-bounded
-  blending smooth actual radius/percentage; the inner gold stroke touches blue
-  at equal progress. Host/render/source/signed-APK gates pass. Installation and
-  exact publication are in progress; wearer/main acceptance remains open.
-
 
 - Operator follow-up (2026-11-16): participant accepts code-9 calibration.
   Reviewed local code 10 repairs explicit H10 connection recovery, clarifies

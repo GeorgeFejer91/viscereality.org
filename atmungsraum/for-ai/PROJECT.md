@@ -2,6 +2,47 @@
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Physical display correction — 2026-11-16
+
+The user postpones fixed/adaptive mode testing and reports that yellow radius
+and percentage still step even under Automatic. Keep the phone user-controlled;
+USB access is read-only. No calibration, new-mode switch or recording is
+requested during this diagnosis. The initial software-only display acceptance
+is reopened for this observed behavior.
+
+- [x] Install code11 while confirmed idle, verify exact hash/version/retained UID,
+  accepted MAIN/LAUNCHER and controller-only startup; user confirms phone version.
+- [x] Verify the actual standalone Pixel loaded UI43/setup8/display4 and current
+  CSS. Blue126px/yellow122px at equal progress confirms the intended2px-per-side
+  inset; this is subtle by design, not an overlapping-ring/cache failure.
+- [x] Capture18s of real read-only network/rAF evidence:89 statuses,1079 frames,
+  median request54ms, native renderer age6ms, no stale frames. Repeated150–220ms
+  actual-radius plateaus occur while the phase moves. Early/late responses
+  truncate chained composite blends at their oldest endpoint expiry.
+- [x] RED/GREEN against captured jitter; bounded adjacent observed-sample playout
+  with a finite reserve, original500ms endpoint expiry and no future estimate.
+- [x] Independent corrective review and full223/223 zero-skip phone gate.
+- [ ] Publish PWA-only fix and exact Pages/live, then user refresh and read-only
+  physical cadence confirmation. APK11 unchanged.
+
+Corrective source checkpoint: 25 focused display tests pass, including the
+anonymous captured-timing fixture and exact continuous interpolation where a
+fresh observed bracket exists. The old 5Hz trace replay improves interior ramp
+stops from34.51%/290ms maximum to7.90%/140ms; a 10Hz captured-age model gives
+1.34%/80ms. These are offline/model results, not a physical fix acceptance.
+Preview reads are now100ms, with44status reads/four seconds, ordinary4ECG and
+4receipts, at most one in flight, and no hidden/outside-preview acceleration.
+Source-time playout is bounded280ms; strict500ms endpoint freshness remains.
+Rare unsupported gaps still clamp/freeze. Corrective spec/quality review and full223/223 zero-skip gate pass.
+Publication and same-phone confirmation are pending. APK11 stays unchanged.
+
+Private evidence: `2026-11-16-yellow-diagnosis`. The display implementer owns
+live-breath-display.js and focused tests; parent owns phone observation, cache,
+evidence, remote reconciliation/publication and cleanup. Preserve concurrent
+origin/main documentation commit d92cb2e during reconciliation. New-mode and
+full-main physical acceptance stay open for later.
+
+
 ### Smooth actual-radius display and selectable Polar state modes — 2026-11-16
 
 User requests smooth yellow actual-circle/percentage updates, an inner yellow
@@ -26,8 +67,9 @@ single audio clock and 900-second main. No additional approval loop.
   native/phone host gates and narrow/200% rendered checks.
 - [x] Bind cumulative source, package/inspect local code 11 and publish exact
   Pages/live with public phone/desktop checks.
-- [ ] Install while idle and qualify affected device behavior. No Meta upload;
-  wearer testing requires fresh Ready and user keeps phone control.
+- [x] Install while idle, verify exact APK bytes/version/UID and trusted launch.
+- [ ] Qualify affected device behavior after fresh wearer Ready; user keeps
+  phone control. No Meta upload.
 
 Task ownership: display implementation owns live-breath-display.js, display
 CSS and display tests; native implementation owns selected native adapter,
@@ -55,9 +97,9 @@ reconstructs tree `9a482a67f80342cb612b50112996488fac422c3a`, SHA-256
 `6b1180654ba1fadda6bb88a2bbf677c3c2d0c2b3dca1ca8ae4a5ee2289c150ef`.
 Selected code-11 Android compilation and signed-APK inspection pass with the
 unchanged private particle inputs and retained signer. See the APK log for exact
-bytes/source/build identity. The build lease is released. Installation awaits
-the requested idle/no-recording answer; publication is in progress. Actual
-phone/LAN timing and wearer acceptance remain open. No new wearer calibration has been started.
+bytes/source/build identity. Build and installation leases are released. The
+current software is published and code11 is installed; actual phone/LAN timing
+and wearer acceptance remain open. No calibration was started by the agent.
 
 Publication verified: [PR 20](https://github.com/GeorgeFejer91/viscereality.org/pull/20)
 merged through the secondary account at
@@ -68,16 +110,24 @@ policy and new cache versions. Live390px/1440px rendering, actual policy fetch,
 install-help interaction and source/remote context gates pass. The live policy
 requires code11/0.2.10-dev; new preset choices also require explicit capability.
 
-Last installed device version remains code10. A pending user question asks
-whether any recording is running before installation of the inspected local
-code11 APK; do not infer idle/approval from elapsed time. Retain user phone
-control. After idle confirmation, reserve the exact Quest, verify current Wi-Fi
-identity/boot, capture startup, install/read back exact bytes, launch through
-MAIN/LAUNCHER and verify effective startup/phone identity. Require fresh wearer
-Ready before calibration or mode tracking tests. No Meta upload or recording was
-started. Next hardware checks are smooth yellow/percent, stroke contact, both
-preset modes and participant-fit/Controller fallback continuity; full-main
-physical acceptance remains open.
+Installed checkpoint, 2026-11-16: the user confirmed no recording and requested
+installation/launch. Exact code11 APK bytes match the inspected SHA-256; Package
+Manager reports0.2.10-dev/code11, UID10159 retained from code10. The Wi-Fi route
+was freshly bound to the same canonical Quest/current boot without restarting
+shared ADB. Normal MAIN/LAUNCHER cold start is accepted; the target activity owns
+Android focus. Startup reports controller-only true, live hand extension and
+simultaneous tracking false. Initial driver value is zero; no agent calibration
+or recording command was sent. Automatic H10 preferred-candidate admission is
+observed; stream quality/readiness needs the phone/wearer check. Location staysON.
+The bounded observer and its ADB child are stopped; all owned leases released.
+
+The user refreshed/reconnected the phone, took control and confirmed
+“0.2.10-dev / code11” on its version display. This is user-reported installed-phone
+readback, not independent resource capture or physical cadence qualification.
+Fresh wearer Ready is requested before testing the fixed/dynamic modes, smooth
+yellow percentage/circle, exact stroke contact, personal-fit and Controller
+fallback continuity. The user retains phone control. Full-main physical
+acceptance and effective kiosk qualification remain open. No Meta upload.
 
 Local sync verification, 2026-11-16: the clean sparse checkout matched
 `b01cb3e277f99e63bea1dce6e83f0b77d04cbee6` (PR 21) and

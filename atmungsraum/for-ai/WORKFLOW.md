@@ -2,26 +2,29 @@
 
 ## Current hardware-test handoff — 2026-11-16
 
-Code 11 (0.2.10-dev) is built/inspected with selectable pretrained fixed/adaptive
-Polar state modes and matching smooth inset actual-radius phone display. The
-participant fit and Controller fallback remain. Code 10 is the last confirmed
-installed baseline until fresh idle installation/readback. The user has been
-asked whether any recording is running; do not install before that answer.
-Fresh wearer Ready is still required before calibration. No Meta upload.
+The user defers new-mode testing. Current focus is physical yellow-circle/
+percentage stepping under Automatic, diagnosed read-only on the connected Pixel.
+Actual current assets are loaded; blue126px/gold122px is the requested touching
+inset. Uneven arrivals truncate the original composite blends. The corrective
+PWA uses100ms coalesced preview-only reads and bounded280ms adjacent GPU-sample
+playout; endpoint expiry stays500ms. Its exact same-phone confirmation is pending.
+Keep phone control with the user; do not reload/click, switch modes or calibrate
+without the corresponding user action/readiness. Clean the owned CDP forward
+and leases when observation ends. APK11 and native/audio/recording are unchanged.
 
-Local code11 (0.2.10-dev) is built and inspected with retained signer and private
-particle inputs. Matching PWA is live through PR20, exact Pages43848286245,
-27 live-file matches and public phone/desktop checks. Build lease is released.
-The last installed Quest version is code10. A pending user idle/no-recording
-question must be answered before installation; the Polar can remain off.
+Code11 (0.2.10-dev) is installed with exact byte/version readback and retained
+UID after the user confirmed no recording. Trusted MAIN/LAUNCHER cold start and
+Android activity focus are verified. Controller-only is true, live hand and
+simultaneous tracking false; initial driver0. Automatic H10 candidate admission
+is observed; signal quality requires the phone/wearer check. Location staysON.
 
-After confirmation, reserve the exact Quest and verify current Wi-Fi serial/boot
-before effects. Capture startup before install/MAIN+LAUNCHER, read back exact
-installed bytes/version/identity and truthful native startup. The user operates
-the phone. Fresh wearer Ready is required before calibration or tracking tests.
-See PROJECT for the smooth actual display, preset choices, participant/Controller
-fallback, effective kiosk and full-main acceptance still requiring device checks.
-No Meta upload or recording has been started in this increment.
+Matching PWA is live through PR20/Pages43848286245 with27 live-file matches and
+public phone/desktop checks. The user refreshed/reconnected, took control and
+confirmed0.2.10-dev/code11 in the phone version display. They retain phone control.
+Fresh wearer Ready is requested before fixed/adaptive mode/display acceptance.
+No agent calibration/recording or Meta upload occurred. The finite observer,
+owned ADB child and all owned build/device/lifecycle leases are released. Keep
+requested Wi-Fi ADB and LocationON. See PROJECT for remaining physical checks.
 
 The user explicitly requests retaining system Location ON on the test Quest
 after the attended scan/calibration work. This supersedes the earlier temporary

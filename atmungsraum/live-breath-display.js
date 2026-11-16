@@ -1,5 +1,7 @@
 // Presentation only. Command admission and calibration completion stay native.
 const labels = ['Einatmen', 'Atem halten', 'Ausatmen', 'Atem halten'];
+// Bounded source-time delay absorbs polling jitter without extending freshness.
+const actualDelayMs = 280;
 
 export class LiveBreathDisplay {
   reset() { this.anchor = null; this.actual = null; }
@@ -31,6 +33,7 @@ export class LiveBreathDisplay {
     };
     const renderer = view.renderer;
     if (!renderer) { this.actual = null; return; }
+    const stamp = BigInt(renderer.observed_ns);
     const previous = this.rendererCursor;
     const same = previous?.key === key;
     if (same && (renderer.render_generation < previous.generation
@@ -42,29 +45,32 @@ export class LiveBreathDisplay {
     // A new status witness cannot make an old renderer frame fresh again.
     if (same && renderer.render_generation === previous.generation && renderer.settings_revision === previous.settings
       && renderer.frame === previous.frame) return;
-    this.rendererCursor = { key, generation: renderer.render_generation, settings: renderer.settings_revision, frame: renderer.frame };
+    if (same && renderer.render_generation === previous.generation && renderer.settings_revision === previous.settings
+      && stamp <= previous.stamp) { this.actual = null; return; }
+    this.rendererCursor = {
+      key, generation: renderer.render_generation, settings: renderer.settings_revision, frame: renderer.frame, stamp,
+    };
     const age = Math.max(0, observation.a) + renderer.age_ns / 1000000;
     if (age > 500) {
       if (!same || this.actual?.generation !== renderer.render_generation || this.actual?.settings !== renderer.settings_revision) this.actual = null;
       return;
     }
-    const rendererContinuing = same && this.actual?.generation === renderer.render_generation && this.actual.settings === renderer.settings_revision;
-    // Follow the spacing of real GPU observations. A fixed short blend finishes
-    // before the next poll and produces a step/plateau even on a steady stream.
-    // Both contributing endpoints must remain fresh. An unfinished blend also
-    // carries its oldest support expiry through an early subsequent poll.
+    const rendererContinuing = same && this.actual?.generation === renderer.render_generation && this.actual.settings === renderer.settings_revision
+      && prior.actualLive;
     const old = this.actual;
-    const oldExpiry = rendererContinuing ? (now - old.received < old.duration ? old.supportExpires : old.expires) : now;
-    const expires = now + 500 - age;
-    const duration = rendererContinuing ? Math.max(0, Math.min(now - old.received, oldExpiry - now, expires - now)) : 0;
-    const blending = duration > 0;
+    const origin = rendererContinuing ? old.origin : stamp;
+    const originTime = rendererContinuing ? old.originTime : now - age;
+    const time = originTime + Number(stamp - origin) / 1000000;
+    if (rendererContinuing && (time <= old.samples.at(-1).time || time > now)) { this.actual = null; return; }
+    // Keep adjacent observations, never a recursively blended endpoint. HTTP
+    // jitter may append a new point but cannot restart the ongoing playout.
+    // Every point retains its original full-age expiry; neither buffering nor
+    // a later witness can renew it. Native timestamps preserve source cadence.
+    const samples = rendererContinuing ? old.samples.filter(sample => sample.expires >= now) : [];
+    samples.push({ time, progress: renderer.progress01, meters: renderer.radius_m, expires: now + 500 - age });
     this.actual = {
-      progress: renderer.progress01, meters: renderer.radius_m, received: now, age,
       generation: renderer.render_generation, settings: renderer.settings_revision,
-      from: blending ? prior.actualProgress : renderer.progress01,
-      metersFrom: blending ? prior.actualMeters : renderer.radius_m,
-      duration: Math.max(1, duration), expires,
-      supportExpires: blending ? Math.min(oldExpiry, expires) : expires,
+      origin, originTime, samples: samples.slice(-32),
     };
   }
 
@@ -91,19 +97,28 @@ export class LiveBreathDisplay {
         : typeof anchor.volumeFrom !== 'number' ? anchor.inputVolume
           : anchor.volumeFrom + (anchor.inputVolume - anchor.volumeFrom) * volumeBlend;
     const actual = this.actual;
-    const actualElapsed = actual ? Math.max(0, now - actual.received) : 0;
-    const actualBlend = !actual || reducedMotion ? 1 : Math.min(1, Math.min(actualElapsed, Math.max(0, 500 - actual.age)) / actual.duration);
-    const actualProgress = actual ? actual.from + (actual.progress - actual.from) * actualBlend : null;
-    const actualLive = Boolean(actual && actualElapsed + actual.age <= 500);
+    const fresh = actual?.samples.filter(sample => sample.expires >= now) ?? [];
+    const target = now - actualDelayMs;
+    let left = fresh[0] ?? actual?.samples.at(-1), right = left;
+    for (const sample of fresh) {
+      if (sample.time <= target) left = right = sample;
+      else { right = sample; break; }
+    }
+    if (reducedMotion) left = right = actual?.samples.at(-1);
+    const actualBlend = left && right !== left ? Math.max(0, Math.min(1, (target - left.time) / (right.time - left.time))) : 0;
+    const actualProgress = left ? left.progress + (right.progress - left.progress) * actualBlend : null;
+    const actualLive = Boolean(left && now <= left.expires && now <= right.expires);
+    const actualTTL = actualLive ? Math.max(0, Math.min(left.expires, right.expires) - now) : 0;
+    const actualAnimating = actualLive && !reducedMotion && fresh.length > 1 && target < fresh.at(-1).time;
     return {
       radius, desiredAvailable: anchor.desiredAvailable, phaseLabel: labels[phase], live: Boolean(followsAudio && elapsed + anchor.age <= 1500),
       ttl: Math.max(0, 1500 - anchor.age - elapsed),
-      animating: Boolean(actualLive && actualBlend < 1 || followsAudio && elapsed + anchor.age <= 1500 || blend < 1
+      animating: Boolean(actualAnimating || followsAudio && elapsed + anchor.age <= 1500 || blend < 1
         || elapsed + anchor.age <= 1500 && volumeBlend < 1 && anchor.volumeFrom !== anchor.inputVolume),
       inputVolume,
       actualProgress, actualRadius: actualProgress === null ? null : .46 + .54 * actualProgress,
-      actualMeters: actual ? actual.metersFrom + (actual.meters - actual.metersFrom) * actualBlend : null,
-      actualLive, actualTTL: actual ? Math.max(0, 500 - actual.age - actualElapsed) : 0,
+      actualMeters: left ? left.meters + (right.meters - left.meters) * actualBlend : null,
+      actualLive, actualTTL,
       // Never paint progress beyond a frame count actually reported by Quest.
       progress: anchor.from + (anchor.progress - anchor.from) * blend,
     };
