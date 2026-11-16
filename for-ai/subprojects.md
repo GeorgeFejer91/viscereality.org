@@ -12,6 +12,12 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 
 ## Atmungsraum
 
+- PWA startup updates (2026-11-16): each fresh launch checks the published web
+  release before starting the controller, automatically switches if the release
+  differs and can continue with the loaded version if the check fails. Existing
+  open sessions keep their document. See the
+  [release workflow](../atmungsraum/for-ai/WORKFLOW.md#smartphone-pwa).
+
 - Playground UI port (2026-11-16): the production operator starts with setup
   checks and live ECG, then participant entry, native input/calibration,
   tracking and illustrated scenario selection. The

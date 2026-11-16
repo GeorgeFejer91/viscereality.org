@@ -169,10 +169,42 @@ function mountOperator() {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }
-window.addEventListener('hashchange', () => { updateBrowserExportsRoute(); mountOperator(); });
-const recovery = location.hash === '#daten';
-byId('quest').hidden = recovery;
-byId('daten').hidden = !recovery;
-measureLabels();
-updateBrowserExportsRoute();
-mountOperator();
+
+async function replaceWithPublishedRelease() {
+  const entry = new URL(location.href);
+  if (entry.searchParams.has('_pwa')) {
+    // This navigation was just checked by the previous document.
+    entry.searchParams.delete('_pwa');
+    history.replaceState(history.state, '', entry);
+    return false;
+  }
+  entry.searchParams.set('_pwa', `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 2000);
+  try {
+    // Bypass the Pages edge cache and let the browser reuse this response for navigation.
+    const response = await fetch(entry, { cache: 'reload', redirect: 'error', signal: controller.signal });
+    if (!response.ok) return false;
+    const published = document.createElement('template');
+    published.innerHTML = await response.text();
+    const source = published.content.querySelector('script[type="module"][src^="./app.js?v="]')?.getAttribute('src');
+    const release = source && new URL(source, entry).searchParams.get('v');
+    if (!release || release === new URL(import.meta.url).searchParams.get('v')) return false;
+    location.replace(entry);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(deadline);
+  }
+}
+
+if (!await replaceWithPublishedRelease()) {
+  window.addEventListener('hashchange', () => { updateBrowserExportsRoute(); mountOperator(); });
+  const recovery = location.hash === '#daten';
+  byId('quest').hidden = recovery;
+  byId('daten').hidden = !recovery;
+  measureLabels();
+  updateBrowserExportsRoute();
+  mountOperator();
+}

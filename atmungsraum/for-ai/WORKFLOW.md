@@ -235,9 +235,10 @@ screenshots go in ignored `output/playwright/`.
 There is no site build step. The committed `vendor/pretext/` files are the
 deployment runtime; `node_modules/` is ignored.
 
-Reload after edits. If the browser serves stale modules/styles, update the local
-`app.js`/`style.css` version query in index.html; keep both tokens aligned. This
-does not change the static runtime or require a build step.
+Reload after edits. For every published PWA runtime change, update the aligned
+`app.js` and `style.css` version queries in `index.html`. The `app.js` query is
+the release ID the startup check compares. Bump the URL of changed versioned
+dependencies at their import sites too, so the new entry loads the new code.
 
 When restoring/updating the measurement dependency, run
 `pnpm install --frozen-lockfile` and `pnpm run vendor`. Keep the exact version,
@@ -280,6 +281,18 @@ ID, start URL and scope, standalone display and local PNG icons. Native browser
 installation supplies the home-screen launcher; the app currently requires a
 network connection and has no service-worker cache. Do not add offline session
 or background-recording behavior implicitly.
+
+On each new document launch, `app.js` checks the published entry before
+starting the Quest controller or CSV recovery. The request bypasses the
+ordinary cached entry URL. A different release ID triggers one replacement
+navigation with the same query options and fragment. An unavailable check
+falls back to the loaded release after at most two seconds of network wait.
+Returning to an already open app does not restart it. Existing installations
+pick up the checker the first time they load this release.
+
+Run `python -B tools/test-pwa-startup.py` for the Chromium launch regression.
+It simulates publishing a newer release while the old entry is cached, and
+checks fallback, URL retention and storage retention.
 
 The four app icons derive from the root site's `Images/logo.png` (Git blob
 `bcd94ca74f6305eb7cd2e8a9a8b4a66cf99f6caa`): composite the unchanged, contained
