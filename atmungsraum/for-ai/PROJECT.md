@@ -14,6 +14,10 @@
 
 The audit started from `fa22ff4` on `origin/main`, deployed by Pages run
 [43939877200](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43939877200).
+Compatibility release `dd80712` reached `origin/main` and passed the exact
+[Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43947472089).
+All 14 changed paths matched Git, and the live startup, offline recordings,
+history and install dialog passed in Chromium at four viewport sizes.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
 The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress

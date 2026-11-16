@@ -896,7 +896,7 @@ def capture(review):
     scenario = page.locator("#quest-scenario")
     expect(scenario).to_be_visible()
     expect(scenario.get_by_role("radio")).to_have_count(3)
-    expect(page.locator("#quest-condition")).to_have_count(0)
+    expect(page.locator("#quest-condition")).to_be_hidden()
     instruction = scenario.locator('input[value="probe-anleitung"]')
     practice = scenario.locator('input[value="probe-5"]')
     main = scenario.locator('input[value="haupt-15"]')

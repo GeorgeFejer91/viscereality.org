@@ -16,6 +16,8 @@ import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
+const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
+  || dialog.contains(document.activeElement);
 const mainCondition = 'condition-a';
 const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
@@ -140,16 +142,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (driveDialog.open && !drivePanel.open) driveDialog.close();
   });
   driveDialog.addEventListener('close', () => {
+    if (driveDialog.open) return;
     drivePanel.open = false;
     if (driveDialog.contains(driveStatus)) {
       (displayedStep === 'recordings' ? byId('recording-files') : driveStatusHost).prepend(driveStatus);
     }
-    if (!driveOpen.hidden && driveOpen.getClientRects().length) driveOpen.focus({ preventScroll: true });
+    if (needsDialogFocus(driveDialog) && !driveOpen.hidden && driveOpen.getClientRects().length) {
+      driveOpen.focus({ preventScroll: true });
+    }
   });
   const checks = Array.from(document.querySelectorAll('.connection-checks button'));
   const diagnosticState = new Map();
   let diagnosticTrigger;
   diagnostics.addEventListener('close', () => {
+    if (!needsDialogFocus(diagnostics)) return;
     if (diagnosticTrigger?.getClientRects().length && !diagnosticTrigger.disabled) diagnosticTrigger.focus({ preventScroll: true });
     else if (!find.hidden) find.focus({ preventScroll: true });
     else byId('quest-title').focus({ preventScroll: true });

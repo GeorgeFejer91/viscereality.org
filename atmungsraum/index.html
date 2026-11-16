@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261116-controller-compat-r1">
-  <script type="module" src="./pwa-install.js?v=20261107-installed-app"></script>
-  <script type="module" src="./app.js?v=20261116-controller-compat-r1"></script>
+  <link rel="stylesheet" href="./style.css?v=20261116-controller-compat-r2">
+  <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
+  <script type="module" src="./app.js?v=20261116-controller-compat-r2"></script>
 </head>
 <body>
   <button id="recenter-vr" type="button" hidden aria-label="VR zentrieren" aria-disabled="true" aria-describedby="recenter-vr-note" title="VR zentrieren">
@@ -154,8 +154,8 @@
           <div id="drive-status-host"><p id="quest-drive-status" data-measure hidden role="status"></p></div>
         </div>
         <nav aria-label="Weitere Ansichten" class="utility-navigation">
-          <button data-operator-go="settings" type="button"><span data-measure>Einstellungen</span></button>
-          <button data-operator-go="recordings" type="button"><span data-measure>Aufnahmen</span></button>
+          <button data-operator-go="settings" type="button" disabled><span data-measure>Einstellungen</span></button>
+          <button data-operator-go="recordings" type="button" disabled><span data-measure>Aufnahmen</span></button>
         </nav>
       </div>
       <footer class="actions operator-actions">

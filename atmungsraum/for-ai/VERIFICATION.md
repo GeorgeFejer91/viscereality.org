@@ -25,6 +25,14 @@ pairing states, 18 control and Polar location states, 13 receipt recovery states
 and 12 Meta update states. Physical Quest, H10, installed phone and Google Drive
 qualification still needs an attended test.
 
+The 42-state operator walkthrough also reproduced a delayed native dialog close
+event reclaiming focus after the operator moved to Bluetooth or the next session
+button. The install and Drive dialogs preserve the new focus. Ordinary close still
+returns focus to the opener. The walkthrough includes the saved Quest recording
+and historical browser CSV download through their actual links.
+Connection-page navigation enables after the operator module mounts so a slow
+startup release check cannot present actions before their handlers are ready.
+
 ## Current boot/update checkpoint — 2026-11-16
 
 Actual Meta-installed15 is confirmed by exact APK digest and Meta installer/

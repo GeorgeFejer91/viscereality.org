@@ -63,7 +63,12 @@ export function mountAppInstall({
   closeButton.addEventListener('click', () => dialog.close());
   dialog.addEventListener('keydown', event => { if (event.key === 'Escape') event.stopPropagation(); });
   dialog.addEventListener('close', () => {
+    if (dialog.open) return;
     button.setAttribute('aria-expanded', 'false');
+    // A native dialog close event can arrive after the operator moved on.
+    const ownerDocument = button.ownerDocument;
+    const active = ownerDocument?.activeElement;
+    if (active && active !== ownerDocument.body && !dialog.contains(active)) return;
     (button.hidden ? button.nextElementSibling : button)?.focus({ preventScroll: true });
   });
   // Reserve the dock's actual height when zoom or wrapping enlarges its label.
