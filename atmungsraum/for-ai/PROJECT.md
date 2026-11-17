@@ -16,8 +16,16 @@ with zero skips;163 focused cases and35 compact real-DOM renders pass, including
 eight changed runtime assets and their import parents have fresh cache URLs.
 Release marker:20261117-compact-update. Policy27 PR59/mergea4c46d4 reached exact
 Pages44186834653 success;9 live files match and live policy27 probes pass
-(synthetic transport). Compact publication and actual-phone refresh remain to
-verify; attended Quest1WMHHA46S32126 installation and27→28 acceptance stay open below.
+(synthetic transport). Compact PR61 merge `704328c` passed
+[Pages run 44190653853](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44190653853).
+All twelve checked public runtime, policy, patch and readback files matched Git.
+The lab PC synced the release and passed all 35 compact renders. The installed
+Pixel 10 WebAPK loaded `20261117-compact-update` in standalone mode on the Quest
+connection screen. Its Bluetooth and Location were enabled. Both devices had
+the relevant Bluetooth grants, but the lab Quest 2 was asleep and Developer
+was closed. For the next physical discovery check, wake the headset, clear
+prompts, open Atmungsraum Developer, and retry the in-app Bluetooth picker.
+Attended Quest1WMHHA46S32126 installation and27→28 acceptance stay open below.
 
 ### Active: PWA update from every preparation state — 2026-11-17
 
