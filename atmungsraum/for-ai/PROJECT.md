@@ -14,8 +14,9 @@ interpret missing observations as valid.
 
 - [x] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
   across prepared op9, polled replies, final install grant and helper handoff.
-- [ ] Publish/install fixed27-r2/run046, then hold version-only28 until an actual
-  27 session is RUNNING/rec:true and root releases the attended update test.
+- [x] Publish qualified fixed27-r2/run046 through Meta.
+- [ ] Install fixed27, then hold version-only28 until an actual27 session is
+  RUNNING/rec:true and root releases the attended update test.
 - [ ] Test preparation/check and running-session save/update to28 on hardware.
 
 Source4edf4b89/tree358a0c91 passes independent specification/quality review.
@@ -30,13 +31,19 @@ provides the typed worker result. Helper3 IPC has not changed.
 
 The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
 5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723).
-Fixed27-r2/run046 signed APK is built; independent artifact qualification is in
-progress. No Meta27 release or installation is claimed. PR57/merge5df115b reached
+Fixed27-r2/run046 passes1138 signed-package checks and63 negatives. Meta
+1465199570012388 is current and malware/security passed; required/latest27 is
+published independently of installed metadata. Actual installation remains
+pending: the phone is absent over USB and a reconnect question is pending.
+No device action is implied by the Meta publication. Version-only28 preparation
+is private and publication remains held for actual27 RUNNING/rec:true. PR57/merge5df115b reached
 exact Pages44178155493 success;9 live files match and live policy26 probes verify
 25 requires the enabled update action,26 continues, and an actual-shaped running
 25 retains explicit finish/save/update without automatic stop (synthetic transport).
 
-The user confirms fixed27 then test28. Old version-only27-r1/run045 is revoked,
+Source PR58/merge2d59e16 reached exact Pages44183709720 success and10 live
+files match, including the reconstructed patch. The user confirms fixed27 then
+test28. Old version-only27-r1/run045 is revoked,
 unpublished and lacks this fix; preserve its stopped qualification evidence.
 Helper3 is unchanged: the observed failure precedes its handoff. No ADB app
 stop/start/reboot workaround. Phone USB disconnected again after two requests;
