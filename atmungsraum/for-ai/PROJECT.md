@@ -108,9 +108,14 @@ retired with the move to Quest-only operation. Its CSVs remain available at
 - [x] Verify `726204d` in [Pages run 43938500111](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43938500111).
   Nine public files matched Git; both entry URLs and the live current/stale
   Chromium launches passed.
-- [ ] Reopen the installed app on the idle lab Pixel 10 and confirm standalone
-  mode and the current release `20261116-operator-history`. No device was listed by ADB at
-  release verification, so physical acceptance remains open.
+- [x] Verify the installed app on the lab Pixel 10. On 2026-11-17 the WebAPK
+  launched Chrome's standalone Atmungsraum document and loaded its app module
+  with `20261117-meta-handoff`, matching the current public entry response.
+- [ ] Verify live pairing and Polar H10 through that installed PWA. The Pixel's
+  lock screen covered the standalone document. The Quest resumed the separate
+  rehearsal app while the Developer code22 activity was in the background.
+  Unlock the Pixel, open Atmungsraum Developer on the headset, then verify the
+  phone's control lease and live ECG and motion from the worn H10.
 
 Started from clean sparse publication main at `b3a6a59`, matching
 `origin/main`. The primary checkout has pre-existing index changes and
