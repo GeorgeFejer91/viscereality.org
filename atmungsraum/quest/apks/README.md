@@ -1,5 +1,33 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.25-dev — published repaired Meta26-r3, attended guard issue open
+
+Signed26-r3 is65,735,811bytes, SHA256
+`7075f6e6cd16cbafd1c43e9ecd465d0b5808c75b0816d98946ae9eb6c8e64e47`.
+Native source2f41df0acbc5b82e293c2da22310f0ef6e1204d4/tree70e032356b72a374b9cd01f3483dff6428608958;
+the cumulative patch is2,350,099bytes/SHA256
+`bfeaaad65be614c1889ab3adb721fca4a3094ce371b6afbd265644c786936304`.
+It preserves optional authored source while keeping default73 audio assets and
+the900-second loop. The PWA can end preparation through a correlated actual
+park; actual recording still requires original confirmed save/writer cleanup.
+
+Independent signed qualification passes1135 checks and39 rejecting negatives:
+832 compiled instruction/exception/metadata bindings with20 semantic groups,
+the original39 repair paths/6 groups, signatures, unchanged SDK207/helper3,
+controller-only permissions,102 ZIP entries and original audio/private payloads.
+Meta build1465122190020126 is current in the private Developer channel; malware
+and detailed security passed. Quest2/13+ and Require Latest unchecked remain.
+Public minimum/latest is26. Helper3 has not changed.
+
+Attended PWA25 found26 and downloaded262,144/8,246,427bytes, then reported
+native-owner-retired before installation or helper handoff. Existing25 and26
+can conflate temporarily unreadable native locks with actual owner retirement;
+the exact failed predicate was not logged. This hardware failure is not a
+successful PWA installation. Fixed27-r2 is being prepared; the user's agreed
+next sequence is install fixed27, then test updates toward held28. Old26-r1,
+26-r2 and version-only27-r1 stay revoked/unpublished. See the active PROJECT
+checklist for current evidence and remaining hardware gates.
+
 ## 0.2.24-dev — published repaired Meta code25-r2 baseline, 2026-11-17
 
 Repairs R1/R3/R5 from the [implementation review](../../for-ai/REVIEW-2026-11-17.md).
@@ -25,9 +53,9 @@ queued-update exit keeps its watch. Expired main-loop handoffs cannot change
 kiosk state. Native896 tests/6 intentional ignores, all14 updater suites,
 Android34/36 compilation and scoped/integration reviews pass.
 
-Meta build1464859736713038 is current in the private Developer channel. Malware
+Meta build1464859736713038 was published in the private Developer channel. Malware
 and detailed security passed; Quest2/13+ and Require Latest unchecked remain.
-Public policy minimum/latest is25. Actual lab Quest25 has matching published
+At that release, minimum/latest was25. Actual lab Quest25 has matching published
 APK bytes. The idle23 ADB reopen bootstrapped that SDK/Meta installation and
 does not prove a PWA-triggered update; actual phone-triggered checking while
 parked25 is confirmed separately. Old25-r1 is revoked as an upload target.
