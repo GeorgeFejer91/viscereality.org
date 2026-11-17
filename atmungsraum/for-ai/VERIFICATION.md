@@ -3567,4 +3567,44 @@ conditional-APK renders/15cases. The original strict320px/200% scroll/focus chec
 remain intact. Current status and check action are concise; full identity and
 provider diagnostics remain in collapsed Details. Evidence is retained privately
 in the2026-11-17-update-minimal-review validation folder. Runtime marker:
-20261117-update-simple. Publication and installed-phone refresh are pending.
+20261117-update-simple. PR45 merged36d9216 as eedbdf72; exact Pages44091657428
+succeeded and all20 checked public files match Git. A fresh public-runtime
+Chromium probe confirms compact current status, closed Details, automatic
+control and three method switches with no page errors (transport synthetic).
+Installed-phone refresh remains pending because Pixel6a is absent from USB.
+
+## Current Polar health and battery review candidate — 2026-11-17
+
+Native0c82ff/tree2444f55f exports current-generation link, fresh ECG/ACC,
+HR-service contact flags and valid0..100 battery values. Enrolled LAN receives
+power/health in idle and active phases; guest, relay and compact BLE strip the
+new fields including nested health. Quest/controller reads use public Android
+APIs with five-second caching and explicit unknown values. Polar battery uses
+the existing serialized GATT owner with exact callback/generation checks; a lost
+read callback retires only its original transport through existing recovery.
+No admission, classifier, recording or automatic battery-abort changes.
+
+Independent host gates pass: Polar47, serialized battery22, authenticated
+power/privacy89, full WiFi/BLE projection and real Android34 compile. Actual
+signed24-r2 passes1106 package/source/signature/SDK/private-asset checks,54
+actual Java codec/trusted-closure controls, actual signed DEX data paths and the
+explicit Java-to-native parser contract (one pass, zero ignored). The APK is
+65,694,854bytes, SHA2567b8709dd669aa4a33eb689f52456b9bf3525133e7bbf16491514703a1225105c.
+The2139506-byte cumulative source patch reconstructs exact tree2444f55f.
+
+PWA health is independent of old initial readiness and pi.f. It expires current
+link/ECG/ACC/contact observations after five seconds and Polar battery after
+120seconds, with owner/generation/witness aging. Battery review is local and
+bound to participant/preparation; absent controller battery does not block.
+Existing active/recovery controls and native Arm/Start gates are preserved.
+Independent review passes22 targeted unit tests and six actual Chromium/Pretext
+battery renders at390/320/320px with200% text. The full Node suite passes305/305
+with zero skips. The full actual-Pretext layout matrix passes140 states, plus
+operator flow, selection races,24 input renders and26 compact Update renders.
+Source/cache graph review has no findings. Publication remains in progress.
+
+Actual controller battery availability, off-body contact behavior and installed
+phone refresh require hardware acceptance. Pixel6a is absent from USB at the
+current readback. The active-session update test remains open; no recording has
+started from the rejected23 Arm. Version25 remains unpublished until an actual
+repaired24 RUNNING/rec:true observation.

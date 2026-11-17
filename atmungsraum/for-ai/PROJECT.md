@@ -14,27 +14,31 @@ IDLE/g0/r1, rec:false. No experiment recording has started.
   signed24-r1 has identical DEX and is revoked as an upload target.
 - [x] Implement closure-derived duration in both codecs and exact pre-JNI
   validation. Host Java/D8 and actual Java-to-native parser qualification pass;
-  independent integration review and the next signed package remain pending.
+  independent review and signed24-r2 qualification pass:1106 checks including
+  actual emitted Java requests, signed DEX and the unchanged native parser.
 - [x] Simplify Update to one primary actionable status, one check button and
   collapsed optional Details. Preserve native admission/recovery instructions.
   Independent review passes297 Node tests,135 layout states,26 compact Update
   renders and strict conditional-APK scroll/focus qualification.
-- [ ] Publish this compact PWA increment with the available23 release policy,
-  verify exact Pages/live assets, then refresh the idle installed phone.
-- [ ] Replace initial-only Polar green with current link/stream/contact health.
+- [x] Publish compact Update through PR45 as eedbdf72, exact Pages44091657428
+  success and20 live-file comparisons. Installed-phone refresh remains pending:
+  Pixel6a is no longer present on USB at the current readback.
+- [x] Implement ongoing Polar green from current link/stream/contact health.
   Skin contact is explicit detected/not-detected/unsupported/stale/unknown;
   off-body ECG/ACC alone must not claim the strap is worn.
-- [ ] Add a sequential battery review before actual Start: Quest, optional
+- [x] Implement sequential battery review before actual Start: Quest, optional
   controller and Polar. Missing/unavailable controller battery is informational,
   not a new admission requirement. No automatic abort/pause for battery values.
-- [ ] Qualify repaired24-r2 through actual compiled command emission, source,
-  signed assets and Meta installation. Keep existing24-r1 unpublished.
+- [x] Qualify repaired24-r2 source and signed assets; reviewed native0c82ff/tree2444f55f.
+  Code24-r1 stays revoked. Actual24 Meta installation remains pending.
+- [ ] Finish Meta24 publication and health/battery PWA deployment, then refresh
+  the installed phone and verify actual current-device readings and contact loss.
 - [ ] Establish actual RUNNING/rec:true on repaired24 before publishing held25;
   verify recording/saving continuity and safe deferred update/helper relaunch.
 
 The overall goal remains open. Quest Wi-Fi ADB is verified, Location retained.
-Current public baseline is01e16db/PR44; compact Update is reviewed locally and
-publication is in progress. The new health/battery and duration work shares the
+Current public baseline is eedbdf72/PR45; compact Update is live with exact
+Pages and asset proof. The new health/battery and duration work shares the
 existing native owner; preserve the separate workers' unfinished files.
 
 ### Input continuity, automatic phone control and active-session updates — 2026-11-17

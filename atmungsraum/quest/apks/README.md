@@ -1,5 +1,36 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.23-dev — repaired code24-r2 candidate, 2026-11-17
+
+Source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`, tree `2444f55f83d0cc02e7c45ac83c4007145889356f`.
+The cumulative public source patch is2139506bytes, SHA256
+`6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`; isolated-index reconstruction matches that exact tree.
+
+Signed24-r2 is65,694,854bytes, SHA256
+`7b8709dd669aa4a33eb689f52456b9bf3525133e7bbf16491514703a1225105c`.
+Independent qualification passes1106 checks including actual signed DEX duration,
+health/power/private routing,54 Java codec controls and the selected native parser.
+
+Both codecs now obtain Arm/Start duration from the validated packaged closure:
+selected main900000ms, generic rehearsal30000ms. Exact integer validation remains
+before JNI. Actual Java/D8 emitted requests and the unchanged selected native
+parser pass; the previous23/24 DEX fails the new compiled-request guard.
+
+Authenticated LAN status adds current-connection Polar signal/contact health and
+actual battery readings for Quest, optional Android controllers and Polar. Skin
+contact is not inferred from ECG/ACC. Unknown/unreported batteries remain null.
+The optional Polar read uses the existing GATT serializer; missing callbacks
+retire only the exact transport through existing recovery. No unknown read replay.
+Guest, relay and compact BLE strip the new private telemetry. This adds no
+recording/admission or classifier authority.
+
+Independent reviews pass. Host checks: duration54/D8 plus actual native parser;
+remote64/integrated134, authenticated power89, WiFi/BLE projection, Polar health47
+and serialized battery22. Actual new APK build and signed qualification are in
+progress. This candidate is not yet published to Meta; version25 stays held for
+the actual recording-running update test. Public minimum/latest remains23.
+
+
 ## 0.2.22-dev â€” repaired Meta code23-r2 baseline, 2026-11-17
 
 The earlier23-r1 is revoked as an upload target after the attended Meta22

@@ -31,6 +31,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
         c.wait_setup(page,ready=True,r=2,input_phase='hold')
         expect(page.locator('#preview-continue')).to_be_enabled()
         page.locator('#preview-continue').click()
+        c.review_battery(page)
         expect(page.locator('#session-screen')).to_be_visible()
         c.wait_setup(page,ready=False,r=3,input_phase='unknown')
         expect(page.locator('#session-screen')).to_be_visible()
@@ -39,6 +40,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
         expect(page.locator('#quest-play')).to_be_enabled()
         assert mutations(page)['session']==[]
         page.locator('#session-screen [data-operator-back]').click()
+        page.locator('#battery-screen [data-operator-back]').click()
         page.locator('[data-operator-go="input"]:visible').click()
         page.locator('#preview-polar-fixed').click()
         page.clock.run_for(2500)

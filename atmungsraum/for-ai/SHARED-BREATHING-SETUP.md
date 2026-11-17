@@ -1,5 +1,19 @@
 # Shared breathing scheduler and setup calibration
 
+## Current Polar health and pre-session battery review — 2026-11-17
+
+The toolbar must continue checking the current selected Polar after initial
+setup and during the active session. Link, fresh ECG/ACC and skin-contact flags
+are distinct observations. No green worn/ready claim from an old setup pass,
+counts or off-body samples. Missing, stale or unsupported contact stays explicit
+unknown; a new connection retires the previous sensor's health/battery.
+
+Before actual Start, show a sequential battery review for Quest, Polar and
+available controllers. Unknown/unreported controller battery is optional and
+must not introduce a controller requirement for Polar runs. Percentages must be
+actual current-device readings in0..100, with no fabricated default. This is
+operator information, not a battery-triggered pause, abort or classifier change.
+
 ## Main-session plan binding — 2026-11-17
 
 The selected Haupt-Runde uses the continuous900-second shared-loop recording
@@ -7,6 +21,10 @@ plan. Gateway admission and the generated Android participant binding must use
 the same authoritative plan selector; the legacy scenario includes different
 introductory/calibration audio and is not interchangeable. Missing selected
 plans fail closed. Exact validation permits only the participant ID addition.
+Both actual Java codecs obtain their completion duration from the validated
+packaged closure: selected main900000ms, generic rehearsal30000ms. Validate
+that exact integer again before JNI. Signed qualification must test compiled
+request emission, not just the duration present in assets.
 Known pre-native Arm failures settle only the original unexecuted intent;
 potentially executed work remains unknown and reconciles read-only by original
 ID. No timeout, UI callback or update request may replay Start or reset recording.

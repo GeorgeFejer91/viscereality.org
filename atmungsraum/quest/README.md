@@ -102,9 +102,9 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `0cc29137a38885e73b89652db6490d175f8926c3`, matching
-the repaired code23-r2 candidate source `f24bd09a36c34d93b619a0f12f3160f4f7f48d84`.
-Patch SHA256 is `5c76c91d68b3a78e4b57a964edd4b697f9e974f8b51adc1a14ba0b6eb7f18016`
+reconstructs source tree `2444f55f83d0cc02e7c45ac83c4007145889356f`, matching
+the repaired code24-r2 candidate source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`.
+Patch SHA256 is `6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`
 (2,050,779 bytes). The candidate starts fixed Controller State without volume
 calibration and retains the selected manual breathing state through temporary
 input loss. It also binds the selected900-second Haupt-Runde plan consistently

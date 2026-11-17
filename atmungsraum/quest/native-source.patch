@@ -10238,7 +10238,7 @@ index bc962d97..e224cabe 100644
          None
      };
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..6d18f88c 100644
+index ee0417f3..4747e9fc 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -439,7 +439,7 @@ impl Projection {
@@ -11010,10 +11010,74 @@ index ee0417f3..6d18f88c 100644
          operator_fence,
          local_terminal_fence: None,
          operation_id,
-@@ -4964,6 +5359,352 @@ mod tests {
-     };
+@@ -4965,6 +5360,417 @@ mod tests {
  
      static NEXT: AtomicUsize = AtomicUsize::new(0);
+ 
++    /// Explicit cross-language qualification: the fixture is emitted by both
++    /// actual Java codecs and the generated packaged-closure binding.
++    #[test]
++    #[ignore = "requires RQ_EXPERIMENT_JAVA_COMMANDS from test_experiment_threshold_binding.py"]
++    fn actual_java_codec_commands_match_selected_native_threshold_contract() {
++        let path = std::env::var_os("RQ_EXPERIMENT_JAVA_COMMANDS")
++            .expect("set RQ_EXPERIMENT_JAVA_COMMANDS to the actual Java command fixture");
++        let commands: Vec<Value> = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
++        assert_eq!(
++            commands.len(),
++            4,
++            "both codecs must emit participant Arm and Start"
++        );
++        let _binding = crate::breath_composition_runtime::scoped_test_binding::install();
++        {
++            let _setup =
++                crate::experiment_breathing_setup_runtime::test_support::controller_main_waiting();
++            for command in &commands {
++                let parsed = parse_mutating_command(command.clone(), Instant::now())
++                    .expect("actual Java request must satisfy selected native parser");
++                let ParsedOperation::Start {
++                    arm,
++                    completion_threshold_ns,
++                    participant,
++                    ..
++                } = parsed.operation
++                else {
++                    panic!("expected Java Arm/Start");
++                };
++                assert_eq!(completion_threshold_ns, 900_000_000_000);
++                assert_eq!(arm, command["operation"] == "arm");
++                assert_eq!(participant.is_some(), arm);
++                for invalid in [
++                    json!(30000),
++                    json!(899999),
++                    json!(900001),
++                    json!("900000"),
++                    json!(900000.5),
++                    Value::Null,
++                ] {
++                    let mut wrong = command.clone();
++                    wrong["completion_threshold_ms"] = invalid;
++                    assert_eq!(
++                        parse_mutating_command(wrong, Instant::now()).unwrap_err().1,
++                        "completion-threshold-invalid"
++                    );
++                }
++            }
++        }
++        for command in &commands {
++            assert_eq!(
++                parse_mutating_command(command.clone(), Instant::now()).unwrap_err().1,
++                "completion-threshold-invalid",
++                "generic product does not accept selected duration"
++            );
++            let mut generic = command.clone();
++            generic["completion_threshold_ms"] = json!(30000);
++            assert!(
++                parse_mutating_command(generic, Instant::now()).is_ok(),
++                "generic parser retains thirty-second contract"
++            );
++        }
++    }
++
 +    struct SelectedControllerStudy {
 +        runtime: ExperimentSessionRuntime,
 +        root: PathBuf,
@@ -11360,10 +11424,11 @@ index ee0417f3..6d18f88c 100644
 +        runtime.shutdown_for_test().unwrap();
 +        fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +    }
- 
++
      include!("experiment_session_live_bias_tests.rs");
  
-@@ -7613,4 +8354,153 @@ mod tests {
+     fn temp_root(label: &str) -> PathBuf {
+@@ -7613,4 +8419,153 @@ mod tests {
          }
      }
      include!("experiment_session_polar_tests.rs");
@@ -17408,7 +17473,7 @@ index c0c0c17e..3729e77b 100644
          frame_timings.openxr_end_frame_ms = elapsed_ms(stage_started);
          frame_timings.submitted_frame_host_ms = elapsed_ms(submitted_frame_host_started);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..c9d31619 100644
+index a694dfee..459cf1c9 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -17965,7 +18030,13 @@ index a694dfee..c9d31619 100644
      private void refreshBreathCompositionReadback(TextView readback) {
          try {
              renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
-@@ -6281,6 +6604,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -6276,11 +6599,13 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                         .put("condition", command.condition)
+                         .put(
+                             "completion_threshold_ms",
+-                            ExperimentSessionPanelCoordinator.COMPLETION_THRESHOLD_MS
++                            ControlPanelActivity.experimentSessionCompletionThresholdMs()
+                         )
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -18516,20 +18587,24 @@ index 7159d2d6..7463a980 100644
              }
          }, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
-index debfbb6a..149f4d79 100644
+index debfbb6a..fa75344b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
-@@ -312,6 +312,9 @@ final class PolarStopBleCapability {
+@@ -312,6 +312,13 @@ final class PolarStopBleCapability {
      }
      synchronized byte[] projectBoundedStatus(org.json.JSONObject base,org.json.JSONObject offer) throws Exception {
          org.json.JSONObject candidate=new org.json.JSONObject(base.toString());
 +        // Private enrolled-LAN diagnostics never consume compact BLE bytes or evict grants.
 +        candidate.remove("meta_update");
 +        candidate.remove("meta_update_control");
++        candidate.remove("power");
++        candidate.remove("polar_health");
++        org.json.JSONObject setup=candidate.optJSONObject("y");
++        if(setup!=null)setup.remove("health");
          // Readiness and presentation have priority over optional diagnostics.
          if(candidate.has("y"))for(String field:new String[]{"done","early","ms","k","rec","co","bt","po","pf","f","r"}) {
              if(candidate.toString().getBytes(StandardCharsets.UTF_8).length<=430)break;
-@@ -340,6 +343,11 @@ final class PolarStopBleCapability {
+@@ -340,6 +347,11 @@ final class PolarStopBleCapability {
          }
          if(bytes.length<=480)return bytes;
          clear();candidate.remove("z");bytes=candidate.toString().getBytes(StandardCharsets.UTF_8);
@@ -18665,7 +18740,7 @@ index 362e6c72..7583d278 100644
          JSONObject out=new JSONObject().put("v",1).put("version_code",code>0&&code<=2147483647L?code:JSONObject.NULL)
              .put("version_name",name!=null&&name.matches("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}")?name:JSONObject.NULL);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..0873010f 100644
+index 08732e53..4a734b45 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
@@ -18687,11 +18762,12 @@ index 08732e53..0873010f 100644
      private static ExperimentSessionCommandGateway process;
      private final Context context;
      private final SharedPreferences preferences;
-@@ -22,6 +27,20 @@ public final class ExperimentSessionCommandGateway {
+@@ -22,6 +27,21 @@ public final class ExperimentSessionCommandGateway {
      private final ExperimentSessionBleServer carrier;
      private final ExperimentSessionHeadsetIdentity headsetIdentity;
      private final JSONObject buildIdentity;
 +    private final JSONObject apkIdentity;
++    private final PowerSnapshot powerSnapshot = new PowerSnapshot();
 +    private final boolean privateLanData;
 +    private final boolean sceneRecenter;
 +    private final boolean phonePairingEnabled;
@@ -18708,7 +18784,7 @@ index 08732e53..0873010f 100644
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +62,19 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +63,19 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -18728,7 +18804,7 @@ index 08732e53..0873010f 100644
      }
  
  
-@@ -52,22 +84,47 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,22 +85,47 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -18779,7 +18855,7 @@ index 08732e53..0873010f 100644
      /** Operator readback excludes controller keys, tokens and temporary-network passwords. */
      JSONObject productPanelReadback()throws Exception {
          requireMain();return new JSONObject().put("selected",featurePackaged(context)).put("enabled",enabled())
-@@ -110,7 +167,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -110,7 +168,7 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -18788,7 +18864,7 @@ index 08732e53..0873010f 100644
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -153,17 +210,31 @@ public final class ExperimentSessionCommandGateway {
+@@ -153,17 +211,31 @@ public final class ExperimentSessionCommandGateway {
      JSONObject enrollFromHeadset(boolean trustedLan) throws Exception {
          return enrollLocalController(trustedLan);
      }
@@ -18822,7 +18898,7 @@ index 08732e53..0873010f 100644
      JSONObject localOperatorEnrollmentStatus() throws Exception {
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
              clearLocalEnrollmentOffer();
-@@ -188,7 +259,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -188,7 +260,7 @@ public final class ExperimentSessionCommandGateway {
          if(owner<=0||owner!=identity||nativeEpoch<=0||nativeEpoch!=epoch||revision!=lifecycleRevision
                  ||!carrier.acceptsNativeOwner(owner,nativeEpoch))throw new SecurityException("local-enrollment-owner-retired");
      }
@@ -18831,7 +18907,7 @@ index 08732e53..0873010f 100644
      JSONObject enrollFromLocalOperator(final JSONObject input,final LocalEnrollmentGuard guard) throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -217,14 +288,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -217,14 +289,22 @@ public final class ExperimentSessionCommandGateway {
                  return new JSONObject().put("operation_id",id).put("command_status","enrolled")
                      .put("credentials",credentials).put("trusted_lan",true).put("route",routeState)
                      .put("gateway_epoch",Long.toString(gatewayEpoch));
@@ -18856,7 +18932,7 @@ index 08732e53..0873010f 100644
      JSONObject provisionHeadsetIdentity(JSONObject input,final LocalEnrollmentGuard guard)throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -236,7 +315,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -236,7 +316,13 @@ public final class ExperimentSessionCommandGateway {
              guard.check();
              if(!localEnrollmentIdle(delegate.sessionControlReadback(),delegate.snapshot()))throw new SecurityException("identity-provision-requires-idle");
              requireLocalEnrollmentOwner(owner,nativeEpoch,revision);
@@ -18870,7 +18946,7 @@ index 08732e53..0873010f 100644
              return new JSONObject().put("command_status","provisioned").put("serial",headsetIdentity.serial());
          }});
      }
-@@ -245,6 +330,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -245,6 +331,7 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionRecordingExport.retire();
          discovery.close();
          guests.clear();
@@ -18878,7 +18954,7 @@ index 08732e53..0873010f 100644
          if(protocol!=null)protocol.retire();protocol=null;
          main.post(new Runnable(){@Override public void run(){
              if(revision!=lifecycleRevision)return;applyNativeOwnerChanged(owner,nextEpoch,live);
-@@ -257,6 +343,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -257,6 +344,7 @@ public final class ExperimentSessionCommandGateway {
      }
      private void reconcile() {
          if(!featurePackaged(context)||identity<=0||epoch<=0)return;
@@ -18886,7 +18962,7 @@ index 08732e53..0873010f 100644
          carrier.attachCommandGateway(true);
          gatewayEpoch=(new java.security.SecureRandom().nextLong()&0xfffffffffffffL)+1;
          final long admittedGatewayEpoch=gatewayEpoch;
-@@ -267,18 +354,51 @@ public final class ExperimentSessionCommandGateway {
+@@ -267,18 +355,51 @@ public final class ExperimentSessionCommandGateway {
              @Override public boolean reserve(JSONObject body)throws Exception{return activeJournal.reserve(body);}
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
@@ -18943,7 +19019,7 @@ index 08732e53..0873010f 100644
          if(journal==null)return;
          if(!trustedLanAllowed()){
              if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
-@@ -287,16 +407,35 @@ public final class ExperimentSessionCommandGateway {
+@@ -287,16 +408,35 @@ public final class ExperimentSessionCommandGateway {
          catch(Exception unavailable){routeState="listener-unavailable";if(http!=null)http.close();http=null;}
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
@@ -18981,7 +19057,7 @@ index 08732e53..0873010f 100644
          session.clear();polar.clear();
      }
      private void retire() {
-@@ -305,19 +444,119 @@ public final class ExperimentSessionCommandGateway {
+@@ -305,19 +445,119 @@ public final class ExperimentSessionCommandGateway {
          if(http!=null)http.close();http=null;
          carrier.gatewayBinding(null,"","0");carrier.attachCommandGateway(false);if(journal!=null)journal.retire();journal=null;routeState="disabled";
      }
@@ -19103,7 +19179,7 @@ index 08732e53..0873010f 100644
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -332,7 +571,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +572,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -19112,7 +19188,7 @@ index 08732e53..0873010f 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -345,6 +584,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -345,6 +585,13 @@ public final class ExperimentSessionCommandGateway {
      }
      /** Only HTTP after private-peer and Origin admission may bootstrap a local guest. */
      JSONObject exchangeLan(JSONObject envelope)throws Exception {
@@ -19126,7 +19202,7 @@ index 08732e53..0873010f 100644
          if("connect".equals(envelope.opt("action")))return connect(new JSONObject(envelope.toString()));
          return exchangeRoute(envelope,true);
      }
-@@ -352,39 +598,263 @@ public final class ExperimentSessionCommandGateway {
+@@ -352,39 +599,272 @@ public final class ExperimentSessionCommandGateway {
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
@@ -19222,6 +19298,15 @@ index 08732e53..0873010f 100644
 +                    }
 +                    JSONObject response = ownerExchange(action, payload);
 +                    guard.check();
++                    if ("status".equals(action)) {
++                        if (enrolled) response.put("power", powerSnapshot.read(context, SystemClock.elapsedRealtime()));
++                        else {
++                            response.remove("power");
++                            response.remove("polar_health");
++                            JSONObject setupHealth = response.optJSONObject("y");
++                            if (setupHealth != null) setupHealth.remove("health");
++                        }
++                    }
 +                    if(phonePairingEnabled&&(setupReceipt||updateReceipt))admittedEffect.check();
 +                    if(phonePairingEnabled&&enrolled&&"status".equals(action)){
 +                        long before=trustedPhones.revision();
@@ -19400,7 +19485,7 @@ index 08732e53..0873010f 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -394,16 +864,188 @@ public final class ExperimentSessionCommandGateway {
+@@ -394,16 +874,188 @@ public final class ExperimentSessionCommandGateway {
              try{snapshot();}catch(Exception unavailable){/* An unavailable new observation cannot erase an original receipt. */}
              return journal.original(body.getString("id"));
          }
@@ -19591,7 +19676,15 @@ index 08732e53..0873010f 100644
      private JSONObject snapshot()throws Exception {
          try {
              long generation=carrier.currentGeneration(),owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision;
-@@ -431,6 +1073,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -416,6 +1068,7 @@ public final class ExperimentSessionCommandGateway {
+             long now=SystemClock.elapsedRealtime();
+             JSONObject setup=delegate.polarSetupReadback();if(setup!=null&&"IDLE".equals(status.optString("p")))status.put("y",setup);
+             JSONObject polarReadback=delegate.polarStopReadback();
++            projectPolarHealth(status,setup,polarReadback);
+             ExperimentSessionWifiSnapshot.projectJavaDiagnostics(status,polarReadback);
+             JSONObject polarOffer=polar.offer(polarReadback,nativeStatus,generation,owner,nativeEpoch,now);
+             JSONObject offer=session.offer(status,nativeStatus,generation,owner,nativeEpoch,now,polar.bindingTuple());
+@@ -431,6 +1084,7 @@ public final class ExperimentSessionCommandGateway {
                  session.clear();polar.clear();throw new SecurityException("wifi-native-owner-changed");
              }
              status=observed.statusAt(SystemClock.elapsedRealtimeNanos(),nativeEpoch);
@@ -19599,6 +19692,131 @@ index 08732e53..0873010f 100644
              return ExperimentSessionWifiSnapshot.bounded(status.put("v",1).put("m","gated").put("wifi_snapshot",1)
                  .put("build",buildIdentity).put("control_mode",mode.wireName()).put("breath_monitor",1).put("recordings",ExperimentSessionRecordingExport.selected(context)?1:0));
          } catch(Exception unavailable){session.clear();polar.clear();throw unavailable;}
+@@ -439,6 +1093,124 @@ public final class ExperimentSessionCommandGateway {
+         return new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(
+             ExperimentSessionGatewayProtocol.monitorQuery(body).toString()));
+     }
++
++    /** Informational only: preserve current owner health in every session phase. */
++    static void projectPolarHealth(JSONObject status, JSONObject setup, JSONObject polar) throws Exception {
++        JSONObject health = polar == null ? null : polar.optJSONObject("health");
++        if (health == null && setup != null) health = setup.optJSONObject("health");
++        if (health == null || !Integer.valueOf(1).equals(health.opt("v"))
++                || !(health.opt("link") instanceof Boolean)
++                || !(health.opt("connection_generation") instanceof String)
++                || !((String) health.opt("connection_generation")).matches("0|[1-9][0-9]{0,18}")
++                || !(health.opt("observed_at_ns") instanceof String)
++                || !((String) health.opt("observed_at_ns")).matches("0|[1-9][0-9]{0,18}")) {
++            status.put("polar_health", JSONObject.NULL);
++            return;
++        }
++        boolean link = Boolean.TRUE.equals(health.opt("link"));
++        JSONObject out = new JSONObject().put("v", 1).put("link", link)
++            .put("connection_generation", health.getString("connection_generation"))
++            .put("observed_at_ns", health.getString("observed_at_ns"));
++        for (String name : new String[]{"ecg", "acc", "contact", "battery"}) {
++            JSONObject input = health.optJSONObject(name), value = new JSONObject();
++            Object rawAge = input == null ? null : input.opt("age_ms");
++            boolean ageValid = (rawAge instanceof Integer || rawAge instanceof Long)
++                && ((Number) rawAge).longValue() >= 0L;
++            value.put("age_ms", ageValid ? rawAge : JSONObject.NULL);
++            if ("ecg".equals(name) || "acc".equals(name)) {
++                value.put("fresh", link && ageValid && ((Number) rawAge).longValue() < 5000L
++                    && Boolean.TRUE.equals(input.opt("fresh")));
++            } else if ("contact".equals(name)) {
++                String state = input == null ? "unknown" : input.optString("state", "unknown");
++                if (!java.util.Arrays.asList("detected", "not-detected", "unsupported", "stale", "unknown").contains(state)) state = "unknown";
++                value.put("state", state);
++                for (String flag : new String[]{"supported", "detected"}) {
++                    Object observed = input == null ? null : input.opt(flag);
++                    value.put(flag, observed instanceof Boolean ? observed : JSONObject.NULL);
++                }
++            } else {
++                Object percent = input == null ? null : input.opt("percent");
++                value.put("percent", link && ageValid && (percent instanceof Integer || percent instanceof Long)
++                    && ((Number) percent).longValue() >= 0L && ((Number) percent).longValue() <= 100L
++                        ? percent : JSONObject.NULL);
++            }
++            out.put(name, value);
++        }
++        status.put("polar_health", out);
++    }
++
++    /** Public platform observations only; no authority over setup or recording. */
++    static final class PowerSnapshot {
++        private JSONObject cached;
++        private long sampledAt = -1L;
++
++        synchronized JSONObject read(Context context, long now) throws Exception {
++            if (cached != null && now >= sampledAt && now - sampledAt < 5000L)
++                return new JSONObject(cached.toString());
++            Integer percent = null;
++            Boolean charging = null;
++            try {
++                android.os.BatteryManager manager = context.getSystemService(android.os.BatteryManager.class);
++                if (manager != null) {
++                    try {
++                        int value = manager.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
++                        if (value >= 0 && value <= 100) percent = value;
++                    } catch (Exception unavailable) { /* Unknown, never fabricate zero. */ }
++                    if (android.os.Build.VERSION.SDK_INT >= 26) try {
++                        int state = manager.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_STATUS);
++                        if (state == android.os.BatteryManager.BATTERY_STATUS_CHARGING
++                                || state == android.os.BatteryManager.BATTERY_STATUS_FULL) charging = true;
++                        else if (state == android.os.BatteryManager.BATTERY_STATUS_DISCHARGING
++                                || state == android.os.BatteryManager.BATTERY_STATUS_NOT_CHARGING) charging = false;
++                    } catch (Exception unavailable) { /* Unsupported status remains unknown. */ }
++                }
++            } catch (Exception unavailable) { /* Platform service may be absent. */ }
++            org.json.JSONArray controllers = new org.json.JSONArray();
++            if (android.os.Build.VERSION.SDK_INT >= 31) {
++                try { controllers = Api31.controllers(); }
++                catch (Exception unavailable) { /* No public controller inventory available. */ }
++            }
++            cached = new JSONObject().put("v", 1).put("quest", new JSONObject()
++                .put("percent", percent == null ? JSONObject.NULL : percent)
++                .put("charging", charging == null ? JSONObject.NULL : charging))
++                .put("controllers", controllers);
++            sampledAt = now;
++            return new JSONObject(cached.toString());
++        }
++
++        private static final class Api31 {
++            static org.json.JSONArray controllers() throws Exception {
++                org.json.JSONArray result = new org.json.JSONArray();
++                int[] ids = android.view.InputDevice.getDeviceIds();
++                for (int index = 0; ids != null && index < ids.length && index < 64 && result.length() < 8; index++) {
++                    try {
++                        android.view.InputDevice device = android.view.InputDevice.getDevice(ids[index]);
++                        if (device == null) continue;
++                        int sources = device.getSources();
++                        if ((sources & android.view.InputDevice.SOURCE_GAMEPAD) != android.view.InputDevice.SOURCE_GAMEPAD
++                                && (sources & android.view.InputDevice.SOURCE_JOYSTICK) != android.view.InputDevice.SOURCE_JOYSTICK) continue;
++                        String rawName = device.getName();
++                        StringBuilder name = new StringBuilder();
++                        if (rawName != null) for (int n = 0; n < rawName.length() && name.length() < 64; n++)
++                            if (!Character.isISOControl(rawName.charAt(n))) name.append(rawName.charAt(n));
++                        String label = name.toString().trim();
++                        Integer percent = null;
++                        try {
++                            android.hardware.BatteryState state = device.getBatteryState();
++                            if (state != null && state.isPresent()) {
++                                float capacity = state.getCapacity();
++                                if (!Float.isNaN(capacity) && !Float.isInfinite(capacity) && capacity >= 0f && capacity <= 1f)
++                                    percent = Math.round(capacity * 100f);
++                            }
++                        } catch (Exception unavailable) { /* Optional device battery is unknown. */ }
++                        result.put(new JSONObject().put("name", label.isEmpty() ? "Controller" : label)
++                            .put("percent", percent == null ? JSONObject.NULL : percent));
++                    } catch (Exception unavailable) { /* One device must not hide the others. */ }
++                }
++                return result;
++            }
++        }
++    }
+     private ExperimentSessionBleServer.CommandRequest parse(JSONObject body)throws Exception {
+         if(body.has("mac")||body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>240)throw new IllegalArgumentException("closed-command-required");
+         Object version=body.opt("v");if(!(version instanceof Integer))throw new IllegalArgumentException("integer-version-required");
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java
 index 2da04596..92d63dd4 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapability.java
@@ -19905,7 +20123,7 @@ index f41c56ea..09381589 100644
          Peer p=peers.get(device);if(p!=null)return p;
          if(snapshot==null||peers.size()>=8){try{server.cancelConnection(device);}catch(RuntimeException ignored){}return null;}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index cf6c5de1..8d207435 100644
+index cf6c5de1..dbd0a156 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -2,9 +2,13 @@ package io.github.mesmerprism.rustyquest.native_renderer;
@@ -19963,7 +20181,7 @@ index cf6c5de1..8d207435 100644
      }
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
-@@ -36,16 +66,40 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -36,16 +66,42 @@ public final class ExperimentSessionGatewayProtocol {
                      || !controller.equals(request.opt("controller")) || !epoch.equals(request.opt("epoch")))
                  throw new SecurityException("controller-or-epoch-unavailable");
              nonce=string(request,"nonce"); action=string(request,"action"); payload=string(request,"payload");
@@ -19996,8 +20214,10 @@ index cf6c5de1..8d207435 100644
 +            result.remove("apk");
 +            result.remove("meta_update");
 +            result.remove("meta_update_control");
++            result.remove("power");
++            result.remove("polar_health");
 +            JSONObject polar=result.optJSONObject("y");
-+            if(polar!=null)polar.remove("ad");
++            if(polar!=null){polar.remove("ad");polar.remove("health");}
 +        }
          synchronized(this) {
              if(retired)throw new SecurityException("owner-retired");
@@ -20007,7 +20227,7 @@ index cf6c5de1..8d207435 100644
              JSONObject reply=new JSONObject().put("v",1).put("device",device).put("epoch",epoch).put("nonce",nonce)
                  .put("action",action).put("payload",body).put("mac",hmac(key,
                      "RQG1-REPLY|"+controller+"|"+device+"|"+epoch+"|"+nonce+"|"+action+"|"+body));
-@@ -53,6 +107,40 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -53,6 +109,40 @@ public final class ExperimentSessionGatewayProtocol {
              return reply;
          }
      }
@@ -20048,7 +20268,7 @@ index cf6c5de1..8d207435 100644
      static String string(JSONObject value,String field)throws Exception {
          Object raw=value.opt(field);if(!(raw instanceof String))throw new IllegalArgumentException("string-required");return (String)raw;
      }
-@@ -65,12 +153,46 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -65,12 +155,46 @@ public final class ExperimentSessionGatewayProtocol {
          return new JSONObject().put("schema","rusty.quest.experiment_session.command.v1")
              .put("operation","breath-monitor").put("run",run).put("after",after);
      }
@@ -20097,10 +20317,16 @@ index cf6c5de1..8d207435 100644
      private static boolean constant(String a,String b) {
          return hex(b,64)&&MessageDigest.isEqual(a.getBytes(StandardCharsets.US_ASCII),b.getBytes(StandardCharsets.US_ASCII));
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
-index 5ce15656..bbc89ddc 100644
+index 5ce15656..343e25bc 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionJsonCodec.java
-@@ -44,6 +44,8 @@ final class ExperimentSessionJsonCodec
+@@ -39,11 +39,13 @@ final class ExperimentSessionJsonCodec
+                         .put("condition", command.condition)
+                         .put(
+                             "completion_threshold_ms",
+-                            ExperimentSessionPanelCoordinator.COMPLETION_THRESHOLD_MS
++                            ControlPanelActivity.experimentSessionCompletionThresholdMs()
+                         )
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -20110,10 +20336,42 @@ index 5ce15656..bbc89ddc 100644
                  return request.toString();
              } catch (Exception error) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
-index c3a44a7d..a497e5a4 100644
+index c3a44a7d..85ae49c1 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosure.java
-@@ -271,6 +271,16 @@ final class ExperimentSessionPackagedClosure {
+@@ -108,12 +108,13 @@ final class ExperimentSessionPackagedClosure {
+         final String providerId;
+         final String inventorySha256;
+         final String nonAudioProfileSha256;
++        final long selectedRuntimeThresholdMs;
+         final AudioEntry[] audioEntries;
+         final GuidanceEntry[] guidanceEntries;
+         final AudioEntry[] phaseAudioEntries;
+ 
+         private Result(boolean active, boolean openControlDefault, String providerId, String inventorySha256,
+-                String nonAudioProfileSha256,
++                String nonAudioProfileSha256, long selectedRuntimeThresholdMs,
+                 AudioEntry[] audioEntries,
+                 GuidanceEntry[] guidanceEntries, AudioEntry[] phaseAudioEntries) {
+             this.active = active;
+@@ -121,6 +122,7 @@ final class ExperimentSessionPackagedClosure {
+             this.providerId = safe(providerId);
+             this.inventorySha256 = safe(inventorySha256);
+             this.nonAudioProfileSha256 = safe(nonAudioProfileSha256);
++            this.selectedRuntimeThresholdMs = active ? selectedRuntimeThresholdMs : 0L;
+             this.audioEntries = audioEntries == null ? new AudioEntry[0] : audioEntries.clone();
+             this.phaseAudioEntries = phaseAudioEntries == null ? new AudioEntry[0] : phaseAudioEntries.clone();
+             this.guidanceEntries = guidanceEntries == null
+@@ -128,7 +130,7 @@ final class ExperimentSessionPackagedClosure {
+         }
+ 
+         static Result inactive() {
+-            return new Result(false, false, "", "", "", new AudioEntry[0], new GuidanceEntry[0], new AudioEntry[0]);
++            return new Result(false, false, "", "", "", 0L, new AudioEntry[0], new GuidanceEntry[0], new AudioEntry[0]);
+         }
+ 
+         GuidanceEntry guidanceFor(String conditionId) {
+@@ -271,6 +273,16 @@ final class ExperimentSessionPackagedClosure {
          }
          Map<String, Object> lock = object(parse(strictUtf8(featureLockBytes,
              "feature-lock")), "feature-lock");
@@ -20130,7 +20388,7 @@ index c3a44a7d..a497e5a4 100644
          Object selected = lock.get("selected_feature_ids");
          boolean selectedOwner = selected instanceof List && ((List<?>) selected).contains("ui.experiment_session_owner");
          if (selectedOwner != standaloneOwner) fail("experiment-session-owner-selection-mismatch");
-@@ -373,10 +383,10 @@ final class ExperimentSessionPackagedClosure {
+@@ -373,10 +385,10 @@ final class ExperimentSessionPackagedClosure {
          AssetEntry packagedB = entries.get("condition-audio-b");
          GuidanceIdentity guidanceA = validateProjectedCondition(
              "condition-a", projectedConditions, outerConditions, packagedA,
@@ -20143,7 +20401,16 @@ index c3a44a7d..a497e5a4 100644
          if (packagedA.sourceSha256.equals(packagedB.sourceSha256)) {
              fail("experiment-session-audio-identities-not-distinct");
          }
-@@ -466,12 +476,12 @@ final class ExperimentSessionPackagedClosure {
+@@ -425,7 +437,7 @@ final class ExperimentSessionPackagedClosure {
+             guidanceABytes);
+         if (guidanceB != null) materializeGuidance(selectedDirectory, filesRoot, "condition-b",
+             guidanceBBytes);
+-        return new Result(true, openControlDefault, providerId, inventorySha256, nonAudioProfileSha256,
++        return new Result(true, openControlDefault, providerId, inventorySha256, nonAudioProfileSha256, runtimeThresholdMs,
+             new AudioEntry[] {
+             new AudioEntry("condition-a", packagedA),
+             new AudioEntry("condition-b", packagedB)
+@@ -466,12 +478,12 @@ final class ExperimentSessionPackagedClosure {
      private static GuidanceIdentity validateProjectedCondition(String conditionId,
              Map<String, Object> projectedConditions,
              Map<String, ConditionIdentity> outerConditions, AssetEntry packagedAudio,
@@ -22264,10 +22531,18 @@ index f5bfbe84..d9985074 100644
          if (activity == null || Build.VERSION.SDK_INT < 23) {
              return true;
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
-index e68547bd..804b2829 100644
+index e68547bd..120207de 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
 +++ b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java
-@@ -140,6 +140,11 @@ final class PolarSensorPanel {
+@@ -122,6 +122,7 @@ final class PolarSensorPanel {
+     private static final long PMD_START_ACK_WAIT_MS = 1200L;
+     private static final long PMD_DATA_RECEIVING_WINDOW_NS = 2_000_000_000L;
+     private static final long STREAMING_STATUS_WRITE_DELAY_MS = 250L;
++    private static final long BATTERY_READ_TIMEOUT_MS = 5000L;
+ 
+     interface Host {
+         void closePanelAndReturnToImmersive();
+@@ -140,6 +141,11 @@ final class PolarSensorPanel {
      private final ArrayList<DeviceEntry> devices = new ArrayList<DeviceEntry>();
      private final Object countersLock = new Object();
      private final Object connectionIdentityLock = new Object();
@@ -22279,7 +22554,26 @@ index e68547bd..804b2829 100644
      private final Queue<DescriptorTask> descriptorTasks = new ArrayDeque<DescriptorTask>();
      private final ExecutorService eventWriter = Executors.newSingleThreadExecutor();
      private final ExecutorService statusWriter = Executors.newSingleThreadExecutor();
-@@ -223,8 +228,17 @@ final class PolarSensorPanel {
+@@ -160,6 +166,10 @@ final class PolarSensorPanel {
+     private ScanCallback activeScanCallback;
+     private volatile BluetoothGatt gatt;
+     private BluetoothGattCharacteristic batteryCharacteristic;
++    private BluetoothGatt batteryReadGatt;
++    private BluetoothGattCharacteristic batteryReadCharacteristic;
++    private long batteryReadGeneration, batteryReadTicket;
++    private Runnable batteryReadTimeout;
+     private BluetoothGattCharacteristic hrCharacteristic;
+     private BluetoothGattCharacteristic pmdControlCharacteristic;
+     private BluetoothGattCharacteristic pmdDataCharacteristic;
+@@ -210,6 +220,7 @@ final class PolarSensorPanel {
+     private long streamEventsWritten;
+     private int latestBpm;
+     private int batteryPercent = -1;
++    private final PolarLiveHealth liveHealth = new PolarLiveHealth();
+     private String connectedLabel = "none";
+     private String connectedDeviceInstanceId = "none";
+     private String pendingConnectionLabel = "none";
+@@ -223,8 +234,17 @@ final class PolarSensorPanel {
      private long autoScanGeneration = -1L;
      private long autoUniqueCandidateScheduledGeneration = -1L;
      private int autoConnectionAttempts;
@@ -22297,7 +22591,7 @@ index e68547bd..804b2829 100644
      private boolean automaticConnectionCycleActive;
      private boolean automaticConnectionRetryScheduled;
      private boolean manualConnectionControl;
-@@ -499,7 +513,7 @@ final class PolarSensorPanel {
+@@ -499,7 +519,7 @@ final class PolarSensorPanel {
          if (requestCode != REQUEST_BLE_PERMISSIONS) {
              return;
          }
@@ -22306,7 +22600,7 @@ index e68547bd..804b2829 100644
              NativeRendererSelfKioskApplication.endSystemPrompt(permissionHost);
          }
          if (hasRequiredPermissions()) {
-@@ -553,8 +567,10 @@ final class PolarSensorPanel {
+@@ -553,8 +573,10 @@ final class PolarSensorPanel {
              return true;
          }
          pendingBleAction = PENDING_BLE_SCAN;
@@ -22319,7 +22613,7 @@ index e68547bd..804b2829 100644
          String missing = PolarBleRuntimeSupport.join(
              PolarBleRuntimeSupport.missingPermissions(appContext),
              ","
-@@ -615,6 +631,7 @@ final class PolarSensorPanel {
+@@ -615,6 +637,7 @@ final class PolarSensorPanel {
              }
          }
          resumeAutomaticConnectionIfRequested();
@@ -22327,7 +22621,7 @@ index e68547bd..804b2829 100644
      }
  
      void shutdown() {
-@@ -774,12 +791,64 @@ final class PolarSensorPanel {
+@@ -774,12 +797,64 @@ final class PolarSensorPanel {
          String selected=selectedDeviceInstanceId();
          long now=System.nanoTime(),accReceipt,ecgReceipt;
          synchronized(countersLock){accReceipt=lastAccFrameReceiptNs;ecgReceipt=lastEcgFrameReceiptNs;}
@@ -22339,9 +22633,10 @@ index e68547bd..804b2829 100644
              .put("c",connected&&selected.equals(connectedDeviceInstanceId)).put("x",selected.startsWith("polar-")?selected.substring(6):"")
 -            .put("a",connected&&accPmdRunning&&accReceipt>0&&now>=accReceipt&&now-accReceipt<5000000000L)
 -            .put("e",connected&&ecgPmdRunning&&ecgReceipt>0&&now>=ecgReceipt&&now-ecgReceipt<5000000000L)
+-            .put("d",candidates).put("sc",scanning);
 +            .put("a",connected&&accPmdRunning&&accReceipt>0&&(!required||accReceipt>=requiredConnectionAtNs&&accReceipt>accStreamReceiptFloorNs)&&now>=accReceipt&&now-accReceipt<5000000000L)
 +            .put("e",connected&&ecgPmdRunning&&ecgReceipt>0&&(!required||ecgReceipt>=requiredConnectionAtNs&&ecgReceipt>ecgStreamReceiptFloorNs)&&now>=ecgReceipt&&now-ecgReceipt<5000000000L)
-             .put("d",candidates).put("sc",scanning);
++            .put("d",candidates).put("sc",scanning).put("health",remoteHealthProjection());
 +        if(required)projection.put("ar",requiredStreamsMonitoring&&connected&&selected.equals(connectedDeviceInstanceId)&&pmdReady
 +            &&requiredStreams.current(gatt,autoConnectionGeneration)&&recoveryIntent.streamWanted("acc")&&recoveryIntent.streamWanted("ecg"));
 +        String autoState;
@@ -22395,7 +22690,7 @@ index e68547bd..804b2829 100644
      }
  
      long remoteSetupEffectNs(String operation) {
-@@ -1027,6 +1096,7 @@ final class PolarSensorPanel {
+@@ -1027,6 +1102,7 @@ final class PolarSensorPanel {
          autoConnectionAttempts = 0;
          automaticConnectionCycleActive = true;
          automaticConnectionRetryScheduled = false;
@@ -22403,7 +22698,7 @@ index e68547bd..804b2829 100644
          automaticRecoveryGeneration += 1L;
      }
  
-@@ -1065,6 +1135,7 @@ final class PolarSensorPanel {
+@@ -1065,6 +1141,7 @@ final class PolarSensorPanel {
          );
          final long recoveryGeneration = ++automaticRecoveryGeneration;
          automaticConnectionRetryScheduled = true;
@@ -22411,7 +22706,7 @@ index e68547bd..804b2829 100644
          if (nextCycle) automaticConnectionCycleActive = false;
          if (announceRetry) {
              setAutomaticConnectionState(
-@@ -1082,6 +1153,7 @@ final class PolarSensorPanel {
+@@ -1082,6 +1159,7 @@ final class PolarSensorPanel {
                      return;
                  }
                  automaticConnectionRetryScheduled = false;
@@ -22419,7 +22714,7 @@ index e68547bd..804b2829 100644
                  if (!PolarAutoConnectionPolicy.automaticRecoveryAllowed(
                          automaticConnectionRequested,
                          manualConnectionControl,
-@@ -1101,6 +1173,7 @@ final class PolarSensorPanel {
+@@ -1101,6 +1179,7 @@ final class PolarSensorPanel {
      private void finishAutomaticConnectionCycle() {
          automaticRecoveryGeneration += 1L;
          automaticConnectionRetryScheduled = false;
@@ -22427,7 +22722,7 @@ index e68547bd..804b2829 100644
          automaticConnectionCycleActive = false;
          autoConnectionAttempts = 0;
      }
-@@ -1108,6 +1181,7 @@ final class PolarSensorPanel {
+@@ -1108,6 +1187,7 @@ final class PolarSensorPanel {
      private void cancelAutomaticRecovery(boolean clearRequest) {
          automaticRecoveryGeneration += 1L;
          automaticConnectionRetryScheduled = false;
@@ -22435,7 +22730,23 @@ index e68547bd..804b2829 100644
          automaticConnectionCycleActive = false;
          autoUniqueCandidateScheduledGeneration = -1L;
          if (clearRequest) automaticConnectionRequested = false;
-@@ -1315,7 +1389,15 @@ final class PolarSensorPanel {
+@@ -1185,6 +1265,15 @@ final class PolarSensorPanel {
+         );
+     }
+ 
++    JSONObject remoteHealthProjection() throws Exception {
++        synchronized (connectionIdentityLock) {
++            boolean link = !closing && connected && gatt != null
++                && selectedDeviceInstanceId().equals(connectedDeviceInstanceId);
++            return new JSONObject(liveHealth.snapshot(link, gatt, autoConnectionGeneration,
++                connectedDeviceInstanceId, System.nanoTime(), accPmdRunning, ecgPmdRunning));
++        }
++    }
++
+     boolean isEcgReceiving() {
+         synchronized (countersLock) {
+             return ecgPmdRunning && ecgFrames > 0L && ecgSamples > 0L;
+@@ -1315,7 +1404,15 @@ final class PolarSensorPanel {
              setStatus("No Polar device selected.");
              return;
          }
@@ -22452,7 +22763,7 @@ index e68547bd..804b2829 100644
      }
  
      private void connectAdmittedCandidate(DeviceEntry entry, boolean automatic) {
-@@ -1359,6 +1441,7 @@ final class PolarSensorPanel {
+@@ -1359,6 +1456,7 @@ final class PolarSensorPanel {
              }
              if (nextGatt == null) {
                  closeGatt();
@@ -22460,7 +22771,7 @@ index e68547bd..804b2829 100644
                  setStatusState("connection-failed", "BLE connect returned no transport handle.");
                  if ("connecting".equals(automaticConnectionState)) {
                      setAutomaticConnectionState("failed", "BLE connect returned no transport handle.");
-@@ -1378,12 +1461,14 @@ final class PolarSensorPanel {
+@@ -1378,12 +1476,14 @@ final class PolarSensorPanel {
                  + " rawDeviceIdentifierLogged=false");
          } catch (SecurityException ex) {
              closeGatt();
@@ -22475,7 +22786,7 @@ index e68547bd..804b2829 100644
              setStatusState("connection-failed", "BLE connect failed to start.");
              if ("connecting".equals(automaticConnectionState)) {
                  setAutomaticConnectionState("failed", "BLE connect failed to start.");
-@@ -1411,6 +1496,8 @@ final class PolarSensorPanel {
+@@ -1411,6 +1511,8 @@ final class PolarSensorPanel {
                      return;
                  }
                  closeGatt();
@@ -22484,7 +22795,7 @@ index e68547bd..804b2829 100644
                  setAutomaticConnectionState("failed", "Polar connection timed out.");
                  scheduleAutomaticRecovery("Polar connection timed out.");
              }
-@@ -1444,7 +1531,9 @@ final class PolarSensorPanel {
+@@ -1444,7 +1546,9 @@ final class PolarSensorPanel {
              setStatus("PMD notifications are not ready yet.");
              return;
          }
@@ -22494,7 +22805,7 @@ index e68547bd..804b2829 100644
          beginPmdStartFlow(selectedMode);
      }
  
-@@ -1457,9 +1546,11 @@ final class PolarSensorPanel {
+@@ -1457,9 +1561,11 @@ final class PolarSensorPanel {
              setStatus("PMD control point is not ready for parallel streams.");
              return;
          }
@@ -22506,7 +22817,17 @@ index e68547bd..804b2829 100644
          if (!accPmdRunning) {
              beginPmdStartFlow("acc");
          } else if (!ecgPmdRunning) {
-@@ -1679,7 +1770,10 @@ final class PolarSensorPanel {
+@@ -1534,7 +1640,8 @@ final class PolarSensorPanel {
+             .put("observed_at_monotonic_ns", observedAt)
+             .put("capture_session_id", captureSessionId)
+             .put("connection_generation",autoConnectionGeneration)
+-            .put("diagnostics",new JSONObject(diagnostics.snapshot(observedAt)));
++            .put("diagnostics",new JSONObject(diagnostics.snapshot(observedAt)))
++            .put("health",remoteHealthProjection());
+     }
+ 
+     private void requestUndesiredStreamStop(String mode) {
+@@ -1679,7 +1786,10 @@ final class PolarSensorPanel {
  
      private void setStreamRunning(String mode, boolean running) {
          if ("ecg".equals(mode)) {
@@ -22518,7 +22839,7 @@ index e68547bd..804b2829 100644
          } else {
              accPmdRunning = running;
          }
-@@ -1689,6 +1783,44 @@ final class PolarSensorPanel {
+@@ -1689,6 +1799,44 @@ final class PolarSensorPanel {
              : (accPmdRunning ? "acc" : (ecgPmdRunning ? "ecg" : "none"));
      }
  
@@ -22563,7 +22884,34 @@ index e68547bd..804b2829 100644
      private void clearCounters() {
          synchronized (countersLock) {
              sequenceId = 0L;
-@@ -2038,6 +2170,7 @@ final class PolarSensorPanel {
+@@ -1964,18 +2112,14 @@ final class PolarSensorPanel {
+ 
+         @Override
+         public void onCharacteristicRead(final BluetoothGatt callbackGatt, BluetoothGattCharacteristic characteristic, int statusCode) {
+-            if (statusCode == BluetoothGatt.GATT_SUCCESS && BATTERY_LEVEL.equals(characteristic.getUuid())) {
+-                final byte[] value = characteristic.getValue();
+-                handler.post(new Runnable() {
+-                    @Override
+-                    public void run() {
+-                        if (!isCurrentConnectedGatt(callbackGatt)) {
+-                            return;
+-                        }
+-                        handleBattery(value);
+-                    }
+-                });
+-            }
++            receiveBatteryRead(callbackGatt, characteristic, statusCode,
++                characteristic == null ? null : characteristic.getValue());
++        }
++
++        @Override
++        public void onCharacteristicRead(BluetoothGatt callbackGatt, BluetoothGattCharacteristic characteristic,
++                byte[] value, int statusCode) {
++            receiveBatteryRead(callbackGatt, characteristic, statusCode, value);
+         }
+ 
+         @Override
+@@ -2038,6 +2182,7 @@ final class PolarSensorPanel {
          }
          if (statusCode != BluetoothGatt.GATT_SUCCESS) {
              closeGatt();
@@ -22571,7 +22919,7 @@ index e68547bd..804b2829 100644
              setStatusState("connection-failed", "Connection failed: " + statusCode);
              setAutomaticConnectionState("failed", "Polar connection failed.");
              scheduleAutomaticRecovery("Polar connection failed with GATT status " + statusCode + ".");
-@@ -2054,6 +2187,7 @@ final class PolarSensorPanel {
+@@ -2054,6 +2199,7 @@ final class PolarSensorPanel {
              }
              connectedLabel = pendingConnectionLabel;
              connectedDeviceInstanceId = pendingConnectionDeviceInstanceId;
@@ -22579,7 +22927,7 @@ index e68547bd..804b2829 100644
              pendingConnectionLabel = "none";
              pendingConnectionDeviceInstanceId = "none";
              setStatusState("connected", "Connected. Discovering services.");
-@@ -2080,6 +2214,9 @@ final class PolarSensorPanel {
+@@ -2080,6 +2226,9 @@ final class PolarSensorPanel {
                  marker("status=error reason=discover-security-exception");
              }
          } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -22589,7 +22937,7 @@ index e68547bd..804b2829 100644
              closeGatt();
              setAutomaticConnectionState("failed", "Polar device disconnected.");
              setStatusState("disconnected", "Polar device disconnected.");
-@@ -2166,9 +2303,12 @@ final class PolarSensorPanel {
+@@ -2166,9 +2315,12 @@ final class PolarSensorPanel {
              pmdReady = true;
              marker("status=pmd-ready");
              setStatus("HR/RR notifications active; restoring requested PMD streams.");
@@ -22605,7 +22953,7 @@ index e68547bd..804b2829 100644
          } else {
              pmdReady = false;
              setStatus("HR/RR notifications active; PMD service not available.");
-@@ -2176,11 +2316,75 @@ final class PolarSensorPanel {
+@@ -2176,11 +2328,75 @@ final class PolarSensorPanel {
          updateCounters();
      }
  
@@ -22681,7 +23029,7 @@ index e68547bd..804b2829 100644
              setStatus("PMD command failed: " + command + " " + statusCode);
              marker("status=command-failed command=" + markerToken(command) + " statusCode=" + statusCode);
              return;
-@@ -2219,7 +2423,10 @@ final class PolarSensorPanel {
+@@ -2219,7 +2435,10 @@ final class PolarSensorPanel {
      }
  
      private void beginPmdStartFlow(String mode) {
@@ -22693,7 +23041,7 @@ index e68547bd..804b2829 100644
          if (commandInFlight) {
              setStatus("PMD command is already in flight.");
              return;
-@@ -2229,6 +2436,7 @@ final class PolarSensorPanel {
+@@ -2229,6 +2448,7 @@ final class PolarSensorPanel {
          pmdSettingsAttempts = 0;
          pmdStartAttempts = 0;
          long generation = pmdFlowGeneration;
@@ -22701,7 +23049,7 @@ index e68547bd..804b2829 100644
          if (streamRunning(mode)) {
              setStatus(mode.toUpperCase(Locale.US) + " PMD stream is already active.");
              if (startAllPending && "acc".equals(mode) && !ecgPmdRunning) {
-@@ -2242,7 +2450,7 @@ final class PolarSensorPanel {
+@@ -2242,7 +2462,7 @@ final class PolarSensorPanel {
      }
  
      private void requestPmdSettings(final long generation) {
@@ -22710,7 +23058,7 @@ index e68547bd..804b2829 100644
              return;
          }
          if (commandInFlight) {
-@@ -2278,7 +2486,7 @@ final class PolarSensorPanel {
+@@ -2278,7 +2498,7 @@ final class PolarSensorPanel {
      }
  
      private void startPmdWithCurrentSettings(final long generation) {
@@ -22719,7 +23067,7 @@ index e68547bd..804b2829 100644
              return;
          }
          if (commandInFlight) {
-@@ -2290,6 +2498,10 @@ final class PolarSensorPanel {
+@@ -2290,6 +2510,10 @@ final class PolarSensorPanel {
              }, 100L);
              return;
          }
@@ -22730,7 +23078,7 @@ index e68547bd..804b2829 100644
          byte[] payload = buildStartCommand(pendingPmdMode, pmdStartAttempts);
          setStatus("Starting " + pendingPmdMode.toUpperCase(Locale.US) + " PMD.");
          writePmdCommand("start_stream", payload);
-@@ -2297,6 +2509,9 @@ final class PolarSensorPanel {
+@@ -2297,6 +2521,9 @@ final class PolarSensorPanel {
      }
  
      private void handleStartAckTimeout(long generation) {
@@ -22740,7 +23088,7 @@ index e68547bd..804b2829 100644
          if (generation != pmdFlowGeneration || !"start_stream".equals(pendingCommand) || pmdRunning) {
              return;
          }
-@@ -2339,17 +2554,20 @@ final class PolarSensorPanel {
+@@ -2339,17 +2566,20 @@ final class PolarSensorPanel {
          pendingCommandGeneration = pmdFlowGeneration;
          try {
              commandInFlight = true;
@@ -22761,15 +23109,171 @@ index e68547bd..804b2829 100644
              setStatus("BLE write permission is missing.");
              marker("status=error reason=write-security-exception");
          }
-@@ -2495,6 +2713,7 @@ final class PolarSensorPanel {
+@@ -2378,39 +2608,109 @@ final class PolarSensorPanel {
+         return targetGatt.writeCharacteristic(characteristic);
+     }
+ 
+-    private void scheduleBatteryRead(
+-        final BluetoothGatt callbackGatt,
+-        final BluetoothGattCharacteristic callbackBatteryCharacteristic
+-    ) {
+-        if (!isCurrentConnectedGatt(callbackGatt) || callbackBatteryCharacteristic == null) {
+-            return;
+-        }
++    private void scheduleBatteryRead(final BluetoothGatt callbackGatt,
++            final BluetoothGattCharacteristic characteristic) {
++        if (!isCurrentConnectedGatt(callbackGatt) || characteristic == null) return;
++        scheduleBatteryPoll(callbackGatt, characteristic, autoConnectionGeneration, ++batteryReadTicket, 1500L);
++    }
++
++    private void scheduleBatteryPoll(final BluetoothGatt callbackGatt,
++            final BluetoothGattCharacteristic characteristic, final long generation, final long ticket, long delayMs) {
+         handler.postDelayed(new Runnable() {
+-            @Override
+-            public void run() {
+-                readBatteryIfIdle(callbackGatt, callbackBatteryCharacteristic);
++            @Override public void run() { readBatteryIfIdle(callbackGatt, characteristic, generation, ticket); }
++        }, delayMs);
++    }
++
++    private void readBatteryIfIdle(BluetoothGatt callbackGatt,
++            BluetoothGattCharacteristic characteristic, long generation, long ticket) {
++        synchronized (connectionIdentityLock) {
++            if (!isCurrentConnectedGatt(callbackGatt) || generation != autoConnectionGeneration
++                    || ticket != batteryReadTicket || characteristic == null || characteristic != batteryCharacteristic) return;
++            // A dispatched read owns the same slot as PMD/descriptor writes until
++            // its exact callback or connection retirement. Never retry an unknown read.
++            if (batteryReadGatt != null) return;
++            if (commandInFlight || !descriptorTasks.isEmpty() || startAllPending || stopAllPending) {
++                scheduleBatteryPoll(callbackGatt, characteristic, generation, ticket, 500L);
++                return;
+             }
+-        }, 1500L);
++            batteryReadGatt = callbackGatt; batteryReadCharacteristic = characteristic;
++            batteryReadGeneration = generation; commandInFlight = true;
++            try {
++                if (callbackGatt.readCharacteristic(characteristic)) {
++                    final BluetoothGatt readGatt = callbackGatt;
++                    final BluetoothGattCharacteristic readCharacteristic = characteristic;
++                    final long readGeneration = generation;
++                    batteryReadTimeout = new Runnable() {
++                        @Override public void run() { expireBatteryRead(readGatt, readCharacteristic, readGeneration, this); }
++                    };
++                    handler.postDelayed(batteryReadTimeout, BATTERY_READ_TIMEOUT_MS);
++                    return;
++                }
++                marker("status=battery-read-not-started");
++            } catch (SecurityException denied) {
++                marker("status=error reason=battery-read-security-exception");
++            } catch (RuntimeException unavailable) {
++                marker("status=error reason=battery-read-runtime-exception");
++            }
++            batteryReadGatt = null; batteryReadCharacteristic = null; commandInFlight = false;
++            scheduleBatteryPoll(callbackGatt, characteristic, generation, ticket, 5000L);
++        }
+     }
+ 
+-    private void readBatteryIfIdle(
+-        BluetoothGatt callbackGatt,
+-        BluetoothGattCharacteristic callbackBatteryCharacteristic
+-    ) {
+-        if (!isCurrentConnectedGatt(callbackGatt)
+-                || callbackBatteryCharacteristic == null
+-                || callbackBatteryCharacteristic != batteryCharacteristic
+-                || commandInFlight) {
+-            return;
++    private void expireBatteryRead(BluetoothGatt readGatt, BluetoothGattCharacteristic characteristic,
++            long generation, Runnable timeout) {
++        synchronized (connectionIdentityLock) {
++            if (batteryReadTimeout != timeout || batteryReadGatt != readGatt || gatt != readGatt
++                    || batteryReadCharacteristic != characteristic || batteryReadGeneration != generation || closing) return;
++            // A timeout proves no completion. Retire this exact transport through
++            // the existing recovery owner; never free its slot and reuse it.
++            batteryReadTimeout = null;
++        }
++        // This runnable and every connection replacement run on the same main
++        // Handler. Keep GATT/Binder retirement effects outside the identity lock.
++        closeGatt();
++        connectionFailureRevision++;
++        setStatusState("disconnected", "Polar battery read timed out; reconnecting the retired transport.");
++        scheduleAutomaticRecovery("Polar battery read callback timed out.");
++    }
++
++    private void receiveBatteryRead(final BluetoothGatt callbackGatt,
++            final BluetoothGattCharacteristic characteristic, final int statusCode, byte[] raw) {
++        if (characteristic == null || !BATTERY_LEVEL.equals(characteristic.getUuid())) return;
++        final byte[] value = raw == null ? null : raw.clone();
++        final long generation;
++        final long at = System.nanoTime();
++        synchronized (connectionIdentityLock) {
++            if (!isCurrentConnectedGatt(callbackGatt)) return;
++            generation = callbackGatt == batteryReadGatt ? batteryReadGeneration : autoConnectionGeneration;
+         }
+-        try {
+-            if (!callbackGatt.readCharacteristic(callbackBatteryCharacteristic)) {
+-                marker("status=battery-read-not-started");
++        handler.post(new Runnable() {
++            @Override public void run() {
++                completeBatteryRead(callbackGatt, generation, characteristic, statusCode, value, at);
+             }
+-        } catch (SecurityException ex) {
+-            marker("status=error reason=battery-read-security-exception");
+-        } catch (RuntimeException ex) {
+-            marker("status=error reason=battery-read-runtime-exception");
++        });
++    }
++
++    private void completeBatteryRead(BluetoothGatt callbackGatt, long generation,
++            BluetoothGattCharacteristic characteristic, int statusCode, byte[] value, long at) {
++        synchronized (connectionIdentityLock) {
++            if (!isCurrentConnectedGatt(callbackGatt) || callbackGatt != batteryReadGatt
++                    || characteristic != batteryReadCharacteristic || generation != batteryReadGeneration) return;
++            if (batteryReadTimeout != null) handler.removeCallbacks(batteryReadTimeout);
++            batteryReadTimeout = null;
++            batteryReadGatt = null; batteryReadCharacteristic = null; commandInFlight = false;
++            if (generation != autoConnectionGeneration) {
++                // The original physical read has completed, so its slot may be
++                // released. Its old intent generation may not publish a value.
++                synchronized (countersLock) { batteryPercent = -1; }
++                scheduleBatteryPoll(callbackGatt, characteristic, autoConnectionGeneration, ++batteryReadTicket, 500L);
++                return;
++            }
++            byte[] admitted = statusCode == BluetoothGatt.GATT_SUCCESS ? value : null;
++            liveHealth.battery(callbackGatt, generation, connectedDeviceInstanceId, at, admitted);
++            handleBattery(admitted);
++            scheduleBatteryPoll(callbackGatt, characteristic, generation, batteryReadTicket,
++                batteryPercent >= 0 ? 60_000L : 5000L);
+         }
+     }
+ 
+@@ -2442,6 +2742,8 @@ final class PolarSensorPanel {
+                     }
+                     markAutomaticConnectionEvidenceFromLiveCallback(admittedGatt, admittedGeneration);
+                     synchronized (countersLock) {
++                        liveHealth.contact(admittedGatt, admittedGeneration, connectedDeviceInstanceId, callbackEnteredNs,
++                            reading.contactSupported, reading.contactDetected);
+                         heartRateEvents += 1L;
+                         latestBpm = reading.bpm;
+                         rrIntervals += reading.rrIntervalsMs.size();
+@@ -2494,7 +2796,9 @@ final class PolarSensorPanel {
+                                 ? 0L
                                  : Math.max(0L, frame.hostTimeNs - lastAccFrameReceiptNs);
                              lastAccFrameReceiptNs = frame.hostTimeNs;
++                            liveHealth.acc(admittedGatt, admittedGeneration, connectedDeviceInstanceId, frame.hostTimeNs);
                          }
 +                        retainAccDiagnostic(admittedGatt,admittedGeneration,value,frame,previousReceiptDeltaNs);
                          nativeSubmitPolarPmdFrame(
                              measurementType,
                              frameSequenceId,
-@@ -2571,6 +2790,8 @@ final class PolarSensorPanel {
+@@ -2551,6 +2855,7 @@ final class PolarSensorPanel {
+                                 ? 0L
+                                 : Math.max(0L, frame.hostTimeNs - lastEcgFrameReceiptNs);
+                             lastEcgFrameReceiptNs = frame.hostTimeNs;
++                            liveHealth.ecg(admittedGatt, admittedGeneration, connectedDeviceInstanceId, frame.hostTimeNs);
+                         }
+                         nativeSubmitPolarPmdFrame(
+                             measurementType,
+@@ -2571,6 +2876,8 @@ final class PolarSensorPanel {
                                  activeEcgSampleRateHz,
                                  sampleIndex,
                                  frame.sampleCount);
@@ -22778,7 +23282,7 @@ index e68547bd..804b2829 100644
                              nativeSubmitPolarEcgMeasurement(
                                  sampleHostTimeNs,
                                  sampleSensorTimeNs,
-@@ -2579,7 +2800,7 @@ final class PolarSensorPanel {
+@@ -2579,7 +2886,7 @@ final class PolarSensorPanel {
                                  sampleIndex,
                                  frame.sampleCount,
                                  System.nanoTime(),
@@ -22787,7 +23291,7 @@ index e68547bd..804b2829 100644
                          }
                          appendEcgEvent(frame);
                          scheduleStreamingStatusWrite();
-@@ -2619,6 +2840,7 @@ final class PolarSensorPanel {
+@@ -2619,6 +2926,7 @@ final class PolarSensorPanel {
                  && record.measurementType == measurementTypeInt(pendingPmdMode)) {
              if (record.errorCode == 0) {
                  final String startedMode = pendingPmdMode;
@@ -22795,7 +23299,7 @@ index e68547bd..804b2829 100644
                  setStreamRunning(startedMode, true);
                  setStatus("PMD stream active: " + activePmdMode.toUpperCase(Locale.US));
                  marker("status=pmd-started mode=" + markerToken(startedMode)
-@@ -2647,6 +2869,7 @@ final class PolarSensorPanel {
+@@ -2647,6 +2955,7 @@ final class PolarSensorPanel {
                      marker("status=pmd-all-started activeModes=acc_ecg");
                  }
              } else if (!tryNextStartCandidate(pendingCommandGeneration, "err_" + record.errorCode)) {
@@ -22803,7 +23307,7 @@ index e68547bd..804b2829 100644
                  setStatus("PMD start rejected for " + pendingPmdMode.toUpperCase(Locale.US)
                      + " error " + record.errorCode + ".");
                  marker("status=pmd-start-rejected mode=" + markerToken(pendingPmdMode)
-@@ -2661,6 +2884,7 @@ final class PolarSensorPanel {
+@@ -2661,6 +2970,7 @@ final class PolarSensorPanel {
                  && record.measurementType == measurementTypeInt(pendingPmdMode)
                  && ("stop_stream_only".equals(pendingCommand) || "stop_before_start".equals(pendingCommand))) {
              if (record.errorCode == 0) {
@@ -22811,7 +23315,20 @@ index e68547bd..804b2829 100644
                  setStreamRunning(pendingPmdMode, false);
                  setStatus(pendingPmdMode.toUpperCase(Locale.US) + " PMD stop acknowledged.");
                  marker("status=pmd-stopped mode=" + markerToken(pendingPmdMode));
-@@ -3205,11 +3429,14 @@ final class PolarSensorPanel {
+@@ -2674,11 +2984,8 @@ final class PolarSensorPanel {
+     }
+ 
+     private void handleBattery(byte[] value) {
+-        if (value == null || value.length < 1) {
+-            return;
+-        }
+         synchronized (countersLock) {
+-            batteryPercent = value[0] & 0xff;
++            batteryPercent = value != null && value.length == 1 && (value[0] & 255) <= 100 ? value[0] & 255 : -1;
+         }
+         appendStatusEvent("battery");
+         updateCountersOnUiThread();
+@@ -3205,11 +3512,19 @@ final class PolarSensorPanel {
      }
  
      private void closeGatt() {
@@ -22821,12 +23338,17 @@ index e68547bd..804b2829 100644
              currentGatt = gatt;
              gatt = null;
              connected = false;
++            liveHealth.clear();
++            batteryReadTicket++; batteryReadGatt = null; batteryReadCharacteristic = null;
++            if (batteryReadTimeout != null) handler.removeCallbacks(batteryReadTimeout);
++            batteryReadTimeout = null;
++            synchronized (countersLock) { batteryPercent = -1; }
 +            clearEcgPreview();
 +            latestAccDiagnostic=null;
          }
          pmdFlowGeneration += 1L;
          connectedLabel = "none";
-@@ -3298,8 +3525,10 @@ final class PolarSensorPanel {
+@@ -3298,8 +3613,10 @@ final class PolarSensorPanel {
              marker("status=permission-required origin=headless pendingAction=" + pendingAction);
              return false;
          }
@@ -22839,6 +23361,113 @@ index e68547bd..804b2829 100644
          String missing = PolarBleRuntimeSupport.join(
              PolarBleRuntimeSupport.missingPermissions(appContext),
              ","
+@@ -3742,10 +4059,13 @@ final class PolarSensorPanel {
+     private static final class HeartRateReading {
+         final int bpm;
+         final List<Float> rrIntervalsMs;
++        final boolean contactSupported, contactDetected;
+ 
+-        HeartRateReading(int bpm, List<Float> rrIntervalsMs) {
++        HeartRateReading(int bpm, List<Float> rrIntervalsMs, boolean contactSupported, boolean contactDetected) {
+             this.bpm = bpm;
+             this.rrIntervalsMs = rrIntervalsMs;
++            this.contactSupported = contactSupported;
++            this.contactDetected = contactSupported && contactDetected;
+         }
+     }
+ 
+@@ -3976,8 +4296,11 @@ final class PolarSensorPanel {
+                 offset += 1;
+             }
+             if ((flags & 0x08) != 0) {
++                if (offset + 2 > data.length) throw new IllegalArgumentException("short heart-rate energy payload");
+                 offset += 2;
+             }
++            if ((flags & 0x10) != 0 && (data.length - offset) % 2 != 0)
++                throw new IllegalArgumentException("short heart-rate RR payload");
+             List<Float> rr = new ArrayList<Float>();
+             if ((flags & 0x10) != 0) {
+                 while (offset + 1 < data.length) {
+@@ -3985,7 +4308,7 @@ final class PolarSensorPanel {
+                     offset += 2;
+                 }
+             }
+-            return new HeartRateReading(bpm, rr);
++            return new HeartRateReading(bpm, rr, (flags & 0x04) != 0, (flags & 0x02) != 0);
+         }
+ 
+         static ControlRecord parseControl(byte[] data) {
+@@ -4186,3 +4509,70 @@ final class PolarAcquisitionDiagnostics {
+         return d;
+     }
+ }
++
++
++/** Connection-bound observations only; no recording or admission authority. */
++final class PolarLiveHealth {
++    private Object owner;
++    private long generation;
++    private String device = "";
++    private long batteryAt, contactAt, accAt, ecgAt;
++    private Integer percent;
++    private Boolean contactSupported, contactDetected;
++
++    synchronized void clear() {
++        owner = null; generation = 0L; device = "";
++        batteryAt = contactAt = accAt = ecgAt = 0L;
++        percent = null; contactSupported = contactDetected = null;
++    }
++    private void bind(Object value, long revision, String identity) {
++        if (owner != value || generation != revision || !device.equals(identity)) {
++            clear(); owner = value; generation = revision; device = identity;
++        }
++    }
++    synchronized void battery(Object value, long revision, String identity, long at, byte[] raw) {
++        bind(value, revision, identity);
++        if (at <= 0L || at < batteryAt) return;
++        percent = raw != null && raw.length == 1 && (raw[0] & 255) <= 100 ? raw[0] & 255 : null;
++        batteryAt = at;
++    }
++    synchronized void contact(Object value, long revision, String identity, long at, boolean supported, boolean detected) {
++        bind(value, revision, identity);
++        if (at <= 0L || at < contactAt) return;
++        contactAt = at;
++        contactSupported = supported; contactDetected = supported ? detected : null;
++    }
++    synchronized void acc(Object value, long revision, String identity, long at) {
++        bind(value, revision, identity); if (at > accAt) accAt = at;
++    }
++    synchronized void ecg(Object value, long revision, String identity, long at) {
++        bind(value, revision, identity); if (at > ecgAt) ecgAt = at;
++    }
++    private static Long age(long now, long sampled) {
++        return sampled > 0L && now >= sampled ? (now - sampled) / 1_000_000L : null;
++    }
++    private static Map<String,Object> stream(long now, long sampled, boolean running) {
++        Map<String,Object> result = new LinkedHashMap<>(); Long elapsed = age(now, sampled);
++        result.put("age_ms", elapsed); result.put("fresh", running && elapsed != null && elapsed < 5000L);
++        return result;
++    }
++    synchronized Map<String,Object> snapshot(boolean link, Object value, long revision, String identity,
++            long now, boolean accRunning, boolean ecgRunning) {
++        boolean scoped = link && value != null && value == owner && revision > 0L && revision == generation && device.equals(identity);
++        Map<String,Object> result = new LinkedHashMap<>();
++        result.put("v", 1); result.put("link", link); result.put("connection_generation", Long.toString(revision));
++        result.put("observed_at_ns", Long.toString(now));
++        result.put("acc", stream(now, scoped ? accAt : 0L, link && accRunning));
++        result.put("ecg", stream(now, scoped ? ecgAt : 0L, link && ecgRunning));
++        Map<String,Object> contact = new LinkedHashMap<>(); Long contactAge = age(now, scoped ? contactAt : 0L);
++        boolean contactFresh = contactAge != null && contactAge < 5000L;
++        contact.put("state", contactAge == null ? "unknown" : !contactFresh ? "stale"
++            : Boolean.FALSE.equals(contactSupported) ? "unsupported" : Boolean.TRUE.equals(contactDetected) ? "detected" : "not-detected");
++        contact.put("supported", scoped ? contactSupported : null);
++        contact.put("detected", contactFresh ? contactDetected : null); contact.put("age_ms", contactAge);
++        result.put("contact", contact);
++        Map<String,Object> battery = new LinkedHashMap<>(); Long batteryAge = age(now, scoped && percent != null ? batteryAt : 0L);
++        battery.put("percent", batteryAge == null ? null : percent); battery.put("age_ms", batteryAge);
++        result.put("battery", battery); return result;
++    }
++}
 diff --git a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java b/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
 index a3dcca7f..0744fae4 100644
 --- a/apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorRuntime.java
@@ -26640,7 +27269,7 @@ index 36a65bbd..9eca91c7 100644
          ExperimentSessionGatewayProtocol restarted=new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,43,(action,payload)->{calls++;return payload;});
          denied(()->restarted.exchange(request("77777777777777777777777777777777","status","{}")));
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
-index 2ec7cb92..4ca85bc8 100644
+index 2ec7cb92..29a7b0e3 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPackagedClosureTest.java
 @@ -32,6 +32,7 @@ public final class ExperimentSessionPackagedClosureTest {
@@ -26662,7 +27291,7 @@ index 2ec7cb92..4ca85bc8 100644
              if (args.length != 7 || !"--real-closure".equals(args[0])) {
                  throw new IllegalArgumentException("expected --real-closure feature-lock profile manifest-sha inventory-sha audio-a audio-b");
              }
-@@ -54,6 +57,55 @@ public final class ExperimentSessionPackagedClosureTest {
+@@ -54,6 +57,70 @@ public final class ExperimentSessionPackagedClosureTest {
          System.out.println("ExperimentSessionPackagedClosureTest PASS");
      }
  
@@ -26683,10 +27312,25 @@ index 2ec7cb92..4ca85bc8 100644
 +                boolean valid = "true".equals(mode) && duration == 900000L
 +                    || "false".equals(mode) && duration == 30000L;
 +                try {
-+                    if (valid) check(selected.prepare().active, "locked duration materializes: " + mode + "/" + duration);
++                    if (valid) {
++                        ExperimentSessionPackagedClosure.Result result = selected.prepare();
++                        check(result.active && result.selectedRuntimeThresholdMs == duration,
++                            "verified closure retains locked duration: " + mode + "/" + duration);
++                    }
 +                    else expectRejected(selected, "wrong duration or malformed mode " + mode + "/" + duration);
 +                } finally { selected.close(); }
 +            }
++        }
++    }
++
++    // Shared by the real-codec boundary fixture: obtain generic policy through
++    // the same full profile/asset validation as production, never a fake Result.
++    static ExperimentSessionPackagedClosure.Result prepareGenericClosureForCodecTest() throws Exception {
++        byte[] bytes = profile("provider.one", audio("session-audio/condition-a.mp3",
++            AUDIO_A_SHA, 101L), audio("session-audio/condition-b.mp3", AUDIO_B_SHA, 202L), false)
++            .getBytes(StandardCharsets.UTF_8);
++        try (Fixture generic = fixture(bytes, "provider.one", entries(bytes, "", false))) {
++            return generic.prepare();
 +        }
 +    }
 +
@@ -26718,6 +27362,15 @@ index 2ec7cb92..4ca85bc8 100644
      private static void acceptsRealResolvedClosure(String[] args) throws Exception {
          byte[] lock = Files.readAllBytes(java.nio.file.Paths.get(args[1]));
          byte[] profile = Files.readAllBytes(java.nio.file.Paths.get(args[2]));
+@@ -145,7 +212,7 @@ public final class ExperimentSessionPackagedClosureTest {
+                 ExperimentSessionPackagedClosure.prepare(lock.getBytes(StandardCharsets.UTF_8),
+                     destination -> { throw new AssertionError("inactive closure read asset"); },
+                     root, new ExperimentSessionPackagedClosure.Anchors("", "", ""));
+-            check(!result.active && !Files.exists(root.resolve(
++            check(!result.active && result.selectedRuntimeThresholdMs == 0L && !Files.exists(root.resolve(
+                 ExperimentSessionPackagedClosure.MATERIALIZED_DIRECTORY)),
+                 "inactive closure remains unavailable and does not materialize");
+         } finally { deleteTree(root); }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java
 index 41c93e9c..0dc5b6eb 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java
@@ -26831,6 +27484,17 @@ index 56040232..5e5da2eb 100644
 +      throw new AssertionError("encrypted 32 KiB chunk exceeds browser limits");
 + }
 +}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionStatusReadCodecTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionStatusReadCodecTest.java
+index 1d40895a..6ead67d3 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionStatusReadCodecTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionStatusReadCodecTest.java
+@@ -158,5 +158,6 @@ public final class ExperimentSessionStatusReadCodecTest {
+ 
+ // Only condition-readiness dependencies of the extracted codec are modeled.
+ final class ControlPanelActivity {
++    static long experimentSessionCompletionThresholdMs() { return 30_000L; }
+     static String conditionBreathGuidanceReadiness(String condition) { return "not-ready"; }
+ }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiCredentialsTest.java
 new file mode 100644
 index 00000000..a6b1d21f
@@ -28576,7 +29240,7 @@ index 262fbeec..1e36d908 100644
        "type": "object"
      },
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..d46a8308 100644
+index ccb3e308..c8ffdd5e 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -15,6 +15,11 @@ param(
@@ -28696,10 +29360,15 @@ index ccb3e308..d46a8308 100644
          try {
              org.json.JSONObject command = new org.json.JSONObject(commandJson == null ? "{}" : commandJson);
              String operation = command.optString("operation", "");
-@@ -1245,6 +1291,13 @@ $sharedPanelFacade
+@@ -1245,6 +1291,18 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
++                Object requestedThreshold = command.opt("completion_threshold_ms");
++                if (!(requestedThreshold instanceof Integer || requestedThreshold instanceof Long)
++                        || ((Number) requestedThreshold).longValue() != closure.selectedRuntimeThresholdMs) {
++                    throw new SecurityException("experiment-session-completion-threshold-not-packaged");
++                }
 +                if (command.has("participant")) {
 +                    org.json.JSONObject participant = new org.json.JSONObject(command.getJSONObject("participant").toString());
 +                    participant.remove("participant_id");
@@ -28710,7 +29379,7 @@ index ccb3e308..d46a8308 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1277,12 +1330,14 @@ $sharedPanelFacade
+@@ -1277,12 +1335,14 @@ $sharedPanelFacade
                          .put("media_type", guidance.mediaType));
                  }
              }
@@ -28729,7 +29398,22 @@ index ccb3e308..d46a8308 100644
      }
  
      private static byte[] readPackagedAsset(
-@@ -1334,12 +1389,34 @@ $polarBleStopHooks
+@@ -1319,6 +1379,14 @@ $polarBleStopHooks
+         return closure != null && closure.active && closure.openControlDefault;
+     }
+ 
++    static long experimentSessionCompletionThresholdMs() {
++        ExperimentSessionPackagedClosure.Result closure = experimentSessionClosure;
++        if (closure == null || !closure.active || closure.selectedRuntimeThresholdMs <= 0L) {
++            throw new SecurityException("experiment-session-packaged-closure-unavailable");
++        }
++        return closure.selectedRuntimeThresholdMs;
++    }
++
+     static String conditionBreathGuidanceReadiness(String conditionId) {
+         ExperimentSessionPackagedClosure.Result closure = experimentSessionClosure;
+         if (closure == null || !closure.active) return "pattern-inventory-unavailable";
+@@ -1334,12 +1402,34 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -28765,7 +29449,7 @@ index ccb3e308..d46a8308 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1424,13 @@ $polarBleStopHooks
+@@ -1347,12 +1437,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -28780,7 +29464,7 @@ index ccb3e308..d46a8308 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1439,13 @@ $polarBleStopHooks
+@@ -1361,12 +1452,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -28795,7 +29479,7 @@ index ccb3e308..d46a8308 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1567,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1580,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -28807,7 +29491,7 @@ index ccb3e308..d46a8308 100644
          }
          return clean;
      }
-@@ -1525,6 +1607,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1620,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -28815,7 +29499,7 @@ index ccb3e308..d46a8308 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -2036,6 +2119,8 @@ if ($showcaseSelected) {
+@@ -2036,6 +2132,8 @@ if ($showcaseSelected) {
  if ($standaloneExperimentOwner) {
      $standaloneBaseSources = @('NativeAppSettingsReader.java','NativeMeshUiProducer.java','NativeInputWidgetGeometry.java','NativePageSnapshot.java','NativeSystemKeyboard.java','NativePanelFont.java',
          'NativeRendererExperimentLaunchAuthority.java','NativeRendererExperimentLauncherPolicy.java','NativeRendererActivityComponents.java','NativeRendererBootObservation.java',
@@ -28824,7 +29508,7 @@ index ccb3e308..d46a8308 100644
          'NativeRendererWriterAcknowledgedExitPolicy.java','PanelImmersiveHandoff.java',
          'PanelImmersiveHandoffLifecyclePolicy.java','PanelImmersiveHandoffProofPolicy.java',
          'PanelModule.java','PanelModuleRegistry.java')
-@@ -2069,7 +2154,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
+@@ -2069,7 +2167,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
  $debugSources = @()
  if ($script:BuildUsesLock) {
      $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['debug_experiment_operator_sources']) { $appBuildLockObject.debug_experiment_operator_sources })
@@ -28833,7 +29517,7 @@ index ccb3e308..d46a8308 100644
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2174,70 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2187,70 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -28904,7 +29588,7 @@ index ccb3e308..d46a8308 100644
  if (-not [string]::IsNullOrWhiteSpace($generatedControlPanelActivityPath)) {
      $sourceFiles += $generatedControlPanelActivityPath
  }
-@@ -2127,6 +2276,7 @@ Invoke-Checked "javac" $javac @(
+@@ -2127,6 +2289,7 @@ Invoke-Checked "javac" $javac @(
  )
  Invoke-Checked "jar class pack" $jar @("cf", $classesJar, "-C", $classesDir, ".")
  Invoke-Checked "d8" $d8 @("--lib", $platformJar, "--output", $dexDir, $classesJar)
@@ -28912,7 +29596,7 @@ index ccb3e308..d46a8308 100644
  
  $previousAndroidHome = $env:ANDROID_HOME
  $previousNdkHome = $env:ANDROID_NDK_HOME
-@@ -2152,6 +2302,10 @@ if ($showcaseVulkanSelected) {
+@@ -2152,6 +2315,10 @@ if ($showcaseVulkanSelected) {
  } elseif ($showcaseSelected) {
      $cargoBuildArguments += @('--features', 'showcase')
  }
@@ -28923,7 +29607,7 @@ index ccb3e308..d46a8308 100644
  if ($operatorSelection.enabled) { $cargoBuildArguments += @('--features', 'meta-xr-operator') }
  try {
      $env:ANDROID_HOME = $AndroidHome
-@@ -2265,6 +2419,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
+@@ -2265,6 +2432,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
  [IO.File]::WriteAllText($packagingInputPath, $packaging.json, [Text.UTF8Encoding]::new($false))
  # Public build identity only: no paths or app/private payload metadata.
  $buildIdentityAsset = [ordered]@{schema='rusty.quest.android_build_identity.v1';source_commit=$sourceHead;source_tree=$sourceTree;source_composition_fingerprint=[string]$sourceComposition.fingerprint;packaging_fingerprint=$packaging.sha256}
@@ -28931,7 +29615,7 @@ index ccb3e308..d46a8308 100644
  $buildIdentityAsset | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $assetsDir 'android-build-identity.json') -Encoding utf8
  Invoke-Checked "aapt2 link" $aapt2 @(
      "link",
-@@ -2297,6 +2452,7 @@ Invoke-Checked "apksigner" $apksigner @(
+@@ -2297,6 +2465,7 @@ Invoke-Checked "apksigner" $apksigner @(
  
  $sha256 = Get-FileSha256 -Path $apkSigned
  Assert-QuestMetaXrOperatorArchive -Selection $operatorSelection -ApkPath $apkSigned
@@ -28939,7 +29623,7 @@ index ccb3e308..d46a8308 100644
  if ($operatorSelection.enabled) {
      $operatorManifestDump = @(& $aapt2 dump xmltree $apkSigned --file AndroidManifest.xml 2>&1 | ForEach-Object ToString)
      $operatorManifestExit = $LASTEXITCODE
-@@ -2305,6 +2461,8 @@ if ($operatorSelection.enabled) {
+@@ -2305,6 +2474,8 @@ if ($operatorSelection.enabled) {
          ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutDir 'operator-manifest-dump.json') -Encoding utf8NoBOM
  }
  $manifest = [ordered]@{
@@ -28948,7 +29632,7 @@ index ccb3e308..d46a8308 100644
      meta_xr_operator = $operatorSelection
      '$schema' = "rusty.quest.native_renderer_android.build_manifest.v1"
      app_id = if ($null -eq $appBuildLockObject) { "unlocked-development" } else { [string]$appBuildLockObject.app_id }
-@@ -2451,9 +2609,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
+@@ -2451,9 +2622,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
  if ($script:BuildUsesLock) {
      $propertyManifestPath = Join-Path $repoRoot "fixtures\native-renderer\native-renderer-property-manifest.json"
      $runCapsule = [ordered]@{
@@ -30336,7 +31020,7 @@ index 302fa990..804d8f25 100644
 +if ($LASTEXITCODE) { throw 'Production controller-only input/compiler tests failed.' }
 +Write-Output "PASS controller-only actual resolver/default control, closed binding, hand-free manifest and compiled runtime selection ($OutputRoot)."
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-index 966e9942..231a87a1 100644
+index 966e9942..c2d165a8 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
 +++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 @@ -156,11 +156,15 @@ try {
@@ -30355,7 +31039,15 @@ index 966e9942..231a87a1 100644
      & $javaCommand.Source '-cp' $output 'io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionPanelCoordinatorTest'
      if ($LASTEXITCODE -ne 0) { throw "Java test failed: $LASTEXITCODE" }
      & $javaCommand.Source '-cp' $output 'io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionPanelViewPolicyTest'
-@@ -254,12 +258,19 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -216,6 +220,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+         throw new SecurityException("polar-feature-unselected");
+     }
+     static boolean experimentSessionOpenControlDefault() { return false; }
++    static long experimentSessionCompletionThresholdMs() { return 30_000L; }
+     static String conditionBreathGuidanceReadiness(String condition) { return "no-pattern"; }
+     static int conditionBreathGuidanceDefaultBias(String condition) { return 0; }
+     static boolean startConditionAudio(long generation, String operationId, String condition) { return false; }
+@@ -254,12 +259,19 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
          (Join-Path $mainRoot 'NativeRendererSelfKioskService.java'),
          (Join-Path $mainRoot 'NativeRendererSelfKioskDeparturePolicy.java'),
          (Join-Path $mainRoot 'NativeRendererExperimentLaunchAuthority.java'),
@@ -30375,7 +31067,7 @@ index 966e9942..231a87a1 100644
          (Join-Path $panelRoot 'ExperimentControlMode.java'),
          (Join-Path $panelRoot 'ExperimentSessionJsonCodec.java'),
          (Join-Path $panelRoot 'ExperimentSessionBleNamePolicy.java'),
-@@ -272,6 +283,8 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -272,6 +284,8 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
          (Join-Path $panelRoot 'ExperimentSessionCommandGateway.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
@@ -30384,7 +31076,7 @@ index 966e9942..231a87a1 100644
          (Join-Path $panelRoot 'ExperimentSessionGuestRegistry.java'),
          (Join-Path $panelRoot 'ExperimentSessionHeadsetIdentity.java'),
          (Join-Path $panelRoot 'ExperimentSessionGatewayHttpServer.java'),
-@@ -302,6 +315,11 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -302,6 +316,11 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
      $debugRoot = Join-Path $repo 'apps/native-renderer-android/src/debug/java/io/github/mesmerprism/rustyquest/native_renderer'
      & $javacCommand.Source '-encoding' 'UTF-8' '-source' '1.8' '-target' '1.8' '-bootclasspath' $androidJar '-cp' $output '-d' $output (Join-Path $debugRoot 'ExperimentSessionDebugOperator.java') (Join-Path $debugRoot 'ExperimentSessionDebugControlProvider.java')
      if ($LASTEXITCODE -ne 0) { throw "Opt-in debug operator API compile failed: $LASTEXITCODE" }
@@ -30396,7 +31088,7 @@ index 966e9942..231a87a1 100644
      & $javacCommand.Source '--release' '8' '-encoding' 'UTF-8' '-cp' ($output + [IO.Path]::PathSeparator + $jsonJar.FullName + [IO.Path]::PathSeparator + $androidJar) '-d' $output (Join-Path $testRoot 'ExperimentSessionDebugOperatorTest.java')
      if ($LASTEXITCODE -ne 0) { throw "Debug operator control compile failed: $LASTEXITCODE" }
      & $javaCommand.Source '-cp' ($output + [IO.Path]::PathSeparator + $jsonJar.FullName + [IO.Path]::PathSeparator + $androidJar) 'io.github.mesmerprism.rustyquest.native_renderer.ExperimentSessionDebugOperatorTest'
-@@ -344,7 +362,13 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -344,7 +363,13 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
          (Join-Path $mainRoot 'PanelImmersiveHandoffLifecyclePolicy.java'),
          (Join-Path $mainRoot 'PanelImmersiveHandoffProofPolicy.java'),
          (Join-Path $mainRoot 'NativeRendererExperimentLaunchAuthority.java'),
@@ -30410,7 +31102,7 @@ index 966e9942..231a87a1 100644
          (Join-Path $mainRoot 'NativeRendererSoftKioskAccessibilityService.java'),
          (Join-Path $mainRoot 'NativeRendererSelfKioskApplication.java'),
          (Join-Path $mainRoot 'NativeRendererSelfKioskService.java'),
-@@ -463,7 +487,13 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -463,7 +488,13 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
          (Join-Path $mainRoot 'NativeRendererForegroundGuardPolicy.java'),
          (Join-Path $mainRoot 'NativeRendererSoftKioskCoordinator.java'),
          (Join-Path $mainRoot 'NativeRendererExperimentLaunchAuthority.java'),
@@ -30424,7 +31116,7 @@ index 966e9942..231a87a1 100644
          (Join-Path $mainRoot 'NativeRendererSoftKioskAccessibilityService.java'),
          (Join-Path $mainRoot 'NativeRendererSelfKioskApplication.java'),
          (Join-Path $mainRoot 'NativeRendererSelfKioskService.java'),
-@@ -487,6 +517,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+@@ -487,6 +518,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
  }
  
  & (Join-Path $PSScriptRoot 'Test-ExperimentSessionDebugSelection.ps1') -RepoRoot $repo
@@ -30474,6 +31166,34 @@ index 2408b225..d4960b32 100644
      foreach($required in $originalIds){$bad=@{selected_feature_ids=@($originalIds|Where-Object {$_ -cne $required})};Deny ('original-missing-'+$required) {Get-NativeRendererPanelCompositionSelection -FeatureLock $bad -BuildEnvByName $originalEnv}}
      foreach($name in @($neutral,$mesh,$originalScene)){$bad=$originalEnv.Clone();$bad[$name]='invalid';Deny ('original-invalid-'+$name) {Get-NativeRendererPanelCompositionSelection -FeatureLock $originalLock -BuildEnvByName $bad}}
      $mixed=@{selected_feature_ids=$originalIds+@('renderer.native_scene')}
+diff --git a/tools/checks/Test-NativeRendererPolarPanelStatic.ps1 b/tools/checks/Test-NativeRendererPolarPanelStatic.ps1
+index 3d4d31e5..76b6ac3e 100644
+--- a/tools/checks/Test-NativeRendererPolarPanelStatic.ps1
++++ b/tools/checks/Test-NativeRendererPolarPanelStatic.ps1
+@@ -167,9 +167,11 @@ Assert-ContainsTokens $polarPanel @(
+     'setStatusState\("disconnected", "Polar device disconnected\."\);',
+     'setStatusState\("candidate-found", "A compatible Polar candidate was found\."\);',
+     'scheduleBatteryRead\(callbackGatt, batteryCharacteristic\);',
+-    'readBatteryIfIdle\(callbackGatt, callbackBatteryCharacteristic\);',
+-    'callbackBatteryCharacteristic != batteryCharacteristic',
+-    'callbackGatt\.readCharacteristic\(callbackBatteryCharacteristic\)',
++    'readBatteryIfIdle\(callbackGatt, characteristic, generation, ticket\);',
++    'characteristic != batteryCharacteristic',
++    'callbackGatt\.readCharacteristic\(characteristic\)',
++    'generation != batteryReadGeneration',
++    'liveHealth\.battery\(callbackGatt, generation, connectedDeviceInstanceId, at, admitted\)',
+     '\.put\("connected", connected\)',
+     'pmdFlowGeneration \+= 1L;',
+     'pendingCommandGeneration = pmdFlowGeneration;',
+@@ -232,7 +234,7 @@ Assert-ContainsTokens "$controlPanel`n$polarPanel`n$polarRuntime`n$polarReceiver
+     "android.permission.DUMP",
+     "shell-authorized operator bridge",
+     "am', 'broadcast",
+-    'foreground_activity_changed = \$false',
++    'foreground_activity_changed = if \(\$Command -ceq ''open_location_settings''\) \{ \$null \} else \{ \$false \}',
+     "ConnectivityPreflight",
+     "ControllerPreflight",
+     "FullRecording",
 diff --git a/tools/checks/Test-NativeRendererSoftKioskStatic.ps1 b/tools/checks/Test-NativeRendererSoftKioskStatic.ps1
 index d3d3fed5..7f426c57 100644
 --- a/tools/checks/Test-NativeRendererSoftKioskStatic.ps1
@@ -31488,7 +32208,7 @@ index 1596ca0d..9e3222b2 100644
  if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_participant_plan_binding.py b/tools/checks/test_experiment_participant_plan_binding.py
 new file mode 100644
-index 00000000..316bdbdf
+index 00000000..89c8d43c
 --- /dev/null
 +++ b/tools/checks/test_experiment_participant_plan_binding.py
 @@ -0,0 +1,129 @@
@@ -31526,7 +32246,7 @@ index 00000000..316bdbdf
 +final class ExperimentSessionPackagedClosure {
 + static final class AudioEntry {String conditionId="condition-a",logicalDestination="session-audio/a.mp3",sourceSha256="a",mediaType="audio/mpeg";long sourceBytes=10;}
 + static final class GuidanceEntry {String logicalDestination="guidance/a.json",sourceSha256="b",mediaType="application/json";long sourceBytes=20;}
-+ static final class Result {boolean active=true;String nonAudioProfileSha256="c";AudioEntry[] audioEntries={new AudioEntry()};GuidanceEntry guidanceFor(String id){return null;}}
++ static final class Result {boolean active=true;long selectedRuntimeThresholdMs=900000L;String nonAudioProfileSha256="c";AudioEntry[] audioEntries={new AudioEntry()};GuidanceEntry guidanceFor(String id){return null;}}
 +}
 +final class ParticipantPlanBindingHarness {
 + static ExperimentSessionPackagedClosure.Result experimentSessionClosure=new ExperimentSessionPackagedClosure.Result();
@@ -31538,7 +32258,7 @@ index 00000000..316bdbdf
 + __APPLY__
 + __PLAN__
 + static void check(boolean ok,String why){checks++;if(!ok)throw new AssertionError(why);}
-+ static JSONObject arm(String plan)throws Exception{return new JSONObject().put("operation","arm").put("condition","condition-a")
++ static JSONObject arm(String plan)throws Exception{return new JSONObject().put("operation","arm").put("condition","condition-a").put("completion_threshold_ms",900000L)
 +   .put("participant",new JSONObject(plan).put("participant_id","Tes_23_M"));}
 + static void succeeds(String plan,String why)throws Exception{int before=effects;applyExperimentSessionCommand(arm(plan).toString());
 +  check(effects==before+1,why);check(new JSONObject(last).getJSONObject("participant").getString("participant_id").equals("Tes_23_M"),"identity preserved");}
@@ -31948,7 +32668,7 @@ index c849c2d5..8fb1d2e0 100644
  }
  '''
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index d1d148eb..2ebe4db5 100644
+index d1d148eb..5a2a8f8f 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -9,6 +9,7 @@ from pathlib import Path
@@ -31959,7 +32679,13 @@ index d1d148eb..2ebe4db5 100644
  
  PACKAGE = 'io/github/mesmerprism/rustyquest/native_renderer'
  STUBS = {
-@@ -45,30 +46,53 @@ STUBS['android/app/Activity.java']='package android.app;public class Activity ex
+@@ -42,33 +43,59 @@ STUBS['android/content/res/AssetManager.java']='package android.content.res;publ
+ STUBS['android/content/Context.java']=STUBS['android/content/Context.java'].replace('public Context getApplicationContext()', 'public android.content.res.AssetManager getAssets(){return new android.content.res.AssetManager();}public Context getApplicationContext()')
+ STUBS['android/content/pm/PackageManager.java']=STUBS['android/content/pm/PackageManager.java'].replace('public static final int GET_META_DATA=128;', 'public static final int GET_META_DATA=128;public PackageInfo getPackageInfo(String p,int f){return new PackageInfo();}')
+ STUBS['android/app/Activity.java']='package android.app;public class Activity extends android.content.Context {}'
++STUBS['android/os/BatteryManager.java']='package android.os;public class BatteryManager {public static final int BATTERY_PROPERTY_CAPACITY=4,BATTERY_PROPERTY_STATUS=6,BATTERY_STATUS_CHARGING=2,BATTERY_STATUS_DISCHARGING=3,BATTERY_STATUS_NOT_CHARGING=4,BATTERY_STATUS_FULL=5;public int getIntProperty(int p){return Integer.MIN_VALUE;}}'
++STUBS['android/hardware/BatteryState.java']='package android.hardware;public class BatteryState {public boolean isPresent(){return false;}public float getCapacity(){return Float.NaN;}}'
++STUBS['android/view/InputDevice.java']='package android.view;public class InputDevice {public static final int SOURCE_GAMEPAD=1025,SOURCE_JOYSTICK=16777232;public static int[] getDeviceIds(){return new int[0];}public static InputDevice getDevice(int id){return null;}public int getSources(){return 0;}public String getName(){return "";}public android.hardware.BatteryState getBatteryState(){return null;}}'
  
  BOUNDARIES = r'''package io.github.mesmerprism.rustyquest.native_renderer;
  import org.json.JSONObject;
@@ -32012,13 +32738,14 @@ index d1d148eb..2ebe4db5 100644
  final class ExperimentSessionGatewayHttpServer {static int starts,closes;ExperimentSessionGatewayHttpServer(ExperimentSessionCommandGateway g,int p){}void start(){starts++;}void close(){closes++;}}
  final class ExperimentSessionDirectNetwork {ExperimentSessionDirectNetwork(android.content.Context c){}static boolean featurePackaged(android.content.Context c){return false;}JSONObject snapshot(){return new JSONObject();}JSONObject localJoinDetails(){return new JSONObject();}void start(String m){}void close(){}}
  final class ExperimentSessionRelayClient {interface Endpoint{JSONObject identity()throws Exception;JSONObject exchange(JSONObject r)throws Exception;}static class Config{Config(String a,String b,String c,String d,long e){}}ExperimentSessionRelayClient(Config c,Endpoint e){}JSONObject snapshot(){return new JSONObject();}void start(){}void close(){}}
- final class ControlPanelActivity {static String applyExperimentSessionCommand(String s){return "{}";}static String nativeReadBreathCompositionStatus(){return "{}";}static String conditionAudioReadiness(String s){return "unavailable";}static String conditionBreathGuidanceReadiness(String s){return "no-pattern";}}
+-final class ControlPanelActivity {static String applyExperimentSessionCommand(String s){return "{}";}static String nativeReadBreathCompositionStatus(){return "{}";}static String conditionAudioReadiness(String s){return "unavailable";}static String conditionBreathGuidanceReadiness(String s){return "no-pattern";}}
 -final class BreathCompositionPanelModule {static JSONObject queueExperimentOperator(JSONObject s){return new JSONObject();}static JSONObject experimentOperatorOwnerReceipt(){return new JSONObject();}
++final class ControlPanelActivity {static long experimentSessionCompletionThresholdMs(){return 30000L;}static String applyExperimentSessionCommand(String s){return "{}";}static String nativeReadBreathCompositionStatus(){return "{}";}static String conditionAudioReadiness(String s){return "unavailable";}static String conditionBreathGuidanceReadiness(String s){return "no-pattern";}}
 +final class BreathCompositionPanelModule {static JSONObject remoteKioskProjection(){return new JSONObject();}static JSONObject remoteKioskCommand(JSONObject c,long e){return new JSONObject();}static JSONObject queueExperimentOperator(JSONObject s){return new JSONObject();}static JSONObject experimentOperatorOwnerReceipt(){return new JSONObject();}
   static JSONObject experimentControlModeStatus(){return new JSONObject();}static JSONObject selectExperimentOperatorMode(JSONObject s,Runnable guard){return new JSONObject();}}
  final class NativeMeshUiProducer {static class VisibilityReadback {static Boolean applied(JSONObject r,long g,long v){return null;}}}
  '''
-@@ -174,10 +198,14 @@ final class RemoteJoinHarness {
+@@ -174,10 +201,14 @@ final class RemoteJoinHarness {
    deny(()->g.provisionHeadsetIdentity(provision,()->{throw new SecurityException("wrong actor");}));
    deny(()->g.provisionHeadsetIdentity(new JSONObject(provision.toString()).put("hardware_serial","unknown"),good));
    g.provisionHeadsetIdentity(provision,good);check(g.identity().getString("serial").equals("SYNTHETIC-ONLY")&&g.discoveryMetadata().getString("serial").equals("SYNTHETIC-ONLY"),"provision readback binding");
@@ -32034,7 +32761,7 @@ index d1d148eb..2ebe4db5 100644
    JSONObject enrolledClient=new JSONObject().put("controller",context.prefs.getString("controller","")).put("key",enrolled).put("epoch",enrolledIdentity.getString("epoch"));g.exchange(auth(enrolledClient,"status",new JSONObject()));
    check(context.prefs.getString("key","").equals(enrolled)&&context.prefs.getBoolean("trusted-lan",false),"join rotated legacy enrollment");
    // Optional enrollment revocation must preserve the live native owner's key-free route and originals.
-@@ -209,11 +237,11 @@ def main():
+@@ -209,11 +240,11 @@ def main():
      with tempfile.TemporaryDirectory(prefix='rq-remote-join-') as tmp:
          out=Path(tmp)
          for name,source in STUBS.items():
@@ -32049,7 +32776,7 @@ index d1d148eb..2ebe4db5 100644
          http=(root/'ExperimentSessionGatewayHttpServer.java').read_text()
          http_fixture=r'''package io.github.mesmerprism.rustyquest.native_renderer;
  import java.io.*;import java.net.Socket;import java.util.*;import java.nio.charset.StandardCharsets;import org.json.JSONObject;
-@@ -232,7 +260,7 @@ final class HttpRemoteJoinBoundary {
+@@ -232,7 +263,7 @@ final class HttpRemoteJoinBoundary {
          debug=(a.repo/'apps/native-renderer-android/src/debug/java'/PACKAGE/'ExperimentSessionDebugOperator.java').read_text()
          (package/'ExperimentSessionDebugOperator.java').write_text(debug)
          (package/'ExperimentSessionDebugOperatorTest.java').write_text((a.repo/'apps/native-renderer-android/tests/java'/PACKAGE/'ExperimentSessionDebugOperatorTest.java').read_text())
@@ -32216,6 +32943,284 @@ index 00000000..83f1fa46
 +  else:
 +   if result.returncode:print(result.stderr)
 +   result.check_returncode();print(result.stdout.strip())
++if __name__=='__main__':main()
+diff --git a/tools/checks/test_experiment_status_power.py b/tools/checks/test_experiment_status_power.py
+new file mode 100644
+index 00000000..5328e154
+--- /dev/null
++++ b/tools/checks/test_experiment_status_power.py
+@@ -0,0 +1,77 @@
++"""Actual enrolled gateway HMAC route + public Android power API boundary controls."""
++import test_experiment_trusted_phones as configured
++
++owner = configured.owner
++owner.STUBS['android/os/BatteryManager.java'] = '''package android.os;
++public class BatteryManager {
++ public static final int BATTERY_PROPERTY_CAPACITY=4,BATTERY_PROPERTY_STATUS=6;
++ public static final int BATTERY_STATUS_UNKNOWN=1,BATTERY_STATUS_CHARGING=2,BATTERY_STATUS_DISCHARGING=3,BATTERY_STATUS_NOT_CHARGING=4,BATTERY_STATUS_FULL=5;
++ public static int percent=55,status=2,reads;public static boolean fail;
++ public int getIntProperty(int property){reads++;if(fail)throw new SecurityException("unavailable");return property==4?percent:status;}
++}'''
++owner.STUBS['android/hardware/BatteryState.java'] = '''package android.hardware;
++public class BatteryState {public boolean present=true;public float capacity;
++ public BatteryState(float c){capacity=c;}public boolean isPresent(){return present;}public float getCapacity(){return capacity;}}
++'''
++owner.STUBS['android/view/InputDevice.java'] = '''package android.view;
++public class InputDevice {
++ public static final int SOURCE_GAMEPAD=1025,SOURCE_JOYSTICK=16777232;
++ public static int scans;public static boolean fail;public static int count=3;public static float capacity=.6f;
++ final int id;InputDevice(int i){id=i;}public static int[] getDeviceIds(){scans++;if(fail)throw new SecurityException();int[] ids=new int[count];for(int i=0;i<count;i++)ids[i]=i;return ids;}
++ public static InputDevice getDevice(int id){return new InputDevice(id);}public int getSources(){return id==0?257:SOURCE_GAMEPAD;}
++ public String getName(){return "Pad\\n"+id+"                                                                                  ";}
++ public android.hardware.BatteryState getBatteryState(){return new android.hardware.BatteryState(capacity);}
++}'''
++owner.STUBS['android/content/Context.java'] = owner.STUBS['android/content/Context.java'].replace(
++    'public <T>T getSystemService(Class<T> c){return null;}',
++    'public <T>T getSystemService(Class<T> c){return c==android.os.BatteryManager.class?c.cast(new android.os.BatteryManager()):null;}')
++
++checks = r'''
++  long powerNow=1000;
++  JSONObject power=installedStatus.optJSONObject("power");
++  check(power!=null,"authenticated status must expose actual public power observations");
++  check(installedStatus.has("polar_health")&&installedStatus.getJSONObject("y").has("health"),"enrolled LAN retains top-level and nested current owner health");
++  JSONObject privateGuest=read(g,guest,"status",new JSONObject());
++  check(!privateGuest.has("polar_health")&&!privateGuest.getJSONObject("y").has("health"),"guest excludes top-level and nested health");
++  JSONObject privateRelay=new JSONObject(g.exchange(auth(a,"status",new JSONObject())).getString("payload"));
++  check(!privateRelay.has("polar_health")&&!privateRelay.getJSONObject("y").has("health"),"relay excludes top-level and nested health");
++  check(power.length()==3&&power.getInt("v")==1&&power.getJSONObject("quest").getInt("percent")==55&&power.getJSONObject("quest").getBoolean("charging"),"closed Quest power");
++  check(power.getJSONArray("controllers").length()==2&&power.getJSONArray("controllers").getJSONObject(0).getInt("percent")==60,"only public controller devices and fraction conversion");
++  String name=power.getJSONArray("controllers").getJSONObject(0).getString("name");
++  check(name.length()<=64&&!name.contains("\n"),"controller label sanitized and bounded");
++  ExperimentSessionCommandGateway.PowerSnapshot cache=new ExperimentSessionCommandGateway.PowerSnapshot();
++  JSONObject cachedPower=cache.read(context,powerNow);
++  int batteryReads=android.os.BatteryManager.reads,inputScans=android.view.InputDevice.scans;
++  android.os.BatteryManager.percent=90;cachedPower.getJSONObject("quest").put("percent",1);
++  check(cache.read(context,powerNow).getJSONObject("quest").getInt("percent")==55,"cache returns independent JSON copy");
++  check(android.os.BatteryManager.reads==batteryReads&&android.view.InputDevice.scans==inputScans,"100ms status polling cannot query binders before5s");
++  powerNow+=4999;
++  check(cache.read(context,powerNow).getJSONObject("quest").getInt("percent")==55,"cache retained until exact5s");
++  powerNow+=1;
++  check(cache.read(context,powerNow).getJSONObject("quest").getInt("percent")==90&&android.view.InputDevice.scans==inputScans+1,"cache refresh at5s");
++  for(int invalid:new int[]{-1,101,Integer.MIN_VALUE}) {
++   android.os.BatteryManager.percent=invalid;android.os.BatteryManager.status=Integer.MIN_VALUE;powerNow+=5000;
++   JSONObject unknown=cache.read(context,powerNow).getJSONObject("quest");
++   check(unknown.isNull("percent")&&unknown.isNull("charging"),"unsupported Quest values remain unknown");
++  }
++  for(float invalid:new float[]{Float.NaN,Float.POSITIVE_INFINITY,Float.NEGATIVE_INFINITY,-.1f,1.1f}) {
++   android.view.InputDevice.capacity=invalid;powerNow+=5000;
++   check(cache.read(context,powerNow).getJSONArray("controllers").getJSONObject(0).isNull("percent"),"invalid public controller fraction remains unknown");
++  }
++  android.os.BatteryManager.fail=true;android.view.InputDevice.fail=true;powerNow+=5000;
++  JSONObject unavailable=cache.read(context,powerNow);
++  check(unavailable.getJSONObject("quest").isNull("percent")&&unavailable.getJSONObject("quest").isNull("charging")&&unavailable.getJSONArray("controllers").length()==0,"permission/device failures cannot fail native status");
++  android.os.BatteryManager.fail=false;android.view.InputDevice.fail=false;android.view.InputDevice.count=100;powerNow+=5000;
++  check(cache.read(context,powerNow).getJSONArray("controllers").length()<=8,"controller inventory bounded");
++  android.os.Build.VERSION.SDK_INT=30;powerNow+=5000;
++  check(cache.read(context,powerNow).getJSONArray("controllers").length()==0,"pre31 never queries unsupported public controller battery");
++  android.os.Build.VERSION.SDK_INT=35;
++  check(!read(g,guest,"status",new JSONObject()).has("power"),"guest does not receive power projection");
++  check(!new JSONObject(g.exchange(auth(a,"status",new JSONObject())).getString("payload")).has("power"),"relay preserves private LAN boundary");
++'''
++owner.HARNESS = owner.HARNESS.replace('  int packageReads=', checks + '\n  int packageReads=')
++owner.HARNESS = owner.HARNESS.replace('public JSONObject polarSetupReadback(){return new JSONObject().put("ar",true);}',
++    'public JSONObject polarSetupReadback(){return new JSONObject().put("ar",true).put("health",new JSONObject().put("v",1).put("link",false).put("connection_generation","0").put("observed_at_ns","1000"));}')
++
++if __name__ == '__main__':
++    owner.main()
+diff --git a/tools/checks/test_experiment_threshold_binding.py b/tools/checks/test_experiment_threshold_binding.py
+new file mode 100644
+index 00000000..f748a12b
+--- /dev/null
++++ b/tools/checks/test_experiment_threshold_binding.py
+@@ -0,0 +1,189 @@
++"""Actual Java codec + generated binding + validated signed-APK closure duration probe.
++
++Writes optional bound requests for the native parser contract test. No Android/device effects.
++"""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import re
++import subprocess
++import tempfile
++import zipfile
++from test_experiment_gateway_dedupe import method
++
++
++def verify_apk_dex(apk, dexdump):
++    """Check actual signed bytecode, including the field-to-JSON data path."""
++    with zipfile.ZipFile(apk) as archive, tempfile.TemporaryDirectory(prefix='rq-threshold-dex-') as temp:
++        dumps = []
++        for name in archive.namelist():
++            if re.fullmatch(r'classes\d*\.dex', name):
++                path = Path(temp) / name
++                path.write_bytes(archive.read(name))
++                dumps.append(subprocess.run([str(dexdump), '-d', str(path)], check=True,
++                                            stdout=subprocess.PIPE).stdout.decode('utf-8', 'replace').replace('\r', ''))
++        classes = {}
++        for dump in dumps:
++            for block in re.split(r'(?m)^Class #\d+', dump)[1:]:
++                descriptor = re.search(r"Class descriptor\s*:\s*'([^']+)'", block)
++                if descriptor:
++                    classes[descriptor[1]] = block
++        prefix = 'Lio/github/mesmerprism/rustyquest/native_renderer/'
++        for name in ['BreathCompositionPanelModule$ExperimentSessionJsonCodec', 'ExperimentSessionJsonCodec']:
++            block = classes[prefix + name + ';']
++            command = re.search(r"name\s*:\s*'command'(.*?)(?=\n    #|\Z)", block, re.S)[1]
++            # The value for this exact JSON key must come from the trusted
++            # accessor; merely finding 900000 in an asset or another method
++            # would miss the original inlined-30000 defect.
++            assert re.search(r'const-string[^\n]*"completion_threshold_ms"[^\n]*\n'
++                             r'[^\n]*invoke-static[^\n]*ControlPanelActivity;\.experimentSessionCompletionThresholdMs:\(\)J[^\n]*\n'
++                             r'[^\n]*move-result-wide[^\n]*\n'
++                             r'[^\n]*invoke-virtual[^\n]*JSONObject;\.put:\(Ljava/lang/String;J\)', command), \
++                name + ': DEX completion threshold does not use verified closure:\n' + command[max(0,command.find('"completion_threshold_ms"')-200):command.find('"completion_threshold_ms"')+900]
++        activity = classes[prefix + 'ControlPanelActivity;']
++        accessor = re.search(r"name\s*:\s*'experimentSessionCompletionThresholdMs'(.*?)(?=\n    #|\Z)", activity, re.S)[1]
++        assert 'ExperimentSessionPackagedClosure$Result;.selectedRuntimeThresholdMs:J' in accessor
++        assert 'ExperimentSessionPackagedClosure$Result;.active:Z' in accessor
++        binding = re.search(r"name\s*:\s*'applyExperimentSessionCommand'(.*?)(?=\n    #|\Z)", activity, re.S)[1]
++        assert 'experiment-session-completion-threshold-not-packaged' in binding
++        assert 'ExperimentSessionPackagedClosure$Result;.selectedRuntimeThresholdMs:J' in binding
++    print('PASS actual DEX both codec JSON values + active verified closure + binding guard')
++
++HARNESS = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import org.json.*;import java.nio.file.*;import java.util.*;import java.util.zip.*;
++final class BreathingSetupAudio {
++ static boolean selected(Object context){return true;}
++ static String mainRecordingPlan(String scenario){return BreathCompositionPanelModule.plan;}
++}
++final class ConditionAudioAndroidMediaBackendFactory {interface ScenarioTracks {String recordingPlan(String id);}}
++final class ControlPanelActivity {
++ static ExperimentSessionPackagedClosure.Result experimentSessionClosure;
++ static Object preparedClosureApplicationContext=new Object();
++ static ConditionAudioAndroidMediaBackendFactory.ScenarioTracks scenarioAudioTracks;
++ static String nativeApplyBreathCompositionCommand(String request){return request;}
++ static String conditionBreathGuidanceReadiness(String condition){return "not-ready";}
++ __THRESHOLD__
++ __APPLY__
++ __PLAN__
++}
++final class StandaloneCodecFactory {
++ static ExperimentSessionAndroidShell.Codec create(){return new ExperimentSessionJsonCodec(()->BreathCompositionPanelModule.EXPERIMENT_SESSION_PANEL);}
++}
++final class BreathCompositionPanelModule {
++ static final ExperimentSessionPanelCoordinator EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();
++ static String plan;
++ __NESTED__
++ static int checks;static void check(boolean yes,String reason){checks++;if(!yes)throw new AssertionError(reason);}
++ static byte[] asset(ZipFile zip,String path)throws Exception {
++  java.io.InputStream in=zip.getInputStream(zip.getEntry("assets/"+path));
++  try{java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] b=new byte[8192];int n;while((n=in.read(b))>=0)out.write(b,0,n);return out.toByteArray();}finally{in.close();}
++ }
++ public static void main(String[] args)throws Exception {
++  Path temporary=Paths.get(args[5]);
++  try(ZipFile zip=new ZipFile(args[0])) {
++   ControlPanelActivity.experimentSessionClosure=ExperimentSessionPackagedClosure.prepare(
++     asset(zip,"feature-lock.json"), path->asset(zip,path),temporary,
++     new ExperimentSessionPackagedClosure.Anchors(args[1],args[2],args[3]));
++   JSONObject participant=new JSONObject(new String(Files.readAllBytes(Paths.get(args[4])),"UTF-8"));
++   JSONObject trustedPlan=new JSONObject(participant.toString());trustedPlan.remove("participant_id");plan=trustedPlan.toString();
++   ExperimentSessionAndroidShell.Codec[] codecs={new ExperimentSessionJsonCodec(),StandaloneCodecFactory.create()};
++   JSONArray commands=new JSONArray();
++   for(ExperimentSessionAndroidShell.Codec codec:codecs) {
++    for(String operation:new String[]{"arm","start"}) {
++    ExperimentSessionPanelCoordinator.NativeCommand intent=new ExperimentSessionPanelCoordinator.NativeCommand(operation,"threshold-"+operation+"-"+commands.length(),0,"condition-a");
++    if("arm".equals(operation))intent=intent.withParticipantPlan(participant.toString());
++    String request=codec.command(intent,true,1000000000L,1725000000000000000L);
++    check(new JSONObject(request).getLong("completion_threshold_ms")==900000L,"actual selected codec must emit900000ms, not generic30000ms");
++    String bound=ControlPanelActivity.applyExperimentSessionCommand(request);
++    JSONObject data=new JSONObject(bound);check(data.getLong("completion_threshold_ms")==900000L,"binding preserves verified900000ms");
++    if("arm".equals(operation))check(data.getJSONObject("participant").getString("participant_id").equals("Tes_24_M"),"participant identity preserved");
++    for(Object invalid:new Object[]{30000L,899999L,900001L,"900000",900000.5,JSONObject.NULL}) {
++      JSONObject damaged=new JSONObject(request).put("completion_threshold_ms",invalid);
++      try{ControlPanelActivity.applyExperimentSessionCommand(damaged.toString());throw new AssertionError("untrusted duration accepted:"+invalid);}
++      catch(ExperimentSessionAndroidShell.PreDispatchFailure expected){checks++;}
++    }
++    JSONObject missing=new JSONObject(request);missing.remove("completion_threshold_ms");
++    try{ControlPanelActivity.applyExperimentSessionCommand(missing.toString());throw new AssertionError("missing duration accepted");}
++    catch(ExperimentSessionAndroidShell.PreDispatchFailure expected){checks++;}
++    commands.put(data);
++    }
++   }
++   ExperimentSessionPackagedClosure.Result verified=ControlPanelActivity.experimentSessionClosure;
++   for(ExperimentSessionPackagedClosure.Result unavailable:new ExperimentSessionPackagedClosure.Result[]{null,ExperimentSessionPackagedClosure.Result.inactive()}) {
++     ControlPanelActivity.experimentSessionClosure=unavailable;
++     for(ExperimentSessionAndroidShell.Codec codec:codecs) {
++       try{codec.command(new ExperimentSessionPanelCoordinator.NativeCommand("arm","unavailable",0,"condition-a"),true,1L,1L);throw new AssertionError("unavailable closure encoded duration");}
++       catch(IllegalStateException expected){checks++;}
++     }
++   }
++   ControlPanelActivity.experimentSessionClosure=verified;
++   ControlPanelActivity.experimentSessionClosure=ExperimentSessionPackagedClosureTest.prepareGenericClosureForCodecTest();
++   for(ExperimentSessionAndroidShell.Codec codec:codecs)for(String operation:new String[]{"arm","start"}) {
++     String request=codec.command(new ExperimentSessionPanelCoordinator.NativeCommand(operation,"generic-"+operation,0,"condition-a"),true,1L,1L);
++     check(new JSONObject(request).getLong("completion_threshold_ms")==30000L,"actual generic codec preserves verified30000ms");
++     check(new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(request)).getLong("completion_threshold_ms")==30000L,"generic binding accepts verified30000ms");
++     try{ControlPanelActivity.applyExperimentSessionCommand(new JSONObject(request).put("completion_threshold_ms",900000L).toString());throw new AssertionError("generic accepted selected caller duration");}
++     catch(ExperimentSessionAndroidShell.PreDispatchFailure expected){checks++;}
++   }
++   if(args.length>6)Files.write(Paths.get(args[6]),commands.toString().getBytes("UTF-8"));
++   System.out.println("PASS actual codec/trusted closure/native binding "+checks+" checks");
++  }
++ }
++}
++'''
++
++def main():
++    parser=argparse.ArgumentParser()
++    parser.add_argument('--repo',type=Path,default=Path(__file__).resolve().parents[2])
++    parser.add_argument('--apk',type=Path,required=True)
++    parser.add_argument('--json-jar',type=Path,required=True)
++    parser.add_argument('--commands-output',type=Path)
++    parser.add_argument('--verify-apk-dex',action='store_true',help='Also require fixed actual APK bytecode')
++    parser.add_argument('--dexdump',type=Path)
++    parser.add_argument('--d8-jar',type=Path,help='Also compile and check the actual Java fixture with D8')
++    parser.add_argument('--android-jar',type=Path)
++    args=parser.parse_args()
++    if (args.verify_apk_dex or args.d8_jar) and not args.dexdump:
++        parser.error('--dexdump is required for bytecode checks')
++    if args.d8_jar and not args.android_jar:
++        parser.error('--android-jar is required with --d8-jar')
++    if args.verify_apk_dex:
++        verify_apk_dex(args.apk,args.dexdump)
++    package='io/github/mesmerprism/rustyquest/native_renderer'
++    panel=args.repo/'apps/native-renderer-android/panel-modules/breath-composition/src/main/java'/package
++    owner=args.repo/'apps/native-renderer-android/src/main/java'/package
++    builder=(args.repo/'tools/Build-NativeRendererAndroid.ps1').read_text(encoding='utf-8-sig')
++    module=(panel/'BreathCompositionPanelModule.java').read_text(encoding='utf-8-sig')
++    nested=method(module,'private static final class ExperimentSessionJsonCodec')
++    threshold=method(builder,'static long experimentSessionCompletionThresholdMs(')
++    code=HARNESS.replace('__NESTED__',nested).replace('__THRESHOLD__',threshold)
++    code=code.replace('__APPLY__',method(builder,'static String applyExperimentSessionCommand(')).replace('__PLAN__',method(builder,'static String conditionAudioRecordingPlan('))
++    with zipfile.ZipFile(args.apk) as zip, tempfile.TemporaryDirectory(prefix='rq-threshold-binding-') as temp:
++        out=Path(temp);java=out/'ThresholdBindingHarness.java';java.write_text(code,encoding='utf-8')
++        (out/'materialized').mkdir()
++        lock=json.loads(zip.read('assets/feature-lock.json'));closure=lock['build_inputs']['private_asset_closure']
++        profile=next(a['source_sha256'] for a in closure['assets'] if a['asset_id']=='experiment-session-profile')
++        raw=zip.read('assets/atmungsraum-audio/audio/box-loop.json');loop=json.loads(raw);total=39690000
++        plan={'scenario_id':'haupt-15','scenario_sha256':hashlib.sha256(raw).hexdigest(),'sample_rate':44100,'total_frames':total,
++              'phases':[[base+p['offset_frames'],p['id']] for base in range(0,total,705600) for p in loop['phases'] if base+p['offset_frames']<total], 'participant_id':'Tes_24_M'}
++        plan_file=out/'plan.json';plan_file.write_text(json.dumps(plan),encoding='utf-8')
++        names=['ExperimentSessionPanelCoordinator','ExperimentSessionPanelState','ExperimentSessionPanelViewPolicy','ExperimentSessionStatusObservation','ExperimentSessionAndroidShell','ExperimentSessionJsonCodec','ExperimentSessionPackagedClosure']
++        sources=[panel/(n+'.java') for n in names]+[owner/'NativeRendererWriterAcknowledgedExitPolicy.java',java]
++        sources.append(args.repo/'apps/native-renderer-android/tests/java'/package/'ExperimentSessionPackagedClosureTest.java')
++        subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(args.json_jar),'-d',str(out),*map(str,sources)],check=True)
++        run=['java','-cp',str(out)+os.pathsep+str(args.json_jar),'io.github.mesmerprism.rustyquest.native_renderer.BreathCompositionPanelModule',str(args.apk),profile,closure['provider_manifest_sha256'],closure['inventory_sha256'],str(plan_file),str(out/'materialized')]
++        if args.commands_output:run.append(str(args.commands_output))
++        subprocess.run(run,check=True)
++        if args.d8_jar:
++            dex=out/'dex';dex.mkdir()
++            subprocess.run(['java','-cp',str(args.d8_jar),'com.android.tools.r8.D8',
++                            '--lib',str(args.android_jar),'--output',str(dex),
++                            *map(str,out.rglob('*.class'))],check=True)
++            fixture=out/'fixture.apk'
++            with zipfile.ZipFile(fixture,'w') as archive:
++                for path in dex.glob('*.dex'):archive.write(path,path.name)
++            verify_apk_dex(fixture,args.dexdump)
++
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
 new file mode 100644
@@ -32417,10 +33422,18 @@ index 00000000..6a086d12
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
-index d6a4bfd4..b7648130 100644
+index d6a4bfd4..5180c791 100644
 --- a/tools/checks/test_experiment_wifi_snapshot.py
 +++ b/tools/checks/test_experiment_wifi_snapshot.py
-@@ -66,6 +66,7 @@ public final class WifiSnapshotHarness {
+@@ -28,6 +28,7 @@ def main():
+     source = r'''package io.github.mesmerprism.rustyquest.native_renderer;
+ import org.json.*;
+ final class ControlPanelActivity {
++ static long experimentSessionCompletionThresholdMs(){return 30000L;}
+  static JSONObject raw;static int reads;
+  static String applyExperimentSessionCommand(String command)throws Exception {WifiSnapshotHarness.check("status".equals(new JSONObject(command).getString("operation")),"status cannot mutate experiment");reads++;return raw.toString();}
+  static String nativeReadBreathCompositionStatus()throws Exception{return new JSONObject().put("snapshot",new JSONObject().put("feature_lock_active",true).put("activation_binding_matches",true).put("activation_binding_sha256",WifiSnapshotHarness.repeat("b",64))).toString();}
+@@ -66,6 +67,7 @@ public final class WifiSnapshotHarness {
   static String repeat(String s,int n){return String.join("",java.util.Collections.nCopies(n,s));}
   Object context=new Object();
   long identity=11,epoch=7,lifecycleRevision=1;
@@ -32428,7 +33441,44 @@ index d6a4bfd4..b7648130 100644
   JSONObject buildIdentity=new JSONObject().put("v",1).put("version_code",61).put("version_name","0.1.61");
   ExperimentSessionControlCapability session=new ExperimentSessionControlCapability();PolarStopBleCapability polar=new PolarStopBleCapability();
   ExperimentControlMode controlMode=new ExperimentControlMode();
-@@ -122,6 +123,8 @@ public final class WifiSnapshotHarness {
+@@ -73,7 +75,7 @@ public final class WifiSnapshotHarness {
+   boolean acceptsNativeOwner(long i,long e){return live&&i==identity&&e==epoch;}}
+  Carrier carrier=new Carrier();
+  class Delegate implements WifiDelegate {
+-  int legacyReads;boolean replace;JSONObject raw=response(9,900),setup;
++  int legacyReads;boolean replace,noStopHealth;JSONObject raw=response(9,900),setup;
+   ExperimentSessionWifiSnapshot wifiObservation;long wifiGeneration,wifiEpoch;
+   class RemotePending {ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId;long serverGeneration;int requestedBias;}
+   RemotePending remotePending;Object remoteTerminal;String remoteSetupPendingId="";Object remoteContext=new Object();
+@@ -92,16 +94,26 @@ public final class WifiSnapshotHarness {
+    .put("connected",false).put("acc_requested",true).put("acc_pmd_ack_running",true)
+    .put("diagnostics",new JSONObject().put("clock","java-nano-time").put("observed_at_monotonic_ns",42).put("callback_count",15).put("acc_callback_count",14)
+     .put("decode_count",13).put("jni_submit_count",12).put("callback_age_ms",6).put("gatt_state",0).put("gatt_status",8).put("disconnect_count",1).put("private",repeat("x",20000)))
+-   .put("selected_sensor",repeat("x",20000));}
++   .put("selected_sensor",repeat("x",20000)).put("health",noStopHealth?JSONObject.NULL:health());}
++  JSONObject health(){return new JSONObject().put("v",1).put("link",true).put("connection_generation","2").put("observed_at_ns","7000000000")
++   .put("ecg",new JSONObject().put("age_ms",3).put("fresh",true)).put("acc",new JSONObject().put("age_ms",4).put("fresh",true))
++   .put("contact",new JSONObject().put("state","unsupported").put("supported",false).put("detected",JSONObject.NULL).put("age_ms",4))
++   .put("battery",new JSONObject().put("percent",80).put("age_ms",100)).put("raw",repeat("x",20000));}
+  }
+  Delegate delegate=new Delegate();
+  WifiSnapshotHarness()throws Exception{}
+  __SNAPSHOT__
++ __HEALTH__
+  void gateway()throws Exception {
+   JSONObject status;
+   try{status=snapshot();}catch(Exception oldBudget){throw new AssertionError("full Wi-Fi snapshot must bypass compact BLE budget",oldBudget);}
+   check(status.getInt("wifi_snapshot")==1,"full Wi-Fi marker");
+   check(status.getJSONObject("build").getInt("version_code")==61,"Wi-Fi installed identity projected");
++  check(status.getJSONObject("polar_health").getJSONObject("ecg").getBoolean("fresh")&&!status.getJSONObject("polar_health").has("raw"),"active status retains closed live ECG health without raw owner fields");
++  JSONObject ble=new JSONObject().put("v",1).put("p","IDLE").put("polar_health",new JSONObject().put("v",1))
++   .put("power",new JSONObject().put("v",1)).put("y",new JSONObject().put("ar",true).put("health",new JSONObject().put("v",1)));
++  JSONObject compact=new JSONObject(new String(polar.projectBoundedStatus(ble,null),"UTF-8"));
++  check(!compact.has("polar_health")&&!compact.has("power")&&!compact.getJSONObject("y").has("health")&&compact.getJSONObject("y").getBoolean("ar"),"private health and power never consume BLE bytes or change existing readiness");
+   JSONObject diagnostic=status.getJSONObject("pd"),nativeInput=diagnostic.getJSONObject("native"),javaInput=diagnostic.getJSONObject("java");
+   check(nativeInput.getBoolean("diagnostics_observed")&&"acc-stale".equals(nativeInput.getString("reason"))&&nativeInput.getLong("accepted_age_ms")==1234,"current native reason/age retained");
+   check("acc-stale".equals(nativeInput.getJSONObject("last_pause").getString("reason")),"original pause retained");
+@@ -122,6 +134,8 @@ public final class WifiSnapshotHarness {
    JSONObject oversized=new JSONObject(status.toString()).put("k",repeat("x",17000));
    try{ExperimentSessionWifiSnapshot.bounded(oversized);throw new AssertionError("16KiB bound");}catch(IllegalStateException expected){}
    WifiSnapshotHarness modes=new WifiSnapshotHarness();
@@ -32437,7 +33487,17 @@ index d6a4bfd4..b7648130 100644
    for(String mode:new String[]{"choose","direct","remote"}){modes.controlMode.state.name=mode;check(mode.equals(modes.snapshot().getString("control_mode")),"explicit "+mode);}
    modes.controlMode.state.selected=false;check(modes.snapshot().has("control_mode"),"unselected owner still explicit");
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
-@@ -202,9 +205,9 @@ public final class WifiSnapshotHarness {
+@@ -129,6 +143,9 @@ public final class WifiSnapshotHarness {
+   ControlPanelActivity.raw=modes.delegate.raw;modes.delegate.setup=new JSONObject().put("s","owner").put("g",7).put("r",8).put("p",true).put("b",true)
+    .put("c",false).put("x","").put("sc",true).put("a",false).put("e",false).put("d",new JSONArray().put("aaaaaaaaaaaa").put("bbbbbbbbbbbb").put("cccccccccccc").put("dddddddddddd"));
+   JSONObject idle=modes.snapshot();check(idle.has("y")&&idle.getJSONObject("y").getJSONArray("d").length()==4&&idle.getJSONObject("pi").length()==3&&!idle.has("q"),"full idle setup keeps original y and mandatory pi");
++  modes.delegate.noStopHealth=true;JSONObject idleHealth=modes.delegate.health();idleHealth.remove("raw");modes.delegate.setup.put("health",idleHealth);
++  check(modes.snapshot().getJSONObject("polar_health").getJSONObject("battery").getInt("percent")==80,"idle status routes setup health without requiring stop offer");
++  modes.delegate.setup.remove("health");check(modes.snapshot().isNull("polar_health"),"missing owner health stays explicit unknown");
+   for(String field:new String[]{"g","r","ms","rec","co","h","st","o","pi"})check(idle.has(field),"idle setup retains "+field);
+  }
+  void denySnapshot(String why)throws Exception{try{snapshot();}catch(SecurityException|IllegalStateException expected){return;}throw new AssertionError(why);}
+@@ -202,9 +219,9 @@ public final class WifiSnapshotHarness {
  final class PolarReceiptHarness {
   java.util.Map<String,String> setupReceipts=new java.util.LinkedHashMap<>(),setupOutcomes=new java.util.LinkedHashMap<>();
   java.util.Map<String,Long> setupEffectTimes=new java.util.LinkedHashMap<>();
@@ -32449,6 +33509,15 @@ index d6a4bfd4..b7648130 100644
    void selectRemoteCandidate(String d){}void handleCommand(String op){effects++;scanning=true;}
    JSONObject remoteSetupProjection()throws Exception{return remoteSetupStatus(7);}}Panel panel=new Panel();
   PolarReceiptHarness(){setupReceipts.put("original","original canonical command");}
+@@ -212,7 +229,7 @@ final class PolarReceiptHarness {
+  __DISPATCH__
+  __RECEIPT__
+ }
+-'''.replace('__SNAPSHOT__', method(gateway, 'private JSONObject snapshot(')).replace('__RECEIPT__', method(polar, 'synchronized JSONObject remoteSetupReceipt(')).replace('__READBACK__', method(module, 'private JSONObject sessionControlReadback(JSONObject response)')).replace('__PRODUCER__', method(module, 'public ExperimentSessionWifiSnapshot.Read wifiSnapshot(')).replace('__DISPATCH__', method(polar, 'synchronized JSONObject dispatchRemoteSetup('))
++'''.replace('__SNAPSHOT__', method(gateway, 'private JSONObject snapshot(')).replace('__HEALTH__',method(gateway,'static void projectPolarHealth(')).replace('__RECEIPT__', method(polar, 'synchronized JSONObject remoteSetupReceipt(')).replace('__READBACK__', method(module, 'private JSONObject sessionControlReadback(JSONObject response)')).replace('__PRODUCER__', method(module, 'public ExperimentSessionWifiSnapshot.Read wifiSnapshot(')).replace('__DISPATCH__', method(polar, 'synchronized JSONObject dispatchRemoteSetup('))
+     with tempfile.TemporaryDirectory(prefix='rq-wifi-snapshot-') as temp:
+         out = Path(temp)
+         fixture = out / 'WifiSnapshotHarness.java'
 diff --git a/tools/checks/test_installed_apk_identity.py b/tools/checks/test_installed_apk_identity.py
 new file mode 100644
 index 00000000..941ad65a
@@ -33694,10 +34763,27 @@ index 00000000..bac36337
 +    subprocess.run([str(binary)],check=True)
 +print('PASS production reset method preserves the particle baseline through repeated experiment resets and first-frame pending reset')
 diff --git a/tools/checks/test_polar_acquisition_callbacks.py b/tools/checks/test_polar_acquisition_callbacks.py
-index 0d368041..2982a7b5 100644
+index 0d368041..49d4fa94 100644
 --- a/tools/checks/test_polar_acquisition_callbacks.py
 +++ b/tools/checks/test_polar_acquisition_callbacks.py
-@@ -72,6 +72,8 @@ class AcquisitionCallbackTest {
+@@ -43,6 +43,7 @@ class BluetoothGattCharacteristic {
+ class AcquisitionCallbackTest {
+  static final UUID PMD_DATA=UUID.randomUUID(),HEART_RATE_MEASUREMENT=UUID.randomUUID(),PMD_CONTROL_POINT=UUID.randomUUID();
+  final Object connectionIdentityLock=new Object(),countersLock=new Object();
++ final PolarLiveHealth liveHealth=new PolarLiveHealth();String connectedDeviceInstanceId="sensor";
+  final PolarAcquisitionDiagnostics diagnostics=new PolarAcquisitionDiagnostics();
+  BluetoothGatt gatt=new BluetoothGatt(); boolean connected=true,closing;
+  long autoConnectionGeneration=1,automaticConnectionUpdatedAtUnixMs,automaticConnectionEvidenceGeneration;
+@@ -54,7 +55,7 @@ class AcquisitionCallbackTest {
+  __MODELS__
+  __REAL_ACC__
+  static PmdFrameMetric sample(){return new PmdFrameMetric(100,100,1,Arrays.asList(new AccSample(0,0,1000)),Arrays.asList(12));}
+- static class HeartRateReading {int bpm=60;List<Float> rrIntervalsMs=Arrays.asList(1000.0f);}
++ static class HeartRateReading {boolean contactSupported=true,contactDetected=true;int bpm=60;List<Float> rrIntervalsMs=Arrays.asList(1000.0f);}
+  static class ControlRecord {}
+  static class PolarProtocol {
+   static HeartRateReading decodeHeartRateMeasurement(byte[] v){duringDecode.run();return new HeartRateReading();}
+@@ -72,6 +73,8 @@ class AcquisitionCallbackTest {
   void appendAccEvent(PmdFrameMetric f){commit();appends++;}
   void appendEcgEvent(PmdFrameMetric f){commit();appends++;}
   void scheduleStreamingStatusWrite(){}
@@ -33706,6 +34792,188 @@ index 0d368041..2982a7b5 100644
   long sampleTimeNs(long t,int rate,int i,int n){return t;}
   void nativeSubmitPolarHeartRateMeasurement(long t,int bpm){commit();hrSubmits++;}
   void nativeSubmitPolarRrMeasurement(long t,float rr){commit();rrSubmits++;}
+@@ -132,7 +135,7 @@ class AcquisitionCallbackTest {
+ __METHODS__
+ }
+ __POLICY__
+-'''.replace("__MODELS__", models).replace("__REAL_ACC__", real_acc).replace("__METHODS__", methods).replace("__POLICY__", policy + "\n" + diagnostics)
++'''.replace("__MODELS__", models).replace("__REAL_ACC__", real_acc).replace("__METHODS__", methods).replace("__POLICY__", policy + "\n" + diagnostics + "\n" + block(source, "final class PolarLiveHealth"))
+     with tempfile.TemporaryDirectory(prefix="rq-polar-acquisition-") as temporary:
+         output = Path(temporary)
+         java = output / "AcquisitionCallbackTest.java"
+diff --git a/tools/checks/test_polar_battery_queue.py b/tools/checks/test_polar_battery_queue.py
+new file mode 100644
+index 00000000..2c0cb70d
+--- /dev/null
++++ b/tools/checks/test_polar_battery_queue.py
+@@ -0,0 +1,85 @@
++"""Execute actual low-priority battery scheduler against an inert serialized GATT."""
++from pathlib import Path
++import tempfile,subprocess
++from test_polar_acquisition_callbacks import block
++source=(Path(__file__).resolve().parents[2]/'apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java').read_text(encoding='utf-8-sig')
++modern='private void completeBatteryRead(' in source
++methods='\n'.join(block(source,a) for a in (['private void scheduleBatteryRead(','private void scheduleBatteryPoll(','private void readBatteryIfIdle(','private void completeBatteryRead(','private void receiveBatteryRead(','private void expireBatteryRead(','private void handleBattery('] if modern else ['private void readBatteryIfIdle(']))
++code=r'''import java.util.*;
++class BluetoothGattCharacteristic {UUID getUuid(){return BatteryQueueTest.BATTERY_LEVEL;}}
++class BluetoothGatt {static final int GATT_SUCCESS=0;int reads;boolean accepts=true;boolean readCharacteristic(BluetoothGattCharacteristic c){reads++;return accepts;}}
++class BatteryQueueTest {
++ static final UUID BATTERY_LEVEL=UUID.randomUUID();static final long BATTERY_READ_TIMEOUT_MS=5000L;
++ Runnable batteryReadTimeout;long connectionFailureRevision;int resets,recoveries;
++ final Object connectionIdentityLock=new Object(),countersLock=new Object();
++ BluetoothGatt gatt=new BluetoothGatt(),batteryReadGatt;BluetoothGattCharacteristic batteryCharacteristic=new BluetoothGattCharacteristic(),batteryReadCharacteristic;
++ long autoConnectionGeneration=1,batteryReadGeneration,batteryReadTicket;boolean connected=true,closing,commandInFlight,startAllPending,stopAllPending;
++ String connectedDeviceInstanceId="sensor";int batteryPercent=-1;
++ final Queue<Object> descriptorTasks=new ArrayDeque<>();
++ static class Health {int commits;void battery(Object g,long generation,String id,long at,byte[] v){commits++;}}
++ Health liveHealth=new Health();
++ static class Handler {
++  static class Task {Runnable r;long at,seq;Task(Runnable r,long at,long seq){this.r=r;this.at=at;this.seq=seq;}}
++  long now,sequence;PriorityQueue<Task> tasks=new PriorityQueue<>((a,b)->a.at==b.at?Long.compare(a.seq,b.seq):Long.compare(a.at,b.at));
++  void post(Runnable r){postDelayed(r,0);}void postDelayed(Runnable r,long d){tasks.add(new Task(r,now+d,sequence++));}
++  void removeCallbacks(Runnable r){tasks.removeIf(t->t.r==r);}
++  void tick(){if(!tasks.isEmpty()){Task t=tasks.remove();now=t.at;t.r.run();}}
++  void advance(long delta){long end=now+delta;while(!tasks.isEmpty()&&tasks.peek().at<=end)tick();now=end;}
++ }
++ Handler handler=new Handler();
++ boolean isCurrentConnectedGatt(BluetoothGatt target){return connected&&!closing&&target==gatt;}
++ void closeGatt(){resets++;gatt=null;connected=false;commandInFlight=false;batteryReadGatt=null;batteryReadCharacteristic=null;batteryReadTicket++;if(batteryReadTimeout!=null)handler.removeCallbacks(batteryReadTimeout);batteryReadTimeout=null;}
++ void setStatusState(String a,String b){}void scheduleAutomaticRecovery(String detail){recoveries++;}
++ void marker(String s){}void appendStatusEvent(String s){}void updateCountersOnUiThread(){}
++ __METHODS__
++ static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
++ public static void main(String[]args){
++  BatteryQueueTest t=new BatteryQueueTest();t.commandInFlight=true;
++  __BUSY__
++  check(t.gatt.reads==0&&t.handler.tasks.size()==1,"busy PMD must retain one low-priority battery retry");
++  __MODERN__
++ }
++}'''.replace('__METHODS__',methods).replace('__BUSY__', 't.scheduleBatteryRead(t.gatt,t.batteryCharacteristic);t.handler.tick();' if modern else 't.readBatteryIfIdle(t.gatt,t.batteryCharacteristic);')
++extra=r'''
++  t.commandInFlight=false;t.handler.tick();check(t.gatt.reads==1&&t.commandInFlight,"battery read acquires existing GATT slot");
++  check(!t.handler.tasks.isEmpty(),"dispatched optional read must have a finite operation watchdog");
++  t.readBatteryIfIdle(t.gatt,t.batteryCharacteristic,t.autoConnectionGeneration,t.batteryReadTicket);
++  check(t.gatt.reads==1,"unconfirmed in-flight read is never duplicated");
++  t.completeBatteryRead(new BluetoothGatt(),1,t.batteryCharacteristic,0,new byte[]{99},100);
++  check(t.commandInFlight&&t.liveHealth.commits==0,"foreign callback cannot release slot or publish battery");
++  t.completeBatteryRead(t.gatt,2,t.batteryCharacteristic,0,new byte[]{99},100);
++  check(t.commandInFlight&&t.liveHealth.commits==0,"foreign generation cannot release slot");
++  t.completeBatteryRead(t.gatt,1,t.batteryCharacteristic,0,new byte[]{78},100);
++  check(!t.commandInFlight&&t.batteryPercent==78&&t.liveHealth.commits==1,"exact success commits real battery and releases slot");
++  check(t.handler.tasks.size()==1,"successful read schedules bounded refresh");
++  t.handler.tick();check(t.gatt.reads==2&&t.commandInFlight,"next refresh uses same serialized slot");
++  t.completeBatteryRead(t.gatt,1,t.batteryCharacteristic,5,new byte[]{78},101);
++  check(!t.commandInFlight&&t.batteryPercent==-1&&t.handler.tasks.size()==1,"failed read becomes unknown and retries");
++  t.handler.tick();check(t.commandInFlight,"retry owns slot before generation change");
++  int committed=t.liveHealth.commits;t.autoConnectionGeneration=2;
++  t.completeBatteryRead(t.gatt,1,t.batteryCharacteristic,0,new byte[]{99},102);
++  check(!t.commandInFlight&&t.liveHealth.commits==committed&&t.batteryPercent==-1,"completed old-generation read releases exact slot without publishing stale value");
++  t.gatt.accepts=false;t.handler.tick();check(!t.commandInFlight&&t.handler.tasks.size()==1,"non-admitted read releases slot and retries");
++  t.gatt=new BluetoothGatt();t.autoConnectionGeneration++;t.handler.tick();check(t.gatt.reads==0,"retired scheduled GATT cannot read replacement");
++  BatteryQueueTest immutable=new BatteryQueueTest();immutable.scheduleBatteryRead(immutable.gatt,immutable.batteryCharacteristic);immutable.handler.tick();
++  byte[] bytes={44};immutable.receiveBatteryRead(immutable.gatt,immutable.batteryCharacteristic,0,bytes);bytes[0]=99;immutable.handler.tick();
++  check(immutable.batteryPercent==44,"queued read callback snapshots immutable actual bytes");
++  immutable.handler.tick();immutable.receiveBatteryRead(immutable.gatt,immutable.batteryCharacteristic,0,new byte[]{101});immutable.handler.tick();
++  check(immutable.batteryPercent==-1,"actual callback rejects reserved percent101");
++  BatteryQueueTest retired=new BatteryQueueTest();retired.scheduleBatteryRead(retired.gatt,retired.batteryCharacteristic);retired.handler.tick();
++  retired.receiveBatteryRead(retired.gatt,retired.batteryCharacteristic,0,new byte[]{44});retired.gatt=new BluetoothGatt();retired.handler.tick();
++  check(retired.liveHealth.commits==0,"retirement while callback is queued publishes no health");
++  BatteryQueueTest lost=new BatteryQueueTest();BluetoothGatt original=lost.gatt;lost.scheduleBatteryRead(lost.gatt,lost.batteryCharacteristic);lost.handler.tick();
++  lost.handler.advance(4999);check(lost.resets==0&&lost.commandInFlight,"unknown read owns transport until exact5s deadline");
++  lost.handler.advance(1);check(lost.resets==1&&lost.recoveries==1&&lost.gatt==null&&!lost.commandInFlight,"lost optional read retires exact GATT through existing recovery owner");
++  check(original.reads==1&&lost.handler.tasks.isEmpty(),"timeout never replays an unknown read on live transport");
++  lost.completeBatteryRead(original,1,lost.batteryCharacteristic,0,new byte[]{99},103);check(lost.liveHealth.commits==0,"late timed-out callback cannot publish retired reading");
++  BatteryQueueTest successor=new BatteryQueueTest();successor.scheduleBatteryRead(successor.gatt,successor.batteryCharacteristic);successor.handler.tick();successor.gatt=new BluetoothGatt();
++  successor.handler.advance(5000);check(successor.resets==0&&successor.gatt!=null,"old read deadline cannot retire replacement GATT");
++  System.out.println("PASS "+checks+" actual serialized battery read/retry/retirement controls");
++'''
++code=code.replace('__MODERN__',extra if modern else '')
++with tempfile.TemporaryDirectory(prefix='rq-battery-queue-') as out:
++ out=Path(out);java=out/'BatteryQueueTest.java';java.write_text(code,encoding='utf-8')
++ subprocess.run(['javac','--release','8','-d',str(out),str(java)],check=True)
++ subprocess.run(['java','-cp',str(out),'BatteryQueueTest'],check=True)
+diff --git a/tools/checks/test_polar_live_health.py b/tools/checks/test_polar_live_health.py
+new file mode 100644
+index 00000000..d67ee57e
+--- /dev/null
++++ b/tools/checks/test_polar_live_health.py
+@@ -0,0 +1,76 @@
++"""Execute Polar battery admission, contact decoding and current-connection health without Android I/O."""
++from pathlib import Path
++import subprocess
++import tempfile
++from test_polar_acquisition_callbacks import block
++
++ROOT=Path(__file__).resolve().parents[2]
++SOURCE=ROOT/'apps/native-renderer-android/panel-modules/polar/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/PolarSensorPanel.java'
++
++def main():
++ source=SOURCE.read_text(encoding='utf-8-sig')
++ # First regression exercises the existing production battery handler directly.
++ if 'final class PolarLiveHealth' not in source:
++  code='''class BatteryRangeTest {final Object countersLock=new Object();int batteryPercent=-1;
++   void appendStatusEvent(String s){}void updateCountersOnUiThread(){}
++   __METHOD__
++   public static void main(String[]a){BatteryRangeTest t=new BatteryRangeTest();t.handleBattery(new byte[]{101});
++    if(t.batteryPercent!=-1)throw new AssertionError("reserved Battery Service value101 was shown as a real percentage");}
++   }'''.replace('__METHOD__',block(source,'private void handleBattery('))
++ else:
++  methods='\n'.join(block(source,m) for m in ('static HeartRateReading decodeHeartRateMeasurement(', 'static int unsigned(', 'static int readUInt16('))
++  code=r'''import java.util.*;
++ __HEALTH__
++ class BatteryRangeTest {
++ __HR__
++ static class PolarProtocol {__PROTOCOL__}
++ static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
++ static Map<String,Object> health(PolarLiveHealth h,Object g,long gen,String device,long at,boolean link){return h.snapshot(link,g,gen,device,at,true,true);}
++ @SuppressWarnings("unchecked")static Map<String,Object> part(Map<String,Object> h,String key){return (Map<String,Object>)h.get(key);}
++ public static void main(String[]args){
++  Object g=new Object();PolarLiveHealth h=new PolarLiveHealth();long now=10_000_000_000L;
++  Map<String,Object> first=health(h,g,1,"a",now,true);
++  check(first.get("observed_at_ns").equals(Long.toString(now))&&first.get("connection_generation").equals("1"),"nanosecond and lineage values preserve exact decimal strings");
++  check(part(first,"battery").get("percent")==null,"battery unknown before real read");
++  check(part(first,"contact").get("detected")==null,"contact unknown before HR");
++  for(int value:new int[]{0,1,50,100}){h.battery(g,1,"a",now,new byte[]{(byte)value});check(part(health(h,g,1,"a",now,true),"battery").get("percent").equals(value),"valid percent including0");}
++  for(byte[] bad:new byte[][]{null,new byte[0],new byte[]{101},new byte[]{(byte)255},new byte[]{50,1}}){h.battery(g,1,"a",now,bad);check(part(health(h,g,1,"a",now,true),"battery").get("percent")==null,"malformed/reserved battery unavailable");}
++  h.battery(g,1,"a",now,new byte[]{78});
++  check(part(health(h,g,1,"a",now+2_000_000_000L,true),"battery").get("age_ms").equals(2000L),"actual battery receipt age");
++  h.battery(g,1,"a",now+3,new byte[]{101});h.battery(g,1,"a",now+2,new byte[]{99});
++  check(part(health(h,g,1,"a",now+4,true),"battery").get("percent")==null,"older battery cannot overwrite newer invalid observation");
++  for(int flags:new int[]{0,2,4,6}){
++   HeartRateReading r=PolarProtocol.decodeHeartRateMeasurement(new byte[]{(byte)flags,60});
++   check(r.contactSupported==((flags&4)!=0),"HR support bit");check(r.contactDetected==((flags&6)==6),"detected only with supported flag");
++   h.contact(g,1,"a",now,r.contactSupported,r.contactDetected);
++   Map<String,Object> c=part(health(h,g,1,"a",now,true),"contact");
++   check(c.get("state").equals((flags&4)==0?"unsupported":(flags&2)==0?"not-detected":"detected"),"contact states remain distinct");
++   check((flags&4)!=0?c.get("detected").equals((flags&2)!=0):c.get("detected")==null,"unsupported is unknown contact");
++  }
++  h.contact(g,1,"a",now+1,true,false);h.contact(g,1,"a",now,true,true);
++  check(part(health(h,g,1,"a",now+2,true),"contact").get("state").equals("not-detected"),"late older HR cannot overwrite newer no-contact evidence");
++  h.acc(g,1,"a",now);h.ecg(g,1,"a",now);
++  check(part(health(h,g,1,"a",now+4_999_999_999L,true),"ecg").get("fresh").equals(true),"ECG fresh before5s");
++  check(part(health(h,g,1,"a",now+5_000_000_000L,true),"ecg").get("fresh").equals(false),"ECG expires at5s");
++  Map<String,Object> stale=part(health(h,g,1,"a",now+5_000_000_001L,true),"contact");
++  check(stale.get("state").equals("stale")&&stale.get("detected")==null,"stale contact cannot stay green");
++  check(part(h.snapshot(true,g,1,"a",now,false,true),"acc").get("fresh").equals(false),"stopped ACK is not live ACC");
++  for(Map<String,Object> retired:Arrays.asList(health(h,g,1,"a",now,false),health(h,new Object(),1,"a",now,true),health(h,g,2,"a",now,true),health(h,g,1,"b",now,true))){
++   check(part(retired,"battery").get("percent")==null&&part(retired,"contact").get("detected")==null,"disconnect/GATT/generation/device replacement retires health");
++   check(part(retired,"ecg").get("fresh").equals(false),"replacement cannot inherit ECG");
++  }
++  h.clear();check(part(health(h,g,1,"a",now,true),"battery").get("percent")==null,"clear removes old battery");
++  HeartRateReading wide=PolarProtocol.decodeHeartRateMeasurement(new byte[]{7,44,1});check(wide.bpm==300&&wide.contactDetected,"16bit HR preserves contact flags");
++  for(byte[] invalid:new byte[][]{new byte[]{14,60},new byte[]{22,60,1}}){
++   try{PolarProtocol.decodeHeartRateMeasurement(invalid);throw new AssertionError("malformed HR cannot publish contact");}
++   catch(IllegalArgumentException expected){checks++;}
++  }
++  System.out.println("PASS "+checks+" actual Polar contact/battery/freshness controls");
++ }
++}'''.replace('__HEALTH__',block(source,'final class PolarLiveHealth')).replace('__HR__',block(source,'private static final class HeartRateReading')).replace('__PROTOCOL__',methods)
++ with tempfile.TemporaryDirectory(prefix='rq-polar-health-') as out:
++  out=Path(out);p=out/'BatteryRangeTest.java';p.write_text(code,encoding='utf-8')
++  subprocess.run(['javac','--release','8','-encoding','UTF-8','-d',str(out),str(p)],check=True)
++  subprocess.run(['java','-cp',str(out),'BatteryRangeTest'],check=True)
++
++if __name__=='__main__':main()
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
 new file mode 100644
 index 00000000..833f50b0
@@ -34056,7 +35324,7 @@ index 00000000..dc0bab36
 +}'''.replace('__BODIES__',bodies)
 +run({pkg+'/AccDiagnosticHost.java':fixture+'\n'+support},'AccDiagnosticHost')
 diff --git a/tools/checks/test_remote_durable_pending.py b/tools/checks/test_remote_durable_pending.py
-index d531814a..25e41559 100644
+index d531814a..30b2ee45 100644
 --- a/tools/checks/test_remote_durable_pending.py
 +++ b/tools/checks/test_remote_durable_pending.py
 @@ -38,6 +38,11 @@ def main():
@@ -34177,13 +35445,14 @@ index d531814a..25e41559 100644
    pending("arm");RemotePending original=remotePending;server.stopWithReason("disabled");expireRemotePendingObservation(45000);check(remotePending==null&&server.updates==0,"actual retired carrier cannot adopt old result");
    pending("arm");original=remotePending;experimentSessionBleOwnerChanged(1,99,false);check(remotePending==original,"wrong owner epoch cannot retire original");RemoteStatusObserver observer=new RemoteStatusObserver();remoteStatusObserver=observer;experimentSessionBleOwnerChanged(1,3,false);check(remotePending==null&&observer.target.retired,"genuine native owner retirement clears mapping and observer");
    pending("arm");original=remotePending;experimentSessionBleOwnerChanged(1,3,true);check(remotePending==original,"replayed owner start cannot retire original");experimentSessionBleOwnerChanged(2,3,true);check(remotePending==null,"new admitted native owner retires original mapping");
-@@ -148,19 +193,33 @@ final class BreathCompositionPanelModule {
+@@ -148,19 +193,34 @@ final class BreathCompositionPanelModule {
  package io.github.mesmerprism.rustyquest.native_renderer;
  import java.lang.ref.WeakReference;import org.json.JSONObject;import android.os.SystemClock;
  __SERVER__
 +__CORRELATION__
  final class ControlPanelActivity {
   static void startConditionAudio(long g,String id,String condition){}
++ static long experimentSessionCompletionThresholdMs(){return 30000L;}
   static String conditionBreathGuidanceReadiness(String condition){return "not-ready";}
  }
 -final class ActualRemoteArmHarness {
@@ -34213,7 +35482,7 @@ index d531814a..25e41559 100644
   static int checks;
   static void check(boolean value,String reason){if(!value)throw new AssertionError(reason);checks++;}
   static JSONObject response(String phase,Object condition,long generation,String operation)throws Exception{
-@@ -179,6 +238,20 @@ final class ActualRemoteArmHarness {
+@@ -179,6 +239,20 @@ final class ActualRemoteArmHarness {
   }
   public static void main(String[]args)throws Exception{
    ActualRemoteArmHarness sink=new ActualRemoteArmHarness();ExperimentSessionJsonCodec codec=new ExperimentSessionJsonCodec(() -> EXPERIMENT_SESSION_PANEL);
@@ -34234,7 +35503,7 @@ index d531814a..25e41559 100644
    for(long at:new long[]{11270L,40000L})for(String control:new String[]{"armed","running","paused"}){
     SystemClock.now=1000;server=new ExperimentSessionBleServer();EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();
     ExperimentSessionPanelCoordinator.NativeCommand original=EXPERIMENT_SESSION_PANEL.arm("condition-a",100);
-@@ -256,6 +329,36 @@ final class ActualRemoteArmHarness {
+@@ -256,6 +330,36 @@ final class ActualRemoteArmHarness {
      int updates=server.updates;sink.onExperimentSessionReadback(observed);check(server.updates==updates,"repeat save callback cannot replay receipt");
     }else check(!server.state.equals("confirmed"),"hostile save finalization cannot confirm: "+route+" case "+change);
    }
@@ -34271,7 +35540,7 @@ index d531814a..25e41559 100644
    if(args.length==1){
     JSONObject captured=new JSONObject(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(args[0])),java.nio.charset.StandardCharsets.UTF_8));
     JSONObject nativeResponse=captured.getJSONObject("native_response"),nativeState=nativeResponse.getJSONObject("readback");
-@@ -276,9 +379,13 @@ final class ActualRemoteArmHarness {
+@@ -276,9 +380,13 @@ final class ActualRemoteArmHarness {
  }
  '''
          actual = actual.replace("__SERVER__", extract(harness, "final class ExperimentSessionBleServer"))

@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=5';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=6';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
@@ -17,6 +17,7 @@ import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
 import { MetaUpdateControl } from './meta-update-control.js?v=2';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=1';
 import { ControllerLease } from './controller-lease.js?v=1';
+import { OperatorDeviceHealth } from './operator-device-health.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -134,6 +135,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const participantOutput = byId('patient-id');
   let participantId = '';
   let previewAccepted = '';
+  let batteryAccepted = '';
   const data = byId('quest-data');
   const ecgStatus = byId('quest-ecg-status');
   const graph = byId('quest-ecg');
@@ -219,6 +221,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
   const controllerLease = new ControllerLease({ storage });
+  const deviceHealth = new OperatorDeviceHealth();
   const kiosk = new KioskControl({ storage });
   const metaControl = new MetaUpdateControl({ storage });
   const metaHandoff = new MetaUpdateHandoff({ storage });
@@ -232,6 +235,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let ecgSensor = '';
   let breathTimer;
   let controlTimer;
+  let deviceTimer;
   let versionGeometryKey = '';
   let updateGeometryKey = '';
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
@@ -500,7 +504,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       && breath.setup.input !== 'automatic'
       && (breath.setup.input !== 'polar-tilt' || breath.setup.calibration === 'ready');
     if (previewAccepted !== breath.acceptance || !reviewable || !idle) previewAccepted = '';
+    const batteryBinding = previewAccepted && `${previewAccepted}/${participantId}`;
+    if (!batteryBinding || batteryAccepted !== batteryBinding) batteryAccepted = '';
+    const batteryReviewed = Boolean(batteryAccepted && batteryAccepted === batteryBinding);
     const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && reviewable;
+    const device = deviceHealth.update(rehearsal.gateway?.owner, rehearsal.state);
+    clearTimeout(deviceTimer);
+    if (!document.hidden && device.expiresIn !== null) deviceTimer = setTimeout(() => paint(), device.expiresIn + 1);
+    text(byId('battery-quest'), device.battery.quest);
+    text(byId('battery-controllers'), device.battery.controllers);
+    text(byId('battery-polar'), device.battery.polar);
+    byId('battery-next').disabled = !selectionAllowed || waiting || unknown;
     // Authority and readiness remain owned by the existing domain models.
     byId('quest-control-host').hidden = !access;
     const version = apkRelease.update(rehearsal.gateway, status);
@@ -575,9 +589,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     paintCheck('control', control.active ? true : control.fresh || control.state === 'lost' ? false : null,
       'Quest-Steuerung', control.message, 'wird bestätigt');
     byId('check-control').dataset.controlState = control.state;
-    const polarChecking = setup?.sc || ['scanning', 'backoff', 'connecting', 'streams'].includes(setup?.auto?.state);
-    paintCheck('polar', status && !polarChecking ? Boolean(ready || active && status.pi?.f === true) : null,
-      'Polar H10', polarReadiness(setup));
+    const polarConfirmation = document.hidden ? null : device.polar.confirmed;
+    paintCheck('polar', polarConfirmation, 'Polar H10', device.polar.detail, device.polar.neutral);
+    byId('check-polar').dataset.healthState = device.polar.state;
+    if (polarConfirmation === null && status && !document.hidden) {
+      byId('check-polar').disabled = false;
+      text(byId('check-polar').querySelector('.check-symbol'), '?');
+    }
     const showParticipant = requiresParticipant && armedWithParticipant && status.p === 'IDLE' && !active && !waitingForControl;
     if (!showParticipant && !participant.hidden && participant.contains(document.activeElement)) {
       statusText.focus({ preventScroll: true });
@@ -611,7 +629,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
     play.disabled = waiting || unknown || !actions.play
-      || actions.play === 'arm' && (!selectionAllowed || !scenario || !breath.actions.continue);
+      || actions.play === 'arm' && (!selectionAllowed || !batteryReviewed || !scenario || !breath.actions.continue);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -641,7 +659,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
     download.hidden = !status || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
-      requiresParticipant, selectionAllowed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
+      requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
@@ -728,6 +746,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function resetPreview() {
     previewAccepted = '';
+    batteryAccepted = '';
     calibrationBaseline = undefined;
   }
 
@@ -1333,6 +1352,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   previewContinue.addEventListener('click', () => {
     if (preview.hidden || previewContinue.disabled || !breathing.view?.actions.continue) return;
     previewAccepted = breathing.view.acceptance;
+    navigateLocal({ type: 'go', step: 'battery' });
+    paint();
+  });
+  byId('battery-next').addEventListener('click', () => {
+    if (document.hidden || displayedStep !== 'battery' || byId('battery-next').disabled
+      || !previewAccepted || previewAccepted !== breathing.view?.acceptance) return;
+    batteryAccepted = `${previewAccepted}/${participantId}`;
     navigateLocal({ type: 'go', step: 'session' });
     paint();
   });
@@ -1399,6 +1425,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   window.addEventListener('pagehide', (event) => {
     clearTimeout(breathTimer);
     clearTimeout(controlTimer);
+    clearTimeout(deviceTimer);
     cancelAnimationFrame(animationFrame);
     animationFrame = 0;
     userAction?.abort();
