@@ -176,6 +176,25 @@ the existing utility and recovery routes.
 
 ### Active update extension — 2026-11-16
 
+Today's boot/update subset passes,2026-11-17: Meta22 build1463496130182732 is
+private Developer current, Quest2/13+, malware/security passed. Actual boot12→13
+autolaunched21; own DownloadSuccess and a subsequent fresh progress preceded SDK
+install. Exact22 bytes were Meta-installed at02:26:01, retained UID10159, and the
+helper fallback request at02:26:02.893 preceded the new focused22 process. The
+Quest shell handles the final activity launch. User confirmed automatic stimulus,
+PWA22 and no manual update trigger. No host main install or post-boot app launch.
+Code21 baseline had also been exactly Meta-installed and launched by helper3.
+Required/latest floor advances to22. Full package receipts and live boot trace
+remain private. The duplicate/queued lane and physical phone handoff notice are
+not separately qualified by this normal SDK run. Broader calibration/PWA fine
+tuning remains open; the user ends testing for today.
+
+Prior source/policy PR35/aa3882e passed exact Pages43992621746 and10 affected/core
+byte comparisons, preserving concurrent PROJECT work. The final22 policy and
+collaborator handoff use the same standing exact-publication workflow. The
+collaborator receives a signed helper3 bundle and repository-backed setup
+runbook; the signing key and private visual inputs remain private.
+
 Meta21 is published,2026-11-17: a user-requested fresh chat recovered browser
 access and uploaded the exact qualified artifact. Developer build1463458816853130
 is current for Quest2/13+, tests Complete, malware passed and detailed security

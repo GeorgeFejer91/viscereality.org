@@ -1,5 +1,32 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.21-dev — code22 automatic boot/update acceptance, 2026-11-17
+
+Code22 is current in the private Developer channel, Meta build1463496130182732,
+Quest2/13+, malware passed and detailed security All tests passed. Signed APK
+65,686,662bytes, SHA256
+`e0de22c7f8f54bcec85b49caddea2bab21f66fc55dd98689241aca7a0645c94a`.
+Source1cd5ee3/treea9dc76d and signer remain the21 values below. All169 independent
+package checks pass; its DEX and payload/audio match21, with version and joined
+activation bindings accounting for expected differences.
+
+The actual Quest2 boot12→13 automatically launched the Meta21 baseline. Native
+logs captured its own DownloadSuccess, subsequently issued downloaded progress,
+and SDK install dispatch. Meta installed exact22 bytes at02:26:01; UID10159 and
+installer/initiator com.oculus.ocms were retained. Helper3's fallback request was
+captured at02:26:02.893, followed by the new22 process and advancing FOCUSED
+frames. Android's final activity launcher is Quest shell; the helper request is
+directly logged, without claiming it was the sole winning launch request.
+The user confirmed automatic stimulus and PWA22, with no manual update trigger.
+Root issued only the authorized reboot, with no host main APK install or new
+app launch after it. This qualifies the normal SDK boot/update/relaunch lane.
+The duplicate/queued lane and disconnected-PWA notice retain software coverage;
+their distinct physical acceptance is not inferred from this run.
+
+The required/latest policy is22. The
+[collaborator setup handoff](../../for-ai/COLLABORATOR-QUEST-SETUP.md) covers
+provisioning another headset with Meta distribution and the signed helper.
+
 ## 0.2.20-dev — code21 monitor3 Developer release, 2026-11-17
 
 | Property | Qualified value |
@@ -33,10 +60,9 @@ watch, and cancellation persistence failure is reported.
 
 Code21 is current in the private Meta Developer channel as build1463458816853130
 for Quest2 and13+, with malware passed and detailed security All tests passed.
-Its Meta installation and actual21-to22 helper handoff, update, relaunch and
-focus qualification remain open. Successor22 is built privately and stays
-unpublished until the Meta21 baseline is established. No main21 or22
-APK has been installed by the host. Prior19 and20 were actually Meta-installed;
+Its exact Meta21 baseline and subsequent22 boot/update acceptance are now
+verified as described above. No main21 or22 APK has been installed by the host.
+Prior19 and20 were actually Meta-installed;
 20 replacement after the app closed did not prove the new monitor path.
 
 ## 0.2.18-dev — repeatable native update cycles, qualified code19, 2026-11-16

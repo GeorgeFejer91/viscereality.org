@@ -89,11 +89,12 @@ test('policy refresh is one bounded read-only request and does not mutate headse
 
 test('the published release policy declares the selected Developer package minimum independently of installed APK metadata', async () => {
   const actual = JSON.parse(await readFile(new URL('../quest-release.json', import.meta.url), 'utf8'));
-  assert.deepEqual(actual, policy({ minimum_version_code: 21, latest_version_code: 21, version_name: '0.2.20-dev' }));
+  assert.deepEqual(actual, policy({ minimum_version_code: 22, latest_version_code: 22, version_name: '0.2.21-dev' }));
   const model = new release.ApkRelease({ fetcher: async () => Response.json(actual) });
   await model.refresh();
   assert.equal(model.update({ owner }, status(apk(9))).state, 'required');
   assert.equal(model.update({ owner }, status(apk(20))).state, 'required');
-  assert.equal(model.update({ owner }, status(apk(21))).state, 'compatible');
+  assert.equal(model.update({ owner }, status(apk(21))).state, 'required');
+  assert.equal(model.update({ owner }, status(apk(22))).state, 'compatible');
   assert.equal(model.update({ owner }, status(null)).state, 'unknown');
 });
