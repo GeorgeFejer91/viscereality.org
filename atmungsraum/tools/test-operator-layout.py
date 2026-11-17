@@ -113,6 +113,7 @@ def scenario_compatibility(review):
     legacy = ['probe-10', 'probe-15', 'box-20']
     for offered, tracks, visible, selected in (
         (primary + legacy, ['track-ready', 'track-ready'], primary, 'probe-5'),
+        (primary, ['track-ready', 'track-ready'], primary, 'probe-anleitung'),
         (['haupt-15'], ['track-ready', 'track-ready'], ['haupt-15'], 'haupt-15'),
         (legacy, ['track-ready', 'track-ready'], [], None),
         (None, ['track-ready', 'track-ready'], [], None),
@@ -140,6 +141,24 @@ def scenario_compatibility(review):
             expect(page.locator('#running-screen')).to_be_visible()
             assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == [selected, 'condition-a']
             assert mutations(page)['session'] == ['arm', 'start']
+            duration = {'probe-5': 300000, 'haupt-15': 900000}.get(selected)
+            c.wait_state(page, clock=18000, duration_ms=duration)
+            progress = page.locator('#quest-progress')
+            if duration:
+                expect(progress).to_have_js_property('max', duration)
+                expect(progress).to_have_js_property('value', 18000)
+            else:
+                expect(progress).to_be_hidden()
+                expect(page.locator('#quest-clock')).to_contain_text('00:18')
+            page.locator('#quest-play').click()
+            expect(page.locator('#running-screen-title')).to_have_text('Sitzung pausiert')
+            c.wait_state(page)
+            if duration:
+                expect(progress).to_have_js_property('value', 18000)
+            else:
+                expect(progress).to_be_hidden()
+            page.locator('#quest-play').click()
+            assert mutations(page)['session'] == ['arm', 'start', 'pause', 'resume']
         else:
             expect(page.locator('#quest-play')).to_be_disabled()
             expect(page.locator('#quest-scenario-unavailable')).to_be_visible()
