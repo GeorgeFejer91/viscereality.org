@@ -70,6 +70,8 @@ private Drive folder. Earlier browser CSVs remain available from
 Read common rules first, then the documents needed for the task:
 
 - [PROJECT.md](PROJECT.md): purpose, current page contract, and deployment facts.
+- [Unattended implementation review](REVIEW-2026-11-17.md): reproduced runtime,
+  recovery, kiosk and stored-recording issues at the code24 baseline.
 - [COLLABORATOR-QUEST-SETUP.md](COLLABORATOR-QUEST-SETUP.md): provision another
   headset and phone using Meta distribution and the supplied signed boot/update
   helper, with acceptance checks and source links.

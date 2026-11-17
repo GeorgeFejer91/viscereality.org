@@ -1,5 +1,31 @@
 # Project
 
+### Unattended comprehensive review — 2026-11-17
+
+The user is unavailable for device tests and requests a comprehensive review.
+The [review report](REVIEW-2026-11-17.md) records four reproduced P2 issues and
+one lower-priority P3 race: Polar clock/source retirement selects Automatic;
+an old setup journal blocks current-session Pause/Finish; protected kiosk
+escape leaves a pending boot watch; local archives require a live Quest to
+download; and a timed-out handoff can apply a late kiosk side effect.
+
+- [x] Independent PWA, breathing/audio and updater/helper reviews, plus sensor,
+  recording and integration review. All five reproductions rerun independently.
+- [x] Fresh PWA305/zero skips and native888/zero failures (6 intentional ignores),
+  plus targeted health, recording and helper regression checks pass.
+- [ ] Repair the findings with targeted regressions; prioritize retained Polar
+  state and current-session controls before the next attended trial.
+- [ ] Resume actual code24/contact/battery and running-session update acceptance
+  after review disposition. Hardware remains deferred at the user's request.
+
+This increment changes review/evidence only. PWA runtime, native0c82ff and Meta
+channels are unchanged; code25 remains unpublished. The report's reviewed web
+baseline is ab294b7, with the independently landed audio6074c11 additionally
+reviewed for source timing, staging hashes and full rendered length. It remains
+future authoring awaiting native integration. No further defect was verified.
+Review documentation is being synchronized through the
+existing GitHub/Pages workflow. Keep the overall goal open.
+
 ### Current attended test and preparation improvements — 2026-11-17
 
 The Meta-installed23-r2 baseline is verified by exact APK hash, Meta installer
