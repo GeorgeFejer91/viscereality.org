@@ -3,7 +3,7 @@ from pathlib import Path
 import importlib.util
 import tempfile
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import initial, mutations
+from layout_render_fixtures import CURRENT_APK, initial, mutations
 
 spec = importlib.util.spec_from_file_location('capture_phone', Path(__file__).with_name('capture-phone-screens.py'))
 c = importlib.util.module_from_spec(spec)
@@ -12,7 +12,7 @@ spec.loader.exec_module(c)
 
 def compact_setup(review):
     for width, height in ((320, 640), (390, 844), (844, 390)):
-        page = review.page(initial(c), viewport={'width': width, 'height': height})
+        page = review.page(initial(c, {'apk': CURRENT_APK}), viewport={'width': width, 'height': height})
         page.clock.run_for(4000)
 
         def assert_fits():

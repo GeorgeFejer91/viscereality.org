@@ -1,5 +1,6 @@
 """Real app/gateway layout qualification. No static HTML or readiness bypass."""
 import json
+from pathlib import Path
 from playwright.sync_api import expect
 
 SIZES = (("390", {"width":390,"height":844}, ""),
@@ -7,13 +8,16 @@ SIZES = (("390", {"width":390,"height":844}, ""),
          ("320-200text", {"width":320,"height":568}, "200%"),
          ("landscape", {"width":844,"height":390}, ""),
          ("desktop", {"width":1440,"height":900}, ""))
-APK = {"v":1,"package_name":"org.viscereality.atmungsraum.developer",
-       "version_code":11,"version_name":"0.2.10-dev","build_id":"e"*64}
+DEVELOPER_PACKAGE = "org.viscereality.atmungsraum.developer"
+POLICY = json.loads((Path(__file__).resolve().parents[1] / "quest-release.json").read_text(encoding="utf-8"))
+RELEASE = POLICY["packages"][DEVELOPER_PACKAGE]
+APK = {"v": 1, "package_name": DEVELOPER_PACKAGE,
+       "version_code": 11, "version_name": "0.2.10-dev", "build_id": "e" * 64}
+CURRENT_APK = {**APK, "version_code": RELEASE["latest_version_code"], "version_name": RELEASE["version_name"]}
 
 
 def module():
     import importlib.util
-    from pathlib import Path
     spec = importlib.util.spec_from_file_location('capture_layout_gateway',Path(__file__).with_name('capture-phone-screens.py'))
     c = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(c)
@@ -55,7 +59,7 @@ def capture_layout(review):
     c = module()
     for size, viewport, text in SIZES:
         def new(quest=None, setup=None, extra=''):
-            page = review.page(initial(c,quest,setup)+extra,viewport=viewport)
+            page = review.page(initial(c, {"apk": CURRENT_APK, **(quest or {})}, setup)+extra, viewport=viewport)
             page.evaluate('size=>document.documentElement.style.fontSize=size',text)
             page.clock.run_for(1500)
             return page
@@ -71,7 +75,7 @@ def capture_layout(review):
         shot(page,'input','#preview-controller')
         go(page,'settings')
         page.locator('#apk-identity summary').click()
-        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','recommended')
+        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','compatible')
         shot(page,'settings-identity','#apk-full-identity')
         page.locator('[data-operator-return]:visible').click()
         go(page,'recordings')
