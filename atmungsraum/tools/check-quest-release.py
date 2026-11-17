@@ -33,7 +33,7 @@ def main():
         for width, size in [(390, '100%'), (320, '200%'), (1280, '100%')]:
             for slug, apk, expected, failure in cases:
                 review.release_policy_failure = failure
-                settings = {'polar': 'ready', 'apk': apk,
+                settings = {'polar': 'ready', 'apk': apk, 'participantArm': False,
                             'access': {'v': 1, 'role': 'active', 'active_phone': 'Fixture', 'revision': 1}}
                 initial = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({capture.PAIRED}));" + \
                     'window.reviewInitialQuest=' + json.dumps(settings) + ';' + """
@@ -48,7 +48,10 @@ def main():
                     """
                 page = review.page(initial, viewport={'width': width, 'height': 844})
                 page.evaluate('size=>document.documentElement.style.fontSize=size', size)
-                capture.enter_participant(page)
+                # Version diagnostics have their own optional/required page.
+                # Participant entry is independent of this metadata projection.
+                expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok')
+                capture.show_operator(page, 'update')
                 page.clock.run_for(500)
                 expect(page.locator('#quest-version')).to_have_attribute('data-version-state', expected)
                 expect(page.locator('#preview-continue')).to_be_enabled()
@@ -76,10 +79,15 @@ def main():
                     expect(page.locator('#apk-full-identity')).to_contain_text('e' * 64)
                     expect(page.locator('#apk-full-identity')).to_contain_text(metadata['package_name'])
                     summary.focus()
+                    # Let the disclosure's real Pretext/reflow settle before
+                    # establishing the baseline for later native/policy polls.
+                    page.clock.run_for(1200)
                     page.evaluate('scrollTo(0,Math.min(800,document.documentElement.scrollHeight-innerHeight-10))')
                     before = page.evaluate('scrollY')
                     page.clock.run_for(2300)
-                    assert abs(page.evaluate('scrollY') - before) <= 2
+                    assert abs(page.evaluate('scrollY') - before) <= 2, {
+                        'case': slug, 'width': width, 'text_size': size, 'before': before,
+                        'after': page.evaluate('scrollY'), 'height': page.evaluate('document.documentElement.scrollHeight')}
                     expect(summary).to_be_focused()
                     review.shot(page, f'full-identity-{width}', f'APK full build identity · {width}px/{size}', page.locator('#apk-full-identity'), 'APK release indicator')
                     # Isolate policy-copy geometry from the existing desired
@@ -92,7 +100,11 @@ def main():
                     page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
                     page.clock.run_for(1400)
                     expect(page.locator('#quest-version')).to_have_attribute('data-version-state', 'compatible')
-                    assert abs(page.evaluate('scrollY') - before) <= 2, 'read-only policy refresh clamped document scroll'
+                    assert abs(page.evaluate('scrollY') - before) <= 2, {
+                        'kind': 'read-only policy refresh clamped document scroll', 'width': width,
+                        'text_size': size, 'before': before, 'after': page.evaluate('scrollY'),
+                        'document_height': page.evaluate('document.documentElement.scrollHeight'),
+                        'layout': page.locator('html').get_attribute('data-layout')}
                     expect(summary).to_be_focused()
                     page.evaluate('window.reviewQuest.apk=null')
                     page.clock.run_for(1400)

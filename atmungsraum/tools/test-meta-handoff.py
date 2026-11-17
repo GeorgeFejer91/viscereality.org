@@ -4,7 +4,8 @@ import os
 import tempfile
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import module, initial, mutations
+from layout_render_fixtures import APK, module, initial, mutations
+from release_fixtures import meta_update_fixture
 
 
 def run():
@@ -14,8 +15,9 @@ def run():
         output = Path(os.environ.get('ATMUNGSRAUM_META_UI_OUTPUT', temporary))
         output.mkdir(parents=True, exist_ok=True)
         review = c.Review(browser, output)
-        update = dict(v=2, state='installing', reason='queued-meta-update-handoff',
-                      installed_code=22, available_code=23, required_code=23,
+        target_code = APK['version_code']+1
+        update = meta_update_fixture(state='installing', reason='queued-meta-update-handoff',
+                      available_code=target_code, required_code=target_code,
                       downloaded_bytes=55, total_bytes=100, session_allowed=False,
                       cycle='2', revision='9', attempt='777', can_check=False, busy_reason='')
         for width, text_size in [(390, ''), (320, ''), (320, '200%')]:
@@ -47,13 +49,13 @@ def run():
             expect(notice).to_contain_text('aktuelle Stand ist auf diesem Smartphone unbekannt')
             review.shot(page, f'handoff-reloaded-{width}-{text_size or "normal"}',
                         'Retained update instructions', notice, 'Meta update')
-            # Return with actual current code21, then normal native UI takes over.
-            page.evaluate('''() => {
+            # Return with a fresh native report of the target version.
+            page.evaluate('''code => {
               window.reviewJoin=null;reviewQuest.statusDrop=false;
-              reviewQuest.apk.version_code=23;
-              Object.assign(reviewQuest.metaUpdate,{state:'current',reason:'',installed_code:23,
-                available_code:23,required_code:23,session_allowed:true,revision:'10',can_check:true});
-            }''')
+              reviewQuest.apk.version_code=code;
+              Object.assign(reviewQuest.metaUpdate,{state:'current',reason:'',installed_code:code,
+                available_code:code,required_code:code,session_allowed:true,revision:'10',can_check:true});
+            }''', target_code)
             page.locator('#quest-find').click()
             page.clock.run_for(2000)
             expect(notice).to_be_hidden()

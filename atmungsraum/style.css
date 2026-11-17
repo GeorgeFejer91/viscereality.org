@@ -92,6 +92,9 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 .version-panel[data-version-state="required"] { border: 2px solid #efc570; }
 .version-panel[data-version-state="compatible"] { border-color: #69b4e0; }
 .version-panel summary { min-height: 48px; cursor: pointer; align-content: center; }
+.update-diagnostics { display: grid; gap: 12px; min-width: 0; padding-block: 8px; }
+#update-screen #meta-update { border: 0; padding: 0; }
+#update-instruction { overflow-wrap: break-word; }
 #apk-full-identity { white-space: pre-line; overflow-wrap: anywhere; }
 .meta-update-panel { display: grid; gap: 8px; min-width: 0; width: 100%; text-align: start; border-left: 2px solid transparent; padding-left: 12px; }
 .meta-update-panel p { overflow-wrap: break-word; }
