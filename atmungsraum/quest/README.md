@@ -33,7 +33,10 @@ Calibrated Polar classifies the measured tilt into inhale, exhale or hold. The
 existing frame-time integrator drives radius. Between valid classifications it
 retains the last confirmed state: inhale keeps expanding, exhale contracting,
 hold stays still. Missing/invalid samples do not reset radius. Genuine source,
-projection, audio, model or input/configuration barriers still clear that state.
+input/configuration changes or explicit operator recovery still clear that state.
+Technical source/projection/audio/model retirement invalidates readiness and
+classification evidence while retaining the selected manual visual method and
+its last diagnosed phase; it does not silently select Automatic.
 
 If a preparation audio clock is unhealthy, an explicit calibration or Controller
 request can reserve a fresh transport generation. Only actual forward playback
@@ -102,16 +105,21 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `2444f55f83d0cc02e7c45ac83c4007145889356f`, matching
-the repaired code24-r2 candidate source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`.
-Patch SHA256 is `6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`
-(2,050,779 bytes). The candidate starts fixed Controller State without volume
+reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching
+the reviewed repair source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`.
+Patch SHA256 is `0b8f3fafcf901b74531f0f58635a7e054f6340f84fc5a15ce3b82715e3656b7f`
+(2,208,323 bytes). The candidate starts fixed Controller State without volume
 calibration and retains the selected manual breathing state through temporary
 input loss. It also binds the selected900-second Haupt-Runde plan consistently
 and reports original Arm failures without replaying uncertain native work.
-Native host tests pass888 cases with five intentional ignores;
-Android/package and wearer acceptance are separate gates. Code22 remains the
-last Meta-installed hardware baseline until the APK log records otherwise.
+Review repairs retain manual Polar selection through technical clock/source
+retirement, require durable helper cancellation before intentional closure,
+and expire delayed main-thread install handoffs. Software qualification is
+separate from the pending physical acceptance.
+Native host tests pass896 cases with six intentional ignores; actual signed25-r2
+passes1114 package checks. Wearer acceptance remains a separate gate. Code23
+remains the last observed Meta-installed hardware baseline until the APK log
+records otherwise.
 Applying the exact binary patch to an isolated index at the
 pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects

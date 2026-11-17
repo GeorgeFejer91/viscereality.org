@@ -454,7 +454,7 @@ index 00000000..75af7cfd
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/breath_composition_driver.rs b/apps/native-renderer-android/native/src/breath_composition_driver.rs
-index 80046d3c..bcb4c90c 100644
+index 80046d3c..f3636d85 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_driver.rs
 +++ b/apps/native-renderer-android/native/src/breath_composition_driver.rs
 @@ -159,6 +159,31 @@ enum DriverStatus {
@@ -1005,7 +1005,7 @@ index 80046d3c..bcb4c90c 100644
      use rusty_quest_breath_contract::{
          composition::{
              BreathCompositionOutput, BreathCompositionTelemetry, ControllerProjectionSelection,
-@@ -482,7 +843,613 @@ mod tests {
+@@ -482,7 +843,624 @@ mod tests {
  
      const BINDING: [u8; 32] = [0x5a; 32];
  
@@ -1349,6 +1349,17 @@ index 80046d3c..bcb4c90c 100644
 +        dt: f32,
 +    ) {
 +        setup_frame_with_settings(driver, setup, driver.settings(), true, now_ns, dt);
++    }
++
++    pub(crate) fn setup_frame_with_lineage(
++        driver: &mut BreathCompositionDriver,
++        setup: crate::experiment_breathing_setup_runtime::SetupDriverOutput,
++        lineage: crate::experiment_breathing_setup_runtime::SetupRendererLineage,
++        now_ns: u64,
++        dt: f32,
++    ) {
++        driver.renderer_lineage = Some(lineage);
++        setup_frame(driver, setup, now_ns, dt);
 +    }
 +
 +    pub(crate) fn changed_settings(rate: f32, slot: usize) -> BreathCompositionDriverSettings {
@@ -2020,10 +2031,10 @@ index 5273a82f..17c667c5 100644
  }
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
 new file mode 100644
-index 00000000..8fbfce06
+index 00000000..e18d53db
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup.rs
-@@ -0,0 +1,1484 @@
+@@ -0,0 +1,1497 @@
 +//! Audio-frame-owned parked setup and whole-window participant tilt fitting.
 +//! No Android dependencies or implicit system clock.
 +//!
@@ -2327,6 +2338,8 @@ index 00000000..8fbfce06
 +    last_acc: Option<AccObservation>,
 +    motion_continuity: bool,
 +    phase_history_epoch: u64,
++    // Technical retirement is stronger than a recoverable quality mask.
++    evidence_retirement_epoch: u64,
 +    alignment_anchor: Option<(u64, u64)>,
 +    signal_resume_ns: Option<u64>,
 +    samples: Vec<TrainingSample>,
@@ -2364,6 +2377,7 @@ index 00000000..8fbfce06
 +            last_acc: None,
 +            motion_continuity: false,
 +            phase_history_epoch: 0,
++            evidence_retirement_epoch: 0,
 +            alignment_anchor: None,
 +            signal_resume_ns: None,
 +            samples: Vec::with_capacity(MAX_TRAINING_SAMPLES),
@@ -2659,11 +2673,16 @@ index 00000000..8fbfce06
 +        Ok(())
 +    }
 +
-+    /// Retire evidence without replacing the core or inventing an audio observation.
-+    /// The accepted transport owner must subsequently supply a real new clock.
++    /// Explicit operator recovery uses Automatic until its request completes.
 +    pub(crate) fn retire_audio_evidence(&mut self) {
-+        self.fail(self.failure.unwrap_or(SetupFailure::ClockStale));
++        self.retire_audio_owner_evidence();
 +        self.input = SetupInput::Automatic;
++    }
++
++    /// A spontaneous transport-owner fault retires evidence, not selection.
++    /// The accepted transport owner must subsequently supply a real new clock.
++    pub(crate) fn retire_audio_owner_evidence(&mut self) {
++        self.fail(self.failure.unwrap_or(SetupFailure::ClockStale));
 +        self.samples.clear();
 +        self.last_training_slot = None;
 +        self.clock_history.clear();
@@ -3109,6 +3128,10 @@ index 00000000..8fbfce06
 +        self.phase_history_epoch
 +    }
 +
++    pub(crate) fn evidence_retirement_epoch(&self) -> u64 {
++        self.evidence_retirement_epoch
++    }
++
 +    pub(crate) fn driver_sample(&self, now_ns: u64) -> Option<TiltSample> {
 +        if self.parked() && self.clock_fresh(now_ns) {
 +            return Some(TiltSample {
@@ -3352,9 +3375,10 @@ index 00000000..8fbfce06
 +        ) {
 +            self.calibration = CalibrationState::Failed;
 +        }
-+        if self.input.is_polar() {
-+            self.input = SetupInput::Automatic;
-+        }
++        // Selection owns visual continuity, independently of live evidence.
++        // Explicit calibration/input/reset operations still own method changes.
++        self.evidence_retirement_epoch = self.evidence_retirement_epoch.saturating_add(1);
++        self.reset_sample_continuity();
 +        if affects_selected_input
 +            && matches!(
 +                self.experiment,
@@ -3510,10 +3534,10 @@ index 00000000..8fbfce06
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 00000000..25f49bdf
+index 00000000..589e1f7e
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,2263 @@
+@@ -0,0 +1,2283 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -3665,6 +3689,7 @@ index 00000000..25f49bdf
 +    classified_model: Option<u64>,
 +    classified_at: Option<u64>,
 +    classified_signal_epoch: u64,
++    evidence_retirement_epoch: u64,
 +    driver_epoch: u64,
 +    // Sensor callbacks own confirmation even if a later callback re-primes
 +    // history before rendering can observe the newly confirmed state.
@@ -4050,6 +4075,7 @@ index 00000000..25f49bdf
 +        self.refresh(now);
 +    }
 +    fn refresh_classifier_continuity(&mut self, source_ns: u64) {
++        self.synchronize_evidence_retirement(source_ns);
 +        let epoch = self.core.phase_history_epoch();
 +        if self.classified_signal_epoch != epoch {
 +            let _ = self
@@ -4062,6 +4088,21 @@ index 00000000..25f49bdf
 +            self.classified_at = None;
 +            self.phase = CommonBreathPhase::Unknown;
 +        }
++    }
++    fn synchronize_evidence_retirement(&mut self, now: u64) {
++        let epoch = self.core.evidence_retirement_epoch();
++        if self.evidence_retirement_epoch == epoch {
++            return;
++        }
++        self.evidence_retirement_epoch = epoch;
++        self.retire_driver_phase();
++        let _ = self
++            .classifier
++            .reset(BreathTimestampMicros::new(now / 1000));
++        self.classified_model = None;
++        self.classified_at = None;
++        self.classified_signal_epoch = self.core.phase_history_epoch();
++        self.phase = CommonBreathPhase::Unknown;
 +    }
 +    fn renderer_lineage(&self, now: u64) -> SetupRendererLineage {
 +        SetupRendererLineage {
@@ -4207,6 +4248,7 @@ index 00000000..25f49bdf
 +            classified_model: None,
 +            classified_at: None,
 +            classified_signal_epoch: 0,
++            evidence_retirement_epoch: 0,
 +            driver_epoch: 0,
 +            last_confirmed_phase: None,
 +            confirmation_revision: 0,
@@ -4340,6 +4382,7 @@ index 00000000..25f49bdf
 +                    .host_aligned_sample_ns
 +                    .is_some_and(|ns| self.map_raw_host(ns).is_some()));
 +        self.projection_anchor = projection.anchor;
++        self.synchronize_evidence_retirement(self.now_ns());
 +    }
 +    fn sensor_clock_metadata(&self, input: SetupInput) -> Value {
 +        if !input.is_polar() {
@@ -4425,6 +4468,7 @@ index 00000000..25f49bdf
 +    }
 +    fn refresh(&mut self, now: u64) {
 +        self.expire_recovery(now);
++        self.synchronize_evidence_retirement(now);
 +        let s = self.core.snapshot(now);
 +        if self
 +            .last_confirmed_phase
@@ -4807,7 +4851,7 @@ index 00000000..25f49bdf
 +        self.expire_recovery(now);
 +        if action == "fault" {
 +            if old == self.generation && target == old && old > self.retired_audio_generation {
-+                self.core.retire_audio_evidence();
++                self.core.retire_audio_owner_evidence();
 +                self.retire_driver_phase();
 +                self.classified_model = None;
 +                self.classified_at = None;
@@ -5779,10 +5823,10 @@ index 00000000..25f49bdf
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 00000000..e1b12a98
+index 00000000..83eadd36
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,2463 @@
+@@ -0,0 +1,3058 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
@@ -6743,9 +6787,12 @@ index 00000000..e1b12a98
 +}
 +
 +fn calibrated_inhale_runtime() -> (Runtime, u64, u64) {
++    calibrated_inhale_runtime_with_binding((5, 1))
++}
++fn calibrated_inhale_runtime_with_binding(binding: (u64, u64)) -> (Runtime, u64, u64) {
 +    let mut r = runtime();
 +    r.observe_clock(7, 0, sample_time(0), true);
-+    r.bind_source((5, 1));
++    r.bind_source(binding);
 +    r.observe_host_aligned_acc(
 +        100_000_000_000 + sample_time(0),
 +        sample_time(0),
@@ -7312,7 +7359,7 @@ index 00000000..e1b12a98
 +    ));
 +    assert_eq!(r.status(now)["ready"], true);
 +    r.bind_source((5, 2));
-+    assert_eq!(r.status(now)["input"], "automatic");
++    assert_eq!(r.status(now)["input"], "polar-tilt");
 +    assert_eq!(r.status(now)["ready"], false);
 +    assert!(r.core.model().is_none());
 +}
@@ -8246,12 +8293,604 @@ index 00000000..e1b12a98
 +        "park acknowledgment alone cannot grant the next session"
 +    );
 +}
++
++fn polar_diagnosis_runtime(input: SetupInput, phase: CommonBreathPhase) -> (Runtime, u64, u64) {
++    polar_diagnosis_runtime_with_binding(input, phase, (5, 1))
++}
++fn polar_diagnosis_runtime_with_binding(
++    input: SetupInput,
++    phase: CommonBreathPhase,
++    binding: (u64, u64),
++) -> (Runtime, u64, u64) {
++    if input == SetupInput::PolarTilt {
++        let (mut r, base_frame, base_ns) = calibrated_inhale_runtime_with_binding(binding);
++        if phase == CommonBreathPhase::Inhale {
++            return (r, base_frame, base_ns);
++        }
++        for tick in 1..=40 {
++            let frame = base_frame + tick * 1764;
++            let now = base_ns + tick * 40_000_000;
++            let v = if phase == CommonBreathPhase::Hold {
++                0.2
++            } else {
++                0.2 - tick as f64 / 200.0
++            };
++            r.observe_clock(7, frame, now, true);
++            r.observe_host_aligned_acc(100_000_000_000 + now, now, vector(v));
++            if r.phase == phase {
++                return (r, frame, now);
++            }
++        }
++    } else {
++        let mut r = runtime();
++        let start = sample_time(0);
++        r.observe_clock(7, 0, start, false);
++        r.bind_source(binding);
++        r.projection_ready = true;
++        let op = if input == SetupInput::PolarTiltFixed {
++            "polar-fixed"
++        } else {
++            "polar-adaptive"
++        };
++        assert_eq!(command(&mut r, 1, op, start)["accepted"], true);
++        r.observe_clock(7, 0, start, true);
++        for tick in 1..=500 {
++            let now = start + tick * 40_000_000;
++            let frame = tick * 1764;
++            let breath = (tick as f64 * std::f64::consts::PI / 50.0).sin();
++            let mg = if phase == CommonBreathPhase::Hold {
++                [0.0, 0.0, 1000.0]
++            } else {
++                [
++                    (-630.0 + 30.0 * breath) as f32,
++                    (80.0 + 10.0 * breath) as f32,
++                    (720.0 + 30.0 * breath) as f32,
++                ]
++            };
++            r.observe_clock(7, frame, now, true);
++            r.observe_source_pair(now, now);
++            r.observe_host_aligned_acc(100_000_000_000 + now, now, mg);
++            if tick > 10 && r.phase == phase && r.ready(r.core.snapshot(now), now) {
++                return (r, frame, now);
++            }
++        }
++    }
++    panic!("real classifier failed to diagnose {input:?} {phase:?}");
++}
++
++#[test]
++fn technical_retirement_retains_actual_runtime_manual_diagnosis_through_the_driver() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        for phase in [
++            CommonBreathPhase::Inhale,
++            CommonBreathPhase::Exhale,
++            CommonBreathPhase::Hold,
++        ] {
++            for barrier in [
++                "poll-gap",
++                "head-stall",
++                "source-binding",
++                "audio-generation",
++                "generation-regression",
++                "minimum-no-assessments",
++            ] {
++                let (mut r, mut frame, mut now) = polar_diagnosis_runtime(input, phase);
++                let mut driver = BreathCompositionDriver::new(settings());
++                setup_frame_with_lineage(
++                    &mut driver,
++                    r.output(now),
++                    r.renderer_lineage(now),
++                    now,
++                    0.2,
++                );
++                let before = driver.value01();
++                let old_lineage = r.renderer_lineage(now);
++                assert!(r.last_confirmed_phase.is_some());
++                if barrier == "minimum-no-assessments" {
++                    // Keep actual clock observations advancing into hold-out without
++                    // inventing sensor assessments for the missing interval.
++                    let target = ((frame / 705600) + 1) * 705600 + 573300;
++                    while frame < target {
++                        frame += (target - frame).min(882);
++                        now = sample_time(frame);
++                        r.observe_clock(7, frame, now, true);
++                    }
++                    assert_eq!(r.core.snapshot(now).automatic_volume, 0.0);
++                }
++                let at = now + 300_000_000;
++                match barrier {
++                    "poll-gap" | "minimum-no-assessments" => {
++                        r.observe_clock(7, frame + 13230, at, true)
++                    }
++                    "head-stall" => {
++                        for tick in 1..=15 {
++                            r.observe_clock(7, frame, now + tick * 20_000_000, true);
++                        }
++                    }
++                    "source-binding" => r.bind_source((5, 2)),
++                    "audio-generation" => r.observe_clock(8, 0, at, true),
++                    _ => r.observe_clock(6, 0, at, true),
++                }
++                let s = r.status(at);
++                assert_eq!(s["input"], input.as_str(), "{input:?}/{phase:?}/{barrier}");
++                assert_eq!(s["ready"], false);
++                assert_eq!(s["input_phase"], "unknown");
++                assert!(s["input_volume01"].is_null());
++                assert!(
++                    r.last_confirmed_phase.is_none(),
++                    "retire callback confirmation: {barrier}"
++                );
++                assert!(r.tilt_assessment(at).is_none());
++                assert_eq!(
++                    r.tracking_configuration(1, "test-main"),
++                    Err("setup-input-not-ready")
++                );
++                assert_ne!(
++                    r.renderer_lineage(at),
++                    old_lineage,
++                    "data lineage must retire"
++                );
++                assert!(r.renderer_lineage(at).continues_visual_input(old_lineage));
++                setup_frame_with_lineage(
++                    &mut driver,
++                    r.output(at),
++                    r.renderer_lineage(at),
++                    at,
++                    0.1,
++                );
++                let expected = before
++                    + match phase {
++                        CommonBreathPhase::Inhale => 0.05,
++                        CommonBreathPhase::Exhale => -0.025,
++                        _ => 0.0,
++                    };
++                assert!(
++                    (driver.value01() - expected).abs() < 0.000001,
++                    "{input:?}/{phase:?}/{barrier}: {} expected {expected}, {}",
++                    driver.value01(),
++                    driver.marker_fields()
++                );
++                let epoch = r.driver_epoch;
++                for _ in 0..3 {
++                    assert_eq!(r.status(at)["ready"], false);
++                    assert!(
++                        r.last_confirmed_phase.is_none(),
++                        "read-only status cannot revive confirmation"
++                    );
++                }
++                assert_eq!(r.driver_epoch, epoch, "status must not repeat retirement");
++                if input == SetupInput::PolarTilt {
++                    assert!(r.core.model().is_none());
++                    assert!(r.core.snapshot(at).model_generation.is_none());
++                    assert_eq!(r.status(at)["calibration"], "failed");
++                }
++            }
++        }
++    }
++}
++
++#[test]
++fn technical_retirement_without_a_diagnosis_holds_radius_for_each_polar_method() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        let (mut r, frame, now) = polar_diagnosis_runtime(input, CommonBreathPhase::Hold);
++        // A newly created renderer has never consumed the earlier diagnosis.
++        let mut driver = BreathCompositionDriver::new(settings());
++        r.observe_clock(7, frame + 13230, now + 300_000_000, true);
++        let at = now + 300_000_000;
++        setup_frame_with_lineage(&mut driver, r.output(at), r.renderer_lineage(at), at, 0.1);
++        assert_eq!(
++            driver.value01(),
++            0.2,
++            "{input:?} must hold without diagnosis"
++        );
++    }
++}
++
++#[test]
++fn retired_polar_evidence_cannot_recover_from_readback_or_old_confirmation() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        for barrier in ["poll-gap", "source-generation", "repeated-stall"] {
++            let (mut r, frame, now) = polar_diagnosis_runtime(input, CommonBreathPhase::Inhale);
++            r.observe_source_pair(now, now);
++            assert!(r.tracking_configuration(1, "test-main").is_ok());
++            let old = r.renderer_lineage(now);
++            let measured = RendererRadius {
++                lineage: old,
++                progress01: 0.7,
++                radius_m: 1.5,
++                frame: 50,
++                observed_ns: now,
++                render_generation: 1,
++                settings_revision: 1,
++            };
++            let mut driver = BreathCompositionDriver::new(settings());
++            setup_frame_with_lineage(&mut driver, r.output(now), old, now, 0.2);
++            let revision = r.confirmation_revision;
++            let mut at = now + 300_000_000;
++            let mut current_frame = frame + 13230;
++            match barrier {
++                "source-generation" => {
++                    r.bind_source((5, 2));
++                    r.refresh(now);
++                }
++                "repeated-stall" => {
++                    current_frame = frame;
++                    for tick in 1..=25 {
++                        r.observe_clock(7, frame, now + tick * 20_000_000, true);
++                    }
++                    at = now + 500_000_000;
++                }
++                _ => r.observe_clock(7, current_frame, at, true),
++            }
++            let retired = r.renderer_lineage(at);
++            for _ in 0..5 {
++                assert_eq!(r.status(at)["ready"], false);
++                assert_eq!(r.confirmation_revision, revision);
++                assert_eq!(
++                    r.renderer_lineage(at),
++                    retired,
++                    "status cannot re-retire or rearm evidence"
++                );
++                assert!(r.last_confirmed_phase.is_none());
++                assert!(r.tilt_assessment(at).is_none());
++                assert_eq!(
++                    r.tracking_configuration(1, "test-main"),
++                    Err("setup-input-not-ready")
++                );
++            }
++            assert!(
++                measured.json(retired, at).is_null(),
++                "old renderer metadata must not be relabeled"
++            );
++            assert_eq!(command(&mut r, 2, "begin-main", at)["accepted"], false);
++            // Forward audio alone is not fresh Polar evidence.
++            for tick in 1..=5 {
++                r.observe_clock(7, current_frame + tick * 882, at + tick * 20_000_000, true);
++                assert_eq!(r.status(at + tick * 20_000_000)["ready"], false);
++                assert!(r.last_confirmed_phase.is_none());
++            }
++            current_frame += 5 * 882;
++            at += 100_000_000;
++            for tick in 1..=100 {
++                let ns = at + tick * 40_000_000;
++                r.observe_clock(7, current_frame + tick * 1764, ns, true);
++                r.observe_source_pair(ns, ns);
++                r.observe_host_aligned_acc(100_000_000_000 + ns, ns, [0.0, 0.0, 1000.0]);
++                if tick == 1 {
++                    if let Some((lineage, phase)) = r.last_confirmed_phase {
++                        assert!(
++                            input.pretrained(),
++                            "retired participant fit cannot classify"
++                        );
++                        assert_eq!(phase, CommonBreathPhase::Hold);
++                        assert!(r.confirmation_revision > revision);
++                        assert_ne!(lineage.driver_epoch, old.driver_epoch);
++                    }
++                }
++            }
++            let end = at + 4_000_000_000;
++            assert_eq!(r.status(end)["input"], input.as_str());
++            if input.pretrained() {
++                assert_eq!(r.status(end)["ready"], true);
++                assert!(r.confirmation_revision > revision);
++                assert!(matches!(
++                    r.output(end),
++                    SetupDriverOutput::PolarTilt {
++                        confirmed_phase: Some(CommonBreathPhase::Hold),
++                        ..
++                    }
++                ));
++                let configuration = r.tracking_configuration(2, "fresh-main").unwrap();
++                assert_eq!(
++                    configuration["model"]["kind"],
++                    "pretrained-paired-controller-tilt-v1"
++                );
++                assert_eq!(configuration["input"], input.as_str());
++                setup_frame_with_lineage(
++                    &mut driver,
++                    r.output(end),
++                    r.renderer_lineage(end),
++                    end,
++                    0.1,
++                );
++                assert!(
++                    (driver.value01() - 0.3).abs() < 0.000001,
++                    "fresh Hold replaces retained Inhale without radius reset"
++                );
++            } else {
++                assert_eq!(r.status(end)["ready"], false);
++                assert_eq!(r.status(end)["calibration"], "failed");
++                assert!(r.core.model().is_none());
++                assert!(r.tilt_assessment(end).is_none());
++                assert_eq!(command(&mut r, 3, "calibrate", end)["accepted"], true);
++                assert_eq!(
++                    r.status(end)["input"],
++                    "automatic",
++                    "explicit retry owns Automatic guidance"
++                );
++                assert_eq!(r.status(end)["calibration"], "waiting");
++            }
++        }
++    }
++}
++
++#[test]
++fn explicit_method_and_runtime_owner_changes_discard_retired_visual_diagnosis() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    for transition in ["method", "controller", "owner", "reset"] {
++        let (mut r, frame, now) =
++            polar_diagnosis_runtime(SetupInput::PolarTiltFixed, CommonBreathPhase::Inhale);
++        let mut driver = BreathCompositionDriver::new(settings());
++        setup_frame_with_lineage(
++            &mut driver,
++            r.output(now),
++            r.renderer_lineage(now),
++            now,
++            0.2,
++        );
++        r.observe_clock(7, frame + 13230, now + 300_000_000, true);
++        let at = now + 300_000_000;
++        setup_frame_with_lineage(&mut driver, r.output(at), r.renderer_lineage(at), at, 0.1);
++        let retained = driver.value01();
++        match transition {
++            "method" => {
++                assert_eq!(command(&mut r, 2, "polar-adaptive", at)["accepted"], true);
++            }
++            "controller" => {
++                assert_eq!(command(&mut r, 2, "controller", at)["accepted"], true);
++            }
++            "owner" => {
++                r = runtime();
++                r.observe_clock(7, 0, at, false);
++                r.bind_source((5, 1));
++                r.projection_ready = true;
++                assert_eq!(command(&mut r, 1, "polar-fixed", at)["accepted"], true);
++                r.observe_clock(7, 0, at, true);
++            }
++            _ => {
++                r.core.reset_preparation();
++                r.refresh(at);
++            }
++        }
++        setup_frame_with_lineage(&mut driver, r.output(at), r.renderer_lineage(at), at, 0.1);
++        let expected = if transition == "reset" {
++            r.core.snapshot(at).automatic_volume as f32
++        } else {
++            retained
++        };
++        assert!(
++            (driver.value01() - expected).abs() < 0.000001,
++            "{transition} must discard the old ramp"
++        );
++        if transition != "reset" {
++            setup_frame_with_lineage(
++                &mut driver,
++                SetupDriverOutput::Waiting,
++                r.renderer_lineage(at),
++                at + 20_000_000,
++                0.1,
++            );
++            assert_eq!(
++                driver.value01(),
++                retained,
++                "{transition}: no inherited diagnosis"
++            );
++        }
++    }
++}
++
++#[test]
++fn actual_sensor_clock_retirement_preserves_visual_method_and_retires_data_lineage() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    use crate::polar_sensor_clock::{ClockFault, SensorFrame};
++    let _binding = crate::breath_composition_runtime::scoped_test_binding::install_polar();
++    let binding = crate::polar_input_health::source_binding();
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        let _ingress = crate::polar_composition_adapters::scoped_packet_ingress::install();
++        for sequence in 1..=4 {
++            let _ = crate::polar_composition_adapters::observe_setup_sensor_frame(
++                binding,
++                SensorFrame {
++                    sequence,
++                    sensor_last_ns: 100_000_000_000 + sequence * 200_000_000,
++                    receipt_ns: 1_000_000_000 + sequence * 200_000_000,
++                    rate_hz: 200,
++                    count: 40,
++                },
++            );
++        }
++        let (mut r, _, now) =
++            polar_diagnosis_runtime_with_binding(input, CommonBreathPhase::Inhale, binding);
++        let old = r.renderer_lineage(now);
++        let mut driver = BreathCompositionDriver::new(settings());
++        setup_frame_with_lineage(&mut driver, r.output(now), old, now, 0.2);
++        assert_eq!(
++            crate::polar_composition_adapters::observe_setup_sensor_frame(
++                binding,
++                SensorFrame {
++                    sequence: 5,
++                    sensor_last_ns: 100_000_000_000,
++                    receipt_ns: 2_000_000_000,
++                    rate_hz: 200,
++                    count: 40
++                }
++            ),
++            Err(ClockFault::Retired)
++        );
++        // Same native bind path as refresh_source_projection, after the ingress
++        // guard is released. No nested setup/ingress lock or invented ACC.
++        r.bind_source(binding);
++        let s = r.status(now);
++        assert_eq!(s["input"], input.as_str());
++        assert_eq!(s["ready"], false);
++        assert!(r.last_confirmed_phase.is_none());
++        assert!(r.core.model().is_none());
++        assert!(r.tilt_assessment(now).is_none());
++        assert_eq!(
++            r.tracking_configuration(1, "test-main"),
++            Err("setup-input-not-ready")
++        );
++        assert_ne!(r.renderer_lineage(now), old);
++        assert!(r.renderer_lineage(now).continues_visual_input(old));
++        setup_frame_with_lineage(
++            &mut driver,
++            r.output(now),
++            r.renderer_lineage(now),
++            now,
++            0.1,
++        );
++        assert!((driver.value01() - 0.35).abs() < 0.000001);
++    }
++}
++
++#[test]
++fn spontaneous_audio_owner_fault_preserves_manual_diagnosis_and_retires_evidence() {
++    use crate::breath_composition_driver::{
++        tests::{settings, setup_frame_with_lineage},
++        BreathCompositionDriver,
++    };
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        for phase in [
++            CommonBreathPhase::Inhale,
++            CommonBreathPhase::Exhale,
++            CommonBreathPhase::Hold,
++        ] {
++            let (mut r, _, now) = polar_diagnosis_runtime(input, phase);
++            assert!(r.recovery.is_none());
++            assert_eq!(r.status(now)["ready"], true);
++            let mut driver = BreathCompositionDriver::new(settings());
++            let original_lineage = r.renderer_lineage(now);
++            setup_frame_with_lineage(&mut driver, r.output(now), original_lineage, now, 0.2);
++            let before = driver.value01();
++            for retired in [6, 8] {
++                assert_eq!(
++                    r.recovery_effect("", retired, retired, "fault", now + 1)["reason"],
++                    "stale-generation"
++                );
++                assert_eq!(r.renderer_lineage(now), original_lineage);
++                assert_eq!(r.status(now)["ready"], true);
++            }
++            assert_eq!(command(&mut r, 2, "begin-main", now)["accepted"], true);
++            let at = now + 1;
++            assert_eq!(
++                r.recovery_effect("", 7, 7, "fault", at)["reason"],
++                "audio-owner-fault"
++            );
++            assert!(
++                r.recovery.is_none(),
++                "a transport fault is not an operator recovery request"
++            );
++            let s = r.status(at);
++            assert_eq!(s["input"], input.as_str(), "{input:?}/{phase:?}");
++            assert_eq!(s["ready"], false);
++            assert_eq!(s["clock_valid"], false);
++            assert_eq!(s["input_phase"], "unknown");
++            assert!(s["input_volume01"].is_null());
++            assert_eq!(r.core.snapshot(at).experiment, ExperimentState::Invalidated);
++            assert!(r.core.model().is_none());
++            assert!(r.last_confirmed_phase.is_none());
++            assert!(r.classified_model.is_none());
++            assert!(r.tilt_assessment(at).is_none());
++            assert_eq!(
++                r.tracking_configuration(1, "fault-main"),
++                Err("setup-input-not-ready")
++            );
++            assert_ne!(r.renderer_lineage(at), original_lineage);
++            assert!(r
++                .renderer_lineage(at)
++                .continues_visual_input(original_lineage));
++            for tick in 1..=3 {
++                assert_eq!(
++                    r.recovery_effect("", 7, 7, "fault", at + tick)["accepted"],
++                    true
++                );
++                setup_frame_with_lineage(
++                    &mut driver,
++                    r.output(at + tick),
++                    r.renderer_lineage(at + tick),
++                    at + tick,
++                    0.1,
++                );
++                let expected = before
++                    + tick as f32
++                        * match phase {
++                            CommonBreathPhase::Inhale => 0.05,
++                            CommonBreathPhase::Exhale => -0.025,
++                            _ => 0.0,
++                        };
++                assert!(
++                    (driver.value01() - expected).abs() < 0.000001,
++                    "{input:?}/{phase:?} repeated owner fault reset radius"
++                );
++                assert!(r.last_confirmed_phase.is_none());
++            }
++        }
++    }
++}
++
++#[test]
++fn explicit_preset_recovery_keeps_its_automatic_transition_after_an_owner_fault() {
++    for op in ["calibrate", "polar-fixed", "polar-adaptive", "controller"] {
++        let (mut r, _, now) =
++            polar_diagnosis_runtime(SetupInput::PolarTiltFixed, CommonBreathPhase::Hold);
++        let at = now + 1;
++        assert_eq!(r.recovery_effect("", 7, 7, "fault", at)["accepted"], true);
++        assert!(r.recovery.is_none());
++        assert_eq!(command(&mut r, 2, op, at)["state"], "pending");
++        assert_eq!(r.status(at)["input"], "automatic");
++        assert!(r.recovery.is_some());
++        assert_eq!(
++            r.recovery_effect("", 7, 7, "fault", at + 1)["accepted"],
++            true
++        );
++        assert_eq!(r.status(at + 1)["input"], "automatic");
++        assert!(r.recovery.is_none());
++    }
++}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
 new file mode 100644
-index 00000000..41db6217
+index 00000000..4f733b91
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_tests.rs
-@@ -0,0 +1,1356 @@
+@@ -0,0 +1,1419 @@
 +use super::*;
 +
 +#[test]
@@ -9020,7 +9659,7 @@ index 00000000..41db6217
 +    assert!(!setup.snapshot(time(2_116_800) + 300_000_000).ready);
 +    setup.observe_acc(8, 200_000_000_000, time(2_116_800), [0.0, 0.0, 1.0]);
 +    assert!(setup.model().is_none());
-+    assert_eq!(setup.snapshot(time(2_116_800)).input, SetupInput::Automatic);
++    assert_eq!(setup.snapshot(time(2_116_800)).input, SetupInput::PolarTilt);
 +    assert_eq!(
 +        setup.snapshot(time(2_116_800)).failure,
 +        Some(SetupFailure::SourceReplaced)
@@ -9310,7 +9949,7 @@ index 00000000..41db6217
 +    let now = time(2_116_800) + 400_000_000;
 +    setup.observe_clock(1, 2_134_440, now, true);
 +    assert!(setup.model().is_none());
-+    assert_eq!(setup.snapshot(now).input, SetupInput::Automatic);
++    assert_eq!(setup.snapshot(now).input, SetupInput::PolarTilt);
 +    assert_eq!(setup.snapshot(now).calibration, CalibrationState::Failed);
 +}
 +
@@ -9573,14 +10212,11 @@ index 00000000..41db6217
 +        let status = setup.snapshot(time(2_116_800));
 +        assert!(!status.ready);
 +        assert!(setup.model().is_none());
-+        assert_eq!(status.input, SetupInput::Automatic);
++        assert_eq!(status.input, SetupInput::PolarTilt);
 +        assert_eq!(status.calibration, CalibrationState::Failed);
 +        assert_eq!(status.experiment, ExperimentState::Invalidated);
 +        assert_eq!(status.source_owner, if owner == 0 { None } else { Some(8) });
-+        let driver = setup.driver_sample(time(2_116_800)).unwrap();
-+        assert_eq!(driver.input, SetupInput::Automatic);
-+        assert_eq!(driver.source_owner, None);
-+        assert_eq!(driver.model_generation, None);
++        assert!(setup.driver_sample(time(2_116_800)).is_none());
 +    }
 +}
 +
@@ -9606,6 +10242,72 @@ index 00000000..41db6217
 +        assert!(status.ready);
 +        assert_eq!(status.experiment, ExperimentState::Running);
 +        assert_eq!(status.experiment_start_frame, Some(2_822_400));
++    }
++}
++
++#[test]
++fn technical_retirement_keeps_each_polar_selection_but_retires_model_and_main() {
++    for input in [
++        SetupInput::PolarTilt,
++        SetupInput::PolarTiltFixed,
++        SetupInput::PolarTiltAdaptive,
++    ] {
++        for barrier in [
++            "poll-gap",
++            "head-stall",
++            "source-replaced",
++            "source-retired",
++            "audio-generation",
++            "generation-regression",
++        ] {
++            let mut setup = calibrated();
++            let frame = 2_116_800;
++            let now = time(frame);
++            if input.pretrained() {
++                setup.select_pretrained(input, 7, now).unwrap();
++                for tick in 1..=20 {
++                    let ns = now + tick * 40_000_000;
++                    setup.observe_clock(1, frame + tick * 1764, ns, true);
++                    setup.observe_acc(7, 100_000_000_000 + ns, ns, [0.0, 0.0, 1.0]);
++                }
++            }
++            let before = setup.snapshot(now + if input.pretrained() { 800_000_000 } else { 0 });
++            let now = time(before.absolute_frame);
++            assert!(before.ready, "fixture {input:?}");
++            setup.request_experiment(now).unwrap();
++            let at = now + 300_000_000;
++            match barrier {
++                "poll-gap" => setup.observe_clock(1, before.absolute_frame + 13230, at, true),
++                "head-stall" => {
++                    for tick in 1..=15 {
++                        setup.observe_clock(
++                            1,
++                            before.absolute_frame,
++                            now + tick * 20_000_000,
++                            true,
++                        );
++                    }
++                }
++                "source-replaced" => setup.observe_source_owner(8),
++                "source-retired" => setup.observe_source_owner(0),
++                "audio-generation" => setup.observe_clock(2, 0, at, true),
++                _ => setup.observe_clock(0, 0, at, true),
++            }
++            let after = setup.snapshot(at);
++            assert_eq!(after.input, input, "{input:?}: {barrier}");
++            assert!(!after.ready, "{input:?}: {barrier}");
++            assert!(setup.model().is_none());
++            assert!(setup.driver_sample(at).is_none());
++            assert_eq!(after.experiment, ExperimentState::Invalidated);
++            assert_eq!(
++                setup.request_experiment(at),
++                Err(SetupFailure::InputNotReady)
++            );
++            if input == SetupInput::PolarTilt {
++                assert_eq!(after.calibration, CalibrationState::Failed);
++                assert_eq!(after.model_generation, None);
++            }
++        }
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_control_mode.rs b/apps/native-renderer-android/native/src/experiment_control_mode.rs
@@ -23851,10 +24553,10 @@ index 0477d906..4696df33 100644
          launchActivity.clear();
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java
 new file mode 100644
-index 00000000..6bf94631
+index 00000000..465a664b
 --- /dev/null
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,204 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.app.Activity;
@@ -23871,6 +24573,8 @@ index 00000000..6bf94631
 +/** Selected process SDK/service; native cycles own all preparation and install authority. */
 +final class NativeRendererMetaUpdate {
 +    private static volatile Owner process;
++    private static volatile TerminalExit terminalExit;
++    private static final Object HELPER_LOCK=new Object();
 +    private NativeRendererMetaUpdate(){}
 +    private static native boolean nativeFence(int operation,long attempt,long cycle,long revision);
 +    private static native String nativeCycleState();
@@ -23883,7 +24587,7 @@ index 00000000..6bf94631
 +        Owner owner=process;if(owner!=null){owner.bind(activity,epoch);return;}
 +        try{Class.forName("io.github.mesmerprism.rustyquest.native_renderer.NativeRendererMetaPlatformTransport",false,activity.getClassLoader());}
 +        catch(ClassNotFoundException disabled){return;}catch(LinkageError unavailable){return;}
-+        synchronized(NativeRendererMetaUpdate.class){if(process!=null){process.bind(activity,epoch);return;}process=new Owner(activity,epoch);}
++        synchronized(NativeRendererMetaUpdate.class){if(process!=null){process.bind(activity,epoch);return;}if(terminalExit!=null){terminalExit.retired=true;terminalExit=null;}process=new Owner(activity,epoch);}
 +    }
 +    static void firstSubmittedFrame(Activity activity,long epoch,long generation) {
 +        Owner owner=process;if(owner==null)return;Binding b=owner.binding;
@@ -23896,7 +24600,62 @@ index 00000000..6bf94631
 +        if(b.activity!=activity||!owner.trusted(b)||b.focusedGeneration==generation)return;
 +        b.focusedGeneration=generation;owner.worker.post(new Runnable(){public void run(){owner.acknowledge(b,"launch-ready",0);}});
 +    }
-+    static void intentionalExit(){Owner o=process;if(o!=null){o.binding.exited=true;o.worker.post(new Runnable(){public void run(){o.helper.acknowledge("cancel-watch");}});}}
++    static void intentionalExit(Context context,long generation,long departure){terminal(context,generation,departure).begin(null);}
++    /** Writer acknowledgement remains necessary; closure additionally awaits durable helper cancellation. */
++    static void finishIntentionalExit(Context context,long generation,long departure,Runnable completion){terminal(context,generation,departure).begin(completion);}
++    private static synchronized TerminalExit terminal(Context context,long generation,long departure){
++        Owner owner=process;
++        if(owner!=null)owner.binding.exited=true;
++        if(terminalExit==null||terminalExit.generation!=generation||terminalExit.departure!=departure){
++            if(terminalExit!=null)terminalExit.retired=true;
++            terminalExit=new TerminalExit(context.getApplicationContext(),owner==null||owner.configurationFailure!=null?null:owner.helper,generation,departure);
++        }
++        return terminalExit;
++    }
++    /** Independent of the policy worker. Retry pacing never substitutes for a positive durable ACK. */
++    private static final class TerminalExit {
++        final Context context;final long generation,departure;volatile boolean retired;NativeRendererMetaUpdateHelper helper;
++        final Handler main=new Handler(android.os.Looper.getMainLooper());
++        final java.util.ArrayList<Runnable> completions=new java.util.ArrayList<>();
++        Handler cancellationWorker;boolean pending,confirmed;
++        TerminalExit(Context context,NativeRendererMetaUpdateHelper helper,long generation,long departure){this.context=context;this.helper=helper;this.generation=generation;this.departure=departure;}
++        private NativeRendererMetaUpdateHelper helper()throws Exception{
++            if(helper==null){
++                ApplicationInfo info=context.getPackageManager().getApplicationInfo(context.getPackageName(),PackageManager.GET_META_DATA);
++                Object selection=info.metaData==null?null:info.metaData.get("rusty.quest.meta_update.helper_enabled");
++                if(selection!=null&&!(selection instanceof Boolean))throw new IllegalStateException("helper-selection-unavailable");
++                long code=packageCode(context);if(Boolean.TRUE.equals(selection)&&code<=0)throw new IllegalStateException("loaded-code-unavailable");
++                helper=new NativeRendererMetaUpdateHelper(context,code,Boolean.TRUE.equals(selection));
++            }
++            return helper;
++        }
++        private void deliver(Runnable ready){main.post(new Runnable(){public void run(){if(!retired)ready.run();}});}
++        synchronized void begin(Runnable completion){
++            if(retired)return;
++            if(confirmed){if(completion!=null)deliver(completion);return;}
++            if(completion!=null)completions.add(completion);
++            if(pending)return;
++            pending=true;
++            final HandlerThread thread=new HandlerThread("meta-terminal-cancel");thread.start();
++            cancellationWorker=new Handler(thread.getLooper());
++            cancellationWorker.post(new Runnable(){public void run(){
++                boolean cancelled=false;
++                try{NativeRendererMetaUpdateHelper selected=helper();
++                    synchronized(HELPER_LOCK){if(!retired)cancelled=!selected.selected()||selected.acknowledge("cancel-watch");}
++                }catch(Exception unavailable){/* Unknown selection/cancellation never authorizes closure. */}
++                synchronized(TerminalExit.this){
++                    if(retired){completions.clear();thread.quitSafely();return;}
++                    if(!cancelled){
++                        android.util.Log.w("RQNativeRenderer","meta-terminal-cancel pending=true closure=false");
++                        cancellationWorker.postDelayed(this,1000);return;
++                    }
++                    confirmed=true;pending=false;
++                    for(Runnable ready:completions)deliver(ready);
++                    completions.clear();thread.quitSafely();
++                }
++            }});
++        }
++    }
 +    static void retire(){Owner o=process;if(o!=null){o.binding.retired=true;o.worker.post(new Runnable(){public void run(){o.service.tick(SystemClock.elapsedRealtime());}});}}
 +    static void cycleChanged(){Owner o=process;if(o!=null)o.worker.post(new Runnable(){public void run(){o.service.tick(SystemClock.elapsedRealtime());}});}
 +    static JSONObject status()throws Exception {
@@ -23934,9 +24693,14 @@ index 00000000..6bf94631
 +            worker.post(new Runnable(){public void run(){acknowledge(binding,"launch-started",0);}});
 +            worker.post(new Runnable(){public void run(){if(configurationFailure==null)service.tick(SystemClock.elapsedRealtime());worker.postDelayed(this,100);}});
 +        }
-+        void bind(Activity activity,long epoch){Binding old=binding;if(old.activity==activity&&old.epoch==epoch)return;old.retired=true;binding=new Binding(activity,epoch);Binding captured=binding;worker.post(new Runnable(){public void run(){acknowledge(captured,"launch-started",0);}});}
++        void bind(Activity activity,long epoch){Binding old=binding;if(old.activity==activity&&old.epoch==epoch)return;if(terminalExit!=null){terminalExit.retired=true;terminalExit=null;}old.retired=true;binding=new Binding(activity,epoch);Binding captured=binding;worker.post(new Runnable(){public void run(){acknowledge(captured,"launch-started",0);}});}
 +        boolean trusted(Binding b){return b==binding&&!b.retired&&!b.exited&&!b.activity.isFinishing()&&!b.activity.isDestroyed()&&NativeRendererExperimentLaunchAuthority.trustedColdEpochForOwner(b.activity)==b.epoch;}
-+        void acknowledge(Binding b,String method,int retry){if(!trusted(b)||loadedCode!=packageCode(context)||method.equals("launch-ready")&&b.focusedGeneration<=0)return;if(!helper.acknowledge(method)&&retry<7)worker.postDelayed(new Runnable(){public void run(){acknowledge(b,method,retry+1);}},1000);}
++        void acknowledge(Binding b,String method,int retry){
++            synchronized(HELPER_LOCK){
++                if(!trusted(b)||loadedCode!=packageCode(context)||method.equals("launch-ready")&&b.focusedGeneration<=0)return;
++                if(!helper.acknowledge(method)&&retry<7)worker.postDelayed(new Runnable(){public void run(){acknowledge(b,method,retry+1);}},1000);
++            }
++        }
 +        public NativeRendererMetaUpdateService.Cycle read(){return cycle();}
 +        public boolean operation(int op,long attempt,long cycle,long revision){return nativeFence(op,attempt,cycle,revision);}
 +        public long loadedCode(){return loadedCode;}public long actualCode(){return packageCode(context);}
@@ -23966,14 +24730,19 @@ index 00000000..6bf94631
 +            try{return done.await(5,java.util.concurrent.TimeUnit.SECONDS)&&accepted.get();}finally{expired.set(true);}
 +        }
 +        public boolean handoff(long attempt,long target)throws Exception {
-+            Binding b=binding;if(!ownerValid()||!helper.arm(attempt,target))return false;if(!ownerValid()){helper.acknowledge("cancel-watch");return false;}
++            Binding b=binding;
++            synchronized(HELPER_LOCK){if(b!=binding||!ownerValid()||!helper.arm(attempt,target))return false;
++                if(b!=binding||!ownerValid()){helper.acknowledge("cancel-watch");return false;}}
 +            java.util.concurrent.CountDownLatch done=new java.util.concurrent.CountDownLatch(1);java.util.concurrent.atomic.AtomicBoolean accepted=new java.util.concurrent.atomic.AtomicBoolean();
-+            Runnable action=new Runnable(){public void run(){try{if(b==binding&&ownerValid()){
-+                try{Class<?> k=Class.forName("io.github.mesmerprism.rustyquest.native_renderer.NativeRendererSelfKioskApplication",false,b.activity.getClassLoader());accepted.set(Boolean.TRUE.equals(k.getDeclaredMethod("handoffForMetaInstall",Activity.class,long.class).invoke(null,b.activity,b.epoch)));}
++            java.util.concurrent.atomic.AtomicBoolean expired=new java.util.concurrent.atomic.AtomicBoolean();
++            final long deadline=SystemClock.elapsedRealtime()+5000;
++            Runnable action=new Runnable(){public void run(){try{if(!expired.get()&&SystemClock.elapsedRealtime()<=deadline&&b==binding&&ownerValid()
++                    &&!expired.get()&&SystemClock.elapsedRealtime()<=deadline){
++                try{Class<?> k=Class.forName("io.github.mesmerprism.rustyquest.native_renderer.NativeRendererSelfKioskApplication",false,b.activity.getClassLoader());accepted.set(Boolean.TRUE.equals(k.getDeclaredMethod("handoffForMetaInstall",Activity.class,long.class,long.class).invoke(null,b.activity,b.epoch,deadline)));}
 +                catch(ClassNotFoundException noKiosk){accepted.set(true);}catch(ReflectiveOperationException unavailable){accepted.set(false);}
 +            }}finally{done.countDown();}}};
 +            if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper())action.run();else if(!new Handler(android.os.Looper.getMainLooper()).post(action))return false;
-+            return done.await(5,java.util.concurrent.TimeUnit.SECONDS)&&accepted.get()&&ownerValid();
++            try{return done.await(5,java.util.concurrent.TimeUnit.SECONDS)&&accepted.get()&&ownerValid();}finally{expired.set(true);}
 +        }
 +    }
 +    private static final class Persistence implements NativeRendererMetaUpdateService.Persistence {
@@ -24312,10 +25081,10 @@ index 00000000..cc26517b
 +}
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateHelper.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateHelper.java
 new file mode 100644
-index 00000000..bd6c99e1
+index 00000000..2bae424b
 --- /dev/null
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateHelper.java
-@@ -0,0 +1,65 @@
+@@ -0,0 +1,66 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.Context;
@@ -24366,7 +25135,8 @@ index 00000000..bd6c99e1
 +            if(android.os.SystemClock.elapsedRealtime()>deadline||android.provider.Settings.Global.getInt(context.getContentResolver(),android.provider.Settings.Global.BOOT_COUNT,-1)!=boot){failure="meta-update-helper-command-expired";return false;}
 +            if(reply==null)return false;
 +            if(!Integer.valueOf(1).equals(reply.get("v"))||!Integer.valueOf(3).equals(reply.get("protocol"))||!Integer.valueOf(3).equals(reply.get("monitor_protocol"))||!Boolean.TRUE.equals(reply.get("monitor"))){failure="meta-update-helper-monitor-capability-required";return false;}
-+            return Boolean.TRUE.equals(reply.get("accepted"))&&(!method.equals("arm-update")||Boolean.TRUE.equals(reply.get("watching")));
++            return Boolean.TRUE.equals(reply.get("accepted"))&&(!method.equals("arm-update")||Boolean.TRUE.equals(reply.get("watching")))
++                &&(!method.equals("cancel-watch")||Boolean.FALSE.equals(reply.get("watching")));
 +        }catch(Exception unavailable){return false;}
 +    }
 +    private static byte[][] certificates(Signature[] signatures) {
@@ -24746,7 +25516,7 @@ index 00000000..20ff093d
 +    }
 +}
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
-index 4f0b7864..05991c41 100644
+index 4f0b7864..58e9d4a3 100644
 --- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskApplication.java
 @@ -44,7 +44,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
@@ -24775,14 +25545,20 @@ index 4f0b7864..05991c41 100644
          } catch (ClassNotFoundException disabledModule) {
              // Other app compositions do not select the experiment transport.
          } catch (ReflectiveOperationException unavailableOwner) {
-@@ -134,6 +137,38 @@ public final class NativeRendererSelfKioskApplication extends Application {
+@@ -134,6 +137,44 @@ public final class NativeRendererSelfKioskApplication extends Application {
  
      void discardDepartures() { departures.clear(); panelLeaveGeneration = 0L; }
  
 +    /** Main-looper install handoff. No SDK call occurs under these authority checks. */
 +    static boolean handoffForMetaInstall(Activity activity,long epoch) {
-+        if(activity==null||activity.isFinishing()||activity.isDestroyed()
-+                ||NativeRendererExperimentLaunchAuthority.trustedColdEpochForOwner(activity)!=epoch)return false;
++        return handoffForMetaInstall(activity,epoch,android.os.SystemClock.elapsedRealtime()+5000);
++    }
++
++    static boolean handoffForMetaInstall(Activity activity,long epoch,long deadline) {
++        if(android.os.Looper.myLooper()!=android.os.Looper.getMainLooper()
++                ||deadline<=0||android.os.SystemClock.elapsedRealtime()>deadline||activity==null||activity.isFinishing()||activity.isDestroyed()
++                ||NativeRendererExperimentLaunchAuthority.trustedColdEpochForOwner(activity)!=epoch
++                ||android.os.SystemClock.elapsedRealtime()>deadline)return false;
 +        if(!NativeRendererSoftKioskCoordinator.process().beginInstallHandoff(epoch))return false;
 +        if(activity.getApplicationContext() instanceof NativeRendererSelfKioskApplication)
 +            ((NativeRendererSelfKioskApplication)activity.getApplicationContext()).discardDepartures();
@@ -24814,7 +25590,7 @@ index 4f0b7864..05991c41 100644
      /**
       * Finish every other live Activity owned by this APK after durable terminal cleanup.
       *
-@@ -200,6 +235,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
+@@ -200,6 +241,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
      }
  
      public static void userLeaveHint(Activity activity) {
@@ -24822,24 +25598,8 @@ index 4f0b7864..05991c41 100644
          Context app = activity.getApplicationContext();
          if (!(app instanceof NativeRendererSelfKioskApplication)) return;
          NativeRendererSelfKioskApplication owner = (NativeRendererSelfKioskApplication) app;
-@@ -222,6 +258,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
- 
-     public static void requestSaveAndExit(Activity activity) {
-         if (!(activity.getApplicationContext() instanceof NativeRendererSelfKioskApplication)) return;
-+        NativeRendererMetaUpdate.intentionalExit();
-         NativeRendererSoftKioskCoordinator.Action action =
-             NativeRendererSoftKioskCoordinator.process().requestExplicitTerminalExit();
-         Log.i("RustyQuestSelfKiosk", "status=explicit-save-exit-requested action="
-@@ -242,6 +279,7 @@ public final class NativeRendererSelfKioskApplication extends Application {
-             java.util.function.Consumer<NativeRendererSoftKioskCoordinator.Action> observer) {
-         if (context == null || !(context.getApplicationContext()
-                 instanceof NativeRendererSelfKioskApplication)) return false;
-+        NativeRendererMetaUpdate.intentionalExit();
-         NativeRendererSoftKioskCoordinator.Action action =
-             NativeRendererSoftKioskCoordinator.process().requestExplicitTerminalExit();
-         if (action.kind == NativeRendererSoftKioskCoordinator.ActionKind.BEGIN_TERMINAL_EXIT) {
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
-index 9e93d6eb..ccd4c40a 100644
+index 9e93d6eb..eab64faf 100644
 --- a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererSelfKioskService.java
 @@ -40,7 +40,7 @@ public final class NativeRendererSelfKioskService extends Service {
@@ -24866,7 +25626,14 @@ index 9e93d6eb..ccd4c40a 100644
          NativeRendererSoftKioskCoordinator.Snapshot state = coordinator.snapshot();
          long now = SystemClock.uptimeMillis();
          if (state.terminal || !state.armed) {
-@@ -244,6 +252,7 @@ public final class NativeRendererSelfKioskService extends Service {
+@@ -238,12 +246,14 @@ public final class NativeRendererSelfKioskService extends Service {
+         synchronized (TERMINAL_LOCK) {
+             if (pendingTerminal == null) pendingTerminal = action;
+         }
++        NativeRendererMetaUpdate.intentionalExit(context, action.generation, action.homeEpisodeId);
+         NativeRendererExperimentLaunchAuthority.invalidatePending();
+         PanelImmersiveHandoff.cancelActiveForTerminalExit();
+         resumePendingTerminal(context);
      }
  
      static boolean resumePendingTerminal(Context context) {
@@ -29240,7 +30007,7 @@ index 262fbeec..1e36d908 100644
        "type": "object"
      },
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..c8ffdd5e 100644
+index ccb3e308..92557d17 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -15,6 +15,11 @@ param(
@@ -29309,7 +30076,14 @@ index ccb3e308..c8ffdd5e 100644
      $usesPolarSessionRuntime = ($isExperimentSessionPanel -and -not $standaloneExperimentOwner) -or
          $selectedPanelModuleId -ceq "polar-controls"
      $standaloneExperimentOwnerJava = if ($standaloneExperimentOwner) { 'true' } else { 'false' }
-@@ -1064,9 +1102,11 @@ $sharedPanelFacade
+@@ -1059,14 +1097,18 @@ $sharedPanelFacade
+     private static long presentationGeneration;
+     private static boolean terminalIntentAdmitted;
+     private static boolean terminalFinishConsumed;
++    private static Object terminalAdmission;
++    private static long terminalGuardGeneration, terminalHomeEpisode;
+     // EXPERIMENT_SESSION_SHELL_BEGIN
+     private static volatile android.content.Context ownerApplicationContext;
      private static android.content.Context preparedClosureApplicationContext;
      private static String preparedClosureFilesRoot;
      private static volatile ConditionAudioRuntime conditionAudioRuntime;
@@ -29321,7 +30095,7 @@ index ccb3e308..c8ffdd5e 100644
      private static String pendingAudioPrepareOperation = "";
      private static String pendingAudioCondition = "";
      private static boolean audioImmersiveAdmitted;
-@@ -1104,6 +1144,8 @@ $sharedPanelFacade
+@@ -1104,6 +1146,8 @@ $sharedPanelFacade
                  && (preparedClosureApplicationContext != context
                      || !preparedClosureFilesRoot.equals(appPrivateFilesRoot)))
              throw new SecurityException("prepared-owner-scope-mismatch");
@@ -29330,7 +30104,7 @@ index ccb3e308..c8ffdd5e 100644
          ConditionAudioContract.TrustedPackagedInventory inventory =
              ConditionAudioContract.TrustedPackagedInventory.unavailable(
                  "packaged-inventory-not-loaded");
-@@ -1178,10 +1220,11 @@ $sharedPanelFacade
+@@ -1178,10 +1222,11 @@ $sharedPanelFacade
                  phaseProviders[0],phaseProviders[1],phaseProviders[2]);
          }
          try {
@@ -29343,7 +30117,7 @@ index ccb3e308..c8ffdd5e 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1189,6 +1232,8 @@ $sharedPanelFacade
+@@ -1189,6 +1234,8 @@ $sharedPanelFacade
                              + receipt.event.name().toLowerCase(java.util.Locale.ROOT)
                              + " generation=" + receipt.sessionGeneration
                              + " revision=" + receipt.receiptRevision
@@ -29352,7 +30126,7 @@ index ccb3e308..c8ffdd5e 100644
                              + " reason=" + receipt.reason);
                      String eventOperation = receipt.event == ConditionAudioContract.Event.PREPARED
                          ? "audio-prepared" : receipt.event == ConditionAudioContract.Event.ACTUAL_START
-@@ -1237,6 +1282,7 @@ $sharedPanelFacade
+@@ -1237,6 +1284,7 @@ $sharedPanelFacade
  
      /** Binds a panel arm/start request to the verified packaged profile and audio asset. */
      static String applyExperimentSessionCommand(String commandJson) {
@@ -29360,7 +30134,7 @@ index ccb3e308..c8ffdd5e 100644
          try {
              org.json.JSONObject command = new org.json.JSONObject(commandJson == null ? "{}" : commandJson);
              String operation = command.optString("operation", "");
-@@ -1245,6 +1291,18 @@ $sharedPanelFacade
+@@ -1245,6 +1293,18 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -29379,7 +30153,7 @@ index ccb3e308..c8ffdd5e 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1277,12 +1335,14 @@ $sharedPanelFacade
+@@ -1277,12 +1337,14 @@ $sharedPanelFacade
                          .put("media_type", guidance.mediaType));
                  }
              }
@@ -29398,7 +30172,7 @@ index ccb3e308..c8ffdd5e 100644
      }
  
      private static byte[] readPackagedAsset(
-@@ -1319,6 +1379,14 @@ $polarBleStopHooks
+@@ -1319,6 +1381,14 @@ $polarBleStopHooks
          return closure != null && closure.active && closure.openControlDefault;
      }
  
@@ -29413,7 +30187,7 @@ index ccb3e308..c8ffdd5e 100644
      static String conditionBreathGuidanceReadiness(String conditionId) {
          ExperimentSessionPackagedClosure.Result closure = experimentSessionClosure;
          if (closure == null || !closure.active) return "pattern-inventory-unavailable";
-@@ -1334,12 +1402,34 @@ $polarBleStopHooks
+@@ -1334,12 +1404,34 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -29449,7 +30223,7 @@ index ccb3e308..c8ffdd5e 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1437,13 @@ $polarBleStopHooks
+@@ -1347,12 +1439,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -29464,7 +30238,7 @@ index ccb3e308..c8ffdd5e 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1452,13 @@ $polarBleStopHooks
+@@ -1361,12 +1454,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -29479,7 +30253,7 @@ index ccb3e308..c8ffdd5e 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1580,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1582,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -29491,7 +30265,7 @@ index ccb3e308..c8ffdd5e 100644
          }
          return clean;
      }
-@@ -1525,6 +1620,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1622,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -29499,7 +30273,55 @@ index ccb3e308..c8ffdd5e 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -2036,6 +2132,8 @@ if ($showcaseSelected) {
+@@ -1607,6 +1705,7 @@ $polarRuntimeReopenFromExplicitLaunch
+             synchronized (PRESENTATION_LOCK) {
+                 presentationGeneration = launchEpoch;
+                 terminalIntentAdmitted = false;
++                terminalAdmission = null;
+                 terminalFinishConsumed = false;
+             }
+         }
+@@ -1710,6 +1809,9 @@ $polarRuntimeReopenFromExplicitLaunch
+         synchronized (PRESENTATION_LOCK) {
+             if (terminalIntentAdmitted) return false;
+             terminalIntentAdmitted = true;
++            terminalAdmission = new Object();
++            terminalGuardGeneration = guardGeneration;
++            terminalHomeEpisode = homeEpisode;
+         }
+         NativeRendererSelfKioskService.acknowledgeTerminalIntent(guardGeneration, homeEpisode);
+         NativeRendererExperimentLaunchAuthority.invalidatePending();
+@@ -1729,8 +1831,29 @@ $experimentSessionTerminalAudioStop
+                 || shutdownAckRevision <= 0L) {
+             return;
+         }
++        final Object admission;
++        final long guardGeneration, homeEpisode;
+         synchronized (PRESENTATION_LOCK) {
+             if (!terminalIntentAdmitted || terminalFinishConsumed) return;
++            admission = terminalAdmission;
++            guardGeneration = terminalGuardGeneration;
++            homeEpisode = terminalHomeEpisode;
++        }
++        NativeRendererMetaUpdate.finishIntentionalExit(activity, guardGeneration, homeEpisode, new Runnable() { @Override public void run() {
++            completeTerminalSaveAndExit(activity, saved, sessionGeneration, operationId,
++                shutdownAckRevision, admission, guardGeneration, homeEpisode);
++        }});
++    }
++
++    private static void completeTerminalSaveAndExit(
++            android.app.Activity activity, boolean saved, long sessionGeneration,
++            String operationId, long shutdownAckRevision, Object admission, long guardGeneration, long homeEpisode) {
++        if (!($currentPanelGuard) || activity == null || activity.isDestroyed()
++                || sessionGeneration < 0L || operationId == null
++                || !operationId.startsWith("panel-save-and-exit-") || shutdownAckRevision <= 0L) return;
++        synchronized (PRESENTATION_LOCK) {
++            if (!terminalIntentAdmitted || terminalFinishConsumed || terminalAdmission != admission
++                    || terminalGuardGeneration != guardGeneration || terminalHomeEpisode != homeEpisode) return;
+             terminalFinishConsumed = true;
+         }
+         android.util.Log.i("RustyQuestNativeRenderer",
+@@ -2036,6 +2159,8 @@ if ($showcaseSelected) {
  if ($standaloneExperimentOwner) {
      $standaloneBaseSources = @('NativeAppSettingsReader.java','NativeMeshUiProducer.java','NativeInputWidgetGeometry.java','NativePageSnapshot.java','NativeSystemKeyboard.java','NativePanelFont.java',
          'NativeRendererExperimentLaunchAuthority.java','NativeRendererExperimentLauncherPolicy.java','NativeRendererActivityComponents.java','NativeRendererBootObservation.java',
@@ -29508,7 +30330,7 @@ index ccb3e308..c8ffdd5e 100644
          'NativeRendererWriterAcknowledgedExitPolicy.java','PanelImmersiveHandoff.java',
          'PanelImmersiveHandoffLifecyclePolicy.java','PanelImmersiveHandoffProofPolicy.java',
          'PanelModule.java','PanelModuleRegistry.java')
-@@ -2069,7 +2167,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
+@@ -2069,7 +2194,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
  $debugSources = @()
  if ($script:BuildUsesLock) {
      $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['debug_experiment_operator_sources']) { $appBuildLockObject.debug_experiment_operator_sources })
@@ -29517,7 +30339,7 @@ index ccb3e308..c8ffdd5e 100644
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2187,70 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2214,70 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -29588,7 +30410,7 @@ index ccb3e308..c8ffdd5e 100644
  if (-not [string]::IsNullOrWhiteSpace($generatedControlPanelActivityPath)) {
      $sourceFiles += $generatedControlPanelActivityPath
  }
-@@ -2127,6 +2289,7 @@ Invoke-Checked "javac" $javac @(
+@@ -2127,6 +2316,7 @@ Invoke-Checked "javac" $javac @(
  )
  Invoke-Checked "jar class pack" $jar @("cf", $classesJar, "-C", $classesDir, ".")
  Invoke-Checked "d8" $d8 @("--lib", $platformJar, "--output", $dexDir, $classesJar)
@@ -29596,7 +30418,7 @@ index ccb3e308..c8ffdd5e 100644
  
  $previousAndroidHome = $env:ANDROID_HOME
  $previousNdkHome = $env:ANDROID_NDK_HOME
-@@ -2152,6 +2315,10 @@ if ($showcaseVulkanSelected) {
+@@ -2152,6 +2342,10 @@ if ($showcaseVulkanSelected) {
  } elseif ($showcaseSelected) {
      $cargoBuildArguments += @('--features', 'showcase')
  }
@@ -29607,7 +30429,7 @@ index ccb3e308..c8ffdd5e 100644
  if ($operatorSelection.enabled) { $cargoBuildArguments += @('--features', 'meta-xr-operator') }
  try {
      $env:ANDROID_HOME = $AndroidHome
-@@ -2265,6 +2432,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
+@@ -2265,6 +2459,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
  [IO.File]::WriteAllText($packagingInputPath, $packaging.json, [Text.UTF8Encoding]::new($false))
  # Public build identity only: no paths or app/private payload metadata.
  $buildIdentityAsset = [ordered]@{schema='rusty.quest.android_build_identity.v1';source_commit=$sourceHead;source_tree=$sourceTree;source_composition_fingerprint=[string]$sourceComposition.fingerprint;packaging_fingerprint=$packaging.sha256}
@@ -29615,7 +30437,7 @@ index ccb3e308..c8ffdd5e 100644
  $buildIdentityAsset | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $assetsDir 'android-build-identity.json') -Encoding utf8
  Invoke-Checked "aapt2 link" $aapt2 @(
      "link",
-@@ -2297,6 +2465,7 @@ Invoke-Checked "apksigner" $apksigner @(
+@@ -2297,6 +2492,7 @@ Invoke-Checked "apksigner" $apksigner @(
  
  $sha256 = Get-FileSha256 -Path $apkSigned
  Assert-QuestMetaXrOperatorArchive -Selection $operatorSelection -ApkPath $apkSigned
@@ -29623,7 +30445,7 @@ index ccb3e308..c8ffdd5e 100644
  if ($operatorSelection.enabled) {
      $operatorManifestDump = @(& $aapt2 dump xmltree $apkSigned --file AndroidManifest.xml 2>&1 | ForEach-Object ToString)
      $operatorManifestExit = $LASTEXITCODE
-@@ -2305,6 +2474,8 @@ if ($operatorSelection.enabled) {
+@@ -2305,6 +2501,8 @@ if ($operatorSelection.enabled) {
          ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutDir 'operator-manifest-dump.json') -Encoding utf8NoBOM
  }
  $manifest = [ordered]@{
@@ -29632,7 +30454,7 @@ index ccb3e308..c8ffdd5e 100644
      meta_xr_operator = $operatorSelection
      '$schema' = "rusty.quest.native_renderer_android.build_manifest.v1"
      app_id = if ($null -eq $appBuildLockObject) { "unlocked-development" } else { [string]$appBuildLockObject.app_id }
-@@ -2451,9 +2622,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
+@@ -2451,9 +2649,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
  if ($script:BuildUsesLock) {
      $propertyManifestPath = Join-Path $repoRoot "fixtures\native-renderer\native-renderer-property-manifest.json"
      $runCapsule = [ordered]@{
@@ -33869,6 +34691,100 @@ index 00000000..f2cf988e
 +
 +if __name__ == '__main__':
 +    main()
+diff --git a/tools/checks/test_meta_update_handoff_dispatch.py b/tools/checks/test_meta_update_handoff_dispatch.py
+new file mode 100644
+index 00000000..2979f8ce
+--- /dev/null
++++ b/tools/checks/test_meta_update_handoff_dispatch.py
+@@ -0,0 +1,50 @@
++"""Execute the production worker-to-main shared-handoff dispatch with inert main IPC."""
++from pathlib import Path
++import subprocess
++import tempfile
++from test_experiment_gateway_dedupe import method
++ROOT = Path(__file__).resolve().parents[2]
++PKG = 'io/github/mesmerprism/rustyquest/native_renderer'
++TEST = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import android.os.SystemClock;
++class Activity {ClassLoader getClassLoader(){return getClass().getClassLoader();}}
++class Binding {Activity activity=new Activity();long epoch=42;}
++class Helper {boolean enabled=true;boolean selected(){return enabled;}boolean arm(long a,long t){return t>15;}boolean acknowledge(String m){return true;}}
++class Handler extends android.os.Handler {Handler(android.os.Looper l){super(l);}}
++class NativeRendererSelfKioskApplication {static int calls;static boolean handoffForMetaInstall(Activity a,long e,long deadline){calls++;return true;}static boolean handoffForMetaInstall(Activity a,long e){calls++;return true;}}
++class Owner {static final Object HELPER_LOCK=new Object();Helper helper=new Helper();long loadedCode=15;Binding binding=new Binding();boolean valid=true,fence=true,slowValidation;int validations;
++ boolean ownerValid(){if(slowValidation&&++validations>2)SystemClock.now=6000;return valid;}
++ boolean nativeFence(int op,long a,long c,long r){return fence;}
++ __DISPATCH__
++}
++public class HandoffDispatchTest {
++ static int checks;static void check(boolean b,String s){checks++;if(!b)throw new AssertionError(s);}
++ static Owner fresh(){SystemClock.now=0;android.os.Handler.immediate=true;android.os.Handler.pending=null;android.os.Handler.before=null;NativeRendererSelfKioskApplication.calls=0;return new Owner();}
++ public static void main(String[] args)throws Exception {
++  Owner o=fresh();check(o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==1,"trusted helper/owner/nativephase3 dispatch invokes exact main exit seam");
++  
++  o=fresh();check(!o.handoff(7,15)&&android.os.Handler.pending==null,"non-new target never queues exit");
++  o=fresh();o.valid=false;check(!o.handoff(7,16)&&android.os.Handler.pending==null,"invalid initial owner never queues exit");
++  
++  final Owner replaced=fresh();android.os.Handler.before=new Runnable(){public void run(){replaced.binding=new Binding();}};
++  check(!replaced.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"binding replacement before main execution never exits");
++  o=fresh();o.slowValidation=true;check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"deadline is repeated after possibly slow owner/native lookup");
++  o=fresh();android.os.Handler.before=new Runnable(){public void run(){SystemClock.now=6000;}};
++  check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"late main execution beyond monotonic deadline never exits");
++  o=fresh();android.os.Handler.immediate=false;check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"worker times out rather than waiting indefinitely for main");
++  SystemClock.now=100;android.os.Handler.pending.run();check(NativeRendererSelfKioskApplication.calls==0,"already timed-out runnable remains expired even when invoked later");
++  System.out.println("PASS "+checks+" production shared-handoff main-dispatch deadline/owner checks");
++ }
++}'''
++def main():
++    source=ROOT/'apps/native-renderer-android/src/main/java'/PKG/'NativeRendererMetaUpdate.java'
++    body=method(source.read_text(),'        public boolean handoff(long attempt,long target)')
++    with tempfile.TemporaryDirectory(prefix='rq-queued-main-') as tmp:
++        out=Path(tmp);os=out/'android/os';os.mkdir(parents=True)
++        (os/'Looper.java').write_text('package android.os;public class Looper{static final Looper M=new Looper();public static Looper myLooper(){return null;}public static Looper getMainLooper(){return M;}}')
++        (os/'SystemClock.java').write_text('package android.os;public class SystemClock{public static long now;public static long elapsedRealtime(){return now;}}')
++        (os/'Handler.java').write_text('package android.os;public class Handler{public static boolean immediate=true;public static Runnable pending,before;public Handler(Looper l){}public boolean post(Runnable r){pending=r;if(before!=null)before.run();if(immediate)r.run();return true;}}')
++        test=out/'HandoffDispatchTest.java';test.write_text(TEST.replace('__DISPATCH__',body))
++        subprocess.run(['javac','--release','8','-d',tmp,*map(str,os.glob('*.java')),str(test)],check=True)
++        subprocess.run(['java','-cp',tmp,PKG.replace('/','.')+'.HandoffDispatchTest'],check=True)
++if __name__=='__main__':main()
+diff --git a/tools/checks/test_meta_update_handoff_latch.py b/tools/checks/test_meta_update_handoff_latch.py
+new file mode 100644
+index 00000000..b0c41906
+--- /dev/null
++++ b/tools/checks/test_meta_update_handoff_latch.py
+@@ -0,0 +1,32 @@
++"""Actual main-looper kiosk latch repeats deadline after trusted-owner lookup."""
++from pathlib import Path
++import subprocess,tempfile
++from test_experiment_gateway_dedupe import method
++ROOT=Path(__file__).resolve().parents[2];PKG='io/github/mesmerprism/rustyquest/native_renderer'
++TEST=r'''package io.github.mesmerprism.rustyquest.native_renderer;
++class Activity {boolean isFinishing(){return false;}boolean isDestroyed(){return false;}Object getApplicationContext(){return new NativeRendererSelfKioskApplication();}}
++class NativeRendererExperimentLaunchAuthority {static boolean slow;static long epoch=42;static long trustedColdEpochForOwner(Activity a){if(slow)android.os.SystemClock.now=6000;return epoch;}}
++class NativeRendererSelfKioskApplication {static int discards;void discardDepartures(){discards++;}
++__BODY__
++}
++public class HandoffLatchTest {
++ static int checks;static void check(boolean b,String m){checks++;if(!b)throw new AssertionError(m);}
++ public static void main(String[] args){Activity a=new Activity();NativeRendererSoftKioskCoordinator c=NativeRendererSoftKioskCoordinator.process();
++ android.os.SystemClock.now=6000;check(!NativeRendererSelfKioskApplication.handoffForMetaInstall(a,42,5000)&&!c.installHandoffActive(),"expired main callback never latches");
++ android.os.SystemClock.now=100;NativeRendererExperimentLaunchAuthority.slow=true;check(!NativeRendererSelfKioskApplication.handoffForMetaInstall(a,42,5000)&&!c.installHandoffActive(),"deadline repeats after slow trusted owner read");
++ android.os.SystemClock.now=100;NativeRendererExperimentLaunchAuthority.slow=false;NativeRendererExperimentLaunchAuthority.epoch=43;check(!NativeRendererSelfKioskApplication.handoffForMetaInstall(a,42,5000)&&!c.installHandoffActive(),"replaced owner cannot latch");
++ NativeRendererExperimentLaunchAuthority.epoch=42;android.os.Looper.main=false;check(!NativeRendererSelfKioskApplication.handoffForMetaInstall(a,42,5000)&&!c.installHandoffActive(),"nonmain callback cannot latch");
++ android.os.Looper.main=true;check(NativeRendererSelfKioskApplication.handoffForMetaInstall(a,42,5000)&&c.installHandoffActive()&&NativeRendererSelfKioskApplication.discards==1,"valid early main callback reaches actual irreversible coordinator latch");
++ System.out.println("PASS "+checks+" actual main deadline/owner checks with real kiosk coordinator");}}
++'''
++def main():
++ java=ROOT/'apps/native-renderer-android/src/main/java'/PKG
++ body=method((java/'NativeRendererSelfKioskApplication.java').read_text(),'    static boolean handoffForMetaInstall(Activity activity,long epoch,long deadline)')
++ with tempfile.TemporaryDirectory(prefix='rq-handoff-latch-') as tmp:
++  out=Path(tmp);os=out/'android/os';os.mkdir(parents=True)
++  (os/'Looper.java').write_text('package android.os;public class Looper{public static boolean main=true;static final Looper M=new Looper();public static Looper myLooper(){return main?M:null;}public static Looper getMainLooper(){return M;}}')
++  (os/'SystemClock.java').write_text('package android.os;public class SystemClock{public static long now;public static long elapsedRealtime(){return now;}}')
++  p=out/'HandoffLatchTest.java';p.write_text(TEST.replace('__BODY__',body))
++  subprocess.run(['javac','--release','8','-d',tmp,*map(str,os.glob('*.java')),str(p),str(java/'NativeRendererSoftKioskCoordinator.java'),str(java/'NativeRendererForegroundGuardPolicy.java')],check=True)
++  subprocess.run(['java','-cp',tmp,PKG.replace('/','.')+'.HandoffLatchTest'],check=True)
++if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_helper_client.py b/tools/checks/test_meta_update_helper_client.py
 new file mode 100644
 index 00000000..7ced1dba
@@ -33896,10 +34812,10 @@ index 00000000..7ced1dba
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_helper_monitor.py b/tools/checks/test_meta_update_helper_monitor.py
 new file mode 100644
-index 00000000..79cfe138
+index 00000000..7fe309bf
 --- /dev/null
 +++ b/tools/checks/test_meta_update_helper_monitor.py
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,57 @@
 +"""Production helper client with exact monitor3 IPC/certificate/command-deadline boundaries."""
 +from pathlib import Path
 +import subprocess,tempfile
@@ -33931,7 +34847,8 @@ index 00000000..79cfe138
 +  NativeRendererMetaUpdateHelper h=fresh();check(h.arm(42,16),"helper boot2 compatibility metadata plus explicit monitor3 handshake accepted");
 +  check(ContentResolver.args.size()==7&&Integer.valueOf(3).equals(ContentResolver.args.get("monitor_protocol"))&&Long.valueOf(4).equals(ContentResolver.args.get("boot_count"))&&Long.valueOf(6000).equals(ContentResolver.args.get("deadline_elapsed")),"arm request has exact protocol3/actualboot/5s-commanddeadline and immutable target fields");
 +  h=fresh();PackageManager.metadata.putInt("org.viscereality.atmungsraum.boot_protocol",3);check(h.arm(42,16),"helper boot3 plus explicit monitor3 capability accepted");
-+  for(String ack:new String[]{"launch-started","launch-ready","cancel-watch"}){h=fresh();check(h.acknowledge(ack)&&ContentResolver.args.size()==5&&Integer.valueOf(3).equals(ContentResolver.args.get("monitor_protocol")),"every new ACK/cancel is explicitly monitor3 and command fenced");}
++  for(String ack:new String[]{"launch-started","launch-ready","cancel-watch"}){h=fresh();if(ack.equals("cancel-watch"))ContentResolver.reply.put("watching",false);check(h.acknowledge(ack)&&ContentResolver.args.size()==5&&Integer.valueOf(3).equals(ContentResolver.args.get("monitor_protocol")),"every new ACK/cancel is explicitly monitor3 and command fenced");}
++  for(Object watching:new Object[]{Boolean.TRUE,null,"false"}){h=fresh();ContentResolver.reply.put("watching",watching);check(!h.acknowledge("cancel-watch"),"accepted cancellation without explicit stopped-watch readback cannot release closure");}
 +  h=fresh();PackageManager.metadata.remove("org.viscereality.atmungsraum.monitor_protocol");ContentResolver.reply.putInt("protocol",2);check(!h.arm(42,16)&&ContentResolver.calls==0&&reason(h).equals("meta-update-helper-monitor-capability-required"),"legacy helper2 fails clearly before IPC rather than assuming indefinite monitor");
 +  for(String field:new String[]{"protocol","monitor_protocol","monitor"}){h=fresh();ContentResolver.reply.remove(field);check(!h.arm(42,16)&&reason(h).equals("meta-update-helper-monitor-capability-required"),"missing explicit monitor3 reply cannot authorize closing");}
 +  h=fresh();ContentResolver.reply.put("monitor",false);check(!h.arm(42,16),"negative capability never authorizes handoff");
@@ -33958,7 +34875,7 @@ index 00000000..79cfe138
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_metadata.py b/tools/checks/test_meta_update_metadata.py
 new file mode 100644
-index 00000000..5dad5d41
+index 00000000..9127dde2
 --- /dev/null
 +++ b/tools/checks/test_meta_update_metadata.py
 @@ -0,0 +1,94 @@
@@ -33995,7 +34912,7 @@ index 00000000..5dad5d41
 + 'android/os/Handler.java': '''package android.os;public class Handler {public static java.util.Queue<Runnable> queue=new java.util.ArrayDeque<>();public Handler(Looper l){}
 + public boolean post(Runnable r){queue.add(r);return true;}public boolean postDelayed(Runnable r,long d){queue.add(r);return true;}
 + public static void drain(){for(int i=0;i<20&&!queue.isEmpty();i++)queue.remove().run();}}''',
-+ 'android/util/Log.java': 'package android.util;public class Log {public static int e(String t,String m,Throwable e){return 0;}public static int i(String t,String m){return 0;}}',
++ 'android/util/Log.java': 'package android.util;public class Log {public static int w(String t,String m){return 0;}public static int e(String t,String m,Throwable e){return 0;}public static int i(String t,String m){return 0;}}',
 + PKG+'/NativeRendererExperimentLaunchAuthority.java': 'package io.github.mesmerprism.rustyquest.native_renderer;class NativeRendererExperimentLaunchAuthority {static long trustedColdEpochForOwner(android.app.Activity a){return 42;}}',
 + PKG+'/NativeRendererSoftKioskCoordinator.java': 'package io.github.mesmerprism.rustyquest.native_renderer;class NativeRendererSoftKioskCoordinator {static NativeRendererSoftKioskCoordinator process(){return new NativeRendererSoftKioskCoordinator();}boolean beginInstallHandoff(long e){return false;}}',
 + PKG+'/NativeRendererSelfKioskApplication.java': 'package io.github.mesmerprism.rustyquest.native_renderer;class NativeRendererSelfKioskApplication extends android.content.Context {void discardDepartures(){}}',
@@ -34559,6 +35476,199 @@ index 00000000..78b811a8
 +
 +if __name__ == '__main__':
 +    main()
+diff --git a/tools/checks/test_meta_update_terminal_cancel.py b/tools/checks/test_meta_update_terminal_cancel.py
+new file mode 100644
+index 00000000..9edec5b8
+--- /dev/null
++++ b/tools/checks/test_meta_update_terminal_cancel.py
+@@ -0,0 +1,113 @@
++"""Real terminal cancellation worker/helper client with inert Android IPC/main queue."""
++from pathlib import Path
++import subprocess,tempfile,sys
++from test_experiment_gateway_dedupe import method
++from test_terminal_pending_arm import block
++from test_meta_update_helper_monitor import STUBS
++ROOT=Path(__file__).resolve().parents[2]
++PKG='io/github/mesmerprism/rustyquest/native_renderer'
++TEST=r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import android.app.Activity;import android.content.Context;import android.content.pm.*;import android.os.*;
++class NativeRendererMetaPlatformTransport {}
++class NativeRendererExperimentLaunchAuthority {static long trustedColdEpochForOwner(Activity a){return a.epoch;}}
++public class NativeRendererMetaUpdate {
++ private static volatile Owner process;private static volatile TerminalExit terminalExit;private static final Object HELPER_LOCK=new Object();
++ static class Binding {final Activity activity;final long epoch;volatile boolean frame,retired,exited;volatile long focusedGeneration;Binding(Activity a,long e){activity=a;epoch=e;}}
++ static class Owner {
++  final Context context=new Context();final String configurationFailure=null;final long loadedCode=15;final NativeRendererMetaUpdateHelper helper;Binding binding;final Handler worker;
++  Owner(Activity activity,long epoch){this(true,epoch);}
++  Owner(boolean selected,long epoch){helper=new NativeRendererMetaUpdateHelper(context,15,selected);binding=new Binding(new Activity(epoch),epoch);HandlerThread t=new HandlerThread("policy");t.start();worker=new Handler(t.getLooper());}
++  __BIND__
++  __TRUSTED__
++  __ACK__
++ }
++ __COLD__
++ __PACKAGE__
++ __TERMINAL__
++ __EXIT__
++ __FINISH__
++ __CLASS__
++ static int checks;static final java.util.concurrent.atomic.AtomicInteger closures=new java.util.concurrent.atomic.AtomicInteger();
++ static void check(boolean b,String m){checks++;if(!b)throw new AssertionError(m);}
++ static void await(java.util.function.BooleanSupplier test,String message)throws Exception{long end=System.nanoTime()+3000000000L;while(!test.getAsBoolean()&&System.nanoTime()<end){Handler.drainMain();Thread.sleep(2);}Handler.drainMain();check(test.getAsBoolean(),message);}
++ static Context fresh(boolean selected){
++  if(terminalExit!=null)terminalExit.retired=true;terminalExit=null;process=new Owner(selected,42);closures.set(0);android.content.ContentResolver.reset();PackageManager.unavailable=false;
++  Bundle m=new Bundle();m.putInt("org.viscereality.atmungsraum.boot_protocol",3);m.putInt("org.viscereality.atmungsraum.monitor_protocol",3);m.put("rusty.quest.meta_update.helper_enabled",selected);PackageManager.metadata=m;return process.context;
++ }
++ public static void main(String[] args)throws Exception{
++  Context c=fresh(true);Owner old=process;
++  java.util.concurrent.CountDownLatch entered=new java.util.concurrent.CountDownLatch(1),release=new java.util.concurrent.CountDownLatch(1);
++  old.worker.post(()->{entered.countDown();try{release.await();}catch(Exception e){throw new RuntimeException(e);}});entered.await();
++  final Owner policyOwner=old;Binding b=old.binding;b.focusedGeneration=1;old.worker.post(()->policyOwner.acknowledge(b,"launch-ready",0));
++  android.content.ContentResolver.block=new java.util.concurrent.CountDownLatch(1);
++  intentionalExit(c,42,1);finishIntentionalExit(c,42,1,()->closures.incrementAndGet());
++  await(()->android.content.ContentResolver.calls>0,"cancellation runs while policy worker remains blocked");Handler.drainMain();
++  check(closures.get()==0&&android.content.ContentResolver.watching,"IPC queued or in flight never claims durable cancellation");
++  android.content.ContentResolver.block.countDown();await(()->closures.get()==1,"positive durable cancel releases closure independently of blocked worker");
++  check(!android.content.ContentResolver.watching&&!android.content.ContentResolver.mainIpc,"cancel ACK stops watch with zero main-thread IPC");
++  release.countDown();Thread.sleep(30);check(android.content.ContentResolver.readyCalls==0,"ready ACK queued before terminal is retired before dispatch");
++  finishIntentionalExit(c,42,1,()->closures.incrementAndGet());Handler.drainMain();check(closures.get()==2&&android.content.ContentResolver.cancelCalls==1,"same terminal barrier reuses exact cancellation receipt");
++  old.bind(new Activity(43),43);check(terminalExit==null&&!old.binding.exited,"fresh trusted owner retires prior terminal cancellation scope");
++  synchronized(HELPER_LOCK){check(old.helper.arm(2,16),"new launch may arm a new update watch");}
++  android.content.ContentResolver.allowCancel=false;finishIntentionalExit(c,43,2,()->closures.incrementAndGet());Thread.sleep(50);Handler.drainMain();
++  check(closures.get()==2&&android.content.ContentResolver.watching,"previous terminal ACK cannot release new terminal scope");
++  android.content.ContentResolver.allowCancel=true;await(()->closures.get()==3,"new terminal scope requires fresh positive cancellation ACK");
++  c=fresh(true);android.content.ContentResolver.allowCancel=false;finishIntentionalExit(c,42,1,()->closures.incrementAndGet());Thread.sleep(40);Handler.drainMain();check(closures.get()==0,"provider rejection retains callback and blocks closure");
++  android.content.ContentResolver.allowCancel=true;await(()->closures.get()==1,"idempotent cancellation retries until actual positive ACK");
++  c=fresh(true);process=null;PackageManager.unavailable=true;finishIntentionalExit(c,42,1,()->closures.incrementAndGet());Thread.sleep(30);Handler.drainMain();check(closures.get()==0&&android.content.ContentResolver.calls==0,"unknown selection with absent owner never assumes no watch");
++  PackageManager.unavailable=false;await(()->closures.get()==1,"absent owner lazily discovers selected helper on cancellation worker");
++  check(!android.content.ContentResolver.watching,"discovered helper watch durably cancelled");
++  c=fresh(false);process=null;finishIntentionalExit(c,42,1,()->closures.incrementAndGet());await(()->closures.get()==1,"absent SDK/unselected helper exits without IPC");check(android.content.ContentResolver.calls==0,"unselected helper is inert");
++  c=fresh(true);android.content.ContentResolver.block=new java.util.concurrent.CountDownLatch(1);finishIntentionalExit(c,42,1,()->closures.incrementAndGet());await(()->android.content.ContentResolver.calls>0,"old cancel in flight");
++  TerminalExit stale=terminalExit;old=process;old.bind(new Activity(43),43);android.content.ContentResolver.block.countDown();Thread.sleep(20);Handler.drainMain();check(closures.get()==0&&stale.retired,"old ACK/callback cannot release replacement launch");
++  synchronized(HELPER_LOCK){check(old.helper.arm(3,16),"new arm follows in-flight cancellation under process lock");}check(android.content.ContentResolver.watching,"old cancellation cannot clear subsequent newly armed watch");
++  c=fresh(true);process=null;android.content.ContentResolver.block=new java.util.concurrent.CountDownLatch(1);finishIntentionalExit(c,42,1,()->closures.incrementAndGet());await(()->android.content.ContentResolver.calls>0,"lazy owner-absent cancellation in flight");
++  trustedColdLaunch(new Activity(43),43);final Owner successor=process;final java.util.concurrent.atomic.AtomicBoolean armed=new java.util.concurrent.atomic.AtomicBoolean();
++  Thread arm=new Thread(()->{synchronized(HELPER_LOCK){armed.set(successor.helper.arm(4,16));}});arm.start();Thread.sleep(20);check(!armed.get(),"different helper instance cannot overtake old lazy cancellation");
++  android.content.ContentResolver.block.countDown();arm.join(3000);Handler.drainMain();check(armed.get()&&android.content.ContentResolver.watching&&closures.get()==0,"new owner watch survives old cancel ACK and stale continuation");
++  System.out.println("PASS "+checks+" actual terminal worker/helper ACK, blocked policy, launch scopes, retries and unavailable-selection checks");
++ }
++}
++'''
++def main():
++ java=ROOT/'apps/native-renderer-android/src/main/java'/PKG;s=(java/'NativeRendererMetaUpdate.java').read_text();fixture=TEST
++ for token,signature in [('__COLD__','    static void trustedColdLaunch('),('__BIND__','        void bind('),('__TRUSTED__','        boolean trusted('),('__ACK__','        void acknowledge('),('__PACKAGE__','    private static long packageCode('),('__TERMINAL__','    private static synchronized TerminalExit terminal('),('__EXIT__','    static void intentionalExit('),('__FINISH__','    static void finishIntentionalExit(')]:fixture=fixture.replace(token,method(s,signature))
++ fixture=fixture.replace('__CLASS__',block(s,'    private static final class TerminalExit'))
++ stubs=dict(STUBS)
++ stubs['android/app/Activity.java']='package android.app;public class Activity extends android.content.Context{public ClassLoader getClassLoader(){return getClass().getClassLoader();}public final long epoch;public Activity(long e){epoch=e;}public boolean isFinishing(){return false;}public boolean isDestroyed(){return false;}}'
++ stubs['android/os/Looper.java']='package android.os;public class Looper{static final Looper MAIN=new Looper(null);static final Thread MAIN_THREAD=Thread.currentThread();final java.util.concurrent.ScheduledExecutorService executor;Looper(java.util.concurrent.ScheduledExecutorService e){executor=e;}public static Looper getMainLooper(){return MAIN;}public static Looper myLooper(){return Thread.currentThread()==MAIN_THREAD?MAIN:null;}}'
++ stubs['android/os/HandlerThread.java']='package android.os;public class HandlerThread{final Looper looper;public HandlerThread(String n){looper=new Looper(java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r->{Thread t=new Thread(r,n);t.setDaemon(true);return t;}));}public void start(){}public Looper getLooper(){return looper;}public boolean quitSafely(){looper.executor.shutdown();return true;}}'
++ stubs['android/os/Handler.java']='package android.os;public class Handler{static final java.util.Queue<Runnable> main=new java.util.concurrent.ConcurrentLinkedQueue<>();final Looper l;public Handler(Looper l){this.l=l;}public boolean post(Runnable r){if(l==Looper.MAIN)main.add(r);else l.executor.execute(r);return true;}public boolean postDelayed(Runnable r,long delay){l.executor.schedule(r,Math.min(delay,100),java.util.concurrent.TimeUnit.MILLISECONDS);return true;}public static void drainMain(){Runnable r;while((r=main.poll())!=null)r.run();}}'
++ stubs['android/util/Log.java']='package android.util;public class Log{public static void w(String t,String m){}}'
++ stubs['android/content/Context.java']=stubs['android/content/Context.java'].replace('public String getPackageName()', 'public Context getApplicationContext(){return this;}public String getPackageName()')
++ stubs['android/content/pm/PackageManager.java']=stubs['android/content/pm/PackageManager.java'].replace('public static android.os.Bundle metadata;','public static android.os.Bundle metadata;public static volatile boolean unavailable;').replace('public PackageInfo getPackageInfo(String p,int f){','public PackageInfo getPackageInfo(String p,int f){if(unavailable)throw new IllegalStateException();').replace('public ApplicationInfo getApplicationInfo(String p,int f){','public ApplicationInfo getApplicationInfo(String p,int f){if(unavailable)throw new IllegalStateException();')
++ stubs['android/content/ContentResolver.java']=r'''package android.content;public class ContentResolver{
++ public static volatile int calls,cancelCalls,readyCalls;public static volatile boolean watching=true,mainIpc,allowCancel=true;public static volatile java.util.concurrent.CountDownLatch block;
++ public static void reset(){calls=cancelCalls=readyCalls=0;watching=allowCancel=true;mainIpc=false;block=null;}
++ public android.os.Bundle call(android.net.Uri uri,String m,String arg,android.os.Bundle a){calls++;if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper())mainIpc=true;if(m.equals("cancel-watch")){cancelCalls++;try{if(block!=null)block.await();}catch(Exception e){throw new RuntimeException(e);}if(allowCancel)watching=false;}if(m.equals("arm-update"))watching=true;if(m.equals("launch-ready")){readyCalls++;watching=false;}
++ android.os.Bundle r=new android.os.Bundle();r.putInt("v",1);r.putInt("protocol",3);r.putInt("monitor_protocol",3);r.put("monitor",true);r.put("accepted",!m.equals("cancel-watch")||allowCancel);r.put("watching",watching);return r;}}
++'''
++ extras=[]
++ if len(sys.argv)>1:
++  helper=Path(sys.argv[1]);extras=[str(helper/'BootPolicy.java'),str(helper/'WatchPolicy.java')]
++  stubs['android/content/WatchBridge.java']=r'''package android.content;import org.viscereality.atmungsraum.boot.*;public class WatchBridge{
++   static final class Host implements WatchPolicy.Host{long version=15;int launches;boolean save=true;WatchPolicy.Ledger ledger=new WatchPolicy.Ledger(4,new java.util.HashSet<String>(),null);
++    public boolean enabled(){return true;}public boolean overlayAllowed(){return true;}public long currentBoot(){return 4;}public long now(){return android.os.SystemClock.now;}public WatchPolicy.Ledger load(){return ledger;}public boolean save(WatchPolicy.Ledger l){if(!save)return false;ledger=l;return true;}public BootPolicy.Target resolveCurrentTarget(){return new BootPolicy.Target(BootPolicy.TARGET_PACKAGE,"Current",true,true,true,version,3,true);}public void dispatchFallback(BootPolicy.Target t){launches++;}}
++   static Host h;public static void reset(){h=new Host();if(!WatchPolicy.armBoot(h,h.resolveCurrentTarget()).accepted)throw new AssertionError();}public static boolean watching(){return WatchPolicy.watching(h);}
++   public static boolean call(String m,android.os.Bundle args,boolean persist){h.save=persist;return m.equals("arm-update")?WatchPolicy.armUpdate(h,(String)args.get("attempt"),(Long)args.get("installed_code"),(Long)args.get("target_code"),(Long)args.get("boot_count"),(Long)args.get("deadline_elapsed")).accepted:WatchPolicy.ack(h,m,(Long)args.get("installed_code"),(Long)args.get("boot_count"),(Long)args.get("deadline_elapsed")).accepted;}
++   public static boolean replacementDoesNotLaunch(){h.version=16;WatchPolicy.poll(h);h.version=15;return h.launches==0;}}
++'''
++  resolver=stubs['android/content/ContentResolver.java']
++  resolver=resolver.replace('block=null;}','block=null;WatchBridge.reset();}')
++  resolver=resolver.replace('if(allowCancel)watching=false;','').replace('if(m.equals("arm-update"))watching=true;','').replace('readyCalls++;watching=false;','readyCalls++;')
++  resolver=resolver.replace('android.os.Bundle r=new android.os.Bundle();','boolean accepted=WatchBridge.call(m,a,allowCancel);watching=WatchBridge.watching();android.os.Bundle r=new android.os.Bundle();').replace('!m.equals("cancel-watch")||allowCancel','accepted')
++  stubs['android/content/ContentResolver.java']=resolver
++  fixture=fixture.replace('policyRelease.countDown();','check(android.content.WatchBridge.replacementDoesNotLaunch(),"real helper WatchPolicy does not fallback after durable intentional cancel");policyRelease.countDown();') if 'policyRelease.countDown();' in fixture else fixture.replace('release.countDown();','check(android.content.WatchBridge.replacementDoesNotLaunch(),"real helper WatchPolicy does not fallback after durable intentional cancel");release.countDown();',1)
++ with tempfile.TemporaryDirectory(prefix='rq-terminal-worker-') as tmp:
++  out=Path(tmp);files=[]
++  for path,body in stubs.items():
++   p=out/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(body);files.append(str(p))
++  p=out/'NativeRendererMetaUpdate.java';p.write_text(fixture)
++  subprocess.run(['javac','--release','8','-d',tmp,*files,*extras,str(java/'NativeRendererMetaUpdateHelper.java'),str(p)],check=True)
++  subprocess.run(['java','-cp',tmp,PKG.replace('/','.')+'.NativeRendererMetaUpdate'],check=True)
++if __name__=='__main__':main()
+diff --git a/tools/checks/test_meta_update_terminal_exit.py b/tools/checks/test_meta_update_terminal_exit.py
+new file mode 100644
+index 00000000..87fae01e
+--- /dev/null
++++ b/tools/checks/test_meta_update_terminal_exit.py
+@@ -0,0 +1,68 @@
++"""Execute actual terminal dispatch and generated writer-ACK closure methods."""
++from pathlib import Path
++import subprocess,tempfile
++from test_experiment_gateway_dedupe import method
++ROOT=Path(__file__).resolve().parents[2]
++PKG='io/github/mesmerprism/rustyquest/native_renderer'
++TEST=r"""package io.github.mesmerprism.rustyquest.native_renderer;
++import android.content.Context;import android.app.Activity;
++class NativeRendererExperimentLaunchAuthority {static void invalidatePending(){}}
++class PanelImmersiveHandoff {static void cancelActiveForTerminalExit(){}}
++class NativeRendererMetaUpdate {static int cancellations;static Runnable pending;static void intentionalExit(Context context,long g,long d){cancellations++;}static void finishIntentionalExit(Context context,long g,long d,Runnable r){pending=r;}}
++class NativeRendererSelfKioskApplication {static int finishes;static int finishOwnedActivitiesForTerminalExit(Activity a){finishes++;return 1;}}
++class NativeRendererSelfKioskService {
++ static final Object TERMINAL_LOCK=new Object();static NativeRendererSoftKioskCoordinator.Action pendingTerminal;
++ static void resumePendingTerminal(Context c){}
++ __DISPATCH__
++}
++class Generated {
++ static final Object PRESENTATION_LOCK=new Object();static boolean terminalIntentAdmitted=true,terminalFinishConsumed;static Object terminalAdmission=new Object();static long terminalGuardGeneration=42,terminalHomeEpisode=1;
++ __FINISH__
++ __COMPLETE__
++}
++public class TerminalExitTest {
++ static int checks;static void check(boolean b,String m){checks++;if(!b)throw new AssertionError(m);}
++ public static void main(String[] a){
++  NativeRendererSoftKioskCoordinator c=NativeRendererSoftKioskCoordinator.process();c.useSelfWatchdog();c.armFromExplicitColdLaunch(42,NativeRendererForegroundGuardPolicy.Presentation.IMMERSIVE,"experimenter");
++  c.updateServiceState(NativeRendererSoftKioskCoordinator.ServiceState.CONNECTED);c.observeOwnSurface(NativeRendererForegroundGuardPolicy.NATIVE_ACTIVITY,42,10);
++  for(int i=1;i<=3;i++){NativeRendererSoftKioskCoordinator.Action action=c.observeSelfDeparture(42,i,i*1000);if(i==3)NativeRendererSelfKioskService.dispatchTerminal(new Context(),action);else c.observeOwnSurface(NativeRendererForegroundGuardPolicy.NATIVE_ACTIVITY,42,i*1000+1);}
++  check(c.snapshot().terminal,"real protected triple-menu escape reaches terminal coordinator");
++  if(a.length==0)check(NativeRendererMetaUpdate.cancellations==1,"every admitted terminal dispatch begins intentional watch cancellation");
++  Activity activity=new Activity();
++  Generated.finishTerminalSaveAndExit(activity,true,7,"panel-save-and-exit-7",0);check(NativeRendererMetaUpdate.pending==null,"missing writer ACK never registers cancellation continuation");
++  Generated.finishTerminalSaveAndExit(activity,true,-1,"panel-save-and-exit-7",12);check(NativeRendererMetaUpdate.pending==null,"invalid writer generation never registers continuation");
++  Generated.finishTerminalSaveAndExit(activity,true,7,"panel-save-and-exit-7",12);
++  check(activity.finishes==0&&!Generated.terminalFinishConsumed,"writer ACK alone cannot close before durable cancellation ACK");
++  check(NativeRendererMetaUpdate.pending!=null,"original writer ACK retained as deferred continuation");
++  Runnable original=NativeRendererMetaUpdate.pending;original.run();
++  check(activity.finishes==1&&Generated.terminalFinishConsumed,"positive cancellation continuation closes once");
++  original.run();check(activity.finishes==1,"duplicate completion never closes twice");
++  Generated.terminalFinishConsumed=false;Generated.terminalAdmission=new Object();Generated.finishTerminalSaveAndExit(activity,true,7,"panel-save-and-exit-7",12);original=NativeRendererMetaUpdate.pending;
++  Generated.terminalAdmission=new Object();original.run();check(activity.finishes==1&&!Generated.terminalFinishConsumed,"replacement terminal admission rejects stale cancellation callback");
++  Generated.finishTerminalSaveAndExit(activity,true,7,"foreign",12);Generated.finishTerminalSaveAndExit(activity,true,7,"panel-save-and-exit-7",0);
++  check(activity.finishes==1,"writer operation and positive shutdown ACK remain required");
++  System.out.println("PASS "+checks+" actual common terminal dispatch/generated writer-ACK/cancel-ACK fences");
++ }
++}"""
++STUBS={
++'android/content/Context.java':'package android.content;public class Context{public static final String ACTIVITY_SERVICE="activity";public Object getSystemService(String s){return null;}public String getPackageName(){return "own";}}',
++'android/app/Activity.java':'package android.app;public class Activity extends android.content.Context{public int finishes;public boolean isDestroyed(){return false;}public boolean isFinishing(){return false;}public void finishAndRemoveTask(){finishes++;}}',
++'android/app/ActivityManager.java':'package android.app;public class ActivityManager{public java.util.List<AppTask> getAppTasks(){return new java.util.ArrayList<>();}public static class AppTask{public TaskInfo getTaskInfo(){return new TaskInfo();}public void finishAndRemoveTask(){}}public static class TaskInfo{public android.content.Intent baseIntent;public int id;}}',
++'android/content/Intent.java':'package android.content;public class Intent{public ComponentName getComponent(){return null;}}',
++'android/content/ComponentName.java':'package android.content;public class ComponentName{public String getPackageName(){return "own";}}',
++'android/util/Log.java':'package android.util;public class Log{public static void i(String t,String m){}}'
++}
++def main():
++ java=ROOT/'apps/native-renderer-android/src/main/java'/PKG
++ build=(ROOT/'tools/Build-NativeRendererAndroid.ps1').read_text()
++ finish=method(build,'    static void finishTerminalSaveAndExit(').replace('$currentPanelGuard','true')
++ complete=method(build,'    private static void completeTerminalSaveAndExit(').replace('$currentPanelGuard','true') if '    private static void completeTerminalSaveAndExit(' in build else ''
++ fixture=TEST.replace('__DISPATCH__',method((java/'NativeRendererSelfKioskService.java').read_text(),'    static void dispatchTerminal(')).replace('__FINISH__',finish).replace('__COMPLETE__',complete)
++ with tempfile.TemporaryDirectory(prefix='rq-terminal-cancel-') as tmp:
++  out=Path(tmp);sources=[]
++  for path,body in STUBS.items():
++   p=out/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(body);sources.append(str(p))
++  p=out/'TerminalExitTest.java';p.write_text(fixture)
++  subprocess.run(['javac','--release','8','-d',tmp,*sources,str(p),str(java/'NativeRendererSoftKioskCoordinator.java'),str(java/'NativeRendererForegroundGuardPolicy.java')],check=True)
++  subprocess.run(['java','-cp',tmp,PKG.replace('/','.')+'.TerminalExitTest'],check=True)
++if __name__=='__main__':main()
 diff --git a/tools/checks/test_native_controller_only_input.py b/tools/checks/test_native_controller_only_input.py
 new file mode 100644
 index 00000000..ca2e0c42

@@ -1,5 +1,36 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.24-dev — qualified repaired code25-r2 baseline, 2026-11-17
+
+Repairs R1/R3/R5 from the [implementation review](../../for-ai/REVIEW-2026-11-17.md).
+Native source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`, tree
+`df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`. The cumulative source patch is
+2,208,323 bytes, SHA256
+`0b8f3fafcf901b74531f0f58635a7e054f6340f84fc5a15ce3b82715e3656b7f`;
+isolated-index reconstruction reproduces the exact tree.
+
+Signed25-r2 is65,698,950bytes, SHA256
+`226b90cedc56b7b44a8cdba885260ca280c59fce381341a9d7f5677a3e027951`.
+Independent qualification passes1114 checks, including39 actual signed DEX
+method paths and6 compiled flow guards. Immutable24 and seven damaged instruction
+variants fail the new guard. Same signer, SDK207/helper3, controller-only
+manifest, private visual/audio payloads and900-second configuration are verified.
+No future main-study/probe audio authoring is activated in this build.
+
+Technical clock/source or spontaneous player faults preserve selected Polar
+visual state while retiring input readiness, model and confirmation evidence.
+Explicit operator recovery retains its temporary Automatic behavior. Protected
+intentional exit waits for durable helper cancellation plus writer ACK; the
+queued-update exit keeps its watch. Expired main-loop handoffs cannot change
+kiosk state. Native896 tests/6 intentional ignores, all14 updater suites,
+Android34/36 compilation and scoped/integration reviews pass.
+
+Private Meta Developer publication is in progress. Public policy remains24 until
+availability is confirmed. No device installation or physical acceptance is
+claimed. Old25-r1 is revoked as an upload target. The successor code26 is reserved
+for the deferred attended running-session update test and must remain unpublished
+until actual repaired25 is RUNNING/rec:true and the coordinating agent releases it.
+
 ## 0.2.23-dev — published Meta code24-r2 baseline, 2026-11-17
 
 Source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`, tree `2444f55f83d0cc02e7c45ac83c4007145889356f`.
@@ -32,13 +63,14 @@ Latest unchecked. Public minimum/latest24 and the matching PWA are live.
 Actual installation/contact/battery acceptance is deferred at the user's request;
 last headset readback remains Meta23. No host installation/restart for24.
 
-## 0.2.24-dev — held code25 version-only update probe, 2026-11-17
+## 0.2.24-dev — revoked code25-r1 version-only update probe, 2026-11-17
 
 Signed25 is65,694,854bytes, SHA256
 `a8a2de290680fcfa76820839ae848c8886406dfd6b5ae559599dd5a3e78b208b`.
 The same source0c82ff and actual DEX/SDK/audio/visual payloads match qualified24;
-1100 signed-package checks pass. It is private and **unpublished**. Publish only
-after actual repaired24 is RUNNING/rec:true for the deferred attended update test.
+1100 signed-package checks passed. It remains private and **unpublished**, but is
+now **revoked as an upload target** because it lacks the review repairs. Use the
+repaired25-r2 baseline above and a new held26 successor for the deferred test.
 
 ## 0.2.22-dev — repaired Meta code23-r2 baseline, 2026-11-17
 
