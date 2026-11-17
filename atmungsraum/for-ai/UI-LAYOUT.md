@@ -11,13 +11,17 @@ outside this sparse checkout). Retain Arial, black/white, blue `#00639c`, gold
 `#a26f19`, the existing authentic VR icon and readable telemetry colors. Reuse
 the site's restrained framed groups, thin left rules, 5–8px corners, and clear
 20–30px spacing. Scope app styles; do not import the promotional root CSS.
-Controls retain a 48px minimum height. Reserve one top row for Bluetooth,
-WLAN, APK and Polar checks, the connected recenter control, and the grey
+Controls retain 48px minimum touch targets. Reserve the top toolbar for Bluetooth,
+WLAN, native control and Polar checks, the connected recenter control, and the grey
 Einstellungen and Aufnahmen icons. Put the row before every page, including
 historical recordings, and above device, installation and Drive dialogs.
 Settings and recordings open their existing pages; return restores the toolbar
 button. Disable recordings while native playback or receipt recovery needs the
 operator's attention. Installation stays on the connection and setup page.
+At widths through375px, use two rows with four columns to retain48px targets;
+reserve the resulting100px toolbar body plus its safe top inset. Wider phones
+retain one row. The native-control icon remains in the first row. APK status
+remains on the existing update/identity page.
 
 Use real HTML/CSS prototypes and actual rendered fixture screens as the visual
 design artifact: these are forms, navigation and existing code-native SVG/CSS
@@ -134,7 +138,10 @@ counted as a strict fit.
   Move shared nodes only on page transitions, never on each telemetry update.
 - Selecting a mode/calibrating remains an explicit existing command. A local
   change-input link must never reuse the calibrate command handler.
-- Saved reconnect does not acquire control; claim/release authority is native.
+- Saved reconnect/foreground resume automatically requests a free native lease.
+  Only fresh native active-role readback confirms control; connection, membership
+  and Polar/input readiness remain separate. Other live owners block acquisition,
+  unknown requests are never replayed, and manual Release pauses auto-claims.
 - The exact two-cycle native progress owns calibration completion. No local
   timers classify success. Confirmed input and requested input stay distinct.
 - Tracking acceptance still binds owner/epoch/generation/attempt/input.
@@ -195,7 +202,9 @@ readiness. Once the operator accepts a method, keep that local judgement only
 while actor/audio/attempt/method/sensor binding and the testing loop remain
 valid. Keep Session visible through a transient unknown phase, with Start
 explicitly disabled until the existing native readiness gate is true again.
-No local acceptance authorizes Arm, recording or native readiness.
+Retire that judgement when native leaves IDLE, even if an older snapshot keeps
+setup.stage at testing after recording. No local acceptance authorizes Arm,
+recording or native readiness.
 
 A stale-revision retry is permitted only for the original valid bound explicit
 rejected/accepted:false result, never an unknown/pending/accepted result. Read

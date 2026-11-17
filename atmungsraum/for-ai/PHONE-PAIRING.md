@@ -153,17 +153,42 @@ phone can claim an unowned/expired 15-second lease; only that phone's
 authenticated status renews it. Other trusted phones wait. A release/claim
 uses the enrolled `controller-access` action and closed payload
 `{v:1,id,op,expected_control_revision}`, where op is `claim` or `release`.
-Reconnecting a saved membership never claims control; the phone's Claim button
-is an explicit separate action and stays disabled while another phone owns it.
-An alive owner is not silently replaced. A disconnected controller does not
+The experiment's phone is the intended remote operator. After authenticated
+connection or foreground resume, it automatically requests the existing native
+claim for a free/expired lease. Several memberships remain saved and exactly
+one native lease remains active. A live other owner is never silently replaced:
+show its label and ask the operator to close that other app or release there.
+Continue bounded status reads until native reports free control. No takeover
+command exists in the current native contract. A disconnected controller does not
 erase or finalize a running recording. Explicit handover retires deferred
 mutations from the old controller; it does not replay them under a new owner.
 Keep existing runtime/generation/replay fences in addition to the control lease.
 
 Expose saved-phone removal and active-control release in the headset panel.
-Phone UI shows when another controller owns control and offers the appropriate
-claim/release action; it cannot falsely enable experiment mutations while
-waiting. Read-only status and discovery remain separate from control authority.
+Phone UI shows native control in the top-row gamepad indicator, independently
+of authenticated connection and Polar/input readiness. Green requires a fresh
+active-role status readback; a claim response alone cannot grant green. Retire
+green on backgrounding, failed status reads or expiry, charging transport age.
+Show requesting, retrying, occupied, lost and unknown states in measured text
+and the diagnostic popup. The former routine APK toolbar check is replaced;
+actionable APK warnings and the update/identity page remain available.
+
+Before each claim, read status and recheck the current gateway, visibility and
+native barriers. Conclusive non-grants continue while this foreground phone
+wants control and native reports a free lease: five-second spacing for the
+first three requests, then thirty-second spacing. Continue this bounded cadence
+during recording too, with fresh preflight and native admission on every request.
+An occupied lease never receives automatic claims. A lost
+or malformed reply stores the original ID/owner/revision in session storage
+and permits only readback until native confirms active control, advances the
+revision or retires that owner. There is no access-receipt query in this API;
+do not invent one or replay an unknown request. Session/setup receipt journals
+remain unchanged and can be recovered after free control is acquired.
+
+Manual Release pauses automatic claims for this open app. Claim explicitly
+requests control again without bypassing unknown fences or another live owner.
+An authenticated fresh connection still defaults to automatic acquisition.
+Read-only status and discovery remain separate from control authority.
 
 ## Verification
 

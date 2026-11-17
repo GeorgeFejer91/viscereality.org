@@ -37,7 +37,12 @@ operators can see the live H10 preview and download the verified native
 recording after each rehearsal.
 Selected Developer builds use [button-only phone pairing](PHONE-PAIRING.md):
 read-only Bluetooth discovery, matching codes confirmed on both devices,
-several independent saved phones and one explicitly claimed controller lease.
+several independent saved phones and one active native controller lease.
+The authenticated experiment phone automatically acquires free/expired control
+and keeps trying conclusive non-grants at a bounded cadence. Native status alone
+confirms control; another live owner and unknown requests remain protected.
+Manual Release pauses automatic claims for this open app. See the
+[control policy](PHONE-PAIRING.md#membership-and-active-control).
 The headset panel starts closed and opens approval only for a verified incoming
 request. This flow needs no laptop, USB or generated QR. Legacy provisioned
 rehearsal builds retain their existing connection contract.

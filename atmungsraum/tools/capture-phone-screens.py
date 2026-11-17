@@ -267,11 +267,16 @@ export async function joinQuest({ endpoint }) {
       || !['claim', 'release'].includes(value.op)
       || value.op === 'claim' && (access.role !== 'waiting' || access.active_phone)
       || value.op === 'release' && access.role !== 'active') {
-      return { v: 1, id: value.id, state: 'rejected' };
+      throw Error('Fixture controller-access rejected');
+    }
+    if (settings.controlNoGrant && value.op === 'claim') {
+      if (settings.loseControlReply) throw Error('Fixture lost control response');
+      return structuredClone(access);
     }
     Object.assign(access, { role: value.op === 'claim' ? 'active' : 'waiting',
       active_phone: value.op === 'claim' ? 'Fixture-Smartphone' : '', revision: access.revision + 1 });
-    return { v: 1, id: value.id, state: 'confirmed' };
+    if (settings.loseControlReply) throw Error('Fixture lost control response');
+    return structuredClone(access);
   };
   return {
     owner: { ...owner }, initial: snapshot(), status: observedStatus, command: controlled(command),
@@ -1174,15 +1179,14 @@ def capture_phone_pairing(review):
     page.keyboard.press("Enter")
     expect(page.locator("#quest-pairing")).to_be_hidden()
     expect(page.locator("#quest-pairing-code")).to_have_text("")
-    expect(page.locator("#quest-control-claim")).to_be_visible()
+    page.clock.run_for(2100)
+    expect(page.locator("#check-control")).to_have_attribute("data-check", "ok")
     expect(page.locator("#quest-control-release")).to_be_hidden()
     stored = page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair'))")
     assert stored["identity_kind"] == "app-installation" and stored["serial"] == ""
     assert page.evaluate("window.reviewPairingCalls") == ["begin", "phone-confirmed", "approved"]
-    assert page.evaluate("window.reviewAccessCommands") == []
-    review.shot(page, "pairing-approved", "Both buttons confirmed · trusted app-installation owner", page.locator("#quest-control-status"), "Phone pairing")
-    page.locator("#quest-control-claim").focus()
-    page.keyboard.press("Enter")
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
+    review.shot(page, "pairing-approved", "Both buttons confirmed · native control acquired automatically", page.locator("#operator-connect-next"), "Phone pairing")
     expect(page.locator("#operator-connect-next")).to_be_enabled()
     page.locator("#operator-connect-next").click()
     expect(page.locator("#quest-participant")).to_be_visible()
@@ -1229,11 +1233,13 @@ def capture_phone_pairing(review):
     review.shot(page, "pairing-join-retry", "Approved membership survives a lost first connection reply", page.locator("#quest-find"), "Phone pairing")
     page.locator("#quest-find").focus()
     page.keyboard.press("Enter")
-    expect(page.locator("#quest-control-claim")).to_be_visible()
+    expect(page.locator("#quest-find")).to_be_hidden()
+    page.clock.run_for(2100)
+    expect(page.locator("#check-control")).to_have_attribute("data-check", "ok")
     assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).enrollment") == saved["enrollment"]
     assert page.evaluate("window.reviewPairingCalls") == ["begin", "phone-confirmed", "approved"]
-    assert page.evaluate("window.reviewAccessCommands") == []
-    review.shot(page, "pairing-join-recovered", "Retry reuses the approved membership without a second pairing", page.locator("#quest-control-status"), "Phone pairing")
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
+    review.shot(page, "pairing-join-recovered", "Retry reuses approved membership and acquires free native control", page.locator("#operator-connect-next"), "Phone pairing")
     page.context.close()
 
 
@@ -1246,13 +1252,13 @@ def capture_controller_access(review):
       window.reviewInitialSetup={r:2,input:'polar-tilt',ready:true,calibration:'ready',attempt:1,
         target_frames:1411200,completed_frames:1411200,input_phase:'hold',input_volume01:.5};"""
     page = review.page(initial + "window.reviewInitialQuest.access.active_phone='';")
-    expect(page.locator("#quest-control-status")).to_contain_text("Steuerung ist frei")
+    expect(page.locator("#check-bridge")).to_have_attribute("data-check", "ok")
     page.clock.run_for(2100)
-    expect(page.locator("#quest-control-claim")).to_be_visible()
+    expect(page.locator("#quest-control-claim")).to_be_hidden()
     expect(page.locator("#quest-participant")).to_be_hidden()
-    assert page.evaluate("window.reviewAccessCommands") == []
-    assert page.evaluate("window.reviewQuest.access.role") == "waiting"
-    review.shot(page, "control-saved-free", "Saved phone reconnects · a free lease still needs explicit claim", page.locator("#quest-control-claim"), "Controller access")
+    assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
+    assert page.evaluate("window.reviewQuest.access.role") == "active"
+    review.shot(page, "control-saved-free", "Saved phone reconnects · native control acquired automatically", page.locator("#operator-connect-next"), "Controller access")
     page.context.close()
     page = review.page(initial)
     status = page.locator("#quest-control-status")
@@ -1268,11 +1274,9 @@ def capture_controller_access(review):
     assert page.evaluate("window.reviewAccessCommands") == []
     assert page.evaluate("window.reviewQuest.access.revision") == 4
     wait_state(page, access={"v": 1, "role": "waiting", "active_phone": "", "revision": 5})
-    expect(status).to_contain_text("Steuerung ist frei")
-    expect(claim).to_be_enabled()
-    claim.focus()
-    claim.press("Enter")
-    expect(status).to_have_text("Dieses Smartphone steuert die Quest.")
+    page.clock.run_for(2100)
+    expect(page.locator("#check-control")).to_have_attribute("data-check", "ok")
+    expect(status).to_contain_text("Dieses Smartphone steuert die Quest.")
     expect(page.locator("#patient-fields")).to_be_enabled()
     show_operator(page,'settings')
     expect(release).to_be_visible()
@@ -1285,8 +1289,8 @@ def capture_controller_access(review):
     review.shot(page, "control-recentered", "Active phone · recenter confirmation", operator_status, "Controller access")
     release.focus()
     release.press("Enter")
-    expect(status).to_contain_text("Steuerung ist frei")
-    expect(operator_status).to_have_text("Übernimm die Quest-Steuerung auf diesem Smartphone.")
+    expect(status).to_contain_text("Steuerung freigegeben")
+    expect(operator_status).to_contain_text("Steuerung freigegeben")
     expect(operator_status).not_to_contain_text("VR-Szene zentriert")
     expect(page.locator("#quest-polar")).to_be_hidden()
     expect(claim).to_be_enabled()

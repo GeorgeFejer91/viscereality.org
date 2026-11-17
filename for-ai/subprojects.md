@@ -126,8 +126,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   headset compare a code and each confirm with a button; no headset typing,
   laptop, USB or generated QR is required. The headset approval panel opens
   only for a verified incoming request, never at startup. Multiple independently
-  revocable phones may be saved, with one active controller and explicit
-  claim/release. Reconnecting a saved phone does not acquire control. See the
+  revocable phones may be saved, with one active native controller. Authenticated
+  connection/resume automatically claims free/expired control and continuously
+  retries conclusive non-grants at a bounded cadence. Native status alone grants
+  control; another live owner and unknown requests remain protected. Manual
+  Release pauses automatic claims for this open app. See the
   [pairing contract and acceptance state](../atmungsraum/for-ai/PHONE-PAIRING.md).
 
 - Native breathing setup (2026-11-14): one Quest PCM-frame clock supplies
