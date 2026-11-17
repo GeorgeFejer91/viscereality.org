@@ -715,6 +715,9 @@ after saving a complete run. Device acceptance remains open.
   confirmed main start frame but no duration field; use its fixed 900-second
   boundary only for the authenticated shared-loop main-only catalog.
   See [session preview verification](VERIFICATION.md#quest-backed-session-preview--2026-11-17).
+- [x] Port the playground's single-viewport rules and automatic release gate
+  to the production PWA. The gate qualified 338 rendered Chromium states
+  against commit `faff9b4`. See [smartphone rule verification](VERIFICATION.md#smartphone-ui-rule-port--2026-11-17).
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 
