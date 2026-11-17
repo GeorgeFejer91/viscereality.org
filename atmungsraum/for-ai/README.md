@@ -75,6 +75,7 @@ Read common rules first, then the documents needed for the task:
 - [COLLABORATOR-QUEST-SETUP.md](COLLABORATOR-QUEST-SETUP.md): provision another
   headset and phone using Meta distribution and the supplied signed boot/update
   helper, with acceptance checks and source links.
+- [RUSTDESK-PHONE-TESTING.md](RUSTDESK-PHONE-TESTING.md) covers installed Android PWA validation through RustDeskMCP.
 - [VR-UI-TESTING.md](VR-UI-TESTING.md) covers Meta XR Operator setup, VR UI
   interaction checks and headset evidence.
 - [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers the Windows periodic

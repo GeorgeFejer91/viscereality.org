@@ -25,6 +25,9 @@ areas, the keyboard and the installed PWA on the supported physical phone
 when emulation cannot exercise them. Record the candidate SHA, browser or
 device, viewport, measured states and results.
 
+Follow the [RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md)
+for installed-phone input, capture and native receipt evidence.
+
 ### Smartphone UI rule port — 2026-11-17
 
 The installed pre-push hook tested the archived `faff9b4` candidate and
