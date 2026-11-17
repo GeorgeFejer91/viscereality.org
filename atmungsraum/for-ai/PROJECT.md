@@ -52,7 +52,12 @@ malware/detailed security passed, Quest2/13+ and Require Latest unchecked retain
 Public minimum/latest is25. Source/evidence PR51 merged0a7fb24;
 [Pages44137540961](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44137540961)
 succeeded and all11 checked files match Git, including the reconstructable patch.
-Final policy publication is being checked. No new headset observation is claimed.
+Final policy PR52 merged9e35559;
+[Pages44138654869](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44138654869)
+succeeded and all11 checked files match Git. Live Chromium confirms24 requires
+the sequential update step,25 continues without that extra screen, and both
+current-session journal controls and original-hash offline archives still work.
+No new headset observation is claimed.
 
 Ruling: existing publication authorization applies to verified repairs; no repeat
 approval is needed. The old held version-only25 remains unpublished and is not
@@ -66,8 +71,11 @@ all input modes and tracking-loss continuity, then start Haupt-Runde. Do not
 publish26 until the actual25 session has advancing timer and rec:true. Verify
 no update interrupts that run and monitor the post-save update/relaunch. Overall
 hardware/session/update acceptance remains open. No headset/phone command was
-issued during these repairs. Both local source worktrees are committed; final
-GitHub/Pages/live policy receipts accompany the published increment.
+issued during these repairs. Native source is committed atf5ea725c; web runtime,
+source patch and policy are synchronized through main9e35559. Final handoff
+evidence is synchronized as documentation without changing runtime or policy.
+All build leases are released. No unresolved software-review finding remains;
+the deferred physical acceptance above keeps the overall project goal open.
 
 ### PWA startup update and Quest reconnect — 2026-11-17
 
