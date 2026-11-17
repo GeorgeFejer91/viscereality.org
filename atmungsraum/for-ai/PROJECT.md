@@ -16,6 +16,16 @@
   changed Wi-Fi addresses. No Android device was connected during this
   increment. Leave the separate wearer and recording checklist open.
 
+The runtime commit e3a6969 reached GitHub main and deployed in
+[Pages run 44131085006](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44131085006)
+with deployment API status succeed. The entry, versioned app/controller
+and stylesheet, and five affected notes matched the Git bytes. Live
+Chromium passed changed-address discovery and Bluetooth-off recovery with
+synthetic transport. Local Node tests: 297 passed, 9 skipped; the focused
+layout, native-companion status fixture and remote context gate passed.
+Next: reopen the installed standalone Pixel app at the deployed release and
+repeat both connection cases with the actual headset.
+
 ### Unattended comprehensive review — 2026-11-17
 
 The user is unavailable for device tests and requests a comprehensive review.
