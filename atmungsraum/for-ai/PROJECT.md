@@ -445,16 +445,19 @@ cloud-backed files; it was left untouched. The verified runtime commit
   Play the verified German instruction before the official timed start,
   keep the phone on the pending instruction, and derive the run's progress
   and completion from the Quest media.
-- [ ] Bind the authored programme and the post-session outro to the selected
-  Quest playback owner. Preserve preparation, recording provenance and the
-  900-second completion boundary. Qualify a signed build on a physical Quest.
+- [x] Bind the authored Haupt-Runde programme and separate post-session
+  outro to the Quest playback owner. Preserve preparation, recording
+  provenance and the 900-second completion boundary.
+- [ ] Qualify a signed authored build on a physical Quest 2 with the
+  installed Pixel 10 PWA, including headset audio, Polar input and export.
 
 The authored Probe-Runde package stages the supplied 45.4-second German
 instruction separately from the 300-second plan. The timed plan uses the
 study phase library and ends on an exhale. The authored candidate exposes
 the guided Probe-Runde and Freie Erkundung through the Quest's verified
-scenario list. The Haupt-Runde programme and outro still need native
-playback integration. The authored candidate still needs device acceptance.
+scenario list. The authored Haupt-Runde binds one lossless 900-second
+programme to the recording clock and plays the separate 19-second outro
+after saving a complete run. Device acceptance remains open.
 
 ### Separation of preparation and main study — 2026-11-16
 

@@ -109,7 +109,7 @@ def capture_layout(review):
         page.locator('#preview-continue').click()
         shot(page,'battery','#battery-next')
         c.review_battery(page)
-        expect(page.get_by_role('region', name='Vorbereitung').get_by_role('radio')).to_have_count(2)
+        expect(page.get_by_role('region', name='Probe-Runde').get_by_role('radio')).to_have_count(2)
         expect(page.get_by_role('region', name='Hauptstudie').get_by_role('radio')).to_have_count(1)
         expect(page.locator('#quest-condition')).to_have_count(0)
         requested_scenario = {'390':'haupt-15', '320':'probe-5'}.get(size, 'probe-anleitung')

@@ -649,6 +649,25 @@ the media backend and the staged authored catalog. Phone-pairing assembly
 resolved all 96 assets. Signed installation and physical playback remain
 open.
 
+## Authored Haupt-Runde playback and outro — 2026-11-17
+
+The verified 39,690,000-frame FLAC includes both controls, instructions,
+guided cues and music with its original fades. Its decoded PCM hash
+matches the first 900 seconds of the 919-second review render. The separate
+19-second outro retains the original WAV and is outside the recording clock.
+The verified participant plan selects this source while existing packages
+retain the continuous shared loop.
+
+The Rust worker finalizes the recording on natural completion and authorizes
+the outro only after a complete save. A late end while held remains
+incomplete and does not authorize the outro. All 104 selected Rust session
+tests passed with two ignored. Java passed 53 gateway checks, catalog
+tampering checks, media backend checks and the generated outro cancellation
+and duplicate-delivery checks. All 306 web tests passed. Phone-pairing
+assembly resolved the 97 bound audio assets. Chromium rendered 140 layout
+states and passed the controller and startup walkthroughs. Signed
+installation, physical audio output and the installed Pixel app remain open.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,

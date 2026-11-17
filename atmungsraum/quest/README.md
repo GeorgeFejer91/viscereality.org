@@ -105,8 +105,8 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. This branch's cumulative patch reconstructs the authored-audio source candidate
-`b9aac44e77bddd016e4cfda2f608410b83bab7ee` with SHA-256 `2402a0e797a8c07d5a69a2926676f08f21a231a4e3788e53f8a360dace8480c9`
-(2,268,268 bytes). The
+`ccf68b67db792bbfddec20d9b81276d3497cc559` with SHA-256 `6e3e94a169487f4e9b9e9fce2629061e6a2dede6e4ec30b879018599f4432e76`
+(2,281,677 bytes). The
 [Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
 is the baseline for the following release evidence. Its cumulative patch
 reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching
@@ -148,9 +148,10 @@ before the first Polar calibration and exposes cancellation on the phone.
 The candidate also advertises the verified Freie Erkundung track and uses
 its media positions and natural end during participant recording. The
 guided Probe-Runde plays the verified instruction before the timed run and
-uses the Quest media clock for the five minutes. The Haupt-Runde programme
-and outro still need native integration. The authored candidate still
-needs signed headset qualification.
+uses the Quest media clock for the five minutes. The authored Haupt-Runde
+uses one verified FLAC for the 900-second recording and plays the original
+19-second outro after a completed save. The authored source still needs
+signed headset qualification.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,

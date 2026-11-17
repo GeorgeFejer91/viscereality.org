@@ -1,13 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { access, copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { SCENARIOS } from '../audio/scenario-protocol.js';
 import { stageQuestAudio } from '../quest/stage-audio.mjs';
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+const run = promisify(execFile);
 
 test('stages original scenario JSON and every numbered cue with reproducible identities', async t => {
   const scratch = await mkdtemp(join(tmpdir(), 'atmungsraum-quest-audio-'));
@@ -74,11 +78,26 @@ test('stages original scenario JSON and every numbered cue with reproducible ide
   await assert.rejects(() => access(wrongPrompt), { code: 'ENOENT' });
 });
 
-test('the authored Quest package binds the full exploration recording and calibration instruction', async t => {
+test('the authored Quest package binds the exact main mix, separate outro, exploration and calibration instruction', async t => {
   const scratch = await mkdtemp(join(tmpdir(), 'atmungsraum-authored-audio-'));
   t.after(() => rm(scratch, { recursive: true, force: true }));
   const output = join(scratch, 'package');
   const catalog = await stageQuestAudio({ output, mainStudy: true });
+  const main = JSON.parse(await readFile(join(output, 'audio/scenarios/haupt-15.json'), 'utf8'));
+  assert.equal(main.timed_audio.duration_frames, 39_690_000);
+  assert.equal(main.post_session_audio.offset_frames, main.timed_audio.duration_frames);
+  assert.equal(main.post_session_audio.duration_frames, 837_900);
+  for (const clip of [main.timed_audio, main.post_session_audio]) {
+    const bytes = await readFile(join(output, clip.path));
+    assert.equal(bytes.length, clip.bytes);
+    assert.equal(digest(bytes), clip.sha256);
+    assert.ok(catalog.files.some(entry => entry.path === clip.path && entry.sha256 === clip.sha256));
+  }
+  const review = join(scratch, 'review.wav');
+  await run(process.execPath, [fileURLToPath(new URL('../tools/render-main-study.mjs', import.meta.url)), review]);
+  const pcmHash = async (source, range = []) => (await run('ffmpeg', ['-v', 'error', '-i', source, ...range,
+    '-c:a', 'pcm_s16le', '-f', 'hash', '-hash', 'sha256', '-'])).stdout.trim();
+  assert.equal(await pcmHash(join(output, main.timed_audio.path)), await pcmHash(review, ['-t', '900']));
   const exploration = catalog.scenarios.find(({ id }) => id === 'free-exploration');
   assert.ok(exploration, 'the headset can discover a packaged exploration timeline');
   assert.equal(exploration.total_frames, 19_715_793);

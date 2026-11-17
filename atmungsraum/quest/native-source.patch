@@ -10940,7 +10940,7 @@ index bc962d97..e224cabe 100644
          None
      };
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..594c6a69 100644
+index ee0417f3..e6d6e72c 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -237,6 +237,7 @@ struct Projection {
@@ -11201,16 +11201,18 @@ index ee0417f3..594c6a69 100644
              ParsedOperation::AudioEnded => SessionCommand::AudioEnded,
              ParsedOperation::AudioError => SessionCommand::AudioError,
              ParsedOperation::AudioPrepared => SessionCommand::AudioPrepared,
-@@ -1389,6 +1476,8 @@ impl SessionWorker {
+@@ -1389,6 +1476,10 @@ impl SessionWorker {
              ParsedOperation::RestartToExperimenter => SessionCommand::RestartToExperimenter,
              ParsedOperation::SaveAndExit => SessionCommand::SaveAndExit,
          };
 +        let finished_authored_audio = matches!(parsed.operation, ParsedOperation::AudioEnded)
 +            && self.observe_authored_audio_end(parsed.expected_generation, parsed.at);
++        let finished_authored_main = finished_authored_audio && self.authored_audio.as_ref()
++            .is_some_and(|audio| audio.scenario == "haupt-15");
          let outcome = self.apply_controller(parsed.expected_generation, parsed.at, command);
          if !outcome.accepted {
              self.pending_start = None;
-@@ -1404,6 +1493,22 @@ impl SessionWorker {
+@@ -1404,6 +1495,22 @@ impl SessionWorker {
              );
              return;
          }
@@ -11233,7 +11235,7 @@ index ee0417f3..594c6a69 100644
          if matches!(parsed.operation, ParsedOperation::Start { .. }) {
              self.recording_requires_polar = pending_requires_polar;
          }
-@@ -1450,7 +1555,14 @@ impl SessionWorker {
+@@ -1450,7 +1557,22 @@ impl SessionWorker {
          // In particular a repeated B/Home interaction observes Saving/Exiting
          // while finalization owns the control worker and cannot emit a route.
          self.refresh_controller_projection();
@@ -11243,13 +11245,21 @@ index ee0417f3..594c6a69 100644
 +                let stop = self.apply_internal(parsed.at, SessionCommand::RestartToExperimenter)?;
 +                self.refresh_controller_projection();
 +                self.process_effects(stop.effects, parsed.at)?;
++                if finished_authored_main && matches!(self.controller.recording_result(), RecordingResult::Saved { completed: true }) {
++                    self.projection_write(|projection| {
++                        projection.control_receipt_generation = outcome.generation;
++                        projection.control_receipt_revision = projection.control_receipt_revision.saturating_add(1);
++                        projection.control_event = "main-outro";
++                        projection.control_event_elapsed_realtime_ns = parsed.at.get();
++                    });
++                }
 +            }
 +            Ok(())
 +        });
          match result {
              Ok(()) => {
                  if let ParsedOperation::Start {
-@@ -1489,6 +1601,15 @@ impl SessionWorker {
+@@ -1489,6 +1611,15 @@ impl SessionWorker {
      }
  
      fn apply_bias_change(&mut self, parsed: &ParsedCommand, bias_percent: u8) {
@@ -11265,7 +11275,7 @@ index ee0417f3..594c6a69 100644
          use crate::experiment_session::ExperimentControlState;
          let generation = self.controller.generation();
          let rejection = if parsed.expected_generation != generation {
-@@ -1613,6 +1734,11 @@ impl SessionWorker {
+@@ -1613,6 +1744,11 @@ impl SessionWorker {
          completion_threshold_ns: u64,
          requested: &StartIdentity,
      ) -> Result<ExperimentIdentity, &'static str> {
@@ -11277,7 +11287,7 @@ index ee0417f3..594c6a69 100644
          let inventory = self
              .trusted_inventory
              .as_ref()
-@@ -1648,12 +1774,100 @@ impl SessionWorker {
+@@ -1648,12 +1784,100 @@ impl SessionWorker {
          Ok(expected)
      }
  
@@ -11378,7 +11388,7 @@ index ee0417f3..594c6a69 100644
          self.next_reducer_operation = self.next_reducer_operation.saturating_add(1).max(1);
          self.controller.apply(CommandEnvelope {
              operation: OperationToken::new(self.next_reducer_operation)
-@@ -1714,6 +1928,14 @@ impl SessionWorker {
+@@ -1714,6 +1938,14 @@ impl SessionWorker {
                          Ok(()) => {
                              let _ = identity;
                              self.current_identity = Some(spec.experiment_identity.clone());
@@ -11393,7 +11403,7 @@ index ee0417f3..594c6a69 100644
                              self.current_session_key = Some(spec.started_at.as_str().to_owned());
                              let active_guidance = spec
                                  .experiment_identity
-@@ -1940,6 +2162,14 @@ impl SessionWorker {
+@@ -1940,6 +2172,14 @@ impl SessionWorker {
                                      },
                                  )?
                              };
@@ -11408,7 +11418,7 @@ index ee0417f3..594c6a69 100644
                              // Publish the terminal reducer result before the
                              // route action becomes observable to Android.
                              self.refresh_controller_projection();
-@@ -1964,6 +2194,7 @@ impl SessionWorker {
+@@ -1964,6 +2204,7 @@ impl SessionWorker {
                              }
                          }
                          Err(error) => {
@@ -11416,7 +11426,7 @@ index ee0417f3..594c6a69 100644
                              self.completion_persistence_failure = None;
                              self.set_storage_state("error", "error", 0);
                              let failed = self.apply_internal(
-@@ -2001,6 +2232,7 @@ impl SessionWorker {
+@@ -2001,6 +2242,7 @@ impl SessionWorker {
                      crate::breath_composition_runtime::reset_to_packaged_defaults();
                      let reset_revision = request_particle_packaged_defaults_reset();
                      self.current_identity = None;
@@ -11424,7 +11434,7 @@ index ee0417f3..594c6a69 100644
                      self.current_session_key = None;
                      self.projection_write(|projection| {
                          projection.arm_operation_id = None;
-@@ -2272,6 +2504,10 @@ impl SessionWorker {
+@@ -2272,6 +2514,10 @@ impl SessionWorker {
          if self.reconcile_submitted_frame_stall(None) {
              return;
          }
@@ -11435,7 +11445,7 @@ index ee0417f3..594c6a69 100644
          let Some(now) = current_from_bridge(&self.monotonic_bridge) else {
              return;
          };
-@@ -2293,6 +2529,58 @@ impl SessionWorker {
+@@ -2293,6 +2539,58 @@ impl SessionWorker {
              Err(error) => self.publish_rejection(None, &error),
          }
      }
@@ -11494,7 +11504,7 @@ index ee0417f3..594c6a69 100644
  
      fn publish_terminal_route_identity(&mut self) {
          let Some((generation, operation_id)) = self.pending_terminal_operation.take() else {
-@@ -2406,8 +2694,11 @@ impl SessionWorker {
+@@ -2406,8 +2704,11 @@ impl SessionWorker {
                  Ordering::Release,
              );
              projection.active_time_ns = self.controller.active_time_ns();
@@ -11506,7 +11516,7 @@ index ee0417f3..594c6a69 100644
                  && self.controller.presentation() == PresentationState::ImmersiveActive)
                  .then(|| {
                      self.controller
-@@ -2487,6 +2778,8 @@ struct StatusObservation {
+@@ -2487,6 +2788,8 @@ struct StatusObservation {
  
  enum WorkerMessage {
      Command {
@@ -11515,7 +11525,7 @@ index ee0417f3..594c6a69 100644
          raw: String,
          received_at: Instant,
          polar_ready_at_receipt: PolarInputAdmission,
-@@ -2773,6 +3066,53 @@ impl ExperimentSessionRuntime {
+@@ -2773,6 +3076,53 @@ impl ExperimentSessionRuntime {
                  .recv_timeout(Duration::from_millis(250))
                  .unwrap_or_else(|_| self.cached(|cache| &cache.observation_unavailable));
          }
@@ -11569,7 +11579,7 @@ index ee0417f3..594c6a69 100644
          let terminal_generation = terminal_command_generation(raw);
          let mut terminal_gate = if let Some(generation) = terminal_generation {
              let mut gate = match self.producer_gate.try_write() {
-@@ -2800,6 +3140,8 @@ impl ExperimentSessionRuntime {
+@@ -2800,6 +3150,8 @@ impl ExperimentSessionRuntime {
              &self.command_sender
          };
          match sender.try_send(WorkerMessage::Command {
@@ -11578,7 +11588,7 @@ index ee0417f3..594c6a69 100644
              raw: raw.to_owned(),
              local_terminal_fence,
              polar_ready_at_receipt: self.polar_ready_at_receipt(),
-@@ -2878,6 +3220,17 @@ impl ExperimentSessionRuntime {
+@@ -2878,6 +3230,17 @@ impl ExperimentSessionRuntime {
              && p.presentation == PresentationState::ImmersiveActive
              && observed == Some(now);
          let active_ns = p.official_active_time_ns(observed);
@@ -11596,7 +11606,7 @@ index ee0417f3..594c6a69 100644
          Some((
              p.generation,
              active_ns / 1_000_000,
-@@ -2956,9 +3309,12 @@ impl ExperimentSessionRuntime {
+@@ -2956,9 +3319,12 @@ impl ExperimentSessionRuntime {
          };
          let generation = p.generation;
          let epoch = self.runtime_epoch;
@@ -11609,7 +11619,7 @@ index ee0417f3..594c6a69 100644
          let guard = Arc::new(move || {
              if crate::experiment_control_mode::read() != mode
                  || identity.load(Ordering::Acquire) != owner
-@@ -2968,15 +3324,42 @@ impl ExperimentSessionRuntime {
+@@ -2968,15 +3334,42 @@ impl ExperimentSessionRuntime {
              projection.try_read().ok().is_some_and(|p| {
                  p.runtime_epoch == epoch
                      && p.generation == generation
@@ -11655,7 +11665,7 @@ index ee0417f3..594c6a69 100644
          service
              .query(
                  &self.recording_root,
-@@ -3043,16 +3426,23 @@ impl ExperimentSessionRuntime {
+@@ -3043,16 +3436,23 @@ impl ExperimentSessionRuntime {
          let Ok(guidance) = self.active_breath_guidance.try_read() else {
              return json!({"v":1,"available":false,"reason":"monitor-busy"}).to_string();
          };
@@ -11689,7 +11699,7 @@ index ee0417f3..594c6a69 100644
          if segments.len() > 256 {
              return json!({"v":1,"available":false,"reason":"target-window-too-dense"}).to_string();
          }
-@@ -3243,6 +3633,9 @@ impl ExperimentSessionRuntime {
+@@ -3243,6 +3643,9 @@ impl ExperimentSessionRuntime {
              if prior >= identity {
                  return Err("native-owner-stale".to_owned());
              }
@@ -11699,7 +11709,7 @@ index ee0417f3..594c6a69 100644
              match self.immersive_owner_identity.compare_exchange_weak(
                  prior,
                  identity,
-@@ -3264,6 +3657,9 @@ impl ExperimentSessionRuntime {
+@@ -3264,6 +3667,9 @@ impl ExperimentSessionRuntime {
                  .local_terminal_gate
                  .lock()
                  .unwrap_or_else(|e| e.into_inner());
@@ -11709,7 +11719,7 @@ index ee0417f3..594c6a69 100644
              if self
                  .immersive_owner_identity
                  .compare_exchange(identity, u64::MAX, Ordering::AcqRel, Ordering::Acquire)
-@@ -3311,6 +3707,9 @@ impl ExperimentSessionRuntime {
+@@ -3311,6 +3717,9 @@ impl ExperimentSessionRuntime {
      }
  
      pub(crate) fn try_offer(&self, record: SessionRecord) -> OfferOutcome {
@@ -11719,7 +11729,15 @@ index ee0417f3..594c6a69 100644
          let gate = match self.producer_gate.try_read() {
              Ok(gate) => gate,
              // A write-held gate defines the producer cutoff. This offer is
-@@ -3397,6 +3796,11 @@ impl ExperimentSessionRuntime {
+@@ -3381,6 +3790,7 @@ impl ExperimentSessionRuntime {
+         let now_ns = self.current_elapsed_realtime_ns()?;
+         let projection = self.projection.try_read().ok()?;
+         if projection.phase != SessionPhase::Active
++            || projection.authored_playback.is_some()
+             || projection.control_state
+                 != crate::experiment_session::ExperimentControlState::Running
+             || projection.presentation != PresentationState::ImmersiveActive
+@@ -3397,6 +3807,11 @@ impl ExperimentSessionRuntime {
              return None;
          }
          let generation = projection.generation;
@@ -11731,7 +11749,7 @@ index ee0417f3..594c6a69 100644
          let mut active_time_ns = projection.active_time_ns;
          if let Some(started_ns) = projection.active_interval_started_ns {
              active_time_ns = active_time_ns.saturating_add(now_ns.saturating_sub(started_ns));
-@@ -3486,6 +3890,8 @@ fn run_worker(
+@@ -3486,6 +3901,8 @@ fn run_worker(
      loop {
          match terminal_receiver.try_recv() {
              Ok(WorkerMessage::Command {
@@ -11740,7 +11758,7 @@ index ee0417f3..594c6a69 100644
                  raw,
                  received_at,
                  polar_ready_at_receipt,
-@@ -3497,6 +3903,7 @@ fn run_worker(
+@@ -3497,6 +3914,7 @@ fn run_worker(
                      received_at,
                      polar_ready_at_receipt,
                      local_terminal_fence,
@@ -11748,7 +11766,7 @@ index ee0417f3..594c6a69 100644
                  );
                  worker.reconcile_polar_input(None);
                  worker.reconcile_submitted_frame_stall(None);
-@@ -3556,6 +3963,7 @@ fn run_worker(
+@@ -3556,6 +3974,7 @@ fn run_worker(
              };
              let _ = observation.acknowledgement.try_send(response);
          }
@@ -11756,7 +11774,7 @@ index ee0417f3..594c6a69 100644
          worker.drain_pending_retries();
          // Latest actual renderer observation survives mutation-lane saturation.
          let observed = worker
-@@ -3570,6 +3978,8 @@ fn run_worker(
+@@ -3570,6 +3989,8 @@ fn run_worker(
          }
          match command_receiver.recv_timeout(Duration::from_millis(10)) {
              Ok(WorkerMessage::Command {
@@ -11765,7 +11783,7 @@ index ee0417f3..594c6a69 100644
                  raw,
                  received_at,
                  polar_ready_at_receipt,
-@@ -3581,6 +3991,7 @@ fn run_worker(
+@@ -3581,6 +4002,7 @@ fn run_worker(
                      received_at,
                      polar_ready_at_receipt,
                      local_terminal_fence,
@@ -11773,7 +11791,7 @@ index ee0417f3..594c6a69 100644
                  );
                  // Also runs after a blocking writer operation and with a busy
                  // command lane; freshness cannot depend on recv_timeout firing.
-@@ -4099,7 +4510,28 @@ pub(crate) fn request_control_from_native(
+@@ -4099,7 +4521,28 @@ pub(crate) fn request_control_from_native(
      if raw.len() > MAX_COMMAND_BYTES {
          return NativeControlAdmission::RuntimeUnavailable;
      }
@@ -11802,7 +11820,7 @@ index ee0417f3..594c6a69 100644
          raw,
          polar_ready_at_receipt: runtime.polar_ready_at_receipt(),
          received_at: Instant::now(),
-@@ -4180,6 +4612,29 @@ pub(crate) fn immersive_owner_identity() -> u64 {
+@@ -4180,6 +4623,29 @@ pub(crate) fn immersive_owner_identity() -> u64 {
          .unwrap_or(0)
  }
  
@@ -11832,7 +11850,7 @@ index ee0417f3..594c6a69 100644
  pub(crate) fn apply_terminal_with_fence(raw: &str, scope: LocalTerminalScope) -> String {
      match runtime() {
          Ok(r) => r.apply_local_terminal(raw, scope),
-@@ -4210,6 +4665,36 @@ pub(crate) fn current_generation() -> u64 {
+@@ -4210,6 +4676,36 @@ pub(crate) fn current_generation() -> u64 {
      })
  }
  
@@ -11869,7 +11887,7 @@ index ee0417f3..594c6a69 100644
  pub(crate) fn current_presentation() -> PresentationState {
      let Ok(runtime) = runtime() else {
          return PresentationState::Experimenter;
-@@ -4578,6 +5063,18 @@ fn parse_mutating_command(
+@@ -4578,6 +5074,18 @@ fn parse_mutating_command(
              if object.contains_key("breath_guidance") {
                  start_fields.push("breath_guidance");
              }
@@ -11888,7 +11906,7 @@ index ee0417f3..594c6a69 100644
              require_exact_fields(object, &start_fields).map_err(|reason| failure(reason))?;
              let condition_value = object
                  .get("condition")
-@@ -4591,7 +5088,7 @@ fn parse_mutating_command(
+@@ -4591,7 +5099,7 @@ fn parse_mutating_command(
              let threshold_ms = object
                  .get("completion_threshold_ms")
                  .and_then(Value::as_u64)
@@ -11897,7 +11915,7 @@ index ee0417f3..594c6a69 100644
                  .ok_or_else(|| failure("completion-threshold-invalid"))?;
              let utc_ns = object
                  .get("started_at_utc_ns")
-@@ -4632,6 +5129,7 @@ fn parse_mutating_command(
+@@ -4632,6 +5140,7 @@ fn parse_mutating_command(
                  condition,
                  completion_threshold_ns: threshold_ms.saturating_mul(1_000_000),
                  utc_ns,
@@ -11905,7 +11923,7 @@ index ee0417f3..594c6a69 100644
                  identity: StartIdentity {
                      profile_sha256,
                      audio,
-@@ -4677,6 +5175,13 @@ fn parse_mutating_command(
+@@ -4677,6 +5186,13 @@ fn parse_mutating_command(
              require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
              ParsedOperation::AudioStarted
          }
@@ -11919,7 +11937,7 @@ index ee0417f3..594c6a69 100644
          "audio-ended" => {
              require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
              ParsedOperation::AudioEnded
-@@ -4696,6 +5201,7 @@ fn parse_mutating_command(
+@@ -4696,6 +5212,7 @@ fn parse_mutating_command(
          _ => return Err(failure("unsupported-operation")),
      };
      Ok(ParsedCommand {
@@ -11927,7 +11945,7 @@ index ee0417f3..594c6a69 100644
          operator_fence,
          local_terminal_fence: None,
          operation_id,
-@@ -4965,6 +5471,476 @@ mod tests {
+@@ -4965,6 +5482,515 @@ mod tests {
  
      static NEXT: AtomicUsize = AtomicUsize::new(0);
  
@@ -12124,11 +12142,44 @@ index ee0417f3..594c6a69 100644
 +            json!([[0,"inhale"],[176_400,"hold_in"],[352_800,"exhale"]]));
 +    }
 +
-+    fn check_authored_media_clock(scenario: &str, frames: u64, duration: u64, last_ms: u64, phases: Value) {
++    #[test]
++    fn authored_main_saves_at_fifteen_minutes_before_releasing_outro() {
++        check_authored_media_clock("haupt-15", 39_690_000, 900_000, 899_999,
++            json!([[0,"instruction_1"],[5_615_640,"instruction_2"],[13_230_000,"inhale"]]));
++    }
++
++    #[test]
++    fn authored_main_end_while_held_cannot_complete_or_play_the_outro() {
 +        let session = SelectedControllerStudy::start_with_participant(Some(json!({
++            "participant_id":"Tes_30_N", "scenario_id":"haupt-15", "authored_main":true,
++            "scenario_sha256":"a".repeat(64), "sample_rate":44100, "total_frames":39_690_000,
++            "phases":[[0,"instruction_1"],[13_230_000,"inhale"]],
++        })));
++        let runtime = &session.runtime;
++        runtime.apply_command_json(&command("audio-started", "main-started", 1, 17_025_000_000));
++        runtime.apply_command_json(&command("pause", "held-main", 1, 17_030_000_000));
++        wait_for(runtime, "\"control_state\":\"paused\"");
++        runtime.apply_command_json(&command("audio-ended", "held-main-end", 1, 17_035_000_000));
++        let held: Value = serde_json::from_str(&wait_for(runtime, "\"last_operation_id\":\"held-main-end\"")).unwrap();
++        assert_eq!(held["readback"]["completion"], "not-reached");
++        assert_eq!(held["readback"]["control_event"], "experiment-paused");
++        runtime.apply_command_json(&command("restart-to-experimenter", "save-held-main", 1, 17_040_000_000));
++        let saved: Value = serde_json::from_str(&wait_for(runtime, "\"phase\":\"idle\"")).unwrap();
++        assert_ne!(saved["readback"]["control_event"], "main-outro");
++        let directory = session.root.join("utc-ns-01725000000000000000");
++        let final_record: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
++        assert_eq!(final_record["completed"], false);
++    }
++
++    fn check_authored_media_clock(scenario: &str, frames: u64, duration: u64, last_ms: u64, phases: Value) {
++        let mut participant = json!({
 +            "participant_id":"Tes_30_N", "scenario_id":scenario,
 +            "scenario_sha256":"a".repeat(64), "sample_rate":44100, "total_frames":frames, "phases":phases,
-+        })));
++        });
++        if scenario == "haupt-15" {
++            participant["authored_main"] = json!(true);
++        }
++        let session = SelectedControllerStudy::start_with_participant(Some(participant));
 +        let runtime = &session.runtime;
 +        let readback = |needle: &str| {
 +            let response: Value = serde_json::from_str(&wait_for(runtime, needle)).unwrap();
@@ -12154,7 +12205,13 @@ index ee0417f3..594c6a69 100644
 +        position("ending-media-clock", 1, 17_055_000_000, duration + 1);
 +        assert_eq!(readback(&format!("\"active_time_ms\":{last_ms}"))["completion"], "not-reached");
 +        runtime.apply_command_json(&command("audio-ended", "media-end", 1, 17_060_000_000));
-+        readback("\"phase\":\"idle\"");
++        if scenario == "haupt-15" {
++            let completed = readback("\"control_event\":\"main-outro\"");
++            assert_eq!(completed["phase"], "idle");
++            assert_eq!(completed["control_receipt_generation"], 1);
++        } else {
++            assert_ne!(readback("\"phase\":\"idle\"")["control_event"], "main-outro");
++        }
 +        let directory = session.root.join("utc-ns-01725000000000000000");
 +        let final_record: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
 +        assert_eq!(final_record["completed"], true);
@@ -12404,7 +12461,7 @@ index ee0417f3..594c6a69 100644
      include!("experiment_session_live_bias_tests.rs");
  
      fn temp_root(label: &str) -> PathBuf {
-@@ -7613,4 +8589,153 @@ mod tests {
+@@ -7613,4 +8639,153 @@ mod tests {
          }
      }
      include!("experiment_session_polar_tests.rs");
@@ -16137,10 +16194,10 @@ index f71f79cb..75df8192 100644
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..b0bdb158
+index 00000000..95fa6df2
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1172 @@
+@@ -0,0 +1,1179 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -16233,17 +16290,22 @@ index 00000000..b0bdb158
 +    sha256: String,
 +    duration_ns: u64,
 +    phases: Vec<(u64, String)>,
++    authored_main: bool,
 +}
 +
 +impl ParticipantPlan {
 +    pub(crate) fn parse(value: &Value) -> Result<Self, &'static str> {
 +        const BAD: &str = "participant-plan-invalid";
++        let authored_main = value.get("authored_main").is_some();
 +        value
 +            .as_object()
-+            .filter(|object| object.len() == 6)
++            .filter(|object| object.len() == 6 + usize::from(authored_main))
 +            .ok_or(BAD)?;
 +        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
 +        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
++        if authored_main && (scenario != "haupt-15" || value["authored_main"] != true) {
++            return Err(BAD);
++        }
 +        let sha256 = value["scenario_sha256"]
 +            .as_str()
 +            .filter(|value| valid_hash(value))
@@ -16290,6 +16352,7 @@ index 00000000..b0bdb158
 +            sha256: sha256.to_owned(),
 +            duration_ns: (frames * NANOS_PER_SECOND).div_ceil(rate),
 +            phases,
++            authored_main,
 +        })
 +    }
 +
@@ -16310,7 +16373,7 @@ index 00000000..b0bdb158
 +    }
 +
 +    pub(crate) fn authored_playback(&self, selected: bool) -> Option<(&str, u64)> {
-+        (self.scenario == "free-exploration" || selected && self.scenario == "probe-5")
++        (self.scenario == "free-exploration" || selected && (self.scenario == "probe-5" || self.authored_main))
 +            .then_some((&self.scenario, self.duration_ns))
 +    }
 +
@@ -16441,6 +16504,7 @@ index 00000000..b0bdb158
 +                sha256: sha256.to_owned(),
 +                duration_ns,
 +                phases,
++                authored_main: false,
 +            },
 +            index,
 +            uuid: uuid.to_owned(),
@@ -18497,7 +18561,7 @@ index c0c0c17e..3729e77b 100644
          frame_timings.openxr_end_frame_ms = elapsed_ms(stage_started);
          frame_timings.submitted_frame_host_ms = elapsed_ms(submitted_frame_host_started);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..a37f019f 100644
+index a694dfee..dc5d86f1 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -18590,7 +18654,7 @@ index a694dfee..a37f019f 100644
                      }
                  }
                  RemotePending pending = remotePending;
-@@ -828,6 +871,30 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -828,6 +871,33 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
@@ -18605,6 +18669,9 @@ index a694dfee..a37f019f 100644
 +            }
 +            @Override public boolean hasProbeInstruction() {
 +                return ControlPanelActivity.hasProbeInstruction();
++            }
++            @Override public boolean hasAuthoredMain() {
++                return ControlPanelActivity.hasAuthoredMain();
 +            }
 +            @Override public Runnable playProbeInstruction(Runnable completed, Runnable failed) throws Exception {
 +                return ControlPanelActivity.playProbeInstruction(completed, failed);
@@ -18621,7 +18688,7 @@ index a694dfee..a37f019f 100644
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
-@@ -922,6 +989,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -922,6 +992,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
  
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
@@ -18636,7 +18703,7 @@ index a694dfee..a37f019f 100644
                  ExperimentSessionBleServer server = remoteServer();
                  if (server == null) return;
                  if(remoteTerminal!=null) {
-@@ -997,10 +1072,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -997,10 +1075,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
                          return;
                      }
@@ -18653,7 +18720,7 @@ index a694dfee..a37f019f 100644
                      return;
                  }
                  if ("save-next".equals(request.operation)) {
-@@ -1060,6 +1139,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1060,6 +1142,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
          };
  
@@ -18670,7 +18737,7 @@ index a694dfee..a37f019f 100644
      public static void reconcileCurrentExperimentSessionBleOwner() {
          ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
      }
-@@ -1083,6 +1172,79 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1083,6 +1175,79 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static String remoteSetupPendingId="";
      private static long remoteSetupPendingCarrier,remoteSetupPendingEpoch;
  
@@ -18750,7 +18817,7 @@ index a694dfee..a37f019f 100644
      private static String remoteKioskState() {
          NativeRendererSoftKioskCoordinator.Effectiveness effectiveness =
              NativeRendererSoftKioskCoordinator.process().snapshot().effectiveness;
-@@ -1195,6 +1357,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1195,6 +1360,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private long breathCompositionGeneration;
      private TextView breathOverviewReadback;
      private TextView breathCalibrationReadback;
@@ -18759,7 +18826,7 @@ index a694dfee..a37f019f 100644
      private TextView breathOutputReadback;
      private TextView breathDiagnosticsReadback;
      private ProgressBar breathCalibrationProgress;
-@@ -1211,6 +1375,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1211,6 +1378,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static final ExperimentControlMode controlMode=ExperimentControlMode.process();
      private TextView controlModeSessionReadback;
      private TextView controlModeNetworkReadback;
@@ -18811,7 +18878,7 @@ index a694dfee..a37f019f 100644
  
      private boolean productPanelOperatorAvailable(){
          return !experimentShellDestroyed&&!isFinishing()&&!isDestroyed()
-@@ -1244,6 +1453,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1244,6 +1456,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
      private JSONObject invokeProductPanelOperator(String action,JSONObject parameters)throws Exception {
          requireProductPanelOperator();
@@ -18820,7 +18887,7 @@ index a694dfee..a37f019f 100644
          if("panel-visible".equals(action))return NativeMeshUiProducer.requestProductPanelVisibility(hostActivity(),parameters.getBoolean("visible"));
          if("navigate".equals(action)){
              String surface=parameters.getString("surface"),page=parameters.getString("page");
-@@ -1589,6 +1800,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1589,6 +1803,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              public JSONObject observe()throws Exception{return observeProductPanelOperator();}
              public JSONObject invoke(String action,JSONObject parameters)throws Exception{return invokeProductPanelOperator(action,parameters);}
          });
@@ -18828,7 +18895,7 @@ index a694dfee..a37f019f 100644
      }
  
      @Override
-@@ -1737,6 +1949,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1737,6 +1952,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onResume() {
          super.onResume();
@@ -18838,7 +18905,7 @@ index a694dfee..a37f019f 100644
          activityPanelResumed=!nativePresentation();
          if(meshPanelAttachment!=null&&!nativePresentation())meshPanelAttachment.showInActivity();
          if(!nativePresentation()||meshPanelAttachment!=null&&meshPanelAttachment.presentationActive()
-@@ -1748,6 +1963,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1748,6 +1966,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          NativeMeshUiProducer.productOwnerReady(hostActivity());
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
          if(gateway!=null)gateway.requestDiscoveryPermissions(hostActivity());
@@ -18846,7 +18913,7 @@ index a694dfee..a37f019f 100644
      }
  
      private void resumePanelProjection() {
-@@ -1772,12 +1988,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1772,12 +1991,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
  
      @Override
      protected void onPause() {
@@ -18863,7 +18930,7 @@ index a694dfee..a37f019f 100644
          closeHubStatusLifetime();
          remotePanelResumed = false;
          cancelRemotePolarRender();
-@@ -1838,6 +2058,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1838,6 +2061,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onDestroy() {
          if(experimentShellDestroyed)return;
@@ -18874,7 +18941,7 @@ index a694dfee..a37f019f 100644
          experimentShellDestroyed = true;
          try{if(productPanelOperatorRegistration!=null)productPanelOperatorRegistration.close();}
          catch(Exception unavailable){Log.w(TAG,"channel=product-panel-operator event=registration-retirement-failed");}
-@@ -1864,6 +2088,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1864,6 +2091,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
@@ -18884,7 +18951,7 @@ index a694dfee..a37f019f 100644
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1911,8 +2138,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1911,8 +2141,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -18895,7 +18962,7 @@ index a694dfee..a37f019f 100644
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -2240,6 +2468,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2240,6 +2471,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterPhoneControl(LinearLayout root) {
@@ -18903,7 +18970,7 @@ index a694dfee..a37f019f 100644
          appendExperimenterNetworkControl(root);
          if (!ExperimentSessionBleServer.featurePackaged(this)) return;
          final ExperimentSessionBleServer server =
-@@ -2277,6 +2506,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2277,6 +2509,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterNetworkControl(LinearLayout root) {
@@ -18911,7 +18978,7 @@ index a694dfee..a37f019f 100644
          if(!ExperimentSessionCommandGateway.featurePackaged(this))return;
          final ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.process(this,REMOTE_DELEGATE);
          gateway.requestDiscoveryPermissions(hostActivity());
-@@ -2354,6 +2584,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2354,6 +2587,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          root.addView(network);
      }
  
@@ -18924,7 +18991,7 @@ index a694dfee..a37f019f 100644
      private void handleRemoteOpenPolarIntent(Intent intent) {
          if (intent != null && intent.getBooleanExtra(EXTRA_REMOTE_OPEN_POLAR, false)) {
              intent.removeExtra(EXTRA_REMOTE_OPEN_POLAR);
-@@ -2682,6 +2918,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2682,6 +2921,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void replaceBreathCompositionPanelContent(String topic) {
@@ -18932,7 +18999,7 @@ index a694dfee..a37f019f 100644
          cancelRemotePolarRender();
          rememberPanelScroll();
          cancelPendingPrivateParticleDynamicsApply();
-@@ -4214,10 +4451,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4454,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -18944,7 +19011,7 @@ index a694dfee..a37f019f 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4471,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4474,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -18967,7 +19034,7 @@ index a694dfee..a37f019f 100644
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
-@@ -4526,6 +4776,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4526,6 +4779,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          try {
              String response = nativeApplyBreathCompositionCommand(command.toString());
              renderBreathCompositionResponse(response, readback);
@@ -18975,7 +19042,7 @@ index a694dfee..a37f019f 100644
              writeBreathCompositionOperatorReceipt(
                  "ui-" + SystemClock.elapsedRealtimeNanos(),
                  command.optString("operation", "unknown"),
-@@ -4536,6 +4787,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4536,6 +4790,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          }
      }
  
@@ -19066,7 +19133,7 @@ index a694dfee..a37f019f 100644
      private void refreshBreathCompositionReadback(TextView readback) {
          try {
              renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
-@@ -6276,11 +6611,13 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -6276,11 +6614,13 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          .put("condition", command.condition)
                          .put(
                              "completion_threshold_ms",
@@ -19776,7 +19843,7 @@ index 362e6c72..7583d278 100644
          JSONObject out=new JSONObject().put("v",1).put("version_code",code>0&&code<=2147483647L?code:JSONObject.NULL)
              .put("version_name",name!=null&&name.matches("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}")?name:JSONObject.NULL);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..9086b3ce 100644
+index 08732e53..e16371ee 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
@@ -19822,7 +19889,7 @@ index 08732e53..9086b3ce 100644
      private final ExperimentSessionDiscoveryServer discovery;
      private final ExperimentSessionGuestRegistry guests=new ExperimentSessionGuestRegistry();
      private final ExperimentControlMode controlMode=ExperimentControlMode.process();
-@@ -43,6 +65,27 @@ public final class ExperimentSessionCommandGateway {
+@@ -43,6 +65,28 @@ public final class ExperimentSessionCommandGateway {
      interface LocalEnrollmentGuard { void check() throws Exception; }
      interface WifiDelegate extends ExperimentSessionBleServer.Delegate {
          ExperimentSessionWifiSnapshot.Read wifiSnapshot() throws Exception;
@@ -19834,6 +19901,7 @@ index 08732e53..9086b3ce 100644
 +            throw new IllegalStateException("calibration-instruction-unavailable");
 +        }
 +        default boolean hasProbeInstruction() { return false; }
++        default boolean hasAuthoredMain() { return false; }
 +        default Runnable playProbeInstruction(Runnable completed, Runnable failed) throws Exception {
 +            throw new IllegalStateException("probe-instruction-unavailable");
 +        }
@@ -19850,7 +19918,7 @@ index 08732e53..9086b3ce 100644
      }
  
  
-@@ -52,22 +95,47 @@ public final class ExperimentSessionCommandGateway {
+@@ -52,22 +96,47 @@ public final class ExperimentSessionCommandGateway {
      }
      public static synchronized ExperimentSessionCommandGateway existing(){return process;}
      public static boolean featurePackaged(Context context) {
@@ -19901,7 +19969,7 @@ index 08732e53..9086b3ce 100644
      /** Operator readback excludes controller keys, tokens and temporary-network passwords. */
      JSONObject productPanelReadback()throws Exception {
          requireMain();return new JSONObject().put("selected",featurePackaged(context)).put("enabled",enabled())
-@@ -110,7 +178,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -110,7 +179,7 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -19910,7 +19978,7 @@ index 08732e53..9086b3ce 100644
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -153,17 +221,31 @@ public final class ExperimentSessionCommandGateway {
+@@ -153,17 +222,31 @@ public final class ExperimentSessionCommandGateway {
      JSONObject enrollFromHeadset(boolean trustedLan) throws Exception {
          return enrollLocalController(trustedLan);
      }
@@ -19944,7 +20012,7 @@ index 08732e53..9086b3ce 100644
      JSONObject localOperatorEnrollmentStatus() throws Exception {
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
              clearLocalEnrollmentOffer();
-@@ -188,7 +270,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -188,7 +271,7 @@ public final class ExperimentSessionCommandGateway {
          if(owner<=0||owner!=identity||nativeEpoch<=0||nativeEpoch!=epoch||revision!=lifecycleRevision
                  ||!carrier.acceptsNativeOwner(owner,nativeEpoch))throw new SecurityException("local-enrollment-owner-retired");
      }
@@ -19953,7 +20021,7 @@ index 08732e53..9086b3ce 100644
      JSONObject enrollFromLocalOperator(final JSONObject input,final LocalEnrollmentGuard guard) throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -217,14 +299,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -217,14 +300,22 @@ public final class ExperimentSessionCommandGateway {
                  return new JSONObject().put("operation_id",id).put("command_status","enrolled")
                      .put("credentials",credentials).put("trusted_lan",true).put("route",routeState)
                      .put("gateway_epoch",Long.toString(gatewayEpoch));
@@ -19978,7 +20046,7 @@ index 08732e53..9086b3ce 100644
      JSONObject provisionHeadsetIdentity(JSONObject input,final LocalEnrollmentGuard guard)throws Exception {
          final JSONObject request=new JSONObject(input.toString());
          return onMain(new java.util.concurrent.Callable<JSONObject>(){@Override public JSONObject call()throws Exception {
-@@ -236,7 +326,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -236,7 +327,13 @@ public final class ExperimentSessionCommandGateway {
              guard.check();
              if(!localEnrollmentIdle(delegate.sessionControlReadback(),delegate.snapshot()))throw new SecurityException("identity-provision-requires-idle");
              requireLocalEnrollmentOwner(owner,nativeEpoch,revision);
@@ -19992,7 +20060,7 @@ index 08732e53..9086b3ce 100644
              return new JSONObject().put("command_status","provisioned").put("serial",headsetIdentity.serial());
          }});
      }
-@@ -245,6 +341,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -245,6 +342,7 @@ public final class ExperimentSessionCommandGateway {
          ExperimentSessionRecordingExport.retire();
          discovery.close();
          guests.clear();
@@ -20000,7 +20068,7 @@ index 08732e53..9086b3ce 100644
          if(protocol!=null)protocol.retire();protocol=null;
          main.post(new Runnable(){@Override public void run(){
              if(revision!=lifecycleRevision)return;applyNativeOwnerChanged(owner,nextEpoch,live);
-@@ -257,6 +354,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -257,6 +355,7 @@ public final class ExperimentSessionCommandGateway {
      }
      private void reconcile() {
          if(!featurePackaged(context)||identity<=0||epoch<=0)return;
@@ -20008,7 +20076,7 @@ index 08732e53..9086b3ce 100644
          carrier.attachCommandGateway(true);
          gatewayEpoch=(new java.security.SecureRandom().nextLong()&0xfffffffffffffL)+1;
          final long admittedGatewayEpoch=gatewayEpoch;
-@@ -267,18 +365,51 @@ public final class ExperimentSessionCommandGateway {
+@@ -267,18 +366,51 @@ public final class ExperimentSessionCommandGateway {
              @Override public boolean reserve(JSONObject body)throws Exception{return activeJournal.reserve(body);}
              @Override public JSONObject original(String id)throws Exception{return activeJournal.original(id);}
          },deviceId(),Long.toString(gatewayEpoch));
@@ -20065,7 +20133,7 @@ index 08732e53..9086b3ce 100644
          if(journal==null)return;
          if(!trustedLanAllowed()){
              if(http!=null)http.close();http=null;routeState=enabled()?"enrolled-no-lan-listener":"native-owner-no-lan-listener";return;
-@@ -287,16 +418,37 @@ public final class ExperimentSessionCommandGateway {
+@@ -287,16 +419,37 @@ public final class ExperimentSessionCommandGateway {
          catch(Exception unavailable){routeState="listener-unavailable";if(http!=null)http.close();http=null;}
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
@@ -20105,7 +20173,7 @@ index 08732e53..9086b3ce 100644
          session.clear();polar.clear();
      }
      private void retire() {
-@@ -305,19 +457,121 @@ public final class ExperimentSessionCommandGateway {
+@@ -305,19 +458,121 @@ public final class ExperimentSessionCommandGateway {
          if(http!=null)http.close();http=null;
          carrier.gatewayBinding(null,"","0");carrier.attachCommandGateway(false);if(journal!=null)journal.retire();journal=null;routeState="disabled";
      }
@@ -20229,7 +20297,7 @@ index 08732e53..9086b3ce 100644
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -332,7 +586,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -332,7 +587,7 @@ public final class ExperimentSessionCommandGateway {
              final ExperimentSessionGatewayProtocol[] binding=new ExperimentSessionGatewayProtocol[1];
              binding[0]=new ExperimentSessionGatewayProtocol(controller,key,deviceId(),admittedGateway,new ExperimentSessionGatewayProtocol.Owner(){
                  @Override public JSONObject exchange(final String action,final JSONObject payload)throws Exception {
@@ -20238,7 +20306,7 @@ index 08732e53..9086b3ce 100644
                          if(admittedOwner!=identity||admittedEpoch!=epoch||admittedLifecycle!=lifecycleRevision||admittedGateway!=gatewayEpoch
                                  ||admittedMode!=controlMode.readSnapshot().packed||!remoteAvailable())throw new SecurityException("guest-owner-retired");
                          guests.authenticated(controller,binding[0],SystemClock.elapsedRealtime());
-@@ -345,6 +599,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -345,6 +600,13 @@ public final class ExperimentSessionCommandGateway {
      }
      /** Only HTTP after private-peer and Origin admission may bootstrap a local guest. */
      JSONObject exchangeLan(JSONObject envelope)throws Exception {
@@ -20252,7 +20320,7 @@ index 08732e53..9086b3ce 100644
          if("connect".equals(envelope.opt("action")))return connect(new JSONObject(envelope.toString()));
          return exchangeRoute(envelope,true);
      }
-@@ -352,39 +613,282 @@ public final class ExperimentSessionCommandGateway {
+@@ -352,39 +614,282 @@ public final class ExperimentSessionCommandGateway {
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
@@ -20387,7 +20455,8 @@ index 08732e53..9086b3ce 100644
 +                            }
 +                            if (!ids.isEmpty()) response.put("scenarios", new org.json.JSONArray(ids));
 +                            if (BreathingSetupAudio.selected(context)) {
-+                                org.json.JSONArray selected = new org.json.JSONArray().put("haupt-15");
++                                org.json.JSONArray selected = new org.json.JSONArray();
++                                if (!wifi.hasAuthoredMain() || participantAvailable && ids.contains("haupt-15")) selected.put("haupt-15");
 +                                if (participantAvailable && ids.contains("probe-5") && wifi.hasProbeInstruction()) selected.put("probe-5");
 +                                if (participantAvailable && ids.contains("free-exploration")) selected.put("free-exploration");
 +                                response.put("scenarios", selected);
@@ -20435,8 +20504,7 @@ index 08732e53..9086b3ce 100644
 +
 +    private String verifiedParticipantPlan(JSONObject body, String scenario, JSONObject current) throws Exception {
 +        WifiDelegate wifi = (WifiDelegate) delegate;
-+        String plan = BreathingSetupAudio.selected(context) && "haupt-15".equals(scenario)
-+            ? BreathingSetupAudio.mainRecordingPlan(scenario) : wifi.recordingPlan(scenario);
++        String plan = wifi.recordingPlan(scenario);
 +        String id = ExperimentSessionGatewayProtocol.string(body, "participant_id");
 +        if (plan == null || !java.text.Normalizer.isNormalized(id, java.text.Normalizer.Form.NFC)
 +                || !id.matches("\\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]")
@@ -20545,7 +20613,7 @@ index 08732e53..9086b3ce 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -394,16 +898,399 @@ public final class ExperimentSessionCommandGateway {
+@@ -394,16 +899,407 @@ public final class ExperimentSessionCommandGateway {
              try{snapshot();}catch(Exception unavailable){/* An unavailable new observation cannot erase an original receipt. */}
              return journal.original(body.getString("id"));
          }
@@ -20580,6 +20648,10 @@ index 08732e53..9086b3ce 100644
 +                throw new SecurityException("exploration-participant-arm-required");
 +            boolean guidedProbe = "probe-5".equals(scenario) && participantArm
 +                && delegate instanceof WifiDelegate && ((WifiDelegate) delegate).hasProbeInstruction();
++            if ("haupt-15".equals(scenario) && !participantArm && delegate instanceof WifiDelegate
++                    && ((WifiDelegate) delegate).hasAuthoredMain()) {
++                throw new SecurityException("authored-main-participant-arm-required");
++            }
 +            if (BreathingSetupAudio.selected(context) && !"haupt-15".equals(scenario) && !exploration && !guidedProbe)
 +                throw new SecurityException("shared-scheduler-main-required");
 +            Object generation = body.opt("g");
@@ -20615,7 +20687,11 @@ index 08732e53..9086b3ce 100644
 +                    deferProbeStart(request, start);
 +                    return journal.original(id);
 +                }
-+                if (!"free-exploration".equals(armedScenario)) {
++                if ("haupt-15".equals(armedScenario) && (!"ARMED".equals(start.opt("p"))
++                        || !BreathingSetupAudio.status().optBoolean("ready"))) {
++                    throw new SecurityException("main-breathing-input-unavailable");
++                }
++                if (!"free-exploration".equals(armedScenario) && !"haupt-15".equals(armedScenario)) {
 +                    deferMainStart(id, request);
 +                    return journal.original(id);
 +                }
@@ -20623,7 +20699,7 @@ index 08732e53..9086b3ce 100644
 +            if (participantPlan != null) ((WifiDelegate) delegate).dispatchParticipant(request, scenario, participantPlan);
 +            else if (scenario.isEmpty()) delegate.dispatch(request);
 +            else ((WifiDelegate) delegate).dispatchScenario(request, scenario);
-+        } catch (RuntimeException rejected) {
++        } catch (Exception rejected) {
 +            carrier.updateReceipt(id,"rejected","App command dispatch failed.");
 +        }
          return journal.original(id);
@@ -20947,7 +21023,7 @@ index 08732e53..9086b3ce 100644
      private JSONObject snapshot()throws Exception {
          try {
              long generation=carrier.currentGeneration(),owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision;
-@@ -416,6 +1303,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -416,6 +1312,7 @@ public final class ExperimentSessionCommandGateway {
              long now=SystemClock.elapsedRealtime();
              JSONObject setup=delegate.polarSetupReadback();if(setup!=null&&"IDLE".equals(status.optString("p")))status.put("y",setup);
              JSONObject polarReadback=delegate.polarStopReadback();
@@ -20955,7 +21031,7 @@ index 08732e53..9086b3ce 100644
              ExperimentSessionWifiSnapshot.projectJavaDiagnostics(status,polarReadback);
              JSONObject polarOffer=polar.offer(polarReadback,nativeStatus,generation,owner,nativeEpoch,now);
              JSONObject offer=session.offer(status,nativeStatus,generation,owner,nativeEpoch,now,polar.bindingTuple());
-@@ -431,6 +1319,8 @@ public final class ExperimentSessionCommandGateway {
+@@ -431,6 +1328,8 @@ public final class ExperimentSessionCommandGateway {
                  session.clear();polar.clear();throw new SecurityException("wifi-native-owner-changed");
              }
              status=observed.statusAt(SystemClock.elapsedRealtimeNanos(),nativeEpoch);
@@ -20964,7 +21040,7 @@ index 08732e53..9086b3ce 100644
              return ExperimentSessionWifiSnapshot.bounded(status.put("v",1).put("m","gated").put("wifi_snapshot",1)
                  .put("build",buildIdentity).put("control_mode",mode.wireName()).put("breath_monitor",1).put("recordings",ExperimentSessionRecordingExport.selected(context)?1:0));
          } catch(Exception unavailable){session.clear();polar.clear();throw unavailable;}
-@@ -439,6 +1329,124 @@ public final class ExperimentSessionCommandGateway {
+@@ -439,6 +1338,124 @@ public final class ExperimentSessionCommandGateway {
          return new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(
              ExperimentSessionGatewayProtocol.monitorQuery(body).toString()));
      }
@@ -21939,7 +22015,7 @@ index 00000000..b565c439
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
-index 962a85d1..a0545371 100644
+index 962a85d1..d578e26e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
 @@ -64,6 +64,11 @@ final class ExperimentSessionWifiSnapshot {
@@ -21947,7 +22023,7 @@ index 962a85d1..a0545371 100644
              .put("early",state.counts.totalsAvailable?state.counts.stoppedEarlyTotal():JSONObject.NULL)
              .put("pending",false).put("h","unknown");
 +        Object scenario = nativeStatus.opt("scenario_id");
-+        if ("free-exploration".equals(scenario) || "probe-5".equals(scenario)) {
++        if ("free-exploration".equals(scenario) || "probe-5".equals(scenario) || "haupt-15".equals(scenario)) {
 +            long duration = PolarStopBleCapability.integer(nativeStatus, "duration_ms", false);
 +            status.put("scenario_id", scenario).put("duration_ms", duration);
 +        }
@@ -22906,10 +22982,10 @@ index 00000000..af7819a0
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..3640f14b 100644
+index b042fc60..963971da 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-@@ -15,9 +15,25 @@ import java.util.Map;
+@@ -15,9 +15,29 @@ import java.util.Map;
   */
  final class ConditionAudioAndroidMediaBackendFactory
          implements ConditionAudioRuntime.StartupPreloader {
@@ -22925,6 +23001,10 @@ index b042fc60..3640f14b 100644
 +        default Runnable playProbeInstruction(Runnable completed, Runnable failed) throws Exception {
 +            throw new IllegalStateException("probe-instruction-unavailable");
 +        }
++        default boolean hasAuthoredMain() { return false; }
++        default Runnable playMainOutro(Runnable completed, Runnable failed) throws Exception {
++            throw new IllegalStateException("main-outro-unavailable");
++        }
 +        MediaPlayer prepare(String scenarioId) throws Exception;
 +    }
 +
@@ -22935,7 +23015,7 @@ index b042fc60..3640f14b 100644
      private final Map<String, PreparedTrack> prepared = new HashMap<String, PreparedTrack>();
      private ConditionAudioRuntime.StartupPreloader.Listener preloadListener;
      private boolean closed;
-@@ -42,18 +58,25 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -42,18 +62,25 @@ final class ConditionAudioAndroidMediaBackendFactory
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets) { this(assets, false); }
  
      ConditionAudioAndroidMediaBackendFactory(AssetManager assets, boolean loopBackground) {
@@ -22962,7 +23042,7 @@ index b042fc60..3640f14b 100644
          synchronized (lock) {
              preloadListener = listener;
          }
-@@ -67,7 +90,15 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -67,7 +94,15 @@ final class ConditionAudioAndroidMediaBackendFactory
      @Override public ConditionAudioRuntime.MediaBackend create(
          ConditionAudioContract.Provider provider,
          ConditionAudioRuntime.MediaBackend.Listener listener
@@ -22979,14 +23059,15 @@ index b042fc60..3640f14b 100644
          if (provider == null || listener == null) {
              throw new IllegalArgumentException("prepared track and listener are required");
          }
-@@ -79,7 +110,28 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -79,7 +114,29 @@ final class ConditionAudioAndroidMediaBackendFactory
          if (track == null || track.player == null) {
              throw new IllegalStateException("audio-track-not-ready");
          }
 -        return new SessionBackend(this, provider, track.player, listener);
 +        try {
 +            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener, false);
-+            if (BreathingSetupAudio.continuousMain(scenarioId)) {
++            boolean authoredMain = "haupt-15".equals(scenarioId) && scenarios != null && scenarios.hasAuthoredMain();
++            if (!authoredMain && BreathingSetupAudio.continuousMain(scenarioId)) {
 +                if (BreathingSetupAudio.mainRecordingPlan(scenarioId) == null) {
 +                    throw new IllegalStateException("breathing-loop-not-ready");
 +                }
@@ -22996,7 +23077,7 @@ index b042fc60..3640f14b 100644
 +                throw new IllegalArgumentException("scenario-track-unavailable");
 +            }
 +            MediaPlayer timeline = scenarios.prepare(scenarioId);
-+            boolean standalone = "free-exploration".equals(scenarioId)
++            boolean standalone = authoredMain || "free-exploration".equals(scenarioId)
 +                || "probe-5".equals(scenarioId) && scenarios.hasProbeInstruction();
 +            return new SessionBackend(this, provider, timeline, track.player, listener, standalone);
 +        } catch (Exception error) {
@@ -23009,7 +23090,7 @@ index b042fc60..3640f14b 100644
      }
  
      private void prepareTrack(final ConditionAudioContract.Provider provider) {
-@@ -185,60 +237,141 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -185,60 +242,141 @@ final class ConditionAudioAndroidMediaBackendFactory
          }
      }
  
@@ -23379,10 +23460,10 @@ index feb3ddc2..9a63e8e0 100644
  
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
 new file mode 100644
-index 00000000..8db28db9
+index 00000000..e1b425bf
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,146 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.res.AssetFileDescriptor;
@@ -23461,6 +23542,18 @@ index 00000000..8db28db9
 +        return playPackagedClip(path, completed, failed);
 +    }
 +
++    @Override public boolean hasAuthoredMain() {
++        ScenarioAudioPackage selected = catalog;
++        return selected != null && selected.mainOutroPath() != null;
++    }
++
++    @Override public Runnable playMainOutro(Runnable completed, Runnable failed) throws Exception {
++        ScenarioAudioPackage selected = catalog;
++        String path = selected == null ? null : selected.mainOutroPath();
++        if (path == null) throw new IOException("main-outro-unavailable");
++        return playPackagedClip(path, completed, failed);
++    }
++
 +    private Runnable playPackagedClip(String path, Runnable completed, Runnable failed) throws Exception {
 +        MediaPlayer player = new MediaPlayer();
 +        try (AssetFileDescriptor input = assets.openFd("atmungsraum-audio/" + path)) {
@@ -23483,12 +23576,23 @@ index 00000000..8db28db9
 +    @Override public MediaPlayer prepare(String id) throws Exception {
 +        ScenarioAudioPackage selected = catalog;
 +        if (selected == null) throw new IllegalStateException("scenario-audio-not-verified");
-+        boolean encoded = selected.hasEncodedTrack(id);
-+        File playback = File.createTempFile("scenario-", encoded ? ".mp3" : ".wav", cache);
++        String encoded = selected.encodedTrackPath(id);
++        if (encoded != null) {
++            MediaPlayer player = new MediaPlayer();
++            try (AssetFileDescriptor input = assets.openFd("atmungsraum-audio/" + encoded)) {
++                player.setDataSource(input.getFileDescriptor(), input.getStartOffset(), input.getLength());
++                player.prepare();
++                return player;
++            } catch (Exception failure) {
++                player.release();
++                throw failure;
++            }
++        }
++        File playback = File.createTempFile("scenario-", ".wav", cache);
 +        try {
 +            long frames;
 +            try (FileOutputStream output = new FileOutputStream(playback)) {
-+                frames = encoded ? selected.writeEncodedTrack(id, output) : selected.writeWave(id, output);
++                frames = selected.writeWave(id, output);
 +            }
 +            MediaPlayer player = new MediaPlayer();
 +            try (FileInputStream input = new FileInputStream(playback)) {
@@ -23508,10 +23612,10 @@ index 00000000..8db28db9
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 new file mode 100644
-index 00000000..c3c1892b
+index 00000000..491ebee8
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
-@@ -0,0 +1,431 @@
+@@ -0,0 +1,464 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.IOException;
@@ -23546,6 +23650,7 @@ index 00000000..c3c1892b
 +    private final Map<String, FileIdentity> encodedTracks = new HashMap<>();
 +    private final FileIdentity calibrationInstruction;
 +    private String probeInstructionPath;
++    private String mainOutroPath;
 +    private final int sampleRate;
 +    private final FileIdentity library;
 +
@@ -23641,9 +23746,15 @@ index 00000000..c3c1892b
 +
 +    boolean hasCalibrationInstruction() { return calibrationInstruction != null; }
 +    String probeInstructionPath() { return probeInstructionPath; }
++    String mainOutroPath() { return mainOutroPath; }
 +
 +    boolean hasEncodedTrack(String scenarioId) {
 +        return encodedTracks.containsKey(scenarioId);
++    }
++
++    String encodedTrackPath(String scenarioId) {
++        FileIdentity track = encodedTracks.get(scenarioId);
++        return track == null ? null : track.path;
 +    }
 +
 +    long writeEncodedTrack(String scenarioId, OutputStream output) throws IOException, JSONException {
@@ -23732,9 +23843,11 @@ index 00000000..c3c1892b
 +                    JSONObject event = events.getJSONObject(i);
 +                    phases.put(new JSONArray().put(event.getInt("offset_frames")).put(event.getString("id")));
 +                }
-+                recordingPlans.put(scenarioId, new JSONObject().put("scenario_id", scenarioId)
++                JSONObject recordingPlan = new JSONObject().put("scenario_id", scenarioId)
 +                    .put("scenario_sha256", planFile.sha256).put("sample_rate", sampleRate)
-+                    .put("total_frames", frames).put("phases", phases).toString());
++                    .put("total_frames", frames).put("phases", phases);
++                if ("haupt-15".equals(scenarioId) && mainOutroPath != null) recordingPlan.put("authored_main", true);
++                recordingPlans.put(scenarioId, recordingPlan.toString());
 +            }
 +            return frames;
 +        }
@@ -23781,13 +23894,37 @@ index 00000000..c3c1892b
 +            verifySessionClip(plan.getJSONObject("pre_session_audio"), path);
 +            if (probeInstructionPath == null) probeInstructionPath = path;
 +        }
++        if (plan.has("timed_audio") && !plan.has("post_session_audio")) {
++            throw new IOException("Authored main requires a separate outro");
++        }
 +        if (plan.has("post_session_audio")) {
 +            JSONObject outro = plan.getJSONObject("post_session_audio");
-+            if (!"haupt-15".equals(scenarioId) || outro.getInt("offset_frames") != totalFrames) {
++            if (!"haupt-15".equals(scenarioId) || totalFrames != sampleRate * 900
++                    || outro.getInt("offset_frames") != totalFrames || outro.getInt("duration_frames") != sampleRate * 19) {
 +                throw new IOException("Unexpected session outro");
 +            }
-+            verifySessionClip(outro, "assets/audio/box-breathing/de/soft-v2/outro.wav");
++            String path = "assets/audio/box-breathing/de/soft-v2/outro.wav";
++            verifySessionClip(outro, path);
++            if (plan.has("timed_audio") && mainOutroPath == null) {
++                verifyMainTrack(plan.getJSONObject("timed_audio"), totalFrames);
++                mainOutroPath = path;
++            }
 +        }
++    }
++
++    private void verifyMainTrack(JSONObject clip, int expectedFrames) throws IOException, JSONException {
++        if (clip.getInt("duration_frames") != expectedFrames)
++            throw new IOException("Main track duration does not match the plan");
++        FileIdentity track = boundClip(clip, "assets/audio/scenarios/haupt-15/haupt-15.flac");
++        byte[] bytes = verified(track);
++        if (bytes.length < 42) throw new IOException("Incomplete main FLAC header");
++        ByteBuffer header = ByteBuffer.wrap(bytes);
++        long stream = header.getLong(18);
++        if (header.getInt(0) != 0x664c6143 || (header.getInt(4) & 0x7fffffff) != 34 || (stream >>> 44) != sampleRate
++                || ((stream >>> 36) & 255L) != 15L || (stream & ((1L << 36) - 1L)) != expectedFrames) {
++            throw new IOException("Main FLAC does not match the recording plan");
++        }
++        encodedTracks.put("haupt-15", track);
 +    }
 +
 +    private void verifySessionClip(JSONObject clip, String path) throws IOException, JSONException {
@@ -27007,10 +27144,10 @@ index 68b7cc01..daea3bee 100644
  }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
 new file mode 100644
-index 00000000..250592a1
+index 00000000..ff2ab1e5
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
-@@ -0,0 +1,175 @@
+@@ -0,0 +1,179 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.res.AssetManager;
@@ -27048,6 +27185,7 @@ index 00000000..250592a1
 +            owner.defer(() -> { }, () -> { });
 +            player.frame = 705600; now[0] += 16000000000L; owner.observe();
 +            AssetManager assets = new AssetManager();
++            final boolean[] authoredMain = {false};
 +            ConditionAudioContract.Provider provider = new ConditionAudioContract.Provider("background", "packaged-native-app-provider",
 +                "phase-audio/background.mp3", BreathingSetupAudioContract.sha256(new byte[]{1,2,3}), 3, "audio/mpeg");
 +            factory = new ConditionAudioAndroidMediaBackendFactory(assets, false,
@@ -27055,8 +27193,10 @@ index 00000000..250592a1
 +                    public void verify() { }
 +                    public java.util.List<String> ids() { return java.util.Arrays.asList("haupt-15", "free-exploration", "probe-5"); }
 +                    public boolean hasProbeInstruction() { return true; }
++                    public boolean hasAuthoredMain() { return authoredMain[0]; }
 +                    public MediaPlayer prepare(String id) {
-+                        if ("free-exploration".equals(id) || "probe-5".equals(id)) return new MediaPlayer();
++                        if ("free-exploration".equals(id) || "probe-5".equals(id)
++                                || "haupt-15".equals(id) && authoredMain[0]) return new MediaPlayer();
 +                        throw new AssertionError("continuous main replayed legacy scenario");
 +                    }
 +                });
@@ -27115,7 +27255,8 @@ index 00000000..250592a1
 +            check(bridge.lastEnd.getLong("main_start_frame") == 2116800 && bridge.lastEnd.getLong("r") == 57,
 +                "new backend reset stays bound to its own captured frame");
 +
-+            for (String scenario : new String[]{"free-exploration", "probe-5"}) {
++            authoredMain[0] = true;
++            for (String scenario : new String[]{"free-exploration", "probe-5", "haupt-15"}) {
 +                MediaPlayer background = MediaPlayer.players.get(MediaPlayer.players.size() - 1);
 +                ConditionAudioRuntime.MediaBackend authored = factory.create(provider, listener(), scenario);
 +                MediaPlayer track = MediaPlayer.players.get(MediaPlayer.players.size() - 1);
@@ -29253,10 +29394,10 @@ index ebe21ddf..c8269669 100644
          long value = 20;
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
-index 00000000..a75029b7
+index 00000000..d9097c84
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,115 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.ByteArrayInputStream;
@@ -29290,6 +29431,12 @@ index 00000000..a75029b7
 +        check(catalog.ids().contains(scenario), "authored exploration is discoverable");
 +        check("assets/audio/main-study/de/probe-instructions.wav".equals(catalog.probeInstructionPath()),
 +            "verified authored instruction is discoverable independently of the timed practice");
++        String timedMain = "assets/audio/scenarios/haupt-15/haupt-15.flac";
++        check(timedMain.equals(catalog.encodedTrackPath("haupt-15"))
++            && "assets/audio/box-breathing/de/soft-v2/outro.wav".equals(catalog.mainOutroPath()),
++            "verified main playback has distinct timed and post-session media");
++        check(new org.json.JSONObject(catalog.recordingPlan("haupt-15")).getBoolean("authored_main"),
++            "the participant plan binds the timed mix rather than the legacy loop");
 +        try (java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
 +            check(catalog.writeEncodedTrack(scenario, output) == 19_715_793, "original exploration frame count");
 +            check(java.util.Arrays.equals(Files.readAllBytes(root.resolve(media)), output.toByteArray()),
@@ -29300,7 +29447,7 @@ index 00000000..a75029b7
 +            throw new AssertionError("exploration rendered as a WAV instead of the verified MP3");
 +        } catch (IOException expected) { }
 +
-+        for (String damagedPath : new String[] { media, "assets/audio/playground/calibration-prelude.mp3",
++        for (String damagedPath : new String[] { media, timedMain, "assets/audio/playground/calibration-prelude.mp3",
 +                "assets/audio/main-study/de/probe-instructions.wav", "assets/audio/box-breathing/de/soft-v2/outro.wav" }) {
 +            ScenarioAudioPackage damaged = ScenarioAudioPackage.open(path -> {
 +                if (!path.equals(damagedPath)) return Files.newInputStream(root.resolve(path));
@@ -30826,7 +30973,7 @@ index 262fbeec..1e36d908 100644
        "type": "object"
      },
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..e49ec25f 100644
+index ccb3e308..5d208c97 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -15,6 +15,11 @@ param(
@@ -30895,7 +31042,7 @@ index ccb3e308..e49ec25f 100644
      $usesPolarSessionRuntime = ($isExperimentSessionPanel -and -not $standaloneExperimentOwner) -or
          $selectedPanelModuleId -ceq "polar-controls"
      $standaloneExperimentOwnerJava = if ($standaloneExperimentOwner) { 'true' } else { 'false' }
-@@ -1059,14 +1097,18 @@ $sharedPanelFacade
+@@ -1059,14 +1097,21 @@ $sharedPanelFacade
      private static long presentationGeneration;
      private static boolean terminalIntentAdmitted;
      private static boolean terminalFinishConsumed;
@@ -30911,10 +31058,13 @@ index ccb3e308..e49ec25f 100644
      private static volatile ExperimentSessionPackagedClosure.Result experimentSessionClosure;
      private static long pendingAudioGeneration;
 +    private static String pendingAudioScenario = "";
++    private static long mainOutroEligibleGeneration;
++    private static Object mainOutroPlayback;
++    private static Runnable releaseMainOutro;
      private static String pendingAudioPrepareOperation = "";
      private static String pendingAudioCondition = "";
      private static boolean audioImmersiveAdmitted;
-@@ -1104,6 +1146,8 @@ $sharedPanelFacade
+@@ -1104,6 +1149,8 @@ $sharedPanelFacade
                  && (preparedClosureApplicationContext != context
                      || !preparedClosureFilesRoot.equals(appPrivateFilesRoot)))
              throw new SecurityException("prepared-owner-scope-mismatch");
@@ -30923,7 +31073,7 @@ index ccb3e308..e49ec25f 100644
          ConditionAudioContract.TrustedPackagedInventory inventory =
              ConditionAudioContract.TrustedPackagedInventory.unavailable(
                  "packaged-inventory-not-loaded");
-@@ -1178,10 +1222,11 @@ $sharedPanelFacade
+@@ -1178,10 +1225,11 @@ $sharedPanelFacade
                  phaseProviders[0],phaseProviders[1],phaseProviders[2]);
          }
          try {
@@ -30936,7 +31086,7 @@ index ccb3e308..e49ec25f 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1189,12 +1234,21 @@ $sharedPanelFacade
+@@ -1189,16 +1237,30 @@ $sharedPanelFacade
                              + receipt.event.name().toLowerCase(java.util.Locale.ROOT)
                              + " generation=" + receipt.sessionGeneration
                              + " revision=" + receipt.receiptRevision
@@ -30951,14 +31101,23 @@ index ccb3e308..e49ec25f 100644
 +                    if (receipt.event == ConditionAudioContract.Event.PROGRESS) {
 +                        synchronized (PRESENTATION_LOCK) {
 +                            if (!"free-exploration".equals(pendingAudioScenario)
-+                                    && !("probe-5".equals(pendingAudioScenario) && hasProbeInstruction())) return;
++                                    && !("probe-5".equals(pendingAudioScenario) && hasProbeInstruction())
++                                    && !("haupt-15".equals(pendingAudioScenario) && hasAuthoredMain())) return;
 +                        }
 +                        eventOperation = "audio-position";
 +                    }
                      if (!eventOperation.isEmpty()) {
                          synchronized (PRESENTATION_LOCK) {
                              if (terminalIntentAdmitted || receipt.sessionGeneration != pendingAudioGeneration)
-@@ -1208,6 +1262,7 @@ $sharedPanelFacade
+                                 return;
++                            if (receipt.event == ConditionAudioContract.Event.NATURAL_END
++                                    && "haupt-15".equals(pendingAudioScenario) && hasAuthoredMain()) {
++                                mainOutroEligibleGeneration = receipt.sessionGeneration;
++                            }
+                         }
+                         try {
+                             org.json.JSONObject event = new org.json.JSONObject()
+@@ -1208,6 +1270,7 @@ $sharedPanelFacade
                                      + "-" + receipt.receiptRevision)
                                  .put("expected_generation", receipt.sessionGeneration)
                                  .put("elapsed_realtime_ns", android.os.SystemClock.elapsedRealtimeNanos());
@@ -30966,7 +31125,7 @@ index ccb3e308..e49ec25f 100644
                              nativeApplyBreathCompositionCommand(event.toString());
                          } catch (Exception error) {
                              android.util.Log.e("RustyQuestNativeRenderer", "audio-event-record-failed", error);
-@@ -1237,6 +1292,7 @@ $sharedPanelFacade
+@@ -1237,6 +1300,7 @@ $sharedPanelFacade
  
      /** Binds a panel arm/start request to the verified packaged profile and audio asset. */
      static String applyExperimentSessionCommand(String commandJson) {
@@ -30974,7 +31133,7 @@ index ccb3e308..e49ec25f 100644
          try {
              org.json.JSONObject command = new org.json.JSONObject(commandJson == null ? "{}" : commandJson);
              String operation = command.optString("operation", "");
-@@ -1245,6 +1301,18 @@ $sharedPanelFacade
+@@ -1245,6 +1309,18 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -30993,7 +31152,7 @@ index ccb3e308..e49ec25f 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1277,12 +1345,14 @@ $sharedPanelFacade
+@@ -1277,12 +1353,14 @@ $sharedPanelFacade
                          .put("media_type", guidance.mediaType));
                  }
              }
@@ -31012,7 +31171,7 @@ index ccb3e308..e49ec25f 100644
      }
  
      private static byte[] readPackagedAsset(
-@@ -1319,6 +1389,14 @@ $polarBleStopHooks
+@@ -1319,6 +1397,14 @@ $polarBleStopHooks
          return closure != null && closure.active && closure.openControlDefault;
      }
  
@@ -31027,7 +31186,7 @@ index ccb3e308..e49ec25f 100644
      static String conditionBreathGuidanceReadiness(String conditionId) {
          ExperimentSessionPackagedClosure.Result closure = experimentSessionClosure;
          if (closure == null || !closure.active) return "pattern-inventory-unavailable";
-@@ -1334,12 +1412,56 @@ $polarBleStopHooks
+@@ -1334,12 +1420,98 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -31035,15 +31194,57 @@ index ccb3e308..e49ec25f 100644
 +    }
 +
 +    static String conditionAudioRecordingPlan(String scenarioId) {
-+        // The selected main study records the app-owned continuous loop, not
-+        // the separately packaged legacy instruction/calibration timeline.
-+        // A missing selected owner must remain unavailable, never fall back.
++        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
 +        if (BreathingSetupAudio.selected(preparedClosureApplicationContext)
-+                && "haupt-15".equals(scenarioId)) {
++                && "haupt-15".equals(scenarioId) && !hasAuthoredMain()) {
 +            return BreathingSetupAudio.mainRecordingPlan(scenarioId);
 +        }
-+        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
 +        return tracks == null ? null : tracks.recordingPlan(scenarioId);
++    }
++
++    static boolean hasAuthoredMain() {
++        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
++        return tracks != null && tracks.hasAuthoredMain();
++    }
++
++    private static void scheduleMainOutro(long generation) {
++        Object playback = new Object();
++        synchronized (PRESENTATION_LOCK) {
++            if (terminalIntentAdmitted || generation <= 0L || generation != mainOutroEligibleGeneration) return;
++            mainOutroEligibleGeneration = 0L;
++            mainOutroPlayback = playback;
++        }
++        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
++            synchronized (PRESENTATION_LOCK) {
++                if (terminalIntentAdmitted || playback != mainOutroPlayback) return;
++                try {
++                    ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
++                    if (tracks == null) throw new IllegalStateException("main-outro-unavailable");
++                    releaseMainOutro = tracks.playMainOutro(
++                        () -> mainOutroFinished(playback), () -> mainOutroFinished(playback));
++                } catch (Exception failure) {
++                    mainOutroPlayback = null;
++                    android.util.Log.e("RustyQuestNativeRenderer", "main-outro-playback-failed", failure);
++                }
++            }
++        });
++    }
++
++    private static void mainOutroFinished(Object playback) {
++        synchronized (PRESENTATION_LOCK) {
++            if (playback == mainOutroPlayback) cancelMainOutro();
++        }
++    }
++
++    private static void cancelMainOutro() {
++        Runnable release;
++        synchronized (PRESENTATION_LOCK) {
++            mainOutroEligibleGeneration = 0L;
++            mainOutroPlayback = null;
++            release = releaseMainOutro;
++            releaseMainOutro = null;
++        }
++        if (release != null) new android.os.Handler(android.os.Looper.getMainLooper()).post(release);
 +    }
 +
 +    static boolean hasCalibrationInstruction() throws Exception {
@@ -31085,7 +31286,7 @@ index ccb3e308..e49ec25f 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1469,13 @@ $polarBleStopHooks
+@@ -1347,12 +1519,14 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -31095,12 +31296,13 @@ index ccb3e308..e49ec25f 100644
              if (pendingAudioGeneration > 0L && sessionGeneration != pendingAudioGeneration) {
                  return false;
              }
++            cancelMainOutro();
              pendingAudioGeneration = sessionGeneration;
 +            pendingAudioScenario = scenarioId;
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1484,13 @@ $polarBleStopHooks
+@@ -1361,12 +1535,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -31115,7 +31317,26 @@ index ccb3e308..e49ec25f 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1612,10 @@ $experimentSessionPolarCleanup
+@@ -1391,6 +1566,10 @@ $polarBleStopHooks
+      */
+     public static void applyConditionAudioControlReceipt(
+             long sessionGeneration, long receiptRevision, String event) {
++        if ("main-outro".equals(event)) {
++            if (receiptRevision > 0L) scheduleMainOutro(sessionGeneration);
++            return;
++        }
+         ConditionAudioRuntime runtime;
+         String operationId;
+         synchronized (PRESENTATION_LOCK) {
+@@ -1472,6 +1651,7 @@ $polarBleStopHooks
+     }
+ 
+     static boolean closeExperimentResourcesFromOwner() {
++        cancelMainOutro();
+         if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper())
+             throw new IllegalStateException("terminal cleanup must run off main");
+         boolean clean = true;
+@@ -1488,7 +1668,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -31127,7 +31348,15 @@ index ccb3e308..e49ec25f 100644
          }
          return clean;
      }
-@@ -1525,6 +1652,7 @@ $experimentSessionPolarCleanup
+@@ -1507,6 +1690,7 @@ $experimentSessionPolarCleanup
+ 
+     // Called at the physical terminal latch, before native recording finalization completes.
+     static void stopCurrentConditionAudioForTerminal(boolean fullExit) {
++        if (fullExit) cancelMainOutro();
+         ConditionAudioRuntime runtime = conditionAudioRuntime;
+         if (runtime == null) return;
+         long generation = runtime.snapshot().sessionGeneration;
+@@ -1525,6 +1709,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -31135,7 +31364,7 @@ index ccb3e308..e49ec25f 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1607,6 +1735,7 @@ $polarRuntimeReopenFromExplicitLaunch
+@@ -1607,6 +1792,7 @@ $polarRuntimeReopenFromExplicitLaunch
              synchronized (PRESENTATION_LOCK) {
                  presentationGeneration = launchEpoch;
                  terminalIntentAdmitted = false;
@@ -31143,7 +31372,7 @@ index ccb3e308..e49ec25f 100644
                  terminalFinishConsumed = false;
              }
          }
-@@ -1710,6 +1839,9 @@ $polarRuntimeReopenFromExplicitLaunch
+@@ -1710,6 +1896,9 @@ $polarRuntimeReopenFromExplicitLaunch
          synchronized (PRESENTATION_LOCK) {
              if (terminalIntentAdmitted) return false;
              terminalIntentAdmitted = true;
@@ -31153,7 +31382,7 @@ index ccb3e308..e49ec25f 100644
          }
          NativeRendererSelfKioskService.acknowledgeTerminalIntent(guardGeneration, homeEpisode);
          NativeRendererExperimentLaunchAuthority.invalidatePending();
-@@ -1729,8 +1861,29 @@ $experimentSessionTerminalAudioStop
+@@ -1729,8 +1918,29 @@ $experimentSessionTerminalAudioStop
                  || shutdownAckRevision <= 0L) {
              return;
          }
@@ -31183,7 +31412,7 @@ index ccb3e308..e49ec25f 100644
              terminalFinishConsumed = true;
          }
          android.util.Log.i("RustyQuestNativeRenderer",
-@@ -2036,6 +2189,8 @@ if ($showcaseSelected) {
+@@ -2036,6 +2246,8 @@ if ($showcaseSelected) {
  if ($standaloneExperimentOwner) {
      $standaloneBaseSources = @('NativeAppSettingsReader.java','NativeMeshUiProducer.java','NativeInputWidgetGeometry.java','NativePageSnapshot.java','NativeSystemKeyboard.java','NativePanelFont.java',
          'NativeRendererExperimentLaunchAuthority.java','NativeRendererExperimentLauncherPolicy.java','NativeRendererActivityComponents.java','NativeRendererBootObservation.java',
@@ -31192,7 +31421,7 @@ index ccb3e308..e49ec25f 100644
          'NativeRendererWriterAcknowledgedExitPolicy.java','PanelImmersiveHandoff.java',
          'PanelImmersiveHandoffLifecyclePolicy.java','PanelImmersiveHandoffProofPolicy.java',
          'PanelModule.java','PanelModuleRegistry.java')
-@@ -2069,7 +2224,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
+@@ -2069,7 +2281,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
  $debugSources = @()
  if ($script:BuildUsesLock) {
      $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['debug_experiment_operator_sources']) { $appBuildLockObject.debug_experiment_operator_sources })
@@ -31201,7 +31430,7 @@ index ccb3e308..e49ec25f 100644
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2244,70 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2301,70 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -31272,7 +31501,7 @@ index ccb3e308..e49ec25f 100644
  if (-not [string]::IsNullOrWhiteSpace($generatedControlPanelActivityPath)) {
      $sourceFiles += $generatedControlPanelActivityPath
  }
-@@ -2127,6 +2346,7 @@ Invoke-Checked "javac" $javac @(
+@@ -2127,6 +2403,7 @@ Invoke-Checked "javac" $javac @(
  )
  Invoke-Checked "jar class pack" $jar @("cf", $classesJar, "-C", $classesDir, ".")
  Invoke-Checked "d8" $d8 @("--lib", $platformJar, "--output", $dexDir, $classesJar)
@@ -31280,7 +31509,7 @@ index ccb3e308..e49ec25f 100644
  
  $previousAndroidHome = $env:ANDROID_HOME
  $previousNdkHome = $env:ANDROID_NDK_HOME
-@@ -2152,6 +2372,10 @@ if ($showcaseVulkanSelected) {
+@@ -2152,6 +2429,10 @@ if ($showcaseVulkanSelected) {
  } elseif ($showcaseSelected) {
      $cargoBuildArguments += @('--features', 'showcase')
  }
@@ -31291,7 +31520,7 @@ index ccb3e308..e49ec25f 100644
  if ($operatorSelection.enabled) { $cargoBuildArguments += @('--features', 'meta-xr-operator') }
  try {
      $env:ANDROID_HOME = $AndroidHome
-@@ -2265,6 +2489,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
+@@ -2265,6 +2546,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
  [IO.File]::WriteAllText($packagingInputPath, $packaging.json, [Text.UTF8Encoding]::new($false))
  # Public build identity only: no paths or app/private payload metadata.
  $buildIdentityAsset = [ordered]@{schema='rusty.quest.android_build_identity.v1';source_commit=$sourceHead;source_tree=$sourceTree;source_composition_fingerprint=[string]$sourceComposition.fingerprint;packaging_fingerprint=$packaging.sha256}
@@ -31299,7 +31528,7 @@ index ccb3e308..e49ec25f 100644
  $buildIdentityAsset | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $assetsDir 'android-build-identity.json') -Encoding utf8
  Invoke-Checked "aapt2 link" $aapt2 @(
      "link",
-@@ -2297,6 +2522,7 @@ Invoke-Checked "apksigner" $apksigner @(
+@@ -2297,6 +2579,7 @@ Invoke-Checked "apksigner" $apksigner @(
  
  $sha256 = Get-FileSha256 -Path $apkSigned
  Assert-QuestMetaXrOperatorArchive -Selection $operatorSelection -ApkPath $apkSigned
@@ -31307,7 +31536,7 @@ index ccb3e308..e49ec25f 100644
  if ($operatorSelection.enabled) {
      $operatorManifestDump = @(& $aapt2 dump xmltree $apkSigned --file AndroidManifest.xml 2>&1 | ForEach-Object ToString)
      $operatorManifestExit = $LASTEXITCODE
-@@ -2305,6 +2531,8 @@ if ($operatorSelection.enabled) {
+@@ -2305,6 +2588,8 @@ if ($operatorSelection.enabled) {
          ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutDir 'operator-manifest-dump.json') -Encoding utf8NoBOM
  }
  $manifest = [ordered]@{
@@ -31316,7 +31545,7 @@ index ccb3e308..e49ec25f 100644
      meta_xr_operator = $operatorSelection
      '$schema' = "rusty.quest.native_renderer_android.build_manifest.v1"
      app_id = if ($null -eq $appBuildLockObject) { "unlocked-development" } else { [string]$appBuildLockObject.app_id }
-@@ -2451,9 +2679,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
+@@ -2451,9 +2736,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
  if ($script:BuildUsesLock) {
      $propertyManifestPath = Join-Path $repoRoot "fixtures\native-renderer\native-renderer-property-manifest.json"
      $runCapsule = [ordered]@{
@@ -33154,7 +33383,7 @@ index 00000000..ae47c5a7
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_control_mode.py b/tools/checks/test_experiment_control_mode.py
-index f406a33a..7bb62f3b 100644
+index f406a33a..12b67366 100644
 --- a/tools/checks/test_experiment_control_mode.py
 +++ b/tools/checks/test_experiment_control_mode.py
 @@ -5,6 +5,7 @@ from pathlib import Path
@@ -33177,13 +33406,14 @@ index f406a33a..7bb62f3b 100644
   ExperimentSessionCommandJournal journal=new ExperimentSessionCommandJournal();
   class NativeFixture implements ExperimentControlMode.NativeAccess {long value=9;public long initialize(boolean s){return value;}public long read(){return value;}public long select(long e,int m){return value;}}
   NativeFixture nativeOwner=new NativeFixture();ExperimentControlMode controlMode=new ExperimentControlMode(nativeOwner);
-@@ -34,10 +36,22 @@ final class ControlModeGatewayTest {
+@@ -34,10 +36,23 @@ final class ControlModeGatewayTest {
   Carrier carrier=new Carrier();
   class Delegate {void dispatch(ExperimentSessionBleServer.CommandRequest request){dispatches++;carrier.updateReceipt(request.id,"pending","owner dispatch");}}
   Delegate delegate=new Delegate();
 + interface WifiDelegate {
 +  java.util.List<String> scenarioIds();
 +  default boolean hasProbeInstruction(){return false;}
++  default boolean hasAuthoredMain(){return false;}
 +  void dispatchScenario(ExperimentSessionBleServer.CommandRequest request,String scenario);
 +  void dispatchParticipant(ExperimentSessionBleServer.CommandRequest request,String scenario,String plan);
 + }
@@ -33201,7 +33431,7 @@ index f406a33a..7bb62f3b 100644
   __OWNER__
   interface Checked {void run()throws Exception;}
   static void deny(Checked action)throws Exception {try{action.run();}catch(SecurityException expected){return;}throw new AssertionError("Non-Remote command reached actual main-thread dispatch");}
-@@ -59,7 +73,7 @@ final class ControlModeGatewayTest {
+@@ -59,7 +74,7 @@ final class ControlModeGatewayTest {
    System.out.println("PASS production main-thread gateway mode admission, Choose/Direct denial, Remote dispatch, legacy behavior, queued switch and original receipts");
   }
  }
@@ -33473,10 +33703,10 @@ index 00000000..8cab703c
 +    main()
 diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
 new file mode 100644
-index 00000000..632adbff
+index 00000000..486b90c7
 --- /dev/null
 +++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
-@@ -0,0 +1,272 @@
+@@ -0,0 +1,284 @@
 +"""Run selected gateway boundary methods with deterministic audio/native effects."""
 +import argparse
 +import os
@@ -33532,6 +33762,7 @@ index 00000000..632adbff
 + CalibrationInstruction calibrationInstruction;
 + ProbeInstruction probeInstruction;
 + boolean calibrationSelected,probePackaged=true,polarReady=true;Runnable narrationCompleted,narrationFailed;int narrationStarts,narrationReleases;
++ boolean authoredMain;
 + int dispatches,dispatchAttempts,rejectedUpdates;boolean failDispatch;String phase="ARMED",scenario="";
 + ExperimentSessionCommandJournal journal=new ExperimentSessionCommandJournal();
 + static final class Clear {void clear(){}}
@@ -33554,6 +33785,7 @@ index 00000000..632adbff
 +  }
 +  public boolean hasCalibrationInstruction(){return calibrationSelected;}
 +  public boolean hasProbeInstruction(){return probePackaged;}
++  public boolean hasAuthoredMain(){return authoredMain;}
 +  public Runnable playProbeInstruction(Runnable completed,Runnable failed) {
 +   return playCalibrationInstruction(completed,failed);
 +  }
@@ -33568,6 +33800,7 @@ index 00000000..632adbff
 +  boolean hasCalibrationInstruction() throws Exception;
 +  Runnable playCalibrationInstruction(Runnable completed,Runnable failed) throws Exception;
 +  boolean hasProbeInstruction();
++  boolean hasAuthoredMain();
 +  Runnable playProbeInstruction(Runnable completed,Runnable failed) throws Exception;
 + }
 + class Main {
@@ -33652,6 +33885,14 @@ index 00000000..632adbff
 +  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1,
 +    "exploration start retries use the original receipt");
 + }
++ static void checkAuthoredMainStart()throws Exception {
++  GatewayBreathingBoundaryTest h=fresh();h.scenario="haupt-15";h.authoredMain=true;
++  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1&&BreathingSetupAudio.begins==0,
++    "authored main starts its own media clock without reserving the legacy loop");
++  h=fresh();h.scenario="haupt-15";h.authoredMain=true;BreathingSetupAudio.inputReady=false;
++  check(h.start().getString("state").equals("rejected")&&h.dispatches==0,
++    "authored main still needs a valid prepared breathing input");
++ }
 + static void checkProbeStart()throws Exception {
 +  JSONObject arm=new JSONObject().put("v",1).put("op","arm").put("id",ID).put("g",7).put("condition","condition-a")
 +   .put("bias",0).put("nonce","2222222222222222").put("scenario","probe-5").put("participant_id","Tes_30_N");
@@ -33685,6 +33926,7 @@ index 00000000..632adbff
 + public static void main(String[] args)throws Exception {
 +  checkCalibrationInstruction();
 +  checkExplorationStart();
++  checkAuthoredMainStart();
 +  checkProbeStart();
 +  GatewayBreathingBoundaryTest h=fresh();check(h.start().getString("state").equals("pending")&&h.dispatches==0,"start must wait for real boundary");
 +  check(h.start().getString("state").equals("pending")&&BreathingSetupAudio.begins==1,"retry must retain original admission");
@@ -33750,7 +33992,7 @@ index 00000000..632adbff
 +if __name__ == '__main__':
 +    main()
 diff --git a/tools/checks/test_experiment_gateway_dedupe.py b/tools/checks/test_experiment_gateway_dedupe.py
-index fbc332fd..55ef13fe 100644
+index fbc332fd..572ad6d0 100644
 --- a/tools/checks/test_experiment_gateway_dedupe.py
 +++ b/tools/checks/test_experiment_gateway_dedupe.py
 @@ -3,6 +3,7 @@ import argparse
@@ -33774,13 +34016,14 @@ index fbc332fd..55ef13fe 100644
   ExperimentSessionCommandJournal journal=new ExperimentSessionCommandJournal();
   class LegacyNativeMode {ExperimentControlMode.Snapshot readSnapshot(){return new ExperimentControlMode.Snapshot(9);}}
   LegacyNativeMode controlMode=new LegacyNativeMode();
-@@ -40,10 +42,24 @@ final class GatewayDedupeHarness {
+@@ -40,10 +42,25 @@ final class GatewayDedupeHarness {
   Carrier carrier=new Carrier();
   class Delegate {void dispatch(ExperimentSessionBleServer.CommandRequest r){dispatches++;carrier.updateReceipt(r.id,"pending","real handler callback stand-in");}}
   Delegate delegate=new Delegate();
 + interface WifiDelegate {
 +  java.util.List<String> scenarioIds();
 +  default boolean hasProbeInstruction(){return false;}
++  default boolean hasAuthoredMain(){return false;}
 +  void dispatchScenario(ExperimentSessionBleServer.CommandRequest request,String scenario);
 +  void dispatchParticipant(ExperimentSessionBleServer.CommandRequest request,String scenario,String plan);
 + }
@@ -33800,7 +34043,7 @@ index fbc332fd..55ef13fe 100644
   __OWNER__
   static void check(boolean yes,String message){if(!yes)throw new AssertionError(message);}
   public static void main(String[]args)throws Exception{
-@@ -80,7 +96,7 @@ final class GatewayDedupeHarness {
+@@ -80,7 +97,7 @@ final class GatewayDedupeHarness {
    System.out.println("PASS production gateway owner admission: once-only dispatch, canonical ID binding, original pending/late confirmation, exact receipt, no capacity eviction, retired owner denial; inert handler callbacks");
   }
  }

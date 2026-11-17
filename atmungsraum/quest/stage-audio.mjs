@@ -6,7 +6,7 @@ import { validateManifest } from '../audio/box-breathing.js';
 import { AUDIO_LIBRARY, SCENARIOS, validateScenario } from '../audio/scenario-protocol.js';
 import { loadBoxLoop } from './box-loop.mjs';
 import { loadAuthoredPlayback } from './authored-playback.mjs';
-import { buildMainStudyScenario, buildProbeStudyScenario } from './main-study-audio.mjs';
+import { buildMainStudyScenario, buildProbeStudyScenario, stageMainStudyTrack } from './main-study-audio.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const scenarioDirectory = 'audio/scenarios';
@@ -34,6 +34,7 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output, mainSt
   const study = mainStudy
     ? await buildMainStudyScenario(sourceRoot, originals.find(({ id }) => id === 'haupt-15').plan)
     : null;
+  if (study) await stageMainStudyTrack(study);
   const scenarios = [];
   for (const { id, path, data, plan } of originals) {
     const authored = study && (id === 'haupt-15' ? study
