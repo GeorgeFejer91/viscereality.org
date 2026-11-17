@@ -1,5 +1,31 @@
 # Project
 
+### PWA input confirmation and conditional update step — 2026-11-17
+
+- [x] Keep the confirmed input visible above the tracking circles; readiness
+  polls gate actions without hiding/revealing the method/status block.
+- [x] Name the choice Atmungsmessmethode and explain what it controls.
+- [x] Use the same gold active outline for Controller, fixed/adaptive Polar
+  STATE and personally calibrated Polar. Keep the active Controller choice
+  present; a requested method remains separate until native confirmation.
+- [x] Move APK comparison/update controls to a conditional preparation page.
+  Current APKs skip it. Settings retains an optional update-page entry. Native
+  admission remains authoritative, including offline use with a warning.
+- [x] Mark the authenticated Quest link green after saved Wi-Fi rejoin, with
+  transport wording that does not claim Bluetooth is carrying live commands.
+- [x] Center the live ECG display on the median baseline; raw microvolts,
+  timestamps, gaps, expiry, recordings and replay fences remain unchanged.
+- [x] Verify the full Node suite with the selected native/Java integration,
+  real-app input selection, update/handoff, layout and startup regressions.
+  Independent review found no product issues; its stale layout-fixture route
+  finding was corrected. See [verification](VERIFICATION.md#input-confirmation-and-update-step--2026-11-17).
+- [ ] Publish this increment through the ordinary secondary-account PR and
+  verify its exact Pages deployment and affected live responses.
+- [ ] Refresh the installed phone at the next attended idle point and confirm
+  switching methods against the actual Quest. Rendered checks use synthetic
+  transport and do not establish a new hardware result.
+
+
 Earlier hardware readback (20:15): Meta has subsequently installed16. Its exact
 APK digest matches the published16, installer/initiator are Meta, and Android
 records lastUpdateTime19:43:44. The headset is asleep at readback. This establishes

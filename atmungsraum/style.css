@@ -148,12 +148,11 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 }
 .preview-controls button:enabled { border-color: var(--border); background: var(--surface); }
 .preview-controls:has(#preview-controller[hidden]) #preview-calibrate { grid-column: 1 / -1; }
-#preview-controller:enabled { border-color: var(--site-gold); }
-:is(#preview-calibrate, #preview-continue, #quest-find, #quest-pairing-confirm, #quest-play, #patient-next):enabled:not([aria-disabled="true"]) { color: var(--text); border-color: #3487b7; background: var(--site-blue); }
+:is(#preview-calibrate, #preview-continue, #quest-find, #quest-pairing-confirm, #quest-play, #patient-next):enabled:not([aria-disabled="true"]):not([aria-pressed="true"]) { color: var(--text); border-color: #3487b7; background: var(--site-blue); }
 #preview-start { grid-column: 1 / -1; }
 #breathing-preview .actions { width: 100%; min-height: 48px; }
 #breathing-preview .actions > button { width: min(100%, 220px); }
-:is(#preview-calibrate, #preview-continue, #quest-find, #quest-pairing-confirm, #quest-play, #patient-next):hover:enabled:not([aria-disabled="true"]) { background: #0875b4; border-color: #79badf; }
+:is(#preview-calibrate, #preview-continue, #quest-find, #quest-pairing-confirm, #quest-play, #patient-next):hover:enabled:not([aria-disabled="true"]):not([aria-pressed="true"]) { background: #0875b4; border-color: #79badf; }
 main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 .quest-body, #quest-polar, #quest-data { display: grid; min-width: 0; gap: clamp(6px, 1dvh, 12px); }
 .quest-body { align-content: center; }
@@ -269,7 +268,7 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 #operator-live #preview-actual { text-align: start; }
 .preview-controls { width: 100%; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 .preview-controls small { color: var(--muted); font-size: .875em; margin-top: 4px; line-height: 1.5; }
-.preview-controls [aria-pressed="true"] { border-color: #69b4e0; border-left-width: 3px; }
+.preview-controls button[aria-pressed="true"] { border-color: #efc570; border-left-width: 3px; background: var(--surface); }
 .operator-actions { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .operator-actions > :only-child, .operator-actions:has(> [hidden]) > :not([hidden]) { width: 100%; }
 #breathing-preview .actions > button { width: 100%; }
@@ -287,7 +286,7 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 /* Routine connection information stays compact; exceptions remain fully visible. */
 .operator-common { padding: 10px 12px; gap: 8px; border: 0; border-left: 2px solid #00639c; background: transparent; }
 #operator-input-status { display: grid; gap: 12px; padding: 0; border: 0; background: transparent; }
-#operator-confirmed-input { color: #b9def4; }
+#operator-confirmed-input { color: #efc570; border-inline-start: 3px solid #efc570; padding-inline-start: 12px; }
 #operator-input-diagnostics { min-width: 0; color: var(--muted); }
 #operator-input-diagnostics > summary { min-height: 48px; align-content: center; cursor: pointer; }
 #operator-input-diagnostics[open] { display: grid; gap: 12px; padding: 12px; border-left: 2px solid #ffffff80; }

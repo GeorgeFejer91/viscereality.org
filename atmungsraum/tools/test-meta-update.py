@@ -16,7 +16,7 @@ def run():
         review = c.Review(browser, evidence)
         for width, text_size in [(390, ''), (320, ''), (320, '200%')]:
             update = dict(v=1, state='downloading', reason='download-in-progress-'+'x'*70,
-                          installed_code=11, available_code=16, downloaded_bytes=1024,
+                          installed_code=22, available_code=23, downloaded_bytes=1024,
                           total_bytes=None, session_allowed=False)
             page = review.page(initial(c), viewport={'width':width,'height':568 if width == 320 else 844})
             page.evaluate('size=>document.documentElement.style.fontSize=size', text_size)
@@ -30,7 +30,7 @@ def run():
             expect(page.locator('#operator-meta-update')).to_be_visible()
             expect(page.locator('#operator-meta-summary')).to_contain_text('herunter')
             expect(page.locator('#patient-next')).to_be_disabled()
-            go(page, 'settings')
+            go(page, 'update')
             expect(page.locator('#meta-update-status')).to_contain_text('herunter')
             expect(page.locator('#meta-update-progress')).not_to_have_attribute('value', '')
             assert page.locator('#meta-update-progress').get_attribute('value') is None
@@ -70,7 +70,7 @@ def run():
         page = review.page(initial(c))
         page.clock.run_for(1500)
         before = mutations(page)
-        go(page, 'settings')
+        go(page, 'update')
         expect(page.locator('#meta-update-status')).to_contain_text('nicht gemeldet')
         for state_name, allowed in [('waiting',False),('checking',False),('installing',False),
                                     ('restart_required',False),('failed',False),('failed',True),
@@ -90,7 +90,7 @@ def run():
         page = review.page(initial(c), viewport={'width':320,'height':568})
         page.evaluate("document.documentElement.style.fontSize='200%'")
         page.clock.run_for(1500)
-        go(page, 'settings')
+        go(page, 'update')
         update.update(state='restart_required',session_allowed=False,reason='prior-install-unconfirmed-maintenance-required')
         page.evaluate('window.reviewMetaUpdate='+json.dumps(update))
         page.clock.run_for(1200)
@@ -100,14 +100,14 @@ def run():
         page.context.close()
         # Repeatable control uses the real mounted UI and native cycle fixture.
         # Status/paint never invokes a check; one manual click creates one ID.
-        native2=dict(v=2,state='current',reason='',installed_code=11,available_code=11,
-                     required_code=11,downloaded_bytes=0,total_bytes=None,session_allowed=True,
+        native2=dict(v=2,state='current',reason='',installed_code=22,available_code=22,
+                     required_code=22,downloaded_bytes=0,total_bytes=None,session_allowed=True,
                      cycle='2',revision='7',attempt='19',can_check=True,busy_reason='')
         for width,text_size in [(390,''),(320,''),(320,'200%')]:
             page=review.page(initial(c,quest={'metaUpdate':native2}),viewport={'width':width,'height':844})
             page.evaluate('size=>document.documentElement.style.fontSize=size',text_size)
             page.clock.run_for(1500)
-            go(page,'settings')
+            go(page,'update')
             expect(page.locator('#meta-update-check')).to_be_visible()
             expect(page.locator('#meta-update-check')).to_be_enabled()
             assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
@@ -117,12 +117,12 @@ def run():
             expect(page.locator('#meta-update-check')).to_be_disabled()
             commands=page.evaluate('window.reviewMetaUpdateCommands??[]')
             assert len([x for x in commands if x['op']=='check-and-update']) == 1,commands
-            blocked=dict(native2,state='update_required',reason='required-update-not-yet-on-channel',required_code=20,
+            blocked=dict(native2,state='update_required',reason='required-update-not-yet-on-channel',required_code=24,
                          session_allowed=False,available_code=18,attempt='777',revision='9')
             page.evaluate('window.reviewMetaUpdate='+json.dumps(blocked))
             page.clock.run_for(1200)
             expect(page.locator('#meta-update-status')).to_contain_text('erforderlich')
-            expect(page.locator('#meta-update-detail')).to_contain_text('20')
+            expect(page.locator('#meta-update-detail')).to_contain_text('24')
             expect(page.locator('#patient-next')).to_be_disabled()
             review.shot(page,f'meta-repeatable-required-{width}-{text_size or "normal"}','Required update',page.locator('#meta-update-status'),'Meta update')
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

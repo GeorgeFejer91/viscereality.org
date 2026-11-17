@@ -8,7 +8,7 @@ SIZES = (("390", {"width":390,"height":844}, ""),
          ("landscape", {"width":844,"height":390}, ""),
          ("desktop", {"width":1440,"height":900}, ""))
 APK = {"v":1,"package_name":"org.viscereality.atmungsraum.developer",
-       "version_code":11,"version_name":"0.2.10-dev","build_id":"e"*64}
+       "version_code":22,"version_name":"0.2.21-dev","build_id":"e"*64}
 
 
 def module():
@@ -69,10 +69,10 @@ def capture_layout(review):
         shot(page,'participant','#patient-form')
         participant(c,page)
         shot(page,'input','#preview-controller')
-        go(page,'settings')
+        go(page,'update')
         page.locator('#apk-identity summary').click()
-        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','recommended')
-        shot(page,'settings-identity','#apk-full-identity')
+        expect(page.locator('#quest-version')).to_have_attribute('data-version-state','compatible')
+        shot(page,'update-identity','#apk-full-identity')
         page.locator('[data-operator-return]:visible').click()
         go(page,'recordings')
         shot(page,'recordings','#recording-files')
@@ -196,7 +196,7 @@ def capture_layout(review):
             page=new(quest)
             if label=='unknown-apk':
                 expect(page.locator('#operator-compatibility')).to_be_visible()
-                go(page,'settings')
+                go(page,'update')
                 page.locator('#apk-identity summary').click()
                 expect(page.locator('#quest-version')).to_have_attribute('data-version-state','unknown')
                 shot(page,label,'#apk-full-identity')
@@ -209,7 +209,7 @@ def capture_layout(review):
         review.release_policy_failure=True
         page=new()
         expect(page.locator('#operator-compatibility')).to_be_visible()
-        go(page,'settings')
+        go(page,'update')
         expect(page.locator('#quest-version')).to_have_attribute('data-version-state','check-unavailable')
         shot(page,'release-policy-failed','#apk-update-status')
         page.context.close()

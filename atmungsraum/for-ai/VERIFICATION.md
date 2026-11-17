@@ -1,5 +1,46 @@
 # Verification
 
+## Input confirmation and update step — 2026-11-17
+
+User reports: method-switch status flashing, Controller remaining gold regardless
+of the selection, version comparison always visible, neutral connection icon
+and upward-offset ECG baseline. The reproduced presentation causes were the
+ready-only hiding rule on operator-input-status and the controller-only enabled
+border rule. Confirmed method and all selected controls now derive from the
+unchanged validated native projection; readiness continues to gate actions.
+
+Checks completed before publication:
+
+- Full Node test suite passes with ATMUNGSRAUM_QUEST_REPO and the selected
+  pairing Java classpath; the 34 focused layout/ECG cases also pass.
+- test-input-selection.py reproduces the old hidden confirmed-method failure,
+  then passes method switching, single mutation per choice, no document reload,
+  stable status visibility across readiness drops, saved-link green status,
+  required/current APK routing, and 24 actual Pretext renders of four input
+  methods at 390px, 320px and 320px/200% text.
+- Full --scope layout capture passes 135 rendered states across 390px, 320px,
+  320px/200% text, short landscape and desktop, including native recovery.
+- test-operator-layout.py passes actual app navigation, native scenario Arm,
+  receipt recovery, participant drafts, session controls, Drive and history.
+- test-meta-update.py passes 27 native state/receipt/update renders, preserving
+  native admission, progress, open diagnostic focus and scroll at 320px/200%.
+- test-meta-handoff.py passes six disconnect/reload/reconnect renders.
+- test-pwa-startup.py passes cached launch, idle resume, guarded navigation,
+  URL/storage retention and error/timeout fallback.
+- Independent review passes product changes and the offline-allowed/required
+  native update gate and focus probe. Its old layout-capture Settings routes
+  were corrected for the new update page. Its automatic-update Back-loop
+  finding was fixed and independently retested in the actual app; manual
+  updates retain the prior preparation page.
+- The requested Atmungsmessmethode wording and short purpose explanation are
+  covered by the final rendered input matrix and broader layout capture.
+
+Evidence stays private under
+S:/Work/private/atmungsraum/validation/2026-11-17-pwa-input-layout/.
+This increment changes PWA presentation only. Real phone/Quest acceptance of
+this release remains pending; no new physical observation is claimed.
+
+
 ## Actual automatic boot/update acceptance — 2026-11-17
 
 Quest2 boot12→13 is bound to a changed kernel boot ID and serial. Helper launched

@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=4';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=5';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
@@ -9,7 +9,7 @@ import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=11';
 import { LiveBreathDisplay } from './live-breath-display.js?v=5';
-import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
+import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
 import { KioskControl } from './kiosk-control.js?v=3';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
@@ -244,6 +244,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (!byId('daten').hidden) byId('daten').hidden = true;
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
       participantRequired: context.requiresParticipant, active: nativeActive });
+    if (step === 'update' && localView.step !== 'update') {
+      // Once an exception needs attention, retain its page until Next. A
+      // terminal update poll must not pull focus out of an open diagnostic.
+      localView = { step, returnTo: 'connect' };
+      history.replaceState({ operatorStep: step, operatorReturnTo: localView.returnTo }, '', '#update');
+    }
     if (localView.step === 'calibration' && step === 'tracking') localView = { ...localView, step };
     const page = byId(operatorSteps[step]);
     const body = page.querySelector('.operator-body');
@@ -291,18 +297,22 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
     text(byId('operator-connection-summary'), controllerAccessState(context.status)?.role === 'active'
       ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
-    byId('operator-input-status').hidden = step === 'tracking' && context.inputReady;
+    // Readiness gates actions, never the existence of the confirmed method.
+    // Hiding this block on ready/unready polls made it flash above the circles.
+    if (byId('operator-input-status').hidden) byId('operator-input-status').hidden = false;
     previewProgressGroup.hidden ||= step !== 'calibration';
     byId('operator-connection-summary').hidden = step !== 'connect' || !context.status || context.recovery || !routineStatus;
     byId('quest-control-release').hidden = step !== 'settings' || controllerAccessState(context.status)?.role !== 'active';
     const warning = byId('operator-compatibility');
     const version = byId('quest-version').dataset.versionState;
-    warning.hidden = !context.status || !operatorCompatibilityWarning(version) || step === 'settings';
+    warning.hidden = !context.status || !operatorCompatibilityWarning(version) || step === 'update';
     text(warning, byId('apk-update-status').textContent);
     // An overriding native operation cannot be escaped through utility links.
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
+    byId('operator-update-next').disabled = context.updateRequired || context.waitingForControl || !context.status;
+    byId('operator-update-open').disabled = nativeActive || !context.status;
     for (const [name, button] of Object.entries(utilities)) {
       if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
       else if (name !== step) button.removeAttribute('aria-current');
@@ -449,6 +459,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     // Authority and readiness remain owned by the existing domain models.
     byId('quest-control-host').hidden = !access;
     const version = apkRelease.update(rehearsal.gateway, status);
+    const updateRequired = version.state === 'required' || Boolean(metaUpdate.advertised && !metaUpdate.allowed);
     const versionKey = status ? `${rehearsal.gateway?.owner.device}/${rehearsal.gateway?.owner.epoch}/${rehearsal.gateway?.owner.native_epoch}/${versionPanel.clientWidth}/${getComputedStyle(versionPanel).fontSize}/${byId('apk-identity').open}` : '';
     if (versionGeometryKey !== versionKey) {
       versionPanel.style.minBlockSize = '';
@@ -463,6 +474,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('apk-update-status'), version.message);
     text(byId('apk-installed'), version.installedLabel);
     text(byId('apk-required'), version.required);
+    // Routine version numbers belong in optional diagnostics, not every setup.
+    byId('apk-installed').hidden = byId('apk-required').hidden = !updateRequired && version.compatible;
     text(byId('apk-full-identity'), version.identity);
     const updateNotice = byId('operator-meta-update');
     // Stable nodes only: progress never replaces controls, editors or journals.
@@ -505,8 +518,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     byId('kiosk-acknowledge').hidden = !kioskView.canAcknowledge;
     const polarAttempts = breath.setup && calibrationBaseline ? breath.setup.attempt - calibrationBaseline.attempt : 0;
     paintBreathingSetup(breath, waiting);
-    paintCheck('bluetooth', bluetoothCheck, 'Bluetooth', bluetoothCheck
-      ? 'Die Quest wurde über Bluetooth gefunden.' : 'Prüfe Bluetooth am Smartphone und den Fernmodus der Quest.',
+    paintCheck('bluetooth', status ? true : bluetoothCheck, status ? 'Quest-Verbindung' : 'Bluetooth', status
+      ? 'Die Quest-Verbindung ist bestätigt. Bluetooth dient zum Finden und Koppeln; die laufende Steuerung verwendet die WLAN-Brücke.'
+      : bluetoothCheck ? 'Die Quest wurde über Bluetooth gefunden.' : 'Prüfe Bluetooth am Smartphone und den Fernmodus der Quest.',
       status ? 'für diese WLAN-Verbindung nicht benötigt' : connecting ? 'wird geprüft' : 'nicht geprüft');
     paintCheck('bridge', status ? true : bridgeFailed ? false : null, 'WLAN-Brücke', status
       ? 'Die WLAN-Brücke liefert bestätigte Quest-Daten.' : joinMessage || 'Prüfe, ob Smartphone und Quest im selben WLAN sind.');
@@ -577,7 +591,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
     download.hidden = !status || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
-      requiresParticipant, selectionAllowed, polarAttempts, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
+      requiresParticipant, selectionAllowed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
@@ -587,13 +601,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function paintBreathingSetup(view, waiting) {
     const native = view.setup;
-    text(byId('operator-confirmed-input'), view.available ? `Bestätigte Eingabe: ${view.inputLabel}` : 'Kein aktueller Eingabestatus.');
+    text(byId('operator-confirmed-input'), view.available ? `Aktive Atmungsmessmethode: ${view.inputLabel}` : 'Kein aktueller Status der Atmungsmessmethode.');
     previewCircle.hidden = !view.available;
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
       : !native.playing ? native.stage === 'idle' ? 'Automatic ist bereit.' : 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
     previewSwitch.hidden = !view.pendingInputLabel;
-    text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Die bestätigte Eingabe gilt bis zur Rückmeldung der Quest.` : '');
+    text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Die bestätigte Atmungsmessmethode gilt bis zur Rückmeldung der Quest.` : '');
     const collecting = view.showPolarCalibration && ['waiting', 'collecting'].includes(native?.calibration);
     const detail = view.updateRequired ? 'Quest-App aktualisieren: Dieser Build unterstützt die Atemeinrichtung noch nicht.'
       : view.recovery ? ''
@@ -607,10 +621,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : view.blockedReason ? view.blockedReason
       : view.showPolarCalibration && native.calibration === 'waiting' ? 'Automatic ist aktiv. Die Einrichtung beginnt mit dem nächsten vollständigen Atemzyklus.'
       : view.showPolarCalibration && native.calibration === 'collecting' ? `Automatic ist aktiv. Folge dem Atemtakt für zwei vollständige Atemzyklen.${view.qualityWarning ? ` ${view.qualityWarning}` : ''}`
-      : view.actions.continue ? 'Prüfe die Bewegung im Headset. Wenn die Eingabe passt, gehe weiter zur Auswahl.'
+      : view.actions.continue ? 'Prüfe die Bewegung im Headset. Wenn die Atmungsmessmethode passt, gehe weiter zur Auswahl.'
       : !native.playing ? native.stage === 'idle'
-        ? 'Wähle eine Eingabe. Die Atemschleife beginnt erst danach auf der Quest.' : 'Warte auf die Atemschleife der Quest.'
-      : 'Die Atemschleife läuft. Wähle eine Eingabe oder richte Polar tilt persönlich ein.';
+        ? 'Wähle eine Atmungsmessmethode. Die Atemschleife beginnt erst danach auf der Quest.' : 'Warte auf die Atemschleife der Quest.'
+      : 'Die Atemschleife läuft. Wähle eine Atmungsmessmethode oder richte Polar tilt persönlich ein.';
     text(previewDetail, detail);
     previewDetail.hidden = Boolean(view.recovery);
     previewProgressGroup.hidden = !view.showPolarCalibration || !view.available || view.recovering || !(collecting || native?.attempt > 0);
@@ -633,7 +647,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       button.setAttribute('aria-pressed', String(native?.input === input));
     }
     byId('preview-modes-compatibility').hidden = !view.polarModesUpdateRequired;
-    previewController.hidden = native?.input === 'controller-state';
+    previewController.hidden = false;
+    previewController.setAttribute('aria-pressed', String(native?.input === 'controller-state'));
+    previewCalibrate.setAttribute('aria-pressed', String(native?.input === 'polar-tilt'));
+    previewPersonalReturn.setAttribute('aria-pressed', String(native?.input === 'polar-tilt'));
     previewController.disabled = waiting || !view.actions.controller;
     previewContinue.disabled = waiting || !view.actions.continue;
     previewContinue.hidden = !view.actions.continue;
@@ -693,7 +710,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     trace.setAttribute('d', current?.path ?? '');
     text(ecgStatus, current ? 'Live-EKG vom Polar H10' : rehearsal.gateway?.ecg
       ? 'Warte auf aktuelle EKG-Daten von der Quest.' : 'Für Live-EKG mit dem Quest-Schlüssel verbinden.');
-    if (current) text(scale, `2 s · 130 Hz · ±${current.range} µV`);
+    if (current) text(scale, `2 s · 130 Hz · ±${current.range} µV · Basislinie zentriert`);
   }
 
   function renderLive(now) {
@@ -706,9 +723,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       && typeof current.inputVolume === 'number';
     if (view?.available) {
       const measured = view.inputPhaseLabel ? ` · Erkannt: ${view.inputPhaseLabel}` : '';
-      const rawLabel = showInputVolume ? ' · Rohwert der Eingabe: ' : '';
-      text(previewInputLabel, `Bestätigte Eingabe: ${view.inputLabel}${measured}${rawLabel}`);
-    } else text(previewInputLabel, 'Eingabe auf der Quest nicht verfügbar.');
+      const rawLabel = showInputVolume ? ' · Rohwert der Messmethode: ' : '';
+      text(previewInputLabel, `Aktive Atmungsmessmethode: ${view.inputLabel}${measured}${rawLabel}`);
+    } else text(previewInputLabel, 'Atmungsmessmethode auf der Quest nicht verfügbar.');
     if (previewInputVolume.hidden === showInputVolume) previewInputVolume.hidden = !showInputVolume;
     if (showInputVolume) text(previewInputVolume, `${Math.round(Math.max(0, Math.min(1, current.inputVolume)) * 100)} %`);
     if (previewVisible) {

@@ -14,6 +14,7 @@ export class LiveEcgDisplay {
   #deadline;
   #range;
   #rangeClock;
+  #baseline = 0;
 
   constructor() { this.reset(); }
 
@@ -28,6 +29,7 @@ export class LiveEcgDisplay {
     this.#clock = null;
     this.#deadline = -Infinity;
     this.#range = 100;
+    this.#baseline = 0;
     this.#rangeClock = null;
     // Only explicit source-owner/lifecycle reset may forget the native watermark.
   }
@@ -70,6 +72,11 @@ export class LiveEcgDisplay {
       points[index].gap ||= points[index].timestamp - points[index - 1].timestamp > gapNs;
     }
     this.#points = points.filter(point => latest - point.timestamp <= retainedNs).slice(-maxSamples);
+    // Display-only DC offset: the median keeps QRS peaks from lifting the
+    // baseline. Raw microvolts/timestamps remain untouched for every consumer.
+    const values = this.#points.map(point => point.value).sort((a, b) => a - b);
+    const middle = Math.floor(values.length / 2);
+    this.#baseline = values.length % 2 ? values[middle] : (values[middle - 1] + values[middle]) / 2;
     this.#watermark = latest;
     this.#deadline = nowMs + trace.ttl;
     if (this.#cursor === null || this.#cursor < this.#points[0].timestamp) {
@@ -93,7 +100,7 @@ export class LiveEcgDisplay {
   }
 
   #requiredRange() {
-    return Math.max(100, ...this.#points.map(point => Math.abs(point.value)));
+    return Math.max(100, ...this.#points.map(point => Math.abs(point.value - this.#baseline)));
   }
 
   frame(nowMs) {
@@ -115,10 +122,10 @@ export class LiveEcgDisplay {
       && this.#cursor - point.timestamp <= visibleNs).map(point => ({ ...point }));
     const path = points.map(({ timestamp, value, gap }, index) => {
       const x = 400 - Number(this.#cursor - timestamp) / 5000000;
-      const y = 46 - value / range * 43;
+      const y = 46 - (value - this.#baseline) / range * 43;
       return `${index === 0 || gap ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`;
     }).join(' ');
-    return { path, range, points, cursorTimestamp: this.#cursor, latestTimestamp: this.#watermark,
+    return { path, range, baseline: this.#baseline, points, cursorTimestamp: this.#cursor, latestTimestamp: this.#watermark,
       oldestTimestamp: this.#points[0].timestamp, bufferedSamples: this.#points.length,
       bufferedMs: Number(this.#watermark - this.#cursor) / 1000000, ttl: this.#deadline - nowMs };
   }
