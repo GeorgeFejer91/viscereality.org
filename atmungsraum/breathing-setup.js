@@ -227,7 +227,7 @@ export class BreathingSetup {
       failureLabel: showPolarCalibration && setup?.calibration === 'failed' ? failureLabels[setup.failure] ?? setup.failure : '',
       qualityWarning: showPolarCalibration && setup?.calibration === 'collecting' ? qualityWarnings[setup.quality?.warning ?? ''] : '',
       progress: setup?.target_frames ? { value: 2 * setup.completed_frames / setup.target_frames, max: 2 } : { value: 0, max: 2 },
-      acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}` : '',
+      acceptance: setup ? `${gateway.owner.device}/${gateway.owner.epoch}/${gateway.owner.native_epoch}/${setup.g}/${setup.attempt}/${setup.input}/${status.y?.s ?? ''}/${status.y?.g ?? ''}/${status.y?.x ?? ''}` : '',
       message: this.message,
       blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
         : !updateAllowed ? metaUpdateView(status).summary
@@ -292,6 +292,7 @@ export class BreathingSetup {
       this.unknown = false;
       this.message = recoveryFailures.has(receipt.reason)
         ? 'Die Atemschleife konnte nicht neu gestartet werden. Prüfe die Quest und versuche es erneut.'
+        : receipt.reason === 'stale-revision' ? 'Der Quest-Status hat sich während des Wechsels geändert. Wähle die Atmungsmessmethode bitte erneut.'
         : 'Die Quest hat die Aktion abgelehnt. Prüfe den aktuellen Status.';
     } else {
       if (receipt.reason === 'audio-recovery-pending' && !saved.recovery) this.remember({ ...saved, recovery: true });
@@ -319,7 +320,12 @@ export class BreathingSetup {
     this.message = '';
     try {
       const receipt = await gateway.breathSetup(command, signal);
-      if (this.gateway === gateway) this.observeReceipt(receipt);
+      if (this.gateway === gateway) {
+        this.observeReceipt(receipt);
+        if (validReceipt(receipt) && receipt.id === command.id && receipt.state === 'rejected'
+          && receipt.accepted === false && receipt.reason === 'stale-revision'
+          && !this.pending && !this.unknown) return 'stale-revision';
+      }
     } catch { if (this.pending?.command.id === command.id) this.unknown = true; }
     finally { this.busy = false; }
   }

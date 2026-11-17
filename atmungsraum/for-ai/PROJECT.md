@@ -1,5 +1,35 @@
 # Project
 
+### Attended method-switch follow-up — 2026-11-17
+
+The Pixel6a and Quest2 reproduced issues beyond the initial synthetic render:
+healthy Meta completion still occupied the shared notice; sample-level ready
+changes hid review instructions, changed button colours and erased local review;
+and a real method request was rejected with stale-revision while native r changed
+several times per second. This does not establish a broken calibration model.
+
+- [x] Hide routine current/updated completion outside the explicit update page.
+  Keep actionable warnings, errors and update-page focus/geometry.
+- [x] Retain one review instruction and constant confirmation-button appearance.
+  Native readiness still disables the action. Preserve local operator approval
+  only for the same actor/audio/attempt/method/selected-sensor and reviewable
+  testing state. Ready:false disables Start without bouncing out of Session.
+- [x] Re-observe before each method request. Retry only a bound explicit
+  rejected/accepted:false/stale-revision result, maximum3 new IDs, with unchanged
+  intent and fresh action gates. Never replay accepted, pending or unknown work.
+- [x] Verify actual fixed Polar, adaptive Polar and Controller selection on the
+  connected Quest22. Adaptive received two explicit stale rejections and then a
+  confirmed third request. No calibration, Arm or recording was started.
+- [x] Verify unit/real-UI regressions, native gates and independent review.
+- [ ] Publish and verify the public20261117-selection-retry-2 release, then
+  reload the idle phone from the public origin and repeat its status checks.
+- [ ] At an attended fresh launch, test Controller before any Polar calibration.
+  Source selection has no Polar-model prerequisite; effective output requires
+  an unparked running audio clock and controller assessment fresh within250ms.
+  A cold-start transport/tracking issue that calibration incidentally unblocks
+  remains a separate hypothesis, not an established dependency.
+
+
 ### PWA input confirmation and conditional update step — 2026-11-17
 
 - [x] Keep the confirmed input visible above the tracking circles; readiness

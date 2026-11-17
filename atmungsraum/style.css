@@ -464,6 +464,11 @@ body:has(#recenter-vr[hidden]) main { padding-top: max(var(--inset), env(safe-ar
 #breathing-preview .operator-actions > #preview-continue { grid-column: 1 / -1; }
 #breathing-preview .operator-actions:has(#preview-restart[hidden]) > [data-operator-go] { grid-column: 1 / -1; }
 #preview-continue:enabled { background: var(--site-blue); }
+/* Live readiness still disables the action. Its fast sample-level transitions
+   must not flash the primary action between blue and grey. */
+#breathing-preview #preview-continue {
+  color: var(--text); background: var(--site-blue); border-color: #3487b7; opacity: 1;
+}
 #drive-dialog #quest-drive-form { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9em), 1fr)); }
 #drive-dialog #quest-drive-connect { grid-column: 1 / -1; }
 

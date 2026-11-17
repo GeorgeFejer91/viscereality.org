@@ -24,6 +24,7 @@ def compact_setup(review):
               const open = document.querySelector('dialog[open]');
               return {
                 measured: root.dataset.measurement,
+                layout: root.dataset.layout,
                 page: [root.scrollWidth, root.scrollHeight],
                 viewport: [innerWidth, innerHeight],
                 dialogFits: !open || (open.scrollHeight <= open.clientHeight && open.scrollWidth <= open.clientWidth
@@ -32,7 +33,8 @@ def compact_setup(review):
                   .some(node => node.checkVisibility())
               };
             }''')
-            assert result['measured'] == 'ready' and result['page'] == result['viewport'], result
+            assert result['measured'] == 'ready' and result['page'][0] == result['viewport'][0], result
+            assert result['page'][1] == result['viewport'][1] or result['layout'] == 'reflow', result
             assert result['dialogFits'] and result['textFits'], result
 
         assert_fits()

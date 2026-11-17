@@ -1,5 +1,45 @@
 # Verification
 
+## Attended selection race and flicker — 2026-11-17
+
+Real Pixel6a/Quest2 inspection confirms the phone loaded the published entry,
+with native22 selected and IDLE/no recording. Authenticated status repeatedly
+reported setup.ready:false/input_phase:unknown between healthy hold samples;
+H10 ECG/motion and source/audio clocks remained ready. A method command received
+the exact explicit rejected/accepted:false/stale-revision response.
+
+The bounded selector re-reads status, pins the original actor/audio/attempt/input
+and selected sensor, and sends at most3 newly identified commands, only after
+that exact bound non-acceptance. Accepted/pending/uncertain results never replay.
+Four real-app race fixtures cover stale→success, bounded failure, lost response
+and changed intent. Additional checks retain local review through transient
+ready:false while Start stays disabled and no session command is sent.
+
+An actual idle-phone candidate test used only local runtime-module interception;
+Quest transport, authentication and native decisions stayed real. Fixed Polar,
+adaptive Polar and Controller were each natively confirmed. Adaptive needed
+exactly two explicit stale rejections before the third ID was confirmed. The
+same accepted ID was observed again by receipt lookup; it was not resubmitted.
+No calibration, Arm or recording. Routine completion was hidden; the connected
+phone reported a stable review instruction. The final CSS regression explicitly
+compares enabled/disabled computed colours, border and opacity. The routine
+detail no longer duplicates that instruction. Final native admission is unchanged.
+
+Independent review passes54 domain/selection tests and all4 real-UI race cases.
+The final full288-case suite passes with no failures or skips, including the
+selected-sensor binding regression and selected native/Java integration. Re-run receipts are retained privately
+under S:/Work/private/atmungsraum/validation/2026-11-17-pwa-input-layout/.
+Current release marker:20261117-selection-retry-2. Publication and installed
+phone readback are tracked in PROJECT.md.
+
+Controller source inspection: core.select_controller has no Polar-calibration
+precondition. Java setupCommand handles Controller as a real first-loop action,
+like calibration; native effective output still requires non-parked audio,
+clock_valid/playing and a controller assessment no older than250ms. A direct
+fresh-launch controller-only hardware check remains pending; do not conflate
+selection acceptance with effective radius driving.
+
+
 ## Input confirmation and update step — 2026-11-17
 
 User reports: method-switch status flashing, Controller remaining gold regardless
