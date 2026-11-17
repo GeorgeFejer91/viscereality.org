@@ -15863,10 +15863,10 @@ index f71f79cb..75df8192 100644
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..397764ac
+index 00000000..cef1b125
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1124 @@
+@@ -0,0 +1,1167 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -15889,6 +15889,9 @@ index 00000000..397764ac
 +pub(crate) mod live_csv;
 +
 +const CSV_SCHEMA_VERSION: u64 = 3;
++const NANOS_PER_SECOND: u64 = 1_000_000_000;
++const EXPLORATION_SAMPLE_RATE: u64 = 44_100;
++const EXPLORATION_FRAMES: u64 = 19_715_793;
 +const HEADER: &str = "schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason,signal_reason\r\n";
 +pub(crate) const RECOVERY_RECEIPT: &str = "participant-recovered.json";
 +pub(crate) const RECOVERED_CSV_PREFIX: &str = ".recovered-";
@@ -15954,7 +15957,7 @@ index 00000000..397764ac
 +    participant: ParticipantId,
 +    scenario: String,
 +    sha256: String,
-+    seconds: u64,
++    duration_ns: u64,
 +    phases: Vec<(u64, String)>,
 +}
 +
@@ -15967,7 +15970,6 @@ index 00000000..397764ac
 +            .ok_or(BAD)?;
 +        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
 +        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
-+        let seconds = scenario_seconds(scenario).ok_or(BAD)?;
 +        let sha256 = value["scenario_sha256"]
 +            .as_str()
 +            .filter(|value| valid_hash(value))
@@ -15976,9 +15978,10 @@ index 00000000..397764ac
 +            .as_u64()
 +            .filter(|rate| (8000..=48000).contains(rate))
 +            .ok_or(BAD)?;
++        let expected_frames = scenario_frames(scenario, rate).ok_or(BAD)?;
 +        let frames = value["total_frames"]
 +            .as_u64()
-+            .filter(|frames| *frames == seconds * rate)
++            .filter(|frames| *frames == expected_frames)
 +            .ok_or(BAD)?;
 +        let input = value["phases"]
 +            .as_array()
@@ -15995,7 +15998,7 @@ index 00000000..397764ac
 +                .as_str()
 +                .filter(|name| valid_phase(name))
 +                .ok_or(BAD)?;
-+            let nanos = (offset * 1_000_000_000).div_ceil(rate);
++            let nanos = (offset * NANOS_PER_SECOND).div_ceil(rate);
 +            if phases
 +                .last()
 +                .is_some_and(|(previous, _)| *previous >= nanos)
@@ -16011,7 +16014,7 @@ index 00000000..397764ac
 +            participant,
 +            scenario: scenario.to_owned(),
 +            sha256: sha256.to_owned(),
-+            seconds,
++            duration_ns: (frames * NANOS_PER_SECOND).div_ceil(rate),
 +            phases,
 +        })
 +    }
@@ -16028,7 +16031,7 @@ index 00000000..397764ac
 +        if self.scenario == "probe-anleitung" {
 +            u64::MAX
 +        } else {
-+            self.seconds * 1_000_000_000
++            self.duration_ns
 +        }
 +    }
 +
@@ -16042,14 +16045,21 @@ index 00000000..397764ac
 +    }
 +}
 +
-+fn scenario_seconds(scenario: &str) -> Option<u64> {
-+    match scenario {
-+        "probe-anleitung" => Some(68),
-+        "probe-5" => Some(300),
-+        "probe-10" => Some(600),
-+        "probe-15" | "haupt-15" => Some(900),
-+        _ => None,
-+    }
++fn scenario_frames(scenario: &str, rate: u64) -> Option<u64> {
++    let seconds = match scenario {
++        "probe-anleitung" => 68,
++        "probe-5" => 300,
++        "probe-10" => 600,
++        "probe-15" | "haupt-15" => 900,
++        "free-exploration" if rate == EXPLORATION_SAMPLE_RATE => return Some(EXPLORATION_FRAMES),
++        _ => return None,
++    };
++    Some(seconds * rate)
++}
++
++fn scenario_duration_ns(scenario: &str) -> Option<u64> {
++    let frames = scenario_frames(scenario, EXPLORATION_SAMPLE_RATE)?;
++    Some((frames * NANOS_PER_SECOND).div_ceil(EXPLORATION_SAMPLE_RATE))
 +}
 +
 +fn valid_phase(name: &str) -> bool {
@@ -16107,7 +16117,7 @@ index 00000000..397764ac
 +        const BAD: &str = "participant-recovery-metadata-invalid";
 +        let participant = ParticipantId::parse(value["participant_id"].as_str().ok_or(BAD)?)?;
 +        let scenario = value["scenario_id"].as_str().ok_or(BAD)?;
-+        let seconds = scenario_seconds(scenario).ok_or(BAD)?;
++        let duration_ns = scenario_duration_ns(scenario).ok_or(BAD)?;
 +        let sha256 = value["scenario_sha256"]
 +            .as_str()
 +            .filter(|hash| valid_hash(hash))
@@ -16130,7 +16140,7 @@ index 00000000..397764ac
 +                let pair = phase.as_array().filter(|pair| pair.len() == 2).ok_or(BAD)?;
 +                let offset = pair[0]
 +                    .as_u64()
-+                    .filter(|offset| *offset < seconds * 1_000_000_000)
++                    .filter(|offset| *offset < duration_ns)
 +                    .ok_or(BAD)?;
 +                let name = pair[1]
 +                    .as_str()
@@ -16150,7 +16160,7 @@ index 00000000..397764ac
 +                participant,
 +                scenario: scenario.to_owned(),
 +                sha256: sha256.to_owned(),
-+                seconds,
++                duration_ns,
 +                phases,
 +            },
 +            index,
@@ -16163,6 +16173,12 @@ index 00000000..397764ac
 +    }
 +
 +    pub(crate) fn metadata(&self) -> Value {
++        let duration = self.plan.duration_ns;
++        let planned_seconds = if duration % NANOS_PER_SECOND == 0 {
++            json!(duration / NANOS_PER_SECOND)
++        } else {
++            json!(duration as f64 / NANOS_PER_SECOND as f64)
++        };
 +        let mut metadata = json!({
 +            "participant_id": self.plan.participant.as_text(),
 +            "name_prefix": self.plan.participant.name,
@@ -16173,7 +16189,7 @@ index 00000000..397764ac
 +            "session_id": self.uuid,
 +            "scenario_id": self.plan.scenario,
 +            "scenario_sha256": self.plan.sha256,
-+            "planned_duration_seconds": self.plan.seconds,
++            "planned_duration_seconds": planned_seconds,
 +        });
 +        if !self.plan.phases.is_empty() {
 +            metadata["phase_offsets_ns"] = json!(self.plan.phases);
@@ -16276,7 +16292,7 @@ index 00000000..397764ac
 +            self.plan.participant.as_text(), self.uuid, self.index, self.plan.scenario,
 +        );
 +        let mut write_row = |row: &Observation, outcome: &str, reason: &str| -> Result<(), String> {
-+            let (audio, state) = clock.at(row.at, self.plan.seconds * 1_000_000_000);
++            let (audio, state) = clock.at(row.at, self.plan.duration_ns);
 +            let phase = match state {
 +                "waiting" | "ended" => state,
 +                _ => self.plan.phase_at(audio),
@@ -16379,7 +16395,7 @@ index 00000000..397764ac
 +    if date.len() != 10
 +        || !NaiveDate::parse_from_str(date, "%Y-%m-%d")
 +            .is_ok_and(|value| value.format("%Y-%m-%d").to_string() == date)
-+        || scenario_seconds(scenario).is_none()
++        || scenario_duration_ns(scenario).is_none()
 +    {
 +        return None;
 +    }
@@ -16828,6 +16844,33 @@ index 00000000..397764ac
 +    }
 +
 +    #[test]
++    fn exploration_requires_the_authored_frame_count_and_preserves_its_duration() {
++        let request = json!({
++            "participant_id": "Tes_30_N",
++            "scenario_id": "free-exploration",
++            "scenario_sha256": "a".repeat(64),
++            "sample_rate": 44100,
++            "total_frames": 19_715_793,
++            "phases": [[0, "instruction"], [960_768, "rest"]]
++        });
++        let plan = ParticipantPlan::parse(&request).unwrap();
++        assert_eq!(plan.completion_threshold_ns(), 447_070_136_055);
++        assert_eq!(plan.phase_at(21_786_122_448), "instruction");
++        assert_eq!(plan.phase_at(21_786_122_449), "rest");
++        let scratch = Scratch::new();
++        let run = ParticipantRun::reserve(&scratch.0, plan).unwrap();
++        let metadata = serde_json::from_str(&run.metadata().to_string()).unwrap();
++        let restored = ParticipantRun::restore(&metadata).unwrap();
++        assert_eq!(restored.plan.completion_threshold_ns(), 447_070_136_055);
++        assert!(valid_csv_filename("Tes_30_N_2026-11-17_free-exploration_r1.csv"));
++        for (field, value) in [("sample_rate", 48_000), ("total_frames", 19_715_792)] {
++            let mut modified = request.clone();
++            modified[field] = json!(value);
++            assert!(ParticipantPlan::parse(&modified).is_err());
++        }
++    }
++
++    #[test]
 +    fn reserves_parallel_attempts_durably_per_participant_and_condition() {
 +        let scratch = Scratch::new();
 +        let plan = ParticipantPlan::parse(&request("Tes_30_N", "haupt-15")).unwrap();
@@ -16993,7 +17036,7 @@ index 00000000..397764ac
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 new file mode 100644
-index 00000000..8c4f7cc7
+index 00000000..a60eb4f0
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 @@ -0,0 +1,459 @@
@@ -17384,7 +17427,7 @@ index 00000000..8c4f7cc7
 +        )
 +        .map_err(io_error)?;
 +        if playback {
-+            let (audio, state) = self.clock.at(at, self.run.plan.seconds * 1_000_000_000);
++            let (audio, state) = self.clock.at(at, self.run.plan.duration_ns);
 +            let phase = match state {
 +                "waiting" | "ended" => state,
 +                _ => self.run.plan.phase_at(audio),

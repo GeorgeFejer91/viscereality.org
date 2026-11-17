@@ -435,6 +435,9 @@ cloud-backed files; it was left untouched. The verified runtime commit
   setup gateway and phone controls in the authored-audio candidate. Start
   calibration after playback completes and allow the operator to cancel the
   original request from the phone.
+- [x] Preserve the authored Freie Erkundung duration and phase boundary in
+  Quest recording, recovery and CSV export. Verify the corresponding phone
+  export with both original Polar streams.
 - [ ] Bind the authored programme and the post-session outro to the selected
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.

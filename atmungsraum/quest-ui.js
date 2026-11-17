@@ -4,7 +4,7 @@ import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operatio
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
 import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=33';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=13';

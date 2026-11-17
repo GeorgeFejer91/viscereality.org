@@ -85,9 +85,9 @@ test('Quest export matches the observed run and every byte before making the ZIP
   assert.deepEqual(Buffer.from(await csv.arrayBuffer()), samples);
 });
 
-test('participant exports retain the CSV and both original sensor streams through chunked transfer', async () => {
+test('Free Exploration exports retain the CSV and both original sensor streams through chunked transfer', async () => {
   const id = 'utc-ns-00000000000000000043';
-  const stem = 'Tes_30_N_2026-11-13_probe-5_r2';
+  const stem = 'Tes_30_N_2026-11-17_free-exploration_r2';
   const csvName = `${stem}.csv`;
   const ecg = Buffer.from('{"sensor_time_ns":100,"microvolts":42}\n'.repeat(1300));
   const acc = Buffer.from('{"sensor_time_ns":100,"x_mg":1,"y_mg":2,"z_mg":3}\n'.repeat(900));

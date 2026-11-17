@@ -105,8 +105,8 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. This branch's cumulative patch reconstructs the authored-audio source candidate
-`463a66eeceffa330717f4493eed0fa0d1cfe8931` with SHA-256 `c39ee4500a27d34fcc8cb5c7d5eedcc062967cbae12985e5c12561aa13394026`
-(2,231,673 bytes). The
+`052b232be43161566ba484123be5171b966c1624` with SHA-256 `bfb9357cd33bb99e4993b4e34daf9787a40e4d041b457599bacc177ee85ac75c`
+(2,233,817 bytes). The
 [Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
 is the baseline for the following release evidence. Its cumulative patch
 reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching

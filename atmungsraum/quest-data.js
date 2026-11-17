@@ -1,4 +1,4 @@
-import { isDatedSessionFilename } from './data-logging.js?v=20261113-polar-only';
+import { isDatedSessionFilename } from './data-logging.js?v=20261117-exploration-recording';
 import { createExportsZip } from './data-files.js?v=20261113-polar-only';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;

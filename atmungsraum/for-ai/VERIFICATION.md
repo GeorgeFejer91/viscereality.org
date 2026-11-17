@@ -602,6 +602,17 @@ The Android media sources compiled against API 30. The native patch
 reconstructed from the pinned base and the feature lock resolved all 96
 authored audio assets. Signed installation and headset playback remain open.
 
+## Freie Erkundung recording duration and export — 2026-11-17
+
+For the authored recording at 44,100 Hz, the 19,715,793 frames define a
+447,070,136,055 ns completion threshold and the instruction ends at frame
+960,768. The same limits govern the recovered plan and the live and final
+CSV clocks. Rust passed 79 recording tests, including rejection of a changed
+sample rate or frame count and a recovery round trip. The phone passed seven
+data checks, including download of the dated exploration CSV with its two
+original Polar streams. The PWA startup and reconnect check also passed.
+Headset playback and round selection remain open.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,
