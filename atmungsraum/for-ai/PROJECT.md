@@ -33,15 +33,25 @@ IDLE/g0/r1, rec:false. No experiment recording has started.
   Code24-r1 stays revoked. Repaired24 is current on private Meta Developer
   build1464488216750190; malware and detailed security passed. Actual24
   installation and physical health/battery acceptance remain pending.
-- [ ] Finish Meta24 publication and health/battery PWA deployment, then refresh
-  the installed phone and verify actual current-device readings and contact loss.
+- [x] Publish Meta24 and health/battery PWA. PR46 implementation and PR47 policy
+  merge166f483; exact Pages44097236831 success,21 public-file comparisons and
+  public-runtime health/battery/cache/policy24 probe pass (transport synthetic).
+- [ ] Refresh the installed phone, update actual Quest23→24 through Meta and
+  verify current-device battery values and off-body/contact loss. The user
+  defers attended testing until later; do not start recording or publish25.
 - [ ] Establish actual RUNNING/rec:true on repaired24 before publishing held25;
   verify recording/saving continuity and safe deferred update/helper relaunch.
 
-The overall goal remains open. Quest Wi-Fi ADB is verified, Location retained.
-Current public baseline is eedbdf72/PR45; compact Update is live with exact
-Pages and asset proof. The new health/battery and duration work shares the
-existing native owner; preserve the separate workers' unfinished files.
+The overall goal remains open. Health/battery runtime20261117-device-health and
+minimum/latest24 are live through PR47/Pages44097236831, with exact public
+bytes and behavior checked. The final evidence increment follows unchanged
+runtime proof. The held25 probe passes1100 signed-package checks; do not publish
+before real24 RUNNING/rec:true. The user defers attended testing until later.
+Last Quest readback remains Meta23; no host installation/restart for24. Location
+and Wi-Fi ADB are retained. Phone refresh, actual readings/contact acceptance
+and running-session update remain open. Native0c82ff and public source patch
+are committed; the website branch is synchronized through origin/main166f483
+before this final evidence increment. No worker source remains unfinished.
 
 ### Input continuity, automatic phone control and active-session updates — 2026-11-17
 

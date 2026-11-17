@@ -3601,13 +3601,30 @@ Independent review passes22 targeted unit tests and six actual Chromium/Pretext
 battery renders at390/320/320px with200% text. The full Node suite passes305/305
 with zero skips. The full actual-Pretext layout matrix passes140 states, plus
 operator flow, selection races,24 input renders and26 compact Update renders.
-Source/cache graph review has no findings. Publication remains in progress.
+Source/cache graph review has no findings. [PR46](https://github.com/GeorgeFejer91/viscereality.org/pull/46)
+implementation and [PR47](https://github.com/GeorgeFejer91/viscereality.org/pull/47)
+policy merged as166f483386d70e1aa56b53d3d88349bf00f2d468. Exact
+[Pages44097236831](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44097236831)
+succeeded;21 live-file comparisons pass. PR46's earlier run was superseded and
+cancelled; the successful final deployment includes both increments. The public
+runtime probe exits0 with the correct cache graph, floor/latest24 and all focused
+health/battery routes/expiry checks. Only transport is synthetic; this is not
+new hardware acceptance. Meta24 build1464488216750190 is current and malware/
+detailed security passed, Require Latest remains unchecked.
 
 Actual controller battery availability, off-body contact behavior and installed
 phone refresh require hardware acceptance. Pixel6a is absent from USB at the
 current readback. The active-session update test remains open; no recording has
 started from the rejected23 Arm. Version25 remains unpublished until an actual
-repaired24 RUNNING/rec:true observation.
+repaired24 RUNNING/rec:true observation. Its version-only private package passes
+1100 checks with102 ZIP entries; SHA256
+a8a2de290680fcfa76820839ae848c8886406dfd6b5ae559599dd5a3e78b208b.
+
+The user explicitly deferred attended testing. Actual headset readback remains
+Meta23;24 was not sideloaded or host-launched. Final documentation publication
+retains the above unchanged runtime proof. Phone refresh, actual controller
+battery availability, H10 skin-contact behavior and running-session update remain
+open in PROJECT.md.
 
 Meta24 publication: build1464488216750190 is current on the private Developer
 channel, malware passed and detailed security All tests passed. Quest2/13+ and
