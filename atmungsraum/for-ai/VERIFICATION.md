@@ -1,5 +1,18 @@
 # Verification
 
+Monitor3 signed-package checkpoint: native1cd5ee3/treea9dc76d, source patch
+SHA256c8756d19…/1,939,646bytes reconstructs the exact tree in an isolated index.
+Code21-r2 passes169 independent actual-artifact checks; its strict source-closure
+guard remains and now includes the previously missing SelfKiosk owner. The full
+web suite passes280 with zero skips using selected native resolution and freshly
+compiled real Java pairing interoperability. Helper3 independently passes50
+Android boundary,27/170/43 policy and26 builder checks plus Android34 compilation.
+Signed helper SHA256b98de54c… is installed with exact byte readback, retained
+UID10000 and overlay Allowed. Initial setup reports target Ready/monitor Inactive.
+No main21 or22 host install, new Meta delivery or monitor hardware success is
+claimed. Publication and exact live-file verification of this source increment
+remain pending; actual Meta21 baseline and21-to22 qualification remain open.
+
 ## Disconnected Meta update instructions — 2026-11-17
 
 The read-only handoff model has11 tests; the combined Meta/model/control/gateway
@@ -10,7 +23,10 @@ real Pretext measurement, readable document reflow and unchanged mutation count.
 Fresh actual current APK21 retires the fixture hint; the fixture does not prove
 a hardware installation. The existing27 Meta display/reflow states also pass.
 Private evidence is retained under the active boot/kiosk/update validation run.
-Publication and installed-phone refresh are pending this increment.
+Independent review passes. PR33 merge c10d605 passed exact Pages43986515449;
+all10 affected live responses match Git, and live Edge mounted the controller
+with entry marker20261117-meta-handoff. Installed-phone refresh is pending:
+the Pixel USB serial and its own DevTools forward are no longer available.
 
 PR32 result/diagnostic release a037b2e passed exact Pages43984840599 and all18
 affected live response byte comparisons. Main20 is Meta-installed but stopped;

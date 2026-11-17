@@ -25,6 +25,14 @@ final class AndroidHost implements BootPolicy.Host, WatchPolicy.Host {
         state = context.getSharedPreferences("boot-helper", Context.MODE_PRIVATE);
     }
     public boolean enabled() { return state.getBoolean("enabled", false); }
+    private static final String[] WATCH_FIELDS={"watch_format","watch_kind","watch_attempt","watch_installed","watch_target","watch_deadline","watch_detected","watch_not_before","watch_dispatched","watch_started"};
+    public boolean setEnabled(boolean enabled) {
+        synchronized(WatchPolicy.class) {
+            SharedPreferences.Editor edit=state.edit().putBoolean("enabled",enabled);
+            if(!enabled)for(String field:WATCH_FIELDS)edit.remove(field);
+            return edit.commit();
+        }
+    }
     public boolean overlayAllowed() { return Settings.canDrawOverlays(context); }
     public long admittedBoot() { return state.getLong("admitted_boot", -1); }
     public long currentBoot() { return Settings.Global.getInt(context.getContentResolver(), Settings.Global.BOOT_COUNT, -1); }
@@ -53,7 +61,8 @@ final class AndroidHost implements BootPolicy.Host, WatchPolicy.Host {
         currentIntent = new Intent(query).setComponent(new ComponentName(activity.packageName, activity.name))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         return new BootPolicy.Target(activity.packageName, activity.name, signer,
-            Intent.ACTION_MAIN.equals(currentIntent.getAction()), currentIntent.hasCategory(Intent.CATEGORY_LAUNCHER),version,protocol);
+            Intent.ACTION_MAIN.equals(currentIntent.getAction()), currentIntent.hasCategory(Intent.CATEGORY_LAUNCHER),version,protocol,
+            activity.launchMode==ActivityInfo.LAUNCH_SINGLE_TASK);
     }
     public void dispatch(BootPolicy.Target target) {
         // Recheck package/component and signature at dispatch; no Intent extras,
@@ -65,11 +74,11 @@ final class AndroidHost implements BootPolicy.Host, WatchPolicy.Host {
             throw new SecurityException("Target identity changed");
         if (!state.edit().putString("launcher", currentIntent.getComponent().flattenToShortString()).commit())
             throw new IllegalStateException("Cannot persist launch request");
-        if(target.protocol==2) {
+        if(target.protocol==2||target.protocol==3) {
             WatchPolicy.Result watch=WatchPolicy.armBoot(this,target);
             if(!watch.accepted||!WatchService.ensureRunning(context,false)) {
                 WatchPolicy.cancelInternal(this);
-                throw new IllegalStateException("Bounded boot watch unavailable");
+                throw new IllegalStateException("Boot monitor unavailable");
             }
         }
         context.startActivity(currentIntent);
@@ -90,32 +99,35 @@ final class AndroidHost implements BootPolicy.Host, WatchPolicy.Host {
         WatchPolicy.Watch watch=null;
         String kind=state.getString("watch_kind","");
         if(!kind.isEmpty()) {
-            if(state.getInt("watch_format",0)!=1||(!kind.equals("boot")&&!kind.equals("update")))throw new IllegalStateException("Invalid watch");
+            int format=state.getInt("watch_format",0);
+            if((format!=1&&format!=2)||(!kind.equals("boot")&&!kind.equals("update")))throw new IllegalStateException("Invalid watch");
             String attempt=state.getString("watch_attempt","");
-            long installed=state.getLong("watch_installed",0),target=state.getLong("watch_target",0),deadline=state.getLong("watch_deadline",0);
-            long detected=state.getLong("watch_detected",0),notBefore=state.getLong("watch_not_before",0),dispatched=state.getLong("watch_dispatched",0),started=state.getLong("watch_started",0);
-            if(installed<=0||target<=installed||target>WatchPolicy.SAFE_INTEGER||deadline<=0||boot==currentBoot()&&deadline>now()+WatchPolicy.WATCH_MS
-                ||detected<0||detected>WatchPolicy.SAFE_INTEGER||notBefore<0||notBefore>deadline+WatchPolicy.META_GRACE_MS
-                ||dispatched<0||dispatched>WatchPolicy.SAFE_INTEGER||started<0||started>WatchPolicy.SAFE_INTEGER
+            long installed=state.getLong("watch_installed",0),target=state.getLong("watch_target",0);
+            long dispatched=state.getLong("watch_dispatched",0),started=state.getLong("watch_started",0);
+            if(boot<0||!WatchPolicy.code(installed)||target<=installed||!WatchPolicy.code(target)
+                ||dispatched!=0&&(!WatchPolicy.code(dispatched)||dispatched<target)
+                ||started!=0&&(!WatchPolicy.code(started)||started<installed||kind.equals("update")&&started<target)
                 ||kind.equals("update")&&!attempts.contains(attempt)||kind.equals("boot")&&!attempt.equals("boot"))throw new IllegalStateException("Invalid watch binding");
-            watch=new WatchPolicy.Watch(kind,attempt,installed,target,deadline,detected,notBefore,dispatched,started);
+            // Format1 timing fields intentionally do not become monitor deadlines.
+            watch=new WatchPolicy.Watch(kind,attempt,installed,target,dispatched,started);
         }
         return new WatchPolicy.Ledger(boot,attempts,watch);
     }
     public boolean save(WatchPolicy.Ledger value) {
         android.content.SharedPreferences.Editor edit=state.edit().putLong("watch_boot",value.boot).putStringSet("watch_attempts",new HashSet<String>(value.attempts));
-        String[] fields={"watch_format","watch_kind","watch_attempt","watch_installed","watch_target","watch_deadline","watch_detected","watch_not_before","watch_dispatched","watch_started"};
-        for(String field:fields)edit.remove(field);
+        for(String field:WATCH_FIELDS)edit.remove(field);
         WatchPolicy.Watch w=value.watch;
-        if(w!=null)edit.putInt("watch_format",1).putString("watch_kind",w.kind).putString("watch_attempt",w.attempt)
-            .putLong("watch_installed",w.installed).putLong("watch_target",w.target).putLong("watch_deadline",w.deadline)
-            .putLong("watch_detected",w.detectedCode).putLong("watch_not_before",w.notBefore).putLong("watch_dispatched",w.dispatchedCode).putLong("watch_started",w.startedCode);
+        if(w!=null)edit.putInt("watch_format",2).putString("watch_kind",w.kind).putString("watch_attempt",w.attempt)
+            .putLong("watch_installed",w.installed).putLong("watch_target",w.target)
+            .putLong("watch_dispatched",w.dispatchedCode).putLong("watch_started",w.startedCode);
         return edit.commit();
     }
     public void dispatchFallback(BootPolicy.Target expected) {
+        long boot=currentBoot(),deadline=now()+WatchPolicy.COMMAND_MS;
         BootPolicy.Target current=resolveCurrentTarget();
-        if(current==null||current.version!=expected.version||current.protocol!=2||!current.sameSigner||!current.activity.equals(expected.activity)
-            ||!BootPolicy.TARGET_PACKAGE.equals(current.packageName)||currentIntent==null)throw new SecurityException("Fallback target changed");
+        if(current==null||current.version!=expected.version||(current.protocol!=2&&current.protocol!=3)||!current.sameSigner||!current.singleTask||!current.activity.equals(expected.activity)
+            ||!BootPolicy.TARGET_PACKAGE.equals(current.packageName)||currentIntent==null||!enabled()||!overlayAllowed()
+            ||!WatchPolicy.commandLive(this,boot,deadline))throw new SecurityException("Fallback target changed or command expired");
         context.startActivity(currentIntent);
         record("FALLBACK_REQUESTED_UNCONFIRMED");
     }

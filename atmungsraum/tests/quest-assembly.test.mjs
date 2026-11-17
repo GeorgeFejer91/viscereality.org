@@ -40,7 +40,8 @@ test('Meta update resolution binds the explicit app identity and preserves the e
     assert.equal(run.lock.android_manifest.meta_required_version_manifest_url, 'https://viscereality.org/atmungsraum/quest-release.json');
     assert.equal(run.lock.android_manifest.experiment_meta_update_helper_enabled, true);
     assert.match(run.manifest, /org\.viscereality\.atmungsraum\.boot\.permission\.UPDATE_HANDOFF/);
-    assert.match(run.manifest, /android:name="org\.viscereality\.atmungsraum\.boot_protocol" android:value="2"/);
+    assert.match(run.manifest, /android:name="org\.viscereality\.atmungsraum\.boot_protocol" android:value="3"/);
+    assert.match(run.manifest, /<package android:name="org\.viscereality\.atmungsraum\.boot"\s*\/>/);
     assert.match(run.manifest, /android:name="com\.oculus\.sdk\.appid" android:value="1234567890123456"/);
     assert.match(run.manifest, /android:name="rusty\.quest\.meta_update\.enabled" android:value="true"/);
     assert.doesNotMatch(run.manifest, /SYSTEM_ALERT_WINDOW|RECEIVE_BOOT_COMPLETED|NativeRendererBootReceiver/);

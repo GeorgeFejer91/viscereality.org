@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.viscereality.atmungsraum.boot" android:versionCode="2" android:versionName="2.0">
+    package="org.viscereality.atmungsraum.boot" android:versionCode="3" android:versionName="3.0">
     <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="34" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -12,11 +12,12 @@
         android:allowBackup="false" android:debuggable="false" android:supportsRtl="true">
         <meta-data android:name="com.oculus.supportedDevices" android:value="quest2" />
         <meta-data android:name="org.viscereality.atmungsraum.boot_protocol" android:value="2" />
+        <meta-data android:name="org.viscereality.atmungsraum.monitor_protocol" android:value="3" />
         <provider android:name=".HandoffProvider" android:authorities="org.viscereality.atmungsraum.boot.handoff"
             android:exported="true" android:permission="org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF" />
         <service android:name=".WatchService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Finite same-signer installed-update launch handoff, max five minutes, no install or download" />
+                android:value="Operator-authorized same-signer installed-update and focused-launch monitor; explicit stop; no install or download" />
         </service>
         <activity android:name=".SetupActivity" android:exported="true">
             <intent-filter>

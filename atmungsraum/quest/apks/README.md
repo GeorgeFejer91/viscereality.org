@@ -1,5 +1,42 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.20-dev — code21 monitor3 candidate, 2026-11-17
+
+| Property | Qualified value |
+| --- | --- |
+| Package / release | `org.viscereality.atmungsraum.developer`, code21 / `0.2.20-dev` |
+| Size / SHA256 |65,686,662bytes / `20d785e40b067fae41bc5eaae9c02b87c14f9103fa76f0cb580c969c386c8d91` |
+| Native commit / tree | `1cd5ee3b69550912b5d942e8ca893a25f1a7f361` / `a9dc76d2014f915d7ac7d9756fc581346dad5faa` |
+| Cumulative source patch |1,939,646bytes / SHA256 `c8756d19bb41a1e97c1a69d156e3e20f81eb49ac2b5a86396aa46dbd329a9350` |
+| Certificate SHA256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+
+Local signed-package qualification passes169 checks. Main21 requires explicit
+helper monitor3 capability before a queued-update exit. Its exact helper
+package visibility query and complete11-source SDK closure are bound into
+resolution and actual compiled artifacts. A first build stopped before
+compilation because the strict closure gate caught a missing inventory entry;
+the corrected source and fresh build retain that strict gate.
+
+All15 retained private input files, all85 functional payloads and all79 audio
+assets remain. The91-asset inventory retains88 exact bytes; generated identity,
+lock and settings account for the other three. LSL/OpenXR bytes remain. Main
+native executable code matches20; allocated sections differ only by the joined
+activation bindings. Controller-only input, calibration and900-second main
+remain. No new public study audio is activated.
+
+Helper3 is separately signed with the same certificate and installed once on
+the authorized Quest, with exact byte readback, retained UID and overlay grant.
+It observes actual package/version and first-focused startup acknowledgments;
+there is no download expiry or estimated Meta relaunch grace. Launch-started
+alone does not complete the monitor. Explicit disable atomically clears the
+watch, and cancellation persistence failure is reported.
+
+Code21 Meta publication/installation and actual21-to22 helper handoff, update,
+relaunch and focus qualification remain open. Successor22 is built privately
+and stays unpublished until the Meta21 baseline is established. No main21 or22
+APK has been installed by the host. Prior19 and20 were actually Meta-installed;
+20 replacement after the app closed did not prove the new monitor path.
+
 ## 0.2.18-dev — repeatable native update cycles, qualified code19, 2026-11-16
 
 | Property | Qualified value |

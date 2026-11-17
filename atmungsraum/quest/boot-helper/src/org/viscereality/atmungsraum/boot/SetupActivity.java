@@ -14,7 +14,7 @@ import android.widget.Toast;
 
 public final class SetupActivity extends Activity {
     @Override public void onCreate(Bundle state) { super.onCreate(state); }
-    @Override public void onResume() { super.onResume(); render(); }
+    @Override public void onResume() { super.onResume();AndroidHost host=new AndroidHost(this);if(WatchPolicy.watching(host))WatchService.ensureRunning(this,false);render(); }
     private void render() {
         AndroidHost host = new AndroidHost(this);
         ScrollView scroll = new ScrollView(this);
@@ -33,23 +33,28 @@ public final class SetupActivity extends Activity {
         } catch (RuntimeException failure) { target = "Status unavailable"; }
         info.setText("Atmungsraum Boot Helper\n\nTarget: " + BootPolicy.TARGET_PACKAGE +
             "\nTarget status: " + target + "\nOverlay permission: " + (host.overlayAllowed() ? "Allowed" : "Not allowed") +
-            "\n\nEnable below and allow the overlay permission in Android settings. The helper requests this target once after each real restart. Compatible builds can request a bounded update launch fallback. " +
-            "It does not restart after protected exit or force-stop. A compatible pending replacement has one fallback after Meta gets its first chance.\n\n" +
+            "\n\nEnable below and allow the overlay permission in Android settings. Compatible builds can request an update monitor that waits for the actual installed target and focused app acknowledgment. Long downloads do not expire. " +
+            "Protected exit or Stop monitor cancels it. No download progress is inferred. A launch request does not prove the app opened.\n\n" +
             "Current boot: " + host.currentBoot() + "\nLast admitted boot: " + host.admittedBoot() +
             "\nLast status: " + host.state.getString("status", "No boot attempt") +
             "\nLast requested launcher: " + host.state.getString("launcher", "None") +
-            "\nBounded update watch: " + (WatchPolicy.watching(host) ? "Active" : "Inactive") + "\nA request does not prove the app opened.");
+            "\nUpdate monitor: " + WatchPolicy.describe(host));
         body.addView(info);
         CheckBox enabled = new CheckBox(this);
         enabled.setText("Enable launch after restart");
         enabled.setChecked(host.enabled());
         enabled.setOnCheckedChangeListener((button, checked) -> {
-            if(!checked){WatchPolicy.cancelInternal(host);stopService(new Intent(this,WatchService.class));}
-            if (!host.state.edit().putBoolean("enabled", checked).commit()) {
+            if (!host.setEnabled(checked)) {
                 Toast.makeText(this, "Could not save setup", Toast.LENGTH_LONG).show(); render();
-            }
+            } else if(!checked)stopService(new Intent(this,WatchService.class));
         });
         body.addView(enabled);
+        Button stop=new Button(this);stop.setText("Stop update monitor");
+        stop.setEnabled(WatchPolicy.watching(host));
+        stop.setOnClickListener(view->{boolean saved=WatchPolicy.cancelInternal(host);stopService(new Intent(this,WatchService.class));
+            host.record(saved?"MONITOR_CANCELLED_BY_OPERATOR":"MONITOR_CANCELLATION_NOT_SAVED");
+            if(!saved)Toast.makeText(this,"Could not save cancellation. Check helper setup before restarting.",Toast.LENGTH_LONG).show();render();});
+        body.addView(stop);
         Button overlay = new Button(this);
         overlay.setText("Open Android overlay settings");
         overlay.setOnClickListener(view -> {
