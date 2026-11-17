@@ -175,7 +175,7 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
         for outcome in ['confirmed', 'outcome_unknown', 'rejected']:
             native = meta_update_fixture(can_check=False, can_end_preparation=False, busy_reason='session-active')
             page = review.page(initial(c, quest={'metaUpdate':native,'updatePrepEnabled':True,'deferSave':True,
-                'phase':'RUNNING','host':'vr-session','generation':3,'condition':'condition-a'},
+                'phase':'PAUSED' if outcome=='confirmed' else 'RUNNING','host':'vr-session','generation':3,'condition':'condition-a'},
                 setup={'stage':'main','playing':True,'parked':False,'audio_state':'playing'}),
                 viewport={'width':320,'height':568})
             page.clock.run_for(1500)
@@ -186,6 +186,8 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
             expect(page.locator('#update-screen')).to_be_visible()
             button=page.locator('#meta-update-finish')
             expect(button).to_be_enabled()
+            expect(page.locator('#meta-update-status')).to_have_text('Aufnahme pausiert.' if outcome=='confirmed' else 'Aufnahme läuft.')
+            expect(page.locator('#update-instruction')).to_be_hidden()
             assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
             review.shot(page, 'recording-explicit-'+outcome, 'Explicit save and update', button, 'Preparation update')
             button.click()

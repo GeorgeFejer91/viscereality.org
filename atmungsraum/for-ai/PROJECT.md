@@ -1,5 +1,24 @@
 # Project
 
+### PWA update copy simplification — 2026-11-17
+
+The actual Pixel repeated the same update requirement in four Connect notices
+and repeated it on Update beside an enabled action. The compact-update release
+uses one shared status/action projection. Versions and raw diagnostics stay in
+Details. A published version not yet offered by the headset SDK says “Meta bietet
+das benötigte Update noch nicht an.” with “Erneut prüfen”; an available required
+update offers “Jetzt aktualisieren”. Never tell the operator to wait for
+preparation while the action is enabled. Preserve independent native errors,
+recording/save controls and unresolved original receipts. Routine successful
+version checks remain hidden on ordinary pages. Independent specification/quality review passes. All325 full Node tests pass
+with zero skips;163 focused cases and35 compact real-DOM renders pass, including
+320px/200% text and stable focus/scroll, plus26 preparation/27 Meta cases. All
+eight changed runtime assets and their import parents have fresh cache URLs.
+Release marker:20261117-compact-update. Policy27 PR59/mergea4c46d4 reached exact
+Pages44186834653 success;9 live files match and live policy27 probes pass
+(synthetic transport). Compact publication and actual-phone refresh remain to
+verify; attended Quest1WMHHA46S32126 installation and27→28 acceptance stay open below.
+
 ### Active: PWA update from every preparation state — 2026-11-17
 
 Attended extension: same-process PWA request1312caf4c1629771 found Meta26 and
@@ -15,7 +34,8 @@ interpret missing observations as valid.
 - [x] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
   across prepared op9, polled replies, final install grant and helper handoff.
 - [x] Publish qualified fixed27-r2/run046 through Meta.
-- [x] Confirm the exact fixed27 APK installed by Meta on the connected Quest 2.
+- [x] Retain separate lab-sync evidence of exact Meta-installed fixed27-r2.
+- [ ] Install/confirm fixed27 on attended Quest1WMHHA46S32126 (still25).
 - [x] Sync the published PWA and native source patch to the lab PC, retain the
   verified signed APK locally, and confirm the installed Pixel 10 PWA release.
 - [ ] Hold version-only28 until a fixed27 session is RUNNING/rec:true and root
@@ -35,19 +55,19 @@ provides the typed worker result. Helper3 IPC has not changed.
 The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
 5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723).
 Fixed27-r2/run046 passes1138 signed-package checks and63 negatives. Meta
-1465199570012388 is current and malware/security passed. PR59 merge `a4c46d4`
-set required/latest27 and passed [Pages run 44186834653](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44186834653).
-Eight live PWA, policy and native-patch responses matched Git. The lab PC synced
-that release and verified the source patch and its local private APK copy.
+1465199570012388 is current and malware/security passed. PR59 mergea4c46d4
+set required/latest27; Pages44186834653 succeeded and root verified9 live files.
+Concurrent lab-sync PR60 separately records a Meta-installed fixed27-r2 matching
+the exact signed digest, helper3 and the Pixel10 standalone PWA release. Preserve
+that lab observation; its update trigger and immersive relaunch are unverified.
 
-On 2026-11-17, both lab devices were authorized over USB. Quest 2 reported
-`0.2.26-dev` (27), Meta installer and initiator, and an installed base-APK
-SHA-256 matching fixed27-r2. Boot Helper reported code 3. The headset was asleep
-at readback, so the install observation leaves immersive launch and the exact
-update trigger unverified. The installed Pixel 10 WebAPK opened `Quest verbinden`
-in standalone mode and loaded the live `20261117-preparation-audio-recovery`
-app and Quest UI modules. The next attended check is to confirm control and
-session readiness on code 27 before qualifying the held 28 update.
+The ongoing attended device in this worktree is Quest2 serial1WMHHA46S32126 over
+Wi-Fi192.168.2.48:5555 with Pixel6a28251JEGR21026. Fresh22:35UTC readback still
+reports code25/PID29345. Do not substitute the separate lab-sync observation for
+this device's installation or updater acceptance. Its PWA request completed with
+available26/required27 and no27 download. The Pixel USB is now absent again.
+Version-only28 stays private and held until an actual fixed27 session is
+RUNNING/rec:true and root releases the attended test.
 
 Prior PR57/merge5df115b reached
 exact Pages44178155493 success;9 live files match and live policy26 probes verify
@@ -59,8 +79,11 @@ files match, including the reconstructed patch. The user confirms fixed27 then
 test28. Old version-only27-r1/run045 is revoked,
 unpublished and lacks this fix; preserve its stopped qualification evidence.
 Helper3 is unchanged: the observed failure precedes its handoff. No ADB app
-stop/start/reboot workaround. Phone USB disconnected again after two requests;
-a planned third request was not dispatched. Continue source work independently.
+stop/start/reboot workaround. A planned third request was not dispatched while USB was absent. After
+reconnection, the PWA-only check815086825825642834 completed with installed25,
+available26, required27 / required-update-not-yet-on-channel. No27 download or
+installation began. The portal independently shows a single effective Quest2
+Developer target27, Complete; a propagation/cache explanation remains unproven.
 
 The user resumes attended testing and authorizes operating the USB Pixel. Quest2
 is already on Wi-Fi ADB. Actual Meta23 was IDLE/g0/r1, rec:false, pending:false,

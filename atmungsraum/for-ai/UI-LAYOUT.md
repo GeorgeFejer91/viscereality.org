@@ -221,3 +221,13 @@ A stale-revision retry is permitted only for the original valid bound explicit
 rejected/accepted:false result, never an unknown/pending/accepted result. Read
 fresh status and recheck unchanged intent/action gates before each new ID; cap
 at3 total requests. Preserve a named error and actual confirmed method on failure.
+
+## Concise APK update states — 2026-11-17
+
+Connect and Update share one short update status plus the relevant action.
+Keep installed/required/channel codes and diagnostics in Details; avoid repeating
+the same requirement in connection, compatibility and update notices. Keep a
+separate genuine failure visible when it adds information. An enabled update
+button must not be accompanied by a generic instruction to wait for preparation.
+When Meta does not yet offer the required build, show that fact and “Erneut
+prüfen”. Preserve explicit recording/save actions and original unknown receipts.

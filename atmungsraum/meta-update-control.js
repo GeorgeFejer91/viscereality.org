@@ -1,5 +1,5 @@
 import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=14';
-import { nativeMetaUpdate } from './meta-update.js?v=5';
+import { nativeMetaUpdate } from './meta-update.js?v=6';
 
 const key = 'atmungsraum-meta-update-pending';
 const lineage = v => typeof v === 'string' && /^[1-9][0-9]{0,18}$/.test(v);
@@ -14,7 +14,7 @@ const receiptValid = r => r?.v === 1 && id(r.id) && ['accepted', 'busy', 'stale'
   && (r.state === 'accepted' ? lineage(r.attempt) : r.attempt === null || lineage(r.attempt));
 
 const guidance = {
-  'preparation-active': 'Die Atemvorbereitung läuft. Diese Quest-App kann sie noch nicht per Update-Aktion beenden. Aktualisiere die Quest-App über ihre Meta-Bibliothek.',
+  'preparation-active': 'Diese Quest-App kann die Vorbereitung nicht für das Update beenden. Aktualisiere Atmungsraum in der Meta-Bibliothek im Headset.',
   'session-active': 'Die Sitzung läuft. Beende und speichere sie, bevor du ein Update prüfst.',
   'writer-active': 'Die Quest verarbeitet eine Aufnahme. Warte auf den bestätigten Abschluss.',
   'finalizing': 'Die Quest speichert die Sitzung. Warte auf den bestätigten Abschluss.',

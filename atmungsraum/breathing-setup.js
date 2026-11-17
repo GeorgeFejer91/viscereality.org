@@ -1,5 +1,5 @@
 import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=14';
-import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=5';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=6';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
 const inputs = { automatic: 'Automatic', 'polar-tilt': 'Polar tilt · persönlich eingerichtet',
