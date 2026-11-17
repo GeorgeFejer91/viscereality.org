@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-meta-result">
+  <link rel="stylesheet" href="./style.css?v=20261117-meta-handoff">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-meta-result"></script>
+  <script type="module" src="./app.js?v=20261117-meta-handoff"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -124,6 +124,10 @@
           <aside id="operator-meta-update" class="meta-update-panel" hidden aria-labelledby="operator-meta-summary">
             <p id="operator-meta-summary" data-measure role="status"></p>
             <p id="operator-meta-detail" data-measure></p>
+          </aside>
+          <aside id="operator-meta-handoff" class="meta-update-panel" hidden aria-labelledby="operator-meta-handoff-summary" data-update-allowed="false">
+            <p id="operator-meta-handoff-summary" data-measure role="status"></p>
+            <p id="operator-meta-handoff-detail" data-measure></p>
           </aside>
         </div>
         <div id="quest-pairing" class="screen-body" hidden>
