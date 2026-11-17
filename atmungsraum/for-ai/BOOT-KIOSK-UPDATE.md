@@ -12,8 +12,9 @@ Selected helper builds may therefore hand off an exact duplicate update at a
 fresh, valid, parked boundary: persist the required newer target, admit native
 irreversible maintenance, receive positive same-signer helper arm confirmation
 and install the existing main-looper kiosk latch, then cooperatively close only
-the current app/process. The helper waits a finite period for actual package
-replacement and the expected newer code before its bounded launch fallback.
+the current app/process. The helper observes actual package replacement and the
+expected newer code before its launch fallback. The monitor amendment below
+replaces helper2's earlier fixed duration/grace limits.
 This route uses `installing` with reason `queued-meta-update-handoff`; it does
 not claim a successful SDK Install request or infer completion from a duplicate,
 bytes or progress status. Normal SDK installation still requires its own matched
@@ -31,6 +32,28 @@ cross the boundary. Raw error text, tokens and URLs do not. An error containing
 SUCCESS never authorizes install or a session. New attempts clear stale error
 provenance; unrelated/retired responses cannot replace it. The PWA displays
 native state and the distinct handoff reason without granting authority.
+
+### Continuous monitor and disconnected-phone instructions
+
+The user requires a continuing observation of the actual update/app lifecycle.
+Helper3 watches actual package identity and trusted started/focused-ready
+acknowledgments until completion or explicit cancellation. There is no overall
+download expiry or estimated Meta relaunch grace. Package events wake observation;
+poll intervals/backoff only pace actual reads. Durable once-per-real-boot launch
+consumption and the existing singleTask launcher prevent foreground retry loops.
+Reboot resumes a pending target with current-boot proof. Short per-IPC/main-loop
+deadlines still reject stale commands; they never establish download completion.
+New clients require explicit monitor3 capability before closing. Legacy helper
+boot metadata/replies remain compatible with older clients.
+
+The PWA must retain only a presentation notice across connection loss. A native
+confirmed handoff may say the headset is updating; a check interrupted before
+that evidence must report its last confirmed state and unknown current status.
+While the app is closed, no progress or completion may be invented. Tell the
+operator to inspect the update in the headset and reconnect the PWA once
+Atmungsraum is open. Only fresh same-headset actual APK identity and native
+readiness can complete that notice; local storage, elapsed time or dismissal
+cannot release session/update authority.
 
 Latest hardware readback (20:15): Meta has subsequently installed16. Its exact
 APK digest matches the published16, installer/initiator are Meta, and Android

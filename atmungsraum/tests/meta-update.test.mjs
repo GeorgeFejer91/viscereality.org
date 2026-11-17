@@ -34,7 +34,7 @@ test('SDK failure provenance is bounded and never grants an update or session', 
   assert.equal(queued.allowed, false);
   assert.match(queued.summary, /schließt die App/);
   assert.doesNotMatch(queued.summary, /Installation angefragt/);
-  assert.match(queued.detail, /zeitlich begrenzt/);
+  assert.match(queued.detail, /überwacht den installierten App-Stand/);
 });
 
 test('repeatable native update status requires a fresh cycle and preserves known required versions', () => {

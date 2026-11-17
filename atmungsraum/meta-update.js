@@ -60,6 +60,7 @@ const failureReasons = {
   'download-progress-stalled': 'Das Herunterladen ist nicht weitergekommen.',
   'meta-platform-unavailable': 'Der Meta-Dienst ist gerade nicht verfügbar.',
   'meta-sdk-request-failed': 'Meta hat die Update-Anfrage mit einem Fehler beantwortet. Prüfe den aktuellen App-Stand im Headset.',
+  'meta-update-helper-monitor-capability-required': 'Der Starthelfer auf dieser Quest muss einmal aktualisiert werden. Prüfe die Einrichtung der Quest.',
   'duplicate-download-already-retried': 'Meta meldet erneut eine vorhandene Download-Anfrage. Prüfe das Update in der Meta-Bibliothek.',
   'duplicate-download-cancel-failed': 'Meta hat den Neustart des Downloads nicht bestätigt. Prüfe das Update in der Meta-Bibliothek.',
   'duplicate-download-recovery-timeout': 'Meta hat die Wiederaufnahme des Downloads nicht rechtzeitig bestätigt.',
@@ -80,7 +81,7 @@ const recoveryCopy = {
   'restarting-duplicate-download': ['Quest startet den Meta-Download erneut.',
     'Die Quest erneuert die vorgemerkte Download-Anfrage und prüft anschließend die Version.'],
   'queued-meta-update-handoff': ['Quest schließt die App für das vorgemerkte Meta-Update.',
-    'Der Helfer wartet zeitlich begrenzt auf die erforderliche APK und startet sie nach Bestätigung der neuen APK-Kennung.'],
+    'Der Helfer überwacht den installierten App-Stand und startet die erforderliche APK nach Bestätigung der neuen APK-Kennung.'],
 };
 const sdkErrorCopy = {
   UNKNOWN: 'Meta nennt keine nähere Fehlerursache.',
