@@ -28,6 +28,22 @@ def authored_instruction_cases(c, review):
     review.shot(page, 'calibration-instruction-update', 'Calibration narration can end for update', check, 'Preparation update')
     check.click()
     page.clock.run_for(1200)
+    attempt = page.evaluate('reviewQuest.metaUpdate.attempt')
+    assert attempt == page.evaluate('reviewReceipts[reviewMetaUpdateCommands[0].id].attempt')
+    page.evaluate("reviewQuest.metaUpdate.busy_reason = 'narration-park-pending'")
+    page.evaluate("document.documentElement.style.fontSize = '200%'")
+    page.clock.run_for(16000)
+    expect(page.locator('#meta-update-status')).to_have_text('Anleitung wird beendet.')
+    detail = page.locator('#update-instruction')
+    expect(detail).to_contain_text('schließe Atmungsraum im Headset')
+    expect(detail).to_contain_text('öffne die App erneut und verbinde das Smartphone wieder')
+    expect(check).to_be_disabled()
+    review.shot(page, 'narration-awaiting-release', 'Narration awaits native release', detail, 'Preparation update')
+    page.evaluate("Object.assign(reviewQuest.metaUpdate, {reason:'', busy_reason:''})")
+    page.clock.run_for(1200)
+    expect(page.locator('#meta-update-status')).to_contain_text('prüft den Meta-Kanal')
+    expect(detail).not_to_contain_text('schließe Atmungsraum')
+    assert page.evaluate('reviewQuest.metaUpdate.attempt') == attempt
     assert [cmd['op'] for cmd in page.evaluate('window.reviewMetaUpdateCommands') if cmd['op'] != 'receipt'] == ['end-preparation-and-check']
     assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).command.id") == original
     assert [cmd['op'] for cmd in mutations(page)['setup']] == ['calibrate']

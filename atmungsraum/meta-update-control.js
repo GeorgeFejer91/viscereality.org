@@ -1,5 +1,5 @@
 import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=14';
-import { nativeMetaUpdate } from './meta-update.js?v=4';
+import { nativeMetaUpdate } from './meta-update.js?v=5';
 
 const key = 'atmungsraum-meta-update-pending';
 const lineage = v => typeof v === 'string' && /^[1-9][0-9]{0,18}$/.test(v);
