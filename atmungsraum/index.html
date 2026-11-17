@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-review-repairs">
+  <link rel="stylesheet" href="./style.css?v=20261117-calibration-instruction">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-review-repairs"></script>
+  <script type="module" src="./app.js?v=20261117-calibration-instruction"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -281,7 +281,8 @@
       </div>
       <footer class="actions operator-actions">
         <button id="preview-retry" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
-        <button data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
+        <button id="calibration-instruction-cancel" type="button" hidden disabled><span data-measure>Anleitung abbrechen</span></button>
+        <button id="calibration-change-input" data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
       </footer>
     </section>
     <section id="breathing-preview" aria-labelledby="preview-title" class="screen operator-screen" hidden>

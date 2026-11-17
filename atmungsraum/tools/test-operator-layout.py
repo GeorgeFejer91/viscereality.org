@@ -65,6 +65,36 @@ def compact_setup(review):
         page.context.close()
 
 
+def calibration_instruction(review):
+    page = review.page(initial(c, {'calibrationInstruction': True}), viewport={'width': 320, 'height': 640})
+    page.clock.run_for(4000)
+    c.enter_participant(page)
+    page.locator('#preview-calibrate').click()
+    screen = page.locator('#calibration-screen')
+    cancel = screen.get_by_role('button', name='Anleitung abbrechen')
+    expect(screen.get_by_role('heading', name='Anleitung zur Atemübung')).to_be_visible()
+    expect(screen.locator('#calibration-change-input')).to_be_hidden()
+    expect(cancel).to_be_enabled()
+    page.clock.run_for(35000)
+    expect(cancel).to_be_enabled()
+    expect(page.locator('html')).to_have_attribute('data-measurement', 'ready')
+    assert cancel.locator('[data-measure]').get_attribute('data-text-fit') != 'reflow'
+    assert page.evaluate('document.documentElement.scrollWidth === innerWidth')
+    assert page.evaluate('reviewQuest.setup.attempt') == 0
+    assert page.evaluate('reviewSetupCommands.map(command => command.op)') == ['calibrate']
+    cancel.focus()
+    page.keyboard.press('Enter')
+    expect(cancel).to_be_hidden()
+    page.clock.run_for(1000)
+    expect(screen.get_by_role('button', name='Erneut einrichten')).to_be_enabled()
+    assert page.evaluate('''() => {
+        const [calibrate, cancel, ...extra] = reviewSetupCommands;
+        return cancel.op === 'cancel-instruction' && cancel.target === calibrate.id
+            && cancel.id !== calibrate.id && extra.length === 0 && reviewQuest.setup.attempt === 0;
+    }''')
+    page.context.close()
+
+
 def recovery_and_recordings(review):
     page = review.page()
     expect(page.locator('#quest-find')).to_be_visible()
@@ -408,11 +438,12 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
             expect(page.locator('#quest-finish')).to_be_visible()
         assert before == mutations(page)
         compact_setup(review)
+        calibration_instruction(review)
         session_particles(review)
         session_particle_layout(review)
         assert not review.errors, review.errors
         browser.close()
-    print('PASS real-app scenario Arm, receipt recovery, recording status, Drive dialog, draft and history')
+    print('PASS real-app scenario Arm, calibration narration and cancellation, receipt recovery, recording status, Drive dialog, draft and history')
 
 
 if __name__ == '__main__':

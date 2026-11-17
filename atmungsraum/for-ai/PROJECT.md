@@ -410,6 +410,10 @@ cloud-backed files; it was left untouched. The verified runtime commit
   authored build. The Quest reader verifies the encoded clips, the guided
   Probe instruction and the Haupt-Runde outro against the catalog. See the
   [authored package checks](VERIFICATION.md#authored-quest-audio-package--2026-11-17).
+- [x] Connect the first Polar calibration instruction to the selected Quest
+  setup gateway and phone controls in the authored-audio candidate. Start
+  calibration after playback completes and allow the operator to cancel the
+  original request from the phone.
 - [ ] Bind the authored programme and the post-session outro to the selected
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.

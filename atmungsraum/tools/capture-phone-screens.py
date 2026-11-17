@@ -195,6 +195,17 @@ function breathSetup(command) {
   window.reviewSetupCommands.push(structuredClone(command));
   const { v, id, g, r, op } = command;
   const setup = settings.setup;
+  if (settings.calibrationInstruction && op === 'cancel-instruction') {
+    const target = command.target;
+    const matches = Boolean(target && target === setup.instruction_id);
+    if (matches) {
+      delete setup.instruction_id;
+      settings.pending = false;
+      receipts[target] = {v:1,id:target,state:'rejected',accepted:false,reason:'calibration-instruction-cancelled'};
+    }
+    return receipts[id] = {v:1,id,state:matches ? 'confirmed' : 'rejected',accepted:matches,
+      reason:matches ? 'calibration-instruction-cancelled' : 'calibration-instruction-not-pending'};
+  }
   if (settings.staleSetupRejects > 0) {
     settings.staleSetupRejects--;
     setup.r++;
@@ -213,6 +224,11 @@ function breathSetup(command) {
     return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'audio-recovery-pending',recovery_generation:null};
   }
   if (settings.deferSetup) return receipts[id] = {v:1,id,state:'pending'};
+  if (settings.calibrationInstruction && op === 'calibrate' && setup.attempt === 0) {
+    setup.instruction_id = id;
+    settings.pending = true;
+    return receipts[id] = {v:1,id,state:'pending',accepted:true,reason:'calibration-instruction-pending'};
+  }
   setup.r++;
   const parked = setup.stage === 'idle' && !setup.playing;
   if (op === 'start') Object.assign(setup, { stage: 'testing', playing: true, audio_state:'playing', parked:false });

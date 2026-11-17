@@ -1,5 +1,5 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=7';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=8';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
@@ -7,7 +7,7 @@ import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActio
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=12';
+import { BreathingSetup } from './breathing-setup.js?v=13';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
@@ -93,6 +93,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const previewCalibrate = byId('preview-calibrate');
   const previewRestart = byId('preview-restart');
   const previewRetry = byId('preview-retry');
+  const instructionCancel = byId('calibration-instruction-cancel');
+  const calibrationChangeInput = byId('calibration-change-input');
   let calibrationBaseline;
   const previewPersonalReturn = byId('preview-personal-return');
   const previewPolarFixed = byId('preview-polar-fixed');
@@ -685,6 +687,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
+      instructionPending: breath.instructionPending,
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
     scheduleBreathExpiry();
@@ -693,6 +696,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
   function paintBreathingSetup(view, waiting) {
     const native = view.setup;
+    text(byId('calibration-screen-title'), view.instructionPending ? 'Anleitung zur Atemübung' : 'Zwei Atemzyklen');
+    if (instructionCancel.hidden === view.instructionPending) instructionCancel.hidden = !view.instructionPending;
+    if (calibrationChangeInput.hidden !== view.instructionPending) calibrationChangeInput.hidden = view.instructionPending;
+    instructionCancel.disabled = !view.actions.cancelInstruction || connecting || controllerLease.inFlight || Boolean(userAction);
     const testingMethod = view.available && native.stage === 'testing' && native.playing && native.input !== 'automatic';
     text(byId('operator-confirmed-input'), view.available ? `Aktive Atmungsmessmethode: ${view.inputLabel}` : 'Kein aktueller Status der Atmungsmessmethode.');
     previewCircle.hidden = !view.available;
@@ -756,7 +763,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       ? 'Prüfe, ob die Partikel im Headset auf die Bewegung des Controllers reagieren.'
       : 'Prüfe bei der teilnehmenden Person, ob sich die Partikel im Headset mit der Atmung bewegen.');
     previewRestart.hidden = !testingMethod || !view.showPolarCalibration;
-    previewRetry.hidden = !view.failure || collecting;
+    previewRetry.hidden = !(view.failure || view.instructionFailed) || collecting || view.instructionPending;
     previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
     byId('preview-recovery').hidden = !view.recovery;
     if (view.recovery) {
@@ -1486,6 +1493,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   for (const button of [previewCalibrate, previewRestart, previewRetry]) {
     button.addEventListener('click', () => setupAct('calibrate'));
   }
+  instructionCancel.addEventListener('click', async () => {
+    if (instructionCancel.disabled || document.hidden) return;
+    const cancel = breathing.cancelInstruction();
+    paint();
+    await cancel;
+    await rehearsal.refresh();
+    await breathing.refresh();
+    paint();
+  });
   previewPersonalReturn.addEventListener('click', () => setupAct('calibrate'));
   previewPolarFixed.addEventListener('click', () => setupAct('polar-fixed'));
   previewPolarAdaptive.addEventListener('click', () => setupAct('polar-adaptive'));

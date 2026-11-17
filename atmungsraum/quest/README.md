@@ -105,8 +105,8 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. This branch's cumulative patch reconstructs the authored-audio source candidate
-`b726b2506018f0ca0933bed013a925fa7e0aff5a` with SHA-256 `9ff79eebfaecb80d19f3c268ef4ee1e5ac6b85f157623ee6a6e247c364fc39a1`
-(2,215,031 bytes). The
+`463a66eeceffa330717f4493eed0fa0d1cfe8931` with SHA-256 `c39ee4500a27d34fcc8cb5c7d5eedcc062967cbae12985e5c12561aa13394026`
+(2,231,673 bytes). The
 [Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
 is the baseline for the following release evidence. Its cumulative patch
 reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching
@@ -143,8 +143,10 @@ second build or add `-ResolveOnly` to check the feature lock without compiling.
 Use `-MainStudyAudio` with the authored-audio source candidate to include
 the recorded main and guided Probe programmes, the calibration instruction
 and Freie Erkundung. The media reader verifies the whole package against the
-bound catalog. The selected session clock still needs to be connected to the
-authored programme before this package can advertise the new round.
+bound catalog. The selected Quest gateway plays the calibration instruction
+before the first Polar calibration and exposes cancellation on the phone.
+The selected session clock still needs integration with the authored rounds
+before this package can advertise Freie Erkundung on the phone.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,

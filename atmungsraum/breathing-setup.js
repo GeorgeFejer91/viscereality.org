@@ -36,7 +36,8 @@ const validReceipt = value => value && !Array.isArray(value) && value.v === 1 &&
     && (value.state === 'rejected' ? !value.accepted : value.state === 'outcome_unknown' || value.accepted))
   && (!Object.hasOwn(value, 'reason') || typeof value.reason === 'string' && value.reason.length <= 256
     && !/[\x00-\x1f\x7f]/.test(value.reason))
-  && (value.reason !== 'audio-recovery-pending' || value.state === 'pending' && value.accepted === true)
+  && (!['audio-recovery-pending', 'calibration-instruction-pending'].includes(value.reason)
+    || value.state === 'pending' && value.accepted === true)
   && (!recoveryFailures.has(value.reason) || value.state === 'rejected' && value.accepted === false);
 const qualityWarnings = {
   '': '', motion: 'Bewegung erkannt. Halte den Oberkörper ruhig und atme weiter mit.',
@@ -85,6 +86,7 @@ export function breathingSetup(status, owner) {
     || setup.cycle_frames === 0 || setup.cycle_frames % 4 !== 0 || !Number.isSafeInteger(setup.cycle_frames * 2)
     || !nonnegative(setup.target_frames) || ![0, setup.cycle_frames * 2].includes(setup.target_frames)
     || !nonnegative(setup.completed_frames) || setup.completed_frames > setup.target_frames
+    || Object.hasOwn(setup, 'instruction_id') && (!receiptId(setup.instruction_id) || setup.attempt !== 0)
     || !nonnegative(setup.attempt) || !calibrations.has(setup.calibration)
     || typeof setup.failure !== 'string' || setup.failure.length > 256 || /[\x00-\x1f\x7f]/.test(setup.failure)
     || typeof setup.ready !== 'boolean' || typeof setup.playing !== 'boolean'
@@ -118,7 +120,8 @@ function validJournal(saved) {
   return validOwner(saved?.owner) && command?.v === 1 && receiptId(command.id)
     && nonnegative(command.g) && command.g > 0 && nonnegative(command.r) && operations.has(command.op)
     && Object.keys(command).length === 5
-    && (!Object.hasOwn(saved, 'recovery') || saved.recovery === true);
+    && (!Object.hasOwn(saved, 'recovery') || saved.recovery === true)
+    && (!Object.hasOwn(saved, 'instruction') || saved.instruction === true && command.op === 'calibrate');
 }
 
 export class BreathingSetup {
@@ -133,6 +136,8 @@ export class BreathingSetup {
   refreshAttempt = null;
   waitBudget = null;
   waitExpired = false;
+  cancellingInstruction = false;
+  instructionFailed = false;
 
   constructor({ storage, now = () => performance.now() } = {}) {
     this.storage = storage;
@@ -178,6 +183,11 @@ export class BreathingSetup {
       && setup?.recovery?.id === this.pending.command.id && !this.pending.recovery) {
       this.remember({ ...this.pending, recovery: true });
     }
+    const instructionPending = Boolean(setup?.instruction_id);
+    if (instructionPending && this.pending?.command.op === 'calibrate'
+      && setup.instruction_id === this.pending.command.id && sameQuest(this.pending.owner, gateway?.owner)) {
+      this.observeInstruction();
+    }
     if (this.pending && (!sameQuest(this.pending.owner, gateway?.owner)
       || setup && setup.g !== this.pending.command.g && !this.pending.recovery)) this.unknown = true;
     const available = Boolean(setup && typeof gateway?.breathSetup === 'function');
@@ -214,6 +224,7 @@ export class BreathingSetup {
     this.view = {
       available, updateRequired: Boolean(status && status.breath_setup !== 1), setup,
       pending: Boolean(this.pending || this.busy), unknown: this.unknown, recovering, recoveryUnavailable,
+      instructionPending, instructionFailed: this.instructionFailed,
       phaseLabel: phaseLabels[phaseIndex] ?? '', radius,
       inputLabel: setup ? inputs[setup.input] : '',
       title: controller ? 'Controller testen' : builtin ? 'Polar STATE testen' : 'Atmung einrichten',
@@ -239,6 +250,8 @@ export class BreathingSetup {
           ? 'Die Messsignale sind da. Warte kurz auf gleichmäßige Bewegungsdaten vom Gurt.' : '',
       actions: {
         start: false,
+        cancelInstruction: Boolean(instructionPending && available && canControlQuest(status)
+          && status.p === 'IDLE' && !status.rec && !this.busy && !this.cancellingInstruction),
         calibrate: polarChoice,
         'polar-fixed': Boolean(polarChoice && supportedModes.includes('fixed')
           && (setup.input !== 'polar-tilt-fixed' || recoverable)),
@@ -257,7 +270,9 @@ export class BreathingSetup {
       },
     };
     const { actions } = this.view;
-    this.view.recovery = actions.acknowledge ? {
+    this.view.recovery = instructionPending ? {
+      title: 'Anleitung im Headset', detail: 'Die Atemzyklen beginnen nach der Anleitung.', action: '',
+    } : actions.acknowledge ? {
       title: 'Die Quest-App wurde erneuert', action: 'Aktuellen Quest-Zustand übernehmen',
       detail: 'Die frühere Anfrage gehört zur beendeten Verbindung. Übernimm den aktuellen Zustand, um weiterzumachen. Das bestätigt nur lokal und setzt die Quest nicht zurück. Kein Befehl wird wiederholt.',
     } : this.pending || recovering ? {
@@ -279,6 +294,13 @@ export class BreathingSetup {
     return true;
   }
 
+  observeInstruction() {
+    if (this.pending?.command.op !== 'calibrate' || this.pending.instruction) return;
+    this.remember({ ...this.pending, instruction: true });
+    this.waitExpired = false;
+    this.waitBudget = null;
+  }
+
   observeReceipt(receipt) {
     const saved = this.pending;
     if (!saved || !sameQuest(saved.owner, this.gateway?.owner)) return;
@@ -288,14 +310,18 @@ export class BreathingSetup {
       return;
     }
     if (receipt.state === 'rejected') {
+      this.instructionFailed = Boolean(receipt.reason?.startsWith('calibration-instruction-'));
       this.remember(null);
       this.unknown = false;
       this.message = recoveryFailures.has(receipt.reason)
         ? 'Die Atemschleife konnte nicht neu gestartet werden. Prüfe die Quest und versuche es erneut.'
+        : receipt.reason === 'calibration-instruction-cancelled' ? 'Die Anleitung wurde abgebrochen.'
+        : receipt.reason?.startsWith('calibration-instruction-') ? 'Die Quest konnte die Anleitung nicht abschließen. Versuche es erneut.'
         : receipt.reason === 'stale-revision' ? 'Der Quest-Status hat sich während des Wechsels geändert. Wähle die Atmungsmessmethode bitte erneut.'
         : 'Die Quest hat die Aktion abgelehnt. Prüfe den aktuellen Status.';
     } else {
       if (receipt.reason === 'audio-recovery-pending' && !saved.recovery) this.remember({ ...saved, recovery: true });
+      if (receipt.reason === 'calibration-instruction-pending') this.observeInstruction();
       // The authenticated native lookup binds this terminal result to the exact
       // operation, even when recovery advanced the audio generation while the
       // original admission reply was lost. It does not establish calibration.
@@ -318,6 +344,7 @@ export class BreathingSetup {
     this.remember({ owner: { ...gateway.owner }, command });
     this.busy = true;
     this.message = '';
+    this.instructionFailed = false;
     try {
       const receipt = await gateway.breathSetup(command, signal);
       if (this.gateway === gateway) {
@@ -330,6 +357,21 @@ export class BreathingSetup {
     finally { this.busy = false; }
   }
 
+  async cancelInstruction(signal) {
+    if (!this.view?.actions.cancelInstruction || this.cancellingInstruction || signal?.aborted) return;
+    const gateway = this.gateway;
+    const command = { v: 1, id: operationId(), op: 'cancel-instruction', target: this.setup.instruction_id };
+    this.cancellingInstruction = true;
+    try {
+      const receipt = await gateway.breathSetup(command, signal);
+      if (this.gateway === gateway && validReceipt(receipt) && receipt.id === command.id
+        && receipt.state === 'confirmed' && receipt.accepted === true) return true;
+    } catch {
+      if (this.gateway === gateway && this.pending?.command.id === command.target) this.unknown = true;
+    } finally { this.cancellingInstruction = false; }
+    return false;
+  }
+
   // Read receipts only. A reconnect never retransmits the journaled mutation.
   refresh(signal) {
     const gateway = this.gateway;
@@ -339,7 +381,9 @@ export class BreathingSetup {
     const id = this.pending.command.id;
     const now = this.now();
     this.waitBudget ??= { started: now, last: -Infinity, reads: 0 };
-    if (now - this.waitBudget.started >= 12000 || this.waitBudget.reads >= 12) {
+    const instruction = this.pending.instruction;
+    if (now - this.waitBudget.started >= (instruction ? 65000 : 12000)
+      || this.waitBudget.reads >= (instruction ? 130 : 12)) {
       this.waitExpired = true;
       this.unknown = true;
       return;

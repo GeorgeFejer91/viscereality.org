@@ -552,6 +552,25 @@ The Android media adapter compiled against the Android API. Node passed
 checks cover staging, media input and resolution. They do not exercise the
 selected Quest session owner, audio output or a signed headset install.
 
+## Polar calibration narration — 2026-11-17
+
+The authored-audio candidate uses the verified calibration clip for the
+first Polar setup. The selected Quest gateway holds the original request
+pending during playback. On completion it rechecks the controller, Quest
+owner, setup revision and Polar eligibility before asking the native
+breathing loop to start calibration. Cancellation settles that original
+request before a cycle starts. The legacy package follows its existing path.
+
+The 320px Chromium check woke the real phone UI with the synthetic Quest
+transport, kept narration pending for 35 seconds, verified the measured
+cancel label and cancelled by keyboard. It confirmed zero calibration
+attempts and one cancellation addressed to the original request. The
+selected Java gateway passed 37 boundary checks including one-time
+completion and cancellation on stale owner, failed playback and timeout.
+The Android media sources compiled against API 30. The native patch
+reconstructed from the pinned base and the feature lock resolved all 96
+authored audio assets. Signed installation and headset playback remain open.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,
