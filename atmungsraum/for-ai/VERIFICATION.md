@@ -32,6 +32,17 @@ under S:/Work/private/atmungsraum/validation/2026-11-17-pwa-input-layout/.
 Current release marker:20261117-selection-retry-2. Publication and installed
 phone readback are tracked in PROJECT.md.
 
+Publication: [PR39](https://github.com/GeorgeFejer91/viscereality.org/pull/39)
+merged4b73139 as0e06fa38d88ff1ee27a15b4708577d49aeff094d. Exact
+[Pages44060980318](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44060980318)
+succeeded; all15 checked live responses matched Git. Fresh Chromium loaded
+20261117-selection-retry-2 from the public runtime with only synthetic Quest
+transport substituted. Healthy completion stayed hidden, the first method
+switch used three distinct IDs after two known stale rejections, and further
+adaptive and Controller selections confirmed with no page errors. Pixel6a was
+not listed by ADB at publication, so final physical public-runtime reload is
+pending. No new native APK was built or installed for this PWA increment.
+
 Controller source inspection: core.select_controller has no Polar-calibration
 precondition. Java setupCommand handles Controller as a real first-loop action,
 like calibration; native effective output still requires non-parked audio,
