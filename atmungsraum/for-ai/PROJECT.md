@@ -21,8 +21,14 @@ several times per second. This does not establish a broken calibration model.
   connected Quest22. Adaptive received two explicit stale rejections and then a
   confirmed third request. No calibration, Arm or recording was started.
 - [x] Verify unit/real-UI regressions, native gates and independent review.
-- [ ] Publish and verify the public20261117-selection-retry-2 release, then
-  reload the idle phone from the public origin and repeat its status checks.
+- [x] Publish public20261117-selection-retry-2 through PR39. Implementation
+  4b73139 merged as0e06fa3, exact Pages44060980318 succeeded, and all15 checked
+  live responses matched Git. A fresh public-runtime Chromium check confirmed
+  hidden routine completion, two explicit stale rejections followed by one
+  confirmed switch, further adaptive/Controller switches and no page errors.
+- [ ] Reload the idle physical phone from the public origin and repeat status
+  checks. Pixel6a was absent from ADB after deployment, so this remains open;
+  earlier candidate tests retained real Quest authentication/native decisions.
 - [ ] At an attended fresh launch, test Controller before any Polar calibration.
   Source selection has no Polar-model prerequisite; effective output requires
   an unparked running audio clock and controller assessment fresh within250ms.
