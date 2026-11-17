@@ -5,7 +5,7 @@
   "opening": [
     "atem-lauschen-augen-geschlossen",
     "atem-lauschen-augen-offen",
-    "boxatmung-anleitung"
+    "main-study-instructions"
   ],
   "pools": {
     "inhale": [
@@ -67,7 +67,7 @@
     },
     {
       "id": "boxatmung-anleitung",
-      "role": "instruction_3",
+      "role": "alternate_instruction",
       "file": "boxatmung-anleitung.mp3",
       "transcript_file": "boxatmung-anleitung.txt",
       "sources": [
@@ -384,6 +384,21 @@
       "license": "CC BY 4.0",
       "license_url": "https://creativecommons.org/licenses/by/4.0/",
       "source_url": "https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1200082"
+    },
+    {
+      "id": "main-study-instructions",
+      "role": "instruction_3",
+      "file": "main-study-instructions.mp3",
+      "transcript_file": "main-study-instructions.txt",
+      "text": "Wir wiederholen jetzt die Atemübung von vorhin, diesmal für zehn Minuten.\n\nZur Erinnerung: Vier Sekunden einatmen, vier Sekunden den Atem anhalten, vier\nSekunden ausatmen und erneut vier Sekunden pausieren.\n\nNimm eine bequeme, aufrechte Haltung ein und entspanne deine Schultern. Stell\ndir beim Einatmen vor, wie sich deine unteren Rippen sanft wie ein Regenschirm\nöffnen. Beim Ausatmen lässt du die Luft langsam ausströmen und deinen Brustkorb\nwieder entspannen. Halte den Atem während der Pausen ohne Anstrengung an.\n\nFalls sich der Rhythmus unangenehm anfühlt, kehre zu deiner natürlichen Atmung\nzurück.\n\nBereit?",
+      "sources": [
+        "ElevenLabs_2026-11-17T14_40_02_Zen - Meditation german_pvc_s50_sim76_v4.mp3"
+      ],
+      "bytes": 742096,
+      "sha256": "f8ca3ff95a1a9097c5cdc3d6f89171e0495315863ba30e154db536e29825b2ca",
+      "duration_seconds": 45.32244897959184,
+      "frames_44100": 1998720,
+      "transcript_method": "Whisper medium (de); punctuation and orthography normalized"
     }
   ]
 }

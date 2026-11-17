@@ -312,18 +312,18 @@ cloud-backed files; it was left untouched. The verified runtime commit
   owns the 81-second opening, 50 four-phase cycles, and 19-second closing.
   All eight files contain silence. Their timeline totals 900 seconds and
   serves cue preparation. The active native loop owns Quest playback.
-- [x] Catalogue the 23 supplied recordings as 22 unique MP3/TXT pairs.
-  [Main study audio](../assets/audio/main-study/de/README.md) documents source
-  identity, German transcripts, phase pools, music credit, and staging.
-- [x] Render the candidate with the three intact instructions, 45 complete
-  cycles and a music tail. Native scenario decoder host check accepted the
-  same 184-event speech schedule and rendered exactly 39,690,000 frames.
-- [ ] Confirm the opening versus cycle budget for the selected Quest path.
-  The recordings extend the old 81-second opening to about 160 seconds;
-  the exact 900-second candidate fits 45 cycles. Then bind the approved
-  programme to the native main playback clock, include the music, and verify
-  a signed package and a physical Quest run. The review staging option does
-  not replace the current shared-loop app or its preparation behavior.
+- [x] Catalogue 24 attachments as 23 unique MP3/TXT pairs. The
+  [study library](../assets/audio/main-study/de/README.md) records transcripts,
+  phase pools, quiet listening breaks and the review/staging commands.
+- [x] Stage the playground-approved programme. Both controls are exactly
+  5,615,640 samples. With the instruction they fill 5:00. Guided breathing
+  fills 10:00, with 37 full cycles and a final inhale and exhale. The outro
+  is a separate 19-second asset after the 15-minute timer. Verified all
+  84 catalog file identities, all rendered narration and phase PCM against
+  the playground, and the 919-second review WAV.
+- [ ] Bind the authored programme and the post-session outro to the selected
+  Quest playback owner. Preserve preparation, recording provenance and the
+  900-second completion boundary. Qualify a signed build on a physical Quest.
 
 ### Separation of preparation and main study — 2026-11-16
 

@@ -9,7 +9,16 @@ const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const RATE = 44_100;
 const PHASE_FRAMES = 4 * RATE;
 const TOTAL_FRAMES = 900 * RATE;
-const END_FRAMES = 19 * RATE;
+const OPENING_FRAMES = 300 * RATE;
+const GUIDED_FRAMES = 600 * RATE;
+const SOFT_LOOP_DIRECTORY = 'assets/audio/box-breathing/de/soft-v2';
+
+// Source milliseconds for the eyes-closed and eyes-open prompt boundaries.
+const LISTENING_BREAKS = [
+  { after: [14100, 12140], resumeAt: 28000 }, // Settle and listen.
+  { after: [25580, 25320], resumeAt: 57000 }, // Notice the inhale and exhale.
+  { after: [44950, 49850], resumeAt: 93000 }, // Return attention to breathing.
+];
 const PHASES = [['inhale', 'inhale'], ['hold_in', 'hold'], ['exhale', 'exhale'], ['hold_out', 'hold']];
 const INSTRUCTIONS = ['instruction_1', 'instruction_2', 'instruction_3'];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -76,20 +85,27 @@ export function planMainStudy(inventory) {
     events.push({ id, asset, offset_frames: offset, duration_frames: frames, cycle });
     offset += frames;
   };
-  for (const id of inventory.opening) {
-    const asset = assets.get(id);
-    add(asset.role, id, asset.frames_44100);
+  const controls = inventory.opening.slice(0, 2).map(id => assets.get(id));
+  const instruction = assets.get(inventory.opening[2]);
+  const controlFrames = (OPENING_FRAMES - instruction.frames_44100) / 2;
+  if (!Number.isSafeInteger(controlFrames) || controls.some(asset => asset.frames_44100 >= controlFrames)) {
+    invalid('opening cannot fit two equal listening controls');
   }
-  const cycles = Math.floor((TOTAL_FRAMES - offset - END_FRAMES) / (4 * PHASE_FRAMES));
-  if (cycles < Math.max(...Object.values(inventory.pools).map(pool => pool.length))) invalid('opening leaves too few cycles');
+  for (const asset of controls) add(asset.role, asset.id, controlFrames);
+  add(instruction.role, instruction.id, instruction.frames_44100);
+
+  const cycles = Math.floor(GUIDED_FRAMES / (PHASES.length * PHASE_FRAMES));
+  const addPhase = ([phase, pool], cycle) => {
+    const ids = inventory.pools[pool];
+    const take = cycle + (phase === 'hold_out' ? 1 : 0);
+    add(phase, ids[take % ids.length], PHASE_FRAMES, cycle + 1);
+  };
   for (let cycle = 0; cycle < cycles; cycle++) {
-    for (const [phase, pool] of PHASES) {
-      const ids = inventory.pools[pool];
-      const take = cycle + (phase === 'hold_out' ? 1 : 0);
-      add(phase, ids[take % ids.length], PHASE_FRAMES, cycle + 1);
-    }
+    for (const phase of PHASES) addPhase(phase, cycle);
   }
-  add('outro', null, TOTAL_FRAMES - offset);
+  addPhase(PHASES[0], cycles);
+  addPhase(PHASES[2], cycles);
+  if (offset !== TOTAL_FRAMES) invalid('timed programme does not end at 15 minutes');
   return { scenario_id: 'haupt-15', sample_rate: RATE, total_frames: TOTAL_FRAMES, cycles, events };
 }
 
@@ -106,6 +122,56 @@ function decodePcm(input, args = []) {
     ffmpeg.once('close', code => code === 0 ? resolve(Buffer.concat(chunks))
       : reject(new Error('FFmpeg could not decode ' + input + ': ' + error.trim())));
   });
+}
+
+function extendControl(samples, control, frames) {
+  const chunks = [];
+  let lastFrame = 0;
+  let addedFrames = 0;
+  for (const { after, resumeAt } of LISTENING_BREAKS) {
+    const cut = RATE * after[control] / 1000;
+    const silence = RATE * resumeAt / 1000 - cut - addedFrames;
+    const margin = RATE / 50;
+    if (cut <= lastFrame || cut + margin >= samples.length / 2 || silence <= 0) invalid('invalid listening break');
+    for (let frame = cut - margin; frame < cut + margin; frame++) {
+      if (Math.abs(samples.readInt16LE(frame * 2)) > 128) invalid('listening break overlaps source speech');
+    }
+    chunks.push(samples.subarray(lastFrame * 2, cut * 2), Buffer.alloc(silence * 2));
+    addedFrames += silence;
+    lastFrame = cut;
+  }
+  const tailFrames = frames - samples.length / 2 - addedFrames;
+  if (tailFrames <= 0) invalid('no silence remains after the final listening prompt');
+  chunks.push(samples.subarray(lastFrame * 2), Buffer.alloc(tailFrames * 2));
+  return Buffer.concat(chunks);
+}
+
+function wavePcm(wave, frames) {
+  if (wave.length !== frames * 2 + 44 || wave.toString('ascii', 36, 40) !== 'data'
+      || wave.readUInt32LE(24) !== RATE || wave.readUInt16LE(22) !== 1 || wave.readUInt16LE(34) !== 16) {
+    invalid('unexpected mono PCM WAV');
+  }
+  return wave.subarray(44);
+}
+
+async function loadBreathLayer(sourceRoot, phase) {
+  const read = async name => wavePcm(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, name + '.wav')), PHASE_FRAMES);
+  const [dry, mixed] = await Promise.all([read(phase), read(phase + '_breath')]);
+  return { dry, mixed };
+}
+
+function mixPhase(voice, layer) {
+  let peak = 0;
+  for (let i = 0; i < voice.length; i += 2) peak = Math.max(peak, Math.abs(voice.readInt16LE(i)));
+  if (!peak) invalid('silent voice phase');
+  const voicePeak = 32768 * 10 ** (-8 / 20);
+  for (let i = 0; i < voice.length; i += 2) {
+    const breath = layer ? layer.mixed.readInt16LE(i) - layer.dry.readInt16LE(i) : 0;
+    const sample = Math.round(voice.readInt16LE(i) * voicePeak / peak + breath);
+    if (Math.abs(sample) > 32767) invalid('phase mix clips');
+    voice.writeInt16LE(sample, i);
+  }
+  return voice;
 }
 
 function encodeWav(pcm) {
@@ -132,6 +198,10 @@ export async function buildMainStudyScenario(sourceRoot, original) {
   const registry = {};
   const files = new Map();
   const prefix = 'assets/audio/scenarios/haupt-15';
+  const layers = {
+    inhale: await loadBreathLayer(sourceRoot, 'inhale'),
+    exhale: await loadBreathLayer(sourceRoot, 'exhale'),
+  };
   for (const [index, event] of timeline.events.entries()) {
     if (event.asset === null || Object.hasOwn(registry, event.asset)) continue;
     const source = assets.get(event.asset);
@@ -141,7 +211,12 @@ export async function buildMainStudyScenario(sourceRoot, original) {
       ? `atrim=end=${cutoff},atempo=${tempo},afade=t=in:d=0.008,afade=t=out:st=3.92:d=0.065,apad`
       : source.role === 'hold' ? 'afade=t=in:d=0.008,apad' : '';
     const args = filters ? ['-af', filters, '-t', '4'] : [];
-    const pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, source.file), args);
+    let pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, source.file), args);
+    if (index < 2) {
+      if (pcm.length !== source.frames_44100 * 2) invalid('unexpected control length: ' + source.id);
+      pcm = extendControl(pcm, index, event.duration_frames);
+    }
+    if (event.cycle !== null) pcm = mixPhase(pcm, layers[source.role]);
     if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + source.id);
     const wave = encodeWav(pcm);
     const seconds = Math.floor(event.offset_frames / RATE);
@@ -153,11 +228,26 @@ export async function buildMainStudyScenario(sourceRoot, original) {
     };
     files.set(posix.join(prefix, file), wave);
   }
+  const outro = JSON.parse(await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, 'outro.json'), 'utf8'));
+  if (outro.file !== 'outro.wav' || outro.sample_rate !== RATE || !Number.isSafeInteger(outro.frames)
+      || outro.frames <= 0 || typeof outro.text !== 'string') invalid('invalid post-session outro metadata');
+  const outroPath = posix.join(SOFT_LOOP_DIRECTORY, outro.file);
+  const outroWav = await readFile(join(sourceRoot, outroPath));
+  const outroText = await readFile(join(sourceRoot, SOFT_LOOP_DIRECTORY, 'outro.txt'), 'utf8');
+  if (outroWav.length !== outro.bytes || sha256(outroWav) !== outro.sha256 || outroText !== outro.text + '\n') {
+    invalid('post-session outro integrity mismatch');
+  }
+  wavePcm(outroWav, outro.frames);
+  files.set(outroPath, outroWav);
   const plan = {
     schema_version: original.schema_version,
     library_manifest_sha256: original.library_manifest_sha256,
     audio_assets_base_directory: original.audio_assets_base_directory,
     ...timeline, audio_assets: registry,
+    post_session_audio: {
+      path: outroPath, offset_frames: TOTAL_FRAMES, duration_frames: outro.frames,
+      bytes: outro.bytes, sha256: outro.sha256, text: outro.text,
+    },
   };
   const music = assets.get(inventory.background);
   return { plan, files, music: join(sourceRoot, STUDY_DIRECTORY, music.file) };
