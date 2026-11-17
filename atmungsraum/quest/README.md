@@ -5,9 +5,9 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The code19 shared-scheduler developer APK has passed software and actual signed
-package checks and is published in the private Meta Developer channel;
-installation and hardware acceptance are pending.
+The repaired code25 developer APK has passed1114 signed-package checks and is
+published in the private Meta Developer channel with malware/security passes.
+Its installation and hardware acceptance are pending.
 The APK log records its exact source, signer
 and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
 source identity and verification history.
