@@ -17408,7 +17408,7 @@ index c0c0c17e..3729e77b 100644
          frame_timings.openxr_end_frame_ms = elapsed_ms(stage_started);
          frame_timings.submitted_frame_host_ms = elapsed_ms(submitted_frame_host_started);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index a694dfee..0565597b 100644
+index a694dfee..c9d31619 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -4,10 +4,13 @@ import android.app.Activity;
@@ -17425,15 +17425,72 @@ index a694dfee..0565597b 100644
  import android.media.projection.MediaProjectionManager;
  import android.os.Build;
  import android.os.Bundle;
-@@ -335,6 +338,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -335,8 +338,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          final ExperimentSessionControlCapability.Fence sessionFence;
          final long armGeneration;
          final String armCondition;
 +        String scenarioId = "";
          int requestedBias = -1;
          boolean armCheckpointObserved;
++        long armLaunchEpoch = -1L;
          boolean awaitsDurableNativeOutcome() {
-@@ -549,9 +553,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+             return "arm".equals(operation) || "set-bias".equals(operation) || "save-next".equals(operation)
+                 || "save-exit".equals(operation);
+@@ -518,6 +523,38 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         }
+     }
+ 
++    private static boolean acceptsRemoteCommandFailure(ExperimentSessionAndroidShell.CommandFailure failure) {
++        RemotePending pending=remotePending;
++        ExperimentSessionBleServer server=remoteServer();
++        return failure!=null&&pending!=null&&server!=null&&"arm".equals(pending.operation)
++            &&"arm".equals(failure.operation)&&!pending.nativeId.isEmpty()
++            &&pending.nativeId.equals(failure.operationId)&&pending.armGeneration>0
++            &&failure.expectedGeneration==pending.armGeneration-1L
++            &&pending.armLaunchEpoch>=0&&failure.launchEpoch==pending.armLaunchEpoch
++            &&server.acceptsStatusRead(pending.serverGeneration,pending.nativeOwnerEpoch);
++    }
++
++    private static void observeRemoteCommandFailure(ExperimentSessionAndroidShell.CommandFailure failure) {
++        if(!acceptsRemoteCommandFailure(failure))return;
++        RemotePending pending=remotePending;
++        ExperimentSessionBleServer server=remoteServer();
++        // A durable native observation or refusal to retire the exact local
++        // unexecuted intent overrides a late Java non-dispatch classification.
++        boolean rejected=!failure.mayHaveDispatched&&!pending.armCheckpointObserved
++            &&EXPERIMENT_SESSION_PANEL.rejectUndispatchedArm(pending.nativeId,failure.expectedGeneration,
++                "Arm was not dispatched: "+failure.detail);
++        String detail=(rejected?"Arm was not dispatched: ":"Arm outcome unknown; original request retained: ")+failure.detail;
++        if(!server.updateReceiptForGeneration(pending.serverGeneration,pending.browserId,
++                rejected?"rejected":"outcome_unknown",detail))return;
++        if(rejected) {
++            if(remotePending==pending)remotePending=null;
++        }
++        // Unknown work retains the same mapping and native readback observer.
++        // Neither this receipt nor a timeout may replay it or stop recording.
++        BreathCompositionPanelModule panel=remotePanel.get();
++        if(panel!=null&&!panel.experimentShellDestroyed)panel.updateStatus(detail);
++    }
++
+     private static final ExperimentSessionAndroidShell.UiSink REMOTE_SINK =
+         new ExperimentSessionAndroidShell.UiSink() {
+             @Override public boolean observesSubmittedCommand() { return true; }
+@@ -534,6 +571,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                 return epoch == EXPERIMENT_SESSION_SHELL.currentLaunchEpochForUi();
+             }
+ 
++            @Override public boolean acceptsExperimentSessionCommandFailure(ExperimentSessionAndroidShell.CommandFailure failure) {
++                return acceptsRemoteCommandFailure(failure);
++            }
++
++            @Override public void onExperimentSessionCommandFailure(ExperimentSessionAndroidShell.CommandFailure failure) {
++                observeRemoteCommandFailure(failure);
++            }
++
+             @Override public void onExperimentSessionReadback(
+                     ExperimentSessionAndroidShell.SessionReadback readback) {
+                 if (readback == null || readback.receipt == null) return;
+@@ -549,9 +594,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                      ExperimentSessionPanelState state = EXPERIMENT_SESSION_PANEL.snapshot();
                      if (state.phase == ExperimentSessionPanelState.Phase.ARMING
                              && state.recording) {
@@ -17444,7 +17501,7 @@ index a694dfee..0565597b 100644
                      }
                  }
                  RemotePending pending = remotePending;
-@@ -828,6 +830,18 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -828,6 +871,18 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              @Override public JSONObject polarStopReadback() throws Exception {
                  return ControlPanelActivity.polarStopProjection();
              }
@@ -17463,7 +17520,7 @@ index a694dfee..0565597b 100644
              @Override public JSONObject snapshot() throws Exception {
                  refreshExperimenterPolarProjection();
                  long now = SystemClock.elapsedRealtime();
-@@ -922,6 +936,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -922,6 +977,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
  
              @Override public void dispatch(ExperimentSessionBleServer.CommandRequest request) {
@@ -17478,7 +17535,7 @@ index a694dfee..0565597b 100644
                  ExperimentSessionBleServer server = remoteServer();
                  if (server == null) return;
                  if(remoteTerminal!=null) {
-@@ -997,8 +1019,11 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -997,10 +1060,14 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          server.updateReceipt(request.id, "rejected", "Session is already active or pending.");
                          return;
                      }
@@ -17486,12 +17543,16 @@ index a694dfee..0565597b 100644
 +                    RemotePending arm = new RemotePending(request.id, nativeCommand.operationId, "arm",
                          nativeCommand.expectedGeneration + 1L, request.condition);
 +                    arm.scenarioId = scenario;
++                    arm.armLaunchEpoch = EXPERIMENT_SESSION_SHELL.currentLaunchEpochForUi();
 +                    if (participantPlan != null) nativeCommand = nativeCommand.withParticipantPlan(participantPlan);
 +                    remotePending = arm;
                      server.updateReceipt(request.id, "pending", "Preparing condition in native session.");
-                     EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
+-                    EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK);
++                    EXPERIMENT_SESSION_SHELL.submit(nativeCommand, true, REMOTE_SINK, arm.armLaunchEpoch);
                      return;
-@@ -1060,6 +1085,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+                 }
+                 if ("save-next".equals(request.operation)) {
+@@ -1060,6 +1127,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              }
          };
  
@@ -17508,7 +17569,7 @@ index a694dfee..0565597b 100644
      public static void reconcileCurrentExperimentSessionBleOwner() {
          ExperimentSessionBleServer server=remoteServer();if(server!=null)server.reconcileCurrentNativeOwner();
      }
-@@ -1083,6 +1118,79 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1083,6 +1160,79 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static String remoteSetupPendingId="";
      private static long remoteSetupPendingCarrier,remoteSetupPendingEpoch;
  
@@ -17588,7 +17649,7 @@ index a694dfee..0565597b 100644
      private static String remoteKioskState() {
          NativeRendererSoftKioskCoordinator.Effectiveness effectiveness =
              NativeRendererSoftKioskCoordinator.process().snapshot().effectiveness;
-@@ -1195,6 +1303,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1195,6 +1345,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private long breathCompositionGeneration;
      private TextView breathOverviewReadback;
      private TextView breathCalibrationReadback;
@@ -17597,7 +17658,7 @@ index a694dfee..0565597b 100644
      private TextView breathOutputReadback;
      private TextView breathDiagnosticsReadback;
      private ProgressBar breathCalibrationProgress;
-@@ -1211,6 +1321,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1211,6 +1363,51 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      private static final ExperimentControlMode controlMode=ExperimentControlMode.process();
      private TextView controlModeSessionReadback;
      private TextView controlModeNetworkReadback;
@@ -17649,7 +17710,7 @@ index a694dfee..0565597b 100644
  
      private boolean productPanelOperatorAvailable(){
          return !experimentShellDestroyed&&!isFinishing()&&!isDestroyed()
-@@ -1244,6 +1399,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1244,6 +1441,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
      private JSONObject invokeProductPanelOperator(String action,JSONObject parameters)throws Exception {
          requireProductPanelOperator();
@@ -17658,7 +17719,7 @@ index a694dfee..0565597b 100644
          if("panel-visible".equals(action))return NativeMeshUiProducer.requestProductPanelVisibility(hostActivity(),parameters.getBoolean("visible"));
          if("navigate".equals(action)){
              String surface=parameters.getString("surface"),page=parameters.getString("page");
-@@ -1589,6 +1746,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1589,6 +1788,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
              public JSONObject observe()throws Exception{return observeProductPanelOperator();}
              public JSONObject invoke(String action,JSONObject parameters)throws Exception{return invokeProductPanelOperator(action,parameters);}
          });
@@ -17666,7 +17727,7 @@ index a694dfee..0565597b 100644
      }
  
      @Override
-@@ -1737,6 +1895,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1737,6 +1937,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onResume() {
          super.onResume();
@@ -17676,7 +17737,7 @@ index a694dfee..0565597b 100644
          activityPanelResumed=!nativePresentation();
          if(meshPanelAttachment!=null&&!nativePresentation())meshPanelAttachment.showInActivity();
          if(!nativePresentation()||meshPanelAttachment!=null&&meshPanelAttachment.presentationActive()
-@@ -1748,6 +1909,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1748,6 +1951,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          NativeMeshUiProducer.productOwnerReady(hostActivity());
          ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.existing();
          if(gateway!=null)gateway.requestDiscoveryPermissions(hostActivity());
@@ -17684,7 +17745,7 @@ index a694dfee..0565597b 100644
      }
  
      private void resumePanelProjection() {
-@@ -1772,12 +1934,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1772,12 +1976,16 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
  
      @Override
      protected void onPause() {
@@ -17701,7 +17762,7 @@ index a694dfee..0565597b 100644
          closeHubStatusLifetime();
          remotePanelResumed = false;
          cancelRemotePolarRender();
-@@ -1838,6 +2004,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1838,6 +2046,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onDestroy() {
          if(experimentShellDestroyed)return;
@@ -17712,7 +17773,7 @@ index a694dfee..0565597b 100644
          experimentShellDestroyed = true;
          try{if(productPanelOperatorRegistration!=null)productPanelOperatorRegistration.close();}
          catch(Exception unavailable){Log.w(TAG,"channel=product-panel-operator event=registration-retirement-failed");}
-@@ -1864,6 +2034,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1864,6 +2076,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      protected void onActivityResult(int requestCode, int resultCode, Intent data) {
          super.onActivityResult(requestCode, resultCode, data);
@@ -17722,7 +17783,7 @@ index a694dfee..0565597b 100644
          if (requestCode != REQUEST_DISPLAY_COMPOSITE_CAPTURE) {
              return;
          }
-@@ -1911,8 +2084,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -1911,8 +2126,9 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      @Override
      public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
          super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -17733,7 +17794,7 @@ index a694dfee..0565597b 100644
          PolarSensorRuntime.forApplication(getApplicationContext()).onRequestPermissionsResult(
              hostActivity(),
              requestCode,
-@@ -2240,6 +2414,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2240,6 +2456,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterPhoneControl(LinearLayout root) {
@@ -17741,7 +17802,7 @@ index a694dfee..0565597b 100644
          appendExperimenterNetworkControl(root);
          if (!ExperimentSessionBleServer.featurePackaged(this)) return;
          final ExperimentSessionBleServer server =
-@@ -2277,6 +2452,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2277,6 +2494,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void appendExperimenterNetworkControl(LinearLayout root) {
@@ -17749,7 +17810,7 @@ index a694dfee..0565597b 100644
          if(!ExperimentSessionCommandGateway.featurePackaged(this))return;
          final ExperimentSessionCommandGateway gateway=ExperimentSessionCommandGateway.process(this,REMOTE_DELEGATE);
          gateway.requestDiscoveryPermissions(hostActivity());
-@@ -2354,6 +2530,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2354,6 +2572,12 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          root.addView(network);
      }
  
@@ -17762,7 +17823,7 @@ index a694dfee..0565597b 100644
      private void handleRemoteOpenPolarIntent(Intent intent) {
          if (intent != null && intent.getBooleanExtra(EXTRA_REMOTE_OPEN_POLAR, false)) {
              intent.removeExtra(EXTRA_REMOTE_OPEN_POLAR);
-@@ -2682,6 +2864,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -2682,6 +2906,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
      }
  
      private void replaceBreathCompositionPanelContent(String topic) {
@@ -17770,7 +17831,7 @@ index a694dfee..0565597b 100644
          cancelRemotePolarRender();
          rememberPanelScroll();
          cancelPendingPrivateParticleDynamicsApply();
-@@ -4214,10 +4397,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4214,10 +4439,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          // every authoritative arming readback so a reordered status callback or
          // panel recreation cannot leave the native session permanently arming.
          if (after.phase == ExperimentSessionPanelState.Phase.ARMING && after.recording) {
@@ -17782,7 +17843,7 @@ index a694dfee..0565597b 100644
                  updateStatus("Session armed, but condition audio preparation was rejected.");
              }
          }
-@@ -4237,6 +4417,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4237,6 +4459,22 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          refreshExperimenterAfterReadback();
      }
  
@@ -17805,7 +17866,7 @@ index a694dfee..0565597b 100644
      @Override
      public void onExperimentSessionTerminalAdmission(ExperimentSessionAndroidShell.TerminalAdmission admission) {
          RemoteTerminalPending terminal=remoteTerminal;
-@@ -4526,6 +4722,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4526,6 +4764,7 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          try {
              String response = nativeApplyBreathCompositionCommand(command.toString());
              renderBreathCompositionResponse(response, readback);
@@ -17813,7 +17874,7 @@ index a694dfee..0565597b 100644
              writeBreathCompositionOperatorReceipt(
                  "ui-" + SystemClock.elapsedRealtimeNanos(),
                  command.optString("operation", "unknown"),
-@@ -4536,6 +4733,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -4536,6 +4775,90 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
          }
      }
  
@@ -17904,7 +17965,7 @@ index a694dfee..0565597b 100644
      private void refreshBreathCompositionReadback(TextView readback) {
          try {
              renderBreathCompositionResponse(nativeReadBreathCompositionStatus(), readback);
-@@ -6281,6 +6562,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+@@ -6281,6 +6604,8 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
                          .put("breath_guidance_bias_percent",
                              command.breathGuidanceBiasPercent)
                          .put("started_at_utc_ns", utcNanos);
@@ -18265,6 +18326,195 @@ index 00000000..28b6e2b4
 +        public int hashCode(){return device.hashCode();}
 +    }
 +}
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShell.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShell.java
+index 7159d2d6..7463a980 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShell.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShell.java
+@@ -115,6 +115,14 @@ final class ExperimentSessionAndroidShell {
+         void onExperimentSessionReadback(SessionReadback readback);
+         /** Observation only after terminal admission: never restart panel/audio effects. */
+         default void onExperimentSessionReadbackDuringTerminal(SessionReadback readback) { }
++        default boolean acceptsExperimentSessionCommandFailure(CommandFailure failure) {
++            return acceptsExperimentSessionCallbacks(failure.launchEpoch);
++        }
++        default void onExperimentSessionCommandFailure(CommandFailure failure) {
++            // Preserve the prior local panel diagnostic. This is an inert UI
++            // result; the dispatcher still rejects retired presentations.
++            onExperimentSessionTerminal(new TerminalResult(false,false,0L,"",0L,failure.detail));
++        }
+         default void onExperimentSessionTerminalAdmission(TerminalAdmission admission) { }
+         default boolean acceptsExperimentSessionTerminalCallbacks(long epoch) {
+             return acceptsExperimentSessionCallbacks(epoch);
+@@ -122,6 +130,24 @@ final class ExperimentSessionAndroidShell {
+         void onExperimentSessionTerminal(TerminalResult result);
+     }
+ 
++    /** Only a bridge validator which has not entered JNI may throw this marker. */
++    static final class PreDispatchFailure extends RuntimeException {
++        PreDispatchFailure(String reason, Throwable cause) { super(reason, cause); }
++    }
++
++    /** Original command observation, never permission to dispatch or replay it. */
++    static final class CommandFailure {
++        final String operationId, operation, detail;
++        final long launchEpoch, expectedGeneration;
++        final boolean mayHaveDispatched;
++        CommandFailure(ExperimentSessionPanelCoordinator.NativeCommand command,long epoch,
++                boolean dispatched,String detail) {
++            operationId=command.operationId;operation=command.operation;
++            expectedGeneration=command.expectedGeneration;launchEpoch=epoch;
++            mayHaveDispatched=dispatched;this.detail=safe(detail);
++        }
++    }
++
+     static final class SessionReadback {
+         final ArmAcceptance armAcceptance;
+         final ExperimentSessionPanelCoordinator.NativeReceipt receipt;
+@@ -556,15 +582,22 @@ final class ExperimentSessionAndroidShell {
+             ExperimentSessionPanelCoordinator.NativeCommand command,
+             boolean start,
+             UiSink sink) {
++        submit(command,start,sink,currentLaunchEpoch());
++    }
++
++    void submit(ExperimentSessionPanelCoordinator.NativeCommand command,boolean start,
++            UiSink sink,final long epoch) {
+         if (command == null) return;
+-        synchronized (admissionLock) { if (terminalAdmitted) return; }
+-        final long epoch = currentLaunchEpoch();
+         final WeakReference<UiSink> weakSink = new WeakReference<UiSink>(sink);
++        String denied=undispatchedReason(epoch);
++        if(denied!=null){dispatchCommandFailure(weakSink,command,epoch,false,denied);return;}
++        try {
+         owner.execute(new Runnable() {
+             @Override public void run() {
+-                requireWorkerThread();
+-                if (!isCurrentEpoch(epoch)) return;
+                 try {
++                    requireWorkerThread();
++                    String denied=undispatchedReason(epoch);
++                    if(denied!=null){dispatchCommandFailure(weakSink,command,epoch,false,denied);return;}
+                     if ("restart-to-experimenter".equals(command.operation)) {
+                         nativeBridge.requestAudioRestartStop(command.expectedGeneration,
+                             command.operationId + "-audio-stop");
+@@ -574,10 +607,23 @@ final class ExperimentSessionAndroidShell {
+                         submitOnOwner(weakSink, epoch, command, start);
+                     }
+                 } catch (Throwable error) {
+-                    dispatchFailure(weakSink, epoch, command.operation, error);
++                    // Encoding/admission failures are classified at their exact
++                    // boundary. An unexpected outer failure cannot prove that
++                    // the native call was never entered.
++                    dispatchCommandFailure(weakSink,command,epoch,true,"command-outcome-unknown:"+marker(error));
+                 }
+             }
+         });
++        } catch (java.util.concurrent.RejectedExecutionException deniedExecution) {
++            dispatchCommandFailure(weakSink,command,epoch,false,"command-worker-unavailable");
++        }
++    }
++
++    private String undispatchedReason(long epoch) {
++        synchronized(admissionLock) {
++            return epoch!=launchEpoch?"command-launch-retired":terminalAdmitted?"command-terminal-admitted"
++                :cleanupConsumed?"command-owner-cleaned":null;
++        }
+     }
+ 
+     private void submitAfterRestartAudio(WeakReference<UiSink> sink, long epoch,
+@@ -601,7 +647,20 @@ final class ExperimentSessionAndroidShell {
+ 
+     private void submitOnOwner(WeakReference<UiSink> sink, long epoch,
+             ExperimentSessionPanelCoordinator.NativeCommand command, boolean start) {
+-        SessionReadback readback = apply(command, start);
++        final String request;
++        try {request=codec.command(command,start,clock.elapsedRealtimeNanos(),clock.utcNanos());}
++        catch(Throwable error){dispatchCommandFailure(sink,command,epoch,false,"command-encoding-rejected:"+marker(error));return;}
++        String denied=undispatchedReason(epoch);
++        if(denied!=null){dispatchCommandFailure(sink,command,epoch,false,denied);return;}
++        final String response;
++        try {response=nativeBridge.apply(request);}
++        catch(PreDispatchFailure rejected){dispatchCommandFailure(sink,command,epoch,false,"command-validation-rejected:"+safe(rejected.getMessage()));return;}
++        catch(Throwable unknown){observeUnknownCommand(sink,epoch,command,start,"command-dispatch-unknown:"+marker(unknown));return;}
++        final SessionReadback readback;
++        try {
++            readback=codec.parse(response,command,start);
++            if(readback==null)throw new IllegalStateException("native-command-readback-unavailable");
++        }catch(Throwable unknown){observeUnknownCommand(sink,epoch,command,start,"command-readback-unknown:"+marker(unknown));return;}
+         dispatchReadback(sink, epoch, readback);
+         if (needsCommandPoll(readback, command, start)) {
+             scheduleStatusPoll(sink, epoch, clock.elapsedRealtimeMillis()
+@@ -609,6 +668,47 @@ final class ExperimentSessionAndroidShell {
+         }
+     }
+ 
++    private void observeUnknownCommand(WeakReference<UiSink> sink,long epoch,
++            ExperimentSessionPanelCoordinator.NativeCommand command,boolean start,String detail) {
++        dispatchCommandFailure(sink,command,epoch,true,detail);
++        if(isCurrentEpoch(epoch)&&!cleanupConsumed)
++            scheduleStatusPoll(sink,epoch,clock.elapsedRealtimeMillis()+POLL_TIMEOUT_MS,command,start);
++    }
++
++    private void dispatchCommandFailure(final WeakReference<UiSink> sink,
++            ExperimentSessionPanelCoordinator.NativeCommand command,long epoch,boolean dispatched,String detail) {
++        if(!"arm".equals(command.operation)) {
++            // Preserve the existing terminal/presentation error route for
++            // other shell operations. This new receipt path owns Arm only.
++            dispatchTerminal(sink,epoch,new TerminalResult(false,false,0L,"",0L,detail));
++            return;
++        }
++        final CommandFailure failure=new CommandFailure(command,epoch,dispatched,detail);
++        uiDispatcher.post(new Runnable(){@Override public void run(){
++            UiSink target=sink.get();
++            if(target==null)return;
++            // A process observer must validate its own exact original mapping.
++            // A retired/replaced Activity may never settle another presentation.
++            synchronized(admissionLock) {
++                if(!target.observesSubmittedCommand()&&(!isCurrentEpoch(failure.launchEpoch)
++                    ||attachedSink.get()!=target||retiredSinks.containsKey(target)))return;
++            }
++            if(target.acceptsExperimentSessionCommandFailure(failure)) {
++                try {target.onExperimentSessionCommandFailure(failure);}
++                finally {
++                    // The owner may downgrade a pre-dispatch marker to
++                    // unknown because it already holds a native checkpoint
++                    // or cannot retire that exact local intent. Start reads
++                    // only after delivery, if the original mapping survives.
++                    if(!failure.mayHaveDispatched&&target.observesSubmittedCommand()
++                            &&isCurrentEpoch(failure.launchEpoch)&&!cleanupConsumed
++                            &&target.retainsDurableCommand(failure.operationId,failure.launchEpoch))
++                        scheduleStatusPoll(sink,failure.launchEpoch,clock.elapsedRealtimeMillis()+POLL_TIMEOUT_MS,command,true);
++                }
++            }
++        }});
++    }
++
+     boolean localTerminalRetryReady(){synchronized(admissionLock){return localTerminalScope!=null&&terminalAdmitted&&!cleanupConsumed&&terminalRecovery!=null&&!localTerminalDispatched;}}
+     boolean localTerminalPending(){synchronized(admissionLock){return localTerminalScope!=null&&terminalAdmitted;}}
+     boolean isCurrentTerminalUiAttachment(UiSink sink,long expectedLaunchEpoch){
+@@ -867,13 +967,21 @@ final class ExperimentSessionAndroidShell {
+                 if (clock.elapsedRealtimeMillis() > deadlineMs && !retained) return;
+                 try {
+                     SessionReadback readback = readStatus();
++                    if(readback==null&&expected!=null&&"arm".equals(expected.operation))
++                        throw new IllegalStateException("native-status-readback-unavailable");
+                     dispatchReadback(sink, epoch, readback);
+                     if (readback != null && (readback.initializationPending()
+                             || needsCommandPoll(readback, expected, start))) {
+                         scheduleStatusPoll(sink, epoch, deadlineMs, expected, start);
+                     }
+                 } catch (Throwable error) {
+-                    dispatchFailure(sink, epoch, "status-poll", error);
++                    if(expected!=null&&"arm".equals(expected.operation)) {
++                        dispatchCommandFailure(sink,expected,epoch,true,"arm-status-unknown:"+marker(error));
++                        // Observe the same native operation after a transient
++                        // read/parse error. This schedules no command effect.
++                        if(isCurrentEpoch(epoch)&&!cleanupConsumed)
++                            scheduleStatusPoll(sink,epoch,deadlineMs,expected,start);
++                    }else dispatchFailure(sink, epoch, "status-poll", error);
+                 }
+             }
+         }, POLL_INTERVAL_MS, TimeUnit.MILLISECONDS);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
 index debfbb6a..149f4d79 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionBleProtocol.java
@@ -19909,7 +20159,7 @@ index c3a44a7d..a497e5a4 100644
          }
          ConditionIdentity outer = outerConditions.get(conditionId);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
-index 62ec84d8..a88ecadf 100644
+index 62ec84d8..af5bf01b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinator.java
 @@ -23,6 +23,7 @@ final class ExperimentSessionPanelCoordinator {
@@ -19945,6 +20195,27 @@ index 62ec84d8..a88ecadf 100644
      }
  
      // Raw fields retain JSON type information: strings/floats are not generation evidence.
+@@ -522,6 +534,20 @@ final class ExperimentSessionPanelCoordinator {
+             breathGuidanceBiasPercent);
+     }
+ 
++    synchronized boolean rejectUndispatchedArm(String operationId,long expectedGeneration,String detail) {
++        if(state.phase!=ExperimentSessionPanelState.Phase.ARMING||state.recording
++            ||state.generation!=expectedGeneration||operationId==null||operationId.isEmpty()
++            ||!operationId.equals(state.pendingOperationId))return false;
++        // This retires only a local intent proven never to have reached JNI.
++        // It is not a native receipt and cannot clear an admitted recording.
++        lastRejectedOperationId=operationId;
++        state=copy(state.route,ExperimentSessionPanelState.Phase.ERROR,state.generation,state.revision,
++            state.activeCondition,"",state.routeActionRevision,state.counts,state.polar,state.recording,
++            state.completion,state.activeTimeMs,state.recovery,state.storageStatus,state.kioskRequested,
++            emptyAs(detail,"Arm was not dispatched."));
++        return true;
++    }
++
+     synchronized NativeCommand arm(String condition) {
+         return arm(condition, 0);
+     }
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
 index de472e29..463a5163 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java
@@ -25928,6 +26199,139 @@ index 00000000..8d4a7bb2
 +        System.out.println("PASS "+checks+" actual pairing UI policy controls: immutable same code, owner/id/expiry fences and prompt-owned visibility only");
 +    }
 +}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShellTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShellTest.java
+index 58139afc..772065f6 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShellTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionAndroidShellTest.java
+@@ -5,6 +5,13 @@ import java.util.concurrent.TimeUnit;
+ 
+ public final class ExperimentSessionAndroidShellTest {
+     public static void main(String[] args) throws Exception {
++        commandFailureIsCorrelatedAndDispatchAware();
++        commandFailureCannotReachRetiredPresentation();
++        localArmFailureRetainsDiagnostic();
++        queuedArmDenialReportsOriginalNonDispatch();
++        if(args.length>0&&"--command-failure-only".equals(args[0])) {
++            System.out.println("ExperimentSessionAndroidShell command failure PASS");return;
++        }
+         terminalAdmissionSuppressesQueuedArmEffectsAndReplaysIdentity();
+         terminalObservationFailureCannotStrandOriginalCommand();
+         sameSinkResumeReplaysExactAdmissionBeforeFinal();
+@@ -53,6 +60,94 @@ public final class ExperimentSessionAndroidShellTest {
+         System.out.println("ExperimentSessionAndroidShellTest PASS");
+     }
+ 
++    private static final class FailureSink extends Sink {
++        final CountDownLatch failureReady=new CountDownLatch(1);
++        volatile ExperimentSessionAndroidShell.CommandFailure failure;
++        boolean processObserver=true;
++        @Override public boolean acceptsExperimentSessionCallbacks(long epoch){return epoch>=0;}
++        @Override public boolean observesSubmittedCommand(){return processObserver;}
++        @Override public void onExperimentSessionCommandFailure(ExperimentSessionAndroidShell.CommandFailure value){failure=value;failureReady.countDown();}
++    }
++    private static void localArmFailureRetainsDiagnostic()throws Exception {
++        FakeBridge bridge=new FakeBridge(false);
++        FakeCodec codec=new FakeCodec(){@Override public String command(ExperimentSessionPanelCoordinator.NativeCommand command,boolean start,long elapsed,long utc){throw new IllegalArgumentException("local-validation");}};
++        ExperimentSessionAndroidShell shell=ExperimentSessionAndroidShell.createForTest(bridge,codec,new FakeClock(),new DirectDispatcher());
++        Sink local=new Sink();
++        try {
++            shell.beginExplicitLaunchEpoch(1);shell.attach(local);
++            shell.submit(new ExperimentSessionPanelCoordinator.NativeCommand("arm","local-arm",0,"condition-a"),true,local);
++            require(local.terminal.await(2,TimeUnit.SECONDS));
++            require(local.result.detail.contains("command-encoding-rejected"));
++            reject(local.result.shouldFinish);reject(local.result.saved);equal(0,bridge.armCalls);equal(0,bridge.cleanups);
++        }finally{shell.closeForTest();}
++    }
++    private static void commandFailureIsCorrelatedAndDispatchAware()throws Exception {
++        for(int mode=0;mode<6;mode++) {
++            final int selected=mode;
++            FakeBridge bridge=new FakeBridge(false);bridge.armApplyFailure=mode==1?1:mode==2?2:0;
++            FakeCodec codec=new FakeCodec(){
++                int statusParses;
++                @Override public String command(ExperimentSessionPanelCoordinator.NativeCommand command,boolean start,long elapsed,long utc){
++                    if(selected==0)throw new IllegalArgumentException("plan-validation");
++                    return super.command(command,start,elapsed,utc);
++                }
++                @Override public ExperimentSessionAndroidShell.SessionReadback parse(String raw,ExperimentSessionPanelCoordinator.NativeCommand command,boolean start){
++                    if(selected==5&&command!=null)throw new ExperimentSessionAndroidShell.PreDispatchFailure("marker-after-dispatch",new IllegalStateException("parse-failure"));
++                    if((selected==3||selected==4)&&command!=null)throw new IllegalStateException("malformed-native-reply");
++                    if(selected==4&&command==null&&statusParses++==0)throw new IllegalStateException("transient-status-parse");
++                    return super.parse(raw,command,start);
++                }
++            };
++            ExperimentSessionAndroidShell shell=ExperimentSessionAndroidShell.createForTest(bridge,codec,new FakeClock(),new DirectDispatcher());
++            FailureSink sink=new FailureSink();
++            try {
++                if(mode!=0)shell.beginExplicitLaunchEpoch(7);shell.attach(new Sink());
++                ExperimentSessionPanelCoordinator.NativeCommand arm=new ExperimentSessionPanelCoordinator.NativeCommand("arm","original-arm",0,"condition-a");
++                shell.submit(arm,true,sink);
++                require(sink.failureReady.await(2,TimeUnit.SECONDS));
++                equal("original-arm",sink.failure.operationId);equal("arm",sink.failure.operation);
++                equal(mode==0?0L:7L,sink.failure.launchEpoch);equal(0L,sink.failure.expectedGeneration);
++                equal(mode>=2,sink.failure.mayHaveDispatched);
++                equal(mode==0?0:1,bridge.armCalls);
++                if(mode==4){require(sink.readback.await(2,TimeUnit.SECONDS));require(bridge.statusReads>=2);equal(1,bridge.armCalls);}
++                Thread.sleep(30);equal(mode==0?0:1,bridge.armCalls);
++                equal(0,bridge.cleanups);equal(0,sink.terminalCallbacks);
++            } finally {shell.closeForTest();}
++        }
++    }
++    private static void commandFailureCannotReachRetiredPresentation()throws Exception {
++        java.util.concurrent.LinkedBlockingQueue<Runnable> ui=new java.util.concurrent.LinkedBlockingQueue<Runnable>();
++        FakeCodec codec=new FakeCodec(){@Override public String command(ExperimentSessionPanelCoordinator.NativeCommand c,boolean s,long e,long u){throw new IllegalArgumentException("invalid-plan");}};
++        ExperimentSessionAndroidShell shell=ExperimentSessionAndroidShell.createForTest(new FakeBridge(false),codec,new FakeClock(),new ExperimentSessionAndroidShell.UiDispatcher(){public void post(Runnable task){ui.add(task);}public boolean isUiThread(){return false;}});
++        FailureSink old=new FailureSink();old.processObserver=false;FailureSink replacement=new FailureSink();replacement.processObserver=false;
++        try {
++            shell.beginExplicitLaunchEpoch(1);shell.attach(old);
++            shell.submit(new ExperimentSessionPanelCoordinator.NativeCommand("arm","old-arm",0,"condition-a"),true,old);
++            Runnable result=ui.poll(2,TimeUnit.SECONDS);require(result!=null);
++            shell.attach(replacement);result.run();
++            require(old.failure==null&&replacement.failure==null);
++        } finally {shell.closeForTest();}
++    }
++    private static void queuedArmDenialReportsOriginalNonDispatch()throws Exception {
++        for(boolean retire:new boolean[]{true,false}) {
++            FakeBridge bridge=new FakeBridge(false);ExperimentSessionAndroidShell shell=ExperimentSessionAndroidShell.createForTest(bridge,new FakeCodec(),new FakeClock(),new DirectDispatcher());
++            FailureSink observer=new FailureSink();
++            java.util.concurrent.CountDownLatch blocked=new CountDownLatch(1),release=new CountDownLatch(1);
++            java.lang.reflect.Field field=ExperimentSessionAndroidShell.class.getDeclaredField("owner");field.setAccessible(true);
++            java.util.concurrent.ScheduledExecutorService worker=(java.util.concurrent.ScheduledExecutorService)field.get(shell);
++            try {
++                shell.beginExplicitLaunchEpoch(1);
++                worker.execute(()->{blocked.countDown();try{release.await();}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}});
++                require(blocked.await(2,TimeUnit.SECONDS));
++                shell.submit(new ExperimentSessionPanelCoordinator.NativeCommand("arm","queued-arm",0,"condition-a"),true,observer);
++                if(retire)require(shell.beginExplicitLaunchEpoch(2));else require(shell.beginTerminal(2,3,new Sink()));
++                release.countDown();require(observer.failureReady.await(2,TimeUnit.SECONDS));
++                equal("queued-arm",observer.failure.operationId);reject(observer.failure.mayHaveDispatched);
++                equal(1L,observer.failure.launchEpoch);equal(0,bridge.armCalls);
++            } finally {release.countDown();shell.closeForTest();}
++        }
++    }
++
+     private static void terminalAdmissionSuppressesQueuedArmEffectsAndReplaysIdentity()throws Exception {
+         java.util.concurrent.LinkedBlockingQueue<Runnable> queued=new java.util.concurrent.LinkedBlockingQueue<Runnable>();
+         FakeBridge bridge=new FakeBridge(false);FakeCodec codec=new FakeCodec();
+@@ -1009,6 +1104,7 @@ public final class ExperimentSessionAndroidShellTest {
+     }
+ 
+     private static final class FakeBridge implements ExperimentSessionAndroidShell.NativeBridge {
++        int armApplyFailure;volatile int armCalls;
+         final boolean failShutdown;
+         volatile String initializedRoot = "";
+         volatile String workerThread = "";
+@@ -1062,6 +1158,11 @@ public final class ExperimentSessionAndroidShellTest {
+ 
+         @Override public String apply(String command) {
+             workerThread = Thread.currentThread().getName();
++            if(command.startsWith("arm:")) {
++                armCalls++;
++                if(armApplyFailure==1)throw new ExperimentSessionAndroidShell.PreDispatchFailure("plan-validation",new IllegalArgumentException("selected-plan"));
++                if(armApplyFailure==2)throw new IllegalStateException("reply-lost-after-jni");
++            }
+             if (malformed) return "malformed";
+             if (command.startsWith("restart-to-experimenter:")) {
+                 if (delayRestartAudio) require(restartAudioPolls >= 3);
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
 index 359afefe..5702d64f 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionControlCapabilityTest.java
@@ -26314,6 +26718,51 @@ index 2ec7cb92..4ca85bc8 100644
      private static void acceptsRealResolvedClosure(String[] args) throws Exception {
          byte[] lock = Files.readAllBytes(java.nio.file.Paths.get(args[1]));
          byte[] profile = Files.readAllBytes(java.nio.file.Paths.get(args[2]));
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java
+index 41c93e9c..0dc5b6eb 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionPanelCoordinatorTest.java
+@@ -2,6 +2,7 @@ package io.github.mesmerprism.rustyquest.native_renderer;
+ 
+ public final class ExperimentSessionPanelCoordinatorTest {
+     public static void main(String[] args) {
++        undispatchedArmRetiresOnlyItsLocalIntent();
+         restartFinalizationShapePolicy();
+         remoteVrSaveReadbackPolicy();
+         originalArmAcknowledgementResolvesLaterAudioReadback();
+@@ -21,6 +22,21 @@ public final class ExperimentSessionPanelCoordinatorTest {
+         System.out.println("ExperimentSessionPanelCoordinatorTest PASS");
+     }
+ 
++    private static void undispatchedArmRetiresOnlyItsLocalIntent() {
++        ExperimentSessionPanelCoordinator coordinator=new ExperimentSessionPanelCoordinator();
++        ExperimentSessionPanelCoordinator.NativeCommand original=coordinator.arm("condition-a",0);
++        check(original!=null,"original Arm allocated");
++        check(!coordinator.rejectUndispatchedArm("foreign",original.expectedGeneration,"encoding rejected"),"foreign ID cannot clear Arm");
++        check(!coordinator.rejectUndispatchedArm(original.operationId,original.expectedGeneration+1,"encoding rejected"),"foreign generation cannot clear Arm");
++        check(coordinator.rejectUndispatchedArm(original.operationId,original.expectedGeneration,"encoding rejected"),"exact definitely undispatched intent retired");
++        check(coordinator.snapshot().pendingOperationId.isEmpty()&&!coordinator.snapshot().recording,"no native recording manufactured");
++        check(coordinator.snapshot().generation==original.expectedGeneration,"native generation unchanged");
++        ExperimentSessionPanelCoordinator.NativeCommand next=coordinator.arm("condition-a",0);
++        check(next!=null&&!next.operationId.equals(original.operationId),"fresh explicit action may allocate its own new ID");
++        check(!coordinator.rejectUndispatchedArm(original.operationId,original.expectedGeneration,"late failure"),"late old failure cannot clear replacement");
++        check(coordinator.snapshot().pendingOperationId.equals(next.operationId),"replacement intent retained");
++    }
++
+     private static void restartFinalizationShapePolicy() {
+         for (String route : new String[]{"show-experimenter", "none"}) {
+             Object[] fields = {"idle", route, "remote-vr", "panel-restart-2", "panel-restart-2", 1L, 1};
+@@ -305,6 +321,10 @@ public final class ExperimentSessionPanelCoordinatorTest {
+             0L, 0L, 0L, 0L, true, true, false, 0L, 0L, 0L,
+             "none", 0L, "armed"
+         )), "durable native control state is accepted");
++        ExperimentSessionPanelState admitted=coordinator.snapshot();
++        check(!coordinator.rejectUndispatchedArm(arm.operationId,admitted.generation,"late encoding failure")
++                &&coordinator.snapshot()==admitted&&admitted.recording,
++            "a late local non-dispatch observation cannot change an admitted recording");
+         check(coordinator.snapshot().phase == ExperimentSessionPanelState.Phase.ARMED
+                 && ExperimentSessionPanelViewPolicy.canReturnToImmersive(coordinator.snapshot()),
+             "armed control state closes preparation and admits the particle scene");
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
 index 56040232..5e5da2eb 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingProtocolTest.java
@@ -27008,7 +27457,7 @@ index 00000000..7e418239
 +worn-device qualification; synthetic fixtures establish software behavior, not
 +physiological or clinical accuracy. No successful wearer fit is implied.
 diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
-index 6cb1e8b1..09ce786b 100644
+index 6cb1e8b1..86567e3f 100644
 --- a/docs/EXPERIMENT_SESSION_CONTROL.md
 +++ b/docs/EXPERIMENT_SESSION_CONTROL.md
 @@ -145,6 +145,175 @@ owns the exact headset lease. Queued is not applied. Status exposes persistent
@@ -27187,7 +27636,30 @@ index 6cb1e8b1..09ce786b 100644
  ### Privileged local trusted-LAN enrollment
  
  The debug-only `enroll-trusted-lan` operation additionally requires Boolean
-@@ -312,3 +481,159 @@ Required Polar ACC sessions also use the native acquisition hold described in
+@@ -213,6 +382,22 @@ process command observer continues polling through asynchronous audio preparatio
+ until the checkpoint and armed/running/paused state agree, even without a panel.
+ An exact command rejection still terminates that command's observation.
+ 
++For the selected continuous breathing setup, the gateway and generated participant
++binding use the same packaged Haupt-Runde recording-plan selector. Its900-second
++loop plan differs from the legacy scenario with introductory/calibration audio.
++Other scenarios and nonselected apps keep their original plans. A missing selected
++plan fails closed; it cannot fall back to legacy metadata. Only the participant ID
++may be added to the exact verified plan.
++
++Arm failures before native dispatch carry the original operation, generation and
++launch identity back to the matching remote request. They reject only that
++unexecuted local intent. A generic bridge/parse failure after execution may have
++started remains outcome unknown, retains its original mapping and observes native
++readback without replay. Retired carriers, launches or UI attachments cannot
++settle another attempt. A shell timeout never establishes cancellation or writer
++failure. These distinctions keep a preparation error from silently remaining
++pending while preserving uncertainty after a potentially executed operation.
++
+ The closed v2 envelope is {v,id,op,s,g,n,mac?}, at most240 UTF8 bytes. Gated mode
+ requires the first16 HMAC-SHA256 bytes of
+ RQEC2|challenge|id|op|s|g|nonce. Open mode retains its explicit existing policy.
+@@ -312,3 +497,159 @@ Required Polar ACC sessions also use the native acquisition hold described in
  [Polar recovery](POLAR_SENSOR_RECOVERY.md#native-session-acquisition-hold).
  Official Start and Resume require fresh raw input in both Direct and Remote mode.
  Reconnection never resumes a paused session automatically; Arm remains preparation.
@@ -28104,7 +28576,7 @@ index 262fbeec..1e36d908 100644
        "type": "object"
      },
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..36600178 100644
+index ccb3e308..d46a8308 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -15,6 +15,11 @@ param(
@@ -28216,7 +28688,15 @@ index ccb3e308..36600178 100644
                              + " reason=" + receipt.reason);
                      String eventOperation = receipt.event == ConditionAudioContract.Event.PREPARED
                          ? "audio-prepared" : receipt.event == ConditionAudioContract.Event.ACTUAL_START
-@@ -1245,6 +1290,13 @@ $sharedPanelFacade
+@@ -1237,6 +1282,7 @@ $sharedPanelFacade
+ 
+     /** Binds a panel arm/start request to the verified packaged profile and audio asset. */
+     static String applyExperimentSessionCommand(String commandJson) {
++        final String boundCommand;
+         try {
+             org.json.JSONObject command = new org.json.JSONObject(commandJson == null ? "{}" : commandJson);
+             String operation = command.optString("operation", "");
+@@ -1245,6 +1291,13 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -28230,7 +28710,26 @@ index ccb3e308..36600178 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1334,12 +1386,27 @@ $polarBleStopHooks
+@@ -1277,12 +1330,14 @@ $sharedPanelFacade
+                         .put("media_type", guidance.mediaType));
+                 }
+             }
+-            return nativeApplyBreathCompositionCommand(command.toString());
+-        } catch (RuntimeException error) {
+-            throw error;
++            boundCommand = command.toString();
+         } catch (Exception error) {
+-            throw new IllegalArgumentException("experiment-session-command-binding-failed", error);
++            throw new ExperimentSessionAndroidShell.PreDispatchFailure(
++                "experiment-session-command-binding-rejected", error);
+         }
++        // Only the validation above proves no effect. JNI may already have
++        // executed when it throws; its failures retain an uncertain outcome.
++        return nativeApplyBreathCompositionCommand(boundCommand);
+     }
+ 
+     private static byte[] readPackagedAsset(
+@@ -1334,12 +1389,34 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -28238,6 +28737,13 @@ index ccb3e308..36600178 100644
 +    }
 +
 +    static String conditionAudioRecordingPlan(String scenarioId) {
++        // The selected main study records the app-owned continuous loop, not
++        // the separately packaged legacy instruction/calibration timeline.
++        // A missing selected owner must remain unavailable, never fall back.
++        if (BreathingSetupAudio.selected(preparedClosureApplicationContext)
++                && "haupt-15".equals(scenarioId)) {
++            return BreathingSetupAudio.mainRecordingPlan(scenarioId);
++        }
 +        ConditionAudioAndroidMediaBackendFactory.ScenarioTracks tracks = scenarioAudioTracks;
 +        return tracks == null ? null : tracks.recordingPlan(scenarioId);
 +    }
@@ -28259,7 +28765,7 @@ index ccb3e308..36600178 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1414,13 @@ $polarBleStopHooks
+@@ -1347,12 +1424,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -28274,7 +28780,7 @@ index ccb3e308..36600178 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1429,13 @@ $polarBleStopHooks
+@@ -1361,12 +1439,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -28289,7 +28795,7 @@ index ccb3e308..36600178 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1557,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1567,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -28301,7 +28807,7 @@ index ccb3e308..36600178 100644
          }
          return clean;
      }
-@@ -1525,6 +1597,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1607,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -28309,7 +28815,7 @@ index ccb3e308..36600178 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -2036,6 +2109,8 @@ if ($showcaseSelected) {
+@@ -2036,6 +2119,8 @@ if ($showcaseSelected) {
  if ($standaloneExperimentOwner) {
      $standaloneBaseSources = @('NativeAppSettingsReader.java','NativeMeshUiProducer.java','NativeInputWidgetGeometry.java','NativePageSnapshot.java','NativeSystemKeyboard.java','NativePanelFont.java',
          'NativeRendererExperimentLaunchAuthority.java','NativeRendererExperimentLauncherPolicy.java','NativeRendererActivityComponents.java','NativeRendererBootObservation.java',
@@ -28318,7 +28824,7 @@ index ccb3e308..36600178 100644
          'NativeRendererWriterAcknowledgedExitPolicy.java','PanelImmersiveHandoff.java',
          'PanelImmersiveHandoffLifecyclePolicy.java','PanelImmersiveHandoffProofPolicy.java',
          'PanelModule.java','PanelModuleRegistry.java')
-@@ -2069,7 +2144,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
+@@ -2069,7 +2154,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
  $debugSources = @()
  if ($script:BuildUsesLock) {
      $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['debug_experiment_operator_sources']) { $appBuildLockObject.debug_experiment_operator_sources })
@@ -28327,7 +28833,7 @@ index ccb3e308..36600178 100644
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2164,70 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2174,70 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -28398,7 +28904,7 @@ index ccb3e308..36600178 100644
  if (-not [string]::IsNullOrWhiteSpace($generatedControlPanelActivityPath)) {
      $sourceFiles += $generatedControlPanelActivityPath
  }
-@@ -2127,6 +2266,7 @@ Invoke-Checked "javac" $javac @(
+@@ -2127,6 +2276,7 @@ Invoke-Checked "javac" $javac @(
  )
  Invoke-Checked "jar class pack" $jar @("cf", $classesJar, "-C", $classesDir, ".")
  Invoke-Checked "d8" $d8 @("--lib", $platformJar, "--output", $dexDir, $classesJar)
@@ -28406,7 +28912,7 @@ index ccb3e308..36600178 100644
  
  $previousAndroidHome = $env:ANDROID_HOME
  $previousNdkHome = $env:ANDROID_NDK_HOME
-@@ -2152,6 +2292,10 @@ if ($showcaseVulkanSelected) {
+@@ -2152,6 +2302,10 @@ if ($showcaseVulkanSelected) {
  } elseif ($showcaseSelected) {
      $cargoBuildArguments += @('--features', 'showcase')
  }
@@ -28417,7 +28923,7 @@ index ccb3e308..36600178 100644
  if ($operatorSelection.enabled) { $cargoBuildArguments += @('--features', 'meta-xr-operator') }
  try {
      $env:ANDROID_HOME = $AndroidHome
-@@ -2265,6 +2409,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
+@@ -2265,6 +2419,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
  [IO.File]::WriteAllText($packagingInputPath, $packaging.json, [Text.UTF8Encoding]::new($false))
  # Public build identity only: no paths or app/private payload metadata.
  $buildIdentityAsset = [ordered]@{schema='rusty.quest.android_build_identity.v1';source_commit=$sourceHead;source_tree=$sourceTree;source_composition_fingerprint=[string]$sourceComposition.fingerprint;packaging_fingerprint=$packaging.sha256}
@@ -28425,7 +28931,7 @@ index ccb3e308..36600178 100644
  $buildIdentityAsset | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $assetsDir 'android-build-identity.json') -Encoding utf8
  Invoke-Checked "aapt2 link" $aapt2 @(
      "link",
-@@ -2297,6 +2442,7 @@ Invoke-Checked "apksigner" $apksigner @(
+@@ -2297,6 +2452,7 @@ Invoke-Checked "apksigner" $apksigner @(
  
  $sha256 = Get-FileSha256 -Path $apkSigned
  Assert-QuestMetaXrOperatorArchive -Selection $operatorSelection -ApkPath $apkSigned
@@ -28433,7 +28939,7 @@ index ccb3e308..36600178 100644
  if ($operatorSelection.enabled) {
      $operatorManifestDump = @(& $aapt2 dump xmltree $apkSigned --file AndroidManifest.xml 2>&1 | ForEach-Object ToString)
      $operatorManifestExit = $LASTEXITCODE
-@@ -2305,6 +2451,8 @@ if ($operatorSelection.enabled) {
+@@ -2305,6 +2461,8 @@ if ($operatorSelection.enabled) {
          ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutDir 'operator-manifest-dump.json') -Encoding utf8NoBOM
  }
  $manifest = [ordered]@{
@@ -28442,7 +28948,7 @@ index ccb3e308..36600178 100644
      meta_xr_operator = $operatorSelection
      '$schema' = "rusty.quest.native_renderer_android.build_manifest.v1"
      app_id = if ($null -eq $appBuildLockObject) { "unlocked-development" } else { [string]$appBuildLockObject.app_id }
-@@ -2451,9 +2599,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
+@@ -2451,9 +2609,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
  if ($script:BuildUsesLock) {
      $propertyManifestPath = Join-Path $repoRoot "fixtures\native-renderer\native-renderer-property-manifest.json"
      $runCapsule = [ordered]@{
@@ -30980,6 +31486,141 @@ index 1596ca0d..9e3222b2 100644
 +  subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(a.json_jar),'-d',str(out),str(root/'ExperimentTrustedPhones.java'),str(root/'ExperimentSessionBleProtocol.java'),str(root/'ExperimentSessionControlCapability.java'),str(fixture)],check=True)
    subprocess.run(['java','-cp',str(out)+os.pathsep+str(a.json_jar),'io.github.mesmerprism/rustyquest/native_renderer/LocalEnrollmentHarness'.replace('/','.')],check=True)
  if __name__=='__main__':main()
+diff --git a/tools/checks/test_experiment_participant_plan_binding.py b/tools/checks/test_experiment_participant_plan_binding.py
+new file mode 100644
+index 00000000..316bdbdf
+--- /dev/null
++++ b/tools/checks/test_experiment_participant_plan_binding.py
+@@ -0,0 +1,129 @@
++"""Execute actual generated participant binding against both signed-APK plan formats.
++
++The regression catches selecting the legacy haupt-15 plan for the selected continuous
++loop, plus any validation catch accidentally covering a potentially executed JNI call.
++Only Android/app-owner I/O and the final JNI boundary are modeled.
++"""
++import argparse
++import hashlib
++import json
++import os
++from pathlib import Path
++import subprocess
++import tempfile
++import zipfile
++from test_experiment_gateway_dedupe import method
++
++HARNESS = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import org.json.*;import java.nio.file.*;import java.util.*;
++final class ExperimentSessionAndroidShell {
++ static final class PreDispatchFailure extends RuntimeException {
++  PreDispatchFailure(String reason,Throwable cause){super(reason,cause);}
++ }
++}
++final class BreathingSetupAudio {
++ static boolean enabled;static String main;
++ static boolean selected(Object context){return enabled;}
++ static String mainRecordingPlan(String scenario){return main;}
++}
++final class ConditionAudioAndroidMediaBackendFactory {
++ interface ScenarioTracks {String recordingPlan(String id);}
++}
++final class ExperimentSessionPackagedClosure {
++ static final class AudioEntry {String conditionId="condition-a",logicalDestination="session-audio/a.mp3",sourceSha256="a",mediaType="audio/mpeg";long sourceBytes=10;}
++ static final class GuidanceEntry {String logicalDestination="guidance/a.json",sourceSha256="b",mediaType="application/json";long sourceBytes=20;}
++ static final class Result {boolean active=true;String nonAudioProfileSha256="c";AudioEntry[] audioEntries={new AudioEntry()};GuidanceEntry guidanceFor(String id){return null;}}
++}
++final class ParticipantPlanBindingHarness {
++ static ExperimentSessionPackagedClosure.Result experimentSessionClosure=new ExperimentSessionPackagedClosure.Result();
++ static Object preparedClosureApplicationContext=new Object();
++ static ConditionAudioAndroidMediaBackendFactory.ScenarioTracks scenarioAudioTracks;
++ static int effects,checks;static boolean nativeThrows;
++ static String last;
++ static String nativeApplyBreathCompositionCommand(String request){effects++;last=request;if(nativeThrows)throw new IllegalStateException("post-dispatch-native-failure");return request;}
++ __APPLY__
++ __PLAN__
++ static void check(boolean ok,String why){checks++;if(!ok)throw new AssertionError(why);}
++ static JSONObject arm(String plan)throws Exception{return new JSONObject().put("operation","arm").put("condition","condition-a")
++   .put("participant",new JSONObject(plan).put("participant_id","Tes_23_M"));}
++ static void succeeds(String plan,String why)throws Exception{int before=effects;applyExperimentSessionCommand(arm(plan).toString());
++  check(effects==before+1,why);check(new JSONObject(last).getJSONObject("participant").getString("participant_id").equals("Tes_23_M"),"identity preserved");}
++ static void rejects(JSONObject request,String why){int before=effects;try{applyExperimentSessionCommand(request.toString());throw new AssertionError("accepted "+why);}
++  catch(ExperimentSessionAndroidShell.PreDispatchFailure expected){check(effects==before,"no JNI effect: "+why);}
++  catch(RuntimeException uncorrelated){throw new AssertionError("validator failure lacks definite pre-dispatch provenance: "+why,uncorrelated);}}
++ public static void main(String[] args)throws Exception {
++  final Map<String,String> legacy=new HashMap<>();for(String id:new String[]{"haupt-15","probe-5"})legacy.put(id,new JSONObject(new String(Files.readAllBytes(Paths.get(args[0],id+".json")),"UTF-8")).toString());
++  final String cyclic=new JSONObject(new String(Files.readAllBytes(Paths.get(args[0],"cyclic.json")),"UTF-8")).toString();
++  scenarioAudioTracks=new ConditionAudioAndroidMediaBackendFactory.ScenarioTracks(){public String recordingPlan(String id){return legacy.get(id);}};
++  check(!new JSONObject(cyclic).getString("scenario_sha256").equals(new JSONObject(legacy.get("haupt-15")).getString("scenario_sha256")),"signed APK formats are distinct");
++  BreathingSetupAudio.enabled=true;BreathingSetupAudio.main=cyclic;
++  succeeds(cyclic,"selected cyclic haupt-15 reaches native binding");
++  rejects(arm(legacy.get("haupt-15")),"selected owner must reject legacy haupt-15");
++  succeeds(legacy.get("probe-5"),"selected non-main preserves legacy plan");
++  BreathingSetupAudio.enabled=false;succeeds(legacy.get("haupt-15"),"nonselected main preserves legacy plan");
++  rejects(arm(cyclic),"nonselected cyclic plan");
++  BreathingSetupAudio.enabled=true;BreathingSetupAudio.main=null;
++  rejects(arm(cyclic),"unavailable selected plan");rejects(arm(legacy.get("haupt-15")),"unavailable selected plan cannot fall back");
++  BreathingSetupAudio.main=cyclic;
++  for(String field:new String[]{"scenario_sha256","sample_rate","total_frames","phases"}){
++   JSONObject damaged=arm(cyclic);damaged.getJSONObject("participant").put(field,JSONObject.NULL);rejects(damaged,"mutated "+field);
++  }
++  JSONObject extra=arm(cyclic);extra.getJSONObject("participant").put("untrusted_plan",true);rejects(extra,"extra plan authority");
++  JSONObject missing=arm(cyclic);missing.getJSONObject("participant").remove("scenario_id");rejects(missing,"missing scenario");
++  JSONObject wrongScenario=arm(cyclic);wrongScenario.getJSONObject("participant").put("scenario_id","probe-5");rejects(wrongScenario,"caller cannot relabel a trusted main plan");
++  JSONObject shifted=arm(cyclic);shifted.getJSONObject("participant").getJSONArray("phases").getJSONArray(0).put(0,1);rejects(shifted,"caller phase schedule mutation");
++  JSONObject wrong=arm(cyclic);wrong.put("operation","start");rejects(wrong,"participant requires arm");
++  JSONObject malformed=arm(cyclic);malformed.put("participant","not-an-object");rejects(malformed,"malformed participant");
++  scenarioAudioTracks=null;rejects(arm(legacy.get("probe-5")),"unavailable legacy owner");
++  scenarioAudioTracks=new ConditionAudioAndroidMediaBackendFactory.ScenarioTracks(){public String recordingPlan(String id){return legacy.get(id);}};
++  ExperimentSessionPackagedClosure.Result saved=experimentSessionClosure;experimentSessionClosure=null;rejects(arm(cyclic),"untrusted closure");experimentSessionClosure=saved;
++  saved.active=false;rejects(arm(cyclic),"inactive closure");saved.active=true;
++  JSONObject badCondition=arm(cyclic);badCondition.put("condition","condition-c");rejects(badCondition,"unpackaged condition");
++  JSONObject badBias=arm(cyclic);badBias.put("breath_guidance_bias_percent",101);rejects(badBias,"invalid guidance bias");
++  int malformedBefore=effects;try{applyExperimentSessionCommand("not-json");throw new AssertionError("accepted malformed JSON");}
++  catch(ExperimentSessionAndroidShell.PreDispatchFailure expected){check(effects==malformedBefore,"malformed command rejected before JNI");}
++  // The named pre-dispatch failure is only safe before the native effect boundary.
++  int before=effects;nativeThrows=true;
++  try{applyExperimentSessionCommand(arm(cyclic).toString());throw new AssertionError("native failure swallowed");}
++  catch(ExperimentSessionAndroidShell.PreDispatchFailure unsafe){throw new AssertionError("potential native effect mislabeled pre-dispatch",unsafe);}
++  catch(IllegalStateException expected){check(effects==before+1,"native outcome remains uncertain after effect");}
++  System.out.println("PASS participant plan binding "+checks+" checks");
++ }
++}
++'''
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[2])
++    parser.add_argument('--apk', type=Path, required=True)
++    parser.add_argument('--json-jar', type=Path, required=True)
++    parser.add_argument('--builder-script', type=Path, help='Optional immutable baseline source for red-regression replay')
++    args = parser.parse_args()
++    source = (args.builder_script or args.repo/'tools/Build-NativeRendererAndroid.ps1').read_text(encoding='utf-8-sig')
++    code = HARNESS.replace('__APPLY__',method(source,'static String applyExperimentSessionCommand('))
++    code = code.replace('__PLAN__',method(source,'static String conditionAudioRecordingPlan('))
++    with zipfile.ZipFile(args.apk) as archive, tempfile.TemporaryDirectory(prefix='rq-plan-binding-') as temp:
++        out = Path(temp)
++        raw = archive.read('assets/atmungsraum-audio/audio/box-loop.json')
++        loop = json.loads(raw)
++        assert loop['sample_rate']==44100 and loop['main_seconds']==900 and loop['cycle_frames']==705600
++        total = 39690000
++        cyclic = {'scenario_id':'haupt-15','scenario_sha256':hashlib.sha256(raw).hexdigest(),
++                  'sample_rate':44100,'total_frames':total,'phases':[
++                    [base+p['offset_frames'],p['id']] for base in range(0,total,705600)
++                    for p in loop['phases'] if base+p['offset_frames']<total]}
++        (out/'cyclic.json').write_text(json.dumps(cyclic),encoding='utf-8')
++        for scenario in ['haupt-15','probe-5']:
++            raw = archive.read('assets/atmungsraum-audio/audio/scenarios/'+scenario+'.json')
++            legacy = json.loads(raw)
++            plan = {'scenario_id':scenario,'scenario_sha256':hashlib.sha256(raw).hexdigest(),
++                    'sample_rate':legacy['sample_rate'],'total_frames':legacy['total_frames'],
++                    'phases':[[e['offset_frames'],e['id']] for e in legacy['events']]}
++            (out/(scenario+'.json')).write_text(json.dumps(plan),encoding='utf-8')
++        java = out/'ParticipantPlanBindingHarness.java'
++        java.write_text(code,encoding='utf-8')
++        subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(args.json_jar),'-d',str(out),str(java)],check=True)
++        subprocess.run(['java','-cp',str(out)+os.pathsep+str(args.json_jar),
++                        'io.github.mesmerprism.rustyquest.native_renderer.ParticipantPlanBindingHarness',str(out)],check=True)
++
++if __name__ == '__main__': main()
 diff --git a/tools/checks/test_experiment_phone_pairing_ui_runtime.py b/tools/checks/test_experiment_phone_pairing_ui_runtime.py
 new file mode 100644
 index 00000000..6f3d05ab
@@ -33414,6 +34055,236 @@ index 00000000..dc0bab36
 + }
 +}'''.replace('__BODIES__',bodies)
 +run({pkg+'/AccDiagnosticHost.java':fixture+'\n'+support},'AccDiagnosticHost')
+diff --git a/tools/checks/test_remote_durable_pending.py b/tools/checks/test_remote_durable_pending.py
+index d531814a..25e41559 100644
+--- a/tools/checks/test_remote_durable_pending.py
++++ b/tools/checks/test_remote_durable_pending.py
+@@ -38,6 +38,11 @@ def main():
+         "owner_start": extract(server, "synchronized boolean nativeOwnerStarted("),
+         "owner_end": extract(server, "synchronized boolean nativeOwnerEnded("),
+         "retain": extract(module, "public boolean retainsDurableCommand(", sink_start),
++        "failure": extract(shell, "static final class CommandFailure"),
++        "failure_gate": extract(module, "private static boolean acceptsRemoteCommandFailure("),
++        "failure_outcome": extract(module, "private static void observeRemoteCommandFailure("),
++        "failure_accept": extract(module, "public boolean acceptsExperimentSessionCommandFailure(", sink_start),
++        "failure_callback": extract(module, "public void onExperimentSessionCommandFailure(", sink_start),
+     }
+     assert "expireRemotePendingObservation(now);" in module
+     callback = extract(server, "public void onConnectionStateChange(")
+@@ -53,6 +58,8 @@ final class ExperimentSessionPanelState {
+  long generation=1;String activeCondition="condition-a",pendingOperationId="";
+ }
+ final class ExperimentSessionPanelCoordinator {
++ static class NativeCommand {String operationId,operation;long expectedGeneration;NativeCommand(String op,String id,long g,String c){operation=op;operationId=id;expectedGeneration=g;}}
++ int undispatchedRejections;boolean allowUndispatched=true;boolean rejectUndispatchedArm(String id,long g,String detail){if(!allowUndispatched)return false;undispatchedRejections++;return true;}
+  static class NativeReceipt {boolean accepted=true,durable=false,recording=true;long generation=1;String operationId="audio-later",activeCondition="condition-a";}
+  __ARM__
+  final ExperimentSessionPanelState state=new ExperimentSessionPanelState();
+@@ -60,7 +67,10 @@ final class ExperimentSessionPanelCoordinator {
+  void acceptNativeReadback(long epoch,NativeReceipt receipt,long read,long now,boolean accepted,ArmAcceptance arm){}
+ }
+ final class ExperimentSessionAndroidShell {
++ static String safe(String value){return value;}
++ __FAILURE__
+  long currentLaunchEpochForUi(){return 1L;}
++ boolean terminalAdmittedForUi(){return false;}
+  __ARM_ADAPTER__
+  static class SessionReadback {ExperimentSessionPanelCoordinator.NativeReceipt receipt=new ExperimentSessionPanelCoordinator.NativeReceipt();
+   ArmAcceptance armAcceptance=new ArmAcceptance("native-arm",1,3,"condition-a",true);
+@@ -68,6 +78,7 @@ final class ExperimentSessionAndroidShell {
+   boolean commandPending(){return pending;}}
+  static class TerminalResult {boolean shouldFinish,saved;TerminalResult(boolean finish,boolean saved){this.shouldFinish=finish;this.saved=saved;}}
+ }
++final class ExperimentSessionTerminalCorrelation {long carrierGeneration,nativeOwnerEpoch;}
+ final class ExperimentSessionBleServer {
+  long serverGeneration=7,nativeOwnerIdentity=1,nativeOwnerEpoch=3,nativeOwnerHighWater=1;boolean active=true,commandGatewayAttached=false;
+  int updates;String state="",id="";
+@@ -76,7 +87,7 @@ final class ExperimentSessionBleServer {
+  boolean acceptsStatusRead(long g,long e){return active&&g==serverGeneration&&e==nativeOwnerEpoch;}
+  boolean updateReceiptForGeneration(long generation,String id,String state,String detail){if(generation!=currentGeneration())return false;updates++;this.id=id;this.state=state;return true;}
+  void stopWithReason(String reason){active=false;serverGeneration++;}
+- java.util.Map<String,Long> admissionTimes=new java.util.HashMap<>(),effectTimes=new java.util.HashMap<>();org.json.JSONObject latestOwnerReceipt;int recoveryAttempts;long recoveryToken;boolean recoveryScheduled;void scheduleRecovery(){}
++ java.util.Map<String,Long> admissionTimes=new java.util.HashMap<>(),effectTimes=new java.util.HashMap<>();org.json.JSONObject latestOwnerReceipt,latestTerminalReceipt,interruptedArmReceipt;Object terminalObservation;int recoveryAttempts;long recoveryToken;boolean recoveryScheduled;void scheduleRecovery(){}
+  void startFromNativeOwner(){active=true;serverGeneration++;}
+  __OWNER_START__
+  __OWNER_END__
+@@ -85,11 +96,16 @@ final class ExperimentSessionCommandGateway {static ExperimentSessionCommandGate
+ final class ControlPanelActivity {static int starts;static void startConditionAudio(long generation,String id,String condition){starts++;}}
+ final class BreathCompositionPanelModule {
+  boolean experimentShellDestroyed;
++ void updateStatus(String detail){}
+  static WeakReference<BreathCompositionPanelModule> remotePanel=new WeakReference<>(null);
+  static ExperimentSessionBleServer server=new ExperimentSessionBleServer();
+  static final ExperimentSessionPanelCoordinator EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();
+  static final ExperimentSessionAndroidShell EXPERIMENT_SESSION_SHELL=new ExperimentSessionAndroidShell();
+  static RemotePending remotePending;static RemoteStatusObserver remoteStatusObserver;static long lastRemoteStatusPollMs;
++ static Object remoteTerminal;
++ static void observeInterruptedRemoteArm(ExperimentSessionAndroidShell.SessionReadback readback){}
++ static void observeRemoteTerminal(ExperimentSessionAndroidShell.TerminalResult result){}
++ static boolean requestArmedAudio(ExperimentSessionPanelState state,ExperimentSessionAndroidShell.SessionReadback readback){return false;}
+  static class Target {boolean retired;void retire(){retired=true;}}
+  static class RemoteStatusObserver {final Target target=new Target();}
+  static ExperimentSessionBleServer remoteServer(){return server;}
+@@ -99,11 +115,40 @@ final class BreathCompositionPanelModule {
+  __READBACK__
+  __RETAIN__
+  __TERMINAL__
++ __FAILURE_GATE__
++ __FAILURE_OUTCOME__
++ __FAILURE_ACCEPT__
++ __FAILURE_CALLBACK__
+  static int checks;
+  static void check(boolean yes,String reason){if(!yes)throw new AssertionError(reason);checks++;}
+  static void pending(String operation){SystemClock.now=1000;server=new ExperimentSessionBleServer();remotePending=new RemotePending("original-shell","native-arm",operation,1,"condition-a");EXPERIMENT_SESSION_PANEL.state.phase=ExperimentSessionPanelState.Phase.ARMED;EXPERIMENT_SESSION_PANEL.state.generation=1;EXPERIMENT_SESSION_PANEL.state.pendingOperationId="";}
+  public static void main(String[]args){
+   BreathCompositionPanelModule sink=new BreathCompositionPanelModule();
++  for(long launch:new long[]{0L,1L})for(boolean dispatched:new boolean[]{false,true}){
++   pending("arm");remotePending.armLaunchEpoch=launch;EXPERIMENT_SESSION_PANEL.state.phase=ExperimentSessionPanelState.Phase.ARMING;EXPERIMENT_SESSION_PANEL.state.recording=false;EXPERIMENT_SESSION_PANEL.state.generation=0;EXPERIMENT_SESSION_PANEL.state.pendingOperationId="native-arm";RemotePending original=remotePending;int before=EXPERIMENT_SESSION_PANEL.undispatchedRejections;
++   ExperimentSessionAndroidShell.CommandFailure failure=new ExperimentSessionAndroidShell.CommandFailure(new ExperimentSessionPanelCoordinator.NativeCommand("arm","native-arm",0,"condition-a"),launch,dispatched,"test-command-failure");
++   check(sink.acceptsExperimentSessionCommandFailure(failure),"original bound failure admitted for observation");sink.onExperimentSessionCommandFailure(failure);
++   check(server.id.equals("original-shell")&&server.state.equals(dispatched?"outcome_unknown":"rejected"),"original browser receipt gets exact dispatch-aware outcome");
++   check(dispatched?remotePending==original:remotePending==null,"only definite non-dispatch retires mapping");
++   check(EXPERIMENT_SESSION_PANEL.undispatchedRejections==before+(dispatched?0:1),"unknown cannot retire local intent");
++   if(dispatched){EXPERIMENT_SESSION_PANEL.state.phase=ExperimentSessionPanelState.Phase.ARMED;EXPERIMENT_SESSION_PANEL.state.recording=true;EXPERIMENT_SESSION_PANEL.state.generation=1;EXPERIMENT_SESSION_PANEL.state.pendingOperationId="";sink.onExperimentSessionReadback(new ExperimentSessionAndroidShell.SessionReadback());check(remotePending==null&&server.state.equals("confirmed"),"unknown retains original durable readback reconciliation");}
++  }
++  for(boolean checkpoint:new boolean[]{false,true}){
++   pending("arm");remotePending.armLaunchEpoch=0;remotePending.armCheckpointObserved=checkpoint;EXPERIMENT_SESSION_PANEL.allowUndispatched=false;
++   RemotePending original=remotePending;int before=EXPERIMENT_SESSION_PANEL.undispatchedRejections;
++   sink.onExperimentSessionCommandFailure(new ExperimentSessionAndroidShell.CommandFailure(new ExperimentSessionPanelCoordinator.NativeCommand("arm","native-arm",0,"condition-a"),0,false,"late-failure"));
++   check(remotePending==original&&server.state.equals("outcome_unknown")&&EXPERIMENT_SESSION_PANEL.undispatchedRejections==before,"refused local retirement/durable checkpoint retains original unknown mapping");
++   EXPERIMENT_SESSION_PANEL.allowUndispatched=true;
++  }
++  pending("arm");ExperimentSessionAndroidShell.CommandFailure unstamped=new ExperimentSessionAndroidShell.CommandFailure(new ExperimentSessionPanelCoordinator.NativeCommand("arm","native-arm",0,"condition-a"),0,false,"unstamped-failure");
++  check(remotePending.armLaunchEpoch==-1&&!sink.acceptsExperimentSessionCommandFailure(unstamped),"unstamped pending intent cannot impersonate a recorded headless launch0");sink.onExperimentSessionCommandFailure(unstamped);check(server.updates==0&&remotePending!=null,"unstamped mapping remains untouched");
++  for(int change=0;change<7;change++){
++   pending("arm");remotePending.armLaunchEpoch=1;int before=EXPERIMENT_SESSION_PANEL.undispatchedRejections;
++   ExperimentSessionAndroidShell.CommandFailure failure=new ExperimentSessionAndroidShell.CommandFailure(new ExperimentSessionPanelCoordinator.NativeCommand(change==1?"start":"arm",change==0?"foreign":"native-arm",change==2?1:0,"condition-a"),change==3?2:1,false,"late-failure");
++   if(change==4)server.serverGeneration++;if(change==5)server.nativeOwnerEpoch++;if(change==6)remotePending=new RemotePending("replacement-browser","replacement-native","arm",1,"condition-a");
++   check(!sink.acceptsExperimentSessionCommandFailure(failure),"foreign command/epoch/generation/carrier mapping cannot settle");sink.onExperimentSessionCommandFailure(failure);
++   check(remotePending!=null&&server.updates==0&&EXPERIMENT_SESSION_PANEL.undispatchedRejections==before,"late failure leaves replacement state untouched");
++  }
+   for(String operation:new String[]{"arm","save-next","save-exit"}){pending(operation);RemotePending original=remotePending;expireRemotePendingObservation(31001);check(remotePending==original&&server.updates==0,"31s cannot abandon admitted "+operation);expireRemotePendingObservation(3600001);check(remotePending==original,"storage duration cannot abandon "+operation);}
+   pending("return-vr");expireRemotePendingObservation(31000);check(remotePending!=null,"legacy window boundary preserved");expireRemotePendingObservation(31001);check(remotePending==null&&server.state.equals("outcome_unknown"),"bounded presentation observation remains separate");
+   pending("arm");expireRemotePendingObservation(45000);ExperimentSessionAndroidShell.SessionReadback actual=new ExperimentSessionAndroidShell.SessionReadback();sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.id.equals("original-shell")&&server.state.equals("confirmed"),"late durable original Arm confirms after later audio ID");int count=server.updates;sink.onExperimentSessionReadback(actual);check(server.updates==count,"duplicate callback cannot replay original outcome");
+@@ -111,8 +156,8 @@ final class BreathCompositionPanelModule {
+   pending("arm");actual=new ExperimentSessionAndroidShell.SessionReadback();actual.receipt.accepted=false;actual.receipt.operationId="native-arm";sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("rejected"),"actual correlated native rejection still terminal");
+   pending("save-next");expireRemotePendingObservation(45000);actual=new ExperimentSessionAndroidShell.SessionReadback();actual.armAcceptance=null;actual.receipt.operationId="native-arm";actual.receipt.durable=true;actual.recordingResult="saved";EXPERIMENT_SESSION_PANEL.state.phase=ExperimentSessionPanelState.Phase.IDLE;sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("confirmed"),"late saved receipt confirms original SaveNext");
+   pending("save-next");actual=new ExperimentSessionAndroidShell.SessionReadback();actual.armAcceptance=null;actual.receipt.operationId="native-arm";actual.receipt.accepted=false;sink.onExperimentSessionReadback(actual);check(remotePending==null&&server.state.equals("rejected"),"actual SaveNext failure remains rejection");
+-  pending("save-exit");expireRemotePendingObservation(45000);sink.onExperimentSessionTerminal(new ExperimentSessionAndroidShell.TerminalResult(true,true));check(remotePending==null&&server.state.equals("confirmed"),"late terminal save/shutdown confirms original SaveExit");
+-  pending("save-exit");sink.onExperimentSessionTerminal(new ExperimentSessionAndroidShell.TerminalResult(false,false));check(remotePending==null&&server.state.equals("outcome_unknown"),"actual uncertain shutdown remains unknown");
++  // Save/exit uses its separate terminal correlation harness, not a simulated
++  // terminal callback which could incorrectly settle an ordinary pending Arm.
+   pending("arm");RemotePending original=remotePending;server.stopWithReason("disabled");expireRemotePendingObservation(45000);check(remotePending==null&&server.updates==0,"actual retired carrier cannot adopt old result");
+   pending("arm");original=remotePending;experimentSessionBleOwnerChanged(1,99,false);check(remotePending==original,"wrong owner epoch cannot retire original");RemoteStatusObserver observer=new RemoteStatusObserver();remoteStatusObserver=observer;experimentSessionBleOwnerChanged(1,3,false);check(remotePending==null&&observer.target.retired,"genuine native owner retirement clears mapping and observer");
+   pending("arm");original=remotePending;experimentSessionBleOwnerChanged(1,3,true);check(remotePending==original,"replayed owner start cannot retire original");experimentSessionBleOwnerChanged(2,3,true);check(remotePending==null,"new admitted native owner retires original mapping");
+@@ -148,19 +193,33 @@ final class BreathCompositionPanelModule {
+ package io.github.mesmerprism.rustyquest.native_renderer;
+ import java.lang.ref.WeakReference;import org.json.JSONObject;import android.os.SystemClock;
+ __SERVER__
++__CORRELATION__
+ final class ControlPanelActivity {
+  static void startConditionAudio(long g,String id,String condition){}
+  static String conditionBreathGuidanceReadiness(String condition){return "not-ready";}
+ }
+-final class ActualRemoteArmHarness {
++final class ActualRemoteArmHarness implements ExperimentSessionAndroidShell.UiSink {
+  static ExperimentSessionPanelCoordinator EXPERIMENT_SESSION_PANEL;
+- static RemotePending remotePending;static ExperimentSessionBleServer server;
++ static volatile RemotePending remotePending;static ExperimentSessionBleServer server;
+  static WeakReference<ActualRemoteArmHarness> remotePanel=new WeakReference<>(null);
+  boolean experimentShellDestroyed;
++ void updateStatus(String detail){}
++ static class ShellState {ExperimentSessionAndroidShell actual;boolean terminalAdmittedForUi(){return actual!=null&&actual.terminalAdmittedForUi();}long currentLaunchEpochForUi(){return actual==null?1L:actual.currentLaunchEpochForUi();}}
++ static final ShellState EXPERIMENT_SESSION_SHELL=new ShellState();
++ static void observeInterruptedRemoteArm(ExperimentSessionAndroidShell.SessionReadback value){}
++ static boolean requestArmedAudio(ExperimentSessionPanelState state,ExperimentSessionAndroidShell.SessionReadback readback){return false;}
+  static ExperimentSessionBleServer remoteServer(){return server;}
++ public boolean observesSubmittedCommand(){return true;}
++ public boolean acceptsExperimentSessionCallbacks(long epoch){return epoch==EXPERIMENT_SESSION_SHELL.currentLaunchEpochForUi();}
++ public void onExperimentSessionTerminal(ExperimentSessionAndroidShell.TerminalResult result){}
++ __RETAIN__
+  __PENDING__
+  __CODEC__
+  __READBACK__
++ __FAILURE_GATE__
++ __FAILURE_OUTCOME__
++ __FAILURE_ACCEPT__
++ __FAILURE_CALLBACK__
+  static int checks;
+  static void check(boolean value,String reason){if(!value)throw new AssertionError(reason);checks++;}
+  static JSONObject response(String phase,Object condition,long generation,String operation)throws Exception{
+@@ -179,6 +238,20 @@ final class ActualRemoteArmHarness {
+  }
+  public static void main(String[]args)throws Exception{
+   ActualRemoteArmHarness sink=new ActualRemoteArmHarness();ExperimentSessionJsonCodec codec=new ExperimentSessionJsonCodec(() -> EXPERIMENT_SESSION_PANEL);
++  for(int phase=0;phase<4;phase++){
++   SystemClock.now=1000;server=new ExperimentSessionBleServer();EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();EXPERIMENT_SESSION_PANEL.acceptRuntimeEpoch(3L);
++   ExperimentSessionPanelCoordinator.NativeCommand original=EXPERIMENT_SESSION_PANEL.arm("condition-a",0);
++   remotePending=new RemotePending("original-browser",original.operationId,"arm",1,"condition-a");remotePending.armLaunchEpoch=0;
++   RemotePending mapping=remotePending;
++   if(phase==1){sink.onExperimentSessionReadback(codec.parse(durable(original.operationId,"arming").toString(),null,false));check(remotePending==mapping&&mapping.armCheckpointObserved,"durable ARMING checkpoint remains pending original audio acknowledgement");}
++   if(phase==2){ExperimentSessionAndroidShell.SessionReadback read=codec.parse(durable(original.operationId,"arming").toString(),null,false);EXPERIMENT_SESSION_PANEL.acceptNativeReadback(read.runtimeEpoch,read.receipt,read.statusReadCompletedNanos,SystemClock.elapsedRealtimeNanos(),true,read.armAcceptance);check(EXPERIMENT_SESSION_PANEL.snapshot().recording&&!mapping.armCheckpointObserved,"real coordinator can admit recording before remote checkpoint join");}
++   if(phase==3)mapping.armCheckpointObserved=true;
++   ExperimentSessionPanelState before=EXPERIMENT_SESSION_PANEL.snapshot();
++   ExperimentSessionAndroidShell.CommandFailure failure=new ExperimentSessionAndroidShell.CommandFailure(original,0,false,"typed-pre-dispatch-failure");
++   check(sink.acceptsExperimentSessionCommandFailure(failure),"recorded headless launch0 admits original observation");sink.onExperimentSessionCommandFailure(failure);
++   if(phase==0)check(remotePending==null&&server.state.equals("rejected")&&EXPERIMENT_SESSION_PANEL.snapshot().pendingOperationId.isEmpty(),"actual exact unexecuted Arm alone rejects and retires local intent");
++   else {check(remotePending==mapping&&server.state.equals("outcome_unknown")&&EXPERIMENT_SESSION_PANEL.snapshot()==before,"late failure cannot reject/clear durable or nonretirable Arm");sink.onExperimentSessionReadback(codec.parse(durable(original.operationId,"armed").toString(),null,false));check(remotePending==null&&server.state.equals("confirmed"),"retained mapping still confirms exact original durable Arm without replay");}
++  }
+   for(long at:new long[]{11270L,40000L})for(String control:new String[]{"armed","running","paused"}){
+    SystemClock.now=1000;server=new ExperimentSessionBleServer();EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();
+    ExperimentSessionPanelCoordinator.NativeCommand original=EXPERIMENT_SESSION_PANEL.arm("condition-a",100);
+@@ -256,6 +329,36 @@ final class ActualRemoteArmHarness {
+     int updates=server.updates;sink.onExperimentSessionReadback(observed);check(server.updates==updates,"repeat save callback cannot replay receipt");
+    }else check(!server.state.equals("confirmed"),"hostile save finalization cannot confirm: "+route+" case "+change);
+   }
++  // Exercise the real Shell observer after a typed failure is downgraded.
++  // Manual callbacks cannot conceal a missing status observer here.
++  server=new ExperimentSessionBleServer();EXPERIMENT_SESSION_PANEL=new ExperimentSessionPanelCoordinator();EXPERIMENT_SESSION_PANEL.acceptRuntimeEpoch(3L);
++  final ExperimentSessionPanelCoordinator.NativeCommand retained=EXPERIMENT_SESSION_PANEL.arm("condition-a",0);
++  remotePending=new RemotePending("retained-browser",retained.operationId,"arm",1,"condition-a");remotePending.armLaunchEpoch=0;
++  final RemotePending originalMapping=remotePending;
++  ExperimentSessionAndroidShell.SessionReadback admitted=codec.parse(durable(retained.operationId,"arming").toString(),null,false);
++  EXPERIMENT_SESSION_PANEL.acceptNativeReadback(admitted.runtimeEpoch,admitted.receipt,admitted.statusReadCompletedNanos,SystemClock.elapsedRealtimeNanos(),true,admitted.armAcceptance);
++  final java.util.concurrent.CountDownLatch observed=new java.util.concurrent.CountDownLatch(1),release=new java.util.concurrent.CountDownLatch(1);
++  final int[] calls={0,0};
++  ExperimentSessionAndroidShell.NativeBridge bridge=new ExperimentSessionAndroidShell.NativeBridge(){
++   public String initialize(String root){throw new AssertionError("no initialize effect");}
++   public String apply(String raw){
++    try{if(new JSONObject(raw).getString("operation").equals("arm")){calls[0]++;throw new ExperimentSessionAndroidShell.PreDispatchFailure("typed-validation",new IllegalArgumentException("validation"));}
++     calls[1]++;observed.countDown();release.await(2,java.util.concurrent.TimeUnit.SECONDS);return durable(retained.operationId,"armed").toString();
++    }catch(RuntimeException failure){throw failure;}catch(Exception failure){throw new IllegalStateException(failure);}
++   }
++   public boolean requestAudioStop(long g,String id){throw new AssertionError("no stop effect");}
++   public boolean requestAudioRestartStop(long g,String id){throw new AssertionError("no restart effect");}
++   public String audioShutdownStatus(){return "complete";}
++   public boolean cleanupAfterAcknowledgement(){throw new AssertionError("no cleanup effect");}
++  };
++  ExperimentSessionAndroidShell live=ExperimentSessionAndroidShell.createForTest(bridge,codec,new ExperimentSessionAndroidShell.Clock(){public long elapsedRealtimeMillis(){return 1000;}public long elapsedRealtimeNanos(){return 1000000000;}public long utcNanos(){return 2000000000;}},new ExperimentSessionAndroidShell.UiDispatcher(){public void post(Runnable task){task.run();}public boolean isUiThread(){return false;}});
++  try{
++   EXPERIMENT_SESSION_SHELL.actual=live;live.submit(retained,true,sink,0);
++   check(observed.await(2,java.util.concurrent.TimeUnit.SECONDS),"downgraded typed failure starts real Shell same-ID read-only observation");
++   check(remotePending==originalMapping&&server.state.equals("outcome_unknown")&&calls[0]==1,"uncertain original retained without command replay");release.countDown();
++   long end=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(2);while(remotePending!=null&&System.nanoTime()<end)Thread.sleep(5);
++   check(remotePending==null&&server.id.equals("retained-browser")&&server.state.equals("confirmed")&&calls[0]==1&&calls[1]>=1,"real Shell observation confirms original browser/native Arm without replay");
++  }finally{release.countDown();live.closeForTest();EXPERIMENT_SESSION_SHELL.actual=null;}
+   if(args.length==1){
+    JSONObject captured=new JSONObject(new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(args[0])),java.nio.charset.StandardCharsets.UTF_8));
+    JSONObject nativeResponse=captured.getJSONObject("native_response"),nativeState=nativeResponse.getJSONObject("readback");
+@@ -276,9 +379,13 @@ final class ActualRemoteArmHarness {
+ }
+ '''
+         actual = actual.replace("__SERVER__", extract(harness, "final class ExperimentSessionBleServer"))
++        actual = actual.replace("__CORRELATION__", extract(harness, "final class ExperimentSessionTerminalCorrelation"))
+         actual = actual.replace("__PENDING__", parts["pending"])
+         actual = actual.replace("__CODEC__", codec)
+         actual = actual.replace("__READBACK__", parts["readback"].replace("BreathCompositionPanelModule", "ActualRemoteArmHarness"))
++        actual = actual.replace("__RETAIN__", parts["retain"])
++        for name in ("failure_gate", "failure_outcome", "failure_accept", "failure_callback"):
++            actual = actual.replace("__" + name.upper() + "__", parts[name].replace("BreathCompositionPanelModule", "ActualRemoteArmHarness"))
+         integrated = output / "ActualRemoteArmHarness.java"
+         integrated.write_text(actual, encoding="utf-8")
+         full = output / "actual"
 diff --git a/tools/checks/test_remote_setup.py b/tools/checks/test_remote_setup.py
 index 4e7a895c..00d0b699 100644
 --- a/tools/checks/test_remote_setup.py
@@ -33522,6 +34393,18 @@ index 00000000..1e042ef6
 + subprocess.run(['rustc','--edition','2021','--test',str(source),'-o',str(exe)],check=True)
 + subprocess.run([str(exe),'--nocapture'],check=True)
 +print('PASS source-extracted actual GPU caller with absent recording clock and independent kernel boundary')
+diff --git a/tools/checks/test_terminal_pending_arm.py b/tools/checks/test_terminal_pending_arm.py
+index 6e964c01..51f2f977 100644
+--- a/tools/checks/test_terminal_pending_arm.py
++++ b/tools/checks/test_terminal_pending_arm.py
+@@ -77,6 +77,7 @@ def main():
+     }
+     files = {'Harness.java': headers + '''
+ class Log {static void i(String a,String b){}static void w(String a,String b){}}
++class NativeRendererMetaUpdate {static void intentionalExit(){}}
+ class SystemClock {static long elapsedRealtime(){return 100;}}
+ class Context {Context app=this;Context getApplicationContext(){return app;}}
+ class ExperimentSessionControlCapability {static class Fence {}}
 diff --git a/tools/lib/NativeRendererBootHostFixtures.psm1 b/tools/lib/NativeRendererBootHostFixtures.psm1
 index 8c7f9e1b..ce035a25 100644
 --- a/tools/lib/NativeRendererBootHostFixtures.psm1

@@ -1,5 +1,36 @@
 # Verification
 
+## Haupt-Runde preparation and original Arm failure — 2026-11-17
+
+Passive inspection of the real installed phone confirms release20261117-auto-control,
+native-confirmed green control, ready H10 streams, and the original Arm receipt
+pending for minutes. Fresh native observations remain IDLE/g0/r0, pending:true,
+rec:false. Neither Start nor Arm was replayed. The inspected status HTTP replies
+succeed; CDP missing-body messages are observer lookup failures, not evidence of
+a rejected connection. No recording-running gate was established.
+
+The actual signed22 package contains two different Haupt-Runde plans: the shared
+loop and the legacy authored scenario. The selected gateway supplies the former,
+while generated participant validation previously selected the latter and threw
+before JNI. The original shell failure route dropped ordinary Arm correlation,
+leaving its pending receipt retained indefinitely.
+
+Actual generated Java methods plus signed22 fixtures reproduce the rejection on
+the immutable previous builder and pass28 checks after the repair. Missing,
+mutated, malformed and extra-field plans still reject; legacy/nonselected routing
+is retained. Validation is separated from JNI, so an exception after a possible
+effect remains unknown. Correlated failure tests pass64 remote controls and134
+real sparse codec/coordinator/Shell joins, including exact local-intent refusal,
+durable checkpoint protection, captured headless epoch0, retired local UI, and
+same-ID observation after a downgraded uncertain failure. Terminal27 and all four
+Java host suites pass. Independent review closes the three findings. The PWA's
+unchanged297-case suite also passes with zero skips.
+
+Source d8998233/f24bd09a and the exact reconstructed public patch are qualified
+software evidence. Code23-r1 is revoked as a Meta upload target. Repaired23-r2
+package qualification/Meta installation and actual recording remain pending;
+the running-session target will be24 after an actual23 recording is established.
+
 ## Automatic phone control — 2026-11-17
 
 The PWA requests a free native controller lease after authenticated connection.

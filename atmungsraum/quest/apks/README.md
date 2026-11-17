@@ -1,6 +1,28 @@
 # Atmungsraum Quest 2 APKs
 
-## 0.2.22-dev — code23 candidate, 2026-11-17
+## 0.2.22-dev — repaired code23-r2 source, 2026-11-17
+
+The earlier23-r1 is revoked as an upload target after the attended Meta22
+Haupt-Runde Arm exposed a separate participant-plan validation mismatch and
+failure-reporting gap. No recording started and no23 artifact has been uploaded.
+
+Repaired source is `f24bd09a36c34d93b619a0f12f3160f4f7f48d84`, tree
+`0cc29137a38885e73b89652db6490d175f8926c3`, including plan-binding commitd8998233.
+The cumulative patch is2050779bytes, SHA256
+`5c76c91d68b3a78e4b57a964edd4b697f9e974f8b51adc1a14ba0b6eb7f18016`;
+an isolated index reconstructs that exact tree from the pinned upstream base.
+Selected main preparation now verifies the continuous900-second loop plan.
+Original Arm failures are correlated and distinguish proven non-dispatch from
+uncertain execution, with same-ID read-only reconciliation and no effects replay.
+
+Generated-binding28, remote64, integrated codec/coordinator/Shell134, terminal27,
+all four Java host suites and PWA297 checks pass. Independent review closes the
+identified lineage, headless and local-presentation issues. Rust source retains
+the previously passing888-case host suite (five intentional ignores).
+Signed23-r2 packaging/inspection and Meta installation are pending. The repaired
+23 will establish the Meta baseline;24 stays held until a real23 session runs.
+
+## 0.2.22-dev — superseded code23-r1 candidate, 2026-11-17
 
 Signed Developer code23 is built from native
 `453af6f4efa9fef823670b4a441a37d6feaba9c6`, tree
@@ -30,9 +52,9 @@ pass. Final default native host suite passes888 with five intentional ignores;
 independent source review passes. Private artifact/capsule/verification are retained
 in the lab; no private visuals or APK are added to this public repository.
 
-Meta publication is held for the user-requested running-session22-to23 test.
-Neither Meta delivery nor physical startup/tracking-loss behavior is qualified
-yet. The PWA companion release is20261117-auto-control (PR41/Pages44072213706).
+This23-r1 was never uploaded to Meta and is revoked; use the repaired23-r2
+candidate above. Neither Meta delivery nor physical startup/tracking-loss behavior
+was qualified forr1. Its PWA companion is20261117-auto-control (PR41/Pages44072213706).
 
 ## 0.2.21-dev — code22 automatic boot/update acceptance, 2026-11-17
 

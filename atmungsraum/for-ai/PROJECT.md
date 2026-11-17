@@ -1,5 +1,47 @@
 # Project
 
+### Attended Haupt-Runde preparation blocker — 2026-11-17
+
+The current Meta22 baseline cannot yet establish the running-session update test.
+The user's Start action reaches its original authenticated Arm receipt, which
+stays pending with Preparing condition in native session. Repeated actual phone
+responses show fresh native IDLE/g0/r0, pending:true and rec:false; no recording
+has started. Phone control and H10 ECG/motion are confirmed ready. No Arm replay.
+
+- [x] Diagnose the packaged-plan mismatch: the selected shared Haupt-Runde
+  gateway supplies the continuous900-second loop plan, but generated Java binding
+  validates against the different legacy scenario plan before JNI. Signed22
+  assets independently confirm differing hashes and phase sequences.
+- [x] Identify the reporting gap: ordinary shell failures lose the submitted
+  Arm identity through a terminal-only callback, leaving remotePending retained.
+- [x] Fix and red-to-green test exact selected/legacy plan validation and bound
+  pre-dispatch failure reporting. Ambiguous post-dispatch failures must retain
+  their original ID/readback fence; never replay or declare them rejected.
+  Native d8998233/f24bd09a is clean; exact generated binding28, remote64,
+  integrated real codec/coordinator/Shell134 and terminal27 checks pass. All four
+  Java host suites and the full297-case PWA suite pass. Independent review
+  closes exact-intent/durable-state, headless launch0 and local-UI findings.
+- [ ] Build/qualify repaired code23-r2. The earlier signed23-r1 candidate is
+  revoked as a Meta upload target; it does not include this newly found repair.
+- [ ] Publish repaired23 through Meta as the usable baseline, retire the stuck
+  idle22 attempt through normal app restart, and verify actual installation.
+- [ ] Start a real test session on23, then publish24 while it runs. Verify no
+  recording/saving interruption and observe the subsequent safe update/relaunch.
+
+The changed test sequence is explained to the user: both the repaired baseline
+and follow-up target use Meta distribution. Meta publication chat remains held;
+neither23-r1 nor a follow-up has been uploaded. Public source/evidence PR42 and
+documentation PR43 are deployed; exact Pages44074293155/44075185193 and11/7
+live-file comparisons pass. Current synchronized public main is2430253. The
+native plan/failure repairs are in progress; do not infer hardware success from
+the earlier host/package qualification. The user may take the H10 off until the
+repaired build is ready. Quest Wi-Fi ADB is verified; Location remains enabled.
+
+The repaired source is f24bd09a/tree0cc29137. Its2050779-byte cumulative public
+patch reconstructs that exact tree from the pinned upstream base. Code23-r2
+is now packaging from the clean source; its Meta baseline gate is package
+qualification, followed by an actual23-running gate for the held24 target.
+
 ### Input continuity, automatic phone control and active-session updates — 2026-11-17
 
 The wearer confirms Controller can drive the sphere before Polar calibration,

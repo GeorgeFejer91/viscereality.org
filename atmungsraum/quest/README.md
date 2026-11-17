@@ -102,12 +102,14 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `e1029a45215e831b2d847bbc7265d8d6f5e1fe86`, matching
-the code23 candidate source `453af6f4efa9fef823670b4a441a37d6feaba9c6`.
-Patch SHA256 is `1c0e53135586e68a9314cfec1ca6212db71a9887b4c1d50e76cb4cb13295e138`
-(1,981,101 bytes). The candidate starts fixed Controller State without volume
+reconstructs source tree `0cc29137a38885e73b89652db6490d175f8926c3`, matching
+the repaired code23-r2 candidate source `f24bd09a36c34d93b619a0f12f3160f4f7f48d84`.
+Patch SHA256 is `5c76c91d68b3a78e4b57a964edd4b697f9e974f8b51adc1a14ba0b6eb7f18016`
+(2,050,779 bytes). The candidate starts fixed Controller State without volume
 calibration and retains the selected manual breathing state through temporary
-input loss. Native host tests pass888 cases with five intentional ignores;
+input loss. It also binds the selected900-second Haupt-Runde plan consistently
+and reports original Arm failures without replaying uncertain native work.
+Native host tests pass888 cases with five intentional ignores;
 Android/package and wearer acceptance are separate gates. Code22 remains the
 last Meta-installed hardware baseline until the APK log records otherwise.
 Applying the exact binary patch to an isolated index at the
