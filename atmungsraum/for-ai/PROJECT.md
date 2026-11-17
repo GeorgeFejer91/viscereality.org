@@ -33,8 +33,12 @@ IDLE/g0/r1, rec:false. No experiment recording has started.
   Code24-r1 stays revoked. Repaired24 is current on private Meta Developer
   build1464488216750190; malware and detailed security passed. Actual24
   installation and physical health/battery acceptance remain pending.
-- [ ] Finish Meta24 publication and health/battery PWA deployment, then refresh
-  the installed phone and verify actual current-device readings and contact loss.
+- [x] Publish Meta24 and health/battery PWA. PR46 implementation and PR47 policy
+  merge166f483; exact Pages44097236831 success,21 public-file comparisons and
+  public-runtime health/battery/cache/policy24 probe pass (transport synthetic).
+- [ ] Refresh the installed phone, update actual Quest23→24 through Meta and
+  verify current-device battery values and off-body/contact loss. The user
+  defers attended testing until later; do not start recording or publish25.
 - [ ] Establish actual RUNNING/rec:true on repaired24 before publishing held25;
   verify recording/saving continuity and safe deferred update/helper relaunch.
 
