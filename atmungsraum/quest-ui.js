@@ -7,7 +7,8 @@ import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActio
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=11';
+import { BreathingSetup } from './breathing-setup.js?v=12';
+import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=5';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
 import { KioskControl } from './kiosk-control.js?v=3';
@@ -454,8 +455,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const participantComplete = Boolean(!requiresParticipant || armedWithParticipant && participantId);
     const setupComplete = Boolean(ready && participantComplete);
     const breath = breathing.update(rehearsal.gateway, { status, busy, pending, unknown }, setupComplete);
-    if (!breath.actions.continue || previewAccepted !== breath.acceptance) previewAccepted = '';
-    const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && breath.actions.continue;
+    // This is the operator's judgement of this exact method/attempt, not a
+    // sample-level readiness grant. A brief unknown phase cannot erase it.
+    const reviewable = breath.available && breath.setup.stage === 'testing' && breath.setup.playing
+      && breath.setup.input !== 'automatic'
+      && (breath.setup.input !== 'polar-tilt' || breath.setup.calibration === 'ready');
+    if (previewAccepted !== breath.acceptance || !reviewable) previewAccepted = '';
+    const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && reviewable;
     // Authority and readiness remain owned by the existing domain models.
     byId('quest-control-host').hidden = !access;
     const version = apkRelease.update(rehearsal.gateway, status);
@@ -479,7 +485,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('apk-full-identity'), version.identity);
     const updateNotice = byId('operator-meta-update');
     // Stable nodes only: progress never replaces controls, editors or journals.
-    const noticeHidden = !status || !metaUpdate.advertised;
+    const noticeHidden = !status || !metaUpdate.advertised
+      || metaUpdate.allowed && ['current', 'updated'].includes(metaUpdate.state) && localView.step !== 'update';
     if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
     for (const panel of [updateNotice, byId('meta-update')]) {
       panel.dataset.updateState = metaUpdate.state;
@@ -561,7 +568,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
     play.disabled = waiting || unknown || !actions.play
-      || actions.play === 'arm' && (!selectionAllowed || !scenario);
+      || actions.play === 'arm' && (!selectionAllowed || !scenario || !breath.actions.continue);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
@@ -601,6 +608,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
 
   function paintBreathingSetup(view, waiting) {
     const native = view.setup;
+    const testingMethod = view.available && native.stage === 'testing' && native.playing && native.input !== 'automatic';
     text(byId('operator-confirmed-input'), view.available ? `Aktive Atmungsmessmethode: ${view.inputLabel}` : 'Kein aktueller Status der Atmungsmessmethode.');
     previewCircle.hidden = !view.available;
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
@@ -621,12 +629,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       : view.blockedReason ? view.blockedReason
       : view.showPolarCalibration && native.calibration === 'waiting' ? 'Automatic ist aktiv. Die Einrichtung beginnt mit dem nächsten vollständigen Atemzyklus.'
       : view.showPolarCalibration && native.calibration === 'collecting' ? `Automatic ist aktiv. Folge dem Atemtakt für zwei vollständige Atemzyklen.${view.qualityWarning ? ` ${view.qualityWarning}` : ''}`
-      : view.actions.continue ? 'Prüfe die Bewegung im Headset. Wenn die Atmungsmessmethode passt, gehe weiter zur Auswahl.'
+      : testingMethod ? 'Prüfe die Bewegung im Headset. Wenn die Atmungsmessmethode passt, bestätige sie unten.'
       : !native.playing ? native.stage === 'idle'
         ? 'Wähle eine Atmungsmessmethode. Die Atemschleife beginnt erst danach auf der Quest.' : 'Warte auf die Atemschleife der Quest.'
       : 'Die Atemschleife läuft. Wähle eine Atmungsmessmethode oder richte Polar tilt persönlich ein.';
     text(previewDetail, detail);
-    previewDetail.hidden = Boolean(view.recovery);
+    // Review has its own permanent instruction beside the circles. Repeat
+    // only an actionable warning/error here, never sample-level readiness.
+    previewDetail.hidden = Boolean(view.recovery) || testingMethod && !view.message && !view.failure
+      && !view.blockedReason && !view.pending && !view.unknown && !view.recovering;
     previewProgressGroup.hidden = !view.showPolarCalibration || !view.available || view.recovering || !(collecting || native?.attempt > 0);
     previewProgress.value = view.progress.value;
     const now = performance.now();
@@ -653,13 +664,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     previewPersonalReturn.setAttribute('aria-pressed', String(native?.input === 'polar-tilt'));
     previewController.disabled = waiting || !view.actions.controller;
     previewContinue.disabled = waiting || !view.actions.continue;
-    previewContinue.hidden = !view.actions.continue;
+    previewContinue.hidden = !testingMethod;
     const reviewPrompt = byId('preview-review');
-    reviewPrompt.hidden = !view.actions.continue;
+    reviewPrompt.hidden = !testingMethod;
     text(reviewPrompt, native?.input === 'controller-state'
       ? 'Prüfe, ob die Partikel im Headset auf die Bewegung des Controllers reagieren.'
       : 'Prüfe bei der teilnehmenden Person, ob sich die Partikel im Headset mit der Atmung bewegen.');
-    previewRestart.hidden = !view.actions.continue || !view.showPolarCalibration;
+    previewRestart.hidden = !testingMethod || !view.showPolarCalibration;
     previewRetry.hidden = !view.failure || collecting;
     previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
     byId('preview-recovery').hidden = !view.recovery;
@@ -682,10 +693,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     userAction = attempt;
     if (op === 'calibrate') calibrationBaseline ??= { owner: breathing.gateway.owner, attempt: breathing.view.setup.attempt };
-    const request = breathing.run(op, attempt.signal);
+    const request = selectBreathingMethod(breathing, op, { signal: attempt.signal,
+      refresh: async () => { await rehearsal.refresh(); await breathing.refresh(); paint(); },
+      onPending: paint });
     navigateLocal({ type: 'go', step: op === 'calibrate' ? 'calibration' : 'tracking' });
     paint();
     try { await request; }
+    catch (error) { if (!attempt.signal.aborted) throw error; }
     finally {
       if (userAction === attempt) userAction = null;
       await rehearsal.refresh();

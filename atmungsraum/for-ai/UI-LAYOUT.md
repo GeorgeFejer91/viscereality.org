@@ -184,3 +184,20 @@ phone suite with its real native/Java interoperability prerequisites. Review
 the whole change independently. Publish a coherent cache graph, exact Pages
 deployment and affected live URLs. Physical installed-phone qualification is
 pending phone availability; new-mode wearer testing stays deferred.
+
+## Attended readiness presentation — 2026-11-17
+
+Do not show healthy Meta completion on ordinary pages. The explicit update
+page retains its terminal status and geometry. During method review, retain
+one stable instruction and the confirmation button's appearance through transient
+sample-level readiness changes; its disabled property still follows native
+readiness. Once the operator accepts a method, keep that local judgement only
+while actor/audio/attempt/method/sensor binding and the testing loop remain
+valid. Keep Session visible through a transient unknown phase, with Start
+explicitly disabled until the existing native readiness gate is true again.
+No local acceptance authorizes Arm, recording or native readiness.
+
+A stale-revision retry is permitted only for the original valid bound explicit
+rejected/accepted:false result, never an unknown/pending/accepted result. Read
+fresh status and recheck unchanged intent/action gates before each new ID; cap
+at3 total requests. Preserve a named error and actual confirmed method on failure.

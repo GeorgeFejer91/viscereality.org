@@ -178,6 +178,14 @@ function breathSetup(command) {
   window.reviewSetupCommands.push(structuredClone(command));
   const { v, id, g, r, op } = command;
   const setup = settings.setup;
+  if (settings.staleSetupRejects > 0) {
+    settings.staleSetupRejects--;
+    setup.r++;
+    if (settings.changeInputOnStale) setup.input = settings.changeInputOnStale;
+    const rejected = receipts[id] = {v:1,id,state:'rejected',accepted:false,reason:'stale-revision'};
+    if (settings.loseStaleSetupReply) throw Error('Lost explicit rejection');
+    return rejected;
+  }
   if (v !== 1 || !/^[a-f0-9]{16}$/.test(id) || g !== setup.g || r !== setup.r
     || !['start', 'calibrate', 'controller', 'polar-fixed', 'polar-adaptive'].includes(op)) {
     return receipts[id] = { v: 1, id, state: 'rejected' };

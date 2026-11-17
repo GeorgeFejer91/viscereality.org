@@ -36,6 +36,24 @@ const storage = () => {
   return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
 };
 
+test('only a bound explicit non-accepted stale rejection permits fresh selection retry', async () => {
+  for (const patch of [{}, {accepted:undefined}, {accepted:true}, {reason:'busy'}, {id:'f'.repeat(16)}, {state:'outcome_unknown'}]) {
+    const model=new BreathingSetup(), peer=fixture();
+    peer.gateway.breathSetup=async command=>({v:1,id:command.id,state:'rejected',accepted:false,reason:'stale-revision',...patch});
+    model.update(peer.gateway,state(),true);
+    const result=await model.run('controller');
+    assert.equal(result, Object.keys(patch).length ? undefined : 'stale-revision');
+  }
+});
+
+test('review binding survives sample readiness but retires on a selected sensor change', () => {
+  const model=new BreathingSetup(), peer=fixture();
+  const y={s:'b'.repeat(32),g:8,x:'c'.repeat(12)};
+  const original=model.update(peer.gateway,state(snapshot(native({input:'controller-state',ready:true}),{y})),true).acceptance;
+  assert.equal(model.update(peer.gateway,state(snapshot(native({input:'controller-state',ready:false,r:1}),{y})),true).acceptance,original);
+  assert.notEqual(model.update(peer.gateway,state(snapshot(native({input:'controller-state',ready:true,r:2}),{y:{...y,x:'d'.repeat(12)}})),true).acceptance,original);
+});
+
 test('confirmed Controller mode hides Polar progress and reports a requested switch without claiming it happened', async () => {
   const model = new BreathingSetup(); const peer = fixture(); peer.reply('pending');
   const controller = state(snapshot(native({ input: 'controller-state', ready: true, attempt: 2,
