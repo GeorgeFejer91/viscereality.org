@@ -22,7 +22,7 @@ Implementation plan:
   closure, preserving queued-update handoff. Expire delayed main-thread work.
 - [x] Review each scoped repair, then independently review the integrated branch.
   Run meaningful host/native/real-DOM regressions and applicable package checks.
-- [ ] Publish verified PWA increments through ordinary PR, exact Pages and public
+- [x] Publish verified PWA increments through ordinary PR, exact Pages and public
   runtime checks. Update cumulative native source/evidence, build a repaired APK
   baseline and keep its update-test successor unpublished until an actual run.
 
@@ -47,14 +47,35 @@ archive using synthetic transport. Installed-phone refresh remains deferred.
 Native f5ea725c/tree df5d27e passes896 tests with6 intentional ignores and the
 boundary scan; scoped and integration reviews pass. Signed25-r2 passes1114 package checks, including39 repaired DEX method paths/6
 compiled guards and unchanged audio/private visuals/900-second closure. Meta
-publication is in progress; public policy remains24 until availability is
-confirmed. No new headset observation is claimed.
+publication completed as build1464859736713038 in the private Developer channel;
+malware/detailed security passed, Quest2/13+ and Require Latest unchecked retained.
+Public minimum/latest is25. Source/evidence PR51 merged0a7fb24;
+[Pages44137540961](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44137540961)
+succeeded and all11 checked files match Git, including the reconstructable patch.
+Final policy PR52 merged9e35559;
+[Pages44138654869](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44138654869)
+succeeded and all11 checked files match Git. Live Chromium confirms24 requires
+the sequential update step,25 continues without that extra screen, and both
+current-session journal controls and original-hash offline archives still work.
+No new headset observation is claimed.
 
 Ruling: existing publication authorization applies to verified repairs; no repeat
 approval is needed. The old held version-only25 remains unpublished and is not
-the repaired baseline. Repaired baseline25-r2 replaces it. A new version-only26 is being built and
-remains unpublished until actual25 is recording RUNNING/rec:true and explicitly
-released for the attended update test.
+the repaired baseline. Repaired baseline25-r2 replaces it. Version-only26 passes
+1229 signed-package checks and remains unpublished until actual25 is recording
+RUNNING/rec:true and explicitly released for the attended update test.
+
+Next attended action: refresh the installed Pixel PWA, verify Meta-installed25 by
+exact APK/version/installer readback, inspect battery/contact freshness, verify
+all input modes and tracking-loss continuity, then start Haupt-Runde. Do not
+publish26 until the actual25 session has advancing timer and rec:true. Verify
+no update interrupts that run and monitor the post-save update/relaunch. Overall
+hardware/session/update acceptance remains open. No headset/phone command was
+issued during these repairs. Native source is committed atf5ea725c; web runtime,
+source patch and policy are synchronized through main9e35559. Final handoff
+evidence is synchronized as documentation without changing runtime or policy.
+All build leases are released. No unresolved software-review finding remains;
+the deferred physical acceptance above keeps the overall project goal open.
 
 ### PWA startup update and Quest reconnect — 2026-11-17
 

@@ -1,6 +1,6 @@
 # Atmungsraum Quest 2 APKs
 
-## 0.2.24-dev — qualified repaired code25-r2 baseline, 2026-11-17
+## 0.2.24-dev — published repaired Meta code25-r2 baseline, 2026-11-17
 
 Repairs R1/R3/R5 from the [implementation review](../../for-ai/REVIEW-2026-11-17.md).
 Native source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`, tree
@@ -25,11 +25,23 @@ queued-update exit keeps its watch. Expired main-loop handoffs cannot change
 kiosk state. Native896 tests/6 intentional ignores, all14 updater suites,
 Android34/36 compilation and scoped/integration reviews pass.
 
-Private Meta Developer publication is in progress. Public policy remains24 until
-availability is confirmed. No device installation or physical acceptance is
-claimed. Old25-r1 is revoked as an upload target. The successor code26 is reserved
-for the deferred attended running-session update test and must remain unpublished
-until actual repaired25 is RUNNING/rec:true and the coordinating agent releases it.
+Meta build1464859736713038 is current in the private Developer channel. Malware
+and detailed security passed; Quest2/13+ and Require Latest unchecked remain.
+Public policy minimum/latest is25. No device installation or physical acceptance
+is claimed; last actual headset readback remains23. Old25-r1 is revoked as an
+upload target. No helper APK update is required for these main-app fixes.
+
+## 0.2.25-dev — qualified held code26 version-only probe, 2026-11-17
+
+Signed26 is65,698,947bytes, SHA256
+`627ec300468873bc09369d5b1516cec648435c031ece40a703913ce6adb9db2e`.
+It uses the same sourcef5ea725c and passes1229 checks, including unchanged DEX,
+SDK/audio/private assets and all39 repair instruction paths/6 flow guards.
+Main native machine code and all other bytes match25 apart from the closed
+activation binding and nonloaded compiler-symbol numeric suffixes. It remains
+private and **unpublished**. Publish only after actual repaired25 is
+RUNNING/rec:true and the coordinating agent explicitly releases the attended
+running-session update test. This hold replaces the old revoked25-r1 probe.
 
 ## 0.2.23-dev — published Meta code24-r2 baseline, 2026-11-17
 
