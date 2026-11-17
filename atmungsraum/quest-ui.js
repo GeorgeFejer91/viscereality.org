@@ -14,6 +14,7 @@ import { KioskControl } from './kiosk-control.js?v=3';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
 import { MetaUpdateControl } from './meta-update-control.js?v=2';
+import { MetaUpdateHandoff } from './meta-update-handoff.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -188,6 +189,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   const breathing = new BreathingSetup({ storage });
   const kiosk = new KioskControl({ storage });
   const metaControl = new MetaUpdateControl({ storage });
+  const metaHandoff = new MetaUpdateHandoff({ storage });
   const apkRelease = new ApkRelease({ onChange: () => paint() });
   const breathDisplay = new LiveBreathDisplay();
   const ecgDisplay = new LiveEcgDisplay();
@@ -340,6 +342,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
 
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
+    if (status) metaHandoff.observe(rehearsal.gateway, { status, busy, pending, unknown });
+    else metaHandoff.disconnected();
+    const handoff = metaHandoff.view(savedPair);
+    const handoffNotice = byId('operator-meta-handoff');
+    handoffNotice.hidden = !handoff;
+    text(byId('operator-meta-handoff-summary'), handoff?.summary ?? '');
+    text(byId('operator-meta-handoff-detail'), handoff?.detail ?? '');
     const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
     const available = supportsScenarios ? rehearsalScenarios(status) : [];
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
@@ -1188,7 +1197,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   byId('meta-update-check').addEventListener('click', async () => {
     if (userAction || connecting || document.hidden || !metaControl.view?.canRequest) return;
     const attempt = new AbortController(); userAction = attempt;
-    const request = metaControl.request(attempt.signal); paint();
+    const request = metaControl.request(attempt.signal);
+    if (metaControl.busy) metaHandoff.manualRequest(rehearsal.gateway, rehearsal.state);
+    paint();
     try { await request; }
     finally { if (userAction === attempt) userAction = null; paint(); }
   });

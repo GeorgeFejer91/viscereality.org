@@ -1,5 +1,21 @@
 # Verification
 
+## Disconnected Meta update instructions — 2026-11-17
+
+The read-only handoff model has11 tests; the combined Meta/model/control/gateway
+suite passes34, and the web suite passes271 with nine native-assembly integration
+cases skipped without their selected checkout. The actual mounted PWA passes six
+disconnect/reload/reconnect states at390px,320px and320px/200% text, including
+real Pretext measurement, readable document reflow and unchanged mutation count.
+Fresh actual current APK21 retires the fixture hint; the fixture does not prove
+a hardware installation. The existing27 Meta display/reflow states also pass.
+Private evidence is retained under the active boot/kiosk/update validation run.
+Publication and installed-phone refresh are pending this increment.
+
+PR32 result/diagnostic release a037b2e passed exact Pages43984840599 and all18
+affected live response byte comparisons. Main20 is Meta-installed but stopped;
+new monitor3/21-to22 hardware qualification remains open.
+
 Latest2026-11-17 checkpoint: Meta20 actually replaces19 after the idle app is
 closed, with exact63f3d72f… bytes, Meta attribution and retained UID. No20
 automatic relaunch or own SDK installation is proven. Its earlier manual check

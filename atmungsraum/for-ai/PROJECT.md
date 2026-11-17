@@ -162,6 +162,21 @@ the existing utility and recovery routes.
 
 ### Active update extension — 2026-11-16
 
+PWA handoff follow-up,2026-11-17: the operator now retains a bounded read-only
+update notice across connection loss and document reload. Confirmed native
+handoff is distinguished from an interrupted check. The notice explicitly says
+phone progress is unavailable, asks the operator to inspect the headset and
+reconnect once Atmungsraum reopens. No percent, ETA, timer completion or local
+admission is added. Fresh same-Quest actual APK/native readiness retires the
+hint. Eleven model tests,34 focused checks,271 web checks and six actual mounted
+PWA disconnect/reload/reconnect renders at390px/320px/200% pass; the nine native
+assembly integration cases require their separate selected checkout. Existing
+27 Meta display/reflow renders also pass. Publication, phone refresh and actual
+new monitor3 hardware qualification remain pending.
+
+Previous result/diagnostic increment PR32 merged a037b2e and exact Pages
+43984840599 succeeded; all18 affected live responses match Git.
+
 Current checkpoint,2026-11-17: Meta20 is actually installed with exact signed
 bytes, retained UID and Meta installer attribution, at00:33:21 after root closed
 idle19. It has not been host-launched, and no process is running at readback.
