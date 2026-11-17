@@ -441,17 +441,20 @@ cloud-backed files; it was left untouched. The verified runtime commit
 - [x] Connect Freie Erkundung's verified media to the enrolled phone chooser
   and native participant session. Use the headset media position for
   progress, preserve pause and resume, and save once at natural completion.
+- [x] Connect the five-minute guided Probe-Runde in the authored candidate.
+  Play the verified German instruction before the official timed start,
+  keep the phone on the pending instruction, and derive the run's progress
+  and completion from the Quest media.
 - [ ] Bind the authored programme and the post-session outro to the selected
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.
 
-The authored Probe-Runde package stages the supplied German instruction as
-a separate prelude to the 300-second recording plan. The timed plan reuses
-the study phase library and ends on an exhale. The playground plays the
-prelude first. Playback of that prelude on the Quest still needs native
-integration and qualification. The authored candidate now exposes Freie
-Erkundung through that Quest's verified scenario list. Connect the guided
-Probe-Runde and Haupt-Runde media to their native playback boundaries next.
+The authored Probe-Runde package stages the supplied 45.4-second German
+instruction separately from the 300-second plan. The timed plan uses the
+study phase library and ends on an exhale. The authored candidate exposes
+the guided Probe-Runde and Freie Erkundung through the Quest's verified
+scenario list. The Haupt-Runde programme and outro still need native
+playback integration. The authored candidate still needs device acceptance.
 
 ### Separation of preparation and main study — 2026-11-16
 

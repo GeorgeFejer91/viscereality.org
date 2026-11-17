@@ -81,6 +81,7 @@ function snapshot() {
     build: { v: 1, packaging_fingerprint: 'e'.repeat(64) }, p: phase, h: host, g: generation, r: 0,
     rec: phase !== 'IDLE' && phase !== 'ERROR', c: condition, ms: clock,
     ...(Number.isSafeInteger(settings.duration_ms) ? {duration_ms: settings.duration_ms} : {}),
+    ...(settings.probeInstructionPlaying ? {pre_session_instruction: 'probe-5'} : {}),
     pending, participant_arm: settings.participantArm === false ? undefined : 1, ecg_preview: 1, recenter: 1, recordings: 1,
     ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
@@ -155,14 +156,21 @@ function command({ id, op, condition, d, scenario }) {
     settings.armedScenario = scenario;
     settings.host = 'vr-session';
   }
-  if (op === 'start' && settings.startDelayMs) {
+  const guidedStart = op === 'start' && settings.armedScenario === 'probe-5' && settings.probeInstructionMs;
+  if (op === 'start' && (guidedStart || settings.startDelayMs)) {
     settings.pending = true;
+    if (guidedStart) {
+      settings.probeInstructionPlaying = true;
+      settings.duration_ms = 300000;
+      settings.clock = 0;
+    }
     setTimeout(() => {
       settings.pending = false;
+      settings.probeInstructionPlaying = false;
       settings.phase = 'RUNNING';
-      settings.clock = 37000;
+      settings.clock = guidedStart ? 0 : 37000;
       receipts[id] = { v: 1, id, state: 'confirmed' };
-    }, settings.startDelayMs);
+    }, guidedStart || settings.startDelayMs);
     return receipts[id] = { v: 1, id, state: 'pending' };
   }
   if (op === 'start') settings.clock = 37000;
@@ -996,7 +1004,7 @@ def capture(review):
     expect(main).to_be_checked()
     for value, title in (
         ("probe-anleitung", "Anleitung"),
-        ("probe-5", "Probe-Runde"),
+        ("probe-5", "Geführte Atmung"),
         ("haupt-15", "Haupt-Runde"),
     ):
         tile = scenario.locator(f'input[value="{value}"]')

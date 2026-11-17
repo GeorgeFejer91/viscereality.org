@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
   <link rel="stylesheet" href="./style.css?v=20261117-calibration-instruction">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-exploration-playback"></script>
+  <script type="module" src="./app.js?v=20261117-guided-probe"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -360,7 +360,7 @@
             <legend class="sr-only">Sitzungsablauf</legend>
             <div class="session-segments">
               <section class="session-segment" aria-labelledby="trial-segment-title">
-                <h2 id="trial-segment-title" data-measure>Vorbereitung</h2>
+                <h2 id="trial-segment-title" data-measure>Probe-Runde</h2>
                 <div class="session-tiles">
                   <label class="session-tile">
                     <input type="radio" name="quest-scenario" value="probe-anleitung" checked>
@@ -368,7 +368,7 @@
                   </label>
                   <label class="session-tile">
                     <input type="radio" name="quest-scenario" value="probe-5">
-                    <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Probe-Runde</span><small data-measure>5 Min.</small></span>
+                    <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Geführte Atmung</span><small data-measure>5 Min.</small></span>
                   </label>
                   <label class="session-tile" hidden>
                     <input type="radio" name="quest-scenario" value="free-exploration" disabled>

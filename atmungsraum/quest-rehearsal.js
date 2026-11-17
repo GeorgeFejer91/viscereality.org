@@ -40,6 +40,10 @@ export function rehearsalDuration(status, offered = rehearsalScenarios(status)) 
     && offered.length === 1 && offered[0] === 'haupt-15' ? 900000 : null;
 }
 
+export function probeInstructionPlaying(status) {
+  return status?.p === 'ARMED' && status.pending === true && status.pre_session_instruction === 'probe-5';
+}
+
 export function polarSetup(status) {
   const setup = status?.y;
   if (status?.p !== 'IDLE' || status.rec || !setup || typeof setup.s !== 'string' || !setupReference.test(setup.s)
@@ -202,7 +206,10 @@ export class QuestRehearsal {
       this.update({ unknown: false, message: 'Die Quest hat die Aktion abgelehnt.' });
       return false;
     }
-    if (receipt.state !== 'confirmed') return false;
+    if (receipt.state !== 'confirmed') {
+      if (op === 'start' && status.g === generation && probeInstructionPlaying(status)) this.update({ unknown: false });
+      return false;
+    }
     if (op !== 'recenter' && status.pending) return false;
     const polarHold = (op === 'start' || op === 'resume') && status.p === 'PAUSED'
       && status.rec && status.pi?.r === true && status.pi.h === true;

@@ -3,7 +3,7 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=34';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=35';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
@@ -349,7 +349,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
     const fullConnection = ['connect', 'settings'].includes(step);
     const routineStatus = ['IDLE', 'RUNNING'].includes(context.status?.p) && Object.values(labels).includes(statusText.textContent);
-    text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
+    text(byId('running-screen-title'), probeInstructionPlaying(context.status) ? 'Anleitung zur Probe-Runde' : operatorSessionHeading(context.status?.p));
     const access = controllerAccessState(context.status);
     const duplicateUpdateStatus = step === 'update' && statusText.textContent === nativeUpdate.summary;
     statusText.hidden = duplicateUpdateStatus || (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
@@ -490,7 +490,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
-      : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …'
+      : connecting ? 'Quest wird verbunden …' : probeInstructionPlaying(status) ? 'Die fünf Minuten beginnen nach der Anleitung im Headset.'
+        : commandWaiting ? 'Warte auf Bestätigung der Quest …'
         : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     playback.hidden = !status;

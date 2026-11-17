@@ -631,6 +631,24 @@ text. 306 web tests passed. Phone-pairing assembly resolved all 96 audio
 assets in the feature lock. The authored candidate still needs a signed
 build and physical Quest and Android PWA qualification.
 
+## Guided Probe-Runde phone and Quest playback — 2026-11-17
+
+The verified Quest package binds the 2,002,176-frame instruction at 44.1 kHz
+separately from the 300-second guided practice. The phone reports the
+instruction while the original start receipt is pending and the timed
+progress stays at zero. On natural completion the gateway checks the
+app owner, controller, update cycle, armed session and Polar readiness
+before the official start. The Quest media position drives the timed run
+and the Rust recorder saves at natural completion.
+
+Chromium exercised the real phone flow over a synthetic Quest transport,
+including 45.4 seconds of pending instruction without retransmission and
+then the timed clock. All 306 web tests and 102 selected Rust session tests
+passed, with two Rust tests ignored. Java passed 51 gateway boundary checks,
+the media backend and the staged authored catalog. Phone-pairing assembly
+resolved all 96 assets. Signed installation and physical playback remain
+open.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,

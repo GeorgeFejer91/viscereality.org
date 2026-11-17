@@ -192,8 +192,8 @@ def scenario_compatibility(review):
         page.context.close()
 
 
-def exploration_layout(review):
-    offer = initial(c, {'scenarios': ['haupt-15', 'free-exploration']})
+def authored_round_layout(review):
+    offer = initial(c, {'scenarios': ['haupt-15', 'probe-5', 'free-exploration']})
     for name, viewport, text_size in SIZES:
         page = review.page(offer, viewport=viewport)
         page.evaluate('size => document.documentElement.style.fontSize = size', text_size)
@@ -215,6 +215,33 @@ def exploration_layout(review):
             && document.documentElement.scrollWidth === innerWidth;
         }'''), name
         page.context.close()
+
+
+def guided_probe_instruction(review):
+    page = review.page(initial(c, {'scenarios': ['probe-5', 'free-exploration', 'haupt-15'],
+                                  'probeInstructionMs': 45401}), viewport={'width': 320, 'height': 640})
+    c.enter_participant(page)
+    page.locator('#preview-controller').click()
+    page.locator('#preview-continue').click()
+    c.review_battery(page)
+    page.get_by_role('radio', name='Geführte Atmung 5 Min.').check()
+    page.locator('#quest-play').click()
+    heading = page.locator('#running-screen-title')
+    expect(heading).to_have_text('Anleitung zur Probe-Runde')
+    expect(page.locator('#quest-status')).to_have_text('Die fünf Minuten beginnen nach der Anleitung im Headset.')
+    page.clock.run_for(35000)
+    expect(heading).to_have_text('Anleitung zur Probe-Runde')
+    progress = page.locator('#quest-progress')
+    expect(progress).to_have_js_property('max', 300000)
+    expect(progress).to_have_js_property('value', 0)
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.clock.run_for(12000)
+    expect(heading).to_have_text('Sitzung läuft')
+    expect(progress).to_have_js_property('value', 0)
+    c.wait_state(page, clock=4000)
+    expect(progress).to_have_js_property('value', 4000)
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.context.close()
 
 
 def optional_participant_navigation(review):
@@ -378,7 +405,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         review = c.Review(browser, Path(output))
         recovery_and_recordings(review)
         scenario_compatibility(review)
-        exploration_layout(review)
+        authored_round_layout(review)
+        guided_probe_instruction(review)
         optional_participant_navigation(review)
         completed_session_history(review)
         page = review.page(init)
