@@ -15,21 +15,26 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 - [x] Identify the missing pairing capability in the standard local code 18
   rehearsal package and qualify the opt-in `-PhonePairing` assembly profile.
-- [ ] Install and confirm the paired rehearsal package on the authorized Quest.
+- [x] Install and confirm the paired rehearsal package on the authorized Quest.
 - [ ] Open the installed Pixel PWA, match the code on both devices, and claim
   control. Verify Polar readiness, Start/Pause/Resume/Finish, and recording recovery.
 
-The Windows PC has the powered Pixel and a USB-connected Quest. The Quest
-reports `unauthorized`, so the wearer must approve USB debugging and reach
-Quest Home before installation and launch. The Pixel WebAPK is already
-installed. Run the attended test on the same LAN or phone hotspot.
+The Windows MSI now sees both devices authorized over USB. QFM confirmed the
+installed Quest package, code `19`, rehearsal signer, and exact APK bytes.
+Android resolved and started the rehearsal activity. The first-run Nearby
+devices prompt awaits the wearer. The installed Pixel WebAPK and headset are
+on the same Wi-Fi. The MSI's bounded QFM watchdog reports the headset awake
+with stay-on and virtual proximity closed. Its local heartbeat runs every
+15 seconds. The reinstalled RustDeskMCP client answers on loopback, and the
+USB-forwarded Pixel session awaits authentication.
 
 Local rehearsal code `19` (`0.2.17-local-pairing`) uses the verified code 18
 native tree and existing Windows rehearsal signer. The signed manifest and DEX
 include matching-code pairing. The six assembly checks, 369 native pairing
 assertions, nine browser-to-Java checks, 16 KiB alignment, and the packaged
 900-second session check passed. The private build capsule retains the APK
-digest and exact input lock. Hardware acceptance awaits USB approval.
+digest and exact input lock. After the permission and RustDesk prompts, verify
+an actual rendered rehearsal frame before pairing and starting the test.
 
 ### Operator UI compatibility audit — 2026-11-16
 
