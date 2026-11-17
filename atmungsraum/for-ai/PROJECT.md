@@ -2363,6 +2363,14 @@ To restore normal wear detection, disable and stop the Windows task first,
 then follow [the Quest awake runbook](QUEST-AWAKE-TESTING.md). The physical
 phone and Quest app rehearsal checks remain open.
 
+Protocol update, 2026-11-18. The installed `$keep-quest-awake` skill and the
+[Quest awake runbook](QUEST-AWAKE-TESTING.md#windows-periodic-watchdog-for-the-lab-quest-2)
+now cover the scheduled task and the separately documented MSI/QFM variant.
+This Windows account's task, installed-app, and process inventory showed neither
+watchdog. For a renewed bench hold, check the configured lab host for the
+matching watchdog and confirm a fresh heartbeat plus Quest power/proximity
+readback. App launch and Pixel discovery still need their own checks.
+
 ### Pixel PWA release refresh — 2026-11-13
 
 After every Atmungsraum PWA deployment, refresh the installed app on the lab

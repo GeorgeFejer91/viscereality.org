@@ -77,8 +77,8 @@ Read common rules first, then the documents needed for the task:
   helper, with acceptance checks and source links.
 - [VR-UI-TESTING.md](VR-UI-TESTING.md) covers Meta XR Operator setup, VR UI
   interaction checks and headset evidence.
-- [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers bounded awake holds,
-  headset readiness, recovery, and cleanup for bench and rehearsal tests.
+- [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers the Windows periodic
+  watchdog, bounded awake holds, headset readiness, recovery, and cleanup.
 - [QUEST-PHONE-SYNC.md](QUEST-PHONE-SYNC.md): Quest 2 → installed Pixel PWA → private Google Drive collection procedure and stress test.
 - [WORKFLOW.md](WORKFLOW.md): scoped editing and publishing workflow.
 - [Quest APK changes and releases](WORKFLOW.md#quest-apk-changes-and-releases):

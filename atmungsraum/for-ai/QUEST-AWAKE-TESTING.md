@@ -27,7 +27,63 @@ immersive input, and frame assertions once the target app is ready.
    hold duration, and stop time before applying an override. Follow the machine's
    coordination rules for exclusive device access and transport changes.
 
-## Pick one awake method
+## Choose the awake method
+
+Check for the lab Windows watchdog first on a Windows-operated Quest 2.
+Reuse its active, authorized hold if it covers the test. For a single local
+hold use QFM. For enrolled headsets use Fleet's reviewed host or device
+watchdog when renewal is needed. The manual and development routes below
+cover benches with those capabilities. Assign one owner per headset for
+awake-policy changes so watchdog renewals and restoration can be coordinated.
+
+### Windows periodic watchdog for the lab Quest 2
+
+The lab has used the **Quest 2 Keep Awake** Windows scheduled task and a
+bounded QFM watchdog bundled with the Atmungsraum Windows MSI. Inspect the
+installed variant on the Windows host that actually controls the headset.
+Keep the host powered, its Windows session running, and its ADB connection
+authorized. Check the configured target against the exact physical Quest 2
+before starting the watchdog. Keep the selector and task action details in
+private evidence.
+
+For the scheduled-task variant, find the task and its last result with the
+read-only check below. Inspect its action and triggers in **Task Scheduler**
+before starting it.
+
+```powershell
+Get-ScheduledTask -TaskName 'Quest 2 Keep Awake' |
+    Select-Object TaskName, TaskPath, State
+Get-ScheduledTaskInfo -TaskName 'Quest 2 Keep Awake'
+```
+
+1. If the matching watchdog is already running, check its latest heartbeat,
+   renewal state, and configured or agreed stop time against the test window.
+   If it is installed and stopped, use **Run** in Task Scheduler or the
+   installed MSI watchdog controls when the test calls for a renewed hold.
+   If neither is installed on this host, proceed with an available route below.
+2. Check the actual interval, hold duration, and stop behavior from the
+   installed configuration. The earlier sign-in task polled about every eight
+   seconds and renewed a ten-minute proximity hold when missing or after about
+   eight minutes. A later MSI configuration reported a 15-second heartbeat and
+   a renewable 30-minute QFM hold with a separate watchdog deadline.
+3. Verify a fresh heartbeat and live QFM or Quest power readback. Require
+   display on, the requested stay-on policy, and a positive proximity hold.
+   Check that a needed renewal advances the hold expiry. After USB/Wi-Fi
+   transport returns or the headset reboots, rebind the exact device, check the
+   current boot and watchdog, and verify readiness again. A protected lock or
+   repeated sleep still requires the wearer recovery below.
+4. Confirm the target app separately. For Pixel discovery, open the intended
+   Atmungsraum Developer app on the awake headset and verify its Bluetooth
+   advertisement through the in-app picker before pairing. For immersive
+   checks, verify foreground and advancing OpenXR frames.
+5. At the agreed stop time, stop the run's watchdog and verify its heartbeat
+   and renewal have stopped. If the agreed normal policy requires the sign-in
+   task to stay off, disable its autorun before restoring power/proximity
+   settings. Restore and read back the agreed policy. If the lab watchdog is
+   intentionally left running, record its owner, stop procedure, and coverage.
+
+See the [Windows watchdog evidence](PROJECT.md#windows-quest-2-keep-awake-task--2026-11-13)
+for the tested variants.
 
 ### QFM for one local headset
 
