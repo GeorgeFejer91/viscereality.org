@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-startup-reconnect">
+  <link rel="stylesheet" href="./style.css?v=20261117-session-preview">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-startup-reconnect"></script>
+  <script type="module" src="./app.js?v=20261117-session-preview"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -401,6 +401,13 @@
       </header>
       <div class="screen-body operator-body">
         <div id="quest-playback" hidden>
+          <figure id="session-scene" hidden>
+            <canvas width="192" height="100" aria-hidden="true"></canvas>
+            <figcaption>
+              <span id="session-scene-status" data-measure>Kein aktueller Partikelradius</span>
+              <span id="session-scene-radius" data-measure data-measure-sample="100 %" data-live-value hidden></span>
+            </figcaption>
+          </figure>
           <p id="quest-clock" aria-label="Aktive Zeit auf der Quest" data-measure data-measure-sample="88:88 / 88:88" data-live-value>00:00</p>
           <progress id="quest-progress" aria-label="Szenariofortschritt" aria-describedby="quest-clock" value="0" hidden></progress>
         </div>

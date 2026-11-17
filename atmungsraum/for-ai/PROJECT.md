@@ -389,6 +389,11 @@ integration and qualification.
   320 × 640, 390 × 844, 844 × 390 and 1440 × 900. The exact previous release
   bootstrapped into the live update while preserving its URL and storage.
   ADB and Mobile MCP listed no local phone; standalone Pixel acceptance is open.
+- [x] Port the phone's session particle preview and timed progress. Scope
+  renderer samples to the current run. Code 24 supplies its active clock and
+  confirmed main start frame but no duration field; use its fixed 900-second
+  boundary only for the authenticated shared-loop main-only catalog.
+  See [session preview verification](VERIFICATION.md#quest-backed-session-preview--2026-11-17).
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 

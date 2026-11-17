@@ -500,6 +500,24 @@ Scenario JSON/CSV, context, and Git whitespace checks passed. These are
 browser and synthetic gateway checks; physical installed-device acceptance
 remains open.
 
+## Quest-backed session preview — 2026-11-17
+
+Code 24 source reconstruction verified the authenticated main-only catalog,
+start frame and active clock; its Wi-Fi snapshot omits the total duration.
+The real operator UI fixture covers that shape, missing totals for other
+builds, pause and resume, painted particle size, out-of-order renderer data,
+recording boundaries, and connection during pause. The focused browser
+check passed seven viewport and typography cases; the broader screenshot
+matrix rendered 140 states. Startup and reconnect checks also passed.
+
+The web/domain tests and Java pairing interoperability passed 301 cases;
+native assembly resolution passed another six in a plain-file checkout
+using the reconstructed Code 24 source. Independent review found no
+remaining release blockers for this PWA change. The browser fixtures use
+synthetic transport; these checks do not qualify an installed Pixel or round
+audio in a headset. The separate authored main, probe and exploration
+playback work still needs a native audio path and APK qualification.
+
 ## Playground UI port — 2026-11-16
 
 Ported the presentation from the playground through `60994c4` onto the

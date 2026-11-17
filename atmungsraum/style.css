@@ -462,6 +462,15 @@ html[data-layout] #participant-screen .patient-fields { grid-template-columns: m
 #preview-controller-host button, #preview-controller-fallback button { width: 100%; }
 
 #quest-playback { display: grid; gap: 8px; min-width: 0; }
+#session-scene { display: grid; justify-items: center; gap: 4px; margin: 0; text-align: center; }
+#session-scene canvas { display: block; block-size: clamp(42px, 11dvh, 100px); max-inline-size: 100%; }
+#session-scene figcaption {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .4em;
+  inline-size: min(100%, 32ch);
+}
+#session-scene figcaption:has(#session-scene-radius[hidden]) { grid-template-columns: minmax(0, 1fr); }
+#session-scene-radius { min-inline-size: 6ch; }
+@media (prefers-reduced-motion: reduce) { #session-scene canvas { display: none; } }
 #quest-progress { width: 100%; height: 12px; accent-color: #74c5f2; }
 
 main { padding-bottom: max(var(--inset), env(safe-area-inset-bottom)); }

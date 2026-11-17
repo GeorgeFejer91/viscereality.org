@@ -26,6 +26,19 @@ export function rehearsalScenarios(status) {
     && new Set(offered).size === offered.length && offered.every(id => scenarios.has(id)) ? offered : [];
 }
 
+export function rehearsalDuration(status, offered = rehearsalScenarios(status)) {
+  if (status?.rec !== true) return null;
+  if (status.duration_ms !== undefined) {
+    return Number.isSafeInteger(status.duration_ms) && status.duration_ms > 0 ? status.duration_ms : null;
+  }
+  // The first shared-loop APKs report a start frame and the main-only
+  // catalog, but omit duration_ms. Their native completion boundary is 900 s.
+  const start = status.setup?.main_start_frame;
+  return status.breath_setup === 1 && status.setup?.v === 1
+    && Number.isSafeInteger(start) && start >= 0
+    && offered.length === 1 && offered[0] === 'haupt-15' ? 900000 : null;
+}
+
 export function polarSetup(status) {
   const setup = status?.y;
   if (status?.p !== 'IDLE' || status.rec || !setup || typeof setup.s !== 'string' || !setupReference.test(setup.s)

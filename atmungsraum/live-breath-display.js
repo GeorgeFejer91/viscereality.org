@@ -6,7 +6,10 @@ const actualDelayMs = 280;
 export class LiveBreathDisplay {
   reset() { this.anchor = null; this.actual = null; }
 
-  update(view, observation, now) {
+  update(view, observation, now, sessionGeneration = null) {
+    const newSession = sessionGeneration !== null && this.sessionGeneration !== sessionGeneration;
+    if (this.sessionGeneration !== sessionGeneration) this.actual = null;
+    this.sessionGeneration = sessionGeneration;
     const setup = view?.setup;
     if (!view?.available || !setup || !Number.isFinite(now)
       || !Number.isSafeInteger(setup.cycle_frames) || setup.cycle_frames <= 0
@@ -50,6 +53,7 @@ export class LiveBreathDisplay {
     this.rendererCursor = {
       key, generation: renderer.render_generation, settings: renderer.settings_revision, frame: renderer.frame, stamp,
     };
+    if (newSession) return;
     const age = Math.max(0, observation.a) + renderer.age_ns / 1000000;
     if (age > 500) {
       if (!same || this.actual?.generation !== renderer.render_generation || this.actual?.settings !== renderer.settings_revision) this.actual = null;
@@ -118,7 +122,7 @@ export class LiveBreathDisplay {
       inputVolume,
       actualProgress, actualRadius: actualProgress === null ? null : .46 + .54 * actualProgress,
       actualMeters: left ? left.meters + (right.meters - left.meters) * actualBlend : null,
-      actualLive, actualTTL,
+      actualLive, actualTTL, actualAnimating,
       // Never paint progress beyond a frame count actually reported by Quest.
       progress: anchor.from + (anchor.progress - anchor.from) * blend,
     };

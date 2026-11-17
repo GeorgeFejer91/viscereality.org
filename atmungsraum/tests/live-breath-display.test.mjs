@@ -30,6 +30,22 @@ const applied = (progress01, frame = 1, patch = {}) => ({ v: 1, progress01, radi
   frame, render_generation: 2, settings_revision: 0, observed_ns: String(frame * 200000000), age_ns: 0, ...patch });
 const rendered = (renderer, overrides = {}) => ({ ...view(overrides, 0, .9), renderer });
 
+test('an applied renderer frame cannot be replayed across recording boundaries', () => {
+  const display = new LiveBreathDisplay();
+  display.update(rendered(applied(.9, 1)), observation(1), 200);
+  assert.equal(display.frame(200).actualProgress, .9);
+  display.update(rendered(applied(.9, 1)), observation(2), 220, 1);
+  assert.equal(display.frame(220).actualProgress, null);
+  display.update(rendered(applied(.25, 2)), observation(3), 400, 1);
+  assert.equal(display.frame(400).actualProgress, .25);
+  display.update(rendered(applied(.25, 2)), observation(4), 420, 2);
+  assert.equal(display.frame(420).actualProgress, null);
+  display.update(rendered(applied(.25, 2)), observation(5), 450, 2);
+  assert.equal(display.frame(450).actualProgress, null);
+  display.update(rendered(applied(.7, 3)), observation(6), 600, 2);
+  assert.equal(display.frame(600).actualProgress, .7);
+});
+
 // Anonymous rounded timing only: response completion, full source/transport age,
 // and relative GPU timestamp. No phone payload, owner, participant or raw signal.
 const capturedCadence = JSON.parse(readFileSync(new URL('./fixtures/actual-radius-cadence.json', import.meta.url)));

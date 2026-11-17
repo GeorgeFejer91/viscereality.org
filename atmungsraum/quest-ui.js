@@ -3,13 +3,14 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=31';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=32';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
 import { BreathingSetup } from './breathing-setup.js?v=12';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
-import { LiveBreathDisplay } from './live-breath-display.js?v=5';
+import { LiveBreathDisplay } from './live-breath-display.js?v=6';
+import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
 import { KioskControl } from './kiosk-control.js?v=3';
 import { ApkRelease } from './quest-release.js?v=1';
@@ -230,6 +231,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const metaHandoff = new MetaUpdateHandoff({ storage });
   const apkRelease = new ApkRelease({ onChange: () => paint() });
   const breathDisplay = new LiveBreathDisplay();
+  const sessionScene = byId('session-scene');
+  const sceneStatus = byId('session-scene-status');
+  const sceneRadius = byId('session-scene-radius');
+  const particles = new SessionParticles(sessionScene.querySelector('canvas'));
   const ecgDisplay = new LiveEcgDisplay();
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let animationFrame = 0;
@@ -250,6 +255,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
   function livePreviewVisible() {
     return ['calibration', 'tracking'].includes(displayedStep) && location.hash !== '#daten';
+  }
+  function runningScene() {
+    const status = rehearsal.state.status;
+    return displayedStep === 'running' && location.hash !== '#daten' && status?.rec
+      && (status.p === 'RUNNING' || status.p === 'PAUSED') ? status : null;
   }
   function navigateLocal(event) {
     utilityReturnFocus = event.type === 'return' ? utilities[displayedStep] : null;
@@ -473,14 +483,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     playback.hidden = !status;
-    const duration = status?.duration_ms;
-    const timed = active && Number.isSafeInteger(duration) && duration > 0;
-    progress.hidden = !timed;
-    if (timed) {
-      progress.max = duration;
-      progress.value = Math.min(status.ms, duration);
+    const duration = rehearsalDuration(status, available);
+    if (progress.hidden !== (duration === null)) progress.hidden = duration === null;
+    if (duration !== null) {
+      if (progress.max !== duration) progress.max = duration;
+      const elapsed = Math.min(status.ms, duration);
+      if (progress.value !== elapsed) progress.value = elapsed;
     }
-    if (status) text(clock, timed ? `${runTime(progress.value)} / ${runTime(duration)}` : runTime(status.ms));
+    if (status) text(clock, duration === null ? runTime(status.ms)
+      : `${runTime(progress.value)} / ${runTime(duration)}`);
     const setup = polarSetup(status);
     const source = rehearsal.gateway?.owner;
     if (calibrationBaseline && source && !sameQuest(calibrationBaseline.owner, source)) resetPreview();
@@ -705,11 +716,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     previewProgressGroup.hidden = !view.showPolarCalibration || !view.available || view.recovering || !(collecting || native?.attempt > 0);
     previewProgress.value = view.progress.value;
     const now = performance.now();
-    const observation = rehearsal.state.status?.o;
-    const timing = rehearsal.state.statusTiming;
+    const { status, statusTiming: timing } = rehearsal.state;
+    const observation = status?.o;
     const age = timing ? observation?.a + timing.transportMs + Math.max(0, now - timing.receivedAt) : 1501;
-    breathDisplay.update(view,
-      observation && { ...observation, a: age }, now);
+    const sessionGeneration = status?.rec && status.p !== 'ARMED' ? status.g : null;
+    breathDisplay.update(view, observation && { ...observation, a: age }, now, sessionGeneration);
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
     previewCalibrate.disabled = waiting || !view.actions.calibrate;
     previewCalibrate.hidden = !view.showPolarCalibration;
@@ -792,12 +803,35 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (current) text(scale, `2 s · 130 Hz · ±${current.range} µV · Basislinie zentriert`);
   }
 
+  function renderSessionScene(session, current, now) {
+    const owner = rehearsal.gateway?.owner;
+    const sceneVisible = Boolean(session && owner && !document.hidden);
+    if (sessionScene.hidden === sceneVisible) sessionScene.hidden = !sceneVisible;
+    const paused = session?.p === 'PAUSED';
+    const radius = particles.render({
+      key: sceneVisible ? `${owner.device}/${owner.epoch}/${owner.native_epoch}/${session.g}` : '',
+      progress: current?.actualLive ? current.actualProgress : null,
+      paused,
+      reducedMotion: reducedMotion.matches,
+      now,
+    });
+    if (sceneVisible) {
+      text(sceneStatus, radius === null ? 'Kein aktueller Partikelradius'
+        : paused ? 'Partikelvorschau pausiert' : 'Partikelradius in der Quest');
+      if (sceneRadius.hidden !== (radius === null)) sceneRadius.hidden = radius === null;
+      if (radius !== null) text(sceneRadius, `${Math.round(radius * 100)} %`);
+      return !paused && Boolean(current?.actualAnimating);
+    }
+    return false;
+  }
+
   function renderLive(now) {
-    let moving = false;
     const previewVisible = livePreviewVisible();
     const view = breathing.view;
-    const current = previewVisible || displayedStep === 'input'
-      ? breathDisplay.frame(now, !previewVisible || reducedMotion.matches) : null;
+    const session = runningScene();
+    const current = previewVisible || session || displayedStep === 'input'
+      ? breathDisplay.frame(now, (!previewVisible && !session) || reducedMotion.matches) : null;
+    let moving = renderSessionScene(session, current, now);
     const showInputVolume = Boolean(current?.desiredAvailable) && !view?.renderer
       && typeof current.inputVolume === 'number';
     if (view?.available) {
@@ -840,7 +874,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function scheduleAnimation() {
-    if (animationFrame || document.hidden || reducedMotion.matches || !livePreviewVisible() && graph.hasAttribute('hidden')) return;
+    if (animationFrame || document.hidden || reducedMotion.matches || !livePreviewVisible() && !runningScene() && graph.hasAttribute('hidden')) return;
     animationFrame = requestAnimationFrame(now => {
       animationFrame = 0;
       if (!document.hidden && !reducedMotion.matches && renderLive(now)) scheduleAnimation();
@@ -1434,7 +1468,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   // Renderer samples expire after 500 ms. Read the visible preview every 100 ms
   // to leave room for observed-sample playout; other work keeps the ordinary tick.
   const previewTimer = setInterval(() => {
-    if (document.hidden || !livePreviewVisible() || connecting || userAction || !rehearsal.gateway?.owner) return;
+    const liveScene = runningScene()?.p === 'RUNNING' && Boolean(breathing.view?.setup?.renderer);
+    if (document.hidden || (!livePreviewVisible() && !liveScene) || connecting || userAction || !rehearsal.gateway?.owner) return;
     void rehearsal.refresh({ statusOnly: true });
   }, 100);
   document.addEventListener('visibilitychange', () => {

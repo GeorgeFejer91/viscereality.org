@@ -98,12 +98,17 @@ labels and available height fit. Reflow by available width and text size,
 keeping preparation and the main study separate. The operator selects a scenario. Quest
 receives the established condition value with the exact scenario ID. Arm,
 recording metadata, filenames and per-participant counters retain their
-existing `probe` and `main` rules. Playback uses the authenticated Quest elapsed
-clock. Show a determinate bar when that status also reports a valid total
-duration. The elapsed time remains available on older builds.
-The running screen shows the native elapsed clock. Render percentage progress
-only if the authenticated Quest snapshot reports a positive duration; a missing
-duration still shows elapsed time, without estimating the total.
+existing `probe` and `main` rules. The running screen shows the authenticated
+Quest elapsed clock. Render determinate progress
+only if the authenticated Quest snapshot reports a positive duration or
+confirms the shared-loop main-only build's fixed 900-second protocol and start
+frame. Other snapshots without a duration show elapsed time alone.
+The running view draws a simple particle sphere from the authenticated
+Quest renderer's applied radius, using the same source-time buffer and
+500 ms freshness window as tracking. Pause holds the visible radius.
+Missing or stale observations clear the running preview. Reduced motion
+leaves the numeric radius visible. The preview does not issue commands
+or drive the session clock.
 
 The user confirmed that the 10- and 15-minute practice rounds, the 20-minute
 box-breathing scenario, and the condition selector are intentionally absent
