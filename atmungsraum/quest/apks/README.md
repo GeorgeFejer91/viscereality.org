@@ -1,6 +1,6 @@
 # Atmungsraum Quest 2 APKs
 
-## 0.2.26-dev — published fixed Meta27-r2, installation acceptance pending
+## 0.2.26-dev — fixed Meta27-r2 installed on the lab Quest 2
 
 Signed27-r2 is65,731,718bytes, SHA256
 `6f14707053fc9c07b611485deebfe8554a71b405892e8678f2c7f4bb2d8e398b`.
@@ -24,8 +24,11 @@ host suites, production110-source javac, arm64 typecheck and actual audio join p
 Meta build1465199570012388 is current in the private Developer channel. Malware
 and detailed security passed; Quest2/13+, private access and Require Latest
 unchecked remain. Public minimum/latest is27. Helper3 needs no new installation.
-Actual fixed27 installation and the27-to28 running-session update test remain
-pending. Version-only28 is held until actual27 is RUNNING/rec:true and root
+On 2026-11-17, Quest 2 reported code 27 and Meta as both installer and
+initiator. The installed base APK and the lab PC copy both matched the signed
+fixed27-r2 digest above. The headset was asleep during readback. The exact
+update trigger, immersive relaunch and 27-to-28 running-session test remain
+open. Version-only28 is held until actual27 is RUNNING/rec:true and root
 releases it. Revoked27-r1 is never an upload target.
 
 ## 0.2.25-dev — published repaired Meta26-r3, attended guard issue open

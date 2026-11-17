@@ -17,7 +17,7 @@ eight changed runtime assets and their import parents have fresh cache URLs.
 Release marker:20261117-compact-update. Policy27 PR59/mergea4c46d4 reached exact
 Pages44186834653 success;9 live files match and live policy27 probes pass
 (synthetic transport). Compact publication and actual-phone refresh remain to
-verify; physical27 installation and27→28 acceptance stay open below.
+verify; attended Quest1WMHHA46S32126 installation and27→28 acceptance stay open below.
 
 ### Active: PWA update from every preparation state — 2026-11-17
 
@@ -34,8 +34,12 @@ interpret missing observations as valid.
 - [x] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
   across prepared op9, polled replies, final install grant and helper handoff.
 - [x] Publish qualified fixed27-r2/run046 through Meta.
-- [ ] Install fixed27, then hold version-only28 until an actual27 session is
-  RUNNING/rec:true and root releases the attended update test.
+- [x] Retain separate lab-sync evidence of exact Meta-installed fixed27-r2.
+- [ ] Install/confirm fixed27 on attended Quest1WMHHA46S32126 (still25).
+- [x] Sync the published PWA and native source patch to the lab PC, retain the
+  verified signed APK locally, and confirm the installed Pixel 10 PWA release.
+- [ ] Hold version-only28 until a fixed27 session is RUNNING/rec:true and root
+  releases the attended update test.
 - [ ] Test preparation/check and running-session save/update to28 on hardware.
 
 Source4edf4b89/tree358a0c91 passes independent specification/quality review.
@@ -51,11 +55,21 @@ provides the typed worker result. Helper3 IPC has not changed.
 The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
 5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723).
 Fixed27-r2/run046 passes1138 signed-package checks and63 negatives. Meta
-1465199570012388 is current and malware/security passed; required/latest27 is
-published independently of installed metadata. Actual installation remains
-pending. The USB Pixel is reconnected and the user authorizes operating it.
-No device action is implied by the Meta publication. Version-only28 preparation
-is private and publication remains held for actual27 RUNNING/rec:true. PR57/merge5df115b reached
+1465199570012388 is current and malware/security passed. PR59 mergea4c46d4
+set required/latest27; Pages44186834653 succeeded and root verified9 live files.
+Concurrent lab-sync PR60 separately records a Meta-installed fixed27-r2 matching
+the exact signed digest, helper3 and the Pixel10 standalone PWA release. Preserve
+that lab observation; its update trigger and immersive relaunch are unverified.
+
+The ongoing attended device in this worktree is Quest2 serial1WMHHA46S32126 over
+Wi-Fi192.168.2.48:5555 with Pixel6a28251JEGR21026. Fresh22:35UTC readback still
+reports code25/PID29345. Do not substitute the separate lab-sync observation for
+this device's installation or updater acceptance. Its PWA request completed with
+available26/required27 and no27 download. The Pixel USB is now absent again.
+Version-only28 stays private and held until an actual fixed27 session is
+RUNNING/rec:true and root releases the attended test.
+
+Prior PR57/merge5df115b reached
 exact Pages44178155493 success;9 live files match and live policy26 probes verify
 25 requires the enabled update action,26 continues, and an actual-shaped running
 25 retains explicit finish/save/update without automatic stop (synthetic transport).
