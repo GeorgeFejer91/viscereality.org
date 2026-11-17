@@ -13,8 +13,12 @@ the current GUI rules and original input driver.
   [reusable procedure](RUSTDESK-PHONE-TESTING.md) without the credential.
 - [x] Launch the installed PWA through RustDeskMCP and open Settings with a
   frame-confirmed tap. The Android RustDesk Settings tap also confirms input.
-- [ ] Confirm the installed Pixel release, repeat the fixed APK Details case
-  on it, and verify an authenticated Quest receipt through RustDeskMCP.
+- [x] Confirm the latest deployed PWA loads in standalone mode on the lab
+  Pixel. Verify RustDesk Settings/Back, Bluetooth chooser, and diagnostic
+  open/close with physical phone frames.
+- [ ] Verify the enrolled Pixel rejoins the same Quest automatically without a
+  pairing code or chooser once the gateway is reachable. Then repeat APK
+  Details and verify a native action receipt through RustDeskMCP.
 - [x] Reproduce the missing APK identity measurement at 390 px, schedule its
   measurement on the visibility change and pass the GUI gate and original case.
   See [verification](VERIFICATION.md#apk-detail-measurement--2026-11-18).
@@ -25,12 +29,30 @@ the current GUI rules and original input driver.
   recording. Verify preparation check, PWA-driven save/update, trusted
   relaunch, and a second clean 900-second run with equivalent custody.
 
-Preflight matched six public runtime/policy files to `7ad06a5` and exact
-[Pages run 44193699026](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44193699026).
-The PWA is `20261117-smartphone-rules`. USB readback found both lab devices,
-with the Quest asleep. Recheck wearer readiness and the installed phone release
-before any experiment action. The separate attended update route below remains
-its own evidence.
+The PWA repair merge `b7784bf` passed exact
+[Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
+Eight live files match Git. The delayed-resize APK Details regression passes
+using 42 live assets and synthetic Quest transport. The physical Pixel loaded
+`20261118-dialog-measurement` in standalone mode.
+
+The reconstructed fixed27 native tree matches the release. All 325 Node tests
+pass with zero skips, the GUI gate passes 339 states, and all 35 compact Update
+renders pass. The native suite passes 907 tests with six fixture-dependent
+ignores using a test scratch directory outside the checkout. The ARM64 check,
+actual installed APK signature/alignment, cold session-profile closure, and
+all 14 updater host suites pass. The Windows JNI fixture used MSVC. Current
+Polar acquisition, battery, health and recovery checks pass. Legacy Polar
+platform projection and stream-scope harnesses still need their missing mock
+fields. The startup harness passed with a test-only clock and field added.
+
+The lab Quest launched and logged actual Polar connect, PMD readiness and
+ACC and ECG stream starts. The Pixel retained saved membership and saw Quest 2 in the
+real Chrome chooser after lab app launch. Both devices used one public SSID but
+received different subnets and the phone could not reach the gateway. The Pixel
+hotspot is the selected next connection test. Once a
+reachable private network is available and the Quest is awake, observe
+automatic rejoin without a code, then verify fresh ECG, ACC and contact before
+recording. The separate attended update route below remains its own evidence.
 
 On the docked Pixel 10 (Android 17, RustDesk 1.5.3), RustDeskMCP first reached
 the phone without an active capture. With capture active again, it returned
