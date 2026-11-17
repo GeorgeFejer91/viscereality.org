@@ -11,12 +11,13 @@ the current GUI rules and original input driver.
 - [x] Authenticate RustDeskMCP to the lab Pixel from the operator-owned
   permanent credential file. Receive a fresh Android frame. Record the
   [reusable procedure](RUSTDESK-PHONE-TESTING.md) without the credential.
-- [ ] Confirm the installed Pixel loaded the current PWA and prove a reversible
-  PWA tap and an authenticated Quest action through RustDeskMCP.
-- [ ] Complete the current GUI matrix, repair confirmed defects, and verify
-  the published fixes on the installed phone. The GUI release gate reported
-  one missing measurement for the APK identity detail at 390 px. Trace its
-  measurement scheduling and verify the original case.
+- [x] Launch the installed PWA through RustDeskMCP and open Settings with a
+  frame-confirmed tap. The Android RustDesk Settings tap also confirms input.
+- [ ] Confirm the installed Pixel release, repeat the fixed APK Details case
+  on it, and verify an authenticated Quest receipt through RustDeskMCP.
+- [x] Reproduce the missing APK identity measurement at 390 px, schedule its
+  measurement on the visibility change and pass the GUI gate and original case.
+  See [verification](VERIFICATION.md#apk-detail-measurement--2026-11-18).
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
