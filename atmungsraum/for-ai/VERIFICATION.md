@@ -3608,3 +3608,10 @@ phone refresh require hardware acceptance. Pixel6a is absent from USB at the
 current readback. The active-session update test remains open; no recording has
 started from the rejected23 Arm. Version25 remains unpublished until an actual
 repaired24 RUNNING/rec:true observation.
+
+Meta24 publication: build1464488216750190 is current on the private Developer
+channel, malware passed and detailed security All tests passed. Quest2/13+ and
+Require Latest unchecked are retained. This is provider availability evidence,
+not actual headset installation. Public policy advances to24 only now. The held
+version-only25 passes1100 independent signed-package checks, unchanged source,
+DEX/SDK/helper/private payloads; it remains unpublished until real24 recording.
