@@ -18,7 +18,9 @@ setup-input-not-ready resets; it does not retain the initial startup interval.
   patch reconstructs that exact tree from its pinned upstream base.
 - [x] Qualify signed code23: actual selected Android release build,900-second
   signed-APK session closure, same signer, unchanged SDK/helper/DEX and private
-  payloads, and16KiB ZIP alignment. Independent package receipt passes905 checks.
+  payloads, and16KiB ZIP alignment. Final independent package receipt passes920
+  checks. Source/evidence b0bbff0 merged through PR42 as2385101; exact
+  Pages44074293155 succeeded and all11 checked public files match Git.
 - [ ] Complete attended fresh-launch Controller/tracking-loss checks. No new
   APK has been installed yet; Meta delivery remains held for the running test.
 - [x] Implement default native-confirmed phone control acquisition, continuing

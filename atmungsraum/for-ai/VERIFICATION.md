@@ -52,10 +52,18 @@ configured out by showcase, so no showcase-test success is claimed.
 Native453af6f4/treee1029a45 is clean and the1981101-byte cumulative source patch
 reconstructs that exact tree in an isolated index. Actual selected Android release
 compilation and signed-APK900-second session-closure checks pass. Independent
-signed-package inspection passes905 checks, including signer, API24–27 signature,
+signed-package inspection passes920 checks, including signer, API24–27 signature,
 16KiB ZIP alignment, exact capsule source and copied bytes. All private/audio
 payloads and Java DEX/SDK/helper closure match22; only intended Rust and generated
 identity/bindings differ. Meta distribution and wearer acceptance remain pending.
+
+Source publication: [PR42](https://github.com/GeorgeFejer91/viscereality.org/pull/42)
+mergedb0bbff0 as2385101f5ffa5bfcee37fc59bfc46d5b9bde62d9. Exact
+[Pages44074293155](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44074293155)
+succeeded; all11 checked public files match Git, including the full native patch.
+The actual Meta22 baseline is independently reconfirmed by exact installed APK
+SHA256, version and com.oculus.ocms installer/initiator. Wi-Fi ADB targets the
+correct Quest2; code23 remains unpublished pending the user's running-session gate.
 
 ## Attended selection race and flicker — 2026-11-17
 
