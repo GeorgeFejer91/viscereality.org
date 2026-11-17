@@ -102,10 +102,10 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `7806ebcfb2de37503034c2d63fc74a0a5e7bf1da`, matching
-the code19 developer source `62ddb621a81302866a488bd554d65451aa67260b`.
-Patch SHA256 is `8aac253fec39959d20377f0418f939130faea602034d2e7ca54ca9746f73965a`
-(1,877,521 bytes). Applying the exact binary patch to an isolated index at the
+reconstructs source tree `a9dc76d2014f915d7ac7d9756fc581346dad5faa`, matching
+the code21 developer candidate source `1cd5ee3b69550912b5d942e8ca893a25f1a7f361`.
+Patch SHA256 is `c8756d19bb41a1e97c1a69d156e3e20f81eb49ac2b5a86396aa46dbd329a9350`
+(1,939,646 bytes). Applying the exact binary patch to an isolated index at the
 pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
 automatic install location for Meta distribution.

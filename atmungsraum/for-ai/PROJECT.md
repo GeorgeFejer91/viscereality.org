@@ -162,6 +162,20 @@ the existing utility and recovery routes.
 
 ### Active update extension — 2026-11-16
 
+Monitor3 build checkpoint,2026-11-17: independently reviewed native source
+1cd5ee3/treea9dc76d produces signed code21-r2, qualified169 actual-package checks.
+The cumulative public patch reconstructs that exact tree from the pinned base.
+The actual source-inventory failure on the first21 attempt is corrected and
+covered by the strict resolver/packager/builder regression. All280 web/assembly/
+actual-Java interoperability checks pass with zero skips. Helper3 passes50
+Android boundary,27 boot,170 authority,43 monitor and26 builder checks plus
+actual Android34 compilation and independent review. Its signed APK is installed
+on the authorized Quest with exact byte readback, same UID10000 and overlay
+Allowed; no main app was launched. The initial helper UI reports the installed
+target Ready and monitor Inactive. Code22 is built but held unpublished; actual
+Meta21 baseline and21-to22 monitor/install/relaunch/focus remain open. No main21
+or22 host installation is permitted as distribution proof.
+
 PWA handoff follow-up,2026-11-17: the operator now retains a bounded read-only
 update notice across connection loss and document reload. Confirmed native
 handoff is distinguished from an interrupted check. The notice explicitly says
@@ -171,8 +185,11 @@ admission is added. Fresh same-Quest actual APK/native readiness retires the
 hint. Eleven model tests,34 focused checks,271 web checks and six actual mounted
 PWA disconnect/reload/reconnect renders at390px/320px/200% pass; the nine native
 assembly integration cases require their separate selected checkout. Existing
-27 Meta display/reflow renders also pass. Publication, phone refresh and actual
-new monitor3 hardware qualification remain pending.
+27 Meta display/reflow renders also pass. Independent review passes. PR33 merge
+c10d605 passed exact Pages43986515449 and all10 affected live responses match
+Git; live Edge loaded the new entry marker and mounted controller successfully.
+The Pixel is no longer present on USB, so installed-phone refresh remains open.
+Actual new monitor3 hardware qualification remains pending.
 
 Previous result/diagnostic increment PR32 merged a037b2e and exact Pages
 43984840599 succeeded; all18 affected live responses match Git.

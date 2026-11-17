@@ -382,7 +382,8 @@ and tested; do not assume the existing one-shot BOOT receiver stays alive.
     actual Meta slots, retain private distribution and verify saved result.
 
 
-Helper wire freeze for tasks11/13: declare signature permission
+Historical helper2 wire freeze for tasks11/13 (the monitor3 amendment above
+supersedes its finite duration/grace and capability behavior): declare signature permission
 `org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF` in helper2 and
 provider authority `org.viscereality.atmungsraum.boot.handoff`, exported only with
 that permission. Provider also checks Binder UID resolves exact main package and

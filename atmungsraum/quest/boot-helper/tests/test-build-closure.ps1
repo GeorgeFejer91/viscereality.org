@@ -13,6 +13,9 @@ E: manifest
     E: meta-data
       A: android:name="org.viscereality.atmungsraum.boot_protocol"
       A: android:value=(type 0x10)0x2
+    E: meta-data
+      A: android:name="org.viscereality.atmungsraum.monitor_protocol"
+      A: android:value=(type 0x10)0x3
     E: provider
       A: android:name=".HandoffProvider"
       A: android:authorities="org.viscereality.atmungsraum.boot.handoff"
@@ -31,8 +34,20 @@ E: manifest
 $manifest=$fixture -split "`n"
 & $gate
 $checks=1
-# Actual aapt2 dump from the first signed helper2 candidate (manifest-only, no private data).
-$actualFixture=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'helper2-manifest-aapt2.txt') -Raw
+# Preserve the actual helper2 dump as a downgrade fixture. Append a synthetic
+# capability node to test helper3 gate formatting; this is not a built APK claim.
+$legacyFixture=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'helper2-manifest-aapt2.txt') -Raw
+$manifest=$legacyFixture -split "`n"
+$denied=$false
+try { & $gate } catch { $denied=$true }
+if(!$denied){throw 'Helper2 without monitor capability passed helper3 gate'}
+$checks++
+$actualFixture=$legacyFixture + @'
+
+          E: meta-data
+            A: http://schemas.android.com/apk/res/android:name(0x01010003)="org.viscereality.atmungsraum.monitor_protocol"
+            A: http://schemas.android.com/apk/res/android:value(0x01010024)=3
+'@
 $manifest=$actualFixture -split "`n"
 & $gate
 $checks++
@@ -43,6 +58,8 @@ foreach($mutation in @(
     @('android:permission="org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF"','android:permission="other"'),
     @('android:exported=(type 0x12)0xffffffff','android:exported=(type 0x12)0x0'),
     @('E: receiver','E: other')
+    @('android:value=(type 0x10)0x3','android:value=(type 0x10)0x2'),
+    @('org.viscereality.atmungsraum.monitor_protocol','org.viscereality.atmungsraum.other_capability')
 )){
     $manifest=$fixture.Replace($mutation[0],$mutation[1]) -split "`n"
     $denied=$false

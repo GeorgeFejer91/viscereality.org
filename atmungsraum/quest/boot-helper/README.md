@@ -1,107 +1,120 @@
-# Atmungsraum Boot Helper 2
+# Atmungsraum Boot Helper 3
 
-Version2 is a one-time USB helper update using the existing package and signer.
-It retains the existing checkbox, overlay grant and `boot-helper` preferences.
-The user's task13 amendment adds finite replacement launch assistance.
+One-time USB/Wi-Fi ADB helper update, same package and developer signer. Existing
+checkbox, overlay grant and `boot-helper` preferences are retained. Ordinary
+main updates need no helper update. Runtime never requires a PC, installs an
+APK, downloads content, controls Meta's queue or reports estimated SDK progress.
 
-## Bounded replacement assistance
+## Observed update monitor
 
-Only main metadata `org.viscereality.atmungsraum.boot_protocol=2` enables the boot
-watch. Old main18 retains legacy one-shot boot behavior. The helper durably
-binds an update watch to the current boot, canonical attempt, actual installed
-code, expected strictly newer code and helper-owned elapsed-time expiry.
-Watches last at most five minutes. Once a valid newer package is observed,
-Meta gets20seconds to relaunch first. The helper then allows at most one
-fallback total per watch, consumed durably before dispatch. Duplicate package
-events, service recreation and failed dispatch cannot repeat it.
+An authorized main arms the exact installed code, strictly newer target code,
+canonical attempt and real BOOT_COUNT. The helper retains that target across
+process/service restarts and real reboots. There is **no download expiry or
+Meta launch grace period**. PackageManager code must actually reach or exceed
+the target. Package events wake observation; polling backs off from5seconds to
+at most60seconds. Those timers only schedule observations. They never establish
+download progress, package replacement, launch success or a failure deadline.
 
-A trusted `launch-started` from the original installed code records it without
-retiring an unconfirmed boot watch; `launch-ready` retires that watch. A PM-equal
-replacement start at or above the bound target also retires it immediately,
-so slow first-frame focus cannot cause a second launcher request. For an
-armed update watch, started or ready may retire it only when loaded code equals
-actual PackageManager code and satisfies the expected target. A replaced old
-process cannot acknowledge the new binary. Protected kiosk escape cancels the
-watch. Checkbox/permission loss, expiry or reboot stops it. A128-entry per-boot
-attempt ledger denies at exhaustion without evicting replay protection; duplicate
-exact arm calls do not renew expiry. No general foreground watchdog remains.
+When the actual matching package is installed, the helper may issue one normal
+MAIN/LAUNCHER request per real boot, durably consumed before dispatch. It
+resolves the current enabled/exported component and exact current signer set
+again. The actual launcher must be `singleTask`, as is the selected main's
+`android.app.NativeActivity`: a simultaneous Meta launch then reuses that task.
+No pinned component/version/path, data, selector or caller-controlled target.
+Dispatch retains a finite five-second check; a stale dispatch is never retried
+within that boot.
+
+Only a trusted immutable loaded-process code equal to actual PackageManager
+code can acknowledge startup. For an update it must also satisfy the target.
+`launch-started` suppresses helper launch while retaining the monitor;
+`launch-ready` from main's first FOCUSED submitted frame completes it. A request
+returning or a startup acknowledgment alone does not prove focus/readiness.
+Duplicate events, slow first focus, failed dispatch and process death cannot
+repeat the helper launch in the same boot. No general foreground watchdog.
+
+Protected intentional kiosk exit, explicit Stop monitor or disabling the helper
+cancels durably. Overlay loss blocks launch while retaining read-only package
+observation; restoring permission may admit the one still-unused request. A
+replacement gap, absent package or wrong signer never launches and never
+manufactures completion. Setup and foreground notification show the actual
+monitor phase and expose **Stop monitor**. Notification cancellation is an
+immutable PendingIntent into the non-exported service; no exported stop command.
+
+After a real reboot, a pending update is rebound to the actual new BOOT_COUNT
+and its per-boot dispatch/start consumption resets. The receiver resumes
+observation instead of launching the old experiment. Failed durable resume
+cannot fall through to an old-app boot launch. Once the target is installed it
+may launch once in that new boot. Cancelled/completed watches cannot revive.
+The bounded128-entry attempt ledger never evicts replay protection during a
+boot; the pending attempt is retained across reboot. Format1 pending watches
+migrate without inheriting their former elapsed-time expiry/grace fields.
+
+## Provider contract and compatibility
 
 The fixed provider `org.viscereality.atmungsraum.boot.handoff` requires signature
-permission `org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF`, plus
-Binder UID resolving exclusively to the exact main package and exact current
-APK signer set. Main independently validates helper package/signer/protocol.
-Shared UID callers and another same-signer package are rejected.
+permission `org.viscereality.atmungsraum.boot.permission.UPDATE_HANDOFF`, Binder
+UID resolving exclusively to the exact main package, and exact current APK
+signer sets. Another same-signer app or shared UID is rejected. Calls accept
+null arg and closed, typed v1 Bundles only:
 
-`ContentResolver.call` uses null arg and closed Bundle fields:
-
-| Method | Fields besides Integer `v:1` |
+| Method | Legacy fields besides Integer `v:1` |
 | --- | --- |
 | `arm-update` | String positive canonical decimal `attempt`; Long `installed_code`, `target_code` |
 | `launch-started`, `launch-ready`, `cancel-watch` | Long immutable loaded-process `installed_code` |
 | `status` | None |
 
-Replies contain Integer `v:1`, Integer `protocol:2`, Boolean `accepted`, String
-canonical `reason` and Boolean `watching`. No caller-provided expiry, package,
-component, URL or path is accepted. Status is read-only.
+Every monitor3 request additionally supplies Integer `monitor_protocol:3`, Long
+`boot_count` and Long `deadline_elapsed`. The deadline must be unexpired, within
+five seconds of helper elapsed time and tied to its current real boot. It is
+rechecked after package queries and foreground-service admission. This bounds
+individual IPC effects, **not download duration**. Late/failed admission revokes
+only a newly created matching watch, never a prior accepted duplicate watch.
+The client also rejects late replies and retains its own finite main-dispatch
+deadline. No package/component/URL/path/expiry customization is accepted.
 
-A non-exported `specialUse` foreground service owns the finite watch,
-low-importance notification, one-second checks and dynamic package receiver.
-The BOOT receiver returns promptly. `START_STICKY` recreation reloads the same
-durable boot/expiry/consumption; it does not renew the watch. Update handoff waits
-for foreground service creation before a positive ACK; service-start failure
-revokes the watch and denies handoff. Original boot queues service creation
-without blocking its main looper. Force-stop and OS denial remain limitations.
+Replies contain Integer `v:1`, Integer `protocol`, Boolean `accepted`, String
+`reason`, Boolean `watching`, Integer `monitor_protocol:3`, Boolean `monitor:true`.
+The last two advertise capability; only accepted+watching confirms active arm.
+Monitor3 requests receive protocol3; immutable legacy requests receive protocol2.
+Helper metadata retains `org.viscereality.atmungsraum.boot_protocol=2` for old
+clients and adds `org.viscereality.atmungsraum.monitor_protocol=3`. New main
+metadata uses boot_protocol3, and its queued exit requires explicit helper
+monitor3 capability. Helper2 cannot satisfy that requirement. Old protocol2
+boot/handshake clients remain usable; main without a supported boot protocol
+keeps the original once-per-boot launcher path.
 
-Android34 eligibility uses the existing effective overlay grant for background
-service/activity launch; real BOOT_COMPLETED also exempts the foreground-service
-start. Foreground status alone is not activity-launch authority. The manifest
-declares FOREGROUND_SERVICE, FOREGROUND_SERVICE_SPECIAL_USE and the special-use
-subtype; no while-in-use sensor service is involved. POST_NOTIFICATIONS is not
-required to start an FGS. Raising target SDK to35+ needs review because the
-overlay exemption changes. See [Android FGS restrictions](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start),
-[service types](https://developer.android.com/develop/background-work/services/fgs/service-types#special-use),
-[background activity starts](https://developer.android.com/guide/components/activities/background-starts)
-and [notification permission](https://developer.android.com/develop/ui/views/notifications/notification-permission#exemptions).
-Actual Quest scheduling and Meta replacement/relaunch remain hardware gates.
-
-The policy tests execute production Java; `tests/test_android_boundary.py`
-executes the real provider, persistence adapter and service against inert
-Android seams. Compile all sources against actual Android34 separately. These
-checks establish no APK/device/Meta installation or foreground success.
-
-One-time, separately installed Android helper for the exact same-signer target
-`org.viscereality.atmungsraum.developer`. Normal target updates do not require
-helper updates. The helper never installs, downloads or updates another app.
+## Setup and limits
 
 Open **Atmungsraum Boot Helper**, enable **Enable launch after restart**, and
-use **Open Android overlay settings** to grant this helper the normal overlay
-permission. Both are required. This setup does not launch the target or count
-as boot proof. No overlay window is created. The grant supplies Android's
-background activity launch exemption; actual Quest behavior requires a real
-restart test. Force-stopping the helper suppresses Android boot delivery until
-it is opened again.
+use **Open Android overlay settings** for the helper's normal Android grant.
+Setup does not launch the target or count as boot proof. No overlay window is
+created. This Android34 permission supplies background launch eligibility;
+foreground-service status alone supplies no activity-launch authority. A
+protected real BOOT_COMPLETED is required for normal boot admission; no
+synthetic-broadcast entry exists.
 
-Only Android's protected `BOOT_COMPLETED` action reaches the non-exported boot
-receiver. No custom/synthetic broadcast, alarm or network interface exists.
-The bounded protocol2 service above owns its own lifetime. The receiver reads
-real `Settings.Global.BOOT_COUNT`
-and synchronously commits admission before any launch. A denied or failed
-attempt consumes that boot, so exit/force-stop, permission changes, setup
-changes and duplicate delivery cannot repeat its original boot launch. The
-explicit bounded replacement contract above is the only fallback exception.
-Missing/unreadable boot count fails closed. Existing state survives ordinary
-helper updates; uninstall/clear-data resets setup and history.
+The non-exported specialUse foreground service returns the boot receiver
+promptly and uses START_STICKY to reload durable state after process death.
+Opening setup can resume a pending monitor. Force-stop, platform service denial,
+power loss, or the user stopping an FGS can prevent observation until the helper
+is allowed to run again. No extra privilege bypasses those platform limits.
+Uninstall/clear-data resets consent/history. Failed cancellation persistence is
+reported rather than claimed saved. Actual Quest scheduling, task reuse,
+focused-ready acknowledgment and Meta delivery remain hardware acceptance gates.
 
-Each boot queries the current enabled, exported `MAIN` / `LAUNCHER` activity of
-the fixed package. It rejects other components and mismatched package signing
-certificate sets using `SigningInfo.getApkContentsSigners`; dispatch rechecks the
-signature and component. The explicit launch Intent contains only the normal
-launcher action/category and task flags. No version, activity class or APK
-location is pinned. The setup screen shows read-only status. `startActivity`
-returning is reported as **requested, unconfirmed**, never successful foreground
-or XR admission. Root/device validation supplies that proof separately.
+Permissions remain RECEIVE_BOOT_COMPLETED, SYSTEM_ALERT_WINDOW,
+FOREGROUND_SERVICE, FOREGROUND_SERVICE_SPECIAL_USE and the signature provider
+permission declaration. Visibility is limited to the exact target. No network,
+storage, Bluetooth, sensor, UsageStats, accessibility, admin or root authority.
+The helper never starts an old experiment to bypass an update floor.
 
-Run the pure Java policy boundary test:
+Android references: [FGS background-start restrictions](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start),
+[specialUse service type](https://developer.android.com/develop/background-work/services/fgs/service-types#special-use),
+[background activity starts](https://developer.android.com/guide/components/activities/background-starts),
+[singleTask lifecycle](https://developer.android.com/guide/components/activities/tasks-and-back-stack#TaskLaunchModes).
+Raising target SDK beyond34 needs a new platform review.
+
+## Verification and build
 
 ```powershell
 ./atmungsraum/quest/boot-helper/test-policy.ps1 -JavaHome <JDK17>
@@ -109,11 +122,17 @@ python ./atmungsraum/quest/boot-helper/tests/test_android_boundary.py
 ./atmungsraum/quest/boot-helper/tests/test-build-closure.ps1
 ```
 
-Build only while holding the coordinated build slot. The builder requires
-explicit SDK/JDK, an existing external developer keystore, same-signer reference
-APK, a fresh absolute output directory whose parent is outside Git, and the
-name of a privately set signing-password environment variable. It never creates
-keys, records passwords or overwrites prior output:
+Production pure Java tests cover observed downloads beyond nine hours, actual
+replacement, start versus focused-ready, Meta startup races, reboot recovery,
+replay/cancel/disabled/signer/singleTask barriers and individual command expiry.
+The Android-boundary test executes the actual provider/persistence/service/boot
+receiver with inert Android seams. Compile actual sources against Android34
+separately. Unit/boundary tests prove no physical launch or Meta install.
+
+Only the coordinated build-slot owner may package. The builder requires
+explicit SDK/JDK, existing external key, signed reference APK, fresh absolute
+output outside Git and name of a privately set signing-password variable.
+It never creates keys, records passwords or overwrites output:
 
 ```powershell
 ./atmungsraum/quest/boot-helper/build.ps1 -AndroidSdk <SDK> -JavaHome <JDK17> `
@@ -121,12 +140,8 @@ keys, records passwords or overwrites prior output:
   -OutputRoot <fresh-private-output> -SigningPasswordEnvironment <variable-name>
 ```
 
-Uses SDK34/build-tools36.0.0, min29/target34, plain Java with no external runtime
-dependencies or native libraries. Retains actual signed manifest/badging,
-signature, DEX class closure and hash receipts privately. Only
-`RECEIVE_BOOT_COMPLETED`, `SYSTEM_ALERT_WINDOW`, `FOREGROUND_SERVICE` and
-`FOREGROUND_SERVICE_SPECIAL_USE` are used, plus the signature provider permission;
-visibility is
-limited to the exact target. No device/account/install or upload actions are
-performed by the builder. Meta approval of the separate helper is not claimed;
-the main APK must omit overlay authority and be distributed through Meta.
+Uses SDK34/build-tools36.0.0, min29/target34, plain Java without runtime
+dependencies or native libraries. Retains signed-manifest permission/provider/
+service/capability checks, signature equality, DEX owner closure, alignment and
+hash receipts privately. No install, device, account or upload action. Separate
+helper Meta approval is not claimed; main APK omits helper overlay authority.

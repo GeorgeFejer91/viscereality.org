@@ -78,7 +78,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Actual APK manifest decoding failed.' }
     $permissions = @($badging | Select-String "^uses-permission: name='([^']+)'" | ForEach-Object { $_.Matches[0].Groups[1].Value } | Sort-Object)
     if (($permissions -join ',') -cne 'android.permission.FOREGROUND_SERVICE,android.permission.FOREGROUND_SERVICE_SPECIAL_USE,android.permission.RECEIVE_BOOT_COMPLETED,android.permission.SYSTEM_ALERT_WINDOW') { throw 'Unexpected actual APK permissions.' }
-    if (!($badging -match "^package: name='org.viscereality.atmungsraum.boot' versionCode='2' versionName='2.0'") -or
+    if (!($badging -match "^package: name='org.viscereality.atmungsraum.boot' versionCode='3' versionName='3.0'") -or
         !($badging -match "^sdkVersion:'29'") -or !($badging -match "^targetSdkVersion:'34'") -or
         ($badging -match '^application-debuggable')) { throw 'Actual APK identity/SDK/debugging differs from helper contract.' }
     $actualXml = $manifest -join "`n"
@@ -90,6 +90,23 @@ try {
         $next = [regex]::Match($remaining, ('(?m)^[ ]{0,' + $indent + '}E:'))
         if ($next.Success) { return $remaining.Substring(0,$next.Index) }
         return $remaining
+    }
+    function Assert-ActualMetadata([string]$Name,[int]$Expected) {
+        $matched = 0
+        foreach ($node in [regex]::Matches($actualXml, '(?m)^([ ]*)E: meta-data\b')) {
+            $indent = $node.Groups[1].Value.Length
+            $remaining = $actualXml.Substring($node.Index + $node.Length)
+            $next = [regex]::Match($remaining, ('(?m)^[ ]{0,' + $indent + '}E:'))
+            $block = if ($next.Success) { $remaining.Substring(0,$next.Index) } else { $remaining }
+            if ($block -match ('android:name[^\r\n]*"' + [regex]::Escape($Name) + '"')) {
+                $matched++
+                $hex = '{0:x}' -f $Expected
+                if ($block -notmatch ('(?m)android:value(?:\(0x[0-9a-fA-F]+\))?[ \t]*=[ \t]*(?:' + $Expected + '|(?:\(type[ \t]+0x0*10\)[ \t]*)?0x0*' + $hex + ')[ \t]*\r?$')) {
+                    throw "Actual metadata capability differs: $Name"
+                }
+            }
+        }
+        if ($matched -ne 1) { throw "Expected exactly one actual metadata capability: $Name" }
     }
     $provider = Actual-Node 'provider'; $service = Actual-Node 'service'
     $permission = Actual-Node 'permission'; $receiver = Actual-Node 'receiver'
@@ -112,7 +129,9 @@ try {
         $permission -notmatch 'android:name[^\r\n]*"org\.viscereality\.atmungsraum\.boot\.permission\.UPDATE_HANDOFF"' -or
         $permission -notmatch ('(?m)android:protectionLevel' + $attributeId + $enumValue + '0x0*2[ \t]*\r?$') -or
         $receiver -notmatch $exportedFalse -or
-        $actualXml -notmatch 'org\.viscereality\.atmungsraum\.boot_protocol') { throw 'Actual helper2 IPC/FGS closure differs.' }
+        $actualXml -notmatch 'org\.viscereality\.atmungsraum\.boot_protocol') { throw 'Actual helper3 IPC/FGS closure differs.' }
+    Assert-ActualMetadata 'org.viscereality.atmungsraum.boot_protocol' 2
+    Assert-ActualMetadata 'org.viscereality.atmungsraum.monitor_protocol' 3
     $dexText = @(& $dexdump -d (Join-Path $dex 'classes.dex'))
     if ($LASTEXITCODE -ne 0) { throw 'Actual packaged DEX inspection failed.' }
     $definitions = @($dexText | Select-String "Class descriptor\s*: '([^']+)'" | ForEach-Object { $_.Matches[0].Groups[1].Value })
