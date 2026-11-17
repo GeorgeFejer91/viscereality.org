@@ -1,5 +1,85 @@
 # Project
 
+### Active: PWA update from every preparation state — 2026-11-17
+
+The user resumes attended testing and authorizes operating the USB Pixel. Quest2
+is already on Wi-Fi ADB. Actual Meta23 was IDLE/g0/r1, rec:false, pending:false,
+but its breathing preparation was playing and native update can_check:false /
+busy_reason:session-active. The phone's current PWA hid the update action behind
+plain Weiter, then displayed a disabled Jetzt aktualisieren without its primary
+blocker. Its Polar question mark was missing legacy23 health telemetry, despite
+live ECG/ACC. These are actual attended observations, not synthetic fixtures.
+
+Root used one ADB idle23 force-stop/resolved launcher reopen to bootstrap25;
+this bypassed the PWA trigger and MUST NOT count as a successful PWA update test.
+The SDK downloaded/installed25 through Meta; helper3 requested fallback, and25
+reopened with exact published SHA256226b90cedc56b7b44a8cdba885260ca280c59fce381341a9d7f5677a3e027951.
+No host APK installation or host25 launch. The user explicitly challenges ADB
+app relaunch as a workaround: subsequent app/update actions must use PWA, with
+ADB limited to diagnosis/readback. No new host app stop/start/reboot is authorized
+as a substitute for the PWA update flow.
+
+After reconnecting the actual Pixel,25 reports fresh ECG/ACC/contact detected;
+the Polar toolbar is green, automatic input is parked/silent, and no recording
+runs. A real PWA Erneut prüfen click is accepted and settles current25, same
+correlated attempt, cycle1/revision4→5. This proves a PWA-triggered check while
+parked, not a PWA-triggered installation after active preparation.
+
+Accepted user behavior: update must remain accessible outside actual recording.
+End calibration/input testing safely before checking/installing. During actual
+recording, offer an explicit end-session/save/update action, wait for confirmed
+writer completion and actual audio parking, then check/install. Never silently
+stop recording for a background check, erase an uncertain journal, force unknown
+writer state, install while recording, or use a timer as proof of park/save.
+
+Implementation plan (this document remains the single lifecycle owner):
+
+- [x] Capture actual phone/Quest baseline and the parked25 PWA manual check.
+- [ ] Native owner: regress active preparation causing permanent can_check false;
+  add a fenced preparation-end/actual-park route before update admission. Reuse
+  current runtime/writer/audio/helper owners and correlate all requests/results.
+  Preserve unknown-command/writer and irreversible-install barriers.
+- [ ] PWA owner: expose a clear update action in sequential setup, show any real
+  blocker alongside it; distinguish preparation from a recording. Compose
+  explicit Stop/Save→native park→update with original operation receipts and
+  reconnect/actor/generation fences. Improve missing-health legacy copy while
+  retaining no false strap-contact confirmation from ECG alone.
+- [ ] Independent scoped/integration review, native and real-DOM regressions,
+  exact source-patch reconstruction, signed APK qualification and publication.
+- [ ] Attended PWA-only installation, calibration/testing→update, running-session
+  save→update and helper-relaunch acceptance. Keep actual wearer gates explicit.
+
+Ruling: user instruction supplies design/execution authority; no repeat approval
+menu. Use existing calibration worktrees and this plan, not another planning
+ledger. SAIA task-router is unavailable; deterministic local work and the
+selected Superpowers subagent workflow apply. One native owner and one PWA owner
+coordinate the wire contract before integration; no duplicate concurrent edits.
+Current Meta baseline is25, parked and eligible for a PWA-only bootstrap.
+Old version-only26-r1 is revoked as an upload target and stays unpublished.
+Repaired26-r2 is the planned new baseline; a new held27 follows its qualification.
+The replacement repaired baseline is distinct from a version-only test probe.
+
+Owned interface: private enrolled-LAN capability meta_update_preparation:1 and
+truthful native meta_update.can_end_preparation. New closed operation
+end-preparation-and-check uses the existing v/id/op/cycle/revision request;
+accepted receipt binds EXACT request cycle+1 as its target and retains one
+attempt through measured audio parking and SDK checking. PWA follows that exact
+target cycle/attempt without retiring its journal merely because the cycle moved.
+Original same-ID requests reconcile without replay. Native actual recording and
+ARMED/writer work cannot use this preparation-only route; existing Finish/save
+must first confirm its original receipt. Fresh ownership/revision is checked
+again before the subsequent update, and an already running automatic post-save
+check is followed rather than duplicated.
+
+Early independent review requires regressions for concurrent duplicate IDs,
+pre-reset paused/frame0 clock reuse, and an owner/cycle retiring between native
+preparation admission and Java readback. No accepted receipt may silently adopt
+an unrelated later cycle. These are implementation gates, not device evidence.
+
+Private evidence: validation/2026-11-17-code25-attended contains native update/
+helper observation, installed checksum, real phone DOM/screenshots, native status
+and the accepted PWA25 manual-check receipt. No phone trust/data was cleared.
+
 ### Approved review repairs — 2026-11-17
 
 The user approves implementing all five findings in
