@@ -69,7 +69,7 @@ const failureReasons = {
   'duplicate-download-owner-or-floor-changed': 'Der Quest- oder Versionsstand hat sich während der Prüfung geändert. Prüfe den aktuellen App-Stand.',
   'duplicate-download-package-changed-restart-required': 'Meta hat die Quest-App während der Prüfung ersetzt. Verbinde dich mit der neu gestarteten App.',
   'meta-download-progress-invalid': 'Meta hat einen widersprüchlichen Download-Fortschritt gemeldet. Die Installation wurde nicht angefragt.',
-  'required-update-not-yet-on-channel': 'Die benötigte Version wird von Meta noch nicht angeboten. Warte und prüfe erneut.',
+  'required-update-not-yet-on-channel': 'Meta bietet die benötigte Version noch nicht an.',
   'meta-platform-process-init-failed-restart-required': 'Der Meta-Dienst konnte in diesem App-Prozess nicht starten. Die Quest für eine erneute Meta-Prüfung neu starten.',
   'fresh-process-required-for-update-check': 'Die App wurde im selben Quest-Prozess erneut geöffnet. Für eine neue Meta-Prüfung die Quest neu starten.',
   'pending-install-record-write-failed': 'Der Update-Stand konnte auf der Quest nicht gespeichert werden.',
@@ -104,6 +104,7 @@ export function metaUpdateView(status) {
   if (!result.value) return { ...result, state: 'invalid', summary: 'Meta-Update-Status nicht verlässlich. Vorbereitung gesperrt.',
     detail: 'Prüfe die Quest-App und verbinde das Smartphone erneut. Nur ein gültiger nativer Status kann die Vorbereitung freigeben.', progress: null };
   const value = result.value;
+  const failure = Object.hasOwn(failureReasons, value.reason) ? failureReasons[value.reason] : '';
   const maintenanceRequired = value.state === 'restart_required' && maintenanceReasons.has(value.reason);
   const summaries = {
     waiting: 'Quest wartet auf die Meta-Startprüfung. Vorbereitung gesperrt.',
@@ -127,19 +128,22 @@ export function metaUpdateView(status) {
       : 'Für eine erneute Prüfung die Quest neu starten. Die App nur zu schließen und neu zu öffnen reicht dafür nicht aus.'
     : ['installing', 'restart_required'].includes(value.state)
       ? 'Eine Installationsanfrage bestätigt keine neue APK. Starte die Quest neu; erst die danach tatsächlich gemeldete APK-Kennung bestätigt den Stand.'
-      : result.allowed ? 'Die Quest hat die Vorbereitung freigegeben.' : 'Warte, bis die Quest die Vorbereitung freigibt.';
+      : result.allowed ? 'Die Quest hat die Vorbereitung freigegeben.'
+      : value.v === 2 && value.can_check ? '' : 'Warte, bis die Quest die Vorbereitung freigibt.';
   if (!result.allowed && !blocking.has(value.state)) detail += ' Die Quest hat die Vorbereitung noch nicht freigegeben.';
   const progress = value.state === 'downloading' ? { value: value.downloaded_bytes, max: value.total_bytes } : null;
-  if (progress) detail = `${value.downloaded_bytes.toLocaleString('de-DE')} Byte geladen${value.total_bytes === null
-    ? ' · Gesamtgröße noch unbekannt.' : ` von ${value.total_bytes.toLocaleString('de-DE')} Byte.`} ${detail}`;
+  const downloadStatus = progress ? `${value.downloaded_bytes.toLocaleString('de-DE')} Byte geladen${value.total_bytes === null
+    ? ' · Gesamtgröße noch unbekannt.' : ` von ${value.total_bytes.toLocaleString('de-DE')} Byte.`}` : '';
+  if (progress) detail = `${downloadStatus} ${detail}`;
   if (value.available_code !== null) detail += ` Meta-Kanalcode: ${value.available_code}.`;
   if (value.v === 2 && value.required_code !== null) detail += ` Benötigt: mindestens Code ${value.required_code}.`;
-  if (value.state === 'update_required') detail += ` ${failureReasons[value.reason] || 'Prüfe und installiere die verfügbare Version, bevor eine neue Sitzung startet.'}`;
-  if (value.state === 'failed' && failureReasons[value.reason]) detail += ` ${failureReasons[value.reason]}`;
+  if (value.state === 'update_required') detail += ` ${failure || 'Prüfe und installiere die verfügbare Version, bevor eine neue Sitzung startet.'}`;
+  if (value.state === 'failed' && failure) detail += ` ${failure}`;
   if (value.v === 2 && value.sdk_error && ['failed', 'update_required', 'restart_required'].includes(value.state)) {
     detail += ` ${sdkErrorCopy[value.sdk_error.install_result]}`;
   }
-  let recovery = value.v === 2 && ['checking', 'installing'].includes(value.state) && recoveryCopy[value.reason];
+  let recovery = value.v === 2 && ['checking', 'installing'].includes(value.state)
+    && Object.hasOwn(recoveryCopy, value.reason) && recoveryCopy[value.reason];
   if (value.v === 2 && value.state === 'checking' && value.reason === 'ending-preparation'
     && value.busy_reason === 'narration-park-pending') {
     recovery = ['Anleitung wird beendet.',
@@ -148,5 +152,49 @@ export function metaUpdateView(status) {
   if (recovery) detail = `${recovery[1]}${value.required_code === null ? '' : ` Benötigt: mindestens Code ${value.required_code}.`}`;
   const summary = (recovery ? recovery[0] : value.v === 2 ? summaries[value.state].replaceAll('Meta-Startprüfung', 'Update-Prüfung') : summaries[value.state]) + (!result.allowed && ['current', 'updated'].includes(value.state)
     ? ' Vorbereitung bleibt gesperrt.' : '');
-  return { ...result, state: value.state, summary, detail, progress };
+  let instruction = downloadStatus;
+  if (recovery) instruction = recovery[1];
+  else if (value.state === 'restart_required') instruction = maintenanceRequired
+    ? 'Prüfe das Update in der Meta-Bibliothek im Headset. Bleibt der Stand unklar, ist Betreiberwartung erforderlich.'
+    : 'Starte die Quest neu und prüfe die installierte Version.';
+  else if (['update_required', 'failed'].includes(value.state)) {
+    instruction = failure;
+    if (value.v === 1 && value.state === 'failed') instruction += ' Starte die Quest für eine erneute Prüfung neu.';
+    if (value.v === 2 && value.sdk_error) instruction += ' ' + sdkErrorCopy[value.sdk_error.install_result];
+  }
+  return { ...result, state: value.state, summary, detail: detail.trim(), instruction: instruction.trim(), progress };
+}
+
+// Versions and raw diagnostics stay in Details. Connection and Update share the same operator copy.
+export function updatePresentation(version, native, controls, pending) {
+  const terminal = ['current', 'updated'].includes(native.state);
+  const healthy = terminal && native.allowed && version.state === 'compatible';
+  const required = version.state === 'required' || native.state === 'update_required';
+  const notOnChannel = native.state === 'update_required' && native.value?.reason === 'required-update-not-yet-on-channel';
+  let summary = native.summary.replace('. Vorbereitung gesperrt.', '.');
+  let instruction = native.instruction ?? native.detail;
+  if (notOnChannel) {
+    summary = 'Meta bietet das benötigte Update noch nicht an.';
+    instruction = native.value.sdk_error ? sdkErrorCopy[native.value.sdk_error.install_result] : '';
+  } else if (native.state === 'update_required' || version.state === 'required' && (terminal || native.state === 'legacy')) {
+    summary = 'Update der Quest-App erforderlich.';
+    if (native.state === 'legacy') instruction = 'Aktualisiere Atmungsraum in der Meta-Bibliothek im Headset.';
+  } else if (terminal) {
+    summary = !native.allowed ? 'Vorbereitung noch nicht freigegeben.' : healthy ? 'Quest-App ist aktuell.'
+      : version.state === 'recommended' ? 'Ein Update der Quest-App wird empfohlen.' : version.message;
+    if (native.allowed && !healthy && version.state !== 'recommended') instruction = 'Prüfe den Versionshinweis unter „Details“.';
+  } else if (native.state === 'failed') {
+    summary = 'Update-Prüfung fehlgeschlagen.';
+  }
+  const inProgress = ['waiting', 'checking', 'downloading', 'installing'].includes(native.state);
+  const notes = [];
+  if (pending) summary = 'Update-Bestätigung noch offen.';
+  if (controls.message) notes.push(controls.message);
+  if (instruction) notes.push(instruction);
+  if (!pending && !inProgress && controls.available && (!controls.canRequest || controls.requestOp === 'end-preparation-and-check')) {
+    notes.push(controls.prerequisites);
+  }
+  return { summary, instruction: [...new Set(notes.filter(Boolean))].join(' '),
+    checkLabel: controls.requestOp === 'end-preparation-and-check' ? 'Vorbereitung beenden und aktualisieren'
+      : notOnChannel || healthy ? 'Erneut prüfen' : required ? 'Jetzt aktualisieren' : 'Updates prüfen und installieren' };
 }

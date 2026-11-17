@@ -5,7 +5,60 @@ import os
 import tempfile
 from playwright.sync_api import sync_playwright, expect
 from layout_render_fixtures import module, initial, mutations, go
-from release_fixtures import meta_update_fixture
+from release_fixtures import apk_fixture, meta_update_fixture
+
+
+def required_update(review, c, width, size):
+    apk = dict(apk_fixture(), version_code=25)
+    native = meta_update_fixture(apk, state='update_required', reason='native-owner-retired',
+        required_code=26, available_code=26, session_allowed=False)
+    page = review.page(initial(c, quest={'apk': apk, 'metaUpdate': native}),
+        viewport={'width':width, 'height':844 if width==390 else 568})
+    page.evaluate('size=>document.documentElement.style.fontSize=size', size)
+    page.clock.run_for(1500)
+    notice = 'Update der Quest-App erforderlich.'
+    connect = page.locator('#quest')
+    expect(connect.get_by_text(notice, exact=True).and_(page.locator(':visible'))).to_have_count(1)
+    for selector in ['#quest-status', '#operator-compatibility', '#operator-meta-detail']:
+        expect(page.locator(selector)).to_be_hidden()
+    next_step = page.locator('#operator-connect-next')
+    connect_text = connect.inner_text()
+    expect(next_step).to_have_text('Quest-App aktualisieren')
+    review.shot(page, f'required-connect-{width}-{size or "normal"}', 'One required update notice', next_step, 'Update presentation')
+    next_step.click()
+    expect(page.locator('#meta-update-status')).to_have_text(notice)
+    expect(page.locator('#update-instruction')).to_be_hidden()
+    expect(page.locator('#operator-meta-update')).to_be_hidden()
+    expect(page.locator('#meta-update-check')).to_have_text('Jetzt aktualisieren')
+    expect(page.locator('#meta-update-check')).to_be_enabled()
+    expect(page.locator('#operator-update-next')).to_be_disabled()
+    assert not page.locator('#apk-identity').evaluate('n=>n.open')
+    for visible in [connect_text, page.locator('#update-screen').inner_text()]:
+        assert all(copy not in visible for copy in ['Warte, bis', 'Versionscode', 'Meta-Kanalcode', 'Update über dieses Smartphone'])
+    assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
+    review.shot(page, f'required-primary-{width}-{size or "normal"}', 'Enabled required update', page.locator('#meta-update-check'), 'Update presentation')
+    # Meta sees code 26 while the required version is 27. A new check is still permitted.
+    page.evaluate("Object.assign(reviewQuest.metaUpdate, {required_code:27, reason:'required-update-not-yet-on-channel'})")
+    page.clock.run_for(1200)
+    unavailable = 'Meta bietet das benötigte Update noch nicht an.'
+    expect(page.locator('#meta-update-status')).to_have_text(unavailable)
+    expect(page.locator('#update-instruction')).to_be_hidden()
+    expect(page.locator('#meta-update-check')).to_have_text('Erneut prüfen')
+    expect(page.locator('#meta-update-check')).to_be_enabled()
+    review.shot(page, f'channel-recheck-{width}-{size or "normal"}', 'Required version unavailable on Meta', page.locator('#meta-update-check'), 'Update presentation')
+    page.locator('#update-screen [data-operator-return]').click()
+    expect(connect.get_by_text(unavailable, exact=True).and_(page.locator(':visible'))).to_have_count(1)
+    expect(next_step).to_have_text('Update-Prüfung öffnen')
+    expect(page.locator('#operator-compatibility')).to_be_hidden()
+    expect(page.locator('#operator-meta-detail')).to_be_hidden()
+    assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
+    # A distinct public minimum still matters when the native check itself failed.
+    page.evaluate("Object.assign(reviewQuest.metaUpdate, {state:'failed', reason:'offline'})")
+    page.clock.run_for(1200)
+    expect(page.locator('#operator-compatibility')).to_be_visible()
+    expect(page.locator('#operator-meta-summary')).to_have_text('Update-Prüfung fehlgeschlagen.')
+    expect(page.locator('#operator-meta-detail')).to_contain_text('Internetverbindung')
+    page.context.close()
 
 
 def run():
@@ -16,6 +69,7 @@ def run():
         browser = p.chromium.launch()
         review = c.Review(browser, evidence)
         for width, size in [(390, ''), (320, ''), (320, '200%')]:
+            required_update(review, c, width, size)
             native = meta_update_fixture(state='updated')
             page = review.page(initial(c, quest={'metaUpdate':native}), viewport={'width':width,'height':844 if width==390 else 568})
             page.evaluate('size=>document.documentElement.style.fontSize=size', size)
@@ -51,8 +105,8 @@ def run():
                 ('downloading','',False,'geladen'),
                 ('restart_required','prior-install-unconfirmed-maintenance-required',False,'Meta-Bibliothek'),
                 ('failed','offline',True,'Internetverbindung'),
-                ('current','',False,'freigegeben'),
-                ('update_required','required-update-not-yet-on-channel',False,'Meta'),
+                ('current','',False,None),
+                ('update_required','required-update-not-yet-on-channel',False,None),
             ]:
                 changed=dict(native,state=state,reason=reason,session_allowed=allowed,downloaded_bytes=1024,total_bytes=4096,
                              **({'required_code':native['installed_code']+1} if state=='update_required' else {}))
@@ -60,11 +114,17 @@ def run():
                 page.clock.run_for(1200)
                 expect(page.locator('#meta-update-status')).not_to_have_text('Quest-App ist aktuell.')
                 expect(page.locator('#operator-meta-update')).to_be_hidden()
-                expect(page.locator('#update-instruction')).to_contain_text(instruction)
+                if instruction:
+                    expect(page.locator('#update-instruction')).to_contain_text(instruction)
+                else:
+                    expect(page.locator('#update-instruction')).to_be_hidden()
                 assert not page.locator('#apk-identity').evaluate('n=>n.open')
-                if state=='update_required': expect(page.locator('#meta-update-check')).to_have_text('Jetzt aktualisieren')
+                if state=='update_required':
+                    expect(page.locator('#meta-update-check')).to_have_text('Erneut prüfen')
+                    expect(page.locator('#meta-update-check')).to_be_enabled()
+                    expect(page.locator('#meta-update-status')).to_have_text('Meta bietet das benötigte Update noch nicht an.')
                 if not allowed: expect(page.locator('#operator-update-next')).to_be_disabled()
-                review.shot(page,f'update-{state}-{width}-{size or "normal"}',state,page.locator('#update-instruction'),'Update presentation')
+                review.shot(page,f'update-{state}-{width}-{size or "normal"}',state,page.locator('#meta-update-status'),'Update presentation')
             page.evaluate('window.reviewMetaUpdate=null')
             page.clock.run_for(1200)
             expect(page.locator('#meta-update-status')).to_contain_text('nicht verlässlich')

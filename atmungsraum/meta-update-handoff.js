@@ -1,4 +1,4 @@
-import { nativeMetaUpdate } from './meta-update.js?v=5';
+import { nativeMetaUpdate } from './meta-update.js?v=6';
 import { installedApk } from './quest-release.js';
 
 const key = 'atmungsraum-meta-update-handoff';

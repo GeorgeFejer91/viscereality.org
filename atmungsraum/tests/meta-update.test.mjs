@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nativeMetaUpdate, nativeSessionAllowed, metaUpdateView } from '../meta-update.js';
+import { nativeMetaUpdate, nativeSessionAllowed, metaUpdateView, updatePresentation } from '../meta-update.js';
 
 const value = (state = 'current', patch = {}) => ({ v: 1, state, reason: '', installed_code: 15,
   available_code: 16, downloaded_bytes: 0, total_bytes: null, session_allowed: true, ...patch });
@@ -9,6 +9,25 @@ const status = meta_update => ({ meta_update, o: { v: 1, s: 'observed', e: '8', 
 const cycle = (patch = {}) => ({ ...status(value('current', { v: 2, available_code: 15,
   required_code: 15, cycle: '2', revision: '7', attempt: '19', can_check: true, busy_reason: '', ...patch })),
   meta_update_control: 1 });
+
+test('an actionable required update has one status and its primary action, while specific blockers stay visible', () => {
+  const version = { state: 'required' };
+  const controls = { available: true, canRequest: true, requestOp: 'check-and-update' };
+  const required = metaUpdateView(cycle({ state: 'update_required', reason: 'native-owner-retired',
+    available_code: 16, required_code: 16, session_allowed: false }));
+  assert.deepEqual(updatePresentation(version, required, controls, false), {
+    summary: 'Update der Quest-App erforderlich.', instruction: '', checkLabel: 'Jetzt aktualisieren' });
+  const unavailable = metaUpdateView(cycle({ state: 'update_required', reason: 'required-update-not-yet-on-channel',
+    installed_code: 25, available_code: 26, required_code: 27, session_allowed: false }));
+  assert.deepEqual(updatePresentation(version, unavailable, controls, false), {
+    summary: 'Meta bietet das benötigte Update noch nicht an.', instruction: '', checkLabel: 'Erneut prüfen' });
+  for (const prerequisites of ['Übernimm zuerst die Steuerung.', 'Eine frühere Sitzungsanfrage ist unklar.']) {
+    assert.equal(updatePresentation(version, required, { ...controls, canRequest: false, prerequisites }, false).instruction, prerequisites);
+  }
+  const maintenance = metaUpdateView(cycle({ state: 'restart_required', reason: 'prior-install-unconfirmed-maintenance-required' }));
+  const pending = updatePresentation(version, maintenance, { ...controls, canRequest: false, message: 'Ursprüngliche Bestätigung offen.' }, true);
+  assert.match(pending.instruction, /Ursprüngliche Bestätigung.*Meta-Bibliothek/);
+});
 
 test('only a native narration release wait shows the headset app recovery steps', () => {
   const held = { state: 'checking', reason: 'ending-preparation', busy_reason: 'narration-park-pending',

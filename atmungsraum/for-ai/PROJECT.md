@@ -1,5 +1,24 @@
 # Project
 
+### PWA update copy simplification — 2026-11-17
+
+The actual Pixel repeated the same update requirement in four Connect notices
+and repeated it on Update beside an enabled action. The compact-update release
+uses one shared status/action projection. Versions and raw diagnostics stay in
+Details. A published version not yet offered by the headset SDK says “Meta bietet
+das benötigte Update noch nicht an.” with “Erneut prüfen”; an available required
+update offers “Jetzt aktualisieren”. Never tell the operator to wait for
+preparation while the action is enabled. Preserve independent native errors,
+recording/save controls and unresolved original receipts. Routine successful
+version checks remain hidden on ordinary pages. Independent specification/quality review passes. All325 full Node tests pass
+with zero skips;163 focused cases and35 compact real-DOM renders pass, including
+320px/200% text and stable focus/scroll, plus26 preparation/27 Meta cases. All
+eight changed runtime assets and their import parents have fresh cache URLs.
+Release marker:20261117-compact-update. Policy27 PR59/mergea4c46d4 reached exact
+Pages44186834653 success;9 live files match and live policy27 probes pass
+(synthetic transport). Compact publication and actual-phone refresh remain to
+verify; physical27 installation and27→28 acceptance stay open below.
+
 ### Active: PWA update from every preparation state — 2026-11-17
 
 Attended extension: same-process PWA request1312caf4c1629771 found Meta26 and
@@ -34,7 +53,7 @@ The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
 Fixed27-r2/run046 passes1138 signed-package checks and63 negatives. Meta
 1465199570012388 is current and malware/security passed; required/latest27 is
 published independently of installed metadata. Actual installation remains
-pending: the phone is absent over USB and a reconnect question is pending.
+pending. The USB Pixel is reconnected and the user authorizes operating it.
 No device action is implied by the Meta publication. Version-only28 preparation
 is private and publication remains held for actual27 RUNNING/rec:true. PR57/merge5df115b reached
 exact Pages44178155493 success;9 live files match and live policy26 probes verify
@@ -46,8 +65,11 @@ files match, including the reconstructed patch. The user confirms fixed27 then
 test28. Old version-only27-r1/run045 is revoked,
 unpublished and lacks this fix; preserve its stopped qualification evidence.
 Helper3 is unchanged: the observed failure precedes its handoff. No ADB app
-stop/start/reboot workaround. Phone USB disconnected again after two requests;
-a planned third request was not dispatched. Continue source work independently.
+stop/start/reboot workaround. A planned third request was not dispatched while USB was absent. After
+reconnection, the PWA-only check815086825825642834 completed with installed25,
+available26, required27 / required-update-not-yet-on-channel. No27 download or
+installation began. The portal independently shows a single effective Quest2
+Developer target27, Complete; a propagation/cache explanation remains unproven.
 
 The user resumes attended testing and authorizes operating the USB Pixel. Quest2
 is already on Wi-Fi ADB. Actual Meta23 was IDLE/g0/r1, rec:false, pending:false,

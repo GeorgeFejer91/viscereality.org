@@ -122,7 +122,7 @@ def run():
                          session_allowed=False,available_code=18,attempt='777',revision='9')
             page.evaluate('window.reviewMetaUpdate='+json.dumps(blocked))
             page.clock.run_for(1200)
-            expect(page.locator('#meta-update-status')).to_contain_text('erforderlich')
+            expect(page.locator('#meta-update-status')).to_have_text('Meta bietet das benötigte Update noch nicht an.')
             expect(page.locator('#meta-update-detail')).to_contain_text(str(required))
             expect(page.locator('#patient-next')).to_be_disabled()
             review.shot(page,f'meta-repeatable-required-{width}-{text_size or "normal"}','Required update',page.locator('#meta-update-status'),'Meta update')
