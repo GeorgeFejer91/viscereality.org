@@ -12,11 +12,29 @@ SDK effects until a fresh CURRENT observation, and retire only observed ownershi
 changes. Actual install grants remain mandatory; never block render locks or
 interpret missing observations as valid.
 
-- [ ] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
+- [x] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
   across prepared op9, polled replies, final install grant and helper handoff.
 - [ ] Publish/install fixed27-r2/run046, then hold version-only28 until an actual
   27 session is RUNNING/rec:true and root releases the attended update test.
 - [ ] Test preparation/check and running-session save/update to28 on hardware.
+
+Source4edf4b89/tree358a0c91 passes independent specification/quality review.
+All907 Rust tests pass with6 intentional ignores, all14 updater suites pass
+(183 coordinator/108 duplicate/64 service/12 queued-exit), plus110-source javac,
+Android arm64 typecheck and the actual Java/native audio join. The locked-read
+regression is RED as Retired and GREEN as Unavailable; this reproduces the
+hazard, not the unlogged physical predicate. The worker retains the exact reply
+and nested continuation; UNKNOWN cannot grant install or repeat helper ARM.
+The old boolean JNI remains fail-closed; private nativeObservedFence(IJJJ)I
+provides the typed worker result. Helper3 IPC has not changed.
+
+The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
+5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723).
+Fixed27-r2/run046 signed APK is built; independent artifact qualification is in
+progress. No Meta27 release or installation is claimed. PR57/merge5df115b reached
+exact Pages44178155493 success;9 live files match and live policy26 probes verify
+25 requires the enabled update action,26 continues, and an actual-shaped running
+25 retains explicit finish/save/update without automatic stop (synthetic transport).
 
 The user confirms fixed27 then test28. Old version-only27-r1/run045 is revoked,
 unpublished and lacks this fix; preserve its stopped qualification evidence.

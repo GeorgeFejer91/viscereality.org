@@ -2,6 +2,22 @@
 
 ## Attended Meta26 request and owner-read contention — 2026-11-17
 
+The repaired source4edf4b89/tree358a0c91 passes independent spec/quality review,
+907 native tests/6 ignored,183 coordinator,108 duplicate,64 service and12
+queued-exit checks within all14 updater suites. Real held projection/setup locks
+are observed Unavailable while exact wrong IDs and observed retirement still
+reject. Consumed SDK messages, post-ARM and post-journal stages resume once,
+without another poll/download/install/exit effect while held. Android arm64
+cargo check,110-source production javac and actual Java/native audio join pass.
+The2,368,442byte source patch reconstructs that exact tree. Fixed27-r2 is built;
+its independent signed-artifact qualification and hardware installation are pending.
+
+Policy26 release PR57/merge5df115b deployed in exact Pages44178155493. All9
+checked live files match Git. Live browser fixtures verify required25 has an
+enabled Update action,26 skips that required step, and running25 retains its
+explicit Save/Update action without an automatic stop. This is synthetic
+transport, not a device installation.
+
 The actual Pixel6a loaded20261117-preparation-audio-recovery; green control,
 IDLE/rec:false and an enabled Update button are confirmed. PR56/merge5f3b375
 reached Pages44169545352 success,17 live-file matches and26 live browser cases.

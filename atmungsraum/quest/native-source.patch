@@ -3534,10 +3534,10 @@ index 0000000000000000000000000000000000000000..e18d53db601cf945f69ba80097930d1d
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..268bb611d3a61244b9f6ae195594b13d1aef25ef
+index 0000000000000000000000000000000000000000..129ec5250e95018af13c3e936cf7f86f4c20bfc5
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,2360 @@
+@@ -0,0 +1,2368 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -5344,25 +5344,29 @@ index 0000000000000000000000000000000000000000..268bb611d3a61244b9f6ae195594b13d
 +        && crate::meta_update_admission::can_end_preparation()
 +}
 +
++#[cfg(test)]
 +pub(crate) fn maintenance_parked() -> bool {
++    observe_maintenance_park().is_ok()
++}
++pub(crate) fn observe_maintenance_park(
++) -> Result<(), crate::experiment_session_runtime::MaintenanceObservationError> {
++    use crate::experiment_session_runtime::MaintenanceObservationError::Retired;
 +    if !selected() {
-+        return true;
++        return Ok(());
 +    }
-+    let Ok(guard) = state().try_lock() else {
-+        return false;
-+    };
-+    let Some(r) = guard.as_ref() else {
-+        return false;
-+    };
++    let guard = state().try_lock()?;
++    let r = guard.as_ref().ok_or(Retired)?;
 +    let s = r.core.snapshot(r.now_ns());
-+    !r.started
++    (!r.started
 +        && r.park_after.is_none()
 +        && r.recovery.is_none()
 +        && r.last_admitted_frame.is_none()
 +        && s.parked
 +        && !s.playing
 +        && s.calibration == CalibrationState::Idle
-+        && s.experiment == ExperimentState::Preparation
++        && s.experiment == ExperimentState::Preparation)
++        .then_some(())
++        .ok_or(Retired)
 +}
 +#[cfg(test)]
 +pub(crate) fn driver_output() -> Option<SetupDriverOutput> {
@@ -5842,6 +5846,10 @@ index 0000000000000000000000000000000000000000..268bb611d3a61244b9f6ae195594b13d
 +
 +#[cfg(all(test, not(feature = "showcase")))]
 +pub(crate) mod test_support {
++    pub(crate) fn with_state_locked(action: impl FnOnce()) {
++        let _guard = super::state().lock().unwrap();
++        action();
++    }
 +    use super::*;
 +    pub(crate) struct Guard {
 +        previous: Option<Runtime>,
@@ -11119,7 +11127,7 @@ index bc962d97b429794a74fac425e36c92db2846eee0..e224cabeb91ddee3c15e99f2c074ab3a
          None
      };
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d7d739671 100644
+index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..5540c4f4647f4a7d88718e781b7ce141bfcbc5f0 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -237,6 +237,7 @@ struct Projection {
@@ -11999,14 +12007,40 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
          raw,
          polar_ready_at_receipt: runtime.polar_ready_at_receipt(),
          received_at: Instant::now(),
-@@ -4180,6 +4623,37 @@ pub(crate) fn immersive_owner_identity() -> u64 {
+@@ -4180,6 +4623,78 @@ pub(crate) fn immersive_owner_identity() -> u64 {
          .unwrap_or(0)
  }
  
 +/// Actual initialized, recovered, idle owner. Maintenance has already excluded queued mutations.
 +pub(crate) fn maintenance_owner() -> Option<(u64, u64)> {
-+    maintenance_idle_owner()
-+        .filter(|_| crate::experiment_breathing_setup_runtime::maintenance_parked())
++    observe_maintenance_owner(None).ok()
++}
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) enum MaintenanceObservationError {
++    Unavailable,
++    Retired,
++}
++impl<T> From<std::sync::TryLockError<T>> for MaintenanceObservationError {
++    fn from(error: std::sync::TryLockError<T>) -> Self {
++        match error {
++            std::sync::TryLockError::WouldBlock => Self::Unavailable,
++            std::sync::TryLockError::Poisoned(_) => Self::Retired,
++        }
++    }
++}
++pub(crate) fn observe_maintenance_owner(
++    expected: Option<(u64, u64)>,
++) -> Result<(u64, u64), MaintenanceObservationError> {
++    let runtime = registry()
++        .slot
++        .try_read()?
++        .as_ref()
++        .cloned()
++        .ok_or(MaintenanceObservationError::Retired)?;
++    let owner = observe_idle_writer(&runtime, expected)?;
++    crate::experiment_breathing_setup_runtime::observe_maintenance_park()?;
++    Ok(owner)
 +}
 +
 +/// Writer/control safety only; callers must still establish the actual audio park.
@@ -12015,11 +12049,26 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
 +    maintenance_idle_owner_for(&runtime)
 +}
 +fn maintenance_idle_owner_for(runtime: &ExperimentSessionRuntime) -> Option<(u64, u64)> {
++    observe_idle_writer(runtime, None).ok()
++}
++fn observe_idle_writer(
++    runtime: &ExperimentSessionRuntime,
++    expected: Option<(u64, u64)>,
++) -> Result<(u64, u64), MaintenanceObservationError> {
 +    let owner = runtime.immersive_owner_identity.load(Ordering::Acquire);
-+    if owner == 0 || owner >= i64::MAX as u64 || runtime.worker_finished() {
-+        return None;
++    let identity = (owner, runtime.runtime_epoch);
++    if owner == 0
++        || owner >= i64::MAX as u64
++        || expected.is_some_and(|prior| prior != identity)
++        || runtime
++            .worker
++            .try_lock()?
++            .as_ref()
++            .map_or(true, JoinHandle::is_finished)
++    {
++        return Err(MaintenanceObservationError::Retired);
 +    }
-+    let p = runtime.projection.try_read().ok()?;
++    let p = runtime.projection.try_read()?;
 +    if p.phase != SessionPhase::Idle
 +        || p.control_state != crate::experiment_session::ExperimentControlState::Idle
 +        || p.session_key.is_some()
@@ -12029,15 +12078,15 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
 +        || p.recording_root_status != "ready"
 +        || p.shutdown_status != "not-requested"
 +    {
-+        return None;
++        return Err(MaintenanceObservationError::Retired);
 +    }
-+    Some((owner, runtime.runtime_epoch))
++    Ok(identity)
 +}
 +
  pub(crate) fn apply_terminal_with_fence(raw: &str, scope: LocalTerminalScope) -> String {
      match runtime() {
          Ok(r) => r.apply_local_terminal(raw, scope),
-@@ -4210,6 +4684,36 @@ pub(crate) fn current_generation() -> u64 {
+@@ -4210,6 +4725,36 @@ pub(crate) fn current_generation() -> u64 {
      })
  }
  
@@ -12074,7 +12123,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
  pub(crate) fn current_presentation() -> PresentationState {
      let Ok(runtime) = runtime() else {
          return PresentationState::Experimenter;
-@@ -4578,6 +5082,18 @@ fn parse_mutating_command(
+@@ -4578,6 +5123,18 @@ fn parse_mutating_command(
              if object.contains_key("breath_guidance") {
                  start_fields.push("breath_guidance");
              }
@@ -12093,7 +12142,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
              require_exact_fields(object, &start_fields).map_err(|reason| failure(reason))?;
              let condition_value = object
                  .get("condition")
-@@ -4591,7 +5107,7 @@ fn parse_mutating_command(
+@@ -4591,7 +5148,7 @@ fn parse_mutating_command(
              let threshold_ms = object
                  .get("completion_threshold_ms")
                  .and_then(Value::as_u64)
@@ -12102,7 +12151,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
                  .ok_or_else(|| failure("completion-threshold-invalid"))?;
              let utc_ns = object
                  .get("started_at_utc_ns")
-@@ -4632,6 +5148,7 @@ fn parse_mutating_command(
+@@ -4632,6 +5189,7 @@ fn parse_mutating_command(
                  condition,
                  completion_threshold_ns: threshold_ms.saturating_mul(1_000_000),
                  utc_ns,
@@ -12110,7 +12159,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
                  identity: StartIdentity {
                      profile_sha256,
                      audio,
-@@ -4677,6 +5194,13 @@ fn parse_mutating_command(
+@@ -4677,6 +5235,13 @@ fn parse_mutating_command(
              require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
              ParsedOperation::AudioStarted
          }
@@ -12124,7 +12173,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
          "audio-ended" => {
              require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
              ParsedOperation::AudioEnded
-@@ -4696,6 +5220,7 @@ fn parse_mutating_command(
+@@ -4696,6 +5261,7 @@ fn parse_mutating_command(
          _ => return Err(failure("unsupported-operation")),
      };
      Ok(ParsedCommand {
@@ -12132,7 +12181,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
          operator_fence,
          local_terminal_fence: None,
          operation_id,
-@@ -4965,6 +5490,517 @@ mod tests {
+@@ -4965,6 +5531,517 @@ mod tests {
  
      static NEXT: AtomicUsize = AtomicUsize::new(0);
  
@@ -12650,7 +12699,7 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
      include!("experiment_session_live_bias_tests.rs");
  
      fn temp_root(label: &str) -> PathBuf {
-@@ -7613,4 +8649,289 @@ mod tests {
+@@ -7613,4 +8690,321 @@ mod tests {
          }
      }
      include!("experiment_session_polar_tests.rs");
@@ -12709,6 +12758,38 @@ index ee0417f3d204e3142ce441fa3852c2c8d7e51df1..6fd606e21a93989da785c062896c3f6d
 +        setup::observe_clock(8, 0, 1_020_000_000, false);
 +        assert_eq!(park(1_020_000_000)["accepted"], true);
 +        assert!(maintenance_owner().is_some());
++        use crate::meta_update_admission::{observed_operation, FenceResult::*};
++        let cycle_revision = crate::meta_update_admission::test_cycle_revision();
++        assert_eq!(cycle_revision.0, 2);
++        {
++            let _busy = runtime.projection.write().unwrap();
++            assert_eq!(observed_operation(9, 43, 2, cycle_revision.1), Unavailable);
++        }
++        assert_eq!(observed_operation(9, 43, 2, cycle_revision.1), Current);
++        let revision = cycle_revision.1 + 1;
++        let observe = || observed_operation(3, 43, 2, revision);
++        assert_eq!(observe(), Current);
++        {
++            let _busy = runtime.projection.write().unwrap();
++            assert_eq!(observe(), Unavailable);
++            assert_eq!(observed_operation(3, 99, 2, revision), Retired);
++            assert_eq!(observed_operation(3, 43, 1, revision), Retired);
++            assert_eq!(observed_operation(4, 43, 2, revision), Unavailable);
++            assert_eq!(observed_operation(5, 43, 2, revision), Unavailable);
++            runtime.immersive_owner_identity.store(2, Ordering::Release);
++            assert_eq!(observe(), Retired);
++            runtime.immersive_owner_identity.store(1, Ordering::Release);
++        }
++        setup::test_support::with_state_locked(|| assert_eq!(observe(), Unavailable));
++        assert_eq!(observe(), Current);
++        {
++            let mut projection = runtime.projection.write().unwrap();
++            projection.recording_root_status = "failed";
++        }
++        assert_eq!(observe(), Retired);
++        runtime.projection.write().unwrap().recording_root_status = "ready";
++        runtime.immersive_owner_identity.store(2, Ordering::Release);
++        assert_eq!(observe(), Retired);
 +        assert!(
 +            !crate::meta_update_admission::admit_session(),
 +            "park still requires original update check grant"
@@ -13258,10 +13339,10 @@ index 2a8bc3a13aa3cc28c9ac3faf98a243f87bb8290b..9fb2305d2309e25d4254d8201d0283ae
  mod session_recording_writer;
 diff --git a/apps/native-renderer-android/native/src/meta_update_admission.rs b/apps/native-renderer-android/native/src/meta_update_admission.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0d35e118bfbba6bd30256f2bd9e29a6e1caf69bc
+index 0000000000000000000000000000000000000000..a2f6653800b003e9bd6c0a49ec2d95389b14872d
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/meta_update_admission.rs
-@@ -0,0 +1,766 @@
+@@ -0,0 +1,826 @@
 +//! Process-local preparation cycle authority. No lock spans SDK, writer, or audio callbacks.
 +use std::sync::{Mutex, OnceLock};
 +
@@ -13626,6 +13707,82 @@ index 0000000000000000000000000000000000000000..0d35e118bfbba6bd30256f2bd9e29a6e
 +    }
 +}
 +
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++#[repr(i32)]
++pub(crate) enum FenceResult {
++    Retired = 0,
++    Current = 1,
++    Unavailable = 2,
++}
++
++#[cfg(test)]
++pub(crate) fn test_cycle_revision() -> (u64, u64) {
++    let gate = state().lock().unwrap();
++    (gate.cycle, gate.revision)
++}
++
++#[cfg(any(test, all(target_os = "android", not(feature = "showcase"))))]
++pub(crate) fn observed_operation(op: i32, attempt: u64, cycle: u64, revision: u64) -> FenceResult {
++    use crate::experiment_session_runtime::{
++        observe_maintenance_owner, MaintenanceObservationError,
++    };
++    use FenceResult::*;
++    let expected = state().lock().unwrap_or_else(|e| e.into_inner()).owner;
++    let observation = observe_maintenance_owner(expected);
++    let mut gate = state().lock().unwrap_or_else(|e| e.into_inner());
++    let phase_matches = match op {
++        2 | 4 | 5 => gate.phase == 1,
++        3 => matches!(gate.phase, 1 | 3),
++        9 => gate.phase == 4 && !gate.session_seen && gate.queued == 0,
++        _ => false,
++    };
++    if expected.is_none()
++        || expected != gate.owner
++        || !gate.exact(attempt, cycle, revision)
++        || !phase_matches
++    {
++        return Retired;
++    }
++    let owner = match observation {
++        Ok(owner) if Some(owner) == expected => owner,
++        Err(MaintenanceObservationError::Unavailable) => return Unavailable,
++        _ => return Retired,
++    };
++    let applied = match op {
++        2 => gate.matches(attempt),
++        3 => gate.valid(attempt, cycle, revision, owner),
++        4 => gate.install(attempt, owner),
++        5 => gate.grant(attempt, cycle, revision),
++        9 => gate.begin_prepared(attempt, cycle, revision, owner),
++        _ => false,
++    };
++    if applied {
++        Current
++    } else {
++        Retired
++    }
++}
++#[cfg(all(target_os = "android", feature = "showcase"))]
++fn observed_operation(_: i32, _: u64, _: u64, _: u64) -> FenceResult {
++    FenceResult::Retired
++}
++#[cfg(target_os = "android")]
++#[no_mangle]
++pub extern "system" fn Java_io_github_mesmerprism_rustyquest_native_1renderer_NativeRendererMetaUpdate_nativeObservedFence(
++    _env: jni::EnvUnowned,
++    _class: jni::objects::JClass,
++    op: jni::sys::jint,
++    attempt: jni::sys::jlong,
++    cycle: jni::sys::jlong,
++    revision: jni::sys::jlong,
++) -> jni::sys::jint {
++    observed_operation(
++        op,
++        attempt.max(0) as u64,
++        cycle.max(0) as u64,
++        revision.max(0) as u64,
++    ) as jni::sys::jint
++}
 +#[cfg(all(target_os = "android", not(feature = "showcase")))]
 +fn operation(op: i32, attempt: u64, cycle: u64, revision: u64) -> bool {
 +    if op == 8 {
@@ -13633,32 +13790,16 @@ index 0000000000000000000000000000000000000000..0d35e118bfbba6bd30256f2bd9e29a6e
 +            attempt, cycle, revision,
 +        );
 +    }
-+    let observation = if matches!(op, 1..=5 | 9) {
-+        crate::experiment_session_runtime::maintenance_owner()
-+    } else {
-+        None
-+    };
++    if matches!(op, 2..=5 | 9) {
++        return observed_operation(op, attempt, cycle, revision) == FenceResult::Current;
++    }
++    let owner = (op == 1)
++        .then(crate::experiment_session_runtime::maintenance_owner)
++        .flatten();
 +    let mut gate = state().lock().unwrap_or_else(|e| e.into_inner());
 +    match op {
 +        0 => attempt == 0 && cycle == 0 && revision == 0 && gate.select(),
-+        1 => observation.is_some_and(|owner| gate.begin(attempt, cycle, revision, owner)),
-+        2 => {
-+            gate.exact(attempt, cycle, revision)
-+                && gate.matches(attempt)
-+                && gate.owner == observation
-+                && observation.is_some()
-+        }
-+        3 => observation.is_some_and(|owner| gate.valid(attempt, cycle, revision, owner)),
-+        4 => {
-+            gate.exact(attempt, cycle, revision)
-+                && observation.is_some_and(|owner| gate.install(attempt, owner))
-+        }
-+        5 => {
-+            observation.is_some()
-+                && gate.owner == observation
-+                && gate.grant(attempt, cycle, revision)
-+        }
-+        9 => observation.is_some_and(|owner| gate.begin_prepared(attempt, cycle, revision, owner)),
++        1 => owner.is_some_and(|owner| gate.begin(attempt, cycle, revision, owner)),
 +        6 => gate.block(attempt, cycle, revision),
 +        // A real externally observed install can only tighten admission. Retirement may have
 +        // advanced revision, but cannot erase this same-attempt irreversible observation.
@@ -25934,10 +26075,10 @@ index 0477d906ad1eee0f87accef3f7981605fd0b8649..4696df33e2600d86cb0e520e653efdb1
          launchActivity.clear();
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..435e20b039724aaa7ac7b81b012a7602423793f8
+index 0000000000000000000000000000000000000000..13aa5d1b8f1de61b1b7a0da14f745a4deb448da3
 --- /dev/null
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdate.java
-@@ -0,0 +1,214 @@
+@@ -0,0 +1,242 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.app.Activity;
@@ -25958,6 +26099,7 @@ index 0000000000000000000000000000000000000000..435e20b039724aaa7ac7b81b012a7602
 +    private static final Object HELPER_LOCK=new Object();
 +    private NativeRendererMetaUpdate(){}
 +    private static native boolean nativeFence(int operation,long attempt,long cycle,long revision);
++    private static native int nativeObservedFence(int operation,long attempt,long cycle,long revision);
 +    private static native String nativeCycleState();
 +    private static final class Binding {
 +        final Activity activity;final long epoch;volatile boolean frame,retired,exited;volatile long focusedGeneration;
@@ -26094,6 +26236,11 @@ index 0000000000000000000000000000000000000000..435e20b039724aaa7ac7b81b012a7602
 +        }
 +        public NativeRendererMetaUpdateService.Cycle read(){return cycle();}
 +        public boolean operation(int op,long attempt,long cycle,long revision){return nativeFence(op,attempt,cycle,revision);}
++        public boolean observed(int op,long attempt,long cycle,long revision){
++            int result=nativeObservedFence(op,attempt,cycle,revision);
++            if(result==2)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();
++            return result==1;
++        }
 +        public long loadedCode(){return loadedCode;}public long actualCode(){return packageCode(context);}
 +        public boolean ownerValid(){Binding b=binding;return b.frame&&trusted(b)&&loadedCode>0&&actualCode()==loadedCode;}
 +        public NativeRendererMetaUpdatePolicy.Value policy()throws Exception{return NativeRendererMetaUpdatePolicy.fetch(endpoint,context.getPackageName());}
@@ -26108,32 +26255,54 @@ index 0000000000000000000000000000000000000000..435e20b039724aaa7ac7b81b012a7602
 +            Binding b=binding;java.util.concurrent.CountDownLatch done=new java.util.concurrent.CountDownLatch(1);
 +            java.util.concurrent.atomic.AtomicBoolean accepted=new java.util.concurrent.atomic.AtomicBoolean();
 +            java.util.concurrent.atomic.AtomicBoolean expired=new java.util.concurrent.atomic.AtomicBoolean();
++            final java.util.concurrent.atomic.AtomicBoolean unreadable=new java.util.concurrent.atomic.AtomicBoolean();
 +            final long deadline=SystemClock.elapsedRealtime()+5000;
 +            Runnable action=new Runnable(){public void run(){try{
-+                if(!expired.get()&&SystemClock.elapsedRealtime()<=deadline&&b==binding&&ownerValid()&&nativeFence(3,attempt,cycle,revision)
++                if(!expired.get()&&SystemClock.elapsedRealtime()<=deadline&&b==binding&&ownerValid()&&observed(3,attempt,cycle,revision)
 +                        &&!expired.get()&&SystemClock.elapsedRealtime()<=deadline){
 +                    try{Class<?> k=Class.forName("io.github.mesmerprism.rustyquest.native_renderer.NativeRendererSelfKioskApplication",false,b.activity.getClassLoader());
 +                        accepted.set(Boolean.TRUE.equals(k.getDeclaredMethod("exitForQueuedMetaUpdate",Activity.class,long.class,long.class,long.class,long.class).invoke(null,b.activity,b.epoch,loadedCode,target,deadline)));
 +                    }catch(ReflectiveOperationException unavailable){accepted.set(false);}
 +                }
-+            }finally{done.countDown();}}};
++            }catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable busy){unreadable.set(true);}finally{done.countDown();}}};
 +            if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper())action.run();else if(!new Handler(android.os.Looper.getMainLooper()).post(action))return false;
-+            try{return done.await(5,java.util.concurrent.TimeUnit.SECONDS)&&accepted.get();}finally{expired.set(true);}
++            try{
++                boolean finished=done.await(5,java.util.concurrent.TimeUnit.SECONDS);
++                if(finished&&unreadable.get())throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();
++                return finished&&accepted.get();
++            }finally{expired.set(true);}
 +        }
-+        public boolean handoff(long attempt,long target)throws Exception {
++        private long armedAttempt, armedCycle, armedRevision;
++        public void cancelReversibleHandoff(long attempt,long cycle,long revision){
++            synchronized(HELPER_LOCK){
++                if(armedAttempt!=attempt||armedCycle!=cycle||armedRevision!=revision)return;
++                if(helper.acknowledge("cancel-watch")){armedAttempt=0;return;}
++            }
++            worker.postDelayed(() -> cancelReversibleHandoff(attempt,cycle,revision),1000L);
++        }
++        public boolean handoff(long attempt,long target,long cycle,long revision)throws Exception {
 +            Binding b=binding;
-+            synchronized(HELPER_LOCK){if(b!=binding||!ownerValid()||!helper.arm(attempt,target))return false;
-+                if(b!=binding||!ownerValid()){helper.acknowledge("cancel-watch");return false;}}
++            synchronized(HELPER_LOCK){if(b!=binding||!ownerValid())return false;
++                if(armedAttempt!=attempt||armedCycle!=cycle||armedRevision!=revision){
++                    if(!observed(3,attempt,cycle,revision)||!helper.arm(attempt,target))return false;
++                    armedAttempt=attempt;armedCycle=cycle;armedRevision=revision;
++                }
++                if(b!=binding||!ownerValid()){cancelReversibleHandoff(attempt,cycle,revision);return false;}}
 +            java.util.concurrent.CountDownLatch done=new java.util.concurrent.CountDownLatch(1);java.util.concurrent.atomic.AtomicBoolean accepted=new java.util.concurrent.atomic.AtomicBoolean();
 +            java.util.concurrent.atomic.AtomicBoolean expired=new java.util.concurrent.atomic.AtomicBoolean();
++            final java.util.concurrent.atomic.AtomicBoolean unreadable=new java.util.concurrent.atomic.AtomicBoolean();
 +            final long deadline=SystemClock.elapsedRealtime()+5000;
-+            Runnable action=new Runnable(){public void run(){try{if(!expired.get()&&SystemClock.elapsedRealtime()<=deadline&&b==binding&&ownerValid()
++            Runnable action=new Runnable(){public void run(){try{if(!expired.get()&&SystemClock.elapsedRealtime()<=deadline&&b==binding&&ownerValid()&&observed(3,attempt,cycle,revision)
 +                    &&!expired.get()&&SystemClock.elapsedRealtime()<=deadline){
 +                try{Class<?> k=Class.forName("io.github.mesmerprism.rustyquest.native_renderer.NativeRendererSelfKioskApplication",false,b.activity.getClassLoader());accepted.set(Boolean.TRUE.equals(k.getDeclaredMethod("handoffForMetaInstall",Activity.class,long.class,long.class).invoke(null,b.activity,b.epoch,deadline)));}
 +                catch(ClassNotFoundException noKiosk){accepted.set(true);}catch(ReflectiveOperationException unavailable){accepted.set(false);}
-+            }}finally{done.countDown();}}};
++            }}catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable busy){unreadable.set(true);}finally{done.countDown();}}};
 +            if(android.os.Looper.myLooper()==android.os.Looper.getMainLooper())action.run();else if(!new Handler(android.os.Looper.getMainLooper()).post(action))return false;
-+            try{return done.await(5,java.util.concurrent.TimeUnit.SECONDS)&&accepted.get()&&ownerValid();}finally{expired.set(true);}
++            try{
++                boolean finished=done.await(5,java.util.concurrent.TimeUnit.SECONDS);
++                if(finished&&unreadable.get())throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();
++                return finished&&accepted.get()&&ownerValid();
++            }finally{expired.set(true);}
 +        }
 +    }
 +    private static final class Persistence implements NativeRendererMetaUpdateService.Persistence {
@@ -26154,16 +26323,19 @@ index 0000000000000000000000000000000000000000..435e20b039724aaa7ac7b81b012a7602
 +}
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca06ecd8eb5
+index 0000000000000000000000000000000000000000..240d7d097bfbb48318f53b76af96885d25572955
 --- /dev/null
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateCoordinator.java
-@@ -0,0 +1,312 @@
+@@ -0,0 +1,390 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +/** Single-launch startup policy. One worker owns this object; no SDK call holds an authority lock. */
 +final class NativeRendererMetaUpdateCoordinator {
 +    static final long SAFE_INTEGER = 9007199254740991L;
 +    static final int INITIALIZE=1, VERSION=2, DOWNLOAD=3, PROGRESS=4, INSTALL=5, CANCEL=6;
++    /** A nonblocking observation could not read the owner. Retry the same step. */
++    static final class OwnerUnavailable extends RuntimeException {}
++    interface Step { void run(long now) throws Exception; }
 +    interface Transport {
 +        long request(int type) throws Exception;
 +        Message poll() throws Exception;
@@ -26177,7 +26349,9 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +        boolean install(long attempt);
 +        boolean handoff(long attempt) throws Exception;
 +        boolean externalInstall(long attempt);
++        default void cancelReversibleHandoff(long attempt){}
 +        void release(long attempt);
++        default boolean finishRelease(long attempt){release(attempt);return true;}
 +        default long requiredCode(){return 0;}
 +        default boolean rememberRequired(long code){return true;}
 +        default boolean queuedExitSelected(){return false;}
@@ -26249,6 +26423,20 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +    private long duplicateFloor;
 +    private SdkError lastSdkError;
 +    private volatile Snapshot snapshot;
++    private Step pending;
++    private long unavailableSince = -1L;
++    private boolean startupPending, pendingRecord, closing, reversibleHandoff, externalRecorded;
++    private void runStep(Step step,long now) throws Exception {
++        pending=step;
++        step.run(now);
++        if(pending==step)pending=null;
++    }
++    private void resumeClocks(long now) {
++        if(unavailableSince<0L)return;
++        long elapsed=Math.max(0,now-unavailableSince);
++        deadline+=elapsed; downloadStart+=elapsed; lastProgress+=elapsed; nextProgress+=elapsed;
++        unavailableSince=-1L;
++    }
 +
 +    NativeRendererMetaUpdateCoordinator(long installed,long attempt,Transport sdk,Fence fence,Store store) {
 +        this(installed,attempt,sdk,fence,store,null);
@@ -26256,6 +26444,9 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +    NativeRendererMetaUpdateCoordinator(long installed,long attempt,Transport sdk,Fence fence,Store store,Diagnostics diagnostics) {
 +        this.installed=installed;this.attempt=attempt;this.sdk=sdk;this.fence=fence;this.store=store;
 +        this.diagnostics=diagnostics;
++        try { initialize(); } catch(OwnerUnavailable busy) { startupPending=true; publish(); }
++    }
++    private void initialize() {
 +        boolean admitted=attempt>0&&fence.arm(attempt);
 +        if(installed<=0||installed>SAFE_INTEGER||!admitted) {
 +            terminal=true;state="restart_required";reason="maintenance-admission-unavailable";try{sdk.close();}finally{publish();}return;
@@ -26285,11 +26476,23 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +        if(frame||terminal)return;
 +        frame=true;deadline=now+15000;reason="awaiting-ready-native-owner";publish();
 +    }
-+    void retire(){if(!terminal){if(dispatched)uncertain("owner-retired-after-install");else fail("native-owner-retired");}}
++    void retire(){
++        if(terminal)return;
++        if(dispatched){
++            if(reversibleHandoff)fence.cancelReversibleHandoff(attempt);
++            uncertain("owner-retired-after-install");
++        }
++        else if(pendingRecord&&!store.clear())uncertain("pending-install-record-clear-failed");
++        else { pendingRecord=false; fail("native-owner-retired"); }
++    }
 +    void tick(long now) {
 +        if(terminal||!frame)return;
 +        try {
++            if(closing){runStep(pending,now);return;}
++            if(startupPending){initialize();startupPending=false;if(terminal)return;}
 +            if(!fence.valid(attempt)){retire();return;}
++            resumeClocks(now);
++            if(pending!=null){runStep(pending,now);publish();return;}
 +            if(!started) {
 +                if(now>=deadline){fail("native-owner-readiness-timeout");return;}
 +                if(!fence.ready(attempt))return;
@@ -26303,6 +26506,7 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +            } else if(!dispatched&&now>=deadline){fail(duplicatePhase>=1&&duplicatePhase<=3?"duplicate-download-recovery-timeout":expectedType==INITIALIZE?"platform-initialization-timeout":"version-check-timeout");return;}
 +            // Bound each pump, including unrequested SDK notifications, so rendering never waits.
 +            for(int count=0;count<32&&!terminal;count++) {
++                if(!fence.valid(attempt)){retire();return;}
 +                Message message=sdk.poll();if(message==null)break;
 +                int expected=message.requestId>0&&message.requestId==downloadRequest?DOWNLOAD
 +                    :message.requestId>0&&message.requestId==progressRequest?PROGRESS
@@ -26312,128 +26516,159 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +                diagnose(message.type,message.errorCode!=0?-1:message.type==PROGRESS?message.progressStatus:message.resultCode,
 +                    message.type==PROGRESS?message.downloadedBytes:0,message.type==PROGRESS?message.totalBytes:0);
 +                if(expected==DOWNLOAD)downloadRequest=0;else if(expected==PROGRESS)progressRequest=0;else expectedRequest=0;
-+                if(message.errorCode!=0){
-+                    lastSdkError=new SdkError(message);
-+                    if(diagnostics!=null)try{diagnostics.sdkError(lastSdkError);}catch(Exception unavailable){}
-+                    if(dispatched)uncertain("install-sdk-error-restart-required");
-+                    else if(message.type==DOWNLOAD&&message.errorCode>0&&message.installResult.equals("DUPLICATE_REQUEST")){
-+                        if(duplicatePhase!=0){fail("duplicate-download-already-retried");return;}
-+                        duplicatePhase=1;duplicateFloor=fence.requiredCode();downloadComplete=false;
-+                        progressRequest=completionProgressRequest=0;bytes=0;total=null;
-+                        state="checking";reason="checking-duplicate-download";issue(PROGRESS,now);
-+                    }else fail(message.type==INITIALIZE?"meta-platform-process-init-failed-restart-required":duplicatePhase==2?"duplicate-download-cancel-failed":"meta-sdk-request-failed");
-+                    return;
-+                }
-+                if(message.type==INITIALIZE) {
-+                    if(message.resultCode!=0){fail("meta-platform-process-init-failed-restart-required");return;}
-+                    platformReady=true;
-+                    reason="checking-meta-channel-version";issue(VERSION,now);
-+                } else if(message.type==VERSION) {
-+                    Long current=code(message.currentCode),available=code(message.availableCode);
-+                    if(current==null||available==null||current!=installed){fail("meta-version-identity-disagreement");return;}
-+                    if(duplicatePhase==3&&(fence.installedCode()!=installed||!fence.valid(attempt)||fence.requiredCode()<duplicateFloor)){
-+                        if(fence.installedCode()!=installed)external("duplicate-download-package-changed-restart-required");else fail("duplicate-download-owner-or-floor-changed");return;
-+                    }
-+                    latest=available;
-+                    if(latest>installed&&!fence.rememberRequired(latest)){fail("required-version-record-write-failed");return;}
-+                    if(fence.requiredCode()>installed&&latest<fence.requiredCode()){finish("update_required","required-update-not-yet-on-channel");return;}
-+                    if(latest<=installed){finish(confirmedReplacement?"updated":"current",confirmedReplacement?"installed-package-confirms-update":"installed-version-is-current");return;}
-+                    if(duplicatePhase==3)duplicatePhase=4;
-+                    state="downloading";reason="downloading-meta-channel-update";
-+                    downloadStart=lastProgress=now;nextProgress=now;issue(DOWNLOAD,now);
-+                } else if(message.type==DOWNLOAD) {
-+                    if(message.resultCode!=7){fail("meta-download-rejected");return;}
-+                    downloadComplete=true;
-+                    lastProgress=now;
-+                    nextProgress=now;
-+                } else if(message.type==PROGRESS) {
-+                    if(message.progressStatus==4||message.progressStatus==7){
-+                        external("external-install-in-progress-restart-required");return;
-+                    }
-+                    if(duplicatePhase==1&&fence.installedCode()!=installed){external("duplicate-download-package-changed-restart-required");return;}
-+                    boolean activeDownload=message.progressStatus==2||message.progressStatus==3;
-+                    if(message.downloadedBytes<0||message.totalBytes<0||message.downloadedBytes>SAFE_INTEGER
-+                            ||message.totalBytes>SAFE_INTEGER||message.totalBytes>0&&message.downloadedBytes>message.totalBytes
-+                            ||activeDownload&&duplicatePhase!=1&&message.downloadedBytes<bytes) {fail("meta-download-progress-invalid");return;}
-+                    if(duplicatePhase==1){
-+                        if(message.progressStatus!=1&&!activeDownload&&message.progressStatus!=5){fail("duplicate-download-status-unavailable");return;}
-+                        if(!fence.valid(attempt)){fail("duplicate-download-owner-or-floor-changed");return;}
-+                        if(fence.queuedExitSelected()){queuedExit();return;}
-+                        duplicatePhase=2;reason="restarting-duplicate-download";issue(CANCEL,now);return;
-+                    }
-+                    if(!activeDownload&&message.progressStatus!=5) {
-+                        fail("meta-download-status-invalid");return;
-+                    }
-+                    // SDK207 describes these counters as ongoing-download telemetry, while
-+                    // Installed is current app state. It gives no cross-state monotonicity
-+                    // guarantee. Preserve the last active sample across valid Installed
-+                    // counters; neither this state nor 100% bytes establishes completion.
-+                    if(activeDownload) {
-+                        if(message.downloadedBytes>bytes)lastProgress=now;
-+                        bytes=message.downloadedBytes;total=message.totalBytes==0?null:message.totalBytes;
-+                    }
-+                    // SDK download completion is authority; byte totals may remain unknown.
-+                    // Observe a progress request made after completion to exclude an external
-+                    // queued/installing operation before our own irreversible install dispatch.
-+                    if(downloadComplete&&message.requestId==completionProgressRequest){install(now);return;}
-+                    nextProgress=now+1000;
-+                } else if(message.type==CANCEL) {
-+                    if(duplicatePhase!=2||message.resultCode!=7){fail("duplicate-download-cancel-failed");return;}
-+                    if(fence.installedCode()!=installed){external("duplicate-download-package-changed-restart-required");return;}
-+                    if(!fence.valid(attempt)){fail("duplicate-download-owner-or-floor-changed");return;}
-+                    duplicatePhase=3;issue(VERSION,now);return;
-+                } else if(message.type==INSTALL) {
-+                    if(message.resultCode!=7){uncertain("meta-install-rejected-restart-required");return;}
-+                    reason="install-dispatched-awaiting-fresh-package-identity";
-+                }
++                runStep(t -> {
++                    // A real external installation notification can only tighten admission.
++                    boolean external=message.type==PROGRESS&&message.errorCode==0
++                        &&(message.progressStatus==4||message.progressStatus==7);
++                    if(!external&&!fence.valid(attempt)){retire();return;}
++                    consume(message,t);
++                },now);
++                if(terminal||closing||dispatched)break;
 +            }
-+            if(!terminal&&!dispatched&&state.equals("downloading")&&progressRequest==0&&now>=nextProgress)issue(PROGRESS,now);
++            if(!terminal&&!closing&&!dispatched&&state.equals("downloading")&&progressRequest==0&&now>=nextProgress)issue(PROGRESS,now);
 +            publish();
++        } catch(OwnerUnavailable busy) {
++            if(unavailableSince<0L)unavailableSince=now;
 +        } catch(Exception failure) {if(dispatched)uncertain("install-dispatch-uncertain-restart-required");else fail(platformReady?"meta-platform-unavailable":"meta-platform-process-init-failed-restart-required");}
 +    }
-+    private void queuedExit() throws Exception {
-+        if(latest==null||latest<=installed||latest<fence.requiredCode()||fence.requiredCode()<duplicateFloor||fence.installedCode()!=installed||!fence.valid(attempt)){
-+            fail("duplicate-download-owner-or-floor-changed");return;
++    private void consume(Message message,long now) throws Exception {
++        if(message.errorCode!=0){
++            lastSdkError=new SdkError(message);
++            if(diagnostics!=null)try{diagnostics.sdkError(lastSdkError);}catch(Exception unavailable){}
++            if(dispatched)uncertain("install-sdk-error-restart-required");
++            else if(message.type==DOWNLOAD&&message.errorCode>0&&message.installResult.equals("DUPLICATE_REQUEST")){
++                if(duplicatePhase!=0){fail("duplicate-download-already-retried");return;}
++                duplicatePhase=1;duplicateFloor=fence.requiredCode();downloadComplete=false;
++                progressRequest=completionProgressRequest=0;bytes=0;total=null;
++                state="checking";reason="checking-duplicate-download";issue(PROGRESS,now);
++            }else fail(message.type==INITIALIZE?"meta-platform-process-init-failed-restart-required":duplicatePhase==2?"duplicate-download-cancel-failed":"meta-sdk-request-failed");
++            return;
 +        }
-+        if(!store.save(new Pending(latest,attempt,1))){fail("pending-install-record-write-failed");return;}
-+        if(fence.installedCode()!=installed||!fence.valid(attempt)||!fence.install(attempt)){
-+            if(!store.clear()){uncertain("pending-install-record-clear-failed");return;}
-+            fail("preinstall-admission-retired");return;
++        if(message.type==INITIALIZE) {
++            if(message.resultCode!=0){fail("meta-platform-process-init-failed-restart-required");return;}
++            platformReady=true;
++            reason="checking-meta-channel-version";issue(VERSION,now);
++        } else if(message.type==VERSION) {
++            Long current=code(message.currentCode),available=code(message.availableCode);
++            if(current==null||available==null||current!=installed){fail("meta-version-identity-disagreement");return;}
++            if(duplicatePhase==3&&(fence.installedCode()!=installed||!fence.valid(attempt)||fence.requiredCode()<duplicateFloor)){
++                if(fence.installedCode()!=installed)external("duplicate-download-package-changed-restart-required");else fail("duplicate-download-owner-or-floor-changed");return;
++            }
++            latest=available;
++            if(latest>installed&&!fence.rememberRequired(latest)){fail("required-version-record-write-failed");return;}
++            if(fence.requiredCode()>installed&&latest<fence.requiredCode()){finish("update_required","required-update-not-yet-on-channel");return;}
++            if(latest<=installed){finish(confirmedReplacement?"updated":"current",confirmedReplacement?"installed-package-confirms-update":"installed-version-is-current");return;}
++            if(duplicatePhase==3)duplicatePhase=4;
++            state="downloading";reason="downloading-meta-channel-update";
++            downloadStart=lastProgress=now;nextProgress=now;issue(DOWNLOAD,now);
++        } else if(message.type==DOWNLOAD) {
++            if(message.resultCode!=7){fail("meta-download-rejected");return;}
++            downloadComplete=true;
++            lastProgress=now;
++            nextProgress=now;
++        } else if(message.type==PROGRESS) {
++            if(message.progressStatus==4||message.progressStatus==7){
++                external("external-install-in-progress-restart-required");return;
++            }
++            if(duplicatePhase==1&&fence.installedCode()!=installed){external("duplicate-download-package-changed-restart-required");return;}
++            boolean activeDownload=message.progressStatus==2||message.progressStatus==3;
++            if(message.downloadedBytes<0||message.totalBytes<0||message.downloadedBytes>SAFE_INTEGER
++                    ||message.totalBytes>SAFE_INTEGER||message.totalBytes>0&&message.downloadedBytes>message.totalBytes
++                    ||activeDownload&&duplicatePhase!=1&&message.downloadedBytes<bytes) {fail("meta-download-progress-invalid");return;}
++            if(duplicatePhase==1){
++                if(message.progressStatus!=1&&!activeDownload&&message.progressStatus!=5){fail("duplicate-download-status-unavailable");return;}
++                if(!fence.valid(attempt)){fail("duplicate-download-owner-or-floor-changed");return;}
++                if(fence.queuedExitSelected()){install(now,true);return;}
++                duplicatePhase=2;reason="restarting-duplicate-download";issue(CANCEL,now);return;
++            }
++            if(!activeDownload&&message.progressStatus!=5) {
++                fail("meta-download-status-invalid");return;
++            }
++            // SDK207 describes these counters as ongoing-download telemetry, while
++            // Installed is current app state. It gives no cross-state monotonicity
++            // guarantee. Preserve the last active sample across valid Installed
++            // counters; neither this state nor 100% bytes establishes completion.
++            if(activeDownload) {
++                if(message.downloadedBytes>bytes)lastProgress=now;
++                bytes=message.downloadedBytes;total=message.totalBytes==0?null:message.totalBytes;
++            }
++            // SDK download completion is authority; byte totals may remain unknown.
++            // Observe a progress request made after completion to exclude an external
++            // queued/installing operation before our own irreversible install dispatch.
++            if(downloadComplete&&message.requestId==completionProgressRequest){install(now,false);return;}
++            nextProgress=now+1000;
++        } else if(message.type==CANCEL) {
++            if(duplicatePhase!=2||message.resultCode!=7){fail("duplicate-download-cancel-failed");return;}
++            if(fence.installedCode()!=installed){external("duplicate-download-package-changed-restart-required");return;}
++            if(!fence.valid(attempt)){fail("duplicate-download-owner-or-floor-changed");return;}
++            duplicatePhase=3;issue(VERSION,now);return;
++        } else if(message.type==INSTALL) {
++            if(message.resultCode!=7){uncertain("meta-install-rejected-restart-required");return;}
++            reason="install-dispatched-awaiting-fresh-package-identity";
 +        }
-+        dispatched=true;state="installing";reason="queued-meta-update-handoff";
-+        // This handoff requests no SDK install and asserts no existing job target/completion.
-+        // Helper ARM and kiosk latch must succeed before a separately revalidated main-thread exit.
-+        if(!fence.handoff(attempt)){uncertain(fence.handoffFailureReason());return;}
-+        publish();
-+        if(!fence.valid(attempt)||!fence.queuedExit(attempt,latest)){uncertain("queued-meta-update-exit-unavailable-restart-required");return;}
-+        terminal=true;expectedRequest=0;
-+        try{sdk.close();}finally{publish();}
 +    }
 +    private void external(String reason) throws Exception {
 +        dispatched=true;
 +        // External installation already exists: tighten before storage or counter validation.
 +        boolean blocked=fence.externalInstall(attempt);
-+        boolean handed=fence.handoff(attempt);
-+        boolean persisted=latest!=null&&store.save(new Pending(latest,attempt,1));
-+        uncertain(persisted&&blocked&&handed?reason:"external-install-handoff-uncertain-restart-required");
++        runStep(t -> {
++            boolean handed;
++            try {handed=blocked&&fence.valid(attempt)&&fence.handoff(attempt);}
++            catch(OwnerUnavailable busy){
++                if(!recordExternal()){uncertain("external-install-handoff-uncertain-restart-required");return;}
++                throw busy;
++            }
++            boolean persisted=recordExternal();
++            uncertain(persisted&&blocked&&handed?reason:"external-install-handoff-uncertain-restart-required");
++        },0L);
 +    }
-+    private void install(long now) throws Exception {
-+        if(latest==null||latest<=installed||fence.installedCode()!=installed||!fence.valid(attempt)) {
-+            fail("preinstall-owner-or-package-changed");return;
++    private boolean recordExternal() {
++        if(!externalRecorded)externalRecorded=latest!=null&&store.save(new Pending(latest,attempt,1));
++        return externalRecorded;
++    }
++    private void install(long now,boolean queued) throws Exception {
++        if(latest==null||latest<=installed||fence.installedCode()!=installed||!fence.valid(attempt)
++                ||queued&&(latest<fence.requiredCode()||fence.requiredCode()<duplicateFloor)){
++            fail(queued?"duplicate-download-owner-or-floor-changed":"preinstall-owner-or-package-changed");return;
 +        }
-+        // Durable write precedes the irreversible native install admission and SDK dispatch.
 +        if(!store.save(new Pending(latest,attempt,1))){fail("pending-install-record-write-failed");return;}
-+        if(fence.installedCode()!=installed||!fence.valid(attempt)||!fence.install(attempt)) {
++        pendingRecord=true;
++        runStep(t -> admitInstall(t,queued),now);
++    }
++    private void admitInstall(long now,boolean queued) throws Exception {
++        if(fence.installedCode()!=installed||!fence.valid(attempt)||!fence.install(attempt)){
 +            if(!store.clear()){uncertain("pending-install-record-clear-failed");return;}
-+            fail("preinstall-admission-retired");return;
++            pendingRecord=false;fail("preinstall-admission-retired");return;
 +        }
-+        dispatched=true;state="installing";reason="installing-meta-channel-update";
-+        if(!fence.handoff(attempt)){uncertain(fence.handoffFailureReason());return;}
-+        if(!fence.valid(attempt)){uncertain("owner-retired-after-install");return;}
-+        publish();issue(INSTALL,now);
++        pendingRecord=false;dispatched=true;reversibleHandoff=true;state="installing";
++        reason=queued?"queued-meta-update-handoff":"installing-meta-channel-update";
++        runStep(t -> handoff(t,queued),now);
++    }
++    private void handoff(long now,boolean queued) throws Exception {
++        if(!fence.valid(attempt)){retire();return;}
++        if(!fence.handoff(attempt)){
++            runStep(t -> handoffFailed(fence.handoffFailureReason()),now);return;
++        }
++        publish();
++        if(!queued){issue(INSTALL,now);return;}
++        runStep(t -> {
++            if(!fence.valid(attempt)){retire();return;}
++            if(!fence.queuedExit(attempt,latest)){
++                runStep(retry -> handoffFailed("queued-meta-update-exit-unavailable-restart-required"),t);return;
++            }
++            reversibleHandoff=false;terminal=true;expectedRequest=0;
++            try{sdk.close();}finally{publish();}
++        },now);
++    }
++    private void handoffFailed(String why) {
++        if(!fence.valid(attempt))retire();else uncertain(why);
 +    }
 +    private void issue(int type,long now) throws Exception {
-+        if(!fence.valid(attempt))throw new IllegalStateException("sdk-owner-admission-retired");
++        runStep(t -> issueCurrent(type,t),now);
++    }
++    private void issueCurrent(int type,long now) throws Exception {
++        if(!fence.valid(attempt)){retire();return;}
++        if(type==INSTALL)reversibleHandoff=false;
 +        if(type!=PROGRESS)diagnose(-type,0,0,0);
 +        long id=sdk.request(type);
 +        if(id<=0)throw new IllegalStateException("sdk-request-unavailable");
@@ -26457,9 +26692,21 @@ index 0000000000000000000000000000000000000000..cc26517bdfdc0d1ff8a5c55fe7f15ca0
 +    private void fail(String why){finish("failed",why);}
 +    private void finish(String value,String why) {
 +        if(fence.requiredCode()>installed&&!value.equals("restart_required"))value="update_required";
-+        terminal=true;expectedRequest=0;state=value;reason=why;
-+        // Closing invalidates native transport request lineage before sessions are admitted.
-+        try{sdk.close();}finally{fence.release(attempt);publish();}
++        final String outcome=value;
++        if(!closing){
++            closing=true;
++            try{sdk.close();}catch(RuntimeException unavailable){
++                terminal=true;state="restart_required";reason="sdk-transport-close-unconfirmed";publish();return;
++            }
++        }
++        // Keep the original command live while its exact grant waits for a readable owner.
++        pending=t -> {
++            boolean released=fence.finishRelease(attempt);
++            terminal=true;expectedRequest=0;
++            state=released?outcome:"failed";reason=released?why:"native-owner-retired";publish();
++        };
++        try {pending.run(0);} catch(OwnerUnavailable busy) { /* retry on the worker */ }
++        catch(Exception failure) {uncertain("native-release-unavailable");}
 +    }
 +    private void uncertain(String why) {
 +        terminal=true;expectedRequest=0;state="restart_required";reason=why;
@@ -26746,10 +26993,10 @@ index 0000000000000000000000000000000000000000..d387c620f10da16bc8f7236655836eda
 +}
 diff --git a/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateService.java b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateService.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..a544df26b78af5a489b0544515ac02ccda4e42a1
+index 0000000000000000000000000000000000000000..690cc1a91dfd442dcc92b26a6d22279a9d15a648
 --- /dev/null
 +++ b/apps/native-renderer-android/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/NativeRendererMetaUpdateService.java
-@@ -0,0 +1,228 @@
+@@ -0,0 +1,253 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.util.LinkedHashMap;
@@ -26764,12 +27011,17 @@ index 0000000000000000000000000000000000000000..a544df26b78af5a489b0544515ac02cc
 +        Cycle(long cycle,long revision,long attempt,boolean canCheck,boolean allowed,String busy){this(cycle,revision,attempt,canCheck,allowed,busy,false);}
 +        Cycle(long cycle,long revision,long attempt,boolean canCheck,boolean allowed,String busy,boolean canEndPreparation){this.canEndPreparation=canEndPreparation;this.cycle=cycle;this.revision=revision;this.attempt=attempt;this.canCheck=canCheck;this.allowed=allowed;this.busy=busy;}
 +    }
-+    interface Authority {Cycle read();boolean operation(int op,long attempt,long cycle,long revision);}
++    interface Authority {
++        Cycle read();
++        boolean operation(int op,long attempt,long cycle,long revision);
++        default boolean observed(int op,long attempt,long cycle,long revision){return operation(op,attempt,cycle,revision);}
++    }
 +    interface Environment {
 +        long loadedCode();long actualCode();boolean ownerValid();
 +        NativeRendererMetaUpdatePolicy.Value policy()throws Exception;
 +        NativeRendererMetaUpdateCoordinator.Transport transport(long attempt)throws Exception;
-+        boolean handoff(long attempt,long target)throws Exception;
++        boolean handoff(long attempt,long target,long cycle,long revision)throws Exception;
++        default void cancelReversibleHandoff(long attempt,long cycle,long revision){}
 +        void diagnostic(int stage,int status,long bytes,long total);
 +        default void sdkError(NativeRendererMetaUpdateCoordinator.SdkError error){}
 +        default boolean queuedExitSelected(){return false;}
@@ -26836,14 +27088,16 @@ index 0000000000000000000000000000000000000000..a544df26b78af5a489b0544515ac02cc
 +        Preparation ending=preparation;
 +        if(ending!=null) {
 +            Cycle current=authority.read();
-+            if(!environment.ownerValid()||current.cycle!=ending.cycle||current.attempt!=ending.id
-+                    ||(!current.canCheck&&!"setup-park-pending".equals(current.busy))) {
++            if(!environment.ownerValid()||current.cycle!=ending.cycle||current.attempt!=ending.id) {
 +                preparation=null;automaticHeld=true;state="failed";reason="native-preparation-owner-retired";return;
 +            }
-+            if(!current.canCheck)return;
++            if(!current.canCheck&&"setup-park-pending".equals(current.busy))return;
 +            synchronized(admission) {
 +                if(preparation!=ending||narrationOwners!=0)return;
-+                if(!authority.operation(9,ending.id,current.cycle,current.revision)) {
++                boolean admitted;
++                try {admitted=authority.observed(9,ending.id,current.cycle,current.revision);}
++                catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable busy){return;}
++                if(!admitted) {
 +                    preparation=null;automaticHeld=true;state="failed";reason="native-preparation-admission-unavailable";return;
 +                }
 +                preparation=null;active=new Attempt(ending.id,current.cycle,current.revision+1);
@@ -26953,24 +27207,42 @@ index 0000000000000000000000000000000000000000..a544df26b78af5a489b0544515ac02cc
 +        return result;
 +    }
 +    private final class Attempt implements NativeRendererMetaUpdateCoordinator.Fence {
-+        final long id,cycle,revision;volatile NativeRendererMetaUpdateCoordinator coordinator;String policyWarning;
++        final long id,cycle,revision;volatile NativeRendererMetaUpdateCoordinator coordinator;String policyWarning;boolean policyRead;
 +        Attempt(long id,long cycle,long revision){this.id=id;this.cycle=cycle;this.revision=revision;}
++        private boolean ownerReadyForInitialization() {
++            try {if(valid(id))return true;}
++            catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable busy){return false;}
++            active=null;authority.operation(6,id,cycle,revision);
++            state=floor>environment.loadedCode()?"update_required":"failed";
++            reason="native-owner-retired";return false;
++        }
 +        void initialize(long now) {
-+            try{NativeRendererMetaUpdatePolicy.Value value=environment.policy();if(!remember(value.minimum))policyWarning="required-version-record-write-failed";}catch(Exception unavailable){policyWarning="required-policy-unavailable";}
++            if(!ownerReadyForInitialization())return;
++            if(!policyRead) {
++                policyRead=true;
++                try{NativeRendererMetaUpdatePolicy.Value value=environment.policy();if(!remember(value.minimum))policyWarning="required-version-record-write-failed";}catch(Exception unavailable){policyWarning="required-policy-unavailable";}
++            }
 +            NativeRendererMetaUpdateCoordinator.Transport transport;
-+            try{if(!valid(id))throw new IllegalStateException("native-update-owner-retired");transport=environment.transport(id);}catch(Exception unavailable){transport=new NativeRendererMetaUpdateCoordinator.Transport(){public long request(int type)throws Exception{throw new IllegalStateException("meta-platform-unavailable");}public NativeRendererMetaUpdateCoordinator.Message poll(){return null;}public void close(){}};}
++            if(!ownerReadyForInitialization())return;
++            try{transport=environment.transport(id);}catch(Exception unavailable){transport=new NativeRendererMetaUpdateCoordinator.Transport(){public long request(int type)throws Exception{throw new IllegalStateException("meta-platform-unavailable");}public NativeRendererMetaUpdateCoordinator.Message poll(){return null;}public void close(){}};}
 +            coordinator=new NativeRendererMetaUpdateCoordinator(environment.loadedCode(),id,transport,this,persistence,new NativeRendererMetaUpdateCoordinator.Diagnostics(){public void sample(int stage,int status,long bytes,long total){environment.diagnostic(stage,status,bytes,total);}public void sdkError(NativeRendererMetaUpdateCoordinator.SdkError e){environment.sdkError(e);}});
 +            if(persistenceFailed)coordinator.failBeforeSdk("required-version-record-write-failed");
 +            coordinator.firstFrame(environment.afterPolicyTime(now));
 +        }
 +        public boolean arm(long attempt){return attempt==id&&valid(attempt);}
-+        public boolean ready(long attempt){return environment.ownerValid()&&authority.operation(2,id,cycle,revision);}
-+        public boolean valid(long attempt){return attempt==id&&environment.ownerValid()&&authority.operation(3,id,cycle,revision);}
++        public boolean ready(long attempt){return environment.ownerValid()&&authority.observed(2,id,cycle,revision);}
++        public boolean valid(long attempt){return attempt==id&&environment.ownerValid()&&authority.observed(3,id,cycle,revision);}
 +        public long installedCode(){return environment.actualCode();}
-+        public boolean install(long attempt){return attempt==id&&authority.operation(4,id,cycle,revision);}
++        public boolean install(long attempt){return attempt==id&&authority.observed(4,id,cycle,revision);}
 +        public boolean externalInstall(long attempt){irreversible=true;return authority.operation(7,id,cycle,revision);}
-+        public boolean handoff(long attempt)throws Exception{return attempt==id&&environment.handoff(id,Math.max(floor,environment.loadedCode()+1));}
-+        public void release(long attempt){authority.operation(floor<=environment.loadedCode()&&!persistenceFailed&&environment.actualCode()==environment.loadedCode()?5:6,id,cycle,revision);}
++        public boolean handoff(long attempt)throws Exception{return attempt==id&&environment.handoff(id,Math.max(floor,environment.loadedCode()+1),cycle,revision);}
++        public void cancelReversibleHandoff(long attempt){if(id==attempt)environment.cancelReversibleHandoff(id,cycle,revision);}
++        public void release(long attempt){finishRelease(attempt);}
++        public boolean finishRelease(long attempt){
++            if(floor>environment.loadedCode()||persistenceFailed){authority.operation(6,id,cycle,revision);return true;}
++            if(environment.ownerValid()&&authority.observed(5,id,cycle,revision))return true;
++            authority.operation(6,id,cycle,revision);return false;
++        }
 +        public long requiredCode(){return floor;}
 +        public boolean rememberRequired(long value){return remember(value);}
 +        public boolean queuedExitSelected(){return environment.queuedExitSelected();}
@@ -30838,10 +31110,10 @@ index 6cb1e8b18b34e4b67624da5b9fef7374c8c5ee34..c4811f991f9677bdb36d2b48a6fba778
 +in the adopted downstream plan.
 diff --git a/docs/META_PLATFORM_UPDATE.md b/docs/META_PLATFORM_UPDATE.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..c0f97425b2f325ec53a60ea8e05d263631254c36
+index 0000000000000000000000000000000000000000..2f1eed2c7832ed3f8d10a66ade87c48df13c2cb7
 --- /dev/null
 +++ b/docs/META_PLATFORM_UPDATE.md
-@@ -0,0 +1,253 @@
+@@ -0,0 +1,270 @@
 +# Optional in-app Meta Platform update transport
 +
 +The selected composition now also requires `meta_required_version_manifest_url`
@@ -30938,6 +31210,23 @@ index 0000000000000000000000000000000000000000..c0f97425b2f325ec53a60ea8e05d2636
 +advance revision; actual terminal writer completion plus parked audio advances
 +the cycle. Actual safe owner retirement also invalidates its old grant/cycle.
 +Java never resets native session_seen or fabricates a new preparation cycle.
++
++The accepted updater worker uses an internal three-result JNI fence for ready,
++valid, install admission, final grant and prepared begin. A contended runtime
++registry, worker handle, projection or setup lock yields *unavailable*. The
++worker keeps the original attempt and resumes its pending step on a fresh
++observation. A polled SDK reply stays associated with its original request.
++Time spent waiting for that observation is excluded from SDK progress deadlines.
++An observed identity, phase, writer, park, cycle or revision mismatch yields
++*retired*. A poisoned lock also fails closed. The older boolean seam returns
++false for both unavailable and retired.
++
++The durable install record, native admission and successful helper arm each
++precede their own continuation. If the main-thread owner check is unreadable,
++the original handoff or queued exit can resume with the same helper watch.
++Confirmed retirement before dispatch cancels the reversible watch and retains
++the durable uncertainty record. Once SDK installation has been requested,
++ownership loss leaves the attempt in restart-required state.
 +
 +When supported, private enrolled LAN status additionally advertises
 +`meta_update_preparation:1` and a boolean `meta_update.can_end_preparation`;
@@ -36754,10 +37043,10 @@ index 0000000000000000000000000000000000000000..f2cf988e67fcfa9afc733a2c874491f6
 +    main()
 diff --git a/tools/checks/test_meta_update_handoff_dispatch.py b/tools/checks/test_meta_update_handoff_dispatch.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..2979f8ceb1582a751bd4a4d88c84e6570a45358a
+index 0000000000000000000000000000000000000000..6cf3b291edaf7de0e0d7067b312f31a1f7c92cfe
 --- /dev/null
 +++ b/tools/checks/test_meta_update_handoff_dispatch.py
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,57 @@
 +"""Execute the production worker-to-main shared-handoff dispatch with inert main IPC."""
 +from pathlib import Path
 +import subprocess
@@ -36767,38 +37056,45 @@ index 0000000000000000000000000000000000000000..2979f8ceb1582a751bd4a4d88c84e657
 +PKG = 'io/github/mesmerprism/rustyquest/native_renderer'
 +TEST = r'''package io.github.mesmerprism.rustyquest.native_renderer;
 +import android.os.SystemClock;
++class NativeRendererMetaUpdateCoordinator {static class OwnerUnavailable extends RuntimeException{}}
 +class Activity {ClassLoader getClassLoader(){return getClass().getClassLoader();}}
 +class Binding {Activity activity=new Activity();long epoch=42;}
-+class Helper {boolean enabled=true;boolean selected(){return enabled;}boolean arm(long a,long t){return t>15;}boolean acknowledge(String m){return true;}}
++class Helper {boolean enabled=true;boolean selected(){return enabled;}int arms;boolean arm(long a,long t){arms++;return t>15;}boolean acknowledge(String m){return true;}}
 +class Handler extends android.os.Handler {Handler(android.os.Looper l){super(l);}}
 +class NativeRendererSelfKioskApplication {static int calls;static boolean handoffForMetaInstall(Activity a,long e,long deadline){calls++;return true;}static boolean handoffForMetaInstall(Activity a,long e){calls++;return true;}}
 +class Owner {static final Object HELPER_LOCK=new Object();Helper helper=new Helper();long loadedCode=15;Binding binding=new Binding();boolean valid=true,fence=true,slowValidation;int validations;
 + boolean ownerValid(){if(slowValidation&&++validations>2)SystemClock.now=6000;return valid;}
-+ boolean nativeFence(int op,long a,long c,long r){return fence;}
++ void cancelReversibleHandoff(long attempt,long cycle,long revision){helper.acknowledge("cancel-watch");}
++ boolean busy;long armedAttempt,armedCycle,armedRevision; boolean observed(int op,long a,long c,long r){if(busy)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();return fence;}
 + __DISPATCH__
 +}
 +public class HandoffDispatchTest {
 + static int checks;static void check(boolean b,String s){checks++;if(!b)throw new AssertionError(s);}
 + static Owner fresh(){SystemClock.now=0;android.os.Handler.immediate=true;android.os.Handler.pending=null;android.os.Handler.before=null;NativeRendererSelfKioskApplication.calls=0;return new Owner();}
 + public static void main(String[] args)throws Exception {
-+  Owner o=fresh();check(o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==1,"trusted helper/owner/nativephase3 dispatch invokes exact main exit seam");
++  Owner o=fresh();check(o.handoff(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==1,"trusted helper/owner/nativephase3 dispatch invokes exact main exit seam");
 +  
-+  o=fresh();check(!o.handoff(7,15)&&android.os.Handler.pending==null,"non-new target never queues exit");
-+  o=fresh();o.valid=false;check(!o.handoff(7,16)&&android.os.Handler.pending==null,"invalid initial owner never queues exit");
++  o=fresh();check(!o.handoff(7,15,1,2)&&android.os.Handler.pending==null,"non-new target never queues exit");
++  o=fresh();o.valid=false;check(!o.handoff(7,16,1,2)&&android.os.Handler.pending==null,"invalid initial owner never queues exit");
 +  
++  final Owner waiting=fresh();android.os.Handler.before=()->waiting.busy=true;
++  try{waiting.handoff(7,16,1,2);throw new AssertionError("unknown owner ran handoff");}catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable expected){}
++  check(waiting.helper.arms==1&&NativeRendererSelfKioskApplication.calls==0,"native lock gap after ARM never latches kiosk or loses reservation");
++  waiting.busy=false;android.os.Handler.before=null;
++  check(waiting.handoff(7,16,1,2)&&waiting.helper.arms==1&&NativeRendererSelfKioskApplication.calls==1,"same attempt resumes on main without a second helper ARM");
 +  final Owner replaced=fresh();android.os.Handler.before=new Runnable(){public void run(){replaced.binding=new Binding();}};
-+  check(!replaced.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"binding replacement before main execution never exits");
-+  o=fresh();o.slowValidation=true;check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"deadline is repeated after possibly slow owner/native lookup");
++  check(!replaced.handoff(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"binding replacement before main execution never exits");
++  o=fresh();o.slowValidation=true;check(!o.handoff(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"deadline is repeated after possibly slow owner/native lookup");
 +  o=fresh();android.os.Handler.before=new Runnable(){public void run(){SystemClock.now=6000;}};
-+  check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"late main execution beyond monotonic deadline never exits");
-+  o=fresh();android.os.Handler.immediate=false;check(!o.handoff(7,16)&&NativeRendererSelfKioskApplication.calls==0,"worker times out rather than waiting indefinitely for main");
++  check(!o.handoff(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"late main execution beyond monotonic deadline never exits");
++  o=fresh();android.os.Handler.immediate=false;check(!o.handoff(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"worker times out rather than waiting indefinitely for main");
 +  SystemClock.now=100;android.os.Handler.pending.run();check(NativeRendererSelfKioskApplication.calls==0,"already timed-out runnable remains expired even when invoked later");
 +  System.out.println("PASS "+checks+" production shared-handoff main-dispatch deadline/owner checks");
 + }
 +}'''
 +def main():
 +    source=ROOT/'apps/native-renderer-android/src/main/java'/PKG/'NativeRendererMetaUpdate.java'
-+    body=method(source.read_text(),'        public boolean handoff(long attempt,long target)')
++    body=method(source.read_text(),'        public boolean handoff(long attempt,long target,long cycle,long revision)')
 +    with tempfile.TemporaryDirectory(prefix='rq-queued-main-') as tmp:
 +        out=Path(tmp);os=out/'android/os';os.mkdir(parents=True)
 +        (os/'Looper.java').write_text('package android.os;public class Looper{static final Looper M=new Looper();public static Looper myLooper(){return null;}public static Looper getMainLooper(){return M;}}')
@@ -37084,10 +37380,10 @@ index 0000000000000000000000000000000000000000..74e2c7b9e49f9421075c7c9a0c845150
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_queued_dispatch.py b/tools/checks/test_meta_update_queued_dispatch.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..cc1741c00588e2c83ce4db4ec2449d5ecd30e50e
+index 0000000000000000000000000000000000000000..192cdc60108c8309524b4bde42d4cd649071f39c
 --- /dev/null
 +++ b/tools/checks/test_meta_update_queued_dispatch.py
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,55 @@
 +"""Execute the production worker-to-main queued-exit dispatch with inert main IPC."""
 +from pathlib import Path
 +import subprocess
@@ -37097,6 +37393,7 @@ index 0000000000000000000000000000000000000000..cc1741c00588e2c83ce4db4ec2449d5e
 +PKG = 'io/github/mesmerprism/rustyquest/native_renderer'
 +TEST = r'''package io.github.mesmerprism.rustyquest.native_renderer;
 +import android.os.SystemClock;
++class NativeRendererMetaUpdateCoordinator {static class OwnerUnavailable extends RuntimeException{}}
 +class Activity {ClassLoader getClassLoader(){return getClass().getClassLoader();}}
 +class Binding {Activity activity=new Activity();long epoch=42;}
 +class Helper {boolean enabled=true;boolean selected(){return enabled;}}
@@ -37104,7 +37401,7 @@ index 0000000000000000000000000000000000000000..cc1741c00588e2c83ce4db4ec2449d5e
 +class NativeRendererSelfKioskApplication {static int calls;static boolean exitForQueuedMetaUpdate(Activity a,long e,long loaded,long target,long deadline){calls++;return true;}}
 +class Owner {Helper helper=new Helper();long loadedCode=15;Binding binding=new Binding();boolean valid=true,fence=true,slowValidation;int validations;
 + boolean ownerValid(){if(slowValidation&&++validations>1)SystemClock.now=6000;return valid;}
-+ boolean nativeFence(int op,long a,long c,long r){return fence;}
++ boolean busy; boolean observed(int op,long a,long c,long r){if(busy)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();return fence;}
 + __DISPATCH__
 +}
 +public class QueuedDispatchTest {
@@ -37116,6 +37413,10 @@ index 0000000000000000000000000000000000000000..cc1741c00588e2c83ce4db4ec2449d5e
 +  o=fresh();check(!o.queuedExit(7,15,1,2)&&android.os.Handler.pending==null,"non-new target never queues exit");
 +  o=fresh();o.valid=false;check(!o.queuedExit(7,16,1,2)&&android.os.Handler.pending==null,"invalid initial owner never queues exit");
 +  o=fresh();o.fence=false;check(!o.queuedExit(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"main execution repeats native cycle/phase3 fence");
++  final Owner waiting=fresh();waiting.busy=true;
++  try{waiting.queuedExit(7,16,1,2);throw new AssertionError("unknown owner exited");}catch(NativeRendererMetaUpdateCoordinator.OwnerUnavailable expected){}
++  check(NativeRendererSelfKioskApplication.calls==0,"main-thread native observation unknown cannot authorize exit");
++  waiting.busy=false;check(waiting.queuedExit(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==1,"original queued exit can revalidate and run once");
 +  final Owner replaced=fresh();android.os.Handler.before=new Runnable(){public void run(){replaced.binding=new Binding();}};
 +  check(!replaced.queuedExit(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"binding replacement before main execution never exits");
 +  o=fresh();o.slowValidation=true;check(!o.queuedExit(7,16,1,2)&&NativeRendererSelfKioskApplication.calls==0,"deadline is repeated after possibly slow owner/native lookup");
@@ -37290,10 +37591,10 @@ index 0000000000000000000000000000000000000000..1a1c66aa57e299edf4c22ec4a3a1ade5
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_service.py b/tools/checks/test_meta_update_service.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..229cf4a1a7bc88eecb850da0bd1d7e2eb5894dd0
+index 0000000000000000000000000000000000000000..10e726f71021b78c7edff5232c8273bce1d5e326
 --- /dev/null
 +++ b/tools/checks/test_meta_update_service.py
-@@ -0,0 +1,178 @@
+@@ -0,0 +1,197 @@
 +"""Repeatable native-cycle service using production coordinator/SDK policy with fake effects."""
 +from pathlib import Path
 +from test_experiment_gateway_dedupe import method
@@ -37307,14 +37608,19 @@ index 0000000000000000000000000000000000000000..229cf4a1a7bc88eecb850da0bd1d7e2e
 +  long cycle=1,revision=1,attempt,required,actual=15,latest=15,minimum=11,clock,policyDelay;boolean crossPrep,prep,parking,denyPrep,allowed,checking,offline,policyOffline,downloadFails,installPhase,handoff=true,valid=true,retirePolicy,retireTransport,holdInit,helperSelected,duplicateDownload;int effects,saves,leases,closes,queuedExits;
 +  java.util.concurrent.CountDownLatch prepEntered,prepRelease;
 +  List<Integer> types=new ArrayList<>();String helperFailure="meta-update-helper-handoff-unavailable";public String handoffFailureReason(){return helperFailure;}
-+  public boolean queuedExitSelected(){return helperSelected;}public boolean queuedExit(long a,long target,long c,long r){check(installPhase&&a==attempt&&c==cycle&&r==revision&&target>=required,"queued service exit retains exact target/attempt/native cycle and revision");queuedExits++;return true;}
++  public boolean queuedExitSelected(){return helperSelected;}public boolean queuedExit(long a,long target,long c,long r){if(busyQueued)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();check(installPhase&&a==attempt&&c==cycle&&r==revision&&target>=required,"queued service exit retains exact target/attempt/native cycle and revision");queuedExits++;return true;}
 +  NativeRendererMetaUpdateCoordinator.Pending pending;
 +  NativeRendererMetaUpdateService service=new NativeRendererMetaUpdateService(this,this,this);
-+  public NativeRendererMetaUpdateService.Cycle read(){return new NativeRendererMetaUpdateService.Cycle(cycle,revision,attempt,!prep&&!parking&&!checking&&!installPhase,allowed,parking?"setup-park-pending":prep?"session-active":"",!denyPrep&&!checking&&!parking&&!installPhase);}
++  public NativeRendererMetaUpdateService.Cycle read(){return new NativeRendererMetaUpdateService.Cycle(cycle,revision,attempt,!busyReadyHint&&!prep&&!parking&&!checking&&!installPhase,allowed,busyReadyHint?"owner-not-parked":parking?"setup-park-pending":prep?"session-active":"",!denyPrep&&!checking&&!parking&&!installPhase);}
++  int busyOp,preparedBegins; boolean busyReadyHint,busyQueued;int helperHandoffs;
++  public boolean observed(int op,long a,long c,long r){
++   if(op==busyOp)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();
++   return operation(op,a,c,r);
++  }
 +  public boolean operation(int op,long a,long c,long r){
 +   if(c!=cycle||r!=revision)return false;
 +   if(op==8){if(prepEntered!=null){prepEntered.countDown();try{prepRelease.await();}catch(Exception e){return false;}}if(denyPrep||checking||installPhase)return false;prep=false;parking=true;allowed=false;attempt=a;cycle++;revision++;if(crossPrep){cycle++;attempt++;parking=false;}return true;}
-+   if(op==9){if(parking||a!=attempt)return false;checking=true;revision++;return true;}
++   if(op==9){if(parking||a!=attempt)return false;preparedBegins++;checking=true;revision++;return true;}
 +   if(op==1){if(checking)return false;checking=true;allowed=false;attempt=a;revision++;return true;}
 +   if(a!=attempt)return false;if(op==2||op==3)return checking;
 +   if(op==4||op==7){installPhase=true;checking=true;allowed=false;return true;}
@@ -37325,7 +37631,7 @@ index 0000000000000000000000000000000000000000..229cf4a1a7bc88eecb850da0bd1d7e2e
 +  public long afterPolicyTime(long before){return Math.max(before,clock);}
 +  public NativeRendererMetaUpdatePolicy.Value policy()throws Exception{clock+=policyDelay;if(retirePolicy)valid=false;if(offline||policyOffline)throw new Exception();return new NativeRendererMetaUpdatePolicy.Value(minimum,99);}
 +  public NativeRendererMetaUpdateCoordinator.Transport transport(long token){leases++;if(retireTransport)valid=false;return new NativeRendererMetaUpdateCoordinator.Transport(){long seq;Queue<NativeRendererMetaUpdateCoordinator.Message> q=new ArrayDeque<>();public long request(int t)throws Exception{types.add(t);effects++;if(offline)throw new Exception();long id=++seq;if(t!=1||!holdInit)q.add(new NativeRendererMetaUpdateCoordinator.Message(id,t,t==3&&downloadFails?1:0,t==3||t==5?7:0,"15",Long.toString(latest),0,0,t==4?5:0,duplicateDownload?409:0,duplicateDownload&&t==3?"DUPLICATE_REQUEST":"UNKNOWN"));return id;}public NativeRendererMetaUpdateCoordinator.Message poll(){return q.poll();}public void close(){closes++;}};}
-+  public boolean handoff(long a,long target){return handoff;}public void diagnostic(int a,int b,long c,long d){}
++  public boolean handoff(long a,long target,long c,long r){helperHandoffs++;return handoff;}public void diagnostic(int a,int b,long c,long d){}
 +  public long required(){return required;}public boolean require(long value){required=Math.max(required,value);saves++;return true;}
 +  public NativeRendererMetaUpdateCoordinator.Pending load(){return pending;}public boolean save(NativeRendererMetaUpdateCoordinator.Pending p){pending=p;return true;}public boolean clear(){pending=null;return true;}
 +  void tick(){for(int i=0;i<8;i++)service.tick(i+1);}
@@ -37393,6 +37699,20 @@ index 0000000000000000000000000000000000000000..229cf4a1a7bc88eecb850da0bd1d7e2e
 +  check(concurrent.prepEntered.await(2,java.util.concurrent.TimeUnit.SECONDS),"first preparation request is inside actual native transition");
 +  duplicate.start();concurrent.prepRelease.countDown();first.join(2000);duplicate.join(2000);
 +  check(!first.isAlive()&&!duplicate.isAlive()&&duplicateReplies[0].equals(duplicateReplies[1])&&new JSONObject(duplicateReplies[0]).getString("state").equals("accepted")&&concurrent.cycle==2,"concurrent same-ID request cannot overwrite accepted effect with busy or dispatch twice");
++  H gap=new H();gap.service.firstFrame();gap.tick();gap.prep=true;
++  JSONObject held=new JSONObject(gap.service.request(prepBody));int previousEffects=gap.effects;
++  gap.parking=false;gap.revision++;gap.busyOp=9;gap.tick();gap.busyReadyHint=true;gap.tick();
++  check(gap.preparedBegins==0&&gap.effects==previousEffects&&gap.service.status().getString("attempt").equals(held.getString("attempt")),"op9 and unreadable post-park hint leave original preparation active");
++  gap.busyReadyHint=false;gap.busyOp=3;gap.tick();
++  check(gap.preparedBegins==1&&gap.leases==1,"post-op9 owner gap opens no new SDK transport");
++  gap.busyOp=5;gap.tick();
++  check(gap.effects==previousEffects+2&&!gap.allowed&&gap.closes==2,"final grant remains pending after transport close during owner contention");
++  gap.busyOp=0;gap.tick();check(gap.allowed&&gap.preparedBegins==1&&gap.closes==2&&gap.effects==previousEffects+2,"same attempt grants once after recovery");
++  H queued=new H();queued.latest=16;queued.downloadFails=queued.duplicateDownload=queued.helperSelected=queued.busyQueued=true;
++  queued.service.firstFrame();queued.tick();int issued=queued.effects;
++  check(queued.queuedExits==0&&queued.helperHandoffs==1&&queued.pending!=null&&queued.installPhase,"queued exit owner unknown preserves exact journal/native admission/confirmed helper");
++  queued.tick();check(queued.effects==issued&&queued.helperHandoffs==1&&queued.queuedExits==0,"no repeated handoff or SDK call while exit unavailable");
++  queued.busyQueued=false;queued.tick();check(queued.effects==issued&&queued.queuedExits==1&&queued.helperHandoffs==1&&!queued.types.contains(5),"same queued exit resumes once without installing through SDK");
 +  GeneratedOutro.verify();
 +  System.out.println("PASS "+checks+" repeatable native-cycle service checks");
 + }
@@ -37474,10 +37794,10 @@ index 0000000000000000000000000000000000000000..229cf4a1a7bc88eecb850da0bd1d7e2e
 +if __name__=='__main__':main()
 diff --git a/tools/checks/test_meta_update_startup.py b/tools/checks/test_meta_update_startup.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..78b811a8628121ae445964f30d4af17895d202f8
+index 0000000000000000000000000000000000000000..2f2fdd6bcd2311a6690bd9dc243b526a9f0e3ebf
 --- /dev/null
 +++ b/tools/checks/test_meta_update_startup.py
-@@ -0,0 +1,164 @@
+@@ -0,0 +1,186 @@
 +"""Compile the production startup coordinator with deterministic SDK/clock/storage seams."""
 +from pathlib import Path
 +import subprocess
@@ -37496,7 +37816,8 @@ index 0000000000000000000000000000000000000000..78b811a8628121ae445964f30d4af178
 +  Map<Integer,Long> ids=new HashMap<>();
 +  NativeRendererMetaUpdateCoordinator.Pending pending;
 +  NativeRendererMetaUpdateCoordinator c;
-+  long required;boolean rememberAvailable,retireOnPoll;
++  long required;boolean rememberAvailable,retireOnPoll,busy,busyOnPoll,busyOnSave,busyOnInstall,busyOnHandoff;
++  int polls,installs,handoffs,cancelledWatches;
 +  public long requiredCode(){return required;}
 +  public boolean rememberRequired(long code){if(rememberAvailable)required=Math.max(required,code);return true;}
 +  final List<long[]> samples=new ArrayList<>(); boolean throwDiagnostics;
@@ -37505,20 +37826,21 @@ index 0000000000000000000000000000000000000000..78b811a8628121ae445964f30d4af178
 +  boolean sampled(int stage,int status,long bytes,long total){for(long[] row:samples)if(row[0]==stage&&row[1]==status&&row[2]==bytes&&row[3]==total)return true;return false;}
 +  long last(){return sequence;}
 +  public long request(int type){if(type==5)check(pending!=null&&nativeInstall&&handoffSeen,"durable/native/kiosk handoff precede SDK install");requests.add(type);ids.put(type,++sequence);return sequence;}
-+  public NativeRendererMetaUpdateCoordinator.Message poll(){NativeRendererMetaUpdateCoordinator.Message m=messages.poll();if(m!=null&&retireOnPoll)valid=false;return m;}
++  public NativeRendererMetaUpdateCoordinator.Message poll(){polls++;NativeRendererMetaUpdateCoordinator.Message m=messages.poll();if(m!=null&&busyOnPoll)busy=true;if(m!=null&&retireOnPoll)valid=false;return m;}
 +  public void close(){closes++;}
 +  public boolean arm(long attempt){armed=true;return valid;}
 +  public boolean ready(long attempt){return ready&&valid;}
-+  public boolean valid(long attempt){return valid;}
++  public boolean valid(long attempt){if(valid&&busy)throw new NativeRendererMetaUpdateCoordinator.OwnerUnavailable();return valid;}
 +  public long installedCode(){return installed;}
-+  public boolean install(long attempt){nativeInstall=valid&&armed;return nativeInstall;}
++  public boolean install(long attempt){installs++;if(busyOnInstall)busy=true;nativeInstall=valid&&armed;return nativeInstall;}
 +  boolean externalObserved;
 +  public boolean externalInstall(long attempt){externalObserved=true;nativeInstall=true;return true;}
-+  public boolean handoff(long attempt){check((externalObserved||pending!=null)&&nativeInstall,"handoff follows native admission and own installs require durable pending first");handoffSeen=handoff;if(retireDuringHandoff)valid=false;return handoff;}
++  public void cancelReversibleHandoff(long attempt){cancelledWatches++;}
++  public boolean handoff(long attempt){handoffs++;if(busyOnHandoff)busy=true;check((externalObserved||pending!=null)&&nativeInstall,"handoff follows native admission and own installs require durable pending first");handoffSeen=handoff;if(retireDuringHandoff)valid=false;return handoff;}
 +  public void release(long attempt){armed=false;releases++;}
 +  public NativeRendererMetaUpdateCoordinator.Pending load(){return pending;}
 +  boolean externalSaveExpected;
-+  public boolean save(NativeRendererMetaUpdateCoordinator.Pending p){if(externalSaveExpected)check(nativeInstall&&handoffSeen,"external native/kiosk irreversibility precedes possibly slow persistence");saves++;if(save)pending=p;return save;}
++  public boolean save(NativeRendererMetaUpdateCoordinator.Pending p){if(externalSaveExpected)check(nativeInstall&&handoffSeen,"external native/kiosk irreversibility precedes possibly slow persistence");saves++;if(busyOnSave)busy=true;if(save)pending=p;return save;}
 +  public boolean clear(){pending=null;return true;}
 +  void tick(long t){clock=t;c.tick(t);}
 +  void reply(int type,int error,int result,String current,String latest,long bytes,long total,int progress){
@@ -37530,7 +37852,27 @@ index 0000000000000000000000000000000000000000..78b811a8628121ae445964f30d4af178
 +  void complete(){download();tick(clock+1000);reply(4,0,0,null,null,100,100,5);tick(clock+1000);reply(4,0,0,null,null,100,100,5);}
 +  void state(String state,boolean allowed){check(c.snapshot().state.equals(state)&&c.snapshot().sessionAllowed==allowed,state+" admission");}
 + }
++ static void checkContention() {
++  Harness h=new Harness();h.download();h.busyOnPoll=true;
++  h.reply(4,0,0,null,null,262144,8246427,3);
++  check(h.messages.isEmpty()&&h.c.snapshot().downloadedBytes==0,"polled download sample held while owner unreadable");
++  int polls=h.polls,requests=h.requests.size();
++  h.tick(h.clock+700000);
++  check(h.polls==polls&&h.requests.size()==requests&&h.closes==0&&h.releases==0,"no polling, timeout, SDK calls or release while unknown");
++  h.busy=h.busyOnPoll=false;h.tick(h.clock+1);
++  check(h.c.snapshot().downloadedBytes==262144&&h.requests.size()==requests&&h.closes==0,"same original downloaded-byte sample resumes without replaying the download");
++  for(int stage=0;stage<3;stage++){
++   h=new Harness();h.busyOnSave=stage==0;h.busyOnInstall=stage==1;h.busyOnHandoff=stage==2;h.complete();
++   check(h.saves==1&&h.pending!=null&&!h.requests.contains(5)&&h.installs==(stage==0?0:1)&&h.handoffs==(stage==2?1:0),"unknown pre/post admission preserves exact durable stage");
++   h.tick(h.clock+60000);check(h.closes==0&&h.cancelledWatches==0,"temporary unavailability never cancels helper or closes transport");
++   h.busy=h.busyOnSave=h.busyOnInstall=h.busyOnHandoff=false;h.tick(h.clock+1);
++   check(h.saves==1&&h.installs==1&&h.handoffs==1&&Collections.frequency(h.requests,5)==1,"resume the same attempt without rewriting journal/rearming/sending twice");
++  }
++  h=new Harness();h.busyOnHandoff=true;h.complete();h.valid=false;h.tick(h.clock+1);
++  check(h.cancelledWatches==1&&h.pending!=null&&!h.requests.contains(5)&&h.closes==1,"actual retirement after helper handoff cancels reversible watch, retains journal, never dispatches install");
++ }
 + public static void main(String[] args){
++  checkContention();
 +  Harness h=new Harness();h.state("waiting",false);h.tick(20_000);check(h.requests.isEmpty(),"no SDK before genuine first frame");
 +  h=new Harness();h.begin();h.version("15","15");h.state("current",true);check(h.requests.equals(Arrays.asList(1,2)),"equal never downloads");
 +  h=new Harness();h.begin();h.version("15","14");h.state("current",true);
