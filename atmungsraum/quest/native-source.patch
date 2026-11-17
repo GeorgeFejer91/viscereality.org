@@ -454,7 +454,7 @@ index 00000000..75af7cfd
 +    }
 +}
 diff --git a/apps/native-renderer-android/native/src/breath_composition_driver.rs b/apps/native-renderer-android/native/src/breath_composition_driver.rs
-index 80046d3c..9c20f61a 100644
+index 80046d3c..bcb4c90c 100644
 --- a/apps/native-renderer-android/native/src/breath_composition_driver.rs
 +++ b/apps/native-renderer-android/native/src/breath_composition_driver.rs
 @@ -159,6 +159,31 @@ enum DriverStatus {
@@ -489,7 +489,7 @@ index 80046d3c..9c20f61a 100644
  impl DriverStatus {
      const fn as_str(self) -> &'static str {
          match self {
-@@ -189,6 +214,20 @@ pub(crate) struct BreathCompositionDriver {
+@@ -189,6 +214,25 @@ pub(crate) struct BreathCompositionDriver {
      reason: &'static str,
      accepted_outputs: u64,
      reset_count: u64,
@@ -507,10 +507,15 @@ index 80046d3c..9c20f61a 100644
 +    )>,
 +    setup_rearm_required: bool,
 +    renderer_lineage: Option<crate::experiment_breathing_setup_runtime::SetupRendererLineage>,
++    retained_setup_phase: Option<(
++        crate::experiment_breathing_setup_runtime::SetupRendererLineage,
++        CommonBreathPhase,
++    )>,
++    visual_boundary: Option<crate::experiment_breathing_setup_runtime::SetupRendererLineage>,
  }
  
  impl BreathCompositionDriver {
-@@ -210,6 +249,14 @@ impl BreathCompositionDriver {
+@@ -210,6 +254,16 @@ impl BreathCompositionDriver {
              reason: "not-observed",
              accepted_outputs: 0,
              reset_count: 0,
@@ -522,10 +527,12 @@ index 80046d3c..9c20f61a 100644
 +            setup_confirmation_fence: None,
 +            setup_rearm_required: false,
 +            renderer_lineage: None,
++            retained_setup_phase: None,
++            visual_boundary: None,
          }
      }
  
-@@ -223,9 +270,26 @@ impl BreathCompositionDriver {
+@@ -223,9 +277,26 @@ impl BreathCompositionDriver {
          snapshot: BreathCompositionSnapshot,
          observed_at: BreathTimestampMicros,
          dt_seconds: f32,
@@ -552,7 +559,7 @@ index 80046d3c..9c20f61a 100644
              self.pending_reset_slot = self
                  .owns_slot
                  .then_some((self.settings.target_slot, self.settings.loss_value01));
-@@ -233,6 +297,8 @@ impl BreathCompositionDriver {
+@@ -233,6 +304,8 @@ impl BreathCompositionDriver {
              self.reset("config-changed");
          }
          if !self.settings.requested_enabled {
@@ -561,7 +568,7 @@ index 80046d3c..9c20f61a 100644
              self.owns_slot = false;
              self.status = DriverStatus::Disabled;
              self.reason = "settings-disabled";
-@@ -258,7 +324,116 @@ impl BreathCompositionDriver {
+@@ -258,33 +331,214 @@ impl BreathCompositionDriver {
              self.reject("activation-binding-mismatch");
              return;
          }
@@ -572,21 +579,54 @@ index 80046d3c..9c20f61a 100644
 +            self.setup_rearm_required = false;
 +        }
          self.owns_slot = true;
++        let manual_setup = setup.is_some()
++            && self
++                .renderer_lineage
++                .is_some_and(|lineage| lineage.manual_input());
++        let visual_boundary = self.renderer_lineage;
++        if visual_boundary.is_some_and(|current| {
++            self.visual_boundary
++                .is_some_and(|prior| !current.same_input_namespace(prior))
++        }) {
++            // A new app/input may reuse numeric sensor/model generations. Retire
++            // both phase stores, keeping only the physically displayed radius.
++            self.reset_for_boundary("setup-visual-owner-input-changed", manual_setup);
++            self.setup_confirmation_fence = None;
++            self.last_setup_confirmation = setup.and_then(|value| value.confirmation_cursor());
++        }
++        if visual_boundary.is_some() {
++            self.visual_boundary = visual_boundary;
++        }
 +        if let Some(setup) = setup {
 +            use crate::experiment_breathing_setup_runtime::SetupDriverOutput;
 +            match setup {
 +                SetupDriverOutput::Waiting => {
-+                    self.wait("setup-input-not-ready");
++                    self.wait_for_output(
++                        "setup-input-not-ready",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
 +                    return;
 +                }
 +                SetupDriverOutput::PolarUnavailable { .. } => {
 +                    self.fence_setup_confirmation();
-+                    self.wait("setup-input-not-ready");
++                    self.wait_for_output(
++                        "setup-input-not-ready",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
 +                    return;
 +                }
 +                SetupDriverOutput::Automatic { volume, generation } => {
 +                    if !volume.is_finite() || !(0.0..=1.0).contains(&volume) {
-+                        self.wait("setup-volume-invalid");
++                        self.wait_for_output(
++                            "setup-volume-invalid",
++                            observed_at,
++                            dt_seconds,
++                            manual_setup,
++                        );
 +                        return;
 +                    }
 +                    let boundary = SetupBoundary::Automatic(generation);
@@ -613,12 +653,17 @@ index 80046d3c..9c20f61a 100644
 +                        .last_observed_at
 +                        .is_some_and(|previous| observed_at < previous)
 +                    {
-+                        self.wait("observed-time-discontinuity");
++                        self.wait_for_output(
++                            "observed-time-discontinuity",
++                            observed_at,
++                            dt_seconds,
++                            manual_setup,
++                        );
 +                        return;
 +                    }
 +                    let boundary = SetupBoundary::Polar(lineage);
 +                    if self.setup_boundary != Some(boundary) {
-+                        self.reset("setup-model-changed");
++                        self.reset_for_boundary("setup-model-changed", manual_setup);
 +                        self.setup_boundary = Some(boundary);
 +                    }
 +                    self.setup_availability = availability.as_str();
@@ -641,9 +686,18 @@ index 80046d3c..9c20f61a 100644
 +                        self.setup_phase = Some(phase);
 +                    }
 +                    let Some(phase) = self.setup_phase else {
-+                        self.status = DriverStatus::Waiting;
-+                        self.reason = "setup-phase-not-established";
-+                        self.last_observed_at = Some(observed_at);
++                        if manual_setup {
++                            self.wait_for_output(
++                                "setup-phase-not-established",
++                                observed_at,
++                                dt_seconds,
++                                true,
++                            );
++                        } else {
++                            self.status = DriverStatus::Waiting;
++                            self.reason = "setup-phase-not-established";
++                            self.last_observed_at = Some(observed_at);
++                        }
 +                        return;
 +                    };
 +                    self.integrator.update(
@@ -655,6 +709,11 @@ index 80046d3c..9c20f61a 100644
 +                        self.settings.loss_value01,
 +                    );
 +                    self.status = DriverStatus::AppliedState;
++                    if manual_setup {
++                        if let Some(lineage) = self.renderer_lineage {
++                            self.retained_setup_phase = Some((lineage, phase));
++                        }
++                    }
 +                    self.reason = if availability
 +                        == crate::experiment_breathing_setup_runtime::SetupSampleAvailability::Ready
 +                    {
@@ -670,15 +729,158 @@ index 80046d3c..9c20f61a 100644
 +                }
 +                SetupDriverOutput::Controller => {
 +                    if self.setup_boundary.take().is_some() {
-+                        self.reset("setup-controller-selected");
++                        self.reset_for_boundary("setup-controller-selected", manual_setup);
 +                    }
 +                }
 +            }
 +        }
          if snapshot.status != BreathCompositionStatus::Running {
-             self.wait("composition-not-running");
+-            self.wait("composition-not-running");
++            self.wait_for_output(
++                "composition-not-running",
++                observed_at,
++                dt_seconds,
++                manual_setup,
++            );
              return;
-@@ -390,13 +565,21 @@ impl BreathCompositionDriver {
+         }
+         let (Some(effective), Some(generation), Some(output)) =
+             (snapshot.effective, snapshot.generation, snapshot.output)
+         else {
+-            self.wait("missing-running-output");
++            self.wait_for_output(
++                "missing-running-output",
++                observed_at,
++                dt_seconds,
++                manual_setup,
++            );
+             return;
+         };
+         if output.source != effective.source || output.mapping != effective.mapping {
+-            self.wait("output-selection-mismatch");
++            self.wait_for_output(
++                "output-selection-mismatch",
++                observed_at,
++                dt_seconds,
++                manual_setup,
++            );
+             return;
+         }
+         if output.sampled_at > observed_at
+             || observed_at.get().saturating_sub(output.sampled_at.get())
+                 > self.settings.stale_after_micros
+         {
+-            self.wait("stale-output");
++            self.wait_for_output("stale-output", observed_at, dt_seconds, manual_setup);
+             return;
+         }
+         if self
+             .last_observed_at
+             .is_some_and(|previous| observed_at < previous)
+         {
+-            self.wait("observed-time-discontinuity");
++            self.wait_for_output(
++                "observed-time-discontinuity",
++                observed_at,
++                dt_seconds,
++                manual_setup,
++            );
+             return;
+         }
+ 
+@@ -292,7 +546,7 @@ impl BreathCompositionDriver {
+             || self.last_source != Some(output.source)
+             || self.last_mapping != Some(output.mapping);
+         if boundary_changed {
+-            self.reset("source-generation-mapping-changed");
++            self.reset_for_boundary("source-generation-mapping-changed", manual_setup);
+         } else if let (Some(previous_sequence), Some(previous_sampled_at)) =
+             (self.last_sequence_id, self.last_sampled_at)
+         {
+@@ -308,11 +562,16 @@ impl BreathCompositionDriver {
+                     .saturating_sub(previous_sampled_at.get())
+                     > self.settings.stale_after_micros;
+             if out_of_order {
+-                self.wait("out-of-order-output");
++                self.wait_for_output("out-of-order-output", observed_at, dt_seconds, manual_setup);
+                 return;
+             }
+             if discontinuous {
+-                self.wait("sample-time-discontinuity");
++                self.wait_for_output(
++                    "sample-time-discontinuity",
++                    observed_at,
++                    dt_seconds,
++                    manual_setup,
++                );
+                 return;
+             }
+         }
+@@ -323,11 +582,21 @@ impl BreathCompositionDriver {
+                     .volume01
+                     .filter(|value| value.is_finite() && (0.0..=1.0).contains(value))
+                 else {
+-                    self.wait("malformed-volume-output");
++                    self.wait_for_output(
++                        "malformed-volume-output",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
+                     return;
+                 };
+                 if output.phase.is_some() {
+-                    self.wait("malformed-volume-output");
++                    self.wait_for_output(
++                        "malformed-volume-output",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
+                     return;
+                 }
+                 self.integrator.reset(value01 as f32);
+@@ -335,7 +604,12 @@ impl BreathCompositionDriver {
+             }
+             BreathCompositionMapping::State => {
+                 let Some(phase) = output.phase else {
+-                    self.wait("malformed-state-output");
++                    self.wait_for_output(
++                        "malformed-state-output",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
+                     return;
+                 };
+                 if output.volume01.is_some()
+@@ -344,7 +618,12 @@ impl BreathCompositionDriver {
+                         CommonBreathPhase::Unknown | CommonBreathPhase::BadTracking
+                     )
+                 {
+-                    self.wait("malformed-state-output");
++                    self.wait_for_output(
++                        "malformed-state-output",
++                        observed_at,
++                        dt_seconds,
++                        manual_setup,
++                    );
+                     return;
+                 }
+                 self.integrator.update(
+@@ -356,6 +635,11 @@ impl BreathCompositionDriver {
+                     self.settings.loss_value01,
+                 );
+                 self.status = DriverStatus::AppliedState;
++                if manual_setup {
++                    if let Some(lineage) = self.renderer_lineage {
++                        self.retained_setup_phase = Some((lineage, phase));
++                    }
++                }
+             }
+         }
+         self.effective = Some(effective);
+@@ -390,13 +674,21 @@ impl BreathCompositionDriver {
          wrote
      }
  
@@ -701,7 +903,7 @@ index 80046d3c..9c20f61a 100644
              self.settings.marker_fields(),
              self.status.as_str(),
              self.reason,
-@@ -409,10 +592,16 @@ impl BreathCompositionDriver {
+@@ -409,10 +701,16 @@ impl BreathCompositionDriver {
              self.last_sequence_id.map_or_else(|| "none".to_owned(), |value| value.to_string()),
              self.accepted_outputs,
              self.reset_count,
@@ -718,7 +920,7 @@ index 80046d3c..9c20f61a 100644
          if self.owns_slot && self.pending_reset_slot.is_none() {
              self.pending_reset_slot = Some((self.settings.target_slot, self.settings.loss_value01));
          }
-@@ -421,12 +610,24 @@ impl BreathCompositionDriver {
+@@ -421,12 +719,75 @@ impl BreathCompositionDriver {
          self.status = DriverStatus::Rejected;
      }
  
@@ -735,15 +937,66 @@ index 80046d3c..9c20f61a 100644
          self.status = DriverStatus::Waiting;
      }
  
++    fn wait_for_output(
++        &mut self,
++        reason: &'static str,
++        at: BreathTimestampMicros,
++        dt: f32,
++        manual_setup: bool,
++    ) {
++        if !manual_setup {
++            self.wait(reason);
++            return;
++        }
++        self.retained_setup_phase = self.retained_setup_phase.filter(|(prior, _)| {
++            self.renderer_lineage
++                .is_some_and(|current| current.continues_visual_input(*prior))
++        });
++        self.setup_availability = "input-unavailable";
++        self.last_observed_at = Some(at);
++        if let Some((_, phase)) = self.retained_setup_phase {
++            self.integrator.update(
++                phase,
++                dt,
++                self.settings.inhale_rate_per_second,
++                self.settings.exhale_rate_per_second,
++                self.settings.hold_policy,
++                self.settings.loss_value01,
++            );
++            self.status = DriverStatus::AppliedState;
++            self.reason = "setup-retained-state-input-unavailable";
++        } else {
++            // No diagnosis for this method yet: hold radius without fabricating a state.
++            self.status = DriverStatus::Waiting;
++            self.reason = reason;
++        }
++    }
++
++    fn reset_for_boundary(&mut self, reason: &'static str, manual_setup: bool) {
++        if !manual_setup {
++            self.reset(reason);
++            return;
++        }
++        let value = self.integrator.value01();
++        let retained = self.retained_setup_phase;
++        self.reset(reason);
++        self.integrator.reset(value);
++        self.retained_setup_phase = retained.filter(|(prior, _)| {
++            self.renderer_lineage
++                .is_some_and(|current| current.continues_visual_input(*prior))
++        });
++    }
++
      fn reset(&mut self, reason: &'static str) {
 +        self.setup_boundary = None;
 +        self.setup_phase = None;
 +        self.setup_availability = "none";
++        self.retained_setup_phase = None;
 +        self.last_reset_reason = reason;
          self.integrator.reset(self.settings.loss_value01);
          self.effective = None;
          self.generation = None;
-@@ -469,7 +670,7 @@ fn parse_required_f32(value: Option<String>, min: f32, max: f32) -> Option<f32>
+@@ -469,7 +830,7 @@ fn parse_required_f32(value: Option<String>, min: f32, max: f32) -> Option<f32>
  }
  
  #[cfg(test)]
@@ -752,11 +1005,343 @@ index 80046d3c..9c20f61a 100644
      use rusty_quest_breath_contract::{
          composition::{
              BreathCompositionOutput, BreathCompositionTelemetry, ControllerProjectionSelection,
-@@ -482,7 +683,281 @@ mod tests {
+@@ -482,7 +843,613 @@ mod tests {
  
      const BINDING: [u8; 32] = [0x5a; 32];
  
 -    fn settings() -> BreathCompositionDriverSettings {
++    #[test]
++    fn selected_controller_loss_keeps_the_last_diagnosed_state_running() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{SetupDriverOutput, SetupRendererLineage};
++        for (phase, expected) in [
++            (CommonBreathPhase::Inhale, 0.55),
++            (CommonBreathPhase::Exhale, 0.475),
++            (CommonBreathPhase::Hold, 0.5),
++        ] {
++            let mut driver = BreathCompositionDriver::new(settings());
++            driver.renderer_lineage = Some(SetupRendererLineage::test_fixture(
++                1,
++                SetupInput::Controller,
++            ));
++            let snapshot = running_snapshot(
++                BreathCompositionSource::Controller,
++                BreathCompositionMapping::State,
++                1,
++                1,
++                100_000,
++                None,
++                Some(phase),
++            );
++            driver.update_frame_with_setup(
++                settings(),
++                snapshot,
++                BreathTimestampMicros::new(100_000),
++                0.0,
++                Some(SetupDriverOutput::Controller),
++            );
++            driver.integrator.reset(0.5);
++            driver.update_frame_with_setup(
++                settings(),
++                snapshot,
++                BreathTimestampMicros::new(200_000),
++                0.1,
++                Some(SetupDriverOutput::Waiting),
++            );
++            assert!(
++                (driver.value01() - expected).abs() < 0.000_001,
++                "{phase:?}: {}",
++                driver.value01()
++            );
++        }
++    }
++
++    #[test]
++    fn selected_polar_transport_loss_continues_its_last_state() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupRendererLineage, SetupSampleAvailability,
++        };
++        let mut driver = BreathCompositionDriver::new(settings());
++        driver.renderer_lineage =
++            Some(SetupRendererLineage::test_fixture(1, SetupInput::PolarTilt));
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarTilt {
++                volume: None,
++                phase: CommonBreathPhase::Inhale,
++                confirmed_phase: Some(CommonBreathPhase::Inhale),
++                confirmation_revision: 1,
++                lineage: polar_lineage(),
++                availability: SetupSampleAvailability::Ready,
++            },
++            100_000_000,
++            0.0,
++        );
++        driver.integrator.reset(0.5);
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarUnavailable {
++                lineage: polar_lineage(),
++                confirmation_revision: 1,
++            },
++            200_000_000,
++            0.1,
++        );
++        assert!(
++            (driver.value01() - 0.55).abs() < 0.000_001,
++            "{}",
++            driver.value01()
++        );
++    }
++
++    #[test]
++    fn manual_wait_without_a_diagnosis_holds_radius_and_app_owner_change_retires_phase() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{SetupDriverOutput, SetupRendererLineage};
++        let mut driver = BreathCompositionDriver::new(settings());
++        driver.renderer_lineage = Some(SetupRendererLineage::test_fixture(
++            1,
++            SetupInput::Controller,
++        ));
++        driver.integrator.reset(0.7);
++        setup_frame(&mut driver, SetupDriverOutput::Waiting, 100_000_000, 0.1);
++        assert!((driver.value01() - 0.7).abs() < 0.000_001);
++        let snapshot = running_snapshot(
++            BreathCompositionSource::Controller,
++            BreathCompositionMapping::State,
++            1,
++            1,
++            200_000,
++            None,
++            Some(CommonBreathPhase::Inhale),
++        );
++        driver.update_frame_with_setup(
++            settings(),
++            snapshot,
++            BreathTimestampMicros::new(200_000),
++            0.0,
++            Some(SetupDriverOutput::Controller),
++        );
++        driver.renderer_lineage = Some(SetupRendererLineage::test_fixture(
++            2,
++            SetupInput::Controller,
++        ));
++        setup_frame(&mut driver, SetupDriverOutput::Waiting, 300_000_000, 0.1);
++        assert!((driver.value01() - 0.7).abs() < 0.000_001);
++        assert!(driver.retained_setup_phase.is_none());
++    }
++
++    #[test]
++    fn controller_reconnection_integrates_new_evidence_without_a_radius_reset() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{SetupDriverOutput, SetupRendererLineage};
++        let mut driver = BreathCompositionDriver::new(settings());
++        driver.renderer_lineage = Some(SetupRendererLineage::test_fixture(
++            1,
++            SetupInput::Controller,
++        ));
++        let initial = running_snapshot(
++            BreathCompositionSource::Controller,
++            BreathCompositionMapping::State,
++            1,
++            1,
++            100_000,
++            None,
++            Some(CommonBreathPhase::Hold),
++        );
++        driver.update_frame_with_setup(
++            settings(),
++            initial,
++            BreathTimestampMicros::new(100_000),
++            0.0,
++            Some(SetupDriverOutput::Controller),
++        );
++        driver.integrator.reset(0.75);
++        setup_frame(&mut driver, SetupDriverOutput::Waiting, 200_000_000, 0.1);
++        let returned = running_snapshot(
++            BreathCompositionSource::Controller,
++            BreathCompositionMapping::State,
++            2,
++            1,
++            300_000,
++            None,
++            Some(CommonBreathPhase::Exhale),
++        );
++        driver.update_frame_with_setup(
++            settings(),
++            returned,
++            BreathTimestampMicros::new(300_000),
++            0.1,
++            Some(SetupDriverOutput::Controller),
++        );
++        assert!(
++            (driver.value01() - 0.725).abs() < 0.000_001,
++            "{}",
++            driver.value01()
++        );
++        let mut denied = returned;
++        denied.feature_lock_active = false;
++        driver.update_frame_with_setup(
++            settings(),
++            denied,
++            BreathTimestampMicros::new(400_000),
++            0.1,
++            Some(SetupDriverOutput::Waiting),
++        );
++        assert_eq!(driver.value01(), settings().loss_value01);
++        assert!(driver.retained_setup_phase.is_none());
++    }
++
++    #[test]
++    fn new_visual_owner_retires_old_phase_and_old_numeric_confirmation_floor() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupRendererLineage, SetupSampleAvailability,
++        };
++        for through_automatic in [false, true] {
++            let mut driver = BreathCompositionDriver::new(settings());
++            driver.renderer_lineage =
++                Some(SetupRendererLineage::test_fixture(1, SetupInput::PolarTilt));
++            let polar =
++                |phase, confirmed_phase, confirmation_revision| SetupDriverOutput::PolarTilt {
++                    volume: None,
++                    phase,
++                    confirmed_phase,
++                    confirmation_revision,
++                    lineage: polar_lineage(),
++                    availability: SetupSampleAvailability::Ready,
++                };
++            setup_frame(
++                &mut driver,
++                polar(
++                    CommonBreathPhase::Inhale,
++                    Some(CommonBreathPhase::Inhale),
++                    100,
++                ),
++                100_000_000,
++                0.0,
++            );
++            driver.integrator.reset(0.5);
++            setup_frame(
++                &mut driver,
++                SetupDriverOutput::PolarUnavailable {
++                    lineage: polar_lineage(),
++                    confirmation_revision: 100,
++                },
++                200_000_000,
++                0.0,
++            );
++            if through_automatic {
++                driver.renderer_lineage =
++                    Some(SetupRendererLineage::test_fixture(2, SetupInput::Automatic));
++                setup_frame(
++                    &mut driver,
++                    SetupDriverOutput::Automatic {
++                        volume: 0.5,
++                        generation: 8,
++                    },
++                    250_000_000,
++                    0.0,
++                );
++            }
++            driver.renderer_lineage =
++                Some(SetupRendererLineage::test_fixture(2, SetupInput::PolarTilt));
++            setup_frame(&mut driver, SetupDriverOutput::Waiting, 300_000_000, 0.1);
++            setup_frame(
++                &mut driver,
++                polar(CommonBreathPhase::Unknown, None, 0),
++                400_000_000,
++                0.1,
++            );
++            assert!(
++                (driver.value01() - 0.5).abs() < 0.000_001,
++                "old owner phase leaked"
++            );
++            assert!(driver.setup_phase.is_none());
++            setup_frame(
++                &mut driver,
++                polar(
++                    CommonBreathPhase::Exhale,
++                    Some(CommonBreathPhase::Exhale),
++                    1,
++                ),
++                500_000_000,
++                0.1,
++            );
++            assert!(
++                (driver.value01() - 0.475).abs() < 0.000_001,
++                "new owner phase was fenced by old owner"
++            );
++        }
++    }
++
++    #[test]
++    fn polar_unconfirmed_reconnection_cannot_replace_the_retained_diagnosis() {
++        use crate::experiment_breathing_setup::SetupInput;
++        use crate::experiment_breathing_setup_runtime::{
++            SetupDriverOutput, SetupRendererLineage, SetupSampleAvailability,
++        };
++        let mut driver = BreathCompositionDriver::new(settings());
++        driver.renderer_lineage =
++            Some(SetupRendererLineage::test_fixture(1, SetupInput::PolarTilt));
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarTilt {
++                volume: None,
++                phase: CommonBreathPhase::Inhale,
++                confirmed_phase: Some(CommonBreathPhase::Inhale),
++                confirmation_revision: 1,
++                lineage: polar_lineage(),
++                availability: SetupSampleAvailability::Ready,
++            },
++            100_000_000,
++            0.0,
++        );
++        driver.integrator.reset(0.5);
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarUnavailable {
++                lineage: polar_lineage(),
++                confirmation_revision: 1,
++            },
++            200_000_000,
++            0.1,
++        );
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarTilt {
++                volume: None,
++                phase: CommonBreathPhase::Exhale,
++                confirmed_phase: Some(CommonBreathPhase::Exhale),
++                confirmation_revision: 1,
++                lineage: polar_lineage(),
++                availability: SetupSampleAvailability::PhaseUnconfirmed,
++            },
++            300_000_000,
++            0.1,
++        );
++        assert!(
++            (driver.value01() - 0.6).abs() < 0.000_001,
++            "{}",
++            driver.value01()
++        );
++        setup_frame(
++            &mut driver,
++            SetupDriverOutput::PolarTilt {
++                volume: None,
++                phase: CommonBreathPhase::Hold,
++                confirmed_phase: Some(CommonBreathPhase::Hold),
++                confirmation_revision: 2,
++                lineage: polar_lineage(),
++                availability: SetupSampleAvailability::Ready,
++            },
++            400_000_000,
++            0.1,
++        );
++        assert!((driver.value01() - 0.6).abs() < 0.000_001);
++    }
++
 +    pub(crate) fn setup_frame(
 +        driver: &mut BreathCompositionDriver,
 +        setup: crate::experiment_breathing_setup_runtime::SetupDriverOutput,
@@ -2925,10 +3510,10 @@ index 00000000..8fbfce06
 +mod tests;
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 new file mode 100644
-index 00000000..979d326e
+index 00000000..25f49bdf
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-@@ -0,0 +1,2228 @@
+@@ -0,0 +1,2263 @@
 +//! Explicit product adapter for the audio-frame-owned breathing setup.
 +use crate::experiment_breathing_setup::{
 +    BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
@@ -3107,6 +3692,31 @@ index 00000000..979d326e
 +    projection_generation: Option<u64>,
 +    controller_generation: Option<u64>,
 +    input: SetupInput,
++}
++impl SetupRendererLineage {
++    pub(crate) fn manual_input(self) -> bool {
++        self.input != SetupInput::Automatic
++    }
++    // Visual continuity is separate from full data/admission lineage.
++    pub(crate) fn continues_visual_input(self, previous: Self) -> bool {
++        self.manual_input() && self.same_input_namespace(previous)
++    }
++    pub(crate) fn same_input_namespace(self, previous: Self) -> bool {
++        self.instance == previous.instance && self.input == previous.input
++    }
++
++    #[cfg(test)]
++    pub(crate) fn test_fixture(instance: u64, input: SetupInput) -> Self {
++        Self {
++            instance,
++            audio_generation: 7,
++            driver_epoch: 1,
++            source_binding: Some((5, 1)),
++            projection_generation: Some(3),
++            controller_generation: Some(1),
++            input,
++        }
++    }
 +}
 +#[derive(Clone, Copy)]
 +struct RendererRadius {
@@ -4954,6 +5564,17 @@ index 00000000..979d326e
 +    r.bind_source(binding);
 +    r.tilt_assessment(r.now_ns())
 +}
++fn controller_state_calibration_ready(
++    calibration: rusty_quest_breath_contract::calibration::CalibrationLifecycle,
++    volume01: Option<f64>,
++) -> bool {
++    use rusty_quest_breath_contract::calibration::CalibrationLifecycle;
++    // The selected fixed-axis state classifier needs no fitted volume range.
++    // Keep its Configured/no-volume provenance; never label it calibrated.
++    calibration == CalibrationLifecycle::Ready
++        || calibration == CalibrationLifecycle::Configured && volume01.is_none()
++}
++
 +pub(crate) fn observe_controller(
 +    snapshot: rusty_quest_breath_contract::composition::BreathCompositionSnapshot,
 +    assessment: rusty_quest_breath_contract::assessment::BreathAssessmentObservation,
@@ -4963,7 +5584,6 @@ index 00000000..979d326e
 +    }
 +    use rusty_quest_breath_contract::{
 +        assessment::BreathTrackingState,
-+        calibration::CalibrationLifecycle,
 +        composition::{
 +            BreathCompositionMapping, BreathCompositionSource, BreathCompositionStatus,
 +            ControllerProjectionSelection,
@@ -4982,7 +5602,7 @@ index 00000000..979d326e
 +                && s.mapping == BreathCompositionMapping::State
 +                && s.controller_projection == ControllerProjectionSelection::FixedOrientation
 +        })
-+        && assessment.calibration == CalibrationLifecycle::Ready
++        && controller_state_calibration_ready(assessment.calibration, assessment.volume01)
 +        && assessment.tracking == BreathTrackingState::Valid
 +        && matches!(
 +            assessment.phase,
@@ -5159,13 +5779,38 @@ index 00000000..979d326e
 +}
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 new file mode 100644
-index 00000000..792a0f3e
+index 00000000..e1b12a98
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-@@ -0,0 +1,2438 @@
+@@ -0,0 +1,2463 @@
 +use super::*;
 +use serde_json::{json, Value};
 +use sha2::{Digest, Sha256};
++
++#[test]
++fn controller_state_accepts_configured_phase_without_inventing_a_volume_fit() {
++    use rusty_quest_breath_contract::calibration::CalibrationLifecycle;
++    assert!(controller_state_calibration_ready(
++        CalibrationLifecycle::Ready,
++        Some(0.5)
++    ));
++    assert!(controller_state_calibration_ready(
++        CalibrationLifecycle::Configured,
++        None
++    ));
++    assert!(!controller_state_calibration_ready(
++        CalibrationLifecycle::Configured,
++        Some(0.5)
++    ));
++    assert!(!controller_state_calibration_ready(
++        CalibrationLifecycle::Collecting,
++        None
++    ));
++    assert!(!controller_state_calibration_ready(
++        CalibrationLifecycle::Failed,
++        None
++    ));
++}
 +
 +fn loop_json() -> String {
 +    json!({"schema":"atmungsraum.box_breathing_loop.v1","sample_rate":44100,
@@ -12071,6 +12716,359 @@ index 0bcdcc4b..99c6ae5b 100644
  
      #[test]
      fn explicit_panel_never_dispatches_without_a_current_openxr_session() {
+diff --git a/apps/native-renderer-android/native/src/openxr_controller_breath_adapter.rs b/apps/native-renderer-android/native/src/openxr_controller_breath_adapter.rs
+index b3a4fd67..d2720278 100644
+--- a/apps/native-renderer-android/native/src/openxr_controller_breath_adapter.rs
++++ b/apps/native-renderer-android/native/src/openxr_controller_breath_adapter.rs
+@@ -16,6 +16,10 @@ use rusty_quest_breath_contract::{
+         CalibrationObservation, CalibrationParameters, CalibrationProjectionSpace,
+         CalibrationRejection,
+     },
++    composition::{
++        BreathCompositionMapping, BreathCompositionRequest, BreathCompositionSource,
++        ControllerProjectionSelection,
++    },
+     BreathGeneration, BreathTimestampMicros,
+ };
+ 
+@@ -25,6 +29,17 @@ use crate::native_controller_breath_state::{
+     NativeControllerBreathStateEstimator,
+ };
+ 
++/// The selected experiment consumes fixed-direction phase independently of volume fitting.
++pub(crate) fn experiment_uses_direct_controller_phase(
++    request: BreathCompositionRequest,
++    experiment_selected: bool,
++) -> bool {
++    experiment_selected
++        && request.source == BreathCompositionSource::Controller
++        && request.mapping == BreathCompositionMapping::State
++        && request.controller_projection == ControllerProjectionSelection::FixedOrientation
++}
++
+ /// Volume projection selected before calibration begins.
+ #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+ pub(crate) enum ControllerVolumeProjection {
+@@ -174,6 +189,7 @@ pub(crate) struct OpenXrControllerBreathAdapter {
+     calibration: AcceptedFrameCalibration,
+     generation: Option<BreathGeneration>,
+     phase_only_inverted: Option<bool>,
++    phase_only_last_frame: Option<(u64, BreathTimestampMicros)>,
+     next_runtime_generation: u64,
+     last_orientation: Option<[f64; 4]>,
+     emitted_samples: u64,
+@@ -191,6 +207,7 @@ impl OpenXrControllerBreathAdapter {
+             calibration: AcceptedFrameCalibration::new(),
+             generation: None,
+             phase_only_inverted: None,
++            phase_only_last_frame: None,
+             next_runtime_generation: 1,
+             last_orientation: None,
+             emitted_samples: 0,
+@@ -209,6 +226,7 @@ impl OpenXrControllerBreathAdapter {
+ 
+     pub(crate) fn configure(&mut self, at: BreathTimestampMicros) -> CalibrationObservation {
+         self.phase_only_inverted = None;
++        self.phase_only_last_frame = None;
+         #[cfg(feature = "showcase")]
+         self.phase_estimator.use_dynamic_axis(false);
+         self.phase_estimator.reset_history();
+@@ -259,7 +277,6 @@ impl OpenXrControllerBreathAdapter {
+         self.generation
+     }
+ 
+-    #[cfg(feature = "showcase")]
+     pub(crate) fn start_phase_only(
+         &mut self,
+         generation: BreathGeneration,
+@@ -268,7 +285,15 @@ impl OpenXrControllerBreathAdapter {
+     ) {
+         self.generation = Some(generation);
+         self.phase_only_inverted = Some(inverted);
++        self.phase_only_last_frame = None;
++        #[cfg(feature = "showcase")]
+         self.phase_estimator.use_dynamic_axis(dynamic_axis);
++        #[cfg(not(feature = "showcase"))]
++        debug_assert!(
++            !dynamic_axis,
++            "only fixed-axis phase is selected outside showcase"
++        );
++        self.phase_estimator.reset_history();
+         self.last_orientation = None;
+     }
+ 
+@@ -288,6 +313,7 @@ impl OpenXrControllerBreathAdapter {
+ 
+     pub(crate) fn reset(&mut self, at: BreathTimestampMicros) -> CalibrationObservation {
+         self.phase_only_inverted = None;
++        self.phase_only_last_frame = None;
+         #[cfg(feature = "showcase")]
+         self.phase_estimator.use_dynamic_axis(false);
+         self.generation = None;
+@@ -391,6 +417,26 @@ impl OpenXrControllerBreathAdapter {
+             );
+         }
+ 
++        if self.phase_only_inverted.is_some() {
++            if let Some(error) = self.phase_only_frame_error(at, frame) {
++                let tracking = if matches!(error, CalibrationInputError::Stale { .. }) {
++                    BreathTrackingState::Stale
++                } else {
++                    BreathTrackingState::OutOfOrder
++                };
++                self.last_orientation = None;
++                return self.reject_pose(
++                    at,
++                    frame.sampled_at,
++                    frame.sequence_id,
++                    generation,
++                    tracking,
++                    ControllerAssessmentRejection::Calibration(CalibrationRejection::Input(error)),
++                );
++            }
++            self.phase_only_last_frame = Some((frame.sequence_id, frame.sampled_at));
++        }
++
+         let orientation = normalize_quat_or_identity(frame.orientation_xyzw);
+         if self.last_orientation.is_some_and(|previous| {
+             quat_angle_degrees(previous, orientation) > self.volume_settings.rotation_guard_degrees
+@@ -481,6 +527,37 @@ impl OpenXrControllerBreathAdapter {
+         )
+     }
+ 
++    fn phase_only_frame_error(
++        &self,
++        at: BreathTimestampMicros,
++        frame: OpenXrControllerPoseFrame,
++    ) -> Option<CalibrationInputError> {
++        if let Some((previous_sequence, previous_at)) = self.phase_only_last_frame {
++            if frame.sampled_at <= previous_at {
++                return Some(CalibrationInputError::OutOfOrderTimestamp {
++                    submitted: frame.sampled_at,
++                    previous: previous_at,
++                });
++            }
++            if frame.sequence_id <= previous_sequence {
++                return Some(CalibrationInputError::OutOfOrderSequence {
++                    submitted: frame.sequence_id,
++                    previous: previous_sequence,
++                });
++            }
++        }
++        let age_micros = at.get().saturating_sub(frame.sampled_at.get());
++        let maximum_age_micros = self
++            .volume_settings
++            .calibration
++            .parameters()
++            .stale_after_micros;
++        (age_micros > maximum_age_micros).then_some(CalibrationInputError::Stale {
++            age_micros,
++            maximum_age_micros,
++        })
++    }
++
+     fn reject_pose(
+         &mut self,
+         at: BreathTimestampMicros,
+@@ -695,7 +772,157 @@ mod tests {
+         );
+     }
+ 
+-    #[cfg(feature = "showcase")]
++    #[test]
++    fn experiment_phase_only_selection_requires_fixed_controller_state() {
++        use rusty_quest_breath_contract::composition::PolarProjectionSelection;
++        let request = BreathCompositionRequest {
++            source: BreathCompositionSource::Controller,
++            mapping: BreathCompositionMapping::State,
++            controller_projection: ControllerProjectionSelection::FixedOrientation,
++            polar_projection: PolarProjectionSelection::Xz,
++            inverted: false,
++        };
++        assert!(experiment_uses_direct_controller_phase(request, true));
++        assert!(!experiment_uses_direct_controller_phase(request, false));
++        assert!(!experiment_uses_direct_controller_phase(
++            BreathCompositionRequest {
++                mapping: BreathCompositionMapping::Volume,
++                ..request
++            },
++            true,
++        ));
++        assert!(!experiment_uses_direct_controller_phase(
++            BreathCompositionRequest {
++                controller_projection: ControllerProjectionSelection::DynamicAxis,
++                ..request
++            },
++            true,
++        ));
++        assert!(!experiment_uses_direct_controller_phase(
++            BreathCompositionRequest {
++                source: BreathCompositionSource::PolarAcc,
++                ..request
++            },
++            true,
++        ));
++    }
++
++    #[test]
++    fn cold_fixed_state_classifies_before_default_volume_calibration() {
++        let settings = ControllerVolumeSettings::new(
++            ControllerVolumeProjection::FixedOrientation,
++            [1.0, 0.0, 0.0],
++            20.0,
++            CalibrationParameters::default(),
++        )
++        .unwrap();
++        let mut state = OpenXrControllerBreathAdapter::new(phase_settings(), settings);
++        let mut volume = OpenXrControllerBreathAdapter::new(phase_settings(), settings);
++        let generation = generation(1);
++        state.configure(BreathTimestampMicros::new(0));
++        state.start_phase_only(generation, false, false);
++        start(&mut volume, 0, 1);
++        let mut saw_inhale = false;
++        let mut saw_exhale = false;
++        for index in 1..120_u64 {
++            let at = index * 16_000;
++            let position = [0.1 + (index as f64 * 0.10).sin() * 0.01, 0.0, 0.0];
++            let input = frame(index, at, position);
++            let phase = state.observe(BreathTimestampMicros::new(at), generation, input);
++            let assessment = phase.assessment.unwrap();
++            assert_eq!(assessment.tracking, BreathTrackingState::Valid);
++            assert_eq!(assessment.calibration, CalibrationLifecycle::Configured);
++            assert_eq!(assessment.volume01, None);
++            assert_eq!(phase.calibration.accepted_frames, 0);
++            assert!(phase.calibration.model.is_none());
++            saw_inhale |= assessment.phase == CommonBreathPhase::Inhale;
++            saw_exhale |= assessment.phase == CommonBreathPhase::Exhale;
++            let calibrated = volume.observe(BreathTimestampMicros::new(at), generation, input);
++            assert_eq!(
++                calibrated.calibration.lifecycle,
++                CalibrationLifecycle::Collecting
++            );
++            assert_ne!(
++                calibrated.assessment.unwrap().tracking,
++                BreathTrackingState::Valid
++            );
++            assert!(calibrated.calibration.accepted_frames < 120);
++        }
++        assert!(saw_inhale && saw_exhale);
++        // A new phase generation starts from fresh pose history.
++        state.start_phase_only(BreathGeneration::new(2).unwrap(), false, false);
++        let first = state.observe(
++            BreathTimestampMicros::new(2_000_000),
++            BreathGeneration::new(2).unwrap(),
++            frame(1, 2_000_000, [0.0; 3]),
++        );
++        assert_eq!(first.assessment.unwrap().phase, CommonBreathPhase::Hold);
++        let retired = state.observe(
++            BreathTimestampMicros::new(2_016_000),
++            generation,
++            frame(2, 2_016_000, [0.0; 3]),
++        );
++        assert_eq!(
++            retired.rejection,
++            Some(ControllerAssessmentRejection::GenerationMismatch)
++        );
++    }
++
++    #[test]
++    fn phase_only_rejects_stale_reordered_and_untracked_poses() {
++        let mut adapter = adapter(ControllerVolumeProjection::FixedOrientation);
++        let generation = generation(1);
++        adapter.configure(BreathTimestampMicros::new(0));
++        adapter.start_phase_only(generation, false, false);
++        let initial = adapter.observe(
++            BreathTimestampMicros::new(10_000),
++            generation,
++            frame(1, 10_000, [0.0; 3]),
++        );
++        assert_eq!(
++            initial.assessment.unwrap().tracking,
++            BreathTrackingState::Valid
++        );
++        let stale = adapter.observe(
++            BreathTimestampMicros::new(200_000),
++            generation,
++            frame(2, 20_000, [0.01, 0.0, 0.0]),
++        );
++        assert_eq!(
++            stale.assessment.unwrap().tracking,
++            BreathTrackingState::Stale
++        );
++        let repeated = adapter.observe(
++            BreathTimestampMicros::new(210_000),
++            generation,
++            frame(1, 210_000, [0.01, 0.0, 0.0]),
++        );
++        assert_eq!(
++            repeated.assessment.unwrap().tracking,
++            BreathTrackingState::OutOfOrder
++        );
++        let mut untracked = match frame(3, 220_000, [0.01, 0.0, 0.0]) {
++            OpenXrControllerPoseInput::Frame(frame) => frame,
++            _ => unreachable!(),
++        };
++        untracked.tracked = false;
++        let missing = adapter.observe(
++            BreathTimestampMicros::new(220_000),
++            generation,
++            OpenXrControllerPoseInput::Frame(untracked),
++        );
++        assert_eq!(
++            missing.assessment.unwrap().tracking,
++            BreathTrackingState::Missing
++        );
++        let recovered = adapter.observe(
++            BreathTimestampMicros::new(230_000),
++            generation,
++            frame(4, 230_000, [0.02, 0.0, 0.0]),
++        );
++        assert_eq!(recovered.assessment.unwrap().phase, CommonBreathPhase::Hold);
++    }
++
+     #[test]
+     fn fixed_state_emits_valid_phase_without_a_fitted_range() {
+         let mut adapter = adapter(ControllerVolumeProjection::FixedOrientation);
+diff --git a/apps/native-renderer-android/native/src/openxr_stimulus_actions.rs b/apps/native-renderer-android/native/src/openxr_stimulus_actions.rs
+index 304fb99b..472b73f6 100644
+--- a/apps/native-renderer-android/native/src/openxr_stimulus_actions.rs
++++ b/apps/native-renderer-android/native/src/openxr_stimulus_actions.rs
+@@ -28,8 +28,9 @@ use crate::{
+     },
+     native_renderer_options::NativeStimulusVolumeSettings,
+     openxr_controller_breath_adapter::{
+-        ControllerVolumeProjection, ControllerVolumeSettings, OpenXrControllerBreathAdapter,
+-        OpenXrControllerPoseFrame, OpenXrControllerPoseInput,
++        experiment_uses_direct_controller_phase, ControllerVolumeProjection,
++        ControllerVolumeSettings, OpenXrControllerBreathAdapter, OpenXrControllerPoseFrame,
++        OpenXrControllerPoseInput,
+     },
+     private_particle_breath_state_driver::PrivateParticleBreathStateDriverSettings,
+     projection_target_state::{ProjectionTargetInput, ProjectionTargetSettings},
+@@ -852,14 +853,21 @@ impl StimulusVolumeActions {
+                     );
+                 }
+                 AdapterAction::Start(generation) => {
+-                    #[cfg(feature = "showcase")]
+                     {
+                         let snapshot = crate::breath_composition_runtime::snapshot();
+                         if snapshot.generation != Some(generation) {
+                             continue;
+                         }
+                         if let Some(request) = snapshot.effective.filter(|request| {
+-                            crate::breath_composition_runtime::showcase_uses_direct_controller_phase(*request)
++                            let selected_experiment_phase = experiment_uses_direct_controller_phase(
++                                *request,
++                                crate::experiment_breathing_setup_runtime::selected(),
++                            );
++                            #[cfg(feature = "showcase")]
++                            let selected_showcase_phase = crate::breath_composition_runtime::showcase_uses_direct_controller_phase(*request);
++                            #[cfg(not(feature = "showcase"))]
++                            let selected_showcase_phase = false;
++                            selected_experiment_phase || selected_showcase_phase
+                         }) {
+                             self.native_controller_breath_assessment
+                                 .start_phase_only(
 diff --git a/apps/native-renderer-android/native/src/particle_visual_profile.rs b/apps/native-renderer-android/native/src/particle_visual_profile.rs
 new file mode 100644
 index 00000000..9c36c77a
@@ -25671,16 +26669,40 @@ index 00000000..729b6fa9
 +}
 diff --git a/docs/EXPERIMENT_BREATHING_SETUP.md b/docs/EXPERIMENT_BREATHING_SETUP.md
 new file mode 100644
-index 00000000..816ab0f5
+index 00000000..7e418239
 --- /dev/null
 +++ b/docs/EXPERIMENT_BREATHING_SETUP.md
-@@ -0,0 +1,306 @@
+@@ -0,0 +1,334 @@
 +# Shared breathing setup contract
 +
 +This optional app-owned path uses the packaged 44,100 Hz loop. Each of inhale,
 +hold-in, exhale and hold-out occupies 176,400 frames. Other products retain their
 +existing input and audio selection. The downstream project's accepted design and
 +project checklist remain the lifecycle owner.
++
++## Controller State startup and temporary input loss — 2026-11-17
++
++The selected experiment's fixed-orientation Controller State path starts the
++phase classifier directly. It does not collect the separate 120-frame volume
++calibration. Its assessment remains Configured with no fitted volume model;
++fresh current-generation tracked poses and a valid diagnosed phase are still
++required. Generic controller/volume selections keep their existing calibration.
++
++For the selected experiment's manual input, temporary missing, stale or rejected
++Controller/Polar observations retain the last valid breath state. Each rendered
++frame continues the bounded integrator: inhale expands, exhale contracts and
++hold stays. Reconnection, sensor/model generation changes and audio recovery do
++not snap the displayed radius to minimum. New data must pass its original
++freshness, generation and confirmation checks before replacing that diagnosis.
++Readiness remains false while input is unusable; retained visual motion grants
++no recording, calibration, main-session or update authority.
++
++A changed app instance or manual input retires its old diagnosed state and
++confirmation namespace while preserving the displayed radius until fresh data.
++Actual configuration/activation rejection retains the original fail-closed
++reset. Before the first valid diagnosis the manual path holds its radius without
++inventing a phase. Automatic startup remains parked at minimum until an accepted
++preparation action starts the shared audio loop.
 +
 +## Parked and running states
 +
@@ -25928,12 +26950,16 @@ index 00000000..816ab0f5
 +to survive a sample lapse; valid sensor evidence owns replacement of the state.
 +
 +Source ownership replacement/retirement, projection generation retirement,
-+audio generation/clock faults or pause, calibration retry/model replacement,
-+input changes and driver configuration/activation barriers retire the retained
-+phase. A pause/resume between render frames remains an explicit epoch barrier,
-+even when the fitted model survives. Startup Automatic remains parked at zero;
-+running Automatic retains its exact observed audio-envelope mapping. Generic
-+composition loss/reset semantics are unchanged.
++audio generation/clock faults or pause and calibration retry/model replacement
++retire full data and callback-confirmation lineage. A pause/resume between render
++frames remains an explicit data epoch barrier, even when the fitted model
++survives. The selected experiment separately retains its visual diagnosis for
++the same app instance and manual input through these temporary losses; this
++cannot revalidate old samples or rearm admission. Changing app/input retires
++that visual diagnosis while preserving radius. Configuration/activation rejection
++keeps its original reset. Startup Automatic remains parked at zero; running
++Automatic retains its exact observed audio-envelope mapping. Generic composition
++loss/reset semantics are unchanged.
 +
 +Each accepted confirmed sensor observation advances a separate revision that
 +does not reset on masking or classifier re-prime. Driver configuration changes

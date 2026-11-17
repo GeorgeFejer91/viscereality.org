@@ -13,21 +13,31 @@ setup-input-not-ready resets; it does not retain the initial startup interval.
   Controller/Polar loss. Keep native data freshness and admission gates.
 - [x] Add regressions for phase-only startup, stale/reordered poses, state
   continuation, recovery, activation rejection and old-owner confirmation fences.
-- [ ] Complete native review, signed APK qualification and attended fresh-launch
-  Controller/tracking-loss checks. No new APK has been installed yet.
+- [x] Complete native review and the final888-case host suite (five intentional
+  ignores). Native453af6f4/treee1029a45 is committed; the public cumulative
+  patch reconstructs that exact tree from its pinned upstream base.
+- [x] Qualify signed code23: actual selected Android release build,900-second
+  signed-APK session closure, same signer, unchanged SDK/helper/DEX and private
+  payloads, and16KiB ZIP alignment. Independent package receipt passes905 checks.
+- [ ] Complete attended fresh-launch Controller/tracking-loss checks. No new
+  APK has been installed yet; Meta delivery remains held for the running test.
 - [x] Implement default native-confirmed phone control acquisition, continuing
   retries for definite free-lease non-grants, occupied/unknown barriers and
   manual-release pause. Toolbar green requires fresh native ownership.
-- [ ] Publish and verify the automatic-control PWA increment, then reload the
-  installed phone at an attended idle point.
+- [x] Publish automatic-control PWA b65ec14 through PR41, mergecabadb7. Exact
+  Pages44072213706 succeeded; all17 checked public files match Git. The public
+  runtime automatically claims a free synthetic native lease, confirms green
+  and switches all three methods with no page errors. Physical phone refresh
+  and confirmed automatic acquisition are requested at the attended idle point.
 - [ ] Publish the improved Meta version in coordination with an actual running
   session. Verify new availability does not interrupt recording or saving;
   observe the deferred update and helper relaunch afterward. Establish actual
   installed versions and lifecycle evidence, not an SDK acknowledgement alone.
 
-The user explicitly requests this running-session update test after the improved
-release is ready. Preserve the current Meta22 baseline until the test timing is
-agreed; do not silently publish the test target while the headset is idle.
+The user is available and the Quest2 is verified over Wi-Fi ADB. Preserve the
+current Meta22 baseline for the actual running-session test; code23 publication
+is held until package qualification and the recording-running gate. The upload
+chat confirmed Meta22 remains current and private, with Require Latest unchecked.
 
 ### Attended method-switch follow-up — 2026-11-17
 

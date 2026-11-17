@@ -172,14 +172,23 @@ radius integrator; its normalized measured coordinate is not the rendered radius
 Preserve smooth state-driven expansion/contraction. The user's explicit correction
 is to retain the last valid breath state until valid data warrants a new state:
 inhale continues expanding, exhale continues contracting, and hold keeps its radius.
-Within the same source/model/audio lineage, unavailable or invalid samples cannot
-change that state. Continue integrating it once per rendered frame with the
-existing rates and limits, while reporting input readiness honestly. No packet
-catch-up or radius reset is permitted for a transient sample lapse.
-Actual source, projection, audio, model, input-selection and configuration barriers
-still retire the appropriate history. Code 7 exposed an undifferentiated Waiting
-reset during the participant preview. Reviewed code-8 source corrects this;
-fresh participant tracking acceptance remains open.
+The 2026-11-17 correction extends this visual continuity to temporary whole-source
+Controller/Polar loss and reconnect in the same app instance and manual input,
+including data/model/audio generation retirement. Those barriers still retire
+classification and callback-confirmation history; only fresh valid evidence can
+replace the last visual diagnosis. Continue integrating once per rendered frame
+with the existing rates and limits, while reporting readiness honestly. No packet
+catch-up or radius reset is permitted for a transient lapse. A changed app or
+input retires that diagnosis while preserving radius; actual driver configuration
+or activation rejection retains its original reset. No prior diagnosis means hold
+radius without inventing a state. None of this grants session admission.
+
+Fixed-orientation Controller State starts its phase classifier directly without
+collecting the separate120-frame volume calibration. Its native assessment stays
+Configured with no fitted volume, still requiring fresh tracked poses, a valid
+phase and the exact selected generation. Generic volume inputs keep their fit.
+This candidate fixes the code22 hidden startup delay and Waiting-to-zero path;
+signed-package and attended tracking-loss acceptance are recorded separately.
 
 The calibrated path uses the common normalized-tilt phase classifier, while the
 older fixed-tilt path uses its 25 Hz feature classifier. Their phase timing is
