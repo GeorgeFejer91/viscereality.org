@@ -77,6 +77,29 @@ password file and the machine-specific locator outside the checkout. Keep
 request bodies out of captured logs. After authentication, prove capture and
 input using the checks above.
 
+## Reconnect while the phone is docked
+
+The Pixel 10 on Android 17 and RustDesk 1.5.3 accepted a fresh connection
+using its existing permanent password while **Screen capture** was active.
+The new session returned a frame without a phone-side approval tap. RustDesk
+taps also switched Android tabs and returned to the launcher in a separate
+live session with capture still active.
+
+- Keep the plugged-in lab phone awake with Android **Developer options →
+  Stay awake**. This was already enabled on the tested Pixel. Leave RustDesk
+  screen capture active and the RustDesk Input accessibility service bound.
+- Use the existing permanent credential and an approval mode that accepts
+  passwords. On the phone, these controls are in **Share screen → ⋮**.
+  Restore the USB forward if it is missing. To reuse the same address on the
+  Windows host, reserve a free fixed port with
+  `adb -s <phone> forward --no-rebind tcp:<host-port> tcp:21118`.
+- After a lock or reboot, plan to unlock the phone and approve screen capture
+  again. Android stops active capture on lock, requires consent for a new
+  capture session, and restricts starting media projection from the boot
+  receiver. [Android screen capture](https://developer.android.com/media/grow/media-projection)
+  · [Android boot restrictions](https://developer.android.com/about/versions/15/changes/foreground-service-types)
+  · [RustDesk Android guidance](https://rustdesk.com/blog/rustdesk-remote-control-android-ios/)
+
 ## Run and evaluate cases
 
 - Record a case ID, installed release, phone/Android configuration, driver,

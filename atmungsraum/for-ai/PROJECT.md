@@ -32,6 +32,15 @@ with the Quest asleep. Recheck wearer readiness and the installed phone release
 before any experiment action. The separate attended update route below remains
 its own evidence.
 
+On the docked Pixel 10 (Android 17, RustDesk 1.5.3), RustDeskMCP first reached
+the phone without an active capture. With capture active again, it returned
+a frame and sent working taps. A fresh USB connection authenticated with the
+existing permanent password and returned a frame without an approval tap.
+Stay awake while charging was already enabled. The primary session was left
+connected and the temporary verification forward was removed. Follow the
+[docked reconnect procedure](RUSTDESK-PHONE-TESTING.md#reconnect-while-the-phone-is-docked)
+when capture ends. Lock and reboot recovery still need an attended check.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
