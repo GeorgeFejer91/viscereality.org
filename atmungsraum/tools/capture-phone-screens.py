@@ -32,6 +32,7 @@ const candidate = 'b'.repeat(12);
 const settings = window.reviewQuest ??= {
   phase: 'IDLE', host: 'vr-preparation', polar: 'off', fresh: true, generation: 0,
   condition: 'condition-b', clock: 0, pending: false, strapCount: 0, selected: '',
+  healthSupported: true,
   apk: __DEFAULT_APK__,
   ...window.reviewInitialQuest
 };
@@ -57,6 +58,18 @@ function snapshot() {
   const { phase, polar, generation, condition, clock, host, fresh, pending } = settings;
   const connected = ['stream-wait', 'ready'].includes(polar);
   const setup = { ...settings.setup };
+  // Synthetic capability fixture with an explicit simulated contact report.
+  // The production projection must never derive contact from sample traffic.
+  const polarHealth = Object.hasOwn(settings,'polarHealth') ? settings.polarHealth
+    : settings.healthSupported && !settings.oldApk ? {
+      v:1,link:connected,connection_generation:String(settings.connectionGeneration??1),
+      observed_at_ns:settings.freezeHealth && window.reviewHealthWitness ? window.reviewHealthWitness
+        : (window.reviewHealthWitness=String(Math.max(1,Math.floor(performance.now()*1000000)))),
+      ecg:{age_ms:settings.ecgAge??0,fresh:settings.ecg??polar==='ready'},
+      acc:{age_ms:settings.accAge??0,fresh:settings.acc??polar==='ready'},
+      contact:settings.contactHealth??{state:'detected',supported:true,detected:true,age_ms:0},
+      battery:{percent:settings.polarBattery??64,age_ms:settings.polarBatteryAge??0}
+    } : undefined;
   if(settings.advanceRenderer && setup.renderer) {
     const frame=Math.floor(performance.now()/100)+1;
     setup.renderer={...setup.renderer,frame,observed_ns:String(frame*100000000),age_ns:0};
@@ -71,6 +84,9 @@ function snapshot() {
     pending, participant_arm: settings.participantArm === false ? undefined : 1, ecg_preview: 1, recenter: 1, recordings: 1,
     ...(settings.liveRecording ? {live_recording: 1} : {}),
     controller_access: settings.access,
+    polar_health: polarHealth,
+    power:Object.hasOwn(settings,'power') ? settings.power
+      : {v:1,quest:{percent:82,charging:false},controllers:[]},
     ...(Object.hasOwn(settings,'apk') ? {apk:settings.apk} : {}),
     ...(Object.hasOwn(window,'reviewMetaUpdate') ? {meta_update:window.reviewMetaUpdate}
       : settings.metaUpdate ? {meta_update:settings.metaUpdate} : {}),
@@ -617,6 +633,7 @@ def show_operator(page, step):
     """Follow real local navigation, without changing a domain model or gateway."""
     page.wait_for_function('Boolean(window.reviewQuest)')
     ids = {'connect':'quest','input':'input-screen','tracking':'breathing-preview','signals':'signals-screen',
+           'battery':'battery-screen','session':'session-screen','calibration':'calibration-screen',
            'settings':'settings-screen','update':'update-screen','recordings':'recordings-screen','participant':'participant-screen'}
     target=page.locator('#'+ids[step])
     if target.is_visible():
@@ -626,6 +643,8 @@ def show_operator(page, step):
         direct=page.locator(f'[data-operator-go="{step}"]:visible')
         if direct.count():
             direct.first.click()
+        elif step == 'session' and page.locator('#battery-next:visible').count():
+            page.locator('#battery-next').click()
         elif step == 'update' and page.locator('[data-operator-go="settings"]:visible').count():
             page.locator('[data-operator-go="settings"]:visible').first.click()
         elif page.locator('[data-operator-return]:visible').count():
@@ -646,6 +665,16 @@ def show_operator(page, step):
             break
     expect(target).to_be_visible()
     assert before==page.evaluate('({commands:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})'), 'Local navigation mutated native state'
+
+
+def review_battery(page):
+    """Use the new local review action, never bypass its route or native guards."""
+    expect(page.locator('#battery-screen')).to_be_visible()
+    before = page.evaluate('({session:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})')
+    expect(page.locator('#battery-next')).to_be_enabled()
+    page.locator('#battery-next').click()
+    expect(page.locator('#session-screen')).to_be_visible()
+    assert before == page.evaluate('({session:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})')
 
 
 def enter_participant(page, then='input'):
@@ -934,6 +963,7 @@ def capture(review):
     shot(page, "native-controller-ready", "Controller State · fixed orientation and continuation", proceed, "Breathing setup")
     proceed.focus()
     proceed.press("Enter")
+    review_battery(page)
     expect(page.locator("#session-screen-title")).to_be_focused()
 
     scenario = page.locator("#quest-scenario")
@@ -1138,6 +1168,7 @@ def capture_accessibility(review, paired):
         expect(proceed).to_be_enabled()
         proceed.focus()
         proceed.press("Enter")
+        review_battery(page)
         expect(page.locator("#quest-scenario")).to_be_visible()
         expect(page.locator("#session-screen-title")).to_be_focused()
         page.context.close()

@@ -254,6 +254,10 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 #quest-status, #quest-polar-status, #quest-data p, #recording-files p { text-align: start; }
 #quest-control-host, #quest-control-access { min-width: 0; }
 #quest-control-access { gap: 12px; }
+.battery-levels { display: grid; gap: var(--gap); width: min(100%, 520px); margin: 0 auto; min-width: 0; }
+.battery-levels > div { display: grid; gap: 4px; min-width: 0; padding-inline-start: 12px; border-inline-start: 2px solid var(--site-blue); }
+.battery-levels dt { font-weight: bold; }
+.battery-levels dd { margin: 0; min-width: 0; white-space: pre-line; overflow-wrap: anywhere; color: var(--muted); }
 .compatibility-note { color: #efc570; border-left: 2px solid var(--site-gold); padding-left: 12px; }
 #quest-participant { width: 100%; }
 #quest-participant > summary { min-height: 48px; align-content: center; cursor: pointer; }

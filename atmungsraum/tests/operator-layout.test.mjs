@@ -39,9 +39,9 @@ test('native active recording and recovery override obsolete preparation and set
   }
   assert.equal(resolveOperatorView('participant', { ...connected, participantComplete: false, recovery: true }), 'recovery');
 });
-test('domain acceptance alone admits session selection; changing input is local', () => {
+test('domain acceptance admits selection after local battery review; changing input is local', () => {
   assert.equal(resolveOperatorView('session', { ...connected, selectionAllowed: false }), 'tracking');
-  assert.equal(resolveOperatorView('session', { ...connected, selectionAllowed: true }), 'session');
+  assert.equal(resolveOperatorView('session', { ...connected, selectionAllowed: true, batteryReviewed: true }), 'session');
   assert.equal(resolveOperatorView('input', { ...connected, selectionAllowed: true }), 'input');
 });
 test('waiting phone stays at connection and settings return is bounded to known step names', () => {
@@ -96,4 +96,15 @@ test('native paused and finalizing states cannot be labelled as running', () => 
   assert.equal(operatorSessionHeading('PAUSED'), 'Sitzung pausiert');
   assert.equal(operatorSessionHeading('FINALIZING'), 'Sitzung wird beendet');
   assert.equal(operatorSessionHeading('SAVING'), 'Aufnahme wird gespeichert');
+});
+test('battery review precedes Session without authorizing native commands or blocking on optional telemetry', () => {
+  const ready = { ...connected, selectionAllowed: true, batteryReviewed: false };
+  assert.equal(resolveOperatorView('session', ready), 'battery');
+  assert.equal(resolveOperatorView('battery', ready), 'battery');
+  assert.equal(resolveOperatorView('session', { ...ready, batteryReviewed: true }), 'session');
+  assert.equal(resolveOperatorView('battery', { ...ready, selectionAllowed: false }), 'tracking');
+  assert.equal(navigateOperatorView({ step: 'session' }, { type: 'back' }).step, 'battery');
+  assert.equal(navigateOperatorView({ step: 'battery' }, { type: 'back' }).step, 'tracking');
+  assert.equal(resolveOperatorView('battery', { ...ready, active: true }), 'running');
+  assert.equal(resolveOperatorView('battery', { ...ready, recovery: true }), 'recovery');
 });

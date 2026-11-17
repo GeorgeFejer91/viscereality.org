@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-update-simple">
+  <link rel="stylesheet" href="./style.css?v=20261117-device-health">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-update-simple"></script>
+  <script type="module" src="./app.js?v=20261117-device-health"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -31,7 +31,7 @@
     </button>
     <button id="check-control" class="check-icon" type="button" data-check="checking" disabled
        aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Quest-Steuerung: wird geprüft" title="Quest-Steuerung: wird geprüft">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg?v=20261117-update-simple#control"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg?v=20261117-device-health#control"/></svg>
       <span class="check-symbol" aria-hidden="true"></span>
     </button>
     <button id="check-polar" class="check-icon" type="button" data-check="checking" disabled
@@ -92,6 +92,7 @@
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="quest-title" data-measure tabindex="-1">Quest verbinden</h1>
+        <p class="preparation-step" data-measure>Schritt 1 von 5</p>
       </header>
       <div class="screen-body operator-body">
         <div id="operator-common" class="operator-common">
@@ -176,7 +177,7 @@
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="participant-screen-title" data-measure tabindex="-1">Teilnehmer-ID</h1>
-        <p class="preparation-step" data-measure>Schritt 2 von 4</p>
+        <p class="preparation-step" data-measure>Schritt 2 von 5</p>
       </header>
       <div class="screen-body operator-body">
         <details id="quest-participant" hidden open>
@@ -237,7 +238,7 @@
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="input-screen-title" data-measure tabindex="-1">Atmungsmessmethode</h1>
-        <p class="preparation-step" data-measure>Schritt 3 von 4</p>
+        <p class="preparation-step" data-measure>Schritt 3 von 5</p>
       </header>
       <div class="screen-body operator-body">
         <p data-measure>Wähle, wie die Atmung die Bewegung im Headset steuert: über den Polar-Gurt oder den Controller.</p>
@@ -274,7 +275,7 @@
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="calibration-screen-title" data-measure tabindex="-1">Zwei Atemzyklen</h1>
-        <p class="preparation-step" data-measure>Schritt 3 von 4</p>
+        <p class="preparation-step" data-measure>Schritt 3 von 5</p>
       </header>
       <div class="screen-body operator-body">
       </div>
@@ -288,7 +289,7 @@
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="preview-title" data-measure tabindex="-1">Bewegung prüfen</h1>
-        <p class="preparation-step" data-measure>Schritt 3 von 4</p>
+        <p class="preparation-step" data-measure>Schritt 3 von 5</p>
       </header>
       <div class="screen-body operator-body">
         <div id="operator-live" class="preview-body">
@@ -326,12 +327,31 @@
         <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Atmungsmessmethode bestätigen</span></button>
       </footer>
     </section>
+    <section id="battery-screen" aria-labelledby="battery-screen-title" class="screen operator-screen" hidden>
+      <header class="screen-header">
+        <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span></div>
+        <h1 id="battery-screen-title" data-measure tabindex="-1">Akku prüfen</h1>
+        <p class="preparation-step" data-measure>Schritt 4 von 5</p>
+      </header>
+      <div class="screen-body operator-body">
+        <dl class="battery-levels">
+          <div><dt data-measure>Quest</dt><dd id="battery-quest" data-measure>unbekannt</dd></div>
+          <div><dt data-measure>Controller</dt><dd id="battery-controllers" data-measure>keine Akkudaten</dd></div>
+          <div><dt data-measure>Polar H10</dt><dd id="battery-polar" data-measure>unbekannt</dd></div>
+        </dl>
+        <p class="compatibility-note" data-measure>Controller sind optional. Fehlende Akkuangaben verhindern den Start nicht.</p>
+      </div>
+      <footer class="actions operator-actions">
+        <button data-operator-back type="button"><span data-measure>Zurück</span></button>
+        <button id="battery-next" class="primary-navigation" type="button" disabled><span data-measure>Weiter zum Start</span></button>
+      </footer>
+    </section>
     <section id="session-screen" aria-labelledby="session-screen-title" class="screen operator-screen" hidden>
       <header class="screen-header">
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
         <h1 id="session-screen-title" data-measure tabindex="-1">Sitzung auswählen</h1>
-        <p class="preparation-step" data-measure>Schritt 4 von 4</p>
+        <p class="preparation-step" data-measure>Schritt 5 von 5</p>
       </header>
       <div class="screen-body operator-body">
         <div id="session-choices" hidden>

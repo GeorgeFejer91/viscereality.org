@@ -107,6 +107,8 @@ def capture_layout(review):
         review.regressions.append({'kind':'actual-renderer-inset','size':size,**inset})
         expect(page.locator('#preview-continue')).to_be_enabled()
         page.locator('#preview-continue').click()
+        shot(page,'battery','#battery-next')
+        c.review_battery(page)
         expect(page.get_by_role('region', name='Vorbereitung').get_by_role('radio')).to_have_count(2)
         expect(page.get_by_role('region', name='Hauptstudie').get_by_role('radio')).to_have_count(1)
         expect(page.locator('#quest-condition')).to_have_count(0)
@@ -120,6 +122,7 @@ def capture_layout(review):
         expect(page.locator('#breathing-preview')).to_be_visible()
         assert mutations(page)['session']==[]
         page.locator('#preview-continue').click()
+        c.review_battery(page)
         expect(page.locator('#session-screen')).to_be_visible()
         page.locator('#quest-play').click()
         expect(page.locator('#running-screen')).to_be_visible()

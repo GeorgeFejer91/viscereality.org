@@ -36,7 +36,7 @@ playout, physical percentage semantics, and exact touching inset geometry.
 ## Page sequence
 
 Connection and setup → APK update when required → participant ID → input choice → personal calibration
-when selected → tracking check → scenario tiles and Start → running/finalizing
+when selected → tracking check → battery review → scenario tiles and Start → running/finalizing
 → recordings. Settings and recovery remain available as before. Keep the saved
 signals route and the earlier browser-recordings route usable. Pairing codes
 belong only to an actual incoming pairing request.
@@ -74,6 +74,12 @@ Eingabe; explain that it chooses Polar- or Controller-driven breathing movement.
 The live ECG view subtracts a rolling median baseline only when drawing and
 scales its deviations about the existing middle line. Label this centering in
 the scale. Preserve raw samples, timestamps, gaps, freshness and stored data.
+
+Before scenario selection/Start, show one focused battery review: Quest,
+Polar and available controllers. Keep unknown values explicit. A missing
+controller or unreported battery is informational. Continue confirms this
+review for the current participant/Quest and preparation; percentage changes
+must not cause navigation. Active sessions retain finish/recovery controls.
 
 Enter participant details on a dedicated, aligned form. Preserve field values
 and the existing identity generator. During personal calibration the Quest
