@@ -139,7 +139,10 @@ verified local playbooks or their commit-pinned public copies. Follow the
 playbook index for provider selection and headset readiness.
 
 Load the installed Codex skill `$keep-quest-awake` for bench and rehearsal
-awake holds, protected sleep recovery, and watchdog cleanup. Use the
+awake holds, protected sleep recovery, and watchdog cleanup. For a local Quest
+2 on a Windows host, check the installed
+[periodic watchdog](QUEST-AWAKE-TESTING.md#windows-periodic-watchdog-for-the-lab-quest-2)
+before choosing a one-shot hold or other awake route. Use the
 [Quest awake runbook](QUEST-AWAKE-TESTING.md) for the project-specific commands
 and evidence checks. The runbook and resolved Meta Quest playbooks also cover
 sessions where the user skill is unavailable.
