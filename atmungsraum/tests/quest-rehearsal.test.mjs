@@ -25,6 +25,31 @@ const snapshot = (phase = 'IDLE', generation = 0, revision = 0, witness = '100')
   },
 });
 
+test('explicit save confirmation waits for the original final writer receipt before composing an update', async () => {
+  for (const outcome of ['confirmed', 'rejected', 'outcome_unknown']) {
+    let current = snapshot('RUNNING', 3), original, reads = 0;
+    const gateway = { owner, initial: current, close() {}, status: async () => current,
+      command: async command => { original = command; current = snapshot('SAVING', 3); current.pending = true;
+        return { v: 1, id: command.id, state: 'pending' }; },
+      receipt: async id => { reads++; assert.equal(id, original.id); current = snapshot('IDLE', 3);
+        return { v: 1, id, state: outcome }; } };
+    const rehearsal = new QuestRehearsal({ wait: async () => {} }); rehearsal.attach(gateway);
+    const saved = await rehearsal.run('finish', undefined, 'condition-a', '', '', { confirmSave: true });
+    assert.equal(original.op, 'save-next');
+    assert.equal(reads, 1);
+    assert.equal(saved, outcome === 'confirmed');
+    if (outcome === 'outcome_unknown') assert.equal(rehearsal.pending.id, original.id);
+  }
+});
+
+test('an armed writer without sample recording exposes only its native session-bound stop/save route', () => {
+  const armed = { ...snapshot('ARMED', 3), rec: false };
+  assert.equal(rehearsalActions(armed).finish, 'save-next');
+  for (const patch of [{ q: undefined }, { q: { ...armed.q, g: 4 } }, { h: 'vr-preparation' }]) {
+    assert.equal(rehearsalActions({ ...armed, ...patch }).finish, undefined);
+  }
+});
+
 test('current-session preflight rejects changed control, session revisions and delayed status', async () => {
   for (const phase of ['RUNNING', 'PAUSED']) {
     for (const action of ['play', 'finish']) {

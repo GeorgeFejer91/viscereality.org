@@ -1,5 +1,5 @@
-import { operationId, sameQuest, canControlQuest, controllerAccessState } from './quest-gateway.js?v=13';
-import { nativeSessionAllowed } from './meta-update.js?v=3';
+import { operationId, sameQuest, canControlQuest, controllerAccessState } from './quest-gateway.js?v=14';
+import { nativeSessionAllowed } from './meta-update.js?v=4';
 
 const conditions = ['condition-a', 'condition-b'];
 const outcomes = new Set(['accepted', 'pending', 'confirmed', 'rejected', 'outcome_unknown']);
@@ -92,7 +92,9 @@ export function rehearsalActions(status, condition = conditions[0]) {
   const selected = conditions.indexOf(condition);
   if (status.p === 'IDLE' && status.h === 'vr-preparation' && !status.rec
     && nativeSessionAllowed(status) && selected >= 0 && status.a?.[selected] === 'track-ready') return { play: 'arm' };
-  if (!status.rec || !conditions.includes(status.c)) return {};
+  const preparedWriter = status.p === 'ARMED' && status.h === 'vr-session'
+    && status.q?.v === 2 && status.q.g === status.g && /^[a-f0-9]{32}$/.test(status.q.s);
+  if ((!status.rec && !preparedWriter) || !conditions.includes(status.c)) return {};
   const next = { ARMED: 'start', RUNNING: 'pause', PAUSED: 'resume' }[status.p];
   const grant = status.q;
   const allowed = status.h === 'vr-session' && next && grant?.v === 2 && grant.g === status.g
@@ -319,7 +321,7 @@ export class QuestRehearsal {
     if (setup?.c && !setup.a) await this.dispatchAndConfirm(gateway, 'start-acc', signal, 32000, setup.x);
   }
 
-  async run(action, signal, condition = conditions[0], participantId = '', scenario = '') {
+  async run(action, signal, condition = conditions[0], participantId = '', scenario = '', { confirmSave = false } = {}) {
     const gateway = this.gateway;
     const clicked = this.state.status;
     const requested = action === 'recenter' && gateway?.recenter && canRecenter(clicked)
@@ -345,7 +347,7 @@ export class QuestRehearsal {
       }
       const op = rehearsalActions(status, condition)[action];
       if (op !== requested || status.g !== clicked.g
-        || op !== 'arm' && op !== 'save-next' && status.q?.s !== clicked.q?.s) return;
+        || op !== 'arm' && status.q?.s !== clicked.q?.s) return;
       if (['pause', 'resume', 'save-next'].includes(op)) {
         const before = controllerAccessState(clicked), after = controllerAccessState(status);
         const age = this.now() - this.state.statusTiming.receivedAt + this.state.statusTiming.transportMs;
@@ -353,6 +355,9 @@ export class QuestRehearsal {
           || before?.active_phone !== after?.active_phone || before?.role !== after?.role) return;
       }
       if (op !== 'arm') {
+        if (op === 'save-next' && confirmSave) {
+          return await this.dispatchAndConfirm(gateway, op, signal, 15000);
+        }
         await this.dispatch(gateway, op, status, signal);
         return;
       }

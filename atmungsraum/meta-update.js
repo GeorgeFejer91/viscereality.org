@@ -38,6 +38,7 @@ export function nativeMetaUpdate(status) {
     && (!repeatable || status.meta_update_control === 1 && lineage(value.cycle) && lineage(value.revision)
       && (value.attempt === null || lineage(value.attempt)) && typeof value.can_check === 'boolean'
       && reason(value.busy_reason) && (value.required_code === null || positive(value.required_code))
+      && (!Object.hasOwn(value, 'can_end_preparation') || typeof value.can_end_preparation === 'boolean')
       && (!Object.hasOwn(value, 'sdk_error') || validSdkError(value.sdk_error)));
   const required = valid && repeatable && Math.max(value.required_code ?? 0, value.available_code ?? 0) > value.installed_code;
   return { advertised: true, allowed: Boolean(valid && value.session_allowed && !blocking.has(value.state) && !required),
@@ -76,6 +77,8 @@ const failureReasons = {
 const maintenanceReasons = new Set(['prior-install-unconfirmed-maintenance-required',
   'pending-install-record-invalid', 'pending-install-record-unreadable', 'pending-install-record-clear-failed']);
 const recoveryCopy = {
+  'ending-preparation': ['Quest beendet die Vorbereitung für das Update.',
+    'Die Quest hält den Atemtakt an. Erst die bestätigte Ruheposition gibt die Update-Prüfung frei.'],
   'checking-duplicate-download': ['Quest prüft den vorgemerkten Meta-Download.',
     'Meta hat bereits eine Anfrage für diese App gespeichert. Die Quest prüft deren Stand.'],
   'restarting-duplicate-download': ['Quest startet den Meta-Download erneut.',

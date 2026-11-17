@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-review-repairs">
+  <link rel="stylesheet" href="./style.css?v=20261117-preparation-update">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-review-repairs"></script>
+  <script type="module" src="./app.js?v=20261117-preparation-update"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -447,7 +447,7 @@
       <header class="screen-header">
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span></div>
         <h1 id="update-screen-title" data-measure tabindex="-1">Quest-App prüfen</h1>
-        <p data-measure>Vor der Vorbereitung</p>
+        <p data-measure>Update über dieses Smartphone</p>
       </header>
       <div class="screen-body operator-body">
         <aside id="quest-version" aria-labelledby="meta-update-status" class="version-panel" hidden>
@@ -457,6 +457,8 @@
             <progress id="meta-update-progress" aria-labelledby="meta-update-status" aria-describedby="update-instruction" hidden></progress>
             <div id="meta-update-controls" hidden>
               <button id="meta-update-check" type="button"><span data-measure>Updates prüfen und installieren</span></button>
+              <button id="meta-update-finish" type="button" hidden><span data-measure>Sitzung beenden, speichern und aktualisieren</span></button>
+              <button id="meta-update-save-retry" type="button" hidden><span data-measure>Quest-Stand erneut abfragen</span></button>
               <button id="meta-update-receipt" hidden type="button"><span data-measure>Bestätigung erneut abfragen</span></button>
               <button id="meta-update-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Stand übernehmen</span></button>
             </div>

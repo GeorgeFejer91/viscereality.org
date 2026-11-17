@@ -1,24 +1,24 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=7';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=8';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=13';
-import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=33';
+  controllerAccessState } from './quest-gateway.js?v=14';
+import { pairPhone } from './quest-pairing.js?v=3';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=34';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=12';
+import { BreathingSetup } from './breathing-setup.js?v=13';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=3';
+import { KioskControl } from './kiosk-control.js?v=4';
 import { ApkRelease } from './quest-release.js?v=1';
-import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
-import { MetaUpdateControl } from './meta-update-control.js?v=2';
-import { MetaUpdateHandoff } from './meta-update-handoff.js?v=1';
-import { ControllerLease } from './controller-lease.js?v=1';
-import { OperatorDeviceHealth } from './operator-device-health.js?v=1';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=4';
+import { MetaUpdateControl } from './meta-update-control.js?v=3';
+import { MetaUpdateHandoff } from './meta-update-handoff.js?v=2';
+import { ControllerLease } from './controller-lease.js?v=2';
+import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -42,14 +42,19 @@ function updatePresentation(version, native, controls, pending) {
     summary = 'Update-Bestätigung noch offen.';
     instruction = controls.message || 'Frage die Bestätigung der ursprünglichen Anfrage erneut ab.';
   } else if (controls.message) instruction = controls.message;
-  else if (healthy && controls.available && !controls.canRequest) instruction = controls.prerequisites;
+  // The reason a primary action cannot run belongs beside that action.
+  if (!pending && controls.available && !['waiting', 'checking', 'downloading', 'installing'].includes(native.state)
+    && (!controls.canRequest || controls.requestOp === 'end-preparation-and-check')) {
+    if (controls.prerequisites && !instruction.includes(controls.prerequisites)) instruction = `${instruction} ${controls.prerequisites}`.trim();
+  }
   // An unresolved phone receipt cannot conceal native headset/recovery instructions.
   if ((pending || controls.message) && (!native.allowed || native.state === 'failed')) {
     const recovery = withoutCodes(native.detail);
     if (recovery && !instruction.includes(recovery)) instruction = `${instruction} ${recovery}`.trim();
   }
   return { summary, instruction,
-    checkLabel: healthy ? 'Erneut prüfen' : version.state === 'required' || native.state === 'update_required'
+    checkLabel: controls.requestOp === 'end-preparation-and-check' ? 'Vorbereitung beenden und aktualisieren'
+      : healthy ? 'Erneut prüfen' : version.state === 'required' || native.state === 'update_required'
       ? 'Jetzt aktualisieren' : 'Updates prüfen und installieren' };
 }
 
@@ -247,6 +252,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let deviceTimer;
   let versionGeometryKey = '';
   let updateGeometryKey = '';
+  let saveForUpdate = false;
+  let saveUpdateMessage = '';
+  let savedUpdateIntent = null;
+  let savedUpdateReconciling = false;
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
 
   let localView = restoreOperatorView(location.hash, history.state);
@@ -273,10 +282,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const nativeActive = context.active || Boolean(context.status && ['ARMED', 'RUNNING', 'PAUSED', 'FINALIZING', 'SAVING'].includes(context.status.p));
     if (context.status) {
       if (wasActive && !nativeActive && context.status.p === 'IDLE') {
-        localView = { step: 'recordings', returnTo: null };
+        localView = { step: saveForUpdate ? 'update' : 'recordings', returnTo: null };
         // Native completion changes the current view. History must reflect it
         // before a link can open the older browser recordings and return.
-        history.replaceState({ operatorStep: localView.step }, '', '#recordings');
+        history.replaceState({ operatorStep: localView.step }, '', `#${localView.step}`);
       }
       wasActive = nativeActive;
     }
@@ -325,6 +334,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (['input', 'calibration', 'tracking', 'recovery'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       move('operator-common', body);
+      const preparationRecovery = byId('preview-recovery');
+      if (step === 'update') byId('apk-identity').append(preparationRecovery);
+      else if (preparationRecovery.parentElement !== byId('operator-common')) byId('quest-recovery').after(preparationRecovery);
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
       displayedStep = step;
       if (['connect', 'recordings'].includes(step)) {
@@ -350,7 +362,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
     const access = controllerAccessState(context.status);
     const duplicateUpdateStatus = step === 'update' && statusText.textContent === nativeUpdate.summary;
-    statusText.hidden = duplicateUpdateStatus || (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
+    statusText.hidden = duplicateUpdateStatus || step === 'update' && !rehearsal.recovery() && !context.waitingForControl
+      || (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
     byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
     text(byId('operator-connection-summary'), controllerLease.view?.active
       ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
@@ -368,8 +381,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
       control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
-    byId('operator-update-next').disabled = context.updateRequired || context.waitingForControl || !context.status;
-    byId('operator-update-open').disabled = nativeActive || !context.status;
+    byId('operator-update-next').disabled = nativeActive || context.updateRequired || context.waitingForControl || !context.status;
+    byId('operator-update-open').disabled = !context.status;
     for (const [name, button] of Object.entries(utilities)) {
       if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
       else if (name !== step) button.removeAttribute('aria-current');
@@ -379,6 +392,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
     byId('operator-connect-next').disabled = context.status?.wifi_snapshot !== 1 || context.waitingForControl;
+    text(byId('operator-connect-next').querySelector('[data-measure]'), context.updateRequired ? 'Quest-App aktualisieren' : 'Weiter');
+    byId('operator-connect-next').dataset.operatorGo = context.updateRequired ? 'update' : 'participant';
     byId('operator-next-session').disabled = !context.status || context.waitingForControl;
   }
   document.addEventListener('click', event => {
@@ -450,7 +465,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     clearTimeout(controlTimer);
     if (control.active) controlTimer = setTimeout(() => paint(), control.expiresIn + 1);
     const liveCommandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || controllerLease.pending
-      || busy || pending || status?.pending || breathing.busy || nativeRecovering);
+      || busy || pending || status?.pending || breathing.busy || nativeRecovering || savedUpdateIntent);
     const preparationWaiting = Boolean(breathing.pending || breathing.view?.recovering);
     const commandWaiting = liveCommandWaiting || preparationWaiting;
     const waiting = waitingForControl || commandWaiting;
@@ -568,7 +583,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('meta-update-detail'), metaUpdate.detail);
     text(byId('operator-meta-summary'), metaUpdate.summary);
     text(byId('operator-meta-detail'), metaUpdate.detail);
-    const updateControls = metaControl.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
+    // An old setup journal stays read-only; native dynamic admission independently
+    // fences ending preparation. Actual experiment/control uncertainty still blocks.
+    const updateControls = metaControl.update(rehearsal.gateway, { status, busy: liveCommandWaiting || waitingForControl || !control.active, pending, unknown });
     byId('meta-update-controls').hidden = !updateControls.available;
     byId('meta-update-check').disabled = !updateControls.canRequest;
     text(byId('meta-update-prerequisites'), updateControls.prerequisites);
@@ -577,6 +594,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     byId('meta-update-receipt').hidden = !updateControls.canReadReceipt || !metaControl.expired;
     byId('meta-update-acknowledge').hidden = !updateControls.canAcknowledge;
     const updateCopy = updatePresentation(version, metaUpdate, updateControls, Boolean(metaControl.pending));
+    const finishUpdate = byId('meta-update-finish');
+    const recording = Boolean(status?.rec || status?.p === 'ARMED' && actions.finish === 'save-next');
+    finishUpdate.hidden = !recording;
+    finishUpdate.disabled = !recording || sessionWaiting || unknown || actions.finish !== 'save-next' || !control.active || Boolean(metaControl.pending);
+    if (recording) updateCopy.instruction = saveUpdateMessage || (finishUpdate.disabled
+      ? 'Warte auf die bestätigte Sitzung und Steuerung. Die Aufnahme wird erst durch deine ausdrückliche Aktion beendet.'
+      : 'Die Sitzung wird beendet und die Aufnahme auf der Quest gespeichert. Erst nach dem bestätigten Abschluss prüft die Quest das Update.');
+    else if (saveUpdateMessage) updateCopy.instruction = saveUpdateMessage;
+    if (saveUpdateMessage) updateCopy.summary = 'Update noch nicht bestätigt.';
+    if (saveForUpdate) updateCopy.summary = 'Quest beendet und speichert die Sitzung.';
+    if (savedUpdateIntent) updateCopy.summary = 'Aufnahme gespeichert. Quest bereitet das Update vor.';
+    byId('meta-update-save-retry').hidden = !savedUpdateIntent;
+    byId('meta-update-save-retry').disabled = Boolean(userAction || connecting || savedUpdateReconciling);
+    byId('meta-update-check').hidden = recording;
     text(byId('meta-update-status'), updateCopy.summary);
     text(byId('update-instruction'), updateCopy.instruction);
     if (byId('update-instruction').hidden !== !updateCopy.instruction) byId('update-instruction').hidden = !updateCopy.instruction;
@@ -654,7 +685,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     play.disabled = (currentPlay ? sessionWaiting : waiting) || unknown || !actions.play
       || actions.play === 'arm' && (!selectionAllowed || !batteryReviewed || !scenario || !breath.actions.continue);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
-    finish.hidden = !active;
+    finish.hidden = !active && actions.finish !== 'save-next';
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
     finish.disabled = sessionWaiting || unknown || !actions.finish;
     const recovery = rehearsal.recovery();
@@ -682,6 +713,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
     download.hidden = !archiveScope || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
+      updateBlocked: Boolean(recovery || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
@@ -1103,6 +1135,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (document.hidden || connecting || userAction) return;
     await breathing.refresh();
     await kiosk.refresh();
+    await reconcileSavedUpdate();
     await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
@@ -1387,7 +1420,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function currentSessionControls(status, control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext())) {
-    return Boolean(status?.rec && ['RUNNING', 'PAUSED', 'RECORDING'].includes(status.p)
+    return Boolean((status?.rec && ['RUNNING', 'PAUSED', 'RECORDING'].includes(status.p)
+      || status?.p === 'ARMED' && rehearsalActions(status, operatorCondition).finish === 'save-next')
       && control.active && !controllerLease.pending && !document.hidden);
   }
 
@@ -1453,12 +1487,79 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   });
   byId('meta-update-check').addEventListener('click', async () => {
     if (userAction || connecting || document.hidden || !metaControl.view?.canRequest) return;
+    saveUpdateMessage = '';
     const attempt = new AbortController(); userAction = attempt;
     const request = metaControl.request(attempt.signal);
     if (metaControl.busy) metaHandoff.manualRequest(rehearsal.gateway, rehearsal.state);
     paint();
     try { await request; }
     finally { if (userAction === attempt) userAction = null; paint(); }
+  });
+  byId('meta-update-finish').addEventListener('click', async () => {
+    if (byId('meta-update-finish').disabled || userAction || connecting || document.hidden) return;
+    const gateway = rehearsal.gateway, clicked = rehearsal.state.status, owner = gateway && { ...gateway.owner };
+    const actor = { ...controllerAccessState(clicked) }, original = metaControl.view?.value && { ...metaControl.view.value };
+    if (!gateway || !original || !currentSessionControls(clicked) || rehearsalActions(clicked, operatorCondition).finish !== 'save-next') return;
+    const attempt = new AbortController(); userAction = attempt;
+    saveForUpdate = true; saveUpdateMessage = '';
+    ecgAttempt?.abort(); exportAttempt?.abort(); liveAttempt?.abort(); drive.cancel();
+    paint();
+    try {
+      const confirmed = await rehearsal.run('finish', attempt.signal, operatorCondition, participantId, '', { confirmSave: true });
+      if (!confirmed || attempt.signal.aborted || document.hidden || rehearsal.gateway !== gateway) {
+        saveUpdateMessage = 'Der Speicherabschluss ist noch nicht bestätigt. Prüfe die ursprüngliche Sitzungsanfrage; das Update wird nicht erneut angefragt.';
+        return;
+      }
+      savedUpdateIntent = { gateway, owner, actor, previousCycle: original.cycle,
+        cycle: String(BigInt(original.cycle) + 1n), previousAttempt: original.attempt, signal: attempt.signal };
+      await rehearsal.refresh();
+      await reconcileSavedUpdate();
+    } finally {
+      saveForUpdate = false;
+      if (userAction === attempt) userAction = null;
+      paint();
+    }
+  });
+  async function reconcileSavedUpdate() {
+    const intent = savedUpdateIntent;
+    if (!intent || savedUpdateReconciling || document.hidden || connecting) return;
+    const state = rehearsal.state, gateway = rehearsal.gateway;
+    const access = controllerAccessState(state.status), value = metaUpdateView(state.status).value;
+    if (intent.signal.aborted || gateway !== intent.gateway || !sameQuest(gateway?.owner, intent.owner)
+      || state.status?.o?.e !== intent.owner.native_epoch
+      || state.unknown || state.pending || state.status?.rec || state.status?.pending
+      || access?.role !== 'active' || access.revision !== intent.actor.revision || access.active_phone !== intent.actor.active_phone
+      || value && ![intent.previousCycle, intent.cycle].includes(value.cycle)) {
+      savedUpdateIntent = null;
+      saveUpdateMessage = 'Sitzung gespeichert; der aktuelle Quest-Stand muss erneut bestätigt werden. Prüfe die Verbindung und wähle das Update erneut.';
+      return;
+    }
+    saveUpdateMessage = 'Aufnahme gespeichert. Warte auf die bestätigte Ruheposition und die Update-Prüfung der Quest.';
+    if (!value || value.cycle !== intent.cycle || state.status.p !== 'IDLE' || state.busy
+      || !controllerLease.update(gateway, state, controlContext()).active) return;
+    // A next-cycle old "current" value cannot prove a new check while the real
+    // audio owner is still parking. Follow only this cycle's admitted attempt.
+    if (value.attempt !== null && value.attempt !== intent.previousAttempt
+      && ['checking', 'downloading', 'installing', 'current', 'updated', 'failed', 'restart_required', 'update_required'].includes(value.state)) {
+      savedUpdateIntent = null; saveUpdateMessage = '';
+      return;
+    }
+    const controls = metaControl.update(gateway, state);
+    if (!controls.canRequest) return;
+    savedUpdateReconciling = true;
+    savedUpdateIntent = null; saveUpdateMessage = '';
+    try {
+      // Native can_check is the actual park/writer boundary. The journal owns
+      // the one new request before transport; receipt loss never resends it.
+      await metaControl.request(intent.signal);
+      if (metaControl.pending) {
+        metaHandoff.manualRequest(gateway, state, metaControl.pending.accepted);
+      }
+    } finally { savedUpdateReconciling = false; }
+  }
+  byId('meta-update-save-retry').addEventListener('click', async () => {
+    if (byId('meta-update-save-retry').disabled || document.hidden) return;
+    await rehearsal.refresh(); await reconcileSavedUpdate(); paint();
   });
   byId('meta-update-receipt').addEventListener('click', () => {
     if (userAction || connecting || document.hidden || !metaControl.view?.canReadReceipt) return;
@@ -1552,6 +1653,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       renderLive(performance.now());
       if (pairingChoice) connecting?.abort();
       userAction?.abort();
+      if (savedUpdateIntent) {
+        savedUpdateIntent = null;
+        saveUpdateMessage = 'Sitzung gespeichert. Wähle das Update erneut, sobald die Quest-Steuerung bestätigt ist.';
+      }
       breathing.cancel();
       ecgAttempt?.abort();
       exportAttempt?.abort();

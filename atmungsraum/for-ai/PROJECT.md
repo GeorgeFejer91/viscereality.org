@@ -56,7 +56,7 @@ selected Superpowers subagent workflow apply. One native owner and one PWA owner
 coordinate the wire contract before integration; no duplicate concurrent edits.
 Current Meta baseline is25, parked and eligible for a PWA-only bootstrap.
 Old version-only26-r1 is revoked as an upload target and stays unpublished.
-Repaired26-r2 is the planned new baseline; a new held27 follows its qualification.
+Repaired26-r3 is the planned combined baseline; a new held27 follows its qualification.
 The replacement repaired baseline is distinct from a version-only test probe.
 
 Owned interface: private enrolled-LAN capability meta_update_preparation:1 and
@@ -75,6 +75,18 @@ Early independent review requires regressions for concurrent duplicate IDs,
 pre-reset paused/frame0 clock reuse, and an owner/cycle retiring between native
 preparation admission and Java readback. No accepted receipt may silently adopt
 an unrelated later cycle. These are implementation gates, not device evidence.
+
+Before concurrent integration, the updater implementation passed scoped and
+whole-change review,319 Node tests/zero skips,23 mounted preparation renders,
+and902 native tests with6 intentional ignores plus actual Java/audio/writer joins.
+Native source b90e2f94/tree65718c6d is committed. Intermediate26-r2 built from it
+is unpublished and revoked as an upload target: current main additionally landed
+authored instructions/Probe/Freie Erkundung/main/outro source. Preserve those
+changes while merging the updater repair; do not overwrite the public authored
+native source patch or silently enable new audio. MainStudyAudio remains an
+explicit opt-in; the update candidate retains the already qualified loop/audio
+payload and900-second main. Revalidate the combined source and interfaces, then
+build26-r3 under a new run name. Root owns final private source binding and release.
 
 Private evidence: validation/2026-11-17-code25-attended contains native update/
 helper observation, installed checksum, real phone DOM/screenshots, native status

@@ -37,6 +37,17 @@ test('contact is never inferred from sample freshness or legacy pi.f', () => {
   ]) assert.equal(model.update(owner, state(health({ contact }))).polar.confirmed, null);
 });
 
+test('legacy Quest telemetry explains missing status capability without inferring strap contact', () => {
+  const model = new OperatorDeviceHealth({ now: () => 1000 });
+  const legacy = state(); delete legacy.status.polar_health;
+  const view = model.update(owner, legacy).polar;
+  assert.equal(view.confirmed, null);
+  assert.match(view.neutral, /Quest-App.*Status/);
+  assert.match(view.detail, /Quest-App.*aktualisieren/);
+  assert.match(view.detail, /Tragekontakt.*unbekannt/);
+  assert.doesNotMatch(view.detail, /Tragekontakt bestätigt|Gurt.*getragen/);
+});
+
 test('loss, stale streams and absent contact remove green, and a fresh native observation can recover', () => {
   const model = new OperatorDeviceHealth({ now: () => 1000 });
   assert.equal(model.update(owner, state()).polar.confirmed, true);

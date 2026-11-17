@@ -105,7 +105,11 @@ def session_cases(review):
         expect(page.locator('#quest-play')).to_be_disabled()
         page.locator('#quest-finish').evaluate('b=>b.click()')
         page.clock.run_for(2000)
-        assert mutations(page)['session'] == mutations(page)['setup'] == []
+        # A native-bound ARMED writer can now be explicitly ended/saved before
+        # an update. Starting it remains blocked by the old setup journal.
+        assert mutations(page)['session'] == (['save-next'] if phase == 'ARMED' else [])
+        assert mutations(page)['setup'] == []
+        assert page.evaluate(f"JSON.parse(sessionStorage.getItem('{KEY}'))") == journal()
         page.context.close()
 
 

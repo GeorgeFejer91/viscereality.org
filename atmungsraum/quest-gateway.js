@@ -345,9 +345,10 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
       } : null,
       ...(enrollment && initial.meta_update_control === 1 && initial.meta_update?.v === 2 ? { metaUpdate: (command, requestSignal) => {
         if (command?.v !== 1 || typeof command.id !== 'string' || !/^[a-f0-9]{16}$/.test(command.id)
-          || !['receipt', 'check-and-update'].includes(command.op)
-          || command.op === 'check-and-update' && !['cycle', 'revision'].every(key => typeof command[key] === 'string' && /^[1-9][0-9]{0,18}$/.test(command[key]))
-          || Object.keys(command).length !== (command.op === 'check-and-update' ? 5 : 3)) throw Error('Ungültige Update-Anfrage.');
+          || !['receipt', 'check-and-update', 'end-preparation-and-check'].includes(command.op)
+          || command.op === 'end-preparation-and-check' && initial.meta_update_preparation !== 1
+          || command.op !== 'receipt' && !['cycle', 'revision'].every(key => typeof command[key] === 'string' && /^[1-9][0-9]{0,18}$/.test(command[key]))
+          || Object.keys(command).length !== (command.op === 'receipt' ? 3 : 5)) throw Error('Ungültige Update-Anfrage.');
         return controlled('meta-update', command, requestSignal);
       } } : {}),
       controllerAccess: enrollment && controllerAccessState(initial)
