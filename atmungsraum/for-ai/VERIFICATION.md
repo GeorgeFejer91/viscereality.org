@@ -668,6 +668,14 @@ assembly resolved the 97 bound audio assets. Chromium rendered 140 layout
 states and passed the controller and startup walkthroughs. Signed
 installation, physical audio output and the installed Pixel app remain open.
 
+The Android ARM64 source check also passed. The original site deployed
+`118fa73` in [Pages run 44150919969](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44150919969).
+Fourteen served resources matched the Git bytes. Chromium exercised the
+deployed application at 320 × 640 and 1440 × 900 with a synthetic Quest
+transport. The active signed release policy still points to Code 25.
+Neither the lab Quest 2 nor the Pixel 10 appeared in the USB or wireless
+ADB inventory, so device qualification remains pending.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,
