@@ -1,9 +1,9 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=6';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=7';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=32';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=33';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
@@ -149,6 +149,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let ecgTimer, ecgAttempt, exportAttempt, nextSync = 0, exportMessage = '';
   let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
+  let archiveListRead = 0, archiveScope = '', archivesSuspended = false;
   let connecting = null;
   let rememberedDevice = null;
   let nextConnect = 0;
@@ -373,7 +374,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
       else if (name !== step) button.removeAttribute('aria-current');
     }
-    utilities.recordings.disabled = nativeActive || Boolean(context.recovery);
+    utilities.recordings.disabled = nativeActive || Boolean(context.recovery && !context.offlineArchives);
     const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
@@ -408,6 +409,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function paint({ status, busy, pending, unknown, message } = rehearsal.state) {
+    refreshLocalArchives();
     if (status) metaHandoff.observe(rehearsal.gateway, { status, busy, pending, unknown });
     else metaHandoff.disconnected();
     const handoff = metaHandoff.view(savedPair);
@@ -447,9 +449,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext());
     clearTimeout(controlTimer);
     if (control.active) controlTimer = setTimeout(() => paint(), control.expiresIn + 1);
-    const commandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || busy || pending || status?.pending
-      || breathing.busy || breathing.pending || nativeRecovering);
+    const liveCommandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || controllerLease.pending
+      || busy || pending || status?.pending || breathing.busy || nativeRecovering);
+    const preparationWaiting = Boolean(breathing.pending || breathing.view?.recovering);
+    const commandWaiting = liveCommandWaiting || preparationWaiting;
     const waiting = waitingForControl || commandWaiting;
+    // An old preparation receipt cannot own a different current recording.
+    // Native recovery and uncertain experiment/control requests still fence it.
+    const sessionWaiting = waitingForControl || liveCommandWaiting
+      || preparationWaiting && !currentSessionControls(status, control);
     controlPanel.hidden = !access;
     controlClaim.hidden = !waitingForControl;
     controlRelease.hidden = access?.role !== 'active';
@@ -642,12 +650,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (focusedChoice && (focusedChoice.closest('[hidden]') || focusedChoice.matches(':disabled'))) {
       byId('session-screen-title').focus({ preventScroll: true });
     }
-    play.disabled = waiting || unknown || !actions.play
+    const currentPlay = ['pause', 'resume'].includes(actions.play);
+    play.disabled = (currentPlay ? sessionWaiting : waiting) || unknown || !actions.play
       || actions.play === 'arm' && (!selectionAllowed || !batteryReviewed || !scenario || !breath.actions.continue);
     text(play.firstElementChild, status?.p === 'RUNNING' ? 'Pause' : status?.p === 'PAUSED' ? 'Fortsetzen' : 'Starten');
     finish.hidden = !active;
     if (finish.hidden && hadFinishFocus) statusText.focus({ preventScroll: true });
-    finish.disabled = waiting || unknown || !actions.finish;
+    finish.disabled = sessionWaiting || unknown || !actions.finish;
     const recovery = rehearsal.recovery();
     byId('quest-recovery').hidden = !recovery;
     if (recovery) {
@@ -666,13 +675,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (!idleForSync(rehearsal.state) && !activeForSync(rehearsal.state)) drive.cancel();
     data.hidden = status?.ecg_preview !== 1;
     if (data.hidden) showTrace(null);
-    exportStatus.hidden = !exportMessage || !status;
+    exportStatus.hidden = !exportMessage || !status && !archiveScope;
     text(exportStatus, exportMessage);
     retry.hidden = !rehearsal.gateway?.recordings || status?.p !== 'IDLE';
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
-    archivePicker.parentElement.hidden = !status || !archivePicker.options.length;
-    download.hidden = !status || !download.hasAttribute('href');
+    archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
+    download.hidden = !archiveScope || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
+      offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
@@ -896,6 +906,51 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     download.hidden = true;
   }
 
+  function localArchiveOwner() {
+    // rememberPair writes build only after an authenticated join. Its value is
+    // provenance, not part of the recording key: APK/actor updates retain files.
+    const pair = savedPair;
+    if (archivesSuspended || !pair || !/^[a-f0-9]{32}$/.test(pair.device)
+      || !/^[a-f0-9]{64}$/.test(pair.build) || typeof pair.serial !== 'string'
+      || !(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(pair.serial)
+        || pair.identity_kind === 'app-installation' && pair.serial === '')) return null;
+    const live = rehearsal.gateway?.owner;
+    if (live && (live.device !== pair.device || live.serial !== pair.serial
+      || live.identity_kind !== pair.identity_kind)) return null;
+    return { device: pair.device, serial: pair.serial, identity_kind: pair.identity_kind };
+  }
+
+  const localArchiveKey = () => {
+    const owner = localArchiveOwner();
+    return owner ? `${owner.device}/${owner.serial}/${owner.identity_kind ?? ''}` : '';
+  };
+
+  function refreshLocalArchives() {
+    const scope = localArchiveKey();
+    if (archiveScope === scope) return;
+    archiveScope = scope;
+    const read = ++archiveListRead;
+    archiveRead++;
+    archivePicker.replaceChildren();
+    clearDownload();
+    if (!scope) return;
+    const owner = localArchiveOwner();
+    void (async () => {
+      let store;
+      try {
+        store = await openQuestRecordingStore(owner);
+        const ids = await store.ids();
+        if (read !== archiveListRead || scope !== localArchiveKey()) return;
+        showArchives(ids);
+      } catch {
+        if (read === archiveListRead) exportMessage = 'Die gespeicherten Aufnahmen konnten nicht geladen werden.';
+      } finally {
+        store?.close();
+        if (read === archiveListRead) paint();
+      }
+    })();
+  }
+
   function clearArchives() {
     ecgDisplay.reset();
     breathDisplay.reset();
@@ -905,6 +960,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     liveGeneration = null;
     nextLive = 0;
     archiveRead++;
+    archiveListRead++;
+    archiveScope = '';
     nextSync = 0;
     exportMessage = '';
     archivePicker.replaceChildren();
@@ -912,17 +969,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   async function selectArchive() {
-    const gateway = rehearsal.gateway;
+    const owner = localArchiveOwner();
+    const scope = localArchiveKey();
     const id = archivePicker.value;
     const read = ++archiveRead;
     clearDownload();
-    if (!gateway?.recordings || !id) return;
+    if (!owner || !scope || !id) return;
     let store;
     try {
-      store = await openQuestRecordingStore(gateway.owner);
+      store = await openQuestRecordingStore(owner);
       const stored = await store.get(id);
       const archive = stored instanceof Blob ? stored : stored?.download;
-      if (read !== archiveRead || rehearsal.gateway !== gateway) return;
+      if (read !== archiveRead || scope !== localArchiveKey()) return;
       if (!(archive instanceof Blob)) throw Error('Aufnahme fehlt.');
       download.href = URL.createObjectURL(archive);
       download.download = archive instanceof File ? archive.name : `quest-${id}.zip`;
@@ -935,6 +993,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function showArchives(ids) {
+    ids = ids.filter(id => /^record-[1-9][0-9]{0,19}$/.test(id)
+      && Number(BigInt(id.slice(7)) / 1000000n) <= 8640000000000000);
     if (ids.length === archivePicker.options.length && ids.every((id, index) => archivePicker.options[index].value === id)) {
       if (ids.length && !download.hasAttribute('href')) void selectArchive();
       return;
@@ -1323,10 +1383,21 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       catch { pairWarning = 'Die Verbindung kann in diesem Browser nicht gespeichert werden.'; }
     }
     savedPair = settings;
+    refreshLocalArchives();
+  }
+
+  function currentSessionControls(status, control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext())) {
+    return Boolean(status?.rec && ['RUNNING', 'PAUSED', 'RECORDING'].includes(status.p)
+      && control.active && !controllerLease.pending && !document.hidden);
   }
 
   async function act(action) {
-    if (userAction || controllerLease.inFlight || breathing.pending || breathing.view?.recovering) return;
+    const { status, busy, pending, unknown } = rehearsal.state;
+    const op = rehearsalActions(status, operatorCondition)[action];
+    const independentSession = ['pause', 'resume', 'save-next'].includes(op) && currentSessionControls(status);
+    if (document.hidden || connecting || userAction || controllerLease.inFlight || controllerLease.pending
+      || busy || pending || unknown || status?.pending || breathing.busy || status?.setup?.stage === 'recovering'
+      || (breathing.pending || breathing.view?.recovering) && !independentSession) return;
     ecgAttempt?.abort();
     exportAttempt?.abort();
     liveAttempt?.abort();
@@ -1508,6 +1579,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     scheduleAnimation();
   });
   window.addEventListener('pagehide', (event) => {
+    archivesSuspended = true;
     clearTimeout(breathTimer);
     clearTimeout(controlTimer);
     clearTimeout(deviceTimer);
@@ -1519,7 +1591,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     detach();
     if (!event.persisted) { clearInterval(timer); clearInterval(previewTimer); }
   });
-  window.addEventListener('pageshow', () => { nextConnect = nextSavedProbe = 0; void tick(); });
+  window.addEventListener('pageshow', () => { archivesSuspended = false; paint(); nextConnect = nextSavedProbe = 0; void tick(); });
+  window.addEventListener('storage', event => {
+    if (event.key !== null && event.key !== 'atmungsraum-quest-pair') return;
+    try { savedPair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair')); }
+    catch { savedPair = null; }
+    paint();
+  });
   window.addEventListener('online', () => { nextConnect = nextSavedProbe = nextLive = 0; drive.schedule(); void tick(); });
   paint();
   void apkRelease.refresh();

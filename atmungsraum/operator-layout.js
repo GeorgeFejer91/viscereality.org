@@ -24,7 +24,7 @@ export function navigateOperatorView(state, event, participantRequired = true) {
 export function resolveOperatorView(step, context) {
   // Settings retains shared recovery and session controls in its own view.
   if (step === 'settings') return 'settings';
-  if (!context.connected) return step === 'recordings' && !context.recovery ? 'recordings' : 'connect';
+  if (!context.connected) return step === 'recordings' && (!context.recovery || context.offlineArchives) ? 'recordings' : 'connect';
   if (context.active) return 'running';
   if (context.recovery) return 'recovery';
   if (step === 'recordings') return 'recordings';

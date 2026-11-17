@@ -25,6 +25,27 @@ const snapshot = (phase = 'IDLE', generation = 0, revision = 0, witness = '100')
   },
 });
 
+test('current-session preflight rejects changed control, session revisions and delayed status', async () => {
+  for (const phase of ['RUNNING', 'PAUSED']) {
+    for (const action of ['play', 'finish']) {
+      for (const patch of [{ revision: 8 }, { active_phone: 'Other' }, { nativeRevision: 9 }, { delay: 5000 }]) {
+        const clicked = { ...snapshot(phase, 3), controller_access: { v: 1, role: 'active', active_phone: 'Phone', revision: 7 } };
+        const current = { ...clicked, r: patch.nativeRevision ?? clicked.r,
+          controller_access: { ...clicked.controller_access, ...Object.fromEntries(Object.entries(patch).filter(([key]) => ['revision', 'active_phone'].includes(key))) } };
+        const commands = [];
+        let now = 0;
+        const gateway = { owner, initial: clicked, close() {}, status: async () => { now += patch.delay ?? 0; return current; },
+          command: async command => { commands.push(command); return { v: 1, id: command.id, state: 'confirmed' }; } };
+        const rehearsal = new QuestRehearsal({ now: () => now });
+        rehearsal.attach(gateway);
+        await rehearsal.run(action);
+        assert.deepEqual(commands, [], `${action}: ${JSON.stringify(patch)}`);
+        assert.equal(rehearsal.pending, null);
+      }
+    }
+  }
+});
+
 test('Polar automatic recovery is optional and accepts only actual boolean observations', () => {
   const y = { s: 'a'.repeat(32), g: 8, r: 1, p: true, b: true, c: true,
     a: false, e: false, sc: false, x: 'b'.repeat(12), d: [] };

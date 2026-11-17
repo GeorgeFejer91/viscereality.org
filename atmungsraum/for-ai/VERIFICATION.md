@@ -1,5 +1,19 @@
 # Verification
 
+## Review repairs: current-session controls and offline archives — 2026-11-17
+
+PWA20261117-review-repairs passes309 Node tests with zero skips after current-main
+integration and cache-version changes. Independent review reruns53 model cases and the mounted real
+PWA recovery/archive suite. Ten rendered states/19 viewport tiles pass actual
+Pretext/DOM checks. Narrow/200% text uses readable document reflow where needed.
+An old preparation receipt is preserved while a fresh current-session lease can
+Pause/Resume/Finish; stale ownership/revision, unknown experiment commands and
+native recovery still block. Offline committed ZIPs retain their original hash,
+exclude incomplete prefixes and foreign identities, survive APK changes, and
+cannot reappear after a delayed read following identity forgetting/switching.
+No headset or phone was operated. Installed-phone refresh and physical
+acceptance remain pending; public deployment is being verified separately.
+
 ## PWA startup update and Quest reconnect — 2026-11-17
 
 `python -B tools/test-pwa-startup.py` runs the served HTML and production

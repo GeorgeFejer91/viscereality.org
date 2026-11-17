@@ -1,4 +1,4 @@
-import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=13';
+import { operationId, sameQuest, canControlQuest, controllerAccessState } from './quest-gateway.js?v=13';
 import { nativeSessionAllowed } from './meta-update.js?v=3';
 
 const conditions = ['condition-a', 'condition-b'];
@@ -346,6 +346,12 @@ export class QuestRehearsal {
       const op = rehearsalActions(status, condition)[action];
       if (op !== requested || status.g !== clicked.g
         || op !== 'arm' && op !== 'save-next' && status.q?.s !== clicked.q?.s) return;
+      if (['pause', 'resume', 'save-next'].includes(op)) {
+        const before = controllerAccessState(clicked), after = controllerAccessState(status);
+        const age = this.now() - this.state.statusTiming.receivedAt + this.state.statusTiming.transportMs;
+        if (!Number.isFinite(age) || age < 0 || age > 2500 || status.r !== clicked.r || before?.revision !== after?.revision
+          || before?.active_phone !== after?.active_phone || before?.role !== after?.role) return;
+      }
       if (op !== 'arm') {
         await this.dispatch(gateway, op, status, signal);
         return;

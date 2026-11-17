@@ -1,5 +1,53 @@
 # Project
 
+### Approved review repairs — 2026-11-17
+
+The user approves implementing all five findings in
+[the review](REVIEW-2026-11-17.md), which is the accepted repair specification.
+Reuse the isolated web/native calibration worktrees and this lifecycle owner.
+Hardware is unavailable: no headset/phone operation or attended-test claim.
+
+Implementation plan:
+
+- [ ] R1, native Rust: add failing core/runtime/driver regressions for calibrated,
+  fixed and adaptive Polar through clock/source retirement; retain manual
+  selection and last visual phase while retiring readiness/model/confirmations.
+  Preserve explicit owner/input/reset and initial Automatic behavior.
+- [x] R2/R4, PWA: reproduce uncertain preparation journal against a fresh active
+  recording; independently fence Pause/Finish without replay or journal erasure.
+  Expose committed local archives with saved verified identity while disconnected;
+  native synchronization remains connected, enrolled and idle-only.
+- [ ] R3/R5, Android: reproduce protected escape with armed helper watch and late
+  handoff; cancel the watch through the common intentional terminal path before
+  closure, preserving queued-update handoff. Expire delayed main-thread work.
+- [ ] Review each scoped repair, then independently review the integrated branch.
+  Run meaningful host/native/real-DOM regressions and applicable package checks.
+- [ ] Publish verified PWA increments through ordinary PR, exact Pages and public
+  runtime checks. Update cumulative native source/evidence, build a repaired APK
+  baseline and keep its update-test successor unpublished until an actual run.
+
+All tasks consume the existing native/status/journal contracts. R2 and R4 share
+quest-ui.js and have one owner. R1 and R3/R5 touch separate native owners; source
+freezes and commits are coordinated before APK packaging. No authority or
+recording-admission relaxation is permitted. The independent audio-authoring
+increment6074c11 is retained without adding its pending native integration.
+
+PWA repair qualification:309/309 Node tests, zero skips, after integration with current main;
+independent53-case review plus mounted production regression cases and10 rendered
+states/19 viewport tiles pass. Pause/Resume/Finish preserve the original setup
+journal and fresh native lease/revision/transport fences. Offline committed ZIP
+downloads retain original bytes and verified device/install identity across APK
+changes; identity switching/forgetting invalidates delayed reads and URLs.
+Release marker20261117-review-repairs is being published through the ordinary
+PR/Pages workflow. Installed-phone refresh remains deferred while unavailable.
+Native repairs are still undergoing final source/package qualification; Meta
+policy remains24 and no new headset observation is claimed.
+
+Ruling: existing publication authorization applies to verified repairs; no repeat
+approval is needed. The old held version-only25 remains unpublished and is not
+the repaired baseline. Version identity and a new held probe will be assigned
+only after source/package qualification, preserving the attended-update gate.
+
 ### PWA startup update and Quest reconnect — 2026-11-17
 
 - [x] Check the published PWA before the saved Quest connection starts. A new

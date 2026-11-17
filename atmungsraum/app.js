@@ -159,7 +159,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261117-session-preview').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261117-review-repairs').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
