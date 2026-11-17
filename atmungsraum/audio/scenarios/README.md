@@ -1,9 +1,12 @@
 # Scenario audio timelines
 
 The [German main study recordings](../../assets/audio/main-study/de/README.md)
-include full transcripts, separate take pools and a 900-second review render.
-They can be staged as a candidate authored `haupt-15` plan. The selected Quest
-preparation/main loop remains the playback owner in production builds.
+include the two matched controls, the approved instruction, 18 phase takes
+and the outro. Use the main-study staging option to build the candidate
+authored `haupt-15` plan. Its first five minutes contain both controls and
+the instruction, followed by ten minutes of guided breathing. The outro
+is staged separately from the 900-second programme. The installed Quest
+release currently uses the shared preparation/main loop.
 
 ## Haupt-Runde cue placeholders
 

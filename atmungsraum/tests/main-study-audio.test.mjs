@@ -5,19 +5,25 @@ import { loadStudyInventory, planMainStudy } from '../quest/main-study-audio.mjs
 test('accounts for every attachment and keeps distinct takes in their phase pools', async () => {
   const inventory = await loadStudyInventory();
   const sourceNames = inventory.assets.flatMap(asset => asset.sources);
-  assert.equal(new Set(sourceNames).size, 23);
-  assert.equal(inventory.assets.length, 22);
+  assert.equal(new Set(sourceNames).size, 24);
+  assert.equal(inventory.assets.length, 23);
   assert.deepEqual(Object.fromEntries(Object.entries(inventory.pools).map(([phase, ids]) => [phase, ids.length])),
     { inhale: 7, exhale: 9, hold: 2 });
-  assert.equal(inventory.opening.length, 3);
+  assert.equal(inventory.opening[2], 'main-study-instructions');
   assert.equal(inventory.assets.find(asset => asset.id === 'wisps-of-whorls').text, '');
 });
 
-test('plays each instruction once and rotates the correct cue pools on an exact 15-minute timeline', async () => {
+test('matches the controls and rotates the cue pools within the 5 + 10 minute programme', async () => {
   const inventory = await loadStudyInventory();
   const plan = planMainStudy(inventory);
   assert.equal(plan.total_frames, 900 * 44100);
-  assert.equal(plan.cycles, 45);
+  assert.equal(plan.cycles, 37);
+  assert.equal(plan.events[0].duration_frames, 5615640);
+  assert.equal(plan.events[0].duration_frames, plan.events[1].duration_frames);
+  assert.equal(plan.events[3].id, 'inhale');
+  assert.equal(plan.events[3].offset_frames, 300 * 44100);
+  assert.equal(plan.total_frames - plan.events[3].offset_frames, 600 * 44100);
+  assert.deepEqual(plan.events.slice(-2).map(event => event.id), ['inhale', 'exhale']);
   assert.deepEqual(plan.events.slice(0, 3).map(event => event.asset), inventory.opening);
   let next = 0;
   const used = { inhale: new Set(), exhale: new Set(), hold: new Set() };
@@ -35,7 +41,6 @@ test('plays each instruction once and rotates the correct cue pools on an exact 
     previous.set(event.id, event.asset);
   }
   assert.equal(next, plan.total_frames);
-  assert.equal(plan.events.at(-1).asset, null);
   for (const [pool, ids] of Object.entries(inventory.pools)) assert.deepEqual(used[pool], new Set(ids));
   assert.deepEqual(planMainStudy(inventory), plan);
 });

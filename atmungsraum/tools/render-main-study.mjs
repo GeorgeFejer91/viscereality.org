@@ -32,7 +32,8 @@ for (const event of plan.events) {
     : Buffer.alloc(event.duration_frames * 2);
   if (!ffmpeg.stdin.write(pcm)) await Promise.race([once(ffmpeg.stdin, 'drain'), result]);
 }
-ffmpeg.stdin.end();
+const outro = files.get(plan.post_session_audio.path).subarray(44);
+ffmpeg.stdin.end(outro);
 const [exitCode] = await result;
 if (exitCode !== 0) process.exitCode = 1;
-else console.log(`${resolve(output)} — ${plan.total_frames / plan.sample_rate}s, ${plan.cycles} cycles`);
+else console.log(`${resolve(output)} — ${plan.total_frames / plan.sample_rate}s of timed programme, ${plan.cycles} complete cycles, ${plan.post_session_audio.duration_frames / plan.sample_rate}s of post-session audio`);
