@@ -613,6 +613,24 @@ data checks, including download of the dated exploration CSV with its two
 original Polar streams. The PWA startup and reconnect check also passed.
 Headset playback and round selection remain open.
 
+## Freie Erkundung phone and Quest playback — 2026-11-17
+
+The enrolled gateway advertises Freie Erkundung after the Quest verifies its
+packaged media and participant recording plan. The media backend plays the
+standalone track, pauses the setup loop and reports media position. Rust uses
+that run's generation and captured position for progress and saves after the
+natural-end event. Progress during pause does not change the recording clock.
+
+101 Rust session tests passed with two ignored, including the authored
+position, pause, resume, natural completion and final CSV integration case.
+The Java harness passed 39 gateway checks and the Wi-Fi clock projection and
+media backend checks. The Android media sources compiled against API 30.
+Chromium passed the real phone flow with a synthetic Quest transport and
+verified the choice in five viewport and text configurations including 200%
+text. 306 web tests passed. Phone-pairing assembly resolved all 96 audio
+assets in the feature lock. The authored candidate still needs a signed
+build and physical Quest and Android PWA qualification.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,

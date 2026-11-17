@@ -3,7 +3,7 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=33';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=34';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
@@ -420,7 +420,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('operator-meta-handoff-summary'), handoff?.summary ?? '');
     text(byId('operator-meta-handoff-detail'), handoff?.detail ?? '');
     const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
-    const available = supportsScenarios ? rehearsalScenarios(status) : [];
+    const available = supportsScenarios ? rehearsalScenarios(status)
+      .filter(id => id !== 'free-exploration' || rehearsal.gateway.participantArm) : [];
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
     for (const option of scenarioOptions) {
       option.closest('label').hidden = option.disabled = !available.includes(option.value);

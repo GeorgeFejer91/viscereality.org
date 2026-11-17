@@ -438,6 +438,9 @@ cloud-backed files; it was left untouched. The verified runtime commit
 - [x] Preserve the authored Freie Erkundung duration and phase boundary in
   Quest recording, recovery and CSV export. Verify the corresponding phone
   export with both original Polar streams.
+- [x] Connect Freie Erkundung's verified media to the enrolled phone chooser
+  and native participant session. Use the headset media position for
+  progress, preserve pause and resume, and save once at natural completion.
 - [ ] Bind the authored programme and the post-session outro to the selected
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.
@@ -446,9 +449,9 @@ The authored Probe-Runde package stages the supplied German instruction as
 a separate prelude to the 300-second recording plan. The timed plan reuses
 the study phase library and ends on an exhale. The playground plays the
 prelude first. Playback of that prelude on the Quest still needs native
-integration and qualification. Next, bind the verified clips to the native
-start, pause, completion and recording boundaries. Enable Freie Erkundung
-in the phone chooser after the selected Quest build can advertise and run it.
+integration and qualification. The authored candidate now exposes Freie
+Erkundung through that Quest's verified scenario list. Connect the guided
+Probe-Runde and Haupt-Runde media to their native playback boundaries next.
 
 ### Separation of preparation and main study — 2026-11-16
 

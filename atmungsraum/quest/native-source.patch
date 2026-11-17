@@ -10940,10 +10940,26 @@ index bc962d97..e224cabe 100644
          None
      };
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index ee0417f3..4747e9fc 100644
+index ee0417f3..34e81088 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-@@ -439,7 +439,7 @@ impl Projection {
+@@ -237,6 +237,7 @@ struct Projection {
+     presentation: PresentationState,
+     active_time_ns: u64,
+     active_interval_started_ns: Option<u64>,
++    authored_playback: Option<(String, u64)>,
+     completion: CompletionProgress,
+     recording_result: RecordingResult,
+     counts: SessionCounts,
+@@ -303,6 +304,7 @@ impl Default for Projection {
+             presentation: PresentationState::Experimenter,
+             active_time_ns: 0,
+             active_interval_started_ns: None,
++            authored_playback: None,
+             completion: CompletionProgress::NotReached,
+             recording_result: RecordingResult::None,
+             counts: SessionCounts::default(),
+@@ -439,7 +441,7 @@ impl Projection {
              .recording_started_ns
              .zip(self.official_started_ns.or(now_ns))
              .map_or(0, |(start, end)| end.saturating_sub(start));
@@ -10952,7 +10968,16 @@ index ee0417f3..4747e9fc 100644
              "schema": EXPERIMENT_SESSION_RESPONSE_SCHEMA,
              "command_status": command_status,
              "reason_code": reason_code,
-@@ -534,8 +534,11 @@ impl Projection {
+@@ -461,6 +463,8 @@ impl Projection {
+                 "phase": phase_token(self.phase),
+                 "control_state": self.control_state.as_str(),
+                 "audio_technical_hold": self.audio_technical_hold,
++                "scenario_id": self.authored_playback.as_ref().map(|(id, _)| id),
++                "duration_ms": self.authored_playback.as_ref().map(|(_, duration)| duration / 1_000_000),
+                 "polar_input": self.polar_input_json(diagnostics_observed),
+                 "control_receipt_generation": self.control_receipt_generation,
+                 "control_receipt_revision": self.control_receipt_revision,
+@@ -534,8 +538,11 @@ impl Projection {
                  "finalized_session_generation": self.finalized_session_generation,
                  "finalized_operation_id": self.finalized_operation_id,
              }
@@ -10966,7 +10991,7 @@ index ee0417f3..4747e9fc 100644
      }
  }
  
-@@ -605,7 +608,7 @@ impl TrustedExperimentInventory {
+@@ -605,7 +612,7 @@ impl TrustedExperimentInventory {
          if self.conditions[0].condition.as_str() != "condition-a"
              || self.conditions[1].condition.as_str() != "condition-b"
              || self.conditions.iter().any(|condition| {
@@ -10975,7 +11000,7 @@ index ee0417f3..4747e9fc 100644
              })
              || self.conditions[0].audio.source_sha256 == self.conditions[1].audio.source_sha256
          {
-@@ -667,6 +670,13 @@ impl TrustedExperimentInventory {
+@@ -667,6 +674,13 @@ impl TrustedExperimentInventory {
          })
      }
  }
@@ -10989,7 +11014,7 @@ index ee0417f3..4747e9fc 100644
  
  #[derive(Clone, Debug)]
  struct ActiveBreathGuidance {
-@@ -686,6 +696,7 @@ enum ParsedOperation {
+@@ -686,10 +700,12 @@ enum ParsedOperation {
          completion_threshold_ns: u64,
          utc_ns: u64,
          identity: StartIdentity,
@@ -10997,7 +11022,12 @@ index ee0417f3..4747e9fc 100644
      },
      Presentation(PresentationState),
      Tick,
-@@ -702,6 +713,7 @@ enum ParsedOperation {
+     AudioStarted,
++    AudioPosition(u64),
+     AudioEnded,
+     AudioError,
+     AudioPrepared,
+@@ -702,6 +718,7 @@ enum ParsedOperation {
  
  #[derive(Clone, Debug)]
  struct ParsedCommand {
@@ -11005,7 +11035,37 @@ index ee0417f3..4747e9fc 100644
      operator_fence: Option<OperatorFence>,
      local_terminal_fence: Option<LocalTerminalFence>,
      operation_id: String,
-@@ -1128,6 +1140,7 @@ impl SessionWorker {
+@@ -1021,6 +1038,13 @@ impl RecordingBackend for ActualRecordingBackend {
+     }
+ }
+ 
++struct AuthoredAudioClock {
++    scenario: String,
++    duration_ns: u64,
++    position_ns: u64,
++    ended: bool,
++}
++
+ struct SessionWorker {
+     polar_requirement: Arc<AtomicU64>,
+     recording_requires_polar: bool,
+@@ -1041,6 +1065,7 @@ struct SessionWorker {
+     next_reducer_operation: u64,
+     pending_start: Option<(SessionStartSpec, StartIdentity, Instant, String)>,
+     current_identity: Option<ExperimentIdentity>,
++    authored_audio: Option<AuthoredAudioClock>,
+     last_presentation: PresentationState,
+     recording_root: PathBuf,
+     trusted_inventory: Option<TrustedExperimentInventory>,
+@@ -1102,6 +1127,7 @@ impl SessionWorker {
+             next_reducer_operation: 0,
+             pending_start: None,
+             current_identity: None,
++            authored_audio: None,
+             current_session_key: None,
+             last_presentation: PresentationState::Experimenter,
+             recording_root,
+@@ -1128,6 +1154,7 @@ impl SessionWorker {
          received_at: Instant,
          polar_ready_at_receipt: PolarInputAdmission,
          fence: Option<LocalTerminalFence>,
@@ -11013,7 +11073,7 @@ index ee0417f3..4747e9fc 100644
      ) {
          // Serializes only native owner transitions with this same worker command.
          // No registry or Java callback participates in this gate.
-@@ -1154,6 +1167,7 @@ impl SessionWorker {
+@@ -1154,6 +1181,7 @@ impl SessionWorker {
              }
          };
          parsed.local_terminal_fence = fence;
@@ -11021,7 +11081,18 @@ index ee0417f3..4747e9fc 100644
          if let Some(fence) = &parsed.local_terminal_fence {
              let projection = self.projection.read().unwrap_or_else(|e| e.into_inner());
              let matches = matches!(parsed.operation, ParsedOperation::SaveAndExit)
-@@ -1245,6 +1259,21 @@ impl SessionWorker {
+@@ -1180,6 +1208,10 @@ impl SessionWorker {
+         // the reducer's explicit MonotonicTimeRegression disposition.
+         self.reconcile_polar_input(Some(parsed.at));
+         self.reconcile_submitted_frame_stall(Some(parsed.at));
++        if let ParsedOperation::AudioPosition(position_ms) = parsed.operation {
++            self.observe_authored_audio_position(parsed.expected_generation, parsed.at, position_ms);
++            return;
++        }
+         if let Some(previous) = self
+             .history
+             .iter()
+@@ -1245,6 +1277,21 @@ impl SessionWorker {
      }
  
      fn apply_parsed(&mut self, parsed: ParsedCommand, polar_ready_at_receipt: PolarInputAdmission) {
@@ -11043,11 +11114,18 @@ index ee0417f3..4747e9fc 100644
          if let Some(fence) = &parsed.operator_fence {
              let epoch = self
                  .projection
-@@ -1292,11 +1321,36 @@ impl SessionWorker {
+@@ -1292,11 +1339,43 @@ impl SessionWorker {
              },
              _ => None,
          };
-+        if crate::experiment_breathing_setup_runtime::selected()
++        if self.authored_audio.as_ref().is_some_and(|audio| audio.ended)
++            && matches!(parsed.operation, ParsedOperation::Resume)
++            && parsed.expected_generation == self.controller.generation()
++        {
++            self.publish_operation(&parsed.operation_id, "rejected", "authored-audio-ended", None);
++            return;
++        }
++        if self.authored_audio.is_none() && crate::experiment_breathing_setup_runtime::selected()
 +            && matches!(parsed.operation, ParsedOperation::Resume)
 +            && parsed.expected_generation == self.controller.generation()
 +            && self.controller.phase() == SessionPhase::Active
@@ -11080,7 +11158,7 @@ index ee0417f3..4747e9fc 100644
                  || resolved_identity
                      .as_ref()
                      .is_some_and(|identity| identity.breath_guidance.is_some())
-@@ -1348,12 +1402,19 @@ impl SessionWorker {
+@@ -1348,12 +1427,19 @@ impl SessionWorker {
                  completion_threshold_ns,
                  utc_ns,
                  identity,
@@ -11101,7 +11179,7 @@ index ee0417f3..4747e9fc 100644
                      clock_anchor: ClockAnchor::new(parsed.at, UtcEpochNanos::new(*utc_ns)),
                      experiment_identity: resolved_identity
                          .clone()
-@@ -1368,12 +1429,12 @@ impl SessionWorker {
+@@ -1368,18 +1454,19 @@ impl SessionWorker {
                  if *arm {
                      SessionCommand::Arm {
                          condition: condition.clone(),
@@ -11116,7 +11194,23 @@ index ee0417f3..4747e9fc 100644
                      }
                  }
              }
-@@ -1404,6 +1465,22 @@ impl SessionWorker {
+             ParsedOperation::Presentation(value) => SessionCommand::PresentationChanged(*value),
+             ParsedOperation::Tick => SessionCommand::Tick,
+             ParsedOperation::AudioStarted => SessionCommand::AudioStarted,
++            ParsedOperation::AudioPosition(_) => unreachable!("time observations bypass command history"),
+             ParsedOperation::AudioEnded => SessionCommand::AudioEnded,
+             ParsedOperation::AudioError => SessionCommand::AudioError,
+             ParsedOperation::AudioPrepared => SessionCommand::AudioPrepared,
+@@ -1389,6 +1476,8 @@ impl SessionWorker {
+             ParsedOperation::RestartToExperimenter => SessionCommand::RestartToExperimenter,
+             ParsedOperation::SaveAndExit => SessionCommand::SaveAndExit,
+         };
++        let finished_authored_audio = matches!(parsed.operation, ParsedOperation::AudioEnded)
++            && self.observe_authored_audio_end(parsed.expected_generation, parsed.at);
+         let outcome = self.apply_controller(parsed.expected_generation, parsed.at, command);
+         if !outcome.accepted {
+             self.pending_start = None;
+@@ -1404,6 +1493,22 @@ impl SessionWorker {
              );
              return;
          }
@@ -11139,7 +11233,23 @@ index ee0417f3..4747e9fc 100644
          if matches!(parsed.operation, ParsedOperation::Start { .. }) {
              self.recording_requires_polar = pending_requires_polar;
          }
-@@ -1489,6 +1566,15 @@ impl SessionWorker {
+@@ -1450,7 +1555,14 @@ impl SessionWorker {
+         // In particular a repeated B/Home interaction observes Saving/Exiting
+         // while finalization owns the control worker and cannot emit a route.
+         self.refresh_controller_projection();
+-        let result = self.process_effects(outcome.effects.clone(), parsed.at);
++        let result = self.process_effects(outcome.effects.clone(), parsed.at).and_then(|()| {
++            if finished_authored_audio && self.controller.phase() == SessionPhase::Active {
++                let stop = self.apply_internal(parsed.at, SessionCommand::RestartToExperimenter)?;
++                self.refresh_controller_projection();
++                self.process_effects(stop.effects, parsed.at)?;
++            }
++            Ok(())
++        });
+         match result {
+             Ok(()) => {
+                 if let ParsedOperation::Start {
+@@ -1489,6 +1601,15 @@ impl SessionWorker {
      }
  
      fn apply_bias_change(&mut self, parsed: &ParsedCommand, bias_percent: u8) {
@@ -11155,7 +11265,7 @@ index ee0417f3..4747e9fc 100644
          use crate::experiment_session::ExperimentControlState;
          let generation = self.controller.generation();
          let rejection = if parsed.expected_generation != generation {
-@@ -1613,6 +1699,11 @@ impl SessionWorker {
+@@ -1613,6 +1734,11 @@ impl SessionWorker {
          completion_threshold_ns: u64,
          requested: &StartIdentity,
      ) -> Result<ExperimentIdentity, &'static str> {
@@ -11167,36 +11277,100 @@ index ee0417f3..4747e9fc 100644
          let inventory = self
              .trusted_inventory
              .as_ref()
-@@ -1654,6 +1745,36 @@ impl SessionWorker {
+@@ -1648,12 +1774,100 @@ impl SessionWorker {
+         Ok(expected)
+     }
+ 
++    fn capture_clock_allowed(&self) -> bool {
++        // Hold the last captured position during Polar loss, pause or renderer stall.
++        let (input, loss) = crate::polar_input_health::status(
++            self.recording_requires_polar,
++            self.polar_pause_latched,
++        );
++        let renderer_ready = self.controller.phase() != SessionPhase::Active
++            || (self.controller.presentation() == PresentationState::ImmersiveActive
++                && self.submitted_frame_generation.load(Ordering::Acquire)
++                    == self.controller.generation()
++                && self.submitted_frame_sequence.load(Ordering::Acquire) != 0
++                && current_from_bridge(&self.monotonic_bridge).is_some_and(|now| {
++                    now.get()
++                        .saturating_sub(self.submitted_frame_elapsed_ns.load(Ordering::Acquire))
++                        <= SUBMITTED_FRAME_STALL_NS
++                }));
++        !self.polar_pause_latched
++            && (!input.required || (input.fresh && loss.revision == self.last_input_revision))
++            && self.controller.control_state()
++                != crate::experiment_session::ExperimentControlState::Paused
++            && renderer_ready
++    }
++
++    fn authored_audio_observation_current(&self, generation: u64, at: MonotonicNanos) -> bool {
++        self.authored_audio.is_some()
++            && generation == self.controller.generation()
++            && self.controller.phase() == SessionPhase::Active
++            && self.controller.last_monotonic().is_none_or(|previous| at >= previous)
++    }
++
++    fn observe_authored_audio_position(
++        &mut self,
++        generation: u64,
++        at: MonotonicNanos,
++        position_ms: u64,
++    ) {
++        if !self.authored_audio_observation_current(generation, at)
++            || self.controller.control_state() != crate::experiment_session::ExperimentControlState::Running
++            || !self.capture_clock_allowed()
++        {
++            return;
++        }
++        let audio = self.authored_audio.as_mut().expect("admitted authored audio");
++        let position_ns = position_ms.saturating_mul(1_000_000).min(audio.duration_ns - 1);
++        if audio.ended || position_ns <= audio.position_ns {
++            return;
++        }
++        audio.position_ns = position_ns;
++        match self.apply_internal(at, SessionCommand::Tick) {
++            Ok(outcome) => {
++                if let Err(error) = self.process_effects(outcome.effects, at) {
++                    self.publish_rejection(None, &error);
++                }
++                self.refresh_controller_projection();
++            }
++            Err(error) => self.publish_rejection(None, &error),
++        }
++    }
++
++    fn observe_authored_audio_end(&mut self, generation: u64, at: MonotonicNanos) -> bool {
++        if !self.authored_audio_observation_current(generation, at) {
++            return false;
++        }
++        let finish = self.capture_clock_allowed()
++            && self.controller.control_state() == crate::experiment_session::ExperimentControlState::Running;
++        let audio = self.authored_audio.as_mut().expect("admitted authored audio");
++        if audio.ended {
++            return false;
++        }
++        audio.ended = true;
++        if finish {
++            audio.position_ns = audio.duration_ns;
++        }
++        finish
++    }
++
+     fn apply_controller(
+         &mut self,
+         expected_generation: u64,
          at: MonotonicNanos,
          command: SessionCommand,
      ) -> CommandOutcome {
-+        if crate::experiment_breathing_setup_runtime::selected() {
-+            // A late audio head cannot overwrite the last admitted capture time
-+            // while a health-loss Pause or renderer-stall effect is applied.
-+            let (input, loss) = crate::polar_input_health::status(
-+                self.recording_requires_polar,
-+                self.polar_pause_latched,
-+            );
-+            let renderer_ready = self.controller.phase() != SessionPhase::Active
-+                || (self.controller.presentation() == PresentationState::ImmersiveActive
-+                    && self.submitted_frame_generation.load(Ordering::Acquire)
-+                        == self.controller.generation()
-+                    && self.submitted_frame_sequence.load(Ordering::Acquire) != 0
-+                    && current_from_bridge(&self.monotonic_bridge).is_some_and(|now| {
-+                        now.get()
-+                            .saturating_sub(self.submitted_frame_elapsed_ns.load(Ordering::Acquire))
-+                            <= SUBMITTED_FRAME_STALL_NS
-+                    }));
-+            let admitted = !self.polar_pause_latched
-+                && (!input.required || (input.fresh && loss.revision == self.last_input_revision))
-+                && self.controller.control_state()
-+                    != crate::experiment_session::ExperimentControlState::Paused
-+                && renderer_ready;
-+            let elapsed = admitted
-+                .then(crate::experiment_breathing_setup_runtime::recording_progress)
-+                .flatten()
-+                .map(|p| p.0);
++        if self.authored_audio.is_some() || crate::experiment_breathing_setup_runtime::selected() {
++            let elapsed = if self.capture_clock_allowed() {
++                self.authored_audio.as_ref().map(|audio| audio.position_ns).or_else(|| {
++                    crate::experiment_breathing_setup_runtime::recording_progress().map(|progress| progress.0)
++                })
++            } else {
++                None
++            };
 +            let _ = self
 +                .controller
 +                .observe_audio_frame_active_time(self.controller.generation(), elapsed);
@@ -11204,7 +11378,22 @@ index ee0417f3..4747e9fc 100644
          self.next_reducer_operation = self.next_reducer_operation.saturating_add(1).max(1);
          self.controller.apply(CommandEnvelope {
              operation: OperationToken::new(self.next_reducer_operation)
-@@ -1940,6 +2061,14 @@ impl SessionWorker {
+@@ -1714,6 +1928,14 @@ impl SessionWorker {
+                         Ok(()) => {
+                             let _ = identity;
+                             self.current_identity = Some(spec.experiment_identity.clone());
++                            self.authored_audio = spec.participant.as_ref()
++                                .and_then(|plan| plan.authored_playback())
++                                .map(|(scenario, duration_ns)| AuthoredAudioClock {
++                                    scenario: scenario.to_owned(),
++                                    duration_ns,
++                                    position_ns: 0,
++                                    ended: false,
++                                });
+                             self.current_session_key = Some(spec.started_at.as_str().to_owned());
+                             let active_guidance = spec
+                                 .experiment_identity
+@@ -1940,6 +2162,14 @@ impl SessionWorker {
                                      },
                                  )?
                              };
@@ -11219,7 +11408,7 @@ index ee0417f3..4747e9fc 100644
                              // Publish the terminal reducer result before the
                              // route action becomes observable to Android.
                              self.refresh_controller_projection();
-@@ -1964,6 +2093,7 @@ impl SessionWorker {
+@@ -1964,6 +2194,7 @@ impl SessionWorker {
                              }
                          }
                          Err(error) => {
@@ -11227,7 +11416,15 @@ index ee0417f3..4747e9fc 100644
                              self.completion_persistence_failure = None;
                              self.set_storage_state("error", "error", 0);
                              let failed = self.apply_internal(
-@@ -2272,6 +2402,10 @@ impl SessionWorker {
+@@ -2001,6 +2232,7 @@ impl SessionWorker {
+                     crate::breath_composition_runtime::reset_to_packaged_defaults();
+                     let reset_revision = request_particle_packaged_defaults_reset();
+                     self.current_identity = None;
++                    self.authored_audio = None;
+                     self.current_session_key = None;
+                     self.projection_write(|projection| {
+                         projection.arm_operation_id = None;
+@@ -2272,6 +2504,10 @@ impl SessionWorker {
          if self.reconcile_submitted_frame_stall(None) {
              return;
          }
@@ -11238,7 +11435,7 @@ index ee0417f3..4747e9fc 100644
          let Some(now) = current_from_bridge(&self.monotonic_bridge) else {
              return;
          };
-@@ -2293,6 +2427,58 @@ impl SessionWorker {
+@@ -2293,6 +2529,58 @@ impl SessionWorker {
              Err(error) => self.publish_rejection(None, &error),
          }
      }
@@ -11253,7 +11450,7 @@ index ee0417f3..4747e9fc 100644
 +        self.process_setup_main_progress();
 +    }
 +    fn process_setup_main_progress(&mut self) {
-+        if self.controller.phase() != SessionPhase::Active
++        if self.authored_audio.is_some() || self.controller.phase() != SessionPhase::Active
 +            || self.controller.control_state()
 +                != crate::experiment_session::ExperimentControlState::Running
 +            || self.controller.presentation() != PresentationState::ImmersiveActive
@@ -11297,15 +11494,19 @@ index ee0417f3..4747e9fc 100644
  
      fn publish_terminal_route_identity(&mut self) {
          let Some((generation, operation_id)) = self.pending_terminal_operation.take() else {
-@@ -2408,6 +2594,7 @@ impl SessionWorker {
+@@ -2406,8 +2694,11 @@ impl SessionWorker {
+                 Ordering::Release,
+             );
              projection.active_time_ns = self.controller.active_time_ns();
++            projection.authored_playback = self.authored_audio.as_ref()
++                .map(|audio| (audio.scenario.clone(), audio.duration_ns));
              projection.active_interval_started_ns = (self.controller.control_state()
                  == crate::experiment_session::ExperimentControlState::Running
 +                && !self.controller.uses_audio_frame_time()
                  && self.controller.presentation() == PresentationState::ImmersiveActive)
                  .then(|| {
                      self.controller
-@@ -2487,6 +2674,8 @@ struct StatusObservation {
+@@ -2487,6 +2778,8 @@ struct StatusObservation {
  
  enum WorkerMessage {
      Command {
@@ -11314,7 +11515,7 @@ index ee0417f3..4747e9fc 100644
          raw: String,
          received_at: Instant,
          polar_ready_at_receipt: PolarInputAdmission,
-@@ -2773,6 +2962,53 @@ impl ExperimentSessionRuntime {
+@@ -2773,6 +3066,53 @@ impl ExperimentSessionRuntime {
                  .recv_timeout(Duration::from_millis(250))
                  .unwrap_or_else(|_| self.cached(|cache| &cache.observation_unavailable));
          }
@@ -11368,7 +11569,7 @@ index ee0417f3..4747e9fc 100644
          let terminal_generation = terminal_command_generation(raw);
          let mut terminal_gate = if let Some(generation) = terminal_generation {
              let mut gate = match self.producer_gate.try_write() {
-@@ -2800,6 +3036,8 @@ impl ExperimentSessionRuntime {
+@@ -2800,6 +3140,8 @@ impl ExperimentSessionRuntime {
              &self.command_sender
          };
          match sender.try_send(WorkerMessage::Command {
@@ -11377,11 +11578,11 @@ index ee0417f3..4747e9fc 100644
              raw: raw.to_owned(),
              local_terminal_fence,
              polar_ready_at_receipt: self.polar_ready_at_receipt(),
-@@ -2878,6 +3116,17 @@ impl ExperimentSessionRuntime {
+@@ -2878,6 +3220,17 @@ impl ExperimentSessionRuntime {
              && p.presentation == PresentationState::ImmersiveActive
              && observed == Some(now);
          let active_ns = p.official_active_time_ns(observed);
-+        if crate::experiment_breathing_setup_runtime::selected() {
++        if p.authored_playback.is_none() && crate::experiment_breathing_setup_runtime::selected() {
 +            let (elapsed_ms, audio_running) =
 +                crate::experiment_breathing_setup_runtime::main_clock()?;
 +            return Some((
@@ -11395,7 +11596,7 @@ index ee0417f3..4747e9fc 100644
          Some((
              p.generation,
              active_ns / 1_000_000,
-@@ -2956,9 +3205,12 @@ impl ExperimentSessionRuntime {
+@@ -2956,9 +3309,12 @@ impl ExperimentSessionRuntime {
          };
          let generation = p.generation;
          let epoch = self.runtime_epoch;
@@ -11408,7 +11609,7 @@ index ee0417f3..4747e9fc 100644
          let guard = Arc::new(move || {
              if crate::experiment_control_mode::read() != mode
                  || identity.load(Ordering::Acquire) != owner
-@@ -2968,15 +3220,42 @@ impl ExperimentSessionRuntime {
+@@ -2968,15 +3324,42 @@ impl ExperimentSessionRuntime {
              projection.try_read().ok().is_some_and(|p| {
                  p.runtime_epoch == epoch
                      && p.generation == generation
@@ -11454,7 +11655,7 @@ index ee0417f3..4747e9fc 100644
          service
              .query(
                  &self.recording_root,
-@@ -3043,16 +3322,23 @@ impl ExperimentSessionRuntime {
+@@ -3043,16 +3426,23 @@ impl ExperimentSessionRuntime {
          let Ok(guidance) = self.active_breath_guidance.try_read() else {
              return json!({"v":1,"available":false,"reason":"monitor-busy"}).to_string();
          };
@@ -11488,7 +11689,7 @@ index ee0417f3..4747e9fc 100644
          if segments.len() > 256 {
              return json!({"v":1,"available":false,"reason":"target-window-too-dense"}).to_string();
          }
-@@ -3243,6 +3529,9 @@ impl ExperimentSessionRuntime {
+@@ -3243,6 +3633,9 @@ impl ExperimentSessionRuntime {
              if prior >= identity {
                  return Err("native-owner-stale".to_owned());
              }
@@ -11498,7 +11699,7 @@ index ee0417f3..4747e9fc 100644
              match self.immersive_owner_identity.compare_exchange_weak(
                  prior,
                  identity,
-@@ -3264,6 +3553,9 @@ impl ExperimentSessionRuntime {
+@@ -3264,6 +3657,9 @@ impl ExperimentSessionRuntime {
                  .local_terminal_gate
                  .lock()
                  .unwrap_or_else(|e| e.into_inner());
@@ -11508,7 +11709,7 @@ index ee0417f3..4747e9fc 100644
              if self
                  .immersive_owner_identity
                  .compare_exchange(identity, u64::MAX, Ordering::AcqRel, Ordering::Acquire)
-@@ -3311,6 +3603,9 @@ impl ExperimentSessionRuntime {
+@@ -3311,6 +3707,9 @@ impl ExperimentSessionRuntime {
      }
  
      pub(crate) fn try_offer(&self, record: SessionRecord) -> OfferOutcome {
@@ -11518,7 +11719,7 @@ index ee0417f3..4747e9fc 100644
          let gate = match self.producer_gate.try_read() {
              Ok(gate) => gate,
              // A write-held gate defines the producer cutoff. This offer is
-@@ -3397,6 +3692,11 @@ impl ExperimentSessionRuntime {
+@@ -3397,6 +3796,11 @@ impl ExperimentSessionRuntime {
              return None;
          }
          let generation = projection.generation;
@@ -11530,7 +11731,7 @@ index ee0417f3..4747e9fc 100644
          let mut active_time_ns = projection.active_time_ns;
          if let Some(started_ns) = projection.active_interval_started_ns {
              active_time_ns = active_time_ns.saturating_add(now_ns.saturating_sub(started_ns));
-@@ -3486,6 +3786,8 @@ fn run_worker(
+@@ -3486,6 +3890,8 @@ fn run_worker(
      loop {
          match terminal_receiver.try_recv() {
              Ok(WorkerMessage::Command {
@@ -11539,7 +11740,7 @@ index ee0417f3..4747e9fc 100644
                  raw,
                  received_at,
                  polar_ready_at_receipt,
-@@ -3497,6 +3799,7 @@ fn run_worker(
+@@ -3497,6 +3903,7 @@ fn run_worker(
                      received_at,
                      polar_ready_at_receipt,
                      local_terminal_fence,
@@ -11547,7 +11748,7 @@ index ee0417f3..4747e9fc 100644
                  );
                  worker.reconcile_polar_input(None);
                  worker.reconcile_submitted_frame_stall(None);
-@@ -3556,6 +3859,7 @@ fn run_worker(
+@@ -3556,6 +3963,7 @@ fn run_worker(
              };
              let _ = observation.acknowledgement.try_send(response);
          }
@@ -11555,7 +11756,7 @@ index ee0417f3..4747e9fc 100644
          worker.drain_pending_retries();
          // Latest actual renderer observation survives mutation-lane saturation.
          let observed = worker
-@@ -3570,6 +3874,8 @@ fn run_worker(
+@@ -3570,6 +3978,8 @@ fn run_worker(
          }
          match command_receiver.recv_timeout(Duration::from_millis(10)) {
              Ok(WorkerMessage::Command {
@@ -11564,7 +11765,7 @@ index ee0417f3..4747e9fc 100644
                  raw,
                  received_at,
                  polar_ready_at_receipt,
-@@ -3581,6 +3887,7 @@ fn run_worker(
+@@ -3581,6 +3991,7 @@ fn run_worker(
                      received_at,
                      polar_ready_at_receipt,
                      local_terminal_fence,
@@ -11572,7 +11773,7 @@ index ee0417f3..4747e9fc 100644
                  );
                  // Also runs after a blocking writer operation and with a busy
                  // command lane; freshness cannot depend on recv_timeout firing.
-@@ -4099,7 +4406,28 @@ pub(crate) fn request_control_from_native(
+@@ -4099,7 +4510,28 @@ pub(crate) fn request_control_from_native(
      if raw.len() > MAX_COMMAND_BYTES {
          return NativeControlAdmission::RuntimeUnavailable;
      }
@@ -11601,7 +11802,7 @@ index ee0417f3..4747e9fc 100644
          raw,
          polar_ready_at_receipt: runtime.polar_ready_at_receipt(),
          received_at: Instant::now(),
-@@ -4180,6 +4508,29 @@ pub(crate) fn immersive_owner_identity() -> u64 {
+@@ -4180,6 +4612,29 @@ pub(crate) fn immersive_owner_identity() -> u64 {
          .unwrap_or(0)
  }
  
@@ -11631,7 +11832,7 @@ index ee0417f3..4747e9fc 100644
  pub(crate) fn apply_terminal_with_fence(raw: &str, scope: LocalTerminalScope) -> String {
      match runtime() {
          Ok(r) => r.apply_local_terminal(raw, scope),
-@@ -4210,6 +4561,36 @@ pub(crate) fn current_generation() -> u64 {
+@@ -4210,6 +4665,36 @@ pub(crate) fn current_generation() -> u64 {
      })
  }
  
@@ -11668,7 +11869,7 @@ index ee0417f3..4747e9fc 100644
  pub(crate) fn current_presentation() -> PresentationState {
      let Ok(runtime) = runtime() else {
          return PresentationState::Experimenter;
-@@ -4578,6 +4959,18 @@ fn parse_mutating_command(
+@@ -4578,6 +5063,18 @@ fn parse_mutating_command(
              if object.contains_key("breath_guidance") {
                  start_fields.push("breath_guidance");
              }
@@ -11687,7 +11888,7 @@ index ee0417f3..4747e9fc 100644
              require_exact_fields(object, &start_fields).map_err(|reason| failure(reason))?;
              let condition_value = object
                  .get("condition")
-@@ -4591,7 +4984,7 @@ fn parse_mutating_command(
+@@ -4591,7 +5088,7 @@ fn parse_mutating_command(
              let threshold_ms = object
                  .get("completion_threshold_ms")
                  .and_then(Value::as_u64)
@@ -11696,7 +11897,7 @@ index ee0417f3..4747e9fc 100644
                  .ok_or_else(|| failure("completion-threshold-invalid"))?;
              let utc_ns = object
                  .get("started_at_utc_ns")
-@@ -4632,6 +5025,7 @@ fn parse_mutating_command(
+@@ -4632,6 +5129,7 @@ fn parse_mutating_command(
                  condition,
                  completion_threshold_ns: threshold_ms.saturating_mul(1_000_000),
                  utc_ns,
@@ -11704,7 +11905,21 @@ index ee0417f3..4747e9fc 100644
                  identity: StartIdentity {
                      profile_sha256,
                      audio,
-@@ -4696,6 +5090,7 @@ fn parse_mutating_command(
+@@ -4677,6 +5175,13 @@ fn parse_mutating_command(
+             require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
+             ParsedOperation::AudioStarted
+         }
++        "audio-position" => {
++            require_common_fields(object, &["position_ms"]).map_err(|reason| failure(reason))?;
++            let position = object["position_ms"].as_u64()
++                .filter(|position| *position <= 3_600_000)
++                .ok_or_else(|| failure("audio-position-invalid"))?;
++            ParsedOperation::AudioPosition(position)
++        }
+         "audio-ended" => {
+             require_common_fields(object, &[]).map_err(|reason| failure(reason))?;
+             ParsedOperation::AudioEnded
+@@ -4696,6 +5201,7 @@ fn parse_mutating_command(
          _ => return Err(failure("unsupported-operation")),
      };
      Ok(ParsedCommand {
@@ -11712,7 +11927,7 @@ index ee0417f3..4747e9fc 100644
          operator_fence,
          local_terminal_fence: None,
          operation_id,
-@@ -4965,6 +5360,417 @@ mod tests {
+@@ -4965,6 +5471,466 @@ mod tests {
  
      static NEXT: AtomicUsize = AtomicUsize::new(0);
  
@@ -11788,6 +12003,10 @@ index ee0417f3..4747e9fc 100644
 +    }
 +    impl SelectedControllerStudy {
 +        fn start() -> Self {
++            Self::start_with_participant(None)
++        }
++
++        fn start_with_participant(participant: Option<Value>) -> Self {
 +            let binding = crate::breath_composition_runtime::scoped_test_binding::install();
 +            let setup =
 +                crate::experiment_breathing_setup_runtime::test_support::controller_main_waiting();
@@ -11836,6 +12055,9 @@ index ee0417f3..4747e9fc 100644
 +            arm["completion_threshold_ms"] = json!(900000);
 +            arm["elapsed_realtime_ns"] = json!(1_000_000_000_u64);
 +            arm["breath_guidance"] = guidance;
++            if let Some(participant) = participant {
++                arm["participant"] = participant;
++            }
 +            session.runtime.apply_command_json(&arm.to_string());
 +            wait_for(&session.runtime, "\"control_state\":\"arming\"");
 +            session.runtime.apply_command_json(&command(
@@ -11890,6 +12112,48 @@ index ee0417f3..4747e9fc 100644
 +            let _ = fs::remove_dir_all(self.root.parent().unwrap());
 +        }
 +    }
++    #[test]
++    fn authored_exploration_uses_media_positions_and_saves_on_natural_end() {
++        let session = SelectedControllerStudy::start_with_participant(Some(json!({
++            "participant_id":"Tes_30_N", "scenario_id":"free-exploration",
++            "scenario_sha256":"a".repeat(64), "sample_rate":44100, "total_frames":19_715_793,
++            "phases":[[0,"instruction"],[960_768,"rest"]],
++        })));
++        let runtime = &session.runtime;
++        let readback = |needle| {
++            let response: Value = serde_json::from_str(&wait_for(runtime, needle)).unwrap();
++            response["readback"].clone()
++        };
++        let position = |id, generation, at, ms| {
++            let mut command: Value =
++                serde_json::from_str(&command("audio-position", id, generation, at)).unwrap();
++            command["position_ms"] = json!(ms);
++            runtime.apply_command_json(&command.to_string());
++        };
++        assert_eq!(readback("\"control_state\":\"running\"")["duration_ms"], 447070);
++        assert_eq!(readback("\"control_state\":\"running\"")["active_time_ms"], 0);
++        runtime.apply_command_json(&command("audio-started", "media-start", 1, 17_025_000_000));
++        position("stale-media-clock", 0, 17_030_000_000, 40_000);
++        position("actual-media-clock", 1, 17_035_000_000, 22_000);
++        readback("\"active_time_ms\":22000");
++        runtime.apply_command_json(&command("pause", "media-pause", 1, 17_040_000_000));
++        assert_eq!(readback("\"control_state\":\"paused\"")["active_time_ms"], 22000);
++        position("paused-media-clock", 1, 17_045_000_000, 32_000);
++        runtime.apply_command_json(&command("resume", "media-resume", 1, 17_050_000_000));
++        assert_eq!(readback("\"control_state\":\"running\"")["active_time_ms"], 22000);
++        position("ending-media-clock", 1, 17_055_000_000, 447_071);
++        assert_eq!(readback("\"active_time_ms\":447070")["completion"], "not-reached");
++        runtime.apply_command_json(&command("audio-ended", "media-end", 1, 17_060_000_000));
++        readback("\"phase\":\"idle\"");
++        let directory = session.root.join("utc-ns-01725000000000000000");
++        let final_record: Value = serde_json::from_slice(&fs::read(directory.join("final.json")).unwrap()).unwrap();
++        assert_eq!(final_record["completed"], true);
++        assert_eq!(final_record["participant"]["scenario_id"], "free-exploration");
++        assert_eq!(final_record["participant_csv"]["name"], "Tes_30_N_2024-08-30_free-exploration_r1.csv");
++        let events = fs::read_to_string(directory.join("events.jsonl")).unwrap();
++        assert_eq!(events.matches("\"audio-ended\"").count(), 1);
++    }
++
 +    #[test]
 +    fn selected_controller_study_pauses_on_quiet_h10_loss_and_does_not_finalize_held_main() {
 +        let session = SelectedControllerStudy::start();
@@ -12130,7 +12394,7 @@ index ee0417f3..4747e9fc 100644
      include!("experiment_session_live_bias_tests.rs");
  
      fn temp_root(label: &str) -> PathBuf {
-@@ -7613,4 +8419,153 @@ mod tests {
+@@ -7613,4 +8579,153 @@ mod tests {
          }
      }
      include!("experiment_session_polar_tests.rs");
@@ -15863,10 +16127,10 @@ index f71f79cb..75df8192 100644
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
 new file mode 100644
-index 00000000..cef1b125
+index 00000000..64faf4ab
 --- /dev/null
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
-@@ -0,0 +1,1167 @@
+@@ -0,0 +1,1171 @@
 +use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 +use serde_json::{Value, json};
 +use sha2::{Digest, Sha256};
@@ -16033,6 +16297,10 @@ index 00000000..cef1b125
 +        } else {
 +            self.duration_ns
 +        }
++    }
++
++    pub(crate) fn authored_playback(&self) -> Option<(&str, u64)> {
++        (self.scenario == "free-exploration").then_some((&self.scenario, self.duration_ns))
 +    }
 +
 +    fn phase_at(&self, elapsed_ns: u64) -> &str {
@@ -19491,7 +19759,7 @@ index 362e6c72..7583d278 100644
          JSONObject out=new JSONObject().put("v",1).put("version_code",code>0&&code<=2147483647L?code:JSONObject.NULL)
              .put("version_name",name!=null&&name.matches("[A-Za-z0-9][A-Za-z0-9._+-]{0,63}")?name:JSONObject.NULL);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index 08732e53..3d34ed02 100644
+index 08732e53..09b1182c 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
@@ -19960,7 +20228,7 @@ index 08732e53..3d34ed02 100644
          if("connect".equals(envelope.opt("action")))return connect(new JSONObject(envelope.toString()));
          return exchangeRoute(envelope,true);
      }
-@@ -352,39 +606,276 @@ public final class ExperimentSessionCommandGateway {
+@@ -352,39 +606,281 @@ public final class ExperimentSessionCommandGateway {
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
@@ -20085,7 +20353,8 @@ index 08732e53..3d34ed02 100644
 +                        else if (delegate instanceof WifiDelegate) {
 +                            WifiDelegate wifi = (WifiDelegate) delegate;
 +                            java.util.List<String> ids = wifi.scenarioIds();
-+                            if (participantArmAvailable()) {
++                            boolean participantAvailable = participantArmAvailable();
++                            if (participantAvailable) {
 +                                response.put("participant_arm", 1);
 +                                response.put("live_recording", 1);
 +                                java.util.ArrayList<String> authored = new java.util.ArrayList<>();
@@ -20094,8 +20363,12 @@ index 08732e53..3d34ed02 100644
 +                            }
 +                            if (!ids.isEmpty()) response.put("scenarios", new org.json.JSONArray(ids));
 +                            if (BreathingSetupAudio.selected(context)) {
-+                                response.put("scenarios", new org.json.JSONArray().put("haupt-15"));
++                                org.json.JSONArray selected = new org.json.JSONArray().put("haupt-15");
++                                if (participantAvailable && ids.contains("free-exploration")) selected.put("free-exploration");
++                                response.put("scenarios", selected);
 +                                JSONObject breathing = BreathingSetupAudio.status();
++                                if (response.optBoolean("rec") && !response.has("duration_ms")
++                                        && !breathing.isNull("main_start_frame")) response.put("duration_ms", 900000);
 +                                if (calibrationInstruction != null) {
 +                                    breathing.put("instruction_id", calibrationInstruction.id);
 +                                }
@@ -20247,7 +20520,7 @@ index 08732e53..3d34ed02 100644
      private JSONObject ownerExchange(String action,JSONObject body)throws Exception {
          requireMain();if(journal==null||!carrier.acceptsNativeOwner(identity,epoch))throw new SecurityException("native-owner-unavailable");
          if("status".equals(action)){if(body.length()!=0)throw new IllegalArgumentException("empty-status-required");return snapshot();}
-@@ -394,16 +885,297 @@ public final class ExperimentSessionCommandGateway {
+@@ -394,16 +890,302 @@ public final class ExperimentSessionCommandGateway {
              try{snapshot();}catch(Exception unavailable){/* An unavailable new observation cannot erase an original receipt. */}
              return journal.original(body.getString("id"));
          }
@@ -20275,7 +20548,10 @@ index 08732e53..3d34ed02 100644
 +        if ("scenario-arm".equals(action) || participantArm) {
 +            boolean defaultScenario = participantArm && !body.has("scenario");
 +            scenario = defaultScenario ? "probe-anleitung" : ExperimentSessionGatewayProtocol.string(body, "scenario");
-+            if (BreathingSetupAudio.selected(context) && !"haupt-15".equals(scenario))
++            boolean exploration = "free-exploration".equals(scenario);
++            if (exploration && (!participantArm || !BreathingSetupAudio.selected(context)))
++                throw new SecurityException("exploration-participant-arm-required");
++            if (BreathingSetupAudio.selected(context) && !"haupt-15".equals(scenario) && !exploration)
 +                throw new SecurityException("shared-scheduler-main-required");
 +            Object generation = body.opt("g");
 +            int fields = participantArm && !defaultScenario ? 9 : 8;
@@ -20298,12 +20574,14 @@ index 08732e53..3d34ed02 100644
 +            if (participantArm) command.remove("participant_id");
 +        }
 +        ExperimentSessionBleServer.CommandRequest request=parse(command);
++        boolean deferStart = "start".equals(request.operation) && BreathingSetupAudio.selected(context)
++            && !"free-exploration".equals(snapshot().opt("scenario_id"));
          if(!journal.reserve(body))return journal.original(id);
          carrier.updateReceipt(id,"accepted","Command admitted by authenticated app gateway.");
 -        try{delegate.dispatch(request);}catch(RuntimeException rejected){carrier.updateReceipt(id,"rejected","App command dispatch failed.");}
 +        try {
 +            revalidateEffect();
-+            if ("start".equals(request.operation) && BreathingSetupAudio.selected(context)) {
++            if (deferStart) {
 +                deferMainStart(id, request);
 +                return journal.original(id);
 +            }
@@ -20547,7 +20825,7 @@ index 08732e53..3d34ed02 100644
      private JSONObject snapshot()throws Exception {
          try {
              long generation=carrier.currentGeneration(),owner=identity,nativeEpoch=epoch,lifecycle=lifecycleRevision;
-@@ -416,6 +1188,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -416,6 +1198,7 @@ public final class ExperimentSessionCommandGateway {
              long now=SystemClock.elapsedRealtime();
              JSONObject setup=delegate.polarSetupReadback();if(setup!=null&&"IDLE".equals(status.optString("p")))status.put("y",setup);
              JSONObject polarReadback=delegate.polarStopReadback();
@@ -20555,7 +20833,7 @@ index 08732e53..3d34ed02 100644
              ExperimentSessionWifiSnapshot.projectJavaDiagnostics(status,polarReadback);
              JSONObject polarOffer=polar.offer(polarReadback,nativeStatus,generation,owner,nativeEpoch,now);
              JSONObject offer=session.offer(status,nativeStatus,generation,owner,nativeEpoch,now,polar.bindingTuple());
-@@ -431,6 +1204,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -431,6 +1214,7 @@ public final class ExperimentSessionCommandGateway {
                  session.clear();polar.clear();throw new SecurityException("wifi-native-owner-changed");
              }
              status=observed.statusAt(SystemClock.elapsedRealtimeNanos(),nativeEpoch);
@@ -20563,7 +20841,7 @@ index 08732e53..3d34ed02 100644
              return ExperimentSessionWifiSnapshot.bounded(status.put("v",1).put("m","gated").put("wifi_snapshot",1)
                  .put("build",buildIdentity).put("control_mode",mode.wireName()).put("breath_monitor",1).put("recordings",ExperimentSessionRecordingExport.selected(context)?1:0));
          } catch(Exception unavailable){session.clear();polar.clear();throw unavailable;}
-@@ -439,6 +1213,124 @@ public final class ExperimentSessionCommandGateway {
+@@ -439,6 +1223,124 @@ public final class ExperimentSessionCommandGateway {
          return new JSONObject(ControlPanelActivity.applyExperimentSessionCommand(
              ExperimentSessionGatewayProtocol.monitorQuery(body).toString()));
      }
@@ -21537,6 +21815,21 @@ index 00000000..b565c439
 +        }
 +    }
 +}
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+index 962a85d1..7ad52db0 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWifiSnapshot.java
+@@ -64,6 +64,10 @@ final class ExperimentSessionWifiSnapshot {
+             .put("done",state.counts.totalsAvailable?state.counts.completedTotal():JSONObject.NULL)
+             .put("early",state.counts.totalsAvailable?state.counts.stoppedEarlyTotal():JSONObject.NULL)
+             .put("pending",false).put("h","unknown");
++        if ("free-exploration".equals(nativeStatus.opt("scenario_id"))) {
++            long duration = PolarStopBleCapability.integer(nativeStatus, "duration_ms", false);
++            status.put("scenario_id", "free-exploration").put("duration_ms", duration);
++        }
+         ExperimentSessionBleProtocol.projectPolarInput(status,nativeStatus);
+         status.put("pd",new JSONObject().put("v",1).put("native",nativeDiagnostics(input)).put("java",JSONObject.NULL));
+         Read read=new Read(status,nativeStatus,completedNanos,epoch);
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java
 new file mode 100644
 index 00000000..2a093498
@@ -22489,7 +22782,7 @@ index 00000000..af7819a0
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
-index b042fc60..9b40eca1 100644
+index b042fc60..94aeb086 100644
 --- a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ConditionAudioAndroidMediaBackendFactory.java
 @@ -15,9 +15,21 @@ import java.util.Map;
@@ -22564,7 +22857,7 @@ index b042fc60..9b40eca1 100644
          }
 -        return new SessionBackend(this, provider, track.player, listener);
 +        try {
-+            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener);
++            if (scenarioId.isEmpty()) return new SessionBackend(this, provider, track.player, null, listener, false);
 +            if (BreathingSetupAudio.continuousMain(scenarioId)) {
 +                if (BreathingSetupAudio.mainRecordingPlan(scenarioId) == null) {
 +                    throw new IllegalStateException("breathing-loop-not-ready");
@@ -22575,7 +22868,7 @@ index b042fc60..9b40eca1 100644
 +                throw new IllegalArgumentException("scenario-track-unavailable");
 +            }
 +            MediaPlayer timeline = scenarios.prepare(scenarioId);
-+            return new SessionBackend(this, provider, timeline, track.player, listener);
++            return new SessionBackend(this, provider, timeline, track.player, listener, "free-exploration".equals(scenarioId));
 +        } catch (Exception error) {
 +            synchronized (lock) {
 +                if (closed) track.player.release();
@@ -22586,7 +22879,7 @@ index b042fc60..9b40eca1 100644
      }
  
      private void prepareTrack(final ConditionAudioContract.Provider provider) {
-@@ -185,10 +231,68 @@ final class ConditionAudioAndroidMediaBackendFactory
+@@ -185,60 +231,141 @@ final class ConditionAudioAndroidMediaBackendFactory
          }
      }
  
@@ -22653,31 +22946,39 @@ index b042fc60..9b40eca1 100644
          private final MediaPlayer player;
 +        private final MediaPlayer background;
          private final Listener listener;
++        private final boolean standalone;
          private boolean released;
  
-@@ -196,17 +300,20 @@ final class ConditionAudioAndroidMediaBackendFactory
+         SessionBackend(
              ConditionAudioAndroidMediaBackendFactory factory,
              ConditionAudioContract.Provider provider,
              MediaPlayer player,
+-            Listener listener
 +            MediaPlayer background,
-             Listener listener
++            Listener listener,
++            boolean standalone
          ) {
              this.factory = factory;
              this.provider = provider;
              this.player = player;
 +            this.background = background;
              this.listener = listener;
++            this.standalone = standalone;
          }
  
          @Override public void prepare(boolean looping) {
              if (looping) throw new IllegalArgumentException("condition audio must not loop");
 -            if (factory.loopBackground) player.setLooping(true);
-+            if (background != null) background.setLooping(true);
++            if (background != null && !standalone) background.setLooping(true);
 +            if (background == null && factory.loopBackground) player.setLooping(true);
              else player.setLooping(false);
              listener.onPrepared();
          }
-@@ -217,28 +324,44 @@ final class ConditionAudioAndroidMediaBackendFactory
+ 
+         @Override public void start() {
++            if (standalone) BreathingSetupAudio.pauseLoop();
+             player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                 @Override public void onCompletion(MediaPlayer completedPlayer) {
                      listener.onNaturalEnd(Math.max(0L, completedPlayer.getCurrentPosition()));
                  }
              });
@@ -22690,7 +22991,7 @@ index b042fc60..9b40eca1 100644
 -            });
 +            };
 +            player.setOnErrorListener(error);
-+            if (background != null) {
++            if (background != null && !standalone) {
 +                background.setOnErrorListener(error);
 +                background.start();
 +            }
@@ -22701,7 +23002,7 @@ index b042fc60..9b40eca1 100644
 -        @Override public void stop() { player.stop(); }
 +        @Override public void stop() {
 +            try { player.stop(); }
-+            finally { if (background != null) background.stop(); }
++            finally { if (background != null && !standalone) background.stop(); }
 +        }
 +
 +        @Override public long currentPlaybackPositionMs() {
@@ -22711,7 +23012,7 @@ index b042fc60..9b40eca1 100644
          @Override public long pause() {
 -            player.pause();
 +            try { player.pause(); }
-+            finally { if (background != null) background.pause(); }
++            finally { if (background != null && !standalone) background.pause(); }
              return Math.max(0L, player.getCurrentPosition());
          }
  
@@ -26556,10 +26857,10 @@ index 68b7cc01..daea3bee 100644
  }
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
 new file mode 100644
-index 00000000..e909ae8c
+index 00000000..af6c880d
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/BreathingSetupAudioBackendTest.java
-@@ -0,0 +1,152 @@
+@@ -0,0 +1,172 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.res.AssetManager;
@@ -26602,8 +26903,11 @@ index 00000000..e909ae8c
 +            factory = new ConditionAudioAndroidMediaBackendFactory(assets, false,
 +                new ConditionAudioAndroidMediaBackendFactory.ScenarioTracks() {
 +                    public void verify() { }
-+                    public java.util.List<String> ids() { return java.util.Collections.singletonList("haupt-15"); }
-+                    public MediaPlayer prepare(String id) { throw new AssertionError("continuous main replayed legacy scenario"); }
++                    public java.util.List<String> ids() { return java.util.Arrays.asList("haupt-15", "free-exploration"); }
++                    public MediaPlayer prepare(String id) {
++                        if ("free-exploration".equals(id)) return new MediaPlayer();
++                        throw new AssertionError("continuous main replayed legacy scenario");
++                    }
 +                });
 +            factory.preload(new ConditionAudioContract.Provider[]{provider}, new ConditionAudioRuntime.StartupPreloader.Listener() {
 +                public void onTrackPending(ConditionAudioContract.Provider p) { }
@@ -26659,6 +26963,23 @@ index 00000000..e909ae8c
 +                "terminal cleanup of paused main resumes the same preparation loop");
 +            check(bridge.lastEnd.getLong("main_start_frame") == 2116800 && bridge.lastEnd.getLong("r") == 57,
 +                "new backend reset stays bound to its own captured frame");
++
++            MediaPlayer explorationBackground = MediaPlayer.players.get(MediaPlayer.players.size() - 1);
++            ConditionAudioRuntime.MediaBackend exploration = factory.create(provider, listener(), "free-exploration");
++            MediaPlayer explorationTrack = MediaPlayer.players.get(MediaPlayer.players.size() - 1);
++            exploration.prepare(false); exploration.start();
++            check(!player.playing && explorationTrack.playing && !explorationTrack.looping
++                    && explorationBackground.starts == 0, "exploration plays only the authored non-looping track");
++            explorationTrack.position = 22000;
++            check(exploration.currentPlaybackPositionMs() == 22000 && exploration.pause() == 22000
++                    && !explorationTrack.playing, "exploration reports its own media position when paused");
++            exploration.start();
++            check(explorationTrack.playing && !player.playing && explorationBackground.starts == 0,
++                "exploration resumes without preparation cues or a second music track");
++            exploration.stop(); exploration.release();
++            check(explorationTrack.released && explorationBackground.released && bridge.endRequests == 4,
++                "exploration frees the media without ending a different main round");
++
 +            owner.close();
 +            check(BreathingSetupAudio.mainRecordingPlan("haupt-15") == null, "retired player cannot advertise an executable plan");
 +            BreathingSetupAudio.cancelDeferredExperimentStart();
@@ -30350,7 +30671,7 @@ index 262fbeec..1e36d908 100644
        "type": "object"
      },
 diff --git a/tools/Build-NativeRendererAndroid.ps1 b/tools/Build-NativeRendererAndroid.ps1
-index ccb3e308..a0e1befa 100644
+index ccb3e308..2e969dcf 100644
 --- a/tools/Build-NativeRendererAndroid.ps1
 +++ b/tools/Build-NativeRendererAndroid.ps1
 @@ -15,6 +15,11 @@ param(
@@ -30460,7 +30781,7 @@ index ccb3e308..a0e1befa 100644
              new ConditionAudioContract.ReceiptSink() {
                  @Override public void onReceipt(ConditionAudioContract.Receipt receipt) {
                      android.util.Log.i("RustyQuestNativeRenderer",
-@@ -1189,6 +1234,8 @@ $sharedPanelFacade
+@@ -1189,12 +1234,20 @@ $sharedPanelFacade
                              + receipt.event.name().toLowerCase(java.util.Locale.ROOT)
                              + " generation=" + receipt.sessionGeneration
                              + " revision=" + receipt.receiptRevision
@@ -30469,7 +30790,27 @@ index ccb3e308..a0e1befa 100644
                              + " reason=" + receipt.reason);
                      String eventOperation = receipt.event == ConditionAudioContract.Event.PREPARED
                          ? "audio-prepared" : receipt.event == ConditionAudioContract.Event.ACTUAL_START
-@@ -1237,6 +1284,7 @@ $sharedPanelFacade
+                         ? "audio-started" : receipt.event == ConditionAudioContract.Event.NATURAL_END
+                         ? "audio-ended" : receipt.event == ConditionAudioContract.Event.ERROR
+                         ? "audio-error" : "";
++                    if (receipt.event == ConditionAudioContract.Event.PROGRESS) {
++                        synchronized (PRESENTATION_LOCK) {
++                            if (!"free-exploration".equals(pendingAudioScenario)) return;
++                        }
++                        eventOperation = "audio-position";
++                    }
+                     if (!eventOperation.isEmpty()) {
+                         synchronized (PRESENTATION_LOCK) {
+                             if (terminalIntentAdmitted || receipt.sessionGeneration != pendingAudioGeneration)
+@@ -1208,6 +1261,7 @@ $sharedPanelFacade
+                                     + "-" + receipt.receiptRevision)
+                                 .put("expected_generation", receipt.sessionGeneration)
+                                 .put("elapsed_realtime_ns", android.os.SystemClock.elapsedRealtimeNanos());
++                            if ("audio-position".equals(eventOperation)) event.put("position_ms", receipt.positionMs);
+                             nativeApplyBreathCompositionCommand(event.toString());
+                         } catch (Exception error) {
+                             android.util.Log.e("RustyQuestNativeRenderer", "audio-event-record-failed", error);
+@@ -1237,6 +1291,7 @@ $sharedPanelFacade
  
      /** Binds a panel arm/start request to the verified packaged profile and audio asset. */
      static String applyExperimentSessionCommand(String commandJson) {
@@ -30477,7 +30818,7 @@ index ccb3e308..a0e1befa 100644
          try {
              org.json.JSONObject command = new org.json.JSONObject(commandJson == null ? "{}" : commandJson);
              String operation = command.optString("operation", "");
-@@ -1245,6 +1293,18 @@ $sharedPanelFacade
+@@ -1245,6 +1300,18 @@ $sharedPanelFacade
                  if (closure == null || !closure.active) {
                      throw new SecurityException("experiment-session-packaged-closure-unavailable");
                  }
@@ -30496,7 +30837,7 @@ index ccb3e308..a0e1befa 100644
                  String condition = command.optString("condition", "");
                  ExperimentSessionPackagedClosure.AudioEntry selected = null;
                  for (ExperimentSessionPackagedClosure.AudioEntry entry : closure.audioEntries) {
-@@ -1277,12 +1337,14 @@ $sharedPanelFacade
+@@ -1277,12 +1344,14 @@ $sharedPanelFacade
                          .put("media_type", guidance.mediaType));
                  }
              }
@@ -30515,7 +30856,7 @@ index ccb3e308..a0e1befa 100644
      }
  
      private static byte[] readPackagedAsset(
-@@ -1319,6 +1381,14 @@ $polarBleStopHooks
+@@ -1319,6 +1388,14 @@ $polarBleStopHooks
          return closure != null && closure.active && closure.openControlDefault;
      }
  
@@ -30530,7 +30871,7 @@ index ccb3e308..a0e1befa 100644
      static String conditionBreathGuidanceReadiness(String conditionId) {
          ExperimentSessionPackagedClosure.Result closure = experimentSessionClosure;
          if (closure == null || !closure.active) return "pattern-inventory-unavailable";
-@@ -1334,12 +1404,45 @@ $polarBleStopHooks
+@@ -1334,12 +1411,45 @@ $polarBleStopHooks
  
      static boolean startConditionAudio(
              long sessionGeneration, String operationId, String conditionId) {
@@ -30577,7 +30918,7 @@ index ccb3e308..a0e1befa 100644
          ConditionAudioContract.TrackReadiness readiness = runtime.trackReadiness(conditionId);
          if (readiness.state != ConditionAudioContract.TrackState.READY) return false;
          String prepareOperation = operationId + "-audio-prepare";
-@@ -1347,12 +1450,13 @@ $polarBleStopHooks
+@@ -1347,12 +1457,13 @@ $polarBleStopHooks
              if(terminalIntentAdmitted)return false;
              if (sessionGeneration == pendingAudioGeneration
                      && conditionId.equals(pendingAudioCondition)) {
@@ -30592,7 +30933,7 @@ index ccb3e308..a0e1befa 100644
              pendingAudioPrepareOperation = prepareOperation;
              pendingAudioCondition = conditionId;
              audioImmersiveAdmitted = false;
-@@ -1361,12 +1465,13 @@ $polarBleStopHooks
+@@ -1361,12 +1472,13 @@ $polarBleStopHooks
              appliedAudioControlRevision = 0L;
          }
          boolean accepted = runtime.submit(ConditionAudioContract.Command.prepare(
@@ -30607,7 +30948,7 @@ index ccb3e308..a0e1befa 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1488,7 +1593,10 @@ $experimentSessionPolarCleanup
+@@ -1488,7 +1600,10 @@ $experimentSessionPolarCleanup
              audio.close();
              try { clean = audio.awaitClosed(5000L) && clean; }
              catch (InterruptedException error) { Thread.currentThread().interrupt(); clean = false; }
@@ -30619,7 +30960,7 @@ index ccb3e308..a0e1befa 100644
          }
          return clean;
      }
-@@ -1525,6 +1633,7 @@ $experimentSessionPolarCleanup
+@@ -1525,6 +1640,7 @@ $experimentSessionPolarCleanup
          synchronized (PRESENTATION_LOCK) {
              if (sessionGeneration == pendingAudioGeneration) {
                  pendingAudioGeneration = 0L;
@@ -30627,7 +30968,7 @@ index ccb3e308..a0e1befa 100644
                  pendingAudioPrepareOperation = "";
                  pendingAudioCondition = "";
                  audioImmersiveAdmitted = false;
-@@ -1607,6 +1716,7 @@ $polarRuntimeReopenFromExplicitLaunch
+@@ -1607,6 +1723,7 @@ $polarRuntimeReopenFromExplicitLaunch
              synchronized (PRESENTATION_LOCK) {
                  presentationGeneration = launchEpoch;
                  terminalIntentAdmitted = false;
@@ -30635,7 +30976,7 @@ index ccb3e308..a0e1befa 100644
                  terminalFinishConsumed = false;
              }
          }
-@@ -1710,6 +1820,9 @@ $polarRuntimeReopenFromExplicitLaunch
+@@ -1710,6 +1827,9 @@ $polarRuntimeReopenFromExplicitLaunch
          synchronized (PRESENTATION_LOCK) {
              if (terminalIntentAdmitted) return false;
              terminalIntentAdmitted = true;
@@ -30645,7 +30986,7 @@ index ccb3e308..a0e1befa 100644
          }
          NativeRendererSelfKioskService.acknowledgeTerminalIntent(guardGeneration, homeEpisode);
          NativeRendererExperimentLaunchAuthority.invalidatePending();
-@@ -1729,8 +1842,29 @@ $experimentSessionTerminalAudioStop
+@@ -1729,8 +1849,29 @@ $experimentSessionTerminalAudioStop
                  || shutdownAckRevision <= 0L) {
              return;
          }
@@ -30675,7 +31016,7 @@ index ccb3e308..a0e1befa 100644
              terminalFinishConsumed = true;
          }
          android.util.Log.i("RustyQuestNativeRenderer",
-@@ -2036,6 +2170,8 @@ if ($showcaseSelected) {
+@@ -2036,6 +2177,8 @@ if ($showcaseSelected) {
  if ($standaloneExperimentOwner) {
      $standaloneBaseSources = @('NativeAppSettingsReader.java','NativeMeshUiProducer.java','NativeInputWidgetGeometry.java','NativePageSnapshot.java','NativeSystemKeyboard.java','NativePanelFont.java',
          'NativeRendererExperimentLaunchAuthority.java','NativeRendererExperimentLauncherPolicy.java','NativeRendererActivityComponents.java','NativeRendererBootObservation.java',
@@ -30684,7 +31025,7 @@ index ccb3e308..a0e1befa 100644
          'NativeRendererWriterAcknowledgedExitPolicy.java','PanelImmersiveHandoff.java',
          'PanelImmersiveHandoffLifecyclePolicy.java','PanelImmersiveHandoffProofPolicy.java',
          'PanelModule.java','PanelModuleRegistry.java')
-@@ -2069,7 +2205,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
+@@ -2069,7 +2212,7 @@ if ($standaloneExperimentOwner -or $showcaseSelected) {
  $debugSources = @()
  if ($script:BuildUsesLock) {
      $records = @(if ($null -ne $appBuildLockObject.PSObject.Properties['debug_experiment_operator_sources']) { $appBuildLockObject.debug_experiment_operator_sources })
@@ -30693,7 +31034,7 @@ index ccb3e308..a0e1befa 100644
      if ($records.Count -gt 0) {
          if ($records.Count -ne 2 -or $providers.Count -ne 1 -or $providers[0] -cne 'ExperimentSessionDebugControlProvider' -or
              @($appBuildLockObject.selected_feature_ids) -cnotcontains 'operator.breath_composition_cli') {
-@@ -2089,6 +2225,70 @@ if ($script:BuildUsesLock) {
+@@ -2089,6 +2232,70 @@ if ($script:BuildUsesLock) {
      } elseif ($providers.Count -gt 0) { throw 'Provider declared without debug source closure.' }
  }
  $sourceFiles += $debugSources
@@ -30764,7 +31105,7 @@ index ccb3e308..a0e1befa 100644
  if (-not [string]::IsNullOrWhiteSpace($generatedControlPanelActivityPath)) {
      $sourceFiles += $generatedControlPanelActivityPath
  }
-@@ -2127,6 +2327,7 @@ Invoke-Checked "javac" $javac @(
+@@ -2127,6 +2334,7 @@ Invoke-Checked "javac" $javac @(
  )
  Invoke-Checked "jar class pack" $jar @("cf", $classesJar, "-C", $classesDir, ".")
  Invoke-Checked "d8" $d8 @("--lib", $platformJar, "--output", $dexDir, $classesJar)
@@ -30772,7 +31113,7 @@ index ccb3e308..a0e1befa 100644
  
  $previousAndroidHome = $env:ANDROID_HOME
  $previousNdkHome = $env:ANDROID_NDK_HOME
-@@ -2152,6 +2353,10 @@ if ($showcaseVulkanSelected) {
+@@ -2152,6 +2360,10 @@ if ($showcaseVulkanSelected) {
  } elseif ($showcaseSelected) {
      $cargoBuildArguments += @('--features', 'showcase')
  }
@@ -30783,7 +31124,7 @@ index ccb3e308..a0e1befa 100644
  if ($operatorSelection.enabled) { $cargoBuildArguments += @('--features', 'meta-xr-operator') }
  try {
      $env:ANDROID_HOME = $AndroidHome
-@@ -2265,6 +2470,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
+@@ -2265,6 +2477,7 @@ $packagingInputPath = Join-Path $OutDir 'packaging-input-lock.json'
  [IO.File]::WriteAllText($packagingInputPath, $packaging.json, [Text.UTF8Encoding]::new($false))
  # Public build identity only: no paths or app/private payload metadata.
  $buildIdentityAsset = [ordered]@{schema='rusty.quest.android_build_identity.v1';source_commit=$sourceHead;source_tree=$sourceTree;source_composition_fingerprint=[string]$sourceComposition.fingerprint;packaging_fingerprint=$packaging.sha256}
@@ -30791,7 +31132,7 @@ index ccb3e308..a0e1befa 100644
  $buildIdentityAsset | ConvertTo-Json -Compress | Set-Content -LiteralPath (Join-Path $assetsDir 'android-build-identity.json') -Encoding utf8
  Invoke-Checked "aapt2 link" $aapt2 @(
      "link",
-@@ -2297,6 +2503,7 @@ Invoke-Checked "apksigner" $apksigner @(
+@@ -2297,6 +2510,7 @@ Invoke-Checked "apksigner" $apksigner @(
  
  $sha256 = Get-FileSha256 -Path $apkSigned
  Assert-QuestMetaXrOperatorArchive -Selection $operatorSelection -ApkPath $apkSigned
@@ -30799,7 +31140,7 @@ index ccb3e308..a0e1befa 100644
  if ($operatorSelection.enabled) {
      $operatorManifestDump = @(& $aapt2 dump xmltree $apkSigned --file AndroidManifest.xml 2>&1 | ForEach-Object ToString)
      $operatorManifestExit = $LASTEXITCODE
-@@ -2305,6 +2512,8 @@ if ($operatorSelection.enabled) {
+@@ -2305,6 +2519,8 @@ if ($operatorSelection.enabled) {
          ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutDir 'operator-manifest-dump.json') -Encoding utf8NoBOM
  }
  $manifest = [ordered]@{
@@ -30808,7 +31149,7 @@ index ccb3e308..a0e1befa 100644
      meta_xr_operator = $operatorSelection
      '$schema' = "rusty.quest.native_renderer_android.build_manifest.v1"
      app_id = if ($null -eq $appBuildLockObject) { "unlocked-development" } else { [string]$appBuildLockObject.app_id }
-@@ -2451,9 +2660,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
+@@ -2451,9 +2667,11 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -Path $manifest
  if ($script:BuildUsesLock) {
      $propertyManifestPath = Join-Path $repoRoot "fixtures\native-renderer\native-renderer-property-manifest.json"
      $runCapsule = [ordered]@{
@@ -32963,10 +33304,10 @@ index 00000000..8cab703c
 +    main()
 diff --git a/tools/checks/test_experiment_gateway_breathing_boundary.py b/tools/checks/test_experiment_gateway_breathing_boundary.py
 new file mode 100644
-index 00000000..134ebd5d
+index 00000000..5e83ec68
 --- /dev/null
 +++ b/tools/checks/test_experiment_gateway_breathing_boundary.py
-@@ -0,0 +1,213 @@
+@@ -0,0 +1,222 @@
 +"""Run selected gateway boundary methods with deterministic audio/native effects."""
 +import argparse
 +import os
@@ -33020,7 +33361,7 @@ index 00000000..134ebd5d
 + Object context=new Object();long identity=1,epoch=7;String deferredMainId="";boolean remote=true;
 + CalibrationInstruction calibrationInstruction;
 + boolean calibrationSelected,polarReady=true;Runnable narrationCompleted,narrationFailed;int narrationStarts,narrationReleases;
-+ int dispatches,dispatchAttempts,rejectedUpdates;boolean failDispatch;String phase="ARMED";
++ int dispatches,dispatchAttempts,rejectedUpdates;boolean failDispatch;String phase="ARMED",scenario="";
 + ExperimentSessionCommandJournal journal=new ExperimentSessionCommandJournal();
 + static final class Clear {void clear(){}}
 + static final class Protocol {void retire(){}}
@@ -33059,6 +33400,7 @@ index 00000000..134ebd5d
 + Main main=new Main();
 + static void requireMain(){}boolean remoteAvailable(){return remote;}
 + JSONObject snapshot()throws Exception{return new JSONObject().put("p",phase).put("g",7).put("rec",false)
++  .put("scenario_id",scenario)
 +  .put("h","vr-preparation").put("y",new JSONObject().put("c",true).put("a",polarReady).put("e",polarReady))
 +  .put("pending",!deferredMainId.isEmpty()||calibrationInstruction!=null);}
 + JSONObject monitorSnapshot(JSONObject body){throw new AssertionError();}
@@ -33118,8 +33460,16 @@ index 00000000..134ebd5d
 +  check(h.calibrate(ID).getString("state").equals("confirmed")&&BreathingSetupAudio.calibrations==1&&h.narrationStarts==0,
 +    "legacy package starts its original setup without instruction");
 + }
++ static void checkExplorationStart()throws Exception {
++  GatewayBreathingBoundaryTest h=fresh();h.scenario="free-exploration";
++  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1&&BreathingSetupAudio.begins==0,
++    "native exploration starts without a main breathing boundary");
++  check(h.start().getString("state").equals("confirmed")&&h.dispatches==1,
++    "exploration start retries use the original receipt");
++ }
 + public static void main(String[] args)throws Exception {
 +  checkCalibrationInstruction();
++  checkExplorationStart();
 +  GatewayBreathingBoundaryTest h=fresh();check(h.start().getString("state").equals("pending")&&h.dispatches==0,"start must wait for real boundary");
 +  check(h.start().getString("state").equals("pending")&&BreathingSetupAudio.begins==1,"retry must retain original admission");
 +  try{h.ownerExchange("command",new JSONObject().put("id","2222222222222222").put("op","pause"));throw new AssertionError("new mutation crossed pending boundary");}catch(SecurityException expected){}
@@ -34681,7 +35031,7 @@ index 00000000..6a086d12
 +
 +if __name__=='__main__':owner.main()
 diff --git a/tools/checks/test_experiment_wifi_snapshot.py b/tools/checks/test_experiment_wifi_snapshot.py
-index d6a4bfd4..5180c791 100644
+index d6a4bfd4..7edff2ac 100644
 --- a/tools/checks/test_experiment_wifi_snapshot.py
 +++ b/tools/checks/test_experiment_wifi_snapshot.py
 @@ -28,6 +28,7 @@ def main():
@@ -34692,15 +35042,16 @@ index d6a4bfd4..5180c791 100644
   static JSONObject raw;static int reads;
   static String applyExperimentSessionCommand(String command)throws Exception {WifiSnapshotHarness.check("status".equals(new JSONObject(command).getString("operation")),"status cannot mutate experiment");reads++;return raw.toString();}
   static String nativeReadBreathCompositionStatus()throws Exception{return new JSONObject().put("snapshot",new JSONObject().put("feature_lock_active",true).put("activation_binding_matches",true).put("activation_binding_sha256",WifiSnapshotHarness.repeat("b",64))).toString();}
-@@ -66,6 +67,7 @@ public final class WifiSnapshotHarness {
+@@ -66,6 +67,8 @@ public final class WifiSnapshotHarness {
   static String repeat(String s,int n){return String.join("",java.util.Collections.nCopies(n,s));}
   Object context=new Object();
   long identity=11,epoch=7,lifecycleRevision=1;
 + String deferredMainId="";
++ Object calibrationInstruction=null;
   JSONObject buildIdentity=new JSONObject().put("v",1).put("version_code",61).put("version_name","0.1.61");
   ExperimentSessionControlCapability session=new ExperimentSessionControlCapability();PolarStopBleCapability polar=new PolarStopBleCapability();
   ExperimentControlMode controlMode=new ExperimentControlMode();
-@@ -73,7 +75,7 @@ public final class WifiSnapshotHarness {
+@@ -73,7 +76,7 @@ public final class WifiSnapshotHarness {
    boolean acceptsNativeOwner(long i,long e){return live&&i==identity&&e==epoch;}}
   Carrier carrier=new Carrier();
   class Delegate implements WifiDelegate {
@@ -34709,7 +35060,7 @@ index d6a4bfd4..5180c791 100644
    ExperimentSessionWifiSnapshot wifiObservation;long wifiGeneration,wifiEpoch;
    class RemotePending {ExperimentSessionControlCapability.Fence sessionFence;String operation,nativeId,browserId;long serverGeneration;int requestedBias;}
    RemotePending remotePending;Object remoteTerminal;String remoteSetupPendingId="";Object remoteContext=new Object();
-@@ -92,16 +94,26 @@ public final class WifiSnapshotHarness {
+@@ -92,16 +95,26 @@ public final class WifiSnapshotHarness {
     .put("connected",false).put("acc_requested",true).put("acc_pmd_ack_running",true)
     .put("diagnostics",new JSONObject().put("clock","java-nano-time").put("observed_at_monotonic_ns",42).put("callback_count",15).put("acc_callback_count",14)
      .put("decode_count",13).put("jni_submit_count",12).put("callback_age_ms",6).put("gatt_state",0).put("gatt_status",8).put("disconnect_count",1).put("private",repeat("x",20000)))
@@ -34737,7 +35088,7 @@ index d6a4bfd4..5180c791 100644
    JSONObject diagnostic=status.getJSONObject("pd"),nativeInput=diagnostic.getJSONObject("native"),javaInput=diagnostic.getJSONObject("java");
    check(nativeInput.getBoolean("diagnostics_observed")&&"acc-stale".equals(nativeInput.getString("reason"))&&nativeInput.getLong("accepted_age_ms")==1234,"current native reason/age retained");
    check("acc-stale".equals(nativeInput.getJSONObject("last_pause").getString("reason")),"original pause retained");
-@@ -122,6 +134,8 @@ public final class WifiSnapshotHarness {
+@@ -122,6 +135,8 @@ public final class WifiSnapshotHarness {
    JSONObject oversized=new JSONObject(status.toString()).put("k",repeat("x",17000));
    try{ExperimentSessionWifiSnapshot.bounded(oversized);throw new AssertionError("16KiB bound");}catch(IllegalStateException expected){}
    WifiSnapshotHarness modes=new WifiSnapshotHarness();
@@ -34746,7 +35097,7 @@ index d6a4bfd4..5180c791 100644
    for(String mode:new String[]{"choose","direct","remote"}){modes.controlMode.state.name=mode;check(mode.equals(modes.snapshot().getString("control_mode")),"explicit "+mode);}
    modes.controlMode.state.selected=false;check(modes.snapshot().has("control_mode"),"unselected owner still explicit");
    modes.delegate.raw=response(10,0);modes.delegate.raw.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL)
-@@ -129,6 +143,9 @@ public final class WifiSnapshotHarness {
+@@ -129,6 +144,9 @@ public final class WifiSnapshotHarness {
    ControlPanelActivity.raw=modes.delegate.raw;modes.delegate.setup=new JSONObject().put("s","owner").put("g",7).put("r",8).put("p",true).put("b",true)
     .put("c",false).put("x","").put("sc",true).put("a",false).put("e",false).put("d",new JSONArray().put("aaaaaaaaaaaa").put("bbbbbbbbbbbb").put("cccccccccccc").put("dddddddddddd"));
    JSONObject idle=modes.snapshot();check(idle.has("y")&&idle.getJSONObject("y").getJSONArray("d").length()==4&&idle.getJSONObject("pi").length()==3&&!idle.has("q"),"full idle setup keeps original y and mandatory pi");
@@ -34756,7 +35107,21 @@ index d6a4bfd4..5180c791 100644
    for(String field:new String[]{"g","r","ms","rec","co","h","st","o","pi"})check(idle.has(field),"idle setup retains "+field);
   }
   void denySnapshot(String why)throws Exception{try{snapshot();}catch(SecurityException|IllegalStateException expected){return;}throw new AssertionError(why);}
-@@ -202,9 +219,9 @@ public final class WifiSnapshotHarness {
+@@ -142,6 +160,13 @@ public final class WifiSnapshotHarness {
+   try{observer.observe(response(8,899),2000000000L,2000000001L,7);throw new AssertionError("regressed revision");}catch(IllegalStateException expected){}
+   try{observer.observe(response(10,901),2000000000L,2000000001L,8);throw new AssertionError("wrong epoch");}catch(IllegalStateException expected){}
+   try{observer.observe(response(10,901),2000000000L,8000000001L,7);throw new AssertionError("stale read");}catch(IllegalStateException expected){}
++  ExperimentSessionWifiSnapshot mediaObserver=new ExperimentSessionWifiSnapshot();
++  mediaObserver.observe(response(10,0),2000000000L,2000000001L,7);
++  JSONObject exploration=response(10,22000);
++  exploration.getJSONObject("readback").put("scenario_id","free-exploration").put("duration_ms",447070);
++  JSONObject round=mediaObserver.observe(exploration,3000000000L,3000000001L,7).status;
++  check(round.getString("scenario_id").equals("free-exploration")&&round.getLong("duration_ms")==447070
++   &&round.getLong("ms")==22000,"scenario and media clock come from the same native read");
+   JSONObject missing=response(10,901);missing.getJSONObject("readback").remove("polar_input");
+   try{observer.observe(missing,3000000000L,3000000001L,7);throw new AssertionError("missing required pi");}catch(IllegalStateException expected){}
+   JSONObject idle=response(10,0);idle.getJSONObject("readback").put("phase","idle").put("control_state","idle").put("condition_id",JSONObject.NULL).put("session_key",JSONObject.NULL)
+@@ -202,9 +227,9 @@ public final class WifiSnapshotHarness {
  final class PolarReceiptHarness {
   java.util.Map<String,String> setupReceipts=new java.util.LinkedHashMap<>(),setupOutcomes=new java.util.LinkedHashMap<>();
   java.util.Map<String,Long> setupEffectTimes=new java.util.LinkedHashMap<>();
@@ -34768,7 +35133,7 @@ index d6a4bfd4..5180c791 100644
    void selectRemoteCandidate(String d){}void handleCommand(String op){effects++;scanning=true;}
    JSONObject remoteSetupProjection()throws Exception{return remoteSetupStatus(7);}}Panel panel=new Panel();
   PolarReceiptHarness(){setupReceipts.put("original","original canonical command");}
-@@ -212,7 +229,7 @@ final class PolarReceiptHarness {
+@@ -212,7 +237,7 @@ final class PolarReceiptHarness {
   __DISPATCH__
   __RECEIPT__
  }
