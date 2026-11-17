@@ -1,5 +1,18 @@
 # Verification
 
+Meta21 publication: exact qualified21 artifact is current in Developer build
+1463458816853130, Quest2/13+, Complete tests, malware passed and detailed security
+All tests passed. The user-requested new chat recovered browser access; its
+private receipt includes the app/channel/size/digest and saved screenshots.
+No Meta21 installed-byte proof yet; actual headset remains20, cold-launched only
+to request the Meta baseline. No main21/22 host install or host22 launch.
+
+Public source PR34 is deployed through preservinga5376d4, exact successful
+Pages43989652647 with27 byte-matching affected/core responses. Its earlier
+811af1e Pages job was superseded/cancelled. This policy increment raises the
+known required/latest floor to the now-available21; its focused comparison
+checks cover20 blocked and21 compatible. Exact deployment is pending.
+
 Monitor3 signed-package checkpoint: native1cd5ee3/treea9dc76d, source patch
 SHA256c8756d19…/1,939,646bytes reconstructs the exact tree in an isolated index.
 Code21-r2 passes169 independent actual-artifact checks; its strict source-closure

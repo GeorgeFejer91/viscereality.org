@@ -1,6 +1,6 @@
 # Atmungsraum Quest 2 APKs
 
-## 0.2.20-dev — code21 monitor3 candidate, 2026-11-17
+## 0.2.20-dev — code21 monitor3 Developer release, 2026-11-17
 
 | Property | Qualified value |
 | --- | --- |
@@ -31,9 +31,11 @@ there is no download expiry or estimated Meta relaunch grace. Launch-started
 alone does not complete the monitor. Explicit disable atomically clears the
 watch, and cancellation persistence failure is reported.
 
-Code21 Meta publication/installation and actual21-to22 helper handoff, update,
-relaunch and focus qualification remain open. Successor22 is built privately
-and stays unpublished until the Meta21 baseline is established. No main21 or22
+Code21 is current in the private Meta Developer channel as build1463458816853130
+for Quest2 and13+, with malware passed and detailed security All tests passed.
+Its Meta installation and actual21-to22 helper handoff, update, relaunch and
+focus qualification remain open. Successor22 is built privately and stays
+unpublished until the Meta21 baseline is established. No main21 or22
 APK has been installed by the host. Prior19 and20 were actually Meta-installed;
 20 replacement after the app closed did not prove the new monitor path.
 

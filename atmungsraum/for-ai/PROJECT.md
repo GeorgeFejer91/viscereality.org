@@ -176,6 +176,20 @@ the existing utility and recovery routes.
 
 ### Active update extension — 2026-11-16
 
+Meta21 is published,2026-11-17: a user-requested fresh chat recovered browser
+access and uploaded the exact qualified artifact. Developer build1463458816853130
+is current for Quest2/13+, tests Complete, malware passed and detailed security
+All tests passed. Existing private access, artwork/testers and Require Latest
+unchecked are preserved. Public required/latest policy advances to21. Installed
+headset is still20; root cold-launched20 to prepare its SDK fetch and requested
+one attended manual check. Actual21 Meta baseline and subsequent22 update test
+remain open. No main21/22 host install or host22 launch has occurred.
+
+Source PR34/811af1e was retained in descendanta5376d4. Its own Pages job was
+superseded; exact descendant Pages43989652647 succeeded and all27 affected/core
+responses matched Git. The code21 policy/publication checkpoint awaits its own
+deployment verification. Pixel refresh remains user-operated with USB absent.
+
 Monitor3 build checkpoint,2026-11-17: independently reviewed native source
 1cd5ee3/treea9dc76d produces signed code21-r2, qualified169 actual-package checks.
 The cumulative public patch reconstructs that exact tree from the pinned base.
