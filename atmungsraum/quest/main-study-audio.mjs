@@ -73,6 +73,10 @@ export async function loadStudyInventory(sourceRoot = projectRoot) {
       }
     }
   }
+  const probe = byId.get(inventory.probe_instruction);
+  if (probe?.role !== 'probe_instruction' || !Number.isSafeInteger(probe.frames_44100) || probe.frames_44100 < 1) {
+    invalid('invalid probe instruction');
+  }
   if (byId.get(inventory.background)?.role !== 'background') invalid('missing background music');
   return inventory;
 }
@@ -191,6 +195,13 @@ function encodeWav(pcm) {
   return Buffer.concat([header, pcm]);
 }
 
+function stagedCueFilename(index, event) {
+  const seconds = Math.floor(event.offset_frames / RATE);
+  const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+  const remainder = String(seconds % 60).padStart(2, '0');
+  return String(index + 1).padStart(4, '0') + '_' + minutes + 'm' + remainder + 's_' + event.asset + '.wav';
+}
+
 export async function buildMainStudyScenario(sourceRoot, original) {
   const inventory = await loadStudyInventory(sourceRoot);
   const timeline = planMainStudy(inventory);
@@ -219,9 +230,7 @@ export async function buildMainStudyScenario(sourceRoot, original) {
     if (event.cycle !== null) pcm = mixPhase(pcm, layers[source.role]);
     if (pcm.length !== event.duration_frames * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected PCM: ' + source.id);
     const wave = encodeWav(pcm);
-    const seconds = Math.floor(event.offset_frames / RATE);
-    const firstUse = String(Math.floor(seconds / 60)).padStart(2, '0') + 'm' + String(seconds % 60).padStart(2, '0') + 's';
-    const file = String(index + 1).padStart(4, '0') + '_' + firstUse + '_' + source.id + '.wav';
+    const file = stagedCueFilename(index, event);
     registry[source.id] = {
       id: source.id, file, frames: event.duration_frames, bytes: wave.length, sha256: sha256(wave),
       placeholder: false, text: source.phase_text ?? source.text, source_sha256: source.sha256,
@@ -251,4 +260,51 @@ export async function buildMainStudyScenario(sourceRoot, original) {
   };
   const music = assets.get(inventory.background);
   return { plan, files, music: join(sourceRoot, STUDY_DIRECTORY, music.file) };
+}
+
+export async function buildProbeStudyScenario(sourceRoot, original, study) {
+  const inventory = await loadStudyInventory(sourceRoot);
+  const instruction = inventory.assets.find(asset => asset.id === inventory.probe_instruction);
+  const pcm = await decodePcm(join(sourceRoot, STUDY_DIRECTORY, instruction.file));
+  if (pcm.length !== instruction.frames_44100 * 2 || !pcm.some(byte => byte !== 0)) invalid('unexpected probe instruction PCM');
+
+  const totalFrames = 300 * RATE;
+  if (original.scenario_id !== 'probe-5' || original.total_frames !== totalFrames
+      || original.sample_rate !== RATE) invalid('probe must be five minutes');
+  const events = study.plan.events.filter(event => event.offset_frames >= OPENING_FRAMES
+    && event.offset_frames < OPENING_FRAMES + totalFrames)
+    .map(event => ({ ...event, offset_frames: event.offset_frames - OPENING_FRAMES }));
+  if (events.length !== totalFrames / PHASE_FRAMES || events.at(-1).id !== 'exhale') {
+    invalid('probe guidance must end after the final exhale');
+  }
+
+  const files = new Map();
+  const registry = {};
+  const cueDirectory = 'assets/audio/scenarios/probe-5';
+  for (const [index, event] of events.entries()) {
+    if (Object.hasOwn(registry, event.asset)) continue;
+    const previous = study.plan.audio_assets[event.asset];
+    const file = stagedCueFilename(index, event);
+    registry[event.asset] = { ...previous, file };
+    files.set(posix.join(cueDirectory, file), study.files.get(posix.join('assets/audio/scenarios/haupt-15', previous.file)));
+  }
+
+  const wav = encodeWav(pcm);
+  const preludePath = posix.join(STUDY_DIRECTORY, 'probe-instructions.wav');
+  files.set(preludePath, wav);
+  const plan = {
+    schema_version: original.schema_version,
+    scenario_id: 'probe-5',
+    library_manifest_sha256: original.library_manifest_sha256,
+    audio_assets_base_directory: original.audio_assets_base_directory,
+    sample_rate: RATE,
+    total_frames: totalFrames,
+    events,
+    audio_assets: registry,
+    pre_session_audio: {
+      path: preludePath, duration_frames: instruction.frames_44100,
+      bytes: wav.length, sha256: sha256(wav), text: instruction.text,
+    },
+  };
+  return { plan, files };
 }

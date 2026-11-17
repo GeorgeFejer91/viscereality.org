@@ -155,10 +155,12 @@ async function measureLabels() {
 }
 
 let questMounted = false;
+let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261117-review-repairs').then(({ mountQuestRehearsal }) => mountQuestRehearsal(participantIdentity, questPair)).catch(() => {
+  import('./quest-ui.js?v=20261117-review-repairs').then(({ mountQuestRehearsal }) =>
+    mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
 }
@@ -197,18 +199,16 @@ async function replaceWithPublishedRelease(canReplace = () => true) {
 function idleConnectionPage() {
   const find = byId('quest-find');
   return !document.hidden && root.dataset.operatorStep === 'connect'
-    && byId('check-bridge').dataset.check !== 'ok' && !find.hidden && !find.disabled
+    && byId('check-bridge').dataset.check !== 'ok' && !find.hidden && find.getAttribute('aria-disabled') !== 'true'
     && !document.querySelector('dialog[open], #quest-pairing:not([hidden]), #quest-recovery:not([hidden]), #preview-recovery:not([hidden])')
     && ![...byId('patient-form').querySelectorAll('input, select')].some(field => field.value);
 }
 
 if (!await replaceWithPublishedRelease()) {
-  let refreshingIdlePage = false;
   const refreshIdlePage = async () => {
     if (refreshingIdlePage || !idleConnectionPage()) return;
     refreshingIdlePage = true;
-    try { await replaceWithPublishedRelease(idleConnectionPage); }
-    finally { refreshingIdlePage = false; }
+    if (!await replaceWithPublishedRelease(idleConnectionPage)) refreshingIdlePage = false;
   };
   document.addEventListener('visibilitychange', refreshIdlePage);
   window.addEventListener('pageshow', event => {
@@ -231,6 +231,7 @@ if (!await replaceWithPublishedRelease()) {
   new MutationObserver(showBrowserExports).observe(browserExports, { attributes: true, attributeFilter: ['hidden'] });
   byId('quest').hidden = recovery;
   browserExports.hidden = !recovery;
+  byId('quest-status').textContent = 'Quest-Steuerung wird geladen …';
   measureLabels();
   mountOperator();
 }

@@ -803,8 +803,8 @@ def assert_automatic_rediscovery(review, paired):
         expect(page.locator("#check-bluetooth")).to_have_attribute("data-check","ok")
         expect(page.locator("#quest-find")).to_be_hidden()
         calls = page.evaluate("window.reviewDiscovery")
-        assert calls[0] == "unreachable" and calls[-1] == "discovered", calls
-        assert len(calls[1:-1]) >= 3 and set(calls[1:-1]) == {"bluetooth"}, calls
+        assert calls[:2] == ["bluetooth", "unreachable"] and calls[-1] == "discovered", calls
+        assert len(calls[2:-1]) >= 2 and set(calls[2:-1]) == {"bluetooth"}, calls
     finally:
         page.context.close()
 

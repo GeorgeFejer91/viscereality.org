@@ -2,8 +2,8 @@
 
 ## Review repairs: current-session controls and offline archives — 2026-11-17
 
-PWA20261117-review-repairs passes307 Node tests with zero skips after cache
-version changes. Independent review reruns53 model cases and the mounted real
+PWA20261117-review-repairs passes309 Node tests with zero skips after current-main
+integration and cache-version changes. Independent review reruns53 model cases and the mounted real
 PWA recovery/archive suite. Ten rendered states/19 viewport tiles pass actual
 Pretext/DOM checks. Narrow/200% text uses readable document reflow where needed.
 An old preparation receipt is preserved while a fresh current-session lease can
@@ -13,6 +13,18 @@ exclude incomplete prefixes and foreign identities, survive APK changes, and
 cannot reappear after a delayed read following identity forgetting/switching.
 No headset or phone was operated. Installed-phone refresh and physical
 acceptance remain pending; public deployment is being verified separately.
+
+## PWA startup update and Quest reconnect — 2026-11-17
+
+`python -B tools/test-pwa-startup.py` runs the served HTML and production
+browser gateway in Chromium with synthetic Bluetooth and signed Wi-Fi
+responses. The new case initially observed the old address before the BLE
+read. With the fix it checks launch update before BLE, the exact saved ID
+with a nearby decoy, the changed address and persisted result, Android
+companion discovery, cached Wi-Fi after BLE/update failure, radio recovery
+without a tap, and no discovery on the CSV recovery route. The Bluetooth
+prompt fits the measured 320×568 layout. Physical phone and Quest evidence
+remains separate.
 
 ## Haupt-Runde preparation and original Arm failure — 2026-11-17
 
@@ -501,6 +513,24 @@ The Node suite passed 244 with eight native/Java prerequisites skipped.
 Scenario JSON/CSV, context, and Git whitespace checks passed. These are
 browser and synthetic gateway checks; physical installed-device acceptance
 remains open.
+
+## Quest-backed session preview — 2026-11-17
+
+Code 24 source reconstruction verified the authenticated main-only catalog,
+start frame and active clock; its Wi-Fi snapshot omits the total duration.
+The real operator UI fixture covers that shape, missing totals for other
+builds, pause and resume, painted particle size, out-of-order renderer data,
+recording boundaries, and connection during pause. The focused browser
+check passed seven viewport and typography cases; the broader screenshot
+matrix rendered 140 states. Startup and reconnect checks also passed.
+
+The web/domain tests and Java pairing interoperability passed 301 cases;
+native assembly resolution passed another six in a plain-file checkout
+using the reconstructed Code 24 source. Independent review found no
+remaining release blockers for this PWA change. The browser fixtures use
+synthetic transport; these checks do not qualify an installed Pixel or round
+audio in a headset. The separate authored main, probe and exploration
+playback work still needs a native audio path and APK qualification.
 
 ## Playground UI port — 2026-11-16
 

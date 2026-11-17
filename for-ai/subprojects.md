@@ -146,8 +146,11 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
   logo icon launches the live `/atmungsraum/` app in standalone mode. Prioritize
   touch, portrait/landscape, safe areas and installed-app lifecycle while keeping
   desktop access and the intended VR-headset control purpose. This install
-  increment remains online and does not add offline session caching. See the
-  subproject PROJECT.md for exact verification and physical-phone limits.
+  increment remains online and does not add offline session caching. At
+  launch the PWA checks for a new web release before reconnecting to the saved
+  Quest over Bluetooth and its authenticated Wi-Fi bridge. The previous Wi-Fi
+  address is a fallback. See the subproject PROJECT.md for exact verification
+  and physical-phone limits.
   Desktop Brave uses the canonical manifest identity to detect an existing
   install. The install help names `brave://apps` for reopening that app.
 

@@ -194,6 +194,113 @@ def completed_session_history(review):
     page.context.close()
 
 
+def session_particles(review):
+    page = review.page(initial(c, {
+        'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000,
+    }), viewport={'width': 320, 'height': 640}, reduced_motion='no-preference')
+    page.clock.run_for(1500)
+    scene = page.locator('#session-scene')
+    canvas = scene.locator('canvas')
+    caption = scene.locator('#session-scene-status')
+    expect(scene).to_be_visible()
+    expect(caption).to_have_text('Partikelradius in der Quest')
+
+    def span():
+        return canvas.evaluate("""canvas => {
+          const {width, height} = canvas;
+          const bytes = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+          let left = width, right = -1;
+          for (let i = 3; i < bytes.length; i += 4) {
+            if (!bytes[i]) continue;
+            const x = ((i - 3) / 4) % width;
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+          }
+          return Math.max(0, right - left);
+        }""")
+
+    def radius(progress):
+        page.evaluate("""p => {
+          reviewQuest.setup.renderer = {...reviewQuest.setup.renderer,
+            progress01:p, radius_m:1 + p};
+        }""", progress)
+        page.clock.run_for(450)
+
+    before = mutations(page)
+    radius(.05)
+    small = span()
+    radius(.9)
+    large = span()
+    assert small > 0 and large > small * 1.5, (small, large)
+
+    c.wait_state(page, phase='PAUSED')
+    expect(caption).to_have_text('Partikelvorschau pausiert')
+    paused = span()
+    radius(.05)
+    assert span() == paused
+
+    c.wait_state(page, phase='RUNNING', advanceRenderer=False)
+    expect(scene).to_be_visible()
+    expect(caption).to_have_text('Kein aktueller Partikelradius')
+    expect(page.locator('#session-scene-radius')).to_be_hidden()
+    assert span() == 0
+    assert mutations(page) == before
+    c.wait_state(page, phase='SAVING')
+    expect(scene).to_be_hidden()
+    page.context.close()
+
+    page = review.page(initial(c, {
+        'phase': 'PAUSED', 'host': 'vr-session',
+    }, {'renderer': None}))
+    expect(page.locator('#session-scene')).to_be_visible()
+    caption = page.locator('#session-scene-status')
+    expect(caption).to_have_text('Kein aktueller Partikelradius')
+    c.wait_setup(page, renderer={'v': 1, 'progress01': .5, 'radius_m': 1.5, 'frame': 1,
+                                'render_generation': 2, 'settings_revision': 0,
+                                'observed_ns': '200000000', 'age_ns': 0})
+    expect(caption).to_have_text('Partikelvorschau pausiert')
+    expect(page.locator('#session-scene-radius')).to_have_text('50 %')
+    page.context.close()
+
+
+def session_particle_layout(review):
+    for width, height, font, spacing in (
+        (320, 568, 100, False), (320, 640, 100, False), (390, 844, 100, False),
+        (844, 390, 100, False), (1440, 900, 100, False),
+        (320, 640, 200, False), (390, 844, 100, True),
+    ):
+        page = review.page(initial(c, {
+            'phase': 'RUNNING', 'host': 'vr-session', 'duration_ms': 900000,
+        }), viewport={'width': width, 'height': height}, reduced_motion='no-preference')
+        page.evaluate("size => document.documentElement.style.fontSize = size + '%'", font)
+        if spacing:
+            page.add_style_tag(content="*{line-height:1.5!important;letter-spacing:.12em!important;"
+                                       "word-spacing:.16em!important}")
+        expect(page.locator('#session-scene-status')).to_have_text('Partikelradius in der Quest')
+        page.clock.run_for(500)
+        for selector in ['#session-scene-status', '#session-scene-radius']:
+            expect(page.locator(selector)).to_have_attribute('data-text-fit', 'fit')
+            expect(page.locator(selector)).to_have_attribute('data-text-measurement', 'dom' if spacing else 'pretext')
+        bounds = page.evaluate('''() => {
+          const root = document.documentElement;
+          const scene = document.querySelector('#session-scene');
+          const pause = document.querySelector('#quest-play').getBoundingClientRect();
+          return {
+            width: root.scrollWidth, height: root.scrollHeight,
+            overflow: scene.scrollHeight > scene.clientHeight || scene.scrollWidth > scene.clientWidth,
+            overlapsPause: scene.getBoundingClientRect().bottom > pause.top,
+            pauseBottom: pause.bottom,
+          };
+        }''')
+        assert bounds['width'] <= width and not bounds['overflow'] and not bounds['overlapsPause'], bounds
+        if font == 100:
+            assert bounds['height'] <= height and bounds['pauseBottom'] <= height, (width, height, bounds)
+        page.emulate_media(reduced_motion='reduce')
+        expect(page.locator('#session-scene canvas')).to_be_hidden()
+        expect(page.locator('#session-scene-radius')).to_have_text('50 %')
+        page.context.close()
+
+
 def run():
     init = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({c.PAIRED}));" + """
 window.reviewInitialQuest={polar:'ready',access:{v:1,role:'active',active_phone:'Fixture',revision:1}};
@@ -269,6 +376,17 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         c.wait_state(page, duration_ms=900000)
         expect(page.locator('#quest-progress')).to_have_js_property('value', 18000)
         expect(page.locator('#quest-progress')).to_have_js_property('max', 900000)
+        c.wait_setup(page, main_start_frame=705600, main_started=True, stage='main')
+        c.wait_state(page, duration_ms=None, scenarios=['haupt-15'])
+        expect(page.locator('#quest-progress')).to_have_js_property('value', 18000)
+        expect(page.locator('#quest-progress')).to_have_js_property('max', 900000)
+        expect(page.locator('#quest-clock')).to_have_text('00:18 / 15:00')
+        c.wait_state(page, phase='PAUSED')
+        page.clock.run_for(2400)
+        expect(page.locator('#quest-progress')).to_have_js_property('value', 18000)
+        expect(page.locator('#quest-clock')).to_have_text('00:18 / 15:00')
+        c.wait_state(page, phase='RUNNING', clock=21000)
+        expect(page.locator('#quest-progress')).to_have_js_property('value', 21000)
         expect(page.locator('#running-screen')).to_be_visible()
         expect(page.locator('#running-screen #quest-data')).to_be_visible()
         expect(page.locator('#quest-play')).to_be_visible()
@@ -290,6 +408,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
             expect(page.locator('#quest-finish')).to_be_visible()
         assert before == mutations(page)
         compact_setup(review)
+        session_particles(review)
+        session_particle_layout(review)
         assert not review.errors, review.errors
         browser.close()
     print('PASS real-app scenario Arm, receipt recovery, recording status, Drive dialog, draft and history')

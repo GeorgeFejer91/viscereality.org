@@ -64,7 +64,10 @@ def session_cases(review):
         page = mounted(review, initial(c, running, setup) + pending(journal()))
         page.clock.run_for(2000)
         expect(page.locator('#quest-play')).to_be_enabled()
-        page.evaluate('patch=>window.reviewNextStatusPatch=patch',patch)
+        # Bind the changed reply to this click, after preview polling and before
+        # the production click handler captures and refreshes its authority.
+        page.evaluate('''patch=>document.querySelector('#quest-play').addEventListener('click',
+            ()=>{window.reviewNextStatusPatch=patch;},{capture:true,once:true})''',patch)
         page.locator('#quest-play').click()
         page.clock.run_for(6000)
         assert mutations(page)['session'] == mutations(page)['setup'] == [], patch

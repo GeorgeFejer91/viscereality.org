@@ -32,7 +32,7 @@ freezes and commits are coordinated before APK packaging. No authority or
 recording-admission relaxation is permitted. The independent audio-authoring
 increment6074c11 is retained without adding its pending native integration.
 
-PWA repair qualification:307/307 Node tests, zero skips, after cache-graph bumps;
+PWA repair qualification:309/309 Node tests, zero skips, after integration with current main;
 independent53-case review plus mounted production regression cases and10 rendered
 states/19 viewport tiles pass. Pause/Resume/Finish preserve the original setup
 journal and fresh native lease/revision/transport fences. Offline committed ZIP
@@ -47,6 +47,32 @@ Ruling: existing publication authorization applies to verified repairs; no repea
 approval is needed. The old held version-only25 remains unpublished and is not
 the repaired baseline. Version identity and a new held probe will be assigned
 only after source/package qualification, preserving the attended-update gate.
+
+### PWA startup update and Quest reconnect — 2026-11-17
+
+- [x] Check the published PWA before the saved Quest connection starts. A new
+  release loads first; an unavailable update check falls back to the loaded app.
+- [x] Find the saved headset over browser Bluetooth or the Android companion
+  first and authenticate the advertised Wi-Fi bridge. If discovery is
+  unavailable or still searching, try the previously authenticated address.
+- [x] Explain when Bluetooth needs attention and retry after it is enabled.
+  Browser permission for a first or revoked grant still requires a tap.
+- [x] Verify stale-release replacement, matching grant selection, a changed
+  Wi-Fi address, companion-first discovery, Wi-Fi fallback, disabled Bluetooth
+  recovery and the CSV-only route in Chromium.
+- [ ] Repeat on the installed Pixel with the actual Quest's current and
+  changed Wi-Fi addresses. No Android device was connected during this
+  increment. Leave the separate wearer and recording checklist open.
+
+The runtime commit e3a6969 reached GitHub main and deployed in
+[Pages run 44131085006](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44131085006)
+with deployment API status succeed. The entry, versioned app/controller
+and stylesheet, and five affected notes matched the Git bytes. Live
+Chromium passed changed-address discovery and Bluetooth-off recovery with
+synthetic transport. Local Node tests: 297 passed, 9 skipped; the focused
+layout, native-companion status fixture and remote context gate passed.
+Next: reopen the installed standalone Pixel app at the deployed release and
+repeat both connection cases with the actual headset.
 
 ### Unattended comprehensive review — 2026-11-17
 
@@ -376,6 +402,12 @@ cloud-backed files; it was left untouched. The verified runtime commit
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.
 
+The authored Probe-Runde package stages the supplied German instruction as
+a separate prelude to the 300-second recording plan. The timed plan reuses
+the study phase library and ends on an exhale. The playground plays the
+prelude first. Playback of that prelude on the Quest still needs native
+integration and qualification.
+
 ### Separation of preparation and main study — 2026-11-16
 
 - [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute
@@ -405,6 +437,11 @@ cloud-backed files; it was left untouched. The verified runtime commit
   320 × 640, 390 × 844, 844 × 390 and 1440 × 900. The exact previous release
   bootstrapped into the live update while preserving its URL and storage.
   ADB and Mobile MCP listed no local phone; standalone Pixel acceptance is open.
+- [x] Port the phone's session particle preview and timed progress. Scope
+  renderer samples to the current run. Code 24 supplies its active clock and
+  confirmed main start frame but no duration field; use its fixed 900-second
+  boundary only for the authenticated shared-loop main-only catalog.
+  See [session preview verification](VERIFICATION.md#quest-backed-session-preview--2026-11-17).
 - [ ] Qualify the installed-phone keyboard, actual safe areas, Quest pairing,
   live Polar data and Google authorization on physical hardware.
 
@@ -1664,9 +1701,10 @@ See [Android discovery setup](../phone-discovery/README.md).
 
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
 connection fields. It reads the selected Quest's identity and endpoints and
-opens the authenticated Wi-Fi connection with the saved enrollment. On
-reload it tries the saved endpoint first and uses an existing Bluetooth
-grant when Chrome exposes it. The Quest still owns trusted enrollment.
+opens the authenticated Wi-Fi connection with the saved enrollment. The
+2026-11-17 startup increment checks for the PWA release first and attempts
+Bluetooth rediscovery before the saved endpoint. The Quest still owns trusted
+enrollment.
 APK 0.1.29 advertises identity and addresses. Its hotspot characteristic
 requires existing enrollment and credentials for a running phone hotspot.
 

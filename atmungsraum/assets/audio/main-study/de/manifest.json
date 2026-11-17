@@ -7,6 +7,7 @@
     "atem-lauschen-augen-offen",
     "main-study-instructions"
   ],
+  "probe_instruction": "probe-instructions",
   "pools": {
     "inhale": [
       "einatmen-01",
@@ -399,6 +400,21 @@
       "duration_seconds": 45.32244897959184,
       "frames_44100": 1998720,
       "transcript_method": "Whisper medium (de); punctuation and orthography normalized"
+    },
+    {
+      "id": "probe-instructions",
+      "role": "probe_instruction",
+      "file": "probe-instructions.mp3",
+      "transcript_file": "probe-instructions.txt",
+      "sources": [
+        "ElevenLabs_2026-11-17T15_53_39_Zen - Meditation german_pvc_s50_sim76_v4.mp3"
+      ],
+      "bytes": 743350,
+      "sha256": "b022136da1053f8a8ed5ab8f02b4bd587e2fafa9700f24e078acaf1b84a0f122",
+      "duration_seconds": 45.40081632653061,
+      "text": "Wir wiederholen jetzt die Atemübung von vorhin, diesmal für fünf Minuten.\n\nZur Erinnerung: Vier Sekunden einatmen, vier Sekunden den Atem anhalten, vier\nSekunden ausatmen und erneut vier Sekunden pausieren.\n\nNimm eine bequeme, aufrechte Haltung ein und entspanne deine Schultern. Stell\ndir beim Einatmen vor, wie sich deine unteren Rippen sanft wie ein Regenschirm\nöffnen. Beim Ausatmen lässt du die Luft langsam ausströmen und deinen Brustkorb\nwieder entspannen. Halte den Atem während der Pausen ohne Anstrengung an.\n\nFalls sich der Rhythmus unangenehm anfühlt, kehre zu deiner natürlichen Atmung\nzurück.\n\nBereit?",
+      "frames_44100": 2002176,
+      "transcript_method": "Whisper small (de); punctuation and orthography normalized"
     }
   ]
 }

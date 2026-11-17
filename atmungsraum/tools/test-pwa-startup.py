@@ -65,6 +65,119 @@ def releases():
             server.shutdown()
 
 
+QUEST_STARTUP = r"""
+const device = 'd'.repeat(32), key = 'b'.repeat(64), controller = 'a'.repeat(32), build = 'c'.repeat(64);
+const owner = {v: 1, device, serial: 'TEST-QUEST', epoch: '1', native_epoch: '2'};
+const oldIp = '192.168.10.3', newIp = '192.168.10.9';
+const gateway = ip => 'http://' + ip + ':8766/v1/gateway';
+const mode = new URL(location.href).searchParams.get('fixture');
+const mark = value => sessionStorage.events = JSON.stringify([...JSON.parse(sessionStorage.events || '[]'), value]);
+const storage = 'atmungsraum-quest-pair';
+localStorage.setItem(storage, localStorage.getItem(storage) || JSON.stringify({
+  ...owner, enrollment: {controller, key}, bluetoothId: 'saved', build, endpoint: gateway(oldIp)
+}));
+const encode = new TextEncoder();
+const metadata = {...owner, mode: 'remote', gateways: [newIp]};
+const radio = new EventTarget();
+radio.enabled = mode !== 'radio-off';
+radio.getAvailability = async () => radio.enabled;
+radio.getDevices = async () => [{
+  id: 'other', gatt: {connect() { mark('wrong headset'); }}
+}, {id: 'saved', gatt: {
+  async connect() {
+    mark('ble:' + document.querySelector('script[src^="./app.js?v="]').getAttribute('src'));
+    if (mode === 'wifi-only') throw new DOMException('No GATT connection', 'NetworkError');
+    this.connected = true;
+    return this;
+  },
+  disconnect() { this.connected = false; },
+  async getPrimaryService() {
+    return {getCharacteristic: async id => ({readValue: async () => new DataView(encode.encode(
+      id.startsWith('9a7b2001-7d6a-4b7f-9d4a-6f7c0a020102') ? owner.serial : JSON.stringify(metadata)).buffer)})};
+  }
+}}];
+radio.requestDevice = async () => { mark('chooser'); throw Error('Unexpected chooser'); };
+if (mode === 'companion') delete radio.getDevices;
+Object.defineProperty(navigator, 'bluetooth', {value: radio});
+const fetchPage = window.fetch.bind(window);
+let witness = 0;
+window.fetch = async (url, init) => {
+  const address = new URL(url, location.href);
+  if (address.searchParams.has('_pwa')) mark('update');
+  if (address.port === '8767') {
+    mark('companion');
+    if (mode === 'companion') return Response.json({v: 1, state: 'ready', metadata});
+    throw new TypeError('No companion');
+  }
+  if (address.port !== '8766') return fetchPage(url, init);
+  if (!init.body) {
+    mark('wifi:' + address.hostname);
+    if (address.hostname === oldIp && !['wifi-only', 'companion'].includes(mode)) throw new TypeError('Unreachable');
+    return Response.json({...owner, enabled: true, remote_available: true});
+  }
+  const {action, nonce} = JSON.parse(init.body);
+  if (action !== 'status') throw Error('Unexpected command: ' + action);
+  const payload = JSON.stringify({v: 1, wifi_snapshot: 1, build: {v: 1, packaging_fingerprint: build},
+    recordings: 0, control_mode: 'remote', p: 'IDLE', g: 0, r: 0, ms: 0, pending: false, rec: false,
+    o: {v: 1, s: 'observed', e: owner.native_epoch, i: String(++witness), a: 0, g: 0, r: 0}});
+  const macKey = await crypto.subtle.importKey('raw', encode.encode(key),
+    {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
+  const bytes = await crypto.subtle.sign('HMAC', macKey,
+    encode.encode(['RQG1-REPLY', controller, device, owner.epoch, nonce, action, payload].join('|')));
+  const mac = Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('');
+  return Response.json({v: 1, device, epoch: owner.epoch, nonce, action, payload, mac});
+};
+"""
+
+
+def verify_reconnect(browser, url, release):
+    from playwright.sync_api import expect
+
+    for mode in ('changed-address', 'radio-off', 'companion', 'wifi-only', 'recovery'):
+        target = url.replace('?live-sync=off#daten', '?fixture=' + mode + ('#daten' if mode == 'recovery' else ''))
+        release.update(app_url=OLD, probe_result='error' if mode == 'wifi-only' else None)
+        context = browser.new_context(viewport={'width': 320, 'height': 568}, is_mobile=True, has_touch=True)
+        context.add_init_script(QUEST_STARTUP)
+        page = context.new_page()
+        errors = []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        if mode == 'changed-address':
+            old_page = page.request.get(target).body()
+            page.route(re.compile(re.escape(target) + '$'), lambda route:
+                       route.fulfill(content_type='text/html', body=old_page))
+            release['app_url'] = NEW
+        page.goto(target)
+        if mode == 'radio-off':
+            expect(page.locator('#quest-status')).to_contain_text('Schalte Bluetooth ein')
+            expect(page.locator('#check-bluetooth')).to_have_attribute('data-check', 'unconfirmed')
+            expect(page.locator('#quest-status')).to_have_attribute('data-text-fit', 'fit')
+            assert page.evaluate('document.documentElement.scrollWidth === innerWidth')
+            page.evaluate("""() => {
+              navigator.bluetooth.enabled = true;
+              navigator.bluetooth.dispatchEvent(new Event('availabilitychanged'));
+            }""")
+        if mode == 'recovery':
+            expect(page.locator('#data-status')).to_contain_text('Keine früheren Browser-Aufnahmen')
+            assert page.evaluate('JSON.parse(sessionStorage.events)') == ['update']
+        else:
+            expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok', timeout=3000)
+            events = page.evaluate('JSON.parse(sessionStorage.events)')
+            assert events[0] == 'update', events
+            assert 'chooser' not in events and 'wrong headset' not in events, events
+            if mode == 'changed-address':
+                assert events == ['update', 'ble:' + NEW.decode(), 'wifi:192.168.10.9'], events
+            if mode == 'companion':
+                assert events == ['update', 'companion', 'wifi:192.168.10.9'], events
+            if mode == 'wifi-only':
+                assert events.index('ble:' + OLD.decode()) < events.index('wifi:192.168.10.3'), events
+            ip = '192.168.10.3' if mode == 'wifi-only' else '192.168.10.9'
+            assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).endpoint") == (
+                'http://' + ip + ':8766/v1/gateway')
+        assert not errors, errors
+        context.close()
+    print('PASS ordered startup, saved headset, changed address, companion, Bluetooth recovery and Wi-Fi fallback')
+
+
 def run():
     with releases() as (url, release), sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -126,6 +239,8 @@ def run():
         assert page.evaluate("localStorage.getItem('pwa-test-sentinel')") == 'original'
         assert not errors, errors
         print('PASS cached launch and idle resume update; settings, URL, storage and error/timeout fallback preserved')
+        context.close()
+        verify_reconnect(browser, url, release)
 
 
 if __name__ == '__main__':
