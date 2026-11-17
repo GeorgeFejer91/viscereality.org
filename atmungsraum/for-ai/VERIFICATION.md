@@ -1,5 +1,23 @@
 # Verification
 
+## Attended Meta26 request and owner-read contention — 2026-11-17
+
+The actual Pixel6a loaded20261117-preparation-audio-recovery; green control,
+IDLE/rec:false and an enabled Update button are confirmed. PR56/merge5f3b375
+reached Pages44169545352 success,17 live-file matches and26 live browser cases.
+Repaired26-r3 passes1135 signed-package checks/39 negatives and is published as
+Meta1465122190020126 with security/malware passed. No helper update.
+
+Two original PWA requests were accepted. The first still returned latest25;
+the later same-process request1312caf4c1629771 returned26 and began downloading,
+then failed native-owner-retired at262,144/8,246,427bytes. No install or helper
+handoff occurred. The source treats transient unreadable registry/session/setup
+locks as retirement; old logs cannot identify the precise failing predicate.
+Conservative typed-observation recovery and real contention regressions are in
+progress for27-r2. Actual25 remains the last installed readback. A third planned
+phone request did not dispatch because USB disconnected. This is unresolved
+hardware/update acceptance, not a successful end-to-end update test.
+
 ## Preparation and save before PWA updates — 2026-11-17
 
 Final source follow-up20261117-preparation-audio-recovery passes324 full Node

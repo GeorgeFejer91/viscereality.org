@@ -2,6 +2,28 @@
 
 ### Active: PWA update from every preparation state — 2026-11-17
 
+Attended extension: same-process PWA request1312caf4c1629771 found Meta26 and
+started its8,246,427byte download, then ended update_required/native-owner-retired
+after262,144bytes. No installation/helper handoff occurred. The old app does not
+log the exact failed predicate; source inspection identifies ordinary nonblocking
+registry/session/setup lock contention being conflated with definite retirement.
+25 and26 share this hazard. Preserve the accepted attempt on UNAVAILABLE, pause
+SDK effects until a fresh CURRENT observation, and retire only observed ownership
+changes. Actual install grants remain mandatory; never block render locks or
+interpret missing observations as valid.
+
+- [ ] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
+  across prepared op9, polled replies, final install grant and helper handoff.
+- [ ] Publish/install fixed27-r2/run046, then hold version-only28 until an actual
+  27 session is RUNNING/rec:true and root releases the attended update test.
+- [ ] Test preparation/check and running-session save/update to28 on hardware.
+
+The user confirms fixed27 then test28. Old version-only27-r1/run045 is revoked,
+unpublished and lacks this fix; preserve its stopped qualification evidence.
+Helper3 is unchanged: the observed failure precedes its handoff. No ADB app
+stop/start/reboot workaround. Phone USB disconnected again after two requests;
+a planned third request was not dispatched. Continue source work independently.
+
 The user resumes attended testing and authorizes operating the USB Pixel. Quest2
 is already on Wi-Fi ADB. Actual Meta23 was IDLE/g0/r1, rec:false, pending:false,
 but its breathing preparation was playing and native update can_check:false /
@@ -106,13 +128,18 @@ gateway76/service56,110-source production compilation, source-closure11,
 optional outro retains decoder admission until actual release; explicit accepted
 preparation updates retire it without allowing stale receipts to cancel a newer
 instruction. Default73 assets/900-second loop remain selected. Signed26-r3/run044
-is built; independent package qualification is in progress. No Meta26 upload.
+passes1135 signed-package checks and39 rejecting negatives. Meta build
+1465122190020126 is current; malware/security passed. Actual installation is
+pending after the observed owner-guard failure; package qualification is not
+hardware acceptance.
 
 The final PWA follow-up20261117-preparation-audio-recovery passes324 full Node
 cases with zero skips,26 preparation and26 compact Update renders, and scoped
 re-review. Narration-release waiting has specific conditional manual app
 close/reopen and phone-reconnect guidance. No timer, mutation, journal or native
-admission change is used for that copy. This follow-up awaits publication.
+admission change is used for that copy. PR56/merge5f3b375 and exact Pages44169545352 succeeded;17 public files match
+Git and26 live HTTP cases pass. The actual Pixel6a loaded that release with
+active control and an enabled update button before the two requests.
 The PWA is published through [PR55](https://github.com/GeorgeFejer91/viscereality.org/pull/55),
 mergeae6d3e5, exact [Pages44165786315](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44165786315)
 success. All25 checked public files match Git; the live HTTP runtime passes all25
