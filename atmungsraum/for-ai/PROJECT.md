@@ -38,12 +38,11 @@ include matching-code pairing. The six assembly checks, 369 native pairing
 assertions, nine browser-to-Java checks, 16 KiB alignment, and the packaged
 900-second session check passed. The 55 focused browser tests for pairing,
 connection UI, rehearsal commands, scenario protocol and recording sync also
-passed. The private build capsule retains the APK
-digest and exact input lock. Android still reports the rehearsal Bluetooth
-permissions ungranted, and the separate Developer app is in the foreground.
-Open the rehearsal app in the headset and allow Nearby devices. Verify an actual
-rendered rehearsal frame, then match the phone and headset codes before claiming
-control and starting the test.
+passed. The private build capsule retains the APK digest and exact input lock.
+On 2026-11-17 Android reported all three rehearsal Bluetooth permissions granted
+and the rehearsal activity resumed. Verify an actual rendered rehearsal frame,
+then match the phone and headset codes before claiming control and starting the
+test.
 
 ### Operator UI compatibility audit — 2026-11-16
 
@@ -194,6 +193,14 @@ byte comparisons, preserving concurrent PROJECT work. The final22 policy and
 collaborator handoff use the same standing exact-publication workflow. The
 collaborator receives a signed helper3 bundle and repository-backed setup
 runbook; the signing key and private visual inputs remain private.
+
+MSI installation, 2026-11-17: the selected Quest 2 already had the exact
+Developer22 APK installed by Meta, matching the current published floor. QFM
+installed the bundled, v3-signed Boot Helper code3 as a new package. Independent
+device readback matched both APK digests, the shared signing identity and the
+helper's `SetupActivity` launcher. This installation left the helper's overlay
+permission at its Android default. Launch-after-restart setup and a real reboot
+check on this headset remain open.
 
 Meta21 is published,2026-11-17: a user-requested fresh chat recovered browser
 access and uploaded the exact qualified artifact. Developer build1463458816853130
