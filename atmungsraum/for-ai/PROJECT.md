@@ -9,7 +9,7 @@ Hardware is unavailable: no headset/phone operation or attended-test claim.
 
 Implementation plan:
 
-- [ ] R1, native Rust: add failing core/runtime/driver regressions for calibrated,
+- [x] R1, native Rust: add failing core/runtime/driver regressions for calibrated,
   fixed and adaptive Polar through clock/source retirement; retain manual
   selection and last visual phase while retiring readiness/model/confirmations.
   Preserve explicit owner/input/reset and initial Automatic behavior.
@@ -17,10 +17,10 @@ Implementation plan:
   recording; independently fence Pause/Finish without replay or journal erasure.
   Expose committed local archives with saved verified identity while disconnected;
   native synchronization remains connected, enrolled and idle-only.
-- [ ] R3/R5, Android: reproduce protected escape with armed helper watch and late
+- [x] R3/R5, Android: reproduce protected escape with armed helper watch and late
   handoff; cancel the watch through the common intentional terminal path before
   closure, preserving queued-update handoff. Expire delayed main-thread work.
-- [ ] Review each scoped repair, then independently review the integrated branch.
+- [x] Review each scoped repair, then independently review the integrated branch.
   Run meaningful host/native/real-DOM regressions and applicable package checks.
 - [ ] Publish verified PWA increments through ordinary PR, exact Pages and public
   runtime checks. Update cumulative native source/evidence, build a repaired APK
@@ -38,15 +38,23 @@ states/19 viewport tiles pass. Pause/Resume/Finish preserve the original setup
 journal and fresh native lease/revision/transport fences. Offline committed ZIP
 downloads retain original bytes and verified device/install identity across APK
 changes; identity switching/forgetting invalidates delayed reads and URLs.
-Release marker20261117-review-repairs is being published through the ordinary
-PR/Pages workflow. Installed-phone refresh remains deferred while unavailable.
-Native repairs are still undergoing final source/package qualification; Meta
-policy remains24 and no new headset observation is claimed.
+Release marker20261117-review-repairs is live through
+[PR50](https://github.com/GeorgeFejer91/viscereality.org/pull/50), merge701e8dd,
+[Pages44135534810](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44135534810)
+success. All12 checked public files match Git. A live Chromium probe verifies
+Pause/Resume/Finish with the preserved setup journal and an original-hash offline
+archive using synthetic transport. Installed-phone refresh remains deferred.
+Native f5ea725c/tree df5d27e passes896 tests with6 intentional ignores and the
+boundary scan; scoped and integration reviews pass. Signed25-r2 passes1114 package checks, including39 repaired DEX method paths/6
+compiled guards and unchanged audio/private visuals/900-second closure. Meta
+publication is in progress; public policy remains24 until availability is
+confirmed. No new headset observation is claimed.
 
 Ruling: existing publication authorization applies to verified repairs; no repeat
 approval is needed. The old held version-only25 remains unpublished and is not
-the repaired baseline. Version identity and a new held probe will be assigned
-only after source/package qualification, preserving the attended-update gate.
+the repaired baseline. Repaired baseline25-r2 replaces it. A new version-only26 is being built and
+remains unpublished until actual25 is recording RUNNING/rec:true and explicitly
+released for the attended update test.
 
 ### PWA startup update and Quest reconnect — 2026-11-17
 

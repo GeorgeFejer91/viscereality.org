@@ -33,7 +33,10 @@ Calibrated Polar classifies the measured tilt into inhale, exhale or hold. The
 existing frame-time integrator drives radius. Between valid classifications it
 retains the last confirmed state: inhale keeps expanding, exhale contracting,
 hold stays still. Missing/invalid samples do not reset radius. Genuine source,
-projection, audio, model or input/configuration barriers still clear that state.
+input/configuration changes or explicit operator recovery still clear that state.
+Technical source/projection/audio/model retirement invalidates readiness and
+classification evidence while retaining the selected manual visual method and
+its last diagnosed phase; it does not silently select Automatic.
 
 If a preparation audio clock is unhealthy, an explicit calibration or Controller
 request can reserve a fresh transport generation. Only actual forward playback
@@ -101,22 +104,26 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
     -Developer -Keystore $developerKeystore -VersionCode 11 -VersionName 0.2.10-dev
 ```
 
-Use your Git author identity for the local patch commit. The cumulative
-patch on this branch reconstructs the authored-audio source candidate
-`fc381c3ddf927f42b769a29b9987e2b24228dba9`. Its SHA-256 is
-`0f13a2b9fc9d54477e9ee8854d9b5251ea416eae6cf4cf171542469b6f43024a`
-(2,146,214 bytes). The [released Code 24 patch](https://github.com/GeorgeFejer91/viscereality.org/blob/f952d5b6c9925d0fbbc82bcad4748f8aefc0028b/atmungsraum/quest/native-source.patch)
-reconstructs tree `2444f55f83d0cc02e7c45ac83c4007145889356f`, matching
-repaired Code 24-r2 source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`.
-The Code 24 patch SHA-256 is
-`6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`
-(2,139,506 bytes). Code 24 starts fixed Controller State without volume
+Use your Git author identity for the local patch commit. This branch's cumulative patch reconstructs the authored-audio source candidate
+`b726b2506018f0ca0933bed013a925fa7e0aff5a` with SHA-256 `9ff79eebfaecb80d19f3c268ef4ee1e5ac6b85f157623ee6a6e247c364fc39a1`
+(2,215,031 bytes). The
+[Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
+is the baseline for the following release evidence. Its cumulative patch
+reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching
+the reviewed repair source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`.
+Patch SHA256 is `0b8f3fafcf901b74531f0f58635a7e054f6340f84fc5a15ce3b82715e3656b7f`
+(2,208,323 bytes). The candidate starts fixed Controller State without volume
 calibration and retains the selected manual breathing state through temporary
 input loss. It also binds the selected900-second Haupt-Runde plan consistently
 and reports original Arm failures without replaying uncertain native work.
-Native host tests pass888 cases with five intentional ignores;
-Android/package and wearer acceptance are separate gates. Code22 remains the
-last Meta-installed hardware baseline until the APK log records otherwise.
+Review repairs retain manual Polar selection through technical clock/source
+retirement, require durable helper cancellation before intentional closure,
+and expire delayed main-thread install handoffs. Software qualification is
+separate from the pending physical acceptance.
+Native host tests pass896 cases with six intentional ignores; actual signed25-r2
+passes1114 package checks. Wearer acceptance remains a separate gate. Code23
+remains the last observed Meta-installed hardware baseline until the APK log
+records otherwise.
 Applying the exact binary patch to an isolated index at the
 pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
@@ -136,8 +143,8 @@ second build or add `-ResolveOnly` to check the feature lock without compiling.
 Use `-MainStudyAudio` with the authored-audio source candidate to include
 the recorded main and guided Probe programmes, the calibration instruction
 and Freie Erkundung. The media reader verifies the whole package against the
-bound catalog. Connecting those assets to the selected session clock and
-advertising the new round remain separate native integration steps.
+bound catalog. The selected session clock still needs to be connected to the
+authored programme before this package can advertise the new round.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,

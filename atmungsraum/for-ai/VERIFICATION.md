@@ -12,7 +12,29 @@ native recovery still block. Offline committed ZIPs retain their original hash,
 exclude incomplete prefixes and foreign identities, survive APK changes, and
 cannot reappear after a delayed read following identity forgetting/switching.
 No headset or phone was operated. Installed-phone refresh and physical
-acceptance remain pending; public deployment is being verified separately.
+acceptance remain pending. PR50/merge701e8dd deployed successfully in exact
+Pages44135534810;12 public files match Git. Live Chromium verifies current-session
+controls/journal preservation and the original-hash offline archive with synthetic
+transport. This does not establish installed-phone refresh.
+
+## Review repairs: Polar continuity and terminal/update paths — 2026-11-17
+
+Nativef5ea725c/tree df5d27e passes896 serial host tests, zero failures and6
+intentional ignores; boundary scan and scoped/integration reviews pass. Actual
+Runtime peers reproduce clock-gap/spontaneous-fault fallback before the fix and
+retain Polar selection with unready evidence afterward. Real driver tests cover
+all3 Polar methods and all3 diagnosed phases. Explicit recovery and owner/input/
+configuration fences remain independently tested.
+
+All14 updater suites pass. Actual helper policy, common terminal dispatcher,
+generated writer/ACK continuation and separate cancellation worker pass focused
+regressions including old cancellation/new ARM and same-process relaunch. Actual
+110-source Android34/36 javac/D8, legacy/new handoff ABI and queued-exit checks
+pass. Signed25-r2 passes1114 package checks, including39 repaired DEX instruction
+paths and6 flow guards. Immutable24 and seven damaged instruction variants fail
+the new guard. Source, signer, SDK207/helper3, controller-only permissions,
+private audio/visuals and900-second session closure are independently bound.
+Meta publication is in progress; no installation/physical acceptance is claimed.
 
 ## PWA startup update and Quest reconnect — 2026-11-17
 
