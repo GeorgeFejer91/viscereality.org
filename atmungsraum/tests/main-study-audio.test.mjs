@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { loadStudyInventory, planMainStudy } from '../quest/main-study-audio.mjs';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { buildMainStudyScenario, buildProbeStudyScenario, loadStudyInventory, planMainStudy } from '../quest/main-study-audio.mjs';
 
 test('accounts for every attachment and keeps distinct takes in their phase pools', async () => {
   const inventory = await loadStudyInventory();
   const sourceNames = inventory.assets.flatMap(asset => asset.sources);
-  assert.equal(new Set(sourceNames).size, 24);
-  assert.equal(inventory.assets.length, 23);
+  assert.equal(new Set(sourceNames).size, 25);
+  assert.equal(inventory.assets.length, 24);
   assert.deepEqual(Object.fromEntries(Object.entries(inventory.pools).map(([phase, ids]) => [phase, ids.length])),
     { inhale: 7, exhale: 9, hold: 2 });
   assert.equal(inventory.opening[2], 'main-study-instructions');
@@ -43,4 +45,25 @@ test('matches the controls and rotates the cue pools within the 5 + 10 minute pr
   assert.equal(next, plan.total_frames);
   for (const [pool, ids] of Object.entries(inventory.pools)) assert.deepEqual(used[pool], new Set(ids));
   assert.deepEqual(planMainStudy(inventory), plan);
+});
+
+test('stages the probe instruction separately from exactly five minutes of breathwork', async () => {
+  const root = fileURLToPath(new URL('../', import.meta.url));
+  const original = async id => JSON.parse(await readFile(new URL('../audio/scenarios/' + id + '.json', import.meta.url)));
+  const study = await buildMainStudyScenario(root, await original('haupt-15'));
+  const { plan, files } = await buildProbeStudyScenario(root, await original('probe-5'), study);
+  assert.equal(plan.total_frames, 300 * 44100);
+  assert.equal(plan.pre_session_audio.duration_frames, 2002176);
+  assert.equal(files.get(plan.pre_session_audio.path).length, 44 + 2 * plan.pre_session_audio.duration_frames);
+  assert.match(plan.pre_session_audio.text, /für fünf Minuten/);
+  assert.equal(plan.events[0].id, 'inhale');
+  assert.equal(plan.events[0].offset_frames, 0);
+  assert.deepEqual(plan.events.slice(-3).map(event => event.id), ['inhale', 'hold_in', 'exhale']);
+  let next = 0;
+  for (const event of plan.events) {
+    assert.equal(event.offset_frames, next);
+    next += event.duration_frames;
+    assert.ok(files.has('assets/audio/scenarios/probe-5/' + plan.audio_assets[event.asset].file));
+  }
+  assert.equal(next, plan.total_frames);
 });

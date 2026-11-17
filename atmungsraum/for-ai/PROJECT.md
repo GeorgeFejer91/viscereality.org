@@ -328,6 +328,12 @@ cloud-backed files; it was left untouched. The verified runtime commit
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.
 
+The authored Probe-Runde package stages the supplied German instruction as
+a separate prelude to the 300-second recording plan. The timed plan reuses
+the study phase library and ends on an exhale. The playground plays the
+prelude first. Playback of that prelude on the Quest still needs native
+integration and qualification.
+
 ### Separation of preparation and main study — 2026-11-16
 
 - [x] Expose Anleitung, the five-minute Probe-Runde and the 15-minute

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateManifest } from '../audio/box-breathing.js';
 import { AUDIO_LIBRARY, SCENARIOS, validateScenario } from '../audio/scenario-protocol.js';
 import { loadBoxLoop } from './box-loop.mjs';
-import { buildMainStudyScenario } from './main-study-audio.mjs';
+import { buildMainStudyScenario, buildProbeStudyScenario } from './main-study-audio.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const scenarioDirectory = 'audio/scenarios';
@@ -20,19 +20,27 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output, mainSt
   const libraryRecord = describe(libraryPath, libraryBytes);
   files.set(libraryPath, libraryBytes);
 
-  const scenarios = [];
-  for (const id of SCENARIOS) {
+  async function readScenario(id) {
     const path = posix.join(scenarioDirectory, id + '.json');
     const data = await readFile(join(sourceRoot, path));
     const plan = validateScenario(JSON.parse(data.toString('utf8')), library, {
       scenarioId: id,
       manifestHash: libraryRecord.sha256,
     });
-    if (mainStudy && id === 'haupt-15') {
-      const study = await buildMainStudyScenario(sourceRoot, plan);
-      files.set(path, Buffer.from(JSON.stringify(study.plan, null, 2) + '\n'));
-      for (const [cuePath, cue] of study.files) files.set(cuePath, cue);
-      scenarios.push({ id, path, total_frames: study.plan.total_frames });
+    return { id, path, data, plan };
+  }
+  const originals = await Promise.all(SCENARIOS.map(readScenario));
+  const study = mainStudy
+    ? await buildMainStudyScenario(sourceRoot, originals.find(({ id }) => id === 'haupt-15').plan)
+    : null;
+  const scenarios = [];
+  for (const { id, path, data, plan } of originals) {
+    const authored = study && (id === 'haupt-15' ? study
+      : id === 'probe-5' ? await buildProbeStudyScenario(sourceRoot, plan, study) : null);
+    if (authored) {
+      files.set(path, Buffer.from(JSON.stringify(authored.plan, null, 2) + '\n'));
+      for (const [cuePath, cue] of authored.files) files.set(cuePath, cue);
+      scenarios.push({ id, path, total_frames: authored.plan.total_frames });
       continue;
     }
     files.set(path, data);
