@@ -46,13 +46,12 @@ platform projection and stream-scope harnesses still need their missing mock
 fields. The startup harness passed with a test-only clock and field added.
 
 The lab Quest launched and logged actual Polar connect, PMD readiness and
-ACC and ECG stream starts. The Pixel retained saved membership and saw Quest 2 in the
-real Chrome chooser after lab app launch. Both devices used one public SSID but
-received different subnets and the phone could not reach the gateway. The Pixel
-hotspot is the selected next connection test. Once a
-reachable private network is available and the Quest is awake, observe
-automatic rejoin without a code, then verify fresh ECG, ACC and contact before
-recording. The separate attended update route below remains its own evidence.
+ACC and ECG stream starts. The Pixel retained saved membership and saw
+Quest 2 in the real Chrome chooser. The public SSID placed the devices on
+different subnets and blocked phone access to the Quest gateway. The
+connection milestone below covers automatic recovery on that topology.
+After reconnect, verify fresh ECG, ACC and contact before recording.
+The separate attended update route remains its own hardware gate.
 
 On the docked Pixel 10 (Android 17, RustDesk 1.5.3), RustDeskMCP first reached
 the phone without an active capture. With capture active again, it returned
@@ -62,6 +61,58 @@ Stay awake while charging was already enabled. The primary session was left
 connected and the temporary verification forward was removed. Follow the
 [docked reconnect procedure](RUSTDESK-PHONE-TESTING.md#reconnect-while-the-phone-is-docked)
 when capture ends. Lock and reboot recovery still need an attended check.
+
+#### Connection milestone — fast web pairing across isolated Wi-Fi
+
+The latest applicable Pixel PWA and signed Quest APK must pair quickly and
+reconnect automatically across both ordinary and client-isolated Wi-Fi.
+Measure first enrollment separately from saved reconnection. Saved enrollment
+must reconnect to the same Quest without a code, chooser or hotspot.
+
+- [ ] Use the existing BLE discovery and Android companion to locate the
+  saved Quest. Bind short-lived WebRTC rendezvous material to that enrollment.
+  Hand the transport only dedicated session material. Preserve explicit
+  approval for a new controller or expired or revoked trust.
+- [ ] Start pinned, data-only VDO.Ninja WebRTC signaling as the primary
+  connection route in the PWA and signed development APK. Let ICE select a
+  reachable peer path and use TURN when a relay is needed. Keep the existing
+  authenticated LAN route available when Internet signaling or ICE fails.
+  Automatic connection attempts must never request, create or switch to a
+  hotspot.
+- [ ] Use the same native lease, typed requests, operation IDs, receipts and
+  recorder across routes. Verify application authentication and protection
+  for private payloads. Select one controller route and recover an original
+  receipt after switching. Keep pending and stale states visible within the
+  existing UI rules.
+- [ ] Benchmark the installed PWA and signed APK side by side. Run at least
+  30 trials per common-route comparison across repeated batches with
+  alternated route order. Log time from Connect or resume to authenticated
+  actionable controls, first native receipt and recovered control. Record
+  medians, p95, failures and retries, selected ICE pair on both ends, traffic
+  and active time. Include cold enrollment, warm rejoin and network
+  transitions. Identify every APK, PWA and SDK build in the evidence.
+- [ ] Before releasing the primary WebRTC route, bring shared-network
+  readiness and action latency within measured LAN baseline variability,
+  match or improve successful joins and recoveries, and verify comparable
+  device and network cost. Fix and remeasure any missed gate. Repeat these
+  measurements after pairing, transport or runtime updates.
+- [ ] On physical Quest 2 and Pixel 10, exercise shared Wi-Fi, isolated
+  guest Wi-Fi, high latency and loss, blocked UDP with reachable TURN,
+  no signaling egress, interruption and return. Verify code-free rejoin on
+  saved trust, a selected TURN route at both ends where relayed, and a
+  matched native action receipt. Verify expired rendezvous, wrong peer,
+  revoked trust and simultaneous routes cannot take or duplicate control.
+- [ ] Complete the H10 and recording gates on the qualified isolated-network
+  path. Verify that Quest keeps acquiring during an outage, the Pixel
+  recovers the same session, and Quest, Pixel and private Drive exports
+  match by hash using a synthetic participant identity.
+
+Reference qualification passed 81 deterministic cases. Two separate Chromium
+contexts also ran the locally pinned VDO.Ninja SDK against public signaling
+and TURN with synthetic data. Both independently reported selected relay
+candidates and matched one authenticated applied command at revision 1. The
+next increment is the authenticated rendezvous and a signed test APK for the
+physical Pixel/Quest transport and timing matrix.
 
 ### PWA update copy simplification — 2026-11-17
 
