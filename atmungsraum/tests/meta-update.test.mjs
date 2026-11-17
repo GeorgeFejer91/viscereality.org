@@ -10,6 +10,24 @@ const cycle = (patch = {}) => ({ ...status(value('current', { v: 2, available_co
   required_code: 15, cycle: '2', revision: '7', attempt: '19', can_check: true, busy_reason: '', ...patch })),
   meta_update_control: 1 });
 
+test('only a native narration release wait shows the headset app recovery steps', () => {
+  const held = { state: 'checking', reason: 'ending-preparation', busy_reason: 'narration-park-pending',
+    session_allowed: false, can_check: false };
+  const waiting = metaUpdateView(cycle(held));
+  assert.equal(waiting.summary, 'Anleitung wird beendet.');
+  assert.match(waiting.detail, /Bleibt diese Meldung stehen, schließe Atmungsraum im Headset/);
+  assert.match(waiting.detail, /öffne die App erneut und verbinde das Smartphone wieder/);
+  assert.equal(waiting.allowed, false);
+  assert.equal(waiting.progress, null);
+  const loop = metaUpdateView(cycle({ ...held, busy_reason: 'setup-park-pending' }));
+  assert.match(loop.detail, /Atemtakt.*Ruheposition/);
+  for (const patch of [{ reason: '' }, { state: 'installing' }, { state: 'failed' }]) {
+    const other = metaUpdateView(cycle({ ...held, ...patch }));
+    assert.notEqual(other.summary, waiting.summary);
+    assert.doesNotMatch(other.detail, /schließe Atmungsraum/);
+  }
+});
+
 test('SDK failure provenance is bounded and never grants an update or session', () => {
   const error = { v: 1, stage: 3, code: 1971054, http: null, install_result: 'DUPLICATE_REQUEST' };
   const required = patch => cycle({ state: 'update_required', required_code: 20, available_code: 20,

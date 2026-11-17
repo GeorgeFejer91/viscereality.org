@@ -105,9 +105,13 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs the authored-audio source tree `347e629e80574490ee552f3ba7c27578c95d6df6`
-with SHA-256 `9856437f41640e8d2fe91e49c580cd8d285921ae7586adf92b96de684ca79cfc`
-(2,282,974 bytes). Its build uses `core-lambda-stubs.jar` from the selected
+reconstructs the integrated source tree `70e032356b72a374b9cd01f3483dff6428608958`
+with SHA-256 `bfeaaad65be614c1889ab3adb721fca4a3094ce371b6afbd265644c786936304`
+(2,350,099 bytes), reviewed native source `2f41df0acbc5b82e293c2da22310f0ef6e1204d4`.
+It preserves optional authored playback and adds explicit preparation-end/actual
+audio-park admission for PWA updates. Default builds retain the original73 audio
+assets and900-second shared loop; authored playback remains opt-in. The build
+uses `core-lambda-stubs.jar` from the selected
 Android Build Tools when compiling Java media callbacks. The
 [Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
 is the baseline for the following release evidence. Its cumulative patch

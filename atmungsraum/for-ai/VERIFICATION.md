@@ -2,6 +2,17 @@
 
 ## Preparation and save before PWA updates — 2026-11-17
 
+Final source follow-up20261117-preparation-audio-recovery passes324 full Node
+cases/zero skips,26 mounted preparation renders and26 compact Update states.
+The exact narration-park status shows guide-release waiting and conditional
+manual app reopen/reconnect recovery; a real native status change returns the
+same attempt to ordinary Meta checking. Scoped re-review passes with no
+remaining finding. Native2f41df0a/tree70e03235 passes907/6ignored plus the actual
+Java/audio/writer/outro joins. The one first-run submitted-frame timing failure,
+isolated pass and full serial pass are retained in private evidence. The exact
+2,350,099byte cumulative patch reconstructs the reviewed native tree. Signed
+26-r3 packaging is complete; independent artifact qualification is still pending.
+
 The merged PWA release20261117-preparation-update passes323 Node tests with
 zero failures/skips,25 mounted preparation cases,26 compact Update states,10
 current-session/offline-archive renders and the authored operator flow. Exact
@@ -14,7 +25,11 @@ and update admission. Foreign owners/revisions and uncertain Save outcomes
 cannot continue into installation. Scoped independent review and all14 changed
 runtime cache identities pass. Rendered checks use synthetic enrolled transport;
 they do not prove a Meta installation or wearer acceptance. Signed APK and live
-publication evidence will be added after those gates pass.
+publication evidence is separate. PR55/mergeae6d3e5 reached exact Pages44165786315
+success;25 live files match Git and the deployed HTTP runtime passes all25
+preparation/save/update cases with synthetic enrolled transport. Installed-phone
+refresh remains pending because the USB Pixel disconnected; no actual update
+installation is inferred from these checks.
 
 ## Review repairs: current-session controls and offline archives — 2026-11-17
 

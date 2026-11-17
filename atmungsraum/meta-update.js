@@ -139,7 +139,12 @@ export function metaUpdateView(status) {
   if (value.v === 2 && value.sdk_error && ['failed', 'update_required', 'restart_required'].includes(value.state)) {
     detail += ` ${sdkErrorCopy[value.sdk_error.install_result]}`;
   }
-  const recovery = value.v === 2 && ['checking', 'installing'].includes(value.state) && recoveryCopy[value.reason];
+  let recovery = value.v === 2 && ['checking', 'installing'].includes(value.state) && recoveryCopy[value.reason];
+  if (value.v === 2 && value.state === 'checking' && value.reason === 'ending-preparation'
+    && value.busy_reason === 'narration-park-pending') {
+    recovery = ['Anleitung wird beendet.',
+      'Warte, bis die Quest die Audioausgabe freigibt. Bleibt diese Meldung stehen, schließe Atmungsraum im Headset, öffne die App erneut und verbinde das Smartphone wieder.'];
+  }
   if (recovery) detail = `${recovery[1]}${value.required_code === null ? '' : ` Benötigt: mindestens Code ${value.required_code}.`}`;
   const summary = (recovery ? recovery[0] : value.v === 2 ? summaries[value.state].replaceAll('Meta-Startprüfung', 'Update-Prüfung') : summaries[value.state]) + (!result.allowed && ['current', 'updated'].includes(value.state)
     ? ' Vorbereitung bleibt gesperrt.' : '');

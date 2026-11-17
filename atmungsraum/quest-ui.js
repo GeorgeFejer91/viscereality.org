@@ -3,20 +3,20 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=14';
 import { pairPhone } from './quest-pairing.js?v=3';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=36';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=37';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=14';
+import { BreathingSetup } from './breathing-setup.js?v=15';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
 import { KioskControl } from './kiosk-control.js?v=4';
 import { ApkRelease } from './quest-release.js?v=1';
-import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=4';
-import { MetaUpdateControl } from './meta-update-control.js?v=4';
-import { MetaUpdateHandoff } from './meta-update-handoff.js?v=2';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=5';
+import { MetaUpdateControl } from './meta-update-control.js?v=5';
+import { MetaUpdateHandoff } from './meta-update-handoff.js?v=3';
 import { ControllerLease } from './controller-lease.js?v=2';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 

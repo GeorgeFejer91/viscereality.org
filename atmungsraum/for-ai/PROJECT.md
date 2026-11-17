@@ -35,7 +35,7 @@ writer state, install while recording, or use a timer as proof of park/save.
 Implementation plan (this document remains the single lifecycle owner):
 
 - [x] Capture actual phone/Quest baseline and the parked25 PWA manual check.
-- [ ] Native owner: regress active preparation causing permanent can_check false;
+- [x] Native owner: regress active preparation causing permanent can_check false;
   add a fenced preparation-end/actual-park route before update admission. Reuse
   current runtime/writer/audio/helper owners and correlate all requests/results.
   Preserve unknown-command/writer and irreversible-install barriers.
@@ -96,7 +96,30 @@ changed runtime cache identities match. Calibration narration is cancelable only
 with exact native instruction identity and explicit preparation-end admission.
 An unresolved guided Start retains its original journal; Save waits for that
 original confirmation. No device acceptance is inferred from these fixtures.
-Native integration and signed26-r3 qualification remain in progress.
+Native integration is reviewed and committed at2f41df0a/tree70e03235. The
+cumulative source patch reconstructs that exact tree (2,350,099bytes/SHA256
+bfeaaad65be614c1889ab3adb721fca4a3094ce371b6afbd265644c786936304).
+All907 native cases pass with6 intentional ignores after an isolated and full
+serial rerun of one existing submitted-frame freshness failure. Actual Java
+gateway76/service56,110-source production compilation, source-closure11,
+900-second/participant-plan bindings and Java/native audio joins pass. Natural
+optional outro retains decoder admission until actual release; explicit accepted
+preparation updates retire it without allowing stale receipts to cancel a newer
+instruction. Default73 assets/900-second loop remain selected. Signed26-r3/run044
+is built; independent package qualification is in progress. No Meta26 upload.
+
+The final PWA follow-up20261117-preparation-audio-recovery passes324 full Node
+cases with zero skips,26 preparation and26 compact Update renders, and scoped
+re-review. Narration-release waiting has specific conditional manual app
+close/reopen and phone-reconnect guidance. No timer, mutation, journal or native
+admission change is used for that copy. This follow-up awaits publication.
+The PWA is published through [PR55](https://github.com/GeorgeFejer91/viscereality.org/pull/55),
+mergeae6d3e5, exact [Pages44165786315](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44165786315)
+success. All25 checked public files match Git; the live HTTP runtime passes all25
+preparation/save/update cases with synthetic enrolled transport. Installed Pixel
+refresh remains pending: the previously connected phone is no longer visible
+over USB and the user has been asked to reconnect it. Actual Quest remains25.
+
 
 Private evidence: validation/2026-11-17-code25-attended contains native update/
 helper observation, installed checksum, real phone DOM/screenshots, native status

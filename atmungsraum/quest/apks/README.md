@@ -4,7 +4,7 @@
 
 Repairs R1/R3/R5 from the [implementation review](../../for-ai/REVIEW-2026-11-17.md).
 Native source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`, tree
-`df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`. The cumulative source patch is
+`df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`. The [code25 source snapshot](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch) is
 2,208,323 bytes, SHA256
 `0b8f3fafcf901b74531f0f58635a7e054f6340f84fc5a15ce3b82715e3656b7f`;
 isolated-index reconstruction reproduces the exact tree.
@@ -27,11 +27,13 @@ Android34/36 compilation and scoped/integration reviews pass.
 
 Meta build1464859736713038 is current in the private Developer channel. Malware
 and detailed security passed; Quest2/13+ and Require Latest unchecked remain.
-Public policy minimum/latest is25. No device installation or physical acceptance
-is claimed; last actual headset readback remains23. Old25-r1 is revoked as an
-upload target. No helper APK update is required for these main-app fixes.
+Public policy minimum/latest is25. Actual lab Quest25 has matching published
+APK bytes. The idle23 ADB reopen bootstrapped that SDK/Meta installation and
+does not prove a PWA-triggered update; actual phone-triggered checking while
+parked25 is confirmed separately. Old25-r1 is revoked as an upload target.
+No helper APK update is required for these main-app fixes.
 
-## 0.2.25-dev — qualified held code26 version-only probe, 2026-11-17
+## 0.2.25-dev — revoked unpublished code26-r1 version-only probe, 2026-11-17
 
 Signed26 is65,698,947bytes, SHA256
 `627ec300468873bc09369d5b1516cec648435c031ece40a703913ce6adb9db2e`.
@@ -39,9 +41,11 @@ It uses the same sourcef5ea725c and passes1229 checks, including unchanged DEX,
 SDK/audio/private assets and all39 repair instruction paths/6 flow guards.
 Main native machine code and all other bytes match25 apart from the closed
 activation binding and nonloaded compiler-symbol numeric suffixes. It remains
-private and **unpublished**. Publish only after actual repaired25 is
-RUNNING/rec:true and the coordinating agent explicitly releases the attended
-running-session update test. This hold replaces the old revoked25-r1 probe.
+private, **unpublished and revoked as an upload target**. It lacks the new
+preparation-end/update repair and must not be published. The reviewed integrated
+26-r3 replaces it; updater-only26-r2 is also a revoked unpublished intermediate.
+A new version-only27 may be released only after repaired26 is actually recording
+and the coordinating agent releases that attended running-session test.
 
 ## 0.2.23-dev — published Meta code24-r2 baseline, 2026-11-17
 
