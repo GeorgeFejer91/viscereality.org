@@ -22,6 +22,35 @@ const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
 const needsDialogFocus = dialog => !document.activeElement || document.activeElement === document.body
   || dialog.contains(document.activeElement);
+// Copy only: authoritative release/native projections and command gates stay unchanged.
+function updatePresentation(version, native, controls, pending) {
+  const healthy = native.advertised && native.allowed && version.state === 'compatible'
+    && ['current', 'updated'].includes(native.state) && !pending;
+  const withoutCodes = value => value.replace(/Meta-Kanalcode: \d+\./g, '')
+    .replace(/Benötigt: mindestens Code \d+\./g, '').replace(/\s+/g, ' ').trim();
+  let summary = healthy ? 'Quest-App ist aktuell.' : native.summary;
+  let instruction = healthy ? '' : withoutCodes(native.detail);
+  if (!native.allowed && ['current', 'updated'].includes(native.state)) summary = 'Quest-App noch nicht freigegeben.';
+  if (native.allowed && ['current', 'updated'].includes(native.state) && version.state !== 'compatible') {
+    summary = version.state === 'recommended' ? 'Quest-App kann verwendet werden.' : version.message;
+    instruction = version.state === 'recommended' ? 'Ein neuerer Quest-App-Stand wird empfohlen.' : version.state === 'required' ? 'Aktualisiere die Quest-App, bevor du fortfährst.'
+      : 'Prüfe den Versionshinweis unter „Details“.';
+  }
+  if (pending) {
+    summary = 'Update-Bestätigung noch offen.';
+    instruction = controls.message || 'Frage die Bestätigung der ursprünglichen Anfrage erneut ab.';
+  } else if (controls.message) instruction = controls.message;
+  else if (healthy && controls.available && !controls.canRequest) instruction = controls.prerequisites;
+  // An unresolved phone receipt cannot conceal native headset/recovery instructions.
+  if ((pending || controls.message) && (!native.allowed || native.state === 'failed')) {
+    const recovery = withoutCodes(native.detail);
+    if (recovery && !instruction.includes(recovery)) instruction = `${instruction} ${recovery}`.trim();
+  }
+  return { summary, instruction,
+    checkLabel: healthy ? 'Erneut prüfen' : version.state === 'required' || native.state === 'update_required'
+      ? 'Jetzt aktualisieren' : 'Updates prüfen und installieren' };
+}
+
 const operatorCondition = 'condition-a';
 const runTime = ms => {
   const seconds = Math.floor(ms / 1000);
@@ -293,11 +322,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (step === 'session' || activeControls) {
       move('operator-session-actions', page.querySelector('.actions'));
     }
+    const updateNotice = byId('operator-meta-update');
+    const nativeUpdate = metaUpdateView(context.status);
+    const noticeHidden = !context.status || !nativeUpdate.advertised || step === 'update'
+      || nativeUpdate.allowed && ['current', 'updated'].includes(nativeUpdate.state);
+    if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
     const fullConnection = ['connect', 'settings'].includes(step);
     const routineStatus = ['IDLE', 'RUNNING'].includes(context.status?.p) && Object.values(labels).includes(statusText.textContent);
     text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
     const access = controllerAccessState(context.status);
-    statusText.hidden = (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
+    const duplicateUpdateStatus = step === 'update' && statusText.textContent === nativeUpdate.summary;
+    statusText.hidden = duplicateUpdateStatus || (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
     byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
     text(byId('operator-connection-summary'), controllerLease.view?.active
       ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
@@ -484,19 +519,16 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     text(byId('apk-update-status'), version.message);
     text(byId('apk-installed'), version.installedLabel);
     text(byId('apk-required'), version.required);
-    // Routine version numbers belong in optional diagnostics, not every setup.
-    byId('apk-installed').hidden = byId('apk-required').hidden = !updateRequired && version.compatible;
+    // Full values stay available in the collapsed diagnostic disclosure.
+    for (const id of ['apk-installed', 'apk-required']) if (byId(id).hidden) byId(id).hidden = false;
     text(byId('apk-full-identity'), version.identity);
     const updateNotice = byId('operator-meta-update');
     // Stable nodes only: progress never replaces controls, editors or journals.
-    const noticeHidden = !status || !metaUpdate.advertised
-      || metaUpdate.allowed && ['current', 'updated'].includes(metaUpdate.state) && localView.step !== 'update';
-    if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
     for (const panel of [updateNotice, byId('meta-update')]) {
       panel.dataset.updateState = metaUpdate.state;
       panel.dataset.updateAllowed = String(metaUpdate.allowed);
     }
-    text(byId('meta-update-status'), metaUpdate.summary);
+    text(byId('meta-update-diagnostic-status'), metaUpdate.summary);
     text(byId('meta-update-detail'), metaUpdate.detail);
     text(byId('operator-meta-summary'), metaUpdate.summary);
     text(byId('operator-meta-detail'), metaUpdate.detail);
@@ -508,6 +540,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     byId('meta-update-message').hidden = !updateControls.message;
     byId('meta-update-receipt').hidden = !updateControls.canReadReceipt || !metaControl.expired;
     byId('meta-update-acknowledge').hidden = !updateControls.canAcknowledge;
+    const updateCopy = updatePresentation(version, metaUpdate, updateControls, Boolean(metaControl.pending));
+    text(byId('meta-update-status'), updateCopy.summary);
+    text(byId('update-instruction'), updateCopy.instruction);
+    if (byId('update-instruction').hidden !== !updateCopy.instruction) byId('update-instruction').hidden = !updateCopy.instruction;
+    text(byId('meta-update-check').querySelector('[data-measure]'), updateCopy.checkLabel);
     const updateProgress = byId('meta-update-progress');
     updateProgress.hidden = !metaUpdate.progress;
     if (metaUpdate.progress && metaUpdate.progress.max !== null) {

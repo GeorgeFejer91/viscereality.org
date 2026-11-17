@@ -1,10 +1,20 @@
 # Atmungsraum Quest 2 APKs
 
-## 0.2.22-dev — repaired code23-r2 source, 2026-11-17
+## 0.2.22-dev â€” repaired Meta code23-r2 baseline, 2026-11-17
 
 The earlier23-r1 is revoked as an upload target after the attended Meta22
 Haupt-Runde Arm exposed a separate participant-plan validation mismatch and
-failure-reporting gap. No recording started and no23 artifact has been uploaded.
+failure-reporting gap. No recording started from that failed request.
+
+Code23-r2 is current in the private Developer channel as Meta build1464364696762542,
+Quest2/13+, malware and detailed security passed, Require Latest unchecked.
+Signed APK65,690,757bytes, SHA256
+`c1f3c0a380062bbd15b789d860f1ac583f96bf58bc3ebf271d823ef6a8585bd7`.
+The actual installed APK matches those exact bytes, with installer and initiator
+com.oculus.ocms. New PID13371 submits advancing focused frames. Root explicitly
+restarted only the stuck idle22 app;22's SDK dispatches install/relaunch, followed
+by the helper's fallback request and the actual23 process. No host APK installation
+or host23 launch. This does not establish a fresh reboot or a running-session update.
 
 Repaired source is `f24bd09a36c34d93b619a0f12f3160f4f7f48d84`, tree
 `0cc29137a38885e73b89652db6490d175f8926c3`, including plan-binding commitd8998233.
@@ -19,10 +29,18 @@ Generated-binding28, remote64, integrated codec/coordinator/Shell134, terminal27
 all four Java host suites and PWA297 checks pass. Independent review closes the
 identified lineage, headless and local-presentation issues. Rust source retains
 the previously passing888-case host suite (five intentional ignores).
-Signed23-r2 packaging/inspection and Meta installation are pending. The repaired
-23 will establish the Meta baseline;24 stays held until a real23 session runs.
+Signed23-r2 inspection passes1073 checks, including new Arm/validation DEX closure,
+same signer, SDK/helper/private payloads and900-second session closure. The public
+minimum/latest is23. Actual Arm/Start and manual-input physical acceptance remain
+pending. Version-only24 (`0.2.23-dev`,65,690,758bytes, SHA256
+`41040098f417209dceebc5347997af04dcd133b7ba7ca71389aae03aefb1a8d5`)
+passes1071 checks with identical DEX/audio/visual/SDK payloads and the same native
+source. Both signed23 and24-r1 subsequently fail the actual emitted-duration
+contract: codecs send30000ms to a parser requiring900000ms. The actual23 Arm
+is cleanly rejected, with no recording started. Code24-r1 is revoked as an upload
+target; repaired24-r2 and a held25 probe will follow new compiled-request qualification.
 
-## 0.2.22-dev — superseded code23-r1 candidate, 2026-11-17
+## 0.2.22-dev â€” superseded code23-r1 candidate, 2026-11-17
 
 Signed Developer code23 is built from native
 `453af6f4efa9fef823670b4a441a37d6feaba9c6`, tree
@@ -56,7 +74,7 @@ This23-r1 was never uploaded to Meta and is revoked; use the repaired23-r2
 candidate above. Neither Meta delivery nor physical startup/tracking-loss behavior
 was qualified forr1. Its PWA companion is20261117-auto-control (PR41/Pages44072213706).
 
-## 0.2.21-dev — code22 automatic boot/update acceptance, 2026-11-17
+## 0.2.21-dev â€” code22 automatic boot/update acceptance, 2026-11-17
 
 Code22 is current in the private Developer channel, Meta build1463496130182732,
 Quest2/13+, malware passed and detailed security All tests passed. Signed APK
@@ -66,7 +84,7 @@ Source1cd5ee3/treea9dc76d and signer remain the21 values below. All169 independe
 package checks pass; its DEX and payload/audio match21, with version and joined
 activation bindings accounting for expected differences.
 
-The actual Quest2 boot12→13 automatically launched the Meta21 baseline. Native
+The actual Quest2 boot12â†’13 automatically launched the Meta21 baseline. Native
 logs captured its own DownloadSuccess, subsequently issued downloaded progress,
 and SDK install dispatch. Meta installed exact22 bytes at02:26:01; UID10159 and
 installer/initiator com.oculus.ocms were retained. Helper3's fallback request was
@@ -83,7 +101,7 @@ The required/latest policy is22. The
 [collaborator setup handoff](../../for-ai/COLLABORATOR-QUEST-SETUP.md) covers
 provisioning another headset with Meta distribution and the signed helper.
 
-## 0.2.20-dev — code21 monitor3 Developer release, 2026-11-17
+## 0.2.20-dev â€” code21 monitor3 Developer release, 2026-11-17
 
 | Property | Qualified value |
 | --- | --- |
@@ -121,7 +139,7 @@ verified as described above. No main21 or22 APK has been installed by the host.
 Prior19 and20 were actually Meta-installed;
 20 replacement after the app closed did not prove the new monitor path.
 
-## 0.2.18-dev — repeatable native update cycles, qualified code19, 2026-11-16
+## 0.2.18-dev â€” repeatable native update cycles, qualified code19, 2026-11-16
 
 | Property | Qualified value |
 | --- | --- |
@@ -153,7 +171,7 @@ separate same-signer helper provides the bounded install/relaunch fallback.
 The main APK retains the original native launcher and own-app kiosk watchdog,
 with no overlay, boot or hand-tracking authority. Actual JNI/SDK207/all-DEX
 closure includes the ten update/lifecycle owners and their required cycle,
-frame, request and receipt methods. V3 and independently restricted API24–27/v2
+frame, request and receipt methods. V3 and independently restricted API24â€“27/v2
 signature checks,16KiB ZIP/SDK ELF alignment, and actual signed session closure
 pass. The production updater javac command now uses the real Android
 bootclasspath contract.
@@ -184,7 +202,7 @@ Its DEX, original payload/audio and retained private inputs match19; declared
 version and source-bound activation metadata account for the expected changes.
 It remains unpublished until the actual Meta19 baseline is verified.
 
-## 0.2.17-dev — code18 successor correction, 2026-11-16
+## 0.2.17-dev â€” code18 successor correction, 2026-11-16
 
 Code18 successor correction: final18-r3 retains all79 code17 audio/guidance/session
 assets and all15 private input files. Its native source is `f5946e19058e347f1dc69fde85b7265814c8ed9d`, tree
@@ -210,7 +228,7 @@ Genuine autoboot17/GetVersion/focus and wearer stimulus are observed; actual
 SDK download/install/relaunch acceptance remains pending.
 
 
-## 0.2.16-dev / 0.2.17-dev — SDK startup updater, 2026-11-16
+## 0.2.16-dev / 0.2.17-dev â€” SDK startup updater, 2026-11-16
 
 | Property | Qualified value |
 | --- | --- |
@@ -228,7 +246,7 @@ restores ordinary kiosk. Strict launcher trust is preserved; actual Meta SDK
 relaunch compatibility still requires physical acceptance.
 
 Both signed packages pass actual Java/ARM64/session closure, SDK/manifest/all-DEX,
-v3+API24–27v2 signatures,16KiB ZIP/ELF alignment and independent private-input
+v3+API24â€“27v2 signatures,16KiB ZIP/ELF alignment and independent private-input
 qualification. No overlay/boot/hand-tracking authority enters the main APK.
 All15 original private bundle files match;85 original16 payload assets match,
 four generated provenance/binding assets change and two SDK notice assets are
@@ -257,7 +275,7 @@ manual Update action occurred. Post-update boot/kiosk remains pending; historica
 checkpoint details below retain their observation scope.
 
 
-## 0.2.14-dev / 0.2.15-dev — Meta baseline and update candidate, 2026-11-16
+## 0.2.14-dev / 0.2.15-dev â€” Meta baseline and update candidate, 2026-11-16
 
 | Build property | Verified value |
 | --- | --- |
@@ -271,8 +289,8 @@ checkpoint details below retain their observation scope.
 Both actual APKs opt out of the unsupported internal boot feature: no overlay
 or boot permission, boot receiver/action/metadata. The own-app kiosk watchdog,
 controller-only policy, private visuals, pairing, breathing and experiment data
-behavior remain. Full13→15 resolution and compiled-manifest comparison confirms
-only the boot selection removal plus version/run-derived identity. Full15↔16
+behavior remain. Full13â†’15 resolution and compiled-manifest comparison confirms
+only the boot selection removal plus version/run-derived identity. Full15â†”16
 normalized functional closure matches;90/98ZIP entries, all scenario/payload
 assets and classes.dex match exactly. Native embedded binding/provenance and
 signature differences are recorded; native binary identity is not claimed.
@@ -293,9 +311,9 @@ off, the next genuine boot remains15 in69 samples over about208seconds despite
 validated Wi-Fi/charging. Later closed/asleep readbacks remain15. Automatic
 updating and post-update behavior remain unqualified. The user now approves an
 official in-app startup updater; no SDK-enabled APK is built yet. Follow the
-[active contract](../../for-ai/BOOT-KIOSK-UPDATE.md) extension tasks5–9.
+[active contract](../../for-ai/BOOT-KIOSK-UPDATE.md) extension tasks5â€“9.
 
-## 0.2.11-dev / 0.2.12-dev — autoboot candidates, 2026-11-16
+## 0.2.11-dev / 0.2.12-dev â€” autoboot candidates, 2026-11-16
 
 | Build property | Verified value |
 | --- | --- |
@@ -311,7 +329,7 @@ Both candidates explicitly select the existing boot feature through
 permissions and boot Java-definition closure inspected. The native source,
 private visual inputs, controller-only policy, pairing, audio, calibration and
 recording behavior remain the code11 composition. Code13 is prepared for the
-same-functionality N→N+1 delivery test; run-addressed provenance and version
+same-functionality Nâ†’N+1 delivery test; run-addressed provenance and version
 identity differ.
 
 The source recipe passes independent review, three real resolver tests without
@@ -330,7 +348,7 @@ accepted; code14 was cancelled before signing. No permission grant, reboot,
 automatic boot/menu acceptance or Meta delivery is claimed. The boot/distribution
 architecture must be resolved before resuming this combined test.
 
-## 0.2.10-dev — smooth actual display and selectable Polar presets, 2026-11-16
+## 0.2.10-dev â€” smooth actual display and selectable Polar presets, 2026-11-16
 
 | Build property | Verified value |
 | --- | --- |
@@ -382,7 +400,7 @@ refreshed connected phone. Physical cadence, tracking satisfaction and remaining
 wearer/main acceptance are pending. Observer/owned child and leases are released.
 The optional boot receiver remains absent. No Meta upload.
 
-## 0.2.9-dev — operator controls and installed-build identity, 2026-11-16
+## 0.2.9-dev â€” operator controls and installed-build identity, 2026-11-16
 
 | Build property | Verified value |
 | --- | --- |
@@ -444,7 +462,7 @@ exact Pages run 43838565290, 27 live-file matches and public phone/desktop rende
 pass. Refreshed installed-phone readback and remaining hardware acceptance are
 pending. No Meta upload.
 
-## 0.2.8-dev — explicit audio-clock recovery and diagnostics, 2026-11-15
+## 0.2.8-dev â€” explicit audio-clock recovery and diagnostics, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -492,7 +510,7 @@ startup observers/leases are released. The wearer removed the Polar after code 8
 fresh Ready is required. No code-9 calibration, physical recovery/tracking, full
 trial or Meta acceptance is claimed. No Meta upload occurred.
 
-## 0.2.7-dev — retain confirmed Polar breath state, 2026-11-15
+## 0.2.7-dev â€” retain confirmed Polar breath state, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -547,7 +565,7 @@ explicit pre-main recovery and bounded diagnostics are developed. The wearer
 removed the Polar; another calibration requires fresh Ready. No tracking,
 Controller fallback, full-trial or Meta acceptance is claimed.
 
-## 0.2.6-dev — participant-led calibration and controllers only, 2026-11-15
+## 0.2.6-dev â€” participant-led calibration and controllers only, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -564,7 +582,7 @@ Calibration assumes cue adherence and learns the participant's tilt axis,
 direction and measured range. Ideal correlation, RMSE, flat-hold and ramp-shape
 checks are removed, without introducing recurrence/compliance rejection. Technical
 quality, usable coverage and finite mapping remain required. The existing measured
-span 0.02–0.50 remains an engineering gain/noise limit; it can reject smaller real
+span 0.02â€“0.50 remains an engineering gain/noise limit; it can reject smaller real
 movement and is not a validated physiological cutoff. Participant testing of the
 resulting Polar-driven sphere decides satisfaction and whether to repeat setup.
 
@@ -597,7 +615,7 @@ successful collection does not establish satisfactory tracking. Retry, Controlle
 fallback and the full trial remain open. The app is stopped pending repair and
 fresh wearer readiness. No Meta upload occurred.
 
-## 0.2.5-dev — parked startup and full-window quality, 2026-11-15
+## 0.2.5-dev â€” parked startup and full-window quality, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -641,7 +659,7 @@ System Location remains OFF. Fresh wearer confirmation of silence/minimum startu
 actual ACC format, advancing calibration, fit/retry/fallback and the full trial
 remain pending. No calibration was started and no Meta upload was performed.
 
-## 0.2.4-dev — combined Showcase particle update, 2026-11-15
+## 0.2.4-dev â€” combined Showcase particle update, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -687,7 +705,7 @@ setting. The wearer fit/retry/fallback, full trial, visual parity/performance an
 installed-phone refresh remain pending. No calibration has started collecting.
 Code 5 has not been uploaded to Meta.
 
-## 0.2.3-dev — local permission and timing repair, 2026-11-15
+## 0.2.3-dev â€” local permission and timing repair, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -727,7 +745,7 @@ preserved. Wearer calibration, fresh permission dialogs, callback timing and
 the full trial remain pending. This APK is withheld from Meta until relevant
 local hardware testing passes, as requested by the user.
 
-## 0.2.2-dev — button-only phone pairing, 2026-11-15
+## 0.2.2-dev â€” button-only phone pairing, 2026-11-15
 
 | Build property | Verified value |
 | --- | --- |
@@ -779,7 +797,7 @@ user authorized a one-permission pre-grant on this test installation; readback
 confirmed it. Fresh-install startup permissions still require a fix. Further
 iterative APKs must be tested locally before Meta submission.
 
-## 0.2.1-dev — cold-start repair, 2026-11-15
+## 0.2.1-dev â€” cold-start repair, 2026-11-15
 
 Private Developer package `org.viscereality.atmungsraum.developer`, version code
 2, uses the same certificate as code 1. APK size is 65,264,429 bytes; SHA-256
@@ -803,7 +821,7 @@ onboarding gap: hardware serial was unavailable, so discovery would not
 advertise. Wearer calibration and phone pairing remained pending. The new
 phone-pairing update addresses that gap with explicit app-installation identity.
 
-## 0.2.0-dev — separate developer build, 2026-11-14
+## 0.2.0-dev â€” separate developer build, 2026-11-14
 
 | Build property | Verified value |
 | --- | --- |
@@ -821,7 +839,7 @@ phone-pairing update addresses that gap with explicit app-installation identity.
 | Android packaging | Debugging disabled; min SDK 29, target SDK 34, compile SDK 36, install location auto; v2 and v3 signatures verified |
 
 This build adds one actual audio-frame clock, Automatic startup, unlimited
-4–4–4–4 preparation, two-cycle measured tilt calibration, retry and fixed
+4â€“4â€“4â€“4 preparation, two-cycle measured tilt calibration, retry and fixed
 Controller State fallback. The chosen input continues into a separate,
 exactly 900-second main at the next full cycle boundary. Required study H10
 freshness and submitted-frame checks remain active in Controller mode. A
@@ -846,7 +864,7 @@ installation and version-to-version replacement are not claimed. The developer p
 and signing identity are separate from the rehearsal app and preserve its
 installation and data. Keep the developer signing key for future updates.
 
-## 0.1.30 — Quest 2 calibration menu
+## 0.1.30 â€” Quest 2 calibration menu
 
 | Build property | Verified value |
 | --- | --- |
@@ -861,7 +879,7 @@ installation and data. Keep the developer signing key for future updates.
 | Upstream Rusty Quest | `99352620fd79ec5cdcee71b47c2ba4056241af16` |
 | Atmungsraum source | [b360e99](https://github.com/GeorgeFejer91/viscereality.org/commit/b360e99) |
 
-**Direct → Developer settings → Breath → Calibration** now plays the approved
+**Direct â†’ Developer settings â†’ Breath â†’ Calibration** now plays the approved
 German inhale cue after an accepted Start and the exhale cue four seconds later
 while that calibration is active. Cancel, Reset and leaving the menu release
 playback. The two [Secret Tunnel clips and transcripts](../../assets/audio/calibration-menu/manifest.json)
@@ -875,7 +893,7 @@ scenario files and ARM64 OpenXR loader matched 0.1.29 byte for byte. The broader
 native panel check still stops at a source assertion already false in 0.1.29.
 An attended listening check on Quest 2 remains open.
 
-## 0.1.29 — Quest 2 rehearsal, 2026-11-14
+## 0.1.29 â€” Quest 2 rehearsal, 2026-11-14
 
 | Build property | Verified value |
 | --- | --- |

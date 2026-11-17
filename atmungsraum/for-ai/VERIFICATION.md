@@ -28,8 +28,22 @@ unchanged297-case suite also passes with zero skips.
 
 Source d8998233/f24bd09a and the exact reconstructed public patch are qualified
 software evidence. Code23-r1 is revoked as a Meta upload target. Repaired23-r2
-package qualification/Meta installation and actual recording remain pending;
-the running-session target will be24 after an actual23 recording is established.
+passes1073 actual signed-package checks; Meta build1464364696762542 is current
+and malware/detailed security passed. Installed23 exact APK SHA256, Meta installer/
+initiator and new focused renderer process are observed. Root explicitly restarted
+idle22 to fetch the repaired baseline, with no host install or subsequent23 launch.
+SDK install dispatch and the helper fallback request are captured. No new reboot
+or recording/update-during-session acceptance is inferred from that preparation.
+
+Version-only24-r1 passed1071 packaging checks, but its matching DEX also retains
+the subsequently proven30000ms emitted-request bug. It is revoked as an upload
+target. The actual23 Arm is rejected cleanly with native IDLE/g0/r1, rec:false.
+New qualification must exercise compiled Java requests against the900000ms
+selected native parser, not only asset hashes and closure validation. Repair
+source [PR44](https://github.com/GeorgeFejer91/viscereality.org/pull/44) merged30150da
+as01e16db62987cb812810c0326e16c6609435f5cf; exact
+[Pages44082868232](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44082868232)
+succeeded and all11 checked public files match Git.
 
 ## Automatic phone control — 2026-11-17
 
@@ -3544,3 +3558,13 @@ The context/source checker and Git whitespace check passed. Browser checks at
 `rgb(0, 0, 0)` as the root background, and no horizontal or vertical overflow.
 Both rendered views were visually solid black. Deployment must still be checked
 against the published commit using the procedure above.
+
+## Compact Update presentation — 2026-11-17
+
+Real mounted UI with inert transport passes independent review:297 Node tests
+without skips,135 layout states,26 compact Update renders,27 Meta cases and18
+conditional-APK renders/15cases. The original strict320px/200% scroll/focus checks
+remain intact. Current status and check action are concise; full identity and
+provider diagnostics remain in collapsed Details. Evidence is retained privately
+in the2026-11-17-update-minimal-review validation folder. Runtime marker:
+20261117-update-simple. Publication and installed-phone refresh are pending.

@@ -3,13 +3,12 @@ from pathlib import Path
 import tempfile
 from playwright.sync_api import sync_playwright, expect
 from layout_render_fixtures import module, initial, mutations
+from release_fixtures import meta_update_fixture
 c=module()
 with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
     browser=p.chromium.launch()
     review=c.Review(browser,Path(output))
-    current=dict(v=2,state='current',reason='',installed_code=22,available_code=22,required_code=22,
-                 downloaded_bytes=0,total_bytes=None,session_allowed=True,cycle='2',revision='7',
-                 attempt='19',can_check=True,busy_reason='')
+    current=meta_update_fixture()
     for quest, count, final in (({'staleSetupRejects':2},3,'feste Achse'),
                                ({'staleSetupRejects':9},3,'Controller State'),
                                ({'staleSetupRejects':1,'loseStaleSetupReply':True},1,'Controller State'),

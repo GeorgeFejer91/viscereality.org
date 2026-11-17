@@ -89,12 +89,19 @@ test('policy refresh is one bounded read-only request and does not mutate headse
 
 test('the published release policy declares the selected Developer package minimum independently of installed APK metadata', async () => {
   const actual = JSON.parse(await readFile(new URL('../quest-release.json', import.meta.url), 'utf8'));
-  assert.deepEqual(actual, policy({ minimum_version_code: 22, latest_version_code: 22, version_name: '0.2.21-dev' }));
+  assert.equal(actual.v, 1);
+  assert.deepEqual(Object.keys(actual.packages), [packageName]);
+  const published = actual.packages[packageName];
+  assert.ok(Number.isSafeInteger(published.minimum_version_code) && published.minimum_version_code > 0);
+  assert.ok(published.minimum_version_code >= 23, 'the repaired shared main-session plan requires APK23 or later');
+  assert.ok(Number.isSafeInteger(published.latest_version_code) && published.latest_version_code >= published.minimum_version_code);
   const model = new release.ApkRelease({ fetcher: async () => Response.json(actual) });
   await model.refresh();
   assert.equal(model.update({ owner }, status(apk(9))).state, 'required');
   assert.equal(model.update({ owner }, status(apk(20))).state, 'required');
   assert.equal(model.update({ owner }, status(apk(21))).state, 'required');
-  assert.equal(model.update({ owner }, status(apk(22))).state, 'compatible');
+  assert.equal(model.update({ owner }, status(apk(22))).state, 'required');
+  assert.equal(model.update({ owner }, status(apk(published.minimum_version_code - 1))).state, 'required');
+  assert.equal(model.update({ owner }, status(apk(published.latest_version_code, { version_name: published.version_name }))).state, 'compatible');
   assert.equal(model.update({ owner }, status(null)).state, 'unknown');
 });

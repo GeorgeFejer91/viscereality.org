@@ -3,7 +3,8 @@ from pathlib import Path
 import tempfile
 import os
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import module, initial, mutations
+from layout_render_fixtures import APK, module, initial, mutations
+from release_fixtures import PACKAGE_NAME, release_policy
 
 c = module()
 with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
@@ -55,7 +56,8 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
     page = review.page(initial(c, {'participantArm': False}))
     expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok')
     page.clock.run_for(1500)
-    page.evaluate('reviewQuest.apk.version_code=21')
+    outdated = release_policy()['packages'][PACKAGE_NAME]['minimum_version_code'] - 1
+    page.evaluate('code=>reviewQuest.apk.version_code=code', outdated)
     page.clock.run_for(1200)
     page.locator('#operator-connect-next').click()
     expect(page.locator('#update-screen')).to_be_visible()
@@ -64,7 +66,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
     expect(page.locator('#quest')).to_be_visible()
     page.locator('#operator-connect-next').click()
     expect(page.locator('#update-screen')).to_be_visible()
-    page.evaluate('reviewQuest.apk.version_code=22')
+    page.evaluate('code=>reviewQuest.apk.version_code=code', APK['version_code'])
     page.clock.run_for(1200)
     expect(page.locator('#operator-update-next')).to_be_enabled()
     page.locator('#operator-update-next').click()

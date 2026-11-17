@@ -10,12 +10,14 @@ import subprocess
 import zipfile
 
 from playwright.sync_api import expect, sync_playwright
+from release_fixtures import apk_fixture
 
 
 ROOT = Path(__file__).resolve().parents[1]
 URL = "https://viscereality.org/atmungsraum/"
 ARCHIVE = "atmungsraum-smartphone-review.zip"
 VIEWPORT = {"width": 390, "height": 844}
+DEFAULT_APK = apk_fixture()
 
 GATEWAY = """
 // Keep the actual pure access contract; replace transport, never its UI gates.
@@ -30,8 +32,7 @@ const candidate = 'b'.repeat(12);
 const settings = window.reviewQuest ??= {
   phase: 'IDLE', host: 'vr-preparation', polar: 'off', fresh: true, generation: 0,
   condition: 'condition-b', clock: 0, pending: false, strapCount: 0, selected: '',
-  apk: {v:1,package_name:'org.viscereality.atmungsraum.developer',version_code:22,
-    version_name:'0.2.21-dev',build_id:'e'.repeat(64)},
+  apk: __DEFAULT_APK__,
   ...window.reviewInitialQuest
 };
 settings.setup ??= {
@@ -318,6 +319,8 @@ export async function joinQuest({ endpoint }) {
   };
 }
 """
+
+GATEWAY = GATEWAY.replace('__DEFAULT_APK__', json.dumps(DEFAULT_APK))
 
 PAIRING = """
 // Synthetic transport only: no key generation, derivation or HTTP; tickets are fixed dummy data.

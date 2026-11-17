@@ -4,7 +4,8 @@ import tempfile
 import json
 import os
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import module, initial, mutations, go
+from layout_render_fixtures import APK, module, initial, mutations, go
+from release_fixtures import meta_update_fixture
 
 
 def run():
@@ -15,8 +16,8 @@ def run():
         evidence.mkdir(parents=True, exist_ok=True)
         review = c.Review(browser, evidence)
         for width, text_size in [(390, ''), (320, ''), (320, '200%')]:
-            update = dict(v=1, state='downloading', reason='download-in-progress-'+'x'*70,
-                          installed_code=22, available_code=23, downloaded_bytes=1024,
+            update = meta_update_fixture(v=1, state='downloading', reason='download-in-progress-'+'x'*70,
+                          available_code=APK['version_code']+1, downloaded_bytes=1024,
                           total_bytes=None, session_allowed=False)
             page = review.page(initial(c), viewport={'width':width,'height':568 if width == 320 else 844})
             page.evaluate('size=>document.documentElement.style.fontSize=size', text_size)
@@ -27,7 +28,8 @@ def run():
             before = mutations(page)
             page.evaluate('window.reviewMetaUpdate='+json.dumps(update))
             page.clock.run_for(1200)
-            expect(page.locator('#operator-meta-update')).to_be_visible()
+            expect(page.locator('#operator-meta-update')).to_be_hidden()
+            expect(page.locator('#update-screen')).to_be_visible()
             expect(page.locator('#operator-meta-summary')).to_contain_text('herunter')
             expect(page.locator('#patient-next')).to_be_disabled()
             go(page, 'update')
@@ -36,8 +38,8 @@ def run():
             assert page.locator('#meta-update-progress').get_attribute('value') is None
             expect(page.locator('#meta-update-detail')).to_contain_text('unbekannt')
             review.shot(page, f'meta-{width}-{text_size or "normal"}', 'Meta update', page.locator('#meta-update-status'), 'Meta update')
-            assert page.locator('#meta-update-detail').get_attribute('data-text-measurement') == 'pretext'
-            if page.locator('#meta-update-detail').get_attribute('data-text-fit') != 'fit':
+            assert page.locator('#update-instruction').get_attribute('data-text-measurement') == 'pretext'
+            if page.locator('#update-instruction').get_attribute('data-text-fit') != 'fit':
                 # Conservative Pretext no-fit must retain readable document flow;
                 # shot() independently checks every painted glyph and panel.
                 expect(page.locator('html')).to_have_attribute('data-layout', 'reflow')
@@ -100,9 +102,7 @@ def run():
         page.context.close()
         # Repeatable control uses the real mounted UI and native cycle fixture.
         # Status/paint never invokes a check; one manual click creates one ID.
-        native2=dict(v=2,state='current',reason='',installed_code=22,available_code=22,
-                     required_code=22,downloaded_bytes=0,total_bytes=None,session_allowed=True,
-                     cycle='2',revision='7',attempt='19',can_check=True,busy_reason='')
+        native2=meta_update_fixture()
         for width,text_size in [(390,''),(320,''),(320,'200%')]:
             page=review.page(initial(c,quest={'metaUpdate':native2}),viewport={'width':width,'height':844})
             page.evaluate('size=>document.documentElement.style.fontSize=size',text_size)
@@ -117,12 +117,13 @@ def run():
             expect(page.locator('#meta-update-check')).to_be_disabled()
             commands=page.evaluate('window.reviewMetaUpdateCommands??[]')
             assert len([x for x in commands if x['op']=='check-and-update']) == 1,commands
-            blocked=dict(native2,state='update_required',reason='required-update-not-yet-on-channel',required_code=24,
+            required = APK['version_code']+2
+            blocked=dict(native2,state='update_required',reason='required-update-not-yet-on-channel',required_code=required,
                          session_allowed=False,available_code=18,attempt='777',revision='9')
             page.evaluate('window.reviewMetaUpdate='+json.dumps(blocked))
             page.clock.run_for(1200)
             expect(page.locator('#meta-update-status')).to_contain_text('erforderlich')
-            expect(page.locator('#meta-update-detail')).to_contain_text('24')
+            expect(page.locator('#meta-update-detail')).to_contain_text(str(required))
             expect(page.locator('#patient-next')).to_be_disabled()
             review.shot(page,f'meta-repeatable-required-{width}-{text_size or "normal"}','Required update',page.locator('#meta-update-status'),'Meta update')
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -143,7 +144,7 @@ def run():
             changed=dict(native2,attempt='777',revision='10')
             page.evaluate('window.reviewMetaUpdate='+json.dumps(changed))
             page.clock.run_for(1200)
-            expect(page.locator('#meta-update-status')).to_contain_text('abgeschlossen')
+            expect(page.locator('#meta-update-status')).to_have_text('Quest-App ist aktuell.')
             expect(page.locator('#meta-update-message')).to_be_hidden()
             expect(page.locator('#meta-update-prerequisites')).not_to_contain_text('Die Quest prüft die erforderliche Version')
             page.context.close()

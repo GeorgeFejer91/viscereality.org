@@ -1,14 +1,14 @@
 """Real app/gateway layout qualification. No static HTML or readiness bypass."""
 import json
 from playwright.sync_api import expect
+from release_fixtures import apk_fixture
 
 SIZES = (("390", {"width":390,"height":844}, ""),
          ("320", {"width":320,"height":568}, ""),
          ("320-200text", {"width":320,"height":568}, "200%"),
          ("landscape", {"width":844,"height":390}, ""),
          ("desktop", {"width":1440,"height":900}, ""))
-APK = {"v":1,"package_name":"org.viscereality.atmungsraum.developer",
-       "version_code":22,"version_name":"0.2.21-dev","build_id":"e"*64}
+APK = apk_fixture()
 
 
 def module():

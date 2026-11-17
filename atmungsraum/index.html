@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-auto-control">
+  <link rel="stylesheet" href="./style.css?v=20261117-update-simple">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-auto-control"></script>
+  <script type="module" src="./app.js?v=20261117-update-simple"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -31,7 +31,7 @@
     </button>
     <button id="check-control" class="check-icon" type="button" data-check="checking" disabled
        aria-haspopup="dialog" aria-controls="connection-diagnostic" aria-label="Quest-Steuerung: wird geprüft" title="Quest-Steuerung: wird geprüft">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg?v=20261117-auto-control#control"/></svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="./assets/icons/checks.svg?v=20261117-update-simple#control"/></svg>
       <span class="check-symbol" aria-hidden="true"></span>
     </button>
     <button id="check-polar" class="check-icon" type="button" data-check="checking" disabled
@@ -423,27 +423,29 @@
         <p data-measure>Vor der Vorbereitung</p>
       </header>
       <div class="screen-body operator-body">
-        <aside id="quest-version" aria-labelledby="apk-update-status" class="version-panel" hidden>
-          <p id="apk-update-status" data-measure role="status">APK-Versionsprüfung läuft …</p>
-          <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
-          <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+        <aside id="quest-version" aria-labelledby="meta-update-status" class="version-panel" hidden>
           <div id="meta-update" class="meta-update-panel" aria-labelledby="meta-update-status">
-            <p id="meta-update-status" data-measure role="status"></p>
-            <progress id="meta-update-progress" aria-labelledby="meta-update-status" aria-describedby="meta-update-detail" hidden></progress>
-            <p id="meta-update-detail" data-measure></p>
+            <p id="meta-update-status" data-measure role="status">Quest-App wird geprüft …</p>
+            <p id="update-instruction" data-measure hidden></p>
+            <progress id="meta-update-progress" aria-labelledby="meta-update-status" aria-describedby="update-instruction" hidden></progress>
             <div id="meta-update-controls" hidden>
-              <p id="meta-update-prerequisites" data-measure></p>
               <button id="meta-update-check" type="button"><span data-measure>Updates prüfen und installieren</span></button>
-              <p id="meta-update-message" data-measure hidden role="status"></p>
               <button id="meta-update-receipt" hidden type="button"><span data-measure>Bestätigung erneut abfragen</span></button>
               <button id="meta-update-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Stand übernehmen</span></button>
             </div>
           </div>
           <details id="apk-identity">
-            <summary><span data-measure>Vollständige APK-Kennung</span>
-            </summary>
-            <p id="apk-full-identity" data-measure>
-            </p>
+            <summary><span data-measure>Details</span></summary>
+            <div class="update-diagnostics">
+              <p id="apk-update-status" data-measure>APK-Versionsprüfung läuft …</p>
+              <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
+              <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+              <p id="meta-update-diagnostic-status" data-measure></p>
+              <p id="meta-update-detail" data-measure></p>
+              <p id="meta-update-prerequisites" data-measure></p>
+              <p id="meta-update-message" data-measure hidden role="status"></p>
+              <p id="apk-full-identity" data-measure></p>
+            </div>
           </details>
         </aside>
       </div>
