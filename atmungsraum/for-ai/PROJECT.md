@@ -25,16 +25,21 @@ Android resolved and started the rehearsal activity. The first-run Nearby
 devices prompt awaits the wearer. The installed Pixel WebAPK and headset are
 on the same Wi-Fi. The MSI's bounded QFM watchdog reports the headset awake
 with stay-on and virtual proximity closed. Its local heartbeat runs every
-15 seconds. The reinstalled RustDeskMCP client answers on loopback, and the
-USB-forwarded Pixel session awaits authentication.
+15 seconds. The reinstalled RustDeskMCP client answers on loopback. The Pixel
+closed the forwarded RustDesk session before a usable frame was available.
+The operator can open the installed PWA directly on the Pixel, or authorize a
+new RustDesk session.
 
 Local rehearsal code `19` (`0.2.17-local-pairing`) uses the verified code 18
 native tree and existing Windows rehearsal signer. The signed manifest and DEX
 include matching-code pairing. The six assembly checks, 369 native pairing
 assertions, nine browser-to-Java checks, 16 KiB alignment, and the packaged
 900-second session check passed. The private build capsule retains the APK
-digest and exact input lock. After the permission and RustDesk prompts, verify
-an actual rendered rehearsal frame before pairing and starting the test.
+digest and exact input lock. Android still reports the rehearsal Bluetooth
+permissions ungranted, and the separate Developer app is in the foreground.
+Open the rehearsal app in the headset and allow Nearby devices. Verify an actual
+rendered rehearsal frame, then match the phone and headset codes before claiming
+control and starting the test.
 
 ### Operator UI compatibility audit — 2026-11-16
 
