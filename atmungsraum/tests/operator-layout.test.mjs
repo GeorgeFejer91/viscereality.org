@@ -4,6 +4,15 @@ import { navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning
   restoreOperatorView, operatorSessionHeading } from '../operator-layout.js';
 
 const connected = { connected: true, participantRequired: true, participantComplete: true };
+
+test('verified offline archives remain reachable beside a preparation receipt without granting setup navigation', () => {
+  const context = { connected: false, recovery: true, offlineArchives: true };
+  assert.equal(resolveOperatorView('recordings', context), 'recordings');
+  for (const step of ['input', 'session', 'running']) assert.equal(resolveOperatorView(step, context), 'connect');
+  assert.equal(resolveOperatorView('recordings', { ...context, offlineArchives: false }), 'connect');
+  assert.equal(resolveOperatorView('recordings', { ...context, connected: true }), 'recovery');
+  assert.equal(resolveOperatorView('recordings', { ...context, connected: true, active: true }), 'running');
+});
 test('an actionable APK update is a preparation step, while current APKs skip it', () => {
   assert.equal(resolveOperatorView('input', { ...connected, updateRequired: true }), 'update');
   assert.equal(resolveOperatorView('input', { ...connected, updateRequired: false }), 'input');
