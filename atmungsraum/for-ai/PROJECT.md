@@ -20,7 +20,10 @@ download; and a timed-out handoff can apply a late kiosk side effect.
 
 This increment changes review/evidence only. PWA runtime, native0c82ff and Meta
 channels are unchanged; code25 remains unpublished. The report's reviewed web
-baseline is ab294b7. Review documentation is being synchronized through the
+baseline is ab294b7, with the independently landed audio6074c11 additionally
+reviewed for source timing, staging hashes and full rendered length. It remains
+future authoring awaiting native integration. No further defect was verified.
+Review documentation is being synchronized through the
 existing GitHub/Pages workflow. Keep the overall goal open.
 
 ### Current attended test and preparation improvements — 2026-11-17
