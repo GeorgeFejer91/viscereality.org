@@ -142,9 +142,12 @@ async function measureLabels() {
     main.querySelectorAll('[data-live-value]').forEach(element => {
       liveVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
     });
-    const dialogChanges = new MutationObserver(measure);
+    const dialogChanges = new MutationObserver(records => {
+      if (records.some(record => record.type !== 'attributes'
+        || record.oldValue !== record.target.getAttribute(record.attributeName))) measure();
+    });
     for (const dialog of document.querySelectorAll('dialog')) {
-      dialogChanges.observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
+      dialogChanges.observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open', 'hidden'], attributeOldValue: true });
       observer.observe(dialog);
     }
     new MutationObserver(() => { setLocale(root.lang); cache.clear(); retry(); }).observe(root, { attributes: true, attributeFilter: ['lang', 'style'] });

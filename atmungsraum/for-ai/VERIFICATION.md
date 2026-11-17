@@ -28,6 +28,17 @@ device, viewport, measured states and results.
 Follow the [RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md)
 for installed-phone input, capture and native receipt evidence.
 
+### APK detail measurement — 2026-11-18
+
+The smartphone GUI gate on the previous release caught an unmeasured
+APK identity panel at 390 px. The mounted regression reproduced it while
+ResizeObserver callbacks were delayed. An actual dialog visibility change now
+schedules the existing Pretext pass without waiting for a resize or moving
+focus. The regression passes with usable geometry and the existing selector
+focused. The release gate passes 339 states and the complete operator
+walkthrough. All 35 compact Update renders pass. The installed-phone retest
+remains open.
+
 ### Smartphone UI rule port — 2026-11-17
 
 The installed pre-push hook tested the archived `faff9b4` candidate and
