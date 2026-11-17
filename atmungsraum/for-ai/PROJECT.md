@@ -26,9 +26,28 @@ screen. Bluetooth radios and relevant permissions were enabled on both lab
 devices. The lab Quest 2 was asleep with Developer closed during discovery;
 wake it, clear prompts, open Atmungsraum Developer, and retry the in-app picker.
 Attended
-Quest1WMHHA46S32126 remains25;27 installation and27→28 acceptance stay open.
+Quest1WMHHA46S32126 now has exact27 and active PWA control; the interrupted
+25→26→27 route required the Meta Update button.27→28 unattended acceptance stays open.
 
 ### Active: PWA update from every preparation state — 2026-11-17
+
+Attended continuation: the actual PWA check4e3deb141b1ae8c0 was accepted as
+attempt4876935929144199935. Meta now advertised27, but StartAppDownload returned
+DUPLICATE_REQUEST and reported the cached8,246,427byte download complete. Meta
+installed exact26-r3 first and the old process closed. Helper3 stayed active,
+truthfully observing26 while waiting for target27. The wearer saw the Meta store
+Update button and confirms pressing it. Meta then installed exact27-r2; its
+SHA256 matches6f14707053fc9c07b611485deebfe8554a71b405892e8678f2c7f4bb2d8e398b.
+Helper3 requested fallback and the actual new process became focused; the
+reloaded installed Pixel6a PWA reports27/updated/installed-package-confirms-update,
+session_allowed:true and active phone control. No host install, app launch,
+stop or reboot was used. This confirms installation and helper relaunch, but
+fails unattended25→27 acceptance. Preserve the cached older-download/Meta-store
+confirmation issue for a clean27→28 test; do not generalize it into a requirement
+that every update needs a button press. The earlier21→22 unattended result stands.
+The first passive observer stopped when pidof correctly returned exit1 while
+the app was absent; its evidence is retained. The successor read-only observer
+accepts that transition and confirms exact27/focus. No timer proves installation.
 
 Attended extension: same-process PWA request1312caf4c1629771 found Meta26 and
 started its8,246,427byte download, then ended update_required/native-owner-retired
@@ -44,7 +63,8 @@ interpret missing observations as valid.
   across prepared op9, polled replies, final install grant and helper handoff.
 - [x] Publish qualified fixed27-r2/run046 through Meta.
 - [x] Retain separate lab-sync evidence of exact Meta-installed fixed27-r2.
-- [ ] Install/confirm fixed27 on attended Quest1WMHHA46S32126 (still25).
+- [x] Confirm exact fixed27 on the attended Quest and reconnect the PWA.
+  Manual Meta Update confirmation was required; not an unattended-update pass.
 - [x] Sync the published PWA and native source patch to the lab PC, retain the
   verified signed APK locally, and confirm the installed Pixel 10 PWA release.
 - [ ] Hold version-only28 until a fixed27 session is RUNNING/rec:true and root
@@ -71,10 +91,10 @@ the exact signed digest, helper3 and the Pixel10 standalone PWA release. Preserv
 that lab observation; its update trigger and immersive relaunch are unverified.
 
 The ongoing attended device in this worktree is Quest2 serial1WMHHA46S32126 over
-Wi-Fi192.168.2.48:5555 with Pixel6a28251JEGR21026. Fresh attended readback still
-reports code25/PID29345. Do not substitute the separate lab-sync observation for
-this device's installation or updater acceptance. Its PWA request completed with
-available26/required27 and no27 download. The Pixel USB is now absent again.
+Wi-Fi192.168.2.48:5555 with Pixel6a28251JEGR21026. Before the latest continuation,
+readback was25/PID29345 and the previous request offered26/required27. After USB
+reconnection, the continuation above established exact27 and actual PWA control.
+Keep this evidence distinct from the separate lab-sync observation.
 Version-only28 stays private and held until an actual fixed27 session is
 RUNNING/rec:true and root releases the attended test.
 
