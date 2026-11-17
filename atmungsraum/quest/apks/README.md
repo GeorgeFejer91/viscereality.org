@@ -31,6 +31,14 @@ update trigger, immersive relaunch and 27-to-28 running-session test remain
 open. Version-only28 is held until actual27 is RUNNING/rec:true and root
 releases it. Revoked27-r1 is never an upload target.
 
+Attended PWA continuation also reached exact27-r2. Meta advertised27 but first
+installed the cached26 download after DUPLICATE_REQUEST. The wearer confirmed
+the Meta store Update button; helper3 then detected installed27 and automatically
+relaunched it. Exact installed SHA256, a new focused process and reconnected PWA
+27/updated/active-control confirm the result. No host install/launch/stop/reboot.
+This is not an unattended-update pass; retain the older queued-download issue
+and keep28 held until actual27 RUNNING/rec:true and root release.
+
 ## 0.2.25-dev — published repaired Meta26-r3, attended guard issue open
 
 Signed26-r3 is65,735,811bytes, SHA256
