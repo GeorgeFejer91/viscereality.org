@@ -65,6 +65,9 @@ private Drive folder. Earlier browser CSVs remain available from
 Read common rules first, then the documents needed for the task:
 
 - [PROJECT.md](PROJECT.md): purpose, current page contract, and deployment facts.
+- [COLLABORATOR-QUEST-SETUP.md](COLLABORATOR-QUEST-SETUP.md): provision another
+  headset and phone using Meta distribution and the supplied signed boot/update
+  helper, with acceptance checks and source links.
 - [VR-UI-TESTING.md](VR-UI-TESTING.md) covers Meta XR Operator setup, VR UI
   interaction checks and headset evidence.
 - [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers bounded awake holds,

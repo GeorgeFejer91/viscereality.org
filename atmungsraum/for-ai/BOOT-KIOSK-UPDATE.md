@@ -1,5 +1,23 @@
 # Autoboot, kiosk and Meta update qualification — 2026-11-16
 
+## Actual boot/update acceptance — 2026-11-17
+
+Meta21 baseline and Meta22 successor have exact installed-byte, signer and Meta
+installer evidence. A real boot12→13 automatically launched21, performed its SDK
+check/download/install and returned as22 with advancing FOCUSED frames. Helper3
+fallback dispatch was captured before the new process; Quest shell handles its
+final activity launch. The user triggered no manual update. No host main APK
+install or post-boot app launch established this result. The normal SDK lane is
+qualified; the queued duplicate lane and physical disconnected-phone notice
+remain separate from this run's evidence. See the APK log and VERIFICATION.
+
+For setup on another headset use
+[the collaborator runbook](COLLABORATOR-QUEST-SETUP.md) and its supplied signed
+helper APK. A diagnostic component-only Android launch intentionally lacks a
+trusted updater owner: use the normal MAIN action and sole LAUNCHER category
+for a cold baseline launch. Bare `am start -n` may render while reporting no
+startup checker. The actual boot helper uses the qualified intent route.
+
 ## Queued Meta update amendment — 2026-11-17
 
 The user accepts closing the main app to let Meta apply its queued update.

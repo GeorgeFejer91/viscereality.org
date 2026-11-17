@@ -1,5 +1,25 @@
 # Verification
 
+## Actual automatic boot/update acceptance — 2026-11-17
+
+Quest2 boot12→13 is bound to a changed kernel boot ID and serial. Helper launched
+the actual Meta21 baseline without a host app launch. Live trace captures own
+DownloadSuccess at02:25:57.714, a subsequently issued progress response at
+02:25:57.815, SDK install dispatch at02:25:57.830, actual Meta22 replacement at
+02:26:01 and helper fallback request at02:26:02.893. New PID6850 renders advancing
+FOCUSED frames; user confirms stimulus and PWA22 without a manual update.
+Installed22 exactly matches e0de22c7…/65,686,662bytes, Meta installer/initiator and
+UID10159 retained. The final Android activity launcher is Quest shell; helper
+dispatch is directly captured, without asserting it was the sole winning request.
+No host main APK install or post-boot launch. Normal SDK lane passes. Queued
+duplicate lane and the disconnected-phone notice have software coverage and
+remain separate physical observations. Do not describe all wider app goals as
+complete. The collaborator setup runbook describes this evidence and its limits.
+
+Prior PR35/aa3882e passed exact Pages43992621746 and10 byte-matching live responses.
+The final22 policy and handoff follow the same exact-publication checks, with
+post-merge receipts retained in the owning validation run.
+
 Meta21 publication: exact qualified21 artifact is current in Developer build
 1463458816853130, Quest2/13+, Complete tests, malware passed and detailed security
 All tests passed. The user-requested new chat recovered browser access; its
