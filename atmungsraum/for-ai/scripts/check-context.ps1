@@ -11,7 +11,8 @@ $required = @('index.html', 'app.js', 'quest-ui.js', 'operator-layout.js', 'ques
     'pnpm-lock.yaml', 'vendor/pretext/layout.js', 'vendor/pretext/LICENSE',
     'AGENTS.md', 'for-ai/README.md', 'for-ai/PROJECT.md',
     'for-ai/SKILLS.md', 'for-ai/VERIFICATION.md', 'for-ai/WORKFLOW.md', 'for-ai/UI-LAYOUT.md', 'for-ai/DATA-LOGGING.md',
-    'for-ai/DECISIONS.md', 'for-ai/scripts/check-context.ps1')
+    'for-ai/DECISIONS.md', 'for-ai/scripts/check-context.ps1', 'for-ai/hooks/pre-push',
+    'for-ai/scripts/check-gui.py', 'for-ai/scripts/gui-layout.js', 'tools/test-smartphone-gui.py')
 foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $root $relative) -PathType Leaf)) {
         throw "Missing $relative"

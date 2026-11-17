@@ -187,6 +187,11 @@ Use installed skills; do not fetch and execute unreviewed remote skill code.
 
 ## Main UI stretch settings
 
+The operator PWA follows the [smartphone GUI rules](UI-LAYOUT.md#smartphone-gui-rules)
+and the [strict release gate](VERIFICATION.md#smartphone-gui-release-gate).
+The corner navigation and document-flow guidance below describe the older
+browser interface. Apply the current contract to all operator pages and dialogs.
+
 The base corner size is `clamp(56px, min(10vw, 12dvh), 112px)`. The user's
 2026-11-07 phone correction doubles the two top surfaces and proportional
 artwork at widths through 480px, or coarse-pointer widths through 1024px;

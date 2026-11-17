@@ -4,7 +4,7 @@ import tempfile
 import json
 import os
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import APK, module, initial, mutations, go
+from layout_render_fixtures import APK, module, initial, mutations, go, open_apk_details
 from release_fixtures import meta_update_fixture
 
 
@@ -52,9 +52,9 @@ def run():
             assert page.locator('#patient-surname').input_value() == 'Tes'
             # A shorter terminal message must not clamp bottom scroll, detach
             # disclosure focus, or discard a draft when native admission opens.
-            page.locator('#apk-identity summary').click()
+            open_apk_details(page)
             page.clock.run_for(1200)
-            page.evaluate("document.querySelector('#apk-identity summary').focus({preventScroll:true});scrollTo(0,document.documentElement.scrollHeight)")
+            page.locator('#apk-detail-view').focus()
             page.clock.run_for(100)
             scroll_before = page.evaluate('scrollY')
             page.evaluate("reviewMetaUpdate.state='current';reviewMetaUpdate.session_allowed=true;reviewMetaUpdate.reason=''")
@@ -63,7 +63,9 @@ def run():
             assert abs(scroll_after - scroll_before) < 2, {
                 'viewport': width, 'text': text_size, 'before': scroll_before,
                 'after': scroll_after, 'documentHeight': page.evaluate('document.documentElement.scrollHeight')}
-            assert page.locator('#apk-identity summary').evaluate('n=>n===document.activeElement')
+            expect(page.locator('#apk-detail-view')).to_be_focused()
+            page.keyboard.press('Escape')
+            expect(page.locator('#apk-identity summary')).to_be_focused()
             expect(page.locator('#patient-next')).to_be_enabled()
             assert mutations(page) == before
             page.context.close()

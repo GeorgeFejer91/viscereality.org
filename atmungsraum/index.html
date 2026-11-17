@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-preparation-update">
+  <link rel="stylesheet" href="./style.css?v=20261117-smartphone-rules">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-compact-update"></script>
+  <script type="module" src="./app.js?v=20261117-smartphone-rules"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -48,21 +48,28 @@
         <path d="M10.3 2.7h3.4l.5 2.3 1.2.5 2-1.3 2.4 2.4-1.3 2 .5 1.2 2.3.5v3.4l-2.3.5-.5 1.2 1.3 2-2.4 2.4-2-1.3-1.2.5-.5 2.3h-3.4l-.5-2.3-1.2-.5-2 1.3-2.4-2.4 1.3-2-.5-1.2-2.3-.5v-3.4l2.3-.5.5-1.2-1.3-2 2.4-2.4 2 1.3 1.2-.5z"/>
         <circle cx="12" cy="12" r="3.3"/>
       </svg>
+      <span class="utility-label" data-measure>Einstellungen</span>
     </button>
     <button id="recordings-open" class="operator-tool" data-operator-go="recordings" type="button" aria-label="Aufnahmen" aria-controls="recordings-screen" title="Aufnahmen" disabled>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m-4-4 4 4 4-4M4 15v5h16v-5"/></svg>
+      <span class="utility-label" data-measure>Aufnahmen</span>
+    </button>
+    <button id="toolbar-actions" class="operator-tool" type="button" hidden aria-label="Einstellungen und Aufnahmen"
+      aria-haspopup="dialog" aria-controls="toolbar-dialog" title="Einstellungen und Aufnahmen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h2m5 0h2m5 0h2"/></svg>
     </button>
   </header>
+  <dialog id="toolbar-dialog" aria-labelledby="toolbar-dialog-title">
+    <header><h2 id="toolbar-dialog-title" data-measure>Einstellungen und Aufnahmen</h2></header>
+    <div class="screen-body"></div>
+    <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+  </dialog>
   <dialog id="install-dialog" aria-labelledby="install-title" aria-describedby="install-intro">
-    <header class="files-header">
-      <h2 id="install-title" data-measure>App installieren</h2>
-      <button id="close-install" type="button" autofocus><span data-measure>Schließen</span></button>
-    </header>
-    <p id="install-intro" data-measure>Füge Atmungsraum zum Startbildschirm hinzu. Das Viscereality-Symbol öffnet die App. Eine Internetverbindung wird benötigt.</p>
-    <p data-measure>Am PC mit Brave findest du „Atmungsraum installieren“ unter „Speichern und teilen“. Unter brave://apps kannst du eine bereits installierte App öffnen.</p>
-    <p data-measure>Android / Chrome: Öffne das Browser-Menü und wähle „Installieren“ oder „Zum Startbildschirm hinzufügen“.</p>
-    <p data-measure>iPhone / Safari: Tippe auf „Teilen“ und „Zum Home-Bildschirm“. Aktiviere „Als Web-App öffnen“, falls angeboten.</p>
-    <p data-measure>Fehlt die Option? Öffne viscereality.org/atmungsraum/ direkt in Chrome oder Safari statt im eingebetteten Browser einer anderen App.</p>
+    <header><h2 id="install-title" data-measure>App installieren</h2></header>
+    <div class="screen-body">
+      <p id="install-intro" data-measure>Wähle im Browser-Menü „Installieren“. In Safari öffne „Teilen“ und „Zum Home-Bildschirm“. In Brave findest du die Option unter „Speichern und teilen“.</p>
+    </div>
+    <footer class="actions"><button id="close-install" type="button" autofocus><span data-measure>Schließen</span></button></footer>
   </dialog>
   <dialog id="connection-diagnostic" aria-labelledby="connection-diagnostic-title" aria-describedby="connection-diagnostic-message">
     <header><h2 id="connection-diagnostic-title" data-measure></h2></header>
@@ -187,7 +194,7 @@
             <fieldset class="patient-fields" id="patient-fields" aria-label="Teilnehmer-ID" disabled>
               <div class="patient-row">
                 <label class="patient-field" for="patient-surname">
-                  <span data-measure>Nachname (3 Buchstaben)</span>
+                  <span data-measure>Nachname (3 Buchst.)</span>
                   <input id="patient-surname" name="surnamePrefix" type="text" minlength="3" maxlength="3" pattern="\p{L}{3}" required spellcheck="false" autocapitalize="off">
                 </label>
                 <label class="patient-field" for="patient-age">
@@ -207,7 +214,7 @@
                   </select>
                 </label>
                 <label class="patient-field" for="patient-id">
-                  <span data-measure>Teilnehmer-ID</span>
+                  <span data-measure>ID</span>
                   <output id="patient-id" for="patient-surname patient-age patient-gender" aria-live="off" data-measure>—</output>
                 </label>
               </div>
@@ -217,7 +224,7 @@
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
-        <button id="patient-next" disabled type="submit" form="patient-form"><span data-measure>Teilnehmer-ID übernehmen</span></button>
+        <button id="patient-next" disabled type="submit" form="patient-form"><span data-measure>Bestätigen</span></button>
       </footer>
     </section>
     <section id="signals-screen" aria-labelledby="signals-screen-title" class="screen operator-screen" hidden>
@@ -241,28 +248,31 @@
         <p class="preparation-step" data-measure>Schritt 3 von 5</p>
       </header>
       <div class="screen-body operator-body">
-        <p data-measure>Wähle, wie die Atmung die Bewegung im Headset steuert: über den Polar-Gurt oder den Controller.</p>
         <div id="operator-input-status">
           <p id="operator-confirmed-input" data-measure></p>
           <p id="operator-signal-warning" role="status" data-measure hidden></p>
           <p id="preview-switch" data-measure hidden role="status">
           </p>
           <p id="preview-detail" data-measure role="status">Warte auf den aktuellen Atemstatus der Quest.</p>
-          <details id="operator-input-diagnostics"><summary><span data-measure>Messmethode und Signale</span></summary>
-            <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Atmungsmessmethode auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span>
-            </p>
-            <p id="preview-polar-status" data-measure>
-            </p>
+          <details id="operator-input-diagnostics"><summary><span data-measure>Signale</span></summary>
+            <dialog class="operator-dialog" aria-labelledby="signal-dialog-title">
+              <header><h2 id="signal-dialog-title" data-measure>Messmethode und Signale</h2></header>
+              <div class="screen-body">
+                <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Atmungsmessmethode auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span></p>
+                <p id="preview-polar-status" data-measure></p>
+              </div>
+              <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+            </dialog>
           </details>
         </div>
         <p id="preview-modes-compatibility" data-measure hidden>Quest-App aktualisieren, um vortrainierte Polar-STATE-Modi mit fester oder dynamischer Achse auszuwählen.</p>
         <div class="preview-controls">
           <button id="preview-start" disabled hidden type="button"><span data-measure>Atemschleife starten</span></button>
-          <button id="preview-calibrate" disabled type="button"><span data-measure>Atmung persönlich einrichten</span><small data-measure>Zwei Atemzyklen mit dieser Person</small></button>
-          <button id="preview-personal-return" disabled hidden type="button"><span data-measure>Zur persönlichen Einrichtung wechseln</span><small data-measure>Polar tilt mit dieser Person einrichten</small></button>
-          <button id="preview-polar-fixed" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar tilt STATE · feste Achse</span><small data-measure>Vortrainiert · ohne persönliche Einrichtung</small></button>
-          <button id="preview-polar-adaptive" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar tilt STATE · dynamische Achse</span><small data-measure>Vortrainiert · Achse passt sich laufend an</small></button>
-          <div id="preview-controller-host"><button id="preview-controller" aria-pressed="false" disabled type="button"><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button></div>
+          <button id="preview-calibrate" disabled type="button"><span data-measure>Polar persönlich einrichten</span></button>
+          <button id="preview-personal-return" disabled hidden type="button"><span data-measure>Polar persönlich einrichten</span></button>
+          <button id="preview-polar-fixed" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar · feste Achse</span></button>
+          <button id="preview-polar-adaptive" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar · dynamische Achse</span></button>
+          <div id="preview-controller-host"><button id="preview-controller" aria-pressed="false" disabled type="button"><span data-measure>Controller State</span></button></div>
         </div>
       </div>
       <footer class="actions operator-actions">
@@ -282,7 +292,7 @@
       <footer class="actions operator-actions">
         <button id="preview-retry" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
         <button id="calibration-instruction-cancel" type="button" hidden disabled><span data-measure>Anleitung abbrechen</span></button>
-        <button id="calibration-change-input" data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
+        <button id="calibration-change-input" data-operator-go="input" type="button"><span data-measure>Methode ändern</span></button>
       </footer>
     </section>
     <section id="breathing-preview" aria-labelledby="preview-title" class="screen operator-screen" hidden>
@@ -302,8 +312,8 @@
               </div>
             </div>
             <div class="preview-legend">
-              <p class="desired-key" data-measure>SOLL · blauer Atemtakt</p>
-              <p class="actual-key" data-measure>IST · goldener VR-Radius</p>
+              <p class="desired-key" data-measure>Soll-Takt</p>
+              <p class="actual-key" data-measure>Ist-Radius</p>
             </div>
             <figcaption id="preview-status" data-measure role="status">Warte auf den Atemtakt der Quest.</figcaption>
           </figure>
@@ -323,8 +333,8 @@
         </div>
       </div>
       <footer class="actions operator-actions">
-        <button id="preview-restart" type="button" hidden disabled><span data-measure>Kalibrierung wiederholen</span></button>
-        <button data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern</span></button>
+        <button id="preview-restart" type="button" hidden disabled><span data-measure>Neu kalibrieren</span></button>
+        <button data-operator-go="input" type="button"><span data-measure>Methode ändern</span></button>
         <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Atmungsmessmethode bestätigen</span></button>
       </footer>
     </section>
@@ -469,16 +479,45 @@
           </div>
           <details id="apk-identity">
             <summary><span data-measure>Details</span></summary>
-            <div class="update-diagnostics">
-              <p id="apk-update-status" data-measure>APK-Versionsprüfung läuft …</p>
-              <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
-              <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
-              <p id="meta-update-diagnostic-status" data-measure></p>
-              <p id="meta-update-detail" data-measure></p>
-              <p id="meta-update-prerequisites" data-measure></p>
-              <p id="meta-update-message" data-measure hidden role="status"></p>
-              <p id="apk-full-identity" data-measure></p>
-            </div>
+            <dialog class="operator-dialog" id="apk-details-dialog" aria-labelledby="apk-details-title">
+              <header><h2 id="apk-details-title" data-measure>Quest-App</h2></header>
+              <div class="screen-body">
+                  <select id="apk-detail-view" aria-label="Quest-App-Details">
+                    <option value="version">Versionsprüfung</option>
+                    <option value="installed">Installierte Version</option>
+                    <option value="required">Benötigte Version</option>
+                    <option value="identity">Paket und Build</option>
+                    <option value="update">Update-Status</option>
+                    <option value="guidance">Update-Hinweise</option>
+                    <option value="request">Update-Anfrage</option>
+                    <option value="receipt">Offene Anfrage</option>
+                  </select>
+                <div class="update-diagnostics" id="apk-detail-version">
+                  <p id="apk-update-status" data-measure>APK-Versionsprüfung läuft …</p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-installed" hidden>
+                  <p id="apk-installed" data-measure>Installiert: nicht verlässlich gemeldet.</p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-required" hidden>
+                  <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-identity" hidden>
+                  <p id="apk-full-identity" data-measure></p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-update" hidden>
+                  <p id="meta-update-diagnostic-status" data-measure></p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-guidance" hidden>
+                  <p id="meta-update-detail" data-measure></p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-request" hidden>
+                  <p id="meta-update-prerequisites" data-measure></p>
+                  <p id="meta-update-message" data-measure hidden role="status"></p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-receipt" hidden></div>
+              </div>
+              <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+            </dialog>
           </details>
         </aside>
       </div>
@@ -494,25 +533,48 @@
         <h1 id="settings-screen-title" data-measure tabindex="-1">Einstellungen</h1>
       </header>
       <div class="screen-body operator-body">
-        <button id="operator-update-open" data-operator-go="update" type="button"><span data-measure>Nach Quest-App-Updates suchen</span></button>
-        <details id="quest-settings" open>
-          <summary><span data-measure>Quest-Einstellungen · Kiosk</span>
-          </summary>
-          <p id="kiosk-summary" data-measure role="status">
-          </p>
-          <p id="kiosk-prerequisites" data-measure>
-          </p>
-          <details id="kiosk-diagnostics">
-            <summary><span data-measure>Technische Diagnose</span>
-            </summary>
-            <p id="kiosk-detail" data-measure>
-            </p>
-          </details>
-          <p id="kiosk-message" data-measure hidden role="status">
-          </p>
-          <button id="kiosk-retry" hidden type="button"><span data-measure>Kiosk-Dienst erneut verbinden</span></button>
-          <button id="kiosk-check" hidden type="button"><span data-measure>Bestätigung erneut abfragen</span></button>
-          <button id="kiosk-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Zustand übernehmen</span></button>
+        <button id="operator-update-open" data-operator-go="update" type="button"><span data-measure>Quest-App prüfen</span></button>
+        <details id="settings-connection">
+          <summary><span data-measure>Quest-Steuerung</span></summary>
+          <dialog class="operator-dialog" aria-labelledby="settings-connection-title">
+            <header><h2 id="settings-connection-title" data-measure>Quest-Steuerung</h2></header>
+            <div class="screen-body">
+              <select id="settings-connection-view" aria-label="Quest-Steuerung und Status">
+                <option value="control">Steuerung</option>
+                <option value="run-receipt">Sitzungsanfrage</option>
+                <option value="setup-receipt">Einrichtungsanfrage</option>
+                <option value="update">Update und Verbindung</option>
+              </select>
+            </div>
+            <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+          </dialog>
+        </details>
+        <details id="settings-ecg" hidden>
+          <summary><span data-measure>Live-EKG</span></summary>
+          <dialog class="operator-dialog" aria-labelledby="settings-ecg-title">
+            <header><h2 id="settings-ecg-title" data-measure>Live-EKG</h2></header>
+            <div class="screen-body"></div>
+            <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+          </dialog>
+        </details>
+        <details id="quest-settings">
+          <summary><span data-measure>Kiosk</span></summary>
+          <dialog class="operator-dialog" id="kiosk-dialog" aria-labelledby="kiosk-dialog-title">
+            <header><h2 id="kiosk-dialog-title" data-measure>Kiosk</h2></header>
+            <div class="screen-body">
+              <p id="kiosk-summary" data-measure role="status"></p>
+              <p id="kiosk-prerequisites" data-measure></p>
+              <details id="kiosk-diagnostics">
+                <summary><span data-measure>Technische Diagnose</span></summary>
+                <p id="kiosk-detail" data-measure></p>
+              </details>
+              <p id="kiosk-message" data-measure hidden role="status"></p>
+              <button id="kiosk-retry" hidden type="button"><span data-measure>Kiosk-Dienst erneut verbinden</span></button>
+              <button id="kiosk-check" hidden type="button"><span data-measure>Bestätigung erneut abfragen</span></button>
+              <button id="kiosk-acknowledge" hidden type="button"><span data-measure>Aktuellen Quest-Zustand übernehmen</span></button>
+            </div>
+            <footer class="actions"><form method="dialog"><button><span data-measure>Schließen</span></button></form></footer>
+          </dialog>
         </details>
         <button id="quest-disconnect" hidden type="button"><span data-measure>Verbindung trennen</span></button>
       </div>
@@ -539,10 +601,17 @@
       </header>
       <div class="screen-body data-body">
         <p id="data-status" data-measure role="status">Aufnahmen werden geladen …</p>
-        <ul id="data-files"></ul>
+        <div id="data-files" hidden>
+          <label>
+            <span data-measure>Gespeicherte Browser-Aufnahmen</span>
+            <select id="browser-archives" aria-describedby="browser-archive-name"></select>
+          </label>
+          <output id="browser-archive-name" for="browser-archives" data-measure></output>
+          <a id="browser-export-download" class="text-link"><span data-measure>CSV herunterladen</span></a>
+        </div>
       </div>
       <footer class="actions">
-        <a class="back" href="#recordings"><span data-measure>← Zurück</span>
+        <a class="back" href="#recordings"><span data-measure>Zurück</span>
         </a>
       </footer>
     </section>

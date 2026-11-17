@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import module, initial, go, mutations
+from layout_render_fixtures import module, initial, go, mutations, open_apk_details
 from release_fixtures import meta_update_fixture, apk_fixture
 
 
@@ -156,9 +156,9 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
                 expect(page.locator('#meta-update-status')).to_contain_text('Vorbereitung')
                 expect(page.locator('#update-instruction')).to_contain_text('Ruheposition')
                 expect(page.locator('#preview-recovery')).to_be_hidden()
-                page.locator('#apk-identity summary').click()
+                open_apk_details(page, 'receipt')
                 expect(page.locator('#preview-recovery')).to_be_visible()
-                page.locator('#apk-identity summary').click()
+                page.keyboard.press('Escape')
                 page.locator('#apk-identity summary').focus()
                 page.evaluate('scrollTo(0,Math.max(0,document.documentElement.scrollHeight-innerHeight-10))')
                 before_scroll = page.evaluate('scrollY')

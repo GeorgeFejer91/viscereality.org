@@ -8,19 +8,34 @@ catch { /* Pairing can still start without browser storage. */ }
 
 async function showSavedBrowserExports() {
   const status = byId('data-status');
+  const select = byId('browser-archives');
+  const filename = byId('browser-archive-name');
+  const download = byId('browser-export-download');
   try {
     const records = await savedBrowserExports();
-    for (const record of records) {
-      const item = document.createElement('li');
-      const link = document.createElement('a');
-      link.download = record.filename;
-      link.href = URL.createObjectURL(new Blob([record.csv], { type: 'text/csv;charset=utf-8' }));
-      link.textContent = record.filename;
-      link.dataset.measure = '';
-      item.append(link);
-      byId('data-files').append(item);
+    if (records.length) {
+      const date = new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      for (const [index, record] of records.entries()) {
+        const created = new Date(record.created_at);
+        const number = records.length - index;
+        select.add(new Option(Number.isFinite(created.getTime())
+          ? `${date.format(created)} · ${number}` : `Aufnahme ${number}`, index));
+      }
+      let url;
+      const updateDownload = () => {
+        if (url) URL.revokeObjectURL(url);
+        const record = records[select.selectedIndex];
+        url = URL.createObjectURL(new Blob([record.csv], { type: 'text/csv;charset=utf-8' }));
+        filename.textContent = record.filename;
+        download.download = record.filename;
+        download.href = url;
+      };
+      select.addEventListener('change', updateDownload);
+      updateDownload();
+      byId('data-files').hidden = false;
     }
-    status.textContent = records.length ? 'CSV-Datei zum Herunterladen auswählen.' : 'Keine früheren Browser-Aufnahmen gespeichert.';
+    status.textContent = records.length ? '' : 'Keine früheren Browser-Aufnahmen gespeichert.';
+    status.hidden = records.length > 0;
   } catch {
     status.textContent = 'Frühere Browser-Aufnahmen konnten nicht geladen werden.';
   }
@@ -55,9 +70,9 @@ async function measureLabels() {
           const width = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
           const height = element.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
           const lineHeight = parseFloat(style.lineHeight);
-          const stats = measureLineStats(prepared, Math.max(1, width - 2));
+          const stats = measureLineStats(prepared, Math.max(1, width));
           const naturalWidth = measureNaturalWidth(prepared);
-          const singleLine = root.dataset.layout !== 'reflow' && !element.closest('dialog, .preview-controls, .operator-actions, .setup-actions') && element.closest('button, .actions a');
+          const singleLine = style.whiteSpace === 'nowrap';
           // User word spacing is outside Pretext's model; the painted DOM owns that check.
           const domOnly = (parseFloat(style.wordSpacing) || 0) !== 0 || style.hyphens === 'auto';
           const range = document.createRange();
@@ -80,7 +95,7 @@ async function measureLabels() {
         if (!visible) return;
         const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .patient-row, .session-tiles, .session-tile, #data-files, [data-measure], aside, details, .operator-common, #quest-data')].filter(element => element.getClientRects().length);
         const bounds = visible.getBoundingClientRect();
-        const footer = visible.querySelector('.actions');
+        const footer = visible.querySelector(':scope > .actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
         const hasOverflow = groups.some((group) => {
           const box = group.getBoundingClientRect();
@@ -128,8 +143,7 @@ async function measureLabels() {
       liveVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
     });
     const dialogChanges = new MutationObserver(measure);
-    for (const id of ['install-dialog', 'connection-diagnostic', 'drive-dialog']) {
-      const dialog = byId(id);
+    for (const dialog of document.querySelectorAll('dialog')) {
       dialogChanges.observe(dialog, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['open'] });
       observer.observe(dialog);
     }
@@ -159,7 +173,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261117-compact-update').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261117-smartphone-rules').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });

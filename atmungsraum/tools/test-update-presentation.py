@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import module, initial, mutations, go
+from layout_render_fixtures import module, initial, mutations, go, open_apk_details
 from release_fixtures import apk_fixture, meta_update_fixture
 
 
@@ -85,22 +85,27 @@ def run():
             expect(page.locator('#meta-update-check')).to_have_text('Erneut prüfen')
             expect(page.locator('#operator-update-next')).to_be_enabled()
             review.shot(page,f'update-current-{width}-{size or "normal"}','Current Quest app',page.locator('#meta-update-status'),'Update presentation')
-            page.locator('#apk-identity summary').click()
+            open_apk_details(page, 'installed')
             expect(page.locator('#apk-installed')).to_be_visible()
+            topic = page.locator('#apk-detail-view')
+            topic.select_option('identity')
             expect(page.locator('#apk-full-identity')).to_contain_text('e'*64)
+            topic.select_option('update')
             expect(page.locator('#meta-update-diagnostic-status')).to_contain_text('Code')
+            topic.select_option('guidance')
             review.shot(page,f'update-details-{width}-{size or "normal"}','Update details',page.locator('#meta-update-detail'),'Update presentation')
             summary = page.locator('#apk-identity summary')
-            summary.focus()
+            topic.focus()
             page.clock.run_for(1200)
             page.evaluate('scrollTo(0,Math.max(0,document.documentElement.scrollHeight-innerHeight-10))')
             scroll_before = page.evaluate('scrollY')
             page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
             page.clock.run_for(1400)
             assert abs(page.evaluate('scrollY')-scroll_before)<=2, 'current Meta/policy polling moved the open diagnostic'
-            expect(summary).to_be_focused()
+            expect(topic).to_be_focused()
             expect(page.locator('#meta-update-status')).to_have_text('Quest-App ist aktuell.')
-            summary.click()
+            page.keyboard.press('Escape')
+            expect(summary).to_be_focused()
             for state, reason, allowed, instruction in [
                 ('downloading','',False,'geladen'),
                 ('restart_required','prior-install-unconfirmed-maintenance-required',False,'Meta-Bibliothek'),

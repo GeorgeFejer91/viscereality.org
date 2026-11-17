@@ -1,5 +1,46 @@
 # Verification
 
+## Smartphone GUI release gate
+
+Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
+Use `--ref HEAD` to verify the exact committed tree. The tracked pre-push
+hook runs the check for the candidate branch revisions and exits nonzero
+when a candidate fails. From the repository root enable the hook with
+`git config --local core.hooksPath atmungsraum/for-ai/hooks`.
+
+Use the real production controller with its synthetic Quest transport.
+Exercise connected and disconnected setup, editing and validation, active
+and recovery states, dialogs and expanded controls. Cover 320 × 640 and
+390 × 844 portrait, 844 × 390 landscape, 1440 × 900 desktop, 200% text,
+user text-spacing overrides, both sides of layout breakpoints and focused
+editing with reduced height. Verify positive checks and each independent
+failure popup, with keyboard activation and focus restoration.
+
+Check the [UI rules](UI-LAYOUT.md#smartphone-gui-rules) against the painted
+DOM and real Pretext measurements. Assert viewport and control bounds,
+stretch anchors, tracks and growing group gaps, full text and zero scroll
+range for the document and nested regions. Treat overlap, clipping,
+inaccessible controls or missing evidence as failures. Confirm safe
+areas, the keyboard and the installed PWA on the supported physical phone
+when emulation cannot exercise them. Record the candidate SHA, browser or
+device, viewport, measured states and results.
+
+### Smartphone UI rule port — 2026-11-17
+
+The installed pre-push hook tested the archived `faff9b4` candidate and
+passed 338 states across eight Chromium viewport and text cases. These covered
+the single toolbar row, 48 px controls, the 389/390 px breakpoint, enlarged
+text, text-spacing overrides, reduced height during editing, Pretext and
+painted bounds, stretch geometry, and zero document or panel scrolling.
+Independent diagnostic popups returned keyboard focus to their triggers.
+Selecting from 60 synthetic historical records downloaded the expected CSV.
+
+The production controller walkthrough also passed with synthetic Quest
+transport. The JavaScript suite reported 316 passed and nine skipped, and the
+mounted update suite passed 35 states, including the 320 px and 200% text case.
+USB and wireless ADB listed no devices. The installed PWA's physical keyboard
+and safe-area checks remain open.
+
 ## Attended Meta26 request and owner-read contention — 2026-11-17
 
 The repaired source4edf4b89/tree358a0c91 passes independent spec/quality review,

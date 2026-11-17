@@ -4,6 +4,7 @@ from pathlib import Path
 import importlib.util
 import json
 from playwright.sync_api import sync_playwright, expect
+from layout_render_fixtures import open_apk_details
 
 spec = importlib.util.spec_from_file_location('capture', Path(__file__).with_name('capture-phone-screens.py'))
 capture = importlib.util.module_from_spec(spec)
@@ -74,8 +75,8 @@ def main():
                 assert len(requests) > initial_reads
                 assert all(request['cache'] == 'no-store' and request['credentials'] == 'omit' for request in requests)
                 if slug == 'installed-current':
-                    summary = page.locator('#apk-identity summary')
-                    summary.click()
+                    open_apk_details(page, 'identity')
+                    summary = page.locator('#apk-detail-view')
                     expect(page.locator('#apk-full-identity')).to_contain_text('e' * 64)
                     expect(page.locator('#apk-full-identity')).to_contain_text(metadata['package_name'])
                     summary.focus()

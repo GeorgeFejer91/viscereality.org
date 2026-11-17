@@ -1,0 +1,2 @@
+#!/bin/sh
+exec python -B atmungsraum/for-ai/scripts/check-gui.py --pre-push "$1"

@@ -59,22 +59,24 @@ Historical checkpoint notes below describe their observation time.
 
 ## Operator layout qualification — 2026-11-16
 
-Before a UI feature push, run `python -B tools/test-operator-layout.py` and
-`python -B tools/capture-phone-screens.py --scope layout --output <new-dir>`
-against the actual candidate. Include disconnected and connected setup,
+Before a UI feature push, pass the [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
+against the exact candidate. Enable it in each checkout from the repository
+root using `git config --local core.hooksPath atmungsraum/for-ai/hooks`.
+Use `python -B tools/capture-phone-screens.py --scope layout --output <new-dir>`
+from the subproject for screenshot evidence. Include disconnected and connected setup,
 participant editing, diagnostics, Drive, native input/calibration modes, the
 scenario tiles and existing controls during recovery/recording. Check the
 [single-viewport rules](UI-LAYOUT.md#smartphone-gui-rules) at phone portrait,
-short landscape, 200% text, custom spacing and focused editing. Record any
-deliberate accessibility reflow and physical keyboard/safe-area gaps separately.
+short landscape, 200% text, custom spacing and focused editing. Record every
+failed viewport and use the installed phone to check its keyboard and safe areas.
 Do not move permission, recording, Drive, or audio ownership into the UI.
 
 The [layout contract](UI-LAYOUT.md) preserves native/domain authority while
 splitting preparation, tracking, running, recordings and settings. Use the real
 app/gateway fixture and actual Pretext, not static mockup HTML. Check configured
 viewport width (mobile overflow can expand `innerWidth`), painted text/control
-bounds, header/body/footer separation,48px targets and document reflow. Preserve
-six-poll scroll/editor/caret and zero-command local-navigation checks.
+bounds, header/body/footer separation, 48 px targets and zero scroll range.
+Preserve multi-poll editor/caret and zero-command local-navigation checks.
 
 With the fixture's paused browser clock, Chromium full-page/captureBeyondViewport
 screenshots can paint a stale footer position after measurement/viewport changes,
