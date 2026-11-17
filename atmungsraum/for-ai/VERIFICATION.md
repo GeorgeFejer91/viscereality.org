@@ -60,6 +60,13 @@ DEX and payloads apart from explicit closed generated identities. It remains
 unpublished until an actual repaired25 recording is RUNNING/rec:true and the
 coordinating agent releases it for the deferred attended update test.
 
+Release policy PR52/merge9e35559 reached exact Pages44138654869 success and11
+checked public files match Git. The live browser accepts25 without an extra
+update step and routes24 through the required update step. Current-session
+Pause/Resume/Finish preserve the old setup journal and offline ZIP bytes still
+match the original CSV hash. These browser checks use synthetic transport; they
+do not establish installed-phone refresh or actual Quest installation.
+
 ## PWA startup update and Quest reconnect — 2026-11-17
 
 `python -B tools/test-pwa-startup.py` runs the served HTML and production
