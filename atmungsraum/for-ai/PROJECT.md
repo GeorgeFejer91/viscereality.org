@@ -19,8 +19,13 @@ Pages44186834653 success;9 live files match and live policy27 probes pass
 (synthetic transport). Compact PR61/merge704328c reached exact Pages44190653853
 success. All16 affected live files match Git and35 public-runtime compact renders
 pass (synthetic Quest transport, no native mutations). Local branch matches that
-merge and is clean before this evidence follow-up. The USB Pixel is absent, so
-installed-phone refresh is pending; reopen/refresh when available. Attended
+merge and is clean before this evidence follow-up. The lab PC also synced this
+release and passed all 35 compact renders. The connected lab Pixel 10 WebAPK
+loaded `20261117-compact-update` in standalone mode on the Quest connection
+screen. Bluetooth radios and relevant permissions were enabled on both lab
+devices. The lab Quest 2 was asleep with Developer closed during discovery;
+wake it, clear prompts, open Atmungsraum Developer, and retry the in-app picker.
+Attended
 Quest1WMHHA46S32126 remains25;27 installation and27→28 acceptance stay open.
 
 ### Active: PWA update from every preparation state — 2026-11-17
