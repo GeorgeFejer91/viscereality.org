@@ -28,7 +28,7 @@ Independent reviews pass. Host checks: duration54/D8 plus actual native parser;
 remote64/integrated134, authenticated power89, WiFi/BLE projection, Polar health47
 and serialized battery22. Actual new APK build and signed qualification are in
 progress. This candidate is not yet published to Meta; version25 stays held for
-the actual recording-running update test. Public minimum/latest remains23.
+the actual recording-running update test. Public minimum/latest is24 after verified Meta availability.
 
 
 ## 0.2.22-dev â€” repaired Meta code23-r2 baseline, 2026-11-17
@@ -61,8 +61,8 @@ all four Java host suites and PWA297 checks pass. Independent review closes the
 identified lineage, headless and local-presentation issues. Rust source retains
 the previously passing888-case host suite (five intentional ignores).
 Signed23-r2 inspection passes1073 checks, including new Arm/validation DEX closure,
-same signer, SDK/helper/private payloads and900-second session closure. The public
-minimum/latest is23. Actual Arm/Start and manual-input physical acceptance remain
+same signer, SDK/helper/private payloads and900-second session closure. The then-current public
+minimum/latest was23. Actual Arm/Start and manual-input physical acceptance remain
 pending. Version-only24 (`0.2.23-dev`,65,690,758bytes, SHA256
 `41040098f417209dceebc5347997af04dcd133b7ba7ca71389aae03aefb1a8d5`)
 passes1071 checks with identical DEX/audio/visual/SDK payloads and the same native

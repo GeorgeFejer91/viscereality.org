@@ -30,7 +30,9 @@ IDLE/g0/r1, rec:false. No experiment recording has started.
   controller and Polar. Missing/unavailable controller battery is informational,
   not a new admission requirement. No automatic abort/pause for battery values.
 - [x] Qualify repaired24-r2 source and signed assets; reviewed native0c82ff/tree2444f55f.
-  Code24-r1 stays revoked. Actual24 Meta installation remains pending.
+  Code24-r1 stays revoked. Repaired24 is current on private Meta Developer
+  build1464488216750190; malware and detailed security passed. Actual24
+  installation and physical health/battery acceptance remain pending.
 - [ ] Finish Meta24 publication and health/battery PWA deployment, then refresh
   the installed phone and verify actual current-device readings and contact loss.
 - [ ] Establish actual RUNNING/rec:true on repaired24 before publishing held25;
