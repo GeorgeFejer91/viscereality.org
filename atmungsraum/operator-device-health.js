@@ -55,8 +55,8 @@ export class OperatorDeviceHealth {
       remaining.push(limit - fieldAge - overhead);
       return true;
     };
-    let polar = { confirmed: null, state: 'unknown', neutral: 'Status unbekannt',
-      detail: 'Aktueller Polar-Status wird von dieser Quest-App nicht gemeldet. Tragekontakt unbekannt.' };
+    let polar = { confirmed: null, state: 'unknown', neutral: 'Quest-App meldet keinen Polar-Status',
+      detail: 'Aktueller Polar-Status wird von dieser Quest-App nicht gemeldet. Quest-App aktualisieren, um die Statusprüfung zu nutzen. Tragekontakt unbekannt; EKG und Bewegung allein bestätigen ihn nicht.' };
     if (health) {
       const ecg = health.ecg.fresh && fieldFresh(health.ecg.age_ms);
       const acc = health.acc.fresh && fieldFresh(health.acc.age_ms);

@@ -7,7 +7,7 @@ const owner = { device: 'a'.repeat(32), serial: 'TEST', epoch: '7', native_epoch
 const controller = 'b'.repeat(32), key = 'c'.repeat(64), build = 'd'.repeat(64);
 const mac = text => createHmac('sha256', key).update(text).digest('hex');
 
-async function peer({ version = 2, control = 1, waiting = false } = {}) {
+async function peer({ version = 2, control = 1, waiting = false, preparation = undefined } = {}) {
   const calls = [];
   const fetcher = async (_url, init) => {
     if (!init.body) return Response.json({ ...owner, v: 1, enabled: true, remote_available: true });
@@ -17,6 +17,7 @@ async function peer({ version = 2, control = 1, waiting = false } = {}) {
     if (action === 'status') value = { v: 1, wifi_snapshot: 1, control_mode: 'remote', recordings: 1,
       build: { v: 1, packaging_fingerprint: build }, p: 'IDLE', g: 0, r: 0, ms: 0, pending: false, rec: false,
       o: { v: 1, s: 'observed', e: '8', a: 5, i: '1', g: 0, r: 0 }, meta_update_control: control,
+      ...(preparation === undefined ? {} : { meta_update_preparation: preparation }),
       meta_update: { v: version }, controller_access: { v: 1, role: waiting ? 'waiting' : 'active', active_phone: 'Test', revision: 2 } };
     else {
       assert.equal(action, 'meta-update'); calls.push(JSON.parse(request.payload));
@@ -38,6 +39,19 @@ test('enrolled update action authenticates the exact bounded check body and orig
   for (const bad of [{ ...body, url: 'https://invalid/' }, { ...body, target: 20 }, { ...body, op: 'install' },
     { ...body, cycle: 2 }, { ...body, revision: '0' }, { ...body, id: 'x' }]) assert.throws(() => gateway.metaUpdate(bad));
   assert.equal(calls.length, 2); gateway.close();
+});
+
+test('only advertised preparation capability accepts the exact preparation-end request', async () => {
+  const body = { v: 1, id: 'f'.repeat(16), op: 'end-preparation-and-check', cycle: '2', revision: '7' };
+  for (const preparation of [undefined, 0, 1]) {
+    const { gateway, calls } = await peer({ preparation });
+    if (preparation === 1) {
+      await gateway.metaUpdate(body); assert.deepEqual(calls, [body]);
+      for (const bad of [{ ...body, target: 20 }, { ...body, revision: 7 }, { ...body, cycle: '0' }])
+        assert.throws(() => gateway.metaUpdate(bad));
+    } else assert.throws(() => gateway.metaUpdate(body));
+    gateway.close();
+  }
 });
 
 test('legacy advertisement and a waiting controller cannot invoke the update action', async () => {

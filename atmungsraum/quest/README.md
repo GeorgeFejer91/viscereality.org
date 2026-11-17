@@ -123,9 +123,9 @@ retirement, require durable helper cancellation before intentional closure,
 and expire delayed main-thread install handoffs. Software qualification is
 separate from the pending physical acceptance.
 Native host tests pass896 cases with six intentional ignores; actual signed25-r2
-passes1114 package checks. Wearer acceptance remains a separate gate. Code23
-remains the last observed Meta-installed hardware baseline until the APK log
-records otherwise.
+passes1114 package checks. Wearer acceptance remains a separate gate. Meta-installed25 has been observed
+on the lab Quest with matching published APK bytes; later candidates require
+their own package and attended update evidence.
 Applying the exact binary patch to an isolated index at the
 pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects

@@ -1,5 +1,5 @@
-import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=13';
-import { nativeMetaUpdate } from './meta-update.js?v=3';
+import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=14';
+import { nativeMetaUpdate } from './meta-update.js?v=4';
 
 const key = 'atmungsraum-meta-update-pending';
 const lineage = v => typeof v === 'string' && /^[1-9][0-9]{0,18}$/.test(v);
@@ -7,19 +7,31 @@ const id = v => typeof v === 'string' && /^[a-f0-9]{16}$/.test(v);
 const reason = v => typeof v === 'string' && v.length <= 96 && !/[^\x20-\x7e]/.test(v);
 const ownerValid = o => o && /^[a-f0-9]{32}$/.test(o.device) && typeof o.serial === 'string'
   && o.serial.length <= 64 && !/[\x00-\x1f\x7f]/.test(o.serial) && lineage(o.epoch) && lineage(o.native_epoch);
-const commandValid = c => c?.v === 1 && id(c.id) && c.op === 'check-and-update'
+const commandValid = c => c?.v === 1 && id(c.id) && ['check-and-update', 'end-preparation-and-check'].includes(c.op)
   && lineage(c.cycle) && lineage(c.revision) && Object.keys(c).length === 5;
 const receiptValid = r => r?.v === 1 && id(r.id) && ['accepted', 'busy', 'stale', 'unsupported', 'rejected'].includes(r.state)
   && lineage(r.cycle) && lineage(r.revision) && reason(r.reason)
   && (r.state === 'accepted' ? lineage(r.attempt) : r.attempt === null || lineage(r.attempt));
 
 const guidance = {
-  'preparation-active': 'Die Atemvorbereitung läuft. Updates sind erst nach einer sicher beendeten Sitzung möglich.',
+  'preparation-active': 'Die Atemvorbereitung läuft. Diese Quest-App kann sie noch nicht per Update-Aktion beenden. Aktualisiere die Quest-App über ihre Meta-Bibliothek.',
   'session-active': 'Die Sitzung läuft. Beende und speichere sie, bevor du ein Update prüfst.',
   'writer-active': 'Die Quest verarbeitet eine Aufnahme. Warte auf den bestätigten Abschluss.',
   'finalizing': 'Die Quest speichert die Sitzung. Warte auf den bestätigten Abschluss.',
+  'setup-park-pending': 'Die Quest hält den Atemtakt an. Warte auf die bestätigte Ruheposition; danach beginnt die Update-Prüfung.',
   'install-uncertain': 'Der Installationsstand ist unklar. Prüfe die Meta-Bibliothek im Headset.',
 };
+const successor = value => {
+  if (!lineage(value)) return null;
+  const next = String(BigInt(value) + 1n);
+  return lineage(next) ? next : null;
+};
+const targetCycle = command => command.op === 'end-preparation-and-check'
+  ? successor(command.cycle) : command.cycle;
+const acceptanceValid = (command, receipt) => receiptValid(receipt) && receipt.state === 'accepted'
+  && receipt.id === command.id && receipt.cycle === targetCycle(command)
+  && (command.op === 'end-preparation-and-check' ? receipt.revision === successor(command.revision)
+    : BigInt(receipt.revision) > BigInt(command.revision));
 
 export class MetaUpdateControl {
   pending = null;
@@ -28,19 +40,22 @@ export class MetaUpdateControl {
   message = '';
   expired = false;
   budget = null;
+  receiptConflict = false;
 
   constructor({ storage, now = () => performance.now() } = {}) {
     this.storage = storage; this.now = now;
     try {
       const saved = JSON.parse(storage?.getItem(key) ?? 'null');
-      if (ownerValid(saved?.owner) && commandValid(saved.command)
-        && (!saved.accepted || receiptValid(saved.accepted) && saved.accepted.state === 'accepted'
-          && saved.accepted.id === saved.command.id && saved.accepted.cycle === saved.command.cycle)) this.pending = saved;
+      if (ownerValid(saved?.owner) && commandValid(saved.command)) {
+        this.pending = { owner: saved.owner, command: saved.command };
+        if (saved.accepted && acceptanceValid(saved.command, saved.accepted)) this.pending.accepted = saved.accepted;
+        else if (saved.accepted) this.receiptConflict = true;
+      }
     } catch { /* In-memory lineage remains usable without storage. */ }
   }
 
   remember(value) {
-    this.pending = value; this.budget = null; this.expired = false;
+    this.pending = value; this.budget = null; this.expired = false; this.receiptConflict = false;
     try { if (value) this.storage?.setItem(key, JSON.stringify(value)); else this.storage?.removeItem(key); }
     catch { /* A storage failure never resends an operation. */ }
   }
@@ -53,24 +68,44 @@ export class MetaUpdateControl {
     let active = false;
     try { active = available && controllerAccessState(state.status)?.role === 'active'; } catch { /* Refuse malformed roles. */ }
     if (available && this.pending?.accepted && sameQuest(this.pending.owner, gateway.owner)
-      && value.attempt === this.pending.accepted.attempt && value.cycle === this.pending.accepted.cycle
+      && value.attempt === this.pending.accepted.attempt && value.cycle === targetCycle(this.pending.command)
       && BigInt(value.revision) >= BigInt(this.pending.accepted.revision)) {
       this.remember(null); this.message = '';
     }
-    const idle = active && state.status.p === 'IDLE' && !state.status.rec && !state.status.pending
+    const canEndPreparation = state.status?.meta_update_preparation === 1 && value?.can_end_preparation === true;
+    const requestOp = canEndPreparation && !value?.can_check ? 'end-preparation-and-check' : 'check-and-update';
+    // Native pending covers both experiment commands and the optional calibration introduction.
+    // Only the explicitly admitted preparation-end operation can retire that introduction.
+    const endingInstruction = requestOp === 'end-preparation-and-check' && state.status?.h === 'vr-preparation'
+      && id(state.calibrationInstruction) && state.status.setup?.instruction_id === state.calibrationInstruction;
+    const pendingOnQuest = state.status?.pending && !endingInstruction;
+    const idle = active && state.status.p === 'IDLE' && !state.status.rec && !pendingOnQuest
       && !state.busy && !state.pending && !state.unknown;
+    const boundedRequest = requestOp !== 'end-preparation-and-check' || successor(value?.cycle) && successor(value?.revision);
     const retired = this.pending && gateway?.owner.device === this.pending.owner.device
       && gateway.owner.serial === this.pending.owner.serial
-      && (!sameQuest(this.pending.owner, gateway.owner) || available && value.cycle !== this.pending.command.cycle);
+      && (!sameQuest(this.pending.owner, gateway.owner) || available
+        && value.cycle !== this.pending.command.cycle && value.cycle !== targetCycle(this.pending.command));
     this.view = {
       available, value: available ? value : null,
-      canRequest: Boolean(idle && value.can_check && !this.pending && !this.busy),
+      canRequest: Boolean(idle && boundedRequest && (value.can_check || canEndPreparation) && !this.pending && !this.busy),
+      requestOp,
       canReadReceipt: Boolean(active && this.pending && sameQuest(this.pending.owner, gateway.owner) && !this.busy && !this.refreshing),
       canAcknowledge: Boolean(active && retired && !this.busy),
       prerequisites: !available ? '' : !active ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
-        : !value.can_check ? guidance[value.busy_reason] || 'Die Quest gibt eine neue Update-Prüfung gerade nicht frei. Warte auf einen sicheren Abschluss.'
+        : state.unknown ? 'Eine frühere Sitzungsanfrage ist unklar. Frage ihre ursprüngliche Bestätigung ab, bevor du aktualisierst.'
+        : state.pending || pendingOnQuest ? 'Eine Sitzungsanfrage wartet auf Bestätigung. Warte auf das ursprüngliche Ergebnis.'
+        : state.busy ? 'Eine Quest-Aktion wird bestätigt. Warte auf ihren Abschluss.'
+        : !boundedRequest ? 'Der Quest-Stand kann nicht sicher weitergeführt werden. Verbinde das Smartphone erneut und prüfe den aktuellen Stand.'
+        : canEndPreparation && !value.can_check ? 'Die Vorbereitung wird beendet. Erst wenn die Quest den Atemtakt sicher angehalten hat, beginnt die Update-Prüfung.'
+        : !value.can_check ? (state.status.p === 'IDLE' && !state.status.rec && ['session-active', 'preparation-active'].includes(value.busy_reason)
+          ? state.status.meta_update_preparation === 1
+            ? 'Die Vorbereitung kann gerade nicht sicher beendet werden. Warte auf die Bestätigung der Quest.'
+            : guidance['preparation-active'] : guidance[value.busy_reason]) || 'Die Quest gibt eine neue Update-Prüfung gerade nicht frei. Warte auf einen sicheren Abschluss.'
         : 'Mit „Updates prüfen und installieren“ startest du eine neue Prüfung. Eine nötige Installation kann die Quest-App vorübergehend schließen.',
-      message: this.pending ? this.expired
+      message: this.pending ? this.receiptConflict
+        ? 'Die Quest meldet widersprüchliche Bestätigungen. Die ursprüngliche Update-Anfrage bleibt gespeichert. Frage ihren Stand erneut ab.'
+        : this.expired
         ? 'Die Bestätigung ist noch offen. Frage das Ergebnis der ursprünglichen Anfrage erneut ab. Die Aktualisierung wird nicht erneut angefragt.'
         : 'Warte auf die Bestätigung der Quest. Die ursprüngliche Update-Anfrage bleibt gespeichert.' : this.message,
     };
@@ -80,9 +115,13 @@ export class MetaUpdateControl {
   observe(receipt, gateway) {
     if (!this.pending || this.gateway !== gateway || !sameQuest(this.pending.owner, gateway.owner)
       || !receiptValid(receipt) || receipt.id !== this.pending.command.id) return;
+    if (this.pending.accepted) {
+      if (['v', 'id', 'state', 'cycle', 'revision', 'attempt', 'reason']
+        .some(field => receipt[field] !== this.pending.accepted[field])) this.receiptConflict = true;
+      return;
+    }
     if (receipt.state === 'accepted') {
-      if (receipt.cycle !== this.pending.command.cycle
-        || BigInt(receipt.revision) <= BigInt(this.pending.command.revision)) return;
+      if (!acceptanceValid(this.pending.command, receipt)) return;
       if (!this.pending.accepted || JSON.stringify(this.pending.accepted) !== JSON.stringify(receipt)) {
         this.remember({ ...this.pending, accepted: receipt });
       }
@@ -99,7 +138,7 @@ export class MetaUpdateControl {
     if (!this.view?.canRequest || this.pending || this.busy) return;
     signal?.throwIfAborted();
     const gateway = this.gateway;
-    const command = { v: 1, id: operationId(), op: 'check-and-update', cycle: this.view.value.cycle, revision: this.view.value.revision };
+    const command = { v: 1, id: operationId(), op: this.view.requestOp, cycle: this.view.value.cycle, revision: this.view.value.revision };
     this.remember({ owner: { ...gateway.owner }, command }); this.busy = true; this.message = '';
     try { this.observe(await gateway.metaUpdate(command, signal), gateway); }
     catch { /* Resolve the original ID, never submit a replacement mutation. */ }

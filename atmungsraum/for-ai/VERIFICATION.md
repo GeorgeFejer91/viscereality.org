@@ -1,5 +1,21 @@
 # Verification
 
+## Preparation and save before PWA updates — 2026-11-17
+
+The merged PWA release20261117-preparation-update passes323 Node tests with
+zero failures/skips,25 mounted preparation cases,26 compact Update states,10
+current-session/offline-archive renders and the authored operator flow. Exact
+calibration instruction identity, native end-preparation admission and the
+non-recording preparation owner allow that narration to end for an update.
+An unresolved actual guided Start remains protected with a specific wait message
+until its original receipt confirms; no unrelated pending command is overridden.
+Original Save confirmation precedes writer cleanup, a fresh actual audio park
+and update admission. Foreign owners/revisions and uncertain Save outcomes
+cannot continue into installation. Scoped independent review and all14 changed
+runtime cache identities pass. Rendered checks use synthetic enrolled transport;
+they do not prove a Meta installation or wearer acceptance. Signed APK and live
+publication evidence will be added after those gates pass.
+
 ## Review repairs: current-session controls and offline archives — 2026-11-17
 
 PWA20261117-review-repairs passes309 Node tests with zero skips after current-main

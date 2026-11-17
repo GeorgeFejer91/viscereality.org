@@ -18,6 +18,110 @@ function fixture() {
   return { gateway, calls, mode: v => { mode = v; } };
 }
 
+test('explicit preparation update requires both native capability and current admission and binds the exact next cycle', async () => {
+  const peer = fixture(), saved = storage(), model = new MetaUpdateControl({ storage: saved });
+  const preparing = state({ meta_update_preparation: 1, meta_update: { ...state().status.meta_update,
+    can_check: false, can_end_preparation: true, busy_reason: 'preparation-active' } });
+  assert.equal(model.update(peer.gateway, preparing).canRequest, true);
+  assert.equal(model.view.requestOp, 'end-preparation-and-check');
+  peer.mode('lost'); await model.request();
+  assert.equal(peer.calls[0].op, 'end-preparation-and-check');
+  const original = model.pending.command;
+  const next = new MetaUpdateControl({ storage: saved }); next.update(peer.gateway, preparing);
+  for (const cycle of ['2', '4']) {
+    next.observe({ v: 1, id: original.id, state: 'accepted', cycle, revision: '8', attempt: '20', reason: 'ending-preparation' }, peer.gateway);
+    assert.equal(next.pending.accepted, undefined);
+  }
+  next.observe({ v: 1, id: original.id, state: 'accepted', cycle: '3', revision: '8', attempt: '20', reason: 'ending-preparation' }, peer.gateway);
+  const parking = state({ meta_update_preparation: 1, meta_update: { ...preparing.status.meta_update,
+    cycle: '3', revision: '8', attempt: '20', state: 'checking', reason: 'ending-preparation' } });
+  assert.equal(next.update(peer.gateway, parking).canAcknowledge, false);
+  assert.equal(next.pending, null, 'matching native target/attempt resolves the original receipt');
+  for (const patch of [{ meta_update_preparation: undefined }, { rec: true }, { pending: true },
+    { controller_access: { v: 1, role: 'waiting', active_phone: 'Other', revision: 2 } },
+    { meta_update: { ...preparing.status.meta_update, can_end_preparation: false } }]) {
+    const denied = new MetaUpdateControl();
+    assert.equal(denied.update(peer.gateway, { ...preparing, status: { ...preparing.status, ...patch } }).canRequest, false);
+  }
+});
+
+test('only native preparation-end admission may retire a confirmed calibration narration while pending', () => {
+  const peer = fixture(), model = new MetaUpdateControl(), instructionId = 'b'.repeat(16);
+  const playback = state({ meta_update_preparation: 1, h: 'vr-preparation', pending: true,
+    setup: { instruction_id: instructionId }, meta_update: { ...state().status.meta_update,
+      can_check: false, can_end_preparation: true, busy_reason: 'preparation-audio-active' } });
+  playback.calibrationInstruction = instructionId;
+  assert.equal(model.update(peer.gateway, playback).canRequest, true);
+  assert.equal(model.view.requestOp, 'end-preparation-and-check');
+  for (const overrides of [{ busy: true }, { unknown: true }, { pending: true },
+    { calibrationInstruction: 'c'.repeat(16) }, { calibrationInstruction: null }]) {
+    assert.equal(model.update(peer.gateway, { ...playback, ...overrides }).canRequest, false);
+  }
+  for (const overrides of [{ p: 'ARMED' }, { rec: true }, { h: 'vr-session' }, { meta_update_preparation: 0 },
+    { meta_update: { ...playback.status.meta_update, can_check: true } },
+    { meta_update: { ...playback.status.meta_update, can_end_preparation: false } }]) {
+    assert.equal(model.update(peer.gateway, { ...playback, status: { ...playback.status, ...overrides } }).canRequest, false);
+  }
+});
+
+test('preparation acceptance requires exact next revision for both live and restored receipts', async () => {
+  const command = { v: 1, id: 'e'.repeat(16), op: 'end-preparation-and-check', cycle: '2', revision: '7' };
+  for (const revision of ['1', '7', '8', '9']) {
+    const accepted = { v: 1, id: command.id, state: 'accepted', cycle: '3', revision, attempt: '20', reason: 'ending-preparation' };
+    const peer = fixture(), saved = storage();
+    saved.setItem('atmungsraum-meta-update-pending', JSON.stringify({ owner, command }));
+    const live = new MetaUpdateControl({ storage: saved }); live.update(peer.gateway, state());
+    live.observe(accepted, peer.gateway);
+    assert.equal(Boolean(live.pending.accepted), revision === '8', `live ${revision}`);
+    saved.setItem('atmungsraum-meta-update-pending', JSON.stringify({ owner, command, accepted }));
+    const restored = new MetaUpdateControl({ storage: saved });
+    assert.deepEqual(restored.pending.command, command, 'uncertain original is retained');
+    assert.equal(Boolean(restored.pending.accepted), revision === '8', `restored ${revision}`);
+    restored.update(peer.gateway, state()); await restored.request();
+    assert.equal(peer.calls.length, 0, 'an invalid stored acceptance cannot permit a replacement request');
+  }
+});
+
+test('preparation request arithmetic overflow refuses transport and cannot restore an acceptance', async () => {
+  for (const field of ['cycle', 'revision']) {
+    const peer = fixture(), model = new MetaUpdateControl(), meta = { ...state().status.meta_update,
+      can_check: false, can_end_preparation: true, [field]: '9999999999999999999' };
+    assert.equal(model.update(peer.gateway, state({ meta_update_preparation: 1, meta_update: meta })).canRequest, false);
+    await model.request(); assert.equal(peer.calls.length, 0);
+    const saved = storage(), command = { v: 1, id: 'e'.repeat(16), op: 'end-preparation-and-check', cycle: meta.cycle, revision: meta.revision };
+    saved.setItem('atmungsraum-meta-update-pending', JSON.stringify({ owner, command,
+      accepted: { v: 1, id: command.id, state: 'accepted', cycle: meta.cycle, revision: meta.revision, attempt: '20', reason: '' } }));
+    const restored = new MetaUpdateControl({ storage: saved });
+    assert.deepEqual(restored.pending.command, command); assert.equal(restored.pending.accepted, undefined);
+  }
+});
+
+test('a lost preparation response cannot be locally retired at its target cycle or replayed', async () => {
+  const peer = fixture(), model = new MetaUpdateControl(); peer.mode('lost');
+  const preparing = state({ meta_update_preparation: 1, meta_update: { ...state().status.meta_update,
+    can_check: false, can_end_preparation: true, busy_reason: 'preparation-active' } });
+  model.update(peer.gateway, preparing); await model.request();
+  const target = state({ meta_update_preparation: 1, meta_update: { ...preparing.status.meta_update,
+    cycle: '3', revision: '1', attempt: '20', state: 'checking', reason: 'ending-preparation' } });
+  assert.equal(model.update(peer.gateway, target).canAcknowledge, false);
+  await model.request(); assert.equal(peer.calls.length, 1);
+  assert.equal(model.pending.command.op, 'end-preparation-and-check');
+});
+
+test('an accepted receipt is immutable across contradictory later replies and foreign-attempt status', async () => {
+  const peer = fixture(), model = new MetaUpdateControl();
+  model.update(peer.gateway, state()); await model.request();
+  const accepted = model.pending.accepted;
+  for (const patch of [{ attempt: '21' }, { state: 'rejected', attempt: null }, { revision: '9' }]) {
+    model.observe({ ...accepted, ...patch }, peer.gateway);
+    assert.deepEqual(model.pending.accepted, accepted);
+  }
+  const foreign = state({ meta_update: { ...state().status.meta_update, attempt: '21', revision: '10' } });
+  model.update(peer.gateway, foreign);
+  assert.deepEqual(model.pending.accepted, accepted);
+  assert.equal(model.view.canRequest, false);
+});
+
 test('rendering and status refresh never issue an update; manual request binds native cycle/revision', async () => {
   const peer = fixture(), model = new MetaUpdateControl();
   for (let i = 0; i < 3; i++) { assert.equal(model.update(peer.gateway, state()).canRequest, true); await model.refresh(); }

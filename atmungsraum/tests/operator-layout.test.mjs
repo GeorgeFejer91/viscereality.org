@@ -89,6 +89,12 @@ test('settings remains reachable for native diagnostics during recording and rec
   assert.equal(resolveOperatorView('settings', { ...connected, active: true, recovery: true }), 'settings');
 });
 
+test('explicit update page stays reachable during a recording without bypassing unknown native recovery', () => {
+  assert.equal(resolveOperatorView('update', { ...connected, active: true }), 'update');
+  assert.equal(resolveOperatorView('update', { ...connected, active: true, recovery: true }), 'running');
+  assert.equal(resolveOperatorView('update', { ...connected, recovery: true }), 'recovery');
+});
+
 test('history restores each utility entry return target instead of retaining the next page target', () => {
   const recordings = navigateOperatorView({ step: 'input' }, { type: 'go', step: 'recordings' });
   const settings = navigateOperatorView(recordings, { type: 'go', step: 'settings' });
