@@ -5,7 +5,7 @@
 Signed26-r3 is65,735,811bytes, SHA256
 `7075f6e6cd16cbafd1c43e9ecd465d0b5808c75b0816d98946ae9eb6c8e64e47`.
 Native source2f41df0acbc5b82e293c2da22310f0ef6e1204d4/tree70e032356b72a374b9cd01f3483dff6428608958;
-the cumulative patch is2,350,099bytes/SHA256
+the [code26 source snapshot](https://github.com/GeorgeFejer91/viscereality.org/blob/5f3b3756ce44332621db96b910bcc4005b283006/atmungsraum/quest/native-source.patch) is2,350,099bytes/SHA256
 `bfeaaad65be614c1889ab3adb721fca4a3094ce371b6afbd265644c786936304`.
 It preserves optional authored source while keeping default73 audio assets and
 the900-second loop. The PWA can end preparation through a correlated actual

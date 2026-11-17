@@ -105,11 +105,13 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs the integrated source tree `70e032356b72a374b9cd01f3483dff6428608958`
-with SHA-256 `bfeaaad65be614c1889ab3adb721fca4a3094ce371b6afbd265644c786936304`
-(2,350,099 bytes), reviewed native source `2f41df0acbc5b82e293c2da22310f0ef6e1204d4`.
+reconstructs the integrated source tree `358a0c910ba5d0a84c18ca064492f4978e35a4a4`
+with SHA-256 `5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723`
+(2,368,442 bytes), reviewed native source `4edf4b89b754c57bd062d4695233ede34c8de256`.
 It preserves optional authored playback and adds explicit preparation-end/actual
-audio-park admission for PWA updates. Default builds retain the original73 audio
+audio-park admission for PWA updates. A busy native observation retains the
+accepted continuation without SDK effects; confirmed retirement still stops it.
+Default builds retain the original73 audio
 assets and900-second shared loop; authored playback remains opt-in. The build
 uses `core-lambda-stubs.jar` from the selected
 Android Build Tools when compiling Java media callbacks. The
