@@ -73,3 +73,30 @@ test('stages original scenario JSON and every numbered cue with reproducible ide
   await assert.rejects(() => stageQuestAudio({ sourceRoot: output, output: wrongPrompt }), /Calibration prompt integrity/);
   await assert.rejects(() => access(wrongPrompt), { code: 'ENOENT' });
 });
+
+test('the authored Quest package binds the full exploration recording and calibration instruction', async t => {
+  const scratch = await mkdtemp(join(tmpdir(), 'atmungsraum-authored-audio-'));
+  t.after(() => rm(scratch, { recursive: true, force: true }));
+  const output = join(scratch, 'package');
+  const catalog = await stageQuestAudio({ output, mainStudy: true });
+  const exploration = catalog.scenarios.find(({ id }) => id === 'free-exploration');
+  assert.ok(exploration, 'the headset can discover a packaged exploration timeline');
+  assert.equal(exploration.total_frames, 19_715_793);
+  const plan = JSON.parse(await readFile(join(output, exploration.path), 'utf8'));
+  assert.deepEqual(plan.events, [
+    { id: 'instruction', offset_frames: 0, duration_frames: 960_768 },
+    { id: 'rest', offset_frames: 960_768, duration_frames: 18_755_025 },
+  ]);
+  assert.equal(plan.encoded_audio.duration_frames, exploration.total_frames);
+  assert.equal(catalog.calibration_instruction.duration_frames, 1_952_640);
+  for (const [clip, expected] of [
+    [plan.encoded_audio, '1f1e942ba5ec3c74eb680958047b90ba0e8385e3d4dc3eb641514c57b6f6ab2a'],
+    [catalog.calibration_instruction, '9d723c7fd5e397c087acf8be5e16c38b04344a7deed4c908057a645ac2e0c67a'],
+  ]) {
+    const bytes = await readFile(join(output, clip.path));
+    assert.equal(bytes.length, clip.bytes);
+    assert.equal(digest(bytes), expected);
+    assert.equal(clip.sha256, expected);
+    assert.ok(catalog.files.some(entry => entry.path === clip.path && entry.sha256 === expected));
+  }
+});

@@ -23,6 +23,7 @@ param(
     [string]$MetaPlatformLoaderSha256,
     [string]$MetaPlatformArchiveSha256,
     [switch]$ResolveOnly,
+    [switch]$MainStudyAudio,
     [switch]$BundledAssets
 )
 
@@ -132,7 +133,9 @@ if ((Test-Path -LiteralPath $runRoot) -or (Test-Path -LiteralPath $apkOutput) -o
 if ($LASTEXITCODE -ne 0) { throw 'The native assembly workspace must be ignored by Git.' }
 
 $audio = Join-Path $runRoot 'atmungsraum-audio'
-& node (Join-Path $PSScriptRoot 'stage-audio.mjs') $audio
+$audioStageArgs = @($audio)
+if ($MainStudyAudio) { $audioStageArgs += '--main-study' }
+& node (Join-Path $PSScriptRoot 'stage-audio.mjs') @audioStageArgs
 if ($LASTEXITCODE -ne 0) { throw 'Atmungsraum scenario audio staging failed.' }
 $catalogPath = Join-Path $audio 'scenario-catalog.json'
 $catalog = Get-Content -Raw -LiteralPath $catalogPath | ConvertFrom-Json

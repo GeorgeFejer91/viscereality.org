@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { validateManifest } from '../audio/box-breathing.js';
 import { AUDIO_LIBRARY, SCENARIOS, validateScenario } from '../audio/scenario-protocol.js';
 import { loadBoxLoop } from './box-loop.mjs';
+import { loadAuthoredPlayback } from './authored-playback.mjs';
 import { buildMainStudyScenario, buildProbeStudyScenario } from './main-study-audio.mjs';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
@@ -76,6 +77,15 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output, mainSt
     }
   }
 
+  const playback = study ? await loadAuthoredPlayback(sourceRoot, libraryRecord.sha256) : null;
+  if (playback) {
+    const { plan } = playback;
+    const path = posix.join(scenarioDirectory, plan.scenario_id + '.json');
+    files.set(path, Buffer.from(JSON.stringify(plan, null, 2) + '\n'));
+    for (const [clipPath, bytes] of playback.files) files.set(clipPath, bytes);
+    scenarios.push({ id: plan.scenario_id, path, total_frames: plan.total_frames });
+  }
+
   const loop = await loadBoxLoop({ sourceRoot });
   for (const [path, bytes] of loop.files) {
     if (files.has(path)) throw new Error('Duplicate loop asset: ' + path);
@@ -102,6 +112,7 @@ export async function stageQuestAudio({ sourceRoot = projectRoot, output, mainSt
     sample_rate: library.sample_rate,
     library: libraryPath,
     scenarios,
+    ...(playback ? { calibration_instruction: playback.calibration } : {}),
     box_loop: { path: 'audio/box-loop.json', sha256: loop.sha256,
       cycle_frames: loop.plan.cycle_frames, main_seconds: loop.plan.main_seconds },
     files: Array.from(files, ([path, data]) => describe(path, data)),

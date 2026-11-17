@@ -514,6 +514,22 @@ Scenario JSON/CSV, context, and Git whitespace checks passed. These are
 browser and synthetic gateway checks; physical installed-device acceptance
 remains open.
 
+## Authored Quest audio package — 2026-11-17
+
+The authored-audio branch stages seven scenarios and 96 files.
+`assemble-apk.ps1 -BundledAssets -MainStudyAudio -ResolveOnly` bound the
+catalog SHA-256 into the resolved feature lock. All 96 staged files matched
+their recorded lengths and digests. The native patch reconstructed the
+candidate source tree from the pinned upstream Git base.
+
+The Quest JVM catalog reader accepted both the authored and legacy packages.
+It wrote the original stereo Freie Erkundung bytes and rejected altered
+exploration, calibration, Probe instruction, and Haupt-Runde outro media.
+The Android media adapter compiled against the Android API. Node passed
+302 web and audio tests including Java pairing interoperability. These
+checks cover staging, media input and resolution. They do not exercise the
+selected Quest session owner, audio output or a signed headset install.
+
 ## Quest-backed session preview — 2026-11-17
 
 Code 24 source reconstruction verified the authenticated main-only catalog,

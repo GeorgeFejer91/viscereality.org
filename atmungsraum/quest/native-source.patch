@@ -22047,10 +22047,10 @@ index feb3ddc2..9a63e8e0 100644
  
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
 new file mode 100644
-index 00000000..2f3930bc
+index 00000000..31e88083
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioAndroidTracks.java
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,80 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.content.res.AssetManager;
@@ -22108,15 +22108,16 @@ index 00000000..2f3930bc
 +    @Override public MediaPlayer prepare(String id) throws Exception {
 +        ScenarioAudioPackage selected = catalog;
 +        if (selected == null) throw new IllegalStateException("scenario-audio-not-verified");
-+        File wave = File.createTempFile("scenario-", ".wav", cache);
++        boolean encoded = selected.hasEncodedTrack(id);
++        File playback = File.createTempFile("scenario-", encoded ? ".mp3" : ".wav", cache);
 +        try {
 +            long frames;
-+            try (FileOutputStream output = new FileOutputStream(wave)) {
-+                frames = selected.writeWave(id, output);
++            try (FileOutputStream output = new FileOutputStream(playback)) {
++                frames = encoded ? selected.writeEncodedTrack(id, output) : selected.writeWave(id, output);
 +            }
 +            MediaPlayer player = new MediaPlayer();
-+            try (FileInputStream input = new FileInputStream(wave)) {
-+                player.setDataSource(input.getFD(), 0, wave.length());
++            try (FileInputStream input = new FileInputStream(playback)) {
++                player.setDataSource(input.getFD(), 0, playback.length());
 +                player.prepare();
 +                Log.i(TAG, "channel=scenario-audio event=prepared scenario=" + id
 +                    + " frames=" + frames + " catalog_sha256=" + digest);
@@ -22126,16 +22127,16 @@ index 00000000..2f3930bc
 +                throw failure;
 +            }
 +        } finally {
-+            if (!wave.delete()) Log.w(TAG, "channel=scenario-audio event=cache-cleanup-failed");
++            if (!playback.delete()) Log.w(TAG, "channel=scenario-audio event=cache-cleanup-failed");
 +        }
 +    }
 +}
 diff --git a/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
 new file mode 100644
-index 00000000..e12c53e1
+index 00000000..321eb459
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/condition-audio/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackage.java
-@@ -0,0 +1,345 @@
+@@ -0,0 +1,425 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.IOException;
@@ -22167,6 +22168,8 @@ index 00000000..e12c53e1
 +    private final Map<String, FileIdentity> files = new HashMap<>();
 +    private final Map<String, JSONObject> scenarios = new HashMap<>();
 +    private final Map<String, String> recordingPlans = new HashMap<>();
++    private final Map<String, FileIdentity> encodedTracks = new HashMap<>();
++    private final FileIdentity calibrationInstruction;
 +    private final int sampleRate;
 +    private final FileIdentity library;
 +
@@ -22192,6 +22195,16 @@ index 00000000..e12c53e1
 +        JSONObject profile = json(verified(library));
 +        if (profile.getInt("sample_rate") != sampleRate) {
 +            throw new IOException("Scenario audio library sample rate differs");
++        }
++        if (catalog.has("calibration_instruction")) {
++            JSONObject instruction = catalog.getJSONObject("calibration_instruction");
++            int frames = instruction.getInt("duration_frames");
++            if (frames < 1 || frames > sampleRate * 60) {
++                throw new IOException("Invalid calibration instruction duration");
++            }
++            calibrationInstruction = boundClip(instruction, "assets/audio/playground/calibration-prelude.mp3");
++        } else {
++            calibrationInstruction = null;
 +        }
 +        JSONArray available = catalog.getJSONArray("scenarios");
 +        if (available.length() < 1 || available.length() > 64) {
@@ -22231,6 +22244,7 @@ index 00000000..e12c53e1
 +    }
 +
 +    void verifyAll() throws IOException, JSONException {
++        if (calibrationInstruction != null) verified(calibrationInstruction);
 +        for (String scenarioId : scenarios.keySet()) verifyTimeline(scenarioId, null);
 +    }
 +
@@ -22249,6 +22263,17 @@ index 00000000..e12c53e1
 +        return verifyTimeline(scenarioId, output);
 +    }
 +
++    boolean hasEncodedTrack(String scenarioId) {
++        return encodedTracks.containsKey(scenarioId);
++    }
++
++    long writeEncodedTrack(String scenarioId, OutputStream output) throws IOException, JSONException {
++        FileIdentity track = encodedTracks.get(scenarioId);
++        if (track == null) throw new IOException("Scenario has no verified encoded track: " + scenarioId);
++        output.write(verified(track));
++        return scenarios.get(scenarioId).getInt("total_frames");
++    }
++
 +    private long verifyTimeline(String scenarioId, OutputStream output) throws IOException, JSONException {
 +        JSONObject selected = scenarios.get(scenarioId);
 +        if (selected == null) throw new IOException("Scenario is not packaged: " + scenarioId);
@@ -22259,13 +22284,21 @@ index 00000000..e12c53e1
 +        if (plan.getInt("schema_version") != CATALOG_SCHEMA ||
 +                !plan.getString("scenario_id").equals(scenarioId) ||
 +                !plan.getString("library_manifest_sha256").equals(library.sha256) ||
-+                !plan.getString("audio_assets_base_directory").equals("../../" + cuePrefix) ||
 +                plan.getInt("sample_rate") != sampleRate ||
 +                frames < 1 || frames > sampleRate * 1200 || plan.getInt("total_frames") != frames) {
 +            throw new IOException("Scenario timing or library binding differs");
 +        }
 +
 +        JSONArray events = plan.getJSONArray("events");
++        if ("free-exploration".equals(scenarioId)) {
++            if (output != null) throw new IOException("Exploration requires its verified encoded track");
++            verifyExploration(plan.getJSONObject("encoded_audio"), events, frames);
++            return frames;
++        }
++        if (!plan.getString("audio_assets_base_directory").equals("../../" + cuePrefix) || plan.has("encoded_audio")) {
++            throw new IOException("Unexpected scenario audio format");
++        }
++        verifySessionClips(scenarioId, plan, frames);
 +        if (events.length() < 1 || events.length() > 1000) {
 +            throw new IOException("Invalid scenario audio event count");
 +        }
@@ -22341,6 +22374,54 @@ index 00000000..e12c53e1
 +            }
 +        }
 +        return frames;
++    }
++
++    private void verifyExploration(JSONObject clip, JSONArray events, int frames) throws IOException, JSONException {
++        if (clip.getInt("duration_frames") != frames || events.length() != 2) {
++            throw new IOException("Invalid exploration duration or events");
++        }
++        JSONObject instruction = events.getJSONObject(0);
++        JSONObject music = events.getJSONObject(1);
++        int instructionFrames = instruction.getInt("duration_frames");
++        if (!"instruction".equals(instruction.getString("id")) || !"rest".equals(music.getString("id")) ||
++                instruction.getInt("offset_frames") != 0 || instructionFrames < 1 || instructionFrames >= frames ||
++                music.getInt("offset_frames") != instructionFrames ||
++                music.getInt("duration_frames") != frames - instructionFrames) {
++            throw new IOException("Invalid exploration instruction or music boundary");
++        }
++        FileIdentity track = boundClip(clip, "assets/audio/playground/free-exploration.mp3");
++        verified(track);
++        encodedTracks.put("free-exploration", track);
++    }
++
++    private void verifySessionClips(String scenarioId, JSONObject plan, int totalFrames)
++            throws IOException, JSONException {
++        if (plan.has("pre_session_audio")) {
++            if (!"probe-5".equals(scenarioId)) throw new IOException("Unexpected session instruction");
++            verifySessionClip(plan.getJSONObject("pre_session_audio"), "assets/audio/main-study/de/probe-instructions.wav");
++        }
++        if (plan.has("post_session_audio")) {
++            JSONObject outro = plan.getJSONObject("post_session_audio");
++            if (!"haupt-15".equals(scenarioId) || outro.getInt("offset_frames") != totalFrames) {
++                throw new IOException("Unexpected session outro");
++            }
++            verifySessionClip(outro, "assets/audio/box-breathing/de/soft-v2/outro.wav");
++        }
++    }
++
++    private void verifySessionClip(JSONObject clip, String path) throws IOException, JSONException {
++        int frames = clip.getInt("duration_frames");
++        if (frames < 1 || frames > sampleRate * 60) throw new IOException("Invalid session clip duration: " + path);
++        decodeCue(verified(boundClip(clip, path)), frames, false);
++    }
++
++    private FileIdentity boundClip(JSONObject clip, String expectedPath) throws IOException, JSONException {
++        FileIdentity identity = file(expectedPath);
++        if (!expectedPath.equals(clip.getString("path")) || identity.bytes != clip.getInt("bytes") ||
++                !identity.sha256.equals(clip.getString("sha256"))) {
++            throw new IOException("Audio clip binding differs: " + expectedPath);
++        }
++        return identity;
 +    }
 +
 +    private FileIdentity file(String path) throws IOException {
@@ -27703,10 +27784,10 @@ index ebe21ddf..c8269669 100644
          long value = 20;
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
 new file mode 100644
-index 00000000..729b6fa9
+index 00000000..bbbb387c
 --- /dev/null
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ScenarioAudioPackageTest.java
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,107 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import java.io.ByteArrayInputStream;
@@ -27734,6 +27815,36 @@ index 00000000..729b6fa9
 +        }
 +    }
 +
++    private static void verifyAuthored(Path root, String catalogHash, ScenarioAudioPackage catalog) throws Exception {
++        String scenario = "free-exploration";
++        String media = "assets/audio/playground/" + scenario + ".mp3";
++        check(catalog.ids().contains(scenario), "authored exploration is discoverable");
++        try (java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream()) {
++            check(catalog.writeEncodedTrack(scenario, output) == 19_715_793, "original exploration frame count");
++            check(java.util.Arrays.equals(Files.readAllBytes(root.resolve(media)), output.toByteArray()),
++                "headset media input preserves the exact recording");
++        }
++        try {
++            catalog.writeWave(scenario, OutputStream.nullOutputStream());
++            throw new AssertionError("exploration rendered as a WAV instead of the verified MP3");
++        } catch (IOException expected) { }
++
++        for (String damagedPath : new String[] { media, "assets/audio/playground/calibration-prelude.mp3",
++                "assets/audio/main-study/de/probe-instructions.wav", "assets/audio/box-breathing/de/soft-v2/outro.wav" }) {
++            ScenarioAudioPackage damaged = ScenarioAudioPackage.open(path -> {
++                if (!path.equals(damagedPath)) return Files.newInputStream(root.resolve(path));
++                byte[] bytes = Files.readAllBytes(root.resolve(path));
++                bytes[bytes.length / 2] ^= 1;
++                return new ByteArrayInputStream(bytes);
++            }, catalogHash);
++            try {
++                damaged.verifyAll();
++                throw new AssertionError("accepted damaged authored media: " + damagedPath);
++            } catch (IOException expected) { }
++        }
++        System.out.println("PASS: authored catalog, exact encoded input and damaged media rejection.");
++    }
++
 +    public static void main(String[] args) throws Exception {
 +        Path root = Path.of(args[0]).toAbsolutePath();
 +        String catalogHash = args[1];
@@ -27741,6 +27852,10 @@ index 00000000..729b6fa9
 +            path -> Files.newInputStream(root.resolve(path)), catalogHash
 +        );
 +        catalog.verifyAll();
++        if (args.length == 3 && "authored".equals(args[2])) {
++            verifyAuthored(root, catalogHash, catalog);
++            return;
++        }
 +        org.json.JSONObject mainPlan = new org.json.JSONObject(catalog.recordingPlan("haupt-15"));
 +        check(mainPlan.getInt("total_frames") == 39_690_000, "participant plan duration");
 +        org.json.JSONArray phase = mainPlan.getJSONArray("phases").getJSONArray(1);

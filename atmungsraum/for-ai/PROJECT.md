@@ -398,6 +398,10 @@ cloud-backed files; it was left untouched. The verified runtime commit
   is a separate 19-second asset after the 15-minute timer. Verified all
   84 catalog file identities, all rendered narration and phase PCM against
   the playground, and the 919-second review WAV.
+- [x] Stage the exact calibration narration and Freie Erkundung MP3 in the
+  authored build. The Quest reader verifies the encoded clips, the guided
+  Probe instruction and the Haupt-Runde outro against the catalog. See the
+  [authored package checks](VERIFICATION.md#authored-quest-audio-package--2026-11-17).
 - [ ] Bind the authored programme and the post-session outro to the selected
   Quest playback owner. Preserve preparation, recording provenance and the
   900-second completion boundary. Qualify a signed build on a physical Quest.
@@ -406,7 +410,9 @@ The authored Probe-Runde package stages the supplied German instruction as
 a separate prelude to the 300-second recording plan. The timed plan reuses
 the study phase library and ends on an exhale. The playground plays the
 prelude first. Playback of that prelude on the Quest still needs native
-integration and qualification.
+integration and qualification. Next, bind the verified clips to the native
+start, pause, completion and recording boundaries. Enable Freie Erkundung
+in the phone chooser after the selected Quest build can advertise and run it.
 
 ### Separation of preparation and main study — 2026-11-16
 

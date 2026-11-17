@@ -101,11 +101,16 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
     -Developer -Keystore $developerKeystore -VersionCode 11 -VersionName 0.2.10-dev
 ```
 
-Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `2444f55f83d0cc02e7c45ac83c4007145889356f`, matching
-the repaired code24-r2 candidate source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`.
-Patch SHA256 is `6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`
-(2,050,779 bytes). The candidate starts fixed Controller State without volume
+Use your Git author identity for the local patch commit. The cumulative
+patch on this branch reconstructs the authored-audio source candidate
+`fc381c3ddf927f42b769a29b9987e2b24228dba9`. Its SHA-256 is
+`0f13a2b9fc9d54477e9ee8854d9b5251ea416eae6cf4cf171542469b6f43024a`
+(2,146,214 bytes). The [released Code 24 patch](https://github.com/GeorgeFejer91/viscereality.org/blob/f952d5b6c9925d0fbbc82bcad4748f8aefc0028b/atmungsraum/quest/native-source.patch)
+reconstructs tree `2444f55f83d0cc02e7c45ac83c4007145889356f`, matching
+repaired Code 24-r2 source `0c82ff5744c037f4e01127d1188bbfc81bb8c873`.
+The Code 24 patch SHA-256 is
+`6b6e30b9ce2885157285a7c9017e849ffb09173f0b05e93e34c5a4d652755aa3`
+(2,139,506 bytes). Code 24 starts fixed Controller State without volume
 calibration and retains the selected manual breathing state through temporary
 input loss. It also binds the selected900-second Haupt-Runde plan consistently
 and reports original Arm failures without replaying uncertain native work.
@@ -128,6 +133,11 @@ the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
 `rusty-quest/target/aq2/<RunName>/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
+Use `-MainStudyAudio` with the authored-audio source candidate to include
+the recorded main and guided Probe programmes, the calibration instruction
+and Freie Erkundung. The media reader verifies the whole package against the
+bound catalog. Connecting those assets to the selected session clock and
+advertising the new round remain separate native integration steps.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,
