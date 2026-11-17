@@ -1,5 +1,29 @@
 # Verification
 
+## Automatic phone control — 2026-11-17
+
+The PWA requests a free native controller lease after authenticated connection.
+Only fresh native ownership makes the toolbar control icon green. Hidden/stale
+status, occupied ownership, manual release and uncertain command outcomes retain
+separate states. Definite free-lease non-grants retry at five-second spacing for
+the first three attempts and then every thirty seconds, including recording;
+each attempt rechecks native status. Unknown requests retain their original
+ID/owner/revision and are never replayed. Native admission is unchanged.
+
+The final full Node suite passes297/297 with zero skips using the selected
+native and Java integration. Nine policy cases and the real mounted UI cover
+automatic acquisition, native-confirmed green, stale/hidden removal, occupied
+leases, manual release, unknown fencing, reconnect and continuing fourth/fifth
+requests, including during recording. Independent review passes. The135-state
+rendered layout matrix passes, including320px reflow, enlarged text and stable
+navigation. Input24, Meta27, pairing7 and control/location18 rendered checks,
+startup, operator flow and four selection-race cases also pass. These fixtures
+exercise real app code with synthetic transport; physical Quest/phone acceptance
+is not inferred. Evidence is retained privately under the2026-11-17 auto-control
+validation and visualization directories. Release marker:20261117-auto-control.
+
+Publication and installed-phone refresh remain tracked in PROJECT.md.
+
 ## Attended selection race and flicker — 2026-11-17
 
 Real Pixel6a/Quest2 inspection confirms the phone loaded the published entry,

@@ -45,7 +45,7 @@ def compact_setup(review):
         expect(recordings).to_be_visible()
         controls = header.locator('button:visible').evaluate_all(
             '(buttons) => buttons.map(button => button.getBoundingClientRect().y)')
-        assert len(controls) >= 6 and max(controls) - min(controls) < 2, controls
+        assert len(controls) >= 6 and max(controls) - min(controls) < (54 if width <= 375 else 2), controls
         settings.focus()
         page.keyboard.press('Enter')
         expect(page.locator('#settings-screen-title')).to_be_focused()

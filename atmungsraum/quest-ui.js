@@ -16,6 +16,7 @@ import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
 import { MetaUpdateControl } from './meta-update-control.js?v=2';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=1';
+import { ControllerLease } from './controller-lease.js?v=1';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };
@@ -188,6 +189,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let storage;
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
+  const controllerLease = new ControllerLease({ storage });
   const kiosk = new KioskControl({ storage });
   const metaControl = new MetaUpdateControl({ storage });
   const metaHandoff = new MetaUpdateHandoff({ storage });
@@ -200,6 +202,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let ecgGeneration = null;
   let ecgSensor = '';
   let breathTimer;
+  let controlTimer;
   let versionGeometryKey = '';
   let updateGeometryKey = '';
   const rehearsal = new QuestRehearsal({ storage, onChange: paint });
@@ -296,7 +299,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const access = controllerAccessState(context.status);
     statusText.hidden = (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
     byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
-    text(byId('operator-connection-summary'), controllerAccessState(context.status)?.role === 'active'
+    text(byId('operator-connection-summary'), controllerLease.view?.active
       ? 'Quest verbunden · Steuerung aktiv' : 'Quest verbunden');
     // Readiness gates actions, never the existence of the confirmed method.
     // Hiding this block on ready/unready polls made it flash above the circles.
@@ -389,7 +392,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       // Preserve their combined geometry before writing either text node.
       common.style.minBlockSize = `${Math.max(common.getBoundingClientRect().height, parseFloat(common.style.minBlockSize) || 0)}px`;
     }
-    const commandWaiting = Boolean(connecting || userAction || busy || pending || status?.pending
+    const control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext());
+    clearTimeout(controlTimer);
+    if (control.active) controlTimer = setTimeout(() => paint(), control.expiresIn + 1);
+    const commandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || busy || pending || status?.pending
       || breathing.busy || breathing.pending || nativeRecovering);
     const waiting = waitingForControl || commandWaiting;
     controlPanel.hidden = !access;
@@ -397,9 +403,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     controlRelease.hidden = access?.role !== 'active';
     controlClaim.disabled = !canChangeControl('claim');
     controlRelease.disabled = !canChangeControl('release');
-    text(controlStatus, waitingForControl ? (access.active_phone
-      ? `${access.active_phone} steuert die Quest. Warte auf die Freigabe.` : 'Die Quest-Steuerung ist frei.')
-      : 'Dieses Smartphone steuert die Quest.');
+    text(controlStatus, control.message);
     const recenterAvailable = Boolean(rehearsal.gateway?.recenter && canRecenter(status) && !waiting && !unknown);
     recenter.hidden = !status;
     recenter.setAttribute('aria-disabled', String(!recenterAvailable));
@@ -413,7 +417,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const hint = !status ? (savedPair?.enrollment && autoConnect
       ? 'Warte auf die gespeicherte Quest.'
       : 'Starte die Quest im Fernmodus und schalte Bluetooth am Smartphone ein.')
-      : waitingForControl ? (access.active_phone ? 'Ein anderes Smartphone steuert die Quest.' : 'Übernimm die Quest-Steuerung auf diesem Smartphone.')
+      : waitingForControl ? control.message
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : !rehearsalPolarAllowed(status) ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
       : requiresParticipant && !armedWithParticipant ? 'Dieses Smartphone ist für den Probelauf noch nicht freigegeben.'
@@ -460,7 +464,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const reviewable = breath.available && breath.setup.stage === 'testing' && breath.setup.playing
       && breath.setup.input !== 'automatic'
       && (breath.setup.input !== 'polar-tilt' || breath.setup.calibration === 'ready');
-    if (previewAccepted !== breath.acceptance || !reviewable) previewAccepted = '';
+    if (previewAccepted !== breath.acceptance || !reviewable || !idle) previewAccepted = '';
     const selectionAllowed = idle && setupComplete && Boolean(previewAccepted) && reviewable;
     // Authority and readiness remain owned by the existing domain models.
     byId('quest-control-host').hidden = !access;
@@ -531,7 +535,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       status ? 'für diese WLAN-Verbindung nicht benötigt' : connecting ? 'wird geprüft' : 'nicht geprüft');
     paintCheck('bridge', status ? true : bridgeFailed ? false : null, 'WLAN-Brücke', status
       ? 'Die WLAN-Brücke liefert bestätigte Quest-Daten.' : joinMessage || 'Prüfe, ob Smartphone und Quest im selben WLAN sind.');
-    paintCheck('apk', status && !['checking', 'loading'].includes(version.state) ? version.compatible : null, 'Quest-App', version.message);
+    paintCheck('control', control.active ? true : control.fresh || control.state === 'lost' ? false : null,
+      'Quest-Steuerung', control.message, 'wird bestätigt');
+    byId('check-control').dataset.controlState = control.state;
     const polarChecking = setup?.sc || ['scanning', 'backoff', 'connecting', 'streams'].includes(setup?.auto?.state);
     paintCheck('polar', status && !polarChecking ? Boolean(ready || active && status.pi?.f === true) : null,
       'Polar H10', polarReadiness(setup));
@@ -689,7 +695,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
 
   async function setupAct(op) {
-    if (userAction || connecting || document.hidden || !breathing.view?.actions[op]) return;
+    if (userAction || controllerLease.inFlight || connecting || document.hidden || !breathing.view?.actions[op]) return;
     const attempt = new AbortController();
     userAction = attempt;
     if (op === 'calibrate') calibrationBaseline ??= { owner: breathing.gateway.owner, attempt: breathing.view.setup.attempt };
@@ -937,6 +943,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     if (document.hidden || connecting || userAction) return;
     await rehearsal.refresh();
     if (document.hidden || connecting || userAction) return;
+    const acquisition = controllerLease.acquire(rehearsal.gateway, rehearsal.state, () => rehearsal.refresh(),
+      { ...controlContext(), current: () => ({ gateway: rehearsal.gateway, state: rehearsal.state, ...controlContext() }) });
+    if (controllerLease.inFlight) paint();
+    await acquisition;
+    if (document.hidden || connecting || userAction) return;
     await breathing.refresh();
     await kiosk.refresh();
     await metaControl.refresh();
@@ -1132,19 +1143,33 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     });
   }
 
+  function controlContext() {
+    return { visible: !document.hidden,
+      blocked: Boolean(userAction || connecting || breathing.busy) };
+  }
+
   function canChangeControl(op) {
     const { status, busy, pending, unknown } = rehearsal.state;
     const access = controllerAccessState(status);
-    if (!rehearsal.gateway?.controllerAccess || !access || userAction || connecting || document.hidden
+    if (!rehearsal.gateway?.controllerAccess || !access || userAction || controllerLease.inFlight || connecting || document.hidden
       || busy || status.pending || status.setup?.stage === 'recovering') return false;
     // A trusted phone can reclaim free control to read an earlier receipt.
     // The pending operation still guards every session and setup command.
-    return op === 'claim' ? access.role === 'waiting' && !access.active_phone
+    return op === 'claim' ? access.role === 'waiting' && !access.active_phone && !controllerLease.pending
       : access.role === 'active' && !pending && !unknown && !breathing.pending && !breathing.view?.recovering;
   }
 
   async function changeControl(op) {
     if (!canChangeControl(op)) return;
+    if (op === 'claim') {
+      controllerLease.request();
+      await controllerLease.acquire(rehearsal.gateway, rehearsal.state, () => rehearsal.refresh(),
+        { ...controlContext(), current: () => ({ gateway: rehearsal.gateway, state: rehearsal.state, ...controlContext() }) });
+      paint();
+      return;
+    }
+    // Releasing control is intentional. Polling must not immediately undo it.
+    controllerLease.release();
     const { gateway, state } = rehearsal;
     const access = controllerAccessState(state.status);
     const attempt = new AbortController(); userAction = attempt; paint();
@@ -1171,7 +1196,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   }
 
   async function act(action) {
-    if (userAction || breathing.pending || breathing.view?.recovering) return;
+    if (userAction || controllerLease.inFlight || breathing.pending || breathing.view?.recovering) return;
     ecgAttempt?.abort();
     exportAttempt?.abort();
     liveAttempt?.abort();
@@ -1324,7 +1349,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       liveAttempt?.abort();
       drive.cancel();
       showTrace(null);
-    } else { renderLive(performance.now()); nextSync = 0; void apkRelease.refresh(); void tick(); }
+      paint();
+    } else { paint(); renderLive(performance.now()); nextSync = 0; void apkRelease.refresh(); void tick(); }
   });
   reducedMotion.addEventListener('change', () => {
     cancelAnimationFrame(animationFrame);
@@ -1335,6 +1361,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   });
   window.addEventListener('pagehide', (event) => {
     clearTimeout(breathTimer);
+    clearTimeout(controlTimer);
     cancelAnimationFrame(animationFrame);
     animationFrame = 0;
     userAction?.abort();

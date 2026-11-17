@@ -1,5 +1,34 @@
 # Project
 
+### Input continuity, automatic phone control and active-session updates — 2026-11-17
+
+The wearer confirms Controller can drive the sphere before Polar calibration,
+but reports about20seconds before motion and two abrupt minimum-radius changes,
+possibly during tracking loss. The late device log shows repeated
+setup-input-not-ready resets; it does not retain the initial startup interval.
+
+- [x] Trace fixed Controller State startup to the unrelated120-frame volume
+  calibration and implement a selected-experiment phase-only route.
+- [x] Implement last-diagnosed-state visual continuation through temporary
+  Controller/Polar loss. Keep native data freshness and admission gates.
+- [x] Add regressions for phase-only startup, stale/reordered poses, state
+  continuation, recovery, activation rejection and old-owner confirmation fences.
+- [ ] Complete native review, signed APK qualification and attended fresh-launch
+  Controller/tracking-loss checks. No new APK has been installed yet.
+- [x] Implement default native-confirmed phone control acquisition, continuing
+  retries for definite free-lease non-grants, occupied/unknown barriers and
+  manual-release pause. Toolbar green requires fresh native ownership.
+- [ ] Publish and verify the automatic-control PWA increment, then reload the
+  installed phone at an attended idle point.
+- [ ] Publish the improved Meta version in coordination with an actual running
+  session. Verify new availability does not interrupt recording or saving;
+  observe the deferred update and helper relaunch afterward. Establish actual
+  installed versions and lifecycle evidence, not an SDK acknowledgement alone.
+
+The user explicitly requests this running-session update test after the improved
+release is ready. Preserve the current Meta22 baseline until the test timing is
+agreed; do not silently publish the test target while the headset is idle.
+
 ### Attended method-switch follow-up — 2026-11-17
 
 The Pixel6a and Quest2 reproduced issues beyond the initial synthetic render:

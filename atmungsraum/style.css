@@ -511,6 +511,10 @@ html {
   background: #000;
 }
 #operator-toolbar > button { flex: 1 1 0; min-width: 0; height: 48px; }
+@media (max-width: 375px) {
+  html { --operator-toolbar-height: calc(var(--operator-toolbar-top) + 100px); }
+  #operator-toolbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+}
 #operator-toolbar .check-icon { grid-template-columns: minmax(0, 24px) auto; justify-content: center; }
 #operator-toolbar .operator-tool { padding: 4px; background: #292929; color: #eee; }
 #operator-toolbar .operator-tool svg {

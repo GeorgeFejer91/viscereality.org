@@ -8,6 +8,9 @@
   <symbol id="apk" viewBox="0 0 24 24">
     <path d="M5 2h9l5 5v15H5zm9 0v6h5m-10 5h6m-6 4h6"/>
   </symbol>
+  <symbol id="control" viewBox="0 0 24 24">
+    <path d="M6 7h12l3 10a2 2 0 0 1-3 2l-4-3h-4l-4 3a2 2 0 0 1-3-2zM7 10v4m-2-2h4m6-1h.01m3 2h.01"/>
+  </symbol>
   <symbol id="polar" viewBox="0 0 24 24">
     <path d="M2 12h5l2-6 4 12 2-6h7"/>
   </symbol>
