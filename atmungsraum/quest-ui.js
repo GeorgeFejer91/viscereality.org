@@ -7,7 +7,7 @@ import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, Quest
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=16';
+import { BreathingSetup } from './breathing-setup.js?v=17';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
@@ -164,6 +164,45 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   });
   const toolbar = byId('operator-toolbar');
   const utilities = { settings: byId('settings-open'), recordings: byId('recordings-open') };
+  const toolbarActions = byId('toolbar-actions');
+  const toolbarDialog = byId('toolbar-dialog');
+  const compactToolbar = matchMedia('(max-width: 389px)');
+  function placeToolbarActions() {
+    const active = document.activeElement;
+    if (toolbarDialog.open && !compactToolbar.matches) toolbarDialog.close();
+    toolbarActions.hidden = !compactToolbar.matches;
+    for (const button of Object.values(utilities)) {
+      if (compactToolbar.matches) toolbarDialog.querySelector('.screen-body').append(button);
+      else toolbar.insertBefore(button, toolbarActions);
+    }
+    if (Object.values(utilities).includes(active)) {
+      (compactToolbar.matches ? toolbarActions : active).focus({ preventScroll: true });
+    } else if (!compactToolbar.matches && active === toolbarActions) utilities.settings.focus({ preventScroll: true });
+  }
+  compactToolbar.addEventListener('change', placeToolbarActions);
+  placeToolbarActions();
+  toolbarActions.addEventListener('click', () => toolbarDialog.showModal());
+  const apkDetails = byId('apk-identity');
+  const apkView = byId('apk-detail-view');
+  const settingsEcg = byId('settings-ecg');
+  const settingsConnection = byId('settings-connection');
+  const settingsKiosk = byId('quest-settings');
+  const connectionView = byId('settings-connection-view');
+  const sessionReceiptView = connectionView.querySelector('[value="run-receipt"]');
+  const setupReceiptView = connectionView.querySelector('[value="setup-receipt"]');
+  connectionView.addEventListener('change', () => { settingsConnection.dataset.view = connectionView.value; });
+  function showApkDetails() {
+    for (const option of apkView.options) byId('apk-detail-' + option.value).hidden = option.value !== apkView.value;
+  }
+  apkView.addEventListener('change', showApkDetails);
+  for (const disclosure of [apkDetails, settingsEcg, settingsConnection, settingsKiosk, byId('operator-input-diagnostics')]) {
+    const dialog = disclosure.querySelector('dialog');
+    disclosure.addEventListener('toggle', () => {
+      if (disclosure.open && !dialog.open) dialog.showModal();
+      else if (!disclosure.open && dialog.open) dialog.close();
+    });
+    dialog.addEventListener('close', () => { disclosure.open = false; });
+  }
   const checks = toolbar.querySelectorAll('.check-icon');
   const diagnosticState = new Map();
   let diagnosticTrigger;
@@ -240,7 +279,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       && (status.p === 'RUNNING' || status.p === 'PAUSED') ? status : null;
   }
   function navigateLocal(event) {
-    utilityReturnFocus = event.type === 'return' ? utilities[displayedStep] : null;
+    utilityReturnFocus = event.type === 'return' && utilities[displayedStep]
+      ? (compactToolbar.matches ? toolbarActions : utilities[displayedStep]) : null;
     localView = navigateOperatorView({ ...localView, step: displayedStep || localView.step }, event,
       rehearsal.state.status?.participant_arm === 1);
     const hash = `#${localView.step}`;
@@ -283,7 +323,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const body = page.querySelector('.operator-body');
     const move = (id, host) => { const element = byId(id); if (element.parentElement !== host) host.prepend(element); };
     const activeControls = step === 'running' || step === 'settings' && nativeActive;
-    if (['connect', 'signals'].includes(step) || activeControls) move('quest-data', body);
+    settingsEcg.hidden = !activeControls || step !== 'settings' || data.hidden;
+    if (settingsEcg.hidden && settingsEcg.open) settingsEcg.open = false;
+    if (['connect', 'signals'].includes(step) || step === 'running') move('quest-data', body);
+    else if (step === 'settings' && activeControls) move('quest-data', settingsEcg.querySelector('.screen-body'));
     if (['connect', 'signals'].includes(step)) move('quest-polar', body);
     byId('corner-actions').hidden = step !== 'connect' || byId('install-app').hidden;
     driveOpen.hidden = drivePanel.hidden;
@@ -299,12 +342,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (activeControls) move('quest-playback', body);
     // Only transitions move shared nodes; polling never detaches a focused editor.
     if (step !== displayedStep) {
-      if (['input', 'calibration', 'tracking', 'recovery'].includes(step)) move('operator-input-status', body);
+      if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
-      move('operator-common', body);
+      move('operator-common', step === 'settings' ? settingsConnection.querySelector('.screen-body') : body);
+      if (step !== 'settings') settingsConnection.open = false;
+      if (step !== 'settings') settingsKiosk.open = false;
       const preparationRecovery = byId('preview-recovery');
-      if (step === 'update') byId('apk-identity').append(preparationRecovery);
+      if (step === 'update') byId('apk-detail-receipt').append(preparationRecovery);
       else if (preparationRecovery.parentElement !== byId('operator-common')) byId('quest-recovery').after(preparationRecovery);
+      if (step !== 'update') apkDetails.open = false;
       for (const id of Object.values(operatorSteps)) byId(id).hidden = id !== page.id;
       displayedStep = step;
       if (['connect', 'recordings'].includes(step)) {
@@ -318,7 +364,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       } else page.querySelector('h1').focus();
     }
     if (step === 'session' || activeControls) {
-      move('operator-session-actions', page.querySelector('.actions'));
+      move('operator-session-actions', page.querySelector(':scope > .actions'));
     }
     const updateNotice = byId('operator-meta-update');
     const nativeUpdate = metaUpdateView(context.status);
@@ -330,7 +376,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('running-screen-title'), probeInstructionPlaying(context.status) ? 'Anleitung zur Probe-Runde' : operatorSessionHeading(context.status?.p));
     const access = controllerAccessState(context.status);
     const duplicateUpdateStatus = (step === 'update' || !noticeHidden) && statusText.textContent === nativeUpdate.summary;
-    statusText.hidden = duplicateUpdateStatus || step === 'update' && !rehearsal.recovery() && !context.waitingForControl
+    const duplicateControlStatus = context.waitingForControl && access && statusText.textContent === controlStatus.textContent;
+    statusText.hidden = duplicateUpdateStatus || duplicateControlStatus
+      || step === 'update' && !rehearsal.recovery() && !context.waitingForControl
       || (!fullConnection || step === 'connect' && access?.role === 'active') && routineStatus;
     byId('quest-control-host').hidden = step !== 'settings' && !context.waitingForControl || !access;
     text(byId('operator-connection-summary'), controllerLease.view?.active
@@ -365,10 +413,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       ? nativeUpdate.value?.reason === 'required-update-not-yet-on-channel' ? 'Update-Prüfung öffnen' : 'Quest-App aktualisieren' : 'Weiter');
     byId('operator-connect-next').dataset.operatorGo = context.updateRequired ? 'update' : 'participant';
     byId('operator-next-session').disabled = !context.status || context.waitingForControl;
+    if (step === 'settings') {
+      sessionReceiptView.disabled = byId('quest-recovery').hidden;
+      setupReceiptView.disabled = byId('preview-recovery').hidden;
+      if (connectionView.selectedOptions[0]?.disabled) connectionView.value = 'control';
+      settingsConnection.dataset.view = connectionView.value;
+    }
   }
   document.addEventListener('click', event => {
     const control = event.target.closest('[data-operator-go], [data-operator-back], [data-operator-return]');
     if (!control || control.disabled || control.getAttribute('aria-current') === 'page') return;
+    if (toolbarDialog.open && toolbarDialog.contains(control)) toolbarDialog.close();
     navigateLocal(control.hasAttribute('data-operator-back') ? { type: 'back' }
       : control.hasAttribute('data-operator-return') ? { type: 'return' }
       : { type: 'go', step: control.dataset.operatorGo });
@@ -450,7 +505,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     controlRelease.hidden = access?.role !== 'active';
     controlClaim.disabled = !canChangeControl('claim');
     controlRelease.disabled = !canChangeControl('release');
-    text(controlStatus, control.message);
+    const controlSummary = control.active ? 'Dieses Smartphone steuert die Quest.'
+      : control.state === 'occupied' ? 'Anderes Smartphone steuert die Quest.' : control.message;
+    text(controlStatus, controlSummary);
     const recenterAvailable = Boolean(rehearsal.gateway?.recenter && canRecenter(status) && !waiting && !unknown);
     recenter.hidden = !status;
     recenter.setAttribute('aria-disabled', String(!recenterAvailable));
@@ -464,7 +521,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const hint = !status ? (savedPair?.enrollment && autoConnect
       ? 'Warte auf die gespeicherte Quest.'
       : 'Starte die Quest im Fernmodus und schalte Bluetooth am Smartphone ein.')
-      : waitingForControl ? control.message
+      : waitingForControl ? controlSummary
       : status.h === 'panel' ? 'Schließe das Bedienfeld in der Quest und kehre zur VR-Szene zurück.'
       : !rehearsalPolarAllowed(status) ? 'Diese Sitzung ist nicht für den Probelauf freigegeben.'
       : requiresParticipant && !armedWithParticipant ? 'Dieses Smartphone ist für den Probelauf noch nicht freigegeben.'
@@ -553,7 +610,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       panel.dataset.updateAllowed = String(metaUpdate.allowed);
     }
     text(byId('meta-update-diagnostic-status'), metaUpdate.summary);
-    text(byId('meta-update-detail'), metaUpdate.detail);
+    const currentMetaRelease = metaUpdate.allowed && ['current', 'updated'].includes(metaUpdate.state) && metaUpdate.value;
+    const channelCode = currentMetaRelease && metaUpdate.value.available_code;
+    const requiredCode = currentMetaRelease && metaUpdate.value.required_code;
+    text(byId('meta-update-detail'), currentMetaRelease
+      ? ['Vorbereitung freigegeben.', channelCode != null && `Meta-Code ${channelCode}.`,
+        requiredCode != null && `Mindestens Code ${requiredCode}.`].filter(Boolean).join(' ')
+      : metaUpdate.detail);
     // An old setup journal stays read-only; native dynamic admission independently
     // fences ending preparation. Actual experiment/control uncertainty still blocks.
     const updateControls = metaControl.update(rehearsal.gateway, { status, busy: localCommandWaiting || waitingForControl || !control.active,
@@ -611,7 +674,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       updateProgress.removeAttribute('value');
       updateProgress.removeAttribute('max');
     }
-    byId('quest-settings').hidden = !status;
+    settingsKiosk.hidden = !status;
+    if (!status && settingsKiosk.open) settingsKiosk.open = false;
     const kioskView = kiosk.update(rehearsal.gateway, { status, busy: waiting, pending, unknown });
     text(byId('kiosk-summary'), kioskView.summary);
     text(byId('kiosk-prerequisites'), kioskView.prerequisites);
@@ -653,8 +717,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     polar.hidden = status?.p !== 'IDLE' || active || waitingForControl;
     text(polarStatus, polarReadiness(setup));
     text(byId('preview-polar-status'), polarStatus.textContent);
-    text(byId('operator-signal-warning'), polarStatus.textContent);
-    byId('operator-signal-warning').hidden = Boolean(ready);
+    text(byId('operator-signal-warning'), 'Polar-Signale sind noch nicht bereit.');
+    byId('operator-signal-warning').hidden = Boolean(ready || breath.blockedReason && !previewDetail.hidden);
     text(polarConnect.firstElementChild, ready ? 'Messsignale bereit'
       : setup?.c ? 'Fehlende Messsignale starten' : 'Polar H10 verbinden');
     polarConnect.hidden = recoveringStreams || automaticConnection;
@@ -697,7 +761,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     data.hidden = status?.ecg_preview !== 1;
     if (data.hidden) showTrace(null);
     exportStatus.hidden = !exportMessage || !status && !archiveScope;
-    text(exportStatus, exportMessage);
+    text(exportStatus, exportMessage === 'Keine gespeicherten Aufnahmen auf der Quest.' ? 'Keine gespeicherten Aufnahmen.' : exportMessage);
     retry.hidden = !rehearsal.gateway?.recordings || status?.p !== 'IDLE';
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
     archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
@@ -721,13 +785,19 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (calibrationChangeInput.hidden !== view.instructionPending) calibrationChangeInput.hidden = view.instructionPending;
     instructionCancel.disabled = !view.actions.cancelInstruction || connecting || controllerLease.inFlight || Boolean(userAction);
     const testingMethod = view.available && native.stage === 'testing' && native.playing && native.input !== 'automatic';
-    text(byId('operator-confirmed-input'), view.available ? `Aktive Atmungsmessmethode: ${view.inputLabel}` : 'Kein aktueller Status der Atmungsmessmethode.');
+    const method = {
+      'polar-tilt': 'Polar kalibriert',
+      'polar-tilt-fixed': 'Polar · feste Achse',
+      'polar-tilt-adaptive': 'Polar · dynamische Achse',
+      'controller-state': 'Controller State',
+    }[native?.input] ?? view.inputLabel;
+    text(byId('operator-confirmed-input'), view.available ? `Aktiv: ${method}` : 'Keine bestätigte Messmethode.');
     previewCircle.hidden = !view.available;
     if (view.available) previewCircle.style.transform = `scale(${view.radius})`;
     text(previewStatus, !view.available ? 'Warte auf den Atemtakt der Quest.'
       : !native.playing ? native.stage === 'idle' ? 'Automatic ist bereit.' : 'Atemschleife auf der Quest angehalten.' : `Atemtakt: ${view.phaseLabel}`);
-    previewSwitch.hidden = !view.pendingInputLabel;
-    text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Die bestätigte Atmungsmessmethode gilt bis zur Rückmeldung der Quest.` : '');
+    previewSwitch.hidden = !view.pendingInputLabel || Boolean(view.recovery);
+    text(previewSwitch, view.pendingInputLabel ? `Angefragt: ${view.pendingInputLabel}. Warte auf die Quest.` : '');
     const collecting = view.showPolarCalibration && ['waiting', 'collecting'].includes(native?.calibration);
     const detail = view.updateRequired ? 'Quest-App aktualisieren: Dieser Build unterstützt die Atemeinrichtung noch nicht.'
       : view.recovery ? ''
@@ -737,14 +807,14 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : !view.available ? 'Kein aktueller Atemstatus verfügbar. Prüfe die Verbindung zur Quest.'
       : view.recoveryUnavailable ? view.blockedReason
       : view.message ? view.message
-      : view.failure && native.input === 'automatic' ? `Einrichtung fehlgeschlagen: ${view.failureLabel}. Automatic bleibt aktiv. Du kannst erneut einrichten oder Controller State wählen.`
+      : view.failure && native.input === 'automatic' ? `Einrichtung fehlgeschlagen: ${view.failureLabel}.`
       : view.blockedReason ? view.blockedReason
-      : view.showPolarCalibration && native.calibration === 'waiting' ? 'Automatic ist aktiv. Die Einrichtung beginnt mit dem nächsten vollständigen Atemzyklus.'
-      : view.showPolarCalibration && native.calibration === 'collecting' ? `Automatic ist aktiv. Folge dem Atemtakt für zwei vollständige Atemzyklen.${view.qualityWarning ? ` ${view.qualityWarning}` : ''}`
-      : testingMethod ? 'Prüfe die Bewegung im Headset. Wenn die Atmungsmessmethode passt, bestätige sie unten.'
+      : view.showPolarCalibration && native.calibration === 'waiting' ? 'Die Einrichtung beginnt mit dem nächsten Atemzyklus.'
+      : view.showPolarCalibration && native.calibration === 'collecting' ? `Folge zwei Atemzyklen.${view.qualityWarning ? ` ${view.qualityWarning}` : ''}`
+      : testingMethod ? 'Prüfe die Bewegung im Headset und bestätige die Messmethode.'
       : !native.playing ? native.stage === 'idle'
-        ? 'Wähle eine Atmungsmessmethode. Die Atemschleife beginnt erst danach auf der Quest.' : 'Warte auf die Atemschleife der Quest.'
-      : 'Die Atemschleife läuft. Wähle eine Atmungsmessmethode oder richte Polar tilt persönlich ein.';
+        ? 'Wähle eine Methode, um die Atemschleife zu starten.' : 'Warte auf die Atemschleife der Quest.'
+      : 'Die Atemschleife läuft. Wähle eine Messmethode.';
     text(previewDetail, detail);
     // Review has its own permanent instruction beside the circles. Repeat
     // only an actionable warning/error here, never sample-level readiness.
@@ -761,7 +831,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(previewProgressText, `${new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(view.progress.value)} von 2 Atemzyklen`);
     previewCalibrate.disabled = waiting || !view.actions.calibrate;
     previewCalibrate.hidden = !view.showPolarCalibration;
-    text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Erneut einrichten' : 'Einrichtung starten');
+    text(previewCalibrate.firstElementChild, native?.attempt > 0 ? 'Polar erneut einrichten' : 'Polar persönlich einrichten');
     previewPersonalReturn.hidden = view.showPolarCalibration;
     previewPersonalReturn.disabled = waiting || !view.actions.calibrate;
     for (const [button, mode, input] of [[previewPolarFixed, 'fixed', 'polar-tilt-fixed'], [previewPolarAdaptive, 'adaptive', 'polar-tilt-adaptive']]) {
@@ -780,12 +850,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const reviewPrompt = byId('preview-review');
     reviewPrompt.hidden = !testingMethod;
     text(reviewPrompt, native?.input === 'controller-state'
-      ? 'Prüfe, ob die Partikel im Headset auf die Bewegung des Controllers reagieren.'
-      : 'Prüfe bei der teilnehmenden Person, ob sich die Partikel im Headset mit der Atmung bewegen.');
+      ? 'Folgen die Partikel dem Controller?'
+      : 'Folgen die Partikel im Headset der Atmung?');
     previewRestart.hidden = !testingMethod || !view.showPolarCalibration;
     previewRetry.hidden = !(view.failure || view.instructionFailed) || collecting || view.instructionPending;
     previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
     byId('preview-recovery').hidden = !view.recovery;
+    apkView.querySelector('[value="receipt"]').disabled = !view.recovery;
+    if (!view.recovery && apkView.value === 'receipt') {
+      apkView.value = 'version';
+      showApkDetails();
+    }
     if (view.recovery) {
       text(byId('preview-recovery-title'), view.recovery.title);
       text(byId('preview-recovery-detail'), view.recovery.detail);

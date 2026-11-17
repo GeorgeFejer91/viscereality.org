@@ -664,9 +664,15 @@ def show_operator(page, step):
         return
     before=page.evaluate('({commands:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands})')
     for _ in range(6):
+        toolbar = page.locator('#toolbar-actions:visible')
         direct=page.locator(f'[data-operator-go="{step}"]:visible')
-        if direct.count():
+        if step in ('settings', 'recordings') and toolbar.count():
+            toolbar.click()
+            page.locator(f'#toolbar-dialog [data-operator-go="{step}"]').click()
+        elif direct.count():
             direct.first.click()
+        elif step == 'update' and not page.locator('#settings-screen').is_visible():
+            show_operator(page, 'settings')
         elif step == 'session' and page.locator('#battery-next:visible').count():
             page.locator('#battery-next').click()
         elif step == 'update' and page.locator('[data-operator-go="settings"]:visible').count():
@@ -1249,6 +1255,7 @@ def capture_phone_pairing(review):
     page.locator("#operator-connect-next").click()
     expect(page.locator("#quest-participant")).to_be_visible()
     show_operator(page,'settings')
+    page.locator('#settings-connection summary').click()
     expect(page.locator("#quest-control-release")).to_be_visible()
     assert page.evaluate("window.reviewAccessCommands.map(command=>command.op)") == ["claim"]
     page.context.close()
@@ -1337,13 +1344,16 @@ def capture_controller_access(review):
     expect(status).to_contain_text("Dieses Smartphone steuert die Quest.")
     expect(page.locator("#patient-fields")).to_be_enabled()
     show_operator(page,'settings')
+    page.locator('#settings-connection summary').click()
     expect(release).to_be_visible()
+    page.keyboard.press("Escape")
     recenter = page.locator("#recenter-vr")
     expect(recenter).to_have_attribute("aria-disabled", "false")
     recenter.focus()
     recenter.press("Enter")
     operator_status = page.locator("#quest-status")
     expect(operator_status).to_have_text("VR-Szene zentriert.")
+    page.locator('#settings-connection summary').click()
     review.shot(page, "control-recentered", "Active phone · recenter confirmation", operator_status, "Controller access")
     release.focus()
     release.press("Enter")

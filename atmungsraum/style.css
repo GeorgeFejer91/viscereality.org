@@ -30,10 +30,10 @@ main {
 #install-app { width: 180px; min-width: 0; min-height: var(--corner-size); }
 #install-app svg { display: none; }
 #install-dialog { width: min(480px, calc(100% - 24px)); max-width: none; max-height: calc(100svh - 24px); max-height: calc(100dvh - 24px); margin: auto; padding: 20px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: #000; font: inherit; overflow: auto; }
-#install-dialog[open] { display: grid; gap: 16px; }
+#install-dialog[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: var(--gap); }
 #install-dialog h2 { margin: 0; font-size: 1.25em; line-height: 1.3; font-weight: 700; }
-#install-dialog .files-header { flex-direction: column; align-items: stretch; }
-#close-install { align-self: end; width: min(100%, 8em); }
+#install-dialog .actions { width: 100%; }
+#install-dialog .screen-body { gap: var(--gap); }
 #install-dialog::backdrop { background: #000b; }
 .files-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 body:has(#install-dialog[open]) { overflow: hidden; }
@@ -96,6 +96,8 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 #update-screen #meta-update { border: 0; padding: 0; }
 #update-instruction { overflow-wrap: break-word; }
 #apk-full-identity { white-space: pre-line; overflow-wrap: anywhere; }
+.update-diagnostics p:empty { display: none; }
+#apk-details-dialog .update-diagnostics { gap: var(--gap); padding-block: 0; }
 .meta-update-panel { display: grid; gap: 8px; min-width: 0; width: 100%; text-align: start; border-left: 2px solid transparent; padding-left: 12px; }
 .meta-update-panel p { overflow-wrap: break-word; }
 .meta-update-panel[data-update-allowed="false"], .meta-update-panel[data-update-state="failed"] { border-left-color: var(--site-gold); }
@@ -111,7 +113,7 @@ html[data-mode="quest"] #recenter-vr { position: absolute; }
 #preview-progress-group { display: grid; justify-items: stretch; gap: 4px; width: min(100%, 320px); }
 #preview-progress { width: 100%; height: 12px; accent-color: var(--site-gold); }
 .preview-progress-track { position: relative; height: 12px; border: 1px solid var(--border); border-radius: 3px; overflow: hidden; background: var(--surface); }
-.preview-progress-track progress { position: absolute; inset: 0; margin: 0; opacity: 0; }
+.preview-progress-track progress { position: absolute; inset: 0; height: 100% !important; margin: 0; opacity: 0; }
 #preview-progress-fill { position: absolute; inset: 0; background: var(--site-gold); transform: scaleX(0); transform-origin: left; }
 .preview-radius {
   display: grid;
@@ -182,7 +184,7 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 #quest-drive input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-drive summary { min-height: 48px; align-content: center; cursor: pointer; }
 #quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
-#quest-archives { min-height: 48px; min-width: 0; max-width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
+:is(#quest-archives, #browser-archives, #apk-detail-view, #settings-connection-view) { min-height: 48px; min-width: 0; width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-acknowledge, #quest-disconnect, #quest-find { justify-self: center; }
 #quest-find { width: min(100%, 280px); padding-inline: 16px; }
 #quest-find[aria-disabled="true"] { cursor: default; }
@@ -202,9 +204,9 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 .gender-options input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--site-blue); }
 .gender-options [data-measure] { flex: 1; line-height: 1.3; }
 .data-body { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; justify-items: center; }
-.data-body:has(#data-files:empty) { grid-template-rows: auto; align-content: center; }
+.data-body:has(#data-files[hidden]) { grid-template-rows: auto; align-content: center; }
 .data-body > p { justify-self: stretch; text-align: center; }
-#data-files { display: grid; align-content: space-between; gap: var(--gap); min-width: 0; width: min(100%, 640px); padding: 0; margin: 0; list-style: none; }
+#data-files { display: grid; align-content: space-evenly; gap: var(--gap); min-width: 0; width: min(100%, 640px); }
 #data-files a { display: block; min-height: 48px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; color: #b9def4; text-decoration: none; }
 #data-files [data-measure] { overflow-wrap: anywhere; }
 output { min-height: 1.5em; color: var(--muted); text-align: center; }
@@ -230,7 +232,6 @@ output { min-height: 1.5em; color: var(--muted); text-align: center; }
 /* Expose full document flow when enlarged text cannot fit the bounded panel. */
 html[data-layout="reflow"] main { height: auto; min-height: 100svh; min-height: 100dvh; }
 html[data-layout="reflow"] .screen { grid-template-rows: auto auto auto; }
-html[data-layout="reflow"] .screen-body { min-height: auto; }
 html[data-layout="reflow"] .patient-body, html[data-layout="reflow"] .data-body { grid-template-rows: auto; }
 html[data-layout="reflow"] .patient-fields { grid-template-rows: none; height: auto; max-height: none; align-content: start; }
 html[data-layout="reflow"] #data-files { align-content: start; }
@@ -333,7 +334,8 @@ html[data-mode="quest"] main {
 #quest-polar > button { width: 100%; }
 #input-screen #operator-input-status { gap: 6px; }
 #quest-participant { align-self: stretch; }
-#participant-screen > .operator-body { align-content: stretch; }
+#quest-participant[open] { display: grid; grid-template-rows: minmax(0, 1fr); }
+#quest-participant::details-content { min-block-size: 0; }
 #quest-participant .patient-body { height: 100%; grid-template-rows: minmax(0, 1fr); }
 html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows: auto; }
 #participant-screen .patient-fields { grid-template-rows: auto auto; }
@@ -353,6 +355,7 @@ html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows
   .operator-screen .screen-header { padding-block-end: 4px; }
 }
 @media (orientation: landscape) and (max-height: 480px) {
+  #apk-details-dialog > .screen-body { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: start; }
   #quest .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
   #quest :is(#operator-common, #quest-pairing) { grid-column: 1 / -1; }
   #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
@@ -388,7 +391,7 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 #operator-toolbar .check-icon[data-check="ok"] { color: #81e9a4; }
 #operator-toolbar .check-icon[data-check="unconfirmed"] { color: #ff8f8f; }
 .check-symbol { font-size: 14px; line-height: 1; font-weight: bold; }
-:is(#connection-diagnostic, #drive-dialog) {
+:is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) {
   width: min(480px, calc(100vw - 24px));
   max-block-size: calc(100dvh - 24px);
   padding: clamp(12px, 3vw, 24px);
@@ -397,11 +400,12 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
   border: 1px solid var(--border);
   border-radius: 8px;
 }
-:is(#connection-diagnostic, #drive-dialog)[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
-:is(#connection-diagnostic, #drive-dialog)::backdrop { background: #000b; }
-:is(#connection-diagnostic, #drive-dialog) h2 { margin: 0; font-size: 1.25em; }
-:is(#connection-diagnostic, #drive-dialog) .actions { width: 100%; }
-:is(#connection-diagnostic, #drive-dialog) button { width: 100%; }
+:is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog)[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 12px; }
+:is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) h2 { margin: 0; font-size: 1.25em; }
+:is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) .actions { width: 100%; }
+:is(#connection-diagnostic, #drive-dialog, #toolbar-dialog, .operator-dialog) button { width: 100%; }
+#toolbar-dialog .screen-body { display: grid; gap: var(--gap); }
+#toolbar-dialog .operator-tool svg, #operator-toolbar .utility-label { display: none; }
 #drive-dialog { line-height: 1.25; }
 #drive-dialog #quest-drive-form { gap: 8px; }
 #quest #quest-ecg { max-block-size: clamp(48px, 12dvh, 120px); }
@@ -409,7 +413,7 @@ html[data-mode="quest"] .setup-actions #corner-actions { position: static; displ
 html[data-layout] #participant-screen .patient-fields { grid-template-columns: minmax(0, 1fr); height: 100%; align-content: space-evenly; }
 .patient-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7em), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: auto auto;
   gap: 4px 12px;
 }
@@ -518,7 +522,9 @@ html {
 }
 #operator-toolbar {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: clamp(4px, 1.5vw, 8px);
   width: min(100%, 720px);
   height: var(--operator-toolbar-height);
@@ -526,12 +532,12 @@ html {
   padding: var(--operator-toolbar-top) max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
   background: #000;
 }
-#operator-toolbar > button { flex: 1 1 0; min-width: 0; height: 48px; }
-@media (max-width: 375px) {
-  html { --operator-toolbar-height: calc(var(--operator-toolbar-top) + 100px); }
-  #operator-toolbar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+#operator-toolbar > button { min-width: 0; height: 48px; }
+@media (max-width: 389px) {
+  #operator-toolbar { gap: 3px; }
 }
 #operator-toolbar .check-icon { grid-template-columns: minmax(0, 24px) auto; justify-content: center; }
+#operator-toolbar button:focus-visible { outline-offset: -3px; }
 #operator-toolbar .operator-tool { padding: 4px; background: #292929; color: #eee; }
 #operator-toolbar .operator-tool svg {
   width: min(100%, 24px); fill: none; stroke: currentColor;
@@ -548,11 +554,82 @@ html[data-layout="reflow"][data-mode] body main {
   height: auto;
   min-height: calc(100dvh - var(--operator-toolbar-height));
 }
-:is(#connection-diagnostic, #drive-dialog, #install-dialog) {
+:is(#connection-diagnostic, #drive-dialog, #install-dialog, #toolbar-dialog, .operator-dialog) {
+  --gap: clamp(6px, min(2vw, 1.3dvh), 16px);
+  --dialog-inset: max(12px, env(safe-area-inset-left), env(safe-area-inset-right));
+  --dialog-height: calc(var(--usable-height, 100dvh) - var(--operator-toolbar-height) - max(8px, env(safe-area-inset-bottom)) - 6px);
+  width: min(480px, calc(100vw - 2 * var(--dialog-inset)));
+  block-size: var(--dialog-height);
   inset-block-start: calc(var(--operator-toolbar-height) + 6px);
   inset-block-end: max(8px, env(safe-area-inset-bottom));
-  max-block-size: calc(var(--usable-height, 100dvh) - var(--operator-toolbar-height) - max(8px, env(safe-area-inset-bottom)) - 6px);
+  max-block-size: var(--dialog-height);
 }
-:is(#connection-diagnostic, #drive-dialog, #install-dialog)::backdrop {
+:is(#connection-diagnostic, #drive-dialog, #install-dialog, #toolbar-dialog, .operator-dialog)::backdrop {
   background: linear-gradient(transparent var(--operator-toolbar-height), #000b var(--operator-toolbar-height));
+}
+
+html[data-mode="quest"] main {
+  --gap: clamp(6px, min(2vw, 1.3dvh), 16px);
+  --inset: max(clamp(8px, min(3vw, 2dvh), 20px), env(safe-area-inset-left), env(safe-area-inset-right));
+}
+:is(.operator-screen, #daten) h1 { font-size: clamp(1.125rem, min(4vw, 4.5dvh), 1.625rem); line-height: 1.2; }
+:is(.operator-screen, #daten) .product-brand, .operator-screen .preparation-step { display: none; }
+.operator-screen .screen-header { padding-block-end: var(--gap); }
+.operator-screen .operator-body { align-content: space-evenly; }
+#participant-screen > .operator-body { align-content: stretch; }
+html[data-layout] .operator-screen .operator-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+.operator-actions button { padding-block: 4px; }
+.session-actions:has(> button + button:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#session-screen .operator-actions .session-actions { grid-column: auto; }
+.operator-body #quest-data { gap: var(--gap); }
+#input-screen .preview-controls { width: 100%; }
+#input-screen .preview-controls button { padding: 4px 6px; }
+#operator-input-status, #operator-live { gap: var(--gap); }
+#breathing-preview .operator-body { --gap: clamp(5px, min(1.5vw, 1dvh), 14px); }
+#operator-live .preview-figure {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--gap);
+}
+#operator-live #preview-status { grid-column: 1 / -1; }
+#operator-live .preview-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#operator-live .actual-status-box { flex: 1 1 12ch; }
+#operator-live .preview-radius { inline-size: clamp(52px, min(20vw, 13dvh), 112px); }
+.operator-screen .recovery-panel { gap: var(--gap); padding: var(--gap); }
+#preview-review { width: 100%; max-inline-size: none; font-size: 1.125rem; }
+#preview-continue { padding-inline: 4px; }
+.session-actions button { padding-inline: 4px; }
+#participant-screen .patient-field input, #participant-screen .patient-field select, #patient-id { padding-block: 6px; }
+#settings-screen .operator-body:has(#quest-playback:not([hidden])) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#settings-screen .operator-body:has(#quest-playback:not([hidden])) #operator-common {
+  grid-column: 1 / -1;
+}
+:is(#settings-ecg, #settings-connection) > summary { min-height: 48px; align-content: center; cursor: pointer; }
+#settings-connection #operator-common { padding: 0; border: 0; }
+#settings-connection[data-view="control"] #operator-common > :not(#quest-status, #quest-control-host),
+#settings-connection[data-view="run-receipt"] #operator-common > :not(#quest-recovery),
+#settings-connection[data-view="setup-receipt"] #operator-common > :not(#preview-recovery),
+#settings-connection[data-view="update"] #operator-common > :is(#quest-control-host, #quest-recovery, #preview-recovery) {
+  display: none;
+}
+#settings-screen .operator-actions:has(#operator-session-actions) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+#settings-screen .session-actions { display: contents; }
+#kiosk-dialog .screen-body:has(#kiosk-diagnostics[open]) > :not(#kiosk-diagnostics) { display: none; }
+
+@media (orientation: landscape) and (max-height: 480px) {
+  #apk-details-dialog { width: min(720px, calc(100vw - 2 * var(--dialog-inset))); }
+  #drive-dialog { padding-block: 10px; }
+  #drive-dialog[open] { gap: 6px; }
+  #input-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #input-screen .preview-controls { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+  #breathing-preview .operator-body, #running-screen .operator-body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: center;
+  }
+  #running-screen #quest-data { grid-column: 2; grid-row: 1 / span 4; align-self: center; }
+  #running-screen #quest-ecg { max-height: 16dvh; }
+  html[data-layout] #participant-screen .patient-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-layout] #breathing-preview .operator-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

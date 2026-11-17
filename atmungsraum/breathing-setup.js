@@ -48,7 +48,7 @@ const failureLabels = {
   insufficient_coverage: 'Zu wenige nutzbare Atembewegungen wurden erfasst',
   insufficient_range: 'Die Atembewegung war für die Einrichtung zu klein',
   poor_guided_motion: 'Die Bewegung passte noch nicht zuverlässig zum Atemtakt',
-  excessive_motion: 'Zu viel zusätzliche Bewegung wurde erfasst',
+  excessive_motion: 'Zu viel Bewegung',
   invalid_sample: 'Zu viele Messdaten waren nicht nutzbar',
   signal_gap: 'Zu viele Messdaten fehlten oder kamen unregelmäßig an',
   audio_paused: 'Die Atemschleife wurde angehalten',
@@ -243,7 +243,7 @@ export class BreathingSetup {
       blockedReason: !canControlQuest(status) ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
         : !updateAllowed ? metaUpdateView(status).summary
         : recoveryUnavailable ? 'Die Atemschleife ist nicht bereit. Öffne die Quest-App erneut und verbinde dieses Smartphone wieder.'
-        : !participantReady ? 'Prüfe die Teilnehmer-ID und die Polar-H10-Verbindung.'
+        : !participantReady ? 'Teilnehmer-ID und Polar prüfen.'
         : status?.pi?.r === true && status.pi.f !== true ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
         : setup?.audio_recovery_available === true ? 'Die Atemschleife läuft nicht weiter. Wähle erneut „Atmung einrichten“ oder Controller State.'
         : setup?.input === 'automatic' && setup.source_clock_ready === false
@@ -278,7 +278,7 @@ export class BreathingSetup {
     } : this.pending || recovering ? {
       title: this.waitExpired ? 'Bestätigung noch offen' : this.unknown ? 'Ergebnis der Anfrage unklar' : recovering ? 'Atemschleife wird wiederhergestellt' : 'Quest bestätigt die Anfrage',
       action: actions.checkReceipt ? 'Bestätigung erneut abfragen' : '',
-      detail: `${pendingInputLabel || 'Atemschleife wiederherstellen'}: ${recovering ? 'Die Quest startet den Audio-Takt neu. Danach kann die Einrichtung beginnen.' : 'Die Bestätigung der Quest steht noch aus.'} ${this.waitExpired ? 'Die Wartezeit am Smartphone ist abgelaufen. Frage die Bestätigung erneut ab. Bleibt das Ergebnis unklar, beende und öffne die Atmungsraum-App im Headset erneut und verbinde dieses Smartphone wieder. Erst eine bestätigte neue App-Verbindung kann die alte Anfrage ablösen.' : this.unknown ? 'Die Verbindung wird weiter geprüft; warte auf die Bestätigung.' : 'Bitte warten.'} Die Anfrage wird nicht erneut gesendet.`,
+      detail: `${pendingInputLabel || 'Atemschleife wiederherstellen'}: ${recovering ? 'Die Quest startet den Takt neu.' : 'Warte auf Bestätigung.'} ${this.waitExpired ? 'Frage die Bestätigung ab. Bleibt sie offen, starte Atmungsraum im Headset neu und verbinde dieses Smartphone wieder. ' : ''}Die Anfrage wird nicht erneut gesendet.`,
     } : recoveryUnavailable ? {
       title: 'Atemschleife benötigt einen App-Neustart', action: '',
       detail: 'Die Quest meldet, dass eine automatische Audio-Wiederherstellung nicht verfügbar ist. Beende und öffne die Atmungsraum-App im Headset erneut; verbinde danach dieses Smartphone. Das startet die App tatsächlich neu. Eine lokale Bestätigung kann diesen Schritt nicht ersetzen.',

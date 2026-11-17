@@ -34,6 +34,9 @@ def initial(c, quest=None, setup=None):
 
 
 def go(page, step):
+    if step in ('settings', 'recordings', 'update'):
+        module().show_operator(page, step)
+        return
     direct = page.locator(f'[data-operator-go="{step}"]:visible')
     if direct.count():
         direct.first.click()
@@ -46,14 +49,20 @@ def mutations(page):
     return page.evaluate('({session:reviewQuest.commands??[],setup:reviewSetupCommands,access:reviewAccessCommands,recenter:reviewRecenterCommands,kiosk:window.reviewKioskCommands??[]})')
 
 
+def open_apk_details(page, view="version"):
+    page.locator('#apk-identity summary').click()
+    expect(page.locator('#apk-details-dialog')).to_be_visible()
+    page.locator('#apk-detail-view').select_option(view)
+
+
 def participant(c, page):
     c.enter_participant(page)
     expect(page.locator('#input-screen')).to_be_visible()
 
 
-def capture_layout(review):
+def capture_layout(review, cases=SIZES):
     c = module()
-    for size, viewport, text in SIZES:
+    for size, viewport, text in cases:
         def new(quest=None, setup=None, extra=''):
             page = review.page(initial(c,quest,setup)+extra,viewport=viewport)
             page.evaluate('size=>document.documentElement.style.fontSize=size',text)
@@ -70,9 +79,10 @@ def capture_layout(review):
         participant(c,page)
         shot(page,'input','#preview-controller')
         go(page,'update')
-        page.locator('#apk-identity summary').click()
+        open_apk_details(page, "identity")
         expect(page.locator('#quest-version')).to_have_attribute('data-version-state','compatible')
         shot(page,'update-identity','#apk-full-identity')
+        page.keyboard.press('Escape')
         page.locator('[data-operator-return]:visible').click()
         go(page,'recordings')
         shot(page,'recordings','#recording-files')
@@ -141,8 +151,12 @@ def capture_layout(review):
             go(page,'settings')
             expect(page.locator('#settings-screen #quest-play')).to_be_visible()
             expect(page.locator('#settings-screen #quest-finish')).to_be_visible()
-            expect(page.locator('#settings-screen #quest-ecg')).to_be_visible()
             shot(page,phase.lower()+'-settings','#quest-clock')
+            page.locator('#settings-ecg summary').click()
+            expect(page.locator('#settings-screen #quest-ecg')).to_be_visible()
+            shot(page,phase.lower()+'-settings-ecg','#quest-ecg')
+            page.keyboard.press('Escape')
+            expect(page.locator('#settings-ecg summary')).to_be_focused()
             page.locator('[data-operator-return]:visible').click()
             assert mutations(page)==nav_before
         c.wait_state(page,phase='RUNNING')
@@ -177,7 +191,7 @@ def capture_layout(review):
             assert page.evaluate('reviewQuest.setup.input')==expected_input
             assert [x['op'] for x in mutations(page)['setup']]==[op]
             if op=='controller':
-                expect(page.locator('#operator-signal-warning')).to_be_visible()
+                expect(page.locator('#preview-detail')).to_contain_text('Teilnehmer-ID und Polar')
                 expect(page.locator('#preview-continue')).to_be_disabled()
             shot(page,'explicit-'+op,'#preview-actual')
             go(page,'input')
@@ -185,7 +199,7 @@ def capture_layout(review):
             review.regressions.append({'kind':'explicit-mode','size':size,'op':op,'input':expected_input,'missingStreams':op=='controller'})
             page.context.close()
 
-        page=new(setup={'stage':'testing','calibration':'failed','failure':'excessive-motion','attempt':1,
+        page=new(setup={'stage':'testing','calibration':'failed','failure':'excessive_motion','attempt':1,
                         'target_frames':1411200,'completed_frames':1411200,'playing':True,'parked':False})
         participant(c,page)
         go(page,'input')
@@ -200,7 +214,7 @@ def capture_layout(review):
             if label=='unknown-apk':
                 expect(page.locator('#operator-compatibility')).to_be_visible()
                 go(page,'update')
-                page.locator('#apk-identity summary').click()
+                open_apk_details(page, "identity")
                 expect(page.locator('#quest-version')).to_have_attribute('data-version-state','unknown')
                 shot(page,label,'#apk-full-identity')
             else:
@@ -214,6 +228,7 @@ def capture_layout(review):
         expect(page.locator('#operator-compatibility')).to_be_visible()
         go(page,'update')
         expect(page.locator('#quest-version')).to_have_attribute('data-version-state','check-unavailable')
+        open_apk_details(page)
         shot(page,'release-policy-failed','#apk-update-status')
         page.context.close()
         review.release_policy_failure=False
@@ -226,8 +241,11 @@ def capture_layout(review):
         expect(page.locator('#preview-recovery')).to_contain_text('Ergebnis der Anfrage unklar')
         shot(page,'pending-original-receipt','#preview-recovery')
         go(page,'settings')
+        page.locator('#settings-connection summary').click()
+        page.locator('#settings-connection-view').select_option('setup-receipt')
         expect(page.locator('#settings-screen #preview-recovery')).to_be_visible()
         shot(page,'pending-receipt-settings','#preview-recovery')
+        page.keyboard.press('Escape')
         assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).command.id")=='f'*16
         assert mutations(page)['setup']==[]
         c.wait_state(page,receiptState='confirmed')

@@ -18,19 +18,18 @@ historical recordings, and above device, installation and Drive dialogs.
 Settings and recordings open their existing pages; return restores the toolbar
 button. Disable recordings while native playback or receipt recovery needs the
 operator's attention. Installation stays on the connection and setup page.
-At widths through375px, use two rows with four columns to retain48px targets;
-reserve the resulting100px toolbar body plus its safe top inset. Wider phones
-retain one row. The native-control icon remains in the first row. APK status
-remains on the existing update/identity page.
+Keep the checks and grey action buttons in one row with equal 48 px minimum
+touch targets. Through 389 px the grey actions button opens Einstellungen and
+Aufnahmen below the row. Wider screens show both buttons directly. Keep the
+four checks and the connected recenter control in the row. Reserve one 48 px
+toolbar track plus the safe top inset. APK status remains on its update page.
 
 Use real HTML/CSS prototypes and actual rendered fixture screens as the visual
 design artifact: these are forms, navigation and existing code-native SVG/CSS
 diagrams, not raster illustrations. No generated imagery or new brand assets
 are appropriate. The existing real Pretext implementation remains mandatory.
 
-The header has its natural content height; remove the old fixed 48px track
-that clashes with its brand/title/separator. Prefer readable document reflow
-over clipping, smaller fonts or nested scrolling. Keep the actual-radius
+The page heading uses its natural content height. Keep the actual-radius
 playout, physical percentage semantics, and exact touching inset geometry.
 
 ## Page sequence
@@ -120,24 +119,32 @@ Haupt-Runde alone.
 
 ## Smartphone GUI rules
 
-Adapt the [playground design and release rules](https://github.com/GeorgeFejer91/atmungsraum-ui/blob/main/for-ai/PROJECT.md#smartphone-gui-design-rules)
-to the real operator and recovery flow. With ordinary phone text, every input
-step, popup and its actions must fit together in one usable viewport. Allocate
-the available shell first, with reserved heading and action rows, ordered
-groups, balanced safe-area insets and 48px targets. Use shrinkable tracks and
-shared label/control rows. Use surplus space on both axes between the groups.
-Provide optional diagnostics and settings in their own views rather than
-stacking them on the primary task. No generic arrow controls, clipped content
-or scrollbar hiding.
+Apply the [playground rules](https://github.com/GeorgeFejer91/atmungsraum-ui/blob/58906318e1f407c9c1e2874180d926c3fdee540e/for-ai/PROJECT.md#smartphone-gui-design-rules)
+to the real operator and recovery flow.
 
-Keep real local Pretext 0.0.9 measurement of bounded labels using their actual
-font and inner geometry. Verify painted DOM and focus as well as measurement.
-Keep text enlargement and browser zoom enabled. An unbounded recording list,
-extreme text/keyboard constraints or lengthy native recovery information may
-require readable document reflow while preserving full text and actions; treat
-unexpected scrolling in ordinary input states as a layout failure. An
-exception must be evidenced, with its state and viewport recorded rather than
-counted as a strict fit.
+1. Fit every input step, form, dialog and overlay into one usable visual
+   viewport with all its labels, statuses, actions and focus indicators. Use
+   the space available with safe areas, browser chrome and the keyboard.
+2. The document and every app-authored region must have zero scroll range in
+   either axis during navigation, editing, dialogs and focus changes. Keep
+   browser zoom and text enlargement available. A clipped label, hidden
+   scrollbar or control that needs scrolling fails the release gate.
+3. Allocate the shell first using the outside-in accordion stretch layout.
+   Reserve heading and action tracks. Use balanced insets and shrinkable
+   Grid or Flex tracks, preserve reading and focus order, and keep label-field
+   pairs together. Align peer controls and grow their shared label track when
+   a label wraps. Distribute space between ordered groups and peer cells as
+   each dimension grows. Derive readable type and spacing from both dimensions
+   and keep visible focus and 48 px minimum touch targets.
+4. Use the locked Pretext 0.0.9 measurement in the actual loaded typography,
+   inner width, inner height, spacing and locale. Confirm the painted DOM.
+   Use task-specific views for optional controls and bounded selection for
+   lists. Each view must expose its full readable text and actions.
+5. Show neutral black-and-white SVG checks while checking, green checks on
+   confirmation and red checks on failure. Pair color with a symbol and an
+   accessible label. Each red check opens its own diagnostic content in one
+   popup. Keep those details in the popup, retain the visible single toolbar
+   row above it, and use named task actions instead of generic page arrows.
 
 ## Behavior invariants
 
@@ -195,9 +202,10 @@ counted as a strict fit.
 Pure navigation tests plus rendered real-app fixtures must prove zero-command
 Back/Next/settings, explicit mode/calibration, recovery priority, recording
 controls, persistent participant drafts and unchanged acceptance invalidation.
-Inspect 390px,320px,200% text, long localized status, landscape and desktop.
-Check actual Pretext/DOM bounds,48px controls, no overlap/horizontal or nested
-overflow, keyboard/focus and multi-poll scroll stability. Run the complete
+Run the [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
+for 320 and 390 px portrait, landscape, desktop, 200% text, text spacing, and
+long localized statuses. Check actual Pretext and DOM bounds, 48 px controls,
+zero document and nested overflow, keyboard and stable focus. Run the complete
 phone suite with its real native/Java interoperability prerequisites. Review
 the whole change independently. Publish a coherent cache graph, exact Pages
 deployment and affected live URLs. Physical installed-phone qualification is

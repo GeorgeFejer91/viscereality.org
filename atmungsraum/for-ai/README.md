@@ -87,6 +87,8 @@ Read common rules first, then the documents needed for the task:
   source baseline and changes from the previous version.
 - [SKILLS.md](SKILLS.md): always and conditional skill routes.
 - [VERIFICATION.md](VERIFICATION.md): context, rendering, and deployment checks.
+  The [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
+  enforces the [UI rules](UI-LAYOUT.md#smartphone-gui-rules) on each feature push.
 - [DECISIONS.md](DECISIONS.md): durable decisions and their reasons.
 - [DATA-LOGGING.md](DATA-LOGGING.md): mandatory participant identity, filename,
   CSV schema, mock-source provenance, persistence and recovery contract.

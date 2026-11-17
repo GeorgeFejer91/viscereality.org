@@ -15,6 +15,7 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as output:
     assert [v['op'] for v in mutations(page)['access']] == ['claim']
     assert mutations(page)['setup'] == mutations(page)['session'] == []
     c.show_operator(page, 'settings')
+    page.locator('#settings-connection summary').click()
     page.locator('#quest-control-release').click()
     page.clock.run_for(16000)
     expect(page.locator('#check-control')).to_have_attribute('data-check','unconfirmed')

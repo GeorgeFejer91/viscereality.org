@@ -95,7 +95,7 @@ def main():
             page = review.page(base.replace('deferSetup:true', 'deferSetup:false'), viewport={'width': width, 'height': height})
             page.evaluate('font=>document.documentElement.style.fontSize=font', font)
             capture.enter_participant(page)
-            page.locator('#quest-settings summary').click()
+            page.locator('#quest-settings > summary').click()
             expect(page.locator('#kiosk-summary')).to_contain_text('angefordert · nicht wirksam')
             page.locator('#kiosk-retry').click()
             expect(page.locator('#kiosk-message')).to_contain_text('Warte auf die Bestätigung')

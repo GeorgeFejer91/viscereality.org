@@ -39,19 +39,27 @@ def compact_setup(review):
 
         assert_fits()
         header = page.get_by_role('banner', name='Geräte und Aktionen')
-        settings = header.get_by_role('button', name='Einstellungen')
-        recordings = header.get_by_role('button', name='Aufnahmen')
-        expect(settings).to_be_visible(timeout=1500)
-        expect(recordings).to_be_visible()
+        settings = page.locator('#settings-open')
+        recordings = page.locator('#recordings-open')
+        utility = page.locator('#toolbar-actions') if width < 390 else settings
+        expect(utility).to_be_visible(timeout=1500)
         controls = header.locator('button:visible').evaluate_all(
-            '(buttons) => buttons.map(button => button.getBoundingClientRect().y)')
-        assert len(controls) >= 6 and max(controls) - min(controls) < (54 if width <= 375 else 2), controls
-        settings.focus()
+            '(buttons) => buttons.map(button => button.getBoundingClientRect().toJSON())')
+        assert len({button['y'] for button in controls}) == 1, controls
+        assert all(button['width'] >= 48 and button['height'] >= 48 for button in controls), controls
+        utility.focus()
         page.keyboard.press('Enter')
+        if width < 390:
+            expect(page.locator('#toolbar-dialog')).to_be_visible()
+            expect(recordings).to_be_visible()
+            assert_fits()
+            page.keyboard.press('Escape')
+            expect(utility).to_be_focused()
+            page.keyboard.press('Enter')
+            settings.click()
         expect(page.locator('#settings-screen-title')).to_be_focused()
-        expect(recordings).to_be_visible()
         page.locator('#settings-screen [data-operator-return]').click()
-        expect(settings).to_be_focused()
+        expect(utility).to_be_focused()
         assert mutations(page)['session'] == []
         page.locator('#drive-open').click()
         expect(page.locator('#drive-dialog')).to_be_visible()
@@ -492,7 +500,9 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         expect(page.locator('#settings-screen #quest-play')).to_be_visible()
         expect(page.locator('#settings-screen #quest-finish')).to_be_visible()
         expect(page.locator('#settings-screen #quest-export-status')).to_be_visible()
+        page.locator('#settings-connection summary').click()
         expect(page.locator('#quest-control-release')).to_be_visible()
+        page.keyboard.press('Escape')
         page.locator('[data-operator-return]:visible').click()
         expect(page.locator('#running-screen')).to_be_visible()
         for phase,heading in (('PAUSED','Sitzung pausiert'),('FINALIZING','Sitzung wird beendet'),('SAVING','Aufnahme wird gespeichert')):
