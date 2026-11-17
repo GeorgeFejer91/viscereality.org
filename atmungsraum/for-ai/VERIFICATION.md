@@ -1,5 +1,27 @@
 # Verification
 
+Latest2026-11-17 checkpoint: Meta20 actually replaces19 after the idle app is
+closed, with exact63f3d72f… bytes, Meta attribution and retained UID. No20
+automatic relaunch or own SDK installation is proven. Its earlier manual check
+initially returned offered19 despite published20, then offered20; StartDownload
+failed and scoped OCMS logs rejected a duplicate same-package StartDelayed
+request. A new cooperative queued-update handoff is software-reviewed for21;
+final selected product build and physical21-to22 qualification remain pending.
+
+The PWA result clarification, strict optional SDK error provenance, recovery
+wording, aligned module graph and required/latest20 policy pass269 full web
+checks with zero skips,27 focused checks,27 actual Pretext/reflow states and
+independent review. The new accepted-message regression was red before the
+correction. New SDK/queued states stay blocked and never claim a duplicate is
+installed. Publication and installed-phone refresh are pending this increment.
+The previous PR31/Pages43974010304 and all19 affected live-file comparisons pass.
+
+The local browser H10 recorder has software review and a repaired asynchronous
+device/wake-lock ownership race. Real H10 stream starts are acknowledged, but
+the physical link closes; connection and recording acceptance remain open.
+Its isolated private worktree/diagnostics own that follow-up, not this public
+PWA release. Earlier checkpoints below retain their dated evidence limits.
+
 Current repeatable-updater checkpoint: PWA v2/manual journal/action integration
 passes266/266 zero-skip full web tests,21 focused Meta checks,15 real Pretext/
 320px/200% render states and independent review. Native cycle/park/gateway software

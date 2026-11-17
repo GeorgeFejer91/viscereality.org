@@ -3,17 +3,17 @@ import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompa
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=13';
 import { pairPhone } from './quest-pairing.js?v=2';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=30';
+import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=31';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=10';
+import { BreathingSetup } from './breathing-setup.js?v=11';
 import { LiveBreathDisplay } from './live-breath-display.js?v=5';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=1';
 import { KioskControl } from './kiosk-control.js?v=3';
 import { ApkRelease } from './quest-release.js?v=1';
-import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=2';
-import { MetaUpdateControl } from './meta-update-control.js?v=1';
+import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=3';
+import { MetaUpdateControl } from './meta-update-control.js?v=2';
 
 const byId = (id) => document.getElementById(id);
 const text = (element, value) => { if (element.textContent !== value) element.textContent = value; };

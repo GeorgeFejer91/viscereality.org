@@ -10,6 +10,33 @@ const cycle = (patch = {}) => ({ ...status(value('current', { v: 2, available_co
   required_code: 15, cycle: '2', revision: '7', attempt: '19', can_check: true, busy_reason: '', ...patch })),
   meta_update_control: 1 });
 
+test('SDK failure provenance is bounded and never grants an update or session', () => {
+  const error = { v: 1, stage: 3, code: 1971054, http: null, install_result: 'DUPLICATE_REQUEST' };
+  const required = patch => cycle({ state: 'update_required', required_code: 20, available_code: 20,
+    session_allowed: false, sdk_error: { ...error, ...patch } });
+  assert.equal(nativeSessionAllowed(required()), false);
+  assert.match(metaUpdateView(required()).detail, /bereits.*Anfrage/);
+  assert.equal(nativeSessionAllowed(required({ install_result: 'SUCCESS' })), false);
+  for (const patch of [{ v: 2 }, { stage: 0 }, { stage: 7 }, { code: 0 }, { code: 2147483648 },
+    { code: '7' }, { http: 0 }, { http: 600 }, { install_result: 'raw error text' }, { raw_message: 'secret' }]) {
+    assert.equal(metaUpdateView(required(patch)).state, 'invalid');
+    assert.equal(nativeSessionAllowed(required(patch)), false);
+  }
+  assert.equal(metaUpdateView(cycle({ sdk_error: null })).state, 'current');
+  for (const reason of ['checking-duplicate-download', 'restarting-duplicate-download']) {
+    const recovering = metaUpdateView(cycle({ state: 'checking', reason,
+      session_allowed: false, sdk_error: error }));
+    assert.equal(recovering.allowed, false);
+    assert.match(recovering.summary, /vorgemerkten|erneut/);
+  }
+  const queued = metaUpdateView(cycle({ state: 'installing', reason: 'queued-meta-update-handoff',
+    session_allowed: false, sdk_error: error, required_code: 20 }));
+  assert.equal(queued.allowed, false);
+  assert.match(queued.summary, /schließt die App/);
+  assert.doesNotMatch(queued.summary, /Installation angefragt/);
+  assert.match(queued.detail, /überwacht den installierten App-Stand/);
+});
+
 test('repeatable native update status requires a fresh cycle and preserves known required versions', () => {
   assert.equal(nativeSessionAllowed(cycle()), true);
   assert.equal(metaUpdateView(cycle()).value.cycle, '2');

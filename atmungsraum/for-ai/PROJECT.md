@@ -162,6 +162,34 @@ the existing utility and recovery routes.
 
 ### Active update extension — 2026-11-16
 
+Current checkpoint,2026-11-17: Meta20 is actually installed with exact signed
+bytes, retained UID and Meta installer attribution, at00:33:21 after root closed
+idle19. It has not been host-launched, and no process is running at readback.
+Earlier19 host launch reached advancing focused frames; repeated manual checks
+ran in the same process. Meta20's offer initially lagged in the SDK, then
+reported20. Actual download requests failed; scoped OCMS logs reject the
+same-package StartDelayed request because one already exists. This ordinary
+Meta replacement is not SDK install or automatic relaunch proof. The user
+accepts closing the app for updates. Native21 adds a selected helper handoff and
+safe cooperative exit for queued updates; independent software review passes,
+with final package checks/builds and hardware qualification pending. Do not
+adopt an unidentified existing download as completed.
+
+Quest is verified on Wi-Fi ADB with the same boot. Its idle19 app was explicitly
+stopped to release the H10 for the PC browser recorder. The phone is
+USB-connected and user authorization permits controls. The local recorder's
+null-device connection race is repaired and independently reviewed. Actual Edge
+receives successful ECG/ACC start acknowledgments, then a Bluetooth link close;
+physical connection acceptance remains open. The participant confirms a worn,
+moistened strap. The recorder is committed in its own private worktree; no
+actual recording was started by the agent.
+
+PR31/Pages43974010304 succeeds with19 live-file matches. The new PWA clarification,
+required/latest20 policy, bounded SDK diagnostics and calibration comparison are
+local and unpublished;269 zero-skip full web checks,27 focused checks and27
+Pretext/reflow renders pass, with independent review. Finish publication,
+exact Pages/live checks and installed-phone refresh before claiming that release.
+
 User requests manual check/update and fresh verification for each new native
 session. On unavailable service/internet, permit installed build with warning;
 known required update or installation uncertainty still blocks. Extend the
