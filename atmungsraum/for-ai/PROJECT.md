@@ -11,6 +11,35 @@ approved explicit in-app startup updater continues, with SDK-enabled17/18 next.
 
 ## Active milestone: smartphone PWA and Quest 2 rehearsal
 
+### Playground parity release candidate — 2026-11-17
+
+- [x] Verify the live operator UI, startup update, and Developer code 21 policy
+  at `aa3882e`. [Pages run 43992621746](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/43992621746)
+  passed. The live index, manifest, release policy and Quest UI script matched Git.
+- [x] Add Quest-owned progress and preparation playback for Probe-Runde and
+  Anleitung. Use the accepted scenario's timing, cue plan and recording identity.
+  The signed ARM64 code 23 rehearsal passed host checks against its packaged
+  assets and shares the source tree documented in the [rehearsal APK entry](../quest/apks/README.md#0222-parity--local-rehearsal-2026-11-17).
+- [ ] On the authorized Quest 2 and installed Pixel PWA, record both identities
+  at fresh launch, match pairing codes and claim control. Verify the connection
+  checks, live ECG, participant entry, calibration review/retry and Controller
+  fallback. Check the phone keyboard, safe areas, Settings and the recording
+  history. Observe the corresponding rendered headset state.
+- [ ] Exercise all three scenarios and their matching receipts, pause/resume,
+  recenter, reconnect, finish, native files, and authorized export on the paired
+  devices. Observe the complete native 300- and 900-second runs and manual end
+  for Anleitung. Verify the installed phone opens the newest PWA by itself.
+- [ ] Qualify the parity changes with the Developer line's private inputs and
+  existing signer. Preserve its prior update baseline and release-process
+  evidence before selecting the new public policy.
+
+The native source candidate and its rebuild instructions are in
+[`quest/README.md`](../quest/README.md). The complete website suite passed all
+280 checks, including the native assembly resolvers and browser-to-Java
+pairing. The Quest session and Java gateway host tests passed. The MSI's ADB
+and mobile inventory are empty, so wearer acceptance and installed Pixel
+checks remain open.
+
 ### Windows rehearsal phone pairing — 2026-11-16
 
 - [x] Identify the missing pairing capability in the standard local code 18
@@ -92,7 +121,8 @@ the lab phone or headset. At the next attended idle session, refresh the
 installed phone and verify pairing, Polar and input, Start/Pause/Resume/Finish,
 and a synthetic recording through private Drive.
 See [compatibility verification](VERIFICATION.md#operator-ui-compatibility--2026-11-16).
-The native shared-scheduler catalog offers only `haupt-15`. The PWA needs
+The published Developer code 21 shared-scheduler catalog offers only
+`haupt-15`. The PWA needs
 the corresponding native capability fields to show determinate session progress
 or in-app Meta update progress. The earlier patient-first browser mode was
 retired with the move to Quest-only operation. Its CSVs remain available at

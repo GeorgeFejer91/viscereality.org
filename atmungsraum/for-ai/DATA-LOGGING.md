@@ -107,11 +107,12 @@ creates a different ID; it does not rename previous files. Three surname letters
 plus demographics are not guaranteed to distinguish different people: the UUID
 `session_id` is the unique identity of an individual run.
 
-The exact exercise is in `scenario_id`: historical runs can use
-`probe-anleitung`, `probe-5`, `probe-10`, `probe-15`, or `haupt-15`; the selected
-shared scheduler uses only `haupt-15`. The native recording metadata retains
-the planned duration and scenario hash. Anleitung is a historical practice
-run with a 68-second audio example.
+The recording's `scenario_id` identifies the exact exercise. The rehearsal
+candidate uses `probe-anleitung`, `probe-5` and `haupt-15` with the shared
+scheduler. Historical runs can also use `probe-10` or `probe-15`. Native
+recording metadata retains the scenario hash and authored timing. Anleitung
+continues until the operator finishes, and its authored phase labels end
+after 68 seconds.
 
 Quest keeps its native streams in the session directory with the recording
 manifest. The CSV repeats the participant ID, run index, UUID and scenario

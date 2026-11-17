@@ -5,12 +5,10 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The code19 shared-scheduler developer APK has passed software and actual signed
-package checks and is published in the private Meta Developer channel;
-installation and hardware acceptance are pending.
-The APK log records its exact source, signer
-and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
-source identity and verification history.
+The signed code 23 rehearsal qualifies this checkout's candidate source on the
+build host. Code 21 is the published Meta Developer baseline. See the
+[APK log](apks/README.md) for each package's source, signer and checksum.
+Paired Quest 2 and installed-PWA acceptance is pending for the candidate.
 
 ## Shared breathing setup
 
@@ -43,13 +41,13 @@ The phone follows the original operation's read-only receipt and measured native
 progress. Diagnostics distinguish intent, polling and actual frame advancement;
 the initial physical stall trigger is not yet established.
 
-The selected gateway offers only `haupt-15`. Start retains the chosen input
-and model, waits for the next complete cycle boundary, and starts a separate
-900-second main run: 39,690,000 audio frames at 44,100 Hz. Preparation is not
-main data. The old introductory restart and embedded 15-second calibration
-are absent from this path. The archived practice timelines, condition assets
-and local calibration menu voices remain available to unselected builds;
-they cannot start a second guidance player over the selected loop.
+Start retains the chosen input and model and waits for a complete cycle
+boundary. Haupt-Runde runs for 39,690,000 frames at 44,100 Hz. Probe-Runde
+runs for 300 seconds. Anleitung has a 68-second authored phase schedule and
+continues until the operator finishes. The candidate advertises preparation
+rounds after verifying their bundled silent assets. The shared track is muted
+for these rounds and continues to supply playback frames. The authored
+scenario plan supplies the recording's phase labels.
 
 The selected path currently supports zero guidance bias. Nonzero Arm or
 live-bias requests are explicitly rejected as
@@ -59,8 +57,9 @@ See the [approved setup contract](../for-ai/SHARED-BREATHING-SETUP.md) and
 
 ## Build from the public repository
 
-Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 36,
-Android Build Tools 36.0.0, Android NDK 27.2.12479018, and Rust with the
+Use Windows with PowerShell 7.6, Git, Node.js, JDK 17, Android SDK Platform 35
+for rehearsal or Platform 36 for Developer, Android Build Tools 36.0.0,
+Android NDK 27.2.12479018, and Rust with the
 `aarch64-linux-android` target. Keep the native checkouts together in a short
 ordinary directory. The following commands run from the `atmungsraum/quest`
 directory in a complete Atmungsraum checkout.
@@ -70,7 +69,7 @@ Set the SDK and JDK paths to your installations.
 $native = '<absolute short path for the native sibling repositories>'
 $env:JAVA_HOME = '<absolute path to JDK 17>'
 $env:ANDROID_HOME = '<absolute path to the Android SDK>'
-$developerKeystore = '<absolute path to the existing developer keystore outside Git>'
+$rehearsalKeystore = '<absolute path to the existing rehearsal keystore>'
 $env:ANDROID_NDK_HOME = Join-Path $env:ANDROID_HOME 'ndk/27.2.12479018'
 $env:Path = "$env:JAVA_HOME/bin;$env:Path"
 rustup target add aarch64-linux-android
@@ -97,18 +96,18 @@ if ($LASTEXITCODE) { throw 'Could not apply the Atmungsraum native patch' }
 git -C $quest commit -m 'Apply Atmungsraum Quest 2 source'
 if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked build' }
 
-./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-developer-009 `
-    -Developer -Keystore $developerKeystore -VersionCode 11 -VersionName 0.2.10-dev
+./assemble-apk.ps1 -QuestRepo $quest -BundledAssets -RunName atmungsraum-parity-rehearsal `
+    -PhonePairing -Keystore $rehearsalKeystore -VersionCode 23 -VersionName 0.2.22-parity
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
-reconstructs source tree `a9dc76d2014f915d7ac7d9756fc581346dad5faa`, matching
-the code21 developer candidate source `1cd5ee3b69550912b5d942e8ca893a25f1a7f361`.
-Patch SHA256 is `c8756d19bb41a1e97c1a69d156e3e20f81eb49ac2b5a86396aa46dbd329a9350`
-(1,939,646 bytes). Applying the exact binary patch to an isolated index at the
-pinned upstream base reproduces that tree;
-product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
-automatic install location for Meta distribution.
+reconstructs source tree `afa2ef004694ca1bb36cd4b240dd5461949955ad`, matching
+the code 23 rehearsal source `095f546a1ce7908f3b7b9dc4c0efc83fb3809f3c`.
+The 2,003,799-byte patch has SHA-256
+`10f3ec4e6934252ccb4117c7d32d772f4293e0e3881a1c83b1f17011bc413975`.
+Applying it to an isolated index at the pinned upstream base reproduced that
+tree. The signed rehearsal used compile and target SDK 35. Developer builds for
+Meta use compile SDK 36, target SDK 34 and automatic install location.
 The current Developer build selects the generic opt-in particle adapter with a downstream private
 Showcase profile through the existing three-custom-input route. The bundled
 command above remains the base experiment composition; it does not reproduce

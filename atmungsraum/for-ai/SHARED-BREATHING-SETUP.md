@@ -347,9 +347,12 @@ Preserve Origin, identity, epoch, authentication, replay and command-ID checks.
 Guest/relay routes cannot mutate calibration. The phone shows native progress,
 failure/retry and input testing through existing Pretext helpers. Older APKs
 report the required update rather than simulating setup success.
-The selected app offers `haupt-15` after unlimited preparation. The archived
-timed practice scenarios and local menu prompts remain available to unselected
-builds; they cannot start another guidance player over the selected loop.
+Published Developer code 21 offers `haupt-15` after unlimited preparation. The
+rehearsal candidate also offers `probe-5` and `probe-anleitung` when their silent
+placeholder assets verify. During those rounds the shared audio track is muted
+and its playback head still governs elapsed time, pause and recording. Phase
+labels come from the accepted authored plan. `probe-anleitung` continues after
+the authored schedule until the operator finishes.
 
 The calibrated tilt path currently supports zero guidance bias. A nonzero arm
 or live-bias request is rejected as `setup-guidance-bias-unsupported`, and no

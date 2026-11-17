@@ -1,5 +1,21 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.22-parity — local rehearsal, 2026-11-17
+
+| Property | Qualified value |
+| --- | --- |
+| Package / release | `org.viscereality.atmungsraum.rehearsal`, code 23 / `0.2.22-parity` |
+| Size / SHA-256 | 65,350,445 bytes / `f8a2af53a10758dcb36767d2f88b8076915f608d9bcd7079bcc8fbed849bbd5d` |
+| Native commit / tree | `095f546a1ce7908f3b7b9dc4c0efc83fb3809f3c` / `afa2ef004694ca1bb36cd4b240dd5461949955ad` |
+| Cumulative source patch | 2,003,799 bytes / `10f3ec4e6934252ccb4117c7d32d772f4293e0e3881a1c83b1f17011bc413975` |
+| Certificate SHA-256 | `fabbb0a5ef084cc211a59a9b66a84c34311085c7edf7d91b4679711737089d63` |
+
+The assembly verified the signed APK's session closure, all 74 scenario
+entries, matching-code pairing configuration, ARM64 and 16 KiB alignment.
+The local APK and its build capsule stay with the rehearsal artifacts.
+Installation and the paired Quest 2 and Pixel tests are pending. The Developer
+build needs its retained private inputs, signing identity and Meta release flow.
+
 ## 0.2.20-dev — code21 monitor3 Developer release, 2026-11-17
 
 | Property | Qualified value |
