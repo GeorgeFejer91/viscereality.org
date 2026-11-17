@@ -1,5 +1,39 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.22-dev — code23 candidate, 2026-11-17
+
+Signed Developer code23 is built from native
+`453af6f4efa9fef823670b4a441a37d6feaba9c6`, tree
+`e1029a45215e831b2d847bbc7265d8d6f5e1fe86`.
+Size65,690,757bytes; SHA256
+`36584597afbae13db4cf0adfe6bbda61a6d498c319023c7e42d51795e0a3dca3`.
+Certificate remains
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+The public cumulative patch is1,981,101bytes, SHA256
+`1c0e53135586e68a9314cfec1ca6212db71a9887b4c1d50e76cb4cb13295e138`;
+isolated-index application to the existing pinned upstream reproduces that tree.
+
+Changes: fixed Controller State starts phase classification without the unrelated
+120-frame volume calibration. Selected manual Controller/Polar input loss retains
+the last diagnosed inhale/exhale/hold and integrates it at the original bounded
+render rates. New app/input retires old phase/confirmation history; data readiness
+and native session/update admission remain authoritative. Configuration/activation
+rejection retains its original reset. This is not a change to calibration fitting.
+
+The retained build recipe keeps the22 private inputs, SDK207 pins, signer,
+helper3 integration and controller-only policy. DEX, SDK/helper implementations,
+visuals and audio payloads are byte-identical to22; only expected generated
+identity/bindings/settings, compiled manifest/version, main Rust library and
+signing records differ. Android release compilation, actual signed-APK900-second
+session closure, independent signed-package inspection and16KiB ZIP alignment
+pass. Final default native host suite passes888 with five intentional ignores;
+independent source review passes. Private artifact/capsule/verification are retained
+in the lab; no private visuals or APK are added to this public repository.
+
+Meta publication is held for the user-requested running-session22-to23 test.
+Neither Meta delivery nor physical startup/tracking-loss behavior is qualified
+yet. The PWA companion release is20261117-auto-control (PR41/Pages44072213706).
+
 ## 0.2.21-dev — code22 automatic boot/update acceptance, 2026-11-17
 
 Code22 is current in the private Developer channel, Meta build1463496130182732,

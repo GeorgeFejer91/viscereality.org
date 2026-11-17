@@ -22,7 +22,40 @@ exercise real app code with synthetic transport; physical Quest/phone acceptance
 is not inferred. Evidence is retained privately under the2026-11-17 auto-control
 validation and visualization directories. Release marker:20261117-auto-control.
 
-Publication and installed-phone refresh remain tracked in PROJECT.md.
+Publication: [PR41](https://github.com/GeorgeFejer91/viscereality.org/pull/41)
+mergedb65ec14 ascabadb70f1b2c68d630e680472b432453d308d1a. Exact
+[Pages44072213706](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44072213706)
+succeeded and all17 checked public files matched Git. A public-runtime Chromium
+check confirmed automatic free-lease acquisition, green native-confirmed control,
+fixed/adaptive Polar and Controller selection with no page errors. Only the Quest
+transport was synthetic. Installed-phone refresh is tracked in PROJECT.md.
+
+## Native manual-state continuity candidate — 2026-11-17
+
+Real Quest22 markers showed repeated Waiting/setup-input-not-ready resets to zero.
+The source path also made fixed Controller State wait for120 accepted movement
+frames from volume calibration (at least11.9 seconds, longer with holds/rejection).
+The candidate starts phase classification directly and separates retained visual
+diagnosis from fresh input readiness. Missing Controller/Polar data continues
+inhale/exhale/hold at bounded frame rates. Owner/input changes retire the old
+phase and confirmation namespace; activation/configuration rejection still resets.
+
+Red-to-green regressions cover Waiting-to-zero and a new owner starting through
+Automatic with reused numeric Polar lineage. Final native default host suite
+passes888, zero failures, five intentional ignores, serially. Independent review
+closes both lineage findings. The inherited parallel host suite has shared
+TEST_SELECTED fixture pollution (also reproduced with the prior test binary);
+the serial suite is the complete passing default gate. Showcase production check
+passes; its host-test build has pre-existing ignored-test references to a module
+configured out by showcase, so no showcase-test success is claimed.
+
+Native453af6f4/treee1029a45 is clean and the1981101-byte cumulative source patch
+reconstructs that exact tree in an isolated index. Actual selected Android release
+compilation and signed-APK900-second session-closure checks pass. Independent
+signed-package inspection passes905 checks, including signer, API24–27 signature,
+16KiB ZIP alignment, exact capsule source and copied bytes. All private/audio
+payloads and Java DEX/SDK/helper closure match22; only intended Rust and generated
+identity/bindings differ. Meta distribution and wearer acceptance remain pending.
 
 ## Attended selection race and flicker — 2026-11-17
 
