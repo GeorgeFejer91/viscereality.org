@@ -35,6 +35,16 @@ Checks completed before publication:
 - The requested Atmungsmessmethode wording and short purpose explanation are
   covered by the final rendered input matrix and broader layout capture.
 
+Publication: [PR37](https://github.com/GeorgeFejer91/viscereality.org/pull/37)
+merged implementation7b79208 as dbb29ee2093756c209aa54fc78744948ed5893c4.
+Exact [Pages44052231564](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44052231564)
+succeeded. All16 affected live responses matched Git. A fresh Chromium page
+loaded the public runtime (only Quest/pairing transport replaced by the bounded
+synthetic fixture), mounted release20261117-input-status, displayed the German
+method wording and green link, skipped the current-APK page and switched fixed
+Polar, dynamic Polar and Controller with one command each and zero page errors.
+Installed phone/physical Quest confirmation remains an attended follow-up.
+
 Evidence stays private under
 S:/Work/private/atmungsraum/validation/2026-11-17-pwa-input-layout/.
 This increment changes PWA presentation only. Real phone/Quest acceptance of

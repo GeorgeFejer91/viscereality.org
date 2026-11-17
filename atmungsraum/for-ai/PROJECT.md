@@ -17,10 +17,14 @@
   timestamps, gaps, expiry, recordings and replay fences remain unchanged.
 - [x] Verify the full Node suite with the selected native/Java integration,
   real-app input selection, update/handoff, layout and startup regressions.
-  Independent review found no product issues; its stale layout-fixture route
-  finding was corrected. See [verification](VERIFICATION.md#input-confirmation-and-update-step--2026-11-17).
-- [ ] Publish this increment through the ordinary secondary-account PR and
-  verify its exact Pages deployment and affected live responses.
+  Independent review findings on update Back routing and stale capture-fixture
+  routes were corrected and retested. See [verification](VERIFICATION.md#input-confirmation-and-update-step--2026-11-17).
+- [x] Publish through the ordinary secondary-account PR37. Implementation
+  7b79208 merged as dbb29ee; exact Pages44052231564 succeeded and all16 changed
+  live responses matched Git. The live app mounted release20261117-input-status
+  and switched fixed Polar, dynamic Polar and Controller through synthetic
+  native receipts without page errors. Branch remains
+  codex/atmungsraum-calibration-web-20261114; no native/APK edits.
 - [ ] Refresh the installed phone at the next attended idle point and confirm
   switching methods against the actual Quest. Rendered checks use synthetic
   transport and do not establish a new hardware result.
