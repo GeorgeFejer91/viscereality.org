@@ -1,5 +1,36 @@
 # Project
 
+### Active: full lab validation and UI repairs — 2026-11-18
+
+The Codex validation goal uses this checklist. Repeat affected checks on the
+latest applicable release, and fix and retest any confirmed UI failure against
+the current GUI rules and original input driver.
+
+- [x] Confirm the lab Quest APK matches Meta fixed27-r2 and Boot Helper 3 is
+  installed. Match the live smartphone-rules PWA and policy bytes to Git.
+- [x] Authenticate RustDeskMCP to the lab Pixel from the operator-owned
+  permanent credential file. Receive a fresh Android frame. Record the
+  [reusable procedure](RUSTDESK-PHONE-TESTING.md) without the credential.
+- [ ] Confirm the installed Pixel loaded the current PWA and prove a reversible
+  PWA tap and an authenticated Quest action through RustDeskMCP.
+- [ ] Complete the current GUI matrix, repair confirmed defects, and verify
+  the published fixes on the installed phone. The GUI release gate reported
+  one missing measurement for the APK identity detail at 390 px. Trace its
+  measurement scheduling and verify the original case.
+- [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
+  baseline run and one fault recovery/partial run. Verify native, phone and
+  private Drive custody with matching file hashes.
+- [ ] Coordinate the held successor after the actual lab baseline reports
+  recording. Verify preparation check, PWA-driven save/update, trusted
+  relaunch, and a second clean 900-second run with equivalent custody.
+
+Preflight matched six public runtime/policy files to `7ad06a5` and exact
+[Pages run 44193699026](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44193699026).
+The PWA is `20261117-smartphone-rules`. USB readback found both lab devices,
+with the Quest asleep. Recheck wearer readiness and the installed phone release
+before any experiment action. The separate attended update route below remains
+its own evidence.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices

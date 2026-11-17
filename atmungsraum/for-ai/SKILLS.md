@@ -125,9 +125,9 @@ client, open **RustDeskMCP** from the Start menu.
 
 The release binds to local port `59940`. When enabled, its MCP endpoint
 accepts requests without a token. Enable it from **Settings → Security →
-Enable MCP server** when using the RustDesk skill. Pixel frame capture and
-input through this fork still need validation. The Mobile MCP route above
-already reaches the Pixel over USB for Android app tests.
+Enable MCP server** when using the RustDesk skill. Follow the
+[RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md) for Android
+authentication, frame-based taps, native receipts, layout checks and cleanup.
 
 ### Quest device operations
 
