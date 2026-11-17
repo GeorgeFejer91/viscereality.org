@@ -36,6 +36,30 @@ the new guard. Source, signer, SDK207/helper3, controller-only permissions,
 private audio/visuals and900-second session closure are independently bound.
 Meta publication is in progress; no installation/physical acceptance is claimed.
 
+## Review repair APK and held probe — 2026-11-17
+
+Nativef5ea725c/tree df5d27e passes896 serial host tests, zero failures and6
+intentional ignores; boundary scan, scoped reviews and integrated review pass.
+Actual Runtime peers reproduce technical retirement before the fix and retain
+Polar selection with unavailable evidence afterward. Real driver regressions
+cover all3 Polar methods and all3 diagnosed phases, including spontaneous audio
+owner faults. Explicit operator recovery and owner/configuration fences remain.
+
+All14 updater suites pass. Actual helper policy, common terminal dispatcher,
+generated writer/cancel-ACK continuation and separate cancellation worker pass
+race regressions. The110-source Android34/36 javac/D8 checks pass; legacy/new
+handoff and queued-exit ABI remain closed. Signed25-r2 passes1114 checks,
+including39 repaired DEX method paths/6 compiled control/data-flow guards.
+Immutable24 and seven damaged instruction variants fail the new guard. Same
+signer, SDK207/helper3, controller-only permissions, private visuals/audio and
+900-second configuration are verified. Meta build1464859736713038 is current;
+malware and detailed security pass. No physical installation is claimed.
+
+Version-only26 passes1229 signed-package checks with unchanged machine code,
+DEX and payloads apart from explicit closed generated identities. It remains
+unpublished until an actual repaired25 recording is RUNNING/rec:true and the
+coordinating agent releases it for the deferred attended update test.
+
 ## PWA startup update and Quest reconnect — 2026-11-17
 
 `python -B tools/test-pwa-startup.py` runs the served HTML and production

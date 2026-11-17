@@ -2,9 +2,9 @@
   "v": 1,
   "packages": {
     "org.viscereality.atmungsraum.developer": {
-      "minimum_version_code": 24,
-      "latest_version_code": 24,
-      "version_name": "0.2.23-dev"
+      "minimum_version_code": 25,
+      "latest_version_code": 25,
+      "version_name": "0.2.24-dev"
     }
   }
 }
