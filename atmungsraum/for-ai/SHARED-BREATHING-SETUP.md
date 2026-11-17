@@ -1,5 +1,16 @@
 # Shared breathing scheduler and setup calibration
 
+## Main-session plan binding — 2026-11-17
+
+The selected Haupt-Runde uses the continuous900-second shared-loop recording
+plan. Gateway admission and the generated Android participant binding must use
+the same authoritative plan selector; the legacy scenario includes different
+introductory/calibration audio and is not interchangeable. Missing selected
+plans fail closed. Exact validation permits only the participant ID addition.
+Known pre-native Arm failures settle only the original unexecuted intent;
+potentially executed work remains unknown and reconciles read-only by original
+ID. No timeout, UI callback or update request may replay Start or reset recording.
+
 Approved user design, 2026-11-14. PROJECT.md remains the lifecycle owner.
 
 ## Smooth actual display and optional pretrained Polar modes — 2026-11-16
