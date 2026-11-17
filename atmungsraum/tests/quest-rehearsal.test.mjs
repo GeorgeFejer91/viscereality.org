@@ -467,6 +467,14 @@ test('an enrolled scenario Arm binds the native generation and the selected time
   assert.deepEqual(quest.commands.map(({ op }) => op), ['arm', 'start']);
 });
 
+test('Freie Erkundung requires a Quest offer and participant recording', () => {
+  const scenarios = ['haupt-15', 'free-exploration'];
+  assert.deepEqual(rehearsalContract.rehearsalScenarios({ scenarios }), ['haupt-15']);
+  assert.deepEqual(rehearsalContract.rehearsalScenarios({ participant_arm: 1, scenarios }), scenarios);
+  assert.deepEqual(rehearsalContract.rehearsalScenarios({ participant_arm: 1, scenarios: ['haupt-15'] }), ['haupt-15']);
+  assert.equal(rehearsalContract.rehearsalDuration({ rec: true, duration_ms: 447070 }), 447070);
+});
+
 test('a lost Arm reply is reconciled without starting or replaying after reconnect', async () => {
   const quest = fakeQuest({ lost: 'arm' });
   const rehearsal = new QuestRehearsal();

@@ -72,10 +72,15 @@ export class MetaUpdateControl {
       && BigInt(value.revision) >= BigInt(this.pending.accepted.revision)) {
       this.remember(null); this.message = '';
     }
-    const idle = active && state.status.p === 'IDLE' && !state.status.rec && !state.status.pending
-      && !state.busy && !state.pending && !state.unknown;
     const canEndPreparation = state.status?.meta_update_preparation === 1 && value?.can_end_preparation === true;
     const requestOp = canEndPreparation && !value?.can_check ? 'end-preparation-and-check' : 'check-and-update';
+    // Native pending covers both experiment commands and the optional calibration introduction.
+    // Only the explicitly admitted preparation-end operation can retire that introduction.
+    const endingInstruction = requestOp === 'end-preparation-and-check' && state.status?.h === 'vr-preparation'
+      && id(state.calibrationInstruction) && state.status.setup?.instruction_id === state.calibrationInstruction;
+    const pendingOnQuest = state.status?.pending && !endingInstruction;
+    const idle = active && state.status.p === 'IDLE' && !state.status.rec && !pendingOnQuest
+      && !state.busy && !state.pending && !state.unknown;
     const boundedRequest = requestOp !== 'end-preparation-and-check' || successor(value?.cycle) && successor(value?.revision);
     const retired = this.pending && gateway?.owner.device === this.pending.owner.device
       && gateway.owner.serial === this.pending.owner.serial
@@ -89,7 +94,7 @@ export class MetaUpdateControl {
       canAcknowledge: Boolean(active && retired && !this.busy),
       prerequisites: !available ? '' : !active ? 'Übernimm zuerst die Quest-Steuerung auf diesem Smartphone.'
         : state.unknown ? 'Eine frühere Sitzungsanfrage ist unklar. Frage ihre ursprüngliche Bestätigung ab, bevor du aktualisierst.'
-        : state.pending || state.status.pending ? 'Eine Sitzungsanfrage wartet auf Bestätigung. Warte auf das ursprüngliche Ergebnis.'
+        : state.pending || pendingOnQuest ? 'Eine Sitzungsanfrage wartet auf Bestätigung. Warte auf das ursprüngliche Ergebnis.'
         : state.busy ? 'Eine Quest-Aktion wird bestätigt. Warte auf ihren Abschluss.'
         : !boundedRequest ? 'Der Quest-Stand kann nicht sicher weitergeführt werden. Verbinde das Smartphone erneut und prüfe den aktuellen Stand.'
         : canEndPreparation && !value.can_check ? 'Die Vorbereitung wird beendet. Erst wenn die Quest den Atemtakt sicher angehalten hat, beginnt die Update-Prüfung.'

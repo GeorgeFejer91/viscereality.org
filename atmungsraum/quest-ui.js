@@ -1,13 +1,13 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=8';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=14';
 import { pairPhone } from './quest-pairing.js?v=3';
-import { canRecenter, polarSetup, polarReadiness, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=34';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=26';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=36';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=13';
+import { BreathingSetup } from './breathing-setup.js?v=14';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
@@ -15,7 +15,7 @@ import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
 import { KioskControl } from './kiosk-control.js?v=4';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=4';
-import { MetaUpdateControl } from './meta-update-control.js?v=3';
+import { MetaUpdateControl } from './meta-update-control.js?v=4';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=2';
 import { ControllerLease } from './controller-lease.js?v=2';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
@@ -98,6 +98,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const previewCalibrate = byId('preview-calibrate');
   const previewRestart = byId('preview-restart');
   const previewRetry = byId('preview-retry');
+  const instructionCancel = byId('calibration-instruction-cancel');
+  const calibrationChangeInput = byId('calibration-change-input');
   let calibrationBaseline;
   const previewPersonalReturn = byId('preview-personal-return');
   const previewPolarFixed = byId('preview-polar-fixed');
@@ -359,7 +361,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (updateNotice.hidden !== noticeHidden) updateNotice.hidden = noticeHidden;
     const fullConnection = ['connect', 'settings'].includes(step);
     const routineStatus = ['IDLE', 'RUNNING'].includes(context.status?.p) && Object.values(labels).includes(statusText.textContent);
-    text(byId('running-screen-title'), operatorSessionHeading(context.status?.p));
+    text(byId('running-screen-title'), probeInstructionPlaying(context.status) ? 'Anleitung zur Probe-Runde' : operatorSessionHeading(context.status?.p));
     const access = controllerAccessState(context.status);
     const duplicateUpdateStatus = step === 'update' && statusText.textContent === nativeUpdate.summary;
     statusText.hidden = duplicateUpdateStatus || step === 'update' && !rehearsal.recovery() && !context.waitingForControl
@@ -433,7 +435,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('operator-meta-handoff-summary'), handoff?.summary ?? '');
     text(byId('operator-meta-handoff-detail'), handoff?.detail ?? '');
     const supportsScenarios = Boolean(rehearsal.gateway?.scenarioArm);
-    const available = supportsScenarios ? rehearsalScenarios(status) : [];
+    const available = supportsScenarios ? rehearsalScenarios(status)
+      .filter(id => id !== 'free-exploration' || rehearsal.gateway.participantArm) : [];
     const focusedChoice = sessionChoices.contains(document.activeElement) ? document.activeElement : null;
     for (const option of scenarioOptions) {
       option.closest('label').hidden = option.disabled = !available.includes(option.value);
@@ -464,8 +467,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const control = controllerLease.update(rehearsal.gateway, rehearsal.state, controlContext());
     clearTimeout(controlTimer);
     if (control.active) controlTimer = setTimeout(() => paint(), control.expiresIn + 1);
-    const liveCommandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || controllerLease.pending
-      || busy || pending || status?.pending || breathing.busy || nativeRecovering || savedUpdateIntent);
+    const localCommandWaiting = Boolean(connecting || userAction || controllerLease.inFlight || controllerLease.pending
+      || busy || pending || breathing.busy || breathing.cancellingInstruction || nativeRecovering || savedUpdateIntent);
+    const liveCommandWaiting = localCommandWaiting || status?.pending;
     const preparationWaiting = Boolean(breathing.pending || breathing.view?.recovering);
     const commandWaiting = liveCommandWaiting || preparationWaiting;
     const waiting = waitingForControl || commandWaiting;
@@ -502,7 +506,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
     text(statusText, joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
-      : connecting ? 'Quest wird verbunden …' : commandWaiting ? 'Warte auf Bestätigung der Quest …'
+      : connecting ? 'Quest wird verbunden …' : probeInstructionPlaying(status) ? 'Die fünf Minuten beginnen nach der Anleitung im Headset.'
+        : commandWaiting ? 'Warte auf Bestätigung der Quest …'
         : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint));
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     playback.hidden = !status;
@@ -585,7 +590,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('operator-meta-detail'), metaUpdate.detail);
     // An old setup journal stays read-only; native dynamic admission independently
     // fences ending preparation. Actual experiment/control uncertainty still blocks.
-    const updateControls = metaControl.update(rehearsal.gateway, { status, busy: liveCommandWaiting || waitingForControl || !control.active, pending, unknown });
+    const updateControls = metaControl.update(rehearsal.gateway, { status, busy: localCommandWaiting || waitingForControl || !control.active,
+      calibrationInstruction: breath.setup?.instruction_id, pending, unknown });
     byId('meta-update-controls').hidden = !updateControls.available;
     byId('meta-update-check').disabled = !updateControls.canRequest;
     text(byId('meta-update-prerequisites'), updateControls.prerequisites);
@@ -598,7 +604,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const recording = Boolean(status?.rec || status?.p === 'ARMED' && actions.finish === 'save-next');
     finishUpdate.hidden = !recording;
     finishUpdate.disabled = !recording || sessionWaiting || unknown || actions.finish !== 'save-next' || !control.active || Boolean(metaControl.pending);
-    if (recording) updateCopy.instruction = saveUpdateMessage || (finishUpdate.disabled
+    const pendingProbeStart = probeInstructionPlaying(status) && rehearsal.pending?.op === 'start'
+      && rehearsal.pending.generation === status.g && sameQuest(rehearsal.pending.owner, rehearsal.gateway?.owner);
+    if (recording) updateCopy.instruction = saveUpdateMessage || (pendingProbeStart && !unknown
+      ? 'Die Anleitung zur Probe-Runde läuft. Sobald die Quest den Sitzungsstart bestätigt, kannst du die Aufnahme hier beenden, speichern und aktualisieren.'
+      : finishUpdate.disabled
       ? 'Warte auf die bestätigte Sitzung und Steuerung. Die Aufnahme wird erst durch deine ausdrückliche Aktion beendet.'
       : 'Die Sitzung wird beendet und die Aufnahme auf der Quest gespeichert. Erst nach dem bestätigten Abschluss prüft die Quest das Update.');
     else if (saveUpdateMessage) updateCopy.instruction = saveUpdateMessage;
@@ -713,10 +723,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
     download.hidden = !archiveScope || !download.hasAttribute('href');
     paintOperatorLayout({ status, active, waitingForControl, participantComplete,
-      updateBlocked: Boolean(recovery || unknown || nativeRecovering || controllerLease.pending),
+      updateBlocked: Boolean(recovery && !pendingProbeStart || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
         || unknown || pending || status?.pending || nativeRecovering || breath.unknown),
+      instructionPending: breath.instructionPending,
       calibrationComplete: Boolean(breath.actions.continue && breath.showPolarCalibration) });
     renderLive(performance.now());
     scheduleBreathExpiry();
@@ -725,6 +736,10 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
   function paintBreathingSetup(view, waiting) {
     const native = view.setup;
+    text(byId('calibration-screen-title'), view.instructionPending ? 'Anleitung zur Atemübung' : 'Zwei Atemzyklen');
+    if (instructionCancel.hidden === view.instructionPending) instructionCancel.hidden = !view.instructionPending;
+    if (calibrationChangeInput.hidden !== view.instructionPending) calibrationChangeInput.hidden = view.instructionPending;
+    instructionCancel.disabled = !view.actions.cancelInstruction || connecting || controllerLease.inFlight || Boolean(userAction);
     const testingMethod = view.available && native.stage === 'testing' && native.playing && native.input !== 'automatic';
     text(byId('operator-confirmed-input'), view.available ? `Aktive Atmungsmessmethode: ${view.inputLabel}` : 'Kein aktueller Status der Atmungsmessmethode.');
     previewCircle.hidden = !view.available;
@@ -788,7 +803,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       ? 'Prüfe, ob die Partikel im Headset auf die Bewegung des Controllers reagieren.'
       : 'Prüfe bei der teilnehmenden Person, ob sich die Partikel im Headset mit der Atmung bewegen.');
     previewRestart.hidden = !testingMethod || !view.showPolarCalibration;
-    previewRetry.hidden = !view.failure || collecting;
+    previewRetry.hidden = !(view.failure || view.instructionFailed) || collecting || view.instructionPending;
     previewRestart.disabled = previewRetry.disabled = waiting || !view.actions.calibrate;
     byId('preview-recovery').hidden = !view.recovery;
     if (view.recovery) {
@@ -1587,6 +1602,15 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   for (const button of [previewCalibrate, previewRestart, previewRetry]) {
     button.addEventListener('click', () => setupAct('calibrate'));
   }
+  instructionCancel.addEventListener('click', async () => {
+    if (instructionCancel.disabled || document.hidden) return;
+    const cancel = breathing.cancelInstruction();
+    paint();
+    await cancel;
+    await rehearsal.refresh();
+    await breathing.refresh();
+    paint();
+  });
   previewPersonalReturn.addEventListener('click', () => setupAct('calibrate'));
   previewPolarFixed.addEventListener('click', () => setupAct('polar-fixed'));
   previewPolarAdaptive.addEventListener('click', () => setupAct('polar-adaptive'));

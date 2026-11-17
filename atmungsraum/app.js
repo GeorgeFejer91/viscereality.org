@@ -1,4 +1,4 @@
-import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261113-polar-only';
+import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261117-exploration-recording';
 
 const byId = id => document.getElementById(id);
 const root = document.documentElement;

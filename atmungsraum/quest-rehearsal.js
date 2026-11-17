@@ -7,7 +7,7 @@ const desiredPhase = { arm: 'ARMED', start: 'RUNNING', pause: 'PAUSED', resume: 
 const setupOperations = new Set(['scan', 'select', 'connect', 'start-ecg', 'start-acc']);
 const setupReference = /^[a-f0-9]{32}$/;
 const candidateId = /^[a-f0-9]{12}$/;
-const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20']);
+const scenarios = new Set(['probe-anleitung', 'probe-5', 'probe-10', 'probe-15', 'haupt-15', 'box-20', 'free-exploration']);
 const audioRecovering = status => status?.setup?.stage === 'recovering';
 const automationStates = new Set(['scanning', 'backoff', 'connecting', 'streams', 'ready', 'blocked', 'stopped', 'selection-required']);
 const validAutomation = value => value?.v === 1 && automationStates.has(value.state)
@@ -23,7 +23,8 @@ export function canRecenter(status) {
 export function rehearsalScenarios(status) {
   const offered = status?.scenarios;
   return Array.isArray(offered) && offered.length <= scenarios.size
-    && new Set(offered).size === offered.length && offered.every(id => scenarios.has(id)) ? offered : [];
+    && new Set(offered).size === offered.length && offered.every(id => scenarios.has(id))
+    ? offered.filter(id => id !== 'free-exploration' || status.participant_arm === 1) : [];
 }
 
 export function rehearsalDuration(status, offered = rehearsalScenarios(status)) {
@@ -37,6 +38,10 @@ export function rehearsalDuration(status, offered = rehearsalScenarios(status)) 
   return status.breath_setup === 1 && status.setup?.v === 1
     && Number.isSafeInteger(start) && start >= 0
     && offered.length === 1 && offered[0] === 'haupt-15' ? 900000 : null;
+}
+
+export function probeInstructionPlaying(status) {
+  return status?.p === 'ARMED' && status.pending === true && status.pre_session_instruction === 'probe-5';
 }
 
 export function polarSetup(status) {
@@ -203,7 +208,10 @@ export class QuestRehearsal {
       this.update({ unknown: false, message: 'Die Quest hat die Aktion abgelehnt.' });
       return false;
     }
-    if (receipt.state !== 'confirmed') return false;
+    if (receipt.state !== 'confirmed') {
+      if (op === 'start' && status.g === generation && probeInstructionPlaying(status)) this.update({ unknown: false });
+      return false;
+    }
     if (op !== 'recenter' && status.pending) return false;
     const polarHold = (op === 'start' || op === 'resume') && status.p === 'PAUSED'
       && status.rec && status.pi?.r === true && status.pi.h === true;

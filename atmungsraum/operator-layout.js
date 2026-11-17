@@ -27,6 +27,7 @@ export function resolveOperatorView(step, context) {
   if (!context.connected) return step === 'recordings' && (!context.recovery || context.offlineArchives) ? 'recordings' : 'connect';
   if (step === 'update' && !(context.updateBlocked ?? context.recovery) && !context.waitingForControl) return 'update';
   if (context.active) return 'running';
+  if (context.instructionPending) return 'calibration';
   if (context.recovery) return 'recovery';
   if (step === 'recordings') return 'recordings';
   if (context.waitingForControl) return 'connect';

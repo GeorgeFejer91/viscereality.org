@@ -45,6 +45,25 @@ test('explicit preparation update requires both native capability and current ad
   }
 });
 
+test('only native preparation-end admission may retire a confirmed calibration narration while pending', () => {
+  const peer = fixture(), model = new MetaUpdateControl(), instructionId = 'b'.repeat(16);
+  const playback = state({ meta_update_preparation: 1, h: 'vr-preparation', pending: true,
+    setup: { instruction_id: instructionId }, meta_update: { ...state().status.meta_update,
+      can_check: false, can_end_preparation: true, busy_reason: 'preparation-audio-active' } });
+  playback.calibrationInstruction = instructionId;
+  assert.equal(model.update(peer.gateway, playback).canRequest, true);
+  assert.equal(model.view.requestOp, 'end-preparation-and-check');
+  for (const overrides of [{ busy: true }, { unknown: true }, { pending: true },
+    { calibrationInstruction: 'c'.repeat(16) }, { calibrationInstruction: null }]) {
+    assert.equal(model.update(peer.gateway, { ...playback, ...overrides }).canRequest, false);
+  }
+  for (const overrides of [{ p: 'ARMED' }, { rec: true }, { h: 'vr-session' }, { meta_update_preparation: 0 },
+    { meta_update: { ...playback.status.meta_update, can_check: true } },
+    { meta_update: { ...playback.status.meta_update, can_end_preparation: false } }]) {
+    assert.equal(model.update(peer.gateway, { ...playback, status: { ...playback.status, ...overrides } }).canRequest, false);
+  }
+});
+
 test('preparation acceptance requires exact next revision for both live and restored receipts', async () => {
   const command = { v: 1, id: 'e'.repeat(16), op: 'end-preparation-and-check', cycle: '2', revision: '7' };
   for (const revision of ['1', '7', '8', '9']) {

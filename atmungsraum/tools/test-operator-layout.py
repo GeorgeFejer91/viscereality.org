@@ -3,7 +3,7 @@ from pathlib import Path
 import importlib.util
 import tempfile
 from playwright.sync_api import sync_playwright, expect
-from layout_render_fixtures import initial, mutations
+from layout_render_fixtures import SIZES, initial, mutations
 
 spec = importlib.util.spec_from_file_location('capture_phone', Path(__file__).with_name('capture-phone-screens.py'))
 c = importlib.util.module_from_spec(spec)
@@ -65,6 +65,36 @@ def compact_setup(review):
         page.context.close()
 
 
+def calibration_instruction(review):
+    page = review.page(initial(c, {'calibrationInstruction': True}), viewport={'width': 320, 'height': 640})
+    page.clock.run_for(4000)
+    c.enter_participant(page)
+    page.locator('#preview-calibrate').click()
+    screen = page.locator('#calibration-screen')
+    cancel = screen.get_by_role('button', name='Anleitung abbrechen')
+    expect(screen.get_by_role('heading', name='Anleitung zur Atemübung')).to_be_visible()
+    expect(screen.locator('#calibration-change-input')).to_be_hidden()
+    expect(cancel).to_be_enabled()
+    page.clock.run_for(35000)
+    expect(cancel).to_be_enabled()
+    expect(page.locator('html')).to_have_attribute('data-measurement', 'ready')
+    assert cancel.locator('[data-measure]').get_attribute('data-text-fit') != 'reflow'
+    assert page.evaluate('document.documentElement.scrollWidth === innerWidth')
+    assert page.evaluate('reviewQuest.setup.attempt') == 0
+    assert page.evaluate('reviewSetupCommands.map(command => command.op)') == ['calibrate']
+    cancel.focus()
+    page.keyboard.press('Enter')
+    expect(cancel).to_be_hidden()
+    page.clock.run_for(1000)
+    expect(screen.get_by_role('button', name='Erneut einrichten')).to_be_enabled()
+    assert page.evaluate('''() => {
+        const [calibrate, cancel, ...extra] = reviewSetupCommands;
+        return cancel.op === 'cancel-instruction' && cancel.target === calibrate.id
+            && cancel.id !== calibrate.id && extra.length === 0 && reviewQuest.setup.attempt === 0;
+    }''')
+    page.context.close()
+
+
 def recovery_and_recordings(review):
     page = review.page()
     expect(page.locator('#quest-find')).to_be_visible()
@@ -116,6 +146,7 @@ def scenario_compatibility(review):
     for offered, tracks, visible, selected in (
         (primary + legacy, ['track-ready', 'track-ready'], primary, 'probe-5'),
         (['haupt-15'], ['track-ready', 'track-ready'], ['haupt-15'], 'haupt-15'),
+        (['haupt-15', 'free-exploration'], ['track-ready', 'track-ready'], ['free-exploration', 'haupt-15'], 'free-exploration'),
         (legacy, ['track-ready', 'track-ready'], [], None),
         (None, ['track-ready', 'track-ready'], [], None),
         (['probe-5'], ['missing', 'track-ready'], ['probe-5'], None),
@@ -143,11 +174,74 @@ def scenario_compatibility(review):
             expect(page.locator('#running-screen')).to_be_visible()
             assert page.evaluate('[reviewQuest.armedScenario, reviewQuest.condition]') == [selected, 'condition-a']
             assert mutations(page)['session'] == ['arm', 'start']
+            if selected == 'free-exploration':
+                c.wait_state(page, duration_ms=447070, clock=22000)
+                progress = page.locator('#quest-progress')
+                expect(progress).to_have_js_property('max', 447070)
+                expect(progress).to_have_js_property('value', 22000)
+                page.locator('#quest-play').click()
+                expect(page.locator('#running-screen-title')).to_have_text('Sitzung pausiert')
+                expect(progress).to_have_js_property('value', 22000)
+                page.locator('#quest-play').click()
+                expect(page.locator('#running-screen-title')).to_have_text('Sitzung läuft')
+                assert mutations(page)['session'] == ['arm', 'start', 'pause', 'resume']
         else:
             expect(page.locator('#quest-play')).to_be_disabled()
             expect(page.locator('#quest-scenario-unavailable')).to_be_visible()
             assert mutations(page)['session'] == []
         page.context.close()
+
+
+def authored_round_layout(review):
+    offer = initial(c, {'scenarios': ['haupt-15', 'probe-5', 'free-exploration']})
+    for name, viewport, text_size in SIZES:
+        page = review.page(offer, viewport=viewport)
+        page.evaluate('size => document.documentElement.style.fontSize = size', text_size)
+        c.enter_participant(page)
+        page.locator('#preview-controller').click()
+        page.locator('#preview-continue').click()
+        c.review_battery(page)
+        choice = page.get_by_role('radio', name='Freie Erkundung')
+        expect(choice).to_be_visible()
+        expect(choice).to_be_enabled()
+        expect(page.locator('html')).to_have_attribute('data-measurement', 'ready')
+        page.clock.run_for(150)
+        assert choice.evaluate('''input => {
+          const tile = input.closest('label');
+          const label = tile.querySelector('[data-measure]');
+          const panel = tile.getBoundingClientRect(), text = label.getBoundingClientRect();
+          return text.left >= panel.left && text.right <= panel.right
+            && text.top >= panel.top && text.bottom <= panel.bottom
+            && document.documentElement.scrollWidth === innerWidth;
+        }'''), name
+        page.context.close()
+
+
+def guided_probe_instruction(review):
+    page = review.page(initial(c, {'scenarios': ['probe-5', 'free-exploration', 'haupt-15'],
+                                  'probeInstructionMs': 45401}), viewport={'width': 320, 'height': 640})
+    c.enter_participant(page)
+    page.locator('#preview-controller').click()
+    page.locator('#preview-continue').click()
+    c.review_battery(page)
+    page.get_by_role('radio', name='Geführte Atmung 5 Min.').check()
+    page.locator('#quest-play').click()
+    heading = page.locator('#running-screen-title')
+    expect(heading).to_have_text('Anleitung zur Probe-Runde')
+    expect(page.locator('#quest-status')).to_have_text('Die fünf Minuten beginnen nach der Anleitung im Headset.')
+    page.clock.run_for(35000)
+    expect(heading).to_have_text('Anleitung zur Probe-Runde')
+    progress = page.locator('#quest-progress')
+    expect(progress).to_have_js_property('max', 300000)
+    expect(progress).to_have_js_property('value', 0)
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.clock.run_for(12000)
+    expect(heading).to_have_text('Sitzung läuft')
+    expect(progress).to_have_js_property('value', 0)
+    c.wait_state(page, clock=4000)
+    expect(progress).to_have_js_property('value', 4000)
+    assert mutations(page)['session'] == ['arm', 'start']
+    page.context.close()
 
 
 def optional_participant_navigation(review):
@@ -311,6 +405,8 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
         review = c.Review(browser, Path(output))
         recovery_and_recordings(review)
         scenario_compatibility(review)
+        authored_round_layout(review)
+        guided_probe_instruction(review)
         optional_participant_navigation(review)
         completed_session_history(review)
         page = review.page(init)
@@ -408,11 +504,12 @@ window.reviewInitialSetup={stage:'idle',playing:false,polar_modes:['calibrated',
             expect(page.locator('#quest-finish')).to_be_visible()
         assert before == mutations(page)
         compact_setup(review)
+        calibration_instruction(review)
         session_particles(review)
         session_particle_layout(review)
         assert not review.errors, review.errors
         browser.close()
-    print('PASS real-app scenario Arm, receipt recovery, recording status, Drive dialog, draft and history')
+    print('PASS real-app scenario Arm, calibration narration and cancellation, receipt recovery, recording status, Drive dialog, draft and history')
 
 
 if __name__ == '__main__':

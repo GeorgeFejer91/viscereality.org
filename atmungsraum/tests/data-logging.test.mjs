@@ -19,6 +19,7 @@ test('Participant identity normalizes names and rejects invalid form values', ()
 test('Dated Quest CSV filenames bind participant, UTC date, scenario and positive attempt', () => {
   assert.equal(isDatedSessionFilename('Fej_35_M_2026-11-13_probe-5_r1.csv'), true);
   assert.equal(isDatedSessionFilename('Mül_35_F_2028-02-29_haupt-15_r2.csv'), true);
+  assert.equal(isDatedSessionFilename('Fej_35_M_2026-11-17_free-exploration_r1.csv'), true);
   for (const name of [
     'Fej_35_M_2026-02-29_probe-5_r1.csv',
     'Fej_35_M_2026-11-13_probe-5_r0.csv',

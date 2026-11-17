@@ -1,3 +1,11 @@
+# Atmungsraum authored Quest audio — 2026-11-17
+
+Scope: prepare and verify the authored Quest audio catalog, its JVM reader,
+and Android media inputs on the authored-audio branch. The production baseline
+is f952d5b. The working tree was clean. Keep enrolled command and session
+authority in the existing native owners. Use the active audio section in
+for-ai/PROJECT.md for integration and release evidence.
+
 # Atmungsraum completion — 2026-10-13
 
 ## Scope

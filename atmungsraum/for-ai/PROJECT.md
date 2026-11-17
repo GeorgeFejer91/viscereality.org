@@ -39,7 +39,7 @@ Implementation plan (this document remains the single lifecycle owner):
   add a fenced preparation-end/actual-park route before update admission. Reuse
   current runtime/writer/audio/helper owners and correlate all requests/results.
   Preserve unknown-command/writer and irreversible-install barriers.
-- [ ] PWA owner: expose a clear update action in sequential setup, show any real
+- [x] PWA owner: expose a clear update action in sequential setup, show any real
   blocker alongside it; distinguish preparation from a recording. Compose
   explicit Stop/Save→native park→update with original operation receipts and
   reconnect/actor/generation fences. Improve missing-health legacy copy while
@@ -87,6 +87,16 @@ native source patch or silently enable new audio. MainStudyAudio remains an
 explicit opt-in; the update candidate retains the already qualified loop/audio
 payload and900-second main. Revalidate the combined source and interfaces, then
 build26-r3 under a new run name. Root owns final private source binding and release.
+
+Merged PWA qualification:323 Node cases pass with zero skips;25 mounted
+preparation/update renders include exact calibration narration and pending guided
+Start, plus26 compact Update states,10 current-session/offline archive renders
+and the authored operator flow. Scoped independent review passes and all14
+changed runtime cache identities match. Calibration narration is cancelable only
+with exact native instruction identity and explicit preparation-end admission.
+An unresolved guided Start retains its original journal; Save waits for that
+original confirmation. No device acceptance is inferred from these fixtures.
+Native integration and signed26-r3 qualification remain in progress.
 
 Private evidence: validation/2026-11-17-code25-attended contains native update/
 helper observation, installed checksum, real phone DOM/screenshots, native status
@@ -519,15 +529,37 @@ cloud-backed files; it was left untouched. The verified runtime commit
   is a separate 19-second asset after the 15-minute timer. Verified all
   84 catalog file identities, all rendered narration and phase PCM against
   the playground, and the 919-second review WAV.
-- [ ] Bind the authored programme and the post-session outro to the selected
-  Quest playback owner. Preserve preparation, recording provenance and the
-  900-second completion boundary. Qualify a signed build on a physical Quest.
+- [x] Stage the exact calibration narration and Freie Erkundung MP3 in the
+  authored build. The Quest reader verifies the encoded clips, the guided
+  Probe instruction and the Haupt-Runde outro against the catalog. See the
+  [authored package checks](VERIFICATION.md#authored-quest-audio-package--2026-11-17).
+- [x] Connect the first Polar calibration instruction to the selected Quest
+  setup gateway and phone controls in the authored-audio candidate. Start
+  calibration after playback completes and allow the operator to cancel the
+  original request from the phone.
+- [x] Preserve the authored Freie Erkundung duration and phase boundary in
+  Quest recording, recovery and CSV export. Verify the corresponding phone
+  export with both original Polar streams.
+- [x] Connect Freie Erkundung's verified media to the enrolled phone chooser
+  and native participant session. Use the headset media position for
+  progress, preserve pause and resume, and save once at natural completion.
+- [x] Connect the five-minute guided Probe-Runde in the authored candidate.
+  Play the verified German instruction before the official timed start,
+  keep the phone on the pending instruction, and derive the run's progress
+  and completion from the Quest media.
+- [x] Bind the authored Haupt-Runde programme and separate post-session
+  outro to the Quest playback owner. Preserve preparation, recording
+  provenance and the 900-second completion boundary.
+- [ ] Qualify a signed authored build on a physical Quest 2 with the
+  installed Pixel 10 PWA, including headset audio, Polar input and export.
 
-The authored Probe-Runde package stages the supplied German instruction as
-a separate prelude to the 300-second recording plan. The timed plan reuses
-the study phase library and ends on an exhale. The playground plays the
-prelude first. Playback of that prelude on the Quest still needs native
-integration and qualification.
+The authored Probe-Runde package stages the supplied 45.4-second German
+instruction separately from the 300-second plan. The timed plan uses the
+study phase library and ends on an exhale. The authored candidate exposes
+the guided Probe-Runde and Freie Erkundung through the Quest's verified
+scenario list. The authored Haupt-Runde binds one lossless 900-second
+programme to the recording clock and plays the separate 19-second outro
+after saving a complete run. Device acceptance remains open.
 
 ### Separation of preparation and main study — 2026-11-16
 

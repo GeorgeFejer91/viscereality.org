@@ -15,7 +15,7 @@ export function participantIdentity({ surnamePrefix = '', age = '', gender = '' 
 }
 export function isDatedSessionFilename(name) {
   const parts = /^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_r[1-9][0-9]{0,15}\.csv$/u.exec(name);
-  if (!parts || !SCENARIOS.includes(parts[3])) return false;
+  if (!parts || (parts[3] !== 'free-exploration' && !SCENARIOS.includes(parts[3]))) return false;
   const date = new Date(parts[2]);
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === parts[2];
 }

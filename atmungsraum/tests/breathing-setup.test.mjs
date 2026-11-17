@@ -865,3 +865,40 @@ test('native update gate denies preparation independently of IDLE and keeps safe
       meta_update: update(name, true) })), true).actions.controller, true);
   }
 });
+
+test('Quest calibration narration keeps the original command pending and offers target-bound cancellation', async () => {
+  let now = 0;
+  const model = new BreathingSetup({ now: () => now });
+  const peer = fixture();
+  let target;
+  let cancelled = false;
+  peer.gateway.breathSetup = async command => {
+    if (command.op === 'calibrate') {
+      target = command.id;
+      return { v: 1, id: target, state: 'pending', accepted: true, reason: 'calibration-instruction-pending' };
+    }
+    assert.equal(command.op, 'cancel-instruction');
+    assert.equal(command.target, target);
+    assert.notEqual(command.id, target);
+    cancelled = true;
+    return { v: 1, id: command.id, state: 'confirmed', accepted: true };
+  };
+  peer.gateway.breathSetupReceipt = async id => cancelled
+    ? { v: 1, id, state: 'rejected', accepted: false, reason: 'calibration-instruction-cancelled' }
+    : { v: 1, id, state: 'pending', accepted: true, reason: 'calibration-instruction-pending' };
+  model.update(peer.gateway, state(), true);
+  await model.run('calibrate');
+  await model.refresh();
+  now = 35_000;
+  await model.refresh();
+  const view = model.update(peer.gateway, state(snapshot(native({ instruction_id: target }), { pending: true })), true);
+  assert.equal(view.instructionPending, true);
+  assert.equal(view.actions.cancelInstruction, true);
+  assert.equal(model.waitExpired, false);
+  assert.equal(model.setup.attempt, 0);
+  await model.cancelInstruction();
+  now += 550;
+  await model.refresh();
+  assert.equal(model.pending, null);
+  assert.equal(model.setup.attempt, 0);
+});

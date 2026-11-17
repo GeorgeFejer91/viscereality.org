@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { once } from 'node:events';
+import { mkdtemp, readFile, rmdir, unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -260,6 +262,56 @@ export async function buildMainStudyScenario(sourceRoot, original) {
   };
   const music = assets.get(inventory.background);
   return { plan, files, music: join(sourceRoot, STUDY_DIRECTORY, music.file) };
+}
+
+export async function renderMainStudyTrack({ plan, files, music }, output, { timedOnly = false } = {}) {
+  const start = plan.events.find(event => event.id === 'inhale').offset_frames;
+  const length = plan.total_frames - start;
+  const mix = `[1:a]aresample=${plan.sample_rate},aformat=channel_layouts=mono,atrim=end_sample=${length},`
+    + `volume=-24dB,afade=t=in:d=2,afade=t=out:ss=${length - 3 * plan.sample_rate}:ns=${3 * plan.sample_rate},`
+    + `adelay=${start}S[music];[0:a][music]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95:level=0:latency=1`;
+  const codec = timedOnly ? 'flac' : 'pcm_s16le';
+  const cutoff = timedOnly ? ['-t', String(plan.total_frames / plan.sample_rate)] : [];
+  const ffmpeg = spawn('ffmpeg', ['-nostdin', '-v', 'error', '-n', '-f', 's16le', '-ar', String(plan.sample_rate),
+    '-ac', '1', '-i', 'pipe:0', '-i', music, '-filter_complex', mix, '-map_metadata', '-1',
+    '-metadata', 'comment=Music: Wisps of Whorls by Kevin MacLeod (incompetech.com), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); excerpt, level adjusted and faded.',
+    '-ac', '1', '-sample_fmt', 's16', '-c:a', codec, ...cutoff, output], { stdio: ['pipe', 'ignore', 'inherit'], windowsHide: true });
+  const result = once(ffmpeg, 'close');
+  ffmpeg.stdin.on('error', error => { if (error.code !== 'EPIPE') ffmpeg.kill(); });
+  for (const event of plan.events) {
+    if (ffmpeg.stdin.destroyed) break;
+    const asset = event.asset === null ? null : plan.audio_assets[event.asset];
+    const pcm = asset ? files.get('assets/audio/scenarios/haupt-15/' + asset.file).subarray(44)
+      : Buffer.alloc(event.duration_frames * 2);
+    if (!ffmpeg.stdin.write(pcm)) await Promise.race([once(ffmpeg.stdin, 'drain'), result]);
+  }
+  ffmpeg.stdin.end(files.get(plan.post_session_audio.path).subarray(44));
+  const [exitCode] = await result;
+  if (exitCode !== 0) invalid('study mix render failed');
+}
+
+export async function stageMainStudyTrack(study) {
+  const dir = await mkdtemp(join(tmpdir(), 'atmungsraum-main-audio-'));
+  const rendered = join(dir, 'haupt-15.flac');
+  try {
+    await renderMainStudyTrack(study, rendered, { timedOnly: true });
+    const bytes = await readFile(rendered);
+    const path = 'assets/audio/scenarios/haupt-15/haupt-15.flac';
+    if (bytes.length < 42 || bytes.length > 32 * 1024 * 1024 || bytes.toString('ascii', 0, 4) !== 'fLaC'
+        || (bytes.readUInt32BE(4) & 0x7fffffff) !== 34) invalid('invalid timed FLAC header');
+    const stream = bytes.readBigUInt64BE(18);
+    if (Number(stream >> 44n) !== study.plan.sample_rate
+        || Number((stream >> 36n) & 255n) !== 15
+        || Number(stream & ((1n << 36n) - 1n)) !== study.plan.total_frames) {
+      invalid('timed FLAC does not match the recording plan');
+    }
+    study.files.set(path, bytes);
+    study.plan.timed_audio = { path, bytes: bytes.length, sha256: sha256(bytes), duration_frames: study.plan.total_frames };
+  } finally {
+    try { await unlink(rendered); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    await rmdir(dir);
+  }
 }
 
 export async function buildProbeStudyScenario(sourceRoot, original, study) {

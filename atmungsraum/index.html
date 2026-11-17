@@ -281,7 +281,8 @@
       </div>
       <footer class="actions operator-actions">
         <button id="preview-retry" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
-        <button data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
+        <button id="calibration-instruction-cancel" type="button" hidden disabled><span data-measure>Anleitung abbrechen</span></button>
+        <button id="calibration-change-input" data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
       </footer>
     </section>
     <section id="breathing-preview" aria-labelledby="preview-title" class="screen operator-screen" hidden>
@@ -359,7 +360,7 @@
             <legend class="sr-only">Sitzungsablauf</legend>
             <div class="session-segments">
               <section class="session-segment" aria-labelledby="trial-segment-title">
-                <h2 id="trial-segment-title" data-measure>Vorbereitung</h2>
+                <h2 id="trial-segment-title" data-measure>Probe-Runde</h2>
                 <div class="session-tiles">
                   <label class="session-tile">
                     <input type="radio" name="quest-scenario" value="probe-anleitung" checked>
@@ -367,7 +368,11 @@
                   </label>
                   <label class="session-tile">
                     <input type="radio" name="quest-scenario" value="probe-5">
-                    <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Probe-Runde</span><small data-measure>5 Min.</small></span>
+                    <span class="session-tile-text"><img src="./assets/scenes/practice.svg" alt="" width="96" height="96"><span data-measure>Geführte Atmung</span><small data-measure>5 Min.</small></span>
+                  </label>
+                  <label class="session-tile" hidden>
+                    <input type="radio" name="quest-scenario" value="free-exploration" disabled>
+                    <span class="session-tile-text"><img src="./assets/scenes/exploration.svg" alt="" width="96" height="96"><span data-measure>Freie Erkundung</span></span>
                   </label>
                 </div>
               </section>

@@ -1,5 +1,21 @@
 # Verification
 
+## Preparation and save before PWA updates — 2026-11-17
+
+The merged PWA release20261117-preparation-update passes323 Node tests with
+zero failures/skips,25 mounted preparation cases,26 compact Update states,10
+current-session/offline-archive renders and the authored operator flow. Exact
+calibration instruction identity, native end-preparation admission and the
+non-recording preparation owner allow that narration to end for an update.
+An unresolved actual guided Start remains protected with a specific wait message
+until its original receipt confirms; no unrelated pending command is overridden.
+Original Save confirmation precedes writer cleanup, a fresh actual audio park
+and update admission. Foreign owners/revisions and uncertain Save outcomes
+cannot continue into installation. Scoped independent review and all14 changed
+runtime cache identities pass. Rendered checks use synthetic enrolled transport;
+they do not prove a Meta installation or wearer acceptance. Signed APK and live
+publication evidence will be added after those gates pass.
+
 ## Review repairs: current-session controls and offline archives — 2026-11-17
 
 PWA20261117-review-repairs passes309 Node tests with zero skips after current-main
@@ -566,6 +582,115 @@ The Node suite passed 244 with eight native/Java prerequisites skipped.
 Scenario JSON/CSV, context, and Git whitespace checks passed. These are
 browser and synthetic gateway checks; physical installed-device acceptance
 remains open.
+
+## Authored Quest audio package — 2026-11-17
+
+The authored-audio branch stages seven scenarios and 96 files.
+`assemble-apk.ps1 -BundledAssets -MainStudyAudio -ResolveOnly` bound the
+catalog SHA-256 into the resolved feature lock. All 96 staged files matched
+their recorded lengths and digests. The native patch reconstructed the
+candidate source tree from the pinned upstream Git base.
+
+The Quest JVM catalog reader accepted both the authored and legacy packages.
+It wrote the original stereo Freie Erkundung bytes and rejected altered
+exploration, calibration, Probe instruction, and Haupt-Runde outro media.
+The Android media adapter compiled against the Android API. Node passed
+302 web and audio tests including Java pairing interoperability. These
+checks cover staging, media input and resolution. They do not exercise the
+selected Quest session owner, audio output or a signed headset install.
+
+## Polar calibration narration — 2026-11-17
+
+The authored-audio candidate uses the verified calibration clip for the
+first Polar setup. The selected Quest gateway holds the original request
+pending during playback. On completion it rechecks the controller, Quest
+owner, setup revision and Polar eligibility before asking the native
+breathing loop to start calibration. Cancellation settles that original
+request before a cycle starts. The legacy package follows its existing path.
+
+The 320px Chromium check woke the real phone UI with the synthetic Quest
+transport, kept narration pending for 35 seconds, verified the measured
+cancel label and cancelled by keyboard. It confirmed zero calibration
+attempts and one cancellation addressed to the original request. The
+selected Java gateway passed 37 boundary checks including one-time
+completion and cancellation on stale owner, failed playback and timeout.
+The Android media sources compiled against API 30. The native patch
+reconstructed from the pinned base and the feature lock resolved all 96
+authored audio assets. Signed installation and headset playback remain open.
+
+## Freie Erkundung recording duration and export — 2026-11-17
+
+For the authored recording at 44,100 Hz, the 19,715,793 frames define a
+447,070,136,055 ns completion threshold and the instruction ends at frame
+960,768. The same limits govern the recovered plan and the live and final
+CSV clocks. Rust passed 79 recording tests, including rejection of a changed
+sample rate or frame count and a recovery round trip. The phone passed seven
+data checks, including download of the dated exploration CSV with its two
+original Polar streams. The PWA startup and reconnect check also passed.
+Headset playback and round selection remain open.
+
+## Freie Erkundung phone and Quest playback — 2026-11-17
+
+The enrolled gateway advertises Freie Erkundung after the Quest verifies its
+packaged media and participant recording plan. The media backend plays the
+standalone track, pauses the setup loop and reports media position. Rust uses
+that run's generation and captured position for progress and saves after the
+natural-end event. Progress during pause does not change the recording clock.
+
+101 Rust session tests passed with two ignored, including the authored
+position, pause, resume, natural completion and final CSV integration case.
+The Java harness passed 39 gateway checks and the Wi-Fi clock projection and
+media backend checks. The Android media sources compiled against API 30.
+Chromium passed the real phone flow with a synthetic Quest transport and
+verified the choice in five viewport and text configurations including 200%
+text. 306 web tests passed. Phone-pairing assembly resolved all 96 audio
+assets in the feature lock. The authored candidate still needs a signed
+build and physical Quest and Android PWA qualification.
+
+## Guided Probe-Runde phone and Quest playback — 2026-11-17
+
+The verified Quest package binds the 2,002,176-frame instruction at 44.1 kHz
+separately from the 300-second guided practice. The phone reports the
+instruction while the original start receipt is pending and the timed
+progress stays at zero. On natural completion the gateway checks the
+app owner, controller, update cycle, armed session and Polar readiness
+before the official start. The Quest media position drives the timed run
+and the Rust recorder saves at natural completion.
+
+Chromium exercised the real phone flow over a synthetic Quest transport,
+including 45.4 seconds of pending instruction without retransmission and
+then the timed clock. All 306 web tests and 102 selected Rust session tests
+passed, with two Rust tests ignored. Java passed 51 gateway boundary checks,
+the media backend and the staged authored catalog. Phone-pairing assembly
+resolved all 96 assets. Signed installation and physical playback remain
+open.
+
+## Authored Haupt-Runde playback and outro — 2026-11-17
+
+The verified 39,690,000-frame FLAC includes both controls, instructions,
+guided cues and music with its original fades. Its decoded PCM hash
+matches the first 900 seconds of the 919-second review render. The separate
+19-second outro retains the original WAV and is outside the recording clock.
+The verified participant plan selects this source while existing packages
+retain the continuous shared loop.
+
+The Rust worker finalizes the recording on natural completion and authorizes
+the outro only after a complete save. A late end while held remains
+incomplete and does not authorize the outro. All 104 selected Rust session
+tests passed with two ignored. Java passed 53 gateway checks, catalog
+tampering checks, media backend checks and the generated outro cancellation
+and duplicate-delivery checks. All 306 web tests passed. Phone-pairing
+assembly resolved the 97 bound audio assets. Chromium rendered 140 layout
+states and passed the controller and startup walkthroughs. Signed
+installation, physical audio output and the installed Pixel app remain open.
+
+The Android ARM64 source check also passed. The original site deployed
+`118fa73` in [Pages run 44150919969](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44150919969).
+Fourteen served resources matched the Git bytes. Chromium exercised the
+deployed application at 320 × 640 and 1440 × 900 with a synthetic Quest
+transport. The active signed release policy still points to Code 25.
+Neither the lab Quest 2 nor the Pixel 10 appeared in the USB or wireless
+ADB inventory, so device qualification remains pending.
 
 ## Quest-backed session preview — 2026-11-17
 

@@ -52,10 +52,19 @@ audio and then 300 seconds of guided breathing. It reuses the same phase
 takes and ends with a final inhale, hold and exhale after 18 full cycles.
 The instruction lives outside the five-minute Quest recording timeline.
 
-The staged Quest programme stays at 39,690,000 frames. Its catalog includes
-the outro as separate post-session audio. The currently released APK uses
-the continuous shared loop. Staging this programme prepares the authored
-assets for native integration and qualification.
+The staged Quest programme uses a lossless mix of 39,690,000 frames. Its
+decoded PCM matches the first 900 seconds of the review render, and the
+catalog binds the original outro separately. The authored build also includes the
+first calibration instruction and the full Freie Erkundung recording from the
+playground. Freie Erkundung has 960,768 instruction frames and 18,755,025 music
+frames at 44.1 kHz. The Quest reader passes the original stereo MP3 to Android
+with its instruction boundary and catalog hash verified. The authored
+Haupt-Runde uses the timed source for recording and plays the outro after a
+complete save. Existing signed packages use the continuous shared loop.
+
+Source recordings are unchanged from the [calibration instruction](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/9ed333e)
+and [Freie Erkundung](https://github.com/GeorgeFejer91/atmungsraum-ui/commit/234ebd0ac154b8a5c16e7cbae6814534904b723d)
+playground commits.
 
 Music: [“Wisps of Whorls”](https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1200082)
 by Kevin MacLeod (incompetech.com), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

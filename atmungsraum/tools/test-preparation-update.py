@@ -8,6 +8,57 @@ from layout_render_fixtures import module, initial, go, mutations
 from release_fixtures import meta_update_fixture, apk_fixture
 
 
+def authored_instruction_cases(c, review):
+    page = review.page(initial(c, quest={'metaUpdate': meta_update_fixture(), 'updatePrepEnabled': True,
+                                         'calibrationInstruction': True}), viewport={'width': 320, 'height': 568})
+    page.clock.run_for(1500)
+    c.enter_participant(page)
+    page.locator('#preview-calibrate').click()
+    expect(page.locator('#calibration-instruction-cancel')).to_be_enabled()
+    original = page.evaluate('reviewQuest.setup.instruction_id')
+    page.evaluate("""Object.assign(reviewQuest.metaUpdate, {can_check:false,
+        can_end_preparation:true, busy_reason:'preparation-audio-active'})""")
+    page.clock.run_for(1500)
+    go(page, 'settings')
+    page.locator('#operator-update-open').click()
+    check = page.locator('#meta-update-check')
+    expect(check).to_have_text('Vorbereitung beenden und aktualisieren')
+    expect(check).to_be_enabled()
+    assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
+    review.shot(page, 'calibration-instruction-update', 'Calibration narration can end for update', check, 'Preparation update')
+    check.click()
+    page.clock.run_for(1200)
+    assert [cmd['op'] for cmd in page.evaluate('window.reviewMetaUpdateCommands') if cmd['op'] != 'receipt'] == ['end-preparation-and-check']
+    assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-breathing-setup-pending')).command.id") == original
+    assert [cmd['op'] for cmd in mutations(page)['setup']] == ['calibrate']
+    assert mutations(page)['session'] == []
+    page.context.close()
+
+    page = review.page(initial(c, quest={'metaUpdate': meta_update_fixture(), 'updatePrepEnabled': True,
+        'scenarios': ['probe-5'], 'probeInstructionMs': 45401}), viewport={'width': 320, 'height': 568})
+    c.enter_participant(page)
+    page.locator('#preview-controller').click()
+    page.locator('#preview-continue').click()
+    c.review_battery(page)
+    page.locator('#quest-play').click()
+    expect(page.locator('#running-screen-title')).to_have_text('Anleitung zur Probe-Runde')
+    original = page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-quest-pending')).id")
+    go(page, 'settings')
+    page.locator('#operator-update-open').click()
+    expect(page.locator('#update-screen')).to_be_visible()
+    save = page.locator('#meta-update-finish')
+    expect(save).to_be_visible()
+    expect(save).to_be_disabled()
+    expect(page.locator('#update-instruction')).to_contain_text('Anleitung zur Probe-Runde')
+    assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-quest-pending')).id") == original
+    review.shot(page, 'probe-instruction-update', 'Guided Start awaits its original receipt', save, 'Preparation update')
+    page.clock.run_for(47000)
+    expect(save).to_be_enabled()
+    assert mutations(page)['session'] == ['arm', 'start']
+    assert page.evaluate('window.reviewMetaUpdateCommands??[]') == []
+    page.context.close()
+
+
 def run():
     c = module()
     # The fixture implements the agreed native contract. Production UI, command
@@ -196,6 +247,7 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
                 assert commands==[], commands
                 expect(page.locator('#meta-update-status')).to_contain_text('Meta-Kanal')
             page.context.close()
+        authored_instruction_cases(c, review)
         assert not review.errors, review.errors
         browser.close()
         print(f'PASS {len(review.checks)} mounted preparation update renders; narrow/200% actual Pretext')

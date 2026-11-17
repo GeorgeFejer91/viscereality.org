@@ -105,6 +105,12 @@ if ($LASTEXITCODE) { throw 'A clean native commit is required for the locked bui
 ```
 
 Use your Git author identity for the local patch commit. The cumulative patch
+reconstructs the authored-audio source tree `347e629e80574490ee552f3ba7c27578c95d6df6`
+with SHA-256 `9856437f41640e8d2fe91e49c580cd8d285921ae7586adf92b96de684ca79cfc`
+(2,282,974 bytes). Its build uses `core-lambda-stubs.jar` from the selected
+Android Build Tools when compiling Java media callbacks. The
+[Code 25-r2 repair source](https://github.com/GeorgeFejer91/viscereality.org/blob/0a7fb2439d249436d7b954c634d5924798549379/atmungsraum/quest/native-source.patch)
+is the baseline for the following release evidence. Its cumulative patch
 reconstructs source tree `df5d27ebdb8f91a1d717cf29ead5d6af32c8ac0d`, matching
 the reviewed repair source `f5ea725cb04a4faabc6a424ee98d109f23d2303f`.
 Patch SHA256 is `0b8f3fafcf901b74531f0f58635a7e054f6340f84fc5a15ce3b82715e3656b7f`
@@ -117,9 +123,9 @@ retirement, require durable helper cancellation before intentional closure,
 and expire delayed main-thread install handoffs. Software qualification is
 separate from the pending physical acceptance.
 Native host tests pass896 cases with six intentional ignores; actual signed25-r2
-passes1114 package checks. Wearer acceptance remains a separate gate. Code23
-remains the last observed Meta-installed hardware baseline until the APK log
-records otherwise.
+passes1114 package checks. Wearer acceptance remains a separate gate. Meta-installed25 has been observed
+on the lab Quest with matching published APK bytes; later candidates require
+their own package and attended update evidence.
 Applying the exact binary patch to an isolated index at the
 pinned upstream base reproduces that tree;
 product-build status and prior native identities are in the APK log. The verified build uses compile SDK 36, targets SDK 34 and selects
@@ -136,6 +142,18 @@ the scenario asset inventory and ARM64 loader in the APK, then prints the APK
 location and SHA-256. The output and its build receipts are under
 `rusty-quest/target/aq2/<RunName>/`. Use a fresh run name for a
 second build or add `-ResolveOnly` to check the feature lock without compiling.
+Use `-MainStudyAudio` with the authored-audio source candidate to include
+the recorded main and guided Probe programmes, the calibration instruction
+and Freie Erkundung. The media reader verifies the whole package against the
+bound catalog. The selected Quest gateway plays the calibration instruction
+before the first Polar calibration and exposes cancellation on the phone.
+The candidate also advertises the verified Freie Erkundung track and uses
+its media positions and natural end during participant recording. The
+guided Probe-Runde plays the verified instruction before the timed run and
+uses the Quest media clock for the five minutes. The authored Haupt-Runde
+uses one verified FLAC for the 900-second recording and plays the original
+19-second outro after a completed save. The authored source still needs
+signed headset qualification.
 
 Power-on launch is a separate, explicit `-BootAutostart` selection. It adds the
 existing `ui.experiment_boot_autostart` feature and verifies its resolved lock,
