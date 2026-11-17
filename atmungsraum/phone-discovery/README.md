@@ -1,9 +1,11 @@
 # Atmungsraum Bluetooth discovery for Android
 
-This companion recovers a saved Quest's Wi-Fi address when the installed
-Atmungsraum web app can no longer reach it at its previous address. It requires
-Android 12 or later. The app still authenticates the Quest using the enrollment
-already saved in the browser profile.
+This companion supplies the saved Quest's current Wi-Fi address when the
+installed Atmungsraum web app cannot reopen its saved browser Bluetooth grant.
+The PWA starts discovery automatically after checking for an update; it can
+still use the previous Wi-Fi address while discovery is unavailable or
+searching. The companion requires Android 12 or later. The PWA authenticates
+the Quest using the enrollment already saved in the browser profile.
 
 Install the signed APK and open **Atmungsraum Bluetooth** once. Grant Nearby
 devices. The foreground service starts again at boot and only scans on demand.

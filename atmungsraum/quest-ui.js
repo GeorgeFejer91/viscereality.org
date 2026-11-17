@@ -73,7 +73,7 @@ const labels = {
   SAVING: 'Quest speichert den Probelauf.', ERROR: 'Die Quest meldet einen Fehler.',
 };
 
-export function mountQuestRehearsal(participantIdentity, savedPair) {
+export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConnect) {
   const drive = mountQuestDrive();
   const preview = byId('breathing-preview');
   const versionPanel = byId('quest-version');
@@ -154,6 +154,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
   let nextSavedProbe = 0;
   let discoveryInProgress = false;
   let bluetoothCheck = null;
+  let bluetoothHint = '';
+  const bluetooth = navigator.bluetooth;
+  const enableBluetooth = 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.';
   let bridgeFailed = false;
   const diagnostics = byId('connection-diagnostic');
   const driveDialog = byId('drive-dialog');
@@ -582,7 +585,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     paintBreathingSetup(breath, waiting);
     paintCheck('bluetooth', status ? true : bluetoothCheck, status ? 'Quest-Verbindung' : 'Bluetooth', status
       ? 'Die Quest-Verbindung ist bestätigt. Bluetooth dient zum Finden und Koppeln; die laufende Steuerung verwendet die WLAN-Brücke.'
-      : bluetoothCheck ? 'Die Quest wurde über Bluetooth gefunden.' : 'Prüfe Bluetooth am Smartphone und den Fernmodus der Quest.',
+      : bluetoothCheck ? 'Die Quest wurde über Bluetooth gefunden.' : bluetoothHint || 'Prüfe Bluetooth am Smartphone und den Fernmodus der Quest.',
       status ? 'für diese WLAN-Verbindung nicht benötigt' : connecting ? 'wird geprüft' : 'nicht geprüft');
     paintCheck('bridge', status ? true : bridgeFailed ? false : null, 'WLAN-Brücke', status
       ? 'Die WLAN-Brücke liefert bestätigte Quest-Daten.' : joinMessage || 'Prüfe, ob Smartphone und Quest im selben WLAN sind.');
@@ -1009,7 +1012,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
-    if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect && performance.now() >= nextConnect) {
+    if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect
+      && canAutoConnect() && performance.now() >= nextConnect) {
       void connect(savedPair);
       return;
     }
@@ -1050,9 +1054,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
     const attempt = new AbortController();
     const { signal } = attempt;
     connecting = attempt;
-    if (chooseDevice) bluetoothCheck = null;
+    if (chooseDevice) {
+      bluetoothCheck = null;
+      bluetoothHint = joinMessage = '';
+    }
     bridgeFailed = false;
-    if (chooseDevice || !discoveryInProgress) joinMessage = '';
     discoveryInProgress = false;
     const setup = {
       ...settings,
@@ -1063,7 +1069,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       }
     };
     try {
-      const selection = chooseDevice ? selectQuest(navigator.bluetooth) : null;
+      const selection = chooseDevice ? selectQuest(bluetooth) : null;
       paint();
       const join = (endpoint, discovery) => joinQuest({ endpoint, serial: discovery?.owner.serial ?? settings.serial,
         identity_kind: discovery?.owner.identity_kind ?? settings.identity_kind,
@@ -1072,31 +1078,64 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       let peer = selection ? await selection : null;
       let gateway;
       let endpoint = settings.endpoint;
-      if (endpoint && !peer && performance.now() >= nextSavedProbe) {
-        gateway = await join(endpoint).catch(() => null);
-        if (!gateway) nextSavedProbe = performance.now() + 8000;
+      let discovery;
+      if (chooseDevice) {
+        discovery = await readQuest(peer, signal, {});
+      } else {
+        // Read the saved headset's current address before trying the old one.
+        // Only the chooser path can enroll another headset.
+        bluetoothHint = '';
+        try {
+          if (await bluetooth?.getAvailability?.() === false) {
+            bluetoothHint = enableBluetooth;
+          } else {
+            if (settings.bluetoothId) {
+              const allowed = await bluetooth?.getDevices?.();
+              peer = allowed ? allowed.find(device => device.id === settings.bluetoothId) : rememberedDevice;
+            }
+            if (peer) discovery = await readQuest(peer, signal, setup);
+          }
+        } catch {
+          signal.throwIfAborted();
+          bluetoothHint = 'Schalte Bluetooth ein und prüfe den Fernmodus der Quest.';
+        }
+        signal.throwIfAborted();
+        const trySavedAddress = endpoint && performance.now() >= nextSavedProbe;
+        if (!discovery) {
+          // Chrome may not expose saved grants. The Android companion can start
+          // a scan without a chooser. Don't hold up a usable saved Wi-Fi route
+          // if the companion or its browser permission is slow to respond.
+          const lookup = trySavedAddress ? AbortSignal.any([signal, AbortSignal.timeout(1500)]) : signal;
+          discovery = await rediscoverQuest(settings, lookup).catch(error => {
+            signal.throwIfAborted();
+            if (!trySavedAddress) throw error;
+            return null;
+          });
+          if (discovery?.state !== 'ready' && trySavedAddress) {
+            gateway = await join(endpoint).catch(() => null);
+            signal.throwIfAborted();
+            if (!gateway) nextSavedProbe = performance.now() + 8000;
+          }
+        }
       }
       if (!gateway) {
-        signal.throwIfAborted();
-        peer ??= rememberedDevice;
-        if (!peer) {
-          const allowed = await navigator.bluetooth?.getDevices?.() ?? [];
-          peer = allowed.find(device => device.id === settings.bluetoothId);
-        }
-        const discovery = peer ? await readQuest(peer, signal, chooseDevice ? {} : setup)
-          : await rediscoverQuest(settings, signal);
         if (discovery?.state && discovery.state !== 'ready') {
           discoveryInProgress = true;
           bluetoothCheck = discovery.state === 'searching' ? null : false;
-          joinMessage = {
-            'bluetooth-off': 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.',
+          joinMessage = bluetoothHint = {
+            'bluetooth-off': enableBluetooth,
             'searching': 'Suche die gespeicherte Quest über Bluetooth …',
             'permission-required': 'Erlaube der Bluetooth-Suche den Zugriff auf Geräte in der Nähe.',
           }[discovery.state];
           return;
         }
-        if (!discovery) throw Error('Erlaube den Bluetooth-Zugriff auf die Quest erneut.');
+        if (!discovery) {
+          bluetoothCheck = false;
+          bluetoothHint ||= 'Schalte Bluetooth ein oder wähle die Quest erneut über „Mit Bluetooth verbinden“.';
+          throw Error(bluetoothHint);
+        }
         bluetoothCheck = true;
+        bluetoothHint = joinMessage = '';
         let pairedThisAttempt = false;
         const pairNewPhone = async () => {
           if (!chooseDevice || discovery.pairing !== 1) throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
@@ -1146,6 +1185,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
         bluetoothId: peer?.id ?? settings.bluetoothId, endpoint });
       if (peer) rememberedDevice = peer;
       autoConnect = true;
+      bluetoothHint = '';
       nextSavedProbe = 0;
       joinMessage = '';
       if (!sameQuest(rehearsal.gateway?.owner, gateway.owner)) clearArchives();
@@ -1413,7 +1453,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair) {
       drive.cancel();
       showTrace(null);
       paint();
-    } else { paint(); renderLive(performance.now()); nextSync = 0; void apkRelease.refresh(); void tick(); }
+    } else {
+      nextConnect = nextSavedProbe = nextSync = 0;
+      paint();
+      renderLive(performance.now());
+      void apkRelease.refresh();
+      void tick();
+    }
+  });
+  bluetooth?.addEventListener?.('availabilitychanged', () => {
+    nextConnect = nextSavedProbe = 0;
+    void tick();
   });
   reducedMotion.addEventListener('change', () => {
     cancelAnimationFrame(animationFrame);

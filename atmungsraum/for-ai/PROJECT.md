@@ -1,5 +1,21 @@
 # Project
 
+### PWA startup update and Quest reconnect — 2026-11-17
+
+- [x] Check the published PWA before the saved Quest connection starts. A new
+  release loads first; an unavailable update check falls back to the loaded app.
+- [x] Find the saved headset over browser Bluetooth or the Android companion
+  first and authenticate the advertised Wi-Fi bridge. If discovery is
+  unavailable or still searching, try the previously authenticated address.
+- [x] Explain when Bluetooth needs attention and retry after it is enabled.
+  Browser permission for a first or revoked grant still requires a tap.
+- [x] Verify stale-release replacement, matching grant selection, a changed
+  Wi-Fi address, companion-first discovery, Wi-Fi fallback, disabled Bluetooth
+  recovery and the CSV-only route in Chromium.
+- [ ] Repeat on the installed Pixel with the actual Quest's current and
+  changed Wi-Fi addresses. No Android device was connected during this
+  increment. Leave the separate wearer and recording checklist open.
+
 ### Unattended comprehensive review — 2026-11-17
 
 The user is unavailable for device tests and requests a comprehensive review.
@@ -1622,9 +1638,10 @@ See [Android discovery setup](../phone-discovery/README.md).
 
 The PWA now offers one **Mit Bluetooth verbinden** action and no manual
 connection fields. It reads the selected Quest's identity and endpoints and
-opens the authenticated Wi-Fi connection with the saved enrollment. On
-reload it tries the saved endpoint first and uses an existing Bluetooth
-grant when Chrome exposes it. The Quest still owns trusted enrollment.
+opens the authenticated Wi-Fi connection with the saved enrollment. The
+2026-11-17 startup increment checks for the PWA release first and attempts
+Bluetooth rediscovery before the saved endpoint. The Quest still owns trusted
+enrollment.
 APK 0.1.29 advertises identity and addresses. Its hotspot characteristic
 requires existing enrollment and credentials for a running phone hotspot.
 

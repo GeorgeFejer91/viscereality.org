@@ -1,5 +1,17 @@
 # Verification
 
+## PWA startup update and Quest reconnect — 2026-11-17
+
+`python -B tools/test-pwa-startup.py` runs the served HTML and production
+browser gateway in Chromium with synthetic Bluetooth and signed Wi-Fi
+responses. The new case initially observed the old address before the BLE
+read. With the fix it checks launch update before BLE, the exact saved ID
+with a nearby decoy, the changed address and persisted result, Android
+companion discovery, cached Wi-Fi after BLE/update failure, radio recovery
+without a tap, and no discovery on the CSV recovery route. The Bluetooth
+prompt fits the measured 320×568 layout. Physical phone and Quest evidence
+remains separate.
+
 ## Haupt-Runde preparation and original Arm failure — 2026-11-17
 
 Passive inspection of the real installed phone confirms release20261117-auto-control,

@@ -353,9 +353,20 @@ survive both updates; keep the manifest identity stable. The check uses
 the release currently served by Pages and retries on the next eligible open
 if the hosting edge still serves the prior release.
 
+After the update check, a saved controller enrollment triggers Bluetooth
+rediscovery without opening a chooser. Use the matching browser grant when
+available, or the local Android discovery companion. Authenticate the current
+advertised Wi-Fi address, with the stored endpoint as a fallback if discovery
+is unavailable or still searching. The browser cannot turn on the phone radio;
+the connection status prompts the operator and retries while open and when
+the app returns to the foreground. First access or revoked browser access
+still requires the Bluetooth button. An established Wi-Fi bridge does not
+need Bluetooth to stay on.
+
 Run `python -B tools/test-pwa-startup.py` for the Chromium launch regression.
-It covers a cached release, an idle return, the guard in settings, fallback,
-URL retention and storage retention.
+It covers cached-release replacement, idle return and its settings guard,
+failed update fallback, URL and storage retention, and authenticated
+synthetic reconnect with a changed address, companion and radio recovery.
 
 The four app icons derive from the root site's `Images/logo.png` (Git blob
 `bcd94ca74f6305eb7cd2e8a9a8b4a66cf99f6caa`): composite the unchanged, contained
