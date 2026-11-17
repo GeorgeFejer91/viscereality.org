@@ -1,5 +1,33 @@
 # Atmungsraum Quest 2 APKs
 
+## 0.2.26-dev — published fixed Meta27-r2, installation acceptance pending
+
+Signed27-r2 is65,731,718bytes, SHA256
+`6f14707053fc9c07b611485deebfe8554a71b405892e8678f2c7f4bb2d8e398b`.
+Source4edf4b89b754c57bd062d4695233ede34c8de256/tree358a0c910ba5d0a84c18ca064492f4978e35a4a4;
+cumulative patch2,368,442bytes/SHA256
+`5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723`.
+The accepted update retains the exact SDK response/continuation during a busy
+native owner read. Confirmed retirement still stops it. UNKNOWN cannot grant
+install, send SDK effects or repeat helper ARM/install/queued exit. New internal
+nativeObservedFence(IJJJ)I is verified alongside the legacy boolean JNI.
+
+Independent qualification passes1138 checks and63 rejecting negatives. Actual
+DEX matches the independently compiled frozen source;973 instruction/metadata/
+exception bindings and21 groups pass, including298 owner methods/12 groups.
+The35 unchanged original repair hashes and4 specifically reviewed replacements
+retain protected cancellation and late-main-thread deadline guards. Original
+73 audio assets/catalog, private payloads, SDK207/helper3, signer, controller-only
+manifest and900000ms contract remain verified. Rust907/6 ignored, all14 updater
+host suites, production110-source javac, arm64 typecheck and actual audio join pass.
+
+Meta build1465199570012388 is current in the private Developer channel. Malware
+and detailed security passed; Quest2/13+, private access and Require Latest
+unchecked remain. Public minimum/latest is27. Helper3 needs no new installation.
+Actual fixed27 installation and the27-to28 running-session update test remain
+pending. Version-only28 is held until actual27 is RUNNING/rec:true and root
+releases it. Revoked27-r1 is never an upload target.
+
 ## 0.2.25-dev — published repaired Meta26-r3, attended guard issue open
 
 Signed26-r3 is65,735,811bytes, SHA256
@@ -15,15 +43,15 @@ Independent signed qualification passes1135 checks and39 rejecting negatives:
 832 compiled instruction/exception/metadata bindings with20 semantic groups,
 the original39 repair paths/6 groups, signatures, unchanged SDK207/helper3,
 controller-only permissions,102 ZIP entries and original audio/private payloads.
-Meta build1465122190020126 is current in the private Developer channel; malware
+Meta build1465122190020126 was published in the private Developer channel; malware
 and detailed security passed. Quest2/13+ and Require Latest unchecked remain.
-Public minimum/latest is26. Helper3 has not changed.
+At that release, minimum/latest was26. Helper3 has not changed.
 
 Attended PWA25 found26 and downloaded262,144/8,246,427bytes, then reported
 native-owner-retired before installation or helper handoff. Existing25 and26
 can conflate temporarily unreadable native locks with actual owner retirement;
 the exact failed predicate was not logged. This hardware failure is not a
-successful PWA installation. Fixed27-r2 is being prepared; the user's agreed
+successful PWA installation. Fixed27-r2 is now published; the user's agreed
 next sequence is install fixed27, then test updates toward held28. Old26-r1,
 26-r2 and version-only27-r1 stay revoked/unpublished. See the active PROJECT
 checklist for current evidence and remaining hardware gates.

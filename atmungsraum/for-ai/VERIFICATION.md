@@ -10,7 +10,10 @@ reject. Consumed SDK messages, post-ARM and post-journal stages resume once,
 without another poll/download/install/exit effect while held. Android arm64
 cargo check,110-source production javac and actual Java/native audio join pass.
 The2,368,442byte source patch reconstructs that exact tree. Fixed27-r2 is built;
-its independent signed-artifact qualification and hardware installation are pending.
+its independent signed-artifact qualification passes1138 checks/63 negatives.
+Meta1465199570012388 is current with malware/security passed. Actual installation
+and27-to28 acceptance remain pending. Source PR58/merge2d59e16 reached exact
+Pages44183709720 success and10 live files match Git.
 
 Policy26 release PR57/merge5df115b deployed in exact Pages44178155493. All9
 checked live files match Git. Live browser fixtures verify required25 has an
