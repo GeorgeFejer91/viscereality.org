@@ -2,7 +2,7 @@
 
 The user requests clearer layout and sequential pages, without new experiment
 features. Use the actual root website code as the visual reference. This is a
-PWA-only change; APK11, native behavior, audio and recordings remain unchanged.
+PWA-only change; native behavior, audio and recordings remain unchanged.
 
 ## Visual source and design
 
@@ -31,7 +31,7 @@ playout, physical percentage semantics, and exact touching inset geometry.
 
 ## Page sequence
 
-Connection and setup → participant ID → input choice → personal calibration
+Connection and setup → APK update when required → participant ID → input choice → personal calibration
 when selected → tracking check → scenario tiles and Start → running/finalizing
 → recordings. Settings and recovery remain available as before. Keep the saved
 signals route and the earlier browser-recordings route usable. Pairing codes
@@ -43,8 +43,33 @@ authenticated WLAN connection and eligible control state for **Weiter**. Polar
 readiness remains a separate native fact; the controller alternative must
 stay accessible. Checking or unnecessary checks are neutral, confirmed checks
 are green, and failed checks are red with a named diagnostic popup. Use a
-visible symbol as well as color. A saved WLAN rejoin does not prove Bluetooth
-was checked. Keep required recovery actions visible on the page.
+visible symbol as well as color. The Bluetooth-shaped toolbar control represents Quest connection once an
+actual authenticated link is established, including a saved WLAN rejoin. It
+then turns green and is labelled Quest-Verbindung. This is not proof of a live
+Bluetooth transport; discovery/pairing uses Bluetooth and commands use WLAN.
+Keep required recovery actions visible on the page.
+
+APK code comparison and Meta update controls live on their own preparation
+page when the public code floor or native maintenance status requires action.
+An already current/allowed APK skips that page; Settings can open it explicitly.
+An offline allowed native failure remains a warning, not an added admission
+block. Keep the connection page available for reconnection. Once opened, retain
+the update page and diagnostic focus through terminal polls until the operator
+continues. Only the validated native status can release native admission.
+
+The input chooser and tracking review retain a visible confirmed-method label.
+Use the same gold as the actual VR-radius circle for every active method, with
+aria-pressed reflecting only validated native input. Inactive choices stay
+neutral. The active Controller button remains in the list. Keep a pending
+request separate from the confirmed method; never optimistically highlight it.
+Readiness changes must not toggle the entire status block above the circles.
+The tracking action reads Atmungsmessmethode bestätigen for every method.
+Use Atmungsmessmethode in participant-facing labels instead of the generic
+Eingabe; explain that it chooses Polar- or Controller-driven breathing movement.
+
+The live ECG view subtracts a rolling median baseline only when drawing and
+scales its deviations about the existing middle line. Label this centering in
+the scale. Preserve raw samples, timestamps, gaps, freshness and stored data.
 
 Enter participant details on a dedicated, aligned form. Preserve field values
 and the existing identity generator. During personal calibration the Quest

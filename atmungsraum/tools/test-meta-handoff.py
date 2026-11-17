@@ -15,7 +15,7 @@ def run():
         output.mkdir(parents=True, exist_ok=True)
         review = c.Review(browser, output)
         update = dict(v=2, state='installing', reason='queued-meta-update-handoff',
-                      installed_code=11, available_code=21, required_code=21,
+                      installed_code=22, available_code=23, required_code=23,
                       downloaded_bytes=55, total_bytes=100, session_allowed=False,
                       cycle='2', revision='9', attempt='777', can_check=False, busy_reason='')
         for width, text_size in [(390, ''), (320, ''), (320, '200%')]:
@@ -50,9 +50,9 @@ def run():
             # Return with actual current code21, then normal native UI takes over.
             page.evaluate('''() => {
               window.reviewJoin=null;reviewQuest.statusDrop=false;
-              reviewQuest.apk.version_code=21;
-              Object.assign(reviewQuest.metaUpdate,{state:'current',reason:'',installed_code:21,
-                available_code:21,required_code:21,session_allowed:true,revision:'10',can_check:true});
+              reviewQuest.apk.version_code=23;
+              Object.assign(reviewQuest.metaUpdate,{state:'current',reason:'',installed_code:23,
+                available_code:23,required_code:23,session_allowed:true,revision:'10',can_check:true});
             }''')
             page.locator('#quest-find').click()
             page.clock.run_for(2000)

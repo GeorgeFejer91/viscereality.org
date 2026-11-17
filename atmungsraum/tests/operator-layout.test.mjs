@@ -4,6 +4,17 @@ import { navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning
   restoreOperatorView, operatorSessionHeading } from '../operator-layout.js';
 
 const connected = { connected: true, participantRequired: true, participantComplete: true };
+test('an actionable APK update is a preparation step, while current APKs skip it', () => {
+  assert.equal(resolveOperatorView('input', { ...connected, updateRequired: true }), 'update');
+  assert.equal(resolveOperatorView('input', { ...connected, updateRequired: false }), 'input');
+  assert.equal(resolveOperatorView('connect', { ...connected, updateRequired: true }), 'connect');
+  assert.equal(navigateOperatorView({step:'update'}, {type:'return'}).step, 'connect');
+  const manual = navigateOperatorView({step:'settings',returnTo:'input'}, {type:'go',step:'update'});
+  assert.equal(navigateOperatorView(manual, {type:'return'}).step, 'input');
+  assert.equal(resolveOperatorView('input', { ...connected, updateRequired: true, active: true }), 'running');
+  assert.equal(resolveOperatorView('settings', { ...connected, updateRequired: true }), 'settings');
+  assert.equal(resolveOperatorView('update', connected), 'update');
+});
 test('local Back, Next and settings preserve all external experiment state', () => {
   const experiment = { participant: 'abc_23_m', acceptance: 'owner/epoch/attempt/input', journal: { id: 'original' }, draft: 'abc' };
   const before = structuredClone(experiment);

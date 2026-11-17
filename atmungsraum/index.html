@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261117-meta-handoff">
+  <link rel="stylesheet" href="./style.css?v=20261117-input-status">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261117-meta-handoff"></script>
+  <script type="module" src="./app.js?v=20261117-input-status"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -229,25 +229,26 @@
       </div>
       <footer class="actions operator-actions">
         <button data-operator-back type="button"><span data-measure>Zurück</span></button>
-        <button class="primary-navigation" data-operator-go="input" type="button"><span data-measure>Weiter zur Eingabe</span></button>
+        <button class="primary-navigation" data-operator-go="input" type="button"><span data-measure>Weiter zur Atmungsmessmethode</span></button>
       </footer>
     </section>
     <section id="input-screen" aria-labelledby="input-screen-title" class="screen operator-screen" hidden>
       <header class="screen-header">
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
-        <h1 id="input-screen-title" data-measure tabindex="-1">Atmung einrichten</h1>
+        <h1 id="input-screen-title" data-measure tabindex="-1">Atmungsmessmethode</h1>
         <p class="preparation-step" data-measure>Schritt 3 von 4</p>
       </header>
       <div class="screen-body operator-body">
+        <p data-measure>Wähle, wie die Atmung die Bewegung im Headset steuert: über den Polar-Gurt oder den Controller.</p>
         <div id="operator-input-status">
           <p id="operator-confirmed-input" data-measure></p>
           <p id="operator-signal-warning" role="status" data-measure hidden></p>
           <p id="preview-switch" data-measure hidden role="status">
           </p>
           <p id="preview-detail" data-measure role="status">Warte auf den aktuellen Atemstatus der Quest.</p>
-          <details id="operator-input-diagnostics"><summary><span data-measure>Eingabe und Messsignale</span></summary>
-            <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Eingabe auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span>
+          <details id="operator-input-diagnostics"><summary><span data-measure>Messmethode und Signale</span></summary>
+            <p id="preview-input" aria-live="off"><span id="preview-input-label" data-measure>Atmungsmessmethode auf der Quest nicht verfügbar.</span><span id="preview-input-volume" data-live-value data-measure data-measure-sample="100 %" hidden></span>
             </p>
             <p id="preview-polar-status" data-measure>
             </p>
@@ -260,7 +261,7 @@
           <button id="preview-personal-return" disabled hidden type="button"><span data-measure>Zur persönlichen Einrichtung wechseln</span><small data-measure>Polar tilt mit dieser Person einrichten</small></button>
           <button id="preview-polar-fixed" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar tilt STATE · feste Achse</span><small data-measure>Vortrainiert · ohne persönliche Einrichtung</small></button>
           <button id="preview-polar-adaptive" aria-pressed="false" disabled hidden type="button"><span data-measure>Polar tilt STATE · dynamische Achse</span><small data-measure>Vortrainiert · Achse passt sich laufend an</small></button>
-          <div id="preview-controller-host"><button id="preview-controller" disabled type="button"><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button></div>
+          <div id="preview-controller-host"><button id="preview-controller" aria-pressed="false" disabled type="button"><span data-measure>Controller State</span><small data-measure>Feste Ausrichtung</small></button></div>
         </div>
       </div>
       <footer class="actions operator-actions">
@@ -279,7 +280,7 @@
       </div>
       <footer class="actions operator-actions">
         <button id="preview-retry" type="button" hidden disabled><span data-measure>Erneut einrichten</span></button>
-        <button data-operator-go="input" type="button"><span data-measure>Eingabe ändern / Controller wählen</span></button>
+        <button data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern / Controller wählen</span></button>
       </footer>
     </section>
     <section id="breathing-preview" aria-labelledby="preview-title" class="screen operator-screen" hidden>
@@ -321,8 +322,8 @@
       </div>
       <footer class="actions operator-actions">
         <button id="preview-restart" type="button" hidden disabled><span data-measure>Kalibrierung wiederholen</span></button>
-        <button data-operator-go="input" type="button"><span data-measure>Eingabe ändern</span></button>
-        <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Kalibrierung bestätigen</span></button>
+        <button data-operator-go="input" type="button"><span data-measure>Atmungsmessmethode ändern</span></button>
+        <button id="preview-continue" hidden disabled type="button" aria-describedby="preview-review"><span data-measure>Atmungsmessmethode bestätigen</span></button>
       </footer>
     </section>
     <section id="session-screen" aria-labelledby="session-screen-title" class="screen operator-screen" hidden>
@@ -415,11 +416,11 @@
         <button id="operator-next-session" class="primary-navigation" data-operator-go="session" type="button"><span data-measure>Nächste Sitzung</span></button>
       </footer>
     </section>
-    <section id="settings-screen" aria-labelledby="settings-screen-title" class="screen operator-screen" hidden>
+    <section id="update-screen" aria-labelledby="update-screen-title" class="screen operator-screen" hidden>
       <header class="screen-header">
-        <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
-        </div>
-        <h1 id="settings-screen-title" data-measure tabindex="-1">Einstellungen</h1>
+        <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span></div>
+        <h1 id="update-screen-title" data-measure tabindex="-1">Quest-App prüfen</h1>
+        <p data-measure>Vor der Vorbereitung</p>
       </header>
       <div class="screen-body operator-body">
         <aside id="quest-version" aria-labelledby="apk-update-status" class="version-panel" hidden>
@@ -445,6 +446,20 @@
             </p>
           </details>
         </aside>
+      </div>
+      <footer class="actions operator-actions">
+        <button data-operator-return type="button"><span data-measure>Zurück</span></button>
+        <button id="operator-update-next" data-operator-go="participant" type="button"><span data-measure>Weiter zur Vorbereitung</span></button>
+      </footer>
+    </section>
+    <section id="settings-screen" aria-labelledby="settings-screen-title" class="screen operator-screen" hidden>
+      <header class="screen-header">
+        <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
+        </div>
+        <h1 id="settings-screen-title" data-measure tabindex="-1">Einstellungen</h1>
+      </header>
+      <div class="screen-body operator-body">
+        <button id="operator-update-open" data-operator-go="update" type="button"><span data-measure>Nach Quest-App-Updates suchen</span></button>
         <details id="quest-settings" open>
           <summary><span data-measure>Quest-Einstellungen · Kiosk</span>
           </summary>

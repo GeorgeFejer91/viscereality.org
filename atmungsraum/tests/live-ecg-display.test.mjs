@@ -5,6 +5,17 @@ import { LiveEcgDisplay } from '../live-ecg-display.js';
 
 const start = 900719925474099100n;
 const step = 7692307n;
+test('display centers a DC-biased baseline without changing any raw sample', () => {
+  const display = new LiveEcgDisplay();
+  const packet = trace(0, 260, 0, i => 900 + (i % 20 === 0 ? 200 : 0));
+  display.push(packet, 0);
+  const frame = display.frame(0);
+  assert.equal(frame.baseline, 900);
+  assert.ok(frame.path.includes('46.0'));
+  assert.ok(frame.range <= 200);
+  assert.deepEqual(frame.points.map(p => [p.timestamp, p.value]), packet.points.slice(0, frame.points.length).map(p => [p.timestamp, p.value]));
+  assert.equal(packet.points[1].value, 900);
+});
 function trace(first = 0, count = 260, age = 0, value = index => index % 2 ? -40 : 80) {
   return ecgTrace({ v: 1, rate: 130, unit: 'uV', age_ms: age,
     samples: Array.from({ length: count }, (_, index) =>
@@ -141,7 +152,8 @@ test('an invalid response clears the image and cannot let an old watermark reviv
 test('reset retires previous playout, scale and watermark for a new source owner', () => {
   const display = new LiveEcgDisplay();
   display.push(trace(0, 260, 0, () => 2000), 0);
-  assert.equal(display.frame(0).range, 2000);
+  assert.equal(display.frame(0).baseline, 2000);
+  assert.equal(display.frame(0).range, 100);
   display.reset();
   assert.equal(display.frame(500), null);
   assert.equal(display.push(trace(), 1000), true);
@@ -179,17 +191,17 @@ test('a dense valid packet sequence also obeys the hard sample-count bound', () 
 test('scale keeps a recent peak then releases gradually while every raw value fits', () => {
   const display = new LiveEcgDisplay();
   display.push(trace(0, 260, 0, index => index === 0 ? 900 : 40), 0);
-  assert.equal(display.frame(0).range, 900);
+  assert.equal(display.frame(0).range, 860);
   for (let index = 1; index <= 2; index++) {
     display.push(trace(index * 130, 260, 0, () => 40), index * 1000);
-    assert.equal(display.frame(index * 1000).range, 900);
+    assert.equal(display.frame(index * 1000).range, 860);
   }
   display.push(trace(390, 260, 0, () => 40), 3000);
   const releasing = display.frame(3000);
   const next = display.frame(3001);
-  assert.ok(releasing.range > 100 && releasing.range < 900);
+  assert.ok(releasing.range > 100 && releasing.range < 860);
   assert.ok(releasing.range - next.range <= 1);
-  assert.ok(next.points.every(point => Math.abs(point.value) <= next.range));
+  assert.ok(next.points.every(point => Math.abs(point.value - next.baseline) <= next.range));
   const coordinates = [...next.path.matchAll(/[ML]([\d.]+) ([\d.]+)/g)];
   assert.ok(coordinates.every(point => Number(point[2]) >= 3 && Number(point[2]) <= 89));
 });
@@ -202,9 +214,9 @@ test('large new peaks expand the displayed scale without clipping or altering sa
   const before = structuredClone(packet.points);
   display.push(packet, 1000);
   const current = display.frame(1500);
-  assert.ok(current.range >= 2000);
+  assert.ok(current.range >= Math.abs(-2000 - current.baseline));
   assert.ok(current.points.some(point => point.value === -2000));
-  assert.ok(current.points.every(point => Math.abs(point.value) <= current.range));
+  assert.ok(current.points.every(point => Math.abs(point.value - current.baseline) <= current.range));
   assert.deepEqual(packet.points, before);
   current.points[0].value = 12345;
   assert.notEqual(display.frame(1500).points[0].value, 12345);

@@ -30,8 +30,8 @@ const candidate = 'b'.repeat(12);
 const settings = window.reviewQuest ??= {
   phase: 'IDLE', host: 'vr-preparation', polar: 'off', fresh: true, generation: 0,
   condition: 'condition-b', clock: 0, pending: false, strapCount: 0, selected: '',
-  apk: {v:1,package_name:'org.viscereality.atmungsraum.developer',version_code:11,
-    version_name:'0.2.10-dev',build_id:'e'.repeat(64)},
+  apk: {v:1,package_name:'org.viscereality.atmungsraum.developer',version_code:22,
+    version_name:'0.2.21-dev',build_id:'e'.repeat(64)},
   ...window.reviewInitialQuest
 };
 settings.setup ??= {
@@ -601,7 +601,7 @@ def show_operator(page, step):
     """Follow real local navigation, without changing a domain model or gateway."""
     page.wait_for_function('Boolean(window.reviewQuest)')
     ids = {'connect':'quest','input':'input-screen','tracking':'breathing-preview','signals':'signals-screen',
-           'settings':'settings-screen','recordings':'recordings-screen','participant':'participant-screen'}
+           'settings':'settings-screen','update':'update-screen','recordings':'recordings-screen','participant':'participant-screen'}
     target=page.locator('#'+ids[step])
     if target.is_visible():
         return
@@ -610,6 +610,8 @@ def show_operator(page, step):
         direct=page.locator(f'[data-operator-go="{step}"]:visible')
         if direct.count():
             direct.first.click()
+        elif step == 'update' and page.locator('[data-operator-go="settings"]:visible').count():
+            page.locator('[data-operator-go="settings"]:visible').first.click()
         elif page.locator('[data-operator-return]:visible').count():
             page.locator('[data-operator-return]:visible').first.click()
         elif page.locator('[data-operator-go="input"]:visible').count():

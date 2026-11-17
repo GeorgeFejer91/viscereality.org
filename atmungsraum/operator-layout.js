@@ -3,13 +3,14 @@ export const operatorSteps = Object.freeze({
   connect: 'quest', participant: 'participant-screen', signals: 'signals-screen',
   input: 'input-screen', calibration: 'calibration-screen', tracking: 'breathing-preview',
   session: 'session-screen', running: 'running-screen', recordings: 'recordings-screen',
-  settings: 'settings-screen', recovery: 'recovery-screen',
+  settings: 'settings-screen', update: 'update-screen', recovery: 'recovery-screen',
 });
 const previous = { participant: 'connect', signals: 'participant', input: 'participant',
   calibration: 'input', tracking: 'input', session: 'tracking', recordings: 'session' };
 export function navigateOperatorView(state, event, participantRequired = true) {
   if (event.type === 'return') return { ...state,
-    step: Object.hasOwn(operatorSteps, state.returnTo) && state.returnTo !== state.step ? state.returnTo : 'signals', returnTo: null };
+    step: Object.hasOwn(operatorSteps, state.returnTo) && state.returnTo !== state.step ? state.returnTo
+      : state.step === 'update' ? 'connect' : 'signals', returnTo: null };
   if (event.type === 'back') {
     const step = previous[state.step];
     return { ...state, step: step === 'participant' && !participantRequired ? 'connect' : step || 'connect' };
@@ -17,7 +18,8 @@ export function navigateOperatorView(state, event, participantRequired = true) {
   if (event.type !== 'go' || !Object.hasOwn(operatorSteps, event.step)) return state;
   const step = event.step === 'participant' && !participantRequired ? 'input' : event.step;
   return { ...state, step, returnTo: step === state.returnTo ? null
-    : ['settings', 'recordings'].includes(step) ? state.step : state.returnTo };
+    : step === 'update' && ['settings', 'recordings'].includes(state.step) ? state.returnTo || state.step
+    : ['settings', 'recordings', 'update'].includes(step) ? state.step : state.returnTo };
 }
 export function resolveOperatorView(step, context) {
   // Settings retains shared recovery and session controls in its own view.
@@ -27,6 +29,7 @@ export function resolveOperatorView(step, context) {
   if (context.recovery) return 'recovery';
   if (step === 'recordings') return 'recordings';
   if (context.waitingForControl) return 'connect';
+  if (step === 'update' || context.updateRequired && step && step !== 'connect') return 'update';
   if (!Object.hasOwn(operatorSteps, step)) return 'connect';
   if (context.participantRequired && !context.participantComplete && step !== 'connect') return 'participant';
   if (step === 'participant' && !context.participantRequired) return 'input';
