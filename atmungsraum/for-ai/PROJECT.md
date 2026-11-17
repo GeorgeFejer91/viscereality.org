@@ -15,8 +15,11 @@ interpret missing observations as valid.
 - [x] Regress contention and implement/review/test typed CURRENT/UNAVAILABLE/RETIRED
   across prepared op9, polled replies, final install grant and helper handoff.
 - [x] Publish qualified fixed27-r2/run046 through Meta.
-- [ ] Install fixed27, then hold version-only28 until an actual27 session is
-  RUNNING/rec:true and root releases the attended update test.
+- [x] Confirm the exact fixed27 APK installed by Meta on the connected Quest 2.
+- [x] Sync the published PWA and native source patch to the lab PC, retain the
+  verified signed APK locally, and confirm the installed Pixel 10 PWA release.
+- [ ] Hold version-only28 until a fixed27 session is RUNNING/rec:true and root
+  releases the attended update test.
 - [ ] Test preparation/check and running-session save/update to28 on hardware.
 
 Source4edf4b89/tree358a0c91 passes independent specification/quality review.
@@ -32,11 +35,21 @@ provides the typed worker result. Helper3 IPC has not changed.
 The2,368,442byte cumulative patch reconstructs358a0c91 (SHA256
 5c6e49967f7150fbb1e30390b92ed02aa81906e646e52d5b25dcc986ff070723).
 Fixed27-r2/run046 passes1138 signed-package checks and63 negatives. Meta
-1465199570012388 is current and malware/security passed; required/latest27 is
-published independently of installed metadata. Actual installation remains
-pending: the phone is absent over USB and a reconnect question is pending.
-No device action is implied by the Meta publication. Version-only28 preparation
-is private and publication remains held for actual27 RUNNING/rec:true. PR57/merge5df115b reached
+1465199570012388 is current and malware/security passed. PR59 merge `a4c46d4`
+set required/latest27 and passed [Pages run 44186834653](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44186834653).
+Eight live PWA, policy and native-patch responses matched Git. The lab PC synced
+that release and verified the source patch and its local private APK copy.
+
+On 2026-11-17, both lab devices were authorized over USB. Quest 2 reported
+`0.2.26-dev` (27), Meta installer and initiator, and an installed base-APK
+SHA-256 matching fixed27-r2. Boot Helper reported code 3. The headset was asleep
+at readback, so the install observation leaves immersive launch and the exact
+update trigger unverified. The installed Pixel 10 WebAPK opened `Quest verbinden`
+in standalone mode and loaded the live `20261117-preparation-audio-recovery`
+app and Quest UI modules. The next attended check is to confirm control and
+session readiness on code 27 before qualifying the held 28 update.
+
+Prior PR57/merge5df115b reached
 exact Pages44178155493 success;9 live files match and live policy26 probes verify
 25 requires the enabled update action,26 continues, and an actual-shaped running
 25 retains explicit finish/save/update without automatic stop (synthetic transport).
