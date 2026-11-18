@@ -157,6 +157,35 @@ enrollment present and no connected Quest. Private evidence includes the
 preflight and original native receipts. Physical WebRTC reconnection and
 worn Polar collection on this exact revision remain open.
 
+### Meta and standalone startup recheck — 2026-11-18
+
+The authenticated [Meta Developer channel](https://developers.meta.com/vr/manage/applications/1459506690581676/release-channels/)
+still offered `0.2.26-dev` (code 27), build `1465199570012388`. The exact
+installed APK matched signed fixed27-r2 by SHA-256 and reported
+`com.oculus.ocms` as installer. The live policy agreed with Meta and the
+device. A fresh read of both installed APK archives found the WebRTC
+runtime and release protocol in signed bench 36. The Meta code 27 archive
+contained the LAN gateway.
+
+[Pages run 44355388552](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44355388552)
+deployed `0f212c0409adf47c3cf7b68bc23b5ae8626b4c21`. Eighteen live paths
+matched Git. On the Pixel, three exact-launcher cold starts produced new
+standalone documents on `20261118-saved-quest-service` with visible Connect
+after 1.34, 1.36 and 1.38 seconds. All three kept searching for the saved
+Quest with no dialog and no authenticated session at 30 seconds. The
+phone's saved installation did not match the Meta app's live gateway
+identity. The headset remained in the Developer app and its gateway
+answered on a temporary serial-scoped ADB forward. The installed phone
+companion closed the commissioning request before returning any profile
+information.
+
+All 43 focused Node checks and five mounted startup groups passed. The
+official automatic startup gate failed on the current installed release.
+The next physical run needs the signed unified Developer build and a
+compatible companion commissioned for that installation. Retest first
+join and saved reconnect in both launch orders with native receipts.
+The held Meta successor remains in the existing release sequence.
+
 ### Meta Developer and Pixel startup — 2026-11-18
 
 The [Meta Developer channel](https://developers.meta.com/vr/manage/applications/1459506690581676/release-channels/)
