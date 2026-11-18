@@ -66,6 +66,10 @@ selected breathing input, including Controller State when fallback is selected.
 The native recording manifest retains `breath_tracking_configuration` and the
 calibrated model/source identity. CSV v4 does not add an input-mode column;
 retain that manifest when attributing classifications to a sensor or controller.
+Builds that project Controller State mark new recordings with
+`participant_csv_controller_breath: true` in the native manifest. Recovery
+uses the recorded projection so older v4 runs retain their original live CSV
+prefix. Native breath observations retain the source and its clock.
 
 The selected path supports zero guidance bias and rejects nonzero Arm or
 live-bias requests as `setup-guidance-bias-unsupported`. Intended phases are

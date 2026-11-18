@@ -1,5 +1,17 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with Controller State CSV v4
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `29`,
+version name `0.2.28-rtc-test`, and 65,605,180 bytes. SHA-256 is
+`163d7e694f03b4f7ac2ca477d71cbd2290888a0020d6443e311ac06e62e4aa0e`.
+Native commit `ddf0b2440452678df397b0664d1198fbcf36b866` binds tree
+`877d3a7c045a867c1ceef3d6d3ab5bc7db2e963b`. The v3 bench signing certificate
+matches code 28. The ARM64 package, ZIP alignment, all nine WebRTC assets
+and cold session closure passed. The lab Quest reports exact installed
+bytes, the same app UID and three retained Bluetooth grants. Physical
+foreground launch and recording checks remain open.
+
 ## Managed commissioning WebRTC bench on Quest 2
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `28`,
@@ -9,8 +21,8 @@ Native source tree `c0b2c0fa6e198d6af9edb1d8532bcf7bda9c751f`.
 The v3 signature, ARM64, alignment, selected WebRTC assets and cold
 session closure pass. Installed Quest 2 bench bytes match the signed
 digest. The [pinned WebRTC patch for this APK](https://github.com/GeorgeFejer91/viscereality.org/blob/56e4d66a54417aebaef2b9f522ba386c2c4f6a94/atmungsraum/quest/webrtc-native.patch)
-reconstructs the bound tree above. The newer checkout contains additional
-host verification fixtures. See [the build and verification instructions](../README.md#webrtc-candidate).
+reconstructs the bound tree above. See [bench code 29](#webrtc-bench-with-controller-state-csv-v4)
+for the current install. [Build and verification instructions](../README.md#webrtc-candidate)
 
 This is the test package for the managed phone's first WebRTC connection.
 The separately identified Meta Developer and rehearsal routes continue
