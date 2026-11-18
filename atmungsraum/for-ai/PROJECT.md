@@ -406,8 +406,13 @@ fresh native status and revalidates owner, lease, writer and audio park
 before issuing the single update request. The regression reproduced the
 failure at 320 × 568 with 200% text and now passes. The
 [update verification](VERIFICATION.md#temporary-status-loss-after-save--2026-11-18)
-records the software gates for `20261118-save-update-status`. The attended
-Meta transition remains open.
+records the software gates for `20261118-save-update-status`. Merge
+`6d78a89` passed [exact Pages run 44238768542](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44238768542)
+and six live file comparisons. The installed Pixel loaded the expected
+standalone release and retained saved pairing. Six RustDesk MCP
+Settings-to-Connect cycles passed, including three with rapid repeated
+Settings input. The final frame showed Connect, and the Quest still reported
+asleep over ADB. The attended Meta transition remains open.
 
 ### PWA update copy simplification — 2026-11-17
 

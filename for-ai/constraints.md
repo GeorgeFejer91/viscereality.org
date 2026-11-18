@@ -25,10 +25,14 @@ Documentation-only changes still require prompt push and deployment checks;
 use scoped checks rather than rerunning unrelated runtime suites. Retain the
 Superpowers verification/review requirements and the existing data boundaries.
 
-On 2026-11-13 the user added a standing release step for Atmungsraum: after
-publishing a PWA update, refresh the installed app on the lab Pixel 10 and
-verify that it loaded the release. Follow the
-[Atmungsraum workflow](../atmungsraum/for-ai/WORKFLOW.md#smartphone-pwa).
+The user requires agents to own Atmungsraum device verification for every
+applicable change. Install and verify signed Quest APK improvements and
+refresh or install the deployed PWA on the lab Pixel autonomously. Run the
+affected stress and recovery cases, repair failures, and repeat the checks
+with current builds until the acceptance criteria pass. Follow the
+[standing device validation procedure](../atmungsraum/for-ai/VERIFICATION.md#autonomous-device-validation)
+and the existing Meta release sequence. The Pixel refresh requirement dates
+to 2026-11-13, and the full device verification requirement to 2026-11-18.
 
 - Start with `superpowers-using-superpowers` and select the practices appropriate
   to the task: clarify/design when needed, plan substantial work, implement,

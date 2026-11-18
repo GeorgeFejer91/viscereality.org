@@ -2,21 +2,47 @@
 
 ## Autonomous device validation
 
-Agents own the full fix-and-verify loop. At the start of each phase, identify
-the latest applicable source, build, deployed PWA, signed APK and actual
-installed versions on the selected lab Quest and Pixel. Install authorized
-improvements on the lab devices, verify APK bytes and active PWA assets,
-and repeat every affected case with its original input driver. Continue
-through relevant stress runs, recovery, and output verification until the
-acceptance checklist passes.
+This is the standing verification procedure for every applicable app, APK,
+PWA, UI or data collection change. Agents own the cycle from installing the
+improvement through confirming the last affected acceptance criterion.
 
-Use the Meta Quest workflow and serial-scoped ADB for headset navigation,
-launch, installs and evidence. Use RustDesk MCP for actual Pixel UI input
-and frame readback. Automate what the devices support and reserve wearer
-steps for protected prompts, physical controls, tracking and Polar contact.
-Use the real PWA-driven Meta route for the official update transition and
-verify its installed successor. Record publication and any remaining
-physical gate in [the active checklist](PROJECT.md).
+1. At the start of each phase and at sign-off, resolve the current Git
+   revision, Pages deployment, live PWA release, signed APK and actual
+   installed versions on the selected lab Quest and Pixel. For a Meta update
+   check, also verify the channel offer and the prescribed baseline and
+   successor. If either app changes during verification, rerun the cases it
+   affects with the new pair of versions.
+2. Build or obtain the signed Quest APK and install or update it on the lab
+   Quest. Confirm package, version, signing identity, installed SHA-256 and
+   effective foreground and runtime readiness. On the lab Pixel, refresh the
+   idle standalone PWA from the exact live deployment or install it when
+   missing. Confirm the active release and loaded assets from the standalone
+   app. Apply both steps for changes that span devices. Preserve saved pairing
+   and recordings. Use the approved baseline and the real PWA-driven Meta
+   route for the official transition, then verify the installed successor.
+3. Use the Meta Quest workflow and serial-scoped ADB for supported headset
+   navigation, launch, installs and readback. Use RustDesk MCP frames and
+   input to exercise the physical Pixel UI. Try the existing authorized
+   remote recovery procedures before requesting assistance. Reserve wearer
+   steps for platform prompts that require attendance, physical controls,
+   tracking and worn Polar H10 contact. Continue independent checks while
+   an attended step is pending.
+4. Run the applicable stress and recovery cases in the active checklist.
+   Exercise repeated and rapid inputs, disconnect and rejoin, degraded or
+   interrupted network and sensor links, and restart or update boundaries
+   where relevant. For collection, verify the clean full-duration runs,
+   deliberate partial run, recovery, and matching export bytes across all
+   required destinations. Check the rendered UI against the layout and
+   accessibility rules, and match phone actions to native receipts or
+   state changes. Use fixtures to reproduce failures and require physical
+   evidence for the hardware cases.
+5. Diagnose and repair each confirmed failure. Verify and publish each
+   completed improvement through the release workflow, install it on the
+   affected lab devices, and repeat the original case with its original
+   input driver plus the affected stress and recovery checks. Keep the goal
+   open until the acceptance criteria pass. Record versions, results,
+   publication, remaining blockers and the next executable step in
+   [the active checklist](PROJECT.md).
 
 ## Smartphone GUI release gate
 
