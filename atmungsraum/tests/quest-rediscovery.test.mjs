@@ -34,3 +34,15 @@ test('rediscovery rejects a different headset and a public address', async () =>
       Response.json({ v: 1, state: 'ready', metadata })));
   }
 });
+
+test('an enrolled Quest can advertise the WebRTC room through companion discovery without a LAN address', async () => {
+  const rtc = { r: 'c'.repeat(32), p: 'd'.repeat(64) };
+  const actor = { device, serial: '', identity_kind: 'app-installation' };
+  const metadata = { ...identity, ...actor, v: 2, pairing: 1, gateways: [], rtc };
+  const reply = details => async () => Response.json({ v: 1, state: 'ready', metadata: details });
+  const found = await rediscoverQuest(actor, signal, reply(metadata));
+  assert.deepEqual(found.rtc, rtc);
+  assert.deepEqual(found.endpoints, []);
+  await assert.rejects(rediscoverQuest(actor, signal, reply({ ...metadata, rtc: { ...rtc, p: 'too-short' } })));
+  await assert.rejects(rediscoverQuest(actor, signal, reply({ ...metadata, rtc: { ...rtc, host: 'custom.example' } })));
+});

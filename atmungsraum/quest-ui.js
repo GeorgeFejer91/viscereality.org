@@ -1,23 +1,23 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=15';
-import { pairPhone } from './quest-pairing.js?v=4';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=39';
+  controllerAccessState } from './quest-gateway.js?v=16';
+import { pairPhone } from './quest-pairing.js?v=5';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=40';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=18';
+import { BreathingSetup } from './breathing-setup.js?v=19';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=5';
+import { KioskControl } from './kiosk-control.js?v=6';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=7';
+import { MetaUpdateControl } from './meta-update-control.js?v=8';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=3';
+import { ControllerLease } from './controller-lease.js?v=4';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
@@ -1268,7 +1268,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     try {
       const selection = chooseDevice ? selectQuest(bluetooth) : null;
       paint();
-      const join = (endpoint, discovery) => joinQuest({ endpoint, serial: discovery?.owner.serial ?? settings.serial,
+      const join = (endpoint, discovery, transport) => joinQuest({ endpoint, transport, serial: discovery?.owner.serial ?? settings.serial,
         identity_kind: discovery?.owner.identity_kind ?? settings.identity_kind,
         device: discovery?.owner.device ?? settings.device, build: chooseDevice || discovery ? undefined : settings.build,
         enrollment: settings.enrollment, discovery: discovery?.owner, signal });
@@ -1350,8 +1350,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           rememberPair(settings);
         };
         if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
+        if (discovery.rtc) {
+          try {
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=1');
+            const transport = await openQuestWebRtc(discovery, settings.enrollment, signal);
+            gateway = await join(undefined, discovery, transport);
+            endpoint = discovery.endpoints[0] ?? endpoint;
+          } catch (error) {
+            signal.throwIfAborted();
+            if (error.status === 403) throw error;
+            joinMessage = error.message;
+          }
+        }
         let authenticationRejected = false;
-        for (const candidate of discovery.endpoints) {
+        for (const candidate of gateway ? [] : discovery.endpoints) {
           endpoint = candidate;
           try { gateway = await join(endpoint, discovery); break; }
           catch (error) {
@@ -1365,11 +1377,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           endpoint = discovery.endpoints[0];
           gateway = await join(endpoint, discovery);
         }
-        if (!gateway && peer && settings.hotspot && settings.device === discovery.owner.device) {
-          const hotspot = await readQuest(peer, signal, { ...setup, ...discovery.owner, forceHotspot: true });
-          endpoint = hotspot.endpoints[0];
-          gateway = await join(endpoint, hotspot);
-        }
+
         if (!gateway) throw Error(joinMessage || 'Die Quest antwortet nicht im WLAN.');
       }
       if (signal.aborted || connecting !== attempt) { gateway.close(); return; }

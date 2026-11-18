@@ -1,0 +1,514 @@
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab65892902c1e 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
+@@ -503,7 +503,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
+         ExperimentControlMode.initialize(context);
+         remoteContext = context.getApplicationContext();
+         ExperimentSessionBleServer.process(remoteContext, REMOTE_DELEGATE);
+-        if(ExperimentSessionCommandGateway.featurePackaged(remoteContext))ExperimentSessionCommandGateway.process(remoteContext,REMOTE_DELEGATE);
++        if (ExperimentSessionCommandGateway.featurePackaged(remoteContext)) {
++            ExperimentSessionCommandGateway gateway = ExperimentSessionCommandGateway.process(remoteContext, REMOTE_DELEGATE);
++            ExperimentSessionWebRtc.attach(remoteContext, gateway);
++        }
+     }
+ 
+     static void experimentSessionBleOwnerChanged(long identity, long epoch, boolean live) {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+index dd75697d2e33ab2898af3ee549e86d637a7e1655..335d39dca42f7e089d474596edf361e24cdc7cac 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
+@@ -55,6 +55,20 @@ public final class ExperimentSessionCommandGateway {
+     private ExperimentSessionGatewayHttpServer http;
+     private ExperimentSessionDirectNetwork direct;
+     private ExperimentSessionRelayClient relay;
++    private WebRtcRelay webRtc;
++
++    interface WebRtcRelay {
++        JSONObject offer() throws Exception;
++        boolean accepts(String room);
++        void close();
++    }
++
++    boolean hasWebRtcRelay() { requireMain(); return webRtc != null; }
++    void bindWebRtcRelay(WebRtcRelay relay) {
++        requireMain();
++        if (webRtc != null || !phonePairingEnabled || relay == null) return;
++        webRtc = relay;
++    }
+     private long identity,epoch,gatewayEpoch;
+     private volatile long lifecycleRevision;
+     private long guestModePacked;
+@@ -180,7 +194,15 @@ public final class ExperimentSessionCommandGateway {
+         if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
+     }
+     JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
+-    void stopRoutesFromHeadset(){requireMain();if(relay!=null)relay.close();relay=null;if(direct!=null)direct.close();direct=null;if(wifiSetup!=null)wifiSetup.close();}
++    void stopRoutesFromHeadset() {
++        requireMain();
++        if (relay != null) relay.close();
++        relay = null;
++        if (direct != null) direct.close();
++        direct = null;
++        if (wifiSetup != null) wifiSetup.close();
++        if (webRtc != null) webRtc.close();
++    }
+     String localAddresses() {
+         Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
+         try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
+@@ -411,6 +433,7 @@ public final class ExperimentSessionCommandGateway {
+         boolean remote = remoteAvailable();
+         installPhonePairing();
+         if (!remote && wifiSetup != null) wifiSetup.close();
++        if (!remote && webRtc != null) webRtc.close();
+         discovery.reconcile(packed,remote);
+         if(journal==null)return;
+         if(!trustedLanAllowed()){
+@@ -574,6 +597,13 @@ public final class ExperimentSessionCommandGateway {
+         JSONObject metadata=new JSONObject().put("v",phonePairingEnabled?2:1).put("device",deviceId()).put("serial",headsetIdentity.serial())
+             .put("epoch",Long.toString(gatewayEpoch)).put("native_epoch",Long.toString(epoch)).put("mode","remote").put("gateways",gateways);
+         if(phonePairingEnabled)metadata.put("identity_kind","app-installation").put("pairing",1);
++        if (webRtc != null && trustedPhoneCount > 0) {
++            try {
++                metadata.put("rtc", webRtc.offer());
++                if (metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 512)
++                    metadata.remove("rtc");
++            } catch (Exception unavailable) { webRtc.close(); }
++        }
+         if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
+         return metadata;
+     }
+@@ -612,6 +642,21 @@ public final class ExperimentSessionCommandGateway {
+         return exchangeRoute(envelope,true);
+     }
+     public JSONObject exchange(JSONObject envelope)throws Exception { return exchangeRoute(envelope,false); }
++
++    JSONObject exchangeWebRtc(JSONObject frame, String room) throws Exception {
++        final long nativeEpoch = onMain(() -> {
++            if (webRtc == null || !remoteAvailable() || !webRtc.accepts(room))
++                throw new SecurityException("webrtc-room-retired");
++            return epoch;
++        });
++        String tag = ExperimentSessionGatewayProtocol.string(frame, "tag");
++        if (!ExperimentSessionGatewayProtocol.hex(tag, 64)) throw new SecurityException("webrtc-member-required");
++        for (ExperimentSessionGatewayProtocol member : memberProtocols.values()) {
++            if (member.webRtcMemberTag(room, nativeEpoch).equals(tag))
++                return member.exchangeWebRtc(frame, room, nativeEpoch);
++        }
++        throw new SecurityException("webrtc-member-unavailable");
++    }
+     private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
+         ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
+         if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
+@@ -828,9 +873,9 @@ public final class ExperimentSessionCommandGateway {
+             .put("mode",packed).put("generation",status.getLong("g")).put("device",deviceId()).put("serial",headsetIdentity.serial());
+         return live?ticket.put("session",nativeStatus.getString("session_key")):ticket.put("revision",status.getLong("r"));
+     }
+-    private JSONObject onMain(java.util.concurrent.Callable<JSONObject> action)throws Exception {
++    private <T> T onMain(java.util.concurrent.Callable<T> action)throws Exception {
+         if(Looper.myLooper()==Looper.getMainLooper())return action.call();
+-        FutureTask<JSONObject> task=new FutureTask<>(action);main.post(task);
++        FutureTask<T> task=new FutureTask<>(action);main.post(task);
+         try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
+     }
+     private JSONObject requestRecenter(JSONObject body) throws Exception {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+index 53cd88330b0ccdb28db089089c3be97eeecd49c3..e903b6ccaa34bc98b14875565f31b21308351473 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
+@@ -58,6 +58,71 @@ public final class ExperimentSessionGatewayProtocol {
+     public synchronized void retire() { retired=true; nonces.clear(); }
+     public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
+     public JSONObject exchange(JSONObject request) throws Exception { return exchange(request,false); }
++    private String webRtcBinding(String room, long nativeEpoch) {
++        if (!controllerAccess || !hex(room, 32) || nativeEpoch <= 0) {
++            throw new SecurityException("invalid-webrtc-binding");
++        }
++        return "RQG1-RTC1|" + device + "|" + epoch + "|" + nativeEpoch + "|" + room;
++    }
++
++    String webRtcMemberTag(String room, long nativeEpoch) throws Exception {
++        return hmac(key, webRtcBinding(room, nativeEpoch) + "|member");
++    }
++
++    /** Run sealed WebRTC requests through the same membership, nonce and owner as LAN. */
++    JSONObject exchangeWebRtc(JSONObject frame, String room, long nativeEpoch) throws Exception {
++        String binding = webRtcBinding(room, nativeEpoch);
++        String id = string(frame, "id");
++        String tag = string(frame, "tag");
++        String iv = string(frame, "iv");
++        String data = string(frame, "data");
++        if (frame.length() != 5 || !Integer.valueOf(1).equals(frame.opt("v")) || !hex(id, 32)
++                || !constant(webRtcMemberTag(room, nativeEpoch), tag) || !iv.matches("[A-Za-z0-9+/]{16}")
++                || data.length() < 24 || data.length() > 10944) {
++            throw new SecurityException("invalid-webrtc-frame");
++        }
++
++        byte[] plain;
++        try {
++            byte[] ciphertext = Base64.getDecoder().decode(data);
++            if (ciphertext.length > 8192 + 16 || !Base64.getEncoder().encodeToString(ciphertext).equals(data)) {
++                throw new SecurityException("invalid-webrtc-frame");
++            }
++            byte[] requestIv = Base64.getDecoder().decode(iv);
++            plain = webRtcCipher(Cipher.DECRYPT_MODE, binding, "request", id, requestIv).doFinal(ciphertext);
++        } catch (java.security.GeneralSecurityException | IllegalArgumentException invalid) {
++            throw new SecurityException("invalid-webrtc-proof", invalid);
++        }
++
++        JSONObject request;
++        try {
++            request = new JSONObject(StandardCharsets.UTF_8.newDecoder().decode(java.nio.ByteBuffer.wrap(plain)).toString());
++        } finally {
++            java.util.Arrays.fill(plain, (byte) 0);
++        }
++        if (!id.equals(request.opt("nonce"))) throw new SecurityException("webrtc-request-mismatch");
++        byte[] clearReply = exchange(request, true).toString().getBytes(StandardCharsets.UTF_8);
++        byte[] replyIv = new byte[12];
++        RANDOM.nextBytes(replyIv);
++        try {
++            byte[] reply = webRtcCipher(Cipher.ENCRYPT_MODE, binding, "reply", id, replyIv).doFinal(clearReply);
++            return new JSONObject().put("v", 1).put("id", id).put("tag", tag)
++                .put("iv", Base64.getEncoder().encodeToString(replyIv))
++                .put("data", Base64.getEncoder().encodeToString(reply));
++        } finally {
++            java.util.Arrays.fill(clearReply, (byte) 0);
++        }
++    }
++
++    private Cipher webRtcCipher(int mode, String binding, String lane, String id, byte[] iv) throws Exception {
++        String direction = binding + "|" + lane;
++        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(mode, new SecretKeySpec(hmacBytes(key, direction), "AES"), new GCMParameterSpec(128, iv));
++        cipher.updateAAD((direction + "|" + id).getBytes(StandardCharsets.UTF_8));
++        return cipher;
++    }
++
++
+     private JSONObject exchange(JSONObject request,boolean lan) throws Exception {
+         final String nonce, action, payload;
+         synchronized(this) {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..eb329c1dfe52dd65c4e45c08974606507de42150
+--- /dev/null
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
+@@ -0,0 +1,155 @@
++package io.github.mesmerprism.rustyquest.native_renderer;
++
++import android.annotation.SuppressLint;
++import android.content.Context;
++import android.net.Uri;
++import android.os.SystemClock;
++import android.webkit.JavascriptInterface;
++import android.webkit.RenderProcessGoneDetail;
++import android.webkit.WebResourceRequest;
++import android.webkit.WebResourceResponse;
++import android.webkit.WebSettings;
++import android.webkit.WebView;
++import android.webkit.WebViewClient;
++import org.json.JSONObject;
++
++import java.io.ByteArrayInputStream;
++import java.io.IOException;
++import java.util.Arrays;
++import java.util.HashSet;
++import java.util.Set;
++
++/** Hosts only bundled signaling and ciphertext transport. The native gateway owns all requests. */
++final class ExperimentSessionWebRtc implements ExperimentSessionCommandGateway.WebRtcRelay {
++    private static final String HOST = "appassets.androidplatform.net";
++    private static final String ASSETS = "atmungsraum-webrtc/";
++    private static final String PAGE = "https://" + HOST + "/" + ASSETS + "index.html";
++    private static final String BRIDGE = "QuestRtcNative";
++    private static final long IDLE_LIFETIME_MS = 90_000;
++    private static final Set<String> FILES = new HashSet<>(Arrays.asList(
++        "index.html", "target.js", "vdoninja-sdk.min.js", "vdo-ninja-transport.js", "brsp.js", "quest-webrtc-channel.js"));
++
++    private final Context context;
++    private final ExperimentSessionCommandGateway gateway;
++    private volatile Session session;
++
++    static void attach(Context context, ExperimentSessionCommandGateway gateway) {
++        if (gateway.hasWebRtcRelay()) return;
++        try {
++            for (String file : FILES) {
++                try (java.io.InputStream asset = context.getAssets().open(ASSETS + file)) {
++                    if (asset.read() == -1) return;
++                }
++            }
++            gateway.bindWebRtcRelay(new ExperimentSessionWebRtc(context, gateway));
++        } catch (IOException absent) {
++            // Packages without the selected WebRTC assets retain their existing routes.
++        }
++    }
++
++    private ExperimentSessionWebRtc(Context context, ExperimentSessionCommandGateway gateway) {
++        this.context = context;
++        this.gateway = gateway;
++    }
++
++    @Override public JSONObject offer() throws Exception {
++        if (session == null || !session.live()) {
++            close();
++            Session next = new Session();
++            session = next;
++            next.view.loadUrl(PAGE);
++        }
++        Session active = session;
++        return new JSONObject().put("r", active.room).put("p", active.password);
++    }
++
++    @Override public boolean accepts(String room) {
++        Session active = session;
++        return active != null && active.room.equals(room) && active.live();
++    }
++
++    @Override public void close() {
++        Session old = session;
++        session = null;
++        if (old != null) old.destroy();
++    }
++
++    private final class Session {
++        final String room = ExperimentSessionBleProtocol.newHex(16);
++        final String password = ExperimentSessionBleProtocol.newHex(32);
++        final WebView view;
++        volatile long lastAuthenticated = SystemClock.elapsedRealtime();
++
++        @SuppressLint("SetJavaScriptEnabled")
++        Session() {
++            view = new WebView(context);
++            view.getSettings().setJavaScriptEnabled(true);
++            view.getSettings().setAllowFileAccess(false);
++            view.getSettings().setAllowContentAccess(false);
++            view.getSettings().setDomStorageEnabled(false);
++            view.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
++            view.setWebViewClient(new WebViewClient() {
++                @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
++                    return true;
++                }
++                @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
++                    return intercept(request.getUrl(), request.getMethod());
++                }
++                @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
++                    if (session == Session.this) close();
++                    return true;
++                }
++            });
++            view.addJavascriptInterface(new Bridge(), BRIDGE);
++        }
++
++        boolean live() {
++            return SystemClock.elapsedRealtime() - lastAuthenticated < IDLE_LIFETIME_MS;
++        }
++
++        void destroy() {
++            view.removeJavascriptInterface(BRIDGE);
++            view.stopLoading();
++            view.destroy();
++        }
++
++        private final class Bridge {
++            @JavascriptInterface public String configuration() {
++                if (session != Session.this || !live()) return "";
++                return room + ":" + password;
++            }
++
++            @JavascriptInterface public String exchange(String payload) {
++                if (session != Session.this || !live() || payload == null || payload.length() > 12_000) return "";
++                try {
++                    JSONObject result = gateway.exchangeWebRtc(new JSONObject(payload), room);
++                    if (session != Session.this || !live()) return "";
++                    lastAuthenticated = SystemClock.elapsedRealtime();
++                    return result.toString();
++                } catch (Exception denied) {
++                    return "";
++                }
++            }
++        }
++    }
++
++    private WebResourceResponse intercept(Uri uri, String method) {
++        if ("GET".equals(method) && "https".equals(uri.getScheme()) && uri.getPort() == -1) {
++            String path = uri.getPath();
++            if ("turnservers.vdo.ninja".equals(uri.getHost()) && "/".equals(path)) return null;
++            if (HOST.equals(uri.getHost()) && path != null && path.startsWith("/" + ASSETS)) {
++                String name = path.substring(ASSETS.length() + 1);
++                if (FILES.contains(name)) {
++                    try {
++                        return new WebResourceResponse(name.endsWith(".html") ? "text/html" : "text/javascript",
++                            "UTF-8", context.getAssets().open(ASSETS + name));
++                    } catch (IOException absent) {
++                        // The closure is checked during packaging.
++                    }
++                }
++            }
++        }
++        return new WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden",
++            java.util.Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
++    }
++}
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..6f70b55a7344b057fcf67d78b39b809c10aa6441 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
+@@ -18,7 +18,134 @@ public final class ExperimentSessionGatewayProtocolTest {
+     }
+     interface Trial{void run()throws Exception;}
+     static void denied(Trial trial)throws Exception {int before=calls;try{trial.run();throw new AssertionError("admitted invalid request");}catch(SecurityException|IllegalArgumentException expected){}if(calls!=before)throw new AssertionError("denied request reached owner");}
++    static void rtcEnvelope() throws Exception {
++        String room = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
++        String nonce = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
++        String body = "{\"id\":\"0123456789abcdef\"}";
++        String context = "RQG1-RTC1|" + DEVICE + "|42|7|" + room;
++        JSONObject signed = request(nonce, "receipt", body);
++        JSONObject frame = new JSONObject().put("v", 1).put("id", nonce)
++            .put("tag", ExperimentSessionGatewayProtocol.hmac(KEY, context + "|member"))
++            .put("iv", "AAECAwQFBgcICQoL")
++            .put("data", rtcEncrypt(context, nonce, "request", signed.toString()));
++        ExperimentSessionGatewayProtocol member = new ExperimentSessionGatewayProtocol(CONTROLLER, KEY, DEVICE, 42,
++            true, true, (action, payload) -> {
++                calls++;
++                if (!"receipt".equals(action)) throw new AssertionError("unexpected action");
++                return payload.put("state", "confirmed");
++            });
++
++        denied(() -> member.exchangeWebRtc(frame, "cccccccccccccccccccccccccccccccc", 7));
++        denied(() -> member.exchangeWebRtc(frame, room, 8));
++        denied(() -> member.exchangeWebRtc(copy(frame).put("id", "cccccccccccccccccccccccccccccccc"), room, 7));
++        denied(() -> member.exchangeWebRtc(copy(frame).put("tag", repeat("0", 64)), room, 7));
++        denied(() -> member.exchangeWebRtc(copy(frame).put("data", repeat("AAAA", 3000)), room, 7));
++        byte[] changed = java.util.Base64.getDecoder().decode(frame.getString("data"));
++        changed[0] ^= 1;
++        denied(() -> member.exchangeWebRtc(copy(frame).put("data", java.util.Base64.getEncoder().encodeToString(changed)), room, 7));
++        if (!member.webRtcMemberTag(room, 7).equals(frame.getString("tag"))) throw new AssertionError("wrong rendezvous member tag");
++
++        int before = calls;
++        JSONObject response = member.exchangeWebRtc(frame, room, 7);
++        if (calls != before + 1 || response.has("payload") || !nonce.equals(response.getString("id"))
++                || response.getString("iv").equals(frame.getString("iv"))) throw new AssertionError("wrong sealed receipt");
++        JSONObject signedReply = new JSONObject(rtcDecrypt(context, nonce, "reply", response));
++        JSONObject receipt = new JSONObject(signedReply.getString("payload"));
++        if (!"confirmed".equals(receipt.getString("state")) || !"0123456789abcdef".equals(receipt.getString("id")))
++            throw new AssertionError("original receipt changed");
++        if (!ExperimentSessionGatewayProtocol.hmac(KEY, "RQG1-REPLY|" + CONTROLLER + "|" + DEVICE
++                + "|42|" + nonce + "|receipt|" + signedReply.getString("payload")).equals(signedReply.getString("mac")))
++            throw new AssertionError("native receipt signature changed");
++        denied(() -> member.exchangeWebRtc(frame, room, 7));
++        denied(() -> member.exchangeLan(signed));
++
++        member.retire();
++        String fresh = "dddddddddddddddddddddddddddddddd";
++        JSONObject retiredFrame = copy(frame).put("id", fresh)
++            .put("data", rtcEncrypt(context, fresh, "request", request(fresh, "receipt", body).toString()));
++        denied(() -> member.exchangeWebRtc(retiredFrame, room, 7));
++    }
++
++    static JSONObject copy(JSONObject value) { return new JSONObject(value.toString()); }
++
++    static javax.crypto.Cipher rtcCipher(String context, String nonce, String lane, int mode, String iv) throws Exception {
++        byte[] key = ExperimentSessionGatewayProtocol.hmacBytes(KEY, context + "|" + lane);
++        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");
++        cipher.init(mode, new javax.crypto.spec.SecretKeySpec(key, "AES"),
++            new javax.crypto.spec.GCMParameterSpec(128, java.util.Base64.getDecoder().decode(iv)));
++        cipher.updateAAD((context + "|" + lane + "|" + nonce).getBytes(java.nio.charset.StandardCharsets.UTF_8));
++        return cipher;
++    }
++
++    static String rtcEncrypt(String context, String nonce, String lane, String value) throws Exception {
++        javax.crypto.Cipher cipher = rtcCipher(context, nonce, lane, javax.crypto.Cipher.ENCRYPT_MODE, "AAECAwQFBgcICQoL");
++        return java.util.Base64.getEncoder().encodeToString(cipher.doFinal(value.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
++    }
++
++    static String rtcDecrypt(String context, String nonce, String lane, JSONObject packet) throws Exception {
++        javax.crypto.Cipher cipher = rtcCipher(context, nonce, lane, javax.crypto.Cipher.DECRYPT_MODE, packet.getString("iv"));
++        return new String(cipher.doFinal(java.util.Base64.getDecoder().decode(packet.getString("data"))),
++            java.nio.charset.StandardCharsets.UTF_8);
++    }
++
++    static String repeat(String value, int count) {
++        return String.join("", java.util.Collections.nCopies(count, value));
++    }
++
++
++    static void serveRtc(String room) throws Exception {
++        if (!ExperimentSessionGatewayProtocol.hex(room, 32)) throw new IllegalArgumentException("test-room");
++        final String build = repeat("e", 64);
++        ExperimentSessionGatewayProtocol member = new ExperimentSessionGatewayProtocol(CONTROLLER, KEY, DEVICE, 42,
++            true, true, (action, payload) -> {
++                calls++;
++                if ("status".equals(action)) {
++                    return new JSONObject().put("v", 1).put("wifi_snapshot", 1).put("control_mode", "remote")
++                        .put("build", new JSONObject().put("v", 1).put("packaging_fingerprint", build))
++                        .put("recordings", 1).put("ecg_preview", 1).put("g", 0).put("r", 0).put("ms", 0)
++                        .put("p", "IDLE").put("pending", false).put("rec", false)
++                        .put("controller_access", new JSONObject().put("v", 1).put("role", "active")
++                            .put("active_phone", "Synthetic").put("revision", 1))
++                        .put("o", new JSONObject().put("v", 1).put("s", "observed").put("e", "7")
++                            .put("a", 0).put("i", Integer.toString(calls)).put("g", 0).put("r", 0));
++                }
++                if ("receipt".equals(action)) return payload.put("state", "confirmed");
++                if ("recordings".equals(action)) return new JSONObject().put("synthetic", repeat("abc", 8000));
++                throw new IllegalArgumentException("test-action-unavailable");
++            });
++        try (java.io.BufferedReader input = new java.io.BufferedReader(new java.io.InputStreamReader(
++                System.in, java.nio.charset.StandardCharsets.UTF_8))) {
++            String line;
++            while ((line = input.readLine()) != null) {
++                JSONObject response = new JSONObject();
++                try {
++                    JSONObject request = new JSONObject(line);
++                    switch (request.getString("op")) {
++                        case "frame":
++                            response.put("result", member.exchangeWebRtc(request.getJSONObject("frame"), room, 7));
++                            break;
++                        case "stats":
++                            response.put("result", calls);
++                            break;
++                        case "retire":
++                            member.retire();
++                            break;
++                        default:
++                            throw new IllegalArgumentException("test-operation-unavailable");
++                    }
++                    response.put("ok", true);
++                } catch (Exception denied) {
++                    response.put("ok", false);
++                }
++                System.out.println(response.toString());
++                System.out.flush();
++            }
++        }
++    }
++
+     public static void main(String[]args)throws Exception {
++        if (args.length == 2 && "--serve-webrtc".equals(args[0])) { serveRtc(args[1]); return; }
++        rtcEnvelope();
+         JSONObject updateCommand=new JSONObject().put("v",1).put("id","aabbccddeeff0011").put("op","check-and-update").put("cycle","1").put("revision","2");
+         if(!ExperimentSessionGatewayProtocol.metaUpdateQuery(updateCommand).toString().equals(updateCommand.toString()))throw new AssertionError("canonical update body changed");
+         JSONObject endPreparation=new JSONObject(updateCommand.toString()).put("op","end-preparation-and-check");
+diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+index 22746f1f0a55ae671e2b0215551574d211bfeec0..3db59d58fa3f10dc613020a6ccb25cf54a74fb27 100644
+--- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
++++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
+@@ -82,6 +82,7 @@
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandJournal.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java",
++          "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentPhonePairing.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java",
+           "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java",
+diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
+index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e49018f67 100644
+--- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
++++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
+@@ -282,6 +282,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
+         (Join-Path $panelRoot 'ExperimentSessionGatewayProtocol.java'),
+         (Join-Path $panelRoot 'ExperimentSessionCommandJournal.java'),
+         (Join-Path $panelRoot 'ExperimentSessionCommandGateway.java'),
++        (Join-Path $panelRoot 'ExperimentSessionWebRtc.java'),
+         (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
+         (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
+         (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),

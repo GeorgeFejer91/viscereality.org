@@ -12,6 +12,24 @@ The APK log records its exact source, signer
 and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
 source identity and verification history.
 
+## WebRTC candidate
+
+Start with the exact fixed27-r2 source tree from the APK log and apply
+[`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
+tree is `8e7dbbce2a9132fe3e0b54617bed8d21f956d0c2`. Commit it in an
+isolated source checkout so the build can bind the clean composition.
+Select `-WebRtc` with the phone-pairing APK profile. The assembly locks
+the production Java bridge and the bundled browser assets, then compares
+every selected WebRTC asset in the signed APK to its input bytes.
+
+The browser uses the pinned VDO.Ninja 1.5.5 data-only transport. The
+WebView sees an expiring room and encrypted RQG1 requests only. Native
+membership, gateway and runtime epochs, nonces and command receipts remain
+authoritative. This path currently reconnects saved enrollment. Managed
+automatic initial enrollment and the physical network matrix still gate
+lab release. Keep the installed Meta baseline available for the study and
+update validation.
+
 ## Shared breathing setup
 
 The selected Atmungsraum build uses one looping PCM AudioTrack. Its actual

@@ -160,7 +160,7 @@ export async function readQuest(device, lifetime, setup) {
       const endpoint = await setupQuestWifi(service, discovery.owner, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
       return { owner: discovery.owner, endpoints: [endpoint] };
     }
-    if (!metadata.gateways.length && !setup?.hotspot) {
+    if (!discovery.endpoints.length && !discovery.rtc && !setup?.hotspot) {
       throw Error('Verbinde die Quest mit demselben WLAN oder schalte den Smartphone-Hotspot ein.');
     }
     return discovery;
@@ -176,7 +176,13 @@ function discoveryMetadata(metadata, serial, expected) {
   if (expected?.serial && owner.serial !== expected.serial || expected?.device && owner.device !== expected.device) {
     throw Error('Die gewählte Quest passt nicht zur gespeicherten Verbindung.');
   }
-  return { owner, endpoints: metadata.gateways.map(questEndpoint), ...(metadata.v === 2 ? { pairing: 1 } : {}) };
+  const { rtc } = metadata;
+  if (rtc !== undefined && (owner.identity_kind !== 'app-installation' || !rtc || Object.keys(rtc).length !== 2
+    || typeof rtc.r !== 'string' || !hex32.test(rtc.r) || typeof rtc.p !== 'string' || !hex64.test(rtc.p))) {
+    throw Error('Die Quest hat ungültige WebRTC-Suchdaten gemeldet.');
+  }
+  return { owner, endpoints: metadata.gateways.map(questEndpoint),
+    ...(metadata.v === 2 ? { pairing: 1 } : {}), ...(rtc ? { rtc } : {}) };
 }
 
 export async function rediscoverQuest(settings, signal, fetcher = fetch) {

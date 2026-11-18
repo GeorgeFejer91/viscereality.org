@@ -1,4 +1,4 @@
-import { questEndpoint } from './quest-gateway.js?v=15';
+import { questEndpoint } from './quest-gateway.js?v=16';
 
 const encode = new TextEncoder();
 const prefix = 'RQ-PHONE-PAIR-2';
