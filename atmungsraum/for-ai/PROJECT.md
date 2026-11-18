@@ -88,6 +88,15 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
 - [ ] Update the standard Android companion in place with the retained
   signer and current scanner. Replay the real PWA startup with the
   matching authorized enrollment, and match native status and a receipt.
+- [x] Recover the five exact provider assets and the ARM64 OpenXR loader
+  from signed fixed27-r2 into private release staging. Match every file
+  against the signed APK and its recorded input bytes. Confirm the Meta
+  SDK loader hash and Developer signer on fixed27-r2.
+  [Build input evidence](VERIFICATION.md#canonical-developer-build-inputs--2026-11-18).
+- [ ] Obtain the retained Experimenter build profile with its app spec,
+  feature lock, provider manifest and particle source. Verify it against
+  fixed27-r2 alongside the Developer keystore and the licensed Meta
+  SDK 207 archive before building the canonical release.
 - [ ] Verify automatic startup in both launch orders on the qualified
   unified Developer APK and a Pixel commissioned for that installation.
   Use the retained Developer signer and approved Meta Platform SDK 207

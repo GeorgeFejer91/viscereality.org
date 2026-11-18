@@ -57,6 +57,31 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Canonical Developer build inputs — 2026-11-18
+
+The retained fixed27-r2 APK matched the installed Meta code 27 by
+SHA-256. Its v3 certificate matched the canonical assembler's Developer
+signer. The packaged Meta Platform SDK ARM64 loader matched the supplied
+SDK 207 loader hash. The official SDK archive and header inventory
+still need verification after the build owner accepts Meta's license.
+[Meta Platform SDK 207.0](https://developers.meta.com/vr/downloads/package/oculus-platform-sdk/207.0/).
+
+The signed feature lock identified five linked provider assets.
+Each APK entry matched its recorded source digest and size. Those
+five assets and the exact ARM64 OpenXR loader were staged outside Git
+with a private receipt. The packager verifies OpenXR loader byte
+identity from input to APK. Four provider assets are also available
+with identical bytes in the bundled build inputs. The experiment
+session profile and OpenXR loader differ from the bundled versions.
+
+None of the inspected local app specs or provider manifests matched the
+signed baseline hashes. The recovered files cover the provider asset
+bytes and OpenXR loader. Continue with the retained Experimenter app
+spec, base feature lock, provider manifest and private particle source.
+Finish the keystore and official SDK intake before release assembly.
+All eight assembly checks passed on the pinned native tree, and the
+updater's 11-source selection and tamper checks passed.
+
 ### Listener-aware Bluetooth discovery — 2026-11-18
 
 Bench 35 reported `listener-unavailable` while the Meta baseline process
