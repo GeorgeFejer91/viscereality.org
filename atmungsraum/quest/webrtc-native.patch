@@ -999,7 +999,7 @@ index daffbbfa..64e0c444 100644
  
      static void experimentSessionBleOwnerChanged(long identity, long epoch, boolean live) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index dd75697d..2f4f582e 100644
+index dd75697d..36f0157c 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -55,8 +55,26 @@ public final class ExperimentSessionCommandGateway {
@@ -1094,7 +1094,17 @@ index dd75697d..2f4f582e 100644
          discovery.close();
          retireControllers();
          if(http!=null)http.close();http=null;
-@@ -574,6 +622,13 @@ public final class ExperimentSessionCommandGateway {
+@@ -570,10 +618,22 @@ public final class ExperimentSessionCommandGateway {
+     JSONObject discoveryMetadata()throws Exception {
+         requireMain();if(!remoteAvailable())throw new SecurityException("remote-owner-required");
+         org.json.JSONArray gateways=new org.json.JSONArray();
+-        for(String address:localAddresses().split("\\n"))if(address.matches("http://[0-9.]+:8766/v1/gateway")&&gateways.length()<4)gateways.put(address);
++        if (http != null) {
++            for (String address : localAddresses().split("\\n")) {
++                if (address.matches("http://[0-9.]+:8766/v1/gateway") && gateways.length() < 4)
++                    gateways.put(address);
++            }
++        }
          JSONObject metadata=new JSONObject().put("v",phonePairingEnabled?2:1).put("device",deviceId()).put("serial",headsetIdentity.serial())
              .put("epoch",Long.toString(gatewayEpoch)).put("native_epoch",Long.toString(epoch)).put("mode","remote").put("gateways",gateways);
          if(phonePairingEnabled)metadata.put("identity_kind","app-installation").put("pairing",1);
@@ -1108,7 +1118,7 @@ index dd75697d..2f4f582e 100644
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -612,6 +667,25 @@ public final class ExperimentSessionCommandGateway {
+@@ -612,6 +672,25 @@ public final class ExperimentSessionCommandGateway {
          return exchangeRoute(envelope,true);
      }
      public JSONObject exchange(JSONObject envelope)throws Exception { return exchangeRoute(envelope,false); }
@@ -1134,7 +1144,7 @@ index dd75697d..2f4f582e 100644
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
-@@ -828,9 +902,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -828,9 +907,9 @@ public final class ExperimentSessionCommandGateway {
              .put("mode",packed).put("generation",status.getLong("g")).put("device",deviceId()).put("serial",headsetIdentity.serial());
          return live?ticket.put("session",nativeStatus.getString("session_key")):ticket.put("revision",status.getLong("r"));
      }
@@ -1762,7 +1772,7 @@ index 6790eb56..76558718 100644
    android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
    BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index ebf1df43..9a7cd804 100644
+index ebf1df43..85acb547 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -28,7 +28,13 @@ public class PackageManager {public static final int GET_META_DATA=128;public In
@@ -1794,24 +1804,28 @@ index ebf1df43..9a7cd804 100644
  final class ExperimentSessionDirectNetwork {ExperimentSessionDirectNetwork(android.content.Context c){}static boolean featurePackaged(android.content.Context c){return false;}JSONObject snapshot(){return new JSONObject();}JSONObject localJoinDetails(){return new JSONObject();}void start(String m){}void close(){}}
  final class ExperimentSessionRelayClient {interface Endpoint{JSONObject identity()throws Exception;JSONObject exchange(JSONObject r)throws Exception;}static class Config{Config(String a,String b,String c,String d,long e){}}ExperimentSessionRelayClient(Config c,Endpoint e){}JSONObject snapshot(){return new JSONObject();}void start(){}void close(){}}
  final class ControlPanelActivity {static long experimentSessionCompletionThresholdMs(){return 30000L;}static String applyExperimentSessionCommand(String s){return "{}";}static String nativeReadBreathCompositionStatus(){return "{}";}static String conditionAudioReadiness(String s){return "unavailable";}static String conditionBreathGuidanceReadiness(String s){return "no-pattern";}}
-@@ -134,7 +145,16 @@ final class RemoteJoinHarness {
+@@ -134,7 +145,20 @@ final class RemoteJoinHarness {
     public JSONObject polarSetupReadback(){return null;}public JSONObject polarStopReadback(){return null;}
     public void dispatch(ExperimentSessionBleServer.CommandRequest r){dispatches++;ExperimentSessionBleServer.INSTANCE.updateReceipt(r.id,"confirmed","synthetic owner callback");}
    });
 +  ExperimentSessionGatewayHttpServer.occupied=true;
    g.nativeOwnerChanged(1,7,true);JSONObject identity=g.identity();
 +  check(g.productPanelReadback().getString("state").equals("listener-unavailable"),"occupied port must report unavailable");
++  check(g.discoveryMetadata().getJSONArray("gateways").length()==0,"occupied port must not advertise LAN endpoints");
 +  check(android.os.Handler.delayed.size()==1,"occupied port must schedule one listener retry");
 +  g.controlModeChanged();
 +  check(android.os.Handler.delayed.size()==1,"same owner changes must keep only one retry");
 +  ExperimentSessionGatewayHttpServer.occupied=false;
 +  android.os.Handler.delayed.remove().run();
 +  check(g.productPanelReadback().getString("state").equals("trusted-lan-listening"),"same owner must listen after the port is released");
++  String localAddresses=g.localAddresses();
++  int expectedGateways=localAddresses.startsWith("http://")?localAddresses.split("\n").length:0;
++  check(g.discoveryMetadata().getJSONArray("gateways").length()==expectedGateways,"bound listener must advertise the available LAN endpoints");
 +  check(g.identity().getString("epoch").equals(identity.getString("epoch"))&&android.os.Handler.delayed.isEmpty(),"successful retry must retain owner epoch and stop retrying");
    check(ExperimentSessionDiscoveryServer.latest!=null&&ExperimentSessionDiscoveryServer.latest.remote,"gateway did not start discovery with actual Remote owner");
    deny(()->g.exchange(new JSONObject().put("v",1).put("action","connect").put("device",identity.getString("device")).put("epoch",identity.getString("epoch"))));
    JSONObject localConnect=new JSONObject().put("v",1).put("action","connect").put("device",identity.getString("device")).put("epoch",identity.getString("epoch"));
-@@ -231,6 +251,16 @@ final class RemoteJoinHarness {
+@@ -231,6 +255,16 @@ final class RemoteJoinHarness {
    JSONObject originalReceipt=new JSONObject(g.exchange(auth(recovered,"receipt",new JSONObject().put("id",original.getString("id")))).getString("payload"));
    check(originalReceipt.getString("state").equals("confirmed"),"revocation lost original receipt");g.exchange(auth(recovered,"command",original));check(dispatches==originalDispatches,"recovery redispatched original");
    JSONObject retiring=join(g,recoveredIdentity);g.nativeOwnerChanged(3,9,false);check(!ExperimentSessionDiscoveryServer.latest.remote,"native retirement retained discovery");deny(()->g.exchange(auth(retiring,"status",new JSONObject())));deny(()->join(g,recoveredIdentity));check(!g.identity().getBoolean("remote_available")&&dispatches==originalDispatches,"retired owner available or invalid joins dispatched");
@@ -1828,6 +1842,36 @@ index ebf1df43..9a7cd804 100644
    System.out.println("PASS "+checks+" production Remote join/authentication, exact shape, shared receipts, HMAC/replay, expiry/capacity, owner/mode ABA/queued revocation, serial/provisioning and legacy enrollment; inert Android/network");
   }
  }
+diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
+index 6a086d12..04e5adfe 100644
+--- a/tools/checks/test_experiment_trusted_phones.py
++++ b/tools/checks/test_experiment_trusted_phones.py
+@@ -77,12 +77,25 @@ final class RemoteJoinHarness {
+    public JSONObject polarSetupReadback(){return new JSONObject().put("ar",true);}public JSONObject polarStopReadback(){return null;}
+    public void dispatch(ExperimentSessionBleServer.CommandRequest r){dispatches++;ExperimentSessionBleServer.INSTANCE.updateReceipt(r.id,"confirmed","inert native");}
+   });
++  ExperimentSessionGatewayHttpServer.occupied=true;
+   g.nativeOwnerChanged(1,7,true);JSONObject identity=g.identity();String epoch=identity.getString("epoch");
+   android.app.Activity closedPanelHost=new android.app.Activity();g.discoveryLauncherResumed(closedPanelHost);g.discoveryPermissionResult(ExperimentSessionDiscoveryServer.PERMISSION_REQUEST,closedPanelHost);
+   check(!ExperimentSessionDiscoveryServer.latest.wifiSetup&&ExperimentSessionDiscoveryServer.latest.promptBluetoothPower
+     &&ExperimentSessionDiscoveryServer.latest.launcherResumes==1&&ExperimentSessionDiscoveryServer.latest.permissionRequests==1,"selected gateway routes closed-panel launcher/permission callbacks independently of Wi-Fi setup");
+   check(identity.getInt("v")==2&&identity.getString("identity_kind").equals("app-installation")&&identity.getInt("pairing")==1&&identity.getString("serial").isEmpty(),"honest selected HTTP identity");
+   JSONObject discovery=g.discoveryMetadata();check(discovery.length()==9&&discovery.getInt("v")==2&&discovery.getString("serial").isEmpty()&&discovery.getInt("pairing")==1,"exact v2 discovery without hardware provisioning");
++  final String room="0123456789abcdef0123456789abcdef";
++  final String roomPassword="abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
++  g.bindWebRtcRelay(new ExperimentSessionCommandGateway.WebRtcRelay(){
++   public JSONObject offer()throws Exception{return new JSONObject().put("r",room).put("p",roomPassword);}
++   public boolean accepts(String candidate){return room.equals(candidate);}
++   public void close(){}
++  });
++  JSONObject relayOnly=g.discoveryMetadata();
++  check(relayOnly.getJSONArray("gateways").length()==0&&relayOnly.getJSONObject("rtc").getString("r").equals(room),"occupied LAN port retains the trusted WebRTC offer");
++  ExperimentSessionGatewayHttpServer.occupied=false;
++  android.os.Handler.delayed.remove().run();
++  check(g.productPanelReadback().getString("state").equals("trusted-lan-listening"),"paired gateway can recover its LAN listener");
+   JSONObject a=new JSONObject().put("controller",legacyController).put("key",legacyKey).put("epoch",epoch);
+   check(g.trustedPhones().getJSONArray("members").length()==1&&!context.prefs.contains("key")&&!context.prefs.contains("controller"),"atomic selected legacy migration");
+   JSONObject b=g.enrollFromHeadset(true).put("epoch",epoch);
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
 index 833f50b0..da0a4d75 100644
 --- a/tools/checks/test_polar_platform_projection.py

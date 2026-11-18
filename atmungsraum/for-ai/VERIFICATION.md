@@ -57,6 +57,36 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Listener-aware Bluetooth discovery — 2026-11-18
+
+Bench 35 reported `listener-unavailable` while the Meta baseline process
+was retained. The production gateway host fixture reproduced the same
+bind state and failed because Bluetooth metadata still listed LAN
+addresses. Address publication now follows the gateway's successful
+listener bind. The occupied-port regressions verify that the address list
+is empty while the trusted WebRTC offer is present. The existing retry
+restores the addresses under the same gateway epoch after it binds.
+
+The complete gateway host suite, 59 focused phone and WebRTC checks
+including the compiled Java peer, and all eight assembly checks passed.
+The public overlay applied to fixed27 in an isolated Git index reproduced
+native tree `e7eedd854fd26ab91cb02a0ef56f4eaa25f914e2`. The
+[signed bench 36 APK](../quest/apks/README.md#webrtc-bench-with-listener-aware-bluetooth-discovery)
+passed v3 signature, ARM64, 16 KiB alignment and session closure. An
+exact-serial ADB update retained the bench UID and grants and the installed
+APK matched the signed SHA-256.
+
+The same physical startup check advanced native frames from 162 to 314
+with the Meta baseline retained. Bench discovery reported advertising,
+with the listener unavailable. The bench's run-owned process exited and
+the original Meta code 27 process returned to Prepare with its original
+APK digest. The Pixel resumed `20261118-recordings-offline-landscape`
+with its saved pairing. The control trial that would release the running
+baseline was rejected by automated command approval before dispatch.
+The outstanding bench gates are physical Bluetooth route readback,
+same-owner rebind, and authenticated standalone phone pairing with native
+receipts. The guarded Meta and worn Polar gates remain separate.
+
 ### Signed WebRTC Bench 35 startup — 2026-11-18
 
 The preflight matched the installed APK hashes for the signed bench 35 and
