@@ -548,9 +548,28 @@ original PWA created a second carrier. Release 20261118-commissioning-snapshot-r
 refreshes discovery after the local denial and retries once on the same
 carrier if the full owner and offer match. See
 [verification](VERIFICATION.md#commissioning-snapshot-expiry--2026-11-18).
-After publication, rerun the physical expiry fixture and the default-ICE
-first-join and saved-rejoin timing matrix. The H10 custody and official
-Meta transition gates remain open.
+The exact deployed Pixel PWA passed the expiry fixture on Quest bench 32
+with commissioned companion 4. It reopened authorization after 3.30 seconds
+using the original WebRTC carrier. All 60 default-ICE trials reached
+actionable controls. Four natural 403 cases recovered on their existing
+channels. First-join p95 fell from 16.56 to 6.61 seconds across the two lab
+batches. The H10 custody and official Meta transition gates remain open.
+
+#### Physical participant keyboard layout — 2026-11-18
+
+RustDesk opened the participant step and submitted its empty form. The
+browser kept the step open and focused the required surname input. On the
+411 px Pixel viewport, the visible height fell to 428.6 px when the keyboard
+opened. The measured footer extended to y=459 px and the document grew to
+467 px. The app entered geometry reflow, leaving its action buttons partly
+behind the keyboard with every field label still marked as fit. After
+dismissing the keyboard, a RustDesk Recenter tap returned its original
+native receipt.
+
+Next, reproduce the measured compact viewport in the GUI gate and repair
+the action geometry without weakening the text fit, native form validation,
+touch target or zero-scroll rules. Retest the same RustDesk sequence on
+the latest deployed PWA.
 
 #### Temporary status loss after Save — 2026-11-18
 

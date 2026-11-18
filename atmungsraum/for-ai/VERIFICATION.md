@@ -144,6 +144,19 @@ match. The three host regressions cover searching then ready, rejecting a
 changed rendezvous, and deadline cancellation. Enrollment still requires
 native proof and authenticated status.
 
+[Exact Pages run 44265405035](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44265405035)
+and the 350-state GUI gate passed. The exact deployed PWA was read back on
+the installed Pixel. With the same expired-snapshot fixture, reauthorization
+started 3.30 seconds after the first 403 on one carrier. The same owner and
+offer were confirmed, followed by native proof and actionable controls.
+The recovery removed its fixture and restored the phone document.
+
+All 60 subsequent hotel Wi-Fi cases passed. First joins had median 1.79
+seconds, p95 6.61 seconds, and maximum 6.86 seconds. Saved rejoins had
+median 1.53 seconds, p95 2.91 seconds, and maximum 4.59 seconds. Four first
+joins received 403 and recovered on the first carrier. All 60 selected
+TURN. The native app and the prior headset power policy were restored.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
