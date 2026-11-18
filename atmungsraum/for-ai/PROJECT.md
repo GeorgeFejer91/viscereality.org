@@ -353,10 +353,20 @@ tree `877d3a7c045a867c1ceef3d6d3ab5bc7db2e963b` from fixed27-r2.
 The [signed bench code 29](../quest/apks/README.md#webrtc-bench-with-controller-state-csv-v4)
 is installed with exact byte readback. The Meta Developer code 27 APK hash
 was verified after replacement. The installed Pixel still loads
-`20261118-webrtc-signal-budget` with saved trust. The old permission
-panel persists after replacement, and the Quest is asleep. Once
-foreground is verified, verify the fallback's physical input and compare
-its raw breath source and unbiased phase with the CSV v4 and custody hashes.
+`20261118-webrtc-signal-budget` with saved trust.
+
+The stale permission panel survived replacement. Serial-scoped Android task
+inspection identified a dedicated root containing only the bench's request,
+and closing that root cleared it. The next ordinary VR launch started the
+bench and exposed two ungranted Location permissions in its selected startup
+sequence. The lab grant and cleanup were limited to the bench and its
+permission task. All six startup grants now read back, and neither permission
+panel remains. Horizon kept the Developer scene in front when the bench
+process started. The bounded hold expired and the prior stay-on setting
+was retained. The next action is to open WebRTC Bench from Unknown Sources,
+then resume physical first pairing and receipt checks. In the recording
+test, compare Controller State's raw breath source and unbiased phase with
+the CSV v4 and custody hashes.
 
 ### PWA update copy simplification — 2026-11-17
 
