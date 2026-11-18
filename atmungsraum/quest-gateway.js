@@ -161,7 +161,7 @@ export async function readQuest(device, lifetime, setup) {
       return { owner: discovery.owner, endpoints: [endpoint] };
     }
     if (!discovery.endpoints.length && !discovery.rtc && !setup?.hotspot) {
-      throw Error('Verbinde die Quest mit demselben WLAN oder schalte den Smartphone-Hotspot ein.');
+      throw Error('Prüfe WLAN und Internetzugang der Quest.');
     }
     return discovery;
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
@@ -185,6 +185,11 @@ function discoveryMetadata(metadata, serial, expected) {
     ...(metadata.v === 2 ? { pairing: 1 } : {}), ...(rtc ? { rtc } : {}) };
 }
 
+export async function companionAccessDenied(permissions = globalThis.navigator?.permissions) {
+  try { return (await permissions?.query({ name: 'loopback-network' }))?.state === 'denied'; }
+  catch { return false; }
+}
+
 export async function rediscoverQuest(settings, signal, fetcher = fetch) {
   if (!hex32.test(settings.device ?? '') || !(typeof settings.serial === 'string' && serialPattern.test(settings.serial)
     || settings.identity_kind === 'app-installation' && settings.serial === '')) return null;
@@ -196,7 +201,7 @@ export async function rediscoverQuest(settings, signal, fetcher = fetch) {
     });
   } catch {
     signal.throwIfAborted();
-    return null;
+    return await companionAccessDenied() ? { state: 'loopback-denied' } : null;
   }
   const result = await readJson(response);
   if (result.v !== 1) throw Error('Ungültige Antwort der Bluetooth-Suche.');

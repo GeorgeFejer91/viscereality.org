@@ -6,6 +6,17 @@ The Codex validation goal uses this checklist. Repeat affected checks on the
 latest applicable release, and fix and retest any confirmed UI failure against
 the current GUI rules and original input driver.
 
+Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
+navigate the Quest autonomously where the platform provides a supported
+route. Use RustDesk MCP to drive the Pixel UI and confirm each result from
+the next frame. Check and restore the existing authorized remote controls
+when capture or input drops. Limit wearer assistance to physical actions,
+protected headset prompts, real Touch/tracking, and Polar contact.
+Autonomously build, install and verify each in-scope improvement, exercise
+the relevant stress and recovery cases, and repair and rerun against the
+latest applicable versions until the acceptance criteria pass.
+Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-validation).
+
 - [x] Confirm the lab Quest APK matches Meta fixed27-r2 and Boot Helper 3 is
   installed. Match the live smartphone-rules PWA and policy bytes to Git.
 - [x] Authenticate RustDeskMCP to the lab Pixel from the operator-owned
@@ -28,6 +39,10 @@ the current GUI rules and original input driver.
 - [ ] Coordinate the held successor after the actual lab baseline reports
   recording. Verify preparation check, PWA-driven save/update, trusted
   relaunch, and a second clean 900-second run with equivalent custody.
+- [ ] Qualify one canonical Quest Developer APK with automatic WebRTC
+  pairing, Polar recording and the Meta updater together. Record a single
+  deliverable version, source tree, signing certificate and APK digest.
+  Follow the approved Meta release sequence and verify installed bytes.
 
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
@@ -189,14 +204,46 @@ signed build and coexists with the original companion. Its private fixture
 contains a synthetic derived bootstrap key for the already staged Quest
 bench membership.
 
-Next physical gate: with the Quest awake in WebRTC Bench, open the separate
-phone bench companion, grant Android Nearby devices, and reopen the
-standalone PWA. Check a temporary empty pairing profile against the real
-BLE result, authenticated status and selected WebRTC route. Require the
+The bench companion now runs on the Pixel with Android Nearby devices
+granted. RustDesk MCP capture was active while its Android input binding
+was off. Re-enabling that binding through Accessibility restored verified
+taps. Chrome 157 had granted Local network access but automatically
+blocked Apps on device for the site. An exact-origin permission change
+through RustDesk restored loopback access. The installed PWA observed
+the real Android companion receive GET and POST, return 200 for the
+commissioned identity and reject an invalid proof request with 403.
+
+The lab Quest woke under a bounded QFM hold after a serial-scoped ADB
+wake lasted briefly. ADB launched the signed bench. Android showed its
+Nearby devices prompt in the immersive compositor and the bench waited
+for the grant. ADB could bind the prompt to the bench owner and capture
+the compositor, but the Allow control was outside the captured view.
+After the grant, check a temporary empty pairing profile against real
+BLE, authenticated native status and the selected ICE route. Require the
 expected membership, zero chooser and code prompts, and restoration of the
-ordinary PWA profile. The latest readiness readback had the Quest asleep
-and the phone bench companion stopped. Production commissioning on the
-managed profile and the attended recording and update gates remain open.
+ordinary PWA profile. The managed production phone and the attended
+recording and update gates remain open.
+
+Canonical Developer assembly now resolves the existing non-debuggable
+package, controller-only policy, WebRTC bridge and pinned assets, Meta SDK
+updates and the external helper handoff together. Eight focused assembly
+tests pass, including stale-version and conflicting boot-options rejection.
+The existing Developer signing certificate matches the installed code 27
+and helper. Building the canonical artifact requires access to the retained
+private profile, SDK inputs and signing environment. See [the release
+recipe](../quest/README.md#canonical-quest-developer-apk).
+
+The combined 320 × 568 and 200% text stress case exposed overflow in
+the APK identity, release policy, Live ECG and pending receipt dialogs.
+Individual package and build views preserve both exact values. The
+dialog uses the safe available width, and the receipt selector stays
+ahead of its content. Focused browser measurements confirm the body,
+footer and content bounds with the same enlarged text settings.
+The smartphone GUI gate passes 349 states and the extended layout run
+passes 166 rendered states. All 337 Node tests pass with the native
+JVM fixtures enabled and zero skips. Direct ICE and forced TURN each
+pass the current empty-profile browser test with no chooser, code or
+LAN addresses.
 
 ### PWA update copy simplification — 2026-11-17
 

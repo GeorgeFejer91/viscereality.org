@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { rediscoverQuest } from '../quest-gateway.js';
+import { companionAccessDenied, rediscoverQuest } from '../quest-gateway.js';
 
 const device = 'a'.repeat(32);
 const serial = 'QUEST-TEST';
@@ -8,6 +8,18 @@ const signal = new AbortController().signal;
 const settings = { device, serial };
 const identity = { v: 1, device, serial, epoch: '1', native_epoch: '2', mode: 'remote',
   gateways: ['192.168.10.52'] };
+
+test('only a denied loopback permission identifies a blocked companion', async () => {
+  for (const state of ['granted', 'prompt', 'denied']) {
+    assert.equal(await companionAccessDenied({
+      async query(descriptor) {
+        assert.deepEqual(descriptor, { name: 'loopback-network' });
+        return { state };
+      },
+    }), state === 'denied');
+  }
+  assert.equal(await companionAccessDenied({ query() { throw new TypeError('Unsupported permission'); } }), false);
+});
 
 test('native discovery reports a disabled radio and recovers the remembered Quest on retry', async () => {
   const states = [

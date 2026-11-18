@@ -78,7 +78,9 @@ def main():
                     open_apk_details(page, 'identity')
                     summary = page.locator('#apk-detail-view')
                     expect(page.locator('#apk-full-identity')).to_contain_text('e' * 64)
-                    expect(page.locator('#apk-full-identity')).to_contain_text(metadata['package_name'])
+                    summary.select_option('package')
+                    expect(page.locator('#apk-package')).to_have_text(metadata['package_name'])
+                    summary.select_option('identity')
                     summary.focus()
                     # Let the disclosure's real Pretext/reflow settle before
                     # establishing the baseline for later native/policy polls.

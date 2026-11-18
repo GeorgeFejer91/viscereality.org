@@ -8,7 +8,7 @@ from playwright.sync_api import expect, sync_playwright
 
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
-from layout_render_fixtures import capture_layout, go, initial, module
+from layout_render_fixtures import capture_companion_permission, capture_layout, go, initial, module
 
 AUDIT = (TOOLS.parent / "for-ai" / "scripts" / "gui-layout.js").read_text(encoding="utf-8")
 CASES = (
@@ -227,6 +227,7 @@ def verify():
         review.text_spacing = False
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
+        capture_companion_permission(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))
         for name, sample in review.samples.items():

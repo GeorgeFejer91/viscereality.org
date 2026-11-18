@@ -40,6 +40,13 @@ Quest status and receipts supply native behavior evidence.
    driver, lock local RustDeskMCP viewer input for that session while driving,
    and release the lock before returning control.
 
+If frames update and taps leave the UI unchanged, inspect Android
+**Settings → Accessibility → RustDesk Input** for the active binding. On
+the docked Pixel the service was off while screen capture stayed active.
+Restoring the authorized binding through the Android screen restored
+RustDesk MCP taps. Require a new frame showing the input's effect before
+accepting the action.
+
 ## Use the lab credential file
 
 The handset owner picks the permanent password. Store the path to their existing

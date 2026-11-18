@@ -11,6 +11,7 @@ param(
     [string]$RetainedCargoTargetDirectory,
     [ValidateRange(1, 2100000000)][int]$VersionCode = 1,
     [string]$VersionName = '0.1.0',
+    [switch]$CanonicalRelease,
     [switch]$Developer,
     [switch]$PhonePairing,
     [switch]$WebRtc,
@@ -31,6 +32,22 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+if ($CanonicalRelease) {
+    if ($BootAutostart -or $MainStudyAudio -or ($BundledAssets -and !$ResolveOnly)) {
+        throw 'CanonicalRelease requires the existing private assets, shared breathing loop and external boot helper.'
+    }
+    $releasePolicy = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../quest-release.json') |
+        ConvertFrom-Json -AsHashtable
+    $developerPolicy = $releasePolicy.packages['org.viscereality.atmungsraum.developer']
+    if (!$PSBoundParameters.ContainsKey('VersionCode') -or !$PSBoundParameters.ContainsKey('VersionName') -or
+        $VersionCode -le $developerPolicy.latest_version_code) {
+        throw 'CanonicalRelease requires an explicit version name and a code greater than the advertised Developer release.'
+    }
+    $Developer = $true
+    $WebRtc = $true
+    $MetaPlatformUpdate = $true
+    $MetaUpdateHelper = $true
+}
 $metaInputs = @($MetaPlatformAppId, $MetaPlatformSdkRoot, $MetaPlatformHeadersSha256,
     $MetaPlatformLoaderSha256, $MetaPlatformArchiveSha256, $MetaRequiredVersionManifestUrl)
 if ($MetaPlatformUpdate) {
@@ -475,6 +492,20 @@ try {
 $apks = @(Get-ChildItem -LiteralPath $apkOutput -Recurse -File -Filter 'rusty-quest-native-renderer.apk')
 if ($apks.Count -ne 1) { throw 'Expected one signed APK from the selected output.' }
 $apk = $apks[0]
+if ($CanonicalRelease) {
+    $expectedSigner = '372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e'
+    $apksigner = Get-ChildItem -LiteralPath (Join-Path $env:ANDROID_HOME 'build-tools') -Directory |
+        Sort-Object Name -Descending |
+        ForEach-Object { Join-Path $_.FullName 'apksigner.bat' } |
+        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+    if (!$apksigner) { throw 'CanonicalRelease requires Android apksigner for final signature verification.' }
+    $signing = @(& $apksigner verify --verbose --print-certs $apk.FullName)
+    if ($LASTEXITCODE -ne 0 -or $signing -cnotcontains 'Verified using v3 scheme (APK Signature Scheme v3): true' -or
+        @($signing -cmatch '^Signer #\d+ certificate SHA-256 digest: ').Count -ne 1 -or
+        $signing -cnotcontains "Signer #1 certificate SHA-256 digest: $expectedSigner") {
+        throw 'The signed canonical APK must retain the existing single Developer v3 signing certificate.'
+    }
+}
 $archive = [IO.Compression.ZipFile]::OpenRead($apk.FullName)
 try {
     $loaderEntry = $archive.GetEntry('lib/arm64-v8a/libopenxr_loader.so')

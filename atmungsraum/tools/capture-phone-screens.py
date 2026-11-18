@@ -22,7 +22,7 @@ DEFAULT_APK = apk_fixture()
 GATEWAY = """
 // Keep the actual pure access contract; replace transport, never its UI gates.
 import { canControlQuest } from './quest-gateway.js?review-contract=1';
-export { canControlQuest, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
+export { canControlQuest, companionAccessDenied, controllerAccessState, readJson } from './quest-gateway.js?review-contract=1';
 // Every cache-versioned import shares one fixture, just as it reaches one Quest.
 export const owner = window.reviewOwner ??= {
   serial: 'DEMO-QUEST', device: 'd'.repeat(32), epoch: '7', native_epoch: '8',
@@ -1991,8 +1991,9 @@ def main():
         chromium = browser.version
         review = Review(browser, output)
         if args.scope in ("all", "layout"):
-            from layout_render_fixtures import capture_layout
+            from layout_render_fixtures import capture_companion_permission, capture_layout
             capture_layout(review)
+            capture_companion_permission(review)
         if args.scope == "all":
             capture(review)
             paired = f"localStorage.setItem('atmungsraum-quest-pair',JSON.stringify({PAIRED}));"

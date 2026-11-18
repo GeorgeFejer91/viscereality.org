@@ -9,9 +9,12 @@ the Quest using the enrollment already saved in the browser profile.
 
 Install the signed APK and open **Atmungsraum Bluetooth** once. Grant Nearby
 devices. The foreground service starts again at boot and only scans on demand.
-At the first loopback request Chrome may ask to let viscereality.org access
-services on the phone. Allow this for the companion. Close any floating
-overlays if Chrome blocks the permission tap.
+During setup, allow the site to reach the companion. In Chrome 157 on
+Android, open viscereality.org in a regular tab and choose **⋮ → Site
+controls → Permissions → Apps on device**. This site permission applies
+to the installed PWA. Chrome lists **Local network** separately for
+connections to other devices. Close interfering overlays if Chrome
+blocks the permission tap.
 
 The service listens only on IPv4 loopback port 8767. Its GET path contains the
 saved Quest device identity, and requests require the exact Atmungsraum web
@@ -60,3 +63,5 @@ Opening the PWA after commissioning uses this route when saved pairing
 is absent. It saves the membership only after a fresh signed native
 status. Normal first launch and reconnect need no pairing code, chooser,
 headset approval tap or hotspot.
+
+[Chrome's loopback permission guide](https://developer.chrome.com/docs/modern-web-guidance/guides/security/local-network-access)

@@ -1,4 +1,4 @@
-import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=17';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=18';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=6';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);
@@ -278,7 +278,9 @@ export class BreathingSetup {
     } : this.pending || recovering ? {
       title: this.waitExpired ? 'Bestätigung noch offen' : this.unknown ? 'Ergebnis der Anfrage unklar' : recovering ? 'Atemschleife wird wiederhergestellt' : 'Quest bestätigt die Anfrage',
       action: actions.checkReceipt ? 'Bestätigung erneut abfragen' : '',
-      detail: `${pendingInputLabel || 'Atemschleife wiederherstellen'}: ${recovering ? 'Die Quest startet den Takt neu.' : 'Warte auf Bestätigung.'} ${this.waitExpired ? 'Frage die Bestätigung ab. Bleibt sie offen, starte Atmungsraum im Headset neu und verbinde dieses Smartphone wieder. ' : ''}Die Anfrage wird nicht erneut gesendet.`,
+      detail: `${pendingInputLabel || 'Atemschleife wiederherstellen'} · ${this.waitExpired
+        ? 'Die Anfrage wird nicht erneut gesendet. Bleibt die Antwort offen, starte die Quest-App neu und verbinde das Smartphone erneut.'
+        : recovering ? 'Die Quest startet den Takt neu.' : this.unknown ? 'Keine Wiederholung.' : 'Bestätigung offen.'}`,
     } : recoveryUnavailable ? {
       title: 'Atemschleife benötigt einen App-Neustart', action: '',
       detail: 'Die Quest meldet, dass eine automatische Audio-Wiederherstellung nicht verfügbar ist. Beende und öffne die Atmungsraum-App im Headset erneut; verbinde danach dieses Smartphone. Das startet die App tatsächlich neu. Eine lokale Bestätigung kann diesen Schritt nicht ersetzen.',

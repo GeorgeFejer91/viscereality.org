@@ -66,7 +66,7 @@ export class ApkRelease {
       : installed.version_code < entry.latest_version_code ? 'recommended' : 'compatible';
     const messages = {
       checking: 'APK-Versionsprüfung läuft …',
-      'check-unavailable': 'Versionsprüfung nicht verfügbar. Der aktuelle Freigabestand konnte nicht geladen werden. Versuche es bei bestehender Internetverbindung erneut.',
+      'check-unavailable': 'Versionsprüfung nicht verfügbar. Prüfe die Internetverbindung.',
       required: 'Update der Quest-App erforderlich. Die installierte APK liegt unter dem benötigten Versionscode.',
       recommended: 'Quest-App kompatibel. Ein neuerer APK-Stand wird empfohlen.',
       compatible: 'Quest-App erfüllt die Versionsvorgabe.',
@@ -79,7 +79,6 @@ export class ApkRelease {
       installedLabel: installed ? `Installiert: ${installed.version_name} · Code ${installed.version_code} · Build ${installed.build_id.slice(0, 12)}` : 'Installiert: nicht verlässlich gemeldet.',
       required: entry ? `Mindestens Code ${entry.minimum_version_code}. Referenz: ${entry.version_name} · Code ${entry.latest_version_code}.`
         : this.state === 'checking' ? 'Benötigter APK-Stand wird geprüft.' : 'Benötigter APK-Stand nicht verfügbar.',
-      identity: installed ? `Paket: ${installed.package_name}\nBuild: ${installed.build_id}` : 'Keine bestätigte APK-Kennung verfügbar.',
     };
   }
 }

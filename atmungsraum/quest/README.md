@@ -5,12 +5,28 @@ source and checksum, and release history. Follow the
 [APK commit workflow](../for-ai/WORKFLOW.md#quest-apk-changes-and-releases)
 for every change to a signed Quest APK.
 
-The repaired code25 developer APK has passed1114 signed-package checks and is
-published in the private Meta Developer channel with malware/security passes.
-Its installation and hardware acceptance are pending.
-The APK log records its exact source, signer
-and checksum. The separate 0.1.30 rehearsal entry retains its original artifact,
-source identity and verification history.
+The installed Meta Developer baseline is fixed27-r2. Its source, signer,
+checksum and remaining physical acceptance are recorded in the APK log.
+The historical 0.1.30 rehearsal entry retains its original artifact and
+verification history.
+
+## Canonical Quest Developer APK
+
+Use `assemble-apk.ps1 -CanonicalRelease` for the single final experiment
+APK, `org.viscereality.atmungsraum.developer`. Supply the retained private
+app spec, feature lock and asset provider, the existing Developer keystore
+and OpenXR loader, and the Meta SDK inputs described below. Set a fresh run
+name and the release owner's explicit version code and name after checking
+the current Meta channel and public release policy. The profile selects
+WebRTC, phone enrollment, Meta updates and the installed helper handoff.
+It verifies the actual APK's v3 certificate against the established
+Developer signer.
+
+Use the existing shared 900-second loop and the retained private visuals.
+Before distribution, qualify the exact signed artifact and repeat the
+automatic pairing, Polar, recording custody, and update gates on the lab
+headset and installed Pixel PWA. The WebRTC Bench below supplies development
+evidence. The APK log identifies the signed release by one version and hash.
 
 ## WebRTC candidate
 

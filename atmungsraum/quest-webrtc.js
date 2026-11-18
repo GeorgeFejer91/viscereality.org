@@ -1,7 +1,7 @@
 import { VdoNinjaTransport } from './vendor/quest-webrtc/vdo-ninja-transport.js';
 import { bindQuestRtcChannel } from './quest-webrtc-channel.js';
 import { createQuestRtcTransport } from './quest-webrtc-session.js';
-import { commissioningBroker, recoverCommissionedEnrollment } from './quest-commissioning.js?v=1';
+import { commissioningBroker, recoverCommissionedEnrollment } from './quest-commissioning.js?v=2';
 import './vendor/quest-webrtc/vdoninja-sdk.min.js';
 
 export async function openQuestWebRtc(discovery, enrollment, signal) {
