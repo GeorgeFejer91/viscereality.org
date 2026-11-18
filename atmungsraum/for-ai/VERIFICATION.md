@@ -104,6 +104,18 @@ The compact browser archive link retains its full label and fits on two
 lines. The mounted cases verify all four views, the failed-sync message,
 retry and browser archive return at the new size.
 
+On exact Pages deployment `79d2a49`, the physical Pixel still had 37 px
+of document scroll while seeking its saved Quest. The hidden Drive
+control left a grid item that pushed the browser archive link to a
+second row. The new regression runs the ordinary saved-Quest retry flow
+with an unreachable endpoint and checks all four views at 594 × 272,
+with default and 200% CSS text, with and without a local recording.
+The compact layout removes the empty Drive
+item, places the recording contents beside the discovery message, and
+uses a short discovery message on Recordings. The Connect page retains
+the full Bluetooth status. The fixture checks the footer and performs
+Back without a Quest command.
+
 ### Quest target signaling startup recovery — 2026-11-18
 
 The production target previously ended its startup after a rejected signaling

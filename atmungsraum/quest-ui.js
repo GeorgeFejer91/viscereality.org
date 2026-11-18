@@ -252,6 +252,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let pairWarning = '';
   let userAction = null;
   let joinMessage = '';
+  const lookingForSavedQuest = 'Suche die gespeicherte Quest über Bluetooth …';
   let storage;
   try { storage = sessionStorage; } catch { /* The current connection still works. */ }
   const breathing = new BreathingSetup({ storage });
@@ -386,6 +387,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (!byId('daten').hidden) byId('daten').hidden = true;
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
       participantRequired: context.requiresParticipant, active: nativeActive, questionnaire: showQuestionnaire });
+    text(statusText, step === 'recordings' && context.statusMessage === lookingForSavedQuest
+      ? 'Quest wird gesucht …' : context.statusMessage);
     if (step === 'update' && localView.step !== 'update') {
       // Once an exception needs attention, retain its page until Next. A
       // terminal update poll must not pull focus out of an open diagnostic.
@@ -606,11 +609,11 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         ? 'Warte auf aktuelle Polar-H10-Daten von der Quest.'
       : status.p === 'IDLE' && !actions.play ? 'Warte auf die VR-Szene und den Probelauf.'
       : labels[status.p] ?? 'Quest bereitet den Probelauf vor.';
-    text(statusText, joinMessage || pairWarning || (unknown
+    const statusMessage = joinMessage || pairWarning || (unknown
       ? 'Ergebnis unklar. Prüfe die Quest. Es wird kein Befehl wiederholt.'
       : connecting ? 'Quest wird verbunden …' : probeInstructionPlaying(status) ? 'Die fünf Minuten beginnen nach der Anleitung im Headset.'
         : commandWaiting ? 'Warte auf Bestätigung der Quest …'
-        : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint));
+        : waitingForControl ? hint : !metaUpdate.allowed ? metaUpdate.summary : message || hint);
     if (status && connectingFocus) statusText.focus({ preventScroll: true });
     playback.hidden = !status;
     const duration = rehearsalDuration(status, available);
@@ -845,7 +848,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     retry.disabled = waiting || unknown || Boolean(exportAttempt);
     archivePicker.parentElement.hidden = !archiveScope || !archivePicker.options.length;
     download.hidden = !archiveScope || !download.hasAttribute('href');
-    paintOperatorLayout({ status, active, waitingForControl, participantComplete,
+    paintOperatorLayout({ status, statusMessage, active, waitingForControl, participantComplete,
       updateBlocked: Boolean(recovery && !pendingProbeStart || unknown || nativeRecovering || controllerLease.pending),
       offlineArchives: Boolean(!status && archiveScope && !recovery && !busy && !unknown && !pending && !breathing.busy),
       requiresParticipant, selectionAllowed, batteryReviewed, polarAttempts, updateRequired, inputReady: breath.actions.continue, recovery: Boolean(recovery || breath.recovery
@@ -1456,7 +1459,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           bluetoothCheck = discovery.state === 'searching' ? null : false;
           joinMessage = bluetoothHint = {
             'bluetooth-off': enableBluetooth,
-            'searching': 'Suche die gespeicherte Quest über Bluetooth …',
+            'searching': lookingForSavedQuest,
             'permission-required': 'Erlaube der Bluetooth-Suche den Zugriff auf Geräte in der Nähe.',
             'loopback-denied': allowCompanion,
           }[discovery.state];
