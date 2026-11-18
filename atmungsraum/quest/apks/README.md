@@ -1,5 +1,25 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with target signaling startup retry
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `32`,
+version name `0.2.31-rtc-test`, and 65,609,275 bytes. SHA-256 is
+`15eb7c224edfc989d49e9c47f512c10010f53fe84228b289a53a142626289eb6`.
+Native commit `31ca0b6898156ec0728b8c862f273e8e78684826` binds tree
+`894fb869fa71c787372cdb514c68d380b0fa2488`. The bundled
+`atmungsraum-webrtc/target.js` SHA-256 is
+`e3417be0b2f3d997b869ffdb0380982822e03b14b83716817f99fe6a05300041`.
+The retained bench signer, v3 signature, ARM64 alignment, exact WebRTC
+assets, and signed session closure passed. The lab Quest installed digest
+matched and the UID and six startup grants were retained.
+
+On the focused Quest 2, one injected startup rejection led to one retry
+and one announcement of the same offer in 3.1 seconds. Both test pages
+and the headset power policy were restored. The installed Pixel's paired
+companion still reported Bluetooth searching with both APKs active. The
+[physical retest](../../for-ai/VERIFICATION.md#quest-target-signaling-startup-recovery--2026-11-18)
+records the exact evidence and remaining checks.
+
 ## WebRTC bench with Bluetooth offer admission
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `31`,

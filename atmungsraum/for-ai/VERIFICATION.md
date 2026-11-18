@@ -48,6 +48,29 @@ improvement through confirming the last affected acceptance criterion.
    publication, remaining blockers and the next executable step in
    [the active checklist](PROJECT.md).
 
+### Quest target signaling startup recovery — 2026-11-18
+
+The production target previously ended its startup after a rejected signaling
+attempt. On signed bench 31, the ordinary physical Pixel first acquired
+authenticated status. One injected rejection on the bundled Quest WebView
+then left the valid offer unannounced for the entire 12-second readback and
+the Pixel could not rejoin during that window.
+
+The packaged target now tries again after two seconds while the same native
+offer is valid. The retry is retired on page exit or offer expiry. Four
+lifecycle tests use the production target and transport with a controlled
+SDK response. The initial retry assertion failed before the fix. The full
+342-case Node suite, fresh Java host checks, 350-state smartphone GUI gate
+and signed APK session closure pass.
+
+Exact installed bench 32 reached focused OpenXR frames on Quest 2. The same
+injected rejection led to two total startup attempts, one successful
+signaling connection and one announcement on the same valid offer by 3.1
+seconds. Both pages and the prior power settings were restored. During this
+run the physical Pixel was still searching for the bench over Bluetooth
+before opening WebRTC. The lab checklist tracks rediscovery and the complete
+phone-to-headset retry separately.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.

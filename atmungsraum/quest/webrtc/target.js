@@ -12,6 +12,18 @@ if (/^[a-f0-9]{32}:[a-f0-9]{64}$/.test(configuration)) {
       return JSON.parse(reply);
     });
   });
-  window.addEventListener('pagehide', () => { void carrier.stop().catch(() => {}); }, { once: true });
-  void carrier.start().catch(() => {});
+  let closed = false;
+  let retry;
+  function start() {
+    if (closed || globalThis.QuestRtcNative.configuration() !== configuration) return;
+    void carrier.start().catch(() => {
+      if (!closed) retry = setTimeout(start, 2000);
+    });
+  }
+  window.addEventListener('pagehide', () => {
+    closed = true;
+    clearTimeout(retry);
+    void carrier.stop().catch(() => {});
+  }, { once: true });
+  start();
 }

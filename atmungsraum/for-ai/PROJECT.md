@@ -485,6 +485,19 @@ during separate starts after Quest sleep to explain the timed-out attempts,
 then repeat the full timing matrix. Still run the baseline and fault
 collection cases with the wearer and the official Meta transition.
 
+#### Quest target startup recovery — 2026-11-18
+
+The physical fault reproduced a dropped target startup on bench 31 after
+a rejected signaling attempt. Signed bench 32 now reconnects its signaling
+and announces the same valid room by 3.1 seconds on the focused Quest 2.
+The new APK matches installed bytes and retains the app UID and six
+startup grants. Meta Developer 27 was also read back by its official package
+and digest. The Pixel retest stopped at Bluetooth searching before WebRTC
+while both lab APKs were advertising. Next, verify bench rediscovery with
+both packages present, rerun the full phone recovery with the latest
+installed PWA, and continue the hotel timing matrix.
+See [verification](VERIFICATION.md#quest-target-signaling-startup-recovery--2026-11-18).
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native
