@@ -42,6 +42,14 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   advanced from 223 to 313. Restore the same Meta code 27 process and the
   Pixel standalone PWA with its saved pairing still present.
   [Startup evidence](VERIFICATION.md#signed-webrtc-bench-35-startup--2026-11-18).
+- [x] Correct false LAN endpoints in Bluetooth discovery while the gateway
+  has a contended listener. The host regression reproduced the advertised
+  endpoint before the fix and now verifies an empty LAN list, an available
+  trusted WebRTC offer, and restoration of LAN addresses after the bind.
+  Signed [bench code 36](../quest/apks/README.md#webrtc-bench-with-listener-aware-bluetooth-discovery)
+  matches installed bytes and reached Prepare with advancing native frames.
+  The same Meta code 27 process and the Pixel's original pairing were restored.
+  [Verification](VERIFICATION.md#listener-aware-bluetooth-discovery--2026-11-18).
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.

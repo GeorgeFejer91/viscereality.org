@@ -1,5 +1,33 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with listener-aware Bluetooth discovery
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `36`,
+version name `0.2.35-rtc-test`, 65,621,655 bytes. SHA-256 is
+`f489b841e76c29a2e425fe4ce878c052f62c1e1b175dc72d5410e43700a26713`.
+The retained bench certificate SHA-256 is
+`da1e642f68f2516473269240c7bd325a43eab328878f323358891786cef8eb88`.
+Native commit `42508b1d0b9908aa18e37a9c5c09d1c899c7848f` binds tree
+`e7eedd854fd26ab91cb02a0ef56f4eaa25f914e2`. The
+[native source overlay](../webrtc-native.patch) reconstructs that tree
+from the signed fixed27 baseline. Assemble the bench with the pinned
+bundled assets, `-PhonePairing -WebRtc` and the existing bench signer.
+
+Bluetooth discovery now advertises LAN endpoints only while the native
+gateway is listening. A contended bind still permits the trusted WebRTC
+offer. LAN endpoints return after the current owner binds successfully.
+The gateway host suite, 59 focused phone and WebRTC tests, all eight
+assembly checks, APK v3 signing, ARM64 alignment and signed session
+closure passed.
+
+The lab Quest accepted the signed in-place update with matching installed
+bytes and retained bench UID and grants. Code 36 reached Prepare, reported
+valid tracking and advanced native frames from 162 to 314. The baseline
+process remained running during the test and the bench listener was
+unavailable. The same Meta code 27 process and the installed Pixel PWA
+were restored. Physical pairing and the same-owner physical rebind test
+remain open. [Verification](../../for-ai/VERIFICATION.md#listener-aware-bluetooth-discovery--2026-11-18).
+
 ## WebRTC bench with bundled connectivity and release protocol
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `35`,
