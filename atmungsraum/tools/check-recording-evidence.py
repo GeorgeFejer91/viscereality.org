@@ -315,22 +315,81 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected, requir
     return dict(counts), int(last["audio_elapsed_us"]), completion_elapsed_us, completion_audio_frames
 
 
-def verify_drive(args, descriptor):
-    inventory = read_json(args.drive_list)
-    entries = inventory["files"]
-    require(not inventory.get("nextPageToken") and inventory.get("incompleteSearch", False) is False
-            and len(entries) == 1, "expected one Drive object in the complete inventory")
-    file = entries[0]
-    delivery = read_json(args.drive_receipt)
-    require(file["name"] == descriptor["name"] and file["parents"] == [args.drive_folder]
+def verify_questionnaire(args, csv_descriptor, participant_id):
+    with args.pixel_questionnaire.open("rb") as source:
+        data = source.read(1024 * 1024 + 1)
+    require(len(data) <= 1024 * 1024, "questionnaire JSON exceeds size limit")
+    record = json.loads(data.decode("utf-8-sig"))
+    version = record.get("schema_version")
+    require(type(version) is int and version in (1, 2), "unknown questionnaire schema")
+    require(record.get("participant_id") == participant_id
+            and record.get("session_id") == csv_descriptor["session_id"]
+            and record.get("recording_filename") == csv_descriptor["name"], "questionnaire recording identity mismatch")
+    stamp = record.get("submitted_at_utc")
+    require(isinstance(stamp, str) and re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]{1,6})?Z", stamp),
+            "questionnaire submission time must be UTC")
+    datetime.fromisoformat(stamp)
+    answers = record.get("answers")
+    require(isinstance(answers, list) and len(answers) == 5, "expected five questionnaire answers")
+    for index, item in enumerate(answers, 1):
+        require(item.get("question_id") == f"q{index}" and isinstance(item.get("prompt"), str) and item["prompt"].strip(),
+                "questionnaire item identity mismatch")
+        answer = item.get("answer")
+        if version == 1:
+            require(isinstance(answer, str) and answer.strip(), "invalid questionnaire text answer")
+        else:
+            kind, low, high = ("slider", 0, 100) if index in (1, 5) else ("likert", 1, 5)
+            scale = item.get("scale", {})
+            require(item.get("type") == kind and scale.get("min") == low and scale.get("max") == high
+                    and type(answer) is int and low <= answer <= high, "invalid questionnaire scale or answer")
+    time_properties = None
+    if version == 2:
+        clock = record.get("clock_source")
+        trip = record.get("clock_round_trip_ms")
+        require(record.get("started_at_utc") == stamp
+                and (clock == "timeapi.io" and type(trip) is int and 0 <= trip <= 1800
+                     or clock == "phone-system-clock" and trip is None), "questionnaire clock provenance mismatch")
+        time_properties = dict(startedAtUtc=stamp, clockSource=clock)
+    descriptor = dict(name=csv_descriptor["name"].removesuffix(".csv") + "_questionnaire.json",
+                      size=len(data), sha256=hashlib.sha256(data).hexdigest(), schema_version=version)
+    verify_bytes(args.drive_questionnaire, descriptor, "Drive questionnaire")
+    return descriptor, time_properties
+
+
+def verify_drive_file(file, descriptor, mime_type, folder, receipt_path):
+    delivery = read_json(receipt_path)
+    require(file.get("name") == descriptor["name"] and file["parents"] == [folder]
             and file["ownedByMe"] is True and file["shared"] is False and file["trashed"] is False
-            and file["mimeType"] == "text/csv"
-            and int(file["size"]) == descriptor["size"]
+            and file["mimeType"] == mime_type and int(file["size"]) == descriptor["size"]
             and file.get("sha256Checksum", descriptor["sha256"]) == descriptor["sha256"],
             "Drive object metadata mismatch")
-    require(delivery["verified"] is True and delivery["folderId"] == args.drive_folder
+    require(delivery["verified"] is True and delivery["folderId"] == folder
             and delivery["driveId"] == file["id"] and delivery["sha256"] == descriptor["sha256"],
             "Drive receipt disagrees with the independently listed object")
+
+
+def verify_drive(args, descriptor, participant_id):
+    inventory = read_json(args.drive_list)
+    entries = inventory["files"]
+    count = 2 if args.pixel_questionnaire else 1
+    expected = "one Drive object" if count == 1 else "two distinct Drive objects"
+    require(not inventory.get("nextPageToken") and inventory.get("incompleteSearch", False) is False
+            and len(entries) == len({item["id"] for item in entries}) == count,
+            f"expected {expected} in the complete inventory")
+    by_name = {file["name"]: file for file in entries}
+    verify_drive_file(by_name.get(descriptor["name"], {}), descriptor, "text/csv", args.drive_folder, args.drive_receipt)
+    summary = {"drive_objects": count}
+    if args.pixel_questionnaire:
+        questionnaire, time_properties = verify_questionnaire(args, descriptor, participant_id)
+        file = by_name.get(questionnaire["name"], {})
+        verify_drive_file(file, questionnaire, "application/json", args.drive_folder, args.drive_questionnaire_receipt)
+        if time_properties is not None:
+            actual = file.get("appProperties", {})
+            require(all(actual.get(key) == value for key, value in time_properties.items()),
+                    "Drive questionnaire clock metadata mismatch")
+        summary["questionnaire"] = {key: questionnaire[key] for key in ("schema_version", "size", "sha256")}
+    return summary
 
 
 def verify(args):
@@ -368,7 +427,7 @@ def verify(args):
     verify_bytes(path, descriptor, "Quest CSV")
     verify_bytes(args.pixel_csv, descriptor, "Pixel CSV")
     verify_bytes(args.drive_csv, descriptor, "Drive CSV")
-    verify_drive(args, descriptor)
+    drive_summary = verify_drive(args, descriptor, manifest["participant"]["participant_id"])
 
     entries = {entry["name"]: entry for entry in exported["files"]}
     require(len(exported["files"]) == len(entries) == 8 and entries.keys() == STREAMS | {"manifest.json", "final.json"}
@@ -395,7 +454,7 @@ def verify(args):
         path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted",
         args.require_uninterrupted, args.require_audio_frames)
     return {"pass": True, "mode": args.expect, "bytes": descriptor["size"], "sha256": descriptor["sha256"],
-            "csv_rows": counts, "writer_drops": 0, "drive_objects": 1, "native_checkpoint_recovery": recovered,
+            "csv_rows": counts, "writer_drops": 0, **drive_summary, "native_checkpoint_recovery": recovered,
             "uninterrupted_checks": args.require_uninterrupted,
             "ignored_post_checkpoint_bytes": tails, "terminal_csv_audio_elapsed_us": projected_audio_us,
             "native_start_to_completion_us": native_completion_us,
@@ -406,6 +465,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for option in ("native-run", "export-manifest", "pixel-csv", "drive-csv", "drive-list", "drive-receipt"):
         parser.add_argument("--" + option, type=Path, required=True)
+    parser.add_argument("--pixel-questionnaire", type=Path)
+    parser.add_argument("--drive-questionnaire", type=Path)
+    parser.add_argument("--drive-questionnaire-receipt", type=Path)
     parser.add_argument("--drive-folder", required=True)
     parser.add_argument("--expect", choices=("complete", "partial"), required=True)
     parser.add_argument("--require-uninterrupted", action="store_true",
@@ -417,6 +479,9 @@ def main():
         parser.error("--require-uninterrupted requires --expect complete")
     if args.require_audio_frames and args.expect != "complete":
         parser.error("--require-audio-frames requires --expect complete")
+    questionnaire_inputs = (args.pixel_questionnaire, args.drive_questionnaire, args.drive_questionnaire_receipt)
+    if any(questionnaire_inputs) and (not all(questionnaire_inputs) or args.expect != "complete"):
+        parser.error("a questionnaire requires --expect complete and all three questionnaire paths")
     try:
         print(json.dumps(verify(args), sort_keys=True))
     except EvidenceError as error:
