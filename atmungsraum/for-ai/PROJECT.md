@@ -247,11 +247,23 @@ when capture ends. Lock and reboot recovery still need an attended check.
   [verification](VERIFICATION.md#short-recordings-layout--2026-11-18).
 - [ ] Repeat the short Recordings views on the lab Pixel through RustDesk MCP
   once Android reports RustDesk Input bound and the latest PWA is loaded.
+- [x] Retest same-folder sync on the deployed `20261118-idle-release` assets
+  from [Pages run 44326627442](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44326627442).
+  With synthetic Quest data and a simulated Drive endpoint, the PWA saved
+  separate JSON and CSV files with a matching participant ID, session UUID
+  and recording stem. Both files had the same private dataset parent.
+  The JSON bytes matched the local download, and a lost response plus
+  journal rebuild recovered the original file ID. All 24 targeted Node
+  checks passed. The current standalone Pixel has 18 verified recording
+  deliveries and zero submitted questionnaires. The actual private
+  research Drive folder has 11 CSVs and seven ZIPs, with zero questionnaire
+  files or dataset subfolders.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem
-  to the finalized recording. Confirm the separate private Drive object
-  contains byte-identical JSON.
+  to the finalized recording. Check that the separate JSON and CSV have
+  the same parent ID in research Drive and that the JSON is byte-identical
+  to the phone download.
 
 #### Dataset folders and repeatable Quest–Pixel binding — 2026-11-18
 
