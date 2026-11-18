@@ -1,5 +1,45 @@
 # Atmungsraum Quest 2 APKs
 
+## Canonical Developer 30 candidate
+
+| Build property | Verified value |
+| --- | --- |
+| Package and target | `org.viscereality.atmungsraum.developer`, Quest 2, `arm64-v8a` |
+| Version | `0.2.29-dev`, code `30` |
+| Size | 65,974,255 bytes |
+| SHA-256 | `2dd8072510e84c512b35f93c2ca2caf375e5b1e143d64a4d87c87a153d92f412` |
+| Developer v3 certificate SHA-256 | `372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e` |
+| Native commit / tree | `d3548ec77cc2e39b7f5244b56be4fcb6fda0ecd8` / `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485` |
+
+This is the selected private Developer candidate. It supersedes candidate
+29 and carries the button-only Bluetooth-selected WebRTC pairing repair.
+The [source overlay](../webrtc-native.patch) reconstructs the recorded
+native tree from fixed27-r2. APK v3 signature, 16 KiB alignment and signed
+900-second session closure passed. Independent package inspection verified
+all 74 baseline audio entries, five particle/profile payloads, three
+compiled shaders, five private provider assets, original OpenXR loader,
+SDK207 loader, and seven WebRTC runtime and protocol files. The selected
+DEX, manifest, Meta SDK closure and helper protocol remain bound to this APK.
+
+Physical confirmation, reconnect, TURN, Polar, collection and Meta delivery
+are still open for this candidate. Keep Developer code 27 installed and
+retain code 28 for the guarded update test. The public version policy
+continues to advertise code 27.
+
+## WebRTC bench 37 with button-only pairing
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `37`,
+version name `0.2.36-rtc-test`, 65,621,654 bytes. SHA-256 is
+`8a2ab8b7bb7d3d85098217edf1b4f149c92f3551d7ef168fd3f12586933754da`.
+The retained bench v3 certificate SHA-256 is
+`da1e642f68f2516473269240c7bd325a43eab328878f323358891786cef8eb88`.
+This bench uses the same native commit and tree as Developer 30. Package
+alignment and signed session closure passed. The lab Quest accepted the
+same-signer update from bench 36 and read back the exact installed digest.
+The bench UID and Meta code 27 APK and process were retained. The Quest
+returned to sleep after a bounded wake. Headset confirmation was not
+observed on this bench.
+
 ## Canonical Developer 29 candidate
 
 Package `org.viscereality.atmungsraum.developer`, version code `29`, version
@@ -26,11 +66,10 @@ manifest and runtime settings. The two activation binding hashes reflect
 the relocated input paths and provider manifest. Private inputs, signing
 material and the APK remain in local release staging.
 
-This candidate awaits the recorded baseline/update sequence and exact APK
-hardware qualification on the Quest and installed Pixel PWA. Meta's private
-Developer channel still serves code 27, build `1465199570012388`. Code 28
-remains reserved for the staged update test. Assign code 29 to the channel
-after its release checks pass, then align the public version policy.
+This build is retained as historical evidence. Candidate 30 supersedes it
+for WebRTC hardware qualification. The recorded Developer channel baseline
+is code 27, build `1465199570012388`. Code 28 remains reserved for the
+staged update test.
 
 ## Held Developer 28 update-test candidate
 
@@ -44,7 +83,7 @@ has the recorded fixed27 source tree
 
 This candidate prepares the existing 27-to-28 Meta update test. It uses the
 reconstructed private baseline inputs, phone pairing, SDK 207 updater and
-helper protocol 3, with the baseline transport features. Code 29 carries the
+helper protocol 3, with the baseline transport features. Code 30 carries the
 unified WebRTC runtime and bundled release protocol. Both APKs remain in
 private release staging.
 

@@ -41,10 +41,24 @@ endpoint: the fresh-phone path stops before opening WebRTC.
   zero skips, and all 421 smartphone GUI states. Review regressions covered
   carrier cleanup and stale LAN addresses. The overlay reconstructs native
   tree `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485` from fixed27-r2.
-- [ ] Build and inspect a signed lab bench and the canonical candidate,
-  then use RustDesk/serial-scoped ADB for pairing, receipts and reconnect.
-  Preserve installed Meta 27 and the held update; worn-H10 acceptance stays
-  deferred. Additional physical-device compatibility remains unqualified.
+- [x] Publish `20261119-bluetooth-buttons`. Merge `efe4c3e` passed the
+  [exact Pages run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44424045321).
+  All 24 changed live files matched Git bytes, and the remote context gate
+  passed.
+- [ ] Verify that the installed Pixel has refreshed to
+  `20261119-bluetooth-buttons`. The visible standalone readback after Pages
+  still showed the previous release and its saved pairing. Check the loaded
+  entry and connection modules before counting any phone test.
+- [x] Build and inspect signed bench 37 and the selected canonical Developer
+  candidate 30. Match the bench 37 installed SHA-256 and retained UID. Preserve
+  the installed Meta 27 bytes and process and the staged code 28 update.
+  See the [signed APK records](../quest/apks/README.md).
+- [ ] Pair on the latest installed PWA and bench 37 using RustDesk and
+  serial-scoped ADB where supported. A bounded ADB wake brought the Quest
+  up briefly, then it returned to sleep. Resume with an awake headset and
+  the operator available for the real headset confirmation. Match a native
+  status and Recenter receipt, then test automatic reconnect in both startup
+  orders and measure the ICE route. Cross-device and worn-H10 evidence remains open.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
@@ -144,8 +158,8 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   resolver preserves feature selection, Android manifest, runtime settings
   and the five-asset content inventory. Verify the licensed Meta SDK 207
   archive, headers and ARM64 loader.
-- [x] Build canonical Developer code 29 / `0.2.28-dev` with the retained
-  production signer, latest WebRTC overlay, SDK 207 updater and bundled
+- [x] Build the previous Developer code 29 / `0.2.28-dev` candidate with the
+  retained production signer, then-current WebRTC overlay, SDK 207 updater and bundled
   release protocol. Verify the signature, ARM64 alignment, signed session
   closure, original visual bytes and all ten WebRTC assets. See the
   [candidate record](../quest/apks/README.md#canonical-developer-29-candidate).
@@ -204,15 +218,16 @@ the required qualification and Meta sync steps. Its WebRTC runtime and DEX
 match bench 34 byte for byte. Eight assembly checks, 26 browser and native
 interop checks, the production gateway host suite, and five companion scan
 checks passed. The canonical assembly rejects a foreign Meta app ID and
-verifies the staged protocol bytes. Canonical Developer code 29 is now built
-with the recovered, verified private inputs and the retained Developer key.
+verifies the staged protocol bytes. Canonical Developer code 30 supersedes
+29 with the Bluetooth-selected WebRTC pairing repair. It uses the recovered
+private inputs and retained Developer key.
 Continue through the recorded code 27-to-28 update sequence and qualify the
 unified candidate on the lab Quest, Pixel and companion before assigning its
 Meta release. The physical and Meta publication checks remain open.
 
 Both signed successor APKs are now prepared in private release staging.
 Code 28 preserves the baseline transport feature set for the genuine Meta
-update test; code 29 carries the unified WebRTC runtime and bundled protocol.
+update test; code 30 carries the unified WebRTC runtime and bundled protocol.
 The user explicitly chose **Continue preparation, test later** on 2026-11-18.
 Keep physical acceptance deferred and continue independent preparation.
 Before the next physical session, confirm fresh wearer readiness with the
