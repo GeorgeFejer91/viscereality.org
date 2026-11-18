@@ -10,6 +10,10 @@ const chunkSize = 256 * 1024;
 const batchSize = 4 * chunkSize;
 const expiredStatuses = [404, 410];
 
+function queryValue(value) {
+  return "'" + value.replaceAll('\\', '\\\\').replaceAll("'", "\\'") + "'";
+}
+
 function uploadDestination(location) {
   const url = location && new URL(location, apiOrigin);
   if (!url || url.origin !== apiOrigin || url.pathname !== uploadPath || url.username || url.password
@@ -48,6 +52,20 @@ export function createQuestDrive(token, fetcher = fetch) {
     if (file?.id !== id || file.ownedByMe !== true || file.shared !== false || file.trashed !== false) {
       throw Error('Der private Google-Drive-Speicherort konnte nicht bestätigt werden.');
     }
+  }
+
+  async function findChild(parent, query, signal) {
+    if (!safeId.test(parent)) throw Error('Ungültige Google-Drive-Ordner-ID.');
+    const params = new URLSearchParams({
+      q: `'${parent}' in parents and ${query} and trashed = false`,
+      fields: 'files(id),nextPageToken,incompleteSearch', spaces: 'drive', pageSize: '2',
+    });
+    const result = await (await request(filePath + '?' + params, signal)).json();
+    if (!Array.isArray(result.files) || result.files.length > 1 || result.nextPageToken || result.incompleteSearch
+      || result.files.some(file => typeof file?.id !== 'string' || !safeId.test(file.id))) {
+      throw Error('Das Google-Drive-Objekt konnte nicht eindeutig zugeordnet werden.');
+    }
+    return result.files[0]?.id;
   }
 
   async function beginUpload(receipt, name, type, length, signal) {
@@ -102,20 +120,24 @@ export function createQuestDrive(token, fetcher = fetch) {
       if (typeof ids?.[0] !== 'string' || !safeId.test(ids[0])) throw Error('Google Drive hat keine Datei-ID geliefert.');
       return ids[0];
     },
-    async findFolder(parent, name, signal) {
-      if (!safeId.test(parent)) throw Error('Ungültige Google-Drive-Ordner-ID.');
-      const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
-      const params = new URLSearchParams({
-        q: `'${parent}' in parents and name = '${escaped}' and mimeType = '${folderMime}' and trashed = false`,
-        fields: 'files(id),nextPageToken', spaces: 'drive', pageSize: '2',
-      });
-      const response = await request(filePath + '?' + params, signal);
-      const result = await response.json();
-      if (!Array.isArray(result.files) || result.files.length > 1 || result.nextPageToken
-        || result.files.some(file => typeof file?.id !== 'string' || !safeId.test(file.id))) {
-        throw Error('Der Google-Drive-Ordner konnte nicht eindeutig zugeordnet werden.');
+    findFolder(parent, name, signal) {
+      return findChild(parent, `name = ${queryValue(name)} and mimeType = '${folderMime}'`, signal);
+    },
+    async findDataset(parent, recordingId, signal) {
+      const id = await findChild(parent, `appProperties has { key='questRecordingId' and value=${queryValue(recordingId)} } and mimeType = '${folderMime}'`, signal);
+      if (!id) return;
+      const folder = await getFile(id, signal);
+      checkPrivateFile(folder, id);
+      if (folder.mimeType !== folderMime || folder.parents?.length !== 1 || folder.parents[0] !== parent) {
+        throw Error('Der Google-Drive-Ordner stimmt nicht mit dem Datensatz überein.');
       }
-      return result.files[0]?.id;
+      return folder;
+    },
+    findFile(parent, name, signal) {
+      return findChild(parent, `name = ${queryValue(name)}`, signal);
+    },
+    async verifyExistingFile(receipt, file, signal) {
+      await verifyFile(await getFile(receipt.driveId, signal), receipt, file, signal);
     },
     async ensureFolder(id, signal, child) {
       let folder = await getFile(id, signal);
@@ -232,7 +254,8 @@ function fileTime(stamp) {
   return stamp && { startedAtUtc: stamp.utc, clockSource: stamp.source };
 }
 
-export async function deliverQuestPrefix({ drive, store, folderId, id, name, type, available, read, signal, stamp }) {
+export async function deliverQuestPrefix({ drive, store, folderId, id, name, type, available, read, signal, stamp,
+  recoverExisting = false }) {
   if (!Number.isSafeInteger(available) || available < 0) throw Error('Ungültige Aufnahmelänge.');
   if (available <= chunkSize) return;
   const saved = await store.readDelivery(id);
@@ -240,6 +263,7 @@ export async function deliverQuestPrefix({ drive, store, folderId, id, name, typ
     throw Error('Die gespeicherte Upload-Zuordnung stimmt nicht überein.');
   }
   if (saved?.verified || saved?.sha256) return;
+  if (!saved && recoverExisting && await drive.findFile(folderId, name, signal)) return;
   const receipt = saved ?? { folderId, driveId: await drive.reserveId(signal), name, type, offset: 0,
     verified: false, timeProperties: fileTime(stamp) };
   const persist = value => store.saveDelivery(id, value);
@@ -247,11 +271,21 @@ export async function deliverQuestPrefix({ drive, store, folderId, id, name, typ
   await drive.advance(receipt, available, read, persist, signal);
 }
 
-export async function deliverQuestBundle({ drive, store, folderId, id, file, signal, resetDriveUpload = false, stamp }) {
+export async function deliverQuestBundle({ drive, store, folderId, id, file, signal, resetDriveUpload = false, stamp,
+  recoverExisting = false }) {
   const saved = await store.readDelivery(id);
   if (saved?.folderId === folderId && saved.verified) return;
   const checksum = await sha256(file);
   signal.throwIfAborted();
+  if (!saved && recoverExisting) {
+    const driveId = await drive.findFile(folderId, file.name, signal);
+    if (driveId) {
+      const receipt = { folderId, driveId, sha256: checksum, verified: true };
+      await drive.verifyExistingFile(receipt, file, signal);
+      await store.saveDelivery(id, receipt);
+      return;
+    }
+  }
   const receipt = { ...(saved ?? { folderId, driveId: await drive.reserveId(signal), verified: false,
     timeProperties: fileTime(stamp) }), sha256: checksum };
   if (file.type === 'text/csv' && !receipt.name) Object.assign(receipt, { name: file.name, type: file.type });

@@ -576,12 +576,22 @@ For the acceptance check, send two new synthetic or approved datasets, check
 their distinct UTC folders, and compare the downloaded files to the phone.
 See [the timestamp contract](DATA-LOGGING.md#dataset-folders-and-utc).
 
+If the upload journal is lost, reauthorize the same private Drive account
+and use the same hardware pair. The PWA can recover an existing dataset
+through its Quest recording ID, independently of a new phone UTC reading.
+It verifies the existing CSV and questionnaire by owner, privacy, parent,
+name, type, length and SHA-256 before retaining their IDs. A prefix upload
+waits for final verification when a file with that name already exists.
+Ambiguous matches or failed verification leave the upload pending.
+
 ### Authorize the research account
 
-The phone must automatically upload each newly saved Quest recording's
-original `polar-ecg.jsonl` and `polar-acc.jsonl` bytes to the designated private
-Drive folder. Retain the signed export manifest and the shared participant
-identity and filename contract. Use one immutable recording identity to bind
+For CSV v2 through v4, the phone automatically uploads the exact
+participant CSV to the designated private Drive folder. Quest retains the
+original `polar-ecg.jsonl` and `polar-acc.jsonl` files for checking the CSV
+projection. Historical ZIP transfers include their original sensor streams.
+Retain the signed export manifest and the shared participant identity and
+filename contract. Use one immutable recording identity to bind
 the local copy, queued upload and Drive receipt. Keep Quest originals and the
 phone's durable copy for recovery. Accept uploads only after Drive readback
 matches the folder, file identity, size and content hash. Opening the Drive app
