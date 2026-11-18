@@ -1,5 +1,37 @@
 # Atmungsraum Quest 2 APKs
 
+## Canonical Developer 29 candidate
+
+Package `org.viscereality.atmungsraum.developer`, version code `29`, version
+name `0.2.28-dev`, and 65,974,253 bytes. SHA-256 is
+`7cacbe9eff822d6a95e0b92e375b192a02ed76ef6df522e6b51fa811adc374d8`.
+The v3 signer is the established Developer certificate
+`372324e933ce701b9e71ff1a24239aeba8589231fa54e298c424e1f1a2cf570e`.
+Native commit `42508b1d0b9908aa18e37a9c5c09d1c899c7848f` binds clean tree
+`e7eedd854fd26ab91cb02a0ef56f4eaa25f914e2`.
+
+The canonical profile combines phone enrollment, the latest Bluetooth/LAN
+discovery and WebRTC bridge, Meta Platform SDK 207 updates, and helper protocol
+3. All ten WebRTC directory entries include the exact
+[connectivity and release instructions](../webrtc/release-protocol.md).
+The production SDK archive, header inventory and ARM64 loader match their
+approved pins. Signed JNI/DEX/manifest closure, ARM64 alignment and the
+900-second packaged session closure passed.
+
+The private build inputs were reconstructed from signed fixed27-r2. Its four
+particle arrays and visual profile, three compiled particle shaders, five
+provider assets and OpenXR loader match the corresponding bytes in this
+candidate. Fresh resolution preserves the baseline feature selection,
+manifest and runtime settings. The two activation binding hashes reflect
+the relocated input paths and provider manifest. Private inputs, signing
+material and the APK remain in local release staging.
+
+This candidate awaits the recorded baseline/update sequence and exact APK
+hardware qualification on the Quest and installed Pixel PWA. Meta's private
+Developer channel still serves code 27, build `1465199570012388`. Code 28
+remains reserved for the staged update test. Assign code 29 to the channel
+after its release checks pass, then align the public version policy.
+
 ## WebRTC bench with listener-aware Bluetooth discovery
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `36`,

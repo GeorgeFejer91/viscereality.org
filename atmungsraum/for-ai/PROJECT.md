@@ -98,10 +98,17 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   signing and verification challenge passed. The keystore and transfer
   receipts are in private staging outside Git.
   [Signing evidence](VERIFICATION.md#canonical-developer-build-inputs--2026-11-18).
-- [ ] Obtain the retained Experimenter build profile with its app spec,
-  feature lock, provider manifest and particle source. Verify it against
-  fixed27-r2 with the licensed Meta SDK 207 archive before building the
-  canonical release.
+- [x] Reconstruct the private Experimenter inputs from signed fixed27-r2.
+  Recover the exact visual profile and four particle arrays, and verify all
+  three compiled shaders against the signed native library. The fresh
+  resolver preserves feature selection, Android manifest, runtime settings
+  and the five-asset content inventory. Verify the licensed Meta SDK 207
+  archive, headers and ARM64 loader.
+- [x] Build canonical Developer code 29 / `0.2.28-dev` with the retained
+  production signer, latest WebRTC overlay, SDK 207 updater and bundled
+  release protocol. Verify the signature, ARM64 alignment, signed session
+  closure, original visual bytes and all ten WebRTC assets. See the
+  [candidate record](../quest/apks/README.md#canonical-developer-29-candidate).
 - [ ] Verify automatic startup in both launch orders on the qualified
   unified Developer APK and a Pixel commissioned for that installation.
   Use the retained Developer signer and approved Meta Platform SDK 207
@@ -131,9 +138,11 @@ the required qualification and Meta sync steps. Its WebRTC runtime and DEX
 match bench 34 byte for byte. Eight assembly checks, 26 browser and native
 interop checks, the production gateway host suite, and five companion scan
 checks passed. The canonical assembly rejects a foreign Meta app ID and
-verifies the staged protocol bytes. Continue with the retained Developer
-signing and SDK 207 inputs, then qualify the exact unified APK with the lab
-Pixel and companion before assigning its Meta release.
+verifies the staged protocol bytes. Canonical Developer code 29 is now built
+with the recovered, verified private inputs and the retained Developer key.
+Continue through the recorded code 27-to-28 update sequence and qualify the
+unified candidate on the lab Quest, Pixel and companion before assigning its
+Meta release. The physical and Meta publication checks remain open.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions
