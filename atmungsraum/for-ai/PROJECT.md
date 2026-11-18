@@ -397,6 +397,18 @@ selection and guard were read back after restoration. Open WebRTC Bench
 in the headset, then resume the physical pairing, recordings and custody
 checks.
 
+#### Temporary status loss after Save — 2026-11-18
+
+The mounted PWA dropped an explicit Save→Update intent when one native
+status read failed after the confirmed Save receipt. The updated flow keeps
+the saved state during a missing read on the same connection. It waits for
+fresh native status and revalidates owner, lease, writer and audio park
+before issuing the single update request. The regression reproduced the
+failure at 320 × 568 with 200% text and now passes. The
+[update verification](VERIFICATION.md#temporary-status-loss-after-save--2026-11-18)
+records the software gates for `20261118-save-update-status`. The attended
+Meta transition remains open.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices

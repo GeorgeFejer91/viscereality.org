@@ -1626,8 +1626,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const intent = savedUpdateIntent;
     if (!intent || savedUpdateReconciling || document.hidden || connecting) return;
     const state = rehearsal.state, gateway = rehearsal.gateway;
+    const sameConnection = !intent.signal.aborted && gateway === intent.gateway && sameQuest(gateway.owner, intent.owner);
+    if (sameConnection && !state.status) {
+      saveUpdateMessage = 'Warte auf den aktuellen Quest-Stand.';
+      return;
+    }
     const access = controllerAccessState(state.status), value = metaUpdateView(state.status).value;
-    if (intent.signal.aborted || gateway !== intent.gateway || !sameQuest(gateway?.owner, intent.owner)
+    if (!sameConnection
       || state.status?.o?.e !== intent.owner.native_epoch
       || state.unknown || state.pending || state.status?.rec || state.status?.pending
       || access?.role !== 'active' || access.revision !== intent.actor.revision || access.active_phone !== intent.actor.active_phone
