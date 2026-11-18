@@ -6,9 +6,11 @@ import json
 import re
 from bisect import bisect_right
 from collections import Counter
-from contextlib import ExitStack
+from contextlib import ExitStack, closing
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from itertools import groupby
+from operator import itemgetter
 from pathlib import Path
 from uuid import UUID
 
@@ -16,6 +18,7 @@ from uuid import UUID
 NATIVE_SCHEMA = "rusty.quest.native_renderer.session_recording_"
 SCENARIO = "haupt-15"
 END_US = 900_000_000
+POLAR_RECEIPT_TIMEOUT_NS = 1_000_000_000
 STREAMS = {
     "events.jsonl", "polar-hr-rr.jsonl", "polar-ecg.jsonl", "polar-acc.jsonl", "breath.jsonl", "radius.jsonl",
 }
@@ -31,6 +34,7 @@ PLAYBACK_EVENTS = {
     "official-start", "audio-started", "experiment-paused", "experiment-resumed", "audio-ended", "audio-error",
 }
 SIGNAL_EVENTS = {"ecg-interrupted", "ecg-resumed", "acc-interrupted", "acc-resumed"}
+INTERRUPTION_EVENTS = SIGNAL_EVENTS | {"experiment-paused", "experiment-resumed", "audio-error"}
 CSV_RECORD_TYPES = PLAYBACK_EVENTS | SIGNAL_EVENTS | PROJECTED.keys() | {"end"}
 HEADER = """schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason,signal_reason""".split(",")
 
@@ -177,7 +181,23 @@ def playback_rows(events, start, end, offset, identity):
     yield projection("end", end, elapsed + (end - last if state == "playing" else 0), state)
 
 
-def verify_csv(path, native_directory, run, manifest, terminal, expected):
+def verify_polar_receipt_coverage(native_directory, lengths, run, start, completion):
+    for label, filename in (("ECG", "polar-ecg.jsonl"), ("ACC", "polar-acc.jsonl")):
+        latest = start
+        gap = f"uninterrupted run contains an {label} receipt gap"
+        with closing(native_rows(native_directory / filename, lengths[filename], run)) as rows:
+            for _, batch in groupby(rows, key=itemgetter("record_sequence")):
+                # The native writer observes a nonempty batch at its last
+                # sample's observation timestamp. Older batches may arrive late.
+                for sample in batch:
+                    observed = sample["observed_monotonic_ns"]
+                if start <= observed <= completion:
+                    require(observed - latest <= POLAR_RECEIPT_TIMEOUT_NS, gap)
+                    latest = max(latest, observed)
+        require(completion - latest <= POLAR_RECEIPT_TIMEOUT_NS, gap)
+
+
+def verify_csv(path, native_directory, run, manifest, terminal, expected, require_uninterrupted):
     identity = manifest["participant"]
     require(identity == terminal["participant"] and identity["scenario_id"] == SCENARIO
             and UUID(identity["session_id"]).version == 4 and identity["run_index"] >= 1,
@@ -201,8 +221,8 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
                 "native completion event is outside the run or has the wrong clock")
         completion_elapsed_us = (at - start) // 1000
     playback = playback_rows(events, start, end, offset, identity)
-    signal_events = iter(
-        (row["event"], row["observed_monotonic_ns"], row["signal_reason"])
+    signal_events = (
+        row
         for row in events if row["event"] in SIGNAL_EVENTS and start <= row["observed_monotonic_ns"] <= end
     )
     tracking = manifest.get("breath_tracking_configuration") or {}
@@ -247,9 +267,12 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
                         "CSV playback transition or clock mismatch")
             if kind in SIGNAL_EVENTS:
                 event = next(signal_events, None)
-                require(event is not None and event[0] == kind and event[2] == row["signal_reason"]
-                        and row["elapsed_us"] == str((event[1] - start) // 1000)
-                        and row["timestamp_utc"] == iso_utc((event[1] + offset) // 1000),
+                require(event is not None, "unexpected signal event projection")
+                at = event["observed_monotonic_ns"]
+                require(event["observed_utc_ns"] == at + offset, "native signal event clock mismatch")
+                require(event["event"] == kind and event["signal_reason"] == row["signal_reason"]
+                        and row["elapsed_us"] == str((at - start) // 1000)
+                        and row["timestamp_utc"] == iso_utc((at + offset) // 1000),
                         "signal event projection mismatch")
             counts[kind] += 1
             last = row
@@ -260,13 +283,18 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
             "CSV start, terminal or main measurement stream missing")
     require(last["session_status"] == expected and last["end_reason"] and 0 <= int(last["audio_elapsed_us"]) <= END_US,
             "CSV terminal outcome or projected audio duration mismatch")
+    if require_uninterrupted:
+        require(not INTERRUPTION_EVENTS.intersection(counts), "uninterrupted run contains pauses or faults")
+        require(counts.get("breath", 0) > 0, "uninterrupted run has no breathing observations")
+        verify_polar_receipt_coverage(native_directory, lengths, run, start, completion[0]["observed_monotonic_ns"])
     return dict(counts), int(last["audio_elapsed_us"]), completion_elapsed_us
 
 
 def verify_drive(args, descriptor):
     inventory = read_json(args.drive_list)
     entries = inventory["files"]
-    require(not inventory.get("nextPageToken") and len(entries) == 1, "expected one Drive object in the complete inventory")
+    require(not inventory.get("nextPageToken") and inventory.get("incompleteSearch", False) is False
+            and len(entries) == 1, "expected one Drive object in the complete inventory")
     file = entries[0]
     delivery = read_json(args.drive_receipt)
     require(file["name"] == descriptor["name"] and file["parents"] == [args.drive_folder]
@@ -339,9 +367,10 @@ def verify(args):
         tails += verify_bytes(source, entry, name, allow_tail=recovered and name in STREAMS)
 
     counts, projected_audio_us, native_completion_us = verify_csv(
-        path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted")
+        path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted", args.require_uninterrupted)
     return {"pass": True, "mode": args.expect, "bytes": descriptor["size"], "sha256": descriptor["sha256"],
             "csv_rows": counts, "writer_drops": 0, "drive_objects": 1, "native_checkpoint_recovery": recovered,
+            "uninterrupted_checks": args.require_uninterrupted,
             "ignored_post_checkpoint_bytes": tails, "terminal_csv_audio_elapsed_us": projected_audio_us,
             "native_start_to_completion_us": native_completion_us}
 
@@ -352,7 +381,11 @@ def main():
         parser.add_argument("--" + option, type=Path, required=True)
     parser.add_argument("--drive-folder", required=True)
     parser.add_argument("--expect", choices=("complete", "partial"), required=True)
+    parser.add_argument("--require-uninterrupted", action="store_true",
+                        help="require breathing observations and continuous Polar receipts in a completed run without pauses or faults")
     args = parser.parse_args()
+    if args.require_uninterrupted and args.expect != "complete":
+        parser.error("--require-uninterrupted requires --expect complete")
     try:
         print(json.dumps(verify(args), sort_keys=True))
     except EvidenceError as error:

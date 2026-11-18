@@ -532,7 +532,13 @@ with six fixture-dependent tests ignored.
 The [recording checker](QUEST-PHONE-SYNC.md#check-one-haupt-runde-evidence-bundle)
 compares native ECG, ACC, radius and breath rows and signal events with
 the CSV. It checks the native hashes, checkpoint receipt, three CSV
-copies and one reserved Drive object. Ten CLI fixture tests pass.
+copies and one reserved Drive object. Thirteen CLI fixture tests pass. The
+retained synthetic partial artifact from the native writer still passes.
+A Drive inventory marked incomplete cannot prove uniqueness. The checker
+verifies native signal-event UTC and supports requiring an uninterrupted
+run with breathing observations and continuous ECG and ACC receipts.
+The focused regressions reject missing Polar coverage even when the three
+CSV hashes agree and no interruption marker was written.
 The checker replays the native playback transitions against the CSV and
 checks their UTC, elapsed, pause and phase fields through the terminal row.
 Fixtures reject missing or fabricated transitions and altered clocks even

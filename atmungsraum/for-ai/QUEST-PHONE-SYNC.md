@@ -658,13 +658,14 @@ streams. Use the exact run directory name that the Quest returned.
 
 Get an independent Drive listing filtered by the exact CSV name and its
 designated private parent, with trashed files excluded. Keep the full listing
-response, including any continuation token, and the verified Pixel delivery
-receipt. Verify the folder identity and privacy before running the check.
+response with `nextPageToken` and `incompleteSearch` included in the requested
+fields. Keep the verified Pixel delivery receipt. Verify the folder identity
+and privacy before running the check.
 Then run the read-only verifier from `atmungsraum` with Python 3.12 or newer.
 
 ```powershell
 python -B tools/check-recording-evidence.py `
-  --expect complete --native-run '<native run directory>' `
+  --expect complete --require-uninterrupted --native-run '<native run directory>' `
   --export-manifest '<authenticated export manifest JSON>' `
   --pixel-csv '<committed Pixel CSV>' --drive-csv '<downloaded Drive CSV>' `
   --drive-list '<independent Drive listing JSON>' `
@@ -672,16 +673,26 @@ python -B tools/check-recording-evidence.py `
   --drive-folder '<designated private Drive folder ID>'
 ```
 
-Use `--expect partial` for a separately planned early finish or checkpoint
-recovery. The checker compares the committed ECG, accelerometer, radius and
+Use `--require-uninterrupted` for the clean baseline and successor runs. It
+requires breathing observations and rejects recorded pauses, audio faults,
+and ECG or accelerometer interruption events. It independently checks the
+last observation in each committed Polar batch through the native completion
+marker. Each stream must stay within the native writer's one-second
+freshness interval, including the start and completion boundaries.
+
+Use `--expect complete` alone for a completed run with a planned pause. Use
+`--expect partial` for an early finish or checkpoint recovery. The checker
+compares the committed ECG, accelerometer, radius and
 breath observations with their CSV rows and clock fields. It also checks
 the CSV playback transitions and terminal playback fields against the
 committed native event order, pause intervals and retained phase offsets.
 It verifies native file and checkpoint hashes, the terminal outcome,
 writer drops, matching CSV bytes from all three copies, and one verified
 Drive object under the reserved file ID. A completed run must have exactly
-one committed native completion
-event between official Start and finalization, on the same clock anchor.
+one committed native completion event between official Start and finalization,
+on the same clock anchor. An incomplete or paginated Drive search cannot
+establish uniqueness. The native UTC clock must match the projected
+interruption events.
 A partial run has no committed completion event. The checker reports counts,
 hashes, and native elapsed time to the durable completion marker when present.
 
