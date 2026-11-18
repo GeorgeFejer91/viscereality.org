@@ -101,6 +101,45 @@ The outstanding bench gates are same-owner physical rebind and
 authenticated standalone phone pairing with native receipts. The guarded
 Meta and worn Polar gates remain separate.
 
+### Pixel companion discovery comparison — 2026-11-18
+
+The lab Meta Developer APK matched code 27 and the signed Quest bench
+matched code 36 before launch. The Pixel's installed standalone PWA
+loaded `20261118-saved-quest-service`, which matched the live deployment.
+Bench 36 reached Prepare with advancing native frames. An uncached
+Windows read of one physical Quest found both Bluetooth service
+instances and confirmed the bench advertised a WebRTC offer while its
+LAN listener was unavailable. The first Windows attempt saw the
+advertisements without receiving the payloads. The repeat read both
+payloads successfully.
+
+Android socket ownership bound the standard code 1 companion to loopback
+8767 and the signed commissioned bench code 4 companion to 8768. The lab
+APK matched the retained signed artifact by SHA-256. An earlier launch
+check queried the standard port for the lab companion and restored the
+standard service. The final comparison used each service's own port and
+both owners stayed present for the reads.
+
+Standard code 1 returned the exact Meta code 27 identity with one LAN
+endpoint after 2.55 seconds. All 27 polls for the bench identity stayed
+at searching through 22.58 seconds. The commissioning request closed
+without a response. Bench companion code 4 returned the same Meta
+identity after 1.72 seconds and the exact bench 36 identity after
+3.48 seconds. Bench 36 returned a WebRTC offer with zero LAN endpoints.
+The lab commissioning endpoint returned the identity corresponding to
+that same bench installation. Five host cases for the current production
+scanner passed. The historical standard scanner uses one GATT service
+instance. The newer scanner walks the instances until the requested
+installation matches.
+
+The diagnostic used read-only companion requests and verified the same
+Meta process back in Prepare, the original PWA back in the foreground,
+and the prior Windows radio and phone listener states restored. The
+production companion still needs a release signed with its retained
+certificate. Its available update has a different signer. Verify
+authenticated startup, WebRTC route selection and original native
+receipts with the matching enrollment and current production companion.
+
 ### Remembered Bluetooth service selection — 2026-11-18
 
 The lab Bluetooth read returned both Atmungsraum service instances under

@@ -78,6 +78,16 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   has the WebRTC runtime and Meta code 27 lacks it. The saved Pixel
   enrollment identifies a different Quest installation.
   [Startup evidence](VERIFICATION.md#meta-and-standalone-startup-recheck--2026-11-18).
+- [x] Compare both installed Android companions against the same live Quest
+  Bluetooth advertisements. Standard code 1 owns loopback 8767 and found
+  Meta code 27 in 2.55 seconds. It still searched for bench 36 after
+  22.58 seconds. Signed bench companion code 4 owns lab loopback 8768 and
+  found bench 36 in 3.48 seconds with the commissioned identity, zero LAN
+  endpoints and a WebRTC offer.
+  [Physical scanner evidence](VERIFICATION.md#pixel-companion-discovery-comparison--2026-11-18).
+- [ ] Update the standard Android companion in place with the retained
+  signer and current scanner. Replay the real PWA startup with the
+  matching authorized enrollment, and match native status and a receipt.
 - [ ] Verify automatic startup in both launch orders on the qualified
   unified Developer APK and a Pixel commissioned for that installation.
   Use the retained Developer signer and approved Meta Platform SDK 207
