@@ -32,8 +32,10 @@ evidence. The APK log identifies the signed release by one version and hash.
 
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
-tree is `c0b2c0fa6e198d6af9edb1d8532bcf7bda9c751f`. Commit it in an
-isolated source checkout so the build can bind the clean composition.
+tree is `6e756ef436b52b32bac1cb22a45b7075e42bde32`. Commit it in an isolated
+source checkout so the build can bind the clean composition. The current
+overlay adds host Polar fixtures to the exact bench runtime source.
+See the APK log for the source revision bound into the installed APK.
 Select `-WebRtc` with the phone-pairing APK profile. The assembly locks
 the production Java bridge and the bundled browser assets, then compares
 every selected WebRTC asset in the signed APK to its input bytes.
@@ -44,6 +46,16 @@ membership, gateway and runtime epochs, nonces and command receipts remain
 authoritative. This path supports saved enrollment and commissioned first
 pairing. The physical network matrix still gates lab release. Keep the installed Meta baseline available for the study and
 update validation.
+
+The native verification source includes the Location and live health
+projection check (`tools/checks/test_polar_platform_projection.py`),
+stream scope and GATT retirement check
+(`tools/checks/test_polar_required_stream_scope.py`), and Direct/Remote
+startup check (`tools/checks/test_polar_native_mode_startup.py`). Run them
+from the patched native checkout with the build JDK and the native host
+test dependencies. The startup check takes the JDK bin folder, Android
+platform JAR and host JSON JAR explicitly. These checks use the production
+Java methods with simulated Android effects.
 
 ### Side-by-side Quest 2 bench install
 
