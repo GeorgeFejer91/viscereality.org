@@ -1373,6 +1373,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
             throw Error('Die freigegebene Quest ist über WebRTC noch nicht erreichbar.');
           }
         } else if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
+        let connectionFailure;
         if (discovery.rtc) {
           try {
             const { openQuestWebRtc } = await import('./quest-webrtc.js?v=4');
@@ -1383,7 +1384,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           } catch (error) {
             signal.throwIfAborted();
             if (duringCommissioning || error.status === 403) throw error;
-            joinMessage = error.message;
+            connectionFailure = error;
           }
         }
         let authenticationRejected = false;
@@ -1393,7 +1394,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           catch (error) {
             signal.throwIfAborted();
             authenticationRejected ||= error?.status === 403;
-            joinMessage = error.message;
+            connectionFailure = error;
           }
         }
         if (!gateway && authenticationRejected && !pairedThisAttempt && chooseDevice && discovery.pairing === 1) {
@@ -1402,7 +1403,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           gateway = await join(endpoint, discovery);
         }
 
-        if (!gateway) throw Error(joinMessage || 'Die Quest antwortet nicht im WLAN.');
+        if (!gateway) throw connectionFailure ?? Error('Die Quest antwortet nicht im WLAN.');
       }
       if (signal.aborted || connecting !== attempt) { gateway.close(); return; }
       if (savedPair && (savedPair.serial !== gateway.owner.serial || savedPair.device !== gateway.owner.device)) {

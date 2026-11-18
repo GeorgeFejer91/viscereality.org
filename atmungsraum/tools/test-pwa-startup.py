@@ -67,17 +67,20 @@ def releases():
 
 QUEST_STARTUP = r"""
 const device = 'd'.repeat(32), key = 'b'.repeat(64), controller = 'a'.repeat(32), build = 'c'.repeat(64);
-const owner = {v: 1, device, serial: 'TEST-QUEST', epoch: '1', native_epoch: '2'};
 const oldIp = '192.168.10.3', newIp = '192.168.10.9';
 const gateway = ip => 'http://' + ip + ':8766/v1/gateway';
 const mode = new URL(location.href).searchParams.get('fixture');
+const unreachable = mode === 'lan-unreachable';
+const owner = unreachable ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
+  : {v: 1, device, serial: 'TEST-QUEST', epoch: '1', native_epoch: '2'};
 const mark = value => sessionStorage.events = JSON.stringify([...JSON.parse(sessionStorage.events || '[]'), value]);
 const storage = 'atmungsraum-quest-pair';
 localStorage.setItem(storage, localStorage.getItem(storage) || JSON.stringify({
   ...owner, enrollment: {controller, key}, bluetoothId: 'saved', build, endpoint: gateway(oldIp)
 }));
 const encode = new TextEncoder();
-const metadata = {...owner, mode: 'remote', gateways: [newIp]};
+const metadata = {...owner, mode: 'remote', gateways: [newIp],
+  ...(unreachable ? {pairing: 1, rtc: {r: 'e'.repeat(32), p: 'f'.repeat(64)}} : {})};
 const radio = new EventTarget();
 radio.enabled = mode !== 'radio-off';
 radio.getAvailability = async () => radio.enabled;
@@ -112,6 +115,7 @@ window.fetch = async (url, init) => {
   if (address.port !== '8766') return fetchPage(url, init);
   if (!init.body) {
     mark('wifi:' + address.hostname);
+    if (unreachable) throw new TypeError('Failed to fetch');
     if (address.hostname === oldIp && !['wifi-only', 'companion'].includes(mode)) throw new TypeError('Unreachable');
     return Response.json({...owner, enabled: true, remote_available: true});
   }
@@ -133,7 +137,7 @@ window.fetch = async (url, init) => {
 def verify_reconnect(browser, url, release):
     from playwright.sync_api import expect
 
-    for mode in ('changed-address', 'radio-off', 'companion', 'wifi-only', 'recovery'):
+    for mode in ('lan-unreachable', 'changed-address', 'radio-off', 'companion', 'wifi-only', 'recovery'):
         target = url.replace('?live-sync=off#daten', '?fixture=' + mode + ('#daten' if mode == 'recovery' else ''))
         release.update(app_url=OLD, probe_result='error' if mode == 'wifi-only' else None)
         context = browser.new_context(viewport={'width': 320, 'height': 568}, is_mobile=True, has_touch=True)
@@ -141,6 +145,10 @@ def verify_reconnect(browser, url, release):
         page = context.new_page()
         errors = []
         page.on('pageerror', lambda error: errors.append(str(error)))
+        if mode == 'lan-unreachable':
+            page.route('**/quest-webrtc.js?v=*', lambda route: route.fulfill(
+                content_type='text/javascript',
+                body='export async function openQuestWebRtc() { throw Error("Signaling unavailable"); }'))
         if mode == 'changed-address':
             old_page = page.request.get(target).body()
             page.route(re.compile(re.escape(target) + '$'), lambda route:
@@ -156,7 +164,15 @@ def verify_reconnect(browser, url, release):
               navigator.bluetooth.enabled = true;
               navigator.bluetooth.dispatchEvent(new Event('availabilitychanged'));
             }""")
-        if mode == 'recovery':
+        if mode == 'lan-unreachable':
+            page.evaluate("document.documentElement.style.fontSize='200%'")
+            status = page.locator('#quest-status')
+            expect(status).to_have_text('Quest nicht erreichbar. Prüfe Bluetooth, WLAN und den Fernmodus.')
+            expect(status).to_have_attribute('data-text-fit', 'fit')
+            assert page.evaluate('document.documentElement.scrollWidth === innerWidth')
+            events = page.evaluate('JSON.parse(sessionStorage.events)')
+            assert events[-1] == 'wifi:192.168.10.9' and 'chooser' not in events, events
+        elif mode == 'recovery':
             expect(page.locator('#data-status')).to_contain_text('Keine früheren Browser-Aufnahmen')
             assert page.evaluate('JSON.parse(sessionStorage.events)') == ['update']
         else:
@@ -176,6 +192,7 @@ def verify_reconnect(browser, url, release):
         assert not errors, errors
         context.close()
     print('PASS ordered startup, saved headset, changed address, companion, Bluetooth recovery and Wi-Fi fallback')
+    print('PASS failed signaling and LAN use fitted connection guidance at 320px and 200% text')
 
 
 def run():
