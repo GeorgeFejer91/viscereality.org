@@ -67,12 +67,16 @@ restored. Verify the standalone release, then run code-free pairing and
 the worn Polar and export checks. See the
 [APK record](../quest/apks/README.md#webrtc-bench-with-durable-audiotrack-completion-evidence).
 
-The visible Pixel stayed on its previously loaded PWA while parked on
-Connect. The next web release adds a five-minute check on that idle screen.
-The mounted browser regression first stayed on the old release, then updated
-exactly once after returning from Settings while preserving origin storage.
-The Pixel needs one initial reopen to load the new checker. Android still
-reports RustDesk Input disabled, so that device action remains pending.
+The PWA checks for updates every five minutes on the visible, idle Connect
+screen. [PR 116](https://github.com/GeorgeFejer91/viscereality.org/pull/116)
+and [Pages run 44316222303](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44316222303)
+published `20261118-idle-release`. Eleven live files matched Git. The
+mounted regression preserved Settings and origin storage, and live Chromium
+checked the current release without reloading. The standalone Pixel still
+shows `20261118-dataset-sync`. Restore RustDesk Input in Android and reopen
+the app once to load the checker. The available standard Bluetooth companion
+0.2.1 APK and the installed 0.1.0 APK have different certificates. An
+in-place upgrade requires a build signed with the installed certificate.
 
 The Meta-installed fixed27-r2 APK reached OpenXR focus on the Prepare page.
 After an isolated cold launch its trusted LAN gateway replied over the
@@ -190,6 +194,16 @@ when capture ends. Lock and reboot recovery still need an attended check.
   contained ECG, accelerometer and radius samples under one run identity.
   The six completed schema 4 Haupt-Runde exports each logged an ECG interruption.
   The phone had no submitted questionnaire in this audit.
+- [x] Audit observation coverage in the six retained schema 4 Haupt-Runde
+  CSVs directly on the Pixel. All 118 ECG and 30 accelerometer interruption
+  markers overlapped gaps of more than one second between recorded sample
+  observations. All six recordings also included playback pauses. One
+  recording had 13 ECG observation gaps and a maximum spacing of 16 ms
+  between adjacent sensor timestamps. Collect original PMD batches with
+  their receipt and sensor clocks during the next worn run to distinguish
+  delivery delay, timestamp projection and missing samples. The retained
+  exports establish historical gaps. A fresh native capture is still needed
+  for the uninterrupted acceptance gate.
 - [x] Accept the native terminal completion status for the questionnaire.
   Three of the six completed schema 4 main runs ended with a projected
   audio clock below 900 seconds. The recording evidence check still
