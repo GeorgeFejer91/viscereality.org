@@ -15,8 +15,9 @@ This is the working map of website-adjacent subprojects. Update it when a subpro
 - PWA startup updates (2026-11-16): each fresh launch checks the published web
   release before starting the controller, automatically switches if the release
   differs and can continue with the loaded version if the check fails.
-  Returning to the idle connection screen also checks. Active sessions keep
-  their document, and the installed app keeps its original launcher. See the
+  On the visible, idle Connect screen it also checks every five minutes.
+  Active sessions keep their document, and the installed app keeps its
+  original launcher. See the
   [release workflow](../atmungsraum/for-ai/WORKFLOW.md#smartphone-pwa).
 
 - Playground UI port (2026-11-16): the production operator starts with setup

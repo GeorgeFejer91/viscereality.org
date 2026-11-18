@@ -67,6 +67,13 @@ restored. Verify the standalone release, then run code-free pairing and
 the worn Polar and export checks. See the
 [APK record](../quest/apks/README.md#webrtc-bench-with-durable-audiotrack-completion-evidence).
 
+The visible Pixel stayed on its previously loaded PWA while parked on
+Connect. The next web release adds a five-minute check on that idle screen.
+The mounted browser regression first stayed on the old release, then updated
+exactly once after returning from Settings while preserving origin storage.
+The Pixel needs one initial reopen to load the new checker. Android still
+reports RustDesk Input disabled, so that device action remains pending.
+
 The Meta-installed fixed27-r2 APK reached OpenXR focus on the Prepare page.
 After an isolated cold launch its trusted LAN gateway replied over the
 temporary USB route. The Pixel's ordinary saved pairing is a legacy record

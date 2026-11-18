@@ -230,6 +230,7 @@ if (!await replaceWithPublishedRelease()) {
   window.addEventListener('pageshow', event => {
     if (event.persisted) void refreshIdlePage();
   });
+  window.setInterval(refreshIdlePage, 5 * 60_000);
   window.addEventListener('hashchange', mountOperator);
   const recovery = location.hash === '#daten';
   const browserExports = byId('daten');
