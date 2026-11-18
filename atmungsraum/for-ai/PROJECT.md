@@ -67,6 +67,12 @@ the companion's authorized installation to replace an unreachable legacy
 record only after native authentication. Pending receipts and a newer saved
 selection retain their original owner. See [legacy pairing recovery](VERIFICATION.md#legacy-pairing-recovery--2026-11-18).
 
+The [exact Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44287710879)
+served the recovery release and matching PWA assets. The installed Pixel
+passed frame-confirmed Settings, Quest Control details and return to Connect
+through RustDesk MCP. The ordinary saved pairing was present at sign-off.
+The physical automatic replacement case remains open.
+
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
 Eight live files match Git. The delayed-resize APK Details regression passes

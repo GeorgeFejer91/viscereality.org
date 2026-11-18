@@ -234,6 +234,13 @@ Existing saved installation trust keeps its reconnect path. The separate
 physical success case still requires an authorized companion profile and an
 isolated legacy record on the Pixel.
 
+The exact live release passed 378 GUI states and 346 web checks against
+the integrated questionnaire release. The mounted archive recovery suite
+also passed. On the actual Pixel, the exact standalone release kept its
+ordinary saved pairing and passed RustDesk Settings, Quest Control details
+and return to Connect. The host rejected setup of the isolated physical
+commissioning fixture by policy.
+
 ### Quest gateway listener recovery — 2026-11-18
 
 A temporary ADB reverse mapping occupied Quest port 8766 during an isolated
