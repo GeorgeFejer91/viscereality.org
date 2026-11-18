@@ -83,6 +83,28 @@ test('commit and verified reveal precede either matching-code approval and encry
   assert.ok(native.requests.includes('pair-confirm')); assert.equal(native.cancelled, false);
 });
 
+test('the existing two-sided pairing can run without a LAN address', async () => {
+  const native = fixture();
+  let prompts = 0;
+  const transport = {
+    request(body, signal) {
+      signal.throwIfAborted();
+      return native.fetch(endpoint, { body: JSON.stringify(body), credentials: 'omit', redirect: 'error' });
+    },
+  };
+  const result = await pairPhone({ transport, owner, wait: async () => {},
+    fetcher: () => assert.fail('an explicit data transport must never use HTTP'),
+    async onCode({ code }) {
+      prompts++;
+      assert.equal(code, native.code);
+      assert.equal(native.confirmed, false);
+      return true;
+    } });
+  assert.equal(prompts, 1);
+  assert.deepEqual(result, ticket);
+  assert.deepEqual(native.requests.slice(0, 2), ['pair-begin', 'pair-reveal']);
+});
+
 test('rejected, modified or foreign-owner pairing cannot return a saved phone key', async () => {
   for (const options of [{ reject: true }, { tamper: true }, { wrongOwner: true }]) {
     const native = fixture(options);
@@ -138,20 +160,24 @@ const javaOptions = { skip: !process.env.RQ_PAIRING_JAVA_CLASSPATH && 'Run nativ
 
 for (const order of ['phone-first', 'headset-first']) test(`FULL WebCrypto -> production Java commit/reveal/${order}/status/decrypt`, javaOptions, async t => {
   const java = await javaPeer(t); const actions = []; let prompts = 0;
-  const result = await pairPhone({ endpoint, owner: java.owner, phoneName: 'Test phone', wait: async () => {},
-    fetcher: async (_url, init) => {
-      const request = JSON.parse(init.body); actions.push(request.action);
-      const response = await java.call({ op: 'exchange', request });
-      if (request.action === 'pair-begin') {
-        assert.equal(request.client_nonce, undefined); assert.equal(request.client_public_key, undefined);
-        assert.equal(await java.call({ op: 'prompt' }), null); assert.equal((await java.call({ op: 'stats' })).stores, 0);
-      }
-      if (request.action === 'pair-confirm' && order === 'phone-first') {
-        assert.equal(response.state, 'pending'); assert.equal((await java.call({ op: 'stats' })).stores, 0);
-        await java.call({ op: 'decide', id: request.pairing_id, allow: true });
-      }
-      return Response.json(response);
-    },
+  const requestPairing = async (request, signal) => {
+    signal.throwIfAborted();
+    actions.push(request.action);
+    const response = await java.call({ op: 'exchange', request });
+    if (request.action === 'pair-begin') {
+      assert.equal(request.client_nonce, undefined); assert.equal(request.client_public_key, undefined);
+      assert.equal(await java.call({ op: 'prompt' }), null); assert.equal((await java.call({ op: 'stats' })).stores, 0);
+    }
+    if (request.action === 'pair-confirm' && order === 'phone-first') {
+      assert.equal(response.state, 'pending'); assert.equal((await java.call({ op: 'stats' })).stores, 0);
+      await java.call({ op: 'decide', id: request.pairing_id, allow: true });
+    }
+    return Response.json(response);
+  };
+  const route = order === 'phone-first'
+    ? { endpoint, fetcher: (_url, init) => requestPairing(JSON.parse(init.body), init.signal) }
+    : { transport: { request: requestPairing }, fetcher: () => assert.fail('unexpected LAN request') };
+  const result = await pairPhone({ ...route, owner: java.owner, phoneName: 'Test phone', wait: async () => {},
     onCode: async ({ code, pairingId }) => {
       prompts++; const prompt = await java.call({ op: 'prompt' });
       assert.equal(prompt.code, code); assert.equal(prompt.pairing_id, pairingId); assert.equal((await java.call({ op: 'stats' })).stores, 0);

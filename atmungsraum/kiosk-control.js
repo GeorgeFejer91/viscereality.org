@@ -1,4 +1,4 @@
-import { canControlQuest, operationId, sameQuest } from './quest-gateway.js?v=14';
+import { canControlQuest, operationId, sameQuest } from './quest-gateway.js?v=15';
 
 const journalKey = 'atmungsraum-kiosk-pending';
 const code = value => typeof value === 'string' && /^[a-z][a-z-]{0,47}$/.test(value);

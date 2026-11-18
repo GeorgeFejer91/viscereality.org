@@ -1,4 +1,4 @@
-import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=14';
+import { operationId, sameQuest, canControlQuest } from './quest-gateway.js?v=15';
 import { nativeSessionAllowed, metaUpdateView } from './meta-update.js?v=6';
 
 const stages = new Set(['idle', 'recovering', 'waiting', 'calibrating', 'testing', 'main-pending', 'main', 'complete']);

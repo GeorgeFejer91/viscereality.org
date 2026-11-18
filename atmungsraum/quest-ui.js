@@ -1,23 +1,23 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=14';
-import { pairPhone } from './quest-pairing.js?v=3';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=38';
+  controllerAccessState } from './quest-gateway.js?v=15';
+import { pairPhone } from './quest-pairing.js?v=4';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=39';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=17';
+import { BreathingSetup } from './breathing-setup.js?v=18';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=4';
+import { KioskControl } from './kiosk-control.js?v=5';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=6';
+import { MetaUpdateControl } from './meta-update-control.js?v=7';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=2';
+import { ControllerLease } from './controller-lease.js?v=3';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);

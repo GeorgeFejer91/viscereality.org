@@ -23,6 +23,12 @@ CASES = (
 )
 SPACING = "*{line-height:1.5!important;letter-spacing:.12em!important;word-spacing:.16em!important}p{margin-bottom:2em!important}"
 c = module()
+HOLD_RESIZE = """const RealResizeObserver = window.ResizeObserver;
+    window.ResizeObserver = class extends RealResizeObserver {
+      constructor(callback) {
+        super((...args) => { if (!window.reviewHoldResize) callback(...args); });
+      }
+    };"""
 
 
 class GuiReview(c.Review):
@@ -147,13 +153,7 @@ def capture_diagnostics(review, tag, viewport, font):
 def capture_apk_detail_change(review):
     # Keep the real ResizeObserver installed and delay its callbacks while
     # switching topics, so the visibility change must schedule measurement.
-    hold_resize = """const RealResizeObserver = window.ResizeObserver;
-    window.ResizeObserver = class extends RealResizeObserver {
-      constructor(callback) {
-        super((...args) => { if (!window.reviewHoldResize) callback(...args); });
-      }
-    };"""
-    page = review.page(initial(c) + hold_resize, viewport={"width": 390, "height": 844})
+    page = review.page(initial(c) + HOLD_RESIZE, viewport={"width": 390, "height": 844})
     page.clock.run_for(1500)
     go(page, "update")
     page.locator("#apk-identity summary").click()
@@ -170,6 +170,27 @@ def capture_apk_detail_change(review):
     expect(topic).to_be_focused()
     assert identity.get_attribute("data-text-fit") == "fit", "Visible APK identity must be measured before a resize callback"
     review.samples["apk-details-topic-change"] = page.evaluate(AUDIT, page.viewport_size)
+    page.context.close()
+
+
+def capture_connect_visibility_change(review):
+    page = review.page(initial(c) + HOLD_RESIZE + "window.reviewJoin='fail';",
+                       viewport={"width": 320, "height": 640})
+    page.clock.run_for(2000)
+    expect(page.locator("html")).to_have_attribute("data-measurement", "ready")
+    summary = page.locator("#operator-connection-summary")
+    expect(summary).to_be_hidden()
+    page.clock.pause_at(page.evaluate("Date.now()") + 1000)
+    page.clock.run_for(250)
+    assert summary.get_attribute("data-text-fit") is None
+    page.evaluate("""() => {
+      window.reviewHoldResize = true;
+      document.getElementById('operator-connection-summary').hidden = false;
+    }""")
+    page.clock.run_for(50)
+    expect(summary).to_be_visible()
+    assert summary.get_attribute("data-text-fit") == "fit", "Visible connection summary needs a fit check before resize"
+    review.samples["connect-summary-visibility-change"] = page.evaluate(AUDIT, page.viewport_size)
     page.context.close()
 
 
@@ -205,6 +226,7 @@ def verify():
             print(f"Checked {tag}: {len(review.samples) - count_before} screens and dialogs", flush=True)
         review.text_spacing = False
         capture_apk_detail_change(review)
+        capture_connect_visibility_change(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))
         for name, sample in review.samples.items():
