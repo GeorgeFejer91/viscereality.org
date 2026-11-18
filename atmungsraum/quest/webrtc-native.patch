@@ -15,7 +15,7 @@ index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab658
  
      static void experimentSessionBleOwnerChanged(long identity, long epoch, boolean live) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index dd75697d2e33ab2898af3ee549e86d637a7e1655..335d39dca42f7e089d474596edf361e24cdc7cac 100644
+index dd75697d2e33ab2898af3ee549e86d637a7e1655..4901c397c81598f2b401a66b6e36d9cf6a685f11 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -55,6 +55,20 @@ public final class ExperimentSessionCommandGateway {
@@ -78,7 +78,7 @@ index dd75697d2e33ab2898af3ee549e86d637a7e1655..335d39dca42f7e089d474596edf361e2
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -612,6 +642,21 @@ public final class ExperimentSessionCommandGateway {
+@@ -612,6 +642,25 @@ public final class ExperimentSessionCommandGateway {
          return exchangeRoute(envelope,true);
      }
      public JSONObject exchange(JSONObject envelope)throws Exception { return exchangeRoute(envelope,false); }
@@ -91,16 +91,20 @@ index dd75697d2e33ab2898af3ee549e86d637a7e1655..335d39dca42f7e089d474596edf361e2
 +        });
 +        String tag = ExperimentSessionGatewayProtocol.string(frame, "tag");
 +        if (!ExperimentSessionGatewayProtocol.hex(tag, 64)) throw new SecurityException("webrtc-member-required");
++        boolean commissioning = Integer.valueOf(2).equals(frame.opt("v"));
 +        for (ExperimentSessionGatewayProtocol member : memberProtocols.values()) {
-+            if (member.webRtcMemberTag(room, nativeEpoch).equals(tag))
-+                return member.exchangeWebRtc(frame, room, nativeEpoch);
++            String expected = commissioning ? member.commissioningTag(room, nativeEpoch) : member.webRtcMemberTag(room, nativeEpoch);
++            if (expected.equals(tag)) {
++                return commissioning ? member.commissionWebRtc(frame, room, nativeEpoch)
++                    : member.exchangeWebRtc(frame, room, nativeEpoch);
++            }
 +        }
 +        throw new SecurityException("webrtc-member-unavailable");
 +    }
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
-@@ -828,9 +873,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -828,9 +877,9 @@ public final class ExperimentSessionCommandGateway {
              .put("mode",packed).put("generation",status.getLong("g")).put("device",deviceId()).put("serial",headsetIdentity.serial());
          return live?ticket.put("session",nativeStatus.getString("session_key")):ticket.put("revision",status.getLong("r"));
      }
@@ -113,10 +117,10 @@ index dd75697d2e33ab2898af3ee549e86d637a7e1655..335d39dca42f7e089d474596edf361e2
      }
      private JSONObject requestRecenter(JSONObject body) throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index 53cd88330b0ccdb28db089089c3be97eeecd49c3..e903b6ccaa34bc98b14875565f31b21308351473 100644
+index 53cd88330b0ccdb28db089089c3be97eeecd49c3..7c9960b3cfcbd92fdf6de95c7ba3dd4b13226504 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-@@ -58,6 +58,71 @@ public final class ExperimentSessionGatewayProtocol {
+@@ -58,6 +58,153 @@ public final class ExperimentSessionGatewayProtocol {
      public synchronized void retire() { retired=true; nonces.clear(); }
      public JSONObject exchangeLan(JSONObject request) throws Exception { return exchange(request,true); }
      public JSONObject exchange(JSONObject request) throws Exception { return exchange(request,false); }
@@ -129,6 +133,88 @@ index 53cd88330b0ccdb28db089089c3be97eeecd49c3..e903b6ccaa34bc98b14875565f31b213
 +
 +    String webRtcMemberTag(String room, long nativeEpoch) throws Exception {
 +        return hmac(key, webRtcBinding(room, nativeEpoch) + "|member");
++    }
++
++    private String commissioningKey() throws Exception {
++        return hmac(key, "ATMB1|credential|" + device + "|" + controller);
++    }
++
++    String commissioningTag(String room, long nativeEpoch) throws Exception {
++        return hmac(commissioningKey(), "ATMB1|" + webRtcBinding(room, nativeEpoch) + "|member");
++    }
++
++    /** Recover one existing membership for a commissioned phone through an ephemeral key. */
++    JSONObject commissionWebRtc(JSONObject frame, String room, long nativeEpoch) throws Exception {
++        String binding = "ATMB1|" + webRtcBinding(room, nativeEpoch);
++        String id = string(frame, "id");
++        String tag = string(frame, "tag");
++        String clientKey = string(frame, "public_key");
++        String proof = string(frame, "proof");
++        if (frame.length() != 5 || !Integer.valueOf(2).equals(frame.opt("v")) || !hex(id, 32)
++                || !clientKey.matches("[A-Za-z0-9_-]{122}")
++                || !constant(commissioningTag(room, nativeEpoch), tag)) {
++            throw new SecurityException("invalid-commissioning-frame");
++        }
++        String bootstrap = commissioningKey();
++        String request = binding + "|request|" + id + "|" + tag + "|" + clientKey;
++        if (!constant(hmac(bootstrap, request), proof)) throw new SecurityException("invalid-commissioning-proof");
++        synchronized (this) {
++            if (retired || nonces.size() >= 65536 || !nonces.add("ATMB1|" + id)) {
++                throw new SecurityException("commissioning-replay-or-retired");
++            }
++        }
++
++        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
++        byte[] der = Base64.getUrlDecoder().decode(clientKey);
++        if (der.length != 91 || !clientKey.equals(encoder.encodeToString(der))) {
++            throw new SecurityException("invalid-commissioning-public-key");
++        }
++        java.security.PublicKey client = java.security.KeyFactory.getInstance("EC")
++            .generatePublic(new java.security.spec.X509EncodedKeySpec(der));
++        java.security.KeyPairGenerator generator = java.security.KeyPairGenerator.getInstance("EC");
++        generator.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
++        java.security.KeyPair server = generator.generateKeyPair();
++        byte[] serverDer = server.getPublic().getEncoded();
++        if (!java.util.Arrays.equals(java.util.Arrays.copyOf(der, 27), java.util.Arrays.copyOf(serverDer, 27))) {
++            throw new SecurityException("invalid-commissioning-curve");
++        }
++        String serverKey = encoder.encodeToString(serverDer);
++        String reply = request + "|reply|" + serverKey;
++        javax.crypto.KeyAgreement ecdh = javax.crypto.KeyAgreement.getInstance("ECDH");
++        ecdh.init(server.getPrivate());
++        ecdh.doPhase(client, true);
++        byte[] shared = ecdh.generateSecret();
++        byte[] material = null;
++        byte[] extracted = null;
++        try {
++            byte[] salt = MessageDigest.getInstance("SHA-256").digest(reply.getBytes(StandardCharsets.UTF_8));
++            Mac hkdf = Mac.getInstance("HmacSHA256");
++            hkdf.init(new SecretKeySpec(salt, "HmacSHA256"));
++            extracted = hkdf.doFinal(shared);
++            hkdf.init(new SecretKeySpec(extracted, "HmacSHA256"));
++            material = hkdf.doFinal("ATMB1/ticket\u0001".getBytes(StandardCharsets.US_ASCII));
++            byte[] iv = new byte[12];
++            RANDOM.nextBytes(iv);
++            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
++            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(material, "AES"), new GCMParameterSpec(128, iv));
++            cipher.updateAAD(reply.getBytes(StandardCharsets.UTF_8));
++            synchronized (this) {
++                if (retired) throw new SecurityException("commissioning-owner-retired");
++                byte[] ticket = new JSONObject().put("device", device).put("epoch", epoch)
++                    .put("controller", controller).put("key", key).toString().getBytes(StandardCharsets.UTF_8);
++                byte[] sealed;
++                try { sealed = cipher.doFinal(ticket); }
++                finally { java.util.Arrays.fill(ticket, (byte) 0); }
++                String ivText = encoder.encodeToString(iv);
++                String data = encoder.encodeToString(sealed);
++                return new JSONObject().put("v", 2).put("tag", tag).put("id", id).put("public_key", serverKey)
++                    .put("iv", ivText).put("data", data).put("proof", hmac(bootstrap, reply + "|" + ivText + "|" + data));
++            }
++        } finally {
++            java.util.Arrays.fill(shared, (byte) 0);
++            if (extracted != null) java.util.Arrays.fill(extracted, (byte) 0);
++            if (material != null) java.util.Arrays.fill(material, (byte) 0);
++        }
 +    }
 +
 +    /** Run sealed WebRTC requests through the same membership, nonce and owner as LAN. */
@@ -350,10 +436,10 @@ index 0000000000000000000000000000000000000000..eb329c1dfe52dd65c4e45c0897460650
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..6f70b55a7344b057fcf67d78b39b809c10aa6441 100644
+index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..10f655eaaef0d3e95595f1a0b6cb957b78539989 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-@@ -18,7 +18,134 @@ public final class ExperimentSessionGatewayProtocolTest {
+@@ -18,7 +18,170 @@ public final class ExperimentSessionGatewayProtocolTest {
      }
      interface Trial{void run()throws Exception;}
      static void denied(Trial trial)throws Exception {int before=calls;try{trial.run();throw new AssertionError("admitted invalid request");}catch(SecurityException|IllegalArgumentException expected){}if(calls!=before)throw new AssertionError("denied request reached owner");}
@@ -432,6 +518,39 @@ index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..6f70b55a7344b057fcf67d78b39b809c
 +    }
 +
 +
++    static void commissionedBootstrap() throws Exception {
++        String room = repeat("a", 32);
++        String id = repeat("f", 32);
++        String binding = "ATMB1|RQG1-RTC1|" + DEVICE + "|42|7|" + room;
++        String bootstrap = ExperimentSessionGatewayProtocol.hmac(KEY, "ATMB1|credential|" + DEVICE + "|" + CONTROLLER);
++        String tag = ExperimentSessionGatewayProtocol.hmac(bootstrap, binding + "|member");
++        java.security.KeyPairGenerator keys = java.security.KeyPairGenerator.getInstance("EC");
++        keys.initialize(new java.security.spec.ECGenParameterSpec("secp256r1"));
++        java.security.KeyPair client = keys.generateKeyPair();
++        String clientKey = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(client.getPublic().getEncoded());
++        String transcript = binding + "|request|" + id + "|" + tag + "|" + clientKey;
++        JSONObject frame = new JSONObject().put("v", 2).put("id", id).put("tag", tag)
++            .put("public_key", clientKey).put("proof", ExperimentSessionGatewayProtocol.hmac(bootstrap, transcript));
++        ExperimentSessionGatewayProtocol member = new ExperimentSessionGatewayProtocol(CONTROLLER, KEY, DEVICE, 42,
++            true, true, (action, payload) -> { throw new AssertionError("enrollment reached experiment owner"); });
++
++        if (!tag.equals(member.commissioningTag(room, 7))) throw new AssertionError("wrong commissioning tag");
++        denied(() -> member.commissionWebRtc(frame, room, 8));
++        denied(() -> member.commissionWebRtc(copy(frame).put("proof", repeat("0", 64)), room, 7));
++        denied(() -> member.commissionWebRtc(copy(frame).put("unexpected", 1), room, 7));
++        denied(() -> member.commissionWebRtc(copy(frame).put("public_key", "abc"), room, 7));
++        JSONObject reply = member.commissionWebRtc(frame, room, 7);
++        if (reply.has("key") || reply.has("controller") || !reply.getString("id").equals(id) || !reply.getString("tag").equals(tag))
++            throw new AssertionError("credential escaped the sealed bootstrap envelope");
++        String replyBinding = transcript + "|reply|" + reply.getString("public_key") + "|" + reply.getString("iv")
++            + "|" + reply.getString("data");
++        if (!ExperimentSessionGatewayProtocol.hmac(bootstrap, replyBinding).equals(reply.getString("proof")))
++            throw new AssertionError("Quest proof omitted a required field");
++        denied(() -> member.commissionWebRtc(frame, room, 7));
++        member.retire();
++        denied(() -> member.commissionWebRtc(frame, room, 7));
++    }
++
 +    static void serveRtc(String room) throws Exception {
 +        if (!ExperimentSessionGatewayProtocol.hex(room, 32)) throw new IllegalArgumentException("test-room");
 +        final String build = repeat("e", 64);
@@ -461,7 +580,9 @@ index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..6f70b55a7344b057fcf67d78b39b809c
 +                    JSONObject request = new JSONObject(line);
 +                    switch (request.getString("op")) {
 +                        case "frame":
-+                            response.put("result", member.exchangeWebRtc(request.getJSONObject("frame"), room, 7));
++                            JSONObject packet = request.getJSONObject("frame");
++                            response.put("result", packet.getInt("v") == 2 ? member.commissionWebRtc(packet, room, 7)
++                                : member.exchangeWebRtc(packet, room, 7));
 +                            break;
 +                        case "stats":
 +                            response.put("result", calls);
@@ -485,6 +606,7 @@ index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..6f70b55a7344b057fcf67d78b39b809c
      public static void main(String[]args)throws Exception {
 +        if (args.length == 2 && "--serve-webrtc".equals(args[0])) { serveRtc(args[1]); return; }
 +        rtcEnvelope();
++        commissionedBootstrap();
          JSONObject updateCommand=new JSONObject().put("v",1).put("id","aabbccddeeff0011").put("op","check-and-update").put("cycle","1").put("revision","2");
          if(!ExperimentSessionGatewayProtocol.metaUpdateQuery(updateCommand).toString().equals(updateCommand.toString()))throw new AssertionError("canonical update body changed");
          JSONObject endPreparation=new JSONObject(updateCommand.toString()).put("op","end-preparation-and-check");

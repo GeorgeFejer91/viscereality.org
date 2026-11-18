@@ -1,23 +1,23 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=16';
-import { pairPhone } from './quest-pairing.js?v=5';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=40';
+  controllerAccessState } from './quest-gateway.js?v=17';
+import { pairPhone } from './quest-pairing.js?v=6';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=41';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=19';
+import { BreathingSetup } from './breathing-setup.js?v=20';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=6';
+import { KioskControl } from './kiosk-control.js?v=7';
 import { ApkRelease } from './quest-release.js?v=1';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=8';
+import { MetaUpdateControl } from './meta-update-control.js?v=9';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=4';
+import { ControllerLease } from './controller-lease.js?v=5';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
@@ -1209,9 +1209,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
-    if (location.hash !== '#daten' && !rehearsal.state.status && savedPair?.enrollment && autoConnect
+    if (location.hash !== '#daten' && !rehearsal.state.status && autoConnect
       && canAutoConnect() && performance.now() >= nextConnect) {
-      void connect(savedPair);
+      if (savedPair?.enrollment) void connect(savedPair);
+      else {
+        nextConnect = performance.now() + 8000;
+        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=1');
+        const commissioned = await readCommissionedQuest();
+        if (commissioned && !savedPair?.enrollment && !document.hidden && !connecting && !userAction
+          && !rehearsal.state.status && autoConnect && location.hash !== '#daten' && canAutoConnect()) {
+          void connect(commissioned);
+        }
+      }
       return;
     }
     const gateway = rehearsal.gateway;
@@ -1349,16 +1358,22 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           // it if the following authenticated status request loses its reply.
           rememberPair(settings);
         };
-        if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
+        const duringCommissioning = settings.commissioned === true && !chooseDevice && !settings.enrollment;
+        if (duringCommissioning) {
+          if (!discovery.rtc || settings.device !== discovery.owner.device) {
+            throw Error('Die freigegebene Quest ist über WebRTC noch nicht erreichbar.');
+          }
+        } else if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=1');
-            const transport = await openQuestWebRtc(discovery, settings.enrollment, signal);
-            gateway = await join(undefined, discovery, transport);
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=2');
+            const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
+            settings = { ...settings, enrollment: session.enrollment };
+            gateway = await join(undefined, discovery, session.transport);
             endpoint = discovery.endpoints[0] ?? endpoint;
           } catch (error) {
             signal.throwIfAborted();
-            if (error.status === 403) throw error;
+            if (duringCommissioning || error.status === 403) throw error;
             joinMessage = error.message;
           }
         }

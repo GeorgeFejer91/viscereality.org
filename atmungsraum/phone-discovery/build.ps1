@@ -26,7 +26,10 @@ $sources = @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot src) -Filter '*
 Invoke-BuildTool "$JavaHome/bin/javac.exe" (@('--release', '11', '-classpath', $androidJar, '-d', $classes) + $sources)
 Invoke-BuildTool "$JavaHome/bin/jar.exe" @('cf', "$stage/classes.jar", '-C', $classes, '.')
 Invoke-BuildTool "$buildTools/d8.bat" @('--min-api', '31', '--lib', $androidJar, '--output', $dex, "$stage/classes.jar")
-Invoke-BuildTool "$buildTools/aapt2.exe" @('link', '-I', $androidJar, '--manifest', "$PSScriptRoot/AndroidManifest.xml", '-o', $package)
+$compiledResources = Join-Path $stage 'resources.zip'
+Invoke-BuildTool "$buildTools/aapt2.exe" @('compile', '--dir', "$PSScriptRoot/res", '-o', $compiledResources)
+Invoke-BuildTool "$buildTools/aapt2.exe" @('link', '-I', $androidJar, '--manifest', "$PSScriptRoot/AndroidManifest.xml",
+    '-o', $package, $compiledResources)
 Push-Location -LiteralPath $dex
 try { Invoke-BuildTool "$buildTools/aapt.exe" @('add', $package, 'classes.dex') } finally { Pop-Location }
 Invoke-BuildTool "$buildTools/zipalign.exe" @('-p', '4', $package, $aligned)

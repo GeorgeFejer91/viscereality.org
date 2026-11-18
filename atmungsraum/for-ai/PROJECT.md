@@ -160,6 +160,26 @@ packages. A synthetic membership is staged in the bench package for the
 attended tests. First launch permission, physical relay and the phone
 receipt remain separate gates.
 
+Automatic first pairing now starts from Android managed configuration.
+A commissioned phone with empty PWA storage gets one authorized Quest
+identity from the companion, discovers its current room and proves
+possession of a dedicated device key. The companion verifies the Quest's
+response before the browser can open the encrypted membership ticket.
+An isolated Quest bench APK is installed at code 28 with exact signed
+byte readback. The separate Meta Developer release continues at code 27
+for the attended update protocol.
+
+The real PWA launch, companion proof implementation, bundled target
+page and native Java gateway passed on direct WebRTC and forced TURN
+with initially empty browser storage and zero LAN addresses. A forged
+Quest proof left storage empty and dispatched zero native status
+requests. These host cases used synthetic records. All 335 Node cases,
+the startup check, the native gateway host checks and 340 GUI states
+pass. The lab Pixel still has discovery companion code 1, and the test
+code-2 artifact has a different signer. Physical first pairing needs
+a correctly signed companion and the authorized device configuration.
+See [the managed phone procedure](../phone-discovery/README.md#managed-first-pairing).
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices

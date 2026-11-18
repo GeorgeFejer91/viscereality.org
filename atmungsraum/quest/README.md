@@ -16,7 +16,7 @@ source identity and verification history.
 
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
-tree is `8e7dbbce2a9132fe3e0b54617bed8d21f956d0c2`. Commit it in an
+tree is `c0b2c0fa6e198d6af9edb1d8532bcf7bda9c751f`. Commit it in an
 isolated source checkout so the build can bind the clean composition.
 Select `-WebRtc` with the phone-pairing APK profile. The assembly locks
 the production Java bridge and the bundled browser assets, then compares
@@ -25,9 +25,8 @@ every selected WebRTC asset in the signed APK to its input bytes.
 The browser uses the pinned VDO.Ninja 1.5.5 data-only transport. The
 WebView sees an expiring room and encrypted RQG1 requests only. Native
 membership, gateway and runtime epochs, nonces and command receipts remain
-authoritative. This path currently reconnects saved enrollment. Managed
-automatic initial enrollment and the physical network matrix still gate
-lab release. Keep the installed Meta baseline available for the study and
+authoritative. This path supports saved enrollment and commissioned first
+pairing. The physical network matrix still gates lab release. Keep the installed Meta baseline available for the study and
 update validation.
 
 ### Side-by-side Quest 2 bench install

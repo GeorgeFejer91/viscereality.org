@@ -210,3 +210,20 @@ before either UI, plus the browser's 8192-byte streaming response limit. The
 Java test `--serve` harness and optional `--vector` output contain only synthetic
 host data and are not packaged. A derived-key fixture alone is insufficient
 wire interoperability evidence.
+
+## Provisioned phones over WebRTC
+
+A managed companion can recover a preauthorized existing membership using
+a room-scoped ATMB1 request. The installation ID, gateway and native
+epochs, room, request ID and ephemeral P-256 public key are bound to
+the companion's HMAC. Quest selects the existing member by the
+room-specific tag, verifies the proof and checks the shared replay
+and retirement boundary. A TURN peer or bare discovery result has
+no commissioning authority.
+
+Quest encrypts the existing member credentials to the requesting
+ephemeral key with ECDH, HKDF-SHA256 and AES-GCM. The companion verifies
+a distinct reply HMAC over both public keys, the IV and the ciphertext
+before the browser opens the ticket. This branch has no experiment
+dispatch. The browser then enters the ordinary signed RQG1 status,
+lease and receipt path. [Android commissioning procedure](../phone-discovery/README.md#managed-first-pairing)

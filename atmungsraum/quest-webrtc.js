@@ -1,6 +1,7 @@
 import { VdoNinjaTransport } from './vendor/quest-webrtc/vdo-ninja-transport.js';
 import { bindQuestRtcChannel } from './quest-webrtc-channel.js';
 import { createQuestRtcTransport } from './quest-webrtc-session.js';
+import { commissioningBroker, recoverCommissionedEnrollment } from './quest-commissioning.js?v=1';
 import './vendor/quest-webrtc/vdoninja-sdk.min.js';
 
 export async function openQuestWebRtc(discovery, enrollment, signal) {
@@ -31,12 +32,17 @@ export async function openQuestWebRtc(discovery, enrollment, signal) {
     });
     readySignal.throwIfAborted();
     const link = bindQuestRtcChannel(carrier, peer);
-    return await createQuestRtcTransport({
-      owner, enrollment, room: rtc.r, channel: {
+    const membership = enrollment ?? await recoverCommissionedEnrollment({
+      discovery, channel: link, broker: commissioningBroker,
+      signal: AbortSignal.any([signal, AbortSignal.timeout(7500)]),
+    });
+    const transport = await createQuestRtcTransport({
+      owner, enrollment: membership, room: rtc.r, channel: {
         request: link.request,
         close() { link.close(); stop(); },
       },
     });
+    return { transport, enrollment: membership };
   } catch (error) {
     stop();
     throw error;

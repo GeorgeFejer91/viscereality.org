@@ -1,5 +1,21 @@
 # Atmungsraum Quest 2 APKs
 
+## Managed commissioning WebRTC bench on Quest 2
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `28`,
+version name `0.2.27-rtc-test`, and 65,605,180 bytes. SHA-256 is
+`6b7692b6d4109348e9d4b6e4d08f4a0d915df89dc542b485f278956f31a4f5e2`.
+Native source tree `c0b2c0fa6e198d6af9edb1d8532bcf7bda9c751f`.
+The v3 signature, ARM64, alignment, selected WebRTC assets and cold
+session closure pass. Installed Quest 2 bench bytes match the signed
+digest. Source [reconstruction instructions](../README.md#webrtc-candidate)
+apply to this bench version.
+
+This is the test package for the managed phone's first WebRTC connection.
+The separately identified Meta Developer and rehearsal routes continue
+under their own entries. The headset's attended launch and network,
+Polar H10 and collection verification remain open.
+
 ## WebRTC bench installed on lab Quest 2
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `27`,
