@@ -1,5 +1,5 @@
 import { captureUtc, collectionStart } from './collection-time.js?v=1';
-import { ensureDriveChild } from './quest-drive.js?v=5';
+import { ensureDriveChild } from './quest-drive.js?v=6';
 
 export const hardwarePairKey = 'atmungsraum-drive-hardware-pairs';
 const phoneIdKey = 'atmungsraum-drive-phone-id';
@@ -32,6 +32,18 @@ export async function datasetDestination({ drive, store, root, pair, id, start, 
   if (saved) pair = { id: saved.properties.pairId, source: saved.properties.pairIdentitySource };
   const pairFolder = await ensureDrivePair({ drive, store, root, pair, signal });
   if (saved) return ensureDriveChild({ drive, store, key, ...saved, parent: pairFolder, signal });
+  const existing = await drive.findDataset(pairFolder, id, signal);
+  if (existing) {
+    const { id: folderId, name, appProperties: properties } = existing;
+    const originalStart = properties?.collectionStartedAtUtc;
+    if (properties?.pairId !== pair.id || properties?.pairIdentitySource !== pair.source
+      || properties?.questRecordingId !== id || typeof originalStart !== 'string'
+      || name !== originalStart.replaceAll(':', '-') + '__' + id) {
+      throw Error('Der Google-Drive-Ordner stimmt nicht mit dem Datensatz überein.');
+    }
+    await store.saveDelivery(key, { parent: pairFolder, folderId, name, properties });
+    return folderId;
+  }
   start ??= collectionStart({ id });
   const reference = observed ?? await captureUtc({ signal });
   const name = start.utc.replaceAll(':', '-') + '__' + id;

@@ -19,6 +19,7 @@ function simulatedDrive() {
   let sharedFolder = false;
   let quota = false;
   let loseFolder = false;
+  let incompleteInventory = false;
   const fetcher = async (input, options) => {
     const url = new URL(input);
     assert.equal(url.origin, 'https://www.googleapis.com');
@@ -26,9 +27,16 @@ function simulatedDrive() {
     if (url.pathname === '/drive/v3/about') return Response.json({ user: account });
     if (url.pathname.endsWith('/generateIds')) return Response.json({ ids: [`file-${++reservations}`] });
     if (url.pathname === '/drive/v3/files' && options.method === 'GET') {
-      const [, parent, name] = /^'([^']+)' in parents and name = '([^']+)'/.exec(url.searchParams.get('q'));
-      return Response.json({ files: [...files.values()].filter(file => file.parents?.[0] === parent
-        && file.name === name).map(file => ({ id: file.id })) });
+      const query = url.searchParams.get('q');
+      const [, parent] = /^'([^']+)' in parents/.exec(query);
+      const name = /\bname = '([^']+)'/.exec(query)?.[1];
+      const recording = /appProperties has \{ key='questRecordingId' and value='([^']+)' \}/.exec(query)?.[1];
+      const mime = /mimeType = '([^']+)'/.exec(query)?.[1];
+      const matches = [...files.values()].filter(file => file.parents?.[0] === parent
+        && file.trashed === false && (!name || file.name === name)
+        && (!recording || file.appProperties?.questRecordingId === recording)
+        && (!mime || file.mimeType === mime)).map(file => ({ id: file.id }));
+      return Response.json({ files: matches, incompleteSearch: incompleteInventory });
     }
     if (url.pathname === `/drive/v3/files/${folderId}`) {
       return Response.json({ id: folderId, mimeType: 'application/vnd.google-apps.folder',
@@ -64,7 +72,8 @@ function simulatedDrive() {
   return { files, fetcher, interruptNextUpload: () => { interrupt = true; },
     corruptChecksum: () => { corrupt = true; }, foreignSession: () => { foreignSession = true; },
     shareFolder: () => { sharedFolder = true; }, quotaOnce: () => { quota = true; },
-    interruptFolder: () => { loseFolder = true; } };
+    interruptFolder: () => { loseFolder = true; }, reservations: () => reservations,
+    reportIncompleteInventory: () => { incompleteInventory = true; } };
 }
 
 function localReceipts(rows = new Map()) {
@@ -101,6 +110,56 @@ test('each Quest dataset gets one folder and sibling files through an ambiguous 
   }
   remote.files.get(first).parents = [second];
   await assert.rejects(() => folder(ids[0]), /Ordner stimmt nicht/);
+});
+
+test('a rebuilt Pixel journal adopts the same private dataset and verified files', async () => {
+  const remote = simulatedDrive();
+  let store = localReceipts();
+  const drive = createQuestDrive('fixture-token', remote.fetcher);
+  const pair = { id: 'a'.repeat(24), source: 'usb-hardware-pair' };
+  const id = 'utc-ns-01794996000000000000';
+  const start = { utc: '2026-11-18T10:00:00.123456Z', source: 'quest-official-start' };
+  const observed = { utc: '2026-11-18T10:00:01.010Z', source: 'timeapi.io' };
+  const destination = stamp => datasetDestination({ drive, store, root: folderId, pair, id, start: stamp,
+    observed, signal });
+  const first = await destination(start);
+  const csv = new File(['fixture measurement'], 'recording.csv', { type: 'text/csv' });
+  const questionnaire = new File(['fixture answers'], 'answers.json', { type: 'application/json' });
+  const deliver = (key, file) => deliverQuestBundle({ drive, store, folderId: first, id: key, file,
+    signal, stamp: start, recoverExisting: true });
+  await deliver(id, csv);
+  await deliver(id + '/questionnaire', questionnaire);
+  const original = [store.rows.get(id).driveId, store.rows.get(id + '/questionnaire').driveId];
+  const count = remote.files.size;
+  const reserved = remote.reservations();
+
+  store = localReceipts();
+  assert.equal(await destination({ utc: '2026-11-18T10:00:00.000Z', source: 'quest-recording-key' }), first);
+  await deliverQuestPrefix({ drive, store, folderId: first, id, name: csv.name, type: csv.type,
+    available: 256 * 1024 + 1, signal, recoverExisting: true,
+    read: () => assert.fail('an existing final file needs no provisional upload') });
+  assert.equal(store.rows.has(id), false);
+  await deliver(id, csv);
+  await deliver(id + '/questionnaire', questionnaire);
+  assert.deepEqual([store.rows.get(id).driveId, store.rows.get(id + '/questionnaire').driveId], original);
+  assert.equal(remote.files.size, count);
+  assert.equal(remote.reservations(), reserved);
+  assert.equal(remote.files.get(first).appProperties.phoneObservedAtUtc, observed.utc);
+
+  store = localReceipts();
+  await assert.rejects(() => deliver(id, new File(['Fixture measurement'], csv.name, { type: csv.type })), /Prüfsumme/);
+  assert.equal(store.rows.has(id), false);
+  assert.equal(remote.files.size, count);
+  remote.files.get(original[0]).shared = true;
+  await assert.rejects(() => deliver(id, csv), /private/);
+  assert.equal(store.rows.has(id), false);
+  remote.files.set('duplicate', { ...remote.files.get(first), id: 'duplicate' });
+  await assert.rejects(() => destination(start), /eindeutig/);
+  assert.equal(store.rows.has(id + '/dataset-folder'), false);
+  remote.files.delete('duplicate');
+  remote.reportIncompleteInventory();
+  await assert.rejects(() => destination(start), /eindeutig/);
+  assert.equal(remote.reservations(), reserved);
 });
 
 test('hardware pair aliases are only used for their bound Quest installation', async () => {

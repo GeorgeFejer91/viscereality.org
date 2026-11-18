@@ -1,6 +1,7 @@
 """Render the production PWA under the playground's strict no-scroll rules."""
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from runpy import run_path
@@ -194,7 +195,16 @@ def connect_fixture_drive(page):
         elif url.path == "/drive/v3/about":
             reply({"user": {"emailAddress": email, "permissionId": "fixture-owner"}})
         elif url.path == "/drive/v3/files" and method == "GET":
-            reply({"files": []})
+            query = parse_qs(url.query)["q"][0]
+            parent = re.match(r"^'([^']+)' in parents", query)[1]
+            name = re.search(r"\bname = '([^']+)'", query)
+            recording = re.search(r"appProperties has \{ key='questRecordingId' and value='([^']+)' \}", query)
+            mime = re.search(r"mimeType = '([^']+)'", query)
+            reply({"files": [{"id": entry["id"]} for entry in remote.values()
+                             if entry["parents"] == [parent] and not entry["trashed"]
+                             and (not name or entry["name"] == name[1])
+                             and (not recording or entry.get("appProperties", {}).get("questRecordingId") == recording[1])
+                             and (not mime or entry["mimeType"] == mime[1])]})
         elif url.path.endswith("/generateIds"):
             reservations.append(len(reservations) + 1)
             reply({"ids": [folder if len(reservations) == 1 else f"file-{len(reservations)}"]})
@@ -245,13 +255,53 @@ def connect_fixture_drive(page):
           access_token:'fixture-token', scope:'https://www.googleapis.com/auth/drive.file', expires_in:3600
         })})
     }}};"""))
-    page.locator("#drive-open").click()
-    page.locator("#quest-drive-client").fill("12345-fixture.apps.googleusercontent.com")
-    page.locator("#quest-drive-account").fill(email)
-    page.locator("#quest-drive-connect").click()
+    def authorize():
+        page.locator("#drive-open").click()
+        page.locator("#quest-drive-client").fill("12345-fixture.apps.googleusercontent.com")
+        page.locator("#quest-drive-account").fill(email)
+        page.locator("#quest-drive-connect").click()
+
+    authorize()
     expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 1")
     assert len(payloads) == 1 and len(reservations) == 4
-    return payloads, reservations, lost_answers
+    return payloads, reservations, lost_answers, remote, authorize
+
+
+def rebuild_drive_journal(page, authorize, questionnaire_id):
+    page.evaluate("""() => navigator.locks.request('atmungsraum-quest-drive', () => new Promise((resolve, reject) => {
+        const request = indexedDB.open('atmungsraum-quest-recordings', 4);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const tx = db.transaction('drive', 'readwrite');
+            tx.oncomplete = () => { db.close(); resolve(); };
+            tx.onabort = () => { db.close(); reject(tx.error); };
+            const cursor = tx.objectStore('drive').openCursor();
+            cursor.onsuccess = () => {
+                const entry = cursor.result;
+                if (!entry) return;
+                if (entry.key !== 'destination') entry.delete();
+                entry.continue();
+            };
+        };
+    }))""")
+    go(page, "recordings")
+    with page.expect_response(lambda response: urlsplit(response.url).path == f"/drive/v3/files/{questionnaire_id}"):
+        authorize()
+    expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 2")
+    return page.evaluate("""() => new Promise((resolve, reject) => {
+        const request = indexedDB.open('atmungsraum-quest-recordings', 4);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            const db = request.result;
+            const receipts = db.transaction('drive').objectStore('drive').getAll();
+            receipts.onsuccess = () => {
+                db.close();
+                resolve(receipts.result.filter(row => row.verified).map(row => row.driveId));
+            };
+            receipts.onerror = () => { db.close(); reject(receipts.error); };
+        };
+    })""")
 
 
 def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True, drive=False):
@@ -286,7 +336,7 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             expect(form).to_be_hidden()
             expect(page.locator("#questionnaire-open")).to_be_visible()
             if drive:
-                payloads, reservations, lost_answers = connect_fixture_drive(page)
+                payloads, reservations, lost_answers, remote, authorize = connect_fixture_drive(page)
             page.locator("#questionnaire-open").click()
         expect(form).to_be_visible()
         if tag == "390" and live:
@@ -353,6 +403,9 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             assert payloads[download.value.suggested_filename] == file_bytes
             assert len(payloads) == 2 and len(reservations) == 5 and len(lost_answers) == 1
             assert json.loads(file_bytes)["clock_source"] == "timeapi.io"
+            file_ids = {entry["id"] for entry in remote.values() if entry["name"] in payloads}
+            assert set(rebuild_drive_journal(page, authorize, lost_answers[0])) == file_ids
+            assert len(remote) == 4 and len(reservations) == 5
         record = json.loads(file_bytes)
         assert record["participant_id"] == "Tes_30_N"
         assert record["session_id"] == "01234567-89ab-4def-8abc-0123456789ab"

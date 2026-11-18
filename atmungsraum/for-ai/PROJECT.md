@@ -180,6 +180,15 @@ QFM showed virtual proximity CLOSE; this firmware did not expose the remaining
 hold time to QFM. The Pixel retained the USB pair binding and was still on
 Connect with its other saved Quest. Approve the new headset pairing next.
 
+An empty Pixel upload journal previously made the same hardware pair reserve
+a second Drive dataset. The PWA now finds the original private folder by
+Quest recording ID and verifies its existing CSV and questionnaire before
+restoring their delivery receipts. The mounted PWA fixture clears only the
+synthetic upload journal, reauthorizes Drive and recovers both original IDs
+with zero new reservations. Host tests reject changed bytes, a shared file
+and duplicate or incomplete inventory. The physical Drive custody gate
+remains open.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and

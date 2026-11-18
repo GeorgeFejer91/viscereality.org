@@ -1,7 +1,7 @@
-import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveRootName, questDriveScope } from './quest-drive.js?v=5';
+import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveRootName, questDriveScope } from './quest-drive.js?v=6';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { collectionStart, questionnaireStart, recordingHeadBytes } from './collection-time.js?v=1';
-import { datasetDestination, drivePairIdentity, ensureDrivePair } from './quest-drive-datasets.js?v=1';
+import { datasetDestination, drivePairIdentity, ensureDrivePair } from './quest-drive-datasets.js?v=2';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
 const lockName = 'atmungsraum-quest-drive';
@@ -171,7 +171,7 @@ export function mountQuestDrive() {
                   current.checkFolderAfter = performance.now() + 30000;
                 }
                 await deliverQuestPrefix({ drive: current.drive, store, folderId, id: prefix.id, name: staged.name,
-                  type: 'text/csv', available: staged.offset, signal, stamp,
+                  type: 'text/csv', available: staged.offset, signal, stamp, recoverExisting: folderId !== root,
                   read: (start, end) => store.readPrefixBytes(prefix.id, start, end) });
                 const acknowledged = (await store.readDelivery(prefix.id))?.offset ?? 0;
                 if (acknowledged) report('Google Drive empfängt die laufende Aufnahme.');
@@ -183,7 +183,8 @@ export function mountQuestDrive() {
             async function uploadFile(folderId, id, file, stamp, resetDriveUpload = false) {
               signal.throwIfAborted();
               report('Dateien werden in Google Drive gespeichert …');
-              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file, signal, stamp, resetDriveUpload });
+              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file, signal, stamp, resetDriveUpload,
+                recoverExisting: folderId !== root });
             }
             for (const id of (await store.ids()).reverse()) {
               signal.throwIfAborted();
