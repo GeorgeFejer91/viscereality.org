@@ -370,6 +370,12 @@ html[data-layout="reflow"] #quest-participant .patient-body { grid-template-rows
   align-content: space-evenly;
   gap: clamp(6px, min(2vw, 1.5dvh), 16px);
 }
+@media (max-height: 480px) {
+  #participant-screen .operator-body { row-gap: 4px; }
+  #participant-screen .operator-common { padding: 3px 6px; row-gap: 3px; }
+  #participant-screen .patient-fields { row-gap: 4px; }
+  #participant-screen .patient-row { row-gap: 2px; }
+}
 .setup-actions { display: grid; gap: 8px; min-width: 0; }
 .setup-actions { grid-template-columns: repeat(auto-fit, minmax(min(100%, 8em), 1fr)); align-items: start; }
 html[data-mode="quest"] .setup-actions #corner-actions { position: static; display: grid; max-width: none; }

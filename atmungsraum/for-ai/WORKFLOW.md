@@ -86,7 +86,7 @@ evidence, restoring scroll afterward. Do not change production CSS or suppress
 geometry failures to accommodate a capture artifact. Native sample cadence and
 command assertions remain separate deterministic checks.
 
-## Current hardware-test handoff — 2026-11-16
+## Hardware-test handoff record — 2026-11-16
 
 The user defers new-mode testing. Current focus is physical yellow-circle/
 percentage stepping under Automatic, diagnosed read-only on the connected Pixel.
@@ -96,8 +96,8 @@ PWA uses100ms coalesced preview-only reads and bounded280ms adjacent GPU-sample
 playout; endpoint expiry stays500ms. PR22/Pages43877648195 and27 live/public-render checks pass. Exact same-phone
 confirmation is pending because the user no longer has the phone available.
 Read-only observers ended; owned9226 CDP forward and phone/port leases are released.
-Keep phone control with the user. Wait for their return before requesting refresh
-or readiness; do not switch modes or calibrate. APK11/native remain unchanged.
+The November 16 handoff kept phone control with the user and deferred mode
+changes and calibration. APK11/native remained unchanged during the handoff.
 
 Code11 (0.2.10-dev) is installed with exact byte/version readback and retained
 UID after the user confirmed no recording. Trusted MAIN/LAUNCHER cold start and
@@ -107,8 +107,8 @@ is observed; signal quality requires the phone/wearer check. Location staysON.
 
 Matching PWA is live through PR20/Pages43848286245 with27 live-file matches and
 public phone/desktop checks. The user refreshed/reconnected, took control and
-confirmed0.2.10-dev/code11 in the phone version display. They retain phone control.
-Fresh wearer Ready is requested before fixed/adaptive mode/display acceptance.
+confirmed0.2.10-dev/code11 in the phone version display. Worn fixed/adaptive
+mode and display acceptance still required fresh wearer readiness.
 No agent calibration/recording or Meta upload occurred. The finite observer,
 owned ADB child and all owned build/device/lifecycle leases are released. Keep
 requested Wi-Fi ADB and LocationON. See PROJECT for remaining physical checks.
@@ -118,11 +118,10 @@ after the attended scan/calibration work. This supersedes the earlier temporary
 restore-to-OFF bench instruction. App code must still use normal attended
 permission/settings flows rather than toggling the system setting itself.
 
-The latest user preference is to control the phone themselves. Earlier
-“try yourself” permission applied to that diagnosis and does not override this
-later preference. Observe read-only unless the user renews phone-operation
-authorization. After a test pause, require fresh wearer readiness
-before starting calibration. Announce actual collection only after an accepted
+For current device verification, operate the authorized lab devices through
+[the autonomous validation procedure](VERIFICATION.md#autonomous-device-validation).
+After a test pause, confirm fresh wearer readiness before starting calibration.
+Announce actual collection only after an accepted
 native calibration has begun advancing completed frames. A running Automatic
 loop or a waiting-for-cycle state does not establish collection.
 

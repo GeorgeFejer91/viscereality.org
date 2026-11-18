@@ -566,10 +566,13 @@ behind the keyboard with every field label still marked as fit. After
 dismissing the keyboard, a RustDesk Recenter tap returned its original
 native receipt.
 
-Next, reproduce the measured compact viewport in the GUI gate and repair
-the action geometry without weakening the text fit, native form validation,
-touch target or zero-scroll rules. Retest the same RustDesk sequence on
-the latest deployed PWA.
+The production GUI fixture reproduced the empty form at 411 × 428 px with
+436 px of document height. The compact participant layout reduces the gaps
+around the form and status messages at 480 px of height or less. The focused
+regression checks zero document scroll, visible 48 px footer targets, text
+fit, and retained native invalid focus when the viewport expands again.
+Next, repeat the same RustDesk taps on the deployed standalone PWA with
+Gboard and confirm native Recenter after dismissing the keyboard.
 
 #### Temporary status loss after Save — 2026-11-18
 
