@@ -30,6 +30,7 @@ improvement through confirming the last affected acceptance criterion.
    tracking and worn Polar H10 contact. Continue independent checks while
    an attended step is pending.
 4. Run the applicable stress and recovery cases in the active checklist.
+   Start them autonomously as soon as the installed build pair is ready.
    Before each case, identify the build pair, input driver, repetitions or
    duration, injected fault, expected state and recovery criterion. Use
    the checklist's thresholds where specified. Exercise repeated and rapid
