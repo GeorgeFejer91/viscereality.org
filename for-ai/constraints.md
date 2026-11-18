@@ -34,6 +34,11 @@ with current builds until the acceptance criteria pass. Follow the
 and the existing Meta release sequence. The Pixel refresh requirement dates
 to 2026-11-13, and the full device verification requirement to 2026-11-18.
 
+On 2026-11-18 the user added Meta synchronization for each qualified Atmungsraum
+Quest Developer release. Publish to Viscereality's private Developer channel
+and verify the active Meta build as part of the
+[APK release workflow](../atmungsraum/for-ai/WORKFLOW.md#quest-apk-changes-and-releases).
+
 - Start with `superpowers-using-superpowers` and select the practices appropriate
   to the task: clarify/design when needed, plan substantial work, implement,
   review, and run `superpowers-verification-before-completion` before claiming

@@ -45,6 +45,13 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   deliverable version, source tree, signing certificate and APK digest.
   Follow the approved Meta release sequence and verify installed bytes.
 
+The [Meta APK synchronization procedure](WORKFLOW.md#quest-apk-changes-and-releases)
+is part of every qualified Developer release. The authenticated Viscereality
+dashboard shows private Developer serving `0.2.26-dev` (code 27), build
+`1465199570012388`, with Quest 2 verified in the build list. This matches the
+live version policy. The next Meta change is the staged successor after the
+app reports recording on the lab baseline and the release hold is cleared.
+
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions
 agents read at project entry. The exact
