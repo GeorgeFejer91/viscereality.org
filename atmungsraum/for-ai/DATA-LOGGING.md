@@ -16,6 +16,49 @@ Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
 for enrollment, recovery and verification. The filename and identity contract
 below applies throughout the transfer.
 
+### UTC timestamp protocol
+
+Every new participant record must retain the time of its event, the clock
+source, and the original source timestamp or monotonic offset when one is
+available. Use ISO 8601 UTC with a trailing `Z` for exported wall-clock
+times. Keep capture, phone observation, and Drive transfer times distinct.
+Preserve original timestamps and provenance on reload, recovery, retry,
+and re-export.
+
+| Data | Required timestamp and provenance |
+| --- | --- |
+| Quest ECG, accelerometer, heart-rate and RR, breathing, renderer radius, and native events | Retain the original device or sensor clock and sample/frame position where present. Use the recording manifest's Android elapsed-realtime and UTC anchor to project native observation timestamps. Each participant CSV row carries `timestamp_utc` and `elapsed_us` relative to official Start. The filename date and dataset start use that same Quest event. |
+| Phone observation of a Quest recording | Sample TimeAPI.io when the phone first accepts the live CSV descriptor. Persist the result with the committed prefix and carry it into the final archive. Use a separate `final-import` observation after validating a final CSV with no saved live reference. Older archives with no observation can capture a `drive-staging` reference on first upload. |
+| Phone questionnaire submission | Sample TimeAPI.io on valid Submit, before saving the separate JSON. In schema 2, `started_at_utc` and `submitted_at_utc` carry the same submission instant. Preserve `clock_source` and `clock_round_trip_ms` when available. |
+| Google Drive copies and historical downloads | Preserve the recorded file bytes. New Drive files copy the event time and source to `startedAtUtc` and `clockSource`. The dataset folder retains a separate phone observation with its stage and, when available, round trip. Historical files keep their original timestamps and schema. |
+
+Before collection, verify automatic network date and time on the Quest and
+Pixel. The headset uses Android's network-synced UTC to anchor its native
+monotonic clock. Use the verified CSV `official-start` row as
+`quest-official-start` for the native dataset. When that row is unavailable,
+use the original native recording key with `quest-recording-key` provenance.
+Use the original Polar and renderer clock domains for sample timing and the
+AudioTrack frame clock for playback timing. These clocks stay separate from
+the phone's UTC reference.
+
+For new phone-side capture or observation events, reuse
+[`captureUtc`](../collection-time.js). Its HTTPS request sends only the
+fixed timezone to `https://www.timeapi.io/api/Time/current/zone?timeZone=Etc%2FUTC`
+and omits credentials and the referrer. It validates the UTC response and
+measures the round trip on the browser's monotonic clock. The event estimate
+subtracts half that round trip from the returned UTC, records `timeapi.io`
+as the source, and retains the round trip in milliseconds. A failed, invalid,
+or over-1.8-second response uses the wall-clock value captured at the event
+with `phone-system-clock` provenance. Save the event even when the reference
+is unavailable.
+
+For a data change, exercise successful reference capture, fallback, and the
+affected reload or retry path. In a paired lab run, reconcile Quest clock
+and event evidence with the exported CSV, check the questionnaire's UTC and
+provenance, and compare the private Drive copies and metadata. Use
+[the recording evidence check](QUEST-PHONE-SYNC.md#check-one-haupt-runde-evidence-bundle)
+for the native-to-CSV projection.
+
 ### Dataset folders and UTC
 
 The private Drive hierarchy is `Atmungsraum – Quest-Aufnahmen / Pair_<id> /
@@ -25,21 +68,8 @@ Resumable uploads retain their original file and folder IDs, including when
 the phone reloads. Existing flat Drive deliveries and their pending receipts
 keep their original destination. Folder IDs, parent identity, ownership and
 privacy are verified before a file transfer. The phone validates delivered
-file names, parents, start metadata and hashes.
-
-The dataset and CSV use the recorded Quest `official-start` UTC, including
-the original fractional seconds. Older records without that row use the
-native recording key with explicit provenance. The Quest's network-synced
-Android UTC anchors its native monotonic clock. The Pixel collects a separate
-TimeAPI.io UTC sample when it first observes a live CSV prefix, or when it
-imports a final dataset without a live reference. This reference describes
-that phone event. Older phone archives record a separately labeled Drive
-staging time when their first upload begins. The questionnaire timestamps its
-file write when the operator submits the last answer. TimeAPI.io estimates subtract half
-the measured request time and retain the round trip in milliseconds. The phone
-records a labelled system-clock fallback if the request fails or exceeds
-1.8 seconds. The UTC request sends only the fixed timezone. The dataset folder
-and each Drive file retain their timestamp and clock source in app properties.
+file names, parents, start metadata and hashes. The timestamps and clock
+sources follow the [UTC timestamp protocol](#utc-timestamp-protocol).
 
 ## Shared scheduler recording boundary
 
