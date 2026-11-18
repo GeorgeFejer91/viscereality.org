@@ -78,19 +78,27 @@ test('canonical assembly binds automatic pairing and Meta update to the one Deve
   const conflicting = invoke(runName + '-boot', ['-CanonicalRelease', '-BootAutostart']);
   assert.notEqual(conflicting.status, 0);
   assert.match(conflicting.stdout + conflicting.stderr, /external boot helper/);
-  const result = invoke(runName, ['-CanonicalRelease', '-Keystore', key, '-VersionCode', '2100000000',
-    '-VersionName', '0.0.0-resolve-test', '-MetaPlatformAppId', '1234567890123456',
+  const canonicalArgs = ['-CanonicalRelease', '-Keystore', key, '-VersionCode', '2100000000',
+    '-VersionName', '0.0.0-resolve-test',
     '-MetaRequiredVersionManifestUrl', 'https://viscereality.org/atmungsraum/quest-release.json',
     '-MetaPlatformSdkRoot', scratch, '-MetaPlatformHeadersSha256', 'a'.repeat(64),
-    '-MetaPlatformLoaderSha256', 'b'.repeat(64), '-MetaPlatformArchiveSha256', 'c'.repeat(64)]);
+    '-MetaPlatformLoaderSha256', 'b'.repeat(64), '-MetaPlatformArchiveSha256', 'c'.repeat(64)];
+  const foreign = invoke(runName + '-foreign', [...canonicalArgs, '-MetaPlatformAppId', '1234567890123456']);
+  assert.notEqual(foreign.status, 0, 'reject a different Meta app before staging');
+  assert.match(foreign.stdout + foreign.stderr, /Meta app 1459506690581676/);
+  const result = invoke(runName, [...canonicalArgs, '-MetaPlatformAppId', '1459506690581676']);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const run = await resolvedRun(runName, 'atmungsraum_developer');
   assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.developer"/);
+  assert.match(run.manifest, /android:name="com\.oculus\.sdk\.appid" android:value="1459506690581676"/);
   assert.match(run.manifest, /android:debuggable="false"/);
   assert.doesNotMatch(run.manifest, /SYSTEM_ALERT_WINDOW|RECEIVE_BOOT_COMPLETED|NativeRendererBootReceiver/);
   assert.equal(run.lock.android_manifest.experiment_meta_update_enabled, true);
   assert.equal(run.lock.android_manifest.experiment_meta_update_helper_enabled, true);
-  assert.ok(run.lock.build_inputs.assets.some(path => path.endsWith('/atmungsraum-webrtc')));
+  const webRtcAssets = run.lock.build_inputs.assets.find(path => path.endsWith('/atmungsraum-webrtc'));
+  assert.ok(webRtcAssets, 'the feature lock selects the WebRTC asset directory');
+  const protocol = await readFile(new URL('../quest/webrtc/release-protocol.md', import.meta.url));
+  assert.deepEqual(await readFile(join(questRepo, webRtcAssets, 'release-protocol.md')), protocol);
   assert.ok(run.lock.panel_source_closure.source_files.some(file => file.path.endsWith('/ExperimentSessionWebRtc.java')));
   await assertPhonePairing(run);
   await assertControllerOnly(run);

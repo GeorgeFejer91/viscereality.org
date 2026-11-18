@@ -43,6 +43,9 @@ if ($CanonicalRelease) {
         $VersionCode -le $developerPolicy.latest_version_code) {
         throw 'CanonicalRelease requires an explicit version name and a code greater than the advertised Developer release.'
     }
+    if ($MetaPlatformAppId -cne '1459506690581676') {
+        throw 'CanonicalRelease requires Viscereality Meta app 1459506690581676.'
+    }
     $Developer = $true
     $WebRtc = $true
     $MetaPlatformUpdate = $true
@@ -178,7 +181,7 @@ if ($WebRtc) {
     $null = New-Item -ItemType Directory -Path $rtcAssets
     $projectRoot = Split-Path -Parent $PSScriptRoot
     $vendor = Join-Path $projectRoot 'vendor/quest-webrtc'
-    foreach ($name in @('index.html','target.js')) {
+    foreach ($name in @('index.html','target.js','release-protocol.md')) {
         Copy-Item -LiteralPath (Join-Path $PSScriptRoot "webrtc/$name") -Destination $rtcAssets
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'quest-webrtc-channel.js') -Destination $rtcAssets

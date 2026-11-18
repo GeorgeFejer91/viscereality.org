@@ -1,5 +1,25 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with bundled connectivity and release protocol
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `35`,
+version name `0.2.34-rtc-test`, and 65,621,655 bytes. SHA-256 is
+`c6883fde2998abb48ca90bf724e744ec39915962b5a3e94a1b9af2be045bdf97`.
+Native commit `013f0a4980cd61fd23b99f3d93bd48c69a990382` binds tree
+`6e8de26f24fdded1b433348c99eea4ec4eba5be7`. The DEX and six WebRTC runtime
+files match bench 34 byte for byte. The [protocol](../webrtc/release-protocol.md)
+is included at `assets/atmungsraum-webrtc/release-protocol.md`, SHA-256
+`be01f82a215d16ba70587f6da1933f7834636a5d9500992b73d1ed5178d4ef53`.
+
+The retained bench signer, APK v3 signature, ARM64 and 16 KiB alignment,
+all ten bundled WebRTC directory entries and signed session closure passed.
+The lab Quest 2 upgraded the idle bench app to code 35 with matching
+installed bytes, retained UID and grants. The Meta-installed Developer code
+27 kept the same running process. The new bench package's foreground and
+physical network rerun remain open. The private Meta channel still serves
+fixed27-r2. The unified Developer build needs its retained signing and Meta
+SDK inputs and the canonical release checks in the bundled protocol.
+
 ## WebRTC bench with durable AudioTrack completion evidence
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `34`,

@@ -1,2 +1,6 @@
+brsp.js text eol=lf
+vdo-ninja-transport.js text eol=lf
+LICENSE-BRSP.txt text eol=lf
+NOTICE.md text eol=lf
 vdoninja-sdk*.js -text -whitespace
 LICENSE-MPL-2.0.txt -text

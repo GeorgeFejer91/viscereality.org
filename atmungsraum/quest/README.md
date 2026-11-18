@@ -22,6 +22,11 @@ WebRTC, phone enrollment, Meta updates and the installed helper handoff.
 It verifies the actual APK's v3 certificate against the established
 Developer signer.
 
+The [connectivity and release protocol](webrtc/release-protocol.md) ships in
+`assets/atmungsraum-webrtc/release-protocol.md`. Assembly verifies its signed APK
+bytes with the WebRTC runtime assets. Consult it for the exact Bluetooth,
+Wi-Fi, TURN and WebRTC checks and the standing Meta Developer sync procedure.
+
 Use the existing shared 900-second loop and the retained private visuals.
 Before distribution, qualify the exact signed artifact and repeat the
 automatic pairing, Polar, recording custody, and update gates on the lab
