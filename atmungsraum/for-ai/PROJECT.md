@@ -131,11 +131,14 @@ when capture ends. Lock and reboot recovery still need an attended check.
   verified the new hierarchy, both timestamp sources and a retried questionnaire
   upload. Startup and context checks passed. See
   [the data contract](DATA-LOGGING.md#dataset-folders-and-utc).
-- [ ] Bind the USB-connected lab Quest 2 and Pixel 10 using the
+- [x] Register the USB-connected lab Quest 2 and Pixel 10 using the
   [USB provisioning command](QUEST-PHONE-SYNC.md#bind-the-exact-usb-hardware-pair).
-  Initial Pixel readback confirmed a standalone PWA with a different Quest
-  selected. The USB Quest's Android time detector reported active automatic
-  network UTC, and its display was asleep.
+  Read back the binding from the installed Pixel and obtained a live TimeAPI.io
+  response in its browser. The USB Quest uses automatic network UTC. The
+  headset briefly woke and then returned to sleep.
+- [ ] Authenticate the exact Quest on the installed Pixel. It still showed a
+  saved legacy pairing for another Quest. Activate the new binding after the
+  headset is awake and the phone pairing is approved.
 - [ ] Authorize the research Drive account on that Pixel and check two new
   datasets, sibling files, UTC metadata and exact downloaded bytes.
 

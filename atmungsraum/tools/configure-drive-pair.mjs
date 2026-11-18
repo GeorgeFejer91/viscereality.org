@@ -15,6 +15,26 @@ if (adb(quest, 'get-serialno') !== quest || adb(phone, 'get-serialno') !== phone
   || !/^Quest\b/.test(adb(quest, 'shell', 'getprop', 'ro.product.model'))) throw Error('Expected the selected USB Quest and phone.');
 
 const id = createHash('sha256').update(JSON.stringify(['atmungsraum-usb-pair-v1', quest, phone])).digest('hex').slice(0, 24);
+const deviceId = /^[a-f0-9]{32}$/;
+const providedDevice = values['quest-device'];
+if (providedDevice !== undefined && !deviceId.test(providedDevice)) throw Error('Invalid Quest installation ID.');
+
+async function readUsbQuest() {
+  const port = adb(quest, 'forward', '--no-rebind', 'tcp:0', 'tcp:8766');
+  if (!/^\d+$/.test(port)) throw Error('Quest gateway forward failed.');
+  try {
+    const response = await fetch('http://127.0.0.1:' + port + '/v1/gateway',
+      { signal: AbortSignal.timeout(3000), redirect: 'error' });
+    if (!response.ok) return null;
+    const { device, serial, identity_kind } = await response.json();
+    return deviceId.test(device)
+      && (serial === quest || identity_kind === 'app-installation' && serial === '') ? { device, serial } : null;
+  } catch { return null; }
+  finally { adb(quest, 'forward', '--remove', 'tcp:' + port); }
+}
+
+const usbOwner = await readUsbQuest();
+if (usbOwner && providedDevice && usbOwner.device !== providedDevice) throw Error('The USB Quest gateway reports a different installation ID.');
 const port = adb(phone, 'forward', '--no-rebind', 'tcp:0', 'localabstract:chrome_devtools_remote');
 let socket;
 try {
@@ -50,7 +70,8 @@ try {
       const pairs = JSON.parse(localStorage.getItem('atmungsraum-drive-hardware-pairs')) ?? [];
       const hasRecordings = (await indexedDB.databases()).some(db => db.name === 'atmungsraum-quest-recordings');
       return { device: saved?.device, serial: saved?.serial, kind: saved?.identity_kind,
-        configured: pairs.some(p => p.device === saved?.device && p.serial === saved?.serial && p.id === ${JSON.stringify(id)}),
+        configured: pairs.some(p => p.device === (${JSON.stringify(usbOwner)}?.device ?? saved?.device)
+          && p.serial === (${JSON.stringify(usbOwner)}?.serial ?? saved?.serial) && p.id === ${JSON.stringify(id)}),
         driveConfigured: hasRecordings && await new Promise((resolve, reject) => {
           const request = indexedDB.open('atmungsraum-quest-recordings');
           request.onerror = () => reject(request.error);
@@ -69,17 +90,17 @@ try {
   }
   if (entries.length !== 1) throw Error('Open exactly one installed Atmungsraum PWA on the selected phone.');
   const [{ page, state }] = entries;
-  const matches = state.serial === quest || (state.kind === 'app-installation' && state.serial === ''
-    && /^[a-f0-9]{32}$/.test(values['quest-device']) && state.device === values['quest-device']);
+  const matches = usbOwner ? state.device === usbOwner.device && state.serial === usbOwner.serial
+    : state.serial === quest || (state.kind === 'app-installation' && state.serial === '' && state.device === providedDevice);
   if (values.check) {
     console.log(JSON.stringify({ pairFolder: 'Pair_' + id, ...state, matchesUsbQuest: matches }, null, 2));
   } else {
-    if (!state.device || !matches) throw Error('The installed PWA pairing does not identify the selected Quest. Pair this headset first. For a serial-less installation supply its verified --quest-device ID.');
-    const binding = JSON.stringify({ device: state.device, serial: state.serial, id });
+    if (!usbOwner && (!state.device || !matches)) throw Error('Start Atmungsraum on the USB Quest, or pair it first and supply its verified --quest-device ID.');
+    const binding = JSON.stringify({ ...(usbOwner ?? { device: state.device, serial: state.serial }), id });
     const confirmed = await evaluate(page, `(() => {
       const binding = ${binding};
       const saved = JSON.parse(localStorage.getItem('atmungsraum-quest-pair'));
-      if (saved?.device !== binding.device || saved?.serial !== binding.serial) return false;
+      if (${!usbOwner} && (saved?.device !== binding.device || saved?.serial !== binding.serial)) return false;
       const key = 'atmungsraum-drive-hardware-pairs';
       const pairs = JSON.parse(localStorage.getItem(key)) ?? [];
       const next = pairs.filter(p => p.device !== binding.device || p.serial !== binding.serial);
@@ -87,7 +108,7 @@ try {
       return JSON.parse(localStorage.getItem(key)).some(p => p.device === binding.device && p.serial === binding.serial && p.id === binding.id);
     })()`);
     if (!confirmed) throw Error('The PWA pairing changed while applying the configuration.');
-    console.log('Configured Pair_' + id);
+    console.log('Configured Pair_' + id + (matches ? '' : ' for the USB Quest. Pair it in Atmungsraum to activate the binding.'));
   }
 } finally {
   socket?.close();
