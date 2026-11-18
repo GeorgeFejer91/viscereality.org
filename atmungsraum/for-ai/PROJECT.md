@@ -6,6 +6,18 @@ The Codex validation goal uses this checklist. Repeat affected checks on the
 latest applicable release, and fix and retest any confirmed UI failure against
 the current GUI rules and original input driver.
 
+The user's 2026-11-18 portability requirement applies to every independent
+installation of the Atmungsraum PWA and other compatible headsets and phones
+of the same classes as the lab devices. The user selects the intended headset
+through Bluetooth; that connection supplies its installation identity and
+bootstrap information for authenticated Wi-Fi/WebRTC correspondence.
+Subsequent saved connections reconnect automatically. Initial platform
+permissions remain part of setup. Pairing must need no numeric code, hotspot,
+lab-specific credentials or per-device APK. One canonical signed headset APK
+serves compatible headsets; each installation has its own identity and trust.
+Quest 2/Pixel 10 is the initial physical acceptance pair. General compatibility
+requires the [independent-installation matrix](VERIFICATION.md#independent-headset-and-pwa-installations).
+
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
 route. Prefer RustDesk MCP for the Pixel UI and use authorized ADB recovery
@@ -134,6 +146,12 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   Use the retained Developer signer and approved Meta Platform SDK 207
   from the release build environment. Follow the held Meta update
   sequence and match a native receipt on both Wi-Fi routes.
+- [ ] Qualify fresh Atmungsraum PWA installations with other compatible
+  headsets and smartphones. Bluetooth selection must establish the intended
+  authenticated Wi-Fi/WebRTC session without a numeric code or copied lab
+  pairing state. Test independent identities, saved reconnect, headset
+  switching, protected control leases and rejected wrong/revoked peers.
+  The current commissioned-Pixel bench result does not complete this gate.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
@@ -174,7 +192,8 @@ Quest, Touch controllers and Polar H10, then resume the clean recorded code 27
 baseline and held update sequence. No new calibration or collection was
 started. Do not replace the Meta baseline with an ADB-installed successor.
 
-The standard Android companion's retained signing key is still required.
+Updating the standard Android companion already installed on the lab Pixel
+in place still requires that installation's original signing key.
 Its installed certificate is
 `5d6502013bba4f61acfb82a008bda7420bcff8c8920311bd34d07e1a618cb0e1`.
 The available local Android debug key has certificate
@@ -182,6 +201,10 @@ The available local Android debug key has certificate
 It cannot sign an in-place update to that installation. Prepare the current
 scanner with the original companion key, then verify its installed bytes,
 retained UID/grants and matching Quest enrollment for unified acceptance.
+This is a prerequisite for that legacy installation's update. General
+compatibility must use a reusable production build and supported enrollment for
+each new phone/PWA installation. It must not depend on the lab Pixel's key,
+saved browser storage or a synthetic commissioned fixture.
 
 The signed code 29 input/build record is published through
 [PR 138](https://github.com/GeorgeFejer91/viscereality.org/pull/138), merge
