@@ -13,9 +13,9 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261118-dialog-measurement">
+  <link rel="stylesheet" href="./style.css?v=20261118-companion-permission">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261118-commissioning"></script>
+  <script type="module" src="./app.js?v=20261118-companion-permission"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -486,7 +486,8 @@
                     <option value="version">Versionsprüfung</option>
                     <option value="installed">Installierte Version</option>
                     <option value="required">Benötigte Version</option>
-                    <option value="identity">Paket und Build</option>
+                    <option value="package">Paket</option>
+                    <option value="identity">Build</option>
                     <option value="update">Update-Status</option>
                     <option value="guidance">Update-Hinweise</option>
                     <option value="request">Update-Anfrage</option>
@@ -500,6 +501,9 @@
                 </div>
                 <div class="update-diagnostics" id="apk-detail-required" hidden>
                   <p id="apk-required" data-measure>Benötigter APK-Stand wird geprüft.</p>
+                </div>
+                <div class="update-diagnostics" id="apk-detail-package" hidden>
+                  <p id="apk-package" data-measure></p>
                 </div>
                 <div class="update-diagnostics" id="apk-detail-identity" hidden>
                   <p id="apk-full-identity" data-measure></p>
@@ -537,7 +541,7 @@
         <details id="settings-connection">
           <summary><span data-measure>Quest-Steuerung</span></summary>
           <dialog class="operator-dialog" aria-labelledby="settings-connection-title">
-            <header><h2 id="settings-connection-title" data-measure>Quest-Steuerung</h2></header>
+            <header><h2 id="settings-connection-title" data-measure>Steuerung</h2></header>
             <div class="screen-body">
               <select id="settings-connection-view" aria-label="Quest-Steuerung und Status">
                 <option value="control">Steuerung</option>

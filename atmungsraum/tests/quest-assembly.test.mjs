@@ -65,6 +65,36 @@ test('the WebRTC lab APK resolves to its own package and locked bridge', {
   await assertPhonePairing(run);
 });
 
+test('canonical assembly binds automatic pairing and Meta update to the one Developer package', {
+  skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to the WebRTC native source checkout.',
+}, async () => {
+  const runName = 'asm-canonical-' + randomUUID().slice(0, 10);
+  const scratch = await mkdtemp(join(tmpdir(), 'atmungsraum-canonical-resolve-'));
+  const key = join(scratch, 'resolve-only.keystore');
+  await writeFile(key, 'resolve-only path fixture');
+  const old = invoke(runName + '-old', ['-CanonicalRelease', '-VersionCode', '1', '-VersionName', '0.0.1']);
+  assert.notEqual(old.status, 0);
+  assert.match(old.stdout + old.stderr, /code greater than the advertised Developer release/);
+  const conflicting = invoke(runName + '-boot', ['-CanonicalRelease', '-BootAutostart']);
+  assert.notEqual(conflicting.status, 0);
+  assert.match(conflicting.stdout + conflicting.stderr, /external boot helper/);
+  const result = invoke(runName, ['-CanonicalRelease', '-Keystore', key, '-VersionCode', '2100000000',
+    '-VersionName', '0.0.0-resolve-test', '-MetaPlatformAppId', '1234567890123456',
+    '-MetaRequiredVersionManifestUrl', 'https://viscereality.org/atmungsraum/quest-release.json',
+    '-MetaPlatformSdkRoot', scratch, '-MetaPlatformHeadersSha256', 'a'.repeat(64),
+    '-MetaPlatformLoaderSha256', 'b'.repeat(64), '-MetaPlatformArchiveSha256', 'c'.repeat(64)]);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const run = await resolvedRun(runName, 'atmungsraum_developer');
+  assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.developer"/);
+  assert.match(run.manifest, /android:debuggable="false"/);
+  assert.doesNotMatch(run.manifest, /SYSTEM_ALERT_WINDOW|RECEIVE_BOOT_COMPLETED|NativeRendererBootReceiver/);
+  assert.equal(run.lock.android_manifest.experiment_meta_update_enabled, true);
+  assert.equal(run.lock.android_manifest.experiment_meta_update_helper_enabled, true);
+  assert.ok(run.lock.build_inputs.assets.some(path => path.endsWith('/atmungsraum-webrtc')));
+  assert.ok(run.lock.panel_source_closure.source_files.some(file => file.path.endsWith('/ExperimentSessionWebRtc.java')));
+  await assertPhonePairing(run);
+  await assertControllerOnly(run);
+});
 
 function invoke(runName, extra = []) {
   return spawnSync('pwsh', ['-NoProfile', '-File', assembler, '-QuestRepo', questRepo,

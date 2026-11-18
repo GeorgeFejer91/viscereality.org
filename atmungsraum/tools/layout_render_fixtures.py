@@ -82,6 +82,9 @@ def capture_layout(review, cases=SIZES):
         open_apk_details(page, "identity")
         expect(page.locator('#quest-version')).to_have_attribute('data-version-state','compatible')
         shot(page,'update-identity','#apk-full-identity')
+        page.locator('#apk-detail-view').select_option('package')
+        expect(page.locator('#apk-package')).to_have_text(APK['package_name'])
+        shot(page,'update-package','#apk-package')
         page.keyboard.press('Escape')
         page.locator('[data-operator-return]:visible').click()
         go(page,'recordings')
@@ -259,6 +262,26 @@ def capture_layout(review, cases=SIZES):
         page.context.close()
 
     capture_poll_cadence(review,c)
+
+
+def capture_companion_permission(review):
+    page = review.page("""
+      window.reviewCompanionPermission = 'denied';
+      Object.defineProperty(navigator, 'permissions', {value: {async query({name}) {
+        return {state: name === 'loopback-network' ? window.reviewCompanionPermission : 'granted'};
+      }}});
+    """, viewport={"width":320,"height":568})
+    try:
+        page.evaluate("document.documentElement.style.fontSize = '200%'")
+        page.clock.run_for(2500)
+        hint = page.locator('#quest-status')
+        expect(hint).to_contain_text('Apps auf dem Gerät')
+        review.shot(page, 'layout-loopback-denial', 'Blocked companion · 320 px and 200% text', hint, 'Quest Connect')
+        page.evaluate("window.reviewCompanionPermission = 'granted'")
+        page.clock.run_for(10000)
+        expect(hint).not_to_contain_text('Apps auf dem Gerät')
+    finally:
+        page.context.close()
 
 
 def capture_poll_cadence(review,c):

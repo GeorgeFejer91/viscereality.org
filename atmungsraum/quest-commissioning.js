@@ -1,4 +1,4 @@
-import { readJson } from './quest-gateway.js?v=17';
+import { companionAccessDenied, readJson } from './quest-gateway.js?v=18';
 
 const utf8 = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
@@ -77,7 +77,7 @@ export async function readCommissionedQuest() {
     if (result?.v !== 1 || result.identity_kind !== 'app-installation' || result.serial !== ''
       || !idValue.test(result.device) || Object.keys(result).length !== 4) return null;
     return { device: result.device, serial: '', identity_kind: 'app-installation', commissioned: true };
-  } catch { return null; }
+  } catch { return await companionAccessDenied() ? { state: 'loopback-denied' } : null; }
 }
 
 export const commissioningBroker = {

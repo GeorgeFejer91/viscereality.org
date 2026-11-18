@@ -1,5 +1,23 @@
 # Verification
 
+## Autonomous device validation
+
+Agents own the full fix-and-verify loop. At the start of each phase, identify
+the latest applicable source, build, deployed PWA, signed APK and actual
+installed versions on the selected lab Quest and Pixel. Install authorized
+improvements on the lab devices, verify APK bytes and active PWA assets,
+and repeat every affected case with its original input driver. Continue
+through relevant stress runs, recovery, and output verification until the
+acceptance checklist passes.
+
+Use the Meta Quest workflow and serial-scoped ADB for headset navigation,
+launch, installs and evidence. Use RustDesk MCP for actual Pixel UI input
+and frame readback. Automate what the devices support and reserve wearer
+steps for protected prompts, physical controls, tracking and Polar contact.
+Use the real PWA-driven Meta route for the official update transition and
+verify its installed successor. Record publication and any remaining
+physical gate in [the active checklist](PROJECT.md).
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
@@ -27,6 +45,19 @@ device, viewport, measured states and results.
 
 Follow the [RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md)
 for installed-phone input, capture and native receipt evidence.
+
+### Combined narrow screen and enlarged text — 2026-11-18
+
+The 320 × 568 fixture at 200% text reproduced overflow in the package
+and build display, unavailable release policy, Live ECG and pending
+receipt. The app exposes each exact APK identity field in its own
+selector option. The dialog uses the available safe width and keeps the
+receipt selector above its contents. Updated copy fits the existing
+recovery panel while retaining the operation and no-replay instructions.
+The narrow stress run exercised all four recording phases with the
+ECG dialog, both APK identity views, and the original pending receipt
+after local navigation. The Chrome loopback denial regression checks
+readable remediation and clears it when the browser grant is restored.
 
 ### APK detail measurement — 2026-11-18
 

@@ -1,23 +1,23 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=17';
-import { pairPhone } from './quest-pairing.js?v=6';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=41';
+  controllerAccessState } from './quest-gateway.js?v=18';
+import { pairPhone } from './quest-pairing.js?v=7';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
 import { mountQuestDrive } from './quest-drive-ui.js?v=5';
-import { BreathingSetup } from './breathing-setup.js?v=20';
+import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=7';
-import { ApkRelease } from './quest-release.js?v=1';
+import { KioskControl } from './kiosk-control.js?v=8';
+import { ApkRelease } from './quest-release.js?v=2';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=9';
+import { MetaUpdateControl } from './meta-update-control.js?v=10';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=5';
+import { ControllerLease } from './controller-lease.js?v=6';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
@@ -132,6 +132,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let bluetoothHint = '';
   const bluetooth = navigator.bluetooth;
   const enableBluetooth = 'Schalte Bluetooth ein. Die Quest verbindet sich automatisch.';
+  const allowCompanion = 'Erlaube „Apps auf dem Gerät“ in Chrome.';
   let bridgeFailed = false;
   const diagnostics = byId('connection-diagnostic');
   const driveDialog = byId('drive-dialog');
@@ -344,7 +345,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     if (step !== displayedStep) {
       if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
-      move('operator-common', step === 'settings' ? settingsConnection.querySelector('.screen-body') : body);
+      if (step === 'settings') connectionView.after(byId('operator-common'));
+      else move('operator-common', body);
       if (step !== 'settings') settingsConnection.open = false;
       if (step !== 'settings') settingsKiosk.open = false;
       const preparationRecovery = byId('preview-recovery');
@@ -602,7 +604,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(byId('apk-required'), version.required);
     // Full values stay available in the collapsed diagnostic disclosure.
     for (const id of ['apk-installed', 'apk-required']) if (byId(id).hidden) byId(id).hidden = false;
-    text(byId('apk-full-identity'), version.identity);
+    const unknownIdentity = 'Keine bestätigte APK-Kennung verfügbar.';
+    text(byId('apk-package'), version.installed?.package_name ?? unknownIdentity);
+    text(byId('apk-full-identity'), version.installed?.build_id ?? unknownIdentity);
     const updateNotice = byId('operator-meta-update');
     // Stable nodes only: progress never replaces controls, editors or journals.
     for (const panel of [updateNotice, byId('meta-update')]) {
@@ -1214,11 +1218,22 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (savedPair?.enrollment) void connect(savedPair);
       else {
         nextConnect = performance.now() + 8000;
-        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=1');
+        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=2');
         const commissioned = await readCommissionedQuest();
-        if (commissioned && !savedPair?.enrollment && !document.hidden && !connecting && !userAction
+        if (!savedPair?.enrollment && !document.hidden && !connecting && !userAction
           && !rehearsal.state.status && autoConnect && location.hash !== '#daten' && canAutoConnect()) {
-          void connect(commissioned);
+          if (commissioned?.state === 'loopback-denied') {
+            if (!joinMessage || joinMessage === allowCompanion) {
+              joinMessage = bluetoothHint = allowCompanion;
+              paint();
+            }
+          } else {
+            if (joinMessage === allowCompanion) {
+              joinMessage = bluetoothHint = '';
+              paint();
+            }
+            if (commissioned) void connect(commissioned);
+          }
         }
       }
       return;
@@ -1266,14 +1281,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     }
     bridgeFailed = false;
     discoveryInProgress = false;
-    const setup = {
-      ...settings,
-      onApproval() {
-        if (connecting !== attempt) return;
-        joinMessage = 'Bestätige die WLAN-Verbindung im Headset.';
-        paint();
-      }
-    };
+    const setup = { ...settings, forceHotspot: false };
     try {
       const selection = chooseDevice ? selectQuest(bluetooth) : null;
       paint();
@@ -1326,12 +1334,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       }
       if (!gateway) {
         if (discovery?.state && discovery.state !== 'ready') {
-          discoveryInProgress = true;
+          discoveryInProgress = discovery.state !== 'loopback-denied';
           bluetoothCheck = discovery.state === 'searching' ? null : false;
           joinMessage = bluetoothHint = {
             'bluetooth-off': enableBluetooth,
             'searching': 'Suche die gespeicherte Quest über Bluetooth …',
             'permission-required': 'Erlaube der Bluetooth-Suche den Zugriff auf Geräte in der Nähe.',
+            'loopback-denied': allowCompanion,
           }[discovery.state];
           return;
         }
@@ -1366,7 +1375,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         } else if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=2');
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=3');
             const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
             settings = { ...settings, enrollment: session.enrollment };
             gateway = await join(undefined, discovery, session.transport);

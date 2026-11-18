@@ -11,6 +11,9 @@ Superpowers and Ponytail baseline, plus conditional UI/accessibility/performance
 and native/remote routes. Resume the durable goal and active checklist in
 `for-ai/PROJECT.md` (or the existing GSD state it points to).
 
+For device verification, follow the autonomous install, stress test and
+repair loop in `for-ai/VERIFICATION.md#autonomous-device-validation`.
+
 Before ending, update that same state with verification evidence, blockers,
 the next action and observed Git/publication state. Keep the overall product
 goal open until its own acceptance criteria pass. Use Git for rollback and
