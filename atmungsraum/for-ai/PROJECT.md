@@ -104,6 +104,13 @@ when capture ends. Lock and reboot recovery still need an attended check.
   participant ID, session UUID and run stem. It syncs automatically to the
   existing private Drive folder when the phone is authorized and Quest is
   idle. See [the data contract](DATA-LOGGING.md#haupt-runde-questionnaire).
+- [x] Publish PWA release 20261118-post-session-questions in
+  [PR 102](https://github.com/GeorgeFejer91/viscereality.org/pull/102).
+  The exact [Pages run 44285296799](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44285296799)
+  for merge 08284a0 passed and nine public files match Git. The exact merge
+  passed the 378-state smartphone GUI gate, including independent mocked
+  Drive delivery and recovery. The installed Pixel 10 loaded this release
+  with the matching controller module and stylesheet in standalone mode.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem
