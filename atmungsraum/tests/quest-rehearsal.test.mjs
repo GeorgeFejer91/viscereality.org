@@ -363,6 +363,33 @@ test('fresh app discovery permits an explicitly unavailable serial and reads no 
   }
 });
 
+test('fresh Bluetooth selection prefers a usable RTC service and retains valid LAN fallback', async () => {
+  const rtc = { r: 'c'.repeat(32), p: 'e'.repeat(64) };
+  const service = (device, routes) => ({
+    async getCharacteristic(id) {
+      return { async readValue() {
+        return new TextEncoder().encode(id.endsWith('02') ? '' : JSON.stringify({ v: 2, device,
+          serial: '', identity_kind: 'app-installation', epoch: '7', native_epoch: '8', mode: 'remote', pairing: 1, ...routes }));
+      } };
+    },
+  });
+  const lan = service('a'.repeat(32), { gateways: [endpoint] });
+  const relay = service('b'.repeat(32), { gateways: [], rtc });
+  const invalid = { getCharacteristic() { throw Error('Invalid earlier service'); } };
+  for (const [services, expected] of [[[lan, relay], 'b'], [[relay, lan], 'b'], [[invalid, relay], 'b'], [[invalid, lan], 'a']]) {
+    const gatt = { connected: false,
+      async connect() { this.connected = true; return this; },
+      async getPrimaryService() { return services[0]; },
+      async getPrimaryServices() { return services; },
+      disconnect() { this.connected = false; },
+    };
+    const found = await readQuest({ gatt }, new AbortController().signal, {});
+    assert.equal(found.owner.device, expected.repeat(32));
+    assert.equal(Boolean(found.rtc), expected === 'b');
+    assert.equal(gatt.connected, false);
+  }
+});
+
 test('remembered Bluetooth reconnect selects the saved Quest installation across matching services', async () => {
   const saved = { ...owner, serial: '', identity_kind: 'app-installation' };
   const foreign = { ...saved, device: 'e'.repeat(32) };

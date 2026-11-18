@@ -25,6 +25,15 @@ function pair(handler) {
 
 const frame = (id, data) => ({ v: 1, id: id.repeat(32), tag: 'e'.repeat(64), iv: '0'.repeat(16), data });
 
+test('Unicode phone labels keep their exact text through ASCII-only WebRTC framing', async () => {
+  const request = { v: 3, id: 'a'.repeat(32), request: { phone_name: 'Téléphone 日本語 📱' } };
+  const { client, target, phone, quest } = pair(input => input);
+  try {
+    assert.deepEqual(await client.request(request, AbortSignal.timeout(500)), request);
+    assert.ok([...phone.writes, ...quest.writes].every(text => !/[^\x20-\x7e]/.test(text)));
+  } finally { client.close(); target.close(); }
+});
+
 test('one ordered WebRTC lane preserves large frames and matches concurrent replies', async () => {
   const one = frame('a', 'a'.repeat(87000));
   const two = frame('b', 'b'.repeat(20000));

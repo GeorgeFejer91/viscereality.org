@@ -1,26 +1,26 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=10';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=19';
-import { pairPhone } from './quest-pairing.js?v=8';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=43';
+  controllerAccessState } from './quest-gateway.js?v=20';
+import { pairPhone } from './quest-pairing.js?v=9';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=44';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
 import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-completion';
 import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
-import { BreathingSetup } from './breathing-setup.js?v=23';
+import { BreathingSetup } from './breathing-setup.js?v=24';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=9';
+import { KioskControl } from './kiosk-control.js?v=10';
 import { ApkRelease } from './quest-release.js?v=2';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=11';
+import { MetaUpdateControl } from './meta-update-control.js?v=12';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=7';
+import { ControllerLease } from './controller-lease.js?v=8';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
@@ -1322,7 +1322,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       else nextConnect = performance.now() + 8000;
       if (!canCommission() || connecting || performance.now() < nextCommissioningProbe) return;
       nextCommissioningProbe = performance.now() + 8000;
-      const { readCommissionedQuest } = await import('./quest-commissioning.js?v=4');
+      const { readCommissionedQuest } = await import('./quest-commissioning.js?v=5');
       const commissioned = await readCommissionedQuest();
       if (!canCommission() || connecting) return;
       if (commissioned?.state === 'loopback-denied') {
@@ -1416,6 +1416,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       let discovery;
       if (chooseDevice) {
         discovery = await readQuest(peer, signal, {});
+        if (discovery.owner.device !== settings.device) endpoint = undefined;
       } else {
         // Read the saved headset's current address before trying the old one.
         // An unpaired automatic attempt requires an explicitly commissioned installation.
@@ -1473,48 +1474,69 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         bluetoothCheck = true;
         bluetoothHint = joinMessage = '';
         let pairedThisAttempt = false;
+        let connectionFailure;
+        const retainEnrollment = enrollment => {
+          pairedThisAttempt = true;
+          endpoint = discovery.endpoints[0];
+          settings = { ...discovery.owner, endpoint, bluetoothId: peer?.id,
+            hotspot: settings.device === discovery.owner.device ? settings.hotspot : undefined, enrollment };
+          rememberPair(settings);
+        };
         const pairNewPhone = async () => {
           if (!chooseDevice || discovery.pairing !== 1) throw Error('Dieses Smartphone ist für diese Quest noch nicht freigegeben.');
           const candidate = discovery.endpoints[0];
-          if (!candidate) throw Error('Verbinde Quest und Smartphone mit demselben WLAN.');
+          if (!candidate) throw connectionFailure ?? Error('Prüfe Internetzugang und Quest-App für diese Verbindung.');
           const ticket = await pairPhone({ endpoint: candidate, owner: discovery.owner, signal,
             onCode: prompt => showPairingCode(prompt, attempt) });
           signal.throwIfAborted();
-          pairedThisAttempt = true;
-          settings = { ...discovery.owner, endpoint: candidate, bluetoothId: peer?.id,
-            hotspot: settings.device === discovery.owner.device ? settings.hotspot : undefined,
-            enrollment: { controller: ticket.controller, key: ticket.key } };
           // Human approval already created this independent membership. Preserve
           // it if the following authenticated status request loses its reply.
-          rememberPair(settings);
+          retainEnrollment({ controller: ticket.controller, key: ticket.key });
         };
         const duringCommissioning = settings.commissioned === true && !chooseDevice && !settings.enrollment;
+        const needsPairing = !settings.enrollment || settings.device && settings.device !== discovery.owner.device;
         if (duringCommissioning) {
           if (!discovery.rtc || settings.device !== discovery.owner.device) {
             throw Error('Die freigegebene Quest ist über WebRTC noch nicht erreichbar.');
           }
-        } else if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
-        let connectionFailure;
+        } else if (needsPairing && !discovery.rtc) await pairNewPhone();
+        const connectRtc = async enrollment => {
+          const { openQuestWebRtc } = await import('./quest-webrtc.js?v=7');
+          const session = await openQuestWebRtc(discovery, enrollment, signal,
+            chooseDevice && discovery.pairing === 1 ? {
+              onCode: prompt => showPairingCode(prompt, attempt),
+              onEnrollment: retainEnrollment,
+            } : undefined);
+          settings = { ...settings, enrollment: session.enrollment };
+          gateway = await join(undefined, discovery, session.transport);
+          endpoint = discovery.endpoints[0] ?? endpoint;
+        };
+        let authenticationRejected = false;
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=6');
-            const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
-            settings = { ...settings, enrollment: session.enrollment };
-            gateway = await join(undefined, discovery, session.transport);
-            endpoint = discovery.endpoints[0] ?? endpoint;
+            await connectRtc(needsPairing && !pairedThisAttempt ? undefined : settings.enrollment);
           } catch (error) {
             signal.throwIfAborted();
-            if (duringCommissioning || error.status === 403) throw error;
+            if (duringCommissioning || error.pairingAttempted || error.status === 403 && !chooseDevice) throw error;
+            authenticationRejected = error.status === 403;
             connectionFailure = error;
           }
         }
-        let authenticationRejected = false;
+        if (!gateway && !duringCommissioning && needsPairing && !pairedThisAttempt) await pairNewPhone();
         for (const candidate of gateway ? [] : discovery.endpoints) {
           endpoint = candidate;
           try { gateway = await join(endpoint, discovery); break; }
           catch (error) {
             signal.throwIfAborted();
             authenticationRejected ||= error?.status === 403;
+            connectionFailure = error;
+          }
+        }
+        if (!gateway && !pairedThisAttempt && chooseDevice && discovery.pairing === 1 && discovery.rtc) {
+          try { await connectRtc(undefined); }
+          catch (error) {
+            signal.throwIfAborted();
+            if (error.pairingAttempted) throw error;
             connectionFailure = error;
           }
         }

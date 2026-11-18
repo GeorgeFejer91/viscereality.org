@@ -74,7 +74,7 @@ The retained bench certificate SHA-256 is
 `da1e642f68f2516473269240c7bd325a43eab328878f323358891786cef8eb88`.
 Native commit `42508b1d0b9908aa18e37a9c5c09d1c899c7848f` binds tree
 `e7eedd854fd26ab91cb02a0ef56f4eaa25f914e2`. The
-[native source overlay](../webrtc-native.patch) reconstructs that tree
+[native source overlay for code 36](https://github.com/GeorgeFejer91/viscereality.org/blob/0304433cb54e021e2f75da23381f05c87256463b/atmungsraum/quest/webrtc-native.patch) reconstructs that tree
 from the signed fixed27 baseline. Assemble the bench with the pinned
 bundled assets, `-PhonePairing -WebRtc` and the existing bench signer.
 

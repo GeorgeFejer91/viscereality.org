@@ -1,4 +1,4 @@
-import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=19';
+import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=20';
 
 const journalKey = 'atmungsraum-controller-lease';
 const freshFor = 2500;
