@@ -250,6 +250,13 @@ when capture ends. Lock and reboot recovery still need an attended check.
   verified the new hierarchy, both timestamp sources and a retried questionnaire
   upload. Startup and context checks passed. See
   [the data contract](DATA-LOGGING.md#dataset-folders-and-utc).
+- [x] Document the [UTC timestamp protocol](DATA-LOGGING.md#utc-timestamp-protocol)
+  for native measurements, phone observations, questionnaire submissions
+  and Drive copies. The production PWA origin obtained TimeAPI.io UTC in
+  95 ms with the fixed timezone request and no credentials or referrer.
+  All 27 targeted Node tests and all 14 recording evidence tests passed,
+  along with the project context check. Verify the UTC fields and clock
+  provenance again on the next paired lab run and its new Drive files.
 - [x] Register the USB-connected lab Quest 2 and Pixel 10 using the
   [USB provisioning command](QUEST-PHONE-SYNC.md#bind-the-exact-usb-hardware-pair).
   Read back the binding from the installed Pixel and obtained a live TimeAPI.io

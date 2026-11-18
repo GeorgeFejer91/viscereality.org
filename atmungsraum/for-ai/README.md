@@ -98,7 +98,9 @@ Read common rules first, then the documents needed for the task:
   enforces the [UI rules](UI-LAYOUT.md#smartphone-gui-rules) on each feature push.
 - [DECISIONS.md](DECISIONS.md): durable decisions and their reasons.
 - [DATA-LOGGING.md](DATA-LOGGING.md): mandatory participant identity, filename,
-  CSV schema, mock-source provenance, persistence and recovery contract.
+  CSV schema, persistence, recovery and the
+  [UTC timestamp protocol](DATA-LOGGING.md#utc-timestamp-protocol) for every
+  participant data stream.
 - [Reusable audio engine](../audio/README.md): four separate repeating German
   phase cues, reference analysis, exact session timing, and verification.
 - [Scenario protocol](../audio/scenarios/README.md): the JSON runtime timelines
