@@ -590,9 +590,6 @@ html[data-mode="quest"] main {
 .operator-screen .screen-header { padding-block-end: var(--gap); }
 .operator-screen .operator-body { align-content: space-evenly; }
 #participant-screen > .operator-body { align-content: stretch; }
-#questionnaire-form { display: grid; gap: var(--gap); min-width: 0; }
-#questionnaire-form input { padding-block: 6px; }
-#questionnaire-back[hidden] + #questionnaire-next { grid-column: 1 / -1; }
 html[data-layout] .operator-screen .operator-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
 .operator-actions button { padding-block: 4px; }
 .session-actions:has(> button + button:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }

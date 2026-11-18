@@ -44,13 +44,18 @@ test('a questionnaire belongs to the completed native main CSV and requires five
     assert.equal(completedMainQuestionnaire(csv, bytes(wrong)), null);
   }
   assert.equal(completedMainQuestionnaire({ ...csv, name: name.replace('haupt-15', 'probe-5') }, bytes(row)), null);
-  assert.throws(() => questionnaireFile(run, ['eins', 'zwei', 'drei', 'vier', ' ']), /fünf/);
-  const file = questionnaireFile(run, [' eins ', 'zwei', 'drei', 'vier', 'fünf']);
+  for (const invalid of [[0, 1, 5, 3], [0, 0, 5, 3, 100], [0, 1, 6, 3, 100], [-1, 1, 5, 3, 100],
+    [0, 1, 5, 3, 101], [0, 1, 5, 3, '50'], [0, 1, 5, 3, 0.5], [undefined, 1, 5, 3, 100], Array(5)]) {
+    assert.throws(() => questionnaireFile(run, invalid), /fünf/);
+  }
+  const file = questionnaireFile(run, [0, 1, 5, 3, 100]);
   assert.equal(file.name, name.replace('.csv', '_questionnaire.json'));
   const saved = JSON.parse(await file.text());
   assert.equal(saved.participant_id, run.participant_id);
   assert.equal(saved.session_id, session_id);
   assert.equal(saved.recording_filename, name);
-  assert.deepEqual(saved.answers.map(({ question_id, answer }) => [question_id, answer]),
-    [['q1', 'eins'], ['q2', 'zwei'], ['q3', 'drei'], ['q4', 'vier'], ['q5', 'fünf']]);
+  assert.equal(saved.schema_version, 2);
+  assert.deepEqual(saved.answers.map(({ question_id, type, answer }) => [question_id, type, answer]),
+    [['q1', 'slider', 0], ['q2', 'likert', 1], ['q3', 'likert', 5], ['q4', 'likert', 3], ['q5', 'slider', 100]]);
+  assert.deepEqual(saved.answers.map(({ scale }) => [scale.min, scale.max]), [[0, 100], [1, 5], [1, 5], [1, 5], [0, 100]]);
 });

@@ -165,14 +165,19 @@ on that recording in **Aufnahmen**. The prompt applies to completed main runs
 that this version imports. A partial run or practice recording opens its usual
 recordings view.
 
-Five provisional German free-text answers are required. The phone commits a
-separate UTF-8 JSON file with the exact verified recording stem.
+The one-page questionnaire requires five provisional German responses.
+Three agreement items use five-point Likert scales and two items use
+0–100 sliders. Participants explicitly interact with both sliders before
+submitting. The phone commits a separate UTF-8 JSON file with the exact
+verified recording stem.
 
     Fej_35_M_2026-11-18_haupt-15_r1_questionnaire.json
 
 The file contains the questionnaire schema version, participant ID, native
 session UUID, linked CSV filename, submission timestamp and five question
-IDs, prompts and answers. The same scoped IndexedDB recording database
+IDs, prompts, control types, scale bounds and labels, and integer answers
+in schema version 2. Earlier saved questionnaire files use schema version 1
+with text answers. The same scoped IndexedDB recording database
 keeps the form pending across reload or reconnect and retains the first
 successful submission for each run. **Antworten** downloads the saved file
 for the selected recording. While the phone is open, Quest is idle and

@@ -124,8 +124,10 @@ when capture ends. Lock and reboot recovery still need an attended check.
 
 #### Haupt-Runde follow-up questions — 2026-11-18
 
-- Implemented five required German placeholder questions in the smartphone
-  PWA, opened after the verified final v4 CSV for a live-staged Haupt-Runde.
+- Five required German placeholder questions appear together in the smartphone
+  PWA after the verified final v4 CSV for a live-staged Haupt-Runde. This form
+  may scroll vertically and uses three five-point Likert items and two 0–100
+  sliders. Submitted files use integer answers and include the scale bounds.
   A completed locally imported main recording can also open the questionnaire
   from Aufnahmen. Responses use a separate private JSON file with the same
   participant ID, session UUID and run stem. It syncs automatically to the

@@ -14,9 +14,11 @@
     right: visualViewport.offsetLeft + Math.min(visualViewport.width, viewport.width),
     bottom: visualViewport.offsetTop + Math.min(visualViewport.height, viewport.height) };
   const rect = node => node.getBoundingClientRect();
+  const survey = panel?.matches('#questionnaire-screen') ? panel.querySelector('#questionnaire-form') : null;
+  const surveyBox = survey && rect(survey);
   const measureOverflow = node => {
-    if (node.scrollWidth > node.clientWidth + 1 || node.scrollHeight > node.clientHeight + 1
-        || node.scrollTop || node.scrollLeft) problems.add(`${name(node)} scrolls (${node.scrollWidth - node.clientWidth} × ${node.scrollHeight - node.clientHeight})`);
+    if (node.scrollWidth > node.clientWidth + 1 || node.scrollLeft
+        || node !== survey && (node.scrollHeight > node.clientHeight + 1 || node.scrollTop)) problems.add(`${name(node)} scrolls (${node.scrollWidth - node.clientWidth} × ${node.scrollHeight - node.clientHeight})`);
   };
   measureOverflow(root);
   if (root.scrollHeight > viewport.height + 1 || root.scrollWidth > viewport.width + 1
@@ -31,7 +33,9 @@
   if (rect(toolbar).bottom > rect(panel).top + 1) problems.add('toolbar overlaps the active view');
   for (const node of [panel, ...panel.querySelectorAll('*')].filter(visible)) {
     const box = rect(node);
-    if (!contains(view, box)) problems.add(`${name(node)} outside the visual viewport`);
+    const surveyItem = node !== survey && survey?.contains(node);
+    const boundary = surveyItem ? { left: surveyBox.left, right: surveyBox.right, top: -Infinity, bottom: Infinity } : view;
+    if (!contains(boundary, box)) problems.add(`${name(node)} outside its horizontal or viewport bounds`);
     if (node.clientWidth && node.clientHeight && !node.matches('input, select, progress, canvas')) measureOverflow(node);
     if (node.matches('[data-measure]') && node.textContent.trim()) {
       if (node.dataset.textFit !== 'fit' || !['pretext', 'dom'].includes(node.dataset.textMeasurement)) {
@@ -44,9 +48,12 @@
       }
     }
     if (node.matches('button, input:not([type=radio]), select, summary, a[href]')) {
-      const target = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-      if (target && !node.contains(target)) problems.add(`${name(node)} is covered`);
-      if (!contains(rect(panel), box)) problems.add(`${name(node)} escapes its panel`);
+      const centerY = box.top + box.height / 2;
+      if (!surveyItem || (centerY >= surveyBox.top && centerY <= surveyBox.bottom)) {
+        const target = document.elementFromPoint(box.left + box.width / 2, centerY);
+        if (target && !node.contains(target)) problems.add(`${name(node)} is covered`);
+      }
+      if (!surveyItem && !contains(rect(panel), box)) problems.add(`${name(node)} escapes its panel`);
     }
   }
   const focus = document.activeElement;

@@ -7,7 +7,8 @@ import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, Quest
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=29';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
-import { mainQuestionnairePrompts, questionnaireFile } from './data-logging.js?v=20261118-dataset-sync';
+import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-scales';
+import { mountQuestionnaireForm } from './questionnaire-form.js?v=1';
 import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
@@ -275,45 +276,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let displayedStep = '';
   let wasActive = false;
   const questionnaireForm = byId('questionnaire-form');
-  const answerInput = byId('questionnaire-answer');
   const answerStatus = byId('questionnaire-status');
-  const answerBack = byId('questionnaire-back');
-  const answerNext = byId('questionnaire-next');
+  const answerSubmit = byId('questionnaire-submit');
+  const answerFields = mountQuestionnaireForm(questionnaireForm, answerStatus);
   const answerLink = byId('questionnaire-download');
   const answerOpen = byId('questionnaire-open');
   let questionnaire, selectedQuestionnaire, savingAnswers = false;
-  let questionIndex = 0;
-  const answers = Array(mainQuestionnairePrompts.length).fill('');
-
-  function showQuestion(focus = false) {
-    text(byId('questionnaire-title'), 'Frage ' + (questionIndex + 1) + ' von ' + answers.length);
-    text(byId('questionnaire-prompt'), mainQuestionnairePrompts[questionIndex]);
-    text(answerNext.firstElementChild, questionIndex === answers.length - 1 ? 'Antworten speichern' : 'Weiter');
-    answerInput.value = answers[questionIndex];
-    answerInput.setCustomValidity('');
-    text(answerStatus, '');
-    answerStatus.hidden = true;
-    answerBack.hidden = questionIndex === 0;
-    if (focus) byId('questionnaire-title').focus({ preventScroll: true });
-  }
 
   function setQuestionnaire(form) {
     if (form && !localArchiveOwner()) return;
     if (questionnaire?.id === form?.id && questionnaire?.run.session_id === form?.run.session_id) return;
     questionnaire = form;
-    answers.fill('');
-    questionIndex = 0;
-    if (form) showQuestion();
-    else answerInput.value = '';
+    answerFields.reset();
   }
 
-  answerInput.addEventListener('input', () => { answerInput.setCustomValidity(''); });
-  answerBack.addEventListener('click', () => {
-    if (!questionIndex || savingAnswers) return;
-    answers[questionIndex] = answerInput.value;
-    questionIndex--;
-    showQuestion(true);
-  });
   answerOpen.addEventListener('click', () => {
     if (!selectedQuestionnaire || selectedQuestionnaire.file || questionnaire?.required) return;
     setQuestionnaire(selectedQuestionnaire);
@@ -326,19 +302,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const form = questionnaire;
     const owner = localArchiveOwner();
     if (!form || !owner || savingAnswers || displayedStep !== 'questionnaire') return;
-    answers[questionIndex] = answerInput.value.trim();
-    if (!answers[questionIndex]) {
-      answerInput.setCustomValidity('Bitte gib eine Antwort ein.');
-      answerInput.reportValidity();
-      return;
-    }
-    if (questionIndex < answers.length - 1) {
-      questionIndex++;
-      showQuestion(true);
-      return;
-    }
-    savingAnswers = answerBack.disabled = answerNext.disabled = true;
-    answerInput.readOnly = true;
+    const answers = answerFields.read();
+    if (!answers) return;
+    savingAnswers = answerSubmit.disabled = questionnaireForm.inert = true;
     let store;
     try {
       const file = questionnaireFile(form.run, answers, await captureUtc());
@@ -359,8 +325,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       }
     } finally {
       store?.close();
-      answerInput.readOnly = false;
-      savingAnswers = answerBack.disabled = answerNext.disabled = false;
+      savingAnswers = answerSubmit.disabled = questionnaireForm.inert = false;
       paint();
     }
   });
