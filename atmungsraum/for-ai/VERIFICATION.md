@@ -46,6 +46,26 @@ device, viewport, measured states and results.
 Follow the [RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md)
 for installed-phone input, capture and native receipt evidence.
 
+### Temporary status loss after Save — 2026-11-18
+
+The mounted 320 × 568, 200% text regression loses the status read
+immediately after the original Save receipt has been confirmed. The
+previous page replaced the saved state with an unconfirmed-update message.
+The repaired page retains the intent on the same connection. The fixture
+observes one Save, no update while the writer and audio checks are pending,
+and one check-and-update request after the fresh park observation. Related
+cases cover an uncertain Save, lease and owner changes, and the native
+automatic attempt. All 27 rendered update cases use the shipped UI and
+real Pretext. The full smartphone GUI gate passes 350 states. All 338
+Node tests pass with the native JVM fixtures enabled and zero skips.
+Startup and idle release refresh checks pass.
+
+The production coordinator, duplicate recovery, service, helper monitor,
+queued dispatch, queued exit, main handoff and reusable SDK host checks
+pass. These compile the current Java owners with modeled SDK and Android
+effects. The physical Save→Meta update→relaunch gate follows the attended
+recording plan in [the active checklist](PROJECT.md).
+
 ### Combined narrow screen and enlarged text — 2026-11-18
 
 The 320 × 568 fixture at 200% text reproduced overflow in the package

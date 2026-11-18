@@ -102,6 +102,15 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
   if(outcome==='confirmed' && settings.saveOldCycle) Object.assign(settings.metaUpdate,{cycle:String(BigInt(settings.metaUpdate.cycle)-1n),busy_reason:'writer-active'});
   receipts[window.reviewSaveCommand.id]={v:1,id:window.reviewSaveCommand.id,state:outcome};
 };''')
+    c.GATEWAY = c.GATEWAY.replace('const current = snapshot();', '''const current = snapshot();
+    if (settings.failReadAfterSave && settings.phase === 'IDLE' &&
+        receipts[window.reviewSaveCommand?.id]?.state === 'confirmed') {
+      settings.postSaveReads = (settings.postSaveReads ?? 0) + 1;
+      if (settings.postSaveReads === 2) {
+        settings.postSaveReadFailed = true;
+        throw Error('Simulated loss of the status read after confirmed Save');
+      }
+    }''')
     with sync_playwright() as p, tempfile.TemporaryDirectory() as temporary:
         output = Path(os.environ.get('ATMUNGSRAUM_PREPARATION_UPDATE_OUTPUT', temporary))
         output.mkdir(parents=True, exist_ok=True)
@@ -211,9 +220,10 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
                 page.clock.run_for(16000)
                 assert not any(cmd['op']!='receipt' for cmd in page.evaluate('window.reviewMetaUpdateCommands??[]'))
             page.context.close()
-        for change in ['automatic', 'manual', 'lease', 'owner', 'cleanup']:
+        for change in ['automatic', 'manual', 'lease', 'owner', 'cleanup', 'status-loss']:
             native=meta_update_fixture(can_check=False,can_end_preparation=False,busy_reason='writer-active')
             page=review.page(initial(c,quest={'metaUpdate':native,'updatePrepEnabled':True,'deferSave':True,'saveParkPending':True,
+                'failReadAfterSave':change=='status-loss',
                 'phase':'ARMED','suppressRecording':True,'saveOldCycle':change=='cleanup','host':'vr-session','generation':3,'condition':'condition-a'},
                 setup={'stage':'main','playing':True,'parked':False,'audio_state':'playing'}),viewport={'width':320,'height':568})
             page.evaluate("document.documentElement.style.fontSize='200%'")
@@ -227,6 +237,8 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
             page.clock.run_for(1000)
             page.evaluate('reviewCompleteSave()')
             page.clock.run_for(2000)
+            if change=='status-loss':
+                assert page.evaluate('reviewQuest.postSaveReadFailed === true')
             expect(page.locator('#meta-update-status')).to_have_text('Aufnahme gespeichert. Quest bereitet das Update vor.')
             expect(page.locator('#update-instruction')).to_contain_text('Ruheposition')
             expect(page.locator('#meta-update-save-retry')).to_be_enabled()
@@ -253,7 +265,7 @@ window.reviewCompleteSave=(outcome='confirmed')=>{
                 page.evaluate("Object.assign(reviewQuest.setup,{playing:false,parked:true,audio_state:'paused'});Object.assign(reviewQuest.metaUpdate,{can_check:true,busy_reason:''})")
             page.clock.run_for(2000)
             commands=page.evaluate('window.reviewMetaUpdateCommands??[]')
-            if change=='manual':
+            if change in ['manual', 'status-loss']:
                 assert [cmd['op'] for cmd in commands if cmd['op']!='receipt']==['check-and-update'], commands
                 page.clock.run_for(4000)
                 assert len([cmd for cmd in page.evaluate('window.reviewMetaUpdateCommands??[]') if cmd['op']!='receipt'])==1
