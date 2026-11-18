@@ -95,6 +95,10 @@ temporary USB route. The Pixel's ordinary saved pairing is a legacy record
 for a different installation, and the official gateway reports no enabled
 enrolled controller. The Pixel stopped on the identity check. The official
 Prepare runtime and listener were restored after the bench test.
+The current standalone PWA still holds a legacy enrollment for a different
+installation. Both devices now report the same Wi-Fi subnet. The Pixel's
+direct TCP check to the Quest gateway failed, and the exact Quest gateway
+answered over the temporary USB loopback route.
 
 On the exact Meta-installed code 27, the signed app's typed ADB operator
 showed the panel with a native submitted-frame receipt and confirmed six
@@ -256,11 +260,23 @@ when capture ends. Lock and reboot recovery still need an attended check.
   targeted mounted states passed, including failed sync and recovery.
 - [ ] Rerun the 594 × 272 landscape case with RustDesk MCP on the latest
   installed PWA. Restore the saved Android display settings after testing.
+- [x] Retest same-folder sync on the deployed `20261118-idle-release` assets
+  from [Pages run 44326627442](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44326627442).
+  With synthetic Quest data and a simulated Drive endpoint, the PWA saved
+  separate JSON and CSV files with a matching participant ID, session UUID
+  and recording stem. Both files had the same private dataset parent.
+  The JSON bytes matched the local download, and a lost response plus
+  journal rebuild recovered the original file ID. All 24 targeted Node
+  checks passed. The current standalone Pixel has 18 verified recording
+  deliveries and zero submitted questionnaires. The actual private
+  research Drive folder has 11 CSVs and seven ZIPs, with zero questionnaire
+  files or dataset subfolders.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem
-  to the finalized recording. Confirm the separate private Drive object
-  contains byte-identical JSON.
+  to the finalized recording. Check that the separate JSON and CSV have
+  the same parent ID in research Drive and that the JSON is byte-identical
+  to the phone download.
 
 #### Dataset folders and repeatable Quest–Pixel binding — 2026-11-18
 
