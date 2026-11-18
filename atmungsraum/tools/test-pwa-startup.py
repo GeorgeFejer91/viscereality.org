@@ -71,16 +71,23 @@ const oldIp = '192.168.10.3', newIp = '192.168.10.9';
 const gateway = ip => 'http://' + ip + ':8766/v1/gateway';
 const mode = new URL(location.href).searchParams.get('fixture');
 const unreachable = mode === 'lan-unreachable';
-const owner = unreachable ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
+const legacy = mode.startsWith('legacy-commissioning');
+const owner = unreachable || legacy ? {v: 2, device, serial: '', epoch: '1', native_epoch: '2', identity_kind: 'app-installation'}
   : {v: 1, device, serial: 'TEST-QUEST', epoch: '1', native_epoch: '2'};
 const mark = value => sessionStorage.events = JSON.stringify([...JSON.parse(sessionStorage.events || '[]'), value]);
 const storage = 'atmungsraum-quest-pair';
+const savedOwner = legacy ? {device: '0'.repeat(32), serial: 'OLD-QUEST', epoch: '1', native_epoch: '2'} : owner;
 localStorage.setItem(storage, localStorage.getItem(storage) || JSON.stringify({
-  ...owner, enrollment: {controller, key}, bluetoothId: 'saved', build, endpoint: gateway(oldIp)
+  ...savedOwner, enrollment: {controller, key}, bluetoothId: 'saved', build, endpoint: gateway(oldIp)
 }));
+if (mode === 'legacy-commissioning-pending') {
+  sessionStorage.setItem('atmungsraum-quest-pending', JSON.stringify({
+    owner: savedOwner, op: 'recenter', id: '1'.repeat(16), generation: 0,
+  }));
+}
 const encode = new TextEncoder();
 const metadata = {...owner, mode: 'remote', gateways: [newIp],
-  ...(unreachable ? {pairing: 1, rtc: {r: 'e'.repeat(32), p: 'f'.repeat(64)}} : {})};
+  ...(unreachable || legacy ? {pairing: 1, rtc: {r: 'e'.repeat(32), p: 'f'.repeat(64)}} : {})};
 const radio = new EventTarget();
 radio.enabled = mode !== 'radio-off';
 radio.getAvailability = async () => radio.enabled;
@@ -108,6 +115,15 @@ window.fetch = async (url, init) => {
   const address = new URL(url, location.href);
   if (address.searchParams.has('_pwa')) mark('update');
   if (address.port === '8767') {
+    if (legacy && address.pathname === '/v1/commissioning') {
+      mark('commissioning');
+      return Response.json({v: 1, device, identity_kind: owner.identity_kind, serial: owner.serial});
+    }
+    if (legacy) {
+      mark('companion:' + address.pathname);
+      return Response.json(address.pathname.endsWith(device) ? {v: 1, state: 'ready', metadata}
+        : {v: 1, state: 'searching'});
+    }
     mark('companion');
     if (mode === 'companion') return Response.json({v: 1, state: 'ready', metadata});
     throw new TypeError('No companion');
@@ -121,16 +137,33 @@ window.fetch = async (url, init) => {
   }
   const {action, nonce} = JSON.parse(init.body);
   if (action !== 'status') throw Error('Unexpected command: ' + action);
+  if (legacy) mark('native-status');
   const payload = JSON.stringify({v: 1, wifi_snapshot: 1, build: {v: 1, packaging_fingerprint: build},
     recordings: 0, control_mode: 'remote', p: 'IDLE', g: 0, r: 0, ms: 0, pending: false, rec: false,
+    ...(legacy ? {controller_access: {v: 1, role: 'active', active_phone: 'Phone', revision: 0}} : {}),
     o: {v: 1, s: 'observed', e: owner.native_epoch, i: String(++witness), a: 0, g: 0, r: 0}});
   const macKey = await crypto.subtle.importKey('raw', encode.encode(key),
     {name: 'HMAC', hash: 'SHA-256'}, false, ['sign']);
   const bytes = await crypto.subtle.sign('HMAC', macKey,
     encode.encode(['RQG1-REPLY', controller, device, owner.epoch, nonce, action, payload].join('|')));
   const mac = Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('');
-  return Response.json({v: 1, device, epoch: owner.epoch, nonce, action, payload, mac});
+  return Response.json({v: 1, device, epoch: owner.epoch, nonce, action, payload,
+    mac: mode === 'legacy-commissioning-rejected' ? '0'.repeat(64) : mac});
 };
+if (legacy) {
+  let waitForStatus = ['legacy-commissioning', 'legacy-commissioning-superseded'].includes(mode);
+  window.testCommissionedTransport = {
+    async request(body) {
+      if (body && waitForStatus) {
+        waitForStatus = false;
+        mark('waiting-for-native');
+        await new Promise(resolve => window.releaseCommissionedStatus = resolve);
+      }
+      return window.fetch(gateway(newIp), {body: body ? JSON.stringify(body) : undefined});
+    },
+    close() { mark('transport-closed'); },
+  };
+}
 """
 
 
@@ -193,6 +226,76 @@ def verify_reconnect(browser, url, release):
         context.close()
     print('PASS ordered startup, saved headset, changed address, companion, Bluetooth recovery and Wi-Fi fallback')
     print('PASS failed signaling and LAN use fitted connection guidance at 320px and 200% text')
+
+
+def verify_legacy_commissioning(browser, url, release):
+    from playwright.sync_api import expect
+
+    for suffix in ('', '-rejected', '-pending', '-superseded', '-questionnaire'):
+        target = url.replace('?live-sync=off#daten', '?fixture=legacy-commissioning' + suffix)
+        release.update(app_url=OLD, probe_result=None)
+        context = browser.new_context()
+        context.add_init_script(QUEST_STARTUP)
+        page = context.new_page()
+        page.route('**/quest-webrtc.js?v=*', lambda route: route.fulfill(
+            content_type='text/javascript', body='''export async function openQuestWebRtc(discovery, enrollment) {
+              if (enrollment || discovery.owner.device !== 'd'.repeat(32)) throw Error('Unexpected identity');
+              return {enrollment: {controller: 'a'.repeat(32), key: 'b'.repeat(64)}, transport: window.testCommissionedTransport};
+            }'''))
+        page.clock.install()
+        if suffix == '-questionnaire':
+            page.goto(target + '#daten')
+            page.evaluate("""async () => {
+              const { openQuestRecordingStore } = await import('./quest-recording-store.js?v=20261118-post-session-questions');
+              const store = await openQuestRecordingStore({device: '0'.repeat(32), serial: 'OLD-QUEST'});
+              try {
+                await store.finalizePrefix('old-recording', {
+                  questionnaire: {required: true, run: {session_id: 'old-session'}},
+                });
+              } finally { store.close(); }
+            }""")
+            target += '&prepared=1'
+        page.goto(target)
+        if suffix in ('', '-superseded'):
+            page.wait_for_function('Boolean(window.releaseCommissionedStatus)', timeout=5000)
+            assert page.evaluate("JSON.parse(localStorage.getItem('atmungsraum-quest-pair')).serial") == 'OLD-QUEST'
+            if suffix == '-superseded':
+                page.evaluate("""() => {
+                  const key = 'atmungsraum-quest-pair';
+                  const other = {...JSON.parse(localStorage.getItem(key)), serial: 'RECENTLY-SELECTED'};
+                  localStorage.setItem(key, JSON.stringify(other));
+                  window.dispatchEvent(new StorageEvent('storage', {key}));
+                }""")
+            page.evaluate('window.releaseCommissionedStatus()')
+            if suffix == '-superseded':
+                page.wait_for_function("JSON.parse(sessionStorage.events).includes('transport-closed')")
+            else:
+                expect(page.locator('#check-bridge')).to_have_attribute('data-check', 'ok')
+        elif suffix == '-rejected':
+            expect(page.locator('#quest-status')).to_have_text('Die Quest-Antwort konnte nicht bestätigt werden.')
+        elif suffix == '-questionnaire':
+            expect(page.locator('#questionnaire-screen')).to_be_visible()
+            page.clock.run_for(1500)
+        else:
+            expect(page.locator('#quest-status')).to_contain_text('Suche die gespeicherte Quest')
+            page.clock.run_for(1500)
+            assert page.evaluate("JSON.parse(sessionStorage.getItem('atmungsraum-quest-pending')).id") == '1' * 16
+
+        state = page.evaluate("""() => ({
+            pair: JSON.parse(localStorage.getItem('atmungsraum-quest-pair')),
+            events: JSON.parse(sessionStorage.events),
+        })""")
+        assert 'chooser' not in state['events'], state['events']
+        if not suffix:
+            assert state['pair']['identity_kind'] == 'app-installation' and state['pair']['device'] == 'd' * 32
+            assert state['events'].index('companion:/v1/quest/' + '0' * 32) < state['events'].index('commissioning')
+        elif suffix == '-superseded':
+            assert state['pair']['serial'] == 'RECENTLY-SELECTED'
+        else:
+            assert state['pair']['serial'] == 'OLD-QUEST'
+            assert ('commissioning' in state['events']) == (suffix == '-rejected')
+        context.close()
+    print('PASS stale legacy pairing uses verified commissioning and preserves rejected or pending records')
 
 
 def run():
@@ -258,6 +361,7 @@ def run():
         print('PASS cached launch and idle resume update; settings, URL, storage and error/timeout fallback preserved')
         context.close()
         verify_reconnect(browser, url, release)
+        verify_legacy_commissioning(browser, url, release)
 
 
 if __name__ == '__main__':
