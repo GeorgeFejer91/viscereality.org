@@ -5,7 +5,7 @@ import { createInterface } from 'node:readline';
 import test from 'node:test';
 import { joinQuest } from '../quest-gateway.js';
 import { createQuestRtcTransport } from '../quest-webrtc-session.js';
-import { recoverCommissionedEnrollment } from '../quest-commissioning.js';
+import { commissioningBroker, recoverCommissionedEnrollment } from '../quest-commissioning.js';
 import { openQuestWebRtc } from '../quest-webrtc.js';
 import { VdoNinjaTransport } from '../vendor/quest-webrtc/vdo-ninja-transport.js';
 
@@ -147,4 +147,63 @@ test('WebCrypto transports exact native receipts and large recording replies', {
   await assert.rejects(quest.receipt(id));
   assert.equal((await request({ op: 'stats' })).result, 3, 'retired owner accepted no additional dispatch');
   quest.close();
+});
+
+const commissioningDiscovery = { owner, rtc: { r: room, p: 'b'.repeat(64) }, endpoints: [] };
+const commissioningOffer = { device: owner.device, epoch: owner.epoch, native_epoch: owner.native_epoch,
+  room, id: '4'.repeat(32), public_key: 'A'.repeat(122) };
+const readyDiscovery = (rtc = commissioningDiscovery.rtc) => Response.json({
+  v: 1, state: 'ready', metadata: { ...owner, v: 2, mode: 'remote', pairing: 1, gateways: [], rtc },
+});
+
+test('commissioning refreshes a rejected discovery snapshot and reuses the exact offer', async t => {
+  const requests = [];
+  const authorized = { v: 2, proof: 'fixture-proof' };
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    requests.push({ path: new URL(url).pathname, body: options.body && JSON.parse(options.body) });
+    switch (requests.length) {
+      case 1: return Response.json({}, { status: 403 });
+      case 2: return Response.json({ v: 1, state: 'searching' });
+      case 3: return readyDiscovery();
+      case 4: return Response.json(authorized);
+      default: assert.fail('unexpected commissioning request');
+    }
+  });
+  const result = await commissioningBroker.authorize(commissioningOffer, AbortSignal.timeout(2000), commissioningDiscovery);
+  assert.deepEqual(result, authorized);
+  const proofPath = '/v1/commissioning/request';
+  const discoveryPath = '/v1/quest/' + owner.device;
+  assert.deepEqual(requests, [
+    { path: proofPath, body: commissioningOffer },
+    { path: discoveryPath, body: undefined },
+    { path: discoveryPath, body: undefined },
+    { path: proofPath, body: commissioningOffer },
+  ]);
+});
+
+test('a changed rendezvous leaves the commissioning request denied', async t => {
+  const requests = [];
+  t.mock.method(globalThis, 'fetch', async url => {
+    requests.push(new URL(url).pathname);
+    if (requests.length === 1) return Response.json({}, { status: 403 });
+    if (requests.length === 2) return readyDiscovery({ ...commissioningDiscovery.rtc, p: 'c'.repeat(64) });
+    assert.fail('the changed rendezvous received another proof request');
+  });
+  await assert.rejects(commissioningBroker.authorize(commissioningOffer, AbortSignal.timeout(2000), commissioningDiscovery),
+    { status: 403 });
+  assert.deepEqual(requests, ['/v1/commissioning/request', '/v1/quest/' + owner.device]);
+});
+
+test('commissioning stops polling when the shared deadline aborts', async t => {
+  const controller = new AbortController();
+  const reason = new DOMException('fixture canceled', 'AbortError');
+  let requests = 0;
+  t.mock.method(globalThis, 'fetch', async () => {
+    requests++;
+    if (requests === 1) return Response.json({}, { status: 403 });
+    controller.abort(reason);
+    throw reason;
+  });
+  await assert.rejects(commissioningBroker.authorize(commissioningOffer, controller.signal, commissioningDiscovery), reason);
+  assert.equal(requests, 2);
 });
