@@ -1,5 +1,23 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with Bluetooth offer admission
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `31`,
+version name `0.2.30-rtc-test`, and 65,609,275 bytes. SHA-256 is
+`8e04be6bdf6cc9be1dff20fda0365390c7cfcf2be70ca95b6cfc1e7d67cbed09`. Native
+commit `31ca0b6898156ec0728b8c862f273e8e78684826` binds tree
+`894fb869fa71c787372cdb514c68d380b0fa2488`. The retained bench signer, v3
+signature, ARM64 alignment, exact WebRTC assets and cold session closure pass.
+The installed Quest bytes match the signed build, with its UID and six startup
+grants retained.
+
+The physical Pixel established authenticated native status in 19 seconds with
+an initially empty temporary pairing slot and the real commissioned Android
+companion. Bluetooth reached ready, phone and Quest proof succeeded, and
+the Pixel selected relay-to-server-reflexive ICE without a chooser or code.
+The normal app document and saved pairing were restored after the test.
+Meta Developer code 27 remains the official baseline.
+
 ## WebRTC bench with shared-scheduler Polar recording clocks
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `30`,

@@ -407,6 +407,27 @@ selection and guard were read back after restoration. Open WebRTC Bench
 in the headset, then resume the physical pairing, recordings and custody
 checks.
 
+#### Physical automatic commissioning over WebRTC — 2026-11-18
+
+The lab Pixel reached its provisioned Android companion and scanned while
+the signed bench code 30 was foreground. The Java Bluetooth validator
+rejected its own v2 discovery snapshot when the WebRTC owner appended the
+optional offer, so advertising was never reached for that snapshot. The
+production callback regression reproduced the rejection and now passes with
+119 checks. The gateway host suite also passes.
+
+The [signed bench code 31](../quest/apks/README.md#webrtc-bench-with-bluetooth-offer-admission)
+matches installed bytes on Quest 2 with the app UID and six grants retained.
+The normal Android launcher brought it to the foreground, and fresh OpenXR
+readback showed focused, advancing submitted frames. The installed Pixel
+PWA discovered the headset and authenticated native status in 19 seconds,
+using the real Android companion and a temporarily isolated pairing slot
+that started empty. No chooser or code appeared. The phone selected a
+local TURN relay and remote server-reflexive candidate at 26 ms round-trip
+time. The ordinary phone document and prior Quest power policy were
+restored. Saved reconnect, matched native action receipts, wearer runs and
+the official Meta transition remain open.
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native
