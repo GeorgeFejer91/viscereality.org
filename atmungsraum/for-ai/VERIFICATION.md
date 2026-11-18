@@ -72,6 +72,17 @@ device, viewport, measured states and results.
 Follow the [RustDeskMCP phone validation protocol](RUSTDESK-PHONE-TESTING.md)
 for installed-phone input, capture and native receipt evidence.
 
+### Connection guidance after relay and LAN failure — 2026-11-18
+
+With signaling held and an actual native LAN address offered, the physical
+Pixel reached Bluetooth readiness but its browser could not reach the LAN
+address. The original fallback copied `Failed to fetch` into the operator
+status. The production startup fixture reproduces the two route failures
+using saved trust, with no chooser. It verifies the existing German
+connection guidance, a passing text measurement and horizontal bounds at
+320 px and 200% text. The cached-release, idle refresh, Bluetooth and
+successful LAN fallback fixtures also pass.
+
 ### Temporary status loss after Save — 2026-11-18
 
 The mounted 320 × 568, 200% text regression loses the status read

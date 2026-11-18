@@ -433,6 +433,27 @@ the installed phone text measurement. The ordinary phone document and prior
 Quest power policy were restored. The wearer runs, physical network stress
 matrix and official Meta transition remain open.
 
+#### Physical relay-only connection and recovery — 2026-11-18
+
+The physical Pixel and signed Quest bench code 31 completed first pairing
+in 10.0 seconds with zero LAN endpoints exposed to the installed PWA,
+relay-only ICE on the phone and 1.2 seconds of delay per outbound signaling
+message. Saved reconnect under those constraints first reached native
+status in 8.2 seconds. Closing that transport and withholding phone
+signaling for 10 seconds cleared connected status within 0.7 seconds.
+It returned automatically 6.4 seconds after signaling was restored.
+The Quest WebView and Pixel reported the matching relay candidate pair.
+A RustDesk Recenter tap confirmed its original native receipt after recovery.
+
+This controlled fault injection ran on the existing shared Wi-Fi subnet.
+The actual isolated guest Wi-Fi and the physical timing matrix remain
+unqualified. When signaling was withheld and the signed Quest offered a
+LAN endpoint, the physical browser reported `ERR_ADDRESS_UNREACHABLE`
+with local-network permission granted. The installed interface exposed the
+raw fetch error. The PWA now keeps the connection error type through
+fallback and renders the established German recovery guidance.
+See [connection guidance verification](VERIFICATION.md#connection-guidance-after-relay-and-lan-failure--2026-11-18).
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native
