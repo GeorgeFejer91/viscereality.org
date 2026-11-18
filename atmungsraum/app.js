@@ -128,19 +128,15 @@ async function measureLabels() {
       // The bounded 0–100% field is measured against its largest label once.
       // Changing its digits cannot change geometry or require a page-wide pass.
       if (records.some(record => {
+        if (record.type === 'attributes') return record.oldValue !== record.target.getAttribute('hidden');
         const element = record.target.nodeType === Node.TEXT_NODE ? record.target.parentElement : record.target;
         return !element?.closest?.('[data-live-value]');
       })) measure();
-    }).observe(main, { childList: true, characterData: true, subtree: true });
+    }).observe(main, { childList: true, characterData: true, subtree: true,
+      attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
     const screenChanges = new MutationObserver(() => { root.dataset.layout = 'bounded'; measure(); });
     main.querySelectorAll('.screen').forEach((screen) => {
       screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
-    });
-    const liveVisibility = new MutationObserver(records => {
-      if (records.some(({ target, oldValue }) => oldValue !== target.getAttribute('hidden'))) measure();
-    });
-    main.querySelectorAll('[data-live-value]').forEach(element => {
-      liveVisibility.observe(element, { attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
     });
     const dialogChanges = new MutationObserver(records => {
       if (records.some(record => record.type !== 'attributes'
@@ -176,7 +172,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261117-smartphone-rules').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261118-gateway-transport').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });

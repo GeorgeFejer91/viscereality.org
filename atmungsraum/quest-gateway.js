@@ -222,25 +222,42 @@ async function readJson(response) {
   } finally { await reader.cancel().catch(() => {}); }
 }
 
-export async function joinQuest({ endpoint, serial, device, identity_kind, build, discovery, enrollment, signal, fetcher = fetch }) {
-  const url = questEndpoint(endpoint);
-  const installation = identity_kind === 'app-installation' || discovery?.identity_kind === 'app-installation';
-  if (!(typeof serial === 'string' && serialPattern.test(serial) || installation && serial === '')
-    || (build === undefined ? !enrollment : !hex64.test(build))) {
-    throw Error('Die Einstellungen für die Quest sind ungültig.');
-  }
-  if (enrollment && (!hex32.test(enrollment.controller) || !hex64.test(enrollment.key))) {
-    throw Error('Prüfe Controller-ID und Quest-Schlüssel.');
-  }
+export async function joinQuest({ endpoint, serial, device, identity_kind, build, discovery, enrollment, signal, fetcher = fetch, transport }) {
   const lifetime = new AbortController();
-  const fetchJson = async (body, requestSignal) => readJson(await fetcher(url, {
-    method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    mode: 'cors', cache: 'no-store', credentials: 'omit', redirect: 'error',
-    referrerPolicy: 'no-referrer', targetAddressSpace: 'local',
-    signal: AbortSignal.any([lifetime.signal, AbortSignal.timeout(6500), ...[signal, requestSignal].filter(Boolean)]),
-  }));
+  const close = () => {
+    if (lifetime.signal.aborted) return;
+    lifetime.abort();
+    if (typeof transport?.close === 'function') transport.close();
+  };
   try {
+    const installation = identity_kind === 'app-installation' || discovery?.identity_kind === 'app-installation';
+    if (transport && (!installation || !enrollment || !hex32.test(device ?? discovery?.device ?? '')
+      || typeof transport.request !== 'function' || typeof transport.close !== 'function')) {
+      throw Error('Für diesen Verbindungsweg fehlt eine gültige Verbindungsanmeldung.');
+    }
+    const url = transport ? undefined : questEndpoint(endpoint);
+    if (!(typeof serial === 'string' && serialPattern.test(serial) || installation && serial === '')
+      || (build === undefined ? !enrollment : !hex64.test(build))) {
+      throw Error('Die Einstellungen für die Quest sind ungültig.');
+    }
+    if (enrollment && (!hex32.test(enrollment.controller) || !hex64.test(enrollment.key))) {
+      throw Error('Prüfe Controller-ID und Quest-Schlüssel.');
+    }
+    const fetchJson = async (body, requestSignal) => {
+      const requestLifetime = AbortSignal.any([lifetime.signal, AbortSignal.timeout(6500), ...[signal, requestSignal].filter(Boolean)]);
+      requestLifetime.throwIfAborted();
+      const response = transport ? await transport.request(body, requestLifetime)
+        : await fetcher(url, {
+          method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
+          headers: body ? { 'Content-Type': 'application/json' } : undefined,
+          mode: 'cors', cache: 'no-store', credentials: 'omit', redirect: 'error',
+          referrerPolicy: 'no-referrer', targetAddressSpace: 'local', signal: requestLifetime,
+        });
+      requestLifetime.throwIfAborted();
+      const result = await readJson(response);
+      requestLifetime.throwIfAborted();
+      return result;
+    };
     const raw = await fetchJson();
     const owner = identity(raw);
     if (raw.enabled !== true || raw.remote_available !== true || owner.serial !== serial
@@ -355,6 +372,6 @@ export async function joinQuest({ endpoint, serial, device, identity_kind, build
         ? (command, requestSignal) => exchange('controller-access', command, requestSignal) : null,
       ecg: ecgKey ? (requestSignal) => exchange('ecg-preview', {}, requestSignal) : null,
       recordings: ecgKey && initial.recordings === 1 ? (query, requestSignal) => exchange('recordings', query, requestSignal) : null,
-      receipt: (id) => exchange('receipt', { id }), close: () => lifetime.abort() };
-  } catch (error) { lifetime.abort(); throw error; }
+      receipt: (id) => exchange('receipt', { id }), close };
+  } catch (error) { close(); throw error; }
 }

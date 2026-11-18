@@ -1,4 +1,4 @@
-import { questEndpoint } from './quest-gateway.js?v=14';
+import { questEndpoint } from './quest-gateway.js?v=15';
 
 const encode = new TextEncoder();
 const prefix = 'RQ-PHONE-PAIR-2';
@@ -42,8 +42,9 @@ const delay = (ms, signal) => new Promise((resolve, reject) => {
   signal.addEventListener('abort', abort, { once: true });
 });
 
-export async function pairPhone({ endpoint, owner, signal, onCode, phoneName = 'Smartphone', fetcher = fetch, wait = delay }) {
-  const url = questEndpoint(endpoint);
+export async function pairPhone({ endpoint, owner, signal, onCode, phoneName = 'Smartphone', fetcher = fetch, wait = delay, transport }) {
+  if (transport && typeof transport.request !== 'function') fail();
+  const url = transport ? undefined : questEndpoint(endpoint);
   const lifetime = AbortSignal.any([AbortSignal.timeout(120000), ...[signal].filter(Boolean)]);
   lifetime.throwIfAborted();
   if (owner?.identity_kind !== 'app-installation' || typeof onCode !== 'function'
@@ -56,11 +57,13 @@ export async function pairPhone({ endpoint, owner, signal, onCode, phoneName = '
     || encode.encode(phoneName).length > 128 || /[\x00-\x1f\x7f-\x9f\p{Cf}]/u.test(phoneName)) fail();
   for (const char of phoneName) if (char.codePointAt(0) >= 0xd800 && char.codePointAt(0) <= 0xdfff) fail();
   const exchange = async (body, selectedSignal = lifetime) => {
-    selectedSignal.throwIfAborted();
-    const response = await fetcher(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body), mode: 'cors', cache: 'no-store', credentials: 'omit', redirect: 'error',
-      referrerPolicy: 'no-referrer', targetAddressSpace: 'local',
-      signal: AbortSignal.any([selectedSignal, AbortSignal.timeout(6500)]) });
+    const requestLifetime = AbortSignal.any([selectedSignal, AbortSignal.timeout(6500)]);
+    requestLifetime.throwIfAborted();
+    const response = transport ? await transport.request(body, requestLifetime)
+      : await fetcher(url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body), mode: 'cors', cache: 'no-store', credentials: 'omit', redirect: 'error',
+        referrerPolicy: 'no-referrer', targetAddressSpace: 'local', signal: requestLifetime });
+    requestLifetime.throwIfAborted();
     if (!response.ok) throw Error('Die Quest kann gerade keine neue Verbindung annehmen.');
     const reader = response.body?.getReader(); if (!reader) fail();
     const buffer = new Uint8Array(8192); let length = 0;
@@ -70,6 +73,7 @@ export async function pairPhone({ endpoint, owner, signal, onCode, phoneName = '
         if (length + value.byteLength > buffer.length) fail();
         buffer.set(value, length); length += value.byteLength;
       }
+      requestLifetime.throwIfAborted();
       return JSON.parse(decode.decode(buffer.subarray(0, length)));
     } finally { await reader.cancel().catch(() => {}); }
   };

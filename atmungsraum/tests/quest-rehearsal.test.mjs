@@ -189,6 +189,64 @@ test('v2 identifies an app installation without pretending an unavailable hardwa
   await assert.rejects(joinQuest({ endpoint, serial: '', enrollment: { controller, key }, build, fetcher: valid.fetch }));
 });
 
+test('saved enrollment verifies status and sends the original receipt request without a LAN address', async () => {
+  const identity = { ...owner, v: 2, identity_kind: 'app-installation', serial: '' };
+  const status = { ...snapshot(), controller_access: { v: 1, role: 'active', active_phone: 'Pixel', revision: 1 } };
+  const native = server({ identity, status });
+  const exchanges = [];
+  let closed = 0;
+  let notifyPending;
+  let releaseLateReply;
+  const pending = new Promise(resolve => { notifyPending = resolve; });
+  const transport = {
+    async request(body, signal) {
+      signal.throwIfAborted();
+      exchanges.push(body);
+      const response = await native.fetch(endpoint, { body: body ? JSON.stringify(body) : undefined, cache: 'no-store', credentials: 'omit' });
+      if (exchanges.length === 4) {
+        await new Promise(resolve => {
+          releaseLateReply = resolve;
+          notifyPending();
+        });
+      }
+      return response;
+    },
+    close() { closed++; },
+  };
+  const quest = await joinQuest({ transport, serial: '', identity_kind: 'app-installation', device: identity.device,
+    enrollment: { controller, key }, build, fetcher: () => assert.fail('an explicit data transport must never use HTTP') });
+  assert.equal(quest.initial.p, 'IDLE');
+  await quest.receipt('e'.repeat(16));
+  assert.deepEqual(native.requests, ['GET', 'status', 'receipt']);
+  assert.deepEqual(JSON.parse(exchanges[2].payload), { id: 'e'.repeat(16) });
+  const late = quest.receipt('f'.repeat(16));
+  await pending;
+  quest.close();
+  quest.close();
+  releaseLateReply();
+  assert.equal(closed, 1);
+  await assert.rejects(late, { name: 'AbortError' });
+  await assert.rejects(quest.receipt('e'.repeat(16)), { name: 'AbortError' });
+  assert.equal(exchanges.length, 4);
+});
+
+test('non-LAN transport requires saved enrollment and closes after a forged status', async () => {
+  const identity = { ...owner, v: 2, identity_kind: 'app-installation', serial: '' };
+  const native = server({ identity, tamper: true });
+  const selection = { serial: '', identity_kind: 'app-installation', device: identity.device, build };
+  let closed = 0;
+  const transport = {
+    request: body => native.fetch(endpoint, { body: body ? JSON.stringify(body) : undefined, cache: 'no-store', credentials: 'omit' }),
+    close() { closed++; },
+  };
+  await assert.rejects(joinQuest({ ...selection, transport }), /Verbindungsanmeldung/);
+  assert.deepEqual(native.requests, []);
+  assert.equal(closed, 1);
+  await assert.rejects(joinQuest({ ...selection, transport, enrollment: { controller, key } }), /bestätigt/);
+  assert.deepEqual(native.requests, ['GET', 'status']);
+  assert.equal(closed, 2);
+});
+
 test('a waiting trusted phone can read status and request control but cannot send experiment mutations', async () => {
   const state = { ...snapshot(), controller_access: { v: 1, role: 'waiting', active_phone: 'Other phone', revision: 4 },
     breath_setup: 1, participant_arm: 1, recordings: 1, ecg_preview: 1, recenter: 1 };

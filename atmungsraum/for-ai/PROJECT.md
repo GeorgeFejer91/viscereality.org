@@ -65,14 +65,18 @@ when capture ends. Lock and reboot recovery still need an attended check.
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and
-reconnect automatically across both ordinary and client-isolated Wi-Fi.
-Measure first enrollment separately from saved reconnection. Saved enrollment
-must reconnect to the same Quest without a code, chooser or hotspot.
+automatically across both ordinary and client-isolated Wi-Fi. Opening or
+resuming the PWA must connect to the authorized Quest without a code, chooser,
+approval tap or hotspot. Test a provisioned phone's first connection with
+empty PWA storage separately from saved reconnection.
 
-- [ ] Use the existing BLE discovery and Android companion to locate the
-  saved Quest. Bind short-lived WebRTC rendezvous material to that enrollment.
-  Hand the transport only dedicated session material. Preserve explicit
-  approval for a new controller or expired or revoked trust.
+- [ ] Provision lab device trust before the operator opens the app. The
+  Android companion and Quest must authenticate each other using per-device
+  proof and a short-lived rendezvous. A provisioned phone can obtain its
+  enrollment automatically even with empty browser storage. A saved phone
+  can rejoin automatically. A foreign or revoked device must be denied.
+  Bluetooth discovery and the VDO room alone grant no authority. Hand the
+  transport only dedicated session material.
 - [ ] Start pinned, data-only VDO.Ninja WebRTC signaling as the primary
   connection route in the PWA and signed development APK. Let ICE select a
   reachable peer path and use TURN when a relay is needed. Keep the existing
@@ -98,21 +102,41 @@ must reconnect to the same Quest without a code, chooser or hotspot.
   measurements after pairing, transport or runtime updates.
 - [ ] On physical Quest 2 and Pixel 10, exercise shared Wi-Fi, isolated
   guest Wi-Fi, high latency and loss, blocked UDP with reachable TURN,
-  no signaling egress, interruption and return. Verify code-free rejoin on
-  saved trust, a selected TURN route at both ends where relayed, and a
-  matched native action receipt. Verify expired rendezvous, wrong peer,
-  revoked trust and simultaneous routes cannot take or duplicate control.
+  no signaling egress, interruption and return. Verify automatic first join
+  and rejoin, a selected TURN route at both ends where relayed, and a matched
+  native action receipt. Verify expired rendezvous, wrong peer, revoked trust
+  and simultaneous routes cannot take or duplicate control.
 - [ ] Complete the H10 and recording gates on the qualified isolated-network
   path. Verify that Quest keeps acquiring during an outage, the Pixel
   recovers the same session, and Quest, Pixel and private Drive exports
   match by hash using a synthetic participant identity.
 
+The 320 px Connect render exposed a visibility-only fit gap. The main-screen
+measurement observer now measures changed `hidden` state, including nested
+labels, while ignoring idempotent visibility writes and digit updates to live
+values. The delayed-resize regression reproduced the missing Connect summary
+measurement before the fix and passes after it. The installed Quest 2 base
+APK still matches fixed27-r2 by SHA-256.
+
 Reference qualification passed 81 deterministic cases. Two separate Chromium
-contexts also ran the locally pinned VDO.Ninja SDK against public signaling
-and TURN with synthetic data. Both independently reported selected relay
-candidates and matched one authenticated applied command at revision 1. The
-next increment is the authenticated rendezvous and a signed test APK for the
-physical Pixel/Quest transport and timing matrix.
+contexts ran the pinned VDO.Ninja SDK against public signaling and TURN.
+Both reported selected relayed ICE candidates and matched an authenticated
+reference command at revision 1.
+
+The PWA pairing and gateway now accept a typed request transport with no LAN
+address. The existing v2 matching-code ceremony and RQG1 status, owner proof,
+lease and receipt rules run through that boundary. An alternate route cannot
+request legacy enrollment, accept a forged status or publish a reply after
+closing. Host verification recompiled the released fix27-r2 Java pairing
+owner and passed 369 checks. A synthetic two-browser TURN probe reached that
+Java owner, matched the two approval codes and stored exactly one enrollment
+after both confirmations. Both browser peers reported relay candidates.
+
+This increment exposes the transport boundary while the installed APK uses
+the current LAN connection in normal operation. The next increment wires
+authenticated BLE rendezvous, the packaged native bridge and the data-only
+channel into the actual Connect path. The physical timing matrix still gates
+the primary route.
 
 ### PWA update copy simplification — 2026-11-17
 
