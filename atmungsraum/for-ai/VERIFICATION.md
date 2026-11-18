@@ -57,6 +57,31 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Physical Pixel navigation stress — 2026-11-18
+
+The standalone Pixel PWA loaded `20261118-saved-quest-service` with the
+current gateway, pairing and data modules. On publication `13e0e04`, exact
+Git bytes matched all six checked live paths, including the three changed
+documents, release policy, HTML and app entry. Pages run `44372630949`
+succeeded. The installed Meta Developer APK still matched fixed27-r2,
+`6f14707053fc9c07b611485deebfe8554a71b405892e8678f2c7f4bb2d8e398b`,
+code 27 with Meta installer attribution. Its process was retained.
+
+RustDesk MCP opened Settings from a fresh physical frame, then completed
+ten Settings/Back cycles. Every tap was followed by a saved RustDesk frame
+and a read-only CDP assertion of the visible page. All twenty transitions
+showed the expected heading, current release, ready measurement, saved
+pairing present and zero horizontal/vertical document overflow at
+411 × 833 CSS pixels. The original Connect page was restored and the
+RustDesk viewer input lock was released. The private receipt is
+`canonical29-current-pwa-navigation-stress.json` with the twenty frames.
+
+The app stayed disconnected. The browser's saved grant reference still
+has no matching visible Bluetooth grant. This navigation check leaves
+authenticated reconnect, native action receipts, worn H10, full recordings
+and update/recovery acceptance open. The existing standard-companion
+in-place signing and matching-enrollment requirements still apply.
+
 ### Canonical Developer build inputs — 2026-11-18
 
 The canonical Developer candidate now builds from a verified reconstruction
@@ -88,6 +113,18 @@ visual profile, compiled particle shaders, five provider assets and OpenXR
 loader in [Developer code 29](../quest/apks/README.md#canonical-developer-29-candidate).
 Its recorded Meta runtime qualification is still pending. The authenticated
 Meta dashboard continues to show code 27 and build `1465199570012388`.
+
+Independent lab-controller qualification selected the exact published
+candidate digest `7cacbe9eff822d6a95e0b92e375b192a02ed76ef6df522e6b51fa811adc374d8`.
+Its retained Developer v3 signature, ARM64/16 KiB alignment and embedded
+source identity passed. Direct signed-APK comparison confirmed all 74
+original audio entries, five provider assets, five embedded particle inputs
+and three compiled shaders against fixed27-r2. The SDK native/DEX closure
+digests and seven selected WebRTC runtime/protocol files matched. The
+actual-APK session closure and locked 900-second duration passed again.
+Private receipts are `canonical-developer-29-independent-verified.json`
+and `canonical-developer-29-independent-content-verification.json`.
+Bind installation and Meta actions to the exact candidate digest above.
 
 The earlier input investigation follows for provenance.
 

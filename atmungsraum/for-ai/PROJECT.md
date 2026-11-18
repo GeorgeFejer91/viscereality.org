@@ -109,6 +109,14 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   release protocol. Verify the signature, ARM64 alignment, signed session
   closure, original visual bytes and all ten WebRTC assets. See the
   [candidate record](../quest/apks/README.md#canonical-developer-29-candidate).
+  Independent lab-controller inspection matched that exact candidate digest,
+  all 74 original audio entries, five provider assets, five particle inputs,
+  three compiled shaders, SDK closure and packaged 900-second session.
+- [x] Repeat ten Settings/Back cycles through RustDesk MCP on the current
+  standalone Pixel PWA. All twenty transitions returned the expected page,
+  ready measurement and zero page overflow at 411 × 833 CSS pixels. Saved
+  pairing remained present. The app remained disconnected. See the
+  [physical navigation evidence](VERIFICATION.md#physical-pixel-navigation-stress--2026-11-18).
 - [ ] Verify automatic startup in both launch orders on the qualified
   unified Developer APK and a Pixel commissioned for that installation.
   Use the retained Developer signer and approved Meta Platform SDK 207
