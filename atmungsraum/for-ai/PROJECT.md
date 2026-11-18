@@ -516,6 +516,24 @@ power settings were restored. The stock companion update requires the
 retained signer for the lab Pixel's installed standard companion.
 See [scanner verification](VERIFICATION.md#multi-instance-bluetooth-rediscovery--2026-11-18).
 
+The restored lab commissioning profile and signed bench companion code 4
+passed 30 first joins and 30 saved rejoins on the public hotel Wi-Fi with
+the same focused Quest bench code 32. Every trial reached actionable
+controls through TURN using the installed PWA, without a pairing code or
+chooser. Median readiness was 1.92 seconds for first join and 1.77 seconds
+for saved rejoin. The corresponding p95 was 16.56 and 4.58 seconds.
+
+With LAN excluded from discovery and phone signaling delayed by 1.2
+seconds per outbound message, first pairing passed in 10.05 seconds.
+A 10-second signaling interruption cleared the connected state and the
+same saved pairing regained native status 6.08 seconds after signaling
+returned. RustDesk MCP matched the native Recenter receipt after recovery.
+The normal phone and Quest power state were restored.
+
+Continue with the common-route LAN comparison, distinct client-isolation
+and blocked-UDP cases, negative trust checks, worn H10 recording and export
+custody, and the official Meta transition.
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native
