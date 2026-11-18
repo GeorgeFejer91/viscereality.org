@@ -631,9 +631,12 @@ python -B tools/check-recording-evidence.py `
 Use `--expect partial` for a separately planned early finish or checkpoint
 recovery. The checker compares the committed ECG, accelerometer, radius and
 breath observations with their CSV rows and clock fields. It verifies native
-file and checkpoint hashes, one terminal outcome, writer drops, matching CSV
+file and checkpoint hashes, the terminal outcome, writer drops, matching CSV
 bytes from all three copies, and one verified Drive object under the reserved
-file ID. Its output contains byte counts, hashes and row counts.
+file ID. A completed run must have exactly one committed native completion
+event between official Start and finalization, on the same clock anchor.
+A partial run has no committed completion event. The checker reports counts,
+hashes, and native elapsed time to the durable completion marker when present.
 
 Keep the actual AudioTrack 39,690,000-frame receipt at 44,100 Hz, wearer and
 input evidence, signal/fault window notes, and the headset/phone release

@@ -141,6 +141,15 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
     start, end = starts[0], terminal["ended_monotonic_ns"]
     require(clock["monotonic_ns"] <= start < end, "native measurement interval mismatch")
     offset = clock["utc_epoch_ns"] - clock["monotonic_ns"]
+    completion = [row for row in events if row["event"] == "completion-reached"]
+    require(len(completion) == (1 if expected == "completed" else 0),
+            "native completion event disagrees with the terminal outcome")
+    completion_elapsed_us = None
+    if completion:
+        at = completion[0]["observed_monotonic_ns"]
+        require(start < at <= end and completion[0]["observed_utc_ns"] == at + offset,
+                "native completion event is outside the run or has the wrong clock")
+        completion_elapsed_us = (at - start) // 1000
     signal_events = iter(
         (row["event"], row["observed_monotonic_ns"], row["signal_reason"])
         for row in events if row["event"] in SIGNAL_EVENTS and start <= row["observed_monotonic_ns"] <= end
@@ -200,7 +209,7 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
             "CSV start, terminal or main measurement stream missing")
     require(last["session_status"] == expected and last["end_reason"] and 0 <= int(last["audio_elapsed_us"]) <= END_US,
             "CSV terminal outcome or projected audio duration mismatch")
-    return dict(counts), int(last["audio_elapsed_us"])
+    return dict(counts), int(last["audio_elapsed_us"]), completion_elapsed_us
 
 
 def verify_drive(args, descriptor):
@@ -278,10 +287,12 @@ def verify(args):
         source = terminal_path if name == "final.json" else args.native_run / name
         tails += verify_bytes(source, entry, name, allow_tail=recovered and name in STREAMS)
 
-    counts, projected_audio_us = verify_csv(path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted")
+    counts, projected_audio_us, native_completion_us = verify_csv(
+        path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted")
     return {"pass": True, "mode": args.expect, "bytes": descriptor["size"], "sha256": descriptor["sha256"],
             "csv_rows": counts, "writer_drops": 0, "drive_objects": 1, "native_checkpoint_recovery": recovered,
-            "ignored_post_checkpoint_bytes": tails, "terminal_csv_audio_elapsed_us": projected_audio_us}
+            "ignored_post_checkpoint_bytes": tails, "terminal_csv_audio_elapsed_us": projected_audio_us,
+            "native_start_to_completion_us": native_completion_us}
 
 
 def main():
