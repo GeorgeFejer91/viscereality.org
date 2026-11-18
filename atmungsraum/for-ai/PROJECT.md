@@ -531,8 +531,20 @@ returned. RustDesk MCP matched the native Recenter receipt after recovery.
 The normal phone and Quest power state were restored.
 
 Continue with the common-route LAN comparison, distinct client-isolation
-and blocked-UDP cases, negative trust checks, worn H10 recording and export
-custody, and the official Meta transition.
+and network-wide blocked-UDP cases, revoked trust and simultaneous routes,
+worn H10 recording and export custody, and the official Meta transition.
+
+#### TURN/TLS and invalid controller requests — 2026-11-18
+
+The current standalone PWA and focused Quest bench 32 paired through a
+TURN/TLS-only phone ICE fixture. Cold browser enrollment took 2.19 seconds
+and saved reconnection took 4.25 seconds in the controlled repeat. The
+headset independently observed the phone relay candidate. A wrong member
+tag and altered ciphertext reached real WebRTC channels. The channels
+closed without authenticated status or actionable controls. The final
+valid reconnection returned the original RustDesk Recenter receipt.
+Two attempts in the earlier batch did not reach a data channel. See the
+[route and trust evidence](VERIFICATION.md#phone-turntls-and-invalid-controller-requests--2026-11-18).
 
 #### Commissioning after Bluetooth snapshot expiry — 2026-11-18
 

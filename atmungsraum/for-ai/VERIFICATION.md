@@ -160,6 +160,42 @@ median 1.53 seconds, p95 2.91 seconds, and maximum 4.59 seconds. Four first
 joins received 403 and recovered on the first carrier. All 60 selected
 TURN. The native app and the prior headset power policy were restored.
 
+### Phone TURN/TLS and invalid controller requests — 2026-11-18
+
+The physical devices used standalone PWA `20261118-participant-keyboard-layout`
+from exact [Pages run 44272922844](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44272922844),
+bench companion 4, and signed, foreground Quest bench APK 32, with the pinned
+VDO.Ninja SDK 1.5.5. The Quest reported focused, advancing submitted frames.
+The installed official Developer APK separately matched Meta code 27.
+
+The temporary phone fixture first restricted its ICE candidates to the SDK's
+TURN TCP/TLS endpoints. The first join and wrong-tag cases timed out before
+opening a channel. The altered ciphertext reached a real TURN/TLS route and
+the channel closed without control. Valid saved trust then reopened control
+over TURN/TLS and RustDesk Recenter matched its original native receipt.
+
+After a default-ICE warm-up, a temporary empty browser pairing slot and a
+saved profile reached actionable native status on TURN/TLS in 2.19 and 4.25
+seconds. The empty slot obtained its existing device authorization via the
+commissioning exchange. Neither case showed a chooser or pairing prompt.
+The Pixel reported a local relay with `relayProtocol=tls`. An independent
+read-only WebView observer on the Quest saw its selected peer use a local
+server-reflexive UDP candidate with a remote relay candidate during the
+saved rejoin. The restriction applied on the phone and the Quest retained
+its normal ICE configuration.
+
+In the same repeat, default ICE delivered one request with a modified member
+tag and two with modified authenticated ciphertext. All three implicated
+channels closed. The phone received no authenticated reply and exposed no
+actionable controls during either 17-second negative case. The subsequent
+valid saved reconnect returned the original native Recenter receipt from a
+RustDesk tap. The temporary phone profile and Quest WebView forward were
+removed and the prior headset power policy was restored.
+
+Run the end-to-end UDP-block case with a verified network filter and the
+LAN comparison on a verified common route. Keep the physical revoked-member
+case open until an independently revocable bench identity is available.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
