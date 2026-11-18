@@ -271,8 +271,16 @@ when capture ends. Lock and reboot recovery still need an attended check.
   Use two columns at the measured landscape width, keep the sync status
   beside Retry and allocate the longer footer action more space. All 21
   targeted mounted states passed, including failed sync and recovery.
+- [x] Repeat the original disconnected Pixel case after the first fix.
+  Exact Pages run 44331741215 at `79d2a49` matched all nine affected live
+  paths. The deployed Recordings layout still had 37 px of document scroll
+  with the Bluetooth discovery status and no Drive control. Restored the
+  device display settings and reproduced the disconnected state in mounted
+  Chromium. The corrected layout passes 16 combinations of view, text size,
+  and availability of a locally saved recording.
 - [ ] Rerun the 594 × 272 landscape case with RustDesk MCP on the latest
-  installed PWA. Restore the saved Android display settings after testing.
+  installed PWA after the disconnected layout correction. Restore the
+  saved Android display settings after testing.
 - [x] Retest same-folder sync on the deployed `20261118-idle-release` assets
   from [Pages run 44326627442](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44326627442).
   With synthetic Quest data and a simulated Drive endpoint, the PWA saved

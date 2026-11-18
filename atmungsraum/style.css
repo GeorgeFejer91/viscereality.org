@@ -684,6 +684,7 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   #recordings-screen[data-view="sync"] #recording-files:not(:has(#quest-export-retry:not([hidden]), #quest-export-status:not([hidden]))) #recordings-sync-empty,
   #recordings-screen[data-view="files"] #recording-files:not(:has(.recording-file-actions > :not([hidden]))) #recordings-files-empty { display: block; }
   #recordings-screen #quest-export-status { font-size: .875rem; line-height: 1.35; }
+  #recordings-drive-actions:not(:has(> #drive-open:not([hidden]))) { display: none; }
   #recordings-screen .recording-file-actions > :is(a, button), #quest-export-retry {
     padding: 4px 6px;
   }
@@ -692,6 +693,11 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   #recordings-screen .screen-header { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
   #recordings-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
   #recordings-screen #recording-files { grid-column: 1 / -1; }
+  #recordings-screen #operator-common:has(> #quest-status:not([hidden])):not(:has(> :not(#quest-status, [hidden]))) + #recording-files {
+    grid-column: 2;
+  }
+  #recordings-screen #operator-common { padding: 4px 6px; }
+  #recordings-screen :is(#quest-status, p.recordings-short-label) { font-size: .875rem; line-height: 1.2; }
   #recordings-screen[data-view="sync"] #recording-files:has(#quest-export-retry:not([hidden])) {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;

@@ -397,6 +397,58 @@ def capture_short_recordings(review, page):
     expect(topic).to_be_hidden()
 
 
+def capture_disconnected_recordings(review, font, *, cached=False):
+    page = review.page(initial(c) + """
+      const pair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair'));
+      pair.endpoint = 'unreachable';
+      pair.build = 'c'.repeat(64);
+      localStorage.setItem('atmungsraum-quest-pair', JSON.stringify(pair));
+      window.reviewDiscoveryState = 'searching';
+    """, viewport={"width": 390, "height": 844})
+    if cached:
+        page.evaluate("""async () => {
+            const { openQuestRecordingStore } = await import('./quest-recording-store.js?v=5');
+            const pair = JSON.parse(localStorage.getItem('atmungsraum-quest-pair'));
+            const store = await openQuestRecordingStore(pair);
+            try {
+                await store.put('utc-ns-01763115400000000000',
+                    new File(['synthetic,sample\\n1,0\\n'], 'Tes_30_N_2025-11-14_haupt-15_r1.csv', {type:'text/csv'}));
+            } finally { store.close(); }
+        }""")
+        page.reload()
+    page.evaluate("size => document.documentElement.style.fontSize = size", font)
+    page.clock.run_for(2100)
+    status = page.locator("#quest-status")
+    expect(status).to_have_text("Suche die gespeicherte Quest über Bluetooth …")
+    initial_mutations = mutations(page)
+    go(page, "recordings")
+    resize_recordings_fixture(page, {"width": 594, "height": 272})
+    topic = page.locator("#recordings-view")
+    back = page.locator("#recordings-screen [data-operator-return]")
+    data = "cached" if cached else "empty"
+    for view, target in (
+        ("archive", "#quest-archives" if cached else "#recordings-archive-empty"),
+        ("files", "#quest-export-download" if cached else "#recordings-files-empty"),
+        ("sync", "#recordings-sync-empty"),
+        ("storage", '#recordings-screen a[href="#daten"]'),
+    ):
+        topic.select_option(view)
+        expect(status).to_have_text("Quest wird gesucht …")
+        expect(page.locator("#drive-open")).to_be_hidden()
+        slug = f"short-recordings-disconnected-{data}-{font or 'default'}-{view}"
+        control = page.locator(target)
+        review.shot(page, slug, view, control, "Recordings")
+        assert not review.samples[slug]["problems"], review.samples[slug]["problems"]
+        if view == "storage" or cached and view in ("archive", "files"):
+            assert min(control.bounding_box()[edge] for edge in ("height", "width")) >= 47.99
+        bounds = back.bounding_box()
+        assert bounds["height"] >= 47.99 and bounds["y"] + bounds["height"] <= 272.5, bounds
+    back.click()
+    expect(page.locator("#quest")).to_be_visible()
+    assert mutations(page) == initial_mutations
+    page.context.close()
+
+
 def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True,
                           drive=False, focus_viewport=None, short_recordings=False):
     quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
@@ -702,6 +754,9 @@ def verify():
         capture_questionnaire(review, "compact-enlarged", viewport, "200%", focus_viewport={"width": 320, "height": 428})
         capture_questionnaire(review, "landscape-enlarged", viewport, "200%", focus_viewport={"width": 640, "height": 320})
         capture_questionnaire(review, "recordings-enlarged", viewport, "200%", short_recordings=True)
+        for font in ("", "200%"):
+            capture_disconnected_recordings(review, font)
+            capture_disconnected_recordings(review, font, cached=True)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
