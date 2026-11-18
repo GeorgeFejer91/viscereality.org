@@ -84,6 +84,20 @@ in-place signing and matching-enrollment requirements still apply.
 
 ### Canonical Developer build inputs — 2026-11-18
 
+The held code 28 successor is also assembled from the recorded fixed27 tree
+and verified recovered inputs. Its production v3 signature, ARM64/16 KiB
+alignment and actual 900-second packaged session closure pass. Its provider
+and audio assets, runtime configuration, original particle/profile/shader
+bytes, OpenXR loader and both Meta native libraries match the baseline.
+Complete DEX disassembly comparison changes only the provider-manifest digest
+and its string-table references. The different Polar source-closure hashes
+match the original after converting the checkout's LF to CRLF; generated
+session identity binds the new provider manifest. The signed APK and a local
+verification receipt are retained privately. See the
+[held code 28 record](../quest/apks/README.md#held-developer-28-update-test-candidate).
+This establishes package preparation. Wearer acceptance and genuine Meta
+delivery remain pending; code 27 remains the installed/released baseline.
+
 The canonical Developer candidate now builds from a verified reconstruction
 of the signed baseline inputs. The original visual profile was recovered
 from the ARM64 library and matches its locked SHA-256
