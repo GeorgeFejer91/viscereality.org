@@ -160,6 +160,38 @@ median 1.53 seconds, p95 2.91 seconds, and maximum 4.59 seconds. Four first
 joins received 403 and recovered on the first carrier. All 60 selected
 TURN. The native app and the prior headset power policy were restored.
 
+### Official code 27 preparation readiness — 2026-11-18
+
+The official Developer package was Meta-installed fixed27-r2, code 27,
+with exact APK SHA-256 `6f14707053fc9c07b611485deebfe8554a71b405892e8678f2c7f4bb2d8e398b`.
+The standalone Pixel loaded release `20261118-participant-keyboard-layout`
+from [Pages run 44275522298](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44275522298).
+Public release policy listed minimum and latest code 27.
+
+A serial-scoped launch using the declared `MAIN`, `LAUNCHER` and Meta VR
+categories started the official process. The bench activity retained the
+foreground throughout the 85-second observation. Adding an Android Home
+dispatch before the same launcher intent brought the Developer app forward.
+The official renderer reported `FOCUSED` and advancing submitted frames.
+Subsequent bounded wakes again exposed the official foreground.
+
+The package's read-only ProductPanelOperator receipt reported the
+experimenter Prepare page, a hidden operator panel, and `listener-unavailable`
+with `trusted_lan=true`. The installed Pixel had loopback permission granted.
+An owned Quest ADB forward and Pixel USB reverse did not establish signed
+status, and the separate host-side gateway probe could not read the endpoint
+in the same run. An Android Home intent followed by a warm official launch
+again produced focus and submitted frames, with no listener at port 8766.
+The earlier anonymous gateway response was observed while the bench held
+the foreground. The official observer sent status requests only. The Meta
+offer and preparation action remain unobserved. The two owned USB mappings
+and the temporary wake policy were released.
+
+At the next official attempt, verify the runtime owns the gateway listener
+before pairing or issuing a preparation command. Check whether the bench
+process previously occupied the port. Only the official signed status can
+establish the current offer and preparation eligibility.
+
 ### Phone TURN/TLS and invalid controller requests — 2026-11-18
 
 The physical devices used standalone PWA `20261118-participant-keyboard-layout`
