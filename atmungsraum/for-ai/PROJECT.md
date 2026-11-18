@@ -214,9 +214,11 @@ PR 107's `20261118-drive-receipt-recovery` release shipped with
 Eighteen live files matched Git. The installed Pixel still showed
 `20261118-dataset-sync` with saved pairing. RustDesk MCP captured fresh
 frames, but Settings taps had no effect on the existing or newly
-authenticated session. Android reported RustDesk Input disabled. Restore
-that input binding, reopen Atmungsraum from the launcher, then verify the
-loaded Drive modules and rerun the installed check.
+authenticated session. The latest readback still shows the Pixel's RustDesk
+Input disabled, with Quest 2 awake on Meta-installed code 27 and separate
+WebRTC Bench code 33. Once input is restored, verify a reversible RustDesk
+tap, reopen the installed PWA on the exact deployed release and continue
+the pending phone, pairing and Drive cases.
 
 RustDesk MCP opened the Pixel Bluetooth chooser, selected Quest 2 and
 pressed Pair. The next frame confirmed Bluetooth discovery and a failed
