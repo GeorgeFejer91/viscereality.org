@@ -354,7 +354,8 @@ export async function joinQuest({ endpoint }) {
     controllerAccess: settings.access ? controllerAccess : null,
     receipt: async id => settings.receiptState ? { v: 1, id, state: settings.receiptState }
       : receipts[id] ?? { v: 1, id, state: 'outcome_unknown' }, close() {},
-    recordings: async () => ({ v: 1, state: 'ready', entries: [], next_before: null }),
+    recordings: async (query) => window.reviewRecordings
+      ? window.reviewRecordings(query, owner) : { v: 1, state: 'ready', entries: [], next_before: null },
     ecg: async () => ecgPacket()
   };
 }
@@ -1057,7 +1058,7 @@ def capture(review):
 
     await_archive = page.locator("#quest-export-download")
     page.evaluate("""async () => {
-      const { openQuestRecordingStore } = await import('./quest-recording-store.js?v=4');
+      const { openQuestRecordingStore } = await import('./quest-recording-store.js?v=5');
       const store = await openQuestRecordingStore(window.reviewOwner);
       try {
         await store.put('utc-ns-01763115400000000000',

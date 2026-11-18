@@ -13,11 +13,50 @@ export function participantIdentity({ surnamePrefix = '', age = '', gender = '' 
   if (!Number.isSafeInteger(years) || years < 0 || !genderCode) throw new Error('Invalid age or gender');
   return { name, age: years, genderCode, id: `${name}_${years}_${genderCode}` };
 }
-export function isDatedSessionFilename(name) {
-  const parts = /^\p{L}{3}_(0|[1-9][0-9]{0,15})_[MFON]_(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_r[1-9][0-9]{0,15}\.csv$/u.exec(name);
-  if (!parts || (parts[3] !== 'free-exploration' && !SCENARIOS.includes(parts[3]))) return false;
+function datedSessionParts(name) {
+  const parts = /^(\p{L}{3}_(?:0|[1-9][0-9]{0,15})_[MFON])_(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_r([1-9][0-9]{0,15})\.csv$/u.exec(name);
+  if (!parts || (parts[3] !== 'free-exploration' && !SCENARIOS.includes(parts[3]))) return null;
   const date = new Date(parts[2]);
-  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === parts[2];
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === parts[2] ? parts : null;
+}
+
+export const isDatedSessionFilename = name => datedSessionParts(name) !== null;
+
+export const mainQuestionnairePrompts = Object.freeze([
+  'Wie fühlst du dich gerade?',
+  'Wie war die Atemübung für dich?',
+  'Was ist dir beim Atmen aufgefallen?',
+  'Wie hast du den Raum erlebt?',
+  'Was möchtest du noch festhalten?',
+]);
+
+export function completedMainQuestionnaire(csv, bytes) {
+  const parts = datedSessionParts(csv.name);
+  if (csv.schema_version !== 4 || parts?.[3] !== 'haupt-15') return null;
+  const [, participant_id, , scenario, run] = parts;
+  // The checked v4 file ends in one native terminal row. A completed row has
+  // no quoted fields, and a short tail avoids decoding the full recording.
+  const tail = new TextDecoder().decode(bytes.subarray(-2048)).trimEnd();
+  const row = tail.slice(tail.lastIndexOf('\n') + 1).split(',');
+  if (row.length !== 24 || row[0] !== '4' || row[1] !== participant_id
+    || row[2] !== csv.session_id || row[3] !== run || row[4] !== scenario || row[5] !== 'end'
+    || row[8] !== '900000000' || row[21] !== 'completed' || row[22] !== 'completed') return null;
+  return { participant_id, session_id: csv.session_id, recording_filename: csv.name };
+}
+
+export function questionnaireFile(run, answers) {
+  const values = answers.map(answer => answer.trim());
+  if (values.length !== mainQuestionnairePrompts.length || values.some(answer => !answer || answer.length > 500)) {
+    throw Error('Bitte beantworte alle fünf Fragen mit höchstens 500 Zeichen pro Antwort.');
+  }
+  const record = {
+    schema_version: 1, ...run, submitted_at_utc: new Date().toISOString(),
+    answers: mainQuestionnairePrompts.map((prompt, index) => ({
+      question_id: 'q' + (index + 1), prompt, answer: values[index],
+    })),
+  };
+  const filename = run.recording_filename.replace(/\.csv$/u, '_questionnaire.json');
+  return new File([JSON.stringify(record, null, 2) + '\n'], filename, { type: 'application/json' });
 }
 
 export async function savedBrowserExports() {

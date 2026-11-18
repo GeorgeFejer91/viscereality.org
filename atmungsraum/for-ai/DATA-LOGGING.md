@@ -129,6 +129,31 @@ on each row. The participant ID embeds the surname prefix, age and gender code.
 Historical exports can also use `<participant_id>_<condition><run>.csv`.
 Shared scenario CSVs and audio manifests contain no participant data.
 
+## Haupt-Runde questionnaire
+
+After the phone verifies and stores the finalized v4 Haupt-Runde CSV, its
+native terminal row must identify the same participant, attempt and session
+UUID, with 900 seconds of audio and a completed result. A matching staged
+live prefix opens the required questionnaire automatically. For a completed
+Haupt-Runde first imported without live staging, use **Fragen beantworten**
+on that recording in **Aufnahmen**. The prompt applies to completed main runs
+that this version imports. A partial run or practice recording opens its usual
+recordings view.
+
+Five provisional German free-text answers are required. The phone commits a
+separate UTF-8 JSON file with the exact verified recording stem.
+
+    Fej_35_M_2026-11-18_haupt-15_r1_questionnaire.json
+
+The file contains the questionnaire schema version, participant ID, native
+session UUID, linked CSV filename, submission timestamp and five question
+IDs, prompts and answers. The same scoped IndexedDB recording database
+keeps the form pending across reload or reconnect and retains the first
+successful submission for each run. **Antworten** downloads
+the saved file for the selected recording. The Quest CSV and its existing
+Drive delivery retain their original bytes. The response file is stored on
+the phone and available through that download.
+
 ## Participant CSV v2
 
 Quest produces one UTF-8, comma-separated CSV per started attempt. The Pixel

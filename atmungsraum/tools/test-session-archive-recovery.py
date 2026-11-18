@@ -116,7 +116,7 @@ def session_cases(review):
 def seed(page):
     page.wait_for_function('Boolean(window.reviewOwner)')
     return page.evaluate('''async ({id,csv})=>{
-      const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=4');
+      const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=5');
       const s=await openQuestRecordingStore(reviewOwner);
       await s.put(id,{download:new File([csv],'synthetic.csv',{type:'text/csv'}),bundleVersion:1,
         bundle:new File(['original bundle'],'synthetic.zip')});
@@ -186,7 +186,7 @@ def archive_cases(review):
         # Real IndexedDB work is held behind a live transaction to expose races.
         page.evaluate('''async()=>{
           window.reviewArchiveURL=document.querySelector('#quest-export-download').href;
-          const request=indexedDB.open('atmungsraum-quest-recordings',3);
+          const request=indexedDB.open('atmungsraum-quest-recordings');
           const db=await new Promise(resolve=>request.onsuccess=()=>resolve(request.result));
           const tx=db.transaction('recordings','readwrite');window.reviewArchiveRelease=false;
           function keepAlive(){const r=tx.objectStore('recordings').get('keep-alive');
@@ -209,7 +209,7 @@ def archive_cases(review):
         # Enumeration from a restored pairing must not outlive a switch to a
         # different verified device, even if its IDB request completes later.
         page.evaluate('''async pair=>{
-          const request=indexedDB.open('atmungsraum-quest-recordings',3);
+          const request=indexedDB.open('atmungsraum-quest-recordings');
           const db=await new Promise(resolve=>request.onsuccess=()=>resolve(request.result));
           const tx=db.transaction('recordings','readwrite');window.reviewArchiveRelease=false;window.reviewArchiveReleased=false;
           function keepAlive(){const r=tx.objectStore('recordings').get('keep-alive');
@@ -229,13 +229,13 @@ def archive_cases(review):
           window.dispatchEvent(new StorageEvent('storage',{key:'atmungsraum-quest-pair'}));}''', pair)
         assert_download(page)
         # A missing committed payload is a visible local error even without Quest.
-        page.evaluate('''async id=>{const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=4');
+        page.evaluate('''async id=>{const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=5');
           const s=await openQuestRecordingStore(reviewOwner);await s.put(id,{});s.close();
           document.querySelector('#quest-archives').dispatchEvent(new Event('change'));}''', ARCHIVE)
         expect(page.locator('#quest-export-status')).to_be_visible()
         expect(page.locator('#quest-export-status')).to_contain_text('konnte nicht geöffnet')
         expect(page.locator('#quest-export-download')).to_be_hidden()
-        page.evaluate('''async ({id,csv})=>{const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=4');
+        page.evaluate('''async ({id,csv})=>{const {openQuestRecordingStore}=await import('./quest-recording-store.js?v=5');
           const s=await openQuestRecordingStore(reviewOwner);await s.put(id,new File([csv],'synthetic.csv'));s.close();
           document.querySelector('#quest-archives').dispatchEvent(new Event('change'));}''', dict(id=ARCHIVE,csv=CSV))
         assert_download(page)

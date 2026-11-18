@@ -51,6 +51,22 @@ improvement through confirming the last affected acceptance criterion.
    publication, remaining blockers and the next executable step in
    [the active checklist](PROJECT.md).
 
+### Haupt-Runde questionnaire — 2026-11-18
+
+The mounted Chromium tests replay the existing live recording and final
+signed-descriptor paths with synthetic data. They check that the form waits
+for verified local custody, opens for a completed main, and stays closed
+during saving, after a partial run and after a practice run. They verify
+blank and whitespace rejection, Back and keyboard submission, focused
+editing at reduced viewport height, offline reload, optional access from
+recordings and the exact downloaded JSON identity and five answers.
+
+The questionnaire uses the production Pretext and viewport gate, including
+320 px portrait, short landscape, 200% text and the text-spacing override.
+The separate mounted archive recovery and PWA startup suites pass. The Node
+suite passes 334 checks with 12 native-fixture checks skipped and zero
+failures. Full lab acceptance is tracked in [PROJECT.md](PROJECT.md#haupt-runde-follow-up-questions--2026-11-18).
+
 ### Quest target signaling startup recovery — 2026-11-18
 
 The production target previously ended its startup after a rejected signaling

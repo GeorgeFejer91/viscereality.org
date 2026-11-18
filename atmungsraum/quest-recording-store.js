@@ -2,11 +2,12 @@ const storeName = 'recordings';
 const driveStore = 'drive';
 const prefixStore = 'prefix';
 const rangeStore = 'prefix-bytes';
+const questionnaireStore = 'questionnaires';
 
 export async function openQuestRecordingStore({ device, serial }) {
   const scope = `${device}/${serial}/`;
   const db = await new Promise((resolve, reject) => {
-    const request = indexedDB.open('atmungsraum-quest-recordings', 3);
+    const request = indexedDB.open('atmungsraum-quest-recordings', 4);
     request.onupgradeneeded = ({ oldVersion }) => {
       if (oldVersion === 0) request.result.createObjectStore(storeName);
       if (oldVersion < 2) request.result.createObjectStore(driveStore);
@@ -14,6 +15,7 @@ export async function openQuestRecordingStore({ device, serial }) {
         request.result.createObjectStore(prefixStore);
         request.result.createObjectStore(rangeStore);
       }
+      if (oldVersion < 4) request.result.createObjectStore(questionnaireStore);
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -97,8 +99,16 @@ export async function openQuestRecordingStore({ device, serial }) {
   function finalizePrefix(id, archive) {
     const key = scope + id;
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([storeName, prefixStore, rangeStore], 'readwrite', { durability: 'strict' });
-      tx.objectStore(storeName).put(archive, key);
+      const { questionnaire, ...recording } = archive;
+      const tx = db.transaction([storeName, prefixStore, rangeStore, questionnaireStore], 'readwrite', { durability: 'strict' });
+      tx.objectStore(storeName).put(recording, key);
+      if (questionnaire) {
+        const forms = tx.objectStore(questionnaireStore);
+        const prior = forms.get(key);
+        prior.onsuccess = () => {
+          if (!prior.result) forms.add({ id, ...questionnaire }, key);
+        };
+      }
       tx.objectStore(prefixStore).delete(key);
       tx.objectStore(rangeStore).delete(IDBKeyRange.bound([key, 0], [key, Number.MAX_SAFE_INTEGER]));
       tx.oncomplete = resolve;
@@ -107,6 +117,22 @@ export async function openQuestRecordingStore({ device, serial }) {
   }
 
   return {
+    async pendingQuestionnaire() {
+      const forms = await query('readonly', store => store.getAll(IDBKeyRange.bound(scope, scope + '\uffff')), questionnaireStore);
+      return forms.find(form => form.required && !form.file);
+    },
+    getQuestionnaire: id => query('readonly', store => store.get(scope + id), questionnaireStore),
+    saveQuestionnaire(id, sessionId, file) {
+      return query('readwrite', store => {
+        const request = store.get(scope + id);
+        request.onsuccess = () => {
+          const form = request.result;
+          if (form?.run.session_id !== sessionId) store.transaction.abort();
+          else if (!form.file) store.put({ ...form, file }, scope + id);
+        };
+        return request;
+      }, questionnaireStore);
+    },
     async ids() {
       const keys = await query('readonly', store => store.getAllKeys(IDBKeyRange.bound(scope, scope + '\uffff')));
       return keys.reverse().map(key => key.slice(scope.length));

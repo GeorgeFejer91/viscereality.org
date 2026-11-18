@@ -1,5 +1,5 @@
 import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveScope } from './quest-drive.js?v=4';
-import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
 const lockName = 'atmungsraum-quest-drive';
