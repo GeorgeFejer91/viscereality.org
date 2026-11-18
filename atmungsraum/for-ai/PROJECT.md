@@ -278,9 +278,16 @@ when capture ends. Lock and reboot recovery still need an attended check.
   device display settings and reproduced the disconnected state in mounted
   Chromium. The corrected layout passes 16 combinations of view, text size,
   and availability of a locally saved recording.
-- [ ] Rerun the 594 × 272 landscape case with RustDesk MCP on the latest
-  installed PWA after the disconnected layout correction. Restore the
-  saved Android display settings after testing.
+- [x] Publish and retest the disconnected layout correction
+  [PR 126](https://github.com/GeorgeFejer91/viscereality.org/pull/126).
+  The exact [Pages run 44335925396](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44335925396)
+  deployed `4c822ea` and eight live paths matched Git. The GUI gate passed
+  421 states. Serial-scoped ADB relaunched the idle Pixel into
+  `20261118-recordings-offline-landscape` with its saved pairing intact.
+  RustDesk MCP opened all four disconnected Recordings views at 594 × 272
+  CSS px and returned from Storage to Connect. All four views showed zero
+  document and panel scroll, full 48 px footer controls and visible
+  content. Android text size, screen size and rotation were restored.
 - [x] Retest same-folder sync on the deployed `20261118-idle-release` assets
   from [Pages run 44326627442](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44326627442).
   With synthetic Quest data and a simulated Drive endpoint, the PWA saved

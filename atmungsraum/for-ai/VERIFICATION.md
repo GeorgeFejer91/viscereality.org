@@ -116,6 +116,21 @@ uses a short discovery message on Recordings. The Connect page retains
 the full Bluetooth status. The fixture checks the footer and performs
 Back without a Quest command.
 
+[PR 126](https://github.com/GeorgeFejer91/viscereality.org/pull/126) passed
+421 mounted GUI states, five PWA startup groups and 47 targeted controller
+and recording tests. The exact
+[Pages run 44335925396](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44335925396)
+deployed `4c822ea`. Eight live paths matched the merge. ADB relaunched
+the installed Pixel in standalone mode and the entry, stylesheet and
+operator module reported `20261118-recordings-offline-landscape`.
+The saved pairing stayed present. On the disconnected Pixel at 594 × 272
+CSS px, RustDesk MCP selected Archive, Files, Sync and Storage. The
+archive selector, download control, browser archive link, and both
+footer controls were 48 px high and completely visible. Document and
+panel scroll were zero in every selection. A RustDesk tap on Back
+returned to Connect. Android display size, rotation and font scale were
+restored. Device images and measurements remain in the private run folder.
+
 ### Quest target signaling startup recovery — 2026-11-18
 
 The production target previously ended its startup after a rejected signaling
