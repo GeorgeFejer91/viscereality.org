@@ -70,6 +70,19 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   enrollment still points to a different installation and Chrome exposed
   no matching grant. Qualify authenticated reconnect with the approved
   phone and headset enrollment.
+- [x] Recheck startup on the current Meta Developer release and installed
+  PWA. The dashboard, live release policy and exact Quest APK agree on
+  `0.2.26-dev` (code 27). The standalone Pixel PWA matches the current
+  Pages deployment. Three cold starts opened Connect in 1.34–1.38 seconds.
+  None authenticated during the 30-second observations. Signed bench 36
+  has the WebRTC runtime and Meta code 27 lacks it. The saved Pixel
+  enrollment identifies a different Quest installation.
+  [Startup evidence](VERIFICATION.md#meta-and-standalone-startup-recheck--2026-11-18).
+- [ ] Verify automatic startup in both launch orders on the qualified
+  unified Developer APK and a Pixel commissioned for that installation.
+  Use the retained Developer signer and approved Meta Platform SDK 207
+  from the release build environment. Follow the held Meta update
+  sequence and match a native receipt on both Wi-Fi routes.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
