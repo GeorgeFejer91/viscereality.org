@@ -81,6 +81,19 @@ The separate mounted archive recovery and PWA startup suites pass. The Node
 suite passes 334 checks with 12 native-fixture checks skipped and zero
 failures. Full lab acceptance is tracked in [PROJECT.md](PROJECT.md#haupt-runde-follow-up-questions--2026-11-18).
 
+### Short Recordings layout — 2026-11-18
+
+At 200% text and 320 × 428 or 640 × 320, the combined controls overflowed
+after a questionnaire save. The short layout presents the Quest recording,
+download, sync and storage controls in separate views of the same screen.
+The mounted Chromium checks cover every view and the failed-sync status.
+They verify zero document and panel scroll, fitted labels, 48 px targets,
+focus across resize, keyboard entry to the recording selector, both
+downloads, Drive dialog close and return from browser archives. The
+explicit retry still recovers from a failed archive list. There are no
+native session or setup mutations from these views. Physical Pixel retest
+remains open.
+
 ### Quest target signaling startup recovery — 2026-11-18
 
 The production target previously ended its startup after a rejected signaling

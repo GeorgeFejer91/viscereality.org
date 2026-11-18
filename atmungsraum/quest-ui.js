@@ -122,6 +122,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   const retry = byId('quest-export-retry');
   const download = byId('quest-export-download');
   const archivePicker = byId('quest-archives');
+  const recordingsView = byId('recordings-view');
+  const recordingsScreen = byId('recordings-screen');
+  function setRecordingsView(view) {
+    recordingsView.value = view;
+    if (recordingsScreen.dataset.view !== view) recordingsScreen.dataset.view = view;
+  }
+  recordingsView.addEventListener('change', () => setRecordingsView(recordingsView.value));
+  recordingsScreen.addEventListener('focusin', event => {
+    const view = event.target.closest('[data-recordings-view]')?.dataset.recordingsView;
+    if (view) setRecordingsView(view);
+  });
   let ecgTimer, ecgAttempt, exportAttempt, nextSync = 0, exportMessage = '';
   let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
@@ -315,6 +326,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (questionnaire !== form) return;
       setQuestionnaire(nextForm);
       localView = { step: 'recordings', returnTo: null };
+      setRecordingsView('files');
       history.replaceState({ operatorStep: 'recordings' }, '', '#recordings');
       archivePicker.value = form.id;
       void selectArchive();
@@ -1246,7 +1258,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         } finally { store.close(); }
       });
     } catch {
-      if (!signal.aborted) exportMessage = 'Abgleich fehlgeschlagen. Die App versucht es erneut, wenn die Quest bereit ist.';
+      if (!signal.aborted) exportMessage = 'Abgleich fehlgeschlagen.';
     } finally {
       if (exportAttempt === attempt) {
         if (signal.aborted) exportMessage = '';

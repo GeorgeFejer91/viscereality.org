@@ -151,10 +151,12 @@ when capture ends. Lock and reboot recovery still need an attended check.
   were confirmed, and the Pixel retained the older release. Android reported
   no enabled accessibility services, so the remote session could not drive
   a refresh. Re-enable RustDesk Input on the Pixel and retry the idle launch.
-- [ ] Verify Recordings fits the usable viewport with 200% text at
-  320 × 428 portrait and 640 × 320 landscape. Both reproduced document
-  scroll after the questionnaire was saved. Retain the download and
-  navigation actions and the 48 px target size.
+- [x] Verify Recordings fits at 320 × 428 portrait and 640 × 320 landscape
+  with 200% text in the mounted PWA. The short views retain selection,
+  downloads, retry, Drive, browser archives and 48 px targets. See
+  [verification](VERIFICATION.md#short-recordings-layout--2026-11-18).
+- [ ] Repeat the short Recordings views on the lab Pixel through RustDesk MCP
+  once Android reports RustDesk Input bound and the latest PWA is loaded.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem

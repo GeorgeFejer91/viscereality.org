@@ -13,10 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261118-questionnaire-scales">
+  <link rel="stylesheet" href="./style.css?v=20261118-recordings-compact">
   <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261118-questionnaire-focus"></script>
+  <script type="module" src="./app.js?v=20261118-recordings-compact"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -441,30 +441,44 @@
         <button id="questionnaire-submit" class="primary-navigation" type="submit" form="questionnaire-form"><span data-measure>Antworten speichern</span></button>
       </footer>
     </section>
-    <section id="recordings-screen" aria-labelledby="recordings-screen-title" class="screen operator-screen" hidden>
+    <section id="recordings-screen" aria-labelledby="recordings-screen-title" class="screen operator-screen" data-view="archive" hidden>
       <header class="screen-header">
         <div class="product-brand"><img alt="" aria-hidden="true" height="40" src="./assets/icons/app-192.png" width="40"/><span data-measure>Viscereality · Atmungsraum</span>
         </div>
-        <h1 id="recordings-screen-title" data-measure tabindex="-1">Aufnahmen sichern</h1>
+        <h1 id="recordings-screen-title" aria-label="Aufnahmen sichern" tabindex="-1">
+          <span class="recordings-full-label" data-measure>Aufnahmen sichern</span>
+          <span class="recordings-short-label" data-measure>Aufnahmen</span>
+        </h1>
+        <select id="recordings-view" aria-label="Bereich in Aufnahmen">
+          <option value="archive">Aufnahme</option>
+          <option value="files">Dateien</option>
+          <option value="sync">Abgleich</option>
+          <option value="storage">Ablage</option>
+        </select>
       </header>
       <div class="screen-body operator-body">
         <div id="recording-files" class="task-group">
           <p id="quest-export-status" data-measure hidden role="status">
           </p>
-          <button id="quest-export-retry" hidden type="button"><span data-measure>Jetzt abgleichen</span></button>
-          <label id="quest-archives-label" hidden>
+          <button id="quest-export-retry" data-recordings-view="sync" hidden type="button"><span data-measure>Jetzt abgleichen</span></button>
+          <label id="quest-archives-label" data-recordings-view="archive" hidden>
             <span data-measure>Quest-Aufnahme</span>
-            <select id="quest-archives">
+            <select id="quest-archives" aria-label="Quest-Aufnahme">
             </select>
           </label>
-          <div class="recording-file-actions">
-            <a id="quest-export-download" aria-label="Aufnahme herunterladen" hidden><span data-measure>Aufnahme herunterladen</span></a>
+          <div class="recording-file-actions" data-recordings-view="files">
+            <a id="quest-export-download" aria-label="Aufnahme herunterladen" hidden><span class="recordings-full-label" data-measure>Aufnahme herunterladen</span><span class="recordings-short-label" data-measure>Aufnahme</span></a>
             <button id="questionnaire-open" aria-label="Fragen beantworten" type="button" hidden><span data-measure>Fragen</span></button>
             <a id="questionnaire-download" aria-label="Antworten herunterladen" hidden><span data-measure>Antworten</span></a>
           </div>
+          <p id="recordings-archive-empty" class="recordings-short-label" data-measure>Keine Quest-Aufnahme.</p>
+          <p id="recordings-files-empty" class="recordings-short-label" data-measure>Keine Aufnahme ausgewählt.</p>
+          <p id="recordings-sync-empty" class="recordings-short-label" data-measure>Quest-Abgleich nicht verfügbar.</p>
         </div>
-        <div id="recordings-drive-actions" class="setup-actions"></div>
-        <a class="text-link" href="#daten"><span data-measure>Frühere Browser-Aufnahmen</span>
+        <div id="recordings-drive-actions" class="setup-actions" data-recordings-view="storage"></div>
+        <a class="text-link" data-recordings-view="storage" href="#daten" aria-label="Frühere Browser-Aufnahmen">
+          <span class="recordings-full-label" data-measure>Frühere Browser-Aufnahmen</span>
+          <span class="recordings-short-label" data-measure>Browser-Aufnahmen</span>
         </a>
       </div>
       <footer class="actions operator-actions">

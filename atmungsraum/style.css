@@ -184,7 +184,7 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 #quest-drive input { width: 100%; min-width: 0; min-height: 48px; padding: 8px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-drive summary { min-height: 48px; align-content: center; cursor: pointer; }
 #quest-archives-label { display: grid; gap: 6px; justify-self: center; text-align: center; max-width: 100%; min-width: 0; }
-:is(#quest-archives, #browser-archives, #apk-detail-view, #settings-connection-view) { min-height: 48px; min-width: 0; width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
+:is(#quest-archives, #browser-archives, #apk-detail-view, #settings-connection-view, #recordings-view) { min-height: 48px; min-width: 0; width: 100%; padding: 6px 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: inherit; }
 #quest-acknowledge, #quest-disconnect, #quest-find { justify-self: center; }
 #quest-find { width: min(100%, 280px); padding-inline: 16px; }
 #quest-find[aria-disabled="true"] { cursor: default; }
@@ -292,6 +292,7 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .recording-file-actions > a { width: 100%; justify-self: stretch; }
+#recordings-view, .recordings-short-label { display: none; }
 @media (max-width: 480px) {
   .operator-actions { grid-template-columns: minmax(0, 1fr); }
 }
@@ -643,6 +644,11 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   }
   #running-screen #quest-data { grid-column: 2; grid-row: 1 / span 4; align-self: center; }
   #running-screen #quest-ecg { max-height: 16dvh; }
+  html[data-layout] #participant-screen .patient-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  html[data-layout] #breathing-preview .operator-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (orientation: landscape) and (min-height: 351px) and (max-height: 480px) {
   #recordings-screen:has(#quest-export-download:not([hidden])) .operator-body {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
     align-content: center;
@@ -658,6 +664,32 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   }
   #recordings-screen:has(#quest-export-download:not([hidden])) .operator-body > :not(#recording-files) { grid-column: 2; }
   #recording-files > :is(#quest-archives-label, .recording-file-actions) { grid-column: 1 / -1; }
-  html[data-layout] #participant-screen .patient-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  html[data-layout] #breathing-preview .operator-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) and (max-height: 480px), (orientation: landscape) and (max-height: 350px) {
+  #recordings-view, #recordings-screen .recordings-short-label { display: block; }
+  #recordings-screen .recordings-full-label, #recordings-screen #quest-drive-status,
+  #recordings-screen :is(#recordings-archive-empty, #recordings-files-empty, #recordings-sync-empty),
+  #recordings-screen #quest-archives-label > span { display: none; }
+  #recordings-screen .operator-body { align-content: center; gap: var(--gap); }
+  #recordings-screen #recording-files { padding: 0; border: 0; background: none; gap: var(--gap); }
+  #recordings-screen:not([data-view="archive"]) [data-recordings-view="archive"],
+  #recordings-screen:not([data-view="files"]) [data-recordings-view="files"],
+  #recordings-screen:not([data-view="sync"]) [data-recordings-view="sync"],
+  #recordings-screen:not([data-view="storage"]) [data-recordings-view="storage"],
+  #recordings-screen:is([data-view="files"], [data-view="storage"]) #quest-export-status,
+  #recordings-screen[data-view="archive"]:has(#quest-archives-label:not([hidden])) #quest-export-status,
+  #recordings-screen[data-view="storage"] #recording-files { display: none; }
+  #recordings-screen[data-view="archive"] #recording-files:not(:has(#quest-archives-label:not([hidden]), #quest-export-status:not([hidden]))) #recordings-archive-empty,
+  #recordings-screen[data-view="sync"] #recording-files:not(:has(#quest-export-retry:not([hidden]), #quest-export-status:not([hidden]))) #recordings-sync-empty,
+  #recordings-screen[data-view="files"] #recording-files:not(:has(.recording-file-actions > :not([hidden]))) #recordings-files-empty { display: block; }
+  #recordings-screen #quest-export-status { font-size: .875rem; line-height: 1.35; }
+  #recordings-screen .recording-file-actions > :is(a, button), #quest-export-retry {
+    padding: 4px 6px;
+  }
+}
+@media (orientation: landscape) and (max-height: 350px) and (min-width: 600px) {
+  #recordings-screen .screen-header { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
+  #recordings-screen .operator-body { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; }
+  #recordings-screen #recording-files { grid-column: 1 / -1; }
 }
