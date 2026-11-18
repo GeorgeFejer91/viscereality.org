@@ -5,13 +5,49 @@ import { createInterface } from 'node:readline';
 import test from 'node:test';
 import { joinQuest } from '../quest-gateway.js';
 import { createQuestRtcTransport } from '../quest-webrtc-session.js';
-
 import { recoverCommissionedEnrollment } from '../quest-commissioning.js';
+import { openQuestWebRtc } from '../quest-webrtc.js';
+import { VdoNinjaTransport } from '../vendor/quest-webrtc/vdo-ninja-transport.js';
 
 const owner = { device: '2'.repeat(32), epoch: '42', native_epoch: '7', serial: '', identity_kind: 'app-installation' };
 const enrollment = { controller: '1'.repeat(32), key: '3'.repeat(64) };
 const room = 'a'.repeat(32);
 const build = 'e'.repeat(64);
+
+test('WebRTC keeps negotiating a selected peer and falls back quickly while still discovering', async t => {
+  const deadlines = new Map();
+  let carrier;
+  let stopped = 0;
+  t.mock.method(AbortSignal, 'timeout', duration => {
+    const clock = new AbortController();
+    deadlines.set(duration, clock);
+    return clock.signal;
+  });
+  t.mock.method(VdoNinjaTransport.prototype, 'start', async function () { carrier = this; });
+  t.mock.method(VdoNinjaTransport.prototype, 'stop', async () => { stopped++; });
+  const discovery = { owner, rtc: { r: room, p: 'b'.repeat(64) }, endpoints: ['http://192.168.1.2:8766'] };
+  const signal = new AbortController().signal;
+  const timeout = new DOMException('deadline reached', 'TimeoutError');
+  const abortWithoutPeer = assert.rejects(openQuestWebRtc(discovery, enrollment, signal), timeout);
+  deadlines.get(5000).abort(timeout);
+  await abortWithoutPeer;
+
+  const pendingPeer = openQuestWebRtc(discovery, enrollment, signal);
+  carrier.dispatchEvent(new CustomEvent('status', { detail: { phase: 'connecting-peer' } }));
+  deadlines.get(5000).abort(timeout);
+  carrier.dispatchEvent(new CustomEvent('peeropen', { detail: { peerKey: 'test-peer' } }));
+  const { transport } = await pendingPeer;
+  assert.deepEqual(await (await transport.request(undefined, signal)).json(),
+    { ...owner, v: 2, enabled: true, remote_available: true });
+  transport.close();
+
+  deadlines.clear();
+  const abortWithoutEnrollment = assert.rejects(openQuestWebRtc(discovery, null, signal), timeout);
+  assert.equal(deadlines.has(5000), false);
+  deadlines.get(15000).abort(timeout);
+  await abortWithoutEnrollment;
+  assert.equal(stopped, 3);
+});
 
 test('the WebRTC transport exposes discovery identity and passes opaque, room-scoped frames', async () => {
   const requests = [];
