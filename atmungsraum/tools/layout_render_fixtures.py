@@ -73,6 +73,8 @@ def capture_layout(review, cases=SIZES):
 
         page = new()
         before = mutations(page)
+        expect(page.locator('#operator-connect-next')).to_be_enabled()
+        expect(page.locator('#check-polar')).to_have_attribute('data-check', 'ok')
         shot(page,'connect','#operator-connect-next')
         page.locator('#operator-connect-next').click()
         shot(page,'participant','#patient-form')

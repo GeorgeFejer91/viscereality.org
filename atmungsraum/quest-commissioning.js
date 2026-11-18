@@ -1,4 +1,4 @@
-import { companionAccessDenied, readJson, rediscoverQuest, sameQuest } from './quest-gateway.js?v=18';
+import { companionAccessDenied, readJson, rediscoverQuest, sameQuest } from './quest-gateway.js?v=19';
 
 const utf8 = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });

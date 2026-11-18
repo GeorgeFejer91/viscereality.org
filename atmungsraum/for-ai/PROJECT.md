@@ -56,6 +56,12 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   supplied zero LAN endpoints and a well-formed WebRTC offer. Windows radio
   state, the original code 27 process, and the Pixel PWA were restored.
   Authenticated phone pairing and physical listener recovery remain open.
+- [x] Repair the PWA remembered-Bluetooth path for the two service
+  instances observed on the lab Quest. It now checks matching service
+  instances against the saved installation ID, so a preceding foreign
+  service cannot hide the saved Quest. The mounted startup and focused
+  gateway tests passed. Retest the published release on the Pixel and
+  qualify authenticated reconnect with the approved device enrollment.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.

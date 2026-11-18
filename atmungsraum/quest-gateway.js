@@ -147,23 +147,36 @@ export async function readQuest(device, lifetime, setup) {
       return gatt;
     });
     const gatt = await waitForGatt(connection);
-    const service = await waitForGatt(gatt.getPrimaryService(serviceId));
-    const serialCharacteristic = await waitForGatt(service.getCharacteristic(serialId));
-    const serialBytes = await waitForGatt(serialCharacteristic.readValue());
-    const metadataCharacteristic = await waitForGatt(service.getCharacteristic(metadataId));
-    const metadataBytes = await waitForGatt(metadataCharacteristic.readValue());
-    if (serialBytes.byteLength > 64 || metadataBytes.byteLength > 512) throw Error('Ungültige Quest-Suchdaten.');
-    const serial = decode.decode(serialBytes);
-    const metadata = JSON.parse(decode.decode(metadataBytes));
-    const discovery = discoveryMetadata(metadata, serial, setup);
-    if (credentials) {
-      const endpoint = await setupQuestWifi(service, discovery.owner, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
-      return { owner: discovery.owner, endpoints: [endpoint] };
+    const services = setup?.device && typeof gatt.getPrimaryServices === 'function'
+      ? await waitForGatt(gatt.getPrimaryServices(serviceId))
+      : [await waitForGatt(gatt.getPrimaryService(serviceId))];
+    let rejected;
+    for (const service of services) {
+      let discovery;
+      try {
+        const serialCharacteristic = await waitForGatt(service.getCharacteristic(serialId));
+        const serialBytes = await waitForGatt(serialCharacteristic.readValue());
+        const metadataCharacteristic = await waitForGatt(service.getCharacteristic(metadataId));
+        const metadataBytes = await waitForGatt(metadataCharacteristic.readValue());
+        if (serialBytes.byteLength > 64 || metadataBytes.byteLength > 512) throw Error('Ungültige Quest-Suchdaten.');
+        const serial = decode.decode(serialBytes);
+        const metadata = JSON.parse(decode.decode(metadataBytes));
+        discovery = discoveryMetadata(metadata, serial, setup);
+      } catch (error) {
+        signal.throwIfAborted();
+        rejected ??= error;
+        continue;
+      }
+      if (credentials) {
+        const endpoint = await setupQuestWifi(service, discovery.owner, setup.enrollment, credentials, waitForGatt, signal, setup.onApproval);
+        return { owner: discovery.owner, endpoints: [endpoint] };
+      }
+      if (!discovery.endpoints.length && !discovery.rtc && !setup?.hotspot) {
+        throw Error('Prüfe WLAN und Internetzugang der Quest.');
+      }
+      return discovery;
     }
-    if (!discovery.endpoints.length && !discovery.rtc && !setup?.hotspot) {
-      throw Error('Prüfe WLAN und Internetzugang der Quest.');
-    }
-    return discovery;
+    throw rejected ?? Error('Keine Quest-Suchdaten verfügbar.');
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
 }
 

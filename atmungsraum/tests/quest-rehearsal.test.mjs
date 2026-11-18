@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDecipheriv, createHmac } from 'node:crypto';
-import { discoverQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
+import { discoverQuest, readQuest, joinQuest, questEndpoint, controllerAccessState, canControlQuest, sameQuest } from '../quest-gateway.js';
 import { QuestRehearsal, rehearsalActions, polarSetup } from '../quest-rehearsal.js';
 import * as rehearsalContract from '../quest-rehearsal.js';
 import { installedApk } from '../quest-release.js';
@@ -361,6 +361,40 @@ test('fresh app discovery permits an explicitly unavailable serial and reads no 
     assert.deepEqual(calls, ['02', '03']);
     assert.equal(gatt.connected, false);
   }
+});
+
+test('remembered Bluetooth reconnect selects the saved Quest installation across matching services', async () => {
+  const saved = { ...owner, serial: '', identity_kind: 'app-installation' };
+  const foreign = { ...saved, device: 'e'.repeat(32) };
+  const rtc = { r: 'f'.repeat(32), p: 'f'.repeat(64) };
+  const reads = [];
+  const service = (identity, routes) => ({
+    async getCharacteristic(id) {
+      return { async readValue() {
+        reads.push([identity.device, id.slice(-2)]);
+        return new TextEncoder().encode(id.endsWith('02') ? identity.serial
+          : JSON.stringify({ ...identity, ...routes, v: 2, mode: 'remote', pairing: 1 }));
+      } };
+    },
+  });
+  const first = service(foreign, { gateways: [endpoint] });
+  const second = service(saved, { gateways: [], rtc });
+  const gatt = {
+    connected: false,
+    async connect() { this.connected = true; return this; },
+    async getPrimaryService() { return first; },
+    async getPrimaryServices() { return [first, second]; },
+    disconnect() { this.connected = false; },
+  };
+  const signal = new AbortController().signal;
+  const found = await readQuest({ gatt }, signal, saved);
+  assert.deepEqual(found, { owner: saved, endpoints: [], pairing: 1, rtc });
+  assert.deepEqual(reads, [[foreign.device, '02'], [foreign.device, '03'], [saved.device, '02'], [saved.device, '03']]);
+  assert.equal(gatt.connected, false);
+
+  const absent = { ...saved, device: 'c'.repeat(32) };
+  await assert.rejects(readQuest({ gatt }, signal, absent), /passt nicht zur gespeicherten Verbindung/);
+  assert.equal(gatt.connected, false);
 });
 
 test('native breathing setup is offered only by an enrolled capable Quest and keeps its closed command', async () => {
