@@ -146,10 +146,11 @@ TURN probes with the compiled Java gateway and a synthetic owner. Both
 peers reported the expected ICE route, the original synthetic receipt ID was
 preserved and the decrypted 24,000-byte recording fixture matched exactly.
 The native host checks and all 334 Node tests pass with no skips. The PWA
-startup and all 340 rendered smartphone GUI states pass. APK source is bound by
-[the WebRTC build recipe](../quest/README.md#webrtc-candidate). Automatic
-first enrollment of a provisioned phone with empty PWA storage and physical
-Pixel/Quest timing, denial, recovery and recording checks remain open.
+startup and all 340 rendered smartphone GUI states pass. The signed arm64
+rehearsal APK passed v3, alignment, locked session, exact runtime asset and
+assembly closure checks. [Candidate build and hash](../quest/apks/README.md#webrtc-rehearsal-candidate).
+Automatic first enrollment of a provisioned phone with empty PWA storage and
+physical Pixel/Quest timing, denial, recovery and recording checks remain open.
 
 ### PWA update copy simplification — 2026-11-17
 

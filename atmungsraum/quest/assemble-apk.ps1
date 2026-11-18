@@ -166,7 +166,7 @@ if ($WebRtc) {
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'quest-webrtc-channel.js') -Destination $rtcAssets
     foreach ($name in @('brsp.js','vdo-ninja-transport.js','vdoninja-sdk.min.js','LICENSE-BRSP.txt','LICENSE-MPL-2.0.txt','NOTICE.md')) {
-        Copy-Item -LiteralPath (Join-Path $vendor $name) -Destination $rtcAssets
+        Copy-Item -LiteralPath (Join-Path $vendor $name) -Destination (Join-Path $rtcAssets $name.ToLowerInvariant())
     }
     $sdkSha = (Get-FileHash -LiteralPath (Join-Path $rtcAssets 'vdoninja-sdk.min.js')).Hash.ToLowerInvariant()
     if ($sdkSha -cne '390ea6c8b1a4e57bf7fa18ff2b394f25cc79e637130f97e4a29ca958a90fac77') {
