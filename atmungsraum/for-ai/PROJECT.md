@@ -148,6 +148,16 @@ when capture ends. Lock and reboot recovery still need an attended check.
 - [ ] Authorize the research Drive account on that Pixel and check two new
   datasets, sibling files, UTC metadata and exact downloaded bytes.
 
+Dataset release `20261118-dataset-sync` merged as `8ca2af6` in PR 105.
+[Exact Pages run 44289536519](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44289536519)
+succeeded. Eleven live runtime assets match that merge, and all 378 exact
+smartphone GUI states passed. The lab Pixel reloaded the release in
+standalone mode. Its deployed UTC module received a TimeAPI.io response
+in 93 ms, and the USB pair binding survived the reload. Both devices had
+automatic Android time enabled. The selected Quest was still asleep, and
+the Pixel remained on Connect with the other legacy Quest. The next action
+is to confirm headset pairing and authorize the existing Drive account.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and
