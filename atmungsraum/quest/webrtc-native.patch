@@ -1,5 +1,114 @@
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+index 129ec525..97c7f51b 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
+@@ -2,6 +2,8 @@
+ use crate::experiment_breathing_setup::{
+     BreathingSetup, CalibrationState, ExperimentState, LoopSchedule, SetupInput, SetupStatus,
+ };
++#[cfg(not(feature = "showcase"))]
++use crate::session_recording_contract::CompletionAudioClock;
+ use rusty_quest_breath_contract::{
+     assessment::CommonBreathPhase,
+     phase::{
+@@ -732,6 +734,37 @@ impl Runtime {
+             ns.saturating_add(at.elapsed().as_nanos().min(u128::from(u64::MAX)) as u64)
+         })
+     }
++    #[cfg(not(feature = "showcase"))]
++    fn completion_audio_clock(&self, active_ns: u64, now_ns: u64) -> Option<CompletionAudioClock> {
++        let setup = self.core.snapshot(now_ns);
++        let (generation, playback_head_frame, observed_elapsed_ns, true) = self.last_clock? else {
++            return None;
++        };
++        let main_start_frame = setup.experiment_start_frame?;
++        let completed_frames = setup.experiment_completed_frames;
++        let sample_rate_hz = self.schedule.sample_rate;
++        if self.controller_lost
++            || setup.experiment != ExperimentState::Finished
++            || !setup.clock_valid
++            || generation != self.generation
++            || generation <= self.retired_audio_generation
++            || playback_head_frame != setup.absolute_frame
++            || completed_frames != setup.experiment_target_frames
++            || playback_head_frame < main_start_frame.checked_add(completed_frames)?
++            || completed_frames.checked_mul(1_000_000_000)? / u64::from(sample_rate_hz) != active_ns
++        {
++            return None;
++        }
++        Some(CompletionAudioClock {
++            generation,
++            sample_rate_hz,
++            main_start_frame,
++            completed_frames,
++            playback_head_frame,
++            observed_elapsed_ns,
++        })
++    }
++
+     fn observe_clock(&mut self, g: u64, frame: u64, ns: u64, playing: bool) {
+         self.expire_recovery(ns);
+         if g <= self.retired_audio_generation {
+@@ -1988,6 +2021,17 @@ pub(crate) fn recording_progress() -> Option<(u64, bool)> {
+     ))
+ }
+ #[cfg(not(feature = "showcase"))]
++pub(crate) fn completion_audio_clock(active_ns: u64) -> Option<CompletionAudioClock> {
++    if !selected() {
++        return None;
++    }
++    let binding = crate::polar_input_health::source_binding();
++    let mut guard = state().lock().unwrap_or_else(|e| e.into_inner());
++    let runtime = guard.as_mut()?;
++    runtime.bind_source(binding);
++    runtime.completion_audio_clock(active_ns, runtime.now_ns())
++}
++#[cfg(not(feature = "showcase"))]
+ pub(crate) fn recording_sample_admitted(
+     record: &crate::session_recording_contract::SessionRecord,
+ ) -> bool {
+diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+index 02ab65d7..cee53442 100644
+--- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
+@@ -2377,12 +2377,21 @@ fn pretrained_polar_full_main_is_audio_owned_for_exact_nine_hundred_seconds() {
+             if tick == 22_899 {
+                 assert_eq!(r.core.snapshot(now).experiment, ExperimentState::Running);
+                 assert_eq!(r.status(now)["experiment_elapsed_ms"], 899_960);
++                assert!(r.completion_audio_clock(900_000_000_000, now).is_none());
+             }
+         }
+         let now = base + 916_020_000_000;
+         let status = r.status(now);
+         assert_eq!(status["stage"], "complete");
+         assert_eq!(status["experiment_elapsed_ms"], 900_000);
++        assert!(r.completion_audio_clock(899_999_999_999, now).is_none());
++        let clock = r.completion_audio_clock(900_000_000_000, now).unwrap();
++        assert_eq!(clock.generation, 7);
++        assert_eq!(clock.sample_rate_hz, 44_100);
++        assert_eq!(clock.main_start_frame, 705_600);
++        assert_eq!(clock.completed_frames, 39_690_000);
++        assert_eq!(clock.playback_head_frame, 40_395_600);
++        assert_eq!(clock.observed_elapsed_ns, now);
+         assert_eq!(r.generation, 7);
+         assert_eq!(status["calibration"], "idle");
+         assert_eq!(status["input_volume01"], Value::Null);
+@@ -2398,6 +2407,13 @@ fn pretrained_polar_full_main_is_audio_owned_for_exact_nine_hundred_seconds() {
+             "quality mask retains the last valid state lineage"
+         );
+         assert_eq!(r.status(now)["ready"], false);
++        let after = now + 20_000_000;
++        r.observe_clock(7, 40_396_482, after, true);
++        let clock = r.completion_audio_clock(900_000_000_000, after).unwrap();
++        assert_eq!(clock.completed_frames, 39_690_000);
++        assert_eq!(clock.playback_head_frame, 40_396_482);
++        r.retired_audio_generation = 7;
++        assert!(r.completion_audio_clock(900_000_000_000, after).is_none());
+     }
+ }
+ 
 diff --git a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
-index a82c07c1686daa6499fa4fa11a74132385064003..f3b9072b9e5d24c05446188b8bdc2ae159c9842e 100644
+index a82c07c1..f3b9072b 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 @@ -156,11 +156,11 @@ fn live_bias_changes_are_durable_fenced_replay_safe_and_manifest_immutable() {
@@ -17,8 +126,91 @@ index a82c07c1686daa6499fa4fa11a74132385064003..f3b9072b9e5d24c05446188b8bdc2ae1
      assert!(matches!(runtime.try_offer(record),OfferOutcome::Accepted{..}));
      apply_and_read(&runtime,&serde_json::from_str(&command("pause","pause",1,7000)).unwrap());
      let paused=apply_and_read(&runtime,&bias_command(&armed,"bias-paused",0,8000));
+diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+index 5540c4f4..7e397260 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
+@@ -35,7 +35,8 @@ use crate::{
+         UtcEpochNanos,
+     },
+     session_recording_contract::{
+-        AudioAssetIdentity, BiasChange, BreathObservation, BreathPhase, ConditionKey,
++        AudioAssetIdentity, BiasChange, BreathObservation, BreathPhase, CompletionAudioClock,
++        ConditionKey,
+         EffectiveRadiusProfile, EffectiveRadiusSnapshotObservation, ExperimentIdentity,
+         FinalizationReason, PolarAccBatch, PolarAccSample, PolarEcgBatch, PolarEcgSample,
+         PolarHeartRateObservation, SessionCounts, SessionEvent, SessionEventKind, SessionRecord,
+@@ -894,7 +895,12 @@ trait RecordingBackend: Send {
+     fn recover(&mut self, root: &Path) -> Result<RecoveryReport, String>;
+     fn prepare(&mut self, generation: u64, spec: SessionStartSpec) -> Result<(), String>;
+     fn offer(&self, generation: u64, record: SessionRecord) -> OfferReceipt;
+-    fn mark_completion(&self, generation: u64, at: MonotonicNanos) -> Result<(), String>;
++    fn mark_completion(
++        &self,
++        generation: u64,
++        at: MonotonicNanos,
++        audio_clock: Option<CompletionAudioClock>,
++    ) -> Result<(), String>;
+     fn finalize(
+         &self,
+         generation: u64,
+@@ -995,9 +1001,14 @@ impl RecordingBackend for ActualRecordingBackend {
+             .try_offer(generation, record)
+     }
+ 
+-    fn mark_completion(&self, generation: u64, at: MonotonicNanos) -> Result<(), String> {
++    fn mark_completion(
++        &self,
++        generation: u64,
++        at: MonotonicNanos,
++        audio_clock: Option<CompletionAudioClock>,
++    ) -> Result<(), String> {
+         self.writer()?
+-            .mark_completion(generation, at)?
++            .mark_completion(generation, at, audio_clock)?
+             .receive()
+             .map(|_| ())
+     }
+@@ -2092,9 +2103,16 @@ impl SessionWorker {
+                 }
+                 SessionEffect::PersistCompletion {
+                     generation,
+-                    active_time_ns: _,
++                    active_time_ns,
+                 } => {
+-                    match self.backend.mark_completion(generation, at) {
++                    let audio_clock = if self.authored_audio.is_none() {
++                        crate::experiment_breathing_setup_runtime::completion_audio_clock(
++                            active_time_ns,
++                        )
++                    } else {
++                        None
++                    };
++                    match self.backend.mark_completion(generation, at, audio_clock) {
+                         Ok(()) => {
+                             let durable =
+                                 self.apply_internal(at, SessionCommand::CompletionDurable)?;
+@@ -7046,11 +7064,16 @@ mod tests {
+             self.inner.offer(generation, record)
+         }
+ 
+-        fn mark_completion(&self, generation: u64, at: MonotonicNanos) -> Result<(), String> {
++        fn mark_completion(
++            &self,
++            generation: u64,
++            at: MonotonicNanos,
++            audio_clock: Option<CompletionAudioClock>,
++        ) -> Result<(), String> {
+             if self.fail_completion_once.swap(false, Ordering::AcqRel) {
+                 Err("injected-completion-persistence-failure".to_owned())
+             } else {
+-                self.inner.mark_completion(generation, at)
++                self.inner.mark_completion(generation, at, audio_clock)
+             }
+         }
+ 
 diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
-index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c69295f89dc2 100644
+index 773a44f9..07bcea50 100644
 --- a/apps/native-renderer-android/native/src/session_recording_contract.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
 @@ -12,6 +12,34 @@ use crate::session_recording_clock::{
@@ -56,7 +248,43 @@ index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c692
  pub(crate) fn validate_breath_polar_provenance(
      provenance: &Value,
      sampled_ns: u64,
-@@ -698,7 +726,7 @@ impl SessionRecord {
+@@ -449,6 +477,16 @@ impl ExperimentIdentity {
+     }
+ }
+ 
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub(crate) struct CompletionAudioClock {
++    pub(crate) generation: u64,
++    pub(crate) sample_rate_hz: u32,
++    pub(crate) main_start_frame: u64,
++    pub(crate) completed_frames: u64,
++    pub(crate) playback_head_frame: u64,
++    pub(crate) observed_elapsed_ns: u64,
++}
++
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+ pub(crate) enum SessionEventKind {
+     BiasChanged,
+@@ -466,6 +504,7 @@ pub(crate) enum SessionEventKind {
+     AudioEnded,
+     AudioError,
+     CompletionReached,
++    CompletionReachedWithAudioClock(CompletionAudioClock),
+     RestartRequested,
+     ExitRequested,
+     SourceGap,
+@@ -515,7 +554,9 @@ impl SessionEventKind {
+             Self::AudioStarted => "audio-started",
+             Self::AudioEnded => "audio-ended",
+             Self::AudioError => "audio-error",
+-            Self::CompletionReached => "completion-reached",
++            Self::CompletionReached | Self::CompletionReachedWithAudioClock(_) => {
++                "completion-reached"
++            }
+             Self::RestartRequested => "restart-requested",
+             Self::ExitRequested => "exit-requested",
+             Self::SourceGap => "source-gap",
+@@ -698,7 +739,7 @@ impl SessionRecord {
          }
      }
  
@@ -65,7 +293,7 @@ index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c692
          let optional_finite = |value: Option<f32>| value.map_or(true, f32::is_finite);
          match self {
              Self::BiasChange(value) => {
-@@ -739,12 +767,15 @@ impl SessionRecord {
+@@ -739,12 +780,15 @@ impl SessionRecord {
                                  | "rejected-rotation"
                          )
                      })
@@ -87,7 +315,24 @@ index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c692
                      && value
                          .polar_source_provenance
                          .as_ref()
-@@ -1225,7 +1256,7 @@ mod tests {
+@@ -855,6 +899,16 @@ impl SessionRecord {
+                 if let Some(reason) = value.kind.signal_reason() {
+                     row["signal_reason"] = json!(reason);
+                 }
++                if let SessionEventKind::CompletionReachedWithAudioClock(clock) = value.kind {
++                    row["audio_clock"] = json!({
++                        "generation": clock.generation,
++                        "sample_rate_hz": clock.sample_rate_hz,
++                        "main_start_frame": clock.main_start_frame,
++                        "completed_frames": clock.completed_frames,
++                        "playback_head_frame": clock.playback_head_frame,
++                        "observed_elapsed_ns": clock.observed_elapsed_ns,
++                    });
++                }
+                 if value.kind == SessionEventKind::Started {
+                     if let Some(configuration) = &spec.breath_tracking_configuration {
+                         row["breath_tracking_configuration"] = configuration.clone();
+@@ -1225,7 +1279,7 @@ mod tests {
                  resulting_radius_parameter_source: "app-effective-world-anchor",
              })
          };
@@ -96,7 +341,7 @@ index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c692
          for damaged in [
              record(f32::NAN, 0.5, 0.5),
              record(f32::INFINITY, 0.5, 0.5),
-@@ -1236,7 +1267,7 @@ mod tests {
+@@ -1236,7 +1290,7 @@ mod tests {
              record(1.2, 0.5, -0.01),
              record(1.2, 0.5, 1.01),
          ] {
@@ -106,7 +351,7 @@ index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c692
      }
  }
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index 75df819211917d5b4dc40874644356eff5bd96b4..7eeb297db6fcfa30ee18285f4bd70659a137fbb1 100644
+index 75df8192..7eeb297d 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -842,6 +842,10 @@ fn writer_restart_exports_an_aborted_csv_and_only_the_verified_checkpoint_prefix
@@ -155,7 +400,7 @@ index 75df819211917d5b4dc40874644356eff5bd96b4..7eeb297db6fcfa30ee18285f4bd70659
 +    fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
-index 95fa6df23c39e388dfd3dfa948b65622d415fe63..a9d6cf9529ff81ed058d93944f44be6ad08622e0 100644
+index 95fa6df2..a9d6cf95 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
 @@ -728,7 +728,7 @@ impl ObservationStream {
@@ -227,7 +472,7 @@ index 95fa6df23c39e388dfd3dfa948b65622d415fe63..a9d6cf9529ff81ed058d93944f44be6a
          assert_eq!(lines.last().unwrap()[5], "end");
      }
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
-index a60eb4f012477a8caf79bb2193f2b8c7140b9461..4ce559f2721f1649f6edcee5ea69c2449d61c607 100644
+index a60eb4f0..4ce559f2 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 @@ -13,6 +13,7 @@ use std::{
@@ -310,7 +555,7 @@ index a60eb4f012477a8caf79bb2193f2b8c7140b9461..4ce559f2721f1649f6edcee5ea69c244
          }
          Ok(())
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
-index b1c43bdb17fde8012a8ec4e7736952a32a757168..72ffd4859df91aa47bdaf695eed942d87f2c2e68 100644
+index b1c43bdb..72ffd485 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 @@ -126,7 +126,15 @@ fn publish_run(directory: &Path, key: &SessionTimestampKey) -> Result<(), String
@@ -331,7 +576,7 @@ index b1c43bdb17fde8012a8ec4e7736952a32a757168..72ffd4859df91aa47bdaf695eed942d8
                  live_csv::publish_final(directory, csv, true)?;
              }
 diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
-index 829184d6d78e5ec5085cb2deac8c515cdfb00900..1fb28807f0a0120dcd78fcd5ce642c876651db91 100644
+index 829184d6..1fb28807 100644
 --- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
 @@ -14,7 +14,7 @@ use std::{
@@ -434,10 +679,20 @@ index 829184d6d78e5ec5085cb2deac8c515cdfb00900..1fb28807f0a0120dcd78fcd5ce642c87
          );
      }
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87debd8bf1f9 100644
+index 56c3f444..42f6acb1 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
-@@ -195,6 +195,7 @@ struct QueuedRecord {
+@@ -23,7 +23,8 @@ use serde_json::{json, Value};
+ use crate::{
+     session_recording_clock::MonotonicNanos,
+     session_recording_contract::{
+-        FinalizationReason, SessionEvent, SessionEventKind, SessionRecord, SessionStartSpec,
++        CompletionAudioClock, FinalizationReason, SessionEvent, SessionEventKind, SessionRecord,
++        SessionStartSpec,
+         SESSION_CHECKPOINT_SCHEMA, SESSION_FINAL_SCHEMA, SESSION_INDEX_SCHEMA,
+         SESSION_MANIFEST_SCHEMA, SESSION_STREAM_FILES,
+     },
+@@ -195,6 +196,7 @@ struct QueuedRecord {
  struct AdmissionState {
      generation: Option<u64>,
      accepting: bool,
@@ -445,7 +700,30 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
      finalize_requested: bool,
      next_sequence: u64,
      last_accepted_sequence: u64,
-@@ -616,7 +617,7 @@ fn offer_to_queue(
+@@ -359,6 +361,7 @@ enum ControlCommand {
+     MarkCompletion {
+         generation: u64,
+         at: MonotonicNanos,
++        audio_clock: Option<CompletionAudioClock>,
+         reply: mpsc::Sender<Result<CompletionReceipt, String>>,
+     },
+     Finalize {
+@@ -470,12 +473,14 @@ impl SessionRecordingWriter {
+         &self,
+         generation: u64,
+         at: MonotonicNanos,
++        audio_clock: Option<CompletionAudioClock>,
+     ) -> Result<ControlReceipt<CompletionReceipt>, String> {
+         let (reply, receiver) = mpsc::channel();
+         self.control_sender
+             .send(ControlCommand::MarkCompletion {
+                 generation,
+                 at,
++                audio_clock,
+                 reply,
+             })
+             .map_err(|_| "recording-writer-closed".to_owned())?;
+@@ -616,7 +621,7 @@ fn offer_to_queue(
          state.loss.record_drop(offer_sequence, &record);
          return OfferReceipt::consumed(OfferOutcome::BatchOversize);
      }
@@ -454,7 +732,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
          state.loss.record_drop(offer_sequence, &record);
          return OfferReceipt::consumed(OfferOutcome::NonFinite);
      }
-@@ -745,6 +746,9 @@ fn handle_control(
+@@ -745,6 +750,9 @@ fn handle_control(
                          .unwrap_or_else(|poisoned| poisoned.into_inner());
                      state.generation = Some(generation);
                      state.accepting = true;
@@ -464,7 +742,28 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
                      state.finalize_requested = false;
                      state.next_sequence = 0;
                      state.last_accepted_sequence = 0;
-@@ -1172,6 +1176,7 @@ impl ActiveRecording {
+@@ -833,6 +841,7 @@ fn handle_control(
+         ControlCommand::MarkCompletion {
+             generation,
+             at,
++            audio_clock,
+             reply,
+         } => {
+             let result = active
+@@ -843,7 +852,11 @@ fn handle_control(
+                         return Err("recording-generation-stale".to_owned());
+                     }
+                     recording
+-                        .mark_completion(at, loss_snapshot(admission, external_loss, generation))
++                        .mark_completion(
++                            at,
++                            loss_snapshot(admission, external_loss, generation),
++                            audio_clock,
++                        )
+                         .map(|checkpoint_ordinal| CompletionReceipt {
+                             generation,
+                             checkpoint_ordinal,
+@@ -1172,6 +1185,7 @@ impl ActiveRecording {
              if let Some(run) = &participant {
                  manifest["participant"] = run.metadata();
                  manifest["participant_csv_schema"] = json!(live_csv::SCHEMA_VERSION);
@@ -472,7 +771,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
              }
              publish_json_exclusive(&directory, "manifest.json", &manifest)?;
              let mut streams = BTreeMap::new();
-@@ -1245,7 +1250,11 @@ impl ActiveRecording {
+@@ -1245,7 +1259,11 @@ impl ActiveRecording {
      }
  
      fn write_record(&mut self, sequence: u64, record: &SessionRecord) -> Result<(), String> {
@@ -485,7 +784,37 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
              return Err("recording-row-non-finite".to_owned());
          }
          self.append_record(sequence, record)?;
-@@ -1455,8 +1464,13 @@ impl ActiveRecording {
+@@ -1315,9 +1333,18 @@ impl ActiveRecording {
+         Ok(())
+     }
+ 
+-    fn mark_completion(&mut self, at: MonotonicNanos, loss: LossSnapshot) -> Result<u64, String> {
++    fn mark_completion(
++        &mut self,
++        at: MonotonicNanos,
++        loss: LossSnapshot,
++        audio_clock: Option<CompletionAudioClock>,
++    ) -> Result<u64, String> {
+         if !self.completion_durable {
+-            self.write_internal_event(SessionEventKind::CompletionReached, at)?;
++            let kind = audio_clock.map_or(
++                SessionEventKind::CompletionReached,
++                SessionEventKind::CompletionReachedWithAudioClock,
++            );
++            self.write_internal_event(kind, at)?;
+             self.completion_durable = true;
+         }
+         self.checkpoint(true, loss)
+@@ -1416,7 +1443,7 @@ impl ActiveRecording {
+             return Err(format!("recording-writer-fault:{error}"));
+         }
+         if threshold_reached && !self.completion_durable {
+-            self.mark_completion(at, loss.clone())?;
++            self.mark_completion(at, loss.clone(), None)?;
+         }
+         self.record_open_signal_interruptions(at)?;
+         let event = match reason {
+@@ -1455,8 +1482,13 @@ impl ActiveRecording {
              });
              let csv = match result {
                  Some(csv) => csv,
@@ -501,7 +830,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
              };
              if let Some((csv, _)) = csv {
                  live_csv::publish_final(&self.directory, &csv, false)?;
-@@ -1784,6 +1798,12 @@ pub(crate) mod tests {
+@@ -1784,6 +1816,12 @@ pub(crate) mod tests {
                  samples: Box::new([PolarEcgSample { source_sequence: 1, sample_index: 0, source_time: source,
                      received_source: source, observed_at: MonotonicNanos::new(27_000_020_000), microvolts: 37 }]),
              })).unwrap();
@@ -514,7 +843,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
          }
          let ordinal = writer.checkpoint(false, LossSnapshot::default()).unwrap();
          if official_start {
-@@ -1891,6 +1911,79 @@ pub(crate) mod tests {
+@@ -1891,6 +1929,79 @@ pub(crate) mod tests {
          })
      }
  
@@ -594,7 +923,50 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
      #[test]
      fn bias_checkpoint_failure_remains_sticky_after_storage_repair() {
          let root = temp_root("bias-checkpoint-failure");
-@@ -2035,6 +2128,7 @@ pub(crate) mod tests {
+@@ -1994,8 +2105,16 @@ pub(crate) mod tests {
+                 OfferOutcome::Accepted { sequence }
+             );
+         }
++        let audio_clock = CompletionAudioClock {
++            generation: 7,
++            sample_rate_hz: 44_100,
++            main_start_frame: 705_600,
++            completed_frames: 1_323_000,
++            playback_head_frame: 2_029_482,
++            observed_elapsed_ns: 30_000_000_900,
++        };
+         writer
+-            .mark_completion(1, MonotonicNanos::new(30_000_001_000))
++            .mark_completion(1, MonotonicNanos::new(30_000_001_000), Some(audio_clock))
+             .unwrap()
+             .receive_timeout(Duration::from_secs(2))
+             .unwrap();
+@@ -2024,6 +2143,24 @@ pub(crate) mod tests {
+         assert!(!final_text.contains("runtime_generation"));
+         let breath_rows = fs::read_to_string(finalized.directory.join("breath.jsonl")).unwrap();
+         assert_eq!(breath_rows.lines().count(), 4);
++        let events = fs::read_to_string(finalized.directory.join("events.jsonl")).unwrap();
++        let completion: Vec<_> = events
++            .lines()
++            .map(|line| serde_json::from_str::<Value>(line).unwrap())
++            .filter(|row| row["event"] == "completion-reached")
++            .collect();
++        assert_eq!(completion.len(), 1);
++        assert_eq!(
++            completion[0]["audio_clock"],
++            json!({
++                "generation": 7,
++                "sample_rate_hz": 44_100,
++                "main_start_frame": 705_600,
++                "completed_frames": 1_323_000,
++                "playback_head_frame": 2_029_482,
++                "observed_elapsed_ns": 30_000_000_900_u64,
++            }),
++        );
+         assert!(root.join("index-00000000000000000001.json").exists());
+         writer.shutdown(Duration::from_secs(2)).unwrap();
+         fs::remove_dir_all(root).unwrap();
+@@ -2035,6 +2172,7 @@ pub(crate) mod tests {
          let admission = Mutex::new(AdmissionState {
              generation: Some(9),
              accepting: true,
@@ -602,7 +974,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
              finalize_requested: false,
              next_sequence: 0,
              last_accepted_sequence: 0,
-@@ -2100,6 +2194,7 @@ pub(crate) mod tests {
+@@ -2100,6 +2238,7 @@ pub(crate) mod tests {
          let admission = Mutex::new(AdmissionState {
              generation: Some(9),
              accepting: true,
@@ -611,7 +983,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87de
              next_sequence: 0,
              last_accepted_sequence: 0,
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab65892902c1e 100644
+index daffbbfa..64e0c444 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -503,7 +503,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -627,7 +999,7 @@ index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab658
  
      static void experimentSessionBleOwnerChanged(long identity, long epoch, boolean live) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index dd75697d2e33ab2898af3ee549e86d637a7e1655..2f4f582e9a675c808a7439adcc6ef6cb0a9de2fe 100644
+index dd75697d..2f4f582e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 @@ -55,8 +55,26 @@ public final class ExperimentSessionCommandGateway {
@@ -775,7 +1147,7 @@ index dd75697d2e33ab2898af3ee549e86d637a7e1655..2f4f582e9a675c808a7439adcc6ef6cb
      }
      private JSONObject requestRecenter(JSONObject body) throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-index 09381589409a3b7601da9e1e2a41fc3b706f40c0..d485327b899fba1a06e9f671245e0dd8cc3d3956 100644
+index 09381589..d485327b 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 @@ -66,8 +66,11 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
@@ -806,7 +1178,7 @@ index 09381589409a3b7601da9e1e2a41fc3b706f40c0..d485327b899fba1a06e9f671245e0dd8
          final Snapshot snapshot;
          int mtu=23;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index 53cd88330b0ccdb28db089089c3be97eeecd49c3..7c9960b3cfcbd92fdf6de95c7ba3dd4b13226504 100644
+index 53cd8833..7c9960b3 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -58,6 +58,153 @@ public final class ExperimentSessionGatewayProtocol {
@@ -965,7 +1337,7 @@ index 53cd88330b0ccdb28db089089c3be97eeecd49c3..7c9960b3cfcbd92fdf6de95c7ba3dd4b
          synchronized(this) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..eb329c1dfe52dd65c4e45c08974606507de42150
+index 00000000..eb329c1d
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
 @@ -0,0 +1,155 @@
@@ -1125,7 +1497,7 @@ index 0000000000000000000000000000000000000000..eb329c1dfe52dd65c4e45c0897460650
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..10f655eaaef0d3e95595f1a0b6cb957b78539989 100644
+index 899cbf6f..10f655ea 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 @@ -18,7 +18,170 @@ public final class ExperimentSessionGatewayProtocolTest {
@@ -1300,7 +1672,7 @@ index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..10f655eaaef0d3e95595f1a0b6cb957b
          if(!ExperimentSessionGatewayProtocol.metaUpdateQuery(updateCommand).toString().equals(updateCommand.toString()))throw new AssertionError("canonical update body changed");
          JSONObject endPreparation=new JSONObject(updateCommand.toString()).put("op","end-preparation-and-check");
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
-index c8269669768931306642dae97644957aabc2b08f..1158aac0930d06f4bfe4d092e2d354fbfbdb3944 100644
+index c8269669..1158aac0 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 @@ -22,6 +22,9 @@ final class Handler {
@@ -1322,7 +1694,7 @@ index c8269669768931306642dae97644957aabc2b08f..1158aac0930d06f4bfe4d092e2d354fb
      int autoConnectionAttempts, pendingBleAction, scans;
      static final int AUTO_CONNECTION_MAX_ATTEMPTS = 2, PENDING_BLE_SCAN = 1, REQUEST_BLE_PERMISSIONS = 19;
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
-index 22746f1f0a55ae671e2b0215551574d211bfeec0..3db59d58fa3f10dc613020a6ccb25cf54a74fb27 100644
+index 22746f1f..3db59d58 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 +++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 @@ -82,6 +82,7 @@
@@ -1334,7 +1706,7 @@ index 22746f1f0a55ae671e2b0215551574d211bfeec0..3db59d58fa3f10dc613020a6ccb25cf5
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java",
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java",
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e49018f67 100644
+index c2d165a8..a58702d7 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
 +++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 @@ -282,6 +282,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
@@ -1346,7 +1718,7 @@ index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),
 diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
-index 6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b..76558718eebf058770552158c7580b065058ad5f 100644
+index 6790eb56..76558718 100644
 --- a/tools/checks/test_experiment_discovery.py
 +++ b/tools/checks/test_experiment_discovery.py
 @@ -85,6 +85,31 @@ public class DiscoveryHostTest {
@@ -1390,7 +1762,7 @@ index 6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b..76558718eebf058770552158c7580b06
    android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
    BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index ebf1df439940f34a5a8976f3c74d2efde167c036..9a7cd8041323ff48b76416a605542e10ea552194 100644
+index ebf1df43..9a7cd804 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -28,7 +28,13 @@ public class PackageManager {public static final int GET_META_DATA=128;public In
@@ -1457,7 +1829,7 @@ index ebf1df439940f34a5a8976f3c74d2efde167c036..9a7cd8041323ff48b76416a605542e10
   }
  }
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
-index 833f50b03335810d11063ffdd60c7c48017f760d..da0a4d75246ce4358fdacd189641af5b3c7d7666 100644
+index 833f50b0..da0a4d75 100644
 --- a/tools/checks/test_polar_platform_projection.py
 +++ b/tools/checks/test_polar_platform_projection.py
 @@ -5,7 +5,10 @@ from test_experiment_gateway_dedupe import method
@@ -1521,7 +1893,7 @@ index 833f50b03335810d11063ffdd60c7c48017f760d..da0a4d75246ce4358fdacd189641af5b
    subprocess.run(['javac','--release','8','-cp',str(jar),'-d',str(out),*map(str,out.rglob('*.java'))],check=True)
    subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
 diff --git a/tools/checks/test_polar_required_stream_scope.py b/tools/checks/test_polar_required_stream_scope.py
-index dc0bab363f105ecc62874888ade63aff2ea8dc2e..20676d871518f76c8154d23eb02d8d266fbbb9ce 100644
+index dc0bab36..20676d87 100644
 --- a/tools/checks/test_polar_required_stream_scope.py
 +++ b/tools/checks/test_polar_required_stream_scope.py
 @@ -1,6 +1,6 @@

@@ -18,6 +18,8 @@ from uuid import UUID
 NATIVE_SCHEMA = "rusty.quest.native_renderer.session_recording_"
 SCENARIO = "haupt-15"
 END_US = 900_000_000
+AUDIO_SAMPLE_RATE_HZ = 44_100
+AUDIO_CYCLE_FRAMES = 16 * AUDIO_SAMPLE_RATE_HZ
 POLAR_RECEIPT_TIMEOUT_NS = 1_000_000_000
 STREAMS = {
     "events.jsonl", "polar-hr-rr.jsonl", "polar-ecg.jsonl", "polar-acc.jsonl", "breath.jsonl", "radius.jsonl",
@@ -197,7 +199,28 @@ def verify_polar_receipt_coverage(native_directory, lengths, run, start, complet
         require(completion - latest <= POLAR_RECEIPT_TIMEOUT_NS, gap)
 
 
-def verify_csv(path, native_directory, run, manifest, terminal, expected, require_uninterrupted):
+def verify_completion_audio(row, start, end, required):
+    if "audio_clock" not in row:
+        require(not required, "native AudioTrack frame receipt is missing")
+        return None
+    clock = row["audio_clock"]
+    fields = ("generation", "sample_rate_hz", "main_start_frame", "completed_frames",
+              "playback_head_frame", "observed_elapsed_ns")
+    problem = "native AudioTrack frame receipt does not match the main interval"
+    require(isinstance(clock, dict) and all(type(clock.get(key)) is int for key in fields), problem)
+    frames = clock["completed_frames"]
+    start_frame = clock["main_start_frame"]
+    require(clock["generation"] > 0 and clock["sample_rate_hz"] == AUDIO_SAMPLE_RATE_HZ
+            and start_frame >= 0 and start_frame % AUDIO_CYCLE_FRAMES == 0
+            and frames == END_US * AUDIO_SAMPLE_RATE_HZ // 1_000_000
+            and clock["playback_head_frame"] >= start_frame + frames
+            and start < clock["observed_elapsed_ns"] <= end,
+            problem)
+    return frames
+
+
+def verify_csv(path, native_directory, run, manifest, terminal, expected, require_uninterrupted,
+               require_audio_frames):
     identity = manifest["participant"]
     require(identity == terminal["participant"] and identity["scenario_id"] == SCENARIO
             and UUID(identity["session_id"]).version == 4 and identity["run_index"] >= 1,
@@ -215,11 +238,13 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected, requir
     require(len(completion) == (1 if expected == "completed" else 0),
             "native completion event disagrees with the terminal outcome")
     completion_elapsed_us = None
+    completion_audio_frames = None
     if completion:
         at = completion[0]["observed_monotonic_ns"]
         require(start < at <= end and completion[0]["observed_utc_ns"] == at + offset,
                 "native completion event is outside the run or has the wrong clock")
         completion_elapsed_us = (at - start) // 1000
+        completion_audio_frames = verify_completion_audio(completion[0], start, end, require_audio_frames)
     playback = playback_rows(events, start, end, offset, identity)
     signal_events = (
         row
@@ -287,7 +312,7 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected, requir
         require(not INTERRUPTION_EVENTS.intersection(counts), "uninterrupted run contains pauses or faults")
         require(counts.get("breath", 0) > 0, "uninterrupted run has no breathing observations")
         verify_polar_receipt_coverage(native_directory, lengths, run, start, completion[0]["observed_monotonic_ns"])
-    return dict(counts), int(last["audio_elapsed_us"]), completion_elapsed_us
+    return dict(counts), int(last["audio_elapsed_us"]), completion_elapsed_us, completion_audio_frames
 
 
 def verify_drive(args, descriptor):
@@ -366,13 +391,15 @@ def verify(args):
         source = terminal_path if name == "final.json" else args.native_run / name
         tails += verify_bytes(source, entry, name, allow_tail=recovered and name in STREAMS)
 
-    counts, projected_audio_us, native_completion_us = verify_csv(
-        path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted", args.require_uninterrupted)
+    counts, projected_audio_us, native_completion_us, native_audio_frames = verify_csv(
+        path, args.native_run, run, manifest, terminal, "completed" if complete else "aborted",
+        args.require_uninterrupted, args.require_audio_frames)
     return {"pass": True, "mode": args.expect, "bytes": descriptor["size"], "sha256": descriptor["sha256"],
             "csv_rows": counts, "writer_drops": 0, "drive_objects": 1, "native_checkpoint_recovery": recovered,
             "uninterrupted_checks": args.require_uninterrupted,
             "ignored_post_checkpoint_bytes": tails, "terminal_csv_audio_elapsed_us": projected_audio_us,
-            "native_start_to_completion_us": native_completion_us}
+            "native_start_to_completion_us": native_completion_us,
+            "native_completed_audio_frames": native_audio_frames}
 
 
 def main():
@@ -383,9 +410,13 @@ def main():
     parser.add_argument("--expect", choices=("complete", "partial"), required=True)
     parser.add_argument("--require-uninterrupted", action="store_true",
                         help="require breathing observations and continuous Polar receipts in a completed run without pauses or faults")
+    parser.add_argument("--require-audio-frames", action="store_true",
+                        help="require an exact native AudioTrack frame receipt in a completed run")
     args = parser.parse_args()
     if args.require_uninterrupted and args.expect != "complete":
         parser.error("--require-uninterrupted requires --expect complete")
+    if args.require_audio_frames and args.expect != "complete":
+        parser.error("--require-audio-frames requires --expect complete")
     try:
         print(json.dumps(verify(args), sort_keys=True))
     except EvidenceError as error:

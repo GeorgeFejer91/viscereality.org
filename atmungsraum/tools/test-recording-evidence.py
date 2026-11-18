@@ -61,7 +61,7 @@ class CollectionEvidenceTest(unittest.TestCase):
 
     def publish(self, partial=False, duplicate=False, old_projection=False, polar_setup=None,
                 include_completion=True, completion_offset_ns=0, csv_audio_start=None, pause=False, extra_events=(),
-                continuous_signals=False):
+                continuous_signals=False, audio_clock=None):
         identity = dict(participant_id="Tes_30_N", session_id=SESSION, scenario_id="haupt-15", run_index=1)
         phases = [[0, "instruction_1"], [1_000_000, "instruction_2"]] if pause else [[0, "instruction_1"]]
         participant = dict(identity, planned_duration_seconds=900, phase_offsets_ns=phases)
@@ -121,6 +121,8 @@ class CollectionEvidenceTest(unittest.TestCase):
             completed_at = end_ns + completion_offset_ns
             events.append(dict(event="completion-reached", observed_monotonic_ns=completed_at,
                                observed_utc_ns=UTC + completed_at - START))
+            if audio_clock is not None:
+                events[-1]["audio_clock"] = audio_clock
         events.extend(extra_events)
         lengths = {
             "events.jsonl": self.streams("events.jsonl", "event", events),
@@ -179,7 +181,7 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.json_file(self.evidence / "delivery.json", dict(folderId="private-folder", driveId="drive-file",
                                                            sha256=desc["sha256"], verified=True))
 
-    def invoke(self, mode="complete", fail=None, *, uninterrupted=False):
+    def invoke(self, mode="complete", fail=None, *, uninterrupted=False, audio_frames=False):
         result = subprocess.run([
             sys.executable, "-B", str(TOOL), "--native-run", str(self.native),
             "--export-manifest", str(self.evidence / "export.json"),
@@ -187,6 +189,7 @@ class CollectionEvidenceTest(unittest.TestCase):
             "--drive-list", str(self.evidence / "drive-list.json"), "--drive-receipt", str(self.evidence / "delivery.json"),
             "--drive-folder", "private-folder", "--expect", mode,
             *(["--require-uninterrupted"] if uninterrupted else []),
+            *(["--require-audio-frames"] if audio_frames else []),
         ], capture_output=True, text=True)
         if fail:
             self.assertEqual(result.returncode, 1, result.stderr)
@@ -218,6 +221,21 @@ class CollectionEvidenceTest(unittest.TestCase):
     def test_completion_event_must_be_inside_the_run(self):
         self.publish(completion_offset_ns=1)
         self.invoke(fail="native completion event is outside the run or has the wrong clock")
+
+    def test_audio_frame_receipt_matches_exact_main_and_rejects_changed_values(self):
+        self.assertIsNone(self.invoke()["native_completed_audio_frames"])
+        self.invoke(audio_frames=True, fail="native AudioTrack frame receipt is missing")
+        clock = dict(generation=7, sample_rate_hz=44_100, main_start_frame=705_600,
+                     completed_frames=39_690_000, playback_head_frame=40_395_601,
+                     observed_elapsed_ns=START + 900_000_000_000)
+        self.publish(audio_clock=clock)
+        self.assertEqual(self.invoke(audio_frames=True)["native_completed_audio_frames"], 39_690_000)
+        for changes in (dict(generation=True), dict(sample_rate_hz=48_000),
+                        dict(completed_frames=39_689_999), dict(playback_head_frame=40_395_599),
+                        dict(observed_elapsed_ns=START + 900_000_000_001)):
+            with self.subTest(changes=changes):
+                self.publish(audio_clock=clock | changes)
+                self.invoke(fail="native AudioTrack frame receipt does not match the main interval")
 
     def test_missing_playback_transition_fails_even_when_all_copies_match(self):
         self.publish(csv_audio_start=False)

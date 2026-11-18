@@ -44,6 +44,29 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   deliverable version, source tree, signing certificate and APK digest.
   Follow the approved Meta release sequence and verify installed bytes.
 
+[PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
+autonomous install, stress, repair and retest loop part of the instructions
+agents read at project entry. The exact
+[Pages run](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44309823231)
+passed and all three changed documents matched the live Markdown bytes.
+The smartphone GUI gate passed 399 states. Fourteen targeted WebRTC and
+recording sync checks passed, with one compiled Java gateway fixture skipped.
+
+The signed WebRTC Bench now includes the durable AudioTrack completion
+receipt. All 909 executed native host tests passed, including the 900-second
+fixed and adaptive Polar scheduler and the finalization round trip. Six
+native tests were intentionally ignored. All 14 evidence verifier tests
+passed, including missing and wrong frame receipts. The retained synthetic
+native partial export still verifies. All 14 Drive fixture checks passed,
+including upload interruption and resume from the acknowledged byte. The lab
+Quest accepted the same-signer Bench code 34 update with matching installed
+bytes, retained UID and grants. The normal launcher reached Prepare with a
+native submitted frame. The bench was stopped and Meta Developer code 27 was
+restored to Prepare with a native submitted frame. Restore Pixel input and
+verify the standalone release, then run code-free pairing and the worn
+Polar and export checks. See the
+[APK record](../quest/apks/README.md#webrtc-bench-with-durable-audiotrack-completion-evidence).
+
 The Meta-installed fixed27-r2 APK reached OpenXR focus on the Prepare page.
 After an isolated cold launch its trusted LAN gateway replied over the
 temporary USB route. The Pixel's ordinary saved pairing is a legacy record

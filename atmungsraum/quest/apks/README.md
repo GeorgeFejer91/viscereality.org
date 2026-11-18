@@ -1,5 +1,23 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with durable AudioTrack completion evidence
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `34`,
+version name `0.2.33-rtc-test`, and 65,617,468 bytes. SHA-256 is
+`0df04b315eff4dc1974ef592f18d0a4ea3211ddb57e990a4783bdcc9dd4a7f19`.
+Native commit `013f0a4980cd61fd23b99f3d93bd48c69a990382` binds tree
+`6e8de26f24fdded1b433348c99eea4ec4eba5be7`. The retained bench certificate,
+v3 signature, 16 KiB alignment and signed session closure passed.
+The lab Quest's installed bytes match and the app UID and grant set were
+retained. The normal launcher reached Prepare with a native submitted frame.
+The bench was then stopped and Meta Developer code 27 was restored to Prepare
+with a native submitted frame.
+
+The new native event retains the precise completion and observed AudioTrack
+head. The host exercises the supported Polar modes, the exact boundary and
+overshoot, retirement, and preservation through writer finalization. A worn
+900-second session and the authenticated Pixel recording path remain open.
+
 ## WebRTC bench with LAN listener recovery
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `33`,
