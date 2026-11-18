@@ -112,6 +112,13 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   Independent lab-controller inspection matched that exact candidate digest,
   all 74 original audio entries, five provider assets, five particle inputs,
   three compiled shaders, SDK closure and packaged 900-second session.
+- [x] Build the held Developer code 28 / `0.2.27-dev` successor from the
+  recorded fixed27 source tree and recovered baseline inputs. Verify the
+  production signature, ARM64 alignment, packaged session closure, original
+  assets and native particle/shader bytes. Full DEX disassembly differs only
+  in the relocated provider-manifest digest and string-table references.
+  [Held candidate](../quest/apks/README.md#held-developer-28-update-test-candidate).
+  Keep it unpublished until the recorded baseline/update hold is cleared.
 - [x] Repeat ten Settings/Back cycles through RustDesk MCP on the current
   standalone Pixel PWA. All twenty transitions returned the expected page,
   ready measurement and zero page overflow at 411 × 833 CSS pixels. Saved
@@ -151,6 +158,24 @@ with the recovered, verified private inputs and the retained Developer key.
 Continue through the recorded code 27-to-28 update sequence and qualify the
 unified candidate on the lab Quest, Pixel and companion before assigning its
 Meta release. The physical and Meta publication checks remain open.
+
+Both signed successor APKs are now prepared in private release staging.
+Code 28 preserves the baseline transport feature set for the genuine Meta
+update test; code 29 carries the unified WebRTC runtime and bundled protocol.
+The next physical action is wearer readiness with the Quest, Touch controllers
+and Polar H10, followed by the clean recorded code 27 baseline and held update
+sequence. Readiness was requested; no new calibration or collection was
+started. Do not replace the Meta baseline with an ADB-installed successor.
+The signed code 29 input/build record is published through
+[PR 138](https://github.com/GeorgeFejer91/viscereality.org/pull/138), merge
+`13e0e042dae0d7fde92510b708fc6c99e73a87e9`, with successful
+[Pages run 44372630949](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44372630949)
+and exact live comparisons of all three changed documents.
+The held code 28 evidence uses branch `codex/atmungsraum-held28-evidence`
+and [PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140).
+The context checker and whitespace review pass. Follow the PR's exact merge
+deployment and compare the three live documents before handing off; the
+runtime release policy remains at the verified Meta baseline.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions

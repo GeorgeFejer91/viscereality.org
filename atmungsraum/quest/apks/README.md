@@ -32,6 +32,39 @@ Developer channel still serves code 27, build `1465199570012388`. Code 28
 remains reserved for the staged update test. Assign code 29 to the channel
 after its release checks pass, then align the public version policy.
 
+## Held Developer 28 update-test candidate
+
+Package `org.viscereality.atmungsraum.developer`, version code `28`, version
+name `0.2.27-dev`, and 65,731,717 bytes. SHA-256 is
+`111961aeeacf7bc46719ff81c3b9b585950f79570059d21762a64954aabf8295`.
+Its v3 signature uses the same Developer certificate as codes 27 and 29.
+Local reconstruction commit `4303b4f6f6b3e5fd2fcd0918685be191a8279d4f`
+has the recorded fixed27 source tree
+`358a0c910ba5d0a84c18ca064492f4978e35a4a4`.
+
+This candidate prepares the existing 27-to-28 Meta update test. It uses the
+reconstructed private baseline inputs, phone pairing, SDK 207 updater and
+helper protocol 3, with the baseline transport features. Code 29 carries the
+unified WebRTC runtime and bundled release protocol. Both APKs remain in
+private release staging.
+
+The signed code 28 passes ARM64/16 KiB alignment and the actual 900-second
+session closure. All baseline assets apart from regenerated identity,
+feature/settings and source-closure metadata are byte-identical. This
+includes the runtime configuration, provider assets and audio. Original
+particle arrays, visual profile and all three compiled shaders occur exactly
+in the native library; OpenXR and both Meta native libraries match code 27.
+The complete DEX disassembly is equivalent after accounting for the relocated
+provider-manifest digest and its string-table references. The two Polar
+source-closure hash differences are verified CRLF/LF differences.
+
+Code 28 is built and held, with hardware and Meta delivery unqualified.
+Preserve the actual Meta-installed code 27 baseline. Observe its native
+`RUNNING` / `rec:true` before clearing the staged successor hold, then follow
+the recorded [update acceptance sequence](../../for-ai/BOOT-KIOSK-UPDATE.md).
+No upload, channel assignment or device installation established these build
+checks. Meta continues to serve code 27.
+
 ## WebRTC bench with listener-aware Bluetooth discovery
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `36`,
