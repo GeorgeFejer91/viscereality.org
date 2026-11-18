@@ -158,8 +158,8 @@ when capture ends. Lock and reboot recovery still need an attended check.
   response in its browser. The USB Quest uses automatic network UTC. The
   headset briefly woke and then returned to sleep.
 - [ ] Authenticate the exact Quest on the installed Pixel. It still showed a
-  saved legacy pairing for another Quest. Activate the new binding after the
-  headset is awake and the phone pairing is approved.
+  saved legacy pairing for another Quest. Activate the new binding after
+  authenticated, automatic code-free commissioning over WebRTC.
 - [ ] Authorize the research Drive account on that Pixel and check two new
   datasets, sibling files, UTC metadata and exact downloaded bytes.
 
@@ -178,7 +178,8 @@ with a 30-minute proximity hold requested. Fresh Android readbacks showed the
 display on for over a minute and Atmungsraum Developer in the foreground.
 QFM showed virtual proximity CLOSE; this firmware did not expose the remaining
 hold time to QFM. The Pixel retained the USB pair binding and was still on
-Connect with its other saved Quest. Approve the new headset pairing next.
+Connect with its other saved Quest. The official APK still needs authorized
+automatic commissioning on the lab pair.
 
 An empty Pixel upload journal previously made the same hardware pair reserve
 a second Drive dataset. The PWA now finds the original private folder by
@@ -189,12 +190,21 @@ with zero new reservations. Host tests reject changed bytes, a shared file
 and duplicate or incomplete inventory. The physical Drive custody gate
 remains open.
 
+PR 107's `20261118-drive-receipt-recovery` release shipped with
+[Pages run 44295116093](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44295116093).
+Eighteen live files matched Git. The installed Pixel still showed
+`20261118-dataset-sync` with saved pairing. RustDesk MCP captured fresh
+frames, but Settings taps had no effect on the existing or newly
+authenticated session. Android reported RustDesk Input disabled. Restore
+that input binding, reopen Atmungsraum from the launcher, then verify the
+loaded Drive modules and rerun the installed check.
+
 RustDesk MCP opened the Pixel Bluetooth chooser, selected Quest 2 and
 pressed Pair. The next frame confirmed Bluetooth discovery and a failed
 network connection. Both devices were on the hotel Wi-Fi. A phone-side
 TCP probe to the Quest reported no route, while the same Quest gateway
-answered via its exact USB connection. Next, retry pairing on a shared
-private network, approve the headset code and authorize Drive. The
+answered via its exact USB connection. Continue with automatic WebRTC
+pairing on the hotel Wi-Fi, then authorize the research Drive account. The
 [standing development workflow](WORKFLOW.md#physical-device-development)
 requires awake coverage throughout device work and RustDesk MCP for all
 interactive Pixel actions.
