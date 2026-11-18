@@ -93,10 +93,15 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   against the signed APK and its recorded input bytes. Confirm the Meta
   SDK loader hash and Developer signer on fixed27-r2.
   [Build input evidence](VERIFICATION.md#canonical-developer-build-inputs--2026-11-18).
+- [x] Retrieve the supplied Developer keystore from the QR-linked transfer.
+  The certificate matches signed Meta fixed27-r2, and a local RSA
+  signing and verification challenge passed. The keystore and transfer
+  receipts are in private staging outside Git.
+  [Signing evidence](VERIFICATION.md#canonical-developer-build-inputs--2026-11-18).
 - [ ] Obtain the retained Experimenter build profile with its app spec,
   feature lock, provider manifest and particle source. Verify it against
-  fixed27-r2 alongside the Developer keystore and the licensed Meta
-  SDK 207 archive before building the canonical release.
+  fixed27-r2 with the licensed Meta SDK 207 archive before building the
+  canonical release.
 - [ ] Verify automatic startup in both launch orders on the qualified
   unified Developer APK and a Pixel commissioned for that installation.
   Use the retained Developer signer and approved Meta Platform SDK 207

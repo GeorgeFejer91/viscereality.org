@@ -78,9 +78,18 @@ None of the inspected local app specs or provider manifests matched the
 signed baseline hashes. The recovered files cover the provider asset
 bytes and OpenXR loader. Continue with the retained Experimenter app
 spec, base feature lock, provider manifest and private particle source.
-Finish the keystore and official SDK intake before release assembly.
-All eight assembly checks passed on the pinned native tree, and the
-updater's 11-source selection and tamper checks passed.
+The supplied Developer keystore arrived through the user's QR-linked
+transfer. The 3,618-byte ZIP decrypted successfully and its single
+3,530-byte keystore entry was extracted into private staging. Its
+certificate matched signed fixed27-r2 and the canonical Developer
+signer. The existing build credentials opened the private key entry,
+and an RSA signing and verification challenge passed. The transfer
+key, keystore and verification receipts remain outside Git.
+
+Finish the official SDK intake and retained build profile verification
+before release assembly. All eight assembly checks passed on the
+pinned native tree, and the updater's 11-source selection and tamper
+checks passed.
 
 ### Listener-aware Bluetooth discovery — 2026-11-18
 
