@@ -91,6 +91,38 @@ the original native receipt. The standard companion's installed certificate
 differs from the available lab signer, so that package's in-place update
 remains pending.
 
+### Hotel Wi-Fi timing and recovery on the repaired scanner — 2026-11-18
+
+Run 30 alternating first joins with an empty temporary PWA pairing slot
+and 30 saved rejoins on the installed Pixel. The Android lab companion
+uses a provisioned identity. Each case has 23 seconds to reach authenticated
+actionable controls, with the original pairing and lease journals isolated
+in the verification document. Retain the installed browser profile.
+The first batch's empty-slot cases were ineligible because the test
+companion was missing its lab commissioning overlay. The commissioned
+bench build restored that overlay before the 60-trial run.
+
+| Path | Passed | Median to controls | p95 | Maximum |
+| --- | ---: | ---: | ---: | ---: |
+| First join | 30/30 | 1.92 s | 16.56 s | 16.91 s |
+| Saved rejoin | 30/30 | 1.77 s | 4.58 s | 4.61 s |
+
+Both devices used the public hotel Wi-Fi. The Quest reported two service
+registrations. The installed PWA used default ICE selection and every
+successful trial selected a TURN candidate. Code and chooser counts were
+zero. The exact lab combination was Quest bench 32, Pixel bench companion
+4 and PWA release 20261118-connection-error-status. The official standard
+companion requires its retained signing key for the in-place update.
+
+The paired hardware also passed a separate relay-only check with zero LAN
+attempts and 1.2-second delays on outbound phone signaling. The empty slot
+reached authenticated status in 10.05 seconds. With the transport closed
+and signaling held for ten seconds, connected state cleared in the first
+observation and stayed disconnected during the fault. The same enrollment
+returned 6.08 seconds after signaling resumed. RustDesk confirmed the
+original native Recenter receipt on the recovered route. Both fixtures were
+removed and the routine PWA and headset power settings were read back.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
