@@ -173,6 +173,13 @@ automatic Android time enabled. The selected Quest was still asleep, and
 the Pixel remained on Connect with the other legacy Quest. The next action
 is to confirm headset pairing and authorize the existing Drive account.
 
+At 12:13 CET the approved QFM single-device keep-awake route woke the lab Quest
+with a 30-minute proximity hold requested. Fresh Android readbacks showed the
+display on for over a minute and Atmungsraum Developer in the foreground.
+QFM showed virtual proximity CLOSE; this firmware did not expose the remaining
+hold time to QFM. The Pixel retained the USB pair binding and was still on
+Connect with its other saved Quest. Approve the new headset pairing next.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and
