@@ -4,10 +4,11 @@ import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operatio
   controllerAccessState } from './quest-gateway.js?v=18';
 import { pairPhone } from './quest-pairing.js?v=7';
 import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=28';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=29';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
-import { mountQuestDrive } from './quest-drive-ui.js?v=7';
-import { mainQuestionnairePrompts, questionnaireFile } from './data-logging.js?v=20261118-post-session-questions';
+import { mountQuestDrive } from './quest-drive-ui.js?v=8';
+import { mainQuestionnairePrompts, questionnaireFile } from './data-logging.js?v=20261118-dataset-sync';
+import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
@@ -340,7 +341,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     answerInput.readOnly = true;
     let store;
     try {
-      const file = questionnaireFile(form.run, answers);
+      const file = questionnaireFile(form.run, answers, await captureUtc());
       store = await openQuestRecordingStore(owner);
       await store.saveQuestionnaire(form.id, form.run.session_id, file);
       drive.schedule();
@@ -1298,7 +1299,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
           signal.throwIfAborted();
           const store = await openQuestRecordingStore(gateway.owner);
           try {
-            for await (const prefix of questPrefixBatches(gateway, store, signal)) {
+            for await (const prefix of questPrefixBatches(gateway, store, signal, () => captureUtc({ signal }))) {
               signal.throwIfAborted();
               if (rehearsal.state.status?.g !== generation) break;
               if (!exportMessage.startsWith('Laufende Quest-Aufnahme')) {

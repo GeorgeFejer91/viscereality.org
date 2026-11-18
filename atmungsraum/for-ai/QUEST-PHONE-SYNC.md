@@ -547,6 +547,35 @@ and a CSV reopened from phone Files. Track evidence and open work in
 
 ## Google Drive delivery acceptance
 
+### Bind the exact USB hardware pair
+
+Pair the installed Atmungsraum PWA with the intended Quest and open it in
+standalone mode on the Pixel. Connect both devices over USB and use
+`adb devices -l` to identify their serials. From `atmungsraum/` run:
+
+```powershell
+node tools/configure-drive-pair.mjs <Quest-USB-serial> <Pixel-USB-serial> --check
+node tools/configure-drive-pair.mjs <Quest-USB-serial> <Pixel-USB-serial>
+```
+
+For a serial-less commissioned Quest, add `--quest-device <verified-installation-id>`
+from the headset's commissioning record. The tool compares that ID with the
+selected phone's saved Quest pairing. It stores the same 24-character fingerprint
+whenever the same two hardware serials are supplied. Repeat with the second
+headset and phone. Keep the diagnostic output local. The default for a phone
+without USB provisioning uses the authenticated Quest identity and a random
+PWA installation ID.
+
+Authorize the same OAuth client and research account when both pairs belong in
+one Drive. A new phone reuses one matching app-visible private research root
+and creates or reuses its own `Pair_<id>` child. If the account already has
+several matching roots, resolve their identity before authorizing a new phone.
+For the acceptance check, send two new synthetic or approved datasets, check
+their distinct UTC folders, and compare the downloaded files to the phone.
+See [the timestamp contract](DATA-LOGGING.md#dataset-folders-and-utc).
+
+### Authorize the research account
+
 The phone must automatically upload each newly saved Quest recording's
 original `polar-ecg.jsonl` and `polar-acc.jsonl` bytes to the designated private
 Drive folder. Retain the signed export manifest and the shared participant

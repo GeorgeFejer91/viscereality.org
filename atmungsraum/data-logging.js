@@ -13,7 +13,7 @@ export function participantIdentity({ surnamePrefix = '', age = '', gender = '' 
   if (!Number.isSafeInteger(years) || years < 0 || !genderCode) throw new Error('Invalid age or gender');
   return { name, age: years, genderCode, id: `${name}_${years}_${genderCode}` };
 }
-function datedSessionParts(name) {
+export function datedSessionParts(name) {
   const parts = /^(\p{L}{3}_(?:0|[1-9][0-9]{0,15})_[MFON])_(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_r([1-9][0-9]{0,15})\.csv$/u.exec(name);
   if (!parts || (parts[3] !== 'free-exploration' && !SCENARIOS.includes(parts[3]))) return null;
   const date = new Date(parts[2]);
@@ -44,13 +44,14 @@ export function completedMainQuestionnaire(csv, bytes) {
   return { participant_id, session_id: csv.session_id, recording_filename: csv.name };
 }
 
-export function questionnaireFile(run, answers) {
+export function questionnaireFile(run, answers, stamp = { utc: new Date().toISOString(), source: 'phone-system-clock' }) {
   const values = answers.map(answer => answer.trim());
   if (values.length !== mainQuestionnairePrompts.length || values.some(answer => !answer || answer.length > 500)) {
     throw Error('Bitte beantworte alle fünf Fragen mit höchstens 500 Zeichen pro Antwort.');
   }
   const record = {
-    schema_version: 1, ...run, submitted_at_utc: new Date().toISOString(),
+    schema_version: 1, ...run, started_at_utc: stamp.utc, submitted_at_utc: stamp.utc, clock_source: stamp.source,
+    ...(stamp.round_trip_ms === undefined ? {} : { clock_round_trip_ms: stamp.round_trip_ms }),
     answers: mainQuestionnairePrompts.map((prompt, index) => ({
       question_id: 'q' + (index + 1), prompt, answer: values[index],
     })),

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix } from '../quest-drive.js';
+import { datasetDestination, drivePairIdentity } from '../quest-drive-datasets.js';
 
 const signal = new AbortController().signal;
 const folderId = 'private-folder';
@@ -17,12 +18,18 @@ function simulatedDrive() {
   let foreignSession = false;
   let sharedFolder = false;
   let quota = false;
+  let loseFolder = false;
   const fetcher = async (input, options) => {
     const url = new URL(input);
     assert.equal(url.origin, 'https://www.googleapis.com');
     assert.equal(options.headers.get('Authorization'), 'Bearer fixture-token');
     if (url.pathname === '/drive/v3/about') return Response.json({ user: account });
     if (url.pathname.endsWith('/generateIds')) return Response.json({ ids: [`file-${++reservations}`] });
+    if (url.pathname === '/drive/v3/files' && options.method === 'GET') {
+      const [, parent, name] = /^'([^']+)' in parents and name = '([^']+)'/.exec(url.searchParams.get('q'));
+      return Response.json({ files: [...files.values()].filter(file => file.parents?.[0] === parent
+        && file.name === name).map(file => ({ id: file.id })) });
+    }
     if (url.pathname === `/drive/v3/files/${folderId}`) {
       return Response.json({ id: folderId, mimeType: 'application/vnd.google-apps.folder',
         ownedByMe: true, shared: sharedFolder, trashed: false });
@@ -33,9 +40,14 @@ function simulatedDrive() {
     }
     if (options.method === 'POST') {
       const metadata = JSON.parse(options.body);
-      assert.deepEqual(metadata.parents, [folderId]);
+      assert.ok(metadata.parents[0] === folderId || files.get(metadata.parents[0])?.mimeType === 'application/vnd.google-apps.folder');
       if (quota) { quota = false; return new Response(null, { status: 403 }); }
       if (files.has(metadata.id)) return new Response(null, { status: 409 });
+      if (metadata.mimeType === 'application/vnd.google-apps.folder') {
+        files.set(metadata.id, { ...metadata, ownedByMe: true, shared: false, trashed: false });
+        if (loseFolder) { loseFolder = false; throw new TypeError('lost folder response'); }
+        return Response.json({ id: metadata.id });
+      }
       sessions.set(metadata.id, metadata);
       const origin = foreignSession ? 'https://unexpected.example.invalid' : url.origin;
       return new Response(null, { headers: { Location: `${origin}/upload/drive/v3/files?upload_id=${metadata.id}` } });
@@ -51,13 +63,57 @@ function simulatedDrive() {
   };
   return { files, fetcher, interruptNextUpload: () => { interrupt = true; },
     corruptChecksum: () => { corrupt = true; }, foreignSession: () => { foreignSession = true; },
-    shareFolder: () => { sharedFolder = true; }, quotaOnce: () => { quota = true; } };
+    shareFolder: () => { sharedFolder = true; }, quotaOnce: () => { quota = true; },
+    interruptFolder: () => { loseFolder = true; } };
 }
 
 function localReceipts(rows = new Map()) {
   return { rows, readDelivery: async id => rows.get(id),
     saveDelivery: async (id, receipt) => rows.set(id, structuredClone(receipt)) };
 }
+
+test('each Quest dataset gets one folder and sibling files through an ambiguous folder creation and reload', async () => {
+  const remote = simulatedDrive();
+  const drive = createQuestDrive('fixture-token', remote.fetcher);
+  let store = localReceipts();
+  const pair = { id: '1'.repeat(24), source: 'usb-hardware-pair' };
+  const start = { utc: '2026-11-18T10:00:00.123456Z', source: 'quest-official-start' };
+  const observed = { utc: '2026-11-18T10:00:01.010Z', source: 'timeapi.io', round_trip_ms: 120 };
+  const ids = ['utc-ns-01794996000000000000', 'utc-ns-01794996000000000001'];
+  const folder = id => datasetDestination({ drive, store, root: folderId, pair, id, start, observed, signal });
+  remote.interruptFolder();
+  await assert.rejects(() => folder(ids[0]), /lost folder response/);
+  store = localReceipts(new Map(store.rows));
+  const first = await folder(ids[0]);
+  const second = await folder(ids[1]);
+  assert.notEqual(first, second);
+  assert.equal(await folder(ids[0]), first);
+  const parent = remote.files.get(first).parents[0];
+  assert.deepEqual(remote.files.get(second).parents, [parent]);
+  assert.equal(remote.files.get(parent).name, 'Pair_' + pair.id);
+  assert.equal(remote.files.get(first).appProperties.phoneObservedAtUtc, observed.utc);
+  const file = new File(['fixture only'], 'answers.json', { type: 'application/json' });
+  for (const id of [ids[0] + '/first-file', ids[0] + '/questionnaire']) {
+    await deliverQuestBundle({ drive, store, folderId: first, id, file, signal, stamp: observed });
+    const receipt = store.rows.get(id);
+    assert.deepEqual(remote.files.get(receipt.driveId).parents, [first]);
+    assert.equal(remote.files.get(receipt.driveId).appProperties.startedAtUtc, observed.utc);
+  }
+  remote.files.get(first).parents = [second];
+  await assert.rejects(() => folder(ids[0]), /Ordner stimmt nicht/);
+});
+
+test('hardware pair aliases are only used for their bound Quest installation', async () => {
+  const id = 'a'.repeat(24);
+  const values = new Map([['atmungsraum-drive-hardware-pairs', JSON.stringify([{ device: 'quest-a', serial: 'a', id }])]]);
+  const storage = { getItem: key => values.get(key), setItem: (key, value) => values.set(key, value) };
+  assert.deepEqual(await drivePairIdentity({ device: 'quest-a', serial: 'a' }, storage), { id, source: 'usb-hardware-pair' });
+  const other = { device: 'quest-b', serial: 'b' };
+  const first = await drivePairIdentity(other, storage);
+  assert.equal(first.source, 'app-installation-pair');
+  assert.notEqual(first.id, id);
+  assert.deepEqual(await drivePairIdentity(other, storage), first);
+});
 
 test('a lost Drive response leaves one reserved ID and reconciles its exact bytes after restart', async () => {
   const remote = simulatedDrive();

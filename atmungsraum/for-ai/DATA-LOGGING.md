@@ -16,6 +16,30 @@ Use [the collection and sync procedure](QUEST-PHONE-SYNC.md)
 for enrollment, recovery and verification. The filename and identity contract
 below applies throughout the transfer.
 
+### Dataset folders and UTC
+
+The private Drive hierarchy is `Atmungsraum – Quest-Aufnahmen / Pair_<id> /
+<UTC start>__<Quest recording ID>`. Each newly delivered Quest dataset gets
+its own subfolder. The Quest CSV and the phone questionnaire are siblings.
+Resumable uploads retain their original file and folder IDs, including when
+the phone reloads. Existing flat Drive deliveries and their pending receipts
+keep their original destination. Folder IDs, parent identity, ownership and
+privacy are verified before a file transfer. The phone validates delivered
+file names, parents, start metadata and hashes.
+
+The dataset and CSV use the recorded Quest `official-start` UTC, including
+the original fractional seconds. Older records without that row use the
+native recording key with explicit provenance. The Quest's network-synced
+Android UTC anchors its native monotonic clock. The Pixel collects a separate
+TimeAPI.io UTC sample when it first observes a live CSV prefix, or when it
+imports a final dataset without a live reference. This reference describes
+that phone event. The questionnaire timestamps the start of its file write
+when the operator submits the last answer. TimeAPI.io estimates subtract half
+the measured request time and retain the round trip in milliseconds. The phone
+records a labelled system-clock fallback if the request fails or exceeds
+1.8 seconds. The UTC request sends only the fixed timezone. The dataset folder
+and each Drive file retain their timestamp and clock source in app properties.
+
 ## Shared scheduler recording boundary
 
 In the explicitly selected shared-scheduler build, preparation loops without

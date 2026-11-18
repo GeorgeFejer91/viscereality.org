@@ -1,5 +1,6 @@
-import { completedMainQuestionnaire, isDatedSessionFilename } from './data-logging.js?v=20261118-post-session-questions';
+import { completedMainQuestionnaire, isDatedSessionFilename } from './data-logging.js?v=20261118-dataset-sync';
 import { createExportsZip } from './data-files.js?v=20261113-polar-only';
+import { collectionStart } from './collection-time.js?v=1';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;
 const digest = /^[a-f0-9]{64}$/;
@@ -25,7 +26,7 @@ function chunkData(chunk, length) {
   return raw;
 }
 
-export async function* questPrefixBatches(gateway, store, signal) {
+export async function* questPrefixBatches(gateway, store, signal, captureReference) {
   signal.throwIfAborted();
   const descriptor = await gateway.recordings({ query: 'live-describe' }, signal);
   if (descriptor?.v === 1 && descriptor.state === 'preparing') return;
@@ -43,6 +44,8 @@ export async function* questPrefixBatches(gateway, store, signal) {
     throw Error('Die laufende Quest-Aufnahme stimmt nicht mit dem gespeicherten Stand überein.');
   }
   let start = prior?.offset ?? 0;
+  prefix.collectionStart = prior?.collectionStart;
+  prefix.collectionObserved = prior?.collectionObserved ?? await captureReference?.();
   if (start === size && prior) yield prior;
   while (start < size) {
     signal.throwIfAborted();
@@ -68,6 +71,7 @@ async function stageQuestBatch(gateway, store, prefix, start, signal) {
     parts.push(raw);
   }
   signal.throwIfAborted();
+  if (!start) prefix.collectionStart = collectionStart(prefix, parts[0]);
   await store.appendPrefix(prefix, start, parts);
   return end;
 }
@@ -198,10 +202,11 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
   let resetDriveUpload = false;
-  let matchedLivePrefix = false;
+  let matchedLivePrefix = false, collectionObserved;
   for (const file of selected) {
     const prior = file.schema_version === 4 && await store?.readPrefix(id);
     matchedLivePrefix = Boolean(prior && prior.session_id === file.session_id && prior.name === file.name);
+    if (matchedLivePrefix) collectionObserved = prior.collectionObserved;
     const saved = matchedLivePrefix && Number.isSafeInteger(prior.offset) && prior.offset > 0 && prior.offset <= file.size
       ? await store.readPrefixBytes(id, 0, prior.offset).catch(() => null) : null;
     const usable = saved instanceof Uint8Array && saved.byteLength === prior?.offset ? saved : null;
@@ -220,6 +225,8 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   if (unified) {
     const questionnaire = completedMainQuestionnaire(csv, records[0].bytes);
     return { download: participantFile, bundle: participantFile, bundleVersion: 1,
+      collectionStart: collectionStart({ id, ...csv }, records[0].bytes),
+      ...(collectionObserved ? { collectionObserved } : {}),
       ...(questionnaire ? { questionnaire: { run: questionnaire,
         required: matchedLivePrefix } } : {}),
       ...(resetDriveUpload ? { resetDriveUpload: true } : {}) };

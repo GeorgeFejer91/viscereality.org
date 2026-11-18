@@ -135,7 +135,8 @@ window.reviewRecordings = async (query, owner) => {
   const session_id = '01234567-89ab-4def-8abc-0123456789ab';
   const scenario = reviewQuest.recordingScenario ?? 'haupt-15';
   const name = 'Tes_30_N_2026-11-18_' + scenario + '_r2.csv';
-  const prefix = new TextEncoder().encode('schema_version,participant_id,session_id\\r\\n4,Tes_30_N,' + session_id + '\\r\\n');
+  const prefix = new TextEncoder().encode('schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us\\r\\n4,Tes_30_N,' +
+    session_id + ',2,' + scenario + ',official-start,2026-11-18T11:45:00.012345Z,0\\r\\n');
   const outcome = reviewQuest.recordingAborted ? 'aborted' : 'completed';
   const terminal = ['4','Tes_30_N',session_id,'2',scenario,'end','2026-11-18T12:00:00Z',
     '900000000','900000000','ended','ended',...Array(10).fill(''),outcome,outcome,''].join(',');
@@ -192,6 +193,8 @@ def connect_fixture_drive(page):
             reply()
         elif url.path == "/drive/v3/about":
             reply({"user": {"emailAddress": email, "permissionId": "fixture-owner"}})
+        elif url.path == "/drive/v3/files" and method == "GET":
+            reply({"files": []})
         elif url.path.endswith("/generateIds"):
             reservations.append(len(reservations) + 1)
             reply({"ids": [folder if len(reservations) == 1 else f"file-{len(reservations)}"]})
@@ -203,9 +206,23 @@ def connect_fixture_drive(page):
             reply(found, 200 if found else 404)
         elif method == "POST":
             metadata = route.request.post_data_json
-            assert metadata["parents"] == [folder]
-            sessions[metadata["id"]] = metadata
-            reply(Location=f"https://www.googleapis.com/upload/drive/v3/files?upload_id={metadata['id']}")
+            parent, = metadata["parents"]
+            if metadata["mimeType"] == "application/vnd.google-apps.folder":
+                if metadata["name"].startswith("Pair_"):
+                    assert parent == folder
+                else:
+                    assert remote[parent]["name"].startswith("Pair_")
+                    assert metadata["name"].startswith("2026-11-18T11-45-00.012345Z__")
+                    assert metadata["appProperties"]["phoneClockSource"] == "timeapi.io"
+                remote[metadata["id"]] = {**metadata, "ownedByMe": True, "shared": False, "trashed": False}
+                reply({"id": metadata["id"]})
+            else:
+                assert remote[parent]["appProperties"]["questRecordingId"].startswith("utc-ns-")
+                assert metadata["appProperties"]["clockSource"] == (
+                    "timeapi.io" if metadata["name"].endswith("_questionnaire.json") else "quest-official-start"
+                )
+                sessions[metadata["id"]] = metadata
+                reply(Location=f"https://www.googleapis.com/upload/drive/v3/files?upload_id={metadata['id']}")
         else:
             assert method == "PUT"
             file_id = parse_qs(url.query)["upload_id"][0]
@@ -222,6 +239,9 @@ def connect_fixture_drive(page):
                 reply({"id": file_id})
 
     page.context.route("https://www.googleapis.com/**", google)
+    page.context.route("https://www.timeapi.io/**", lambda route: route.fulfill(
+        headers={"Access-Control-Allow-Origin": "*"},
+        json={"timeZone": "Etc/UTC", "dateTime": "2026-11-18T12:00:00.1234567"}))
     page.context.route("https://accounts.google.com/gsi/client", lambda route: route.fulfill(
         content_type="text/javascript", body="""window.google={accounts:{oauth2:{
         initTokenClient: options => ({requestAccessToken: () => options.callback({
@@ -233,7 +253,7 @@ def connect_fixture_drive(page):
     page.locator("#quest-drive-account").fill(email)
     page.locator("#quest-drive-connect").click()
     expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 1")
-    assert len(payloads) == 1 and len(reservations) == 2
+    assert len(payloads) == 1 and len(reservations) == 4
     return payloads, reservations, lost_answers
 
 
@@ -328,7 +348,8 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             page.clock.run_for(25000)
             expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 2")
             assert payloads[download.value.suggested_filename] == file_bytes
-            assert len(payloads) == 2 and len(reservations) == 3 and len(lost_answers) == 1
+            assert len(payloads) == 2 and len(reservations) == 5 and len(lost_answers) == 1
+            assert json.loads(file_bytes)["clock_source"] == "timeapi.io"
         record = json.loads(file_bytes)
         assert record["participant_id"] == "Tes_30_N"
         assert record["session_id"] == "01234567-89ab-4def-8abc-0123456789ab"

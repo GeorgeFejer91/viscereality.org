@@ -3,7 +3,8 @@ const apiOrigin = 'https://www.googleapis.com';
 const filePath = '/drive/v3/files';
 const uploadPath = '/upload/drive/v3/files';
 const folderMime = 'application/vnd.google-apps.folder';
-const fields = 'id,name,mimeType,size,parents,sha256Checksum,ownedByMe,shared,trashed';
+export const questDriveRootName = 'Atmungsraum – Quest-Aufnahmen';
+const fields = 'id,name,mimeType,size,parents,sha256Checksum,ownedByMe,shared,trashed,appProperties';
 const safeId = /^[A-Za-z0-9_-]+$/;
 const chunkSize = 256 * 1024;
 const batchSize = 4 * chunkSize;
@@ -52,9 +53,10 @@ export function createQuestDrive(token, fetcher = fetch) {
   async function beginUpload(receipt, name, type, length, signal) {
     const headers = { 'Content-Type': 'application/json', 'X-Upload-Content-Type': type };
     if (length !== undefined) headers['X-Upload-Content-Length'] = String(length);
-    const { driveId, folderId } = receipt;
+    const { driveId, folderId, timeProperties } = receipt;
     const response = await request(`${uploadPath}?uploadType=resumable`, signal, { method: 'POST', expected: [409], headers,
-      body: JSON.stringify({ id: driveId, name, mimeType: type, parents: [folderId] }) });
+      body: JSON.stringify({ id: driveId, name, mimeType: type, parents: [folderId],
+        ...(timeProperties ? { appProperties: timeProperties } : {}) }) });
     return response.status === 409 ? null : uploadDestination(response.headers.get('Location'));
   }
 
@@ -78,7 +80,8 @@ export function createQuestDrive(token, fetcher = fetch) {
     const { driveId, folderId, sha256: checksum } = receipt;
     checkPrivateFile(remote, driveId);
     if (remote.name !== file.name || remote.mimeType !== file.type || String(file.size) !== remote.size
-      || remote.parents?.length !== 1 || remote.parents[0] !== folderId) throw Error('Google Drive hat eine andere Datei bestätigt.');
+      || remote.parents?.length !== 1 || remote.parents[0] !== folderId
+      || !matchesProperties(remote, receipt.timeProperties)) throw Error('Google Drive hat eine andere Datei bestätigt.');
     const actual = remote.sha256Checksum ?? await sha256(await (await request(`${filePath}/${driveId}?alt=media`, signal,
       { timeout: 300000 })).blob());
     if (actual !== checksum) throw Error('Die Google-Drive-Prüfsumme stimmt nicht überein.');
@@ -99,15 +102,34 @@ export function createQuestDrive(token, fetcher = fetch) {
       if (typeof ids?.[0] !== 'string' || !safeId.test(ids[0])) throw Error('Google Drive hat keine Datei-ID geliefert.');
       return ids[0];
     },
-    async ensureFolder(id, signal) {
+    async findFolder(parent, name, signal) {
+      if (!safeId.test(parent)) throw Error('Ungültige Google-Drive-Ordner-ID.');
+      const escaped = name.replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+      const params = new URLSearchParams({
+        q: `'${parent}' in parents and name = '${escaped}' and mimeType = '${folderMime}' and trashed = false`,
+        fields: 'files(id),nextPageToken', spaces: 'drive', pageSize: '2',
+      });
+      const response = await request(filePath + '?' + params, signal);
+      const result = await response.json();
+      if (!Array.isArray(result.files) || result.files.length > 1 || result.nextPageToken
+        || result.files.some(file => typeof file?.id !== 'string' || !safeId.test(file.id))) {
+        throw Error('Der Google-Drive-Ordner konnte nicht eindeutig zugeordnet werden.');
+      }
+      return result.files[0]?.id;
+    },
+    async ensureFolder(id, signal, child) {
       let folder = await getFile(id, signal);
       if (!folder) {
         await request(filePath, signal, { method: 'POST', expected: [409], headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name: 'Atmungsraum – Quest-Aufnahmen', mimeType: folderMime }) });
+          body: JSON.stringify({ id, mimeType: folderMime, ...(child
+            ? { name: child.name, parents: [child.parent], appProperties: child.properties }
+            : { name: questDriveRootName }) }) });
         folder = await getFile(id, signal);
       }
       checkPrivateFile(folder, id);
       if (folder.mimeType !== folderMime) throw Error('Das Google-Drive-Ziel ist kein Ordner.');
+      if (child && (folder.name !== child.name || folder.parents?.length !== 1 || folder.parents[0] !== child.parent
+        || !matchesProperties(folder, child.properties))) throw Error('Der Google-Drive-Ordner stimmt nicht mit dem Datensatz überein.');
     },
     async upload(receipt, file, signal) {
       const { driveId } = receipt;
@@ -188,7 +210,29 @@ export function createQuestDrive(token, fetcher = fetch) {
   };
 }
 
-export async function deliverQuestPrefix({ drive, store, folderId, id, name, type, available, read, signal }) {
+function matchesProperties(remote, expected = {}) {
+  return Object.entries(expected).every(([key, value]) => remote.appProperties?.[key] === value);
+}
+
+export async function ensureDriveChild({ drive, store, key, parent, name, properties, signal, reuse = false }) {
+  let receipt = await store.readDelivery(key);
+  if (receipt && (receipt.parent !== parent || receipt.name !== name)) {
+    throw Error('Die gespeicherte Google-Drive-Ordnerzuordnung stimmt nicht überein.');
+  }
+  if (!receipt) {
+    const existing = reuse && await drive.findFolder(parent, name, signal);
+    receipt = { parent, name, properties, folderId: existing || await drive.reserveId(signal) };
+    await store.saveDelivery(key, receipt);
+  }
+  await drive.ensureFolder(receipt.folderId, signal, receipt);
+  return receipt.folderId;
+}
+
+function fileTime(stamp) {
+  return stamp && { startedAtUtc: stamp.utc, clockSource: stamp.source };
+}
+
+export async function deliverQuestPrefix({ drive, store, folderId, id, name, type, available, read, signal, stamp }) {
   if (!Number.isSafeInteger(available) || available < 0) throw Error('Ungültige Aufnahmelänge.');
   if (available <= chunkSize) return;
   const saved = await store.readDelivery(id);
@@ -196,18 +240,20 @@ export async function deliverQuestPrefix({ drive, store, folderId, id, name, typ
     throw Error('Die gespeicherte Upload-Zuordnung stimmt nicht überein.');
   }
   if (saved?.verified || saved?.sha256) return;
-  const receipt = saved ?? { folderId, driveId: await drive.reserveId(signal), name, type, offset: 0, verified: false };
+  const receipt = saved ?? { folderId, driveId: await drive.reserveId(signal), name, type, offset: 0,
+    verified: false, timeProperties: fileTime(stamp) };
   const persist = value => store.saveDelivery(id, value);
   if (!saved) await persist(receipt);
   await drive.advance(receipt, available, read, persist, signal);
 }
 
-export async function deliverQuestBundle({ drive, store, folderId, id, file, signal, resetDriveUpload = false }) {
+export async function deliverQuestBundle({ drive, store, folderId, id, file, signal, resetDriveUpload = false, stamp }) {
   const saved = await store.readDelivery(id);
   if (saved?.folderId === folderId && saved.verified) return;
   const checksum = await sha256(file);
   signal.throwIfAborted();
-  const receipt = { ...(saved ?? { folderId, driveId: await drive.reserveId(signal), verified: false }), sha256: checksum };
+  const receipt = { ...(saved ?? { folderId, driveId: await drive.reserveId(signal), verified: false,
+    timeProperties: fileTime(stamp) }), sha256: checksum };
   if (file.type === 'text/csv' && !receipt.name) Object.assign(receipt, { name: file.name, type: file.type });
   if (receipt.folderId !== folderId || (saved?.sha256 && saved.sha256 !== checksum)
     || (saved?.name && (saved.name !== file.name || saved.type !== file.type))) {
