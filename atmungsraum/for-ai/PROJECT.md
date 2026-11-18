@@ -183,11 +183,16 @@ The signed code 29 input/build record is published through
 `13e0e042dae0d7fde92510b708fc6c99e73a87e9`, with successful
 [Pages run 44372630949](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44372630949)
 and exact live comparisons of all three changed documents.
-The held code 28 evidence uses branch `codex/atmungsraum-held28-evidence`
-and [PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140).
-The context checker and whitespace review pass. Follow the PR's exact merge
-deployment and compare the three live documents before handing off; the
-runtime release policy remains at the verified Meta baseline.
+The held code 28 evidence was published through
+[PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140), merge
+`a145a05d2cf318d44bff07a8a8614c7730cca59e`. Its exact
+[Pages run 44376330876](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44376330876)
+succeeded and all three live documents matched Git. The preparation handoff
+uses branch `codex/atmungsraum-test-deferral` and
+[PR 141](https://github.com/GeorgeFejer91/viscereality.org/pull/141).
+The context checker and whitespace review pass. Follow the handoff's exact
+merge deployment and compare the live notes before ending; the runtime
+release policy remains at the verified Meta baseline.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions
