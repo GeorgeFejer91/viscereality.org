@@ -208,8 +208,9 @@ long localized statuses. Check actual Pretext and DOM bounds, 48 px controls,
 zero document and nested overflow, keyboard and stable focus. Run the complete
 phone suite with its real native/Java interoperability prerequisites. Review
 the whole change independently. Publish a coherent cache graph, exact Pages
-deployment and affected live URLs. Physical installed-phone qualification is
-pending phone availability; new-mode wearer testing stays deferred.
+deployment and affected live URLs. Verify the installed phone through the
+[autonomous device procedure](VERIFICATION.md#autonomous-device-validation)
+and record pending wearer checks in the [active checklist](PROJECT.md).
 
 ## Attended readiness presentation — 2026-11-17
 
