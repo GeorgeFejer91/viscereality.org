@@ -217,10 +217,20 @@ if ($audioModule.Count -ne 1) { throw 'The selected panel must contain the condi
 $audioModule[0].source_files = @(@($audioModule[0].source_files) + $scenarioSources | Select-Object -Unique)
 $panel | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $panelDescriptor -Encoding utf8NoBOM
 
-$app.app_id = if ($Developer) { 'atmungsraum_developer' } else { 'atmungsraum_quest2' }
 $app.package_policy = 'app-specific-package'
-$app.package_name = if ($Developer) { 'org.viscereality.atmungsraum.developer' } else { 'org.viscereality.atmungsraum.rehearsal' }
-$app.application_label = if ($Developer) { 'Atmungsraum Developer' } else { 'Atmungsraum Quest 2' }
+if ($Developer) {
+    $app.app_id = 'atmungsraum_developer'
+    $app.package_name = 'org.viscereality.atmungsraum.developer'
+    $app.application_label = 'Atmungsraum Developer'
+} elseif ($WebRtc) {
+    $app.app_id = 'atmungsraum_webrtc_bench'
+    $app.package_name = 'org.viscereality.atmungsraum.webrtcbench'
+    $app.application_label = 'Atmungsraum WebRTC Bench'
+} else {
+    $app.app_id = 'atmungsraum_quest2'
+    $app.package_name = 'org.viscereality.atmungsraum.rehearsal'
+    $app.application_label = 'Atmungsraum Quest 2'
+}
 $app.android_debuggable = !$Developer
 if ($Developer) {
     $app.android_target_sdk_version = 34

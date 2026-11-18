@@ -48,6 +48,24 @@ test('Meta update resolution binds the explicit app identity and preserves the e
     await assertControllerOnly(run);
   });
 
+test('the WebRTC lab APK resolves to its own package and locked bridge', {
+  skip: !questRepo && 'Set ATMUNGSRAUM_QUEST_REPO to the WebRTC native source checkout.',
+}, async () => {
+  const runName = `asm-webrtc-${randomUUID().slice(0, 10)}`;
+  const result = invoke(runName, ['-PhonePairing', '-WebRtc']);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /dry-run accepted: atmungsraum_webrtc_bench/);
+  const run = await resolvedRun(runName, 'atmungsraum_webrtc_bench');
+  assert.match(run.manifest, /package="org\.viscereality\.atmungsraum\.webrtcbench"/);
+  assert.match(run.manifest, /android:label="Atmungsraum WebRTC Bench"/);
+  assert.doesNotMatch(run.manifest, /android:authorities="org\.viscereality\.atmungsraum\.(rehearsal|developer)\./);
+  assert.equal(run.lock.android_manifest.experiment_meta_update_enabled, false);
+  assert.ok(run.lock.build_inputs.assets.some(path => path.endsWith('/atmungsraum-webrtc')));
+  assert.ok(run.lock.panel_source_closure.source_files.some(file => file.path.endsWith('/ExperimentSessionWebRtc.java')));
+  await assertPhonePairing(run);
+});
+
+
 function invoke(runName, extra = []) {
   return spawnSync('pwsh', ['-NoProfile', '-File', assembler, '-QuestRepo', questRepo,
     '-BundledAssets', '-ResolveOnly', '-RunName', runName, ...extra], { encoding: 'utf8', timeout: 60000 });

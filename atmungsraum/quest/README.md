@@ -30,6 +30,14 @@ automatic initial enrollment and the physical network matrix still gate
 lab release. Keep the installed Meta baseline available for the study and
 update validation.
 
+### Side-by-side Quest 2 bench install
+
+A non-Developer `-WebRtc -PhonePairing` build uses app ID
+`atmungsraum_webrtc_bench`, package `org.viscereality.atmungsraum.webrtcbench`
+and launcher label Atmungsraum WebRTC Bench. Its feature lock includes the
+production Android bridge and the hashed WebRTC assets. The ordinary rehearsal
+and the Meta Developer builds use their established package IDs.
+
 ## Shared breathing setup
 
 The selected Atmungsraum build uses one looping PCM AudioTrack. Its actual
