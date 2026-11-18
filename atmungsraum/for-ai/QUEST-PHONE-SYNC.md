@@ -657,7 +657,9 @@ the native recovery receipt and its checkpoint file along with the original
 streams. Use the exact run directory name that the Quest returned.
 
 Get an independent Drive listing filtered by the exact CSV name and its
-designated private parent, with trashed files excluded. Keep the full listing
+designated private parent, with trashed files excluded. For a submitted
+questionnaire, include its exact JSON filename in the same listing and request
+`appProperties` for the file metadata. Keep the full listing
 response with `nextPageToken` and `incompleteSearch` included in the requested
 fields. Keep the verified Pixel delivery receipt. Verify the folder identity
 and privacy before running the check.
@@ -672,6 +674,15 @@ python -B tools/check-recording-evidence.py `
   --drive-receipt '<verified Pixel delivery receipt JSON>' `
   --drive-folder '<designated private Drive folder ID>'
 ```
+
+For a completed run with submitted answers, append all three options:
+`--pixel-questionnaire` with the phone's saved JSON, `--drive-questionnaire`
+with an independent Drive download, and `--drive-questionnaire-receipt` with
+the phone's verified questionnaire delivery receipt. The verifier checks that
+the JSON names the same participant, session and CSV, and that both files are
+unique private objects in the same folder. It checks the questionnaire bytes,
+the separate delivery receipt and the schema 2 UTC metadata without printing
+answers.
 
 Use `--require-uninterrupted` for the clean baseline and successor runs. It
 requires breathing observations and rejects recorded pauses, audio faults,
@@ -693,8 +704,8 @@ breath observations with their CSV rows and clock fields. It also checks
 the CSV playback transitions and terminal playback fields against the
 committed native event order, pause intervals and retained phase offsets.
 It verifies native file and checkpoint hashes, the terminal outcome,
-writer drops, matching CSV bytes from all three copies, and one verified
-Drive object under the reserved file ID. A completed run must have exactly
+writer drops, matching CSV bytes from all three copies, and the verified
+Drive objects under their reserved file IDs. A completed run must have exactly
 one committed native completion event between official Start and finalization,
 on the same clock anchor. An incomplete or paginated Drive search cannot
 establish uniqueness. The native UTC clock must match the projected

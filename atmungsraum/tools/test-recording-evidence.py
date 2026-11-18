@@ -181,7 +181,36 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.json_file(self.evidence / "delivery.json", dict(folderId="private-folder", driveId="drive-file",
                                                            sha256=desc["sha256"], verified=True))
 
-    def invoke(self, mode="complete", fail=None, *, uninterrupted=False, audio_frames=False):
+    def publish_questionnaire(self, *, session_id=SESSION, folder="private-folder", schema=2):
+        stamp = "2023-11-14T22:29:00.000Z"
+        answers = []
+        for index, (kind, answer) in enumerate(zip(("slider", "likert", "likert", "likert", "slider"), (0, 1, 5, 3, 100)), 1):
+            item = dict(question_id=f"q{index}", prompt=f"Fixture question {index}", answer=str(answer))
+            if schema == 2:
+                low, high = (0, 100) if kind == "slider" else (1, 5)
+                item.update(type=kind, answer=answer, scale=dict(min=low, max=high, min_label="Low", max_label="High"))
+            answers.append(item)
+        record = dict(schema_version=schema, participant_id="Tes_30_N", session_id=session_id,
+                      recording_filename=NAME, submitted_at_utc=stamp, answers=answers)
+        if schema == 2:
+            record.update(started_at_utc=stamp, clock_source="timeapi.io", clock_round_trip_ms=90)
+        pixel = self.evidence / "pixel-questionnaire.json"
+        self.json_file(pixel, record)
+        data = pixel.read_bytes()
+        (self.evidence / "drive-questionnaire.json").write_bytes(data)
+        receipt = dict(folderId="private-folder", driveId="drive-questionnaire", sha256=digest(data), verified=True)
+        self.json_file(self.evidence / "questionnaire-delivery.json", receipt)
+        inventory_path = self.evidence / "drive-list.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        inventory["files"] = [item for item in inventory["files"] if item["name"] == NAME]
+        inventory["files"].insert(0, dict(
+            id=receipt["driveId"], name=NAME.removesuffix(".csv") + "_questionnaire.json", parents=[folder],
+            ownedByMe=True, shared=False, trashed=False, mimeType="application/json", size=str(len(data)),
+            sha256Checksum=receipt["sha256"], appProperties=dict(startedAtUtc=stamp, clockSource="timeapi.io"),
+        ))
+        self.json_file(inventory_path, inventory)
+
+    def invoke(self, mode="complete", fail=None, *, uninterrupted=False, audio_frames=False, questionnaire=False):
         result = subprocess.run([
             sys.executable, "-B", str(TOOL), "--native-run", str(self.native),
             "--export-manifest", str(self.evidence / "export.json"),
@@ -190,6 +219,10 @@ class CollectionEvidenceTest(unittest.TestCase):
             "--drive-folder", "private-folder", "--expect", mode,
             *(["--require-uninterrupted"] if uninterrupted else []),
             *(["--require-audio-frames"] if audio_frames else []),
+            *(["--pixel-questionnaire", str(self.evidence / "pixel-questionnaire.json"),
+                "--drive-questionnaire", str(self.evidence / "drive-questionnaire.json"),
+                "--drive-questionnaire-receipt", str(self.evidence / "questionnaire-delivery.json")
+               ] if questionnaire else []),
         ], capture_output=True, text=True)
         if fail:
             self.assertEqual(result.returncode, 1, result.stderr)
@@ -213,6 +246,33 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.assertIsNone(result["native_start_to_completion_us"])
         self.assertEqual(result["ignored_post_checkpoint_bytes"], len(b"uncommitted-checkpoint-tail"))
         self.assertEqual(result["csv_rows"].get("breath", 0), 0)
+
+    def test_questionnaire_and_csv_share_one_dataset(self):
+        for schema in (1, 2):
+            with self.subTest(schema=schema):
+                self.publish_questionnaire(schema=schema)
+                result = self.invoke(questionnaire=True)
+                self.assertEqual(result["drive_objects"], 2)
+                self.assertEqual(result["questionnaire"]["schema_version"], schema)
+
+    def test_questionnaire_must_match_the_native_run_and_private_dataset(self):
+        self.publish_questionnaire(session_id="different-run")
+        self.invoke(questionnaire=True, fail="questionnaire recording identity mismatch")
+        self.publish_questionnaire(folder="another-dataset")
+        self.invoke(questionnaire=True, fail="Drive object metadata mismatch")
+        self.publish_questionnaire()
+        inventory_path = self.evidence / "drive-list.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        inventory["files"][0]["appProperties"]["clockSource"] = "phone-system-clock"
+        self.json_file(inventory_path, inventory)
+        self.invoke(questionnaire=True, fail="Drive questionnaire clock metadata mismatch")
+
+    def test_questionnaire_drive_download_must_match_phone_bytes(self):
+        self.publish_questionnaire()
+        path = self.evidence / "drive-questionnaire.json"
+        with path.open("ab") as output:
+            output.write(b" ")
+        self.invoke(questionnaire=True, fail="Drive questionnaire: byte count or SHA-256 mismatch")
 
     def test_complete_requires_a_durable_completion_event(self):
         self.publish(include_completion=False)

@@ -224,8 +224,11 @@ keeps the form pending across reload or reconnect and retains the first
 successful submission for each run. **Antworten** downloads the saved file
 for the selected recording. While the phone is open, Quest is idle and
 Google Drive is authorized, the same response file syncs automatically to
-the existing private folder. It has its own reserved Drive ID and verified
-checksum receipt, so retries reconcile the same remote file.
+the same private dataset folder as its Quest CSV. Earlier flat deliveries
+keep their existing destination. The questionnaire has its own reserved Drive
+ID and verified checksum receipt, so retries reconcile the same remote file.
+Use the [recording evidence check](QUEST-PHONE-SYNC.md#check-one-haupt-runde-evidence-bundle)
+to verify both files against the run and their independent Drive downloads.
 
 ## Participant CSV v2
 

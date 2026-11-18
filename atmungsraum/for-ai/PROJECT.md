@@ -276,7 +276,13 @@ when capture ends. Lock and reboot recovery still need an attended check.
   and match the downloaded questionnaire's participant ID, UUID and CSV stem
   to the finalized recording. Check that the separate JSON and CSV have
   the same parent ID in research Drive and that the JSON is byte-identical
-  to the phone download.
+  to the phone download. Use the
+  [combined evidence check](QUEST-PHONE-SYNC.md#check-one-haupt-runde-evidence-bundle).
+- [x] Extend the evidence verifier to check the Quest CSV and questionnaire
+  together, including the run identity, private folder, separate IDs, exact
+  downloaded bytes and schema 2 UTC metadata. The mounted PWA fixture passed
+  offline reload, lost upload response and restoration of the original Drive
+  receipts. Real questionnaire custody remains open on the lab pair.
 
 #### Dataset folders and repeatable Quest–Pixel binding — 2026-11-18
 
