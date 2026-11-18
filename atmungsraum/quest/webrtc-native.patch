@@ -1,3 +1,269 @@
+diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
+index 75df819211917d5b4dc40874644356eff5bd96b4..7eeb297db6fcfa30ee18285f4bd70659a137fbb1 100644
+--- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
++++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
+@@ -842,6 +842,10 @@ fn writer_restart_exports_an_aborted_csv_and_only_the_verified_checkpoint_prefix
+     let csv = String::from_utf8(csv_bytes.clone()).unwrap();
+     assert!(csv.contains(",26000000,paused,calibration,"));
+     assert!(csv.contains(",,,,4000,1,0,37,"));
++    let breath: Vec<_> = csv.lines().find(|line| line.contains(",breath,"))
++        .unwrap().split(',').collect();
++    assert_eq!(breath[0], "4");
++    assert_eq!(breath[20], "inhale");
+     assert!(csv.contains(",aborted,interrupted-recovery,\r\n"));
+     assert!(csv.contains(",ecg-interrupted,"));
+     assert!(csv.contains(",no-recorded-receipt-for-one-second\r\n"));
+@@ -902,6 +906,33 @@ fn old_participant_manifest_recovers_observations_without_guessing_authored_phas
+     assert_eq!(prepared.manifest["participant_csv"]["name"], "Mül_35_F_2023-11-14_haupt-15_r1.csv");
+     let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_2023-11-14_haupt-15_r1.csv")).unwrap();
+     assert!(csv.contains(",26000000,paused,unknown,4000,1,0,37,"));
++    assert!(!csv.contains(",breath,"));
+     drop(prepared);
+     fs::remove_dir_all(root.parent().unwrap()).unwrap();
+ }
++
++#[test]
++fn older_v4_recovery_keeps_its_original_breath_projection() {
++    use crate::session_recording_participant::live_csv::CONTROLLER_BREATH_FIELD;
++    use crate::session_recording_writer::{SessionRecordingWriter, tests::{config, interrupted_participant_fixture, temp_root}};
++    use std::time::Duration;
++
++    let root = temp_root("participant-checkpoint-older-v4");
++    let (directory, _) = interrupted_participant_fixture(root.clone(), true);
++    let manifest_path = directory.join("manifest.json");
++    let mut manifest: Value = serde_json::from_slice(&fs::read(&manifest_path).unwrap()).unwrap();
++    assert_eq!(manifest["participant_csv_schema"], 4);
++    assert!(manifest.as_object_mut().unwrap().remove(CONTROLLER_BREATH_FIELD).is_some());
++    fs::write(&manifest_path, manifest.to_string()).unwrap();
++    let breath_path = directory.join("breath.jsonl");
++    let original_breath = fs::read(&breath_path).unwrap();
++    assert!(String::from_utf8_lossy(&original_breath).contains("\"assessment_source\":\"controller\""));
++
++    let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 100)).unwrap();
++    assert!(writer.recover().unwrap().receive().unwrap().sessions[0].error.is_none());
++    writer.shutdown(Duration::from_secs(1)).unwrap();
++    let csv = fs::read_to_string(directory.join(".recovered-Mül_35_F_2023-11-14_haupt-15_r1.csv")).unwrap();
++    assert!(!csv.contains(",breath,"));
++    assert_eq!(fs::read(&breath_path).unwrap(), original_breath);
++    fs::remove_dir_all(root.parent().unwrap()).unwrap();
++}
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
+index 95fa6df23c39e388dfd3dfa948b65622d415fe63..a9d6cf9529ff81ed058d93944f44be6ad08622e0 100644
+--- a/apps/native-renderer-android/native/src/session_recording_participant.rs
++++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
+@@ -728,7 +728,7 @@ impl ObservationStream {
+                     Some(Observation { at, kind: event.as_str(), values: Default::default(), signal_reason })
+                 })
+             } else {
+-                observation_values(self.kind, &row)?.map(|values| Observation {
++                observation_values(self.kind, &row, false)?.map(|values| Observation {
+                     at, kind: self.kind, values, signal_reason: "",
+                 })
+             };
+@@ -741,7 +741,11 @@ impl ObservationStream {
+     }
+ }
+ 
+-fn observation_values(kind: &str, row: &Value) -> Result<Option<[String; 10]>, &'static str> {
++fn observation_values(
++    kind: &str,
++    row: &Value,
++    include_controller_breath: bool,
++) -> Result<Option<[String; 10]>, &'static str> {
+     const BAD: &str = "participant-stream-value-invalid";
+     let mut values: [String; 10] = Default::default();
+     let integer = |key: &str| row[key].as_u64().map(|value| value.to_string()).ok_or(BAD);
+@@ -764,7 +768,8 @@ fn observation_values(kind: &str, row: &Value) -> Result<Option<[String; 10]>, &
+             values[8] = row["resulting_radius_m"].as_number().ok_or(BAD)?.to_string();
+         }
+         ("breath", Some("breath")) => {
+-            if row["assessment_source"].as_str() != Some("polar-acc") {
++            let source = row["assessment_source"].as_str();
++            if source != Some("polar-acc") && !(include_controller_breath && source == Some("controller")) {
+                 return Ok(None);
+             }
+             values[9] = row["unbiased_phase"].as_str()
+@@ -884,13 +889,21 @@ mod tests {
+         append("events.jsonl", event(start, "official-start"));
+         append("events.jsonl", event(start + 10, "audio-started"));
+         append("polar-ecg.jsonl", ecg(start + 4_000_000, -19));
++        let breath = |at, source, phase| json!({
++            "kind": "breath", "observed_monotonic_ns": at, "assessment_source": source,
++            "unbiased_phase": phase, "phase": "exhale"
++        });
++        append("breath.jsonl", breath(start - 1, "controller", "hold"));
++        append("breath.jsonl", breath(start + 1_000, "controller", "inhale"));
++        append("breath.jsonl", breath(start + 2_000, "polar-acc", "hold"));
++        append("breath.jsonl", breath(start + 3_000, "unselected", "hold"));
+         let lengths = || -> BTreeMap<String, u64> {
+             ["events.jsonl", "polar-ecg.jsonl", "polar-acc.jsonl", "radius.jsonl", "breath.jsonl"].into_iter()
+                 .map(|name| (name.to_owned(), fs::metadata(dir.join(name)).map_or(0, |meta| meta.len())))
+                 .collect()
+         };
+         let first = lengths();
+-        let mut live = live_csv::Projection::new(run, dir.to_owned(), anchor);
++        let mut live = live_csv::Projection::new(run, dir.to_owned(), anchor, true);
+         let prefix = live.append(&first, None).unwrap().unwrap();
+         let initial = fs::read(dir.join(live_csv::LIVE_CSV)).unwrap();
+         assert_eq!(initial.len() as u64, prefix.size);
+@@ -917,6 +930,12 @@ mod tests {
+         assert_eq!(&pause[7..11], ["2000", "1999", "paused", "instruction_1"]);
+         let first_ecg = lines.iter().find(|row| row[5] == "ecg").unwrap();
+         assert_eq!(&first_ecg[7..11], ["4000", "", "", ""]);
++        let phases: Vec<_> = lines
++            .iter()
++            .filter(|row| row[5] == "breath")
++            .map(|row| (row[7], row[20]))
++            .collect();
++        assert_eq!(phases, [("1", "inhale"), ("2", "hold")]);
+         assert_eq!(lines.iter().filter(|row| row[5] == "ecg").count(), 2);
+         assert_eq!(lines.last().unwrap()[5], "end");
+     }
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
+index a60eb4f012477a8caf79bb2193f2b8c7140b9461..4ce559f2721f1649f6edcee5ea69c2449d61c607 100644
+--- a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
++++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
+@@ -13,6 +13,7 @@ use std::{
+ };
+ 
+ pub(crate) const SCHEMA_VERSION: u64 = 4;
++pub(crate) const CONTROLLER_BREATH_FIELD: &str = "participant_csv_controller_breath";
+ pub(crate) const LIVE_CSV: &str = ".participant-live.csv";
+ pub(crate) const LIVE_PREFIX: &str = ".participant-live-prefix.json";
+ const STREAMS: [(&str, &str); 5] = [
+@@ -50,7 +51,7 @@ impl Worker {
+         let thread = thread::Builder::new()
+             .name("participant-csv".to_owned())
+             .spawn(move || {
+-                let mut projection = Projection::new(run, directory, anchor);
++                let mut projection = Projection::new(run, directory, anchor, true);
+                 let mut next = 1;
+                 loop {
+                     let finish = match commands.try_recv() {
+@@ -162,19 +163,16 @@ fn publish_prefix(directory: &Path, ordinal: u64, prefix: &Prefix) -> Result<(),
+ }
+ 
+ pub(crate) fn replay(
+-    run: &ParticipantRun,
+-    directory: &Path,
+-    anchor: ClockAnchor,
++    mut projection: Projection,
+     checkpoint: u64,
+     lengths: &Lengths,
+     cutoff: Option<u64>,
+     complete: bool,
+     reason: &str,
+ ) -> Result<FinalCsv, String> {
+-    discard_recovery_csv(&directory.join(LIVE_CSV))?;
+-    let mut projection = Projection::new(run.clone(), directory.to_owned(), anchor);
++    discard_recovery_csv(&projection.directory.join(LIVE_CSV))?;
+     for ordinal in 1..=checkpoint {
+-        let checkpoint = checkpoint_lengths(directory, ordinal)?;
++        let checkpoint = checkpoint_lengths(&projection.directory, ordinal)?;
+         if checkpoint
+             .iter()
+             .any(|(file, size)| lengths.get(file).is_none_or(|bound| size > bound))
+@@ -242,6 +240,7 @@ pub(crate) struct Projection {
+     run: ParticipantRun,
+     directory: PathBuf,
+     anchor: ClockAnchor,
++    include_controller_breath: bool,
+     identity: String,
+     clock: PlaybackClock,
+     cursors: [u64; STREAMS.len()],
+@@ -251,7 +250,12 @@ pub(crate) struct Projection {
+ }
+ 
+ impl Projection {
+-    pub(crate) fn new(run: ParticipantRun, directory: PathBuf, anchor: ClockAnchor) -> Self {
++    pub(crate) fn new(
++        run: ParticipantRun,
++        directory: PathBuf,
++        anchor: ClockAnchor,
++        include_controller_breath: bool,
++    ) -> Self {
+         let identity = format!(
+             "{SCHEMA_VERSION},{},{},{},{}",
+             run.plan.participant.as_text(),
+@@ -263,6 +267,7 @@ impl Projection {
+             run,
+             directory,
+             anchor,
++            include_controller_breath,
+             identity,
+             clock: PlaybackClock::default(),
+             cursors: [0; STREAMS.len()],
+@@ -338,7 +343,7 @@ impl Projection {
+         if at < self.clock.start() {
+             return Ok(());
+         }
+-        if let Some(values) = observation_values(kind, row)? {
++        if let Some(values) = observation_values(kind, row, self.include_controller_breath)? {
+             self.write_row(at, kind, Some(&values), false, "", "", "")?;
+         }
+         Ok(())
+diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
+index b1c43bdb17fde8012a8ec4e7736952a32a757168..72ffd4859df91aa47bdaf695eed942d87f2c2e68 100644
+--- a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
++++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
+@@ -126,7 +126,15 @@ fn publish_run(directory: &Path, key: &SessionTimestampKey) -> Result<(), String
+         Some(version) if version == live_csv::SCHEMA_VERSION => {
+             let lengths = serde_json::from_value(lengths.clone())
+                 .map_err(|_| "participant-stream-length-invalid".to_owned())?;
+-            let result = live_csv::replay(&run, directory, anchor, ordinal, &lengths, None, false, "interrupted-recovery")?;
++            let include_controller_breath = match original.get(live_csv::CONTROLLER_BREATH_FIELD) {
++                None => false,
++                Some(Value::Bool(included)) => *included,
++                Some(_) => return Err("participant-recovery-breath-projection-invalid".into()),
++            };
++            let projection = live_csv::Projection::new(
++                run.clone(), directory.to_owned(), anchor, include_controller_breath,
++            );
++            let result = live_csv::replay(projection, ordinal, &lengths, None, false, "interrupted-recovery")?;
+             if let Some((csv, _)) = &result {
+                 live_csv::publish_final(directory, csv, true)?;
+             }
+diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
+index 56c3f44473ac998165132a574dc2593399997b7d..3c910a1b80695763da4ac1f60a189f5c899fa089 100644
+--- a/apps/native-renderer-android/native/src/session_recording_writer.rs
++++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
+@@ -1172,6 +1172,7 @@ impl ActiveRecording {
+             if let Some(run) = &participant {
+                 manifest["participant"] = run.metadata();
+                 manifest["participant_csv_schema"] = json!(live_csv::SCHEMA_VERSION);
++                manifest[live_csv::CONTROLLER_BREATH_FIELD] = json!(true);
+             }
+             publish_json_exclusive(&directory, "manifest.json", &manifest)?;
+             let mut streams = BTreeMap::new();
+@@ -1455,8 +1456,13 @@ impl ActiveRecording {
+             });
+             let csv = match result {
+                 Some(csv) => csv,
+-                None => live_csv::replay(run, &self.directory, self.spec.clock_anchor, self.checkpoint_ordinal,
+-                    &lengths, Some(at.get()), complete, end_reason)?,
++                None => {
++                    let projection = live_csv::Projection::new(
++                        run.clone(), self.directory.clone(), self.spec.clock_anchor, true,
++                    );
++                    live_csv::replay(projection, self.checkpoint_ordinal, &lengths,
++                        Some(at.get()), complete, end_reason)?
++                }
+             };
+             if let Some((csv, _)) = csv {
+                 live_csv::publish_final(&self.directory, &csv, false)?;
+@@ -1784,6 +1790,12 @@ pub(crate) mod tests {
+                 samples: Box::new([PolarEcgSample { source_sequence: 1, sample_index: 0, source_time: source,
+                     received_source: source, observed_at: MonotonicNanos::new(27_000_020_000), microvolts: 37 }]),
+             })).unwrap();
++            let SessionRecord::Breath(mut controller) = breath(27_100_020_000) else {
++                unreachable!();
++            };
++            controller.assessment_source = Some("controller");
++            controller.tracking_status = Some("valid");
++            writer.write_record(0, &SessionRecord::Breath(controller)).unwrap();
+         }
+         let ordinal = writer.checkpoint(false, LossSnapshot::default()).unwrap();
+         if official_start {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab65892902c1e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java

@@ -337,6 +337,27 @@ stay-on setting and the Quest asleep. At the next attended window, clear
 the old headset panel and open WebRTC Bench. Resume the empty profile
 check with the installed Pixel, then physical reconnect and receipt checks.
 
+#### Controller State CSV v4 — 2026-11-18
+
+The v4 projection dropped Controller State observations already present in
+the native breath stream. The regression reproduced the missing row. The
+repair writes the unbiased classification for both recognized input sources
+after official Start. The native manifest records the projection used by
+the run so the interrupted-run replay keeps the previously published
+prefix. Tests cover current replay, older v4 and v3 recovery, and a
+backdated pause with already committed bytes.
+
+All 80 focused recording tests and 908 native tests passed, with six
+fixture-dependent native tests ignored. The cumulative patch reconstructs
+tree `877d3a7c045a867c1ceef3d6d3ab5bc7db2e963b` from fixed27-r2.
+The [signed bench code 29](../quest/apks/README.md#webrtc-bench-with-controller-state-csv-v4)
+is installed with exact byte readback. The Meta Developer code 27 APK hash
+was verified after replacement. The installed Pixel still loads
+`20261118-webrtc-signal-budget` with saved trust. The old permission
+panel persists after replacement, and the Quest is asleep. Once
+foreground is verified, verify the fallback's physical input and compare
+its raw breath source and unbiased phase with the CSV v4 and custody hashes.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
