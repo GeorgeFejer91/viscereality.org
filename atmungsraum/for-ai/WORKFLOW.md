@@ -181,8 +181,8 @@ guarantee installation before an immediate app or boot launch. Use an idle updat
 window and verify the installed version before a session. See Meta's
 [channel membership](https://developers.meta.com/vr/resources/publish-release-channels-add-users/)
 and [headset update guidance](https://www.meta.com/help/quest/172903867975450/).
-Keep current iterative APKs local until relevant hardware qualification; no
-automatic Meta upload is authorized by a version-indicator change.
+Use the [APK release workflow](#quest-apk-changes-and-releases) to synchronize
+qualified Developer builds with Meta.
 
 Custom private-particle assembly requires applying its approved
 `experiment.env.json` to the child process for both initial resolution and
@@ -244,8 +244,8 @@ Do not publish them or machine-specific paths.
 ## Quest APK changes and releases
 
 The user's 2026-11-15 correction requires testing iterative APKs locally on the
-headset before Meta Developer submission. Do not upload every test build to the
-Dev Hub; hand off a qualified release after the relevant hardware checks.
+headset before Meta Developer submission. Publish qualified releases after the
+relevant hardware checks.
 Agents perform the authorized lab install, verify the resulting runtime
 and continue through the applicable
 [stress and recovery checks](VERIFICATION.md#autonomous-device-validation).
@@ -273,7 +273,28 @@ or dependency pins, assets, and packaging-only changes.
    Record launch and the relevant physical acceptance checks. Mark any
    checks still pending. If a change crosses into the Pixel PWA, record
    the tested browser release with the APK.
-4. Review and stage only the intended files, run the context checker, then
+4. Synchronize each qualified Developer release under the user's standing
+   instruction of 2026-11-18. Use the Viscereality team, Atmungsraum Developer
+   app `1459506690581676`, package `org.viscereality.atmungsraum.developer`,
+   and private Developer channel `1529361979246951`.
+   - In the [Meta Developer Dashboard](https://developers.meta.com/vr/manage/applications/1459506690581676/release-channels/),
+     check the active version, build ID and device targets. If the intended
+     build is already active, record the readback. If a newer build is active,
+     investigate the difference before any upload or channel change.
+   - For a new release, use the signed APK and SHA-256 from the release record.
+     Use the authenticated dashboard or Meta Quest Developer Hub to upload to
+     the private Developer channel. Preserve its audience and Quest 2 target.
+     Keep bench builds in the lab and honor explicit staged-update holds.
+     Keep authentication material outside the repository.
+   - Wait for Meta processing and verify that the channel's active build shows
+     the intended version name, code, Meta build ID, and device target. Record
+     those values, the signed APK digest, and processing result in the APK log.
+     Update `quest-release.json` to reflect the verified latest Developer version
+     and retain the release's agreed minimum. Verify exact installed bytes and
+     Meta installer attribution on the lab Quest when qualifying Meta delivery.
+     Record any pending checks or blockers in [PROJECT.md](PROJECT.md) and
+     continue publishing independently verified GitHub and Pages increments.
+5. Review and stage only the intended files, run the context checker, then
    commit, push, and follow the exact Pages deployment. Publish signed APKs
    under `quest/apks/` when their bundled assets are authorized for public
    distribution. For the public build, keep the selected source assets and
