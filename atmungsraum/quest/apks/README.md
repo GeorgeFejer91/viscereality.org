@@ -1,5 +1,21 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with LAN listener recovery
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `33`,
+version name `0.2.32-rtc-test`, and 65,609,276 bytes. SHA-256 is
+`fd68e9680aef2286c478d8e3958f7cfb577ef602206619e698ca18a4eac902f5`.
+Native commit `d95964ece73f8b3f821e90ea1493b187837fcbca` binds tree
+`388e9d00eb9206a997db1f1b0e011d025476b478`. The signed session closure, retained
+bench certificate, v3 signature and 16 KiB alignment passed. The installed
+Quest digest, app UID and granted permission set matched the upgrade checks.
+
+The physical Quest recovered port 8766 after its release in 0.93 seconds
+with the same process and panel owner. The installed Pixel authenticated
+code 33 on the recovered gateway, then matched the original native Recenter
+receipt over the ordinary WebRTC route in a separate RustDesk run.
+[Verification](../../for-ai/VERIFICATION.md#quest-gateway-listener-recovery--2026-11-18).
+
 ## WebRTC bench with target signaling startup retry
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `32`,
