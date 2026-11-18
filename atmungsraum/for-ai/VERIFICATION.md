@@ -49,10 +49,13 @@ improvement through confirming the last affected acceptance criterion.
    retest request. Diagnose and repair each confirmed failure. Verify and
    publish each completed improvement through the release workflow, install it on the
    affected lab devices, and repeat the original case with its original
-   input driver plus the affected stress and recovery checks. Keep the goal
-   open until the acceptance criteria pass. Record versions, results,
-   publication, remaining blockers and the next executable step in
-   [the active checklist](PROJECT.md).
+   input driver plus the affected stress and recovery checks. If lab access
+   fails, try the documented recovery, continue independent cases and resume
+   device work as soon as the route is available. Carry any pending case into
+   the next run with its exact build pair, last verified state and next
+   executable action. Record results and publication in
+   [the active checklist](PROJECT.md). Keep the goal open until every
+   mandatory acceptance criterion passes.
 
 ### Haupt-Runde questionnaire — 2026-11-18
 
