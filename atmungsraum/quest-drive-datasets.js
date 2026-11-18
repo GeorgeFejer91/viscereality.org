@@ -38,7 +38,7 @@ export async function datasetDestination({ drive, store, root, pair, id, start, 
   const properties = { pairId: pair.id, pairIdentitySource: pair.source, questRecordingId: id,
     collectionStartedAtUtc: start.utc, collectionClockSource: start.source,
     phoneObservedAtUtc: reference.utc, phoneClockSource: reference.source,
-    phoneObservation: observed ? 'live-prefix' : 'final-import',
+    phoneObservation: observed?.stage ?? (observed ? 'live-prefix' : 'drive-staging'),
     ...(reference.round_trip_ms === undefined ? {} : { phoneClockRoundTripMs: String(reference.round_trip_ms) }) };
   return ensureDriveChild({ drive, store, key, parent: pairFolder, name, properties, signal });
 }

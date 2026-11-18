@@ -239,9 +239,6 @@ def connect_fixture_drive(page):
                 reply({"id": file_id})
 
     page.context.route("https://www.googleapis.com/**", google)
-    page.context.route("https://www.timeapi.io/**", lambda route: route.fulfill(
-        headers={"Access-Control-Allow-Origin": "*"},
-        json={"timeZone": "Etc/UTC", "dateTime": "2026-11-18T12:00:00.1234567"}))
     page.context.route("https://accounts.google.com/gsi/client", lambda route: route.fulfill(
         content_type="text/javascript", body="""window.google={accounts:{oauth2:{
         initTokenClient: options => ({requestAccessToken: () => options.callback({
@@ -264,6 +261,12 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
     setup = {"stage": "main", "input": "controller-state", "playing": True, "ready": True}
     enrollment = "localStorage.setItem('atmungsraum-quest-pair'"
     fixture = initial(c, quest, setup).replace(enrollment, "if (!localStorage.getItem('atmungsraum-quest-pair')) " + enrollment, 1)
+    fixture += """
+      const captureFetch = window.fetch;
+      window.fetch = (url, options) => String(url) === 'https://www.timeapi.io/api/Time/current/zone?timeZone=Etc%2FUTC'
+        ? Promise.resolve(Response.json({ timeZone:'Etc/UTC', dateTime:'2026-11-18T12:00:00.1234567' }))
+        : captureFetch(url, options);
+    """
     page = review.page(fixture + QUESTIONNAIRE_RECORDINGS, viewport=viewport)
     try:
         page.evaluate("font => document.documentElement.style.fontSize = font", font)

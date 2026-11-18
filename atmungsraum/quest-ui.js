@@ -1261,6 +1261,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
             }
             const archive = await questRecording(gateway, id, signal, { includeSensorBundle: true, store });
             if (participantCsv && !archive.download.name.endsWith('.csv')) throw Error('Quest-CSV fehlt.');
+            if (!archive.collectionObserved && archive.download.type === 'text/csv') {
+              archive.collectionObserved = { ...await captureUtc({ signal }), stage: 'final-import' };
+            }
             signal.throwIfAborted();
             await store.finalizePrefix(id, archive);
             const pendingForm = archive.questionnaire?.required && await store.pendingQuestionnaire();

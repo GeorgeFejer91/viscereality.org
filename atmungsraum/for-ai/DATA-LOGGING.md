@@ -33,8 +33,9 @@ native recording key with explicit provenance. The Quest's network-synced
 Android UTC anchors its native monotonic clock. The Pixel collects a separate
 TimeAPI.io UTC sample when it first observes a live CSV prefix, or when it
 imports a final dataset without a live reference. This reference describes
-that phone event. The questionnaire timestamps the start of its file write
-when the operator submits the last answer. TimeAPI.io estimates subtract half
+that phone event. Older phone archives record a separately labeled Drive
+staging time when their first upload begins. The questionnaire timestamps its
+file write when the operator submits the last answer. TimeAPI.io estimates subtract half
 the measured request time and retain the round trip in milliseconds. The phone
 records a labelled system-clock fallback if the request fails or exceeds
 1.8 seconds. The UTC request sends only the fixed timezone. The dataset folder
