@@ -728,6 +728,37 @@ index dd75697d2e33ab2898af3ee549e86d637a7e1655..4901c397c81598f2b401a66b6e36d9cf
          try{return task.get(5,TimeUnit.SECONDS);}catch(Exception failure){task.cancel(false);throw failure;}
      }
      private JSONObject requestRecenter(JSONObject body) throws Exception {
+diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
+index 09381589409a3b7601da9e1e2a41fc3b706f40c0..d485327b899fba1a06e9f671245e0dd8cc3d3956 100644
+--- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
++++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
+@@ -66,8 +66,11 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+             String serialText=value.getString("serial");serial=serialText.getBytes(StandardCharsets.UTF_8);
+             metadata=value.toString().getBytes(StandardCharsets.UTF_8);
+             boolean pairing=value.getInt("v")==2;
+-            if((pairing?(value.length()!=9||!"app-installation".equals(value.opt("identity_kind"))||!Integer.valueOf(1).equals(value.opt("pairing")))
+-                        :(value.length()!=7||value.getInt("v")!=1))||!"remote".equals(value.getString("mode"))
++            boolean rtcPresent=value.has("rtc");
++            if((pairing?(value.length()!=(rtcPresent?10:9)||!"app-installation".equals(value.opt("identity_kind"))
++                            ||!Integer.valueOf(1).equals(value.opt("pairing"))
++                            ||rtcPresent&&!validWebRtcOffer(value.optJSONObject("rtc")))
++                        :(value.length()!=7||value.getInt("v")!=1||rtcPresent))||!"remote".equals(value.getString("mode"))
+                     ||!value.getString("device").matches("[0-9a-f]{32}")
+                     ||!value.getString("epoch").matches("[1-9][0-9]{0,18}")
+                     ||!value.getString("native_epoch").matches("[1-9][0-9]{0,18}")
+@@ -85,6 +88,12 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
+             }
+         }
+     }
++    private static boolean validWebRtcOffer(JSONObject offer) {
++        if (offer == null || offer.length() != 2) return false;
++        Object room = offer.opt("r"), password = offer.opt("p");
++        return room instanceof String && ((String) room).matches("[0-9a-f]{32}")
++            && password instanceof String && ((String) password).matches("[0-9a-f]{64}");
++    }
+     private static final class Peer {
+         final Snapshot snapshot;
+         int mtu=23;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 index 53cd88330b0ccdb28db089089c3be97eeecd49c3..7c9960b3cfcbd92fdf6de95c7ba3dd4b13226504 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
@@ -1268,6 +1299,50 @@ index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e
          (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),
+diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
+index 6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b..76558718eebf058770552158c7580b065058ad5f 100644
+--- a/tools/checks/test_experiment_discovery.py
++++ b/tools/checks/test_experiment_discovery.py
+@@ -85,6 +85,31 @@ public class DiscoveryHostTest {
+   ExperimentSessionDiscoveryServer wrong=new ExperimentSessionDiscoveryServer(c,()->metadata().put("v",2).put("identity_kind","hardware").put("pairing",1));int count=c.manager.servers.size();wrong.reconcile(3,true);
+   check(c.manager.servers.size()==count,"v2 identity_kind is exact");wrong.close();serial=previous;
+  }
++ static void checkWebRtcDiscovery()throws Exception {
++  android.app.Activity activity=new android.app.Activity();
++  JSONObject offer=new JSONObject().put("r","b".repeat(32)).put("p","c".repeat(64));
++  JSONObject data=metadata().put("v",2).put("serial","").put("identity_kind","app-installation")
++      .put("pairing",1).put("gateways",new JSONArray()).put("rtc",offer);
++  ExperimentSessionDiscoveryServer discovery=new ExperimentSessionDiscoveryServer(activity,()->data);
++  discovery.reconcile(1,true);
++  check(activity.manager.servers.size()==1,
++      "WebRTC v2 discovery reaches platform advertising instead of metadata-unavailable");
++  BluetoothGattServer server=activity.manager.servers.get(0);
++  server.callback.onServiceAdded(0,server.service);
++  activity.manager.adapter.advertiser.callbacks.get(0).onStartSuccess(new AdvertiseSettings());
++  check("advertising".equals(discovery.readback().getString("state")),"WebRTC discovery is advertising");
++  JSONObject readback=new JSONObject(all(server,new BluetoothDevice(),ExperimentSessionDiscoveryServer.METADATA));
++  check(readback.similar(data),"the app sends the unchanged WebRTC offer over bounded GATT fragments");
++  discovery.close();
++  for(JSONObject malformed : Arrays.asList(null,new JSONObject(),new JSONObject(offer.toString()).put("p","short"),
++       new JSONObject(offer.toString()).put("unexpected",true))) {
++   data.put("rtc",malformed==null?JSONObject.NULL:malformed);
++   discovery.reconcile(2,true);
++   check(activity.manager.servers.size()==1&&"metadata-unavailable".equals(discovery.readback().getString("reason")),
++       "malformed WebRTC metadata never reaches GATT");
++   discovery.close();
++  }
++ }
+  static void checkBluetoothStartup() throws Exception {
+   android.app.Activity c = new android.app.Activity();
+   ExperimentSessionDiscoveryServer selected = new ExperimentSessionDiscoveryServer(c, () -> metadata(), true);
+@@ -186,6 +211,7 @@ public class DiscoveryHostTest {
+   checkReadOnlyBluetoothStartup();
+   checkCoordinatedStartup();
+   checkV2Identity();
++  checkWebRtcDiscovery();
+   checkWifiSetup();
+   android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
+   BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
 index 833f50b03335810d11063ffdd60c7c48017f760d..da0a4d75246ce4358fdacd189641af5b3c7d7666 100644
 --- a/tools/checks/test_polar_platform_projection.py
