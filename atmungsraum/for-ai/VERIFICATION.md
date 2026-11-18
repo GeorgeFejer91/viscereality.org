@@ -216,6 +216,24 @@ operator readback reported no enabled enrolled controller. Establish
 authorized membership for that installation and require signed status for
 the live Meta offer and preparation eligibility.
 
+### Legacy pairing recovery — 2026-11-18
+
+The installed Pixel had a legacy record for a different Quest installation.
+The startup regression reproduced a similar legacy record suppressing an
+available commissioned profile. PWA release
+`20261118-legacy-commissioning-recovery` tries the saved enrollment first.
+If a legacy reconnect fails, it can consult the local companion and reuse the
+existing commissioning proof path. It writes the new pairing only after
+the companion and Quest authenticate the current installation and signed
+native status arrives. The browser keeps the legacy record during the attempt.
+
+Browser startup checks cover the verified replacement, a rejected signed
+reply, a pending receipt or unanswered stored questionnaire that keeps the
+original owner, and a newer saved selection arriving during authentication.
+Existing saved installation trust keeps its reconnect path. The separate
+physical success case still requires an authorized companion profile and an
+isolated legacy record on the Pixel.
+
 ### Quest gateway listener recovery — 2026-11-18
 
 A temporary ADB reverse mapping occupied Quest port 8766 during an isolated

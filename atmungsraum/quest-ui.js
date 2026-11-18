@@ -124,9 +124,12 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let liveAttempt, liveGeneration, nextLive = 0;
   let archiveRead = 0;
   let archiveListRead = 0, archiveScope = '', archivesSuspended = false;
+  let archiveListLoaded = false;
   let connecting = null;
   let rememberedDevice = null;
   let nextConnect = 0;
+  let autoConnectInFlight = false;
+  let nextCommissioningProbe = 0;
   let nextSavedProbe = 0;
   let discoveryInProgress = false;
   let bluetoothCheck = null;
@@ -1133,6 +1136,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     const scope = localArchiveKey();
     if (archiveScope === scope) return;
     archiveScope = scope;
+    archiveListLoaded = false;
     const read = ++archiveListRead;
     archiveRead++;
     archivePicker.replaceChildren();
@@ -1148,6 +1152,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         if (read !== archiveListRead || scope !== localArchiveKey()) return;
         if (pendingForm) setQuestionnaire(pendingForm);
         showArchives(ids);
+        archiveListLoaded = true;
       } catch {
         if (read === archiveListRead) exportMessage = 'Die gespeicherten Aufnahmen konnten nicht geladen werden.';
       } finally {
@@ -1168,6 +1173,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     archiveRead++;
     archiveListRead++;
     archiveScope = '';
+    archiveListLoaded = false;
     nextSync = 0;
     exportMessage = '';
     archivePicker.replaceChildren();
@@ -1314,6 +1320,42 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     }
   }
 
+  function canConnectAutomatically() {
+    return !document.hidden && !archivesSuspended && !userAction && !rehearsal.state.status
+      && autoConnect && canAutoConnect() && location.hash !== '#daten';
+  }
+
+  async function connectAutomatically() {
+    if (autoConnectInFlight) return;
+    autoConnectInFlight = true;
+    const previous = savedPair;
+    const canCommission = () => savedPair === previous && canConnectAutomatically() && (!previous?.enrollment
+      || !previous.identity_kind && !rehearsal.gateway && !rehearsal.pending && !breathing.pending
+      && !kiosk.pending && !controllerLease.pending && !metaControl.pending && !savedUpdateIntent
+      && !metaHandoff.view(previous) && (!archiveScope || archiveListLoaded && !questionnaire && !savingAnswers));
+    try {
+      if (previous?.enrollment) await connect(previous);
+      else nextConnect = performance.now() + 8000;
+      if (!canCommission() || connecting || performance.now() < nextCommissioningProbe) return;
+      nextCommissioningProbe = performance.now() + 8000;
+      const { readCommissionedQuest } = await import('./quest-commissioning.js?v=3');
+      const commissioned = await readCommissionedQuest();
+      if (!canCommission() || connecting) return;
+      if (commissioned?.state === 'loopback-denied') {
+        if (!joinMessage || joinMessage === allowCompanion) {
+          joinMessage = bluetoothHint = allowCompanion;
+          paint();
+        }
+      } else {
+        if (joinMessage === allowCompanion) {
+          joinMessage = bluetoothHint = '';
+          paint();
+        }
+        if (commissioned) await connect(commissioned, false, canCommission);
+      }
+    } finally { autoConnectInFlight = false; }
+  }
+
   async function tick() {
     if (document.hidden || connecting || userAction) return;
     await rehearsal.refresh();
@@ -1329,29 +1371,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     await metaControl.refresh();
     paint();
     if (document.hidden || connecting || userAction) return;
-    if (location.hash !== '#daten' && !rehearsal.state.status && autoConnect
-      && canAutoConnect() && performance.now() >= nextConnect) {
-      if (savedPair?.enrollment) void connect(savedPair);
-      else {
-        nextConnect = performance.now() + 8000;
-        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=3');
-        const commissioned = await readCommissionedQuest();
-        if (!savedPair?.enrollment && !document.hidden && !connecting && !userAction
-          && !rehearsal.state.status && autoConnect && location.hash !== '#daten' && canAutoConnect()) {
-          if (commissioned?.state === 'loopback-denied') {
-            if (!joinMessage || joinMessage === allowCompanion) {
-              joinMessage = bluetoothHint = allowCompanion;
-              paint();
-            }
-          } else {
-            if (joinMessage === allowCompanion) {
-              joinMessage = bluetoothHint = '';
-              paint();
-            }
-            if (commissioned) void connect(commissioned);
-          }
-        }
-      }
+    if (canConnectAutomatically() && performance.now() >= nextConnect) {
+      void connectAutomatically();
       return;
     }
     const gateway = rehearsal.gateway;
@@ -1385,7 +1406,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     }
   }
 
-  async function connect(settings, chooseDevice = false) {
+  async function connect(settings, chooseDevice = false, allowAttach) {
     if (connecting) return;
     settings ??= {};
     const attempt = new AbortController();
@@ -1413,7 +1434,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         discovery = await readQuest(peer, signal, {});
       } else {
         // Read the saved headset's current address before trying the old one.
-        // Only the chooser path can enroll another headset.
+        // An unpaired automatic attempt requires an explicitly commissioned installation.
         bluetoothHint = '';
         try {
           if (await bluetooth?.getAvailability?.() === false) {
@@ -1521,7 +1542,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
 
         if (!gateway) throw connectionFailure ?? Error('Die Quest antwortet nicht im WLAN.');
       }
-      if (signal.aborted || connecting !== attempt) { gateway.close(); return; }
+      if (signal.aborted || connecting !== attempt || allowAttach && !allowAttach()) { gateway.close(); return; }
       if (savedPair && (savedPair.serial !== gateway.owner.serial || savedPair.device !== gateway.owner.device)) {
         resetPreview();
       }

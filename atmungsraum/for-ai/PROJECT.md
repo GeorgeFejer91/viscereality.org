@@ -61,6 +61,12 @@ Next, establish authorized membership for the official installation and read
 the signed Meta offer before any preparation action. The held successor,
 canonical signing and wearer gates remain open.
 
+The PWA previously skipped the commissioned profile whenever a saved legacy
+record existed. The recovered path tries the saved pairing first, then allows
+the companion's authorized installation to replace an unreachable legacy
+record only after native authentication. Pending receipts and a newer saved
+selection retain their original owner. See [legacy pairing recovery](VERIFICATION.md#legacy-pairing-recovery--2026-11-18).
+
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
 Eight live files match Git. The delayed-resize APK Details regression passes
