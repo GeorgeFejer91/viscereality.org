@@ -451,7 +451,12 @@ unqualified. When signaling was withheld and the signed Quest offered a
 LAN endpoint, the physical browser reported `ERR_ADDRESS_UNREACHABLE`
 with local-network permission granted. The installed interface exposed the
 raw fetch error. The PWA now keeps the connection error type through
-fallback and renders the established German recovery guidance.
+fallback and renders the established German recovery guidance. The installed
+Pixel loaded the exact deployed release and reproduced the corrected status
+with passing text fit. After signaling was restored, the phone returned to
+authenticated bridge status over TURN in 6.0 seconds with saved pairing.
+Next, qualify a genuinely isolated network and run the baseline and fault
+collection cases with the wearer when available.
 See [connection guidance verification](VERIFICATION.md#connection-guidance-after-relay-and-lan-failure--2026-11-18).
 
 #### Temporary status loss after Save — 2026-11-18

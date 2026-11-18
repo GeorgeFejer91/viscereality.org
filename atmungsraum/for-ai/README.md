@@ -88,6 +88,8 @@ Read common rules first, then the documents needed for the task:
   source baseline and changes from the previous version.
 - [SKILLS.md](SKILLS.md): always and conditional skill routes.
 - [VERIFICATION.md](VERIFICATION.md): context, rendering, and deployment checks.
+  The [autonomous device validation procedure](VERIFICATION.md#autonomous-device-validation)
+  covers lab installs and refreshes, physical stress testing, repairs and reruns.
   The [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
   enforces the [UI rules](UI-LAYOUT.md#smartphone-gui-rules) on each feature push.
 - [DECISIONS.md](DECISIONS.md): durable decisions and their reasons.
