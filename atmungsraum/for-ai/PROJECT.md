@@ -498,6 +498,24 @@ both packages present, rerun the full phone recovery with the latest
 installed PWA, and continue the hotel timing matrix.
 See [verification](VERIFICATION.md#quest-target-signaling-startup-recovery--2026-11-18).
 
+#### Bluetooth rediscovery with both Quest packages active — 2026-11-18
+
+The lab headset registered the same discovery service twice. The previous
+Pixel companion read only the first matching service UUID and kept
+searching when it was owned by the other app. Companion 0.2.1 reads the
+registered instances in sequence and accepts only the enrolled installation
+in Remote mode.
+
+The signed bench companion update retained the Pixel app UID and Nearby
+devices grants. The latest installed PWA found bench APK 32 with both
+headset packages present. The original injected target startup failure
+now recovered authenticated phone status over TURN. In a separate physical
+test with an isolated lease journal, a RustDesk MCP Recenter tap returned
+its original native receipt. The normal phone document and prior headset
+power settings were restored. The stock companion update requires the
+retained signer for the lab Pixel's installed standard companion.
+See [scanner verification](VERIFICATION.md#multi-instance-bluetooth-rediscovery--2026-11-18).
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native

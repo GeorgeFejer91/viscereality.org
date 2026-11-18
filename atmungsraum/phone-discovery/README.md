@@ -33,8 +33,15 @@ Set JAVA_HOME, ANDROID_HOME and ATMUNGSRAUM_DISCOVERY_STOREPASS, then run:
 ```
 
 Install with the intended phone's serial and retain the same signer for
-updates. This companion supports rediscovery on a reachable Wi-Fi network.
-The Quest's existing hotspot provisioning remains a separate path.
+updates. Version 0.2.1 checks each instance of the Quest Bluetooth service
+when two app packages register it on one headset. It returns only the
+enrolled installation's remote-mode metadata. The PWA still verifies
+authenticated native status before adopting the route.
+
+Run the scanner regression with Python 3, JDK 17 and a host org.json JAR
+using `python tests/test-quest-scan.py --java-home <jdk> --json-jar <jar>`.
+It exercises the production callback with sequential GATT reads, foreign
+and Direct-mode identities, and rejected metadata.
 
 ## Managed first pairing
 

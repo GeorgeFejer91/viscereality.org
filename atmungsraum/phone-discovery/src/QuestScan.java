@@ -17,12 +17,14 @@ import android.os.ParcelUuid;
 import android.os.SystemClock;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 final class QuestScan {
@@ -45,9 +47,8 @@ final class QuestScan {
             while (SystemClock.elapsedRealtime() < deadline && adapter.isEnabled()) {
                 BluetoothDevice device = devices.poll(500, TimeUnit.MILLISECONDS);
                 if (device == null || !tried.add(device)) continue;
-                JSONObject metadata = readMetadata(context, device);
-                if (metadata != null && rememberedId.equals(metadata.optString("device"))
-                        && "remote".equals(metadata.optString("mode"))) return metadata;
+                JSONObject metadata = readMetadata(context, device, rememberedId);
+                if (metadata != null) return metadata;
             }
             return null;
         } finally {
@@ -55,41 +56,78 @@ final class QuestScan {
         }
     }
 
-    private static JSONObject readMetadata(Context context, BluetoothDevice device) throws InterruptedException {
-        CountDownLatch finished = new CountDownLatch(1);
-        BluetoothGattCallback callback = new BluetoothGattCallback() {
-            @Override public void onConnectionStateChange(BluetoothGatt gatt, int status, int state) {
-                if (status != BluetoothGatt.GATT_SUCCESS || state != BluetoothProfile.STATE_CONNECTED
-                        || !gatt.discoverServices()) finished.countDown();
-            }
-
-            @Override public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                BluetoothGattService service = status == BluetoothGatt.GATT_SUCCESS ? gatt.getService(SERVICE) : null;
-                BluetoothGattCharacteristic metadata = service == null ? null : service.getCharacteristic(METADATA);
-                if (metadata == null || !gatt.readCharacteristic(metadata)) finished.countDown();
-            }
-
-            @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic,
-                                                      int status) {
-                if (status != BluetoothGatt.GATT_SUCCESS) characteristic.setValue(new byte[0]);
-                finished.countDown();
-            }
-        };
+    private static JSONObject readMetadata(Context context, BluetoothDevice device, String rememberedId)
+            throws InterruptedException {
+        MetadataRead callback = new MetadataRead(rememberedId);
         BluetoothGatt gatt = device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE);
         if (gatt == null) return null;
         try {
-            if (!finished.await(3500, TimeUnit.MILLISECONDS)) return null;
-            BluetoothGattService service = gatt.getService(SERVICE);
-            BluetoothGattCharacteristic characteristic = service == null ? null : service.getCharacteristic(METADATA);
-            byte[] data = characteristic == null ? null : characteristic.getValue();
-            if (data == null || data.length == 0 || data.length > 512) return null;
-            try {
-                return new JSONObject(new String(data, StandardCharsets.UTF_8));
-            } catch (org.json.JSONException invalid) {
-                return null;
-            }
+            return callback.finished.await(3500, TimeUnit.MILLISECONDS) ? callback.result : null;
         } finally {
+            callback.finished.countDown();
             gatt.close();
+        }
+    }
+
+    private static final class MetadataRead extends BluetoothGattCallback {
+        private final String rememberedId;
+        private final CountDownLatch finished = new CountDownLatch(1);
+        private Iterator<BluetoothGattService> services;
+        private BluetoothGattCharacteristic active;
+        private JSONObject result;
+
+        MetadataRead(String rememberedId) {
+            this.rememberedId = rememberedId;
+        }
+
+        @Override public void onConnectionStateChange(BluetoothGatt gatt, int status, int state) {
+            if (finished.getCount() == 0) return;
+            if (status != BluetoothGatt.GATT_SUCCESS || state != BluetoothProfile.STATE_CONNECTED
+                    || !gatt.discoverServices()) finished.countDown();
+        }
+
+        @Override public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                finished.countDown();
+                return;
+            }
+            services = gatt.getServices().iterator();
+            readNext(gatt);
+        }
+
+        private void readNext(BluetoothGatt gatt) {
+            // Multiple apps on one headset can register the same discovery service.
+            while (finished.getCount() != 0 && services.hasNext()) {
+                BluetoothGattService service = services.next();
+                if (!SERVICE.equals(service.getUuid())) continue;
+                active = service.getCharacteristic(METADATA);
+                if (active != null && gatt.readCharacteristic(active)) return;
+            }
+            finished.countDown();
+        }
+
+        @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic,
+                                                   int status) {
+            onCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
+        }
+
+        @Override public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic,
+                                                   byte[] value, int status) {
+            if (finished.getCount() == 0 || active == null
+                    || characteristic.getInstanceId() != active.getInstanceId()) return;
+            if (status == BluetoothGatt.GATT_SUCCESS && value != null && value.length > 0 && value.length <= 512) {
+                try {
+                    JSONObject metadata = new JSONObject(new String(value, StandardCharsets.UTF_8));
+                    if (rememberedId.equals(metadata.optString("device")) && "remote".equals(metadata.optString("mode"))) {
+                        result = metadata;
+                        finished.countDown();
+                        return;
+                    }
+                } catch (JSONException invalid) {
+                    // Advance to the next instance when its metadata cannot be used.
+                }
+            }
+            readNext(gatt);
         }
     }
 }

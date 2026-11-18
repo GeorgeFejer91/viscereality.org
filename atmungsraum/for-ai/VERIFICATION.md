@@ -71,6 +71,26 @@ run the physical Pixel was still searching for the bench over Bluetooth
 before opening WebRTC. The lab checklist tracks rediscovery and the complete
 phone-to-headset retry separately.
 
+### Multi-instance Bluetooth rediscovery — 2026-11-18
+
+The host regression runs the production scan callback. Its first case
+reproduced the failure when the first matching service belonged to another
+installation. All five cases pass after the repair, including both Android
+characteristic callback forms, skipping a Direct-mode service, ignoring a
+failed or malformed read, and returning the first eligible match. The
+managed proof host test and both signed Android builds also pass.
+
+On the physical Pixel, the same-signer bench companion update retained
+the app UID and Bluetooth grants. With the Quest Developer and bench
+packages registered together, auto discovery found the expected
+installation with no chooser. The original WebView startup rejection was
+repeated on bench APK 32. The same offer was announced in 2.9 seconds, and
+the installed PWA then rejoined with a relay path and authenticated status.
+A separate RustDesk Recenter run with an isolated lease journal confirmed
+the original native receipt. The standard companion's installed certificate
+differs from the available lab signer, so that package's in-place update
+remains pending.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.
