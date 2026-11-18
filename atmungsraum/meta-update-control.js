@@ -1,4 +1,4 @@
-import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=16';
+import { controllerAccessState, operationId, sameQuest } from './quest-gateway.js?v=17';
 import { nativeMetaUpdate } from './meta-update.js?v=6';
 
 const key = 'atmungsraum-meta-update-pending';

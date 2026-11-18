@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
+import { createHmac } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import test from 'node:test';
 import { joinQuest } from '../quest-gateway.js';
 import { createQuestRtcTransport } from '../quest-webrtc-session.js';
+
+import { recoverCommissionedEnrollment } from '../quest-commissioning.js';
 
 const owner = { device: '2'.repeat(32), epoch: '42', native_epoch: '7', serial: '', identity_kind: 'app-installation' };
 const enrollment = { controller: '1'.repeat(32), key: '3'.repeat(64) };
@@ -72,12 +75,34 @@ test('WebCrypto transports exact native receipts and large recording replies', {
     },
     close() {},
   };
-  const transport = await createQuestRtcTransport({ owner, enrollment, room, channel });
+  const signal = new AbortController().signal;
+  const bootstrap = createHmac('sha256', enrollment.key)
+    .update(`ATMB1|credential|${owner.device}|${enrollment.controller}`).digest('hex');
+  const mac = text => createHmac('sha256', bootstrap).update(text).digest('hex');
+  const binding = `ATMB1|RQG1-RTC1|${owner.device}|${owner.epoch}|${owner.native_epoch}|${room}`;
+  const transcript = frame => `${binding}|request|${frame.id}|${frame.tag}|${frame.public_key}`;
+  const broker = {
+    async authorize({ id, public_key }) {
+      const frame = { v: 2, id, public_key, tag: mac(binding + '|member') };
+      return { ...frame, proof: mac(transcript(frame)) };
+    },
+    async verify(frame, reply) {
+      return reply.proof === mac(`${transcript(frame)}|reply|${reply.public_key}|${reply.iv}|${reply.data}`);
+    },
+  };
+  const recovered = await recoverCommissionedEnrollment({ discovery: { owner, rtc: { r: room } }, channel, broker, signal });
+  assert.deepEqual(recovered, enrollment, 'a blank browser recovered the registered member without displaying a SAS');
+  assert.equal((await request({ op: 'stats' })).result, 0, 'commissioning dispatched no experiment action');
+  assert.equal((await request({ op: 'frame', frame: frames[0] })).ok, false, 'commissioning replay was accepted');
+  const forged = { ...broker, verify: async () => false };
+  await assert.rejects(recoverCommissionedEnrollment({ discovery: { owner, rtc: { r: room } }, channel, broker: forged, signal }));
+
+  const transport = await createQuestRtcTransport({ owner, enrollment: recovered, room, channel });
   const quest = await joinQuest({ ...owner, enrollment, transport, build });
   assert.equal(quest.initial.p, 'IDLE');
   const id = '0123456789abcdef';
   assert.deepEqual(await quest.receipt(id), { id, state: 'confirmed' });
-  assert.equal((await request({ op: 'frame', frame: frames[1] })).ok, false, 'replay reached native owner');
+  assert.equal((await request({ op: 'frame', frame: frames[3] })).ok, false, 'replay reached native owner');
   const exportReply = await quest.recordings({ id }, new AbortController().signal);
   assert.equal(exportReply.synthetic, 'abc'.repeat(8000));
   assert.ok(receivedBytes > 32768, 'covers data-channel fragmentation and bounded reply decoding');

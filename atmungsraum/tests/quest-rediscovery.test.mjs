@@ -43,6 +43,11 @@ test('an enrolled Quest can advertise the WebRTC room through companion discover
   const found = await rediscoverQuest(actor, signal, reply(metadata));
   assert.deepEqual(found.rtc, rtc);
   assert.deepEqual(found.endpoints, []);
+  const hardwareActor = await rediscoverQuest({ ...actor, commissioned: true }, signal,
+    reply({ ...metadata, serial: 'HARDWARE-TEST' }));
+  assert.equal(hardwareActor.owner.serial, 'HARDWARE-TEST');
+  await assert.rejects(rediscoverQuest({ ...actor, commissioned: true }, signal,
+    reply({ ...metadata, device: 'e'.repeat(32), serial: 'HARDWARE-TEST' })));
   await assert.rejects(rediscoverQuest(actor, signal, reply({ ...metadata, rtc: { ...rtc, p: 'too-short' } })));
   await assert.rejects(rediscoverQuest(actor, signal, reply({ ...metadata, rtc: { ...rtc, host: 'custom.example' } })));
 });

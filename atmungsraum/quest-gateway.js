@@ -201,13 +201,15 @@ export async function rediscoverQuest(settings, signal, fetcher = fetch) {
   const result = await readJson(response);
   if (result.v !== 1) throw Error('Ungültige Antwort der Bluetooth-Suche.');
   if (result.state === 'ready') {
-    return { state: 'ready', ...discoveryMetadata(result.metadata, settings.serial, settings) };
+    const serial = settings.commissioned && settings.identity_kind === 'app-installation'
+      ? result.metadata?.serial : settings.serial;
+    return { state: 'ready', ...discoveryMetadata(result.metadata, serial, settings) };
   }
   if (['bluetooth-off', 'searching', 'permission-required'].includes(result.state)) return { state: result.state };
   throw Error('Ungültige Antwort der Bluetooth-Suche.');
 }
 
-async function readJson(response) {
+export async function readJson(response) {
   if (!response.ok || !response.body) {
     const error = Error('Die Quest-Verbindung wurde abgelehnt.');
     error.status = response.status;
