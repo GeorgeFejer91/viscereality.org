@@ -1375,7 +1375,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         } else if (!settings.enrollment || settings.device && settings.device !== discovery.owner.device) await pairNewPhone();
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=3');
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=4');
             const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
             settings = { ...settings, enrollment: session.enrollment };
             gateway = await join(undefined, discovery, session.transport);

@@ -264,6 +264,39 @@ permission and ownership gates survive Direct/Remote selection.
 Both required-stream admission fixtures pass 12 assertions each. All
 eight focused Polar host suites pass. The signed APK runtime sources
 match the earlier checkout. [Native verification recipe](../quest/README.md#webrtc-candidate)
+The [Polar verification deploy](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44225449427)
+from `885c096316ab` matched all four changed files to Git.
+
+#### WebRTC under delayed signaling — 2026-11-18
+
+The browser proof with a synthetic Quest owner and real VDO.Ninja signaling
+reproduced the old five-second negotiation cutoff. With 800 ms added to
+each outgoing signaling message, first pairing over forced TURN timed out
+before any native exchange. A saved pairing also tried its advertised
+unreachable LAN address before later joining.
+
+A fresh pairing or a saved pairing without LAN candidates now has up to
+15 seconds to reach the data channel. With saved trust and an advertised
+LAN address, the five-second fallback still applies until VDO.Ninja
+selects a peer. Once a peer is negotiating, the 15-second deadline lets
+its ICE and TURN exchange continue.
+
+With the new deadlines, an empty profile joined without a chooser or code
+after 7.3 seconds on direct ICE and 8.8 seconds over forced TURN with
+1,200 ms added to outgoing signaling. The saved profile on forced TURN
+joined in 5.6 seconds at 800 ms delay without attempting the blocked LAN
+address. A separate saved profile with no advertised WebRTC peer in the
+signaling room tried its LAN address after 5.4 seconds. These are
+individual synthetic browser observations. The physical network matrix
+and benchmark remain open.
+
+The GUI gate twice caught the focused participant form extending beyond
+the reduced viewport. Holding resize events reproduced an 844 px
+document inside a 591 px viewport. The main layout and dialogs now cap
+the measured height at the current CSS viewport. The regression checks
+zero scroll range, full geometry, and retained focus, value and caret
+with resize event delivery held. The actual Pixel keyboard remains
+part of the physical UI matrix.
 
 ### PWA update copy simplification — 2026-11-17
 

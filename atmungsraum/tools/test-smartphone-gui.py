@@ -194,6 +194,37 @@ def capture_connect_visibility_change(review):
     page.context.close()
 
 
+def capture_focused_viewport_change(review):
+    hold_resize = """const holdResize = event => {
+      if (window.reviewHoldViewportResize) event.stopImmediatePropagation();
+    };
+    window.addEventListener('resize', holdResize, true);
+    window.visualViewport?.addEventListener('resize', holdResize, true);"""
+    page = review.page(initial(c) + hold_resize, viewport={"width": 390, "height": 844})
+    try:
+        page.clock.run_for(2000)
+        page.locator("#operator-connect-next").click()
+        field = page.locator("#patient-surname")
+        field.fill("Tes")
+        field.evaluate("element => element.setSelectionRange(1, 1)")
+        expect(field).to_be_focused()
+        page.evaluate("window.reviewHoldViewportResize = true")
+        page.set_viewport_size({"width": 390, "height": 591})
+        state = page.evaluate("""() => ({
+          height: innerHeight,
+          measured: document.documentElement.style.getPropertyValue('--usable-height'),
+          scroll: document.documentElement.scrollHeight,
+        })""")
+        assert state["measured"] == "844px", state
+        assert state["height"] == 591 and state["scroll"] <= 591, state
+        review.shot(page, "focused-participant-delayed-viewport", "Focused participant", field, "Keyboard")
+        expect(field).to_be_focused()
+        expect(field).to_have_value("Tes")
+        assert field.evaluate("element => element.selectionStart") == 1
+    finally:
+        page.context.close()
+
+
 def check_stretch(samples):
     findings = []
     for name, intermediate in samples.items():
@@ -228,6 +259,7 @@ def verify():
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
+        capture_focused_viewport_change(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))
         for name, sample in review.samples.items():
