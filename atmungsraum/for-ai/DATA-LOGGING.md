@@ -149,10 +149,11 @@ The file contains the questionnaire schema version, participant ID, native
 session UUID, linked CSV filename, submission timestamp and five question
 IDs, prompts and answers. The same scoped IndexedDB recording database
 keeps the form pending across reload or reconnect and retains the first
-successful submission for each run. **Antworten** downloads
-the saved file for the selected recording. The Quest CSV and its existing
-Drive delivery retain their original bytes. The response file is stored on
-the phone and available through that download.
+successful submission for each run. **Antworten** downloads the saved file
+for the selected recording. While the phone is open, Quest is idle and
+Google Drive is authorized, the same response file syncs automatically to
+the existing private folder. It has its own reserved Drive ID and verified
+checksum receipt, so retries reconcile the same remote file.
 
 ## Participant CSV v2
 

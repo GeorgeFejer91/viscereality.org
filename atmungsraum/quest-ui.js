@@ -6,7 +6,7 @@ import { pairPhone } from './quest-pairing.js?v=7';
 import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=28';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
-import { mountQuestDrive } from './quest-drive-ui.js?v=6';
+import { mountQuestDrive } from './quest-drive-ui.js?v=7';
 import { mainQuestionnairePrompts, questionnaireFile } from './data-logging.js?v=20261118-post-session-questions';
 import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
@@ -338,6 +338,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       const file = questionnaireFile(form.run, answers);
       store = await openQuestRecordingStore(owner);
       await store.saveQuestionnaire(form.id, form.run.session_id, file);
+      drive.schedule();
       const nextForm = await store.pendingQuestionnaire();
       if (questionnaire !== form) return;
       setQuestionnaire(nextForm);

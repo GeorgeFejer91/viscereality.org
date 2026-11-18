@@ -59,7 +59,11 @@ for verified local custody, opens for a completed main, and stays closed
 during saving, after a partial run and after a practice run. They verify
 blank and whitespace rejection, Back and keyboard submission, focused
 editing at reduced viewport height, offline reload, optional access from
-recordings and the exact downloaded JSON identity and five answers.
+recordings and the exact downloaded JSON identity and five answers. The
+mounted Drive case authorizes a fixture account, confirms the CSV first,
+then uploads the questionnaire automatically under a different file ID in
+the same folder. An ambiguous questionnaire response is reconciled without
+reserving another ID, and the uploaded bytes match the downloaded file.
 
 The questionnaire uses the production Pretext and viewport gate, including
 320 px portrait, short landscape, 200% text and the text-spacing override.

@@ -1,9 +1,11 @@
 """Render the production PWA under the playground's strict no-scroll rules."""
+import hashlib
 import json
 import sys
 from pathlib import Path
 from runpy import run_path
 from tempfile import TemporaryDirectory
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -166,7 +168,76 @@ window.reviewRecordings = async (query, owner) => {
 """
 
 
-def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True):
+def connect_fixture_drive(page):
+    folder = "fixture-folder"
+    email = "research@example.test"
+    remote = {}
+    sessions = {}
+    payloads = {}
+    reservations = []
+    lost_answers = []
+    headers = {
+        "Access-Control-Allow-Origin": "https://viscereality.org",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Expose-Headers": "Location",
+    }
+
+    def google(route):
+        url = urlsplit(route.request.url)
+        method = route.request.method
+        def reply(body=None, status=200, **extra):
+            route.fulfill(status=status, headers={**headers, **extra}, json=body)
+        if method == "OPTIONS":
+            reply()
+        elif url.path == "/drive/v3/about":
+            reply({"user": {"emailAddress": email, "permissionId": "fixture-owner"}})
+        elif url.path.endswith("/generateIds"):
+            reservations.append(len(reservations) + 1)
+            reply({"ids": [folder if len(reservations) == 1 else f"file-{len(reservations)}"]})
+        elif url.path == f"/drive/v3/files/{folder}":
+            reply({"id": folder, "mimeType": "application/vnd.google-apps.folder",
+                   "ownedByMe": True, "shared": False, "trashed": False})
+        elif url.path.startswith("/drive/v3/files/"):
+            found = remote.get(url.path.rsplit("/", 1)[1])
+            reply(found, 200 if found else 404)
+        elif method == "POST":
+            metadata = route.request.post_data_json
+            assert metadata["parents"] == [folder]
+            sessions[metadata["id"]] = metadata
+            reply(Location=f"https://www.googleapis.com/upload/drive/v3/files?upload_id={metadata['id']}")
+        else:
+            assert method == "PUT"
+            file_id = parse_qs(url.query)["upload_id"][0]
+            metadata = sessions[file_id]
+            body = route.request.post_data_buffer
+            payloads[metadata["name"]] = body
+            remote[file_id] = {**metadata, "ownedByMe": True, "shared": False, "trashed": False,
+                               "size": str(len(body)), "sha256Checksum": hashlib.sha256(body).hexdigest()}
+            if metadata["name"].endswith("_questionnaire.json") and not lost_answers:
+                assert metadata["mimeType"] == "application/json"
+                lost_answers.append(file_id)
+                reply(status=503)
+            else:
+                reply({"id": file_id})
+
+    page.context.route("https://www.googleapis.com/**", google)
+    page.context.route("https://accounts.google.com/gsi/client", lambda route: route.fulfill(
+        content_type="text/javascript", body="""window.google={accounts:{oauth2:{
+        initTokenClient: options => ({requestAccessToken: () => options.callback({
+          access_token:'fixture-token', scope:'https://www.googleapis.com/auth/drive.file', expires_in:3600
+        })})
+    }}};"""))
+    page.locator("#drive-open").click()
+    page.locator("#quest-drive-client").fill("12345-fixture.apps.googleusercontent.com")
+    page.locator("#quest-drive-account").fill(email)
+    page.locator("#quest-drive-connect").click()
+    expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 1")
+    assert len(payloads) == 1 and len(reservations) == 2
+    return payloads, reservations, lost_answers
+
+
+def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True, drive=False):
     quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
              "clock": 895000, "duration_ms": 900000, "liveRecording": live,
              "recordingAborted": outcome == "aborted", "recordingScenario": scenario}
@@ -190,6 +261,9 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             return
         if not live:
             expect(form).to_be_hidden()
+            expect(page.locator("#questionnaire-open")).to_be_visible()
+            if drive:
+                payloads, reservations, lost_answers = connect_fixture_drive(page)
             page.locator("#questionnaire-open").click()
         expect(form).to_be_visible()
         if tag == "390" and live:
@@ -233,7 +307,13 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         with page.expect_download() as download:
             link.click()
         assert download.value.suggested_filename == "Tes_30_N_2026-11-18_haupt-15_r2_questionnaire.json"
-        record = json.loads(download.value.path().read_bytes())
+        file_bytes = download.value.path().read_bytes()
+        if drive:
+            page.clock.run_for(25000)
+            expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 2")
+            assert payloads[download.value.suggested_filename] == file_bytes
+            assert len(payloads) == 2 and len(reservations) == 3 and len(lost_answers) == 1
+        record = json.loads(file_bytes)
         assert record["participant_id"] == "Tes_30_N"
         assert record["session_id"] == "01234567-89ab-4def-8abc-0123456789ab"
         assert record["recording_filename"] == "Tes_30_N_2026-11-18_haupt-15_r2.csv"
@@ -416,7 +496,7 @@ def verify():
         viewport = {"width": 390, "height": 844}
         capture_questionnaire(review, "aborted", viewport, "", outcome="aborted")
         capture_questionnaire(review, "probe", viewport, "", scenario="probe-5")
-        capture_questionnaire(review, "recordings", viewport, "", live=False)
+        capture_questionnaire(review, "recordings", viewport, "", live=False, drive=True)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)

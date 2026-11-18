@@ -164,21 +164,33 @@ export function mountQuestDrive() {
               return;
             }
             let saved = 0;
+            async function uploadFile(id, file, resetDriveUpload = false) {
+              signal.throwIfAborted();
+              report('Dateien werden in Google Drive gespeichert …');
+              await current.drive.ensureFolder(folderId, signal);
+              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file, signal, resetDriveUpload });
+            }
             for (const id of (await store.ids()).reverse()) {
               signal.throwIfAborted();
               const receipt = await store.readDelivery(id);
-              if (receipt?.verified && receipt.folderId === folderId) { saved++; continue; }
-              const entry = await store.get(id);
-              if (entry?.bundleVersion !== 1 || !(entry.bundle instanceof File)) continue;
-              report('Aufnahmen werden in Google Drive gespeichert …');
-              await current.drive.ensureFolder(folderId, signal);
-              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file: entry.bundle, signal,
-                resetDriveUpload: entry.resetDriveUpload === true });
+              if (receipt?.verified && receipt.folderId === folderId) saved++;
+              else {
+                const entry = await store.get(id);
+                if (entry?.bundleVersion === 1 && entry.bundle instanceof File) {
+                  await uploadFile(id, entry.bundle, entry.resetDriveUpload === true);
+                  saved++;
+                }
+              }
+              const form = await store.getQuestionnaire(id);
+              if (!(form?.file instanceof File)) continue;
+              const answerId = id + '/questionnaire';
+              const answerReceipt = await store.readDelivery(answerId);
+              if (!answerReceipt?.verified || answerReceipt.folderId !== folderId) await uploadFile(answerId, form.file);
               saved++;
             }
             signal.throwIfAborted();
-            report(saved ? `In Google Drive bestätigt: ${saved}` : 'Google Drive verbunden. Warte auf Aufnahmen.');
-            due = performance.now() + 60000;
+            report(saved ? 'In Google Drive bestätigt: ' + saved : 'Google Drive verbunden. Warte auf Aufnahmen.');
+            if (due !== 0) due = performance.now() + 60000;
           } finally { store.close(); }
         });
       } catch (error) {
