@@ -271,6 +271,22 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             page.add_init_script("window.reviewJoin='fail';")
             page.reload(wait_until="load")
             expect(form).to_be_visible()
+            # The recording and its unfinished form belong to this pairing.
+            page.locator("#questionnaire-answer").fill("Temporäre Eingabe")
+            page.evaluate('''() => {
+                const key = 'atmungsraum-quest-pair';
+                window.reviewSavedQuestPair = localStorage.getItem(key);
+                localStorage.removeItem(key);
+                dispatchEvent(new StorageEvent('storage', {key}));
+            }''')
+            expect(form).to_be_hidden()
+            expect(page.locator("#questionnaire-answer")).to_have_value("")
+            page.evaluate('''() => {
+                const key = 'atmungsraum-quest-pair';
+                localStorage.setItem(key, window.reviewSavedQuestPair);
+                dispatchEvent(new StorageEvent('storage', {key}));
+            }''')
+            expect(form).to_be_visible()
         answer = page.locator("#questionnaire-answer")
         heading = page.locator("#questionnaire-title")
         submit = page.locator("#questionnaire-next")

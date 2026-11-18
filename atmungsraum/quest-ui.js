@@ -294,11 +294,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function setQuestionnaire(form) {
+    if (form && !localArchiveOwner()) return;
     if (questionnaire?.id === form?.id && questionnaire?.run.session_id === form?.run.session_id) return;
     questionnaire = form;
     answers.fill('');
     questionIndex = 0;
     if (form) showQuestion();
+    else answerInput.value = '';
   }
 
   answerInput.addEventListener('input', () => { answerInput.setCustomValidity(''); });
@@ -387,7 +389,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       }
       wasActive = nativeActive;
     }
-    const showQuestionnaire = questionnaire && (questionnaire.required || localView.step === 'questionnaire');
+    const showQuestionnaire = archiveScope && questionnaire && (questionnaire.required || localView.step === 'questionnaire');
     if (location.hash === '#daten' && !nativeActive && !context.recovery && !showQuestionnaire) {
       utilities.settings.disabled = utilities.recordings.disabled = false;
       for (const button of Object.values(utilities)) button.removeAttribute('aria-current');
@@ -1170,6 +1172,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     exportMessage = '';
     archivePicker.replaceChildren();
     clearDownload();
+    setQuestionnaire(undefined);
   }
 
   async function selectArchive() {
