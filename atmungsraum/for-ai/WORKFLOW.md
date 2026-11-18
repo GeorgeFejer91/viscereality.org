@@ -247,6 +247,9 @@ Do not publish them or machine-specific paths.
 The user's 2026-11-15 correction requires testing iterative APKs locally on the
 headset before Meta Developer submission. Do not upload every test build to the
 Dev Hub; hand off a qualified release after the relevant hardware checks.
+Agents perform the authorized lab install, verify the resulting runtime
+and continue through the applicable
+[stress and recovery checks](VERIFICATION.md#autonomous-device-validation).
 APK startup must request required runtime permissions using the attended
 platform flow even when its app panel starts closed. A one-off permission
 pre-grant is only a bench exception when explicitly authorized by the user.
@@ -310,12 +313,16 @@ George's standing instruction of 2026-11-13 includes updating the installed
 Atmungsraum app on the lab Pixel 10 after each deployment that changes the PWA.
 The installed app loads the live website. Once the release is live, target
 the authorized Pixel over USB and reload its standalone Atmungsraum page
-through Chrome DevTools, or reopen it from the home-screen icon. Reload when
+through Chrome DevTools, or reopen it from the home-screen icon. If the
+standalone app is missing, install it on the selected lab Pixel. Reload when
 the app is idle and preserve its site data, saved Quest pairing and recordings.
 Confirm standalone mode, the expected screen, and that the loaded versioned
-runtime assets match the release. Record the deployed commit and phone
-readback in [PROJECT.md](PROJECT.md). If the Pixel is unavailable, locked, or
-in use, record the blocker and leave the device check pending.
+runtime assets match the release. Drive the affected phone cases autonomously
+with [RustDesk MCP](RUSTDESK-PHONE-TESTING.md#run-and-evaluate-cases) and
+continue through the [stress and recovery checks](VERIFICATION.md#autonomous-device-validation).
+Record the deployed commit and phone readback in [PROJECT.md](PROJECT.md).
+If the Pixel is unavailable, locked, or in use, try its authorized remote
+recovery where applicable and keep the affected check pending.
 
 `pwa-install.js` owns the permanent install action and browser prompt lifecycle.
 Its manual help covers Android, iPhone and desktop Brave, including embedded
