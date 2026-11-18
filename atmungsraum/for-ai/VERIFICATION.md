@@ -59,6 +59,38 @@ improvement through confirming the last affected acceptance criterion.
 
 ### Canonical Developer build inputs — 2026-11-18
 
+The canonical Developer candidate now builds from a verified reconstruction
+of the signed baseline inputs. The original visual profile was recovered
+from the ARM64 library and matches its locked SHA-256
+`6fcc1a35e8bfd5c1243d25e6cb350900501ad2ad84e5a457dac242170956b21a`.
+Disassembly binds the four embedded particle arrays to explicit pointers and
+lengths. The recovered auxiliary array matches the baseline's compiled
+coupling SHA-256 `6f8328b0b484a33db6bb6c1e238c33817733b05e94d0b927c24d348cec1efd96`.
+The current particle shader sources compiled with the baseline parameters
+produce all three exact SPIR-V blobs in the signed baseline.
+
+The reconstructed input spec and provider use the original values and asset
+bytes with local paths. Fresh resolution has identical selected and denied
+features, Android manifest, provider content inventory and runtime values,
+apart from the two generated activation binding hashes. Those hashes bind
+the relocated input paths and provider manifest. This reconstructs effective
+inputs and records a new spec hash. The original source app-spec bytes remain
+unavailable.
+
+SDK 207 intake now has the user's license approval. The official archive,
+header inventory and ARM64 loader match the supplied pins. The native
+transport test with Windows-targeted LLVM, production Java/DEX/manifest
+checks and negative selection/tamper controls passed. The full canonical
+assembly passed the production Developer certificate check and the actual
+signed session closure. Independent inspection verified ARM64, 16 KiB
+alignment, all ten WebRTC assets, SDK loader bytes, original particle arrays,
+visual profile, compiled particle shaders, five provider assets and OpenXR
+loader in [Developer code 29](../quest/apks/README.md#canonical-developer-29-candidate).
+Its recorded Meta runtime qualification is still pending. The authenticated
+Meta dashboard continues to show code 27 and build `1465199570012388`.
+
+The earlier input investigation follows for provenance.
+
 The retained fixed27-r2 APK matched the installed Meta code 27 by
 SHA-256. Its v3 certificate matched the canonical assembler's Developer
 signer. The packaged Meta Platform SDK ARM64 loader matched the supplied
