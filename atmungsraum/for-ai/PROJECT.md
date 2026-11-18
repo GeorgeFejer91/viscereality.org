@@ -162,20 +162,37 @@ Meta release. The physical and Meta publication checks remain open.
 Both signed successor APKs are now prepared in private release staging.
 Code 28 preserves the baseline transport feature set for the genuine Meta
 update test; code 29 carries the unified WebRTC runtime and bundled protocol.
-The next physical action is wearer readiness with the Quest, Touch controllers
-and Polar H10, followed by the clean recorded code 27 baseline and held update
-sequence. Readiness was requested; no new calibration or collection was
+The user explicitly chose **Continue preparation, test later** on 2026-11-18.
+Keep physical acceptance deferred and continue independent preparation.
+Before the next physical session, confirm fresh wearer readiness with the
+Quest, Touch controllers and Polar H10, then resume the clean recorded code 27
+baseline and held update sequence. No new calibration or collection was
 started. Do not replace the Meta baseline with an ADB-installed successor.
+
+The standard Android companion's retained signing key is still required.
+Its installed certificate is
+`5d6502013bba4f61acfb82a008bda7420bcff8c8920311bd34d07e1a618cb0e1`.
+The available local Android debug key has certificate
+`51a7052801899e071b728ae7e4dbd1fba0507f0f8c6ffdb7c6754fc1eb65eedb`.
+It cannot sign an in-place update to that installation. Prepare the current
+scanner with the original companion key, then verify its installed bytes,
+retained UID/grants and matching Quest enrollment for unified acceptance.
+
 The signed code 29 input/build record is published through
 [PR 138](https://github.com/GeorgeFejer91/viscereality.org/pull/138), merge
 `13e0e042dae0d7fde92510b708fc6c99e73a87e9`, with successful
 [Pages run 44372630949](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44372630949)
 and exact live comparisons of all three changed documents.
-The held code 28 evidence uses branch `codex/atmungsraum-held28-evidence`
-and [PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140).
-The context checker and whitespace review pass. Follow the PR's exact merge
-deployment and compare the three live documents before handing off; the
-runtime release policy remains at the verified Meta baseline.
+The held code 28 evidence was published through
+[PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140), merge
+`a145a05d2cf318d44bff07a8a8614c7730cca59e`. Its exact
+[Pages run 44376330876](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44376330876)
+succeeded and all three live documents matched Git. The preparation handoff
+uses branch `codex/atmungsraum-test-deferral` and
+[PR 141](https://github.com/GeorgeFejer91/viscereality.org/pull/141).
+The context checker and whitespace review pass. Follow the handoff's exact
+merge deployment and compare the live notes before ending; the runtime
+release policy remains at the verified Meta baseline.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions

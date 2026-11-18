@@ -257,6 +257,14 @@ certificate. Its available update has a different signer. Verify
 authenticated startup, WebRTC route selection and original native
 receipts with the matching enrollment and current production companion.
 
+Preparation rechecked the public certificate of the local Android debug
+keystore. It is `51a7052801899e071b728ae7e4dbd1fba0507f0f8c6ffdb7c6754fc1eb65eedb`,
+matching the available update's signer. The installed standard companion
+uses `5d6502013bba4f61acfb82a008bda7420bcff8c8920311bd34d07e1a618cb0e1`.
+The original companion key remains a prerequisite for an in-place release.
+No replacement or enrollment change was attempted. The user deferred the
+physical acceptance test; preparation and the held APK sequence remain ready.
+
 ### Remembered Bluetooth service selection — 2026-11-18
 
 The lab Bluetooth read returned both Atmungsraum service instances under
