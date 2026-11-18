@@ -362,6 +362,34 @@ def run():
         context.close()
         verify_reconnect(browser, url, release)
         verify_legacy_commissioning(browser, url, release)
+        verify_idle_release_timer(browser, url, release)
+
+
+def verify_idle_release_timer(browser, url, release):
+    release.update(app_url=OLD, probe_result=None)
+    with browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True) as context:
+        page = context.new_page()
+        page.clock.install()
+        idle = url.replace('#daten', '')
+        page.goto(idle)
+        page.locator('#quest-find').wait_for(state='visible')
+        old_script = page.locator('script[src="./app.js?v=pwa-test-old"]')
+        assert old_script.count() == 1
+        page.evaluate("localStorage.setItem('pwa-test-sentinel', 'retained')")
+        probe_count = len(release['probes'])
+        release['app_url'] = NEW
+        page.locator('#settings-open').click()
+        page.clock.fast_forward(5 * 60 * 1000)
+        assert old_script.count() == 1 and len(release['probes']) == probe_count
+        assert page.locator('#settings-screen').is_visible()
+        page.locator('#settings-screen [data-operator-return]').click()
+        page.locator('#quest-find').wait_for(state='visible')
+        page.clock.fast_forward(5 * 60 * 1000)
+        page.wait_for_selector('script[src="./app.js?v=pwa-test-new"]', state='attached', timeout=5000)
+        page.wait_for_function("document.documentElement.dataset.operatorStep === 'connect' && !location.search.includes('_pwa=')")
+        assert page.url == idle + '#connect' and len(release['probes']) == probe_count + 1
+        assert page.evaluate("localStorage.getItem('pwa-test-sentinel')") == 'retained'
+        print('PASS open and idle Connect updates once without hiding Settings or dropping storage')
 
 
 if __name__ == '__main__':
