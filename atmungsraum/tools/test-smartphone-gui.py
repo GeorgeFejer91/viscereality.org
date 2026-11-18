@@ -304,7 +304,19 @@ def rebuild_drive_journal(page, authorize, questionnaire_id):
     })""")
 
 
-def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True, drive=False):
+def expect_questionnaire_focus(control):
+    expect(control).to_be_focused()
+    bounds = control.evaluate("""element => {
+        const target = element.getBoundingClientRect();
+        const form = element.form.getBoundingClientRect();
+        return { above: Math.round(form.top - target.top), below: Math.round(target.bottom - form.bottom),
+                 pageScroll: document.scrollingElement.scrollTop };
+    }""")
+    assert bounds["above"] <= 0 and bounds["below"] <= 0 and bounds["pageScroll"] == 0, bounds
+
+
+def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True,
+                          drive=False, focus_viewport=None):
     quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
              "clock": 895000, "duration_ms": 900000, "liveRecording": live,
              "recordingAborted": outcome == "aborted", "recordingScenario": scenario}
@@ -360,6 +372,8 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
                 dispatchEvent(new StorageEvent('storage', {key}));
             }''')
             expect(form).to_be_visible()
+        if focus_viewport:
+            page.set_viewport_size(focus_viewport)
         fields = page.locator("#questionnaire-form")
         first = page.locator("#questionnaire-q1 input")
         last = page.locator("#questionnaire-q5 input")
@@ -368,18 +382,21 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         expect(fields.locator('input[type="radio"]')).to_have_count(15)
         expect(fields.locator('input[type="range"]')).to_have_count(2)
         submit.click()
-        expect(first).to_be_focused()
+        expect_questionnaire_focus(first)
         expect(first).to_have_attribute("aria-invalid", "true")
         expect(page.locator("#questionnaire-status")).to_have_text("Bitte beantworte alle fünf Fragen.")
         review.shot(page, f"{tag}-questionnaire-first", "Scroll form at the first item", first, "Questionnaire")
         first.press("Home")
         expect(first).to_have_attribute("aria-valuetext", "0")
+        if focus_viewport:
+            submit.click()
+            expect_questionnaire_focus(fields.locator("#questionnaire-q2 input").first)
         for question, value in ((2, 1), (3, 5), (4, 3)):
             choice = fields.locator(f'#questionnaire-q{question} input[value="{value}"]')
             choice.check()
             expect(choice).to_be_checked()
         submit.click()
-        expect(last).to_be_focused()
+        expect_questionnaire_focus(last)
         expect(last).to_have_attribute("aria-invalid", "true")
         expect(last).to_have_attribute("aria-valuetext", "Noch keine Auswahl")
         if tag in ("320", "landscape", "enlarged"):
@@ -395,7 +412,7 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         submit.click()
         link = page.locator("#questionnaire-download")
         expect(link).to_be_visible()
-        if tag == "390" and live:
+        if (tag == "390" and live) or focus_viewport:
             page.set_viewport_size(viewport)
         review.shot(page, f"{tag}-questionnaire-saved", "Saved answers", link, "Questionnaire")
         assert mutations(page)["session"] == []
@@ -598,6 +615,8 @@ def verify():
         capture_questionnaire(review, "aborted", viewport, "", outcome="aborted")
         capture_questionnaire(review, "probe", viewport, "", scenario="probe-5")
         capture_questionnaire(review, "recordings", viewport, "", live=False, drive=True)
+        capture_questionnaire(review, "compact-enlarged", viewport, "200%", focus_viewport={"width": 320, "height": 428})
+        capture_questionnaire(review, "landscape-enlarged", viewport, "200%", focus_viewport={"width": 640, "height": 320})
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)

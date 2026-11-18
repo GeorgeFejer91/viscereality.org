@@ -8,7 +8,7 @@ import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from '.
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
 import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-scales';
-import { mountQuestionnaireForm } from './questionnaire-form.js?v=1';
+import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';

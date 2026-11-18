@@ -146,11 +146,15 @@ when capture ends. Lock and reboot recovery still need an attended check.
   deployed merge 65336fc. Seven public assets match Git. The 378-state gate
   and a browser run on the public assets confirmed scrolling, numeric JSON
   and mocked Drive reconciliation.
-- [ ] Refresh the installed Pixel to 20261118-questionnaire-scales and
+- [ ] Refresh the installed Pixel to the current questionnaire release and
   verify it loaded the release. Quest awake coverage and the RustDesk frame
   were confirmed, and the Pixel retained the older release. Android reported
   no enabled accessibility services, so the remote session could not drive
   a refresh. Re-enable RustDesk Input on the Pixel and retry the idle launch.
+- [ ] Verify Recordings fits the usable viewport with 200% text at
+  320 × 428 portrait and 640 × 320 landscape. Both reproduced document
+  scroll after the questionnaire was saved. Retain the download and
+  navigation actions and the 48 px target size.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem
