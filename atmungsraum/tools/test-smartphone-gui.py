@@ -139,8 +139,9 @@ window.reviewRecordings = async (query, owner) => {
   const prefix = new TextEncoder().encode('schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us\\r\\n4,Tes_30_N,' +
     session_id + ',2,' + scenario + ',official-start,2026-11-18T11:45:00.012345Z,0\\r\\n');
   const outcome = reviewQuest.recordingAborted ? 'aborted' : 'completed';
+  const audioElapsed = reviewQuest.recordingAborted ? '830000000' : '899902362';
   const terminal = ['4','Tes_30_N',session_id,'2',scenario,'end','2026-11-18T12:00:00Z',
-    '900000000','900000000','ended','ended',...Array(10).fill(''),outcome,outcome,''].join(',');
+    '900000000',audioElapsed,'ended','ended',...Array(10).fill(''),outcome,outcome,''].join(',');
   const full = new Uint8Array([...prefix, ...new TextEncoder().encode(terminal + '\\r\\n')]);
   const sha = async bytes => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
     byte => byte.toString(16).padStart(2, '0')).join('');

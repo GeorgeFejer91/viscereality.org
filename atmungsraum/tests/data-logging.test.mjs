@@ -38,8 +38,14 @@ test('a questionnaire belongs to the completed native main CSV and requires five
   const bytes = cells => new TextEncoder().encode('previous row\r\n' + cells.join(',') + '\r\n');
   const run = completedMainQuestionnaire(csv, bytes(row));
   assert.deepEqual(run, { participant_id: 'Mül_35_F', session_id, recording_filename: name });
+  // Saved v4 exports use slightly different projected audio clocks at the same native completion gate.
+  for (const elapsed of ['899963105', '899902362', '898724842']) {
+    assert.deepEqual(completedMainQuestionnaire(csv, bytes(row.with(8, elapsed))), run);
+  }
+  assert.equal(completedMainQuestionnaire(csv,
+    bytes(row.with(8, '830000000').with(21, 'aborted').with(22, 'save-next'))), null);
   for (const [column, value] of [[1, 'Tes_30_N'], [2, 'another-session'], [3, '1'], [4, 'probe-5'],
-    [5, 'breath'], [8, '830000000'], [21, 'aborted']]) {
+    [5, 'breath'], [21, 'aborted'], [22, 'recording-loss']]) {
     const wrong = row.with(column, value);
     assert.equal(completedMainQuestionnaire(csv, bytes(wrong)), null);
   }
