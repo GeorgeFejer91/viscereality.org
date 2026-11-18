@@ -118,6 +118,8 @@ and [VERIFICATION.md](VERIFICATION.md) for the app acceptance checks.
 
 Load [`rustdesk-mcp-operator`](skills/rustdesk-mcp-operator/SKILL.md) for
 remote screen frames and input through the separate RustDeskMCP Windows client.
+Use this route for every interactive action on the physical lab Pixel.
+See the [standing device workflow](WORKFLOW.md#physical-device-development).
 The vendored skill and the [Windows release](https://github.com/YaoxinCS/RustdeskMCP/releases/tag/v1.4.6-mcp.1)
 come from [`abbd7d1`](https://github.com/YaoxinCS/RustdeskMCP/tree/abbd7d1a287980c91f979b5239c05ae0e08059e2/skills/rustdesk-mcp-operator).
 The upstream skill shows a source checkout path. For the packaged Windows
@@ -139,7 +141,9 @@ verified local playbooks or their commit-pinned public copies. Follow the
 playbook index for provider selection and headset readiness.
 
 Load the installed Codex skill `$keep-quest-awake` for bench and rehearsal
-awake holds, protected sleep recovery, and watchdog cleanup. For a local Quest
+awake holds, protected sleep recovery, and watchdog cleanup. Keep the headset
+awake throughout each [hardware development session](WORKFLOW.md#physical-device-development).
+For a local Quest
 2 on a Windows host, check the installed
 [periodic watchdog](QUEST-AWAKE-TESTING.md#windows-periodic-watchdog-for-the-lab-quest-2)
 before choosing a one-shot hold or other awake route. Use the

@@ -10,6 +10,10 @@ state-management and native/remote routes. Resume the goal/checklist in
 [PROJECT.md](PROJECT.md); before handoff, record evidence, blockers, the next
 action and observed Git/publication state in that same owner.
 
+Follow the [physical device development workflow](WORKFLOW.md#physical-device-development)
+for every hardware session. Keep the Quest awake throughout the session and
+use RustDesk MCP for all interactive Pixel actions.
+
 The primary delivery goal is a progressive web app (PWA) for smartphones.
 
 The operator layout follows the [sequential-page contract](UI-LAYOUT.md):

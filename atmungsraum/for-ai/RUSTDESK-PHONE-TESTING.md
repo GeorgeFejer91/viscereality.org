@@ -2,7 +2,11 @@
 
 Use this runbook for the installed Atmungsraum PWA on the lab Android phone.
 RustDeskMCP supplies physical phone frames and taps. The
-[smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
+[physical device development workflow](WORKFLOW.md#physical-device-development)
+applies to every interactive Pixel action, including Android settings and PWA
+launch or refresh.
+
+The [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
 supplies repeatable Pretext and painted DOM measurements. The authenticated
 Quest status and receipts supply native behavior evidence.
 

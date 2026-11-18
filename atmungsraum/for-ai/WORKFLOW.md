@@ -306,14 +306,33 @@ When restoring/updating the measurement dependency, run
 lockfile, copied runtime modules, and license aligned, and rerun rendered checks.
 The vendor script copies only the main API's runtime module graph and license.
 
+## Physical device development
+
+Keep the selected Quest awake throughout every Atmungsraum hardware
+development, debugging and validation session. Start with
+[`$keep-quest-awake`](QUEST-AWAKE-TESTING.md) before the first device action.
+Confirm the exact headset, active hold and display-on readback. Recheck them
+after idle, build, install or reconnect gaps and renew the bounded hold as
+needed. Coordinate the expiry and restore the prior policy when the session
+ends. A protected headset prompt still needs the wearer.
+
+Use [RustDesk MCP](RUSTDESK-PHONE-TESTING.md) for every interactive action
+and screen capture on the lab Pixel during development. This includes the
+launcher, PWA, system settings and Bluetooth or network choosers. Use fresh
+RustDesk frames to locate controls and confirm each meaningful action.
+Keep ADB and DevTools available for device identification, USB forwarding,
+non-UI tooling and read-only diagnostics. If RustDesk input or capture drops,
+restore the authorized RustDesk route and request help only for a protected
+phone-side step.
+
 ## Smartphone PWA
 
 George's standing instruction of 2026-11-13 includes updating the installed
 Atmungsraum app on the lab Pixel 10 after each deployment that changes the PWA.
 The installed app loads the live website. Once the release is live, target
-the authorized Pixel over USB and reload its standalone Atmungsraum page
-through Chrome DevTools, or reopen it from the home-screen icon. If the
-standalone app is missing, install it on the selected lab Pixel. Reload when
+the authorized Pixel and use RustDesk MCP to reopen the standalone
+Atmungsraum app from its home-screen icon. If the standalone app is missing,
+install it on the selected lab Pixel through RustDesk. Refresh when
 the app is idle and preserve its site data, saved Quest pairing and recordings.
 Confirm standalone mode, the expected screen, and that the loaded versioned
 runtime assets match the release. Drive the affected phone cases autonomously

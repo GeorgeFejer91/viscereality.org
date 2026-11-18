@@ -23,8 +23,10 @@ improvement through confirming the last affected acceptance criterion.
    baseline and the real PWA-driven Meta route for the official transition,
    then verify the installed successor.
 3. Use the Meta Quest workflow and serial-scoped ADB for supported headset
-   navigation, launch, installs and readback. Use RustDesk MCP frames and
-   input to exercise the physical Pixel UI. Try the existing authorized
+   navigation, launch, installs and readback. Follow the
+   [physical device development workflow](WORKFLOW.md#physical-device-development)
+   for continuous Quest wake coverage and all interactive Pixel actions
+   through RustDesk MCP. Try the existing authorized
    remote recovery procedures before requesting assistance. Reserve wearer
    steps for platform prompts that require attendance, physical controls,
    tracking and worn Polar H10 contact. Continue independent checks while

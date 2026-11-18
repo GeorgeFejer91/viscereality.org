@@ -189,6 +189,16 @@ with zero new reservations. Host tests reject changed bytes, a shared file
 and duplicate or incomplete inventory. The physical Drive custody gate
 remains open.
 
+RustDesk MCP opened the Pixel Bluetooth chooser, selected Quest 2 and
+pressed Pair. The next frame confirmed Bluetooth discovery and a failed
+network connection. Both devices were on the hotel Wi-Fi. A phone-side
+TCP probe to the Quest reported no route, while the same Quest gateway
+answered via its exact USB connection. Next, retry pairing on a shared
+private network, approve the headset code and authorize Drive. The
+[standing development workflow](WORKFLOW.md#physical-device-development)
+requires awake coverage throughout device work and RustDesk MCP for all
+interactive Pixel actions.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and
