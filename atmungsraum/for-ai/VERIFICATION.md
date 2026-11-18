@@ -123,6 +123,27 @@ returned 6.08 seconds after signaling resumed. RustDesk confirmed the
 original native Recenter receipt on the recovered route. Both fixtures were
 removed and the routine PWA and headset power settings were read back.
 
+### Commissioning snapshot expiry — 2026-11-18
+
+Capture the installed PWA's local commissioning HTTP statuses and the timing
+and version of data-channel frames. Keep request bodies, pairing material
+and offer secrets private. Two hotel Wi-Fi first-join traces reached an open
+channel around 1.4 seconds after loading. The companion replied 403 on the
+first authorization request and the native proof exchange began only after
+rediscovery on a second carrier.
+
+The physical control held the first ready Bluetooth snapshot for 12.25
+seconds, past the companion's 12-second cache lifetime. The original PWA
+received 403 and opened two carriers for the same native offer. The second
+authorization began 14.02 seconds after the first denial.
+
+The production broker now rereads Bluetooth discovery after an authorization
+403 using the existing commissioning deadline. It retries the exact proof
+request once when the installation, both epochs, room and room secret still
+match. The three host regressions cover searching then ready, rejecting a
+changed rendezvous, and deadline cancellation. Enrollment still requires
+native proof and authenticated status.
+
 ## Smartphone GUI release gate
 
 Run `python -B for-ai/scripts/check-gui.py` from `atmungsraum` while editing.

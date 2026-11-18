@@ -534,6 +534,24 @@ Continue with the common-route LAN comparison, distinct client-isolation
 and blocked-UDP cases, negative trust checks, worn H10 recording and export
 custody, and the official Meta transition.
 
+#### Commissioning after Bluetooth snapshot expiry — 2026-11-18
+
+Two traced first joins opened their first WebRTC data channels, then the
+phone's commissioning request returned HTTP 403 before any proof frame
+reached Quest. The PWA waited for its next connection attempt. A fresh
+Bluetooth scan and a second WebRTC carrier brought both cases to control
+in about 16.4–16.6 seconds.
+
+A controlled repeat aged the first ready snapshot while keeping the
+native offer in place. The same local rejection reproduced and the
+original PWA created a second carrier. Release 20261118-commissioning-snapshot-retry
+refreshes discovery after the local denial and retries once on the same
+carrier if the full owner and offer match. See
+[verification](VERIFICATION.md#commissioning-snapshot-expiry--2026-11-18).
+After publication, rerun the physical expiry fixture and the default-ICE
+first-join and saved-rejoin timing matrix. The H10 custody and official
+Meta transition gates remain open.
+
 #### Temporary status loss after Save — 2026-11-18
 
 The mounted PWA dropped an explicit Save→Update intent when one native

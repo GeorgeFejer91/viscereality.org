@@ -1218,7 +1218,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (savedPair?.enrollment) void connect(savedPair);
       else {
         nextConnect = performance.now() + 8000;
-        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=2');
+        const { readCommissionedQuest } = await import('./quest-commissioning.js?v=3');
         const commissioned = await readCommissionedQuest();
         if (!savedPair?.enrollment && !document.hidden && !connecting && !userAction
           && !rehearsal.state.status && autoConnect && location.hash !== '#daten' && canAutoConnect()) {
@@ -1376,7 +1376,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         let connectionFailure;
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=4');
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=5');
             const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
             settings = { ...settings, enrollment: session.enrollment };
             gateway = await join(undefined, discovery, session.transport);

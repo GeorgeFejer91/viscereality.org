@@ -1,4 +1,4 @@
-import { companionAccessDenied, readJson } from './quest-gateway.js?v=18';
+import { companionAccessDenied, readJson, rediscoverQuest, sameQuest } from './quest-gateway.js?v=18';
 
 const utf8 = new TextEncoder();
 const decode = new TextDecoder('utf-8', { fatal: true });
@@ -25,7 +25,7 @@ export async function recoverCommissionedEnrollment({ discovery, channel, broker
   const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('');
   const offer = { device: owner.device, epoch: owner.epoch, native_epoch: owner.native_epoch,
     room: rtc.r, id, public_key: publicKey };
-  const frame = await broker.authorize(offer, signal);
+  const frame = await broker.authorize(offer, signal, discovery);
   if (frame?.v !== 2 || frame.id !== id || frame.public_key !== publicKey || !keyValue.test(frame.tag)
     || !keyValue.test(frame.proof) || Object.keys(frame).length !== 5) throw rejected();
   signal.throwIfAborted();
@@ -81,7 +81,24 @@ export async function readCommissionedQuest() {
 }
 
 export const commissioningBroker = {
-  authorize: (offer, signal) => companion('/request', offer, signal),
+  async authorize(offer, signal, { owner, rtc }) {
+    try {
+      return await companion('/request', offer, signal);
+    } catch (error) {
+      if (error.status !== 403) throw error;
+      // Discovery can expire while the WebRTC channels are opening.
+      let current;
+      do {
+        signal.throwIfAborted();
+        current = await rediscoverQuest(owner, signal);
+        if (current?.state === 'searching') await new Promise(resolve => setTimeout(resolve, 300));
+      } while (current?.state === 'searching');
+      if (current?.state !== 'ready' || !sameQuest(owner, current.owner)
+        || current.rtc?.r !== rtc.r || current.rtc?.p !== rtc.p) throw error;
+      signal.throwIfAborted();
+      return companion('/request', offer, signal);
+    }
+  },
   async verify(request, reply, signal) {
     const result = await companion('/verify', { request, reply }, signal);
     return result?.verified === true;
