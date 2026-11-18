@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import re
+from bisect import bisect_right
 from collections import Counter
 from contextlib import ExitStack
 from datetime import UTC, datetime, timedelta
@@ -26,11 +27,11 @@ PROJECTED = {
 }
 SENSOR_FIELDS = dict(sensor_time_ns="source_time_ns", sensor_frame_sequence="source_sequence",
                      sensor_sample_index="sample_index")
-EVENTS = {
+PLAYBACK_EVENTS = {
     "official-start", "audio-started", "experiment-paused", "experiment-resumed", "audio-ended", "audio-error",
-    "ecg-interrupted", "ecg-resumed", "acc-interrupted", "acc-resumed",
 }
 SIGNAL_EVENTS = {"ecg-interrupted", "ecg-resumed", "acc-interrupted", "acc-resumed"}
+CSV_RECORD_TYPES = PLAYBACK_EVENTS | SIGNAL_EVENTS | PROJECTED.keys() | {"end"}
 HEADER = """schema_version,participant_id,session_id,run_index,scenario_id,record_type,timestamp_utc,elapsed_us,audio_elapsed_us,playback_state,audio_phase,sensor_time_ns,sensor_frame_sequence,sensor_sample_index,ecg_uv,acc_x_mg,acc_y_mg,acc_z_mg,render_frame,radius_m,breathing_phase,session_status,end_reason,signal_reason""".split(",")
 
 
@@ -127,6 +128,55 @@ def check_measurement(kind, actual, native, setup_polar_clock):
         require(key in fields or key in precision or actual[key] == "", f"unexpected {kind} measurement column")
 
 
+def playback_rows(events, start, end, offset, identity):
+    duration = END_US * 1000
+    require(identity["planned_duration_seconds"] == END_US // 1_000_000,
+            "native playback profile has the wrong duration")
+    offsets, phases = zip(*identity["phase_offsets_ns"])
+    require(offsets[0] == 0 and all(type(value) is int and 0 <= value < duration for value in offsets)
+            and all(left < right for left, right in zip(offsets, offsets[1:]))
+            and all(isinstance(phase, str) and phase for phase in phases),
+            "native playback phase offsets are invalid")
+
+    def projection(kind, at, elapsed, state):
+        elapsed = min(elapsed, duration)
+        if elapsed == duration:
+            state = "ended"
+        phase = state if state in {"waiting", "ended"} else phases[bisect_right(offsets, elapsed) - 1]
+        return kind, iso_utc((at + offset) // 1000), str((at - start) // 1000), str(elapsed // 1000), state, phase
+
+    state = None
+    media_started = False
+    last = start
+    elapsed = 0
+    for event in events:
+        at, kind = event["observed_monotonic_ns"], event["event"]
+        if kind not in PLAYBACK_EVENTS or not start <= at <= end:
+            continue
+        if kind == "official-start":
+            next_state = "waiting"
+        elif state in {None, "ended"}:
+            continue
+        elif kind == "audio-started":
+            if media_started:
+                continue
+            media_started = True
+            next_state = "paused" if state == "paused" else "playing"
+        elif kind == "experiment-paused":
+            next_state = "paused"
+        elif kind == "experiment-resumed":
+            next_state = "playing" if media_started else "waiting"
+        else:
+            next_state = "ended"
+        require(last <= at and event["observed_utc_ns"] == at + offset,
+                "native playback transition order or clock mismatch")
+        if state == "playing":
+            elapsed += at - last
+        last, state = at, next_state
+        yield projection(kind, at, elapsed, state)
+    yield projection("end", end, elapsed + (end - last if state == "playing" else 0), state)
+
+
 def verify_csv(path, native_directory, run, manifest, terminal, expected):
     identity = manifest["participant"]
     require(identity == terminal["participant"] and identity["scenario_id"] == SCENARIO
@@ -150,6 +200,7 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
         require(start < at <= end and completion[0]["observed_utc_ns"] == at + offset,
                 "native completion event is outside the run or has the wrong clock")
         completion_elapsed_us = (at - start) // 1000
+    playback = playback_rows(events, start, end, offset, identity)
     signal_events = iter(
         (row["event"], row["observed_monotonic_ns"], row["signal_reason"])
         for row in events if row["event"] in SIGNAL_EVENTS and start <= row["observed_monotonic_ns"] <= end
@@ -179,7 +230,7 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
             require(row["schema_version"] == "4" and all(row[key] == value for key, value in common.items()),
                     "CSV row identity mismatch")
             kind = row["record_type"]
-            require(kind in (EVENTS | PROJECTED.keys() | {"end"}) and counts["end"] == 0, "CSV row beyond terminal or unknown kind")
+            require(kind in CSV_RECORD_TYPES and counts["end"] == 0, "CSV row beyond terminal or unknown kind")
             require(0 <= int(row["elapsed_us"]) <= (end - start) // 1000, "CSV row outside start/end clock bounds")
             if kind in PROJECTED:
                 native = next(projected[kind], None)
@@ -190,10 +241,10 @@ def verify_csv(path, native_directory, run, manifest, terminal, expected):
                         and row["elapsed_us"] == str((at - start) // 1000)
                         and not any(row[key] for key in HEADER[8:11]),
                         f"{kind} projected observation clock mismatch")
-            if kind in {"official-start", "end"}:
-                at = start if kind == "official-start" else end
-                require(row["timestamp_utc"] == iso_utc((at + offset) // 1000)
-                        and row["elapsed_us"] == str((at - start) // 1000), f"{kind} UTC binding mismatch")
+            if kind in PLAYBACK_EVENTS or kind == "end":
+                require(tuple(row[key] for key in HEADER[5:11]) == next(playback, None)
+                        and not any(row[key] for key in HEADER[11:21]),
+                        "CSV playback transition or clock mismatch")
             if kind in SIGNAL_EVENTS:
                 event = next(signal_events, None)
                 require(event is not None and event[0] == kind and event[2] == row["signal_reason"]
