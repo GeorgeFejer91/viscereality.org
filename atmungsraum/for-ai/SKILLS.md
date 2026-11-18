@@ -118,8 +118,9 @@ and [VERIFICATION.md](VERIFICATION.md) for the app acceptance checks.
 
 Load [`rustdesk-mcp-operator`](skills/rustdesk-mcp-operator/SKILL.md) for
 remote screen frames and input through the separate RustDeskMCP Windows client.
-Use this route for every interactive action on the physical lab Pixel.
-See the [standing device workflow](WORKFLOW.md#physical-device-development).
+Use this route as the default on the physical lab Pixel. See the
+[standing device workflow](WORKFLOW.md#physical-device-development) for
+authorized ADB recovery and navigation.
 The vendored skill and the [Windows release](https://github.com/YaoxinCS/RustdeskMCP/releases/tag/v1.4.6-mcp.1)
 come from [`abbd7d1`](https://github.com/YaoxinCS/RustdeskMCP/tree/abbd7d1a287980c91f979b5239c05ae0e08059e2/skills/rustdesk-mcp-operator).
 The upstream skill shows a source checkout path. For the packaged Windows
