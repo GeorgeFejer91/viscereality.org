@@ -1,5 +1,5 @@
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
-index 129ec525..97c7f51b 100644
+index 129ec5250e95018af13c3e936cf7f86f4c20bfc5..97c7f51b75d378ed0c0fe0b2ee59ecfb3a841b3c 100644
 --- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime.rs
 @@ -2,6 +2,8 @@
@@ -68,7 +68,7 @@ index 129ec525..97c7f51b 100644
      record: &crate::session_recording_contract::SessionRecord,
  ) -> bool {
 diff --git a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
-index 02ab65d7..cee53442 100644
+index 02ab65d7ff3594e7f319a9c7b6469475b953f31e..cee53442a123ee210a59758a5037bfa392f282ba 100644
 --- a/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 +++ b/apps/native-renderer-android/native/src/experiment_breathing_setup_runtime_tests.rs
 @@ -2377,12 +2377,21 @@ fn pretrained_polar_full_main_is_audio_owned_for_exact_nine_hundred_seconds() {
@@ -108,7 +108,7 @@ index 02ab65d7..cee53442 100644
  }
  
 diff --git a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
-index a82c07c1..f3b9072b 100644
+index a82c07c1686daa6499fa4fa11a74132385064003..f3b9072b9e5d24c05446188b8bdc2ae159c9842e 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
 @@ -156,11 +156,11 @@ fn live_bias_changes_are_durable_fenced_replay_safe_and_manifest_immutable() {
@@ -127,7 +127,7 @@ index a82c07c1..f3b9072b 100644
      apply_and_read(&runtime,&serde_json::from_str(&command("pause","pause",1,7000)).unwrap());
      let paused=apply_and_read(&runtime,&bias_command(&armed,"bias-paused",0,8000));
 diff --git a/apps/native-renderer-android/native/src/experiment_session_runtime.rs b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
-index 5540c4f4..7e397260 100644
+index 5540c4f4647f4a7d88718e781b7ce141bfcbc5f0..7e397260d329b6ce64bb71111f465eec8eedef9a 100644
 --- a/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 +++ b/apps/native-renderer-android/native/src/experiment_session_runtime.rs
 @@ -35,7 +35,8 @@ use crate::{
@@ -210,7 +210,7 @@ index 5540c4f4..7e397260 100644
          }
  
 diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
-index 773a44f9..07bcea50 100644
+index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..07bcea50f3eb0ad1ccb73033af23fbca94072cb4 100644
 --- a/apps/native-renderer-android/native/src/session_recording_contract.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
 @@ -12,6 +12,34 @@ use crate::session_recording_clock::{
@@ -351,7 +351,7 @@ index 773a44f9..07bcea50 100644
      }
  }
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
-index 75df8192..7eeb297d 100644
+index 75df819211917d5b4dc40874644356eff5bd96b4..7eeb297db6fcfa30ee18285f4bd70659a137fbb1 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 @@ -842,6 +842,10 @@ fn writer_restart_exports_an_aborted_csv_and_only_the_verified_checkpoint_prefix
@@ -400,7 +400,7 @@ index 75df8192..7eeb297d 100644
 +    fs::remove_dir_all(root.parent().unwrap()).unwrap();
 +}
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant.rs b/apps/native-renderer-android/native/src/session_recording_participant.rs
-index 95fa6df2..a9d6cf95 100644
+index 95fa6df23c39e388dfd3dfa948b65622d415fe63..a9d6cf9529ff81ed058d93944f44be6ad08622e0 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant.rs
 @@ -728,7 +728,7 @@ impl ObservationStream {
@@ -472,7 +472,7 @@ index 95fa6df2..a9d6cf95 100644
          assert_eq!(lines.last().unwrap()[5], "end");
      }
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
-index a60eb4f0..4ce559f2 100644
+index a60eb4f012477a8caf79bb2193f2b8c7140b9461..4ce559f2721f1649f6edcee5ea69c2449d61c607 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant/live_csv.rs
 @@ -13,6 +13,7 @@ use std::{
@@ -555,7 +555,7 @@ index a60eb4f0..4ce559f2 100644
          }
          Ok(())
 diff --git a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
-index b1c43bdb..72ffd485 100644
+index b1c43bdb17fde8012a8ec4e7736952a32a757168..72ffd4859df91aa47bdaf695eed942d87f2c2e68 100644
 --- a/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_participant_recovery.rs
 @@ -126,7 +126,15 @@ fn publish_run(directory: &Path, key: &SessionTimestampKey) -> Result<(), String
@@ -576,7 +576,7 @@ index b1c43bdb..72ffd485 100644
                  live_csv::publish_final(directory, csv, true)?;
              }
 diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
-index 829184d6..1fb28807 100644
+index 829184d6d78e5ec5085cb2deac8c515cdfb00900..1fb28807f0a0120dcd78fcd5ce642c876651db91 100644
 --- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
 @@ -14,7 +14,7 @@ use std::{
@@ -679,7 +679,7 @@ index 829184d6..1fb28807 100644
          );
      }
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 56c3f444..42f6acb1 100644
+index 56c3f44473ac998165132a574dc2593399997b7d..42f6acb13e200399bb5efc3c10e8737d493e12f2 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
 @@ -23,7 +23,8 @@ use serde_json::{json, Value};
@@ -983,7 +983,7 @@ index 56c3f444..42f6acb1 100644
              next_sequence: 0,
              last_accepted_sequence: 0,
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
-index daffbbfa..64e0c444 100644
+index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab65892902c1e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 @@ -503,7 +503,10 @@ public class BreathCompositionPanelModule extends BreathCompositionPanelContext
@@ -999,10 +999,10 @@ index daffbbfa..64e0c444 100644
  
      static void experimentSessionBleOwnerChanged(long identity, long epoch, boolean live) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-index dd75697d..36f0157c 100644
+index dd75697d2e33ab2898af3ee549e86d637a7e1655..9427584f81d8be4be4059561f1355bf58a1d029c 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionCommandGateway.java
-@@ -55,8 +55,26 @@ public final class ExperimentSessionCommandGateway {
+@@ -55,8 +55,27 @@ public final class ExperimentSessionCommandGateway {
      private ExperimentSessionGatewayHttpServer http;
      private ExperimentSessionDirectNetwork direct;
      private ExperimentSessionRelayClient relay;
@@ -1011,6 +1011,7 @@ index dd75697d..36f0157c 100644
 +    interface WebRtcRelay {
 +        JSONObject offer() throws Exception;
 +        boolean accepts(String room);
++        default void pairingProgress(String room,long pendingMillis,boolean approved) {}
 +        void close();
 +    }
 +
@@ -1029,7 +1030,7 @@ index dd75697d..36f0157c 100644
      private long guestModePacked;
      private String routeState="disabled";
      private String localEnrollmentReference="";
-@@ -180,7 +198,15 @@ public final class ExperimentSessionCommandGateway {
+@@ -180,7 +199,15 @@ public final class ExperimentSessionCommandGateway {
          if(direct==null)direct=new ExperimentSessionDirectNetwork(context);direct.start(mode);
      }
      JSONObject directJoinDetails()throws Exception{return direct==null?new JSONObject().put("state","inactive"):direct.localJoinDetails();}
@@ -1046,7 +1047,7 @@ index dd75697d..36f0157c 100644
      String localAddresses() {
          Map<String,java.util.List<String>> candidates=new LinkedHashMap<>();
          try{java.util.Enumeration<java.net.NetworkInterface> interfaces=java.net.NetworkInterface.getNetworkInterfaces();
-@@ -411,13 +437,34 @@ public final class ExperimentSessionCommandGateway {
+@@ -411,13 +438,34 @@ public final class ExperimentSessionCommandGateway {
          boolean remote = remoteAvailable();
          installPhonePairing();
          if (!remote && wifiSetup != null) wifiSetup.close();
@@ -1086,7 +1087,7 @@ index dd75697d..36f0157c 100644
      }
      void requestDiscoveryPermissions(android.app.Activity host){requireMain();discovery.requestPermissions(host);}
      void discoveryLauncherResumed(android.app.Activity host) {
-@@ -454,6 +501,7 @@ public final class ExperimentSessionCommandGateway {
+@@ -454,6 +502,7 @@ public final class ExperimentSessionCommandGateway {
          session.clear();polar.clear();
      }
      private void retire() {
@@ -1094,7 +1095,7 @@ index dd75697d..36f0157c 100644
          discovery.close();
          retireControllers();
          if(http!=null)http.close();http=null;
-@@ -570,10 +618,22 @@ public final class ExperimentSessionCommandGateway {
+@@ -570,10 +619,22 @@ public final class ExperimentSessionCommandGateway {
      JSONObject discoveryMetadata()throws Exception {
          requireMain();if(!remoteAvailable())throw new SecurityException("remote-owner-required");
          org.json.JSONArray gateways=new org.json.JSONArray();
@@ -1108,7 +1109,7 @@ index dd75697d..36f0157c 100644
          JSONObject metadata=new JSONObject().put("v",phonePairingEnabled?2:1).put("device",deviceId()).put("serial",headsetIdentity.serial())
              .put("epoch",Long.toString(gatewayEpoch)).put("native_epoch",Long.toString(epoch)).put("mode","remote").put("gateways",gateways);
          if(phonePairingEnabled)metadata.put("identity_kind","app-installation").put("pairing",1);
-+        if (webRtc != null && trustedPhoneCount > 0) {
++        if (webRtc != null && (phonePairingEnabled || trustedPhoneCount > 0)) {
 +            try {
 +                metadata.put("rtc", webRtc.offer());
 +                if (metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 512)
@@ -1118,12 +1119,33 @@ index dd75697d..36f0157c 100644
          if(metadata.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>512)throw new IllegalStateException("discovery-metadata-bound");
          return metadata;
      }
-@@ -612,6 +672,25 @@ public final class ExperimentSessionCommandGateway {
+@@ -612,6 +673,46 @@ public final class ExperimentSessionCommandGateway {
          return exchangeRoute(envelope,true);
      }
      public JSONObject exchange(JSONObject envelope)throws Exception { return exchangeRoute(envelope,false); }
 +
 +    JSONObject exchangeWebRtc(JSONObject frame, String room) throws Exception {
++        if (Integer.valueOf(3).equals(frame.opt("v"))) {
++            final String id=ExperimentSessionGatewayProtocol.string(frame,"id");
++            final boolean exchange=frame.has("request");
++            if(!ExperimentSessionGatewayProtocol.hex(id,32)||frame.length()!=(exchange?3:2)
++                    ||frame.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length>8192)
++                throw new SecurityException("webrtc-pairing-frame-invalid");
++            if(exchange&&!(frame.opt("request") instanceof JSONObject))
++                throw new SecurityException("webrtc-pairing-request-invalid");
++            final JSONObject request=exchange?new JSONObject(frame.getJSONObject("request").toString()):null;
++            return onMain(() -> {
++                if(!phonePairingEnabled||phonePairing==null||webRtc==null||!remoteAvailable()||!webRtc.accepts(room))
++                    throw new SecurityException("webrtc-pairing-unavailable");
++                if(request==null)return new JSONObject().put("v",3).put("id",id).put("pairing",1);
++                if(!ExperimentPhonePairing.handlesAction(request.optString("action")))
++                    throw new SecurityException("webrtc-pairing-action-invalid");
++                JSONObject reply=phonePairing.exchange(request);
++                JSONObject prompt=phonePairing.pendingPrompt();
++                webRtc.pairingProgress(room,prompt==null?0:prompt.getLong("expires_in_ms"),"approved".equals(reply.optString("state")));
++                return new JSONObject().put("v",3).put("id",id).put("reply",reply);
++            });
++        }
 +        final long nativeEpoch = onMain(() -> {
 +            if (webRtc == null || !remoteAvailable() || !webRtc.accepts(room))
 +                throw new SecurityException("webrtc-room-retired");
@@ -1144,7 +1166,7 @@ index dd75697d..36f0157c 100644
      private JSONObject exchangeRoute(JSONObject envelope,boolean lan)throws Exception {
          ExperimentSessionGuestRegistry.Guest guest=guests.find(envelope.optString("controller"),SystemClock.elapsedRealtime());
          if(guest!=null)return lan?guest.protocol.exchangeLan(envelope):guest.protocol.exchange(envelope);
-@@ -828,9 +907,9 @@ public final class ExperimentSessionCommandGateway {
+@@ -828,9 +929,9 @@ public final class ExperimentSessionCommandGateway {
              .put("mode",packed).put("generation",status.getLong("g")).put("device",deviceId()).put("serial",headsetIdentity.serial());
          return live?ticket.put("session",nativeStatus.getString("session_key")):ticket.put("revision",status.getLong("r"));
      }
@@ -1157,7 +1179,7 @@ index dd75697d..36f0157c 100644
      }
      private JSONObject requestRecenter(JSONObject body) throws Exception {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
-index 09381589..d485327b 100644
+index 09381589409a3b7601da9e1e2a41fc3b706f40c0..d485327b899fba1a06e9f671245e0dd8cc3d3956 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionDiscoveryServer.java
 @@ -66,8 +66,11 @@ final class ExperimentSessionDiscoveryServer implements AutoCloseable {
@@ -1188,7 +1210,7 @@ index 09381589..d485327b 100644
          final Snapshot snapshot;
          int mtu=23;
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
-index 53cd8833..7c9960b3 100644
+index 53cd88330b0ccdb28db089089c3be97eeecd49c3..7c9960b3cfcbd92fdf6de95c7ba3dd4b13226504 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocol.java
 @@ -58,6 +58,153 @@ public final class ExperimentSessionGatewayProtocol {
@@ -1347,10 +1369,10 @@ index 53cd8833..7c9960b3 100644
          synchronized(this) {
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
 new file mode 100644
-index 00000000..eb329c1d
+index 0000000000000000000000000000000000000000..cf095592465de89f6369cc601e396af6345b8f95
 --- /dev/null
 +++ b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionWebRtc.java
-@@ -0,0 +1,155 @@
+@@ -0,0 +1,169 @@
 +package io.github.mesmerprism.rustyquest.native_renderer;
 +
 +import android.annotation.SuppressLint;
@@ -1421,6 +1443,17 @@ index 00000000..eb329c1d
 +        return active != null && active.room.equals(room) && active.live();
 +    }
 +
++    @Override public void pairingProgress(String room,long pendingMillis,boolean approved) {
++        Session active=session;
++        if(active==null||!active.room.equals(room)||!active.live()||pendingMillis<0||pendingMillis>120_000)
++            throw new SecurityException("webrtc-pairing-room-retired");
++        long now=SystemClock.elapsedRealtime();
++        if(approved){active.lastAuthenticated=now;active.pendingPairingDeadline=0;}
++        else if(pendingMillis>0)active.pendingPairingDeadline=now+pendingMillis;
++        else if(active.pendingPairingDeadline>now)
++            active.pendingPairingDeadline=Math.min(active.pendingPairingDeadline,now+2000);
++    }
++
 +    @Override public void close() {
 +        Session old = session;
 +        session = null;
@@ -1432,6 +1465,7 @@ index 00000000..eb329c1d
 +        final String password = ExperimentSessionBleProtocol.newHex(32);
 +        final WebView view;
 +        volatile long lastAuthenticated = SystemClock.elapsedRealtime();
++        volatile long pendingPairingDeadline;
 +
 +        @SuppressLint("SetJavaScriptEnabled")
 +        Session() {
@@ -1457,7 +1491,8 @@ index 00000000..eb329c1d
 +        }
 +
 +        boolean live() {
-+            return SystemClock.elapsedRealtime() - lastAuthenticated < IDLE_LIFETIME_MS;
++            long now=SystemClock.elapsedRealtime();
++            return now-lastAuthenticated<IDLE_LIFETIME_MS||now<pendingPairingDeadline;
 +        }
 +
 +        void destroy() {
@@ -1475,9 +1510,10 @@ index 00000000..eb329c1d
 +            @JavascriptInterface public String exchange(String payload) {
 +                if (session != Session.this || !live() || payload == null || payload.length() > 12_000) return "";
 +                try {
-+                    JSONObject result = gateway.exchangeWebRtc(new JSONObject(payload), room);
++                    JSONObject frame=new JSONObject(payload);
++                    JSONObject result = gateway.exchangeWebRtc(frame, room);
 +                    if (session != Session.this || !live()) return "";
-+                    lastAuthenticated = SystemClock.elapsedRealtime();
++                    if(!Integer.valueOf(3).equals(frame.opt("v")))lastAuthenticated = SystemClock.elapsedRealtime();
 +                    return result.toString();
 +                } catch (Exception denied) {
 +                    return "";
@@ -1507,7 +1543,7 @@ index 00000000..eb329c1d
 +    }
 +}
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
-index 899cbf6f..10f655ea 100644
+index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..10f655eaaef0d3e95595f1a0b6cb957b78539989 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionGatewayProtocolTest.java
 @@ -18,7 +18,170 @@ public final class ExperimentSessionGatewayProtocolTest {
@@ -1682,7 +1718,7 @@ index 899cbf6f..10f655ea 100644
          if(!ExperimentSessionGatewayProtocol.metaUpdateQuery(updateCommand).toString().equals(updateCommand.toString()))throw new AssertionError("canonical update body changed");
          JSONObject endPreparation=new JSONObject(updateCommand.toString()).put("op","end-preparation-and-check");
 diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
-index c8269669..1158aac0 100644
+index c8269669768931306642dae97644957aabc2b08f..1158aac0930d06f4bfe4d092e2d354fbfbdb3944 100644
 --- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 +++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
 @@ -22,6 +22,9 @@ final class Handler {
@@ -1703,8 +1739,40 @@ index c8269669..1158aac0 100644
      long generation;
      int autoConnectionAttempts, pendingBleAction, scans;
      static final int AUTO_CONNECTION_MAX_ATTEMPTS = 2, PENDING_BLE_SCAN = 1, REQUEST_BLE_PERMISSIONS = 19;
+diff --git a/docs/EXPERIMENT_SESSION_CONTROL.md b/docs/EXPERIMENT_SESSION_CONTROL.md
+index c4811f991f9677bdb36d2b48a6fba77866b0e864..66efc372e83410fe3ee5d959f4d70f83b5e383e3 100644
+--- a/docs/EXPERIMENT_SESSION_CONTROL.md
++++ b/docs/EXPERIMENT_SESSION_CONTROL.md
+@@ -229,6 +229,16 @@ otherwise. V1 keeps its nonempty hardware-serial contract. Discovery grants no
+ commands or private data. Nearby new phones use the proof-bound `pair-*` exchange;
+ only both actual device confirmations permit atomic membership persistence.
+ 
++With the WebRTC relay also selected, discovery can advertise an expiring
++`rtc` offer before the first member exists. Outer WebRTC v3 admits a
++capability probe or one existing v2 `pair-*` request. The current Remote
++owner checks the room, exact frame shape and request size before the
++pairing owner handles it. The relay keeps a verified pending prompt's
++room through its original deadline. An approved ticket refreshes the
++room for the first member request. Experiment actions and authenticated
++status still require member-bound v1 frames. A v3 capability probe
++carries no approval and does not extend room lifetime.
++
+ The registry retains up to eight independent members/keys, with atomic migration
+ of a valid legacy enrollment. Explicit machine provisioning may add one member
+ without rotating unrelated phones. Selected unaffiliated guests remain read-only.
+@@ -306,6 +316,10 @@ Focused checks are `Test-ExperimentPhonePairingSelection.ps1`,
+ `Test-ExperimentPhonePairingUi.ps1` (pure ownership policy and actual UI bridge
+ with inert Android boundaries), and `Test-ExperimentPhonePairingAndroid.ps1`
+ (all current changed Java against actual selected shell classes and Android API).
++Run `python tools/checks/test_experiment_webrtc_pairing.py --json-jar <jar>
++--output <fresh-dir>` with JDK 17 on PATH for the WebRTC discovery, frame
++admission and room lifetime checks. It exercises the production methods
++and pairing cryptography with inert Android owners.
+ Protocol/registry checks include `Test-ExperimentPhonePairing.ps1`,
+ `test_experiment_trusted_phones.py` and the existing gateway host harness.
+ Startup checks include `test_experiment_startup_permissions.py` (actual coordinator,
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
-index 22746f1f..3db59d58 100644
+index 22746f1f0a55ae671e2b0215551574d211bfeec0..3db59d58fa3f10dc613020a6ccb25cf54a74fb27 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 +++ b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 @@ -82,6 +82,7 @@
@@ -1716,7 +1784,7 @@ index 22746f1f..3db59d58 100644
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentTrustedPhones.java",
            "apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/ExperimentSessionRecordingExport.java",
 diff --git a/tools/checks/Test-NativeRendererExperimentPanel.ps1 b/tools/checks/Test-NativeRendererExperimentPanel.ps1
-index c2d165a8..a58702d7 100644
+index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e49018f67 100644
 --- a/tools/checks/Test-NativeRendererExperimentPanel.ps1
 +++ b/tools/checks/Test-NativeRendererExperimentPanel.ps1
 @@ -282,6 +282,7 @@ final class ControlPanelActivity extends BreathCompositionPanelModule {
@@ -1728,7 +1796,7 @@ index c2d165a8..a58702d7 100644
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),
 diff --git a/tools/checks/test_experiment_discovery.py b/tools/checks/test_experiment_discovery.py
-index 6790eb56..76558718 100644
+index 6790eb56e3d5ddeadeebb895d4d3edd3cfc5bd7b..76558718eebf058770552158c7580b065058ad5f 100644
 --- a/tools/checks/test_experiment_discovery.py
 +++ b/tools/checks/test_experiment_discovery.py
 @@ -85,6 +85,31 @@ public class DiscoveryHostTest {
@@ -1772,7 +1840,7 @@ index 6790eb56..76558718 100644
    android.app.Activity c=new android.app.Activity();ExperimentSessionDiscoveryServer d=new ExperimentSessionDiscoveryServer(c,()->metadata());
    BluetoothGattServer s=start(d,c,1);BluetoothLeAdvertiser a=c.manager.adapter.advertiser;
 diff --git a/tools/checks/test_experiment_remote_join.py b/tools/checks/test_experiment_remote_join.py
-index ebf1df43..85acb547 100644
+index ebf1df439940f34a5a8976f3c74d2efde167c036..85acb547103f384bd2ccafe896694952387d2246 100644
 --- a/tools/checks/test_experiment_remote_join.py
 +++ b/tools/checks/test_experiment_remote_join.py
 @@ -28,7 +28,13 @@ public class PackageManager {public static final int GET_META_DATA=128;public In
@@ -1843,7 +1911,7 @@ index ebf1df43..85acb547 100644
   }
  }
 diff --git a/tools/checks/test_experiment_trusted_phones.py b/tools/checks/test_experiment_trusted_phones.py
-index 6a086d12..04e5adfe 100644
+index 6a086d129b2d5396484039afd9be324ec72cfbe0..04e5adfeb9b2fd53da08bac8215b10bc35240733 100644
 --- a/tools/checks/test_experiment_trusted_phones.py
 +++ b/tools/checks/test_experiment_trusted_phones.py
 @@ -77,12 +77,25 @@ final class RemoteJoinHarness {
@@ -1872,8 +1940,170 @@ index 6a086d12..04e5adfe 100644
    JSONObject a=new JSONObject().put("controller",legacyController).put("key",legacyKey).put("epoch",epoch);
    check(g.trustedPhones().getJSONArray("members").length()==1&&!context.prefs.contains("key")&&!context.prefs.contains("controller"),"atomic selected legacy migration");
    JSONObject b=g.enrollFromHeadset(true).put("epoch",epoch);
+diff --git a/tools/checks/test_experiment_webrtc_pairing.py b/tools/checks/test_experiment_webrtc_pairing.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..679ae09ced13897932623e616d8073827c31448b
+--- /dev/null
++++ b/tools/checks/test_experiment_webrtc_pairing.py
+@@ -0,0 +1,156 @@
++"""Run the production WebRTC pairing boundary with real JCE and inert owners."""
++import argparse
++import os
++import re
++from pathlib import Path
++import subprocess
++from test_experiment_gateway_dedupe import method
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--repo', type=Path, default=Path(__file__).resolve().parents[2])
++    parser.add_argument('--json-jar', type=Path, required=True)
++    parser.add_argument('--output', type=Path, required=True)
++    args = parser.parse_args()
++    args.output.mkdir(parents=True, exist_ok=False)
++    pkg = 'io/github/mesmerprism/rustyquest/native_renderer'
++    source = args.repo / 'apps/native-renderer-android/panel-modules/breath-composition/src/main/java' / pkg
++    gateway = (source / 'ExperimentSessionCommandGateway.java').read_text(encoding='utf-8')
++    rtc = (source / 'ExperimentSessionWebRtc.java').read_text(encoding='utf-8')
++    harness = r'''package io.github.mesmerprism.rustyquest.native_renderer;
++import java.util.*;import java.util.concurrent.Callable;import java.io.*;import org.json.JSONObject;
++public final class WebRtcPairingHarness {
++ static final String ROOM="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
++ static final String DEVICE="22222222222222222222222222222222";
++ static final String CONTROLLER="33333333333333333333333333333333";
++ static final String KEY="4444444444444444444444444444444444444444444444444444444444444444";
++ long identity=1,epoch=7,gatewayEpoch=42,lifecycleRevision=1;
++ boolean phonePairingEnabled=true,remote=true,retireBeforeMain;
++ int calls,stores,trustedPhoneCount;long now=1000;
++ Object http;
++ final class HeadsetIdentity {String serial(){return "";}}
++ final HeadsetIdentity headsetIdentity=new HeadsetIdentity();
++ void requireMain(){}
++ String deviceId(){return DEVICE;}
++ String localAddresses(){return "http://192.168.1.2:8766/v1/gateway";}
++ final Map<String,ExperimentSessionGatewayProtocol> memberProtocols=new LinkedHashMap<>();
++ final class Relay {boolean live=true;long pending;
++  JSONObject offer(){return new JSONObject().put("r",ROOM).put("p",KEY);}
++  void close(){live=false;}
++  boolean accepts(String room){return live&&ROOM.equals(room);}
++  void pairingProgress(String room,long remaining,boolean approved){pending=remaining;}
++ }
++ final Relay webRtc=new Relay();
++ final ExperimentPhonePairing phonePairing=new ExperimentPhonePairing(new ExperimentPhonePairing.Host(){
++  public long clockElapsedMs(){return now;}
++  public boolean canPair(){return remote;}
++  public JSONObject identity(){return WebRtcPairingHarness.this.owner();}
++  public JSONObject addTrustedPhone(String name)throws Exception{
++   memberProtocols.put(CONTROLLER,new ExperimentSessionGatewayProtocol(CONTROLLER,KEY,DEVICE,gatewayEpoch,false,true,
++    (action,payload)->new JSONObject().put("phase","idle").put("action",action)));
++   stores++;return new JSONObject().put("device",DEVICE).put("controller",CONTROLLER).put("key",KEY);
++  }
++  public void discardTrustedPhone(String controller){stores--;memberProtocols.remove(controller);}
++ });
++ JSONObject owner(){return new JSONObject().put("device",DEVICE).put("serial","").put("identity_kind","app-installation").put("epoch","42").put("native_epoch","7");}
++ boolean remoteAvailable(){return remote;}
++ boolean pairingAvailable(){return phonePairingEnabled&&remote;}
++ <T>T onMain(Callable<T> task)throws Exception{
++  if(++calls==1&&retireBeforeMain){epoch++;lifecycleRevision++;webRtc.live=false;}
++  return task.call();
++ }
++ __EXCHANGE__
++ __DISCOVERY__
++ static final class RoomFixture {
++  static final long IDLE_LIFETIME_MS=__IDLE__;
++  static final class SystemClock {static long now;static long elapsedRealtime(){return now;}}
++  final class Session {
++   final String room=ROOM;long lastAuthenticated,pendingPairingDeadline;
++   __ROOM_LIVE__
++   final class Bridge {__BRIDGE_EXCHANGE__}
++  }
++  Session session=new Session();
++  final class DummyGateway {
++   JSONObject exchangeWebRtc(JSONObject frame,String room){return new JSONObject().put("v",frame.get("v"));}
++  }
++  final DummyGateway gateway=new DummyGateway();
++  __ROOM_PROGRESS__
++  static void checks()throws Exception {
++   SystemClock.now=85000;RoomFixture one=new RoomFixture();
++   one.session.new Bridge().exchange("{\"v\":3}");
++   check(one.session.lastAuthenticated==0,"capability traffic cannot renew authentication");
++   one.pairingProgress(ROOM,119000,false);check(one.session.lastAuthenticated==0,"pending approval is not member authentication");
++   SystemClock.now=91000;check(one.session.live(),"verified pairing survives original ninety-second room expiry");
++   one.pairingProgress(ROOM,0,false);long terminal=one.session.pendingPairingDeadline;
++   SystemClock.now=91500;one.pairingProgress(ROOM,0,false);check(one.session.pendingPairingDeadline==terminal,"terminal response grace cannot be replay-extended");
++   SystemClock.now=terminal;check(!one.session.live(),"unapproved room expires after bounded terminal grace");
++   denied(()->one.pairingProgress(ROOM,1000,false));
++   SystemClock.now=85000;RoomFixture approved=new RoomFixture();approved.pairingProgress(ROOM,119000,false);
++   denied(()->approved.pairingProgress("other",1000,false));denied(()->approved.pairingProgress(ROOM,120001,false));
++   SystemClock.now=200000;approved.pairingProgress(ROOM,0,true);
++   check(approved.session.lastAuthenticated==200000&&approved.session.pendingPairingDeadline==0,"approved ticket renews the authenticated room before reply");
++   SystemClock.now=289999;check(approved.session.live(),"approved member receives a fresh room lifetime");
++   SystemClock.now=290000;check(!approved.session.live(),"approved but idle room still expires");
++  }
++ }
++ static void check(boolean ok,String label){if(!ok)throw new AssertionError(label);}
++ static JSONObject frame(){return new JSONObject().put("v",3).put("id","bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");}
++ static JSONObject begin(WebRtcPairingHarness h){return h.owner().put("v",2).put("action","pair-begin").put("phone_name","Smartphone").put("client_commitment",KEY);}
++ interface Trial{void run()throws Exception;}
++ static void denied(Trial action)throws Exception{try{action.run();throw new AssertionError("invalid frame admitted");}catch(SecurityException|IllegalArgumentException expected){}}
++ static void checks()throws Exception{
++  WebRtcPairingHarness h=new WebRtcPairingHarness();
++  check(h.discoveryMetadata().has("rtc")&&h.stores==0,"selected fresh headset advertises RTC before any member");
++  WebRtcPairingHarness unselected=new WebRtcPairingHarness();unselected.phonePairingEnabled=false;
++  check(!unselected.discoveryMetadata().has("rtc"),"unselected zero-member product keeps its existing boundary");
++  JSONObject capabilities=h.exchangeWebRtc(frame(),ROOM);
++  check(capabilities.getInt("v")==3&&capabilities.getInt("pairing")==1,"pairing-only capability before membership");
++  check(h.phonePairing.pendingPrompt()==null&&h.stores==0,"capability has no approval or member effect");
++  JSONObject reply=h.exchangeWebRtc(frame().put("request",begin(h)),ROOM);
++  check(reply.getJSONObject("reply").getInt("v")==2,"v2 owner receives original begin");
++  check(h.phonePairing.pendingPrompt()==null&&h.stores==0,"begin alone has no prompt or member");
++  for(JSONObject bad:new JSONObject[]{frame().put("extra",true),frame().put("v",3.0),frame().put("id","bad"),frame().put("request",new JSONObject().put("action","command")),frame().put("request",JSONObject.NULL)}){
++   denied(()->h.exchangeWebRtc(bad,ROOM));
++  }
++  denied(()->h.exchangeWebRtc(frame(),"wrong-room"));
++  WebRtcPairingHarness disabled=new WebRtcPairingHarness();disabled.phonePairingEnabled=false;denied(()->disabled.exchangeWebRtc(frame(),ROOM));
++  WebRtcPairingHarness retired=new WebRtcPairingHarness();retired.retireBeforeMain=true;denied(()->retired.exchangeWebRtc(frame().put("request",begin(retired)),ROOM));
++  check(retired.stores==0&&retired.phonePairing.pendingPrompt()==null,"retired queued owner cannot begin pairing");
++  RoomFixture.checks();
++  System.out.println("PASS production WebRTC pairing boundary: capability, closed shapes, selected owner/room and no approval bypass");
++ }
++ public static void main(String[] args)throws Exception{
++  if(args.length==0){checks();return;}
++  WebRtcPairingHarness h=new WebRtcPairingHarness();
++  BufferedReader in=new BufferedReader(new InputStreamReader(System.in,"UTF-8"));String line;
++  while((line=in.readLine())!=null){JSONObject out=new JSONObject();try{
++   JSONObject request=new JSONObject(line);String op=request.getString("op");Object result;
++   if(op.equals("identity"))result=h.owner();
++   else if(op.equals("frame"))result=h.exchangeWebRtc(request.getJSONObject("frame"),request.optString("room",ROOM));
++   else if(op.equals("prompt"))result=h.phonePairing.pendingPrompt();
++   else if(op.equals("decide")){h.phonePairing.decide(request.getString("id"),request.getBoolean("allow"));result=true;}
++   else if(op.equals("stats"))result=new JSONObject().put("stores",h.stores);
++   else if(op.equals("expire")){h.now+=120001;result=true;}
++   else throw new IllegalArgumentException("unknown-test-operation");
++   out.put("ok",true).put("result",result==null?JSONObject.NULL:result);
++  }catch(Exception rejected){out.put("ok",false).put("error",rejected.getClass().getSimpleName());}
++  System.out.println(out);System.out.flush();}
++ }
++}'''.replace('__EXCHANGE__', method(gateway, 'JSONObject exchangeWebRtc('))
++    harness = harness.replace('__DISCOVERY__', method(gateway, 'JSONObject discoveryMetadata('))
++    harness = harness.replace('__IDLE__', re.search(r'IDLE_LIFETIME_MS\s*=\s*([0-9_]+)', rtc).group(1))
++    harness = harness.replace('__ROOM_LIVE__', method(rtc, 'boolean live('))
++    harness = harness.replace('__ROOM_PROGRESS__', method(rtc, 'public void pairingProgress('))
++    harness = harness.replace('__BRIDGE_EXCHANGE__', method(rtc, 'public String exchange('))
++    target = args.output / 'WebRtcPairingHarness.java'
++    target.write_text(harness, encoding='utf-8')
++    production = [source / name for name in ['ExperimentSessionGatewayProtocol.java', 'ExperimentPhonePairing.java']]
++    subprocess.run(['javac', '--release', '8', '-encoding', 'UTF-8', '-cp', str(args.json_jar), '-d', str(args.output), *map(str, production), str(target)], check=True)
++    cp = str(args.output.resolve()) + os.pathsep + str(args.json_jar.resolve())
++    (args.output / 'classpath.txt').write_text(cp, encoding='utf-8')
++    subprocess.run(['java', '-cp', cp, 'io.github.mesmerprism.rustyquest.native_renderer.WebRtcPairingHarness'], check=True)
++
++
++if __name__ == '__main__':
++    main()
 diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
-index 833f50b0..da0a4d75 100644
+index 833f50b03335810d11063ffdd60c7c48017f760d..da0a4d75246ce4358fdacd189641af5b3c7d7666 100644
 --- a/tools/checks/test_polar_platform_projection.py
 +++ b/tools/checks/test_polar_platform_projection.py
 @@ -5,7 +5,10 @@ from test_experiment_gateway_dedupe import method
@@ -1937,7 +2167,7 @@ index 833f50b0..da0a4d75 100644
    subprocess.run(['javac','--release','8','-cp',str(jar),'-d',str(out),*map(str,out.rglob('*.java'))],check=True)
    subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
 diff --git a/tools/checks/test_polar_required_stream_scope.py b/tools/checks/test_polar_required_stream_scope.py
-index dc0bab36..20676d87 100644
+index dc0bab363f105ecc62874888ade63aff2ea8dc2e..20676d871518f76c8154d23eb02d8d266fbbb9ce 100644
 --- a/tools/checks/test_polar_required_stream_scope.py
 +++ b/tools/checks/test_polar_required_stream_scope.py
 @@ -1,6 +1,6 @@

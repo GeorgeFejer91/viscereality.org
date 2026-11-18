@@ -33,7 +33,7 @@ export function bindQuestRtcChannel(carrier, peerKey, exchange) {
   }
 
   function send(frame) {
-    const encoded = JSON.stringify(frame);
+    const encoded = JSON.stringify(frame)?.replace(/[\u007f-\uffff]/g, char => '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0'));
     if (!idPattern.test(frame?.id) || !encoded || encoded.length > frameLimit) throw unavailable();
     const count = Math.ceil(encoded.length / fragmentSize);
     for (let part = 0; part < count; part++) {

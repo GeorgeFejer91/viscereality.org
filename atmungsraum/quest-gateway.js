@@ -147,10 +147,11 @@ export async function readQuest(device, lifetime, setup) {
       return gatt;
     });
     const gatt = await waitForGatt(connection);
-    const services = setup?.device && typeof gatt.getPrimaryServices === 'function'
+    const services = typeof gatt.getPrimaryServices === 'function'
       ? await waitForGatt(gatt.getPrimaryServices(serviceId))
       : [await waitForGatt(gatt.getPrimaryService(serviceId))];
     let rejected;
+    let lanFallback;
     for (const service of services) {
       let discovery;
       try {
@@ -172,10 +173,13 @@ export async function readQuest(device, lifetime, setup) {
         return { owner: discovery.owner, endpoints: [endpoint] };
       }
       if (!discovery.endpoints.length && !discovery.rtc && !setup?.hotspot) {
-        throw Error('Prüfe WLAN und Internetzugang der Quest.');
+        rejected ??= Error('Prüfe WLAN und Internetzugang der Quest.');
+        continue;
       }
-      return discovery;
+      if (setup?.device || discovery.rtc) return discovery;
+      lanFallback ??= discovery;
     }
+    if (lanFallback) return lanFallback;
     throw rejected ?? Error('Keine Quest-Suchdaten verfügbar.');
   } finally { if (device.gatt.connected) device.gatt.disconnect(); }
 }

@@ -12,11 +12,39 @@ of the same classes as the lab devices. The user selects the intended headset
 through Bluetooth; that connection supplies its installation identity and
 bootstrap information for authenticated Wi-Fi/WebRTC correspondence.
 Subsequent saved connections reconnect automatically. Initial platform
-permissions remain part of setup. Pairing must need no numeric code, hotspot,
+permissions remain part of setup. Fresh pairing uses the displayed digits
+and two confirmation buttons, with no code entry or copying, hotspot,
 lab-specific credentials or per-device APK. One canonical signed headset APK
 serves compatible headsets; each installation has its own identity and trust.
 Quest 2/Pixel 10 is the initial physical acceptance pair. General compatibility
 requires the [independent-installation matrix](VERIFICATION.md#independent-headset-and-pwa-installations).
+
+Current repair: first pairing through Bluetooth-selected WebRTC. The user's
+latest clarification permits confirmation buttons and requires no manual
+code entry. Preserve the existing proof-bound v2 pairing and both real device
+confirmations; saved reconnect remains automatic. The mounted production UI
+reproduces a failure when Bluetooth supplies a valid RTC offer with no LAN
+endpoint: the fresh-phone path stops before opening WebRTC.
+
+- [x] Reproduce the RTC-only fresh-join failure and run the current real
+  browser/Java pairing controls (10 tests, zero skips).
+- [x] Add red tests and a bounded native WebRTC pairing frame, using the
+  existing `ExperimentPhonePairing` owner without experiment dispatch or
+  approval bypass. Publish the selected pairing offer before the first member.
+- [x] Route explicit fresh-phone Bluetooth selection through that exchange
+  in `quest-webrtc.js` and `quest-ui.js`; preserve LAN fallback, saved target
+  identity, cancellation and membership persistence. Test service ordering.
+- [x] Run actual Java/browser interop, native gateway controls, the full web
+  suite and GUI gate; review the change before publishing the source overlay.
+  Passed six native/browser pairing cases (including member status and
+  reconnect), eight mounted pairing UI cases, 361 web/assembly tests with
+  zero skips, and all 421 smartphone GUI states. Review regressions covered
+  carrier cleanup and stale LAN addresses. The overlay reconstructs native
+  tree `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485` from fixed27-r2.
+- [ ] Build and inspect a signed lab bench and the canonical candidate,
+  then use RustDesk/serial-scoped ADB for pairing, receipts and reconnect.
+  Preserve installed Meta 27 and the held update; worn-H10 acceptance stays
+  deferred. Additional physical-device compatibility remains unqualified.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
@@ -148,8 +176,8 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   sequence and match a native receipt on both Wi-Fi routes.
 - [ ] Qualify fresh Atmungsraum PWA installations with other compatible
   headsets and smartphones. Bluetooth selection must establish the intended
-  authenticated Wi-Fi/WebRTC session without a numeric code or copied lab
-  pairing state. Test independent identities, saved reconnect, headset
+  authenticated Wi-Fi/WebRTC session with button confirmations and no manual
+  code entry or copied lab pairing state. Test independent identities, saved reconnect, headset
   switching, protected control leases and rejected wrong/revoked peers.
   The current commissioned-Pixel bench result does not complete this gate.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second

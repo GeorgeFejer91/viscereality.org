@@ -11,19 +11,20 @@ WebRTC with TURN supports routes where direct device-to-device Wi-Fi fails;
 the normal flow requires no hotspot. Preserve the selected headset identity
 through discovery, authentication, control and recording download.
 
-Fresh and remembered connections must need no numeric pairing code or
-device-specific APK. Platform Bluetooth/network permissions remain initial
+Fresh connections use the displayed digits and both confirmation buttons
+without manual entry or copying. Saved connections reconnect without
+confirmation. Devices use the same canonical APK. Platform Bluetooth/network permissions remain initial
 setup steps. A release signing key identifies the app across its supported
 devices. Each headset installation and authorized PWA membership retains
 separate credentials, revocation and native ownership. Discovery or a
 connected transport alone cannot grant experiment control. Keep the native
 single-controller lease and receipt checks.
 
-The existing v2 wire implementation is documented below. Its manual matching
-code flow and the managed companion's one-Quest commissioning profile do not
-establish general fresh-PWA, code-free acceptance. A production trust-bootstrap
-path from the user's Bluetooth selection still needs implementation and
-qualification without copied lab credentials or synthetic fixture APKs.
+From an explicit Bluetooth selection, the PWA prefers a WebRTC pairing offer.
+The native owner runs the same v2 proof-bound confirmation exchange over both
+routes. The separately managed commissioning profile retains its own prior
+authorization. Physical first-pairing qualification starts with an empty
+installed PWA and uses the production flow.
 Use the [independent-installation matrix](VERIFICATION.md#independent-headset-and-pwa-installations)
 and the active PROJECT.md checklist; keep this distinction explicit in
 implementation and release claims.
@@ -49,10 +50,24 @@ Discovery metadata is `{v:2,identity_kind,device,serial,epoch,native_epoch,
 mode:remote,gateways,pairing:1}`. Hardware identity provisioning remains a
 separate optional machine-verification route.
 
-Bluetooth supplies only discovery. Pairing uses the existing private-LAN HTTP
-adapter with its peer, Origin, size, queue and timeout checks. The public
+Bluetooth supplies the candidate identities and route offers. The existing
+private-LAN HTTP adapter retains its peer, Origin, size, queue and timeout
+checks. The public
 pairing operations grant no experiment commands, private data or member-list
 access. Unknown users cannot claim active control.
+
+With WebRTC selected, fresh discovery can include `rtc:{r,p}` without
+an existing member. The native Remote owner checks the current room and the
+8,192-byte request limit. An exact `{v:3,id}` capability probe returns
+`{v:3,id,pairing:1}`; `id` is 32 lower-case hex digits. Requests have exactly
+`{v:3,id,request}` and return `{v:3,id,reply}`. The nested request is one of
+the v2 pairing actions below. The capability exchange admits no commands or
+approval. A verified pending prompt retains the room through its deadline.
+If the phone leaves before polling a rejection, that hold expires at the
+original deadline. The approved ticket lets the phone issue its first
+authenticated member request using the existing room. The PWA only falls
+back to direct Wi-Fi if RTC pairing did not start, or uses saved membership
+after an approved ticket. Rejection and cancellation terminate first pairing.
 Selected mode rejects public writes and queued effects through the legacy BLE
 command service, including valid old pairing-code commands. Its internal
 carrier/receipt journal and bounded nonprivate health reads remain available;

@@ -8,30 +8,32 @@ This is the operator and agent checklist bundled in a WebRTC-enabled APK at
 
 1. Open Atmungsraum Developer on the Quest 2 and allow the requested Android
    Nearby devices permissions. Open the installed Atmungsraum PWA on the phone.
-   For the Android discovery companion, allow Nearby devices and the site's
-   Apps on device permission. Allow Local network access when using the direct
-   Wi-Fi route. Use the existing managed profile for automatic first pairing.
+   For the optional Android discovery companion, allow Nearby devices and
+   the site's Apps on device permission. Allow Local network access when
+   using the direct Wi-Fi route.
 2. Bluetooth LE v2 advertises the installation ID, gateway and native epochs,
    and the available gateway routes. The discovery service and metadata
    characteristic use `9a7b2001-7d6a-4b7f-9d4a-6f7c0a020101` and
    `9a7b2001-7d6a-4b7f-9d4a-6f7c0a020103`. The companion scans all matching
    instances and serves the selected installation's data through IPv4 loopback
    port `8767` to `https://viscereality.org`. Discovery conveys no experiment
-   authority. For manual enrollment, use **Mit Bluetooth verbinden**, compare
-   the six-digit code and confirm on both devices.
-3. On shared Wi-Fi or the authorized phone hotspot, the PWA may use the native
-   LAN HTTP gateway on port `8766` with the same installation and epochs.
-   Bluetooth-assisted Wi-Fi setup for an enrolled phone uses the protected
-   setup path. The PWA requires fresh authenticated native status before it
-   adopts a discovered address or enables controls.
-4. For WebRTC, the Quest publishes an expiring offer through Bluetooth after
-   target admission. The pinned VDO.Ninja SDK `1.5.5` carries data-only frames.
+   authority. On a fresh phone, press **Mit Bluetooth verbinden**, select the
+   intended Quest, compare the digits displayed on both devices, and press
+   the two confirmation buttons. No typing or copying is required.
+3. WebRTC is preferred. The Quest publishes an expiring offer through Bluetooth
+   and the pinned VDO.Ninja SDK `1.5.5` carries data-only frames.
    ICE selects the viable path, including TURN relay where needed. The native
-   gateway authenticates `RQG1-RTC1` requests bound to the installation, both
-   epochs and the room. For commissioned first pairing, the `ATMB1` exchange
+   gateway uses a closed v3 frame for the proof-bound first pairing exchange.
+   Saved membership reconnects automatically. The gateway authenticates
+   `RQG1-RTC1` requests bound to the installation, both epochs and the room.
+   For separately commissioned pairing, the `ATMB1` exchange
    proves existing membership with a scoped HMAC and encrypts the ticket to the
    phone's ephemeral P-256 key. The Quest owns member revocation, the active
    controller lease, replay checks and native operation receipts.
+4. When WebRTC is unavailable before first pairing starts, shared Wi-Fi can
+   use the native LAN HTTP gateway on port `8766` for the same installation
+   and epochs. The PWA requires fresh authenticated native status on either
+   route before it enables controls. The connection flow requires no hotspot.
 
 Read the [pairing wire contract](https://viscereality.org/atmungsraum/for-ai/PHONE-PAIRING.md)
 and the [Android companion setup](https://viscereality.org/atmungsraum/phone-discovery/README.md)
@@ -48,8 +50,9 @@ for exact message fields and commissioning steps.
    source closure and WebRTC asset bytes, including this file.
 2. Verify that exact APK on the lab Quest 2 with the current installed PWA and
    matching signed Android companion. Record the three identities and test
-   commissioned first join with an empty test pairing slot, saved reconnect,
-   direct Wi-Fi, and relay-only WebRTC. Verify the selected ICE candidate pair
+   Bluetooth-selected first join from an empty installed PWA with both
+   button orders and no manual code entry, saved reconnect, direct Wi-Fi,
+   and relay-only WebRTC. Verify the selected ICE candidate pair
    and actual TURN relay protocol from WebRTC stats. Exercise TURN/TLS with UDP
    blocked by a verified network filter, signaling interruption and recovery,
    stale discovery, and wrong or revoked membership. Confirm fresh native status

@@ -37,11 +37,12 @@ evidence. The APK log identifies the signed release by one version and hash.
 
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
-tree is `e7eedd854fd26ab91cb02a0ef56f4eaa25f914e2`. Commit it in an isolated
+tree is `da94a0c2c7b1acb60fa734fb9ca5cb4c0857c485`. Commit it in an isolated
 source checkout so the build can bind the clean composition. The current
 overlay admits the validated WebRTC offer to the Bluetooth advertiser,
 advertises LAN after a successful bind, and retries a contended LAN bind
-while the native owner stays live. It includes the CSV v4 Controller State
+while the native owner stays live. It admits button-confirmed v2 pairing
+inside a bounded v3 WebRTC frame. It includes the CSV v4 Controller State
 projection, shared-scheduler Polar recording clock support, the exact
 AudioTrack completion receipt and Polar host fixtures.
 See the APK log for the source revision bound into the installed APK.
@@ -50,10 +51,11 @@ the production Java bridge and the bundled browser assets, then compares
 every selected WebRTC asset in the signed APK to its input bytes.
 
 The browser uses the pinned VDO.Ninja 1.5.5 data-only transport. The
-WebView sees an expiring room and encrypted RQG1 requests only. Native
+WebView carries a bounded pairing exchange and encrypted member requests. Native
 membership, gateway and runtime epochs, nonces and command receipts remain
-authoritative. This path supports saved enrollment and commissioned first
-pairing. The physical network matrix still gates lab release. Keep the installed Meta baseline available for the study and
+authoritative. This path supports fresh Bluetooth-selected pairing, saved
+reconnect and commissioned enrollment. The physical network matrix gates
+lab release. Keep the installed Meta baseline available for the study and
 update validation.
 
 The native verification source includes the Location and live health
