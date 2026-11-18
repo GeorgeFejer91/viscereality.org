@@ -58,7 +58,8 @@ class CollectionEvidenceTest(unittest.TestCase):
                 print(json.dumps({**base, **row}), file=out)
         return target.stat().st_size
 
-    def publish(self, partial=False, duplicate=False, old_projection=False, polar_setup=None):
+    def publish(self, partial=False, duplicate=False, old_projection=False, polar_setup=None,
+                include_completion=True, completion_offset_ns=0):
         identity = dict(participant_id="Tes_30_N", session_id=SESSION, scenario_id="haupt-15", run_index=1)
         end_ns = START + (3_000_000 if partial else 900_000_000_000)
         rows = [row.copy() for row in self.rows if not (old_projection and row["record_type"] == "breath")]
@@ -79,8 +80,13 @@ class CollectionEvidenceTest(unittest.TestCase):
         clocks = dict(source_clock="polar-sensor", source_time_ns=5000, sample_index=0, source_sequence=1,
                       frame_sequence=1, received_source_clock="java-nano-time", received_source_time_ns=7000)
         clock = "java-nano-time" if polar_setup is not None else "openxr-time"
+        events = [dict(event="official-start")]
+        if not partial and include_completion:
+            completed_at = end_ns + completion_offset_ns
+            events.append(dict(event="completion-reached", observed_monotonic_ns=completed_at,
+                               observed_utc_ns=UTC + completed_at - START))
         lengths = {
-            "events.jsonl": self.streams("events.jsonl", "event", [dict(event="official-start")]),
+            "events.jsonl": self.streams("events.jsonl", "event", events),
             "polar-ecg.jsonl": self.streams("polar-ecg.jsonl", "polar-ecg", [dict(clocks, microvolts=-37)]),
             "polar-acc.jsonl": self.streams("polar-acc.jsonl", "polar-acc", [dict(clocks, xyz_mg=[1.5, -2, 1000])]),
             "polar-hr-rr.jsonl": self.streams("polar-hr-rr.jsonl", "polar-hr-rr", []),
@@ -158,11 +164,22 @@ class CollectionEvidenceTest(unittest.TestCase):
         return result
 
     def test_original_and_recovered_exports_match(self):
-        self.assertEqual(self.invoke()["csv_rows"]["breath"], 1)
+        complete = self.invoke()
+        self.assertEqual(complete["csv_rows"]["breath"], 1)
+        self.assertEqual(complete["native_start_to_completion_us"], 900_000_000)
         self.publish(partial=True, old_projection=True)
         result = self.invoke("partial")
+        self.assertIsNone(result["native_start_to_completion_us"])
         self.assertEqual(result["ignored_post_checkpoint_bytes"], len(b"uncommitted-checkpoint-tail"))
         self.assertEqual(result["csv_rows"].get("breath", 0), 0)
+
+    def test_complete_requires_a_durable_completion_event(self):
+        self.publish(include_completion=False)
+        self.invoke(fail="native completion event disagrees with the terminal outcome")
+
+    def test_completion_event_must_be_inside_the_run(self):
+        self.publish(completion_offset_ns=1)
+        self.invoke(fail="native completion event is outside the run or has the wrong clock")
 
     def test_hashes_do_not_excuse_a_missing_or_changed_projection(self):
         self.rows[1]["ecg_uv"] = -36
