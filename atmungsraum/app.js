@@ -1,4 +1,4 @@
-import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261118-questionnaire-scales';
+import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261118-questionnaire-completion';
 
 const byId = id => document.getElementById(id);
 const root = document.documentElement;
@@ -175,7 +175,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261118-recordings-compact').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261118-questionnaire-completion').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });

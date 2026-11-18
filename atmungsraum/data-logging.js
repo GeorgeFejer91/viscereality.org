@@ -46,7 +46,7 @@ export function completedMainQuestionnaire(csv, bytes) {
   const row = tail.slice(tail.lastIndexOf('\n') + 1).split(',');
   if (row.length !== 24 || row[0] !== '4' || row[1] !== participant_id
     || row[2] !== csv.session_id || row[3] !== run || row[4] !== scenario || row[5] !== 'end'
-    || row[8] !== '900000000' || row[21] !== 'completed' || row[22] !== 'completed') return null;
+    || row[21] !== 'completed' || row[22] !== 'completed') return null;
   return { participant_id, session_id: csv.session_id, recording_filename: csv.name };
 }
 

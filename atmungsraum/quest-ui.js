@@ -4,10 +4,10 @@ import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operatio
   controllerAccessState } from './quest-gateway.js?v=18';
 import { pairPhone } from './quest-pairing.js?v=7';
 import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=29';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
-import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-scales';
+import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-completion';
 import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
 import { BreathingSetup } from './breathing-setup.js?v=22';

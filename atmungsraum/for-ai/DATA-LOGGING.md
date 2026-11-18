@@ -168,12 +168,14 @@ Shared scenario CSVs and audio manifests contain no participant data.
 
 After the phone verifies and stores the finalized v4 Haupt-Runde CSV, its
 native terminal row must identify the same participant, attempt and session
-UUID, with 900 seconds of audio and a completed result. A matching staged
-live prefix opens the required questionnaire automatically. For a completed
-Haupt-Runde first imported without live staging, use **Fragen beantworten**
-on that recording in **Aufnahmen**. The prompt applies to completed main runs
-that this version imports. A partial run or practice recording opens its usual
-recordings view.
+UUID and report `completed` for both session status and end reason. The
+native session determines completion. The audio elapsed field is a clock
+projection, and the independent recording evidence check still verifies the
+900-second timing. A matching staged live prefix opens the required
+questionnaire automatically. For a completed Haupt-Runde first imported without
+live staging, use **Fragen beantworten** on that recording in **Aufnahmen**.
+The prompt applies to completed main runs that this version imports.
+A partial run or practice recording opens its usual recordings view.
 
 The one-page questionnaire requires five provisional German responses.
 Three agreement items use five-point Likert scales and two items use
