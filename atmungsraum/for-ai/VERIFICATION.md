@@ -28,9 +28,13 @@ improvement through confirming the last affected acceptance criterion.
    tracking and worn Polar H10 contact. Continue independent checks while
    an attended step is pending.
 4. Run the applicable stress and recovery cases in the active checklist.
-   Exercise repeated and rapid inputs, disconnect and rejoin, degraded or
-   interrupted network and sensor links, and restart or update boundaries
-   where relevant. For collection, verify the clean full-duration runs,
+   Before each case, identify the build pair, input driver, repetitions or
+   duration, injected fault, expected state and recovery criterion. Use
+   the checklist's thresholds where specified. Exercise repeated and rapid
+   inputs, disconnect and rejoin, degraded or interrupted network and sensor
+   links, and restart or update boundaries where relevant. Record attempts,
+   failures, recovery time and final state so the next agent can repeat
+   the case. For collection, verify the clean full-duration runs,
    deliberate partial run, recovery, and matching export bytes across all
    required destinations. Check the rendered UI against the layout and
    accessibility rules, and match phone actions to native receipts or
@@ -82,6 +86,17 @@ using saved trust, with no chooser. It verifies the existing German
 connection guidance, a passing text measurement and horizontal bounds at
 320 px and 200% text. The cached-release, idle refresh, Bluetooth and
 successful LAN fallback fixtures also pass.
+
+Merge 8e57ffe passed [exact Pages run 44250589158](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44250589158),
+six live file comparisons and the 350-state GUI gate. The installed Pixel
+loaded standalone release 20261118-connection-error-status with saved
+pairing retained. On the signed Quest bench code 31, focused with advancing
+submitted frames, the physical retest observed a failed request to the
+offered LAN endpoint and displayed the German guidance about 4.6 seconds
+into the run. The status fit the phone width. With signaling restored, the
+Pixel reached authenticated bridge status and selected TURN after 6.0
+seconds without a chooser or new enrollment. The ordinary PWA and prior
+headset power policy were restored.
 
 ### Temporary status loss after Save — 2026-11-18
 
