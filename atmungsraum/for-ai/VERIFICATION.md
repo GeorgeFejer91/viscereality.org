@@ -98,6 +98,18 @@ verification receipt are retained privately. See the
 This establishes package preparation. Wearer acceptance and genuine Meta
 delivery remain pending; code 27 remains the installed/released baseline.
 
+An independent lab-controller check selected the exact held APK digest
+`111961aeeacf7bc46719ff81c3b9b585950f79570059d21762a64954aabf8295`.
+Developer v3 signing, code/version identity, ARM64/16 KiB alignment and the
+actual-APK 900-second session closure passed. The archive entry inventory
+is unchanged: 87 assets match the baseline byte for byte, and only the four
+declared build/feature/settings/panel metadata assets differ. The embedded
+Manifold runtime configuration, OpenXR loader, both Meta native libraries
+and provider content inventory match the baseline. The private receipt is
+`held28-independent-package-and-input-verification.json`. These are static
+package/input checks. Live save/update/relaunch and recording recovery
+remain unverified; this check installed or uploaded no APK.
+
 The canonical Developer candidate now builds from a verified reconstruction
 of the signed baseline inputs. The original visual profile was recovered
 from the ARM64 library and matches its locked SHA-256
