@@ -83,9 +83,23 @@ the original Meta code 27 process returned to Prepare with its original
 APK digest. The Pixel resumed `20261118-recordings-offline-landscape`
 with its saved pairing. The control trial that would release the running
 baseline was rejected by automated command approval before dispatch.
-The outstanding bench gates are physical Bluetooth route readback,
-same-owner rebind, and authenticated standalone phone pairing with native
-receipts. The guarded Meta and worn Polar gates remain separate.
+
+The physical Bluetooth retest used an uncached read of the discovery
+characteristic on the Quest while bench 36 was in Prepare and reported
+`listener-unavailable`. A 10.5-second Windows scan found one device
+advertising the project service UUID. Both service instances returned
+successful reads. The gateway identity matched Meta code 27 to the
+228-byte snapshot with one LAN endpoint. The bench instance supplied
+a 304-byte snapshot with zero LAN endpoints and a WebRTC offer with
+the expected field lengths. The probe recorded only the route counts,
+offer shape, and baseline identity match. The Windows radio returned to
+Off. The original Meta process returned to Prepare and the Pixel resumed
+the current standalone PWA with its saved pairing. The test used the
+[Windows GATT read API](https://learn.microsoft.com/en-us/windows/apps/develop/devices-sensors/gatt-client).
+
+The outstanding bench gates are same-owner physical rebind and
+authenticated standalone phone pairing with native receipts. The guarded
+Meta and worn Polar gates remain separate.
 
 ### Signed WebRTC Bench 35 startup — 2026-11-18
 

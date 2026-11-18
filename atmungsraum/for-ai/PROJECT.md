@@ -50,6 +50,12 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   matches installed bytes and reached Prepare with advancing native frames.
   The same Meta code 27 process and the Pixel's original pairing were restored.
   [Verification](VERIFICATION.md#listener-aware-bluetooth-discovery--2026-11-18).
+- [x] Read the actual Bluetooth discovery payloads from the lab Quest while
+  signed bench 36 was in Prepare. One Bluetooth device returned both service
+  instances. The known Meta baseline supplied one LAN endpoint. The bench
+  supplied zero LAN endpoints and a well-formed WebRTC offer. Windows radio
+  state, the original code 27 process, and the Pixel PWA were restored.
+  Authenticated phone pairing and physical listener recovery remain open.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
