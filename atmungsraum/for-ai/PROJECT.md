@@ -132,11 +132,25 @@ owner and passed 369 checks. A synthetic two-browser TURN probe reached that
 Java owner, matched the two approval codes and stored exactly one enrollment
 after both confirmations. Both browser peers reported relay candidates.
 
-This increment exposes the transport boundary while the installed APK uses
-the current LAN connection in normal operation. The next increment wires
-authenticated BLE rendezvous, the packaged native bridge and the data-only
-channel into the actual Connect path. The physical timing matrix still gates
-the primary route.
+The PWA now tries WebRTC first when an enrolled Quest advertises a room in
+BLE discovery. Without a reachable WebRTC peer, it can try the existing LAN
+addresses. Automatic Connect leaves hotspot settings alone. The candidate
+Quest bridge limits its WebView to the bundled scripts and VDO signaling.
+WebRTC frames contain room-scoped tags and application ciphertext. The
+Quest checks that proof before dispatching through the existing RQG1 member,
+lease and journal. Untrusted room participants receive no enrollment or
+experiment action from this route.
+
+The exact browser module and bundled target page passed direct and forced
+TURN probes with the compiled Java gateway and a synthetic owner. Both
+peers reported the expected ICE route, the original synthetic receipt ID was
+preserved and the decrypted 24,000-byte recording fixture matched exactly.
+The native host checks and all 334 Node tests pass with no skips. The PWA
+startup and all 340 rendered smartphone GUI states pass. The signed arm64
+rehearsal APK passed v3, alignment, locked session, exact runtime asset and
+assembly closure checks. [Candidate build and hash](../quest/apks/README.md#webrtc-rehearsal-candidate).
+Automatic first enrollment of a provisioned phone with empty PWA storage and
+physical Pixel/Quest timing, denial, recovery and recording checks remain open.
 
 ### PWA update copy simplification — 2026-11-17
 

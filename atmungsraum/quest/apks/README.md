@@ -1,5 +1,19 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC rehearsal candidate
+
+A separate lab candidate uses package `org.viscereality.atmungsraum.rehearsal`,
+version code `27`, version name `0.2.26-rtc-test`, and 65,601,084 bytes.
+SHA-256 is `9f1246d9e8b0c6709b2be3c04cc472c011454f05c701261498622b4a842844f8`.
+The native tree is `8e7dbbce2a9132fe3e0b54617bed8d21f956d0c2`.
+See [the build recipe](../README.md#webrtc-candidate).
+
+The signed APK passes v3 verification, ARM64 and ZIP alignment, the cold
+session closure and all six byte-level runtime WebRTC asset checks. The lab
+test APK was built with the rehearsal signer and is available for the
+physical WebRTC acceptance matrix. The signed Meta Developer APK and held
+successor have their own lifecycle below.
+
 ## 0.2.26-dev — fixed Meta27-r2 installed on the lab Quest 2
 
 Signed27-r2 is65,731,718bytes, SHA256

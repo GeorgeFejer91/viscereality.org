@@ -13,6 +13,7 @@ param(
     [string]$VersionName = '0.1.0',
     [switch]$Developer,
     [switch]$PhonePairing,
+    [switch]$WebRtc,
     [switch]$BootAutostart,
     [switch]$MetaPlatformUpdate,
     [string]$MetaPlatformAppId,
@@ -153,6 +154,26 @@ $featureId = 'audio.atmungsraum_scenarios'
 $featureDir = Join-Path $runRoot 'features'
 Copy-Item -LiteralPath (Join-Path $QuestRepo 'fixtures/native-app-features') -Destination $featureDir -Recurse
 $assetInput = [IO.Path]::GetRelativePath($QuestRepo, $audio).Replace('\','/')
+$assetInputs = @($assetInput)
+if ($WebRtc) {
+    if (!$Developer -and !$PhonePairing) { throw 'WebRtc requires the enrolled phone gateway.' }
+    $rtcAssets = Join-Path $runRoot 'atmungsraum-webrtc'
+    $null = New-Item -ItemType Directory -Path $rtcAssets
+    $projectRoot = Split-Path -Parent $PSScriptRoot
+    $vendor = Join-Path $projectRoot 'vendor/quest-webrtc'
+    foreach ($name in @('index.html','target.js')) {
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot "webrtc/$name") -Destination $rtcAssets
+    }
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'quest-webrtc-channel.js') -Destination $rtcAssets
+    foreach ($name in @('brsp.js','vdo-ninja-transport.js','vdoninja-sdk.min.js','LICENSE-BRSP.txt','LICENSE-MPL-2.0.txt','NOTICE.md')) {
+        Copy-Item -LiteralPath (Join-Path $vendor $name) -Destination (Join-Path $rtcAssets $name.ToLowerInvariant())
+    }
+    $sdkSha = (Get-FileHash -LiteralPath (Join-Path $rtcAssets 'vdoninja-sdk.min.js')).Hash.ToLowerInvariant()
+    if ($sdkSha -cne '390ea6c8b1a4e57bf7fa18ff2b394f25cc79e637130f97e4a29ca958a90fac77') {
+        throw 'The signed WebRTC assets must use the pinned VDO.Ninja SDK.'
+    }
+    $assetInputs += [IO.Path]::GetRelativePath($QuestRepo, $rtcAssets).Replace('\','/')
+}
 $feature = [ordered]@{
     schema = 'rusty.quest.native_app_feature.v1'
     feature_id = $featureId
@@ -174,7 +195,7 @@ $feature = [ordered]@{
             @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256'; value = $boxLoopHash }
             @{ name = 'RUSTY_QUEST_NATIVE_RENDERER_EXPERIMENT_DEFAULT_REMOTE'; value = 'true' }
         )
-        assets = @($assetInput)
+        assets = $assetInputs
         shaders = @()
     }
     markers = @{ required = @(); forbidden = @() }
@@ -308,13 +329,16 @@ try {
         Select-Object -First 1 -ExpandProperty FullName
     if (!$lockPath) { throw 'Native feature lock was not written.' }
     $lock = Get-Content -Raw -LiteralPath $lockPath | ConvertFrom-Json
-    if ($assetInput -cnotin @($lock.build_inputs.assets)) {
-        throw 'The resolved native feature lock does not include the scenario library.'
+    if (@($assetInputs | Where-Object { $_ -cnotin @($lock.build_inputs.assets) }).Count) {
+        throw 'The resolved native feature lock must contain the selected Atmungsraum asset inputs.'
     }
     if (@($scenarioSources | Where-Object { $_ -cnotin @($lock.panel_source_closure.source_files.path) }).Count -or
         $catalogHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_SCENARIO_CATALOG_SHA256' | ForEach-Object value) -or
         $boxLoopHash -cnotin @($lock.build_inputs.env | Where-Object name -CEQ 'RUSTY_QUEST_NATIVE_RENDERER_BOX_LOOP_SHA256' | ForEach-Object value)) {
         throw 'The resolved native feature lock must bind the audio owners, catalog and breathing loop digests.'
+    }
+    if ($WebRtc -and !@($lock.panel_source_closure.source_files | Where-Object path -Like '*/ExperimentSessionWebRtc.java').Count) {
+        throw 'The signed WebRTC asset selection requires the native ciphertext bridge in the feature lock.'
     }
     $manifestPath = Join-Path (Split-Path -Parent $lockPath) 'AndroidManifest.xml'
     [xml]$manifest = Get-Content -Raw -LiteralPath $manifestPath
@@ -463,6 +487,18 @@ try {
         try {
             if ((Get-FileHash -InputStream $stream).Hash -ne $file.sha256) { throw "APK scenario asset differs: $($file.path)" }
         } finally { $stream.Dispose() }
+    }
+    if ($WebRtc) {
+        foreach ($file in Get-ChildItem -LiteralPath $rtcAssets -File) {
+            $entry = $archive.GetEntry("assets/atmungsraum-webrtc/$($file.Name)")
+            if (!$entry -or $entry.Length -ne $file.Length) { throw "Missing WebRTC APK asset: $($file.Name)" }
+            $stream = $entry.Open()
+            try {
+                if ((Get-FileHash -InputStream $stream).Hash -ne (Get-FileHash -LiteralPath $file.FullName).Hash) {
+                    throw "Signed WebRTC asset differs: $($file.Name)"
+                }
+            } finally { $stream.Dispose() }
+        }
     }
 } finally { $archive.Dispose() }
 $closureProbe = Join-Path $QuestRepo 'tools/checks/Test-ExperimentSessionApkClosure.ps1'
