@@ -603,3 +603,41 @@ Run the following with synthetic participant identities before study use:
 5. Reopen the actual Drive folder on the Pixel and download a saved bundle for
    independent hash and contents verification. Record the tested build, elapsed
    durations, run counts and failures without participant data or credentials.
+
+## Check one Haupt-Runde evidence bundle
+
+Collect a private copy of the native run directory after the writer has
+settled. Keep the authenticated recording export manifest, the committed
+Pixel CSV and a separately downloaded Drive CSV. For a recovered run, retain
+the native recovery receipt and its checkpoint file along with the original
+streams. Use the exact run directory name that the Quest returned.
+
+Get an independent Drive listing filtered by the exact CSV name and its
+designated private parent, with trashed files excluded. Keep the full listing
+response, including any continuation token, and the verified Pixel delivery
+receipt. Verify the folder identity and privacy before running the check.
+Then run the read-only verifier from `atmungsraum` with Python 3.12 or newer.
+
+```powershell
+python -B tools/check-recording-evidence.py `
+  --expect complete --native-run '<native run directory>' `
+  --export-manifest '<authenticated export manifest JSON>' `
+  --pixel-csv '<committed Pixel CSV>' --drive-csv '<downloaded Drive CSV>' `
+  --drive-list '<independent Drive listing JSON>' `
+  --drive-receipt '<verified Pixel delivery receipt JSON>' `
+  --drive-folder '<designated private Drive folder ID>'
+```
+
+Use `--expect partial` for a separately planned early finish or checkpoint
+recovery. The checker compares the committed ECG, accelerometer, radius and
+breath observations with their CSV rows and clock fields. It verifies native
+file and checkpoint hashes, one terminal outcome, writer drops, matching CSV
+bytes from all three copies, and one verified Drive object under the reserved
+file ID. Its output contains byte counts, hashes and row counts.
+
+Keep the actual AudioTrack 39,690,000-frame receipt at 44,100 Hz, wearer and
+input evidence, signal/fault window notes, and the headset/phone release
+receipts with the run. The terminal CSV audio value is a projection. Verify
+the actual audio clock and measured sample admission at the main boundaries
+on the headset. For a clean run, inspect the interruption row counts and
+correlate any gaps with the native sensor and clock traces.

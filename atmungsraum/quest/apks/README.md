@@ -1,5 +1,16 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench with shared-scheduler Polar recording clocks
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `30`,
+version name `0.2.29-rtc-test`, and 65,609,276 bytes. SHA-256 is
+`407b08027f67b95767bc7f7210ff4505dc66de720759571b9686edbef5294f01`. Native
+commit `a22cd4f5ea193a540b5c9a8c9d68c4c379b6dd9d` binds tree
+`9d28cec692f0bcdf03be2d342ab231006a5eaabe`. The bench signer, ARM64 identity,
+ZIP alignment, nine WebRTC assets and cold session closure passed.
+The lab Quest reports the exact installed bytes, retained UID and six
+startup grants. The physical launch and recorder verification remain open.
+
 ## WebRTC bench with Controller State CSV v4
 
 Package `org.viscereality.atmungsraum.webrtcbench`, version code `29`,
@@ -11,6 +22,8 @@ matches code 28. The ARM64 package, ZIP alignment, all nine WebRTC assets
 and cold session closure passed. The lab Quest reports exact installed
 bytes, the same app UID and three retained Bluetooth grants. Physical
 foreground launch and recording checks remain open.
+Its [pinned native patch](https://github.com/GeorgeFejer91/viscereality.org/blob/699687eea2dc9f30acc6edb36e7a1a141538f83d/atmungsraum/quest/webrtc-native.patch)
+reconstructs the exact code 29 source tree.
 
 ## Managed commissioning WebRTC bench on Quest 2
 

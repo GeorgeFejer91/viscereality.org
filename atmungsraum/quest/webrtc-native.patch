@@ -1,3 +1,110 @@
+diff --git a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
+index a82c07c1686daa6499fa4fa11a74132385064003..f3b9072b9e5d24c05446188b8bdc2ae159c9842e 100644
+--- a/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
++++ b/apps/native-renderer-android/native/src/experiment_session_live_bias_tests.rs
+@@ -156,11 +156,11 @@ fn live_bias_changes_are_durable_fenced_replay_safe_and_manifest_immutable() {
+     assert_copy::<BreathObservation>();
+     let expected_provenance = observation.polar_source_provenance.unwrap().encoded_value();
+     let mut absent=observation.clone(); absent.polar_source_provenance=None;
+-    assert!(!SessionRecord::Breath(absent).floats_are_finite());
++    assert!(!SessionRecord::Breath(absent).floats_are_finite(false));
+     let mut wrong_source=observation.clone(); wrong_source.assessment_source=Some("controller");
+-    assert!(!SessionRecord::Breath(wrong_source).floats_are_finite());
++    assert!(!SessionRecord::Breath(wrong_source).floats_are_finite(false));
+     let mut unrelated_pair=observation; unrelated_pair.sampled_at.value_ns+=1000;
+-    assert!(!SessionRecord::Breath(unrelated_pair).floats_are_finite());
++    assert!(!SessionRecord::Breath(unrelated_pair).floats_are_finite(false));
+     assert!(matches!(runtime.try_offer(record),OfferOutcome::Accepted{..}));
+     apply_and_read(&runtime,&serde_json::from_str(&command("pause","pause",1,7000)).unwrap());
+     let paused=apply_and_read(&runtime,&bias_command(&armed,"bias-paused",0,8000));
+diff --git a/apps/native-renderer-android/native/src/session_recording_contract.rs b/apps/native-renderer-android/native/src/session_recording_contract.rs
+index 773a44f9689ce25a2cb3faf6ad62e8fa615e76d5..a089265fc80d3ddf775afc93ded2c69295f89dc2 100644
+--- a/apps/native-renderer-android/native/src/session_recording_contract.rs
++++ b/apps/native-renderer-android/native/src/session_recording_contract.rs
+@@ -12,6 +12,34 @@ use crate::session_recording_clock::{
+ 
+ pub(crate) const DEFAULT_COMPLETION_THRESHOLD_NS: u64 = 30_000_000_000;
+ 
++pub(crate) fn permits_setup_polar_clock(configuration: Option<&Value>) -> bool {
++    configuration.is_some_and(|value| {
++        value["schema"] == "rusty.quest.breathing_setup_tracking_configuration.v1"
++            && value["source"] == "polar-acc"
++            && value["sampled_clock"] == SourceClock::JavaNanoTime.as_str()
++            && value["raw_sampled_clock"] == SourceClock::JavaNanoTime.as_str()
++    })
++}
++
++pub(crate) fn breath_assessment_clock_matches(
++    source: &str,
++    clocks: (&str, &str),
++    tracking: Option<&str>,
++    has_presentation_provenance: bool,
++    setup_polar_clock: bool,
++) -> bool {
++    match (source, clocks) {
++        ("controller", ("openxr-time", "openxr-time")) => !has_presentation_provenance,
++        ("polar-acc", ("openxr-time", "openxr-time")) => {
++            tracking != Some("valid") || has_presentation_provenance
++        }
++        ("polar-acc", ("java-nano-time", "java-nano-time")) => {
++            setup_polar_clock && !has_presentation_provenance
++        }
++        _ => false,
++    }
++}
++
+ pub(crate) fn validate_breath_polar_provenance(
+     provenance: &Value,
+     sampled_ns: u64,
+@@ -698,7 +726,7 @@ impl SessionRecord {
+         }
+     }
+ 
+-    pub(crate) fn floats_are_finite(&self) -> bool {
++    pub(crate) fn floats_are_finite(&self, setup_polar_clock: bool) -> bool {
+         let optional_finite = |value: Option<f32>| value.map_or(true, f32::is_finite);
+         match self {
+             Self::BiasChange(value) => {
+@@ -739,12 +767,15 @@ impl SessionRecord {
+                                 | "rejected-rotation"
+                         )
+                     })
+-                    && (value.assessment_source != Some("polar-acc")
+-                        || value.tracking_status != Some("valid")
+-                        || value.polar_source_provenance.is_some())
+-                    && (value.assessment_source.is_none()
+-                        || (value.sampled_at.clock == SourceClock::OpenXrTime
+-                            && value.observed_source.clock == SourceClock::OpenXrTime))
++                    && value.assessment_source.is_none_or(|source| {
++                        breath_assessment_clock_matches(
++                            source,
++                            (value.sampled_at.clock.as_str(), value.observed_source.clock.as_str()),
++                            value.tracking_status,
++                            value.polar_source_provenance.is_some(),
++                            setup_polar_clock,
++                        )
++                    })
+                     && value
+                         .polar_source_provenance
+                         .as_ref()
+@@ -1225,7 +1256,7 @@ mod tests {
+                 resulting_radius_parameter_source: "app-effective-world-anchor",
+             })
+         };
+-        assert!(record(1.2, 0.5, 0.5).floats_are_finite());
++        assert!(record(1.2, 0.5, 0.5).floats_are_finite(false));
+         for damaged in [
+             record(f32::NAN, 0.5, 0.5),
+             record(f32::INFINITY, 0.5, 0.5),
+@@ -1236,7 +1267,7 @@ mod tests {
+             record(1.2, 0.5, -0.01),
+             record(1.2, 0.5, 1.01),
+         ] {
+-            assert!(!damaged.floats_are_finite());
++            assert!(!damaged.floats_are_finite(false));
+         }
+     }
+ }
 diff --git a/apps/native-renderer-android/native/src/session_recording_export/tests.rs b/apps/native-renderer-android/native/src/session_recording_export/tests.rs
 index 75df819211917d5b4dc40874644356eff5bd96b4..7eeb297db6fcfa30ee18285f4bd70659a137fbb1 100644
 --- a/apps/native-renderer-android/native/src/session_recording_export/tests.rs
@@ -223,11 +330,141 @@ index b1c43bdb17fde8012a8ec4e7736952a32a757168..72ffd4859df91aa47bdaf695eed942d8
              if let Some((csv, _)) = &result {
                  live_csv::publish_final(directory, csv, true)?;
              }
+diff --git a/apps/native-renderer-android/native/src/session_recording_recovery.rs b/apps/native-renderer-android/native/src/session_recording_recovery.rs
+index 829184d6d78e5ec5085cb2deac8c515cdfb00900..1fb28807f0a0120dcd78fcd5ce642c876651db91 100644
+--- a/apps/native-renderer-android/native/src/session_recording_recovery.rs
++++ b/apps/native-renderer-android/native/src/session_recording_recovery.rs
+@@ -14,7 +14,7 @@ use std::{
+ use serde_json::Value;
+ 
+ use crate::{
+-    session_recording_clock::{SessionTimestampKey, SourceClock},
++    session_recording_clock::SessionTimestampKey,
+     session_recording_contract::{
+         ConditionKey, ExperimentIdentity, SessionCounts, SessionEventKind,
+         SESSION_CHECKPOINT_SCHEMA, SESSION_FINAL_SCHEMA, SESSION_MANIFEST_SCHEMA,
+@@ -896,6 +896,9 @@ fn validate_stream_prefix(
+     let mut consumed = 0_u64;
+     let mut line = Vec::new();
+     let mut lifecycle = LifecycleEvidence::default();
++    let setup_polar_clock = crate::session_recording_contract::permits_setup_polar_clock(
++        bias_history.breath_tracking_configuration.as_ref(),
++    );
+     while consumed < expected_length {
+         line.clear();
+         let read = reader
+@@ -916,6 +919,7 @@ fn validate_stream_prefix(
+             started_at,
+             condition,
+             strict_source_clocks,
++            setup_polar_clock,
+         )? {
+             RowLifecycle::None => {}
+             RowLifecycle::Started => {
+@@ -944,6 +948,7 @@ fn validate_row(
+     started_at: &SessionTimestampKey,
+     condition: &ConditionKey,
+     strict_source_clocks: bool,
++    setup_polar_clock: bool,
+ ) -> Result<RowLifecycle, String> {
+     let object = row
+         .as_object()
+@@ -1108,17 +1113,18 @@ fn validate_row(
+                         "rejected-rotation",
+                     ],
+                 )?;
+-                if row["sampled_clock"] != SourceClock::OpenXrTime.as_str()
+-                    || row["observed_source_clock"] != SourceClock::OpenXrTime.as_str()
+-                {
++                if !crate::session_recording_contract::breath_assessment_clock_matches(
++                    row["assessment_source"].as_str().unwrap_or_default(),
++                    (
++                        row["sampled_clock"].as_str().unwrap_or_default(),
++                        row["observed_source_clock"].as_str().unwrap_or_default(),
++                    ),
++                    row["tracking_status"].as_str(),
++                    object.contains_key("polar_source_provenance"),
++                    setup_polar_clock,
++                ) {
+                     return Err("recording-assessment-source-clock-mismatch".to_owned());
+                 }
+-                if row["assessment_source"] == "polar-acc"
+-                    && row["tracking_status"] == "valid"
+-                    && !object.contains_key("polar_source_provenance")
+-                {
+-                    return Err("recording-valid-polar-provenance-missing".to_owned());
+-                }
+             } else if object.contains_key("tracking_status") {
+                 return Err("recording-tracking-status-source-missing".to_owned());
+             }
+@@ -1424,7 +1430,7 @@ mod tests {
+                 "event": event.as_str(),
+             });
+             if event == SessionEventKind::BiasChanged {
+-                assert!(validate_row(&row, "events.jsonl", &started_at, &condition, true).is_err());
++                assert!(validate_row(&row, "events.jsonl", &started_at, &condition, true, false).is_err());
+                 row["generation"] = serde_json::json!(1);
+                 row["bias_revision"] = serde_json::json!(1);
+                 row["old_bias_percent"] = serde_json::json!(0);
+@@ -1434,7 +1440,7 @@ mod tests {
+                 row["decision_status"] = serde_json::json!("committed-before-application");
+             }
+             if let Some(reason) = event.signal_reason() {
+-                assert!(validate_row(&row, "events.jsonl", &started_at, &condition, true).is_err());
++                assert!(validate_row(&row, "events.jsonl", &started_at, &condition, true, false).is_err());
+                 row["signal_reason"] = json!(reason);
+             }
+             let expected = match event {
+@@ -1443,7 +1449,7 @@ mod tests {
+                 _ => RowLifecycle::None,
+             };
+             assert_eq!(
+-                validate_row(&row, "events.jsonl", &started_at, &condition, true),
++                validate_row(&row, "events.jsonl", &started_at, &condition, true, false),
+                 Ok(expected),
+                 "{}",
+                 event.as_str()
+@@ -1461,7 +1467,7 @@ mod tests {
+             "event": "future-event-without-contract",
+         });
+         assert_eq!(
+-            validate_row(&unknown, "events.jsonl", &started_at, &condition, true),
++            validate_row(&unknown, "events.jsonl", &started_at, &condition, true, false),
+             Err("recording-stream-row-field-invalid:event".to_owned())
+         );
+     }
 diff --git a/apps/native-renderer-android/native/src/session_recording_writer.rs b/apps/native-renderer-android/native/src/session_recording_writer.rs
-index 56c3f44473ac998165132a574dc2593399997b7d..3c910a1b80695763da4ac1f60a189f5c899fa089 100644
+index 56c3f44473ac998165132a574dc2593399997b7d..dcc131c82a864ae06a27c108e5ea87debd8bf1f9 100644
 --- a/apps/native-renderer-android/native/src/session_recording_writer.rs
 +++ b/apps/native-renderer-android/native/src/session_recording_writer.rs
-@@ -1172,6 +1172,7 @@ impl ActiveRecording {
+@@ -195,6 +195,7 @@ struct QueuedRecord {
+ struct AdmissionState {
+     generation: Option<u64>,
+     accepting: bool,
++    setup_polar_clock: bool,
+     finalize_requested: bool,
+     next_sequence: u64,
+     last_accepted_sequence: u64,
+@@ -616,7 +617,7 @@ fn offer_to_queue(
+         state.loss.record_drop(offer_sequence, &record);
+         return OfferReceipt::consumed(OfferOutcome::BatchOversize);
+     }
+-    if !record.floats_are_finite() {
++    if !record.floats_are_finite(state.setup_polar_clock) {
+         state.loss.record_drop(offer_sequence, &record);
+         return OfferReceipt::consumed(OfferOutcome::NonFinite);
+     }
+@@ -745,6 +746,9 @@ fn handle_control(
+                         .unwrap_or_else(|poisoned| poisoned.into_inner());
+                     state.generation = Some(generation);
+                     state.accepting = true;
++                    state.setup_polar_clock = crate::session_recording_contract::permits_setup_polar_clock(
++                        recording.spec.breath_tracking_configuration.as_ref(),
++                    );
+                     state.finalize_requested = false;
+                     state.next_sequence = 0;
+                     state.last_accepted_sequence = 0;
+@@ -1172,6 +1176,7 @@ impl ActiveRecording {
              if let Some(run) = &participant {
                  manifest["participant"] = run.metadata();
                  manifest["participant_csv_schema"] = json!(live_csv::SCHEMA_VERSION);
@@ -235,7 +472,20 @@ index 56c3f44473ac998165132a574dc2593399997b7d..3c910a1b80695763da4ac1f60a189f5c
              }
              publish_json_exclusive(&directory, "manifest.json", &manifest)?;
              let mut streams = BTreeMap::new();
-@@ -1455,8 +1456,13 @@ impl ActiveRecording {
+@@ -1245,7 +1250,11 @@ impl ActiveRecording {
+     }
+ 
+     fn write_record(&mut self, sequence: u64, record: &SessionRecord) -> Result<(), String> {
+-        if !record.floats_are_finite() {
++        let setup_polar_clock = matches!(record, SessionRecord::Breath(_))
++            && crate::session_recording_contract::permits_setup_polar_clock(
++                self.spec.breath_tracking_configuration.as_ref(),
++            );
++        if !record.floats_are_finite(setup_polar_clock) {
+             return Err("recording-row-non-finite".to_owned());
+         }
+         self.append_record(sequence, record)?;
+@@ -1455,8 +1464,13 @@ impl ActiveRecording {
              });
              let csv = match result {
                  Some(csv) => csv,
@@ -251,7 +501,7 @@ index 56c3f44473ac998165132a574dc2593399997b7d..3c910a1b80695763da4ac1f60a189f5c
              };
              if let Some((csv, _)) = csv {
                  live_csv::publish_final(&self.directory, &csv, false)?;
-@@ -1784,6 +1790,12 @@ pub(crate) mod tests {
+@@ -1784,6 +1798,12 @@ pub(crate) mod tests {
                  samples: Box::new([PolarEcgSample { source_sequence: 1, sample_index: 0, source_time: source,
                      received_source: source, observed_at: MonotonicNanos::new(27_000_020_000), microvolts: 37 }]),
              })).unwrap();
@@ -264,6 +514,102 @@ index 56c3f44473ac998165132a574dc2593399997b7d..3c910a1b80695763da4ac1f60a189f5c
          }
          let ordinal = writer.checkpoint(false, LossSnapshot::default()).unwrap();
          if official_start {
+@@ -1891,6 +1911,79 @@ pub(crate) mod tests {
+         })
+     }
+ 
++    #[test]
++    fn setup_polar_breath_keeps_its_java_clock_through_writer_and_recovery() {
++        let root = temp_root("setup-polar-breath");
++        let writer = SessionRecordingWriter::spawn(config(root.clone(), 16, 1000)).unwrap();
++        let mut start = spec(1_725_000_000_000_000_000);
++        let participant = crate::session_recording_participant::ParticipantPlan::parse(&json!({
++            "participant_id":"Tes_30_N", "scenario_id":"haupt-15", "scenario_sha256":"a".repeat(64),
++            "sample_rate":44100, "total_frames":39_690_000, "phases":[[0,"instruction_1"]],
++        })).unwrap();
++        start.completion_threshold_ns = participant.completion_threshold_ns();
++        start.participant = Some(participant);
++        start.experiment_identity.breath_guidance =
++            Some(crate::breath_guidance::BreathGuidanceAssetIdentity {
++                logical_destination: "breath-guidance/condition-a.json".to_owned(),
++                source_sha256: "55".repeat(32),
++                source_bytes: 123,
++                media_type: "application/json".to_owned(),
++            });
++        start.breath_tracking_configuration = Some(json!({
++            "schema":"rusty.quest.breathing_setup_tracking_configuration.v1", "input":"polar-tilt",
++            "source":"polar-acc", "mapping":"state", "controller_projection":"fixed-orientation",
++            "phase_classifier":"common-normalized-tilt", "sampled_clock":"java-nano-time",
++            "core_alignment_clock":"android-elapsed-realtime", "raw_sampled_clock":"java-nano-time",
++            "source_clock_pair":{"java_nano_ns":1000,"android_elapsed_ns":2000,
++                "maximum_age_ms":250,"maximum_sample_distance_ms":250},
++            "sensor_clock_projection":{"method":"fixed-sensor-receipt-anchor-estimate","generation":1,
++                "source_reference":1,"anchor_sensor_ns":500,"anchor_java_ns":1000,
++                "receipt_uncertainty_bound_ns":250000000,"exact_acquisition_time":false},
++            "audio_generation":1, "controller_generation":null, "calibration_generation":1,
++            "model":{"owner":1,"generation":1,"axis":[1.0,0.0,0.0],"low":0.1,"high":0.8},
++            "loop_sha256":"aa".repeat(32), "experiment_generation":1, "arm_operation_id":"bound-arm",
++            "prepared_monotonic_ns":1000, "prepared_monotonic_clock":"android-elapsed-realtime",
++            "acknowledgement":"setup-input-retained","tracking_claim":"fresh-input-observed"
++        }));
++        let prepared = writer.prepare(1, start).unwrap().receive().unwrap();
++        writer.record_control(1, MonotonicNanos::new(2_000), SessionEventKind::OfficialStart)
++            .unwrap().receive().unwrap();
++        let SessionRecord::Breath(mut sample) = breath(3_000) else { unreachable!() };
++        sample.assessment_source = Some("polar-acc");
++        sample.tracking_status = Some("valid");
++        sample.sampled_at = SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: 1_000 };
++        sample.observed_source = SourceTimestamp { clock: SourceClock::JavaNanoTime, value_ns: 2_000 };
++        let mut mixed = sample.clone();
++        mixed.observed_source.clock = SourceClock::OpenXrTime;
++        assert!(!SessionRecord::Breath(mixed).floats_are_finite(true));
++        assert!(!SessionRecord::Breath(sample.clone()).floats_are_finite(false));
++        assert!(matches!(writer.try_offer(1, SessionRecord::Breath(sample)).outcome,
++            OfferOutcome::Accepted { .. }), "the actual selected setup clock must be writable");
++        let end = writer.try_finalize(
++            1, MonotonicNanos::new(4_000), FinalizationReason::RestartToExperimenter, false,
++        ).unwrap().receive().unwrap();
++        assert!(end.saved);
++        assert_eq!(end.dropped_records, 0);
++        let recovery = writer.recover().unwrap().receive().unwrap();
++        assert!(recovery.sessions[0].error.is_none(), "{recovery:?}");
++        let row: Value = serde_json::from_str(&fs::read_to_string(
++            prepared.directory.join("breath.jsonl")).unwrap()).unwrap();
++        assert_eq!(row["sampled_clock"], "java-nano-time");
++        assert_eq!(row["sampled_time_ns"], 1000);
++        assert_eq!(row["observed_source_time_ns"], 2000);
++        assert_eq!(row["observed_monotonic_ns"], 3000);
++        assert_eq!(row["unbiased_phase"], "inhale");
++        let terminal: Value = serde_json::from_slice(&fs::read(prepared.directory.join("final.json")).unwrap()).unwrap();
++        let csv = fs::read_to_string(prepared.directory.join(
++            terminal["participant_csv"]["name"].as_str().unwrap(),
++        )).unwrap();
++        let breath: Vec<_> = csv.lines().find(|line| line.contains(",breath,")).unwrap().split(',').collect();
++        assert_eq!(&breath[5..11], ["breath", "2024-08-30T06:40:00.000002Z", "1", "", "", ""]);
++        assert_eq!(breath[20], "inhale");
++        writer.shutdown(Duration::from_secs(1)).unwrap();
++        fs::remove_dir_all(root.parent().unwrap()).unwrap();
++    }
++
+     #[test]
+     fn bias_checkpoint_failure_remains_sticky_after_storage_repair() {
+         let root = temp_root("bias-checkpoint-failure");
+@@ -2035,6 +2128,7 @@ pub(crate) mod tests {
+         let admission = Mutex::new(AdmissionState {
+             generation: Some(9),
+             accepting: true,
++            setup_polar_clock: false,
+             finalize_requested: false,
+             next_sequence: 0,
+             last_accepted_sequence: 0,
+@@ -2100,6 +2194,7 @@ pub(crate) mod tests {
+         let admission = Mutex::new(AdmissionState {
+             generation: Some(9),
+             accepting: true,
++            setup_polar_clock: false,
+             finalize_requested: false,
+             next_sequence: 0,
+             last_accepted_sequence: 0,
 diff --git a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java b/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
 index daffbbfa0d78715be90d8fb26fbf4899be8ca739..64e0c44402f5c37be2770ed2bf5ab65892902c1e 100644
 --- a/apps/native-renderer-android/panel-modules/breath-composition/src/main/java/io/github/mesmerprism/rustyquest/native_renderer/BreathCompositionPanelModule.java
