@@ -680,6 +680,12 @@ last observation in each committed Polar batch through the native completion
 marker. Each stream must stay within the native writer's one-second
 freshness interval, including the start and completion boundaries.
 
+Add `--require-audio-frames` for a build that emits the native AudioTrack
+completion receipt. The verifier checks that the current generation records
+39,690,000 completed frames at 44,100 Hz, that the AudioTrack head reached
+the end of that interval, and that the observation belongs to the same
+run. For earlier builds, retain a separate live AudioTrack observation.
+
 Use `--expect complete` alone for a completed run with a planned pause. Use
 `--expect partial` for an early finish or checkpoint recovery. The checker
 compares the committed ECG, accelerometer, radius and
@@ -694,7 +700,8 @@ on the same clock anchor. An incomplete or paginated Drive search cannot
 establish uniqueness. The native UTC clock must match the projected
 interruption events.
 A partial run has no committed completion event. The checker reports counts,
-hashes, and native elapsed time to the durable completion marker when present.
+hashes, native elapsed time to the durable completion marker and exact
+completed audio frames when present.
 
 Keep the actual AudioTrack 39,690,000-frame receipt at 44,100 Hz, wearer and
 input evidence, signal/fault window notes, and the headset/phone release

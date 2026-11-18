@@ -66,6 +66,16 @@ against the main interval, including the late acquisition tail. Samples outside
 the interval do not enter it merely because finalization is pending. Release
 checks must cover that tail cutoff as well as the exact 900-second audio limit.
 
+The WebRTC native candidate adds `audio_clock` to the existing durable
+`completion-reached` event when the shared scheduler can prove the boundary.
+It contains the current audio generation, sample rate, main start frame,
+exact completed frame count, observed absolute AudioTrack head and its
+Android elapsed-realtime timestamp. The head can overshoot because AudioTrack
+is sampled periodically. The recorded main interval still stops at 39,690,000
+frames. Retain the original event in the authenticated native export.
+Earlier recordings and recovered or non-shared completion paths can omit
+this object. CSV v4 and the original sensor streams retain their formats.
+
 Polar raw records and Polar-derived breath records retain their original
 `JavaNanoTime` source clock, sensor timestamp, frame receipt, index and count.
 Callback-backdated host samples can reorder between otherwise continuous PMD
