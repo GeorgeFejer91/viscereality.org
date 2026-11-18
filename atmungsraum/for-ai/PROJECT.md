@@ -44,6 +44,16 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   deliverable version, source tree, signing certificate and APK digest.
   Follow the approved Meta release sequence and verify installed bytes.
 
+The Meta-installed fixed27-r2 APK reached OpenXR focus and advancing
+submitted frames after an ADB Home dispatch and the manifest-resolved VR
+launcher. The app's typed status confirmed the experimenter Prepare page
+and reported `listener-unavailable` for the trusted LAN gateway. The exact
+Pixel PWA and a separate host loopback probe could not authenticate that
+runtime. See [official baseline readiness](VERIFICATION.md#official-code-27-preparation-readiness--2026-11-18).
+Next, use a confirmed idle official launch with the gateway port available,
+then require a signed APK/build status and a fresh Meta offer before the
+preparation-only action. The held successor and wearer gates remain open.
+
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
 Eight live files match Git. The delayed-resize APK Details regression passes
