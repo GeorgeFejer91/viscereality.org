@@ -27,9 +27,9 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
 - [x] Confirm the latest deployed PWA loads in standalone mode on the lab
   Pixel. Verify RustDesk Settings/Back, Bluetooth chooser, and diagnostic
   open/close with physical phone frames.
-- [ ] Verify the enrolled Pixel rejoins the same Quest automatically without a
-  pairing code or chooser once the gateway is reachable. Then repeat APK
-  Details and verify a native action receipt through RustDeskMCP.
+- [x] On signed WebRTC Bench code 31, the enrolled Pixel automatically rejoined
+  the same Quest 2 without a code or chooser. RustDesk MCP verified the measured
+  APK Details build identity and the original native Recenter receipt.
 - [x] Reproduce the missing APK identity measurement at 390 px, schedule its
   measurement on the visibility change and pass the GUI gate and original case.
   See [verification](VERIFICATION.md#apk-detail-measurement--2026-11-18).
@@ -424,9 +424,14 @@ PWA discovered the headset and authenticated native status in 19 seconds,
 using the real Android companion and a temporarily isolated pairing slot
 that started empty. No chooser or code appeared. The phone selected a
 local TURN relay and remote server-reflexive candidate at 26 ms round-trip
-time. The ordinary phone document and prior Quest power policy were
-restored. Saved reconnect, matched native action receipts, wearer runs and
-the official Meta transition remain open.
+time. Saved membership brought the installed Pixel back to authenticated
+control in 4.4 and 4.6 seconds without a chooser, code or enrollment request.
+A RustDesk MCP Recenter tap showed the pending state, then confirmed the
+original native operation ID. RustDesk also opened APK Details and selected
+Build. The full reported identity matched the signed APK asset and passed
+the installed phone text measurement. The ordinary phone document and prior
+Quest power policy were restored. The wearer runs, physical network stress
+matrix and official Meta transition remain open.
 
 #### Temporary status loss after Save — 2026-11-18
 
