@@ -24,9 +24,11 @@ The lab Quest accepted the signed in-place update with matching installed
 bytes and retained bench UID and grants. Code 36 reached Prepare, reported
 valid tracking and advanced native frames from 162 to 314. The baseline
 process remained running during the test and the bench listener was
-unavailable. The same Meta code 27 process and the installed Pixel PWA
-were restored. Physical pairing and the same-owner physical rebind test
-remain open. [Verification](../../for-ai/VERIFICATION.md#listener-aware-bluetooth-discovery--2026-11-18).
+unavailable. An uncached Bluetooth read then confirmed zero LAN endpoints
+and a well-formed WebRTC offer in the bench payload. The same Meta code 27
+process and the installed Pixel PWA were restored. Physical pairing and the
+same-owner physical rebind test remain open.
+[Verification](../../for-ai/VERIFICATION.md#listener-aware-bluetooth-discovery--2026-11-18).
 
 ## WebRTC bench with bundled connectivity and release protocol
 
