@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import UTC as UTC_ZONE, datetime, timedelta
 from pathlib import Path
 
 
@@ -59,12 +60,30 @@ class CollectionEvidenceTest(unittest.TestCase):
         return target.stat().st_size
 
     def publish(self, partial=False, duplicate=False, old_projection=False, polar_setup=None,
-                include_completion=True, completion_offset_ns=0, csv_audio_start=None, pause=False):
+                include_completion=True, completion_offset_ns=0, csv_audio_start=None, pause=False, extra_events=(),
+                continuous_signals=False):
         identity = dict(participant_id="Tes_30_N", session_id=SESSION, scenario_id="haupt-15", run_index=1)
         phases = [[0, "instruction_1"], [1_000_000, "instruction_2"]] if pause else [[0, "instruction_1"]]
         participant = dict(identity, planned_duration_seconds=900, phase_offsets_ns=phases)
         end_ns = START + (3_000_000 if partial else 900_000_000_000)
         rows = [row.copy() for row in self.rows if not (old_projection and row["record_type"] == "breath")]
+        clocks = dict(source_clock="polar-sensor", source_time_ns=5000, sample_index=0, source_sequence=1,
+                      frame_sequence=1, received_source_clock="java-nano-time", received_source_time_ns=7000)
+        ecg = [dict(clocks, microvolts=-37)]
+        acc = [dict(clocks, xyz_mg=[1.5, -2, 1000])]
+        if continuous_signals:
+            start_utc = datetime.fromtimestamp(UTC // 1_000_000_000, UTC_ZONE)
+            for seconds in range(1, 900):
+                delta = seconds * 1_000_000_000
+                stamp = dict(observed_monotonic_ns=START + delta, observed_utc_ns=UTC + delta)
+                frame = dict(clocks, frame_sequence=seconds + 1, source_sequence=seconds + 1,
+                             source_time_ns=delta + 5_000, received_source_time_ns=delta + 7_000)
+                ecg.append(dict(frame, **stamp, microvolts=-37))
+                acc.append(dict(frame, **stamp, xyz_mg=[1.5, -2, 1000]))
+                when = (start_utc + timedelta(seconds=seconds)).isoformat(timespec="microseconds").replace("+00:00", "Z")
+                for row in self.rows[1:3]:
+                    rows.insert(-1, dict(row, elapsed_us=seconds * 1_000_000, timestamp_utc=when,
+                                         sensor_time_ns=delta + 5_000, sensor_frame_sequence=seconds + 1))
         if partial:
             rows[-1].update(elapsed_us=3000, timestamp_utc="2023-11-14T22:13:20.003000Z",
                             audio_elapsed_us=3000, playback_state="playing", audio_phase="instruction_1",
@@ -97,17 +116,16 @@ class CollectionEvidenceTest(unittest.TestCase):
         for copy in ("pixel.csv", "drive.csv"):
             (self.evidence / copy).write_bytes(original)
         desc = dict(schema_version=4, name=NAME, session_id=SESSION, size=len(original), sha256=digest(original))
-        clocks = dict(source_clock="polar-sensor", source_time_ns=5000, sample_index=0, source_sequence=1,
-                      frame_sequence=1, received_source_clock="java-nano-time", received_source_time_ns=7000)
         clock = "java-nano-time" if polar_setup is not None else "openxr-time"
         if not partial and include_completion:
             completed_at = end_ns + completion_offset_ns
             events.append(dict(event="completion-reached", observed_monotonic_ns=completed_at,
                                observed_utc_ns=UTC + completed_at - START))
+        events.extend(extra_events)
         lengths = {
             "events.jsonl": self.streams("events.jsonl", "event", events),
-            "polar-ecg.jsonl": self.streams("polar-ecg.jsonl", "polar-ecg", [dict(clocks, microvolts=-37)]),
-            "polar-acc.jsonl": self.streams("polar-acc.jsonl", "polar-acc", [dict(clocks, xyz_mg=[1.5, -2, 1000])]),
+            "polar-ecg.jsonl": self.streams("polar-ecg.jsonl", "polar-ecg", ecg),
+            "polar-acc.jsonl": self.streams("polar-acc.jsonl", "polar-acc", acc),
             "polar-hr-rr.jsonl": self.streams("polar-hr-rr.jsonl", "polar-hr-rr", []),
             "radius.jsonl": self.streams("radius.jsonl", "effective-radius-snapshot",
                                         [dict(source_frame=6, resulting_radius_m=0.8)]),
@@ -161,13 +179,14 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.json_file(self.evidence / "delivery.json", dict(folderId="private-folder", driveId="drive-file",
                                                            sha256=desc["sha256"], verified=True))
 
-    def invoke(self, mode="complete", fail=None):
+    def invoke(self, mode="complete", fail=None, *, uninterrupted=False):
         result = subprocess.run([
             sys.executable, "-B", str(TOOL), "--native-run", str(self.native),
             "--export-manifest", str(self.evidence / "export.json"),
             "--pixel-csv", str(self.evidence / "pixel.csv"), "--drive-csv", str(self.evidence / "drive.csv"),
             "--drive-list", str(self.evidence / "drive-list.json"), "--drive-receipt", str(self.evidence / "delivery.json"),
             "--drive-folder", "private-folder", "--expect", mode,
+            *(["--require-uninterrupted"] if uninterrupted else []),
         ], capture_output=True, text=True)
         if fail:
             self.assertEqual(result.returncode, 1, result.stderr)
@@ -177,8 +196,8 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn(SESSION, result.stdout)
         result = json.loads(result.stdout)
-        self.assertEqual(result["csv_rows"]["ecg"], 1)
-        self.assertEqual(result["csv_rows"]["accelerometer"], 1)
+        self.assertGreater(result["csv_rows"]["ecg"], 0)
+        self.assertGreater(result["csv_rows"]["accelerometer"], 0)
         self.assertEqual(result["writer_drops"], 0)
         return result
 
@@ -243,6 +262,33 @@ class CollectionEvidenceTest(unittest.TestCase):
         self.publish()
         (self.evidence / "pixel.csv").write_bytes(b"changed")
         self.invoke(fail="Pixel CSV: byte count or SHA-256 mismatch")
+
+    def test_incomplete_drive_search_never_proves_uniqueness(self):
+        inventory_path = self.evidence / "drive-list.json"
+        inventory = json.loads(inventory_path.read_text(encoding="utf-8"))
+        self.json_file(inventory_path, dict(inventory, incompleteSearch=True))
+        self.invoke(fail="expected one Drive object in the complete inventory")
+
+    def test_uninterrupted_mode_requires_no_pause_or_missing_breath_projection(self):
+        self.invoke(fail="uninterrupted run contains an ECG receipt gap", uninterrupted=True)
+        self.publish(continuous_signals=True)
+        self.assertTrue(self.invoke(uninterrupted=True)["uninterrupted_checks"])
+        self.publish(pause=True)
+        self.invoke()
+        self.invoke(fail="uninterrupted run contains pauses or faults", uninterrupted=True)
+        self.publish(old_projection=True)
+        self.invoke()
+        self.invoke(fail="uninterrupted run has no breathing observations", uninterrupted=True)
+
+    def test_signal_interruption_requires_native_clock_and_fails_uninterrupted_mode(self):
+        reason = "no-recorded-receipt-for-one-second"
+        self.rows.insert(-1, dict(record_type="ecg-interrupted", signal_reason=reason))
+        event = dict(event="ecg-interrupted", signal_reason=reason)
+        self.publish(extra_events=[event])
+        self.invoke()
+        self.invoke(fail="uninterrupted run contains pauses or faults", uninterrupted=True)
+        self.publish(extra_events=[dict(event, observed_utc_ns=UTC + 1)])
+        self.invoke(fail="native signal event clock mismatch")
 
     def test_polar_java_clock_requires_retained_setup_configuration(self):
         self.publish(polar_setup=True)
