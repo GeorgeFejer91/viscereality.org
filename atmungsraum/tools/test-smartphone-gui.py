@@ -9,6 +9,7 @@ from playwright.sync_api import expect, sync_playwright
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
 from layout_render_fixtures import capture_companion_permission, capture_layout, go, initial, module
+from release_fixtures import apk_fixture
 
 AUDIT = (TOOLS.parent / "for-ai" / "scripts" / "gui-layout.js").read_text(encoding="utf-8")
 CASES = (
@@ -225,6 +226,41 @@ def capture_focused_viewport_change(review):
         page.context.close()
 
 
+def capture_participant_keyboard(review):
+    apk = {**apk_fixture(), "package_name": "org.viscereality.atmungsraum.webrtcbench"}
+    full_viewport = {"width": 411, "height": 844}
+    page = review.page(initial(c, {"apk": apk, "polar": "unconfirmed", "advanceRenderer": False}),
+                       viewport=full_viewport)
+    try:
+        page.clock.run_for(2200)
+        page.locator("#operator-connect-next").click()
+        next_step = page.locator("#operator-update-next")
+        if next_step.is_visible():
+            next_step.click()
+        surname = page.locator("#patient-surname:invalid")
+        page.locator("#patient-next").click()
+        expect(surname).to_be_focused()
+
+        page.set_viewport_size({**full_viewport, "height": 428})
+        review.shot(page, "participant-keyboard", "Empty participant form", surname, "Keyboard")
+        geometry = page.evaluate("""() => ({
+          height: visualViewport.height,
+          scroll: document.documentElement.scrollHeight,
+          buttons: [...document.querySelectorAll('#participant-screen footer button')]
+            .map(button => button.getBoundingClientRect().toJSON()),
+        })""")
+        assert geometry["scroll"] <= geometry["height"], geometry
+        assert all(button["bottom"] <= geometry["height"] and button["height"] >= 48
+                   and button["width"] >= 48 for button in geometry["buttons"]), geometry
+
+        page.set_viewport_size(full_viewport)
+        page.clock.run_for(250)
+        expect(surname).to_be_focused()
+        expect(surname).to_have_value("")
+    finally:
+        page.context.close()
+
+
 def check_stretch(samples):
     findings = []
     for name, intermediate in samples.items():
@@ -260,6 +296,7 @@ def verify():
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
         capture_focused_viewport_change(review)
+        capture_participant_keyboard(review)
         failures.extend(review.errors)
         failures.extend(check_stretch(review.samples))
         for name, sample in review.samples.items():

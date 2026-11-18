@@ -17,9 +17,11 @@ improvement through confirming the last affected acceptance criterion.
    effective foreground and runtime readiness. On the lab Pixel, refresh the
    idle standalone PWA from the exact live deployment or install it when
    missing. Confirm the active release and loaded assets from the standalone
-   app. Apply both steps for changes that span devices. Preserve saved pairing
-   and recordings. Use the approved baseline and the real PWA-driven Meta
-   route for the official transition, then verify the installed successor.
+   app. Check both physical devices on every cycle. Install each new artifact
+   on its target and verify the other device is running the latest applicable
+   counterpart. Preserve saved pairing and recordings. Use the prescribed
+   baseline and the real PWA-driven Meta route for the official transition,
+   then verify the installed successor.
 3. Use the Meta Quest workflow and serial-scoped ADB for supported headset
    navigation, launch, installs and readback. Use RustDesk MCP frames and
    input to exercise the physical Pixel UI. Try the existing authorized
@@ -40,8 +42,9 @@ improvement through confirming the last affected acceptance criterion.
    accessibility rules, and match phone actions to native receipts or
    state changes. Use fixtures to reproduce failures and require physical
    evidence for the hardware cases.
-5. Diagnose and repair each confirmed failure. Verify and publish each
-   completed improvement through the release workflow, install it on the
+5. Drive the lab loop without waiting for a separate refresh, install or
+   retest request. Diagnose and repair each confirmed failure. Verify and
+   publish each completed improvement through the release workflow, install it on the
    affected lab devices, and repeat the original case with its original
    input driver plus the affected stress and recovery checks. Keep the goal
    open until the acceptance criteria pass. Record versions, results,
