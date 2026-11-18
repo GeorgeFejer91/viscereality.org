@@ -1,4 +1,4 @@
-import { operationId, sameQuest, canControlQuest, controllerAccessState } from './quest-gateway.js?v=18';
+import { operationId, sameQuest, canControlQuest, controllerAccessState } from './quest-gateway.js?v=19';
 import { nativeSessionAllowed } from './meta-update.js?v=6';
 
 const conditions = ['condition-a', 'condition-b'];

@@ -1,26 +1,26 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
   restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=10';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
-  controllerAccessState } from './quest-gateway.js?v=18';
-import { pairPhone } from './quest-pairing.js?v=7';
-import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
+  controllerAccessState } from './quest-gateway.js?v=19';
+import { pairPhone } from './quest-pairing.js?v=8';
+import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=43';
 import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=30';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
 import { mountQuestDrive } from './quest-drive-ui.js?v=9';
 import { questionnaireFile } from './data-logging.js?v=20261118-questionnaire-completion';
 import { mountQuestionnaireForm } from './questionnaire-form.js?v=2';
 import { captureUtc } from './collection-time.js?v=1';
-import { BreathingSetup } from './breathing-setup.js?v=22';
+import { BreathingSetup } from './breathing-setup.js?v=23';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
 import { SessionParticles } from './session-particles.js?v=1';
 import { LiveEcgDisplay } from './live-ecg-display.js?v=2';
-import { KioskControl } from './kiosk-control.js?v=8';
+import { KioskControl } from './kiosk-control.js?v=9';
 import { ApkRelease } from './quest-release.js?v=2';
 import { nativeSessionAllowed, metaUpdateView, updatePresentation } from './meta-update.js?v=6';
-import { MetaUpdateControl } from './meta-update-control.js?v=10';
+import { MetaUpdateControl } from './meta-update-control.js?v=11';
 import { MetaUpdateHandoff } from './meta-update-handoff.js?v=4';
-import { ControllerLease } from './controller-lease.js?v=6';
+import { ControllerLease } from './controller-lease.js?v=7';
 import { OperatorDeviceHealth } from './operator-device-health.js?v=2';
 
 const byId = (id) => document.getElementById(id);
@@ -1322,7 +1322,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       else nextConnect = performance.now() + 8000;
       if (!canCommission() || connecting || performance.now() < nextCommissioningProbe) return;
       nextCommissioningProbe = performance.now() + 8000;
-      const { readCommissionedQuest } = await import('./quest-commissioning.js?v=3');
+      const { readCommissionedQuest } = await import('./quest-commissioning.js?v=4');
       const commissioned = await readCommissionedQuest();
       if (!canCommission() || connecting) return;
       if (commissioned?.state === 'loopback-denied') {
@@ -1497,7 +1497,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         let connectionFailure;
         if (discovery.rtc) {
           try {
-            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=5');
+            const { openQuestWebRtc } = await import('./quest-webrtc.js?v=6');
             const session = await openQuestWebRtc(discovery, settings.enrollment, signal);
             settings = { ...settings, enrollment: session.enrollment };
             gateway = await join(undefined, discovery, session.transport);

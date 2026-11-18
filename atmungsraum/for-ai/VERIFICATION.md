@@ -101,6 +101,29 @@ The outstanding bench gates are same-owner physical rebind and
 authenticated standalone phone pairing with native receipts. The guarded
 Meta and worn Polar gates remain separate.
 
+### Remembered Bluetooth service selection — 2026-11-18
+
+The lab Bluetooth read returned both Atmungsraum service instances under
+one BLE device. Meta code 27 returned first. The PWA called the
+single-service Web Bluetooth operation even for a saved installation.
+A regression using the measured ordering failed when the first
+instance belonged to a different installation and the saved Quest
+supplied the valid relay-only payload in the next instance.
+
+The remembered-device route now checks each matching primary service
+until the discovery data matches the saved installation. A missing match
+is rejected and releases the GATT connection. The normal chooser and the
+gateway's existing signed admission rules still apply. The regression
+checks both the expected and absent installation. All 52 focused Node
+checks and five mounted PWA startup groups passed. All browser modules
+load the same gateway version, and the connected GUI snapshot waits for
+the actual Next and Polar readiness states before measuring. The
+installed Pixel's Chrome exposes the multiple-service API. Its saved
+record contains a browser grant reference, and Chrome returned no
+matching device for that reference. Authenticated reconnect for the lab
+installation still needs a matching enrollment.
+[Web Bluetooth service lookup](https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattserver-getprimaryservices).
+
 ### Signed WebRTC Bench 35 startup — 2026-11-18
 
 The preflight matched the installed APK hashes for the signed bench 35 and
