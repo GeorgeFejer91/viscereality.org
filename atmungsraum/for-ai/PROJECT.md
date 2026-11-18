@@ -298,6 +298,45 @@ zero scroll range, full geometry, and retained focus, value and caret
 with resize event delivery held. The actual Pixel keyboard remains
 part of the physical UI matrix.
 
+The [Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44227436820)
+from `abae263905c6` matched all eight changed files to Git. The installed
+Pixel loaded `20261118-webrtc-signal-budget` in standalone mode with saved
+trust and measurement ready. Frame-confirmed RustDesk MCP taps opened
+Settings and returned to Connect. The lab Quest still matched the signed
+Meta Developer code 27 and isolated WebRTC bench code 28 bytes.
+
+#### WebRTC recording transfer stress — 2026-11-18
+
+The current PWA recording modules, compiled Java gateway and all nine
+WebRTC assets from the signed bench APK exercised a 74,967,884-byte
+synthetic export in two Windows Chromium contexts. On direct ICE and
+forced TURN, the peer closed during an in-progress batch. IndexedDB
+retained exactly 1,048,576 committed bytes and the new connection retried
+from that offset. Each run completed 2,273 live range requests and 16
+final range requests, preserved the original receipt ID and matched the
+source SHA-256.
+
+| Selected ICE at both peers | Rejoin | Remaining live prefix | Range p95 | Concurrent status and receipt p95 |
+| --- | ---: | ---: | ---: | ---: |
+| Host | 0.87 s | 55.77 s | 26.9 ms | 55.1 ms over 36 pairs |
+| TURN relay | 1.43 s | 157.15 s | 80.4 ms | 148 ms over 97 pairs |
+
+These are single runs over each route with synthetic bytes and an
+injected peer close. Thirteen focused recording and simulated Drive
+checks passed, including repeated lost upload responses with one file
+ID per run. The physical network matrix and Quest-to-Pixel-to-private
+Drive custody for a new H10 recording remain open.
+
+The lab bench UID now has confirmed Bluetooth scan, connect and advertise
+grants from serial-scoped Android developer commands. The Quest woke
+under a bounded hold. The prior permission panel stayed visible above the
+Developer scene after the grants and a bench relaunch attempt. The bench
+was absent from the foreground and process readbacks, so the physical
+first-pairing probe stayed stopped. The hold expired with the previous
+stay-on setting and the Quest asleep. At the next attended window, clear
+the old headset panel and open WebRTC Bench. Resume the empty profile
+check with the installed Pixel, then physical reconnect and receipt checks.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
