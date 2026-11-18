@@ -171,6 +171,11 @@ The signed code 29 input/build record is published through
 `13e0e042dae0d7fde92510b708fc6c99e73a87e9`, with successful
 [Pages run 44372630949](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44372630949)
 and exact live comparisons of all three changed documents.
+The held code 28 evidence uses branch `codex/atmungsraum-held28-evidence`
+and [PR 140](https://github.com/GeorgeFejer91/viscereality.org/pull/140).
+The context checker and whitespace review pass. Follow the PR's exact merge
+deployment and compare the three live documents before handing off; the
+runtime release policy remains at the verified Meta baseline.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions
