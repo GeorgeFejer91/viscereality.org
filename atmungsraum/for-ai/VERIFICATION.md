@@ -57,6 +57,38 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Meta Developer and Pixel startup — 2026-11-18
+
+The [Meta Developer channel](https://developers.meta.com/vr/manage/applications/1459506690581676/release-channels/)
+served `0.2.26-dev` (code 27). Its complete
+[build 1465199570012388](https://developers.meta.com/vr/manage/applications/1459506690581676/builds/1465199570012388/)
+targeted Quest 2. ADB confirmed Meta installer `com.oculus.ocms` and the
+installed base APK matched the signed fixed27-r2 SHA-256. The live
+version policy also matched. The exact
+[Pages run 44337383494](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44337383494)
+matched eight paths at `31b3822`. The installed Pixel loaded the matching
+standalone release `20261118-recordings-offline-landscape`.
+The mounted APK policy check passed 15 cases across 18 rendered states.
+
+Three serial-scoped cold launches each created a fresh standalone document.
+The latest PWA became visible after 1.25–1.45 seconds and continued
+searching for its saved Quest for the full 30-second observation each time.
+No attempt reached authenticated status. The saved enrollment persisted
+and belongs to another installation. The signed app's typed ADB status
+reported Prepare, discovery advertising, and its trusted LAN listener
+running without an enabled enrolled controller. A current phone-side
+TCP attempt failed on the shared Wi-Fi subnet. The same listener answered
+on an owned USB forward that was then removed. The exact APK contains no
+bundled WebRTC runtime. The Pixel remained on Connect, with RustDesk Input
+working and Android display settings restored.
+
+The official startup gate remains open. Test the qualified unified Developer
+APK with the matching signed companion, commissioned phone, and current PWA.
+Exercise both launch orders, cold first enrollment and saved reconnect on
+the supported network matrix, and match a native receipt on each success.
+Use the prescribed Meta release sequence. Earlier bench receipts remain
+recorded under the [connection milestone](PROJECT.md#connection-milestone--fast-web-pairing-across-isolated-wi-fi).
+
 ### Haupt-Runde questionnaire — 2026-11-18
 
 The mounted Chromium tests replay the existing live recording and final

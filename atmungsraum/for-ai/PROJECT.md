@@ -113,6 +113,22 @@ installation. Both devices now report the same Wi-Fi subnet. The Pixel's
 direct TCP check to the Quest gateway failed, and the exact Quest gateway
 answered over the temporary USB loopback route.
 
+- [x] Recheck Meta Developer and the installed PWA together. Meta showed
+  complete Quest 2 build `1465199570012388`, `0.2.26-dev` (code 27).
+  The Meta-installed APK matched the signed SHA-256 and live policy.
+  Exact Pages run `44337383494` at `31b3822` matched eight paths. The
+  installed Pixel ran `20261118-recordings-offline-landscape`.
+- [ ] Pass automatic startup on the current Developer APK and installed
+  PWA. Three cold Pixel launches created fresh standalone documents.
+  None authenticated within 30 seconds while code 27 was awake,
+  advertising and listening. The Pixel kept a saved enrollment for a
+  different installation. Code 27 has no bundled WebRTC runtime, and
+  the phone could not reach its LAN gateway on the shared Wi-Fi subnet.
+  Continue with the commissioned, unified Developer build and the
+  [connection milestone](#connection-milestone--fast-web-pairing-across-isolated-wi-fi).
+  Repeat the startup gate on the approved Meta release and installed
+  counterpart. The existing guarded successor sequence still applies.
+
 On the exact Meta-installed code 27, the signed app's typed ADB operator
 showed the panel with a native submitted-frame receipt and confirmed six
 Controls and Condition navigation transitions. The same native owner and
