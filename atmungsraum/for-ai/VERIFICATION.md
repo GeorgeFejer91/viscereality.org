@@ -124,6 +124,17 @@ matching device for that reference. Authenticated reconnect for the lab
 installation still needs a matching enrollment.
 [Web Bluetooth service lookup](https://webbluetoothcg.github.io/web-bluetooth/#dom-bluetoothremotegattserver-getprimaryservices).
 
+The exact
+[Pages run 44353740380](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44353740380)
+deployed merge `3cdea7b` after the 421-state GUI gate. Eighteen live paths
+matched Git. The installed Pixel loaded the current entry, operator
+module, and gateway version 19. A cold standalone launch was visible after
+1.23 seconds and still unauthenticated at 30.36 seconds. The exact Meta
+gateway returned a different installation ID from the Pixel's saved
+pairing. The phone retained its enrollment and had no matching Chrome
+grant. RustDesk MCP opened Settings and returned to Connect, with both
+transitions confirmed in fresh frames.
+
 ### Signed WebRTC Bench 35 startup — 2026-11-18
 
 The preflight matched the installed APK hashes for the signed bench 35 and

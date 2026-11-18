@@ -60,8 +60,16 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   instances observed on the lab Quest. It now checks matching service
   instances against the saved installation ID, so a preceding foreign
   service cannot hide the saved Quest. The mounted startup and focused
-  gateway tests passed. Retest the published release on the Pixel and
-  qualify authenticated reconnect with the approved device enrollment.
+  gateway tests passed.
+- [x] Load the published `20261118-saved-quest-service` PWA on the lab
+  Pixel. [Pages run 44353740380](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44353740380)
+  deployed merge `3cdea7b`. Eighteen live files matched Git. The GUI gate passed
+  all 421 states. RustDesk opened Settings and returned to Connect. A
+  cold launch retained saved pairing and reached Connect in 1.23 seconds.
+  It stayed unauthenticated during the 30-second observation. The saved
+  enrollment still points to a different installation and Chrome exposed
+  no matching grant. Qualify authenticated reconnect with the approved
+  phone and headset enrollment.
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
