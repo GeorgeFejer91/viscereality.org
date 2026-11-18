@@ -8,8 +8,9 @@ version name `0.2.27-rtc-test`, and 65,605,180 bytes. SHA-256 is
 Native source tree `c0b2c0fa6e198d6af9edb1d8532bcf7bda9c751f`.
 The v3 signature, ARM64, alignment, selected WebRTC assets and cold
 session closure pass. Installed Quest 2 bench bytes match the signed
-digest. Source [reconstruction instructions](../README.md#webrtc-candidate)
-apply to this bench version.
+digest. The [pinned WebRTC patch for this APK](https://github.com/GeorgeFejer91/viscereality.org/blob/56e4d66a54417aebaef2b9f522ba386c2c4f6a94/atmungsraum/quest/webrtc-native.patch)
+reconstructs the bound tree above. The newer checkout contains additional
+host verification fixtures. See [the build and verification instructions](../README.md#webrtc-candidate).
 
 This is the test package for the managed phone's first WebRTC connection.
 The separately identified Meta Developer and rehearsal routes continue

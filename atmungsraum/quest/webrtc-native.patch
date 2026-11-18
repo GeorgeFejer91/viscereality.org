@@ -610,6 +610,28 @@ index 899cbf6f423773c04d84baea4fff26d9ff6ed52f..10f655eaaef0d3e95595f1a0b6cb957b
          JSONObject updateCommand=new JSONObject().put("v",1).put("id","aabbccddeeff0011").put("op","check-and-update").put("cycle","1").put("revision","2");
          if(!ExperimentSessionGatewayProtocol.metaUpdateQuery(updateCommand).toString().equals(updateCommand.toString()))throw new AssertionError("canonical update body changed");
          JSONObject endPreparation=new JSONObject(updateCommand.toString()).put("op","end-preparation-and-check");
+diff --git a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
+index c8269669768931306642dae97644957aabc2b08f..1158aac0930d06f4bfe4d092e2d354fbfbdb3944 100644
+--- a/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
++++ b/apps/native-renderer-android/tests/java/io/github/mesmerprism/rustyquest/native_renderer/PolarNativeModeStartupTest.java
+@@ -22,6 +22,9 @@ final class Handler {
+     void postDelayed(Runnable action, long delay) { tasks.add(action); }
+     void drain() { List<Runnable> ready = new ArrayList<>(tasks); tasks.clear(); for (Runnable action : ready) action.run(); }
+ }
++final class SystemClock {
++    static long elapsedRealtime() { return 1000L; }
++}
+ final class PolarBleRuntimeSupport {
+     static boolean requestSelectedStartupPermissions(Activity a){return false;}
+     static void selectedStartupPermissionLifecycle(Activity a,String event){}
+@@ -64,6 +67,7 @@ final class PolarSensorPanel {
+     boolean closing, connected, scanning, automaticConnectionRequested, manualConnectionControl;
+     boolean automaticConnectionRetryScheduled, automaticConnectionCycleActive, locationSettingsPromptPending;
+     long automaticRecoveryGeneration, autoUniqueCandidateScheduledGeneration, autoScanGeneration, scanGeneration;
++    long automaticRecoveryNextElapsedMs;
+     long generation;
+     int autoConnectionAttempts, pendingBleAction, scans;
+     static final int AUTO_CONNECTION_MAX_ATTEMPTS = 2, PENDING_BLE_SCAN = 1, REQUEST_BLE_PERMISSIONS = 19;
 diff --git a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json b/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
 index 22746f1f0a55ae671e2b0215551574d211bfeec0..3db59d58fa3f10dc613020a6ccb25cf54a74fb27 100644
 --- a/fixtures/native-app-features/ui/breath-composition-panel/ui.breath_composition_control_panel.feature.json
@@ -634,3 +656,136 @@ index c2d165a82c9268dce30120f21353f0dde128a8ed..a58702d707c3708d0820dea4c807576e
          (Join-Path $panelRoot 'ExperimentSessionWifiSnapshot.java'),
          (Join-Path $panelRoot 'ExperimentSessionDiscoveryServer.java'),
          (Join-Path $panelRoot 'ExperimentSessionWifiConnection.java'),
+diff --git a/tools/checks/test_polar_platform_projection.py b/tools/checks/test_polar_platform_projection.py
+index 833f50b03335810d11063ffdd60c7c48017f760d..da0a4d75246ce4358fdacd189641af5b3c7d7666 100644
+--- a/tools/checks/test_polar_platform_projection.py
++++ b/tools/checks/test_polar_platform_projection.py
+@@ -5,7 +5,10 @@ from test_experiment_gateway_dedupe import method
+ PACKAGE='io/github/mesmerprism/rustyquest/native_renderer'
+ def main():
+  repo=Path(__file__).resolve().parents[2];source=repo/'apps/native-renderer-android/panel-modules/polar/src/main/java'/PACKAGE
+- projection=method((source/'PolarSensorPanel.java').read_text(),'synchronized JSONObject remoteSetupProjection(')
++ panel=(source/'PolarSensorPanel.java').read_text(encoding='utf-8-sig')
++ projection='\n'.join(method(panel,anchor) for anchor in (
++  'synchronized JSONObject remoteSetupProjection(', 'JSONObject remoteHealthProjection('))
++ health=method(panel,'final class PolarLiveHealth')
+  location=method((source/'PolarBleRuntimeSupport.java').read_text(),'static String locationServicesState(')
+  jars=list((Path.home()/'.gradle/caches/modules-2/files-2.1/org.json/json').rglob('json-*.jar'));jar=jars[0]
+  with tempfile.TemporaryDirectory(prefix='rq-polar-platform-') as t:
+@@ -18,7 +21,9 @@ def main():
+   for name,body in files.items():
+    f=out/name;f.parent.mkdir(parents=True,exist_ok=True);f.write_text(body)
+   body=r'''package io.github.mesmerprism.rustyquest.native_renderer;
+-import android.content.Context;import android.location.LocationManager;import android.os.Build;import org.json.*;
++import android.content.Context;import android.location.LocationManager;import android.os.Build;import java.util.*;import org.json.*;
++class SystemClock {static long elapsedRealtime(){return 1000L;}}
++__HEALTH__
+ class PolarBleRuntimeSupport {
+  __LOCATION__
+  static JSONObject statusJson(Context c)throws Exception{return new JSONObject().put("runtime_permission_ready",true).put("bluetooth_adapter_state","on").put("location_services_state",locationServicesState(c));}
+@@ -26,16 +31,32 @@ class PolarBleRuntimeSupport {
+ public final class PolarPlatformProjectionHarness {
+  static class Runtime {boolean automaticExperimentStreamsCurrent(){return false;}}final Runtime originatingRuntime=new Runtime();
+  static class Streams {boolean current(Object g,long n){return false;}}final Streams requiredStreams=new Streams();
+- static class Intent {boolean streamWanted(String s){return false;}}final Intent recoveryIntent=new Intent();
+- boolean requiredStreamsMonitoring,pmdReady;Object gatt;long autoConnectionGeneration,requiredConnectionAtNs,accStreamReceiptFloorNs,ecgStreamReceiptFloorNs;
++ static class Intent {boolean streamWanted(String s){return false;}boolean automaticStartupAllowed(){return true;}}final Intent recoveryIntent=new Intent();
++ boolean requiredStreamsMonitoring,pmdReady,closing;Object gatt=new Object();long autoConnectionGeneration=1,requiredConnectionAtNs,accStreamReceiptFloorNs,ecgStreamReceiptFloorNs;
++ boolean automaticConnectionRequested=true,manualConnectionControl,automaticConnectionRetryScheduled;
++ String automaticConnectionState="",automaticConnectionDetail="";long automaticRecoveryNextElapsedMs;
++ final Object connectionIdentityLock=new Object();final PolarLiveHealth liveHealth=new PolarLiveHealth();
+  Context appContext=new Context();final Object countersLock=new Object();long lastAccFrameReceiptNs=System.nanoTime(),lastEcgFrameReceiptNs=System.nanoTime();
+  boolean connected=true,accPmdRunning=true,ecgPmdRunning=true,scanning;String connectedDeviceInstanceId="polar-111111111111";
+  static final class Device{String instanceId(){return "polar-111111111111";}}java.util.List<Device> devices=new java.util.ArrayList<>();String selectedDeviceInstanceId(){return connectedDeviceInstanceId;}
+  __PROJECTION__
+  static int checks;static void check(boolean v,String why){checks++;if(!v)throw new AssertionError(why);}
+- void state(String expected)throws Exception{JSONObject p=remoteSetupProjection();check(p.has("l"),"compact setup omits actual Location services prerequisite");check(p.getString("l").equals(expected),"Location state changed");check(p.getBoolean("p")&&p.getBoolean("b"),"Location conflated with app permissions/Bluetooth");check(p.getBoolean("c")&&p.getBoolean("a")&&p.getBoolean("e"),"Location prerequisite disabled already-connected streams");}
++ void state(String expected)throws Exception{
++  liveHealth.acc(gatt,autoConnectionGeneration,connectedDeviceInstanceId,lastAccFrameReceiptNs);
++  liveHealth.ecg(gatt,autoConnectionGeneration,connectedDeviceInstanceId,lastEcgFrameReceiptNs);
++  JSONObject p=remoteSetupProjection();
++  check(p.has("l"),"compact setup omits actual Location services prerequisite");
++  check(p.getString("l").equals(expected),"Location state changed");
++  check(p.getBoolean("p")&&p.getBoolean("b"),"Location conflated with app permissions/Bluetooth");
++  check(p.getBoolean("c")&&p.getBoolean("a")&&p.getBoolean("e"),"Location prerequisite disabled already-connected streams");
++  JSONObject health=p.getJSONObject("health");
++  check(health.getBoolean("link")&&health.getJSONObject("acc").getBoolean("fresh")
++    &&health.getJSONObject("ecg").getBoolean("fresh"),"Location retired live health");
++  check(p.getJSONObject("auto").getString("state").equals(expected.equals("disabled")?"blocked":"ready"),
++    "automatic discovery and already-connected health must report separately");
++ }
+  public static void main(String[]args)throws Exception{PolarPlatformProjectionHarness h=new PolarPlatformProjectionHarness();h.state("enabled");h.appContext.manager.enabled=false;h.state("disabled");h.appContext.manager.denied=true;h.state("permission-blocked");h.appContext.manager.denied=false;h.appContext.manager.unknown=true;h.state("unknown");h.appContext.manager=null;h.state("unavailable");Build.VERSION.SDK_INT=27;h.state("legacy-unobserved");System.out.println("PASS "+checks+" actual Polar compact platform projection controls: independent Location state and connected stream preservation");}
+-}'''.replace('__LOCATION__',location).replace('__PROJECTION__',projection)
++}'''.replace('__LOCATION__',location).replace('__PROJECTION__',projection).replace('__HEALTH__',health)
+   f=out/PACKAGE/'PolarPlatformProjectionHarness.java';f.parent.mkdir(parents=True,exist_ok=True);f.write_text(body)
+   subprocess.run(['javac','--release','8','-cp',str(jar),'-d',str(out),*map(str,out.rglob('*.java'))],check=True)
+   subprocess.run(['java','-cp',str(out)+os.pathsep+str(jar),PACKAGE.replace('/','.')+'.PolarPlatformProjectionHarness'],check=True)
+diff --git a/tools/checks/test_polar_required_stream_scope.py b/tools/checks/test_polar_required_stream_scope.py
+index dc0bab363f105ecc62874888ade63aff2ea8dc2e..20676d871518f76c8154d23eb02d8d266fbbb9ce 100644
+--- a/tools/checks/test_polar_required_stream_scope.py
++++ b/tools/checks/test_polar_required_stream_scope.py
+@@ -1,6 +1,6 @@
+ """Production native selection, public intent bit and private latest-frame diagnostics."""
+ from pathlib import Path
+-import subprocess,tempfile
++import os,subprocess,tempfile
+ from test_experiment_gateway_dedupe import method
+ root=Path(__file__).resolve().parents[2];pkg='io/github/mesmerprism/rustyquest/native_renderer'
+ polar=root/'apps/native-renderer-android/panel-modules/polar/src/main/java'/pkg
+@@ -12,7 +12,7 @@ def run(files,name):
+   for path,body in files.items():
+    target=out/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_text(body)
+   subprocess.run(['javac','--release','8','-cp',str(jar),'-d',t,*map(str,out.rglob('*.java'))],check=True)
+-  subprocess.run(['java','-cp',t+';'+str(jar),pkg.replace('/','.')+'.'+name],check=True)
++  subprocess.run(['java','-cp',t+os.pathsep+str(jar),pkg.replace('/','.')+'.'+name],check=True)
+ 
+ gate=method(runtime,'boolean automaticExperimentStreamsCurrent(')
+ files={
+@@ -48,12 +48,16 @@ missing[pkg+'/RequiredMissingBridgeHost.java']=no_bridge.replace('RequiredScopeH
+ run(missing,'RequiredMissingBridgeHost')
+ 
+ anchors=['JSONObject authenticatedAccDiagnostic(', 'private void retainAccDiagnostic(', 'private static final class AccFrameDiagnostic',
+- 'private static final class AccSample', 'private static final class PmdFrameMetric', 'private void closeGatt(', 'synchronized JSONObject remoteSetupProjection(']
++ 'private static final class AccSample', 'private static final class PmdFrameMetric', 'private void closeGatt(',
++ 'synchronized JSONObject remoteSetupProjection(', 'JSONObject remoteHealthProjection(']
+ bodies='\n'.join(method(panel,a) for a in anchors)
+ support='\n'.join(method(runtime,a) for a in ['final class PolarRecoveryIntent','final class PolarStartupCoordinator'])
++support+='\n'+method(panel,'final class PolarLiveHealth')
+ fixture=r'''package io.github.mesmerprism.rustyquest.native_renderer;
+ import org.json.*;import java.util.*;
+ class BluetoothGatt{void disconnect(){}void close(){}}
++class SystemClock{static long elapsedRealtime(){return 1000L;}}
++class Handler{Runnable removed;void removeCallbacks(Runnable action){removed=action;}}
+ class PolarSensorRuntime{boolean selected=true;boolean automaticExperimentStreamsCurrent(){return selected;}}
+ class PolarBleRuntimeSupport{static JSONObject statusJson(Object c){return new JSONObject().put("runtime_permission_ready",true).put("bluetooth_adapter_state","on").put("location_services_state","enabled");}}
+ public class AccDiagnosticHost{
+@@ -62,6 +66,10 @@ public class AccDiagnosticHost{
+  long autoConnectionGeneration=1,pmdFlowGeneration,pendingCommandGeneration,requiredConnectionAtNs,accStreamReceiptFloorNs,ecgStreamReceiptFloorNs,lastAccFrameReceiptNs=System.nanoTime(),lastEcgFrameReceiptNs=System.nanoTime();
+  String connectedLabel="none",connectedDeviceInstanceId="polar-111111111111",pendingConnectionLabel="none",pendingConnectionDeviceInstanceId="none",pendingCommand="none";
+  Object batteryCharacteristic,hrCharacteristic,pmdControlCharacteristic,pmdDataCharacteristic;final Queue<Object> descriptorTasks=new ArrayDeque<>();
++ boolean automaticConnectionRequested,manualConnectionControl,automaticConnectionRetryScheduled;
++ String automaticConnectionState="",automaticConnectionDetail="";long automaticRecoveryNextElapsedMs;
++ final PolarLiveHealth liveHealth=new PolarLiveHealth();final Handler handler=new Handler();
++ long batteryReadTicket;BluetoothGatt batteryReadGatt;Object batteryReadCharacteristic;Runnable batteryReadTimeout;int batteryPercent=-1;
+  BluetoothGatt gatt=new BluetoothGatt();AccFrameDiagnostic latestAccDiagnostic;int activeAccSampleRateHz=200;
+  final PolarSensorRuntime originatingRuntime=new PolarSensorRuntime();final PolarRecoveryIntent recoveryIntent=new PolarRecoveryIntent();final PolarStartupCoordinator requiredStreams=new PolarStartupCoordinator();
+  class DeviceEntry{String instanceId(){return "polar-111111111111";}}final List<DeviceEntry> devices=new ArrayList<>();String selectedDeviceInstanceId(){return connectedDeviceInstanceId;}
+@@ -79,7 +87,17 @@ public class AccDiagnosticHost{
+   h.gatt=new BluetoothGatt();check(h.authenticatedAccDiagnostic()==null,"old GATT diagnostic is unavailable");h.gatt=original;h.autoConnectionGeneration=2;check(h.authenticatedAccDiagnostic()==null,"old connection generation diagnostic is unavailable");h.autoConnectionGeneration=1;
+   synchronized(h.connectionIdentityLock){h.retainAccDiagnostic(new BluetoothGatt(),1,raw,frame,999);h.retainAccDiagnostic(original,2,raw,frame,999);}check(h.authenticatedAccDiagnostic().getString("receipt_delta_ns").equals("77"),"stale callback cannot replace latest actual frame");
+   PmdFrameMetric extreme=new PmdFrameMetric(Long.MIN_VALUE,Long.MAX_VALUE,Integer.MAX_VALUE,Arrays.asList(new AccSample(Integer.MIN_VALUE,Integer.MAX_VALUE,Integer.MIN_VALUE),new AccSample(Integer.MAX_VALUE,Integer.MIN_VALUE,Integer.MAX_VALUE)));synchronized(h.connectionIdentityLock){h.retainAccDiagnostic(original,1,raw,extreme,Long.MAX_VALUE);}check(h.authenticatedAccDiagnostic().toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length<=400&&h.authenticatedAccDiagnostic().getInt("max_adjacent_mg")==Integer.MAX_VALUE,"extreme integer/timestamp diagnostic remains bounded and axis delta cannot overflow");
+-  h.closing=true;check(h.authenticatedAccDiagnostic()==null,"retired owner read denied");h.closing=false;h.closeGatt();check(h.latestAccDiagnostic==null&&h.authenticatedAccDiagnostic()==null,"actual GATT retirement clears one stored frame");
++  h.closing=true;check(h.authenticatedAccDiagnostic()==null,"retired owner read denied");h.closing=false;
++  h.batteryReadGatt=original;h.batteryReadCharacteristic=new Object();
++  Runnable pendingBattery=()->{};h.batteryReadTimeout=pendingBattery;h.batteryPercent=75;
++  h.liveHealth.battery(original,1,h.connectedDeviceInstanceId,System.nanoTime(),new byte[]{75});
++  check(h.remoteHealthProjection().getJSONObject("battery").getInt("percent")==75,"current GATT reports its own battery");
++  h.closeGatt();
++  check(h.latestAccDiagnostic==null&&h.authenticatedAccDiagnostic()==null,"actual GATT retirement clears one stored frame");
++  check(h.batteryReadTicket==1&&h.batteryReadGatt==null&&h.batteryReadCharacteristic==null
++      &&h.batteryReadTimeout==null&&h.handler.removed==pendingBattery&&h.batteryPercent==-1,
++      "retired GATT cannot complete the pending battery read");
++  check(h.remoteHealthProjection().getJSONObject("battery").isNull("percent"),"retired battery is unavailable");
+   System.out.println("PASS "+checks+" actual bounded ACC latest-frame/private-read and automatic-recovery projection controls");
+  }
+ }'''.replace('__BODIES__',bodies)

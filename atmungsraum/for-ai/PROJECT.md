@@ -56,9 +56,10 @@ renders pass. The native suite passes 907 tests with six fixture-dependent
 ignores using a test scratch directory outside the checkout. The ARM64 check,
 actual installed APK signature/alignment, cold session-profile closure, and
 all 14 updater host suites pass. The Windows JNI fixture used MSVC. Current
-Polar acquisition, battery, health and recovery checks pass. Legacy Polar
-platform projection and stream-scope harnesses still need their missing mock
-fields. The startup harness passed with a test-only clock and field added.
+Polar acquisition, battery, health and recovery checks pass. The Location
+projection, required stream scope and startup fixtures now include the
+current health projection, automatic discovery and battery retirement
+dependencies.
 
 The lab Quest launched and logged actual Polar connect, PMD readiness and
 ACC and ECG stream starts. The Pixel retained saved membership and saw
@@ -244,6 +245,25 @@ passes 166 rendered states. All 337 Node tests pass with the native
 JVM fixtures enabled and zero skips. Direct ICE and forced TURN each
 pass the current empty-profile browser test with no chooser, code or
 LAN addresses.
+
+The [autonomous verification release](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44223717447)
+from `56e4d66a5441` matched all 27 changed live files to Git. The actual
+Pixel loaded `20261118-companion-permission` with measurement ready and
+saved trust present. RustDesk taps verified Settings, Quest control, close
+and return. Re-pulling the two installed Quest APKs confirmed their exact
+signed bytes. The bounded Quest hold ended with prior stay-on and
+proximity state observed again. The Quest is asleep and the bench grant
+and attended run remain open.
+
+Native verification commit `53766ae3b59b08239f5227f46e333d053c3dd08a` repairs three
+host fixtures. It extracts the actual health projection and tests that
+existing connected ACC and ECG stay fresh when Location blocks discovery
+(36 assertions), that GATT retirement invalidates a pending battery read
+and the latest private ACC frame (18 assertions), and that startup
+permission and ownership gates survive Direct/Remote selection.
+Both required-stream admission fixtures pass 12 assertions each. All
+eight focused Polar host suites pass. The signed APK runtime sources
+match the earlier checkout. [Native verification recipe](../quest/README.md#webrtc-candidate)
 
 ### PWA update copy simplification — 2026-11-17
 
