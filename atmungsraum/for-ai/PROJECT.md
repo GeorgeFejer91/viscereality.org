@@ -62,9 +62,9 @@ including upload interruption and resume from the acknowledged byte. The lab
 Quest accepted the same-signer Bench code 34 update with matching installed
 bytes, retained UID and grants. The normal launcher reached Prepare with a
 native submitted frame. The bench was stopped and Meta Developer code 27 was
-restored to Prepare with a native submitted frame. Restore Pixel input and
-verify the standalone release, then run code-free pairing and the worn
-Polar and export checks. See the
+restored to Prepare with a native submitted frame. Pixel input has been
+restored. Verify the standalone release, then run code-free pairing and
+the worn Polar and export checks. See the
 [APK record](../quest/apks/README.md#webrtc-bench-with-durable-audiotrack-completion-evidence).
 
 The Meta-installed fixed27-r2 APK reached OpenXR focus on the Prepare page.
@@ -169,11 +169,28 @@ when capture ends. Lock and reboot recovery still need an attended check.
   deployed merge 65336fc. Seven public assets match Git. The 378-state gate
   and a browser run on the public assets confirmed scrolling, numeric JSON
   and mocked Drive reconciliation.
-- [ ] Refresh the installed Pixel to the current questionnaire release and
-  verify it loaded the release. Quest awake coverage and the RustDesk frame
-  were confirmed, and the Pixel retained the older release. Android reported
-  no enabled accessibility services, so the remote session could not drive
-  a refresh. Re-enable RustDesk Input on the Pixel and retry the idle launch.
+- [x] Restore RustDesk Input on the docked Pixel. Android reported the service
+  bound, and RustDesk frames confirmed working Settings and Back taps.
+  The lab Quest remained awake in the developer APK under the watchdog.
+- [x] Read back the phone's 18 uploaded payloads and their private Drive
+  objects. Every phone payload matched its SHA-256 receipt and each remote
+  ID, filename, byte length and private parent matched. One independently
+  downloaded Drive CSV matched the phone's recorded SHA-256. All 11 CSVs
+  contained ECG, accelerometer and radius samples under one run identity.
+  The six completed schema 4 Haupt-Runde exports each logged an ECG interruption.
+  The phone had no submitted questionnaire in this audit.
+- [x] Accept the native terminal completion status for the questionnaire.
+  Three of the six completed schema 4 main runs ended with a projected
+  audio clock below 900 seconds. The recording evidence check still
+  verifies the native completion timing independently. The mounted Chromium
+  gate passed 399 states, including the projected clock regression,
+  byte-identical questionnaire delivery to a Drive fixture and recovery after
+  a lost response. The Node suite passed 340 tests with 12 native-fixture
+  skips. All 14 recording evidence tests passed.
+- [ ] Refresh the installed Pixel and verify the current questionnaire
+  release. The regular Chrome tab refreshed through RustDesk, and the
+  installed standalone app still showed `20261118-dataset-sync`.
+  Retry the idle standalone launch with RustDesk Input enabled.
 - [x] Verify Recordings fits at 320 × 428 portrait and 640 × 320 landscape
   with 200% text in the mounted PWA. The short views retain selection,
   downloads, retry, Drive, browser archives and 48 px targets. See
