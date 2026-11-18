@@ -181,16 +181,45 @@ with `trusted_lan=true`. The installed Pixel had loopback permission granted.
 An owned Quest ADB forward and Pixel USB reverse did not establish signed
 status, and the separate host-side gateway probe could not read the endpoint
 in the same run. An Android Home intent followed by a warm official launch
-again produced focus and submitted frames, with no listener at port 8766.
+again produced focus and submitted frames. The scoped port 8766 gateway
+probe still received no response.
 The earlier anonymous gateway response was observed while the bench held
 the foreground. The official observer sent status requests only. The Meta
 offer and preparation action remain unobserved. The two owned USB mappings
 and the temporary wake policy were released.
 
-At the next official attempt, verify the runtime owns the gateway listener
-before pairing or issuing a preparation command. Check whether the bench
-process previously occupied the port. Only the official signed status can
-establish the current offer and preparation eligibility.
+An isolated cold launch with the bench process stopped restored the official
+listener. The exact installed Pixel PWA compared its saved record against
+the reply and found a different device and serial, with the legacy identity
+kind. The official port replied under its app-installation identity. Its
+operator readback reported no enabled enrolled controller. Establish
+authorized membership for that installation and require signed status for
+the live Meta offer and preparation eligibility.
+
+### Quest gateway listener recovery — 2026-11-18
+
+A temporary ADB reverse mapping occupied Quest port 8766 during an isolated
+official code 27 launch. This reproduced `listener-unavailable`. Removing
+the mapping left the original process without a gateway response after 12
+seconds. An isolated cold relaunch restored the official Prepare listener.
+
+The production gateway host regression failed on the missing retry. The
+repair queues one two-second retry after a bind failure while the native
+owner and LAN permission remain current. Native retirement cancels the
+queued effect. The regression now passes with the shared Remote gateway
+suite (89 checks), discovery suite (119) and phone-pairing UI bridge (25).
+
+Signed [bench APK 33](../quest/apks/README.md#webrtc-bench-with-lan-listener-recovery)
+matched the installed bytes and retained its signer, UID and grants. The
+same port fault exercised the signed APK while OpenXR was focused and
+submitted frames. After release, the listener returned in 0.93 seconds under
+the same process and panel owner. The installed Pixel PWA authenticated the
+new APK code and IDLE native status using the recovered gateway over an owned
+USB test route. A subsequent ordinary WebRTC saved rejoin reached controls
+in 7.80 seconds, and RustDesk Recenter matched its original native receipt.
+The browser's ordinary saved record, temporary ADB mappings and headset
+power policy were restored. The controller trust and Meta behavior of the
+official APK remain separate release gates.
 
 ### Phone TURN/TLS and invalid controller requests — 2026-11-18
 

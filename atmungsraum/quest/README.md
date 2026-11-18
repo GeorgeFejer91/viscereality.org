@@ -32,9 +32,10 @@ evidence. The APK log identifies the signed release by one version and hash.
 
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
-tree is `894fb869fa71c787372cdb514c68d380b0fa2488`. Commit it in an isolated
+tree is `388e9d00eb9206a997db1f1b0e011d025476b478`. Commit it in an isolated
 source checkout so the build can bind the clean composition. The current
-overlay admits the validated WebRTC offer to the Bluetooth advertiser and
+overlay admits the validated WebRTC offer to the Bluetooth advertiser,
+retries a contended LAN gateway bind while the native owner stays live, and
 includes the CSV v4 Controller State projection, shared-scheduler Polar
 recording clock support and Polar host fixtures.
 See the APK log for the source revision bound into the installed APK.

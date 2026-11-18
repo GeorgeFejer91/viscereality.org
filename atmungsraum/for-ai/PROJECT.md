@@ -44,15 +44,22 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   deliverable version, source tree, signing certificate and APK digest.
   Follow the approved Meta release sequence and verify installed bytes.
 
-The Meta-installed fixed27-r2 APK reached OpenXR focus and advancing
-submitted frames after an ADB Home dispatch and the manifest-resolved VR
-launcher. The app's typed status confirmed the experimenter Prepare page
-and reported `listener-unavailable` for the trusted LAN gateway. The exact
-Pixel PWA and a separate host loopback probe could not authenticate that
-runtime. See [official baseline readiness](VERIFICATION.md#official-code-27-preparation-readiness--2026-11-18).
-Next, use a confirmed idle official launch with the gateway port available,
-then require a signed APK/build status and a fresh Meta offer before the
-preparation-only action. The held successor and wearer gates remain open.
+The Meta-installed fixed27-r2 APK reached OpenXR focus on the Prepare page.
+After an isolated cold launch its trusted LAN gateway replied over the
+temporary USB route. The Pixel's ordinary saved pairing is a legacy record
+for a different installation, and the official gateway reports no enabled
+enrolled controller. The Pixel stopped on the identity check. The official
+Prepare runtime and listener were restored after the bench test.
+
+A controlled port reservation reproduced `listener-unavailable` on official
+code 27. Releasing the port left that process unavailable for the full
+12-second observation. The composed native fix passed the same fault on
+signed bench code 33, authenticating the Pixel after the same owner rebound
+within 0.93 seconds. A RustDesk Recenter matched its native receipt over
+ordinary WebRTC. See [listener recovery](VERIFICATION.md#quest-gateway-listener-recovery--2026-11-18).
+Next, establish authorized membership for the official installation and read
+the signed Meta offer before any preparation action. The held successor,
+canonical signing and wearer gates remain open.
 
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
