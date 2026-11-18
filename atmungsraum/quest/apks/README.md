@@ -14,11 +14,15 @@ is included at `assets/atmungsraum-webrtc/release-protocol.md`, SHA-256
 The retained bench signer, APK v3 signature, ARM64 and 16 KiB alignment,
 all ten bundled WebRTC directory entries and signed session closure passed.
 The lab Quest 2 upgraded the idle bench app to code 35 with matching
-installed bytes, retained UID and grants. The Meta-installed Developer code
-27 kept the same running process. The new bench package's foreground and
-physical network rerun remain open. The private Meta channel still serves
-fixed27-r2. The unified Developer build needs its retained signing and Meta
-SDK inputs and the canonical release checks in the bundled protocol.
+installed bytes, retained UID and grants. It then reached foreground
+Prepare with valid tracking and advancing native frames. The original
+Meta Developer code 27 process returned to Prepare after the bench exited.
+The Pixel resumed the current standalone PWA with its saved pairing.
+The [startup evidence](../../for-ai/VERIFICATION.md#signed-webrtc-bench-35-startup--2026-11-18)
+records the bench listener state and the pending physical network rerun.
+The private Meta channel still serves fixed27-r2. The unified Developer
+build needs its retained signing and Meta SDK inputs and the canonical
+release checks in the bundled protocol.
 
 ## WebRTC bench with durable AudioTrack completion evidence
 
