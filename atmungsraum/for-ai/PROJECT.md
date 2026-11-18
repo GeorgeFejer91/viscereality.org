@@ -37,6 +37,11 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
 - [x] Bundle the [connectivity and release protocol](../quest/webrtc/release-protocol.md)
   in the signed WebRTC build. Verify exact signed and installed bytes for
   [bench code 35](../quest/apks/README.md#webrtc-bench-with-bundled-connectivity-and-release-protocol).
+- [x] Verify the exact signed bench 35 starts and reaches native Prepare on
+  the lab Quest 2. Both native receipts reported valid tracking and the frame
+  advanced from 223 to 313. Restore the same Meta code 27 process and the
+  Pixel standalone PWA with its saved pairing still present.
+  [Startup evidence](VERIFICATION.md#signed-webrtc-bench-35-startup--2026-11-18).
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.

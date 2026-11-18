@@ -57,6 +57,28 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Signed WebRTC Bench 35 startup — 2026-11-18
+
+The preflight matched the installed APK hashes for the signed bench 35 and
+Meta code 27 on the awake lab Quest 2. The bounded Windows watchdog had
+more than five minutes of hold remaining. The Pixel was on the current
+`20261118-recordings-offline-landscape` release. It went to Android Home
+for the headset switch so its saved pairing stayed with its existing
+installation. The headset used the exact MAIN and LAUNCHER component.
+
+The bench reached the foreground. Two typed product panel receipts
+reported experimenter Prepare, a native submitted frame, valid tracking,
+an enabled membership and discovery advertising. The submitted frame
+advanced from 223 to 313. The bench reported `listener-unavailable`
+while the baseline process was retained. The test sent no phone pairing
+or experiment request. The run-owned bench process was then stopped.
+The same Meta code 27 process returned to Prepare with a fresh submitted
+frame and a listening LAN gateway. Its installed digest still matched.
+The Pixel returned to standalone on the same release with its saved
+enrollment present and no connected Quest. Private evidence includes the
+preflight and original native receipts. Physical WebRTC reconnection and
+worn Polar collection on this exact revision remain open.
+
 ### Meta Developer and Pixel startup — 2026-11-18
 
 The [Meta Developer channel](https://developers.meta.com/vr/manage/applications/1459506690581676/release-channels/)
