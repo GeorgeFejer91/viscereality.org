@@ -57,6 +57,33 @@ improvement through confirming the last affected acceptance criterion.
    [the active checklist](PROJECT.md). Keep the goal open until every
    mandatory acceptance criterion passes.
 
+### Independent headset and PWA installations
+
+The lab Quest 2/Pixel 10 pair establishes initial physical evidence. The
+portability gate additionally requires independent compatible devices of
+the same classes. Bind every case to the latest applicable canonical APK,
+PWA, companion, OS and browser versions. Use the same signed headset APK
+bytes on both headsets; device identity and membership are runtime state.
+Record supported capabilities and leave untested platforms unqualified.
+
+| Case | Required result |
+| --- | --- |
+| Fresh phone/PWA A → headset A | User Bluetooth selection bootstraps the correct authenticated Wi-Fi/WebRTC session without a numeric code, hotspot or copied pairing storage. Match native build identity and a Recenter receipt. |
+| Fresh phone/PWA B → headset A | The same flow creates independent revocable membership; the native active-controller lease remains authoritative. |
+| Phone/PWA A → headset B, then back to A | Selection addresses the intended installation. Other headset identities, memberships and recordings stay intact. |
+| Phone/PWA B → headset B | The same release and production setup work without a device-specific build or lab fixture. |
+| Restart and route changes | Both launch orders, app/browser restart and interrupted Wi-Fi recover the selected saved pairing. Test direct routing and verified TURN relay on isolated/shared Wi-Fi. |
+| Rejected or unavailable peer | Wrong/revoked identity and missing required permissions yield truthful actionable state and no native control. |
+
+Require fresh frames, signed native status and actual command receipts for
+successful physical joins. Observe the selected ICE route and retain the
+existing disconnect/replay/lease checks. Two profiles on one phone can
+exercise storage isolation but cannot qualify a second physical phone.
+Fresh-PWA first join must use the production trust setup. The present
+managed, one-Quest commissioned profile and a pre-enrolled Pixel fixture
+leave the general code-free bootstrap gate open. Keep the deferred worn-H10
+and guarded baseline/update acceptance separate from this preparation work.
+
 ### Physical Pixel navigation stress — 2026-11-18
 
 The standalone Pixel PWA loaded `20261118-saved-quest-service` with the

@@ -1,5 +1,35 @@
 # Phone pairing and control
 
+## Bluetooth bootstrap for independent installations
+
+The user's 2026-11-18 requirement is one connection flow for every installed
+Atmungsraum PWA on compatible smartphones and headsets of the same classes as
+the lab devices. The user connects to the intended headset through Bluetooth.
+Bluetooth supplies the selected installation identity and the bootstrap
+information used to establish authenticated correspondence over Wi-Fi.
+WebRTC with TURN supports routes where direct device-to-device Wi-Fi fails;
+the normal flow requires no hotspot. Preserve the selected headset identity
+through discovery, authentication, control and recording download.
+
+Fresh and remembered connections must need no numeric pairing code or
+device-specific APK. Platform Bluetooth/network permissions remain initial
+setup steps. A release signing key identifies the app across its supported
+devices. Each headset installation and authorized PWA membership retains
+separate credentials, revocation and native ownership. Discovery or a
+connected transport alone cannot grant experiment control. Keep the native
+single-controller lease and receipt checks.
+
+The existing v2 wire implementation is documented below. Its manual matching
+code flow and the managed companion's one-Quest commissioning profile do not
+establish general fresh-PWA, code-free acceptance. A production trust-bootstrap
+path from the user's Bluetooth selection still needs implementation and
+qualification without copied lab credentials or synthetic fixture APKs.
+Use the [independent-installation matrix](VERIFICATION.md#independent-headset-and-pwa-installations)
+and the active PROJECT.md checklist; keep this distinction explicit in
+implementation and release claims.
+
+## Existing v2 pairing implementation
+
 User decisions, 2026-11-15: Remote advertises public read-only Bluetooth
 discovery. A saved phone authenticates directly; a new phone requests pairing.
 Both devices show a matching code and confirm using buttons, without headset
