@@ -131,12 +131,12 @@ async function measureLabels() {
       // The bounded 0–100% field is measured against its largest label once.
       // Changing its digits cannot change geometry or require a page-wide pass.
       if (records.some(record => {
-        if (record.type === 'attributes') return record.oldValue !== record.target.getAttribute('hidden');
+        if (record.type === 'attributes') return record.oldValue !== record.target.getAttribute(record.attributeName);
         const element = record.target.nodeType === Node.TEXT_NODE ? record.target.parentElement : record.target;
         return !element?.closest?.('[data-live-value]');
       })) measure();
     }).observe(main, { childList: true, characterData: true, subtree: true,
-      attributes: true, attributeFilter: ['hidden'], attributeOldValue: true });
+      attributes: true, attributeFilter: ['hidden', 'data-view'], attributeOldValue: true });
     const screenChanges = new MutationObserver(() => { root.dataset.layout = 'bounded'; measure(); });
     main.querySelectorAll('.screen').forEach((screen) => {
       screenChanges.observe(screen, { attributes: true, attributeFilter: ['hidden'] });
@@ -175,7 +175,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261118-questionnaire-focus').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261118-recordings-compact').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });

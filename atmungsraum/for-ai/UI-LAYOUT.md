@@ -182,6 +182,9 @@ to the real operator and recovery flow.
 - The earlier browser-recordings link works without a Quest. Return to the
   same history entry when coming from Aufnahmen. Keep the Drive dialog usable
   on both setup and recordings, and show live transfer status during a run.
+  Short Recordings viewports use one native section selector for the Quest
+  recording, files, Quest sync and storage. The controls keep their IDs and
+  saved selection. After questionnaire save, open the files section directly.
 - A disconnected controller can reconnect with an unresolved receipt. An
   enrolled waiting phone can claim free control to recover the original journal.
 - Navigation never starts scenarios, changes duration (main 900 s), changes files,

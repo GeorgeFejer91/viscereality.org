@@ -315,8 +315,89 @@ def expect_questionnaire_focus(control):
     assert bounds["above"] <= 0 and bounds["below"] <= 0 and bounds["pageScroll"] == 0, bounds
 
 
+def resize_recordings_fixture(page, viewport):
+    page.set_viewport_size(viewport)
+    # The CSS media query updates before the app receives visualViewport.resize.
+    expect(page.locator("html")).to_have_attribute("style", re.compile(rf"--usable-height:\s*{viewport['height']}px\b"))
+
+
+def capture_short_recordings(review, page):
+    initial_viewport = page.viewport_size
+    start = mutations(page)
+    topic = page.locator("#recordings-view")
+    answer = page.locator("#questionnaire-download")
+    answer.focus()
+    for width, height in ((320, 428), (640, 320)):
+        resize_recordings_fixture(page, {"width": width, "height": height})
+        expect(topic).to_be_visible()
+        expect(answer).to_be_focused()
+        page.clock.run_for(250)
+        prefix = f"short-recordings-{width}"
+        review.shot(page, prefix, "Recordings after saving", page.locator("#recordings-screen"), "Recordings")
+        assert not review.samples[prefix]["problems"], review.samples[prefix]["problems"]
+        for view, targets in (
+            ("archive", ("#quest-archives",)),
+            ("files", ("#quest-export-download", "#questionnaire-download")),
+            ("sync", ("#quest-export-status", "#quest-export-retry")),
+            ("storage", ("#drive-open", '#recordings-screen a[href="#daten"]')),
+        ):
+            topic.select_option(view)
+            for target in targets:
+                locator = page.locator(target)
+                expect(locator).to_be_visible()
+                if target != "#quest-export-status":
+                    assert min(locator.bounding_box()[edge] for edge in ("width", "height")) >= 47.99
+            slug = f"{prefix}-{view}"
+            review.shot(page, slug, view, topic, "Recordings")
+            assert not review.samples[slug]["problems"], review.samples[slug]["problems"]
+            if view == "archive":
+                topic.focus()
+                page.keyboard.press("Tab")
+                expect(page.locator("#quest-archives")).to_be_focused()
+            if view == "files":
+                with page.expect_download() as exported:
+                    page.locator("#quest-export-download").click()
+                assert exported.value.suggested_filename == "Tes_30_N_2026-11-18_haupt-15_r2.csv"
+                with page.expect_download() as exported:
+                    answer.click()
+                assert exported.value.suggested_filename == "Tes_30_N_2026-11-18_haupt-15_r2_questionnaire.json"
+            if view == "sync":
+                page.evaluate("""() => {
+                    window.readFixtureRecordings = window.reviewRecordings;
+                    window.reviewRecordings = (query, owner) => query.query === 'list'
+                        ? Promise.reject(Error('Fixture link loss')) : window.readFixtureRecordings(query, owner);
+                }""")
+                retry = page.locator("#quest-export-retry")
+                status = page.locator("#quest-export-status")
+                retry.click()
+                expect(status).to_contain_text("Abgleich fehlgeschlagen")
+                review.shot(page, f"{slug}-failed", "Abgleich fehlgeschlagen", retry, "Recordings")
+                assert not review.samples[f"{slug}-failed"]["problems"], review.samples[f"{slug}-failed"]["problems"]
+                page.evaluate("""() => {
+                    window.reviewRecordings = window.readFixtureRecordings;
+                    delete window.readFixtureRecordings;
+                }""")
+                retry.click()
+                expect(status).to_have_text("Aufnahmen gespeichert.")
+            if view == "storage":
+                drive = page.locator("#drive-open")
+                drive.click()
+                expect(page.locator("#drive-dialog")).to_be_visible()
+                page.keyboard.press("Escape")
+                expect(drive).to_be_focused()
+                page.locator('#recordings-screen a[href="#daten"]').click()
+                expect(page.locator("#daten")).to_be_visible()
+                page.go_back()
+                expect(topic).to_have_value("storage")
+        topic.select_option("files")
+        answer.focus()
+    assert mutations(page) == start
+    resize_recordings_fixture(page, initial_viewport)
+    expect(topic).to_be_hidden()
+
+
 def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True,
-                          drive=False, focus_viewport=None):
+                          drive=False, focus_viewport=None, short_recordings=False):
     quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
              "clock": 895000, "duration_ms": 900000, "liveRecording": live,
              "recordingAborted": outcome == "aborted", "recordingScenario": scenario}
@@ -413,8 +494,10 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         link = page.locator("#questionnaire-download")
         expect(link).to_be_visible()
         if (tag == "390" and live) or focus_viewport:
-            page.set_viewport_size(viewport)
+            resize_recordings_fixture(page, viewport)
         review.shot(page, f"{tag}-questionnaire-saved", "Saved answers", link, "Questionnaire")
+        if short_recordings:
+            capture_short_recordings(review, page)
         assert mutations(page)["session"] == []
         with page.expect_download() as download:
             link.click()
@@ -617,6 +700,7 @@ def verify():
         capture_questionnaire(review, "recordings", viewport, "", live=False, drive=True)
         capture_questionnaire(review, "compact-enlarged", viewport, "200%", focus_viewport={"width": 320, "height": 428})
         capture_questionnaire(review, "landscape-enlarged", viewport, "200%", focus_viewport={"width": 640, "height": 320})
+        capture_questionnaire(review, "recordings-enlarged", viewport, "200%", short_recordings=True)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
