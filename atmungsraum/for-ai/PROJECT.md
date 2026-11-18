@@ -245,8 +245,17 @@ when capture ends. Lock and reboot recovery still need an attended check.
   with 200% text in the mounted PWA. The short views retain selection,
   downloads, retry, Drive, browser archives and 48 px targets. See
   [verification](VERIFICATION.md#short-recordings-layout--2026-11-18).
-- [ ] Repeat the short Recordings views on the lab Pixel through RustDesk MCP
-  once Android reports RustDesk Input bound and the latest PWA is loaded.
+- [x] Drive all four short Recordings views and the browser archive return
+  with RustDesk MCP on the installed Pixel at 320 × 373 CSS px. Android text
+  scale was 2.0 and Chrome reported a 16 px CSS root. The views showed no
+  document or panel scroll, and the archive and view selectors were 48 px.
+- [x] Reproduce the clipped Recordings footer at 594 × 272 CSS px on the
+  physical Pixel. The mounted 200% regression also failed before the fix.
+  Use two columns at the measured landscape width, keep the sync status
+  beside Retry and allocate the longer footer action more space. All 21
+  targeted mounted states passed, including failed sync and recovery.
+- [ ] Rerun the 594 × 272 landscape case with RustDesk MCP on the latest
+  installed PWA. Restore the saved Android display settings after testing.
 - [ ] Finish the paired lab validation above with the questionnaire release.
   After a real completed 900-second run, enter responses on the installed Pixel
   and match the downloaded questionnaire's participant ID, UUID and CSV stem

@@ -94,8 +94,15 @@ They verify zero document and panel scroll, fitted labels, 48 px targets,
 focus across resize, keyboard entry to the recording selector, both
 downloads, Drive dialog close and return from browser archives. The
 explicit retry still recovers from a failed archive list. There are no
-native session or setup mutations from these views. Physical Pixel retest
-remains open.
+native session or setup mutations from these views.
+
+The installed Pixel showed the footer clipped at 594 × 272 CSS px. A
+regression at that size with 200% CSS text reproduced the scroll. The
+landscape layout now starts its two-column header at 568 px, allocates more
+footer width to the longer action, and places the sync status beside Retry.
+The compact browser archive link retains its full label and fits on two
+lines. The mounted cases verify all four views, the failed-sync message,
+retry and browser archive return at the new size.
 
 ### Quest target signaling startup recovery — 2026-11-18
 
