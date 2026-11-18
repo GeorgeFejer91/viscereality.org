@@ -260,6 +260,10 @@ or dependency pins, assets, and packaging-only changes.
 1. Identify the last verified release in the [Quest APK log](../quest/apks/README.md).
    Inspect the native and website Git state. Review the complete change
    against that release, including selected build features and asset changes.
+   For the unified Developer line, assemble with `-CanonicalRelease` and
+   follow the [APK connectivity and release protocol](../quest/webrtc/release-protocol.md).
+   Verify the signed protocol asset and the runtime it describes on the exact
+   APK, installed PWA and Android companion used for release qualification.
    Commit each coherent native source change with a descriptive message.
 2. In Atmungsraum, commit the corresponding public native patch and any
    affected assembly, public assets, or browser code. A native commit in a

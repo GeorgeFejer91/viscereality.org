@@ -34,6 +34,9 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
 - [x] Reproduce the missing APK identity measurement at 390 px, schedule its
   measurement on the visibility change and pass the GUI gate and original case.
   See [verification](VERIFICATION.md#apk-detail-measurement--2026-11-18).
+- [x] Bundle the [connectivity and release protocol](../quest/webrtc/release-protocol.md)
+  in the signed WebRTC build. Verify exact signed and installed bytes for
+  [bench code 35](../quest/apks/README.md#webrtc-bench-with-bundled-connectivity-and-release-protocol).
 - [ ] Qualify physical Touch, Polar contact and tracking, one clean 900-second
   baseline run and one fault recovery/partial run. Verify native, phone and
   private Drive custody with matching file hashes.
@@ -51,6 +54,16 @@ dashboard shows private Developer serving `0.2.26-dev` (code 27), build
 `1465199570012388`, with Quest 2 verified in the build list. This matches the
 live version policy. The next Meta change is the staged successor after the
 app reports recording on the lab baseline and the release hold is cleared.
+
+The signed fixed27-r2 APK does not contain the WebRTC bridge or assets.
+Signed bench 35 embeds the Bluetooth, Wi-Fi, TURN and WebRTC instructions and
+the required qualification and Meta sync steps. Its WebRTC runtime and DEX
+match bench 34 byte for byte. Eight assembly checks, 26 browser and native
+interop checks, the production gateway host suite, and five companion scan
+checks passed. The canonical assembly rejects a foreign Meta app ID and
+verifies the staged protocol bytes. Continue with the retained Developer
+signing and SDK 207 inputs, then qualify the exact unified APK with the lab
+Pixel and companion before assigning its Meta release.
 
 [PR 113](https://github.com/GeorgeFejer91/viscereality.org/pull/113) makes the
 autonomous install, stress, repair and retest loop part of the instructions
