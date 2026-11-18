@@ -571,8 +571,20 @@ The production GUI fixture reproduced the empty form at 411 × 428 px with
 around the form and status messages at 480 px of height or less. The focused
 regression checks zero document scroll, visible 48 px footer targets, text
 fit, and retained native invalid focus when the viewport expands again.
-Next, repeat the same RustDesk taps on the deployed standalone PWA with
-Gboard and confirm native Recenter after dismissing the keyboard.
+
+Release `20261118-participant-keyboard-layout` passed 351 GUI states and 345
+web and bridge checks. The standalone Pixel loaded the exact
+[Pages deployment](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44271093318).
+Three RustDesk MCP taps on the empty form opened and dismissed Gboard against
+Quest bench APK 32. In each cycle the 411 × 428.6 px viewport contained the
+428 px document, and both 48 px action targets ended at y=419 px. All four
+labels fit with both status messages visible. Native validation kept focus
+on the surname, and Recenter matched its original Quest receipt after the
+keyboard closed. The ordinary PWA document and Quest idle power policy were
+restored. Exact installed APK reads matched bench 32 and official Meta 27.
+
+Continue with the network fault and trust cases listed above, the worn H10
+collection and export checks, and the official Meta transition.
 
 #### Temporary status loss after Save — 2026-11-18
 
