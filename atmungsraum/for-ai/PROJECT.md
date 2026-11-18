@@ -455,9 +455,35 @@ fallback and renders the established German recovery guidance. The installed
 Pixel loaded the exact deployed release and reproduced the corrected status
 with passing text fit. After signaling was restored, the phone returned to
 authenticated bridge status over TURN in 6.0 seconds with saved pairing.
-Next, qualify a genuinely isolated network and run the baseline and fault
-collection cases with the wearer when available.
 See [connection guidance verification](VERIFICATION.md#connection-guidance-after-relay-and-lan-failure--2026-11-18).
+
+#### Public hotel Wi-Fi pairing stress — 2026-11-18
+
+Both lab devices reported the public hotel Wi-Fi on a shared IPv4 subnet.
+The installed PWA saw its offered LAN address fail with local-network
+permission granted. Venue client-isolation policy is unconfirmed.
+The standalone PWA loaded release 20261118-connection-error-status.
+The signed Quest bench code 31 was focused and submitted advancing frames.
+
+The first default-ICE batch alternated three empty temporary pairing slots
+and three saved reopens, with 23 seconds to reach authenticated actionable
+controls per trial. Bluetooth rediscovery reached ready in every trial.
+One first join (6.4 seconds) and one saved rejoin (1.5 seconds) passed and
+selected TURN. Four attempts timed out without an observed selected ICE pair.
+The follow-up alternated three default-ICE and three relay-only trials.
+All six reached actionable controls over WebRTC with no chooser or code.
+Default ICE took 1.8–5.5 seconds and relay-only took 2.1 seconds per trial.
+Every selected path used TURN. A later default-ICE saved rejoin reached
+authenticated bridge status in 20.9 seconds. RustDesk MCP then confirmed
+the original native Recenter receipt. The normal Pixel document and prior
+Quest power settings were restored.
+
+[Pages run 44251972245](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44251972245)
+passed for this executable release and the verification procedure. The
+short batches leave reliability open. Capture signaling and room admission
+during separate starts after Quest sleep to explain the timed-out attempts,
+then repeat the full timing matrix. Still run the baseline and fault
+collection cases with the wearer and the official Meta transition.
 
 #### Temporary status loss after Save — 2026-11-18
 
