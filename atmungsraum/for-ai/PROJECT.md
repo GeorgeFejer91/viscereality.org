@@ -119,6 +119,11 @@ Follow [the standing device validation rules](VERIFICATION.md#autonomous-device-
   in the relocated provider-manifest digest and string-table references.
   [Held candidate](../quest/apks/README.md#held-developer-28-update-test-candidate).
   Keep it unpublished until the recorded baseline/update hold is cleared.
+  Independent lab-controller inspection confirmed its exact digest,
+  Developer v3 signature, alignment and actual 900-second session closure.
+  Eighty-seven assets, including the embedded runtime configuration, and
+  the original OpenXR/Meta libraries match the baseline. Physical update and
+  cold-start recovery remain deferred and unverified.
 - [x] Repeat ten Settings/Back cycles through RustDesk MCP on the current
   standalone Pixel PWA. All twenty transitions returned the expected page,
   ready measurement and zero page overflow at 411 × 833 CSS pixels. Saved
