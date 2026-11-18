@@ -85,6 +85,12 @@ for a different installation, and the official gateway reports no enabled
 enrolled controller. The Pixel stopped on the identity check. The official
 Prepare runtime and listener were restored after the bench test.
 
+On the exact Meta-installed code 27, the signed app's typed ADB operator
+showed the panel with a native submitted-frame receipt and confirmed six
+Controls and Condition navigation transitions. The same native owner and
+process returned to Prepare with the panel closed. Physical Touch and
+wearer input still need their own acceptance pass.
+
 A controlled port reservation reproduced `listener-unavailable` on official
 code 27. Releasing the port left that process unavailable for the full
 12-second observation. The composed native fix passed the same fault on
