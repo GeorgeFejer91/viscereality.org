@@ -59,13 +59,33 @@ class CollectionEvidenceTest(unittest.TestCase):
         return target.stat().st_size
 
     def publish(self, partial=False, duplicate=False, old_projection=False, polar_setup=None,
-                include_completion=True, completion_offset_ns=0):
+                include_completion=True, completion_offset_ns=0, csv_audio_start=None, pause=False):
         identity = dict(participant_id="Tes_30_N", session_id=SESSION, scenario_id="haupt-15", run_index=1)
+        phases = [[0, "instruction_1"], [1_000_000, "instruction_2"]] if pause else [[0, "instruction_1"]]
+        participant = dict(identity, planned_duration_seconds=900, phase_offsets_ns=phases)
         end_ns = START + (3_000_000 if partial else 900_000_000_000)
         rows = [row.copy() for row in self.rows if not (old_projection and row["record_type"] == "breath")]
         if partial:
             rows[-1].update(elapsed_us=3000, timestamp_utc="2023-11-14T22:13:20.003000Z",
-                            audio_elapsed_us=3000, session_status="aborted", end_reason="interrupted-recovery")
+                            audio_elapsed_us=3000, playback_state="playing", audio_phase="instruction_1",
+                            session_status="aborted", end_reason="interrupted-recovery")
+        events = [dict(event="official-start"), dict(event="audio-started")]
+        if csv_audio_start is not False:
+            rows.insert(1, dict(record_type="audio-started", audio_elapsed_us=0,
+                                playback_state="playing", audio_phase="instruction_1") | (csv_audio_start or {}))
+        if pause:
+            for event, elapsed, audio, state, phase, stamp in (
+                ("experiment-paused", 1000, 1000, "paused", "instruction_2", "2023-11-14T22:13:20.001000Z"),
+                ("experiment-resumed", 2000, 1000, "playing", "instruction_2", "2023-11-14T22:13:20.002000Z"),
+                ("audio-ended", 900_000_000, 899_999_000, "ended", "ended", "2023-11-14T22:28:20.000000Z"),
+            ):
+                events.append(dict(event=event, observed_monotonic_ns=START + elapsed * 1000,
+                                   observed_utc_ns=UTC + elapsed * 1000))
+                rows.insert(-1, dict(record_type=event, elapsed_us=elapsed, timestamp_utc=stamp,
+                                     audio_elapsed_us=audio, playback_state=state, audio_phase=phase))
+            events.insert(3, dict(event="audio-started", observed_monotonic_ns=START + 1_500_000,
+                                  observed_utc_ns=UTC + 1_500_000))
+            rows[-1]["audio_elapsed_us"] = 899_999_000
         filename = ".recovered-" + NAME if partial else NAME
         with (self.native / filename).open("w", encoding="utf-8", newline="") as out:
             writer = csv.DictWriter(out, HEADER)
@@ -80,7 +100,6 @@ class CollectionEvidenceTest(unittest.TestCase):
         clocks = dict(source_clock="polar-sensor", source_time_ns=5000, sample_index=0, source_sequence=1,
                       frame_sequence=1, received_source_clock="java-nano-time", received_source_time_ns=7000)
         clock = "java-nano-time" if polar_setup is not None else "openxr-time"
-        events = [dict(event="official-start")]
         if not partial and include_completion:
             completed_at = end_ns + completion_offset_ns
             events.append(dict(event="completion-reached", observed_monotonic_ns=completed_at,
@@ -97,7 +116,7 @@ class CollectionEvidenceTest(unittest.TestCase):
                 sampled_clock=clock, sampled_time_ns=8, observed_source_clock=clock,
                 observed_source_time_ns=9, unbiased_phase="hold", phase="inhale")]),
         }
-        manifest = dict(schema=NATIVE_SCHEMA + "manifest.v1", participant=identity, started_at_utc=RUN,
+        manifest = dict(schema=NATIVE_SCHEMA + "manifest.v1", participant=participant, started_at_utc=RUN,
                         participant_csv_schema=4, clock_anchor=dict(monotonic_clock="android-elapsed-realtime",
                         monotonic_ns=START, utc_epoch_ns=UTC), completion_threshold_ns=900_000_000_000)
         if not old_projection:
@@ -108,7 +127,7 @@ class CollectionEvidenceTest(unittest.TestCase):
                 sampled_clock="java-nano-time", raw_sampled_clock="java-nano-time",
             )
         self.json_file(self.native / "manifest.json", manifest)
-        terminal = dict(schema=NATIVE_SCHEMA + "final.v1", participant=identity, started_at_utc=RUN,
+        terminal = dict(schema=NATIVE_SCHEMA + "final.v1", participant=participant, started_at_utc=RUN,
                         completed=not partial, saved=True, dropped_records=0, loss=dict(dropped_records=0),
                         durable_stream_lengths=lengths, ended_monotonic_ns=end_ns, participant_csv=desc,
                         completion_threshold_ns=900_000_000_000, stop_reason="interrupted-recovery" if partial else "stop")
@@ -180,6 +199,29 @@ class CollectionEvidenceTest(unittest.TestCase):
     def test_completion_event_must_be_inside_the_run(self):
         self.publish(completion_offset_ns=1)
         self.invoke(fail="native completion event is outside the run or has the wrong clock")
+
+    def test_missing_playback_transition_fails_even_when_all_copies_match(self):
+        self.publish(csv_audio_start=False)
+        self.invoke(fail="CSV playback transition or clock mismatch")
+
+    def test_corrupted_playback_transition_fields_fail(self):
+        for update in (
+            {"record_type": "experiment-paused"},
+            {"timestamp_utc": "2023-11-14T22:13:20.001000Z"},
+            {"audio_elapsed_us": 1000},
+            {"playback_state": "paused"},
+            {"audio_phase": "ended"},
+        ):
+            with self.subTest(update=update):
+                self.publish(csv_audio_start=update)
+                self.invoke(fail="CSV playback transition or clock mismatch")
+
+    def test_paused_time_is_excluded_from_the_playback_projection(self):
+        self.publish(pause=True)
+        self.assertEqual(self.invoke()["terminal_csv_audio_elapsed_us"], 899_999_000)
+        self.rows[-1]["audio_elapsed_us"] = 0
+        self.publish()
+        self.invoke(fail="CSV playback transition or clock mismatch")
 
     def test_hashes_do_not_excuse_a_missing_or_changed_projection(self):
         self.rows[1]["ecg_uv"] = -36
