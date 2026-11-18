@@ -73,6 +73,21 @@ passed frame-confirmed Settings, Quest Control details and return to Connect
 through RustDesk MCP. The ordinary saved pairing was present at sign-off.
 The physical automatic replacement case remains open.
 
+After the installed Pixel refreshed to `20261118-dataset-sync`, RustDesk MCP
+opened Recordings, changed the selected saved entry and returned to Connect.
+Eight repeated Recordings-to-Connect cycles passed. The heading in each of
+the 16 RustDesk frames matched the expected screen.
+The mounted archive recovery and PWA startup checks passed on that release.
+
+Serial-scoped ADB verified the installed Meta code 27 and lab bench code 33
+against their signed APK digests. Quest File Manager woke the Meta baseline.
+The native read-only receipt showed Prepare, Bluetooth enabled and the
+trusted LAN listener available. OpenXR focus and frame progression were
+observed. No fresh Polar connection or PMD start marker appeared in the
+observation window. The next physical step is to verify worn H10 contact and
+fresh ECG and ACC before collection. The official phone membership and Meta
+successor gates above remain open.
+
 The PWA repair merge `b7784bf` passed exact
 [Pages run 44197683228](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44197683228).
 Eight live files match Git. The delayed-resize APK Details regression passes
