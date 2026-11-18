@@ -1,5 +1,19 @@
 # Atmungsraum Quest 2 APKs
 
+## WebRTC bench installed on lab Quest 2
+
+Package `org.viscereality.atmungsraum.webrtcbench`, version code `27`,
+version name `0.2.26-rtc-test`, and 65,601,084 bytes. SHA-256 is
+`8bb5637f490515e6cd9deff620ba1af47edd326bd67ad0b5810fc5eaf4613a3b`.
+Native source tree `8e7dbbce2a9132fe3e0b54617bed8d21f956d0c2`.
+See [the WebRTC bench recipe](../README.md#side-by-side-quest-2-bench-install).
+
+The candidate passed the v3 signer, ZIP alignment, ARM64, WebRTC asset and
+cold session closure checks. Lab Quest 2 Package Manager reported the new
+package and the pulled base APK matched the signed digest byte for byte.
+The Quest still listed Developer fixed27-r2 and rehearsal code 19.
+First launch and the physical network and H10 checks remain pending.
+
 ## WebRTC rehearsal candidate
 
 A separate lab candidate uses package `org.viscereality.atmungsraum.rehearsal`,

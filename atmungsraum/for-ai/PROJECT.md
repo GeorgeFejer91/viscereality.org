@@ -152,6 +152,14 @@ assembly closure checks. [Candidate build and hash](../quest/apks/README.md#webr
 Automatic first enrollment of a provisioned phone with empty PWA storage and
 physical Pixel/Quest timing, denial, recovery and recording checks remain open.
 
+The non-Developer WebRTC build now has its own package,
+`org.viscereality.atmungsraum.webrtcbench`. Its signed APK was installed
+on lab Quest 2 over USB and the installed file matched SHA-256. The Quest
+also reported the rehearsal and Meta Developer versions as separate
+packages. A synthetic membership is staged in the bench package for the
+attended tests. First launch permission, physical relay and the phone
+receipt remain separate gates.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
