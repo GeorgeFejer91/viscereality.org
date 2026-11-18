@@ -180,6 +180,24 @@ code-2 artifact has a different signer. Physical first pairing needs
 a correctly signed companion and the authorized device configuration.
 See [the managed phone procedure](../phone-discovery/README.md#managed-first-pairing).
 
+The commissioning release is live from merge `d884853f496a`, Pages run
+`44216308810`, with all 27 changed files matching Git. The installed Pixel
+PWA reloaded that release, reached measurement readiness and retained its
+saved Quest trust. A separately named debug companion is staged on the
+Pixel for the synthetic bench run. The installed debug APK matches its
+signed build and coexists with the original companion. Its private fixture
+contains a synthetic derived bootstrap key for the already staged Quest
+bench membership.
+
+Next physical gate: with the Quest awake in WebRTC Bench, open the separate
+phone bench companion, grant Android Nearby devices, and reopen the
+standalone PWA. Check a temporary empty pairing profile against the real
+BLE result, authenticated status and selected WebRTC route. Require the
+expected membership, zero chooser and code prompts, and restoration of the
+ordinary PWA profile. The latest readiness readback had the Quest asleep
+and the phone bench companion stopped. Production commissioning on the
+managed profile and the attended recording and update gates remain open.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
