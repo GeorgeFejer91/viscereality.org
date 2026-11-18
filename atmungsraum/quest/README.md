@@ -32,9 +32,10 @@ evidence. The APK log identifies the signed release by one version and hash.
 
 Start with the exact fixed27-r2 source tree from the APK log and apply
 [`webrtc-native.patch`](webrtc-native.patch) on top. The resulting native
-tree is `877d3a7c045a867c1ceef3d6d3ab5bc7db2e963b`. Commit it in an isolated
+tree is `9d28cec692f0bcdf03be2d342ab231006a5eaabe`. Commit it in an isolated
 source checkout so the build can bind the clean composition. The current
-overlay includes the CSV v4 Controller State projection and Polar host fixtures.
+overlay includes the CSV v4 Controller State projection, shared-scheduler
+Polar recording clock support and Polar host fixtures.
 See the APK log for the source revision bound into the installed APK.
 Select `-WebRtc` with the phone-pairing APK profile. The assembly locks
 the production Java bridge and the bundled browser assets, then compares

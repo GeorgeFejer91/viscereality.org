@@ -61,6 +61,12 @@ frame/sample positions remain separate from these host clocks. Use the declared
 clock domains and retained provenance when joining streams, especially across
 device sleep. The current repair does not change CSV columns or raw sample bytes.
 
+Recording and recovery accept Java-clock Polar assessments when the retained
+shared-scheduler configuration binds Polar ACC and its Java clock. Earlier
+OpenXR Polar assessments keep their per-observation presentation provenance.
+The [recording evidence check](QUEST-PHONE-SYNC.md#check-one-haupt-runde-evidence-bundle)
+reconciles these observations with the saved CSV.
+
 In this build, `breathing_phase` means the unbiased classification from the
 selected breathing input, including Controller State when fallback is selected.
 The native recording manifest retains `breath_tracking_configuration` and the
