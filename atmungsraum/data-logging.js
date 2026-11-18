@@ -22,12 +22,18 @@ export function datedSessionParts(name) {
 
 export const isDatedSessionFilename = name => datedSessionParts(name) !== null;
 
-export const mainQuestionnairePrompts = Object.freeze([
-  'Wie fühlst du dich gerade?',
-  'Wie war die Atemübung für dich?',
-  'Was ist dir beim Atmen aufgefallen?',
-  'Wie hast du den Raum erlebt?',
-  'Was möchtest du noch festhalten?',
+export const likertLabels = Object.freeze([
+  'Stimme gar nicht zu', 'Stimme eher nicht zu', 'Teils, teils', 'Stimme eher zu', 'Stimme voll zu',
+]);
+const agreement = Object.freeze({ min: 1, max: 5, min_label: likertLabels[0], max_label: likertLabels.at(-1) });
+export const mainQuestionnaireItems = Object.freeze([
+  { type: 'slider', prompt: 'Wie ruhig fühlst du dich gerade?',
+    scale: { min: 0, max: 100, min_label: 'Gar nicht ruhig', max_label: 'Sehr ruhig' } },
+  { type: 'likert', prompt: 'Die Atemübung war angenehm.', scale: agreement },
+  { type: 'likert', prompt: 'Ich konnte meine Atmung bewusst wahrnehmen.', scale: agreement },
+  { type: 'likert', prompt: 'Ich fühlte mich im virtuellen Raum wohl.', scale: agreement },
+  { type: 'slider', prompt: 'Wie intensiv war deine Erfahrung?',
+    scale: { min: 0, max: 100, min_label: 'Gar nicht intensiv', max_label: 'Sehr intensiv' } },
 ]);
 
 export function completedMainQuestionnaire(csv, bytes) {
@@ -45,15 +51,15 @@ export function completedMainQuestionnaire(csv, bytes) {
 }
 
 export function questionnaireFile(run, answers, stamp = { utc: new Date().toISOString(), source: 'phone-system-clock' }) {
-  const values = answers.map(answer => answer.trim());
-  if (values.length !== mainQuestionnairePrompts.length || values.some(answer => !answer || answer.length > 500)) {
-    throw Error('Bitte beantworte alle fünf Fragen mit höchstens 500 Zeichen pro Antwort.');
-  }
+  if (answers.length !== mainQuestionnaireItems.length || mainQuestionnaireItems.some(({ scale }, index) => {
+    const answer = answers[index];
+    return !Number.isInteger(answer) || answer < scale.min || answer > scale.max;
+  })) throw Error('Bitte beantworte alle fünf Fragen mit einer gültigen Auswahl.');
   const record = {
-    schema_version: 1, ...run, started_at_utc: stamp.utc, submitted_at_utc: stamp.utc, clock_source: stamp.source,
+    schema_version: 2, ...run, started_at_utc: stamp.utc, submitted_at_utc: stamp.utc, clock_source: stamp.source,
     ...(stamp.round_trip_ms === undefined ? {} : { clock_round_trip_ms: stamp.round_trip_ms }),
-    answers: mainQuestionnairePrompts.map((prompt, index) => ({
-      question_id: 'q' + (index + 1), prompt, answer: values[index],
+    answers: mainQuestionnaireItems.map(({ type, prompt, scale }, index) => ({
+      question_id: 'q' + (index + 1), type, prompt, scale, answer: answers[index],
     })),
   };
   const filename = run.recording_filename.replace(/\.csv$/u, '_questionnaire.json');

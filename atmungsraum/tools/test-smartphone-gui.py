@@ -345,7 +345,7 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
             page.reload(wait_until="load")
             expect(form).to_be_visible()
             # The recording and its unfinished form belong to this pairing.
-            page.locator("#questionnaire-answer").fill("Temporäre Eingabe")
+            page.locator("#questionnaire-q1 input").press("Home")
             page.evaluate('''() => {
                 const key = 'atmungsraum-quest-pair';
                 window.reviewSavedQuestPair = localStorage.getItem(key);
@@ -353,40 +353,46 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
                 dispatchEvent(new StorageEvent('storage', {key}));
             }''')
             expect(form).to_be_hidden()
-            expect(page.locator("#questionnaire-answer")).to_have_value("")
+            expect(page.locator("#questionnaire-q1 input")).to_have_attribute("aria-valuetext", "Noch keine Auswahl")
             page.evaluate('''() => {
                 const key = 'atmungsraum-quest-pair';
                 localStorage.setItem(key, window.reviewSavedQuestPair);
                 dispatchEvent(new StorageEvent('storage', {key}));
             }''')
             expect(form).to_be_visible()
-        answer = page.locator("#questionnaire-answer")
-        heading = page.locator("#questionnaire-title")
-        submit = page.locator("#questionnaire-next")
+        fields = page.locator("#questionnaire-form")
+        first = page.locator("#questionnaire-q1 input")
+        last = page.locator("#questionnaire-q5 input")
+        submit = page.locator("#questionnaire-submit")
+        expect(fields.locator("fieldset")).to_have_count(5)
+        expect(fields.locator('input[type="radio"]')).to_have_count(15)
+        expect(fields.locator('input[type="range"]')).to_have_count(2)
         submit.click()
-        expect(heading).to_have_text("Frage 1 von 5")
-        expect(answer).to_be_focused()
-        answer.fill("   ")
-        answer.press("Enter")
-        expect(heading).to_have_text("Frage 1 von 5")
-        review.shot(page, f"{tag}-questionnaire-first", "Question 1", answer, "Questionnaire")
-        answer.fill("Antwort 1")
-        answer.press("Enter")
-        expect(heading).to_be_focused()
-        page.locator("#questionnaire-back").click()
-        expect(answer).to_have_value("Antwort 1")
-        answer.press("Enter")
-        for index in range(2, 6):
-            expect(heading).to_have_text(f"Frage {index} von 5")
-            answer.fill(f"Antwort {index}")
-            if index == 5:
-                answer.focus()
-                if tag == "390":
-                    page.set_viewport_size({**viewport, "height": 428})
-                review.shot(page, f"{tag}-questionnaire-last", "Question 5", answer, "Questionnaire")
-                expect(answer).to_be_focused()
-                expect(answer).to_have_value("Antwort 5")
-            answer.press("Enter")
+        expect(first).to_be_focused()
+        expect(first).to_have_attribute("aria-invalid", "true")
+        expect(page.locator("#questionnaire-status")).to_have_text("Bitte beantworte alle fünf Fragen.")
+        review.shot(page, f"{tag}-questionnaire-first", "Scroll form at the first item", first, "Questionnaire")
+        first.press("Home")
+        expect(first).to_have_attribute("aria-valuetext", "0")
+        for question, value in ((2, 1), (3, 5), (4, 3)):
+            choice = fields.locator(f'#questionnaire-q{question} input[value="{value}"]')
+            choice.check()
+            expect(choice).to_be_checked()
+        submit.click()
+        expect(last).to_be_focused()
+        expect(last).to_have_attribute("aria-invalid", "true")
+        expect(last).to_have_attribute("aria-valuetext", "Noch keine Auswahl")
+        if tag in ("320", "landscape", "enlarged"):
+            assert fields.evaluate("element => element.scrollTop") > 0
+            assert page.evaluate("document.scrollingElement.scrollTop") == 0
+        last.press("End")
+        expect(last).to_have_attribute("aria-valuetext", "100")
+        if tag == "390":
+            page.set_viewport_size({**viewport, "height": 428})
+        last.scroll_into_view_if_needed()
+        review.shot(page, f"{tag}-questionnaire-last", "Scroll form at the last item", last, "Questionnaire")
+        expect(last).to_be_focused()
+        submit.click()
         link = page.locator("#questionnaire-download")
         expect(link).to_be_visible()
         if tag == "390" and live:
@@ -410,7 +416,9 @@ def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", s
         assert record["participant_id"] == "Tes_30_N"
         assert record["session_id"] == "01234567-89ab-4def-8abc-0123456789ab"
         assert record["recording_filename"] == "Tes_30_N_2026-11-18_haupt-15_r2.csv"
-        assert [item["answer"] for item in record["answers"]] == [f"Antwort {n}" for n in range(1, 6)]
+        assert record["schema_version"] == 2
+        assert [item["answer"] for item in record["answers"]] == [0, 1, 5, 3, 100]
+        assert [item["type"] for item in record["answers"]] == ["slider", "likert", "likert", "likert", "slider"]
         if tag == "390" and live:
             page.reload(wait_until="load")
             expect(link).to_be_visible()

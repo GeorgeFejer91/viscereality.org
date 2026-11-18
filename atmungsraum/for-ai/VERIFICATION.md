@@ -60,9 +60,10 @@ The mounted Chromium tests replay the existing live recording and final
 signed-descriptor paths with synthetic data. They check that the form waits
 for verified local custody, opens for a completed main, and stays closed
 during saving, after a partial run and after a practice run. They verify
-blank and whitespace rejection, Back and keyboard submission, focused
-editing at reduced viewport height, offline reload and pairing scope, optional access from
-recordings and the exact downloaded JSON identity and five answers. The
+all five controls mounted together, scroll and focus at reduced viewport
+height, required selections, rejection of untouched sliders, offline reload
+and pairing scope, optional access from recordings, and the numeric answers and
+scale metadata in the downloaded JSON. The
 mounted Drive case authorizes a fixture account, confirms the CSV first,
 then uploads the questionnaire automatically under a different file ID in
 the same folder. An ambiguous questionnaire response is reconciled without

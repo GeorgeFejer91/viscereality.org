@@ -13,9 +13,10 @@
   <link rel="manifest" href="/atmungsraum/manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="/atmungsraum/assets/icons/app-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/atmungsraum/assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="./style.css?v=20261118-dataset-sync">
+  <link rel="stylesheet" href="./style.css?v=20261118-questionnaire-scales">
+  <link rel="stylesheet" href="./questionnaire.css?v=1">
   <script type="module" src="./pwa-install.js?v=20261116-install-focus"></script>
-  <script type="module" src="./app.js?v=20261118-drive-receipt-recovery"></script>
+  <script type="module" src="./app.js?v=20261118-questionnaire-scales"></script>
 </head>
 <body>
   <header id="operator-toolbar" aria-label="Geräte und Aktionen">
@@ -432,20 +433,12 @@
     </section>
     <section id="questionnaire-screen" aria-labelledby="questionnaire-title" class="screen operator-screen" hidden>
       <header class="screen-header">
-        <h1 id="questionnaire-title" data-measure tabindex="-1">Frage 1 von 5</h1>
+        <h1 id="questionnaire-title" data-measure tabindex="-1">Fragebogen</h1>
       </header>
-      <div class="screen-body operator-body">
-        <form id="questionnaire-form" autocomplete="off">
-          <label class="patient-field">
-            <span id="questionnaire-prompt" data-measure></span>
-            <input id="questionnaire-answer" required maxlength="500" aria-describedby="questionnaire-status">
-          </label>
-          <p id="questionnaire-status" data-measure role="status" hidden></p>
-        </form>
-      </div>
+      <form id="questionnaire-form" class="screen-body" aria-labelledby="questionnaire-title" autocomplete="off" novalidate></form>
       <footer class="actions operator-actions">
-        <button id="questionnaire-back" type="button" hidden><span data-measure>Zurück</span></button>
-        <button id="questionnaire-next" class="primary-navigation" type="submit" form="questionnaire-form"><span data-measure>Weiter</span></button>
+        <p id="questionnaire-status" data-measure role="status" hidden></p>
+        <button id="questionnaire-submit" class="primary-navigation" type="submit" form="questionnaire-form"><span data-measure>Antworten speichern</span></button>
       </footer>
     </section>
     <section id="recordings-screen" aria-labelledby="recordings-screen-title" class="screen operator-screen" hidden>

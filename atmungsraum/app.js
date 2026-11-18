@@ -1,4 +1,4 @@
-import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261118-dataset-sync';
+import { participantIdentity, savedBrowserExports } from './data-logging.js?v=20261118-questionnaire-scales';
 
 const byId = id => document.getElementById(id);
 const root = document.documentElement;
@@ -94,15 +94,18 @@ async function measureLabels() {
         const visible = document.querySelector('.screen:not([hidden])');
         if (!visible) return;
         const groups = [document.querySelector('main'), visible, ...visible.querySelectorAll('.screen-body, .actions, .patient-fields, .patient-row, .session-tiles, .session-tile, #data-files, [data-measure], aside, details, .operator-common, #quest-data')].filter(element => element.getClientRects().length);
+        const survey = visible.querySelector('#questionnaire-form');
         const bounds = visible.getBoundingClientRect();
         const footer = visible.querySelector(':scope > .actions');
         const bodyLimit = footer ? footer.getBoundingClientRect().top - 2 : bounds.bottom + 2;
         const hasOverflow = groups.some((group) => {
           const box = group.getBoundingClientRect();
-          return group.scrollWidth > group.clientWidth + 2 || group.scrollHeight > group.clientHeight + 2
-            || (group !== document.querySelector('main') && (box.top < bounds.top - 2 || box.bottom > bounds.bottom + 2))
+          return group.scrollWidth > group.clientWidth + 2
+            || group !== survey && group.scrollHeight > group.clientHeight + 2
+            || group !== document.querySelector('main') && !survey?.contains(group)
+              && (box.top < bounds.top - 2 || box.bottom > bounds.bottom + 2)
             || box.left < -2 || box.right > innerWidth + 2;
-        }) || [...visible.querySelector('.screen-body').children].some((group) => group.getBoundingClientRect().bottom > bodyLimit)
+        }) || !survey && [...visible.querySelector('.screen-body').children].some((group) => group.getBoundingClientRect().bottom > bodyLimit)
           || root.scrollWidth > innerWidth + 2 || root.scrollHeight > innerHeight + 2;
         if (root.dataset.layout !== 'reflow') {
           root.dataset.layoutReason = hasOverflow ? 'geometry' : results.some(({ fits, element }) => !fits && !element.closest('dialog')) ? 'text' : 'fit';
@@ -172,7 +175,7 @@ let refreshingIdlePage = false;
 function mountOperator() {
   if (questMounted) return;
   questMounted = true;
-  import('./quest-ui.js?v=20261118-drive-receipt-recovery').then(({ mountQuestRehearsal }) =>
+  import('./quest-ui.js?v=20261118-questionnaire-scales').then(({ mountQuestRehearsal }) =>
     mountQuestRehearsal(participantIdentity, questPair, () => !refreshingIdlePage)).catch(() => {
     byId('quest-status').textContent = 'Die Quest-Steuerung konnte nicht geladen werden.';
   });
