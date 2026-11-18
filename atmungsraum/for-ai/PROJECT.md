@@ -171,11 +171,15 @@ when capture ends. Lock and reboot recovery still need an attended check.
   and mocked Drive reconciliation.
 - [x] Restore RustDesk Input on the docked Pixel. Android reported the service
   bound, and RustDesk frames confirmed working Settings and Back taps.
-  The lab Quest remained awake in the developer APK under the watchdog.
+  A later check found the service off. It was restored, both taps worked
+  again, and the service stayed bound after the validation forward was
+  removed. The lab Quest remained awake in the developer APK under the
+  watchdog.
 - [x] Read back the phone's 18 uploaded payloads and their private Drive
   objects. Every phone payload matched its SHA-256 receipt and each remote
-  ID, filename, byte length and private parent matched. One independently
-  downloaded Drive CSV matched the phone's recorded SHA-256. All 11 CSVs
+  ID, filename, byte length and private parent matched. Two independent
+  Drive downloads matched the phone's recorded SHA-256, including a
+  completed Haupt-Runde CSV. All 11 CSVs
   contained ECG, accelerometer and radius samples under one run identity.
   The six completed schema 4 Haupt-Runde exports each logged an ECG interruption.
   The phone had no submitted questionnaire in this audit.
@@ -187,10 +191,18 @@ when capture ends. Lock and reboot recovery still need an attended check.
   byte-identical questionnaire delivery to a Drive fixture and recovery after
   a lost response. The Node suite passed 340 tests with 12 native-fixture
   skips. All 14 recording evidence tests passed.
+- [x] Publish `20261118-questionnaire-completion` in
+  [PR 115](https://github.com/GeorgeFejer91/viscereality.org/pull/115).
+  The exact [Pages run 44314751038](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44314751038)
+  deployed merge `739f4ca`. Eight live files matched the merge. Six
+  questionnaire states on the public assets covered completed, aborted
+  and practice runs, offline reload, and byte-identical Drive fixture
+  delivery and recovery after a lost response.
 - [ ] Refresh the installed Pixel and verify the current questionnaire
-  release. The regular Chrome tab refreshed through RustDesk, and the
-  installed standalone app still showed `20261118-dataset-sync`.
-  Retry the idle standalone launch with RustDesk Input enabled.
+  release. A RustDesk reload left the installed standalone app on
+  `20261118-dataset-sync`. The phone was idle on Connect, searching
+  the saved legacy Quest. Relaunch the standalone app, confirm the
+  loaded release and commission the exact lab Quest before a new run.
 - [x] Verify Recordings fits at 320 × 428 portrait and 640 × 320 landscape
   with 200% text in the mounted PWA. The short views retain selection,
   downloads, retry, Drive, browser archives and 48 px targets. See
