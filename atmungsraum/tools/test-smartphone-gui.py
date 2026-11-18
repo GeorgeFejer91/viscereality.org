@@ -328,7 +328,7 @@ def capture_short_recordings(review, page):
     topic = page.locator("#recordings-view")
     answer = page.locator("#questionnaire-download")
     answer.focus()
-    for width, height in ((320, 428), (640, 320)):
+    for width, height in ((320, 428), (640, 320), (594, 272)):
         resize_recordings_fixture(page, {"width": width, "height": height})
         expect(topic).to_be_visible()
         expect(answer).to_be_focused()

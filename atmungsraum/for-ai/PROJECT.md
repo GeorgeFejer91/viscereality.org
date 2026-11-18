@@ -95,6 +95,10 @@ temporary USB route. The Pixel's ordinary saved pairing is a legacy record
 for a different installation, and the official gateway reports no enabled
 enrolled controller. The Pixel stopped on the identity check. The official
 Prepare runtime and listener were restored after the bench test.
+The current standalone PWA still holds a legacy enrollment for a different
+installation. Both devices now report the same Wi-Fi subnet. The Pixel's
+direct TCP check to the Quest gateway failed, and the exact Quest gateway
+answered over the temporary USB loopback route.
 
 On the exact Meta-installed code 27, the signed app's typed ADB operator
 showed the panel with a native submitted-frame receipt and confirmed six
@@ -245,8 +249,17 @@ when capture ends. Lock and reboot recovery still need an attended check.
   with 200% text in the mounted PWA. The short views retain selection,
   downloads, retry, Drive, browser archives and 48 px targets. See
   [verification](VERIFICATION.md#short-recordings-layout--2026-11-18).
-- [ ] Repeat the short Recordings views on the lab Pixel through RustDesk MCP
-  once Android reports RustDesk Input bound and the latest PWA is loaded.
+- [x] Drive all four short Recordings views and the browser archive return
+  with RustDesk MCP on the installed Pixel at 320 × 373 CSS px. Android text
+  scale was 2.0 and Chrome reported a 16 px CSS root. The views showed no
+  document or panel scroll, and the archive and view selectors were 48 px.
+- [x] Reproduce the clipped Recordings footer at 594 × 272 CSS px on the
+  physical Pixel. The mounted 200% regression also failed before the fix.
+  Use two columns at the measured landscape width, keep the sync status
+  beside Retry and allocate the longer footer action more space. All 21
+  targeted mounted states passed, including failed sync and recovery.
+- [ ] Rerun the 594 × 272 landscape case with RustDesk MCP on the latest
+  installed PWA. Restore the saved Android display settings after testing.
 - [x] Retest same-folder sync on the deployed `20261118-idle-release` assets
   from [Pages run 44326627442](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44326627442).
   With synthetic Quest data and a simulated Drive endpoint, the PWA saved
