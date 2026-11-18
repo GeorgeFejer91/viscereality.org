@@ -131,7 +131,7 @@ live session with capture still active.
   Check visible labels and focus, 48 px hit targets, the single toolbar row
   and 389/390 px actions breakpoint, and fit in the usable viewport with the
   keyboard. The release gate verifies real Pretext, full painted text, zero
-  document and nested scroll range on app-authored surfaces, and the viewport,
+  document scroll range and nested scroll range outside the questionnaire form, and the viewport,
   text enlargement and spacing matrix. Capture the actual phone to verify
   physical safe areas, native dialogs, keyboard and hit targets.
 - If a frame is unavailable, check projection, session authentication, and

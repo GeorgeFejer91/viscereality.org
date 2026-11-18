@@ -75,7 +75,7 @@ The [layout contract](UI-LAYOUT.md) preserves native/domain authority while
 splitting preparation, tracking, running, recordings and settings. Use the real
 app/gateway fixture and actual Pretext, not static mockup HTML. Check configured
 viewport width (mobile overflow can expand `innerWidth`), painted text/control
-bounds, header/body/footer separation, 48 px targets and zero scroll range.
+bounds, header/body/footer separation, 48 px targets and zero scroll range outside the questionnaire form.
 Preserve multi-poll editor/caret and zero-command local-navigation checks.
 
 With the fixture's paused browser clock, Chromium full-page/captureBeyondViewport
