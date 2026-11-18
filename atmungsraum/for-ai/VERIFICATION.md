@@ -71,6 +71,12 @@ reserving another ID, and the uploaded bytes match the downloaded file.
 
 The questionnaire uses the production Pretext and viewport gate, including
 320 px portrait, short landscape, 200% text and the text-spacing override.
+At 200% text and 320 × 428 or 640 × 320, bringing the missing fieldset into
+view could leave its focused input below the scrollable form. The native
+scroll call now brings the focused input into view as well. The mounted
+cases verify an untouched first slider, an unanswered Likert item and a
+later missing slider, with the target fully visible and the document
+stationary at both sizes.
 The separate mounted archive recovery and PWA startup suites pass. The Node
 suite passes 334 checks with 12 native-fixture checks skipped and zero
 failures. Full lab acceptance is tracked in [PROJECT.md](PROJECT.md#haupt-runde-follow-up-questions--2026-11-18).

@@ -109,6 +109,7 @@ export function mountQuestionnaireForm(form, status) {
       status.hidden = false;
       firstControl.setAttribute('aria-invalid', 'true');
       group.scrollIntoView({ block: 'nearest' });
+      firstControl.scrollIntoView({ block: 'nearest' });
       firstControl.focus({ preventScroll: true });
       return null;
     },
