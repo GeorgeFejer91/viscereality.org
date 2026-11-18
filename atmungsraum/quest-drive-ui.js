@@ -1,5 +1,7 @@
-import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveScope } from './quest-drive.js?v=4';
+import { createQuestDrive, deliverQuestBundle, deliverQuestPrefix, questDriveRootName, questDriveScope } from './quest-drive.js?v=5';
 import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
+import { collectionStart, questionnaireStart, recordingHeadBytes } from './collection-time.js?v=1';
+import { datasetDestination, drivePairIdentity, ensureDrivePair } from './quest-drive-datasets.js?v=1';
 
 const clientIdPattern = /^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/;
 const lockName = 'atmungsraum-quest-drive';
@@ -76,10 +78,13 @@ export function mountQuestDrive() {
                   throw Error('Die Google-Drive-Ablage ist an ein anderes Konto oder einen anderen Client gebunden.');
                 }
                 if (!saved) {
-                  saved = { ...config, accountId: user.permissionId, folderId: await drive.reserveId(signal) };
+                  const folderId = await drive.findFolder('root', questDriveRootName, signal) ?? await drive.reserveId(signal);
+                  saved = { ...config, accountId: user.permissionId, folderId };
                   await store.saveDriveDestination(saved);
                 }
                 await drive.ensureFolder(saved.folderId, signal);
+                const pair = await drivePairIdentity(selectedOwner);
+                await ensureDrivePair({ drive, store, root: saved.folderId, pair, signal });
                 return saved;
               } finally { store.close(); }
             });
@@ -141,7 +146,13 @@ export function mountQuestDrive() {
           signal.throwIfAborted();
           const store = await openQuestRecordingStore(selectedOwner);
           try {
-            const folderId = current.destination.folderId;
+            const root = current.destination.folderId;
+            let pair;
+            async function destination(id, start, observed) {
+              pair ??= await drivePairIdentity(selectedOwner);
+              await current.drive.ensureFolder(root, signal);
+              return datasetDestination({ drive: current.drive, store, root, pair, id, start, observed, signal });
+            }
             if (prefix) {
               const staged = await store.readPrefix(prefix.id);
               if (staged?.session_id !== prefix.session_id || staged.offset < 256 * 1024 + 1) {
@@ -150,12 +161,17 @@ export function mountQuestDrive() {
               }
               const receipt = await store.readDelivery(prefix.id);
               if (!receipt?.verified && (receipt?.pendingEnd || staged.offset - (receipt?.offset ?? 0) > 256 * 1024)) {
+                const stamp = staged.collectionStart ?? collectionStart(staged,
+                  await store.readPrefixBytes(prefix.id, 0, Math.min(recordingHeadBytes, staged.offset)));
+                let folderId = receipt?.folderId;
                 if (!receipt || performance.now() >= current.checkFolderAfter) {
-                  await current.drive.ensureFolder(folderId, signal);
+                  if (folderId === root) await current.drive.ensureFolder(root, signal);
+                  else folderId = await destination(prefix.id, stamp, staged.collectionObserved);
+                  if (receipt && folderId !== receipt.folderId) throw Error('Die gespeicherte Upload-Zuordnung stimmt nicht überein.');
                   current.checkFolderAfter = performance.now() + 30000;
                 }
                 await deliverQuestPrefix({ drive: current.drive, store, folderId, id: prefix.id, name: staged.name,
-                  type: 'text/csv', available: staged.offset, signal,
+                  type: 'text/csv', available: staged.offset, signal, stamp,
                   read: (start, end) => store.readPrefixBytes(prefix.id, start, end) });
                 const acknowledged = (await store.readDelivery(prefix.id))?.offset ?? 0;
                 if (acknowledged) report('Google Drive empfängt die laufende Aufnahme.');
@@ -164,20 +180,24 @@ export function mountQuestDrive() {
               return;
             }
             let saved = 0;
-            async function uploadFile(id, file, resetDriveUpload = false) {
+            async function uploadFile(folderId, id, file, stamp, resetDriveUpload = false) {
               signal.throwIfAborted();
               report('Dateien werden in Google Drive gespeichert …');
-              await current.drive.ensureFolder(folderId, signal);
-              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file, signal, resetDriveUpload });
+              await deliverQuestBundle({ drive: current.drive, store, folderId, id, file, signal, stamp, resetDriveUpload });
             }
             for (const id of (await store.ids()).reverse()) {
               signal.throwIfAborted();
               const receipt = await store.readDelivery(id);
-              if (receipt?.verified && receipt.folderId === folderId) saved++;
+              let folderId = receipt?.folderId;
+              if (receipt?.verified) saved++;
               else {
                 const entry = await store.get(id);
                 if (entry?.bundleVersion === 1 && entry.bundle instanceof File) {
-                  await uploadFile(id, entry.bundle, entry.resetDriveUpload === true);
+                  const stamp = entry.collectionStart ?? collectionStart({ id, name: entry.bundle.name },
+                    entry.bundle.type === 'text/csv' && new Uint8Array(await entry.bundle.slice(0, recordingHeadBytes).arrayBuffer()));
+                  if (folderId === root) await current.drive.ensureFolder(root, signal);
+                  else folderId = await destination(id, stamp, entry.collectionObserved);
+                  await uploadFile(folderId, id, entry.bundle, stamp, entry.resetDriveUpload === true);
                   saved++;
                 }
               }
@@ -185,7 +205,17 @@ export function mountQuestDrive() {
               if (!(form?.file instanceof File)) continue;
               const answerId = id + '/questionnaire';
               const answerReceipt = await store.readDelivery(answerId);
-              if (!answerReceipt?.verified || answerReceipt.folderId !== folderId) await uploadFile(answerId, form.file);
+              if (!answerReceipt?.verified) {
+                if (answerReceipt?.folderId === root || folderId === root) {
+                  folderId = root;
+                  await current.drive.ensureFolder(root, signal);
+                } else {
+                  if (!folderId) continue;
+                  const confirmed = await destination(id);
+                  if (confirmed !== folderId) throw Error('Die gespeicherte Upload-Zuordnung stimmt nicht überein.');
+                }
+                await uploadFile(folderId, answerId, form.file, await questionnaireStart(form.file));
+              }
               saved++;
             }
             signal.throwIfAborted();

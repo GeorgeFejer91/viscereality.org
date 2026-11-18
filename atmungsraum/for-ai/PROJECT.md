@@ -129,6 +129,25 @@ when capture ends. Lock and reboot recovery still need an attended check.
   to the finalized recording. Confirm the separate private Drive object
   contains byte-identical JSON.
 
+#### Dataset folders and repeatable Quest–Pixel binding — 2026-11-18
+
+- [x] Implement private hardware-pair and per-dataset Drive folders, preserve
+  CSV custody and resumable IDs, and save Quest start and TimeAPI.io provenance.
+  Node passed 339 tests with 12 native-fixture skips. The Chromium fixture
+  verified the new hierarchy, both timestamp sources and a retried questionnaire
+  upload. Startup and context checks passed. See
+  [the data contract](DATA-LOGGING.md#dataset-folders-and-utc).
+- [x] Register the USB-connected lab Quest 2 and Pixel 10 using the
+  [USB provisioning command](QUEST-PHONE-SYNC.md#bind-the-exact-usb-hardware-pair).
+  Read back the binding from the installed Pixel and obtained a live TimeAPI.io
+  response in its browser. The USB Quest uses automatic network UTC. The
+  headset briefly woke and then returned to sleep.
+- [ ] Authenticate the exact Quest on the installed Pixel. It still showed a
+  saved legacy pairing for another Quest. Activate the new binding after the
+  headset is awake and the phone pairing is approved.
+- [ ] Authorize the research Drive account on that Pixel and check two new
+  datasets, sibling files, UTC metadata and exact downloaded bytes.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and
