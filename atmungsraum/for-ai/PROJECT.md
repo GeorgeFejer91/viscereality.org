@@ -290,6 +290,14 @@ signaling room tried its LAN address after 5.4 seconds. These are
 individual synthetic browser observations. The physical network matrix
 and benchmark remain open.
 
+The GUI gate twice caught the focused participant form extending beyond
+the reduced viewport. Holding resize events reproduced an 844 px
+document inside a 591 px viewport. The main layout and dialogs now cap
+the measured height at the current CSS viewport. The regression checks
+zero scroll range, full geometry, and retained focus, value and caret
+with resize event delivery held. The actual Pixel keyboard remains
+part of the physical UI matrix.
+
 ### PWA update copy simplification — 2026-11-17
 
 The actual Pixel repeated the same update requirement in four Connect notices
