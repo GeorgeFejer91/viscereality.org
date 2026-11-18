@@ -25,8 +25,8 @@ improvement through confirming the last affected acceptance criterion.
 3. Use the Meta Quest workflow and serial-scoped ADB for supported headset
    navigation, launch, installs and readback. Follow the
    [physical device development workflow](WORKFLOW.md#physical-device-development)
-   for continuous Quest wake coverage and all interactive Pixel actions
-   through RustDesk MCP. Try the existing authorized
+   for continuous Quest wake coverage, RustDesk MCP as the default Pixel
+   driver, and authorized ADB recovery. Try the existing authorized
    remote recovery procedures before requesting assistance. Reserve wearer
    steps for platform prompts that require attendance, physical controls,
    tracking and worn Polar H10 contact. Continue independent checks while

@@ -12,7 +12,7 @@ action and observed Git/publication state in that same owner.
 
 Follow the [physical device development workflow](WORKFLOW.md#physical-device-development)
 for every hardware session. Keep the Quest awake throughout the session and
-use RustDesk MCP for all interactive Pixel actions.
+use RustDesk MCP as the default Pixel driver, with authorized ADB recovery.
 
 The primary delivery goal is a progressive web app (PWA) for smartphones.
 

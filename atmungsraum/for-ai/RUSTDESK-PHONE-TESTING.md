@@ -3,8 +3,9 @@
 Use this runbook for the installed Atmungsraum PWA on the lab Android phone.
 RustDeskMCP supplies physical phone frames and taps. The
 [physical device development workflow](WORKFLOW.md#physical-device-development)
-applies to every interactive Pixel action, including Android settings and PWA
-launch or refresh.
+applies to interactive Pixel actions, including Android settings and PWA
+launch or refresh. Use the serial-scoped ADB route when RustDesk input is
+unavailable or the user directs ADB control.
 
 The [smartphone GUI release gate](VERIFICATION.md#smartphone-gui-release-gate)
 supplies repeatable Pretext and painted DOM measurements. The authenticated
@@ -50,6 +51,20 @@ the docked Pixel the service was off while screen capture stayed active.
 Restoring the authorized binding through the Android screen restored
 RustDesk MCP taps. Require a new frame showing the input's effect before
 accepting the action.
+
+For the authorized lab Pixel, ADB can restore the existing input service if
+it is disabled. Resolve its exact component with Android's accessibility
+service query, and read `enabled_accessibility_services` for the active
+Android user. Append the installed RustDesk Input component while preserving
+the other entries. Read back the setting and confirm a real RustDesk tap in a
+fresh frame. If Android shows a protected prompt, follow its normal approval
+flow.
+
+For ADB navigation, confirm the intended WebAPK is foregrounded and use a
+fresh frame and the actual Android display dimensions before `input tap`.
+RustDesk frames can be scaled. For an idle standalone PWA, send
+`KEYCODE_HOME` and start its resolved MAIN/LAUNCHER component through ADB.
+Verify foreground, standalone mode, the loaded release and saved pairing.
 
 ## Use the lab credential file
 

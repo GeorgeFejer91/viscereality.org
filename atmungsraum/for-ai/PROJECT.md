@@ -8,8 +8,9 @@ the current GUI rules and original input driver.
 
 Use the Meta Quest workflow and exact-serial ADB to inspect, launch and
 navigate the Quest autonomously where the platform provides a supported
-route. Use RustDesk MCP to drive the Pixel UI and confirm each result from
-the next frame. Check and restore the existing authorized remote controls
+route. Prefer RustDesk MCP for the Pixel UI and use authorized ADB recovery
+or navigation when needed. Confirm each result from the next frame.
+Check and restore the existing authorized remote controls
 when capture or input drops. Limit wearer assistance to physical actions,
 protected headset prompts, real Touch/tracking, and Polar contact.
 Autonomously build, install and verify each in-scope improvement, exercise
@@ -72,9 +73,12 @@ screen. [PR 116](https://github.com/GeorgeFejer91/viscereality.org/pull/116)
 and [Pages run 44316222303](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44316222303)
 published `20261118-idle-release`. Eleven live files matched Git. The
 mounted regression preserved Settings and origin storage, and live Chromium
-checked the current release without reloading. The standalone Pixel still
-shows `20261118-dataset-sync`. Restore RustDesk Input in Android and reopen
-the app once to load the checker. The available standard Bluetooth companion
+checked the current release without reloading. RustDesk Input was already
+enabled when the lab Pixel was rechecked. RustDesk Settings and Back worked.
+Serial-scoped ADB backgrounded the old app and relaunched its exact launcher.
+The installed standalone app loaded `20261118-idle-release` with its saved
+pairing intact. ADB Settings and Back also passed with fresh RustDesk frames.
+The available standard Bluetooth companion
 0.2.1 APK and the installed 0.1.0 APK have different certificates. An
 in-place upgrade requires a build signed with the installed certificate.
 
@@ -225,11 +229,11 @@ when capture ends. Lock and reboot recovery still need an attended check.
   questionnaire states on the public assets covered completed, aborted
   and practice runs, offline reload, and byte-identical Drive fixture
   delivery and recovery after a lost response.
-- [ ] Refresh the installed Pixel and verify the current questionnaire
-  release. A RustDesk reload left the installed standalone app on
-  `20261118-dataset-sync`. The phone was idle on Connect, searching
-  the saved legacy Quest. Relaunch the standalone app, confirm the
-  loaded release and commission the exact lab Quest before a new run.
+- [x] Refresh the installed Pixel to the current PWA and verify its loaded
+  questionnaire module. The Android launcher relaunch loaded
+  `20261118-idle-release` with the questionnaire completion module in
+  standalone mode. The phone is idle on Connect and still needs commissioning
+  for this exact lab Quest.
 - [x] Verify Recordings fits at 320 × 428 portrait and 640 × 320 landscape
   with 200% text in the mounted PWA. The short views retain selection,
   downloads, retry, Drive, browser archives and 48 px targets. See

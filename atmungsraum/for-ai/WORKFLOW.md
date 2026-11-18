@@ -316,22 +316,21 @@ after idle, build, install or reconnect gaps and renew the bounded hold as
 needed. Coordinate the expiry and restore the prior policy when the session
 ends. A protected headset prompt still needs the wearer.
 
-Use [RustDesk MCP](RUSTDESK-PHONE-TESTING.md) for every interactive action
-and screen capture on the lab Pixel during development. This includes the
-launcher, PWA, system settings and Bluetooth or network choosers. Use fresh
-RustDesk frames to locate controls and confirm each meaningful action.
-Keep ADB and DevTools available for device identification, USB forwarding,
-non-UI tooling and read-only diagnostics. If RustDesk input or capture drops,
-restore the authorized RustDesk route and request help only for a protected
-phone-side step.
+Use [RustDesk MCP](RUSTDESK-PHONE-TESTING.md) as the default lab Pixel driver.
+When RustDesk input is unavailable or the user directs ADB control, use the
+authorized USB ADB route for the installed PWA, normal launcher and approved
+settings recovery. Verify the exact foreground app and current display
+dimensions before input. Use fresh frames to confirm each meaningful action
+and record which driver sent it. Cases that require RustDesk input still need
+a tap confirmed through RustDesk. Use DevTools for read-only diagnostics.
 
 ## Smartphone PWA
 
 George's standing instruction of 2026-11-13 includes updating the installed
 Atmungsraum app on the lab Pixel 10 after each deployment that changes the PWA.
 The installed app loads the live website. Once the release is live, target
-the authorized Pixel and use RustDesk MCP to reopen the standalone
-Atmungsraum app from its home-screen icon. If the standalone app is missing,
+the authorized Pixel and reopen standalone Atmungsraum from its home-screen
+icon or the exact Android launcher component through ADB. If the app is missing,
 install it on the selected lab Pixel through RustDesk. Refresh when
 the app is idle and preserve its site data, saved Quest pairing and recordings.
 Confirm standalone mode, the expected screen, and that the loaded versioned
