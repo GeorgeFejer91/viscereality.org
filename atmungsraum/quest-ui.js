@@ -1,12 +1,13 @@
 import { operatorSteps, navigateOperatorView, resolveOperatorView, operatorCompatibilityWarning,
-  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=9';
+  restoreOperatorView, operatorSessionHeading } from './operator-layout.js?v=10';
 import { selectQuest, readQuest, rediscoverQuest, joinQuest, sameQuest, operationId,
   controllerAccessState } from './quest-gateway.js?v=18';
 import { pairPhone } from './quest-pairing.js?v=7';
 import { canRecenter, polarSetup, polarReadiness, probeInstructionPlaying, QuestRehearsal, rehearsalActions, rehearsalDuration, rehearsalPolarAllowed, rehearsalScenarios } from './quest-rehearsal.js?v=42';
-import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=27';
-import { openQuestRecordingStore } from './quest-recording-store.js?v=4';
-import { mountQuestDrive } from './quest-drive-ui.js?v=5';
+import { ecgTrace, questRecording, questRecordings, questPrefixBatches } from './quest-data.js?v=28';
+import { openQuestRecordingStore } from './quest-recording-store.js?v=5';
+import { mountQuestDrive } from './quest-drive-ui.js?v=7';
+import { mainQuestionnairePrompts, questionnaireFile } from './data-logging.js?v=20261118-post-session-questions';
 import { BreathingSetup } from './breathing-setup.js?v=22';
 import { selectBreathingMethod } from './breathing-selection.js?v=1';
 import { LiveBreathDisplay } from './live-breath-display.js?v=6';
@@ -269,6 +270,96 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   let localView = restoreOperatorView(location.hash, history.state);
   let displayedStep = '';
   let wasActive = false;
+  const questionnaireForm = byId('questionnaire-form');
+  const answerInput = byId('questionnaire-answer');
+  const answerStatus = byId('questionnaire-status');
+  const answerBack = byId('questionnaire-back');
+  const answerNext = byId('questionnaire-next');
+  const answerLink = byId('questionnaire-download');
+  const answerOpen = byId('questionnaire-open');
+  let questionnaire, selectedQuestionnaire, savingAnswers = false;
+  let questionIndex = 0;
+  const answers = Array(mainQuestionnairePrompts.length).fill('');
+
+  function showQuestion(focus = false) {
+    text(byId('questionnaire-title'), 'Frage ' + (questionIndex + 1) + ' von ' + answers.length);
+    text(byId('questionnaire-prompt'), mainQuestionnairePrompts[questionIndex]);
+    text(answerNext.firstElementChild, questionIndex === answers.length - 1 ? 'Antworten speichern' : 'Weiter');
+    answerInput.value = answers[questionIndex];
+    answerInput.setCustomValidity('');
+    text(answerStatus, '');
+    answerStatus.hidden = true;
+    answerBack.hidden = questionIndex === 0;
+    if (focus) byId('questionnaire-title').focus({ preventScroll: true });
+  }
+
+  function setQuestionnaire(form) {
+    if (form && !localArchiveOwner()) return;
+    if (questionnaire?.id === form?.id && questionnaire?.run.session_id === form?.run.session_id) return;
+    questionnaire = form;
+    answers.fill('');
+    questionIndex = 0;
+    if (form) showQuestion();
+    else answerInput.value = '';
+  }
+
+  answerInput.addEventListener('input', () => { answerInput.setCustomValidity(''); });
+  answerBack.addEventListener('click', () => {
+    if (!questionIndex || savingAnswers) return;
+    answers[questionIndex] = answerInput.value;
+    questionIndex--;
+    showQuestion(true);
+  });
+  answerOpen.addEventListener('click', () => {
+    if (!selectedQuestionnaire || selectedQuestionnaire.file || questionnaire?.required) return;
+    setQuestionnaire(selectedQuestionnaire);
+    navigateLocal({ type: 'go', step: 'questionnaire' });
+    paint();
+  });
+
+  questionnaireForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = questionnaire;
+    const owner = localArchiveOwner();
+    if (!form || !owner || savingAnswers || displayedStep !== 'questionnaire') return;
+    answers[questionIndex] = answerInput.value.trim();
+    if (!answers[questionIndex]) {
+      answerInput.setCustomValidity('Bitte gib eine Antwort ein.');
+      answerInput.reportValidity();
+      return;
+    }
+    if (questionIndex < answers.length - 1) {
+      questionIndex++;
+      showQuestion(true);
+      return;
+    }
+    savingAnswers = answerBack.disabled = answerNext.disabled = true;
+    answerInput.readOnly = true;
+    let store;
+    try {
+      const file = questionnaireFile(form.run, answers);
+      store = await openQuestRecordingStore(owner);
+      await store.saveQuestionnaire(form.id, form.run.session_id, file);
+      drive.schedule();
+      const nextForm = await store.pendingQuestionnaire();
+      if (questionnaire !== form) return;
+      setQuestionnaire(nextForm);
+      localView = { step: 'recordings', returnTo: null };
+      history.replaceState({ operatorStep: 'recordings' }, '', '#recordings');
+      archivePicker.value = form.id;
+      void selectArchive();
+    } catch {
+      if (questionnaire === form) {
+        text(answerStatus, 'Speichern fehlgeschlagen. Bitte versuche es erneut.');
+        answerStatus.hidden = false;
+      }
+    } finally {
+      store?.close();
+      answerInput.readOnly = false;
+      savingAnswers = answerBack.disabled = answerNext.disabled = false;
+      paint();
+    }
+  });
   let utilityReturnFocus = null;
 
   function livePreviewVisible() {
@@ -298,7 +389,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       }
       wasActive = nativeActive;
     }
-    if (location.hash === '#daten' && !nativeActive && !context.recovery) {
+    const showQuestionnaire = archiveScope && questionnaire && (questionnaire.required || localView.step === 'questionnaire');
+    if (location.hash === '#daten' && !nativeActive && !context.recovery && !showQuestionnaire) {
       utilities.settings.disabled = utilities.recordings.disabled = false;
       for (const button of Object.values(utilities)) button.removeAttribute('aria-current');
       if (driveDialog.open) driveDialog.close();
@@ -312,7 +404,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     // bounded-layout retry can clamp document scroll before reflow completes.
     if (!byId('daten').hidden) byId('daten').hidden = true;
     const step = resolveOperatorView(localView.step, { ...context, connected: Boolean(context.status),
-      participantRequired: context.requiresParticipant, active: nativeActive });
+      participantRequired: context.requiresParticipant, active: nativeActive, questionnaire: showQuestionnaire });
     if (step === 'update' && localView.step !== 'update') {
       // Once an exception needs attention, retain its page until Next. A
       // terminal update poll must not pull focus out of an open diagnostic.
@@ -346,7 +438,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (['input', 'calibration', 'tracking'].includes(step)) move('operator-input-status', body);
       if (['calibration', 'tracking'].includes(step)) move('operator-live', body);
       if (step === 'settings') connectionView.after(byId('operator-common'));
-      else move('operator-common', body);
+      else if (step !== 'questionnaire') move('operator-common', body);
+      if (step === 'questionnaire' && toolbarDialog.open) toolbarDialog.close();
       if (step !== 'settings') settingsConnection.open = false;
       if (step !== 'settings') settingsKiosk.open = false;
       const preparationRecovery = byId('preview-recovery');
@@ -398,7 +491,8 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     text(warning, version === 'required' ? 'Update der Quest-App erforderlich.' : byId('apk-update-status').textContent);
     // An overriding native operation cannot be escaped through utility links.
     for (const control of document.querySelectorAll('[data-operator-go], [data-operator-back], [data-operator-return]')) {
-      control.disabled = ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
+      control.disabled = step === 'questionnaire'
+        || ['running', 'recovery'].includes(step) && control.dataset.operatorGo !== 'settings';
     }
     byId('operator-update-next').disabled = nativeActive || context.updateRequired || context.waitingForControl || !context.status;
     byId('operator-update-open').disabled = !context.status;
@@ -406,7 +500,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
       if (name === step && !button.hasAttribute('aria-current')) button.setAttribute('aria-current', 'page');
       else if (name !== step) button.removeAttribute('aria-current');
     }
-    utilities.recordings.disabled = nativeActive || Boolean(context.recovery && !context.offlineArchives);
+    utilities.recordings.disabled = step === 'questionnaire' || nativeActive || Boolean(context.recovery && !context.offlineArchives);
     const polarAlreadyReady = step === 'connect' && byId('check-polar').dataset.check === 'ok';
     polarStatus.hidden = polarAlreadyReady;
     if (polarAlreadyReady) polarConnect.hidden = true;
@@ -1007,9 +1101,13 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function clearDownload() {
-    if (download.hasAttribute('href')) URL.revokeObjectURL(download.href);
-    download.removeAttribute('href');
-    download.hidden = true;
+    for (const link of [download, answerLink]) {
+      if (link.hasAttribute('href')) URL.revokeObjectURL(link.href);
+      link.removeAttribute('href');
+      link.hidden = true;
+    }
+    selectedQuestionnaire = undefined;
+    answerOpen.hidden = true;
   }
 
   function localArchiveOwner() {
@@ -1039,14 +1137,16 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     archiveRead++;
     archivePicker.replaceChildren();
     clearDownload();
+    setQuestionnaire(undefined);
     if (!scope) return;
     const owner = localArchiveOwner();
     void (async () => {
       let store;
       try {
         store = await openQuestRecordingStore(owner);
-        const ids = await store.ids();
+        const [ids, pendingForm] = await Promise.all([store.ids(), store.pendingQuestionnaire()]);
         if (read !== archiveListRead || scope !== localArchiveKey()) return;
+        if (pendingForm) setQuestionnaire(pendingForm);
         showArchives(ids);
       } catch {
         if (read === archiveListRead) exportMessage = 'Die gespeicherten Aufnahmen konnten nicht geladen werden.';
@@ -1072,6 +1172,7 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     exportMessage = '';
     archivePicker.replaceChildren();
     clearDownload();
+    setQuestionnaire(undefined);
   }
 
   async function selectArchive() {
@@ -1084,12 +1185,20 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
     let store;
     try {
       store = await openQuestRecordingStore(owner);
-      const stored = await store.get(id);
+      const [stored, form] = await Promise.all([store.get(id), store.getQuestionnaire(id)]);
       const archive = stored instanceof Blob ? stored : stored?.download;
       if (read !== archiveRead || scope !== localArchiveKey()) return;
       if (!(archive instanceof Blob)) throw Error('Aufnahme fehlt.');
       download.href = URL.createObjectURL(archive);
       download.download = archive instanceof File ? archive.name : `quest-${id}.zip`;
+      text(download.firstElementChild, form ? 'Aufnahme' : 'Aufnahme herunterladen');
+      selectedQuestionnaire = form;
+      answerOpen.hidden = !form || Boolean(form.file);
+      if (form?.file instanceof File) {
+        answerLink.href = URL.createObjectURL(form.file);
+        answerLink.download = form.file.name;
+        answerLink.hidden = false;
+      }
     } catch {
       if (read === archiveRead) exportMessage = 'Die gespeicherte Aufnahme konnte nicht geöffnet werden.';
     } finally {
@@ -1099,15 +1208,18 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
   }
 
   function showArchives(ids) {
-    ids = ids.filter(id => /^record-[1-9][0-9]{0,19}$/.test(id)
-      && Number(BigInt(id.slice(7)) / 1000000n) <= 8640000000000000);
+    const timestamp = id => {
+      const nanos = /^(?:record-([1-9][0-9]{0,19})|utc-ns-([0-9]{20}))$/.exec(id);
+      return nanos ? Number(BigInt(nanos[1] ?? nanos[2]) / 1000000n) : NaN;
+    };
+    ids = ids.filter(id => timestamp(id) <= 8640000000000000);
     if (ids.length === archivePicker.options.length && ids.every((id, index) => archivePicker.options[index].value === id)) {
       if (ids.length && !download.hasAttribute('href')) void selectArchive();
       return;
     }
     const selected = archivePicker.value;
     archivePicker.replaceChildren(...ids.map(id => {
-      const date = new Date(Number(BigInt(id.slice(7)) / 1000000n));
+      const date = new Date(timestamp(id));
       return new Option(archiveDate.format(date), id);
     }));
     if (ids.includes(selected)) archivePicker.value = selected;
@@ -1126,8 +1238,9 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
         signal.throwIfAborted();
         const store = await openQuestRecordingStore(gateway.owner);
         try {
-          const saved = await store.ids();
+          const [saved, pendingForm] = await Promise.all([store.ids(), store.pendingQuestionnaire()]);
           signal.throwIfAborted();
+          if (pendingForm && !questionnaire?.required) setQuestionnaire(pendingForm);
           showArchives(saved);
           const known = new Set(saved);
           exportMessage = 'Quest-Aufnahmen werden abgeglichen …';
@@ -1143,14 +1256,17 @@ export function mountQuestRehearsal(participantIdentity, savedPair, canAutoConne
             if (participantCsv && !archive.download.name.endsWith('.csv')) throw Error('Quest-CSV fehlt.');
             signal.throwIfAborted();
             await store.finalizePrefix(id, archive);
+            const pendingForm = archive.questionnaire?.required && await store.pendingQuestionnaire();
             signal.throwIfAborted();
+            if (pendingForm && !questionnaire?.required) setQuestionnaire(pendingForm);
             drive.schedule();
             void drive.sync();
             known.add(id);
             showArchives([...known].sort().reverse());
             if (existing && archivePicker.value === id) void selectArchive();
+            if (pendingForm) paint();
           }
-          exportMessage = known.size ? 'Aufnahmen sind in diesem Browser gespeichert.' : 'Keine gespeicherten Aufnahmen auf der Quest.';
+          exportMessage = known.size ? 'Aufnahmen gespeichert.' : 'Keine gespeicherten Aufnahmen auf der Quest.';
           nextSync = performance.now() + 60000;
         } finally { store.close(); }
       });

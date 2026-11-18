@@ -167,7 +167,12 @@ to the real operator and recovery flow.
   pause/resume, finish/finalization and recording sync retain current guards.
 - Actual native recording/recovery takes precedence over obsolete local steps;
   settings may expose diagnostics without hiding required recovery controls.
-- On native completion, show recordings. “Nächste Sitzung” is local navigation:
+- After verified storage of a completed Haupt-Runde staged live on this phone,
+  show the five required questions before returning to recordings. One
+  labeled response field at a time leaves room for the phone keyboard. Retain
+  responses when going back a question and keep native running/recovery
+  state higher priority. See [the questionnaire data contract](DATA-LOGGING.md#haupt-runde-questionnaire).
+- On other native completions, show recordings. “Nächste Sitzung” is local navigation:
   retain the participant and return through tracking if the native generation
   invalidated the previous acceptance; never fabricate a new accepted token.
 - A Quest that does not require a participant ID skips that page in both

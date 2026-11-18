@@ -6,6 +6,9 @@ Quest over trusted Wi-Fi. An idle pull can start before the first rehearsal or
 after any rehearsal and catches up on files created while the controller was
 closed. The installed Pixel PWA is the study sync controller. Its verified local
 copy is the input to automatic delivery to the research Google Drive.
+After submission, the Haupt-Runde questionnaire JSON uses the same idle
+delivery to the same private folder, with its own file ID and checksum
+receipt. See the [questionnaire data contract](DATA-LOGGING.md#haupt-runde-questionnaire).
 
 ## Live sync goal
 

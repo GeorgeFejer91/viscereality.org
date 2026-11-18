@@ -95,6 +95,21 @@ connected and the temporary verification forward was removed. Follow the
 [docked reconnect procedure](RUSTDESK-PHONE-TESTING.md#reconnect-while-the-phone-is-docked)
 when capture ends. Lock and reboot recovery still need an attended check.
 
+#### Haupt-Runde follow-up questions — 2026-11-18
+
+- Implemented five required German placeholder questions in the smartphone
+  PWA, opened after the verified final v4 CSV for a live-staged Haupt-Runde.
+  A completed locally imported main recording can also open the questionnaire
+  from Aufnahmen. Responses use a separate private JSON file with the same
+  participant ID, session UUID and run stem. It syncs automatically to the
+  existing private Drive folder when the phone is authorized and Quest is
+  idle. See [the data contract](DATA-LOGGING.md#haupt-runde-questionnaire).
+- [ ] Finish the paired lab validation above with the questionnaire release.
+  After a real completed 900-second run, enter responses on the installed Pixel
+  and match the downloaded questionnaire's participant ID, UUID and CSV stem
+  to the finalized recording. Confirm the separate private Drive object
+  contains byte-identical JSON.
+
 #### Connection milestone — fast web pairing across isolated Wi-Fi
 
 The latest applicable Pixel PWA and signed Quest APK must pair quickly and

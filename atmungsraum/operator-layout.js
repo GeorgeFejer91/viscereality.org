@@ -3,7 +3,7 @@ export const operatorSteps = Object.freeze({
   connect: 'quest', participant: 'participant-screen', signals: 'signals-screen',
   input: 'input-screen', calibration: 'calibration-screen', tracking: 'breathing-preview',
   battery: 'battery-screen', session: 'session-screen', running: 'running-screen', recordings: 'recordings-screen',
-  settings: 'settings-screen', update: 'update-screen', recovery: 'recovery-screen',
+  settings: 'settings-screen', update: 'update-screen', recovery: 'recovery-screen', questionnaire: 'questionnaire-screen',
 });
 const previous = { participant: 'connect', signals: 'participant', input: 'participant',
   calibration: 'input', tracking: 'input', battery: 'tracking', session: 'battery', recordings: 'session' };
@@ -22,6 +22,8 @@ export function navigateOperatorView(state, event, participantRequired = true) {
     : ['settings', 'recordings', 'update'].includes(step) ? state.step : state.returnTo };
 }
 export function resolveOperatorView(step, context) {
+  if (context.questionnaire && !context.active && !context.recovery && !context.instructionPending) return 'questionnaire';
+  if (step === 'questionnaire') step = 'recordings';
   // Settings retains shared recovery and session controls in its own view.
   if (step === 'settings') return 'settings';
   if (!context.connected) return step === 'recordings' && (!context.recovery || context.offlineArchives) ? 'recordings' : 'connect';

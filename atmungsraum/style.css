@@ -168,7 +168,7 @@ main:has(#breathing-preview:not([hidden])) { padding-bottom: var(--inset); }
 #quest-status, #quest-clock, #quest-polar-status, #quest-data p { margin: 0; text-align: center; }
 #quest-ecg { display: block; width: 100%; height: auto; max-height: 120px; fill: none; stroke: #b9def4; stroke-width: 1.5; }
 .quest-ecg-axis { stroke: #5e5e5e; }
-#quest-export-download {
+:is(#quest-export-download, #questionnaire-download) {
   display: grid;
   align-items: center;
   justify-self: center;
@@ -286,7 +286,12 @@ html[data-layout="reflow"] .preview-controls { grid-template-columns: minmax(0, 
 .text-link { display: grid; align-items: center; min-height: 48px; color: #b9def4; }
 #settings-screen #quest-settings { width: 100%; }
 #settings-screen .version-panel { border-radius: 5px; }
-#recording-files > a { width: 100%; justify-self: stretch; }
+#recording-files .recording-file-actions:not(:has(> :not([hidden]))) { display: none; }
+.recording-file-actions { display: grid; gap: var(--gap); min-width: 0; }
+.recording-file-actions:has(#questionnaire-download:not([hidden]), #questionnaire-open:not([hidden])) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.recording-file-actions > a { width: 100%; justify-self: stretch; }
 @media (max-width: 480px) {
   .operator-actions { grid-template-columns: minmax(0, 1fr); }
 }
@@ -585,6 +590,9 @@ html[data-mode="quest"] main {
 .operator-screen .screen-header { padding-block-end: var(--gap); }
 .operator-screen .operator-body { align-content: space-evenly; }
 #participant-screen > .operator-body { align-content: stretch; }
+#questionnaire-form { display: grid; gap: var(--gap); min-width: 0; }
+#questionnaire-form input { padding-block: 6px; }
+#questionnaire-back[hidden] + #questionnaire-next { grid-column: 1 / -1; }
 html[data-layout] .operator-screen .operator-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
 .operator-actions button { padding-block: 4px; }
 .session-actions:has(> button + button:not([hidden])) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -638,6 +646,21 @@ html[data-layout] .operator-screen .operator-actions { grid-template-columns: re
   }
   #running-screen #quest-data { grid-column: 2; grid-row: 1 / span 4; align-self: center; }
   #running-screen #quest-ecg { max-height: 16dvh; }
+  #recordings-screen:has(#quest-export-download:not([hidden])) .operator-body {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-content: center;
+    align-items: start;
+  }
+  #recordings-screen:has(#quest-export-download:not([hidden])) #recording-files {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    padding: 8px;
+    gap: var(--gap);
+  }
+  #recordings-screen:has(#quest-export-download:not([hidden])) .operator-body > :not(#recording-files) { grid-column: 2; }
+  #recording-files > :is(#quest-archives-label, .recording-file-actions) { grid-column: 1 / -1; }
   html[data-layout] #participant-screen .patient-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   html[data-layout] #breathing-preview .operator-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

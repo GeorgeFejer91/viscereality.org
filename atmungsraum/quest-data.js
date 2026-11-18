@@ -1,4 +1,4 @@
-import { isDatedSessionFilename } from './data-logging.js?v=20261117-exploration-recording';
+import { completedMainQuestionnaire, isDatedSessionFilename } from './data-logging.js?v=20261118-post-session-questions';
 import { createExportsZip } from './data-files.js?v=20261113-polar-only';
 
 const recordingId = /^utc-ns-[0-9]{20}$/;
@@ -198,10 +198,11 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
     throw Error('Ungültige Größe der Quest-Aufnahme.');
   }
   let resetDriveUpload = false;
+  let matchedLivePrefix = false;
   for (const file of selected) {
     const prior = file.schema_version === 4 && await store?.readPrefix(id);
-    const saved = prior?.session_id === file.session_id && prior.name === file.name
-      && Number.isSafeInteger(prior.offset) && prior.offset > 0 && prior.offset <= file.size
+    matchedLivePrefix = Boolean(prior && prior.session_id === file.session_id && prior.name === file.name);
+    const saved = matchedLivePrefix && Number.isSafeInteger(prior.offset) && prior.offset > 0 && prior.offset <= file.size
       ? await store.readPrefixBytes(id, 0, prior.offset).catch(() => null) : null;
     const usable = saved instanceof Uint8Array && saved.byteLength === prior?.offset ? saved : null;
     let bytes = await readFinalFile(gateway, manifest, file, signal, usable);
@@ -216,8 +217,13 @@ export async function questRecording(gateway, id, signal, { includeSensorBundle 
   signal.throwIfAborted();
   const participantFile = csv ? new File([records[0].bytes], csv.name, { type: 'text/csv' }) : null;
   if (participantFile && !includeSensorBundle) return participantFile;
-  if (unified) return { download: participantFile, bundle: participantFile, bundleVersion: 1,
-    ...(resetDriveUpload ? { resetDriveUpload: true } : {}) };
+  if (unified) {
+    const questionnaire = completedMainQuestionnaire(csv, records[0].bytes);
+    return { download: participantFile, bundle: participantFile, bundleVersion: 1,
+      ...(questionnaire ? { questionnaire: { run: questionnaire,
+        required: matchedLivePrefix } } : {}),
+      ...(resetDriveUpload ? { resetDriveUpload: true } : {}) };
+  }
   const manifestName = 'export-manifest.json';
   records.push({ filename: manifestName, session_id: id, csv: JSON.stringify(manifest, null, 2) });
   if (dated) {

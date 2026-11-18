@@ -1,14 +1,17 @@
 """Render the production PWA under the playground's strict no-scroll rules."""
+import hashlib
+import json
 import sys
 from pathlib import Path
 from runpy import run_path
 from tempfile import TemporaryDirectory
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS))
-from layout_render_fixtures import capture_companion_permission, capture_layout, go, initial, module
+from layout_render_fixtures import capture_companion_permission, capture_layout, go, initial, module, mutations
 from release_fixtures import apk_fixture
 
 AUDIT = (TOOLS.parent / "for-ai" / "scripts" / "gui-layout.js").read_text(encoding="utf-8")
@@ -124,6 +127,219 @@ def capture_recordings(review, tag, viewport, font):
     assert result.value.suggested_filename == records[0]["filename"]
     assert result.value.path().read_bytes() == records[0]["csv"].encode()
     page.context.close()
+
+
+QUESTIONNAIRE_RECORDINGS = """
+window.reviewRecordings = async (query, owner) => {
+  const id = 'utc-ns-01763460000000000000';
+  const session_id = '01234567-89ab-4def-8abc-0123456789ab';
+  const scenario = reviewQuest.recordingScenario ?? 'haupt-15';
+  const name = 'Tes_30_N_2026-11-18_' + scenario + '_r2.csv';
+  const prefix = new TextEncoder().encode('schema_version,participant_id,session_id\\r\\n4,Tes_30_N,' + session_id + '\\r\\n');
+  const outcome = reviewQuest.recordingAborted ? 'aborted' : 'completed';
+  const terminal = ['4','Tes_30_N',session_id,'2',scenario,'end','2026-11-18T12:00:00Z',
+    '900000000','900000000','ended','ended',...Array(10).fill(''),outcome,outcome,''].join(',');
+  const full = new Uint8Array([...prefix, ...new TextEncoder().encode(terminal + '\\r\\n')]);
+  const sha = async bytes => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)),
+    byte => byte.toString(16).padStart(2, '0')).join('');
+  const names = ['manifest.json','final.json','events.jsonl','polar-acc.jsonl','polar-ecg.jsonl',
+    'polar-hr-rr.jsonl','breath.jsonl','radius.jsonl'];
+  const descriptor = async bytes => ({ v:1, id, session_id, name, schema_version:4, size:bytes.length, sha256:await sha(bytes) });
+  const manifest_id = 'f'.repeat(64);
+  switch (query.query) {
+    case 'live-describe': return { ...await descriptor(prefix), state:'live', checkpoint:1 };
+    case 'list': return { v:1, state:'ready', entries:reviewQuest.recordingSaved
+      ? [{id, exportable:true, participant_csv:true}] : [], next_before:null };
+    case 'describe': {
+      const emptyHash = await sha(new Uint8Array());
+      return { state:'ready', manifest:{ id, manifest_id, schema:'rusty.quest.recording_export.v1', saved:true,
+        file_set_policy:'core8-original-no-checkpoints-or-index', device:owner.device, serial:owner.serial,
+        total_bytes:0, files:names.map(name => ({name, size:0, sha256:emptyHash})), participant_csv:await descriptor(full) } };
+    }
+    default: {
+      const live = query.query === 'live-read';
+      const source = live ? prefix : full;
+      const chunk = source.slice(query.offset, query.offset + query.length);
+      return { ...query, v:1, state:live ? 'live-chunk' : 'chunk',
+        sha256:await sha(live ? chunk : source), data:btoa(String.fromCharCode(...chunk)) };
+    }
+  }
+};
+"""
+
+
+def connect_fixture_drive(page):
+    folder = "fixture-folder"
+    email = "research@example.test"
+    remote = {}
+    sessions = {}
+    payloads = {}
+    reservations = []
+    lost_answers = []
+    headers = {
+        "Access-Control-Allow-Origin": "https://viscereality.org",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Expose-Headers": "Location",
+    }
+
+    def google(route):
+        url = urlsplit(route.request.url)
+        method = route.request.method
+        def reply(body=None, status=200, **extra):
+            route.fulfill(status=status, headers={**headers, **extra}, json=body)
+        if method == "OPTIONS":
+            reply()
+        elif url.path == "/drive/v3/about":
+            reply({"user": {"emailAddress": email, "permissionId": "fixture-owner"}})
+        elif url.path.endswith("/generateIds"):
+            reservations.append(len(reservations) + 1)
+            reply({"ids": [folder if len(reservations) == 1 else f"file-{len(reservations)}"]})
+        elif url.path == f"/drive/v3/files/{folder}":
+            reply({"id": folder, "mimeType": "application/vnd.google-apps.folder",
+                   "ownedByMe": True, "shared": False, "trashed": False})
+        elif url.path.startswith("/drive/v3/files/"):
+            found = remote.get(url.path.rsplit("/", 1)[1])
+            reply(found, 200 if found else 404)
+        elif method == "POST":
+            metadata = route.request.post_data_json
+            assert metadata["parents"] == [folder]
+            sessions[metadata["id"]] = metadata
+            reply(Location=f"https://www.googleapis.com/upload/drive/v3/files?upload_id={metadata['id']}")
+        else:
+            assert method == "PUT"
+            file_id = parse_qs(url.query)["upload_id"][0]
+            metadata = sessions[file_id]
+            body = route.request.post_data_buffer
+            payloads[metadata["name"]] = body
+            remote[file_id] = {**metadata, "ownedByMe": True, "shared": False, "trashed": False,
+                               "size": str(len(body)), "sha256Checksum": hashlib.sha256(body).hexdigest()}
+            if metadata["name"].endswith("_questionnaire.json") and not lost_answers:
+                assert metadata["mimeType"] == "application/json"
+                lost_answers.append(file_id)
+                reply(status=503)
+            else:
+                reply({"id": file_id})
+
+    page.context.route("https://www.googleapis.com/**", google)
+    page.context.route("https://accounts.google.com/gsi/client", lambda route: route.fulfill(
+        content_type="text/javascript", body="""window.google={accounts:{oauth2:{
+        initTokenClient: options => ({requestAccessToken: () => options.callback({
+          access_token:'fixture-token', scope:'https://www.googleapis.com/auth/drive.file', expires_in:3600
+        })})
+    }}};"""))
+    page.locator("#drive-open").click()
+    page.locator("#quest-drive-client").fill("12345-fixture.apps.googleusercontent.com")
+    page.locator("#quest-drive-account").fill(email)
+    page.locator("#quest-drive-connect").click()
+    expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 1")
+    assert len(payloads) == 1 and len(reservations) == 2
+    return payloads, reservations, lost_answers
+
+
+def capture_questionnaire(review, tag, viewport, font, *, outcome="completed", scenario="haupt-15", live=True, drive=False):
+    quest = {"phase": "RUNNING", "host": "vr-session", "generation": 3, "condition": "condition-a",
+             "clock": 895000, "duration_ms": 900000, "liveRecording": live,
+             "recordingAborted": outcome == "aborted", "recordingScenario": scenario}
+    setup = {"stage": "main", "input": "controller-state", "playing": True, "ready": True}
+    enrollment = "localStorage.setItem('atmungsraum-quest-pair'"
+    fixture = initial(c, quest, setup).replace(enrollment, "if (!localStorage.getItem('atmungsraum-quest-pair')) " + enrollment, 1)
+    page = review.page(fixture + QUESTIONNAIRE_RECORDINGS, viewport=viewport)
+    try:
+        page.evaluate("font => document.documentElement.style.fontSize = font", font)
+        expect(page.locator("#running-screen")).to_be_visible()
+        if live:
+            expect(page.locator("#quest-export-status")).to_contain_text("Laufende Quest-Aufnahme")
+        c.wait_state(page, phase="SAVING")
+        expect(page.locator("#questionnaire-screen")).to_be_hidden()
+        c.wait_state(page, phase="IDLE", host="vr-preparation", recordingSaved=True)
+        form = page.locator("#questionnaire-screen")
+        if outcome != "completed" or scenario != "haupt-15":
+            expect(page.locator("#quest-export-download")).to_be_visible()
+            expect(form).to_be_hidden()
+            expect(page.locator("#questionnaire-open")).to_be_hidden()
+            return
+        if not live:
+            expect(form).to_be_hidden()
+            expect(page.locator("#questionnaire-open")).to_be_visible()
+            if drive:
+                payloads, reservations, lost_answers = connect_fixture_drive(page)
+            page.locator("#questionnaire-open").click()
+        expect(form).to_be_visible()
+        if tag == "390" and live:
+            # The pending form and its run survive a fresh document without the Quest.
+            page.add_init_script("window.reviewJoin='fail';")
+            page.reload(wait_until="load")
+            expect(form).to_be_visible()
+            # The recording and its unfinished form belong to this pairing.
+            page.locator("#questionnaire-answer").fill("Temporäre Eingabe")
+            page.evaluate('''() => {
+                const key = 'atmungsraum-quest-pair';
+                window.reviewSavedQuestPair = localStorage.getItem(key);
+                localStorage.removeItem(key);
+                dispatchEvent(new StorageEvent('storage', {key}));
+            }''')
+            expect(form).to_be_hidden()
+            expect(page.locator("#questionnaire-answer")).to_have_value("")
+            page.evaluate('''() => {
+                const key = 'atmungsraum-quest-pair';
+                localStorage.setItem(key, window.reviewSavedQuestPair);
+                dispatchEvent(new StorageEvent('storage', {key}));
+            }''')
+            expect(form).to_be_visible()
+        answer = page.locator("#questionnaire-answer")
+        heading = page.locator("#questionnaire-title")
+        submit = page.locator("#questionnaire-next")
+        submit.click()
+        expect(heading).to_have_text("Frage 1 von 5")
+        expect(answer).to_be_focused()
+        answer.fill("   ")
+        answer.press("Enter")
+        expect(heading).to_have_text("Frage 1 von 5")
+        review.shot(page, f"{tag}-questionnaire-first", "Question 1", answer, "Questionnaire")
+        answer.fill("Antwort 1")
+        answer.press("Enter")
+        expect(heading).to_be_focused()
+        page.locator("#questionnaire-back").click()
+        expect(answer).to_have_value("Antwort 1")
+        answer.press("Enter")
+        for index in range(2, 6):
+            expect(heading).to_have_text(f"Frage {index} von 5")
+            answer.fill(f"Antwort {index}")
+            if index == 5:
+                answer.focus()
+                if tag == "390":
+                    page.set_viewport_size({**viewport, "height": 428})
+                review.shot(page, f"{tag}-questionnaire-last", "Question 5", answer, "Questionnaire")
+                expect(answer).to_be_focused()
+                expect(answer).to_have_value("Antwort 5")
+            answer.press("Enter")
+        link = page.locator("#questionnaire-download")
+        expect(link).to_be_visible()
+        if tag == "390" and live:
+            page.set_viewport_size(viewport)
+        review.shot(page, f"{tag}-questionnaire-saved", "Saved answers", link, "Questionnaire")
+        assert mutations(page)["session"] == []
+        with page.expect_download() as download:
+            link.click()
+        assert download.value.suggested_filename == "Tes_30_N_2026-11-18_haupt-15_r2_questionnaire.json"
+        file_bytes = download.value.path().read_bytes()
+        if drive:
+            page.clock.run_for(25000)
+            expect(page.locator("#quest-drive-status")).to_have_text("In Google Drive bestätigt: 2")
+            assert payloads[download.value.suggested_filename] == file_bytes
+            assert len(payloads) == 2 and len(reservations) == 3 and len(lost_answers) == 1
+        record = json.loads(file_bytes)
+        assert record["participant_id"] == "Tes_30_N"
+        assert record["session_id"] == "01234567-89ab-4def-8abc-0123456789ab"
+        assert record["recording_filename"] == "Tes_30_N_2026-11-18_haupt-15_r2.csv"
+        assert [item["answer"] for item in record["answers"]] == [f"Antwort {n}" for n in range(1, 6)]
+        if tag == "390" and live:
+            page.reload(wait_until="load")
+            expect(link).to_be_visible()
+            expect(form).to_be_hidden()
+    finally:
+        page.context.close()
 
 
 def capture_diagnostics(review, tag, viewport, font):
@@ -290,8 +506,13 @@ def verify():
             capture_dialogs(review, tag, viewport, font)
             capture_diagnostics(review, tag, viewport, font)
             capture_recordings(review, tag, viewport, font)
+            capture_questionnaire(review, tag, viewport, font)
             print(f"Checked {tag}: {len(review.samples) - count_before} screens and dialogs", flush=True)
         review.text_spacing = False
+        viewport = {"width": 390, "height": 844}
+        capture_questionnaire(review, "aborted", viewport, "", outcome="aborted")
+        capture_questionnaire(review, "probe", viewport, "", scenario="probe-5")
+        capture_questionnaire(review, "recordings", viewport, "", live=False, drive=True)
         capture_apk_detail_change(review)
         capture_connect_visibility_change(review)
         capture_companion_permission(review)
