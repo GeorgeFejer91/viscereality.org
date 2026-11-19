@@ -1,12 +1,12 @@
 # Hotel Wi-Fi handoff for Quest and Pixel
 
-## Current blocker — 2026-11-19
+## Hotel Wi-Fi failure — 2026-11-19
 
-The installed Pixel PWA cannot reach its public entry page. Both lab devices
-also fail to reach the WebRTC signaling host. These failures occur before the
-latest PWA and the WebRTC bench can attempt authenticated pairing together.
-Resume the [active validation checklist](PROJECT.md) after restoring these
-routes.
+During the initial test, the installed Pixel PWA could not reach its public
+entry page, and both lab devices failed to reach the WebRTC signaling host.
+The Pixel [recovered after hotel sign-in](#pixel-recovery-and-reinstall).
+Recheck the Quest's portal state and egress before continuing the
+[active validation checklist](PROJECT.md).
 
 | Check | Observed result |
 | --- | --- |
@@ -23,6 +23,23 @@ for the frame-confirmed launcher and Reload procedure. The private lab evidence
 directory `Atmungsraum-Validation/button-bluetooth-wifi-validation` contains
 `pixel-cold-launch-egress.json` and the two phone frames. Keep device
 identifiers, addresses, credentials, and raw captures outside Git.
+
+## Pixel recovery and reinstall
+
+Rejoining the same hotel Wi-Fi made Android show **Sign in to a Wi-Fi
+network**. With the operator's approval, the RustDesk session completed the
+portal sign-in. Android then marked the network validated, and IPv4 TCP to
+both the PWA host and the signaling host on port 443 succeeded from the Pixel.
+The existing standalone app loaded the current release after a Reload tap.
+
+Bringing a stale Chrome tab forward then advanced its entry from
+`20261118-idle-release` to `20261119-idle-refresh` without a Reload tap. The
+RustDesk uninstall and Chrome install prompts produced a new Android WebAPK.
+A RustDesk launcher tap opened the new installation in standalone mode with
+entry `20261119-idle-refresh` and `quest-ui.js?v=20261119-bluetooth-buttons`.
+DevTools confirmed the saved pairing was unchanged. The private lab evidence
+directory contains the `pixel-reinstall-*` frames and version readbacks.
+The Quest's post-recovery egress and authenticated pairing remain open.
 
 ## Release and evidence boundaries
 
