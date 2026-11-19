@@ -699,6 +699,34 @@ def capture_error_recording_update_save(review):
         page.context.close()
 
 
+def capture_polar_signal_pause(review, tag, viewport, font):
+    for recovered in (False, True):
+        health = {"required": True, "pause_latched": True, "invalid_timeout_ms": 5000,
+                  "usable_fresh": recovered, "last_pause": {"reason": "breathing-data-unusable"}}
+        page = review.page(initial(c, {"phase": "PAUSED", "host": "vr-session", "generation": 3,
+                                      "condition": "condition-a", "polarInput": health}), viewport=viewport)
+        try:
+            page.evaluate("size => document.documentElement.style.fontSize = size", font)
+            page.clock.run_for(2000)
+            status = page.locator("#quest-status")
+            expect(status).to_contain_text("Polar-Signal wieder bereit" if recovered else "Gurtposition, Hautkontakt und Batterie")
+            button = page.locator("#quest-play")
+            expect(button).to_have_text("Fortsetzen")
+            assert mutations(page)["session"] == [], "Polar recovery never resumes automatically"
+            if recovered:
+                expect(button).to_be_enabled()
+            else:
+                expect(button).to_be_disabled()
+            review.shot(page, f"{tag}-polar-pause-{'ready' if recovered else 'waiting'}",
+                        "Polar signal pause", status, "Recovery")
+            if recovered:
+                button.click()
+                page.clock.run_for(500)
+                assert mutations(page)["session"] == ["resume"]
+        finally:
+            page.context.close()
+
+
 def capture_diagnostics(review, tag, viewport, font):
     failed_join = initial(c) + "window.reviewJoin='fail';"
     failures = (
@@ -863,6 +891,7 @@ def verify():
             capture_dialogs(review, tag, viewport, font)
             capture_diagnostics(review, tag, viewport, font)
             capture_error_recording_recovery(review, tag, viewport, font)
+            capture_polar_signal_pause(review, tag, viewport, font)
             capture_recordings(review, tag, viewport, font)
             capture_questionnaire(review, tag, viewport, font)
             print(f"Checked {tag}: {len(review.samples) - count_before} screens and dialogs", flush=True)

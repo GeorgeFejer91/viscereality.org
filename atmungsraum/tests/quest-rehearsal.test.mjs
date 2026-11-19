@@ -72,6 +72,21 @@ test('an errored active writer exposes save without enabling Start or requiring 
   assert.equal(sent[0].op, 'save-next');
 });
 
+test('a native five-second Polar pause needs usable data before manual Continue', () => {
+  const base = { ...snapshot('PAUSED', 3), participant_arm: 1, pi: { r: true, f: true },
+    pd: { native: { required: true, pause_latched: true, invalid_timeout_ms: 5000, usable_fresh: false,
+      last_pause: { reason: 'breathing-data-unusable' } } } };
+  assert.equal(rehearsalActions(base).play, undefined, 'fresh raw packets are not usable breathing data');
+  assert.equal(rehearsalActions(base).finish, 'save-next');
+  assert.match(rehearsalContract.polarSessionPause(base).message, /5 s/);
+  assert.match(rehearsalContract.polarSessionPause(base).message, /Gurt|Batterie/);
+  const recovered = { ...base, pd: { native: { ...base.pd.native, usable_fresh: true } } };
+  assert.equal(rehearsalActions(recovered).play, 'resume');
+  assert.match(rehearsalContract.polarSessionPause(recovered).message, /Fortsetzen/);
+  assert.equal(rehearsalContract.polarSessionPause({ ...recovered, p: 'RUNNING' }), null);
+  assert.equal(rehearsalActions({ ...base, pd: undefined }).play, 'resume', 'legacy native gates remain authoritative');
+});
+
 test('current-session preflight rejects changed control, session revisions and delayed status', async () => {
   for (const phase of ['RUNNING', 'PAUSED']) {
     for (const action of ['play', 'finish']) {

@@ -92,6 +92,18 @@ export function rehearsalPolarAllowed(status) {
   return canControlQuest(status) && (status?.pi?.r === false || status?.pi?.r === true && status.participant_arm === 1);
 }
 
+export function polarSessionPause(status) {
+  const input = status?.pd?.native;
+  if (status?.p !== 'PAUSED' || input?.required !== true || input.invalid_timeout_ms !== 5000) return null;
+  const waiting = input.usable_fresh !== true;
+  if (input.pause_latched !== true) return { waiting, message: '' };
+  const cause = input.last_pause?.reason === 'breathing-data-unusable'
+    ? 'Pausiert: 5 s ohne nutzbare Polar-Daten.' : 'Pausiert: Polar-Signal unterbrochen.';
+  return { waiting, message: waiting
+    ? `${cause} Gurtposition, Hautkontakt und Batterie prüfen.`
+    : 'Polar-Signal wieder bereit. Mit „Fortsetzen“ weiter.' };
+}
+
 export function rehearsalActions(status, condition = conditions[0]) {
   if (!rehearsalPolarAllowed(status) || status.pending || audioRecovering(status) || polarSetup(status)?.sc) return {};
   const selected = conditions.indexOf(condition);
@@ -105,6 +117,7 @@ export function rehearsalActions(status, condition = conditions[0]) {
   const allowed = status.h === 'vr-session' && next && grant?.v === 2 && grant.g === status.g
     && typeof grant.s === 'string' && /^[a-f0-9]{32}$/.test(grant.s) && Array.isArray(grant.o) && grant.o.includes(next);
   const canPlay = allowed && (next === 'pause' || nativeSessionAllowed(status))
+    && (next !== 'resume' || !polarSessionPause(status)?.waiting)
     && (next === 'pause' || status.pi.r === false || status.pi.f === true);
   return { play: canPlay ? next : undefined, finish: next || ['RECORDING', 'ERROR'].includes(status.p) ? 'save-next' : undefined };
 }
