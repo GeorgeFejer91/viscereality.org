@@ -80,6 +80,8 @@ Read common rules first, then the documents needed for the task:
   headset and phone using Meta distribution and the supplied signed boot/update
   helper, with acceptance checks and source links.
 - [RUSTDESK-PHONE-TESTING.md](RUSTDESK-PHONE-TESTING.md) covers installed Android PWA validation through RustDeskMCP.
+- [Hotel Wi-Fi handoff](HOTEL-WIFI-HANDOFF.md) records the lab network blocker,
+  the applicable builds, and the checks for resuming physical pairing.
 - [VR-UI-TESTING.md](VR-UI-TESTING.md) covers Meta XR Operator setup, VR UI
   interaction checks and headset evidence.
 - [QUEST-AWAKE-TESTING.md](QUEST-AWAKE-TESTING.md) covers the Windows periodic
