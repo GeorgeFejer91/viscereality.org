@@ -11,12 +11,14 @@ and retain explicit gaps in canonical Polar/recording/relay acceptance.
   Pixel control is active and native27 is `IDLE/rec:false/pending:false`.
 - [x] Upload exact signed32 to the existing private Developer channel, preserve
   Quest2 targeting and confirm processing/current build.
-- [ ] Trigger the update from the actual Pixel PWA and observe Meta/helper
+- [x] Trigger the update from the actual Pixel PWA and observe Meta/helper
   behavior without a host install or launch substituting for the updater.
-- [ ] Confirm installed32 bytes, Meta attribution, retained helper/trust and
+- [x] Confirm installed32 bytes, Meta attribution, retained helper/trust and
   app/PWA recovery; record any required headset confirmation separately.
-- [ ] Align the public latest-version hint after Meta confirmation; publish
+- [x] Align the public latest-version hint after Meta confirmation; publish
   the release/test evidence through exact Pages and live checks.
+- [ ] Isolate the stale version check with a successor published while32 stays
+  open: query from the PWA without a Store visit, then test restart alone.
 
 Candidate `0.2.31-dev`/32, SHA256
 `e93da23aa044d1f43b69c31e17c45f4fe456b54ccb71b7abe521c54f603463db`,
@@ -32,8 +34,35 @@ processing `Complete`. The existing teen/adult audience was reconfirmed.
 The actual Pixel PWA sent one `check-and-update` at14:20:23UTC with operation
 `ac34d6e795114658`. Native27 admitted a fresh SDK attempt but GetVersion still
 reported available27/current, revision5. Installed bytes/process remain27.
-This is a publication success and a pending delivery test, not an installation
-result. The public latest hint is being aligned to32; the required floor stays27.
+This initially proved publication while delivery was still pending. The public
+latest hint has been aligned to32; the required floor stays27.
+
+Delivery follow-up: a second fresh PWA check at14:23:37UTC also offered27.
+Headset internet was validated; the wearer confirmed Developer/code32 in
+Release channels and an Update button in the normal Store, without pressing it.
+The kiosk escape retired the native presentation. A host cold launch restored
+the27 baseline at14:33:34UTC, explicitly before the subsequent SDK update.
+Its startup SDK attempt then detected32, downloaded an8.4MB delta and requested
+install. Package Manager replaced27 with32 at14:33:47UTC. Helper3 requested its
+package-replacement fallback; a new app process appeared without any host
+post-install launch. SDK relaunch and helper fallback were both active, so the
+helper is not established as the sole or necessary launcher.
+
+Installed32 matches exact approved SHA256 `e93da23aa044d1f43b69c31e17c45f4fe456b54ccb71b7abe521c54f603463db`;
+installer and initiator are `com.oculus.ocms`. Helper3 remains installed. The
+Pixel automatically regained active control with saved trust and32's exact
+build fingerprint; kiosk reports requested/effective. The wearer confirms the
+stimulus returned automatically without a Store Update press or manual launch.
+No host install, experiment, calibration or recording was used.
+
+Acceptance is partial: Meta install, automatic relaunch and PWA recovery pass;
+the PWA-only check did not detect the release while27 stayed open. The later
+success followed both Store inspection and a process restart, so caching is a
+hypothesis and those two effects remain unisolated. This does not establish32's
+repaired coordinator against a later available successor. The current installed
+app is32; retain it for that controlled test. The latest32/minimum27 policy
+merged through PR154 (`74e21d8`), exact Pages44543524004 succeeded and live
+policy bytes match Git. Remaining canonical Polar/recording/relay gates stay open.
 
 ### Active: reconcile latest source and pending updater repair — 2026-11-19
 

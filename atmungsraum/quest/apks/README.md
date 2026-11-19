@@ -9,12 +9,29 @@ app `1459506690581676`, targeting Quest2. The current-build table reports
 `0.2.31-dev`/32 and processing `Complete`; the existing teen/adult audience
 is retained. No helper or APK rebuild changed.
 
-Delivery remains pending: the first actual Pixel PWA `check-and-update` command
+Initial delivery checks: the first actual Pixel PWA `check-and-update` command
 completed a fresh native27 SDK check, but Meta still offered27. The package
-observer confirms installed27/process continuity. No host installation or
-launch has substituted for the intended PWA/Meta/helper transition. The public
+observer initially confirmed installed27/process continuity. No host installation
+or post-install launch substituted for the SDK/Meta/helper transition. The public
 latest hint is32; required floor27 remains while this candidate is qualified.
 Polar, full recording and relay acceptance gaps remain explicit.
+
+Subsequent delivery is confirmed, with a qualification gap: two PWA checks while
+27 stayed open reported latest27 despite32 being published. The wearer verified
+Developer/code32 and a Store Update button, without pressing it. After kiosk
+escape and a host baseline cold launch, the startup SDK check detected32 and
+downloaded/installed it. Package replacement occurred at14:33:47UTC. Installed
+SHA256 exactly matches the signed32 artifact; installer and initiator are
+`com.oculus.ocms`. Helper3 requested fallback after replacement and the app
+reappeared automatically. There was no host install or post-install host launch.
+The wearer confirms the stimulus returned; the Pixel automatically rejoined
+saved membership, confirmed active control and saved32's exact build identity.
+
+Thus Meta delivery/relaunch/reconnection pass, but this is not a successful
+PWA-only update detection test. Store inspection and restart both preceded
+success; their individual effects are unknown. Keep32 installed for a controlled
+successor test without an intervening Store visit. Required floor27 remains
+unchanged while the remaining canonical acceptance is open.
 
 ## Startup permission guard: Developer 32 and bench 39 — 2026-11-19
 
