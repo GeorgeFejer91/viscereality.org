@@ -1,5 +1,28 @@
 # Atmungsraum Quest 2 APKs
 
+## Background music signed profile matrix — 2026-11-19
+
+All candidates use native tree `06e8bf8bb7b23c407bc78474e4177f47aae3c1e9`.
+Each signed APK passed v3, ARM64/16 KiB alignment, signed 900-second session
+closure and an exact check of the stored `ji3ji3.mp3` asset. Developer 34
+uses the established Developer signer. The local variants use the bench
+signer. Bench 42 is installed on the USB Quest. Real playback and level
+checks are pending a working authenticated link.
+
+| Build profile | Code | Bytes | APK SHA-256 |
+| --- | ---: | ---: | --- |
+| Canonical Developer | 34 | 73,629,757 | `d32e96729c86c31861e32be414c39daecbf9a1d48af9395863730c219e4c1f49` |
+| WebRTC bench | 42 | 73,277,159 | `422efd293402b745ea23db029f67b8e7c6a67194faccda3bdb9f9f7fd76aa72c` |
+| Rehearsal, default panel | 50 | 73,055,102 | `3c5a15f5127b4c12ecc178eaa4dd9ad82fe709826c88fb5daa1f01bcc1056afb` |
+| Rehearsal, closed panel | 51 | 73,055,103 | `e14ec1ca89bddb79a42434691df3704b83a2de84ea1eb4a1a250e58b38d86380` |
+| Authored study audio | 52 | 137,000,857 | `e6f3087ea1d7d212b2c68e814f82e4740f50dbb78ba23f5d822804b432bf4ec2` |
+| Local boot opt-in | 53 | 73,055,103 | `333147a7d4097972812483cf3f0f16cd042fda60ea39d9cfffe4a5f721d790ec` |
+
+Use the default assembly, `-PhonePairing`, `-MainStudyAudio`, or
+`-BootAutostart` to reproduce the local rehearsal rows with the recorded
+version and retained signer. Historical APK candidates retain their prior
+files and hashes.
+
 ## Background music Developer 34 candidate — 2026-11-19
 
 Canonical package `org.viscereality.atmungsraum.developer`, code 34,

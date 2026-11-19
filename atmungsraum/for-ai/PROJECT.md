@@ -14,9 +14,14 @@ device verification. Historical APKs remain available by their recorded hashes.
   one request in flight and only the newest committed value queued. Drop that
   queued value when the gateway or controller lease changes. Test focus, gain
   confirmation and absence of phone media playback/resource loading.
-- [ ] Verify the full smartphone usability gate and release-matrix suite,
-  signed artifacts and current live Pages version. Exercise the idle installed
-  Pixel release when the lab phone is available.
+- [x] Verify 366 automated tests, 430 GUI states, and the six signed
+  release configurations. The 320 px keyboard test confirms gain
+  coalescing, lease rollover and focus retention. No phone media
+  playback or music-file request is observed in the rendered fixture.
+  [Signed profile matrix](../quest/apks/README.md#background-music-signed-profile-matrix--2026-11-19)
+- [x] Verify the exact Pages deployment and the installed lab Pixel. The
+  phone loads the new modules in standalone mode, keeps its saved enrollment,
+  and returns from the Music dialog to Connect.
 - [x] Build and inspect canonical Developer 34 with the retained signer and
   existing updater. Exact track, signature, alignment and signed session
   closure pass. [Developer 34 APK record](../quest/apks/README.md#background-music-developer-34-candidate--2026-11-19)
@@ -26,10 +31,22 @@ device verification. Historical APKs remain available by their recorded hashes.
   applicable release and prove playback is on the Quest. Cover reconnect,
   lost control, pending playback, and audible same-headset gain changes.
 
-The USB headset shows Developer 27 and bench 42. It reports no route to the
-PWA and signaling hosts. Use the authorized Wi-Fi recovery and an attended
-headset window for the paired checks. Meta currently serves Developer 33 from
-the separate update test below. Same-profile release qualification remains open.
+The USB headset shows Developer 27 and bench 42. Fresh checks report no
+route to the PWA and signaling hosts from the Quest and no route from the
+Pixel to the Quest LAN gateway. The Pixel reaches the public PWA. Use the
+authorized Wi-Fi recovery and an attended headset window for paired checks.
+Meta currently serves Developer 33 from the separate update test below.
+
+Release `20261119-all-release-music` merged in [PR 164](https://github.com/GeorgeFejer91/viscereality.org/pull/164)
+as `5ff43cd23dede790f1bf36a642972deb212e9186`. Exact
+[Pages run 44573460025](https://github.com/GeorgeFejer91/viscereality.org/actions/runs/44573460025)
+passed, and five live runtime files match Git. The installed lab Pixel
+loaded the matching standalone release after a launcher reopen. The live
+dialog opens, gives the unconnected Quest explanation, closes and restores
+focus. Fresh native fixtures pass 104 Remote/authentication and 74
+trusted-phone checks. The startup/rejoin browser suite passed a full
+rerun after an intermittent legacy commissioning fixture timeout also
+observed on the pre-feature baseline.
 
 - [x] Add the German Settings dialog with Play, Stop and a 0–100% volume
   slider. Show native loading and failure states and gate changes on current
